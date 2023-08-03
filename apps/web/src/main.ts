@@ -14,4 +14,6 @@ if (process.env.NODE_ENV === "production") {
   enableProdMode();
 }
 
+import "./app/instrumentation";
+
 platformBrowserDynamic().bootstrapModule(AppModule, { preserveWhitespaces: true });

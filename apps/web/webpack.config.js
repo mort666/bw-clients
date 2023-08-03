@@ -221,6 +221,12 @@ const devServer =
             secure: false,
             changeOrigin: true,
           },
+          "/otlpt": {
+            target: envConfig.dev?.proxyOtlpt,
+            pathRewrite: { "^/otlpt": "" },
+            secure: false,
+            changeOrigin: true,
+          },
         },
         headers: (req) => {
           if (!req.originalUrl.includes("connector.html")) {
@@ -265,6 +271,7 @@ const devServer =
                   https://*.duosecurity.com
                 ;connect-src
                   'self'
+                  ws://localhost:61840
                   wss://notifications.bitwarden.com
                   https://notifications.bitwarden.com
                   https://cdn.bitwarden.net

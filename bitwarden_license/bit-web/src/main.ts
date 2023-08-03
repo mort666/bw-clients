@@ -14,4 +14,6 @@ if (process.env.NODE_ENV === "production") {
   enableProdMode();
 }
 
+import "@bitwarden/web-vault/app/instrumentation";
+
 platformBrowserDynamic().bootstrapModule(AppModule, { preserveWhitespaces: true });
