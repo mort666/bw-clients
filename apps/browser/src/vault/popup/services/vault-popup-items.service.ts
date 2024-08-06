@@ -21,7 +21,7 @@ import {
 
 import { SearchService } from "@bitwarden/common/abstractions/search.service";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
-import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { SyncService } from "@bitwarden/common/platform/sync";
 import { CollectionId, OrganizationId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
@@ -80,7 +80,8 @@ export class VaultPopupItemsService {
   ).pipe(
     runInsideAngular(inject(NgZone)), // Workaround to ensure cipher$ state provider emissions are run inside Angular
     tap(() => this._ciphersLoading$.next()),
-    switchMap(() => Utils.asyncToObservable(() => this.syncService.getLastSync())),
+    switchMap(() => this.accountService.activeAccount$),
+    switchMap((a) => this.syncService.lastSync$(a.id)),
     filter((lastSync) => lastSync !== null), // Only attempt to load ciphers if we performed a sync
     switchMap(() => this.cipherService.cipherViews$),
     map((ciphers) => Object.values(ciphers || {})),
@@ -241,6 +242,7 @@ export class VaultPopupItemsService {
     private collectionService: CollectionService,
     private vaultPopupAutofillService: VaultPopupAutofillService,
     private syncService: SyncService,
+    private accountService: AccountService,
   ) {}
 
   applyFilter(newSearchText: string) {

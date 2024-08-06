@@ -1,7 +1,6 @@
 import {
   concatMap,
   firstValueFrom,
-  map,
   merge,
   Observable,
   ReplaySubject,
@@ -62,11 +61,35 @@ function trackedRecord<T, TKey extends string = string>(
     ];
   };
 }
+export type DecryptedData<TKey extends string, TValue> = [
+  data: Record<TKey, TValue>,
+  lastModified: Date,
+];
+
+function decryptedRecord<T, TKey extends string = string>(
+  valueDeserializer: (value: Jsonify<T>) => T,
+): (record: Jsonify<DecryptedData<TKey, T>> | null) => DecryptedData<TKey, T> {
+  return (jsonValue: Jsonify<DecryptedData<TKey, T>> | null) => {
+    if (jsonValue == null) {
+      return null;
+    }
+
+    const [data, lastModifiedStr] = jsonValue;
+
+    const output: Record<TKey, T> = {} as any;
+    Object.entries(data).forEach(([key, value]) => {
+      output[key as TKey] = valueDeserializer(value);
+    });
+
+    return [output, new Date(lastModifiedStr)];
+  };
+}
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export type VaultStateDefinitionOptions<TData, TView, TKey> = {
   encryptedOptions: UserKeyDefinitionOptions<TData>;
   decryptedOptions: UserKeyDefinitionOptions<TView>;
+  modifiedDateFn: (record: TData) => Date | null;
 };
 
 export class VaultStateKeyDefinition<TData, TView, TKey extends string = string> {
@@ -85,26 +108,22 @@ export class VaultStateKeyDefinition<TData, TView, TKey extends string = string>
     return this.key + "_decrypted";
   }
 
-  toEncryptedKeyDefinition(): UserKeyDefinition<TrackedRecord<TKey, TData>> {
-    return new UserKeyDefinition<TrackedRecord<TKey, TData>>(
-      this.encryptedStateDefinition,
-      this.key,
-      {
-        ...this.options.encryptedOptions,
-        deserializer: trackedRecord<TData, TKey>((v) =>
-          this.options.encryptedOptions.deserializer(v),
-        ),
-      },
-    );
+  toEncryptedKeyDefinition(): UserKeyDefinition<Record<TKey, TData>> {
+    return new UserKeyDefinition<Record<TKey, TData>>(this.encryptedStateDefinition, this.key, {
+      ...this.options.encryptedOptions,
+      deserializer: record<TData, TKey>((v) => this.options.encryptedOptions.deserializer(v)),
+    });
   }
 
-  toDecryptedKeyDefinition(): UserKeyDefinition<Record<TKey, TView>> {
-    return new UserKeyDefinition<Record<TKey, TView>>(
+  toDecryptedKeyDefinition(): UserKeyDefinition<DecryptedData<TKey, TView>> {
+    return new UserKeyDefinition<DecryptedData<TKey, TView>>(
       this.decryptedStateDefinition,
       this.decryptedKey,
       {
         ...this.options.decryptedOptions,
-        deserializer: record<TView, TKey>((v) => this.options.decryptedOptions.deserializer(v)),
+        deserializer: decryptedRecord<TView, TKey>((v) =>
+          this.options.decryptedOptions.deserializer(v),
+        ),
       },
     );
   }
@@ -116,8 +135,8 @@ export class VaultStateKeyDefinition<TData, TView, TKey extends string = string>
 export class DefaultVaultState<TData, TView, TKey extends string = string>
   implements VaultState<TData, TView, TKey>
 {
-  private encryptedState: ActiveUserState<TrackedRecord<TKey, TData>>;
-  private decryptedState: ActiveUserState<Record<TKey, TView>>;
+  private encryptedState: ActiveUserState<Record<TKey, TData>>;
+  private decryptedState: ActiveUserState<DecryptedData<TKey, TView>>;
 
   private forceDecryptedSubject = new Subject<Record<TKey, TView>>();
 
@@ -132,11 +151,7 @@ export class DefaultVaultState<TData, TView, TKey extends string = string>
     this.encryptedState = stateProvider.getActive(this.options.toEncryptedKeyDefinition());
     this.decryptedState = stateProvider.getActive(this.options.toDecryptedKeyDefinition());
 
-    this.encryptedState$ = this.encryptedState.state$.pipe(
-      map((state) => {
-        return state == null ? null : state[0];
-      }),
-    );
+    this.encryptedState$ = this.encryptedState.state$;
 
     const derivedState$ = this.encryptedState.combinedState$.pipe(
       tap((v) => console.log("Encrypted State: ", v)),
@@ -145,22 +160,29 @@ export class DefaultVaultState<TData, TView, TKey extends string = string>
           return null;
         }
 
+        const newDecryptDate = new Date();
         const oldDecrypted = await firstValueFrom(this.decryptedState.state$);
         console.log("Old decrypted", oldDecrypted);
+
+        const [oldData, oldDecryptDate] = oldDecrypted ?? [];
+
         const newDerived = {} as Record<TKey, TView>;
 
-        const [encryptedData, metaData] = encryptedState;
         const needsDecryption = [] as TData[];
 
-        for (const key in encryptedData) {
-          const id = key as TKey;
+        Object.entries(encryptedState).forEach(([key, value]: [TKey, TData]) => {
+          const tKey = key as TKey;
 
-          if (!oldDecrypted || metaData?.modifiedKeys?.includes(id)) {
-            needsDecryption.push(encryptedData[id]);
-          } else if (oldDecrypted[id] != null) {
-            newDerived[id] = oldDecrypted[id];
+          if (
+            oldData &&
+            oldData[tKey] !== null &&
+            this.options.options.modifiedDateFn(value) <= oldDecryptDate
+          ) {
+            newDerived[tKey] = oldData[tKey];
+          } else {
+            needsDecryption.push(value);
           }
-        }
+        });
 
         if (needsDecryption.length === 0) {
           return newDerived;
@@ -173,7 +195,9 @@ export class DefaultVaultState<TData, TView, TKey extends string = string>
           newDerived[key] = view;
         }
 
-        return await this.decryptedState.update(() => newDerived);
+        const [, [updated]] = await this.decryptedState.update(() => [newDerived, newDecryptDate]);
+
+        return updated;
       }),
     );
 
@@ -191,32 +215,28 @@ export class DefaultVaultState<TData, TView, TKey extends string = string>
 
   async update(updatedData: Record<TKey, TData>): Promise<void> {
     await this.encryptedState.update((currentState) => {
-      currentState ??= [{} as Record<TKey, TData>];
-      const [currentData] = currentState;
+      currentState ??= {} as Record<TKey, TData>;
 
       Object.entries(updatedData).forEach(([id, value]) => {
-        currentData[id as TKey] = value as TData;
+        currentState[id as TKey] = value as TData;
       });
 
-      return [
-        currentData,
-        { modifiedKeys: Object.keys(updatedData) as TKey[], lastModified: new Date() },
-      ];
+      return currentState;
     });
   }
   async remove(ids: TKey | TKey[]): Promise<void> {
-    await this.encryptedState.update(([current]) => {
+    await this.encryptedState.update((current) => {
       const modifiedKeys = Array.isArray(ids) ? ids : [ids];
       modifiedKeys.forEach((id) => {
         delete current[id];
       });
-      return [current, { modifiedKeys, lastModified: new Date() }];
+      return current;
     });
   }
   async replace(data: Record<TKey, TData>): Promise<void> {
     await this.clearDecrypted();
     // Replacing, so no need to track modified keys
-    await this.encryptedState.update(() => [data, { lastModified: new Date() }]);
+    await this.encryptedState.update(() => data);
   }
   async clearDecrypted(): Promise<void> {
     this.forceDecryptedSubject.next(null);
@@ -224,6 +244,6 @@ export class DefaultVaultState<TData, TView, TKey extends string = string>
   }
   async clear(): Promise<void> {
     await this.clearDecrypted();
-    await this.encryptedState.update(() => [{} as Record<TKey, TData>]);
+    await this.encryptedState.update(() => ({}) as Record<TKey, TData>);
   }
 }

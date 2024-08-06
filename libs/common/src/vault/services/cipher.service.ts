@@ -143,6 +143,7 @@ export class CipherService implements CipherServiceAbstraction {
           deserializer: (cipher: Jsonify<CipherData>) => CipherData.fromJSON(cipher),
           clearOn: ["logout"],
         },
+        modifiedDateFn: (cipher) => new Date(cipher.revisionDate),
       }),
       async (data, userId) => {
         const localData = await firstValueFrom(this.localData$);
