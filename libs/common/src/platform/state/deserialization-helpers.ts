@@ -36,3 +36,24 @@ export function record<T, TKey extends string | number = string>(
     return output;
   };
 }
+
+export type TrackedRecords<T, TKey extends string | number> = [data: Record<TKey, T>, keys: TKey[]];
+
+export function trackedRecord<T, TKey extends string | number = string>(
+  valueDeserializer: (value: Jsonify<T>) => T,
+): (record: Jsonify<TrackedRecords<T, TKey> | null>) => TrackedRecords<T, TKey> {
+  return (jsonValue: Jsonify<TrackedRecords<T, TKey> | null>) => {
+    if (jsonValue == null) {
+      return [{} as any, [] as TKey[]];
+    }
+
+    const [data, keys] = jsonValue;
+
+    const output: Record<TKey, T> = {} as any;
+    Object.entries(data).forEach(([key, value]) => {
+      output[key as TKey] = valueDeserializer(value);
+    });
+
+    return [output, keys as TKey[]];
+  };
+}

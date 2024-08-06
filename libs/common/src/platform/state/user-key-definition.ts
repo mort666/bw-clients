@@ -2,7 +2,7 @@ import { UserId } from "../../types/guid";
 import { StorageKey } from "../../types/state";
 import { Utils } from "../misc/utils";
 
-import { array, record } from "./deserialization-helpers";
+import { array, record, trackedRecord, TrackedRecords } from "./deserialization-helpers";
 import { DebugOptions, KeyDefinitionOptions } from "./key-definition";
 import { StateDefinition } from "./state-definition";
 
@@ -118,6 +118,17 @@ export class UserKeyDefinition<T> {
     return new UserKeyDefinition<Record<TKey, T>>(stateDefinition, key, {
       ...options,
       deserializer: record((v) => options.deserializer(v)),
+    });
+  }
+
+  static trackedRecord<T, TKey extends string | number = string>(
+    stateDefinition: StateDefinition,
+    key: string,
+    options: UserKeyDefinitionOptions<T>,
+  ) {
+    return new UserKeyDefinition<TrackedRecords<T, TKey>>(stateDefinition, key, {
+      ...options,
+      deserializer: trackedRecord((v) => options.deserializer(v)),
     });
   }
 

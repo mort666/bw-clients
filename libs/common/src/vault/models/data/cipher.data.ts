@@ -87,7 +87,7 @@ export class CipherData {
     }
   }
 
-  static fromJSON(obj: Jsonify<CipherData>) {
+  static fromJSON(obj: Jsonify<CipherData>): CipherData {
     return Object.assign(new CipherData(), obj);
   }
 }

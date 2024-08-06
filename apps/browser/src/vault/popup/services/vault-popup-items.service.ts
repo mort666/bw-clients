@@ -82,7 +82,8 @@ export class VaultPopupItemsService {
     tap(() => this._ciphersLoading$.next()),
     switchMap(() => Utils.asyncToObservable(() => this.syncService.getLastSync())),
     filter((lastSync) => lastSync !== null), // Only attempt to load ciphers if we performed a sync
-    switchMap(() => Utils.asyncToObservable(() => this.cipherService.getAllDecrypted())),
+    switchMap(() => this.cipherService.cipherViews$),
+    map((ciphers) => Object.values(ciphers || {})),
     switchMap((ciphers) =>
       combineLatest([
         this.organizationService.organizations$,
