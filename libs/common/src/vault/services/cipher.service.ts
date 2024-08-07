@@ -4,11 +4,9 @@ import { Jsonify } from "type-fest";
 
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { BulkEncryptService } from "@bitwarden/common/platform/abstractions/bulk-encrypt.service";
-import {
-  DefaultVaultState,
-  VaultStateKeyDefinition,
-} from "@bitwarden/common/vault/state/default-vault-state";
+import { VaultStateKeyDefinition } from "@bitwarden/common/vault/state/default-vault-state";
 import { VaultState } from "@bitwarden/common/vault/state/vault-state";
+import { VaultStateProvider } from "@bitwarden/common/vault/state/vault-state-provider";
 
 import { ApiService } from "../../abstractions/api.service";
 import { SearchService } from "../../abstractions/search.service";
@@ -84,6 +82,23 @@ import {
 
 const CIPHER_KEY_ENC_MIN_SERVER_VER = new SemVer("2024.2.0");
 
+const CIPHER_STATE_KEY = new VaultStateKeyDefinition(
+  "vault_state_ciphers",
+  CIPHERS_DISK,
+  CIPHERS_MEMORY,
+  {
+    decryptedOptions: {
+      deserializer: (cipher: Jsonify<CipherView>) => CipherView.fromJSON(cipher),
+      clearOn: ["lock", "logout"],
+    },
+    encryptedOptions: {
+      deserializer: (cipher: Jsonify<CipherData>) => CipherData.fromJSON(cipher),
+      clearOn: ["logout"],
+    },
+    modifiedDateFn: (cipher) => new Date(cipher.revisionDate),
+  },
+);
+
 export class CipherService implements CipherServiceAbstraction {
   private sortedCiphersCache: SortedCiphersCache = new SortedCiphersCache(
     this.sortCiphersByLastUsed,
@@ -118,6 +133,7 @@ export class CipherService implements CipherServiceAbstraction {
     private cipherFileUploadService: CipherFileUploadService,
     private configService: ConfigService,
     private stateProvider: StateProvider,
+    private vaultStateProvider: VaultStateProvider,
   ) {
     this.localDataState = this.stateProvider.getActive(LOCAL_DATA_KEY);
     this.encryptedCiphersState = this.stateProvider.getActive(ENCRYPTED_CIPHERS);
@@ -132,31 +148,17 @@ export class CipherService implements CipherServiceAbstraction {
       {},
     );
 
-    this.vaultCipherState = new DefaultVaultState<CipherData, CipherView, CipherId>(
-      stateProvider,
-      new VaultStateKeyDefinition(CIPHERS_DISK, CIPHERS_MEMORY, "vault_state_ciphers", {
-        decryptedOptions: {
-          deserializer: (cipher: Jsonify<CipherView>) => CipherView.fromJSON(cipher),
-          clearOn: ["lock", "logout"],
-        },
-        encryptedOptions: {
-          deserializer: (cipher: Jsonify<CipherData>) => CipherData.fromJSON(cipher),
-          clearOn: ["logout"],
-        },
-        modifiedDateFn: (cipher) => new Date(cipher.revisionDate),
-      }),
-      async (data, userId) => {
-        const localData = await firstValueFrom(this.localData$);
+    this.vaultCipherState = this.vaultStateProvider.get(CIPHER_STATE_KEY, async (data, userId) => {
+      const localData = await firstValueFrom(this.localData$);
 
-        const ciphers = data.map(
-          (c) => new Cipher(c, localData ? localData[c.id as CipherId] : null),
-        );
+      const ciphers = data.map(
+        (c) => new Cipher(c, localData ? localData[c.id as CipherId] : null),
+      );
 
-        const views = await this.decryptCiphers(ciphers, userId);
+      const views = await this.decryptCiphers(ciphers, userId);
 
-        return views.map((v) => [v.id as CipherId, v]);
-      },
-    );
+      return views.map((v) => [v.id as CipherId, v]);
+    });
 
     this.localData$ = this.localDataState.state$.pipe(map((data) => data ?? {}));
     // First wait for ciphersExpectingUpdate to be false before emitting ciphers

@@ -1,14 +1,14 @@
-import { Subject, filter, firstValueFrom, map, merge, timeout } from "rxjs";
+import { filter, firstValueFrom, map, merge, Subject, timeout } from "rxjs";
 
 import {
-  PinServiceAbstraction,
-  PinService,
-  InternalUserDecryptionOptionsServiceAbstraction,
-  UserDecryptionOptionsService,
-  AuthRequestServiceAbstraction,
   AuthRequestService,
+  AuthRequestServiceAbstraction,
+  InternalUserDecryptionOptionsServiceAbstraction,
   LoginEmailServiceAbstraction,
   LogoutReason,
+  PinService,
+  PinServiceAbstraction,
+  UserDecryptionOptionsService,
 } from "@bitwarden/auth/common";
 import { ApiService as ApiServiceAbstraction } from "@bitwarden/common/abstractions/api.service";
 import { AuditService as AuditServiceAbstraction } from "@bitwarden/common/abstractions/audit.service";
@@ -54,16 +54,16 @@ import { TokenService } from "@bitwarden/common/auth/services/token.service";
 import { UserVerificationApiService } from "@bitwarden/common/auth/services/user-verification/user-verification-api.service";
 import { UserVerificationService } from "@bitwarden/common/auth/services/user-verification/user-verification.service";
 import {
-  AutofillSettingsServiceAbstraction,
   AutofillSettingsService,
+  AutofillSettingsServiceAbstraction,
 } from "@bitwarden/common/autofill/services/autofill-settings.service";
 import {
-  BadgeSettingsServiceAbstraction,
   BadgeSettingsService,
+  BadgeSettingsServiceAbstraction,
 } from "@bitwarden/common/autofill/services/badge-settings.service";
 import {
-  DomainSettingsService,
   DefaultDomainSettingsService,
+  DomainSettingsService,
 } from "@bitwarden/common/autofill/services/domain-settings.service";
 import {
   UserNotificationSettingsService,
@@ -179,10 +179,11 @@ import { FolderApiService } from "@bitwarden/common/vault/services/folder/folder
 import { FolderService } from "@bitwarden/common/vault/services/folder/folder.service";
 import { TotpService } from "@bitwarden/common/vault/services/totp.service";
 import { VaultSettingsService } from "@bitwarden/common/vault/services/vault-settings/vault-settings.service";
+import { DefaultVaultStateProvider } from "@bitwarden/common/vault/state/vault-state-provider";
 import {
   legacyPasswordGenerationServiceFactory,
-  PasswordGenerationServiceAbstraction,
   legacyUsernameGenerationServiceFactory,
+  PasswordGenerationServiceAbstraction,
   UsernameGenerationServiceAbstraction,
 } from "@bitwarden/generator-legacy";
 import {
@@ -249,6 +250,7 @@ import CommandsBackground from "./commands.background";
 import IdleBackground from "./idle.background";
 import { NativeMessagingBackground } from "./nativeMessaging.background";
 import RuntimeBackground from "./runtime.background";
+
 export default class MainBackground {
   messagingService: MessageSender;
   storageService: BrowserLocalStorageService;
@@ -331,6 +333,7 @@ export default class MainBackground {
   activeUserStateProvider: ActiveUserStateProvider;
   derivedStateProvider: DerivedStateProvider;
   stateProvider: StateProvider;
+  vaultStateProvider: DefaultVaultStateProvider;
   taskSchedulerService: BrowserTaskSchedulerService;
   fido2Background: Fido2BackgroundAbstraction;
   individualVaultExportService: IndividualVaultExportServiceAbstraction;
@@ -531,6 +534,8 @@ export default class MainBackground {
       this.globalStateProvider,
       this.derivedStateProvider,
     );
+
+    this.vaultStateProvider = new DefaultVaultStateProvider(this.stateProvider);
 
     this.taskSchedulerService = this.popupOnlyContext
       ? new ForegroundTaskSchedulerService(this.logService, this.stateProvider)
@@ -761,6 +766,7 @@ export default class MainBackground {
       this.cipherFileUploadService,
       this.configService,
       this.stateProvider,
+      this.vaultStateProvider,
     );
     this.folderService = new FolderService(
       this.cryptoService,
