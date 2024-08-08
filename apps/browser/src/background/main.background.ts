@@ -116,6 +116,7 @@ import { BulkEncryptServiceImplementation } from "@bitwarden/common/platform/ser
 import { EncryptServiceImplementation } from "@bitwarden/common/platform/services/cryptography/encrypt.service.implementation";
 import { FallbackBulkEncryptService } from "@bitwarden/common/platform/services/cryptography/fallback-bulk-encrypt.service";
 import { MultithreadEncryptServiceImplementation } from "@bitwarden/common/platform/services/cryptography/multithread-encrypt.service.implementation";
+import { Fido2ActiveRequestManager } from "@bitwarden/common/platform/services/fido2/fido2-active-request-manager";
 import { Fido2AuthenticatorService } from "@bitwarden/common/platform/services/fido2/fido2-authenticator.service";
 import { Fido2ClientService } from "@bitwarden/common/platform/services/fido2/fido2-client.service";
 import { FileUploadService } from "@bitwarden/common/platform/services/file-upload/file-upload.service";
@@ -455,6 +456,9 @@ export default class MainBackground {
         return new ForegroundMemoryStorageService();
       }
 
+      // For local backed session storage, we expect that the encrypted data on disk will persist longer than the encryption key in memory
+      // and failures to decrypt because of that are completely expected. For this reason, we pass in `false` to the `EncryptServiceImplementation`
+      // so that MAC failures are not logged.
       return new LocalBackedSessionStorageService(
         sessionKey,
         this.storageService,
@@ -987,6 +991,7 @@ export default class MainBackground {
       this.syncService,
       this.logService,
     );
+    const fido2ActiveRequestManager = new Fido2ActiveRequestManager();
     this.fido2ClientService = new Fido2ClientService(
       this.fido2AuthenticatorService,
       this.configService,
@@ -994,6 +999,7 @@ export default class MainBackground {
       this.vaultSettingsService,
       this.domainSettingsService,
       this.taskSchedulerService,
+      fido2ActiveRequestManager,
       this.logService,
     );
 
@@ -1028,6 +1034,7 @@ export default class MainBackground {
         this.fido2ClientService,
         this.vaultSettingsService,
         this.scriptInjectorService,
+        this.configService,
       );
       this.runtimeBackground = new RuntimeBackground(
         this,
@@ -1538,6 +1545,7 @@ export default class MainBackground {
         this.autofillSettingsService,
         this.i18nService,
         this.platformUtilsService,
+        this.fido2ClientService,
         this.themeStateService,
       );
     }
