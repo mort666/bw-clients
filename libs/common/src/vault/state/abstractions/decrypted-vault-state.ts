@@ -19,7 +19,8 @@ export interface DecryptedVaultState<TOutput extends HasId> {
   clear(): Promise<void>;
 
   /**
-   * Manually triggers the decryption of the state
+   * Decrypts the state from the current encrypted state
+   * @param ignoreCache - If true, any cached decrypted state will be cleared forcing decryption for all records
    */
-  refresh(): Promise<void>;
+  decrypt(ignoreCache: boolean): Promise<VaultRecord<string, TOutput> | null>;
 }

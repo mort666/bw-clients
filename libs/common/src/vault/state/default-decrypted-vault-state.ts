@@ -1,14 +1,13 @@
 import {
   catchError,
-  combineLatest,
   firstValueFrom,
   map,
   Observable,
-  raceWith,
+  of,
+  race,
   ReplaySubject,
   share,
-  startWith,
-  Subject,
+  skip,
   switchMap,
   timer,
   withLatestFrom,
@@ -29,7 +28,6 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
   status$: Observable<DecryptionStatus>;
   state$: Observable<VaultRecord<string, TOutput> | null>;
 
-  private _refreshSubject = new Subject<void>();
   private readonly _shouldUpdateRecord: (next: TInput, previous: TOutput | null) => boolean = () =>
     true;
 
@@ -45,10 +43,7 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
       this._shouldUpdateRecord = definition.options.shouldUpdate;
     }
 
-    const refresh$ = this._refreshSubject.pipe(startWith(null));
-
-    this.state$ = combineLatest([this.input$, refresh$]).pipe(
-      map(([input]) => input),
+    this.state$ = this.input$.pipe(
       withLatestFrom(this.state.state$),
       map(([input, previous]) => {
         if (input == null) {
@@ -73,22 +68,31 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
 
         return [needsDecryption, nextValue] as const;
       }),
-      switchMap(async ([needsDecryption, nextValue]) => {
-        // Nothing needs decryption
-        if (needsDecryption.length === 0) {
-          return [nextValue, false] as const;
-        }
+      switchMap((source) => {
+        return race(
+          this.state.state$.pipe(
+            skip(1),
+            map((v) => [v, false] as const),
+          ),
+          of(source).pipe(
+            switchMap(async ([needsDecryption, nextValue]) => {
+              // Nothing needs decryption
+              if (needsDecryption.length === 0) {
+                return [nextValue, false] as const;
+              }
 
-        await this.statusState.update(() => "inProgress");
+              await this.statusState.update(() => "inProgress");
 
-        const decrypted = await definition.options.decryptor(needsDecryption);
+              const decrypted = await definition.options.decryptor(needsDecryption);
 
-        for (const record of decrypted) {
-          nextValue[record.id] = record;
-        }
-        return [nextValue, true] as const;
+              for (const record of decrypted) {
+                nextValue[record.id] = record;
+              }
+              return [nextValue, true] as const;
+            }),
+          ),
+        );
       }),
-      raceWith(this.state.state$.pipe(map((v) => [v, false] as const))),
       switchMap(async ([nextValue, shouldUpdateState]) => {
         await this.statusState.update(() => "complete");
         if (shouldUpdateState) {
@@ -111,7 +115,11 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
     await this.state.update(() => null);
   }
 
-  async refresh(): Promise<void> {
-    await firstValueFrom(this.state$);
+  async decrypt(ignoreCache: boolean = false): Promise<VaultRecord<string, TOutput> | null> {
+    if (ignoreCache) {
+      await this.clear();
+    }
+
+    return await firstValueFrom(this.state$);
   }
 }
