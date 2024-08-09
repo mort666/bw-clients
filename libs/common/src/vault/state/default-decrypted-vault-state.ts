@@ -116,6 +116,8 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
         resetOnRefCountZero: () => timer(definition.options.cleanupDelayMs),
       }),
     );
+
+    this.status$ = this.statusState.state$;
   }
 
   /**

@@ -485,5 +485,67 @@ describe("DefaultDecryptedVaultState", () => {
       expect(fakeState.nextMock).toHaveBeenCalledWith([SomeUser, null]);
       expect(fakeState.nextMock).toHaveBeenLastCalledWith([SomeUser, decrypted]);
     });
+
+    it("should avoid repeatedly decrypting the same value if called multiple times within cleanupDelayMs", async () => {
+      jest.useFakeTimers();
+      const fakeState = fakeProvider.activeUser.mockFor(keyDefinition.key, null);
+
+      // Emit an encrypted value to be decrypted
+      encryptedInput$.next({
+        "1": { id: "1", encValue: "a" },
+        "2": { id: "2", encValue: "b" },
+      });
+
+      const sut = new DefaultDecryptedVaultState<TestInputType, TestViewType>(
+        fakeProvider,
+        encryptedInput$.asObservable(),
+        keyDefinition,
+      );
+
+      const decrypted1 = await sut.decrypt(false);
+      await jest.advanceTimersByTimeAsync(500);
+      const decrypted2 = await sut.decrypt(false);
+
+      expect(decrypted1).toEqual({
+        "1": { id: "1", value: "A" },
+        "2": { id: "2", value: "B" },
+      });
+      expect(decrypted2).toEqual(decrypted1);
+
+      // The decrypted value should be stored in the state
+      expect(fakeState.nextMock).toHaveBeenCalledTimes(1);
+      expect(fakeState.nextMock).toHaveBeenCalledWith([SomeUser, decrypted1]);
+    });
+
+    it("should attempt decryption if called multiple times after cleanupDelayMs", async () => {
+      jest.useFakeTimers();
+      const fakeState = fakeProvider.activeUser.mockFor(keyDefinition.key, null);
+
+      // Emit an encrypted value to be decrypted
+      encryptedInput$.next({
+        "1": { id: "1", encValue: "a" },
+        "2": { id: "2", encValue: "b" },
+      });
+
+      const sut = new DefaultDecryptedVaultState<TestInputType, TestViewType>(
+        fakeProvider,
+        encryptedInput$.asObservable(),
+        keyDefinition,
+      );
+
+      const decrypted1 = await sut.decrypt(false);
+      await jest.advanceTimersByTimeAsync(1500); // Cleanup delay is 1000ms in keyDefinition
+      const decrypted2 = await sut.decrypt(false);
+
+      expect(decrypted1).toEqual({
+        "1": { id: "1", value: "A" },
+        "2": { id: "2", value: "B" },
+      });
+      expect(decrypted2).toEqual(decrypted1);
+
+      // The decrypted value should be stored in the state twice
+      expect(fakeState.nextMock).toHaveBeenCalledTimes(2);
+      expect(fakeState.nextMock).toHaveBeenCalledWith([SomeUser, decrypted1]);
+    });
   });
 });
