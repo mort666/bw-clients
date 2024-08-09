@@ -9,8 +9,8 @@ import {
   share,
   skip,
   switchMap,
+  take,
   timer,
-  withLatestFrom,
 } from "rxjs";
 
 import { ActiveUserState, StateProvider } from "@bitwarden/common/platform/state";
@@ -28,8 +28,8 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
   status$: Observable<DecryptionStatus>;
   state$: Observable<VaultRecord<string, TOutput> | null>;
 
-  private readonly _shouldUpdateRecord: (next: TInput, previous: TOutput | null) => boolean = () =>
-    true;
+  private readonly _shouldUpdateRecord: (next: TInput, previous: TOutput | null) => boolean | null =
+    null;
 
   constructor(
     stateProvider: StateProvider,
@@ -44,44 +44,38 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
     }
 
     this.state$ = this.input$.pipe(
-      withLatestFrom(this.state.state$),
-      map(([input, previous]) => {
-        if (input == null) {
-          return null;
+      switchMap((nextInput) => {
+        // Input is null, so we should clear the state
+        if (nextInput == null) {
+          return of([null, true] as const);
         }
 
-        const nextValue: VaultRecord<string, TOutput> = {};
-        const needsDecryption: TInput[] = [];
-
-        if (previous == null) {
-          needsDecryption.push(...Object.values(input));
-          return [needsDecryption, nextValue] as const;
-        }
-
-        for (const [key, value] of Object.entries(input) as [string, TInput][]) {
-          if (!this._shouldUpdateRecord(value, previous?.[key] ?? null)) {
-            nextValue[key] = previous?.[key] ?? null;
-            continue;
-          }
-          needsDecryption.push(value);
-        }
-
-        return [needsDecryption, nextValue] as const;
-      }),
-      switchMap((source) => {
+        // Race the state.state$ with itself to ensure we don't overwrite an older value if decryption is slow and
+        // the value was updated/cleared in the meantime
         return race(
           this.state.state$.pipe(
-            skip(1),
+            skip(1), // Skip the initial value as it will always emit a cached value
             map((v) => [v, false] as const),
           ),
-          of(source).pipe(
-            switchMap(async ([needsDecryption, nextValue]) => {
-              // Nothing needs decryption
+          this.state.state$.pipe(
+            take(1), // We only care about the current cached value, nothing after
+            switchMap(async (previousOutput) => {
+              await this.statusState.update(() => "inProgress");
+
+              const [needsDecryption, fromPrevious] = this._getNextUpdates(
+                nextInput,
+                previousOutput,
+              );
+
+              // Build the next state, starting with any previous values
+              const nextValue: VaultRecord<string, TOutput> = Object.fromEntries(
+                fromPrevious.map((v) => [v.id, v]),
+              );
+
+              // Nothing needs decryption, we're done
               if (needsDecryption.length === 0) {
                 return [nextValue, false] as const;
               }
-
-              await this.statusState.update(() => "inProgress");
 
               const decrypted = await definition.options.decryptor(needsDecryption);
 
@@ -94,10 +88,10 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
         );
       }),
       switchMap(async ([nextValue, shouldUpdateState]) => {
-        await this.statusState.update(() => "complete");
         if (shouldUpdateState) {
           await this.state.update(() => nextValue);
         }
+        await this.statusState.update(() => "complete");
         return nextValue;
       }),
       catchError(async (err: unknown) => {
@@ -109,6 +103,42 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
         resetOnRefCountZero: () => timer(definition.options.cleanupDelayMs),
       }),
     );
+  }
+
+  /**
+   * Determines which items need to be updated and which can be reused from the previous output.
+   *
+   * If the previous output is null, all items need to be updated.
+   *
+   * @param nextInput - The next input to be decrypted
+   * @param previousOutput - The previous output that was decrypted
+   *
+   * @returns [needsDecryption, fromPrevious] -
+   * The first item contains the list of items that need to be decrypted.
+   * The second item contains values from the previous state that can be reused.
+   */
+  private _getNextUpdates(
+    nextInput: VaultRecord<string, TInput>,
+    previousOutput: VaultRecord<string, TOutput> | null,
+  ) {
+    const fromPrevious: TOutput[] = [];
+    const needsDecryption: TInput[] = [];
+
+    // We have no previous output or no method to determine if a record should be updated, update all inputs
+    if (previousOutput == null || this._shouldUpdateRecord == null) {
+      needsDecryption.push(...Object.values(nextInput));
+      return [needsDecryption, fromPrevious] as const;
+    }
+
+    for (const [key, value] of Object.entries(nextInput) as [string, TInput][]) {
+      if (!this._shouldUpdateRecord(value, previousOutput?.[key] ?? null)) {
+        fromPrevious.push(previousOutput[key]);
+        continue;
+      }
+      needsDecryption.push(value);
+    }
+
+    return [needsDecryption, fromPrevious] as const;
   }
 
   async clear(): Promise<void> {
