@@ -2,12 +2,14 @@ import {
   catchError,
   firstValueFrom,
   map,
+  merge,
   Observable,
   of,
   race,
   ReplaySubject,
   share,
   skip,
+  Subject,
   switchMap,
   take,
   timer,
@@ -28,7 +30,9 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
   status$: Observable<DecryptionStatus>;
   state$: Observable<VaultRecord<string, TOutput> | null>;
 
-  private readonly _shouldUpdate: (next: TInput, previous: TOutput | null) => boolean | null = null;
+  private readonly shouldUpdate: (next: TInput, previous: TOutput | null) => boolean | null = null;
+
+  private forcedValue$ = new Subject<null>();
 
   constructor(
     stateProvider: StateProvider,
@@ -39,10 +43,10 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
     this.statusState = stateProvider.getActive(definition.toStatusKeyDefinition());
 
     if (definition.options.shouldUpdate != null) {
-      this._shouldUpdate = definition.options.shouldUpdate;
+      this.shouldUpdate = definition.options.shouldUpdate;
     }
 
-    this.state$ = this.input$.pipe(
+    const derived$ = this.input$.pipe(
       switchMap((nextInput) => {
         // Input is null, so we should clear the state
         if (nextInput == null) {
@@ -78,6 +82,12 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
 
               const decrypted = await definition.options.decryptor(needsDecryption);
 
+              // We unexpectedly failed to decrypt the needed items
+              if (decrypted == null) {
+                // Throw to clear the state and set the status to error
+                throw new Error("Failed to decrypt all items");
+              }
+
               for (const record of decrypted) {
                 nextValue[record.id] = record;
               }
@@ -93,10 +103,14 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
         await this.statusState.update(() => "complete");
         return nextValue;
       }),
-      catchError(async (err: unknown) => {
+      catchError(async () => {
+        await this.state.update(() => null);
         await this.statusState.update(() => "error");
-        throw err;
+        return null;
       }),
+    );
+
+    this.state$ = merge(this.forcedValue$, derived$).pipe(
       share({
         connector: () => new ReplaySubject<VaultRecord<string, TOutput> | null>(1),
         resetOnRefCountZero: () => timer(definition.options.cleanupDelayMs),
@@ -124,13 +138,13 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
     const needsDecryption: TInput[] = [];
 
     // We have no previous output or no method to determine if a record should be updated, update all inputs
-    if (previousOutput == null || this._shouldUpdate == null) {
+    if (previousOutput == null || this.shouldUpdate == null) {
       needsDecryption.push(...Object.values(nextInput));
       return [needsDecryption, fromPrevious] as const;
     }
 
     for (const [key, nextValue] of Object.entries(nextInput) as [string, TInput][]) {
-      if (!this._shouldUpdate(nextValue, previousOutput?.[key] ?? null)) {
+      if (!this.shouldUpdate(nextValue, previousOutput?.[key] ?? null)) {
         fromPrevious.push(previousOutput[key]);
         continue;
       }
@@ -142,11 +156,12 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
 
   async clear(): Promise<void> {
     await this.state.update(() => null);
+    this.forcedValue$.next(null);
   }
 
-  async decrypt(ignoreCache: boolean = false): Promise<VaultRecord<string, TOutput> | null> {
-    if (ignoreCache) {
-      await this.clear();
+  async decrypt(clearCache: boolean = false): Promise<VaultRecord<string, TOutput> | null> {
+    if (clearCache) {
+      await this.state.update(() => null);
     }
 
     return await firstValueFrom(this.state$);

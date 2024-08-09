@@ -206,6 +206,89 @@ describe("DefaultDecryptedVaultState", () => {
     expect(fakeState.nextMock).toHaveBeenCalledWith([SomeUser, tracked.emissions[0]]);
   });
 
+  describe("error handling", () => {
+    it("should clear the state when any item fails to decrypt", async () => {
+      const fakeState = fakeProvider.activeUser.mockFor(keyDefinition.key, {
+        "1": { id: "1", value: "A" },
+      });
+
+      mockDecryptor.mockImplementation(async (input) => {
+        return null; // Simulate failing to decrypt
+      });
+
+      const sut = new DefaultDecryptedVaultState<TestInputType, TestViewType>(
+        fakeProvider,
+        encryptedInput$.asObservable(),
+        keyDefinition,
+      );
+
+      const tracked = subscribeTo(sut.state$);
+
+      // Emit a new record "2"
+      encryptedInput$.next({
+        "1": { id: "1", encValue: "a" },
+        "2": { id: "2", encValue: "b" },
+      });
+
+      const decrypted = await tracked.expectEmission();
+
+      // We should have called the decryptor
+      expect(mockDecryptor).toHaveBeenCalledTimes(1);
+      expect(mockDecryptor).toHaveBeenCalledWith([
+        { id: "1", encValue: "a" },
+        { id: "2", encValue: "b" },
+      ]);
+
+      // Null should be emitted since we failed to decrypt
+      expect(decrypted).toEqual(null);
+
+      // The decrypted value should be cleared from state
+      expect(fakeState.nextMock).toHaveBeenCalledTimes(1);
+      expect(fakeState.nextMock).toHaveBeenCalledWith([SomeUser, null]);
+    });
+
+    it("should clear the state when the decryptor throws an error", async () => {
+      const fakeState = fakeProvider.activeUser.mockFor(keyDefinition.key, null);
+      const fakeStatusState = fakeProvider.activeUser.mockFor(
+        keyDefinition.toStatusKeyDefinition().key,
+        null,
+      );
+
+      mockDecryptor.mockImplementation(async (input) => {
+        throw new Error("Simulated error");
+      });
+
+      const sut = new DefaultDecryptedVaultState<TestInputType, TestViewType>(
+        fakeProvider,
+        encryptedInput$.asObservable(),
+        keyDefinition,
+      );
+
+      const tracked = subscribeTo(sut.state$);
+
+      // Emit some encrypted values
+      encryptedInput$.next({
+        "1": { id: "1", encValue: "a" },
+        "2": { id: "2", encValue: "b" },
+      });
+
+      const decrypted = await tracked.expectEmission();
+
+      // We should have called the decryptor
+      expect(mockDecryptor).toHaveBeenCalledTimes(1);
+
+      // Null should be emitted since we failed to decrypt
+      expect(decrypted).toEqual(null);
+
+      // The decrypted value should be cleared from state
+      expect(fakeState.nextMock).toHaveBeenCalledTimes(1);
+      expect(fakeState.nextMock).toHaveBeenCalledWith([SomeUser, null]);
+
+      // The status should be set to "error"
+      expect(fakeStatusState.nextMock).toHaveBeenLastCalledWith([SomeUser, "error"]);
+    });
+  });
+
   describe("partial updates", () => {
     it("should only decrypt field that pass the shouldUpdate check", async () => {
       const fakeState = fakeProvider.activeUser.mockFor(keyDefinition.key, {
@@ -307,6 +390,100 @@ describe("DefaultDecryptedVaultState", () => {
 
       // The state should not have been updated
       expect(fakeState.nextMock).toHaveBeenCalledTimes(0);
+    });
+  });
+
+  describe("clear()", () => {
+    it("should clear the state when the clear$ observable emits", async () => {
+      const fakeState = fakeProvider.activeUser.mockFor(keyDefinition.key, null);
+
+      // Emit an encrypted value to fill the state
+      encryptedInput$.next({
+        "1": { id: "1", encValue: "a" },
+        "2": { id: "2", encValue: "b" },
+      });
+
+      const sut = new DefaultDecryptedVaultState<TestInputType, TestViewType>(
+        fakeProvider,
+        encryptedInput$.asObservable(),
+        keyDefinition,
+      );
+
+      const tracked = subscribeTo(sut.state$);
+      const decrypted = await tracked.expectEmission();
+
+      expect(decrypted).not.toBeNull();
+      expect(fakeState.nextMock).toHaveBeenCalledTimes(1);
+      expect(fakeState.nextMock).toHaveBeenCalledWith([SomeUser, decrypted]);
+
+      await sut.clear();
+
+      // state$ should emit a null value
+      const [, cleared] = await tracked.pauseUntilReceived(2);
+      expect(cleared).toBeNull();
+
+      // The decrypted value should be cleared from state
+      expect(fakeState.nextMock).toHaveBeenCalledTimes(2);
+      expect(fakeState.nextMock).toHaveBeenLastCalledWith([SomeUser, null]);
+    });
+  });
+
+  describe("decrypt()", () => {
+    it("should return the decrypted value", async () => {
+      const fakeState = fakeProvider.activeUser.mockFor(keyDefinition.key, null);
+
+      // Emit an encrypted value to be decrypted
+      encryptedInput$.next({
+        "1": { id: "1", encValue: "a" },
+        "2": { id: "2", encValue: "b" },
+      });
+
+      const sut = new DefaultDecryptedVaultState<TestInputType, TestViewType>(
+        fakeProvider,
+        encryptedInput$.asObservable(),
+        keyDefinition,
+      );
+
+      const decrypted = await sut.decrypt(false);
+
+      expect(decrypted).toEqual({
+        "1": { id: "1", value: "A" },
+        "2": { id: "2", value: "B" },
+      });
+
+      // The decrypted value should be stored in the state
+      expect(fakeState.nextMock).toHaveBeenCalledTimes(1);
+      expect(fakeState.nextMock).toHaveBeenCalledWith([SomeUser, decrypted]);
+    });
+
+    it("should clear the cache if clearCache is true", async () => {
+      const fakeState = fakeProvider.activeUser.mockFor(keyDefinition.key, {
+        "1": { id: "1", value: "A" },
+      });
+
+      // Emit an encrypted value to be decrypted
+      encryptedInput$.next({
+        "1": { id: "1", encValue: "a" },
+        "2": { id: "2", encValue: "b" },
+      });
+
+      const sut = new DefaultDecryptedVaultState<TestInputType, TestViewType>(
+        fakeProvider,
+        encryptedInput$.asObservable(),
+        keyDefinition,
+      );
+
+      const decrypted = await sut.decrypt(true);
+
+      expect(decrypted).toEqual({
+        "1": { id: "1", value: "A" },
+        "2": { id: "2", value: "B" },
+      });
+
+      // The decrypted value should be stored in the state
+      expect(fakeState.nextMock).toHaveBeenCalledTimes(2);
+      expect(fakeState.nextMock).toHaveBeenCalledWith([SomeUser, null]);
+      expect(fakeState.nextMock).toHaveBeenLastCalledWith([SomeUser, decrypted]);
     });
   });
 });

@@ -1,5 +1,4 @@
 import { UserKeyDefinition, UserKeyDefinitionOptions } from "@bitwarden/common/platform/state";
-import { StateDefinition } from "@bitwarden/common/platform/state/state-definition";
 import {
   DecryptionStatus,
   HasId,
@@ -7,11 +6,14 @@ import {
   VaultStateDecryptor,
 } from "@bitwarden/common/vault/state/decrypted-vault-state-types";
 
+// eslint-disable-next-line import/no-restricted-paths
+import { StateDefinition } from "../../platform/state/state-definition";
+
 export type DecryptedVaultStateDefinitionOptions<TInput extends HasId, TOutput extends HasId> = {
   /**
    * The decryptor that defines how the state should be decrypted from TInput to TOutput
    */
-  decryptor: VaultStateDecryptor<TInput, TOutput>;
+  decryptor: VaultStateDecryptor<TInput, TOutput> | null;
 
   /**
    * Optional function that determines if a specific record state needs be decrypted/updated based on the prior decrypted value.
