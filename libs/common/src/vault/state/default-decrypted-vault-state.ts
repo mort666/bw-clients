@@ -28,8 +28,7 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
   status$: Observable<DecryptionStatus>;
   state$: Observable<VaultRecord<string, TOutput> | null>;
 
-  private readonly _shouldUpdateRecord: (next: TInput, previous: TOutput | null) => boolean | null =
-    null;
+  private readonly _shouldUpdate: (next: TInput, previous: TOutput | null) => boolean | null = null;
 
   constructor(
     stateProvider: StateProvider,
@@ -40,7 +39,7 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
     this.statusState = stateProvider.getActive(definition.toStatusKeyDefinition());
 
     if (definition.options.shouldUpdate != null) {
-      this._shouldUpdateRecord = definition.options.shouldUpdate;
+      this._shouldUpdate = definition.options.shouldUpdate;
     }
 
     this.state$ = this.input$.pipe(
@@ -125,17 +124,17 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
     const needsDecryption: TInput[] = [];
 
     // We have no previous output or no method to determine if a record should be updated, update all inputs
-    if (previousOutput == null || this._shouldUpdateRecord == null) {
+    if (previousOutput == null || this._shouldUpdate == null) {
       needsDecryption.push(...Object.values(nextInput));
       return [needsDecryption, fromPrevious] as const;
     }
 
-    for (const [key, value] of Object.entries(nextInput) as [string, TInput][]) {
-      if (!this._shouldUpdateRecord(value, previousOutput?.[key] ?? null)) {
+    for (const [key, nextValue] of Object.entries(nextInput) as [string, TInput][]) {
+      if (!this._shouldUpdate(nextValue, previousOutput?.[key] ?? null)) {
         fromPrevious.push(previousOutput[key]);
         continue;
       }
-      needsDecryption.push(value);
+      needsDecryption.push(nextValue);
     }
 
     return [needsDecryption, fromPrevious] as const;
