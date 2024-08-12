@@ -78,9 +78,8 @@ export class VaultPopupListFiltersService {
    */
   private cipherViews$: Observable<CipherView[]> = this.cipherService.cipherViews$.pipe(
     tap((cipherViews) => {
-      this.cipherViews = Object.values(cipherViews);
+      this.cipherViews = cipherViews;
     }),
-    map((ciphers) => Object.values(ciphers)),
   );
 
   constructor(

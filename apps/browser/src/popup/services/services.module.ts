@@ -1,18 +1,18 @@
 import { APP_INITIALIZER, NgModule, NgZone } from "@angular/core";
-import { Subject, merge, of } from "rxjs";
+import { merge, of, Subject } from "rxjs";
 
 import { AngularThemingService } from "@bitwarden/angular/platform/services/theming/angular-theming.service";
 import { SafeProvider, safeProvider } from "@bitwarden/angular/platform/utils/safe-provider";
 import {
-  MEMORY_STORAGE,
-  SECURE_STORAGE,
-  OBSERVABLE_DISK_STORAGE,
-  OBSERVABLE_MEMORY_STORAGE,
-  SYSTEM_THEME_OBSERVABLE,
-  SafeInjectionToken,
+  CLIENT_TYPE,
   DEFAULT_VAULT_TIMEOUT,
   INTRAPROCESS_MESSAGING_SUBJECT,
-  CLIENT_TYPE,
+  MEMORY_STORAGE,
+  OBSERVABLE_DISK_STORAGE,
+  OBSERVABLE_MEMORY_STORAGE,
+  SafeInjectionToken,
+  SECURE_STORAGE,
+  SYSTEM_THEME_OBSERVABLE,
 } from "@bitwarden/angular/services/injection-tokens";
 import { JslibServicesModule } from "@bitwarden/angular/services/jslib-services.module";
 import { AnonLayoutWrapperDataService } from "@bitwarden/auth/angular";
@@ -80,6 +80,8 @@ import { CollectionService } from "@bitwarden/common/vault/abstractions/collecti
 import { FolderService as FolderServiceAbstraction } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { TotpService as TotpServiceAbstraction } from "@bitwarden/common/vault/abstractions/totp.service";
 import { TotpService } from "@bitwarden/common/vault/services/totp.service";
+import { DecryptedVaultStateProvider } from "@bitwarden/common/vault/state/abstractions/decrypted-vault-state-provider";
+import { ForegroundDecryptedVaultStateProvider } from "@bitwarden/common/vault/state/default-decrypted-vault-state-provider";
 import { DialogService, ToastService } from "@bitwarden/components";
 import { PasswordRepromptService } from "@bitwarden/vault";
 
@@ -340,6 +342,11 @@ const safeProviders: SafeProvider[] = [
       StateProvider,
       AccountServiceAbstraction,
     ],
+  }),
+  safeProvider({
+    provide: DecryptedVaultStateProvider,
+    useClass: ForegroundDecryptedVaultStateProvider,
+    deps: [StateProvider, MessageSender, MessageListener],
   }),
   safeProvider({
     provide: SECURE_STORAGE,

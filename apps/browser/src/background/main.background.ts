@@ -1,14 +1,14 @@
-import { Subject, filter, firstValueFrom, map, merge, timeout } from "rxjs";
+import { filter, firstValueFrom, map, merge, Subject, timeout } from "rxjs";
 
 import {
-  PinServiceAbstraction,
-  PinService,
-  InternalUserDecryptionOptionsServiceAbstraction,
-  UserDecryptionOptionsService,
-  AuthRequestServiceAbstraction,
   AuthRequestService,
+  AuthRequestServiceAbstraction,
+  InternalUserDecryptionOptionsServiceAbstraction,
   LoginEmailServiceAbstraction,
   LogoutReason,
+  PinService,
+  PinServiceAbstraction,
+  UserDecryptionOptionsService,
 } from "@bitwarden/auth/common";
 import { ApiService as ApiServiceAbstraction } from "@bitwarden/common/abstractions/api.service";
 import { AuditService as AuditServiceAbstraction } from "@bitwarden/common/abstractions/audit.service";
@@ -54,16 +54,16 @@ import { TokenService } from "@bitwarden/common/auth/services/token.service";
 import { UserVerificationApiService } from "@bitwarden/common/auth/services/user-verification/user-verification-api.service";
 import { UserVerificationService } from "@bitwarden/common/auth/services/user-verification/user-verification.service";
 import {
-  AutofillSettingsServiceAbstraction,
   AutofillSettingsService,
+  AutofillSettingsServiceAbstraction,
 } from "@bitwarden/common/autofill/services/autofill-settings.service";
 import {
-  BadgeSettingsServiceAbstraction,
   BadgeSettingsService,
+  BadgeSettingsServiceAbstraction,
 } from "@bitwarden/common/autofill/services/badge-settings.service";
 import {
-  DomainSettingsService,
   DefaultDomainSettingsService,
+  DomainSettingsService,
 } from "@bitwarden/common/autofill/services/domain-settings.service";
 import {
   UserNotificationSettingsService,
@@ -180,10 +180,16 @@ import { FolderApiService } from "@bitwarden/common/vault/services/folder/folder
 import { FolderService } from "@bitwarden/common/vault/services/folder/folder.service";
 import { TotpService } from "@bitwarden/common/vault/services/totp.service";
 import { VaultSettingsService } from "@bitwarden/common/vault/services/vault-settings/vault-settings.service";
+import { DecryptedVaultStateProvider } from "@bitwarden/common/vault/state/abstractions/decrypted-vault-state-provider";
+import {
+  DefaultDecryptedVaultStateProvider,
+  ForegroundDecryptedVaultStateProvider,
+} from "@bitwarden/common/vault/state/default-decrypted-vault-state-provider";
+import { VaultStateListener } from "@bitwarden/common/vault/state/vault-state-listener";
 import {
   legacyPasswordGenerationServiceFactory,
-  PasswordGenerationServiceAbstraction,
   legacyUsernameGenerationServiceFactory,
+  PasswordGenerationServiceAbstraction,
   UsernameGenerationServiceAbstraction,
 } from "@bitwarden/generator-legacy";
 import {
@@ -250,6 +256,7 @@ import CommandsBackground from "./commands.background";
 import IdleBackground from "./idle.background";
 import { NativeMessagingBackground } from "./nativeMessaging.background";
 import RuntimeBackground from "./runtime.background";
+
 export default class MainBackground {
   messagingService: MessageSender;
   storageService: BrowserLocalStorageService;
@@ -276,6 +283,7 @@ export default class MainBackground {
   vaultTimeoutSettingsService: VaultTimeoutSettingsServiceAbstraction;
   passwordGenerationService: PasswordGenerationServiceAbstraction;
   syncService: SyncService;
+  decryptedVaultStateProvider: DecryptedVaultStateProvider;
   passwordStrengthService: PasswordStrengthServiceAbstraction;
   totpService: TotpServiceAbstraction;
   autofillService: AutofillServiceAbstraction;
@@ -348,6 +356,7 @@ export default class MainBackground {
   kdfConfigService: kdfConfigServiceAbstraction;
   offscreenDocumentService: OffscreenDocumentService;
   syncServiceListener: SyncServiceListener;
+  vaultStateListener: VaultStateListener;
   themeStateService: DefaultThemeStateService;
 
   onUpdatedRan: boolean;
@@ -752,6 +761,23 @@ export default class MainBackground {
       this.authService,
     );
 
+    if (this.popupOnlyContext) {
+      this.decryptedVaultStateProvider = new ForegroundDecryptedVaultStateProvider(
+        this.stateProvider,
+        this.messagingService,
+        messageListener,
+      );
+    } else {
+      this.decryptedVaultStateProvider = new DefaultDecryptedVaultStateProvider(this.stateProvider);
+
+      this.vaultStateListener = new VaultStateListener(
+        this.decryptedVaultStateProvider,
+        this.messagingService,
+        messageListener,
+        this.logService,
+      );
+    }
+
     this.cipherService = new CipherService(
       this.cryptoService,
       this.domainSettingsService,
@@ -765,6 +791,7 @@ export default class MainBackground {
       this.cipherFileUploadService,
       this.configService,
       this.stateProvider,
+      this.decryptedVaultStateProvider,
     );
     this.folderService = new FolderService(
       this.cryptoService,
@@ -1207,6 +1234,7 @@ export default class MainBackground {
     await this.idleBackground.init();
     this.webRequestBackground?.startListening();
     this.syncServiceListener?.listener$().subscribe();
+    this.vaultStateListener?.listener$().subscribe();
 
     if (
       BrowserApi.isManifestVersion(2) &&

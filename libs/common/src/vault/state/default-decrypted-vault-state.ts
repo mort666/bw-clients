@@ -1,5 +1,6 @@
 import {
   catchError,
+  combineLatest,
   firstValueFrom,
   map,
   merge,
@@ -46,8 +47,8 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
       this.shouldUpdate = definition.options.shouldUpdate;
     }
 
-    const derived$ = this.input$.pipe(
-      switchMap((nextInput) => {
+    const derived$ = combineLatest(this.input$, stateProvider.activeUserId$).pipe(
+      switchMap(([nextInput, userId]) => {
         // Input is null, so we should clear the state
         if (nextInput == null) {
           return of([null, true] as const);
@@ -80,7 +81,9 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
                 return [nextValue, false] as const;
               }
 
-              const decrypted = await definition.options.decryptor(needsDecryption);
+              console.log("Decrypting", needsDecryption.length, "items");
+
+              const decrypted = await definition.options.decryptor(needsDecryption, userId);
 
               // We unexpectedly failed to decrypt the needed items
               if (decrypted == null) {
