@@ -105,7 +105,7 @@ export class VaultListItemsContainerComponent {
   ) {}
 
   async doAutofill(cipher: PopupCipherView) {
-    await this.vaultPopupAutofillService.doAutofill(cipher);
+    await this.vaultPopupAutofillService.doAutofill(cipher, false);
   }
 
   async onViewCipher(cipher: PopupCipherView) {

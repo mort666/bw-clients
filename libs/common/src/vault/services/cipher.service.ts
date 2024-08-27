@@ -1,4 +1,12 @@
-import { firstValueFrom, map, Observable, shareReplay, skipWhile, switchMap } from "rxjs";
+import {
+  combineLatest,
+  firstValueFrom,
+  map,
+  Observable,
+  shareReplay,
+  skipWhile,
+  switchMap,
+} from "rxjs";
 import { SemVer } from "semver";
 
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
@@ -129,15 +137,11 @@ export class CipherService implements CipherServiceAbstraction {
       {},
     );
 
-    const TEST_VAULT_STATE_KEY = new DecryptedVaultStateDefinition<CipherData, CipherView>(
+    const TEST_VAULT_STATE_KEY = new DecryptedVaultStateDefinition<Cipher, CipherView>(
       CIPHERS_MEMORY,
       "vault-state-ciphers",
       {
-        decryptor: (ciphers, userId) =>
-          this.decryptCiphers(
-            ciphers.map((c) => new Cipher(c)),
-            userId,
-          ),
+        decryptor: (ciphers, userId) => this.decryptCiphers(ciphers, userId),
         deserializer: (v) => CipherView.fromJSON(v),
         shouldUpdate: (next, previous) => {
           if (previous == null) {
@@ -146,7 +150,8 @@ export class CipherService implements CipherServiceAbstraction {
 
           return (
             new Date(next.revisionDate) > previous.revisionDate ||
-            new Date(next.deletedDate) > previous.deletedDate
+            new Date(next.deletedDate) > previous.deletedDate ||
+            new Date(next.localData?.lastUsedDate) > new Date(previous.localData?.lastUsedDate)
           );
         },
         clearOn: ["logout", "lock"],
@@ -154,7 +159,16 @@ export class CipherService implements CipherServiceAbstraction {
     );
 
     this.vaultCipherState = this.vaultStateProvider.get(
-      this.encryptedCiphersState.state$,
+      combineLatest([this.encryptedCiphersState.state$, this.localDataState.state$]).pipe(
+        map(([ciphers, localData]) => {
+          const result: Record<CipherId, Cipher> = {};
+          const ids = Object.keys(ciphers) as CipherId[];
+          for (const key of ids) {
+            result[key] = new Cipher(ciphers[key], localData ? localData[key] : null);
+          }
+          return result;
+        }),
+      ),
       TEST_VAULT_STATE_KEY,
     );
 

@@ -20,7 +20,7 @@ type TestViewType = { id: string; value: string };
 
 const TEST_STATE = new StateDefinition("test", "disk");
 
-const testDecryptor: VaultStateDecryptor<TestInputType, TestViewType> = (input) =>
+const testDecryptor: VaultStateDecryptor<TestInputType, TestViewType> = (input, userId: UserId) =>
   Promise.resolve(
     input.map((i) => ({
       id: i.id,
@@ -44,6 +44,7 @@ describe("DefaultDecryptedVaultState", () => {
       decryptor: mockDecryptor,
       deserializer: (v) => v,
       clearOn: ["logout", "lock"],
+      cleanupDelayMs: 1000,
     });
   });
 
@@ -112,9 +113,9 @@ describe("DefaultDecryptedVaultState", () => {
       "1": { id: "1", value: "A" },
     });
 
-    mockDecryptor.mockImplementation(async (input) => {
+    mockDecryptor.mockImplementation(async (input, userId) => {
       await new Promise((resolve) => setTimeout(resolve, 100));
-      return await testDecryptor(input);
+      return await testDecryptor(input, userId);
     });
 
     const sut = new DefaultDecryptedVaultState<TestInputType, TestViewType>(
@@ -154,9 +155,9 @@ describe("DefaultDecryptedVaultState", () => {
     jest.useFakeTimers();
 
     const fakeState = fakeProvider.activeUser.mockFor(keyDefinition.key, null);
-    mockDecryptor.mockImplementation(async (input) => {
+    mockDecryptor.mockImplementation(async (input, userId) => {
       await new Promise((resolve) => setTimeout(resolve, 100));
-      return await testDecryptor(input);
+      return await testDecryptor(input, userId);
     });
 
     const sut = new DefaultDecryptedVaultState<TestInputType, TestViewType>(
@@ -234,10 +235,13 @@ describe("DefaultDecryptedVaultState", () => {
 
       // We should have called the decryptor
       expect(mockDecryptor).toHaveBeenCalledTimes(1);
-      expect(mockDecryptor).toHaveBeenCalledWith([
-        { id: "1", encValue: "a" },
-        { id: "2", encValue: "b" },
-      ]);
+      expect(mockDecryptor).toHaveBeenCalledWith(
+        [
+          { id: "1", encValue: "a" },
+          { id: "2", encValue: "b" },
+        ],
+        SomeUser,
+      );
 
       // Null should be emitted since we failed to decrypt
       expect(decrypted).toEqual(null);
@@ -329,7 +333,7 @@ describe("DefaultDecryptedVaultState", () => {
 
       // Only the first record should have been decrypted
       expect(mockDecryptor).toHaveBeenCalledTimes(1);
-      expect(mockDecryptor).toHaveBeenCalledWith([{ id: "1", encValue: "new_value" }]);
+      expect(mockDecryptor).toHaveBeenCalledWith([{ id: "1", encValue: "new_value" }], SomeUser);
 
       // We should see the expected decrypted values emitted
       expect(decrypted).toEqual({
@@ -503,7 +507,7 @@ describe("DefaultDecryptedVaultState", () => {
       );
 
       const decrypted1 = await sut.decrypt(false);
-      await jest.advanceTimersByTimeAsync(500);
+      await jest.advanceTimersByTimeAsync(500); // Cleanup delay is 1000ms in keyDefinition
       const decrypted2 = await sut.decrypt(false);
 
       expect(decrypted1).toEqual({

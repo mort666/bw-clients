@@ -47,7 +47,7 @@ export class DefaultDecryptedVaultState<TInput extends HasId, TOutput extends Ha
       this.shouldUpdate = definition.options.shouldUpdate;
     }
 
-    const derived$ = combineLatest(this.input$, stateProvider.activeUserId$).pipe(
+    const derived$ = combineLatest([this.input$, stateProvider.activeUserId$]).pipe(
       switchMap(([nextInput, userId]) => {
         // Input is null, so we should clear the state
         if (nextInput == null) {
