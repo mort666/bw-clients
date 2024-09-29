@@ -4,7 +4,7 @@
   bannerType="premium"
   icon="bwi-billing"
   [showClose]="false"
-  *ngFor="let organization of organizations"
+  *ngFor="let organization of organizationsPaymentStatus"
 >
   {{
     organization?.trialRemainingDays >= 2

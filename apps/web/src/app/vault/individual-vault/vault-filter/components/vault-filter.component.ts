@@ -111,28 +111,28 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
   }
 
   applyOrganizationFilter = async (orgNode: TreeNode<OrganizationFilter>): Promise<void> => {
-    if (!orgNode?.node?.enabled) {
+    if (!orgNode.node.enabled) {
       this.platformUtilsService.showToast(
         "error",
         null,
         this.i18nService.t("disabledOrganizationFilterError"),
       );
-      const sub = await this.organizationApiService.getSubscription(orgNode?.node?.id);
-      if (sub && sub?.subscription?.status === "unpaid") {
-        const confirmed = await this.promptForPaymentNavigation(orgNode?.node);
+      const sub = await this.organizationApiService.getSubscription(orgNode.node.id);
+      if (sub?.subscription?.status === "unpaid") {
+        const confirmed = await this.promptForPaymentNavigation(orgNode.node);
         if (confirmed) {
-          await this.navigateToPaymentMethod(orgNode?.node?.id);
+          await this.navigateToPaymentMethod(orgNode.node.id);
         }
       }
       return;
     }
     const filter = this.activeFilter;
-    if (orgNode?.node?.id === "AllVaults") {
+    if (orgNode.node.id === "AllVaults") {
       filter.resetOrganization();
     } else {
       filter.selectedOrganizationNode = orgNode;
     }
-    this.vaultFilterService.setOrganizationFilter(orgNode?.node);
+    this.vaultFilterService.setOrganizationFilter(orgNode.node);
     await this.vaultFilterService.expandOrgFilter();
   };
 

@@ -21,7 +21,7 @@ export class VaultBannersComponent implements OnInit {
   visibleBanners: VisibleVaultBanner[] = [];
   premiumBannerVisible$: Observable<boolean>;
   VisibleVaultBanner = VisibleVaultBanner;
-  @Input() organizations: OrganizationPaymentStatus[] = [];
+  @Input() organizationsPaymentStatus: OrganizationPaymentStatus[] = [];
 
   constructor(
     private vaultBannerService: VaultBannersService,

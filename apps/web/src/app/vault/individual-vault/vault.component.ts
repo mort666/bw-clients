@@ -140,7 +140,7 @@ export type OrganizationPaymentStatus = {
   isOwner: boolean;
   trialRemainingDays: number;
   isPaymentSourceEmpty: boolean;
-  orgId: any;
+  orgId: string;
   orgName: string;
 };
 
@@ -197,7 +197,7 @@ export class VaultComponent implements OnInit, OnDestroy {
   protected vaultBulkManagementActionEnabled$ = this.configService.getFeatureFlag$(
     FeatureFlag.VaultBulkManagementAction,
   );
-  protected organizations: OrganizationPaymentStatus[] = [];
+  protected organizationsPaymentStatus: OrganizationPaymentStatus[] = [];
   private searchText$ = new Subject<string>();
   private refresh$ = new BehaviorSubject<void>(null);
   private destroy$ = new Subject<void>();
@@ -254,7 +254,6 @@ export class VaultComponent implements OnInit, OnDestroy {
         }
         const cipherView = new CipherView();
         cipherView.id = cipherId;
-        this.organizationId = cipherView.organizationId;
         if (params.action === "clone") {
           await this.cloneCipher(cipherView);
         } else if (params.action === "view") {
@@ -487,7 +486,9 @@ export class VaultComponent implements OnInit, OnDestroy {
     });
 
     const results = await Promise.all(checks);
-    this.organizations = results.filter((result) => result !== null) as OrganizationPaymentStatus[];
+    this.organizationsPaymentStatus = results.filter(
+      (result) => result !== null,
+    ) as OrganizationPaymentStatus[];
   }
 
   async evaluateOrganizationPaymentConditions(
