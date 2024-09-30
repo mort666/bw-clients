@@ -116,7 +116,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   showResetPasswordAutoEnrollWarning = false;
 
   // Desktop properties
-  deferFocus: boolean = null; // TODO-rr-bw: why initialize to null instead of false
+  deferFocus: boolean | null = null;
 
   constructor(
     private activatedRoute: ActivatedRoute,

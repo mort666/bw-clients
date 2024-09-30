@@ -25,7 +25,7 @@ export class DesktopLoginService {
    */
   setupWindowFocusHandler(focusInputCallback: () => void): void {
     const subscriptionId = "LoginComponent";
-    // TODO-rr-bw: refactor to not use deprecated broadcaster service.
+    // TODO: refactor to not use deprecated broadcaster service.
     this.broadcasterService.subscribe(subscriptionId, (message: any) => {
       this.ngZone.run(() => {
         if (message.command === "windowIsFocused") {
