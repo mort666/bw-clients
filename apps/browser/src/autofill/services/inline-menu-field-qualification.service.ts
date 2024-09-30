@@ -35,7 +35,7 @@ export class InlineMenuFieldQualificationService
   private autofillFieldKeywordsMap: AutofillKeywordsMap = new WeakMap();
   private submitButtonKeywordsMap: SubmitButtonKeywordsMap = new WeakMap();
   private autocompleteDisabledValues = new Set(["off", "false"]);
-  private newFieldKeywords = new Set(["new", "change", "neue", "ändern"]);
+  private newFieldKeywords = new Set(["new", "neue", "ändern"]);
   private accountCreationFieldKeywords = [
     ...new Set(["register", "registration", "create", "confirm", ...this.newFieldKeywords]),
   ];

@@ -3286,10 +3286,6 @@ describe("AutofillService", () => {
             );
 
             expect(AutofillService.forCustomFieldsOnly).toHaveBeenCalledWith(excludedField);
-            expect(AutofillService["isExcludedFieldType"]).toHaveBeenCalledWith(
-              excludedField,
-              AutoFillConstants.ExcludedAutofillTypes,
-            );
             expect(AutofillService["isFieldMatch"]).not.toHaveBeenCalled();
             expect(value.script).toStrictEqual([]);
           });
