@@ -2211,6 +2211,9 @@
   "checkExposedPasswords": {
     "message": "Check exposed passwords"
   },
+  "timesExposed": {
+    "message": "Times exposed"
+  },
   "exposedXTimes": {
     "message": "Exposed $COUNT$ time(s)",
     "placeholders": {
@@ -2245,6 +2248,9 @@
   "noWeakPasswords": {
     "message": "No items in your vault have weak passwords."
   },
+  "weakness": {
+    "message": "Weakness"
+  },
   "reusedPasswordsReport": {
     "message": "Reused passwords"
   },
@@ -2269,6 +2275,9 @@
   },
   "noReusedPasswords": {
     "message": "No logins in your vault have passwords that are being reused."
+  },
+  "timesReused": {
+    "message": "Times reused"
   },
   "reusedXTimes": {
     "message": "Reused $COUNT$ times",

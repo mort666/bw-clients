@@ -153,10 +153,6 @@ import { PlatformUtilsService as PlatformUtilsServiceAbstraction } from "@bitwar
 import { StateService as StateServiceAbstraction } from "@bitwarden/common/platform/abstractions/state.service";
 import { AbstractStorageService } from "@bitwarden/common/platform/abstractions/storage.service";
 import { ValidationService as ValidationServiceAbstraction } from "@bitwarden/common/platform/abstractions/validation.service";
-import {
-  BiometricStateService,
-  DefaultBiometricStateService,
-} from "@bitwarden/common/platform/biometrics/biometric-state.service";
 import { StateFactory } from "@bitwarden/common/platform/factories/state-factory";
 import { Message, MessageListener, MessageSender } from "@bitwarden/common/platform/messaging";
 // eslint-disable-next-line no-restricted-imports -- Used for dependency injection
@@ -265,6 +261,7 @@ import {
   ImportService,
   ImportServiceAbstraction,
 } from "@bitwarden/importer/core";
+import { BiometricStateService, DefaultBiometricStateService } from "@bitwarden/key-management";
 import { PasswordRepromptService } from "@bitwarden/vault";
 import {
   VaultExportService,
