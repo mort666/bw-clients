@@ -26,6 +26,7 @@ import {
   RegistrationStartSecondaryComponentData,
   SetPasswordJitComponent,
   UserLockIcon,
+  VaultIcon,
 } from "@bitwarden/auth/angular";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 
@@ -162,12 +163,6 @@ const routes: Routes = [
     canActivate: [fido2AuthGuard],
     data: { state: "fido2" } satisfies RouteDataProperties,
   }),
-  {
-    path: "login",
-    component: LoginComponent,
-    canActivate: [unauthGuardFn(unauthRouteOverrides)],
-    data: { state: "login" } satisfies RouteDataProperties,
-  },
   {
     path: "login-with-device",
     component: LoginViaAuthRequestComponent,
@@ -456,9 +451,11 @@ const routes: Routes = [
           path: "login",
           canActivate: [unauthGuardFn(unauthRouteOverrides)],
           data: {
+            pageIcon: VaultIcon,
             pageTitle: "logInToBitwarden",
             state: "login",
-          }, // TODO-rr-bw: add `satisfies DataProperties & ExtensionAnonLayoutWrapperData}
+            showAcctSwitcher: true,
+          } satisfies RouteDataProperties & ExtensionAnonLayoutWrapperData,
           children: [
             { path: "", component: LoginComponent },
             { path: "", component: LoginSecondaryContentComponent, outlet: "secondary" },
