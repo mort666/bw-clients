@@ -361,18 +361,26 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       this.inlineMenuCiphers.set(`inline-menu-cipher-${cipherIndex}`, ciphersViews[cipherIndex]);
     }
 
-    const ciphers = await this.getInlineMenuCipherData();
-    this.inlineMenuListPort?.postMessage({
-      command: "updateAutofillInlineMenuListCiphers",
-      ciphers,
-      showInlineMenuAccountCreation: this.showInlineMenuAccountCreation(),
-      showPasskeysLabels: this.showPasskeysLabelsWithinInlineMenu,
-      focusedFieldHasValue: await this.checkMostRecentlyFocusedFieldHasValue(currentTab),
-    });
+    await this.updateInlineMenuListCiphers(currentTab);
 
     if (refocusField) {
       await BrowserApi.tabSendMessage(currentTab, { command: "focusMostRecentlyFocusedField" });
     }
+  }
+
+  /**
+   * Updates the inline menu list's ciphers and sends the updated list to the inline menu list iframe.
+   *
+   * @param tab - The current tab
+   */
+  private async updateInlineMenuListCiphers(tab: chrome.tabs.Tab) {
+    this.inlineMenuListPort?.postMessage({
+      command: "updateAutofillInlineMenuListCiphers",
+      ciphers: await this.getInlineMenuCipherData(),
+      showInlineMenuAccountCreation: this.showInlineMenuAccountCreation(),
+      showPasskeysLabels: this.showPasskeysLabelsWithinInlineMenu,
+      focusedFieldHasValue: await this.checkMostRecentlyFocusedFieldHasValue(tab),
+    });
   }
 
   /**
@@ -534,7 +542,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
 
     for (let cipherIndex = 0; cipherIndex < inlineMenuCiphersArray.length; cipherIndex++) {
       const [inlineMenuCipherId, cipher] = inlineMenuCiphersArray[cipherIndex];
-      if (!this.isFocusedFieldFillType(cipher.type)) {
+      if (!this.focusedFieldMatchesFillType(cipher.type)) {
         continue;
       }
 
@@ -675,14 +683,14 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     if (
       !showInlineMenuAccountCreation ||
       !this.focusedFieldData?.accountCreationFieldType ||
-      this.isFocusedFieldAccountCreationFieldType(InlineMenuAccountCreationFieldType.Password)
+      this.focusedFieldMatchesAccountCreationType(InlineMenuAccountCreationFieldType.Password)
     ) {
       return { fullName };
     }
 
     return {
       fullName,
-      username: this.isFocusedFieldAccountCreationFieldType(
+      username: this.focusedFieldMatchesAccountCreationType(
         InlineMenuAccountCreationFieldType.Email,
       )
         ? cipher.identity.email
@@ -690,11 +698,24 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     };
   }
 
-  private isFocusedFieldAccountCreationFieldType(fieldType: InlineMenuAccountCreationFieldTypes) {
+  /**
+   * Validates whether the currently focused field has an account
+   * creation field type that matches the provided field type.
+   *
+   * @param fieldType - The field type to validate against
+   */
+  private focusedFieldMatchesAccountCreationType(fieldType: InlineMenuAccountCreationFieldTypes) {
     return this.focusedFieldData?.accountCreationFieldType === fieldType;
   }
 
-  private isFocusedFieldFillType(
+  /**
+   * Validates whether the most recently focused field has a fill
+   * type value that matches the provided fill type.
+   *
+   * @param fillType - The fill type to validate against
+   * @param focusedFieldData - Optional focused field data to validate against
+   */
+  private focusedFieldMatchesFillType(
     fillType: InlineMenuFillTypes,
     focusedFieldData?: FocusedFieldData,
   ) {
@@ -717,11 +738,11 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * Identifies whether the inline menu is being shown on an account creation field.
    */
   private showInlineMenuAccountCreation(): boolean {
-    if (this.isFocusedFieldFillType(InlineMenuFillType.AccountCreationUsername)) {
+    if (this.focusedFieldMatchesFillType(InlineMenuFillType.AccountCreationUsername)) {
       return true;
     }
 
-    if (!this.isFocusedFieldFillType(CipherType.Login)) {
+    if (!this.focusedFieldMatchesFillType(CipherType.Login)) {
       return false;
     }
 
@@ -1480,14 +1501,14 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     this.isFieldCurrentlyFocused = true;
 
     const accountCreationFieldBlurred =
-      this.isFocusedFieldFillType(
+      this.focusedFieldMatchesFillType(
         InlineMenuFillType.AccountCreationUsername,
         previousFocusedFieldData,
-      ) && !this.isFocusedFieldFillType(InlineMenuFillType.AccountCreationUsername);
+      ) && !this.focusedFieldMatchesFillType(InlineMenuFillType.AccountCreationUsername);
 
     if (
       this.isInlineMenuButtonVisible &&
-      this.isFocusedFieldFillType(InlineMenuFillType.PasswordGeneration)
+      this.focusedFieldMatchesFillType(InlineMenuFillType.PasswordGeneration)
     ) {
       if (focusedFieldHasValue) {
         this.inlineMenuListPort?.postMessage({ command: "showSaveLoginInlineMenuList" });
@@ -1511,9 +1532,15 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     }
 
     if (
-      !this.isFocusedFieldFillType(focusedFieldData?.inlineMenuFillType, previousFocusedFieldData)
+      !this.focusedFieldMatchesFillType(
+        focusedFieldData?.inlineMenuFillType,
+        previousFocusedFieldData,
+      )
     ) {
-      const updateAllCipherTypes = !this.isFocusedFieldFillType(CipherType.Login, focusedFieldData);
+      const updateAllCipherTypes = !this.focusedFieldMatchesFillType(
+        CipherType.Login,
+        focusedFieldData,
+      );
       this.updateOverlayCiphers(updateAllCipherTypes).catch((error) =>
         this.logService.error(error),
       );
@@ -1539,20 +1566,14 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     }
 
     if (
-      this.isFocusedFieldFillType(CipherType.Login) &&
-      this.isFocusedFieldAccountCreationFieldType(InlineMenuAccountCreationFieldType.Password)
+      this.focusedFieldMatchesFillType(CipherType.Login) &&
+      this.focusedFieldMatchesAccountCreationType(InlineMenuAccountCreationFieldType.Password)
     ) {
       await this.updateGeneratedPassword();
       return;
     }
 
-    this.inlineMenuListPort?.postMessage({
-      command: "updateAutofillInlineMenuListCiphers",
-      ciphers: await this.getInlineMenuCipherData(),
-      showInlineMenuAccountCreation: this.showInlineMenuAccountCreation(),
-      showPasskeysLabels: this.showPasskeysLabelsWithinInlineMenu,
-      focusedFieldHasValue: await this.checkMostRecentlyFocusedFieldHasValue(sender.tab),
-    });
+    await this.updateInlineMenuListCiphers(sender.tab);
   }
 
   /**
@@ -1603,7 +1624,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
 
     // If our currently focused field is for a login form, we want to fill the current password field.
     // Otherwise, map over all page details and filter out fields that are not new password fields.
-    if (!this.isFocusedFieldFillType(CipherType.Login)) {
+    if (!this.focusedFieldMatchesFillType(CipherType.Login)) {
       pageDetails = this.getFilteredPageDetails(
         pageDetails,
         this.inlineMenuFieldQualificationService.isNewPasswordField,
@@ -2694,9 +2715,9 @@ export class OverlayBackground implements OverlayBackgroundInterface {
   ) {
     return (
       isInlineMenuListPort &&
-      (this.isFocusedFieldFillType(InlineMenuFillType.PasswordGeneration) ||
+      (this.focusedFieldMatchesFillType(InlineMenuFillType.PasswordGeneration) ||
         (showInlineMenuAccountCreation &&
-          this.isFocusedFieldAccountCreationFieldType(InlineMenuAccountCreationFieldType.Password)))
+          this.focusedFieldMatchesAccountCreationType(InlineMenuAccountCreationFieldType.Password)))
     );
   }
 
