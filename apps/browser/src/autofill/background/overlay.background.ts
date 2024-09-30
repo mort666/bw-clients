@@ -308,6 +308,9 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * Updates the inline menu list's ciphers and sends the updated list to the inline menu list iframe.
    * Queries all ciphers for the given url, and sorts them by last used. Will not update the
    * list of ciphers if the extension is not unlocked.
+   *
+   * @param updateAllCipherTypes - Identifies credit card and identity cipher types should also be updated
+   * @param refocusField - Identifies whether the most recently focused field should be refocused
    */
   async updateOverlayCiphers(updateAllCipherTypes = true, refocusField = false) {
     const authStatus = await firstValueFrom(this.authService.activeAccountStatus$);
@@ -317,6 +320,13 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     }
   }
 
+  /**
+   * Handles a throttled update of the inline menu ciphers, acting on the emission of a value from
+   * an observable. Will update on the first and last emissions within a 100ms time frame.
+   *
+   * @param updateAllCipherTypes - Identifies credit card and identity cipher types should also be updated
+   * @param refocusField - Identifies whether the most recently focused field should be refocused
+   */
   async handleOverlayCiphersUpdate({
     updateAllCipherTypes,
     refocusField,
@@ -1413,6 +1423,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * Sets the focused field data to the data passed in the extension message.
    *
    * @param focusedFieldData - Contains the rects and styles of the focused field.
+   * @param focusedFieldHasValue - Identifies whether the focused field has a value
    * @param sender - The sender of the extension message
    */
   private setFocusedFieldData(
@@ -1532,7 +1543,12 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     });
   }
 
-  // TODO: Most of the logic here likely should exist within the autofill service instead of here.
+  /**
+   * Triggers a fill of the generated password into the current tab. Will trigger
+   * a  focus of the last focused field after filling the password.
+   *
+   * @param port - The port of the sender
+   */
   private async fillGeneratedPassword(port: chrome.runtime.Port) {
     if (!this.generatedPassword) {
       return;
@@ -1548,27 +1564,17 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       return;
     }
 
-    // TODO: This is incredibly inefficient. Need to think through a better way to approach this.
-    filteredPageDetails = filteredPageDetails.map((pageDetail) => {
-      pageDetail.details.fields = pageDetail.details.fields.filter((field) => {
-        const isNewPasswordField =
-          this.inlineMenuFieldQualificationService.isNewPasswordField(field);
-        if (
-          this.isFocusedFieldFillType(InlineMenuFillType.PasswordGeneration) ||
-          this.isFocusedFieldFillType(InlineMenuFillType.AccountCreationUsername)
-        ) {
-          return isNewPasswordField;
-        }
-
-        return (
-          isNewPasswordField ||
-          (this.showInlineMenuAccountCreation() &&
-            this.inlineMenuFieldQualificationService.isCurrentPasswordField(field))
+    // If our currently focused field is for a login form, we want to fill the current password field.
+    // Otherwise, map over all page details and filter out fields that are not new password fields.
+    if (!this.isFocusedFieldFillType(CipherType.Login)) {
+      filteredPageDetails = filteredPageDetails.map((pageDetail) => {
+        pageDetail.details.fields = pageDetail.details.fields.filter((field) =>
+          this.inlineMenuFieldQualificationService.isNewPasswordField(field),
         );
-      });
 
-      return pageDetail;
-    });
+        return pageDetail;
+      });
+    }
 
     const cipher = this.buildLoginCipherView({
       username: "",
@@ -1585,7 +1591,6 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       allowTotpAutofill: false,
     });
 
-    // TODO - Need to find a better way to approach this, I'm not a fan of this at all.
     globalThis.setTimeout(() => this.openInlineMenu(port.sender, true), 400);
   }
 
