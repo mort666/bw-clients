@@ -1,6 +1,6 @@
 import { DefaultLoginComponentService, LoginComponentService } from "@bitwarden/auth/angular";
 
-import { flagEnabled } from "../../../platform/flags"; // TODO-rr-bw: do I need a client specific `flagEnabled()` fn?
+import { flagEnabled } from "../../../platform/flags";
 
 export class ExtensionLoginComponentService
   extends DefaultLoginComponentService
