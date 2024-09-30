@@ -1070,10 +1070,22 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
   }
 
   private setQualifiedAccountCreationFillType(autofillFieldData: AutofillField) {
-    autofillFieldData.inlineMenuFillType =
-      this.inlineMenuFieldQualificationService.isNewPasswordField(autofillFieldData)
-        ? InlineMenuFillType.PasswordGeneration
-        : InlineMenuFillType.AccountCreationUsername;
+    if (this.inlineMenuFieldQualificationService.isNewPasswordField(autofillFieldData)) {
+      autofillFieldData.inlineMenuFillType = InlineMenuFillType.PasswordGeneration;
+      this.qualifyAccountCreationFieldType(autofillFieldData);
+      return;
+    }
+
+    if (this.inlineMenuFieldQualificationService.isCurrentPasswordField(autofillFieldData)) {
+      autofillFieldData.inlineMenuFillType = InlineMenuFillType.CurrentPasswordUpdate;
+      this.qualifyAccountCreationFieldType(autofillFieldData);
+      return;
+    }
+
+    if (!this.inlineMenuFieldQualificationService.isUsernameField(autofillFieldData)) {
+      return;
+    }
+    autofillFieldData.inlineMenuFillType = InlineMenuFillType.AccountCreationUsername;
     this.qualifyAccountCreationFieldType(autofillFieldData);
   }
 

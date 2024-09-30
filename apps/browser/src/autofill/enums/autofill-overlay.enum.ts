@@ -24,6 +24,7 @@ export const RedirectFocusDirection = {
 export enum InlineMenuFillType {
   AccountCreationUsername = 5,
   PasswordGeneration = 6,
+  CurrentPasswordUpdate = 7,
 }
 export type InlineMenuFillTypes = InlineMenuFillType | CipherType;
 

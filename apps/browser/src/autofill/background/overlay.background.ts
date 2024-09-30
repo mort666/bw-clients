@@ -58,6 +58,7 @@ import {
   InlineMenuFillTypes,
   MAX_SUB_FRAME_DEPTH,
 } from "../enums/autofill-overlay.enum";
+import AutofillField from "../models/autofill-field";
 import { AutofillService, PageDetail } from "../services/abstractions/autofill.service";
 import { InlineMenuFieldQualificationService } from "../services/abstractions/inline-menu-field-qualifications.service";
 import {
@@ -697,11 +698,15 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     fillType: InlineMenuFillTypes,
     focusedFieldData?: FocusedFieldData,
   ) {
-    if (!focusedFieldData) {
-      return this.focusedFieldData?.inlineMenuFillType === fillType;
-    }
+    const focusedFieldFillType = focusedFieldData
+      ? focusedFieldData.inlineMenuFillType
+      : this.focusedFieldData?.inlineMenuFillType;
 
-    return focusedFieldData.inlineMenuFillType === fillType;
+    return (
+      (focusedFieldFillType === InlineMenuFillType.CurrentPasswordUpdate &&
+        fillType === CipherType.Login) ||
+      focusedFieldFillType === fillType
+    );
   }
 
   /**
@@ -1003,8 +1008,8 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     { inlineMenuCipherId, usePasskey }: OverlayPortMessage,
     { sender }: chrome.runtime.Port,
   ) {
-    const pageDetails = this.pageDetailsForTab[sender.tab.id];
-    if (!inlineMenuCipherId || !pageDetails?.size) {
+    const pageDetailsForTab = this.pageDetailsForTab[sender.tab.id];
+    if (!inlineMenuCipherId || !pageDetailsForTab?.size) {
       return;
     }
 
@@ -1023,10 +1028,19 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     if (await this.autofillService.isPasswordRepromptRequired(cipher, sender.tab)) {
       return;
     }
+
+    let pageDetails = Array.from(pageDetailsForTab.values());
+    if (this.focusedFieldData?.inlineMenuFillType === InlineMenuFillType.CurrentPasswordUpdate) {
+      pageDetails = this.getFilteredPageDetails(
+        pageDetails,
+        this.inlineMenuFieldQualificationService.isCurrentPasswordField,
+      );
+    }
+
     const totpCode = await this.autofillService.doAutoFill({
       tab: sender.tab,
-      cipher: cipher,
-      pageDetails: Array.from(pageDetails.values()),
+      cipher,
+      pageDetails,
       fillNewPassword: true,
       allowTotpAutofill: true,
     });
@@ -1036,6 +1050,25 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     }
 
     this.updateLastUsedInlineMenuCipher(inlineMenuCipherId, cipher);
+  }
+
+  private getFilteredPageDetails(
+    pageDetails: PageDetail[],
+    filterCallback: (field: AutofillField) => boolean,
+  ): PageDetail[] {
+    let filteredPageDetails: PageDetail[] = structuredClone(pageDetails);
+    if (!filteredPageDetails.length) {
+      return [];
+    }
+
+    filteredPageDetails = filteredPageDetails.map((pageDetail) => {
+      pageDetail.details.fields = pageDetail.details.fields.filter((field) =>
+        filterCallback(field),
+      );
+      return pageDetail;
+    });
+
+    return filteredPageDetails;
   }
 
   /**
@@ -1554,26 +1587,23 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       return;
     }
 
-    const pageDetails = this.pageDetailsForTab[port.sender.tab.id];
-    if (!pageDetails) {
+    const pageDetailsForTab = this.pageDetailsForTab[port.sender.tab.id];
+    if (!pageDetailsForTab) {
       return;
     }
 
-    let filteredPageDetails: PageDetail[] = structuredClone(Array.from(pageDetails.values()));
-    if (!filteredPageDetails.length) {
+    let pageDetails: PageDetail[] = Array.from(pageDetailsForTab.values());
+    if (!pageDetails.length) {
       return;
     }
 
     // If our currently focused field is for a login form, we want to fill the current password field.
     // Otherwise, map over all page details and filter out fields that are not new password fields.
     if (!this.isFocusedFieldFillType(CipherType.Login)) {
-      filteredPageDetails = filteredPageDetails.map((pageDetail) => {
-        pageDetail.details.fields = pageDetail.details.fields.filter((field) =>
-          this.inlineMenuFieldQualificationService.isNewPasswordField(field),
-        );
-
-        return pageDetail;
-      });
+      pageDetails = this.getFilteredPageDetails(
+        pageDetails,
+        this.inlineMenuFieldQualificationService.isNewPasswordField,
+      );
     }
 
     const cipher = this.buildLoginCipherView({
@@ -1586,7 +1616,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     await this.autofillService.doAutoFill({
       tab: port.sender.tab,
       cipher,
-      pageDetails: filteredPageDetails,
+      pageDetails,
       fillNewPassword: true,
       allowTotpAutofill: false,
     });
