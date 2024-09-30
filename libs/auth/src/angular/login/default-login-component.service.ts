@@ -48,11 +48,7 @@ export class DefaultLoginComponentService implements LoginComponentService {
       special: false,
     };
 
-    let state = await this.passwordGenerationService.generatePassword(passwordOptions);
-    // TODO-rr-bw: verify this is correct. Pulling this from original browser login component launchSsoBrowser method
-    if (clientId === "browser") {
-      state += ":clientId=browser";
-    }
+    const state = await this.passwordGenerationService.generatePassword(passwordOptions);
 
     const codeVerifier = await this.passwordGenerationService.generatePassword(passwordOptions);
     const codeVerifierHash = await this.cryptoFunctionService.hash(codeVerifier, "sha256");
@@ -64,20 +60,16 @@ export class DefaultLoginComponentService implements LoginComponentService {
 
     // Build URL
     const env = await firstValueFrom(this.environmentService.environment$);
-    let url = env.getWebVaultUrl();
-    // TODO-rr-bw: verify this is correct. Pulling this from original browser login component launchSsoBrowser method
-    if (url == null) {
-      url = "https://vault.bitwarden.com";
-    }
+    const webVaultUrl = env.getWebVaultUrl();
 
     const redirectUri =
       clientId === "browser"
-        ? url + "/sso-connector.html" // Browser
+        ? webVaultUrl + "/sso-connector.html" // Browser
         : "bitwarden://sso-callback"; // Desktop
 
     // Launch browser window with URL
     this.platformUtilsService.launchUri(
-      url +
+      webVaultUrl +
         "/#/sso?clientId=" +
         clientId +
         "&redirectUri=" +
