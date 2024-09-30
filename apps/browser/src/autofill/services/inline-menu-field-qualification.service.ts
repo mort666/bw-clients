@@ -30,7 +30,6 @@ export class InlineMenuFieldQualificationService
     this.webAuthnAutocompleteValue,
   ]);
   private fieldIgnoreListString = AutoFillConstants.FieldIgnoreList.join(",");
-  private passwordFieldExcludeListString = AutoFillConstants.PasswordFieldExcludeList.join(",");
   private currentPasswordAutocompleteValue = "current-password";
   private newPasswordAutoCompleteValue = "new-password";
   private autofillFieldKeywordsMap: AutofillKeywordsMap = new WeakMap();
@@ -927,7 +926,7 @@ export class InlineMenuFieldQualificationService
       return false;
     }
 
-    return !(this.passwordFieldExcludeListString.indexOf(cleanedValue) > -1);
+    return !AutoFillConstants.PasswordFieldExcludeList.some((i) => cleanedValue.indexOf(i) > -1);
   }
 
   /**

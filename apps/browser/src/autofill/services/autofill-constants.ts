@@ -55,6 +55,7 @@ export class AutoFillConstants {
 
   static readonly PasswordFieldExcludeList: string[] = [
     ...AutoFillConstants.FieldIgnoreList,
+    "hint",
     "onetimepassword",
   ];
 
