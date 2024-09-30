@@ -4,23 +4,23 @@
 
 @import "../../../../../libs/components/src/tw-theme.css";
 
-@layer base {
-  /* Chrome & Safari support */
-  ::-webkit-scrollbar {
+@layer components {
+  /* Chrome / Safari support */
+  .tw-styled-scrollbar::-webkit-scrollbar {
     @apply tw-overflow-auto;
   }
-  ::-webkit-scrollbar-thumb {
+  .tw-styled-scrollbar::-webkit-scrollbar-thumb {
     @apply tw-bg-secondary-500 tw-rounded-lg tw-border-4 tw-border-solid tw-border-transparent tw-bg-clip-content;
   }
-  ::-webkit-scrollbar-track {
+  .tw-styled-scrollbar::-webkit-scrollbar-track {
     @apply tw-bg-background-alt;
   }
-  ::-webkit-scrollbar-thumb:hover {
+  .tw-styled-scrollbar::-webkit-scrollbar-thumb:hover {
     @apply tw-bg-secondary-600;
   }
 
   /* FireFox support */
-  * {
+  .tw-styled-scrollbar {
     @supports (-moz-appearance: none) {
       scrollbar-color: rgb(var(--color-secondary-500)) rgb(var(--color-background-alt));
     }
