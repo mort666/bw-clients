@@ -631,21 +631,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   async saveBrowserIntegration() {
-    if (
-      ipc.platform.deviceType === DeviceType.MacOsDesktop &&
-      !this.platformUtilsService.isMacAppStore()
-    ) {
-      await this.dialogService.openSimpleDialog({
-        title: { key: "browserIntegrationUnsupportedTitle" },
-        content: { key: "browserIntegrationMasOnlyDesc" },
-        acceptButtonText: { key: "ok" },
-        cancelButtonText: null,
-        type: "warning",
-      });
-
-      this.form.controls.enableBrowserIntegration.setValue(false);
-      return;
-    } else if (ipc.platform.isWindowsStore) {
+    if (ipc.platform.isWindowsStore) {
       await this.dialogService.openSimpleDialog({
         title: { key: "browserIntegrationUnsupportedTitle" },
         content: { key: "browserIntegrationWindowsStoreDesc" },
