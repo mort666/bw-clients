@@ -702,11 +702,15 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       ? focusedFieldData.inlineMenuFillType
       : this.focusedFieldData?.inlineMenuFillType;
 
-    return (
-      (focusedFieldFillType === InlineMenuFillType.CurrentPasswordUpdate &&
-        fillType === CipherType.Login) ||
-      focusedFieldFillType === fillType
-    );
+    // When updating the current password for a field, it should fill with a login cipher
+    if (
+      focusedFieldFillType === InlineMenuFillType.CurrentPasswordUpdate &&
+      fillType === CipherType.Login
+    ) {
+      return true;
+    }
+
+    return focusedFieldFillType === fillType;
   }
 
   /**
