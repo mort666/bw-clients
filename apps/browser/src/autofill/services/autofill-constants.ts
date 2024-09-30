@@ -34,19 +34,20 @@ export class AutoFillConstants {
     "totpcode",
     "2facode",
     "approvals_code",
-    "code",
     "mfacode",
     "otc",
     "otc-code",
+    "onetimecode",
     "otp",
     "otp-code",
     "otpcode",
-    "pin",
+    "onetimepassword",
     "security_code",
     "twofactor",
     "twofa",
     "twofactorcode",
-    "verificationCode",
+    "verification code",
+    "verificatiocode",
   ];
 
   static readonly SearchFieldNames: string[] = ["search", "query", "find", "go"];
@@ -54,9 +55,9 @@ export class AutoFillConstants {
   static readonly FieldIgnoreList: string[] = ["captcha", "findanything", "forgot"];
 
   static readonly PasswordFieldExcludeList: string[] = [
-    ...AutoFillConstants.FieldIgnoreList,
     "hint",
-    "onetimepassword",
+    ...AutoFillConstants.FieldIgnoreList,
+    ...AutoFillConstants.TotpFieldNames,
   ];
 
   static readonly ExcludedAutofillLoginTypes: string[] = [
