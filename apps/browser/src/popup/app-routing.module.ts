@@ -2,6 +2,7 @@ import { Injectable, NgModule } from "@angular/core";
 import { ActivatedRouteSnapshot, RouteReuseStrategy, RouterModule, Routes } from "@angular/router";
 
 import { EnvironmentSelectorComponent } from "@bitwarden/angular/auth/components/environment-selector.component";
+import { unauthUiRefreshRedirect } from "@bitwarden/angular/auth/functions/unauth-ui-refresh-redirect";
 import { unauthUiRefreshSwap } from "@bitwarden/angular/auth/functions/unauth-ui-refresh-route-swap";
 import {
   authGuard,
@@ -154,8 +155,7 @@ const routes: Routes = [
   {
     path: "home",
     component: HomeComponent,
-    // TODO-rr-bw: verify if was the correct feature-flag/redirect to use, and should it go in canActivate?
-    canActivate: [unauthGuardFn(unauthRouteOverrides), extensionRefreshRedirect("login")],
+    canActivate: [unauthGuardFn(unauthRouteOverrides), unauthUiRefreshRedirect("/login")],
     data: { state: "home" } satisfies RouteDataProperties,
   },
   ...extensionRefreshSwap(Fido2V1Component, Fido2Component, {
