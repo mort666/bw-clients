@@ -27,7 +27,7 @@ export class WebLoginComponentService
   router = inject(Router);
   routerService = inject(RouterService);
 
-  getShowPasswordlessFlag(): boolean {
+  isLoginViaAuthRequestSupported(): boolean {
     return flagEnabled("showPasswordless");
   }
 

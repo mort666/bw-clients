@@ -27,8 +27,8 @@ export class DefaultLoginComponentService implements LoginComponentService {
     return null;
   }
 
-  getShowPasswordlessFlag(): boolean {
-    return null;
+  isLoginViaAuthRequestSupported(): boolean {
+    return false;
   }
 
   async launchSsoBrowserWindow(

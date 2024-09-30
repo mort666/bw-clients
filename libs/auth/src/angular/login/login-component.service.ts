@@ -32,10 +32,9 @@ export abstract class LoginComponentService {
   setPreviousUrl: (route: UrlTree) => void | null;
 
   /**
-   * Gets the status of the `showPasswordless` feature flag.
-   * - Used by: Web, Browser
+   * Indicates whether login with device (auth request) is supported on the given client
    */
-  getShowPasswordlessFlag: () => boolean;
+  isLoginViaAuthRequestSupported: () => boolean;
 
   /**
    * Launches the SSO flow in a new browser window.

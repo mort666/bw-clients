@@ -6,7 +6,7 @@ export class ExtensionLoginComponentService
   extends DefaultLoginComponentService
   implements LoginComponentService
 {
-  getShowPasswordlessFlag(): boolean {
+  isLoginViaAuthRequestSupported(): boolean {
     return flagEnabled("showPasswordless");
   }
 }

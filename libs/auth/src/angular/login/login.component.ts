@@ -82,7 +82,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   ClientType = ClientType;
   LoginUiState = LoginUiState;
   registerRoute$ = this.registerRouteService.registerRoute$(); // TODO: remove when email verification flag is removed
-  showLoginWithDevice = false;
+  isKnownDevice = false;
   validatedEmail = false;
 
   formGroup = this.formBuilder.group(
@@ -112,7 +112,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   // Web properties
   enforcedPasswordPolicyOptions: MasterPasswordPolicyOptions;
   policies: Policy[];
-  showPasswordless = false;
+  loginViaAuthRequestSupported = false;
   showResetPasswordAutoEnrollWarning = false;
 
   // Desktop properties
@@ -144,7 +144,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     private extensionLoginService: ExtensionLoginService,
   ) {
     this.clientType = this.platformUtilsService.getClientType();
-    this.showPasswordless = this.loginComponentService.getShowPasswordlessFlag();
+    this.loginViaAuthRequestSupported = this.loginComponentService.isLoginViaAuthRequestSupported();
   }
 
   async ngOnInit(): Promise<void> {
@@ -155,7 +155,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     await this.defaultOnInit();
 
     if (this.clientType === ClientType.Browser) {
-      if (this.showPasswordless) {
+      if (this.loginViaAuthRequestSupported) {
         await this.validateEmail();
       }
     }
@@ -423,12 +423,9 @@ export class LoginComponent implements OnInit, OnDestroy {
   private async getLoginWithDevice(email: string): Promise<void> {
     try {
       const deviceIdentifier = await this.appIdService.getAppId();
-      this.showLoginWithDevice = await this.devicesApiService.getKnownDevice(
-        email,
-        deviceIdentifier,
-      );
+      this.isKnownDevice = await this.devicesApiService.getKnownDevice(email, deviceIdentifier);
     } catch (e) {
-      this.showLoginWithDevice = false;
+      this.isKnownDevice = false;
     }
   }
 
