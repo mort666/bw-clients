@@ -290,7 +290,7 @@ export class InlineMenuFieldQualificationService
     // If the provided field is set with an autocomplete value of "current-password", we should assume that
     // the page developer intends for this field to be interpreted as a password field for a login form.
     if (this.fieldContainsAutocompleteValues(field, this.currentPasswordAutocompleteValue)) {
-      return true;
+      return pageDetails.fields.filter(this.isNewPasswordField).length === 0;
     }
 
     const usernameFieldsInPageDetails = pageDetails.fields.filter(this.isUsernameField);
