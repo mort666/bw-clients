@@ -32,7 +32,7 @@ import { OrganizationInvite } from "../organization-invite/organization-invite";
 import { RouterService } from "./../../core/router.service";
 import { VerticalStepperComponent } from "./vertical-stepper/vertical-stepper.component";
 
-enum ValidOrgParams {
+export enum ValidOrgParams {
   families = "families",
   enterprise = "enterprise",
   teams = "teams",

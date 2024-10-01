@@ -11,16 +11,7 @@ import { ConfigService } from "@bitwarden/common/platform/abstractions/config/co
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 
 import { VerticalStepperComponent } from "../../trial-initiation/vertical-stepper/vertical-stepper.component";
-
-enum ValidOrgParams {
-  families = "families",
-  enterprise = "enterprise",
-  teams = "teams",
-  teamsStarter = "teamsStarter",
-  individual = "individual",
-  premium = "premium",
-  free = "free",
-}
+import { ValidOrgParams } from "../trial-initiation.component";
 
 @Component({
   selector: "app-secrets-manager-trial-free-stepper",
