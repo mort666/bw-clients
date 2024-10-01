@@ -1306,7 +1306,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       { frameId: 0 },
     );
 
-    const subFrameOffsetsForTab = this.subFrameOffsetsForTab[this.focusedFieldData.tabId];
+    const subFrameOffsetsForTab = this.subFrameOffsetsForTab[this.focusedFieldData?.tabId];
     let subFrameOffsets: SubFrameOffsetData;
     if (subFrameOffsetsForTab) {
       subFrameOffsets = subFrameOffsetsForTab.get(this.focusedFieldData.frameId);

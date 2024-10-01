@@ -149,7 +149,9 @@ describe("OverlayBackground", () => {
     domainSettingsService.showFavicons$ = showFaviconsMock$;
     domainSettingsService.neverDomains$ = neverDomainsMock$;
     logService = mock<LogService>();
-    cipherService = mock<CipherService>();
+    cipherService = mock<CipherService>({
+      getAllDecryptedForUrl: jest.fn().mockResolvedValue([]),
+    });
     autofillService = mock<AutofillService>();
     activeAccountStatusMock$ = new BehaviorSubject(AuthenticationStatus.Unlocked);
     authService = mock<AuthService>();
@@ -2028,11 +2030,36 @@ describe("OverlayBackground", () => {
         });
         getTabFromCurrentWindowIdSpy.mockResolvedValue(sender.tab);
         tabsSendMessageSpy.mockImplementation();
+        sendMockExtensionMessage(
+          { command: "updateFocusedFieldData", focusedFieldData: createFocusedFieldDataMock() },
+          sender,
+        );
       });
 
-      it.todo(
-        "updates the inline menu position of both button and list elements if the inline menu is being forced open",
-      );
+      it("updates the inline menu position of both button and list elements if the inline menu is being forced open", async () => {
+        sendMockExtensionMessage(
+          { command: "openAutofillInlineMenu", isOpeningFullInlineMenu: true },
+          sender,
+        );
+        await flushPromises();
+
+        expect(tabsSendMessageSpy).toHaveBeenCalledWith(
+          sender.tab,
+          {
+            command: "appendAutofillInlineMenuToDom",
+            overlayElement: AutofillOverlayElement.Button,
+          },
+          { frameId: 0 },
+        );
+        expect(tabsSendMessageSpy).toHaveBeenCalledWith(
+          sender.tab,
+          {
+            command: "appendAutofillInlineMenuToDom",
+            overlayElement: AutofillOverlayElement.List,
+          },
+          { frameId: 0 },
+        );
+      });
 
       describe("when the focused field does not have a value", () => {
         beforeEach(() => {
@@ -2412,7 +2439,6 @@ describe("OverlayBackground", () => {
 
       it("focuses the most recently focused field if a retry command is present in the message", async () => {
         activeAccountStatusMock$.next(AuthenticationStatus.Unlocked);
-        cipherService.getAllDecryptedForUrl.mockResolvedValue([]);
         getTabFromCurrentWindowIdSpy.mockResolvedValueOnce(createChromeTabMock({ id: 1 }));
         sendMockExtensionMessage({
           command: "unlockCompleted",
@@ -2499,7 +2525,6 @@ describe("OverlayBackground", () => {
       await initOverlayElementPorts();
       buttonMessageConnectorSpy.sender = sender;
       openUnlockPopoutSpy.mockImplementation();
-      cipherService.getAllDecryptedForUrl.mockResolvedValue([]);
     });
 
     describe("autofillInlineMenuButtonClicked message handler", () => {
