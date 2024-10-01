@@ -1,8 +1,9 @@
 import { Injectable } from "@angular/core";
 
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
-import { BillingResponse } from "@bitwarden/common/billing/models/response/billing.response";
+import { BillingSourceResponse } from "@bitwarden/common/billing/models/response/billing.response";
 import { OrganizationSubscriptionResponse } from "@bitwarden/common/billing/models/response/organization-subscription.response";
+import { PaymentSourceResponse } from "@bitwarden/common/billing/models/response/payment-source.response";
 import { FreeTrial } from "@bitwarden/common/billing/types/free-trial";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 
@@ -12,11 +13,11 @@ export class TrialFlowService {
   checkForOrgsWithUpcomingPaymentIssues(
     organization: Organization,
     organizationSubscription: OrganizationSubscriptionResponse,
-    billing: BillingResponse,
+    paymentSource: BillingSourceResponse | PaymentSourceResponse,
   ): FreeTrial {
     const trialEndDate = organizationSubscription?.subscription?.trialEndDate;
     const displayBanner =
-      !billing?.paymentSource &&
+      !paymentSource &&
       organization?.isOwner &&
       organizationSubscription?.subscription?.status === "trialing";
     const trialRemainingDays = trialEndDate ? this.calculateTrialRemainingDays(trialEndDate) : 0;

@@ -150,7 +150,7 @@ export class OverviewComponent implements OnInit, OnDestroy {
         this.freeTrialData = this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(
           org,
           sub,
-          billing,
+          billing?.paymentSource,
         );
         return this.freeTrialData;
       }),
