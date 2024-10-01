@@ -138,17 +138,13 @@ export class PaymentMethodComponent implements OnInit, OnDestroy {
     this.isUnpaid = this.subscription?.status === "unpaid" ?? false;
     this.loading = false;
     if (this.launchPaymentModalAutomatically) {
-      window.setTimeout(() => {
-        this.triggerPaymentModal();
+      window.setTimeout(async () => {
+        await this.changePayment();
         this.launchPaymentModalAutomatically = false;
         this.location.replaceState(this.location.path(), "", {});
       }, 800);
     }
   };
-
-  triggerPaymentModal() {
-    (document.querySelector(".payment_trigger_button")! as HTMLButtonElement).click();
-  }
 
   addCredit = async () => {
     const dialogRef = openAddCreditDialog(this.dialogService, {
