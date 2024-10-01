@@ -11,12 +11,12 @@ import { RegisterRouteService } from "@bitwarden/auth/common";
   template: `
     <div class="tw-text-center">
       {{ "newToBitwarden" | i18n }}
-      <!-- TODO-rr-bw: on Browser ext, this link isn't styled like other clients.
-           It seems to be using default browser (chrome, etc.) styles.
-      -->
-      <a class="tw-font-bold" bitLink [routerLink]="registerRoute$ | async">{{
-        "createAccount" | i18n
-      }}</a>
+      <a
+        class="tw-font-bold tw-no-underline hover:tw-underline tw-text-primary-600"
+        bitLink
+        [routerLink]="registerRoute$ | async"
+        >{{ "createAccount" | i18n }}</a
+      >
     </div>
   `,
 })
