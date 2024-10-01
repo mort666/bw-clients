@@ -19,13 +19,12 @@ import { I18nPipe } from "@bitwarden/angular/platform/pipes/i18n.pipe";
 import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
-import { BillingPaymentResponse } from "@bitwarden/common/billing/models/response/billing-payment.response";
 import { BillingResponse } from "@bitwarden/common/billing/models/response/billing.response";
-import { OrganizationSubscriptionResponse } from "@bitwarden/common/billing/models/response/organization-subscription.response";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { DialogService } from "@bitwarden/components";
+import { TrialFlowService } from "@bitwarden/web-vault/app/core/trial-flow.service";
 
 import { OrganizationCounts } from "../models/view/counts.view";
 import { ProjectListView } from "../models/view/project-list.view";
@@ -95,10 +94,7 @@ export class OverviewComponent implements OnInit, OnDestroy {
   protected loading = true;
   protected organizationEnabled = false;
   protected organization: Organization;
-  protected trialRemainingDays: number;
-  protected defaultPaymentSource: BillingPaymentResponse;
-  protected isOwner: boolean;
-  protected isTrialing: boolean;
+  private freeTrialData: FreeTrial;
   protected i18n: I18nPipe;
   protected onboardingTasks$: Observable<SMOnboardingTasks>;
 
@@ -110,7 +106,7 @@ export class OverviewComponent implements OnInit, OnDestroy {
     tasks: OrganizationTasks;
     counts: OrganizationCounts;
   }>;
-  protected freeTrial$!: Observable<FreeTrial>;
+  protected freeTrial$: Observable<FreeTrial>;
 
   constructor(
     private route: ActivatedRoute,
@@ -127,6 +123,7 @@ export class OverviewComponent implements OnInit, OnDestroy {
     private router: Router,
 
     private organizationApiService: OrganizationApiServiceAbstraction,
+    private trialFlowService: TrialFlowService,
   ) {}
 
   ngOnInit() {
@@ -157,7 +154,12 @@ export class OverviewComponent implements OnInit, OnDestroy {
         ]),
       ),
       map(([org, sub, billing]) => {
-        return this.locateOrganizationsWithIncomingPaymentIssues(org, sub, billing);
+        this.freeTrialData = this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(
+          org,
+          sub,
+          billing,
+        );
+        return this.freeTrialData;
       }),
       takeUntil(this.destroy$),
     );
@@ -232,40 +234,6 @@ export class OverviewComponent implements OnInit, OnDestroy {
           this.loading = false;
         },
       });
-  }
-
-  private locateOrganizationsWithIncomingPaymentIssues(
-    organization: Organization,
-    sub: OrganizationSubscriptionResponse,
-    billing: BillingResponse,
-  ): FreeTrial {
-    const trialEndDate = sub?.subscription?.trialEndDate;
-    const isOwner = organization?.isOwner;
-    const isTrialing = sub?.subscription?.status == "trialing";
-    const defaultPaymentSource = billing;
-    if (trialEndDate) {
-      const today = new Date();
-      const trialEnd = new Date(trialEndDate);
-      const timeDifference = trialEnd.getTime() - today.getTime();
-      this.trialRemainingDays = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-    }
-    return {
-      trialing: isTrialing,
-      remainingDays: this.trialRemainingDays,
-      message: this.freeTrialMessage,
-      isOwner,
-      defaultPaymentSource,
-    };
-  }
-
-  get freeTrialMessage() {
-    if (this.trialRemainingDays >= 2) {
-      return this.i18nService.t("freeTrialEndPrompt", this.trialRemainingDays);
-    } else if (this.trialRemainingDays == 1) {
-      return this.i18nService.t("freeTrialEndPromptForOneDayNoOrgName");
-    } else {
-      return this.i18nService.t("freeTrialEndingSoonWithoutOrgName");
-    }
   }
 
   async navigateToPaymentMethod() {

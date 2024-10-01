@@ -601,11 +601,15 @@ export class VaultComponent implements OnInit, OnDestroy {
         ),
         tap(([sub, billing]) => {
           this.defaultPaymentSource = billing;
-          const { isOwner, isTrialing, trialRemainingDays } =
-            this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(sub, this.organization);
-          this.isOwner = isOwner;
-          this.isTrialing = isTrialing;
-          this.trialRemainingDays = trialRemainingDays;
+          const freeTrial = this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(
+            this.organization,
+            sub,
+            billing,
+          );
+
+          this.isOwner = freeTrial.isOwner;
+          this.isTrialing = freeTrial.trialing;
+          this.trialRemainingDays = freeTrial.remainingDays;
         }),
         takeUntil(this.destroy$),
       )

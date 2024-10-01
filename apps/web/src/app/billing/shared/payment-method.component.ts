@@ -200,11 +200,14 @@ export class PaymentMethodComponent implements OnInit, OnDestroy {
 
   determineOrgsWithUpcomingPaymentIssues() {
     this.defaultPaymentSource = this.billing;
-    const { isOwner, isTrialing, trialRemainingDays } =
-      this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(this.org, this.organization);
-    this.isOwner = isOwner;
-    this.isTrialing = isTrialing;
-    this.trialRemainingDays = trialRemainingDays;
+    const freeTrial = this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(
+      this.organization,
+      this.org,
+      this.billing,
+    );
+    this.isOwner = freeTrial.isOwner;
+    this.isTrialing = freeTrial.trialing;
+    this.trialRemainingDays = freeTrial.remainingDays;
   }
 
   get getTrialEndingMessage() {
