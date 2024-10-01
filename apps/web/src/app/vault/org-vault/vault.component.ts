@@ -1360,8 +1360,8 @@ export class VaultComponent implements OnInit, OnDestroy {
     });
   }
 
-  displayTrialEndingMessage() {
-    this.trialRemainingDays >= 2
+  get displayTrialEndingMessage() {
+    return this.trialRemainingDays >= 2
       ? this.i18nService.t("freeTrialEndPrompt", this.trialRemainingDays)
       : this.trialRemainingDays == 1
         ? this.i18nService.t("freeTrialEndPromptForOneDayNoOrgName")
