@@ -77,6 +77,8 @@ import { OverlayBackground } from "./overlay.background";
 
 describe("OverlayBackground", () => {
   const generatedPassword = "generated-password";
+  const generatedPasswordCallbackMock = jest.fn().mockResolvedValue(generatedPassword);
+  const addPasswordCallbackMock = jest.fn();
   const mockUserId = Utils.newGuid() as UserId;
   const sendResponse = jest.fn();
   let accountService: FakeAccountService;
@@ -193,8 +195,8 @@ describe("OverlayBackground", () => {
       fido2ActiveRequestManager,
       inlineMenuFieldQualificationService,
       themeStateService,
-      () => Promise.resolve(generatedPassword),
-      () => Promise.resolve(),
+      generatedPasswordCallbackMock,
+      addPasswordCallbackMock,
     );
     portKeyForTabSpy = overlayBackground["portKeyForTab"];
     pageDetailsForTabSpy = overlayBackground["pageDetailsForTab"];
@@ -3206,6 +3208,101 @@ describe("OverlayBackground", () => {
         expect(overlayBackground["inlineMenuPosition"]).toStrictEqual({
           list: { height: 100, top: 1, left: 2, width: 3 },
         });
+      });
+    });
+
+    describe("refreshGeneratedPassword", () => {
+      it("refreshes the generated password", async () => {
+        overlayBackground["generatedPassword"] = "populated";
+
+        sendPortMessage(listMessageConnectorSpy, { command: "refreshGeneratedPassword", portKey });
+        await flushPromises();
+
+        expect(generatedPasswordCallbackMock).toHaveBeenCalled();
+      });
+
+      it("sends a message to the list port indicating that the generated password should be updated", async () => {
+        sendPortMessage(listMessageConnectorSpy, { command: "refreshGeneratedPassword", portKey });
+        await flushPromises();
+
+        expect(listPortSpy.postMessage).toHaveBeenCalledWith({
+          command: "updateAutofillInlineMenuGeneratedPassword",
+          generatedPassword,
+          refreshPassword: true,
+        });
+      });
+    });
+
+    describe("fillGeneratedPassword", () => {
+      const focusedFieldData = createFocusedFieldDataMock({
+        inlineMenuFillType: InlineMenuFillType.PasswordGeneration,
+      });
+
+      beforeEach(() => {
+        globalThis.structuredClone = jest.fn((value) => value);
+        sendMockExtensionMessage(
+          {
+            command: "updateFocusedFieldData",
+            focusedFieldData,
+          },
+          sender,
+        );
+        overlayBackground["generatedPassword"] = generatedPassword;
+        overlayBackground["pageDetailsForTab"][sender.tab.id] = new Map([
+          [sender.frameId, createPageDetailMock()],
+        ]);
+      });
+
+      describe("skipping filling the generated password", () => {
+        it("skips filling when the password has not been created", () => {
+          overlayBackground["generatedPassword"] = "";
+
+          sendPortMessage(listMessageConnectorSpy, { command: "fillGeneratedPassword", portKey });
+
+          expect(autofillService.doAutoFill).not.toHaveBeenCalled();
+        });
+
+        it("skips filling when the page details for the tab are not set", () => {
+          overlayBackground["pageDetailsForTab"][sender.tab.id] = undefined;
+
+          sendPortMessage(listMessageConnectorSpy, { command: "fillGeneratedPassword", portKey });
+
+          expect(autofillService.doAutoFill).not.toHaveBeenCalled();
+        });
+
+        it("skips filling when the page details for the tab does not contain a value", () => {
+          overlayBackground["pageDetailsForTab"][sender.tab.id] = new Map([]);
+
+          sendPortMessage(listMessageConnectorSpy, { command: "fillGeneratedPassword", portKey });
+
+          expect(autofillService.doAutoFill).not.toHaveBeenCalled();
+        });
+      });
+
+      it("filters the page details to only include the new password fields before filling", async () => {
+        await flushPromises();
+
+        sendPortMessage(listMessageConnectorSpy, { command: "fillGeneratedPassword", portKey });
+        await flushPromises();
+
+        expect(autofillService.doAutoFill).toHaveBeenCalledWith({
+          tab: sender.tab,
+          cipher: expect.any(Object),
+          pageDetails: [overlayBackground["pageDetailsForTab"][sender.tab.id].get(sender.frameId)],
+          fillNewPassword: true,
+          allowTotpAutofill: false,
+        });
+      });
+
+      it("triggers a delayed open of the inline menu", async () => {
+        jest.useFakeTimers();
+        jest.spyOn(overlayBackground as any, "openInlineMenu");
+
+        sendPortMessage(listMessageConnectorSpy, { command: "fillGeneratedPassword", portKey });
+        await flushPromises();
+        jest.advanceTimersByTime(400);
+
+        expect(overlayBackground["openInlineMenu"]).toHaveBeenCalled();
       });
     });
   });
