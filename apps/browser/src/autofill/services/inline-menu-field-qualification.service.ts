@@ -146,8 +146,7 @@ export class InlineMenuFieldQualificationService
       return this.isFieldForLoginFormFallback(field);
     }
 
-    const isTotpField = this.isTotpField(field);
-    if (isTotpField) {
+    if (this.isTotpField(field)) {
       return false;
     }
 
@@ -230,7 +229,10 @@ export class InlineMenuFieldQualificationService
    * @param pageDetails - The details of the page that the field is on.
    */
   isFieldForAccountCreationForm(field: AutofillField, pageDetails: AutofillPageDetails): boolean {
-    if (this.isExcludedFieldType(field, this.excludedAutofillFieldTypesSet)) {
+    if (
+      this.isExcludedFieldType(field, this.excludedAutofillFieldTypesSet) ||
+      this.isTotpField(field)
+    ) {
       return false;
     }
 
