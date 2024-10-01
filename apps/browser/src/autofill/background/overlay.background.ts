@@ -1351,7 +1351,6 @@ export class OverlayBackground implements OverlayBackgroundInterface {
 
     if (!overlayElement || overlayElement === AutofillOverlayElement.Button) {
       this.isInlineMenuButtonVisible = isVisible;
-      return;
     }
 
     if (!overlayElement || overlayElement === AutofillOverlayElement.List) {
