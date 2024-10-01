@@ -2107,9 +2107,29 @@ describe("OverlayBackground", () => {
           );
         });
 
-        it.todo(
-          "updates the position of the button if the user has the inline menu set to show on button click",
-        );
+        it("updates the position of the button if the user has the inline menu set to show on button click", async () => {
+          inlineMenuVisibilityMock$.next(AutofillOverlayVisibility.OnButtonClick);
+
+          sendMockExtensionMessage({ command: "openAutofillInlineMenu" }, sender);
+          await flushPromises();
+
+          expect(tabsSendMessageSpy).toHaveBeenCalledWith(
+            sender.tab,
+            {
+              command: "appendAutofillInlineMenuToDom",
+              overlayElement: AutofillOverlayElement.Button,
+            },
+            topFrameSendOptions,
+          );
+          expect(tabsSendMessageSpy).not.toHaveBeenCalledWith(
+            sender.tab,
+            {
+              command: "appendAutofillInlineMenuToDom",
+              overlayElement: AutofillOverlayElement.List,
+            },
+            topFrameSendOptions,
+          );
+        });
       });
 
       describe("when the focused field has a value", () => {
