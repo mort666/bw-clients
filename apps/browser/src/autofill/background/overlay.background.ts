@@ -2666,17 +2666,11 @@ export class OverlayBackground implements OverlayBackgroundInterface {
 
     const authStatus = await this.getAuthStatus();
     const showInlineMenuAccountCreation = this.shouldShowInlineMenuAccountCreation();
-    const showInlineMenuPasswordGenerator = this.shouldShowInlineMenuPasswordGenerator(
+    const showInlineMenuPasswordGenerator = await this.shouldInitInlineMenuPasswordGenerator(
+      authStatus,
       isInlineMenuListPort,
       showInlineMenuAccountCreation,
     );
-    if (
-      authStatus === AuthenticationStatus.Unlocked &&
-      showInlineMenuPasswordGenerator &&
-      !this.generatedPassword
-    ) {
-      await this.generatePassword();
-    }
 
     this.storeOverlayPort(port);
     port.onDisconnect.addListener(this.handlePortOnDisconnect);
@@ -2744,21 +2738,35 @@ export class OverlayBackground implements OverlayBackgroundInterface {
   }
 
   /**
-   * Identifies if the focused field should show the inline menu password generator.
+   * Identifies if the focused field should show the inline menu
+   * password generator when the inline menu is opened.
    *
+   * @param authStatus - The current authentication status
    * @param isInlineMenuListPort - Identifies if the port is for the inline menu list
    * @param showInlineMenuAccountCreation - Identifies if the inline menu account creation should be shown
    */
-  private shouldShowInlineMenuPasswordGenerator(
+  private async shouldInitInlineMenuPasswordGenerator(
+    authStatus: AuthenticationStatus,
     isInlineMenuListPort: boolean,
     showInlineMenuAccountCreation: boolean,
   ) {
-    return (
-      isInlineMenuListPort &&
-      (this.focusedFieldMatchesFillType(InlineMenuFillType.PasswordGeneration) ||
-        (showInlineMenuAccountCreation &&
-          this.focusedFieldMatchesAccountCreationType(InlineMenuAccountCreationFieldType.Password)))
-    );
+    if (!isInlineMenuListPort || authStatus !== AuthenticationStatus.Unlocked) {
+      return false;
+    }
+
+    const focusFieldShouldShowPasswordGenerator =
+      this.focusedFieldMatchesFillType(InlineMenuFillType.PasswordGeneration) ||
+      (showInlineMenuAccountCreation &&
+        this.focusedFieldMatchesAccountCreationType(InlineMenuAccountCreationFieldType.Password));
+    if (!focusFieldShouldShowPasswordGenerator) {
+      return false;
+    }
+
+    if (!this.generatedPassword) {
+      await this.generatePassword();
+    }
+
+    return true;
   }
 
   /**
