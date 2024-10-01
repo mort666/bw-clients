@@ -68,6 +68,7 @@ import {
 
 import {
   FocusedFieldData,
+  InlineMenuPosition,
   PageDetailsForTab,
   SubFrameOffsetData,
   SubFrameOffsetsForTab,
@@ -2391,6 +2392,22 @@ describe("OverlayBackground", () => {
         expect(listPortSpy.postMessage).toHaveBeenCalledWith({
           command: "focusAutofillInlineMenuList",
         });
+      });
+    });
+
+    describe("getAutofillInlineMenuPosition", () => {
+      it("returns the current inline menu positio", async () => {
+        const inlineMenuPosition: InlineMenuPosition = mock<InlineMenuPosition>();
+        overlayBackground["inlineMenuPosition"] = inlineMenuPosition;
+
+        sendMockExtensionMessage(
+          { command: "getAutofillInlineMenuPosition" },
+          mock<chrome.runtime.MessageSender>(),
+          sendResponse,
+        );
+        await flushPromises();
+
+        expect(sendResponse).toHaveBeenCalledWith(inlineMenuPosition);
       });
     });
 
