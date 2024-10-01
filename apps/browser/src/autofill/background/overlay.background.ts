@@ -374,7 +374,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     this.inlineMenuListPort?.postMessage({
       command: "updateAutofillInlineMenuListCiphers",
       ciphers: await this.getInlineMenuCipherData(),
-      showInlineMenuAccountCreation: this.showInlineMenuAccountCreation(),
+      showInlineMenuAccountCreation: this.shouldShowInlineMenuAccountCreation(),
       showPasskeysLabels: this.showPasskeysLabelsWithinInlineMenu,
       focusedFieldHasValue: await this.checkMostRecentlyFocusedFieldHasValue(tab),
     });
@@ -447,7 +447,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     let inlineMenuCipherData: InlineMenuCipherData[];
     this.showPasskeysLabelsWithinInlineMenu = false;
 
-    if (this.showInlineMenuAccountCreation()) {
+    if (this.shouldShowInlineMenuAccountCreation()) {
       inlineMenuCipherData = this.buildInlineMenuAccountCreationCiphers(
         inlineMenuCiphersArray,
         true,
@@ -734,7 +734,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
   /**
    * Identifies whether the inline menu is being shown on an account creation field.
    */
-  private showInlineMenuAccountCreation(): boolean {
+  private shouldShowInlineMenuAccountCreation(): boolean {
     if (this.focusedFieldMatchesFillType(InlineMenuFillType.AccountCreationUsername)) {
       return true;
     }
@@ -1565,15 +1565,25 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     await this.updateInlineMenuListCiphers(sender.tab);
   }
 
+  /**
+   * Identifies whether a newly focused field should trigger an update that
+   * displays the account creation view within the inline menu.
+   *
+   * @param previousFocusedFieldData - The data set of the previously focused field
+   */
   private shouldUpdateAccountCreationMenuOnFocus(previousFocusedFieldData: FocusedFieldData) {
     const accountCreationFieldBlurred =
       this.focusedFieldMatchesFillType(
         InlineMenuFillType.AccountCreationUsername,
         previousFocusedFieldData,
       ) && !this.focusedFieldMatchesFillType(InlineMenuFillType.AccountCreationUsername);
-    return accountCreationFieldBlurred || this.showInlineMenuAccountCreation();
+    return accountCreationFieldBlurred || this.shouldShowInlineMenuAccountCreation();
   }
 
+  /**
+   * Sends a message to the list to show the save login inline menu list view. This view
+   * is shown after a field is filled with a generated password.
+   */
   private showSaveLoginInlineMenuList() {
     this.inlineMenuListPort?.postMessage({ command: "showSaveLoginInlineMenuList" });
   }
@@ -1724,6 +1734,11 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     await this.openInlineMenuOnFilledField(sender);
   }
 
+  /**
+   * Triggers logic that handles opening the inline menu on an empty form field.
+   *
+   * @param sender - The sender of the port message
+   */
   private async openInlineMenuOnEmptyField(sender: chrome.runtime.MessageSender) {
     if ((await this.getInlineMenuVisibility()) === AutofillOverlayVisibility.OnFieldFocus) {
       await this.updateInlineMenuPosition(sender, AutofillOverlayElement.Button);
@@ -1741,6 +1756,11 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     await this.updateInlineMenuPosition(sender, AutofillOverlayElement.Button);
   }
 
+  /**
+   * Triggers logic that handles opening the inline menu on a form field that has a value.
+   *
+   * @param sender - The sender of the port message
+   */
   private async openInlineMenuOnFilledField(sender: chrome.runtime.MessageSender) {
     if (!this.focusedFieldData) {
       return;
@@ -1749,7 +1769,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     const { inlineMenuFillType } = this.focusedFieldData;
     if (
       this.createAccountFillTypes.has(inlineMenuFillType) ||
-      this.showInlineMenuAccountCreation()
+      this.shouldShowInlineMenuAccountCreation()
     ) {
       await this.updateInlineMenuPosition(sender, AutofillOverlayElement.Button);
       await this.updateInlineMenuPosition(sender, AutofillOverlayElement.List);
@@ -2640,8 +2660,8 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     }
 
     const authStatus = await this.getAuthStatus();
-    const showInlineMenuAccountCreation = this.showInlineMenuAccountCreation();
-    const showInlineMenuPasswordGenerator = this.showInlineMenuPasswordGenerator(
+    const showInlineMenuAccountCreation = this.shouldShowInlineMenuAccountCreation();
+    const showInlineMenuPasswordGenerator = this.shouldShowInlineMenuPasswordGenerator(
       isInlineMenuListPort,
       showInlineMenuAccountCreation,
     );
@@ -2718,7 +2738,13 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     }
   }
 
-  private showInlineMenuPasswordGenerator(
+  /**
+   * Identifies if the focused field should show the inline menu password generator.
+   *
+   * @param isInlineMenuListPort - Identifies if the port is for the inline menu list
+   * @param showInlineMenuAccountCreation - Identifies if the inline menu account creation should be shown
+   */
+  private shouldShowInlineMenuPasswordGenerator(
     isInlineMenuListPort: boolean,
     showInlineMenuAccountCreation: boolean,
   ) {
