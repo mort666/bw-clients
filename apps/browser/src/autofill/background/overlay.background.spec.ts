@@ -2134,18 +2134,72 @@ describe("OverlayBackground", () => {
 
       describe("when the focused field has a value", () => {
         beforeEach(() => {
+          overlayBackground["inlineMenuCiphers"] = new Map([
+            ["inline-menu-cipher-1", mock<CipherView>({ id: "inline-menu-cipher-1" })],
+          ]);
           jest
             .spyOn(overlayBackground as any, "checkMostRecentlyFocusedFieldHasValue")
             .mockResolvedValue(true);
         });
 
-        it.todo(
-          "updates the position of both button and list elements if the inline menu is showing an account creation view",
-        );
+        it("updates the position of both button and list elements if the inline menu is showing an account creation view", async () => {
+          overlayBackground["inlineMenuCiphers"] = new Map([]);
 
-        it.todo("closes the inline menu list if it is visible");
+          sendMockExtensionMessage({ command: "openAutofillInlineMenu" }, sender);
+          await flushPromises();
 
-        it.todo("updates the position of the inline menu button");
+          expect(tabsSendMessageSpy).toHaveBeenCalledWith(
+            sender.tab,
+            {
+              command: "appendAutofillInlineMenuToDom",
+              overlayElement: AutofillOverlayElement.Button,
+            },
+            topFrameSendOptions,
+          );
+          expect(tabsSendMessageSpy).toHaveBeenCalledWith(
+            sender.tab,
+            {
+              command: "appendAutofillInlineMenuToDom",
+              overlayElement: AutofillOverlayElement.List,
+            },
+            topFrameSendOptions,
+          );
+        });
+
+        it("closes the inline menu list if it is visible", async () => {
+          overlayBackground["isInlineMenuListVisible"] = true;
+
+          sendMockExtensionMessage({ command: "openAutofillInlineMenu" }, sender);
+          await flushPromises();
+
+          expect(tabsSendMessageSpy).toHaveBeenCalledWith(
+            sender.tab,
+            { command: "closeAutofillInlineMenu", overlayElement: AutofillOverlayElement.List },
+            topFrameSendOptions,
+          );
+        });
+
+        it("updates the position of the inline menu button", async () => {
+          sendMockExtensionMessage({ command: "openAutofillInlineMenu" }, sender);
+          await flushPromises();
+
+          expect(tabsSendMessageSpy).toHaveBeenCalledWith(
+            sender.tab,
+            {
+              command: "appendAutofillInlineMenuToDom",
+              overlayElement: AutofillOverlayElement.Button,
+            },
+            topFrameSendOptions,
+          );
+          expect(tabsSendMessageSpy).not.toHaveBeenCalledWith(
+            sender.tab,
+            {
+              command: "appendAutofillInlineMenuToDom",
+              overlayElement: AutofillOverlayElement.List,
+            },
+            topFrameSendOptions,
+          );
+        });
       });
     });
 
