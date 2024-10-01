@@ -1075,9 +1075,8 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
       return;
     }
 
-    if (this.inlineMenuFieldQualificationService.isCurrentPasswordField(autofillFieldData)) {
+    if (this.inlineMenuFieldQualificationService.isUpdateCurrentPasswordField(autofillFieldData)) {
       autofillFieldData.inlineMenuFillType = InlineMenuFillType.CurrentPasswordUpdate;
-      this.qualifyAccountCreationFieldType(autofillFieldData);
       return;
     }
 

@@ -39,6 +39,7 @@ export class InlineMenuFieldQualificationService
   private accountCreationFieldKeywords = [
     ...new Set(["register", "registration", "create", "confirm", ...this.newFieldKeywords]),
   ];
+  private updatePasswordFieldKeywords = ["update", "change", "confirm", "current password"];
   private creditCardFieldKeywords = [
     ...new Set([
       ...CreditCardAutoFillConstants.CardHolderFieldNames,
@@ -852,6 +853,17 @@ export class InlineMenuFieldQualificationService
     }
 
     return this.isPasswordField(field);
+  };
+
+  isUpdateCurrentPasswordField = (field: AutofillField): boolean => {
+    if (this.fieldContainsAutocompleteValues(field, this.newPasswordAutoCompleteValue)) {
+      return false;
+    }
+
+    return (
+      this.isPasswordField(field) &&
+      this.keywordsFoundInFieldData(field, this.updatePasswordFieldKeywords)
+    );
   };
 
   /**

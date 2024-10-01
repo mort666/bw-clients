@@ -1060,7 +1060,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     if (this.focusedFieldData?.inlineMenuFillType === InlineMenuFillType.CurrentPasswordUpdate) {
       pageDetails = this.getFilteredPageDetails(
         pageDetails,
-        this.inlineMenuFieldQualificationService.isCurrentPasswordField,
+        this.inlineMenuFieldQualificationService.isUpdateCurrentPasswordField,
       );
     }
 
