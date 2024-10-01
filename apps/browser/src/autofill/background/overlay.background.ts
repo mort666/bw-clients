@@ -2562,7 +2562,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * Triggers a closure of the inline menu during a reposition event.
    *
    * @param sender - The sender of the message
-   |   */
+   */
   private async closeInlineMenuAfterReposition(sender: chrome.runtime.MessageSender) {
     await this.toggleInlineMenuHidden(
       { isInlineMenuHidden: false, setTransparentInlineMenu: true },
@@ -2716,7 +2716,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * Stores the connected overlay port and sets up any existing ports to be disconnected.
    *
    * @param port - The port to store
-   |   */
+   */
   private storeOverlayPort(port: chrome.runtime.Port) {
     if (port.name === AutofillOverlayPort.List) {
       this.storeExpiredOverlayPort(this.inlineMenuListPort);
