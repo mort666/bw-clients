@@ -375,6 +375,10 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.loginEmailService.setLoginEmail(this.formGroup.value.email);
   }
 
+  isLoginWithPasskeySupported() {
+    return this.loginComponentService.isLoginWithPasskeySupported();
+  }
+
   protected async goToHint(): Promise<void> {
     await this.saveEmailSettings();
     await this.router.navigateByUrl("/hint");

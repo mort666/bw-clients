@@ -3,6 +3,7 @@ import { firstValueFrom } from "rxjs";
 
 import { LoginComponentService, PasswordPolicies } from "@bitwarden/auth/angular";
 import { SsoLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/sso-login.service.abstraction";
+import { ClientType } from "@bitwarden/common/enums";
 import { CryptoFunctionService } from "@bitwarden/common/platform/abstractions/crypto-function.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
@@ -10,6 +11,8 @@ import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
 
 export class DefaultLoginComponentService implements LoginComponentService {
+  protected clientType: ClientType;
+
   constructor(
     protected cryptoFunctionService: CryptoFunctionService,
     protected environmentService: EnvironmentService,
@@ -29,6 +32,10 @@ export class DefaultLoginComponentService implements LoginComponentService {
 
   isLoginViaAuthRequestSupported(): boolean {
     return false;
+  }
+
+  isLoginWithPasskeySupported(): boolean {
+    return this.clientType == ClientType.Web;
   }
 
   async launchSsoBrowserWindow(

@@ -39,8 +39,8 @@
 
       <div class="tw-text-center">{{ "or" | i18n }}</div>
 
-      <!-- Link to Login with Passkey page (Web and Desktop only) -->
-      <ng-container *ngIf="clientType !== ClientType.Browser">
+      <!-- Link to Login with Passkey page (Browser only) -->
+      <ng-container *ngIf="isLoginWithPasskeySupported()">
         <a
           bitButton
           block

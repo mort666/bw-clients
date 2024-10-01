@@ -37,6 +37,11 @@ export abstract class LoginComponentService {
   isLoginViaAuthRequestSupported: () => boolean;
 
   /**
+   * Indicates whether login with passkey is supported on the given client
+   */
+  isLoginWithPasskeySupported: () => boolean;
+
+  /**
    * Launches the SSO flow in a new browser window.
    * - Used by: Browser, Desktop
    */
