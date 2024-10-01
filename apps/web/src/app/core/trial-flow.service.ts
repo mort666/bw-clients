@@ -12,16 +12,22 @@ export class TrialFlowService {
     const trialEndDate = org?.subscription?.trialEndDate;
     const isOwner = organization?.isOwner;
     const isTrialing = org?.subscription?.status == "trialing";
-    let timeDifference = 0;
-    if (trialEndDate) {
-      const today = new Date();
-      const trialEnd = new Date(trialEndDate);
-      timeDifference = trialEnd?.getTime() - today?.getTime();
-    }
+    const timeDifference = 0;
+
     return {
       isOwner,
       isTrialing,
-      trialRemainingDays: Math.ceil(timeDifference / (1000 * 60 * 60 * 24)),
+      trialRemainingDays: trialEndDate
+        ? this.calculateTrialRemainingDays(trialEndDate)
+        : Math.ceil(timeDifference / (1000 * 60 * 60 * 24)),
     };
+  }
+
+  calculateTrialRemainingDays(trialEndDate: string): number | undefined {
+    const today = new Date();
+    const trialEnd = new Date(trialEndDate);
+    const timeDifference = trialEnd.getTime() - today.getTime();
+
+    return Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
   }
 }

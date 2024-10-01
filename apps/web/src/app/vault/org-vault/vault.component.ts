@@ -22,7 +22,6 @@ import {
   debounceTime,
   distinctUntilChanged,
   filter,
-  finalize,
   first,
   map,
   shareReplay,
@@ -599,21 +598,21 @@ export class VaultComponent implements OnInit, OnDestroy {
           // This is a temporary fix to avoid double fetching collections.
           // TODO: Remove when implementing new VVR menu
           this.vaultFilterService.reloadCollections(allCollections);
-          if (this.organization?.id) {
-            await this.flagOrgsWithPaymentIssues();
-          }
+
           this.refreshing = false;
           this.performingInitialLoad = false;
         },
       });
-  }
 
-  private async flagOrgsWithPaymentIssues() {
-    combineLatest([
-      from(this.organizationApiService.getSubscription(this.organization?.id)),
-      from(this.organizationApiService.getBilling(this.organization?.id)),
-    ])
+    firstSetup$
       .pipe(
+        switchMap(() => organization$),
+        switchMap((org) =>
+          combineLatest([
+            from(this.organizationApiService.getSubscription(org?.id)),
+            from(this.organizationApiService.getBilling(org?.id)),
+          ]),
+        ),
         tap(([sub, billing]) => {
           this.defaultPaymentSource = billing;
           const { isOwner, isTrialing, trialRemainingDays } =
@@ -622,7 +621,6 @@ export class VaultComponent implements OnInit, OnDestroy {
           this.isTrialing = isTrialing;
           this.trialRemainingDays = trialRemainingDays;
         }),
-        finalize(() => (this.refreshing = false)),
         takeUntil(this.destroy$),
       )
       .subscribe();
@@ -1374,6 +1372,14 @@ export class VaultComponent implements OnInit, OnDestroy {
       title: null,
       message: this.i18nService.t("missingPermissions"),
     });
+  }
+
+  displayTrialEndingMessage() {
+    this.trialRemainingDays >= 2
+      ? this.i18nService.t("freeTrialEndPrompt", this.trialRemainingDays)
+      : this.trialRemainingDays == 1
+        ? this.i18nService.t("freeTrialEndPromptForOneDayNoOrgName")
+        : this.i18nService.t("freeTrialEndingSoonWithoutOrgName");
   }
 }
 

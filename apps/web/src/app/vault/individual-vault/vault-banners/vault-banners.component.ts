@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 import { Observable } from "rxjs";
 
+import { I18nService } from "@bitwarden/common/platform/services/i18n.service";
 import { BannerModule } from "@bitwarden/components";
 
 import { VerifyEmailComponent } from "../../../auth/settings/verify-email.component";
@@ -26,6 +27,7 @@ export class VaultBannersComponent implements OnInit {
   constructor(
     private vaultBannerService: VaultBannersService,
     private router: Router,
+    private i18nService: I18nService,
   ) {
     this.premiumBannerVisible$ = this.vaultBannerService.shouldShowPremiumBanner$;
   }
@@ -62,5 +64,21 @@ export class VaultBannersComponent implements OnInit {
       showVerifyEmail ? VisibleVaultBanner.VerifyEmail : null,
       showLowKdf ? VisibleVaultBanner.KDFSettings : null,
     ].filter(Boolean); // remove all falsy values, i.e. null
+  }
+
+  getTrialStatusMessage(organization: OrganizationPaymentStatus) {
+    return organization?.trialRemainingDays >= 2
+      ? this.i18nService.t(
+          "freeTrialEndPromptAboveTwoDays",
+          organization?.orgName,
+          organization?.trialRemainingDays.toString(),
+        )
+      : organization?.trialRemainingDays == 1
+        ? this.i18nService.t("freeTrialEndPromptForOneDay", organization?.orgName)
+        : this.i18nService.t("freeTrialEndPromptForLessThanADay", organization?.orgName);
+  }
+
+  trackBy(index: number) {
+    return index;
   }
 }

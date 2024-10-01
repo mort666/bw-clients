@@ -4,16 +4,9 @@
   bannerType="premium"
   icon="bwi-billing"
   [showClose]="false"
-  *ngFor="let organization of organizationsPaymentStatus"
+  *ngFor="let organization of organizationsPaymentStatus; trackBy: trackBy; index as i"
 >
-  {{
-    organization?.trialRemainingDays >= 2
-      ? ("freeTrialEndPromptAboveTwoDays"
-        | i18n: organization?.orgName : organization?.trialRemainingDays)
-      : organization?.trialRemainingDays == 1
-        ? ("freeTrialEndPromptForOneDay" | i18n: organization?.orgName)
-        : ("freeTrialEndPromptForLessThanADay" | i18n: organization?.orgName)
-  }}
+  {{ getTrialStatusMessage(organization) }}
   <a
     bitLink
     linkType="contrast"

@@ -211,6 +211,14 @@ export class PaymentMethodComponent implements OnInit, OnDestroy {
     this.trialRemainingDays = trialRemainingDays;
   }
 
+  get getTrialEndingMessage() {
+    return this.trialRemainingDays >= 2
+      ? this.i18nService.t("freeTrialEndPrompt", this.trialRemainingDays)
+      : this.trialRemainingDays == 1
+        ? this.i18nService.t("freeTrialEndPromptForOneDayNoOrgName")
+        : this.i18nService.t("freeTrialEndingSoonWithoutOrgName");
+  }
+
   async navigateToPaymentMethod() {
     await this.router.navigate(
       ["organizations", `${this.organizationId}`, "billing", "payment-method"],

@@ -111,7 +111,7 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
   }
 
   applyOrganizationFilter = async (orgNode: TreeNode<OrganizationFilter>): Promise<void> => {
-    if (!orgNode.node.enabled) {
+    if (!orgNode?.node.enabled) {
       this.platformUtilsService.showToast(
         "error",
         null,
@@ -127,7 +127,7 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
       return;
     }
     const filter = this.activeFilter;
-    if (orgNode.node.id === "AllVaults") {
+    if (orgNode?.node.id === "AllVaults") {
       filter.resetOrganization();
     } else {
       filter.selectedOrganizationNode = orgNode;

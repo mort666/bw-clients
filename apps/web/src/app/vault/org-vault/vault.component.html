@@ -6,13 +6,7 @@
   [showClose]="false"
   *ngIf="!refreshing && !defaultPaymentSource?.paymentSource && isOwner && isTrialing"
 >
-  {{
-    trialRemainingDays >= 2
-      ? ("freeTrialEndPrompt" | i18n: trialRemainingDays)
-      : trialRemainingDays == 1
-        ? ("freeTrialEndPromptForOneDayNoOrgName" | i18n)
-        : ("freeTrialEndingSoonWithoutOrgName" | i18n)
-  }}
+  {{ displayTrialEndingMessage }}
   <a
     bitLink
     linkType="contrast"

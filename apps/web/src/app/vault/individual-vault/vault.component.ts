@@ -80,6 +80,7 @@ import { VaultItemEvent } from "../components/vault-items/vault-item-event";
 import { VaultItemsModule } from "../components/vault-items/vault-items.module";
 import { getNestedCollectionTree } from "../utils/collection-utils";
 
+import { TrialFlowService } from "./../../core/trial-flow.service";
 import {
   AddEditCipherDialogCloseResult,
   AddEditCipherDialogResult,
@@ -234,6 +235,7 @@ export class VaultComponent implements OnInit, OnDestroy {
     private accountService: AccountService,
     private cipherFormConfigService: DefaultCipherFormConfigService,
     private organizationApiService: OrganizationApiServiceAbstraction,
+    private trialFlowService: TrialFlowService,
   ) {}
 
   async ngOnInit() {
@@ -421,8 +423,8 @@ export class VaultComponent implements OnInit, OnDestroy {
         ),
         takeUntil(this.destroy$),
       )
-      .subscribe({
-        next: async ([
+      .subscribe(
+        ([
           filter,
           canAccessPremium,
           allCollections,
@@ -447,13 +449,12 @@ export class VaultComponent implements OnInit, OnDestroy {
           this.isEmpty = collections?.length === 0 && ciphers?.length === 0;
           if (this.allOrganizations.length > 0) {
             this.refreshing = true;
-            await this.detectUpcomingPaymentProblemsInOrgs();
-            this.refreshing = false;
+            this.detectUpcomingPaymentProblemsInOrgs();
           }
           this.performingInitialLoad = false;
           this.refreshing = false;
         },
-      });
+      );
 
     // Check if the extension refresh feature flag is enabled
     this.extensionRefreshEnabled = await this.configService.getFeatureFlag(
@@ -472,44 +473,41 @@ export class VaultComponent implements OnInit, OnDestroy {
     );
   }
 
-  async detectUpcomingPaymentProblemsInOrgs(): Promise<void> {
-    const checks = this.allOrganizations.map(async (org) => {
-      const result: OrganizationPaymentStatus = await this.evaluateOrganizationPaymentConditions(
-        org.id,
-      );
-
-      if (result.isOwner && result.isTrialing && result.isPaymentSourceEmpty) {
-        return result;
-      }
-
-      return null;
-    });
-
-    const results = await Promise.all(checks);
-    this.organizationsPaymentStatus = results.filter(
-      (result) => result !== null,
-    ) as OrganizationPaymentStatus[];
+  detectUpcomingPaymentProblemsInOrgs() {
+    combineLatest(
+      this.allOrganizations.map((org) => this.evaluateOrganizationPaymentConditions(org)),
+    )
+      .pipe(
+        map((arrResults) =>
+          arrResults.filter(
+            (result) => result.isOwner && result.isTrialing && result.isPaymentSourceEmpty,
+          ),
+        ),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((arr) => (this.organizationsPaymentStatus = arr as OrganizationPaymentStatus[]));
   }
 
   async evaluateOrganizationPaymentConditions(
-    organizationId: string,
+    org: Organization,
   ): Promise<OrganizationPaymentStatus> {
-    const org = await this.organizationService.get(organizationId);
-    const sub = await this.organizationApiService.getSubscription(organizationId);
-    const billing = await this.organizationApiService.getBilling(organizationId);
+    const sub = await this.organizationApiService.getSubscription(org?.id);
+    const billing = await this.organizationApiService.getBilling(org?.id);
 
     const isTrialing = sub?.subscription?.status === "trialing";
     const isOwner = org?.isOwner ?? false;
     const isPaymentSourceEmpty = !billing?.paymentSource;
 
-    const trialRemainingDays = this.calculateTrialRemainingDays(sub?.subscription?.trialEndDate);
+    const trialRemainingDays = this.trialFlowService.calculateTrialRemainingDays(
+      sub?.subscription?.trialEndDate,
+    );
 
     return {
       isTrialing,
       isOwner,
       trialRemainingDays,
       isPaymentSourceEmpty,
-      orgId: organizationId,
+      orgId: org?.id,
       orgName: org?.name ?? "Unknown Organization",
     };
   }
@@ -1403,18 +1401,6 @@ export class VaultComponent implements OnInit, OnDestroy {
       title: null,
       message: this.i18nService.t("missingPermissions"),
     });
-  }
-
-  private calculateTrialRemainingDays(trialEndDate?: string): number | undefined {
-    if (!trialEndDate) {
-      return undefined;
-    }
-
-    const today = new Date();
-    const trialEnd = new Date(trialEndDate);
-    const timeDifference = trialEnd.getTime() - today.getTime();
-
-    return Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
   }
 }
 
