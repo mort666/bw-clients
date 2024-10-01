@@ -116,6 +116,12 @@ export type ToggleInlineMenuHiddenMessage = {
   setTransparentInlineMenu?: boolean;
 };
 
+export type UpdateInlineMenuVisibilityMessage = {
+  overlayElement?: string;
+  isVisible?: boolean;
+  forceUpdate?: boolean;
+};
+
 export type OverlayBackgroundExtensionMessage = {
   command: string;
   portKey?: string;
@@ -124,7 +130,6 @@ export type OverlayBackgroundExtensionMessage = {
   details?: AutofillPageDetails;
   isFieldCurrentlyFocused?: boolean;
   isFieldCurrentlyFilling?: boolean;
-  isVisible?: boolean;
   subFrameData?: SubFrameOffsetData;
   focusedFieldData?: FocusedFieldData;
   focusedFieldHasValue?: boolean;
@@ -133,7 +138,8 @@ export type OverlayBackgroundExtensionMessage = {
   data?: LockedVaultPendingNotificationsData;
 } & OverlayAddNewItemMessage &
   CloseInlineMenuMessage &
-  ToggleInlineMenuHiddenMessage;
+  ToggleInlineMenuHiddenMessage &
+  UpdateInlineMenuVisibilityMessage;
 
 export type OverlayPortMessage = {
   [key: string]: any;

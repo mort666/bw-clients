@@ -90,6 +90,7 @@ import {
   SubFrameOffsetData,
   SubFrameOffsetsForTab,
   ToggleInlineMenuHiddenMessage,
+  UpdateInlineMenuVisibilityMessage,
   UpdateOverlayCiphersParams,
 } from "./abstractions/overlay.background";
 
@@ -172,7 +173,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     fido2AbortRequest: ({ sender }) => this.abortFido2ActiveRequest(sender.tab.id),
   };
   private readonly inlineMenuButtonPortMessageHandlers: InlineMenuButtonPortMessageHandlers = {
-    triggerDelayedAutofillInlineMenuClosure: () => this.handleDelayedInlineMenuClosureTrigger(),
+    triggerDelayedAutofillInlineMenuClosure: () => this.startInlineMenuDelayedClose$.next(),
     autofillInlineMenuButtonClicked: ({ port }) => this.handleInlineMenuButtonClicked(port),
     autofillInlineMenuBlurred: () => this.checkInlineMenuListFocused(),
     redirectAutofillInlineMenuFocusOut: ({ message, port }) =>
@@ -1009,6 +1010,11 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     );
   }
 
+  /**
+   * Indicates whether the most recently focused field contains a value.
+   *
+   * @param tab - The tab to check the focused field for
+   */
   private async checkMostRecentlyFocusedFieldHasValue(tab: chrome.tabs.Tab) {
     return !!(await BrowserApi.tabSendMessage(
       tab,
@@ -1073,19 +1079,24 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     this.updateLastUsedInlineMenuCipher(inlineMenuCipherId, cipher);
   }
 
+  /**
+   * Filters the passed page details in order to selectively fill elements based
+   * on the provided callback.
+   *
+   * @param pageDetails - The page details to filter
+   * @param fieldsFilter - The callback to filter the fields
+   */
   private getFilteredPageDetails(
     pageDetails: PageDetail[],
-    filterCallback: (field: AutofillField) => boolean,
+    fieldsFilter: (field: AutofillField) => boolean,
   ): PageDetail[] {
     let filteredPageDetails: PageDetail[] = structuredClone(pageDetails);
-    if (!filteredPageDetails.length) {
+    if (!filteredPageDetails?.length) {
       return [];
     }
 
     filteredPageDetails = filteredPageDetails.map((pageDetail) => {
-      pageDetail.details.fields = pageDetail.details.fields.filter((field) =>
-        filterCallback(field),
-      );
+      pageDetail.details.fields = pageDetail.details.fields.filter(fieldsFilter);
       return pageDetail;
     });
 
@@ -1191,15 +1202,14 @@ export class OverlayBackground implements OverlayBackgroundInterface {
   ) {
     const command = "closeAutofillInlineMenu";
     const sendOptions = { frameId: 0 };
+    const updateVisibilityDefaults = { overlayElement, isVisible: false, forceUpdate: true };
     this.generatedPassword = null;
 
     if (forceCloseInlineMenu) {
-      BrowserApi.tabSendMessage(
-        sender.tab,
-        { command: "closeAutofillInlineMenu", overlayElement },
-        { frameId: 0 },
-      ).catch((error) => this.logService.error(error));
-      this.updateClosedInlineMenuVisibleStatus(overlayElement);
+      BrowserApi.tabSendMessage(sender.tab, { command, overlayElement }, sendOptions).catch(
+        (error) => this.logService.error(error),
+      );
+      this.updateInlineMenuElementIsVisibleStatus(updateVisibilityDefaults, sender);
 
       return;
     }
@@ -1214,30 +1224,17 @@ export class OverlayBackground implements OverlayBackgroundInterface {
         { command, overlayElement: AutofillOverlayElement.List },
         sendOptions,
       ).catch((error) => this.logService.error(error));
-      this.isInlineMenuListVisible = false;
+      this.updateInlineMenuElementIsVisibleStatus(
+        Object.assign(updateVisibilityDefaults, { overlayElement: AutofillOverlayElement.List }),
+        sender,
+      );
       return;
     }
 
-    this.updateClosedInlineMenuVisibleStatus(overlayElement);
     BrowserApi.tabSendMessage(sender.tab, { command, overlayElement }, sendOptions).catch((error) =>
       this.logService.error(error),
     );
-  }
-
-  private updateClosedInlineMenuVisibleStatus(overlayElement: string) {
-    if (!overlayElement) {
-      this.isInlineMenuButtonVisible = false;
-      this.isInlineMenuListVisible = false;
-      return;
-    }
-
-    if (overlayElement === AutofillOverlayElement.Button) {
-      this.isInlineMenuButtonVisible = false;
-    }
-
-    if (overlayElement === AutofillOverlayElement.List) {
-      this.isInlineMenuListVisible = false;
-    }
+    this.updateInlineMenuElementIsVisibleStatus(updateVisibilityDefaults, sender);
   }
 
   /**
@@ -1253,14 +1250,6 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     const message = { command: "triggerDelayedAutofillInlineMenuClosure" };
     this.inlineMenuButtonPort?.postMessage(message);
     this.inlineMenuListPort?.postMessage(message);
-  }
-
-  /**
-   * Handles the message received from the top level frame to trigger
-   * the delayed closure of the inline menu.
-   */
-  private async handleDelayedInlineMenuClosureTrigger() {
-    this.startInlineMenuDelayedClose$.next();
   }
 
   /**
@@ -1353,20 +1342,19 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * @param sender - The sender of the port message
    */
   private updateInlineMenuElementIsVisibleStatus(
-    message: OverlayBackgroundExtensionMessage,
+    { overlayElement, isVisible, forceUpdate }: UpdateInlineMenuVisibilityMessage,
     sender: chrome.runtime.MessageSender,
   ) {
-    if (!this.senderTabHasFocusedField(sender)) {
+    if (!forceUpdate && !this.senderTabHasFocusedField(sender)) {
       return;
     }
 
-    const { overlayElement, isVisible } = message;
-    if (overlayElement === AutofillOverlayElement.Button) {
+    if (!overlayElement || overlayElement === AutofillOverlayElement.Button) {
       this.isInlineMenuButtonVisible = isVisible;
       return;
     }
 
-    if (overlayElement === AutofillOverlayElement.List) {
+    if (!overlayElement || overlayElement === AutofillOverlayElement.List) {
       this.isInlineMenuListVisible = isVisible;
     }
   }
@@ -1670,12 +1658,19 @@ export class OverlayBackground implements OverlayBackgroundInterface {
 
     const portMessage = { command: "toggleAutofillInlineMenuHidden", styles };
     if (this.inlineMenuButtonPort) {
-      this.isInlineMenuButtonVisible = !isInlineMenuHidden;
+      this.updateInlineMenuElementIsVisibleStatus(
+        { overlayElement: AutofillOverlayElement.Button, isVisible: !isInlineMenuHidden },
+        sender,
+      );
       this.inlineMenuButtonPort.postMessage(portMessage);
     }
 
     if (this.inlineMenuListPort) {
       this.isInlineMenuListVisible = !isInlineMenuHidden;
+      this.updateInlineMenuElementIsVisibleStatus(
+        { overlayElement: AutofillOverlayElement.List, isVisible: !isInlineMenuHidden },
+        sender,
+      );
       this.inlineMenuListPort.postMessage(portMessage);
     }
 
@@ -2757,15 +2752,23 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * @param port - The port that was disconnected
    */
   private handlePortOnDisconnect = (port: chrome.runtime.Port) => {
+    const updateVisibilityDefaults = { isVisible: false, forceUpdate: true };
+
     if (port.name === AutofillOverlayPort.List) {
       this.inlineMenuListPort = null;
-      this.isInlineMenuListVisible = false;
+      this.updateInlineMenuElementIsVisibleStatus(
+        Object.assign(updateVisibilityDefaults, { overlayElement: AutofillOverlayElement.List }),
+        port.sender,
+      );
       this.inlineMenuPosition.list = null;
     }
 
     if (port.name === AutofillOverlayPort.Button) {
       this.inlineMenuButtonPort = null;
-      this.isInlineMenuButtonVisible = false;
+      this.updateInlineMenuElementIsVisibleStatus(
+        Object.assign(updateVisibilityDefaults, { overlayElement: AutofillOverlayElement.List }),
+        port.sender,
+      );
       this.inlineMenuPosition.button = null;
     }
   };
