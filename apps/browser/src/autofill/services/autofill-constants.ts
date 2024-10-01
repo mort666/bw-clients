@@ -47,7 +47,6 @@ export class AutoFillConstants {
     "twofa",
     "twofactorcode",
     "verification code",
-    "verificatiocode",
   ];
 
   static readonly SearchFieldNames: string[] = ["search", "query", "find", "go"];
