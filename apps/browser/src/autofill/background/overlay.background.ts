@@ -1488,7 +1488,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       return;
     }
 
-    if (this.shouldUpdateAccountCreationMenuOnFocus(previousFocusedFieldData)) {
+    if (this.shouldUpdateAccountCreationMenuOnFieldFocus(previousFocusedFieldData)) {
       this.updateInlineMenuAccountCreationField(
         previousFocusedFieldData,
         focusedFieldHasValue,
@@ -1513,6 +1513,12 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     }
   }
 
+  /**
+   * Identifies if a recently focused field should update as a password generation field.
+   * Can also potentially show the save login inline menu list if the field has a value.
+   *
+   * @param focusedFieldHasValue - Identifies whether the focused field has a value
+   */
   private shouldUpdatePasswordGeneratorMenuOnFieldFocus(focusedFieldHasValue: boolean) {
     if (
       !this.isInlineMenuButtonVisible ||
@@ -1571,7 +1577,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    *
    * @param previousFocusedFieldData - The data set of the previously focused field
    */
-  private shouldUpdateAccountCreationMenuOnFocus(previousFocusedFieldData: FocusedFieldData) {
+  private shouldUpdateAccountCreationMenuOnFieldFocus(previousFocusedFieldData: FocusedFieldData) {
     const accountCreationFieldBlurred =
       this.focusedFieldMatchesFillType(
         InlineMenuFillType.AccountCreationUsername,
@@ -1725,8 +1731,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       return;
     }
 
-    const isFieldFilled = await this.checkMostRecentlyFocusedFieldHasValue(sender.tab);
-    if (!isFieldFilled) {
+    if (!(await this.checkMostRecentlyFocusedFieldHasValue(sender.tab))) {
       await this.openInlineMenuOnEmptyField(sender);
       return;
     }
