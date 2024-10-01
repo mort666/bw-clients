@@ -318,9 +318,7 @@ export class AddEditComponent implements OnInit, OnDestroy {
     this.folders$ = this.folderService.folderViews$;
 
     if (this.editMode && this.previousCipherId !== this.cipherId) {
-      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.eventCollectionService.collect(EventType.Cipher_ClientViewed, this.cipherId);
+      void this.eventCollectionService.collectMany(EventType.Cipher_ClientViewed, [this.cipher]);
     }
     this.previousCipherId = this.cipherId;
     this.reprompt = this.cipher.reprompt !== CipherRepromptType.None;
@@ -561,12 +559,9 @@ export class AddEditComponent implements OnInit, OnDestroy {
     if (this.editMode && this.showPassword) {
       document.getElementById("loginPassword")?.focus();
 
-      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.eventCollectionService.collect(
-        EventType.Cipher_ClientToggledPasswordVisible,
-        this.cipherId,
-      );
+      void this.eventCollectionService.collectMany(EventType.Cipher_ClientToggledPasswordVisible, [
+        this.cipher,
+      ]);
     }
   }
 
@@ -576,23 +571,18 @@ export class AddEditComponent implements OnInit, OnDestroy {
     if (this.editMode && this.showTotpSeed) {
       document.getElementById("loginTotp")?.focus();
 
-      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.eventCollectionService.collect(
-        EventType.Cipher_ClientToggledTOTPSeedVisible,
-        this.cipherId,
-      );
+      void this.eventCollectionService.collectMany(EventType.Cipher_ClientToggledTOTPSeedVisible, [
+        this.cipher,
+      ]);
     }
   }
 
   async toggleCardNumber() {
     this.showCardNumber = !this.showCardNumber;
     if (this.showCardNumber) {
-      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.eventCollectionService.collect(
+      void this.eventCollectionService.collectMany(
         EventType.Cipher_ClientToggledCardNumberVisible,
-        this.cipherId,
+        [this.cipher],
       );
     }
   }
@@ -601,12 +591,9 @@ export class AddEditComponent implements OnInit, OnDestroy {
     this.showCardCode = !this.showCardCode;
     document.getElementById("cardCode").focus();
     if (this.editMode && this.showCardCode) {
-      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.eventCollectionService.collect(
-        EventType.Cipher_ClientToggledCardCodeVisible,
-        this.cipherId,
-      );
+      void this.eventCollectionService.collectMany(EventType.Cipher_ClientToggledCardCodeVisible, [
+        this.cipher,
+      ]);
     }
   }
 
@@ -756,17 +743,17 @@ export class AddEditComponent implements OnInit, OnDestroy {
     );
 
     if (typeI18nKey === "password") {
-      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.eventCollectionService.collect(EventType.Cipher_ClientCopiedPassword, this.cipherId);
+      void this.eventCollectionService.collectMany(EventType.Cipher_ClientCopiedPassword, [
+        this.cipher,
+      ]);
     } else if (typeI18nKey === "securityCode") {
-      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.eventCollectionService.collect(EventType.Cipher_ClientCopiedCardCode, this.cipherId);
+      void this.eventCollectionService.collectMany(EventType.Cipher_ClientCopiedCardCode, [
+        this.cipher,
+      ]);
     } else if (aType === "H_Field") {
-      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.eventCollectionService.collect(EventType.Cipher_ClientCopiedHiddenField, this.cipherId);
+      void this.eventCollectionService.collectMany(EventType.Cipher_ClientCopiedHiddenField, [
+        this.cipher,
+      ]);
     }
 
     return true;

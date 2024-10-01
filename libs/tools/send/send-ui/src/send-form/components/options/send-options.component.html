@@ -27,7 +27,17 @@
         bitIconButton="bwi-generate"
         bitSuffix
         [appA11yTitle]="'generatePassword' | i18n"
+        (click)="generatePassword()"
         data-testid="generate-password"
+      ></button>
+      <button
+        type="button"
+        bitIconButton="bwi-clone"
+        bitSuffix
+        [appA11yTitle]="'copyPassword' | i18n"
+        [valueLabel]="'password' | i18n"
+        [appCopyClick]="sendOptionsForm.get('password').value"
+        showToast
       ></button>
       <bit-hint>{{ "sendPasswordDescV2" | i18n }}</bit-hint>
     </bit-form-field>
