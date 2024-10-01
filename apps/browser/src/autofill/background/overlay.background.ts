@@ -97,18 +97,17 @@ export class OverlayBackground implements OverlayBackgroundInterface {
   private readonly openUnlockPopout = openUnlockPopout;
   private readonly openViewVaultItemPopout = openViewVaultItemPopout;
   private readonly openAddEditVaultItemPopout = openAddEditVaultItemPopout;
-  private readonly updateOverlayCiphersSubject = new Subject<UpdateOverlayCiphersParams>();
-  private readonly storeInlineMenuFido2CredentialsSubject = new ReplaySubject<number>(1);
-  private readonly startInlineMenuDelayedCloseSubject: Subject<void> = new Subject<void>();
-  private readonly cancelInlineMenuDelayedCloseSubject: Subject<boolean> = new Subject<boolean>();
-  private readonly startInlineMenuFadeInSubject = new Subject<void>();
-  private readonly cancelInlineMenuFadeInSubject = new Subject<boolean>();
-  private readonly startUpdateInlineMenuPositionSubject =
-    new Subject<chrome.runtime.MessageSender>();
-  private readonly cancelUpdateInlineMenuPositionSubject = new Subject<void>();
-  private readonly repositionInlineMenuSubject = new Subject<chrome.runtime.MessageSender>();
-  private readonly rebuildSubFrameOffsetsSubject = new Subject<chrome.runtime.MessageSender>();
-  private readonly addNewVaultItemSubject = new Subject<CurrentAddNewItemData>();
+  private readonly updateOverlayCiphers$ = new Subject<UpdateOverlayCiphersParams>();
+  private readonly storeInlineMenuFido2Credentials$ = new ReplaySubject<number>(1);
+  private readonly startInlineMenuDelayedClose$ = new Subject<void>();
+  private readonly cancelInlineMenuDelayedClose$ = new Subject<boolean>();
+  private readonly startInlineMenuFadeIn$ = new Subject<void>();
+  private readonly cancelInlineMenuFadeIn$ = new Subject<boolean>();
+  private readonly startUpdateInlineMenuPosition$ = new Subject<chrome.runtime.MessageSender>();
+  private readonly cancelUpdateInlineMenuPosition$ = new Subject<void>();
+  private readonly repositionInlineMenu$ = new Subject<chrome.runtime.MessageSender>();
+  private readonly rebuildSubFrameOffsets$ = new Subject<chrome.runtime.MessageSender>();
+  private readonly addNewVaultItem$ = new Subject<CurrentAddNewItemData>();
   private readonly createAccountFillTypes: Set<InlineMenuFillTypes> = new Set([
     InlineMenuFillType.PasswordGeneration,
     InlineMenuFillType.AccountCreationUsername,
@@ -228,7 +227,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * Initializes event observables that handle events which affect the overlay's behavior.
    */
   private initOverlayEventObservables() {
-    this.updateOverlayCiphersSubject
+    this.updateOverlayCiphers$
       .pipe(
         throttleTime(100, null, { leading: true, trailing: true }),
         switchMap((updateOverlayCiphersParams) =>
@@ -236,22 +235,22 @@ export class OverlayBackground implements OverlayBackgroundInterface {
         ),
       )
       .subscribe();
-    this.storeInlineMenuFido2CredentialsSubject
+    this.storeInlineMenuFido2Credentials$
       .pipe(switchMap((tabId) => this.availablePasskeyAuthCredentials$(tabId)))
       .subscribe((credentials) => this.storeInlineMenuFido2Credentials(credentials));
-    this.repositionInlineMenuSubject
+    this.repositionInlineMenu$
       .pipe(
         debounceTime(1000),
         switchMap((sender) => this.repositionInlineMenu(sender)),
       )
       .subscribe();
-    this.rebuildSubFrameOffsetsSubject
+    this.rebuildSubFrameOffsets$
       .pipe(
         throttleTime(100, null, { leading: true, trailing: true }),
         switchMap((sender) => this.rebuildSubFrameOffsets(sender)),
       )
       .subscribe();
-    this.addNewVaultItemSubject
+    this.addNewVaultItem$
       .pipe(
         debounceTime(100),
         switchMap((addNewItemData) =>
@@ -262,25 +261,22 @@ export class OverlayBackground implements OverlayBackgroundInterface {
 
     // Delayed close of the inline menu
     merge(
-      this.startInlineMenuDelayedCloseSubject.pipe(debounceTime(100)),
-      this.cancelInlineMenuDelayedCloseSubject,
+      this.startInlineMenuDelayedClose$.pipe(debounceTime(100)),
+      this.cancelInlineMenuDelayedClose$,
     )
       .pipe(switchMap((cancelSignal) => this.triggerDelayedInlineMenuClosure(!!cancelSignal)))
       .subscribe();
 
     // Debounce used to update inline menu position
     merge(
-      this.startUpdateInlineMenuPositionSubject.pipe(debounceTime(150)),
-      this.cancelUpdateInlineMenuPositionSubject,
+      this.startUpdateInlineMenuPosition$.pipe(debounceTime(150)),
+      this.cancelUpdateInlineMenuPosition$,
     )
       .pipe(switchMap((sender) => this.updateInlineMenuPositionAfterRepositionEvent(sender)))
       .subscribe();
 
     // FadeIn Observable behavior
-    merge(
-      this.startInlineMenuFadeInSubject.pipe(debounceTime(150)),
-      this.cancelInlineMenuFadeInSubject,
-    )
+    merge(this.startInlineMenuFadeIn$.pipe(debounceTime(150)), this.cancelInlineMenuFadeIn$)
       .pipe(switchMap((cancelSignal) => this.triggerInlineMenuFadeIn(!!cancelSignal)))
       .subscribe();
   }
@@ -317,7 +313,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     const authStatus = await firstValueFrom(this.authService.activeAccountStatus$);
     if (authStatus === AuthenticationStatus.Unlocked) {
       this.inlineMenuCiphers = new Map();
-      this.updateOverlayCiphersSubject.next({ updateAllCipherTypes, refocusField });
+      this.updateOverlayCiphers$.next({ updateAllCipherTypes, refocusField });
     }
   }
 
@@ -352,7 +348,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     }
 
     this.inlineMenuFido2Credentials.clear();
-    this.storeInlineMenuFido2CredentialsSubject.next(currentTab.id);
+    this.storeInlineMenuFido2Credentials$.next(currentTab.id);
 
     await this.generatePassword();
 
@@ -959,8 +955,8 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * @param sender - The sender of the message
    */
   private async rebuildSubFrameOffsets(sender: chrome.runtime.MessageSender) {
-    this.cancelUpdateInlineMenuPositionSubject.next();
-    this.cancelInlineMenuDelayedCloseSubject.next(true);
+    this.cancelUpdateInlineMenuPosition$.next();
+    this.cancelInlineMenuDelayedClose$.next(true);
 
     const subFrameOffsetsForTab = this.subFrameOffsetsForTab[sender.tab.id];
     if (subFrameOffsetsForTab) {
@@ -1264,7 +1260,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * the delayed closure of the inline menu.
    */
   private async handleDelayedInlineMenuClosureTrigger() {
-    this.startInlineMenuDelayedCloseSubject.next();
+    this.startInlineMenuDelayedClose$.next();
   }
 
   /**
@@ -1326,8 +1322,8 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     if (subFrameOffsetsForTab) {
       subFrameOffsets = subFrameOffsetsForTab.get(this.focusedFieldData.frameId);
       if (subFrameOffsets === null) {
-        this.rebuildSubFrameOffsetsSubject.next(sender);
-        this.startUpdateInlineMenuPositionSubject.next(sender);
+        this.rebuildSubFrameOffsets$.next(sender);
+        this.startUpdateInlineMenuPosition$.next(sender);
         return;
       }
     }
@@ -1388,14 +1384,14 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    */
   private startInlineMenuFadeIn() {
     this.cancelInlineMenuFadeIn();
-    this.startInlineMenuFadeInSubject.next();
+    this.startInlineMenuFadeIn$.next();
   }
 
   /**
    * Clears the timeout used to fade in the inline menu elements.
    */
   private cancelInlineMenuFadeIn() {
-    this.cancelInlineMenuFadeInSubject.next(true);
+    this.cancelInlineMenuFadeIn$.next(true);
   }
 
   /**
@@ -1698,7 +1694,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     sender: chrome.runtime.MessageSender,
     isOpeningFullInlineMenu = false,
   ) {
-    this.cancelInlineMenuDelayedCloseSubject.next(true);
+    this.cancelInlineMenuDelayedClose$.next(true);
 
     if (isOpeningFullInlineMenu) {
       await this.updateInlineMenuPosition(sender, AutofillOverlayElement.Button);
@@ -1790,7 +1786,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * @param port - The port of the inline menu button
    */
   private async handleInlineMenuButtonClicked(port: chrome.runtime.Port) {
-    this.cancelInlineMenuDelayedCloseSubject.next(true);
+    this.cancelInlineMenuDelayedClose$.next(true);
     this.cancelInlineMenuFadeInAndPositionUpdate();
 
     if ((await this.getAuthStatus()) !== AuthenticationStatus.Unlocked) {
@@ -1991,7 +1987,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       this.updateCurrentAddNewItemIdentity(identity);
     }
 
-    this.addNewVaultItemSubject.next(this.currentAddNewItemData);
+    this.addNewVaultItem$.next(this.currentAddNewItemData);
   }
 
   /**
@@ -2466,7 +2462,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     this.toggleInlineMenuHidden({ isInlineMenuHidden: true }, sender).catch((error) =>
       this.logService.error(error),
     );
-    this.repositionInlineMenuSubject.next(sender);
+    this.repositionInlineMenu$.next(sender);
   }
 
   /**
@@ -2490,8 +2486,8 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    */
   private async triggerSubFrameFocusInRebuild(sender: chrome.runtime.MessageSender) {
     this.cancelInlineMenuFadeInAndPositionUpdate();
-    this.rebuildSubFrameOffsetsSubject.next(sender);
-    this.repositionInlineMenuSubject.next(sender);
+    this.rebuildSubFrameOffsets$.next(sender);
+    this.repositionInlineMenu$.next(sender);
   }
 
   /**
@@ -2518,10 +2514,10 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     }
 
     if (this.focusedFieldData?.frameId > 0) {
-      this.rebuildSubFrameOffsetsSubject.next(sender);
+      this.rebuildSubFrameOffsets$.next(sender);
     }
 
-    this.startUpdateInlineMenuPositionSubject.next(sender);
+    this.startUpdateInlineMenuPosition$.next(sender);
   };
 
   /**
@@ -2542,7 +2538,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    */
   private cancelInlineMenuFadeInAndPositionUpdate() {
     this.cancelInlineMenuFadeIn();
-    this.cancelUpdateInlineMenuPositionSubject.next();
+    this.cancelUpdateInlineMenuPosition$.next();
   }
 
   /**
