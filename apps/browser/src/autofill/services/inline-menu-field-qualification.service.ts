@@ -1114,17 +1114,17 @@ export class InlineMenuFieldQualificationService
           // Remove hyphens from all potential keywords, we want to treat these as a single word.
           keywordEl = keywordEl.replace(/-/g, "");
 
-          // Split the keyword by non-alphabetical characters to get the keywords without treating a space as a separator.
-          keywordEl.split(/[^\p{L}]+/gu).forEach((keyword) => {
+          // Split the keyword by non-alphanumeric characters to get the keywords without treating a space as a separator.
+          keywordEl.split(/[^\p{L}0-9]+/gu).forEach((keyword) => {
             if (keyword) {
               keywordsSet.add(keyword);
             }
           });
 
-          // Collapse all spaces and split by non-alphabetical characters to get the keywords
+          // Collapse all spaces and split by non-alphanumeric characters to get the keywords
           keywordEl
             .replace(/\s/g, "")
-            .split(/[^\p{L}]+/gu)
+            .split(/[^\p{L}0-9]+/gu)
             .forEach((keyword) => {
               if (keyword) {
                 keywordsSet.add(keyword);
