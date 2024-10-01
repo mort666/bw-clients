@@ -5,12 +5,7 @@
     bannerType="premium"
     icon="bwi-billing"
     [showClose]="false"
-    *ngIf="
-      !loading &&
-      freeTrial.trialing &&
-      !freeTrial.defaultPaymentSource?.paymentSource &&
-      freeTrial.isOwner
-    "
+    *ngIf="!loading && freeTrial.shownBanner"
   >
     {{ freeTrial.message }}
     <a

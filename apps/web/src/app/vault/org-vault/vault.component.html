@@ -1,22 +1,24 @@
-<bit-banner
-  id="free-trial-banner"
-  class="-tw-m-6 tw-flex tw-flex-col tw-pb-6"
-  icon="bwi-billing"
-  bannerType="premium"
-  [showClose]="false"
-  *ngIf="!refreshing && !defaultPaymentSource?.paymentSource && isOwner && isTrialing"
->
-  {{ displayTrialEndingMessage }}
-  <a
-    bitLink
-    linkType="contrast"
-    (click)="navigateToPaymentMethod()"
-    class="tw-cursor-pointer"
-    rel="noreferrer noopener"
+<ng-container *ngIf="freeTrial$ | async as freeTrial">
+  <bit-banner
+    id="free-trial-banner"
+    class="-tw-m-6 tw-flex tw-flex-col tw-pb-6"
+    icon="bwi-billing"
+    bannerType="premium"
+    [showClose]="false"
+    *ngIf="!refreshing && freeTrial.shownBanner"
   >
-    {{ "routeToPaymentPageTrigger" | i18n }}
-  </a>
-</bit-banner>
+    {{ freeTrial.message }}
+    <a
+      bitLink
+      linkType="contrast"
+      (click)="navigateToPaymentMethod()"
+      class="tw-cursor-pointer"
+      rel="noreferrer noopener"
+    >
+      {{ "routeToPaymentPageTrigger" | i18n }}
+    </a>
+  </bit-banner>
+</ng-container>
 
 <app-org-vault-header
   [filter]="filter"

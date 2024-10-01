@@ -4,9 +4,9 @@
   bannerType="premium"
   icon="bwi-billing"
   [showClose]="false"
-  *ngIf="!defaultPaymentSource?.paymentSource && isOwner && isTrialing"
+  *ngIf="freeTrialData.shownBanner"
 >
-  {{ getTrialEndingMessage }}
+  {{ freeTrialData.message }}
   <a
     bitLink
     linkType="contrast"

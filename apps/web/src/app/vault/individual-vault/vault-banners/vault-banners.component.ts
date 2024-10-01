@@ -2,12 +2,12 @@ import { Component, Input, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 import { Observable } from "rxjs";
 
+import { FreeTrial } from "@bitwarden/common/billing/types/free-trial";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { BannerModule } from "@bitwarden/components";
 
 import { VerifyEmailComponent } from "../../../auth/settings/verify-email.component";
 import { SharedModule } from "../../../shared";
-import { OrganizationPaymentStatus } from "../vault.component";
 
 import { VaultBannersService, VisibleVaultBanner } from "./services/vault-banners.service";
 
@@ -22,7 +22,7 @@ export class VaultBannersComponent implements OnInit {
   visibleBanners: VisibleVaultBanner[] = [];
   premiumBannerVisible$: Observable<boolean>;
   VisibleVaultBanner = VisibleVaultBanner;
-  @Input() organizationsPaymentStatus: OrganizationPaymentStatus[] = [];
+  @Input() organizationsPaymentStatus: FreeTrial[] = [];
 
   constructor(
     private vaultBannerService: VaultBannersService,
@@ -66,16 +66,18 @@ export class VaultBannersComponent implements OnInit {
     ].filter(Boolean); // remove all falsy values, i.e. null
   }
 
-  getTrialStatusMessage(organization: OrganizationPaymentStatus) {
-    return organization?.trialRemainingDays >= 2
-      ? this.i18nService.t(
-          "freeTrialEndPromptAboveTwoDays",
-          organization?.orgName,
-          organization?.trialRemainingDays.toString(),
-        )
-      : organization?.trialRemainingDays == 1
-        ? this.i18nService.t("freeTrialEndPromptForOneDay", organization?.orgName)
-        : this.i18nService.t("freeTrialEndPromptForLessThanADay", organization?.orgName);
+  freeTrialMessage(organization: FreeTrial) {
+    if (organization.remainingDays >= 2) {
+      return this.i18nService.t(
+        "freeTrialEndPromptAboveTwoDays",
+        organization.organizationName,
+        organization.remainingDays.toString(),
+      );
+    }
+
+    if (organization.remainingDays === 1) {
+      return this.i18nService.t("freeTrialEndPromptForOneDay", organization.organizationName);
+    }
   }
 
   trackBy(index: number) {

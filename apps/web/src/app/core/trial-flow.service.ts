@@ -3,15 +3,8 @@ import { Injectable } from "@angular/core";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { BillingResponse } from "@bitwarden/common/billing/models/response/billing.response";
 import { OrganizationSubscriptionResponse } from "@bitwarden/common/billing/models/response/organization-subscription.response";
+import { FreeTrial } from "@bitwarden/common/billing/types/free-trial";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-
-type FreeTrial = {
-  trialing: boolean;
-  remainingDays: number;
-  message: string;
-  isOwner: boolean;
-  defaultPaymentSource: BillingResponse;
-};
 
 @Injectable({ providedIn: "root" })
 export class TrialFlowService {
@@ -22,20 +15,19 @@ export class TrialFlowService {
     billing: BillingResponse,
   ): FreeTrial {
     const trialEndDate = organizationSubscription?.subscription?.trialEndDate;
-    const isOwner = organization?.isOwner;
-    const isTrialing = organizationSubscription?.subscription?.status === "trialing";
-    const defaultPaymentSource = billing;
-
+    const displayBanner =
+      !billing?.paymentSource &&
+      organization?.isOwner &&
+      organizationSubscription?.subscription?.status === "trialing";
     const trialRemainingDays = trialEndDate ? this.calculateTrialRemainingDays(trialEndDate) : 0;
-
     const freeTrialMessage = this.getFreeTrialMessage(trialRemainingDays);
 
     return {
-      trialing: isTrialing,
       remainingDays: trialRemainingDays,
       message: freeTrialMessage,
-      isOwner,
-      defaultPaymentSource,
+      shownBanner: displayBanner,
+      organizationId: organization.id,
+      organizationName: organization.name,
     };
   }
 

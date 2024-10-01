@@ -6,11 +6,11 @@
   [showClose]="false"
   *ngFor="let organization of organizationsPaymentStatus; trackBy: trackBy; index as i"
 >
-  {{ getTrialStatusMessage(organization) }}
+  {{ freeTrialMessage(organization) }}
   <a
     bitLink
     linkType="contrast"
-    (click)="navigateToPaymentMethod(organization?.orgId)"
+    (click)="navigateToPaymentMethod(organization?.organizationId)"
     rel="noreferrer noopener"
     class="tw-cursor-pointer"
   >

@@ -38,6 +38,7 @@ import { OrganizationService } from "@bitwarden/common/admin-console/abstraction
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
+import { FreeTrial } from "@bitwarden/common/billing/types/free-trial";
 import { EventType } from "@bitwarden/common/enums";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
@@ -198,7 +199,7 @@ export class VaultComponent implements OnInit, OnDestroy {
   protected vaultBulkManagementActionEnabled$ = this.configService.getFeatureFlag$(
     FeatureFlag.VaultBulkManagementAction,
   );
-  protected organizationsPaymentStatus: OrganizationPaymentStatus[] = [];
+  protected organizationsPaymentStatus: FreeTrial[] = [];
   private searchText$ = new Subject<string>();
   private refresh$ = new BehaviorSubject<void>(null);
   private destroy$ = new Subject<void>();
@@ -406,6 +407,28 @@ export class VaultComponent implements OnInit, OnDestroy {
       )
       .subscribe();
 
+    const organizationsPaymentStatus$ = this.organizationService.organizations$.pipe(
+      switchMap((allOrganizations) =>
+        combineLatest(
+          allOrganizations.map((org) =>
+            combineLatest([
+              this.organizationApiService.getSubscription(org.id),
+              this.organizationApiService.getBilling(org.id),
+            ]).pipe(
+              map(([subscription, billing]) => {
+                return this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(
+                  org,
+                  subscription,
+                  billing,
+                );
+              }),
+            ),
+          ),
+        ),
+      ),
+      map((results) => results.filter((result) => result.shownBanner)),
+    );
+
     firstSetup$
       .pipe(
         switchMap(() => this.refresh$),
@@ -419,6 +442,7 @@ export class VaultComponent implements OnInit, OnDestroy {
             ciphers$,
             collections$,
             selectedCollection$,
+            organizationsPaymentStatus$,
           ]),
         ),
         takeUntil(this.destroy$),
@@ -432,6 +456,7 @@ export class VaultComponent implements OnInit, OnDestroy {
           ciphers,
           collections,
           selectedCollection,
+          organizationsPaymentStatus,
         ]) => {
           this.filter = filter;
           this.canAccessPremium = canAccessPremium;
@@ -447,10 +472,7 @@ export class VaultComponent implements OnInit, OnDestroy {
 
           this.showBulkMove = filter.type !== "trash";
           this.isEmpty = collections?.length === 0 && ciphers?.length === 0;
-          if (this.allOrganizations.length > 0) {
-            this.refreshing = true;
-            this.detectUpcomingPaymentProblemsInOrgs();
-          }
+          this.organizationsPaymentStatus = organizationsPaymentStatus;
           this.performingInitialLoad = false;
           this.refreshing = false;
         },
@@ -472,46 +494,6 @@ export class VaultComponent implements OnInit, OnDestroy {
       navigationExtras,
     );
   }
-
-  detectUpcomingPaymentProblemsInOrgs() {
-    combineLatest(
-      this.allOrganizations.map((org) => this.evaluateOrganizationPaymentConditions(org)),
-    )
-      .pipe(
-        map((arrResults) =>
-          arrResults.filter(
-            (result) => result.isOwner && result.isTrialing && result.isPaymentSourceEmpty,
-          ),
-        ),
-        takeUntil(this.destroy$),
-      )
-      .subscribe((arr) => (this.organizationsPaymentStatus = arr as OrganizationPaymentStatus[]));
-  }
-
-  async evaluateOrganizationPaymentConditions(
-    org: Organization,
-  ): Promise<OrganizationPaymentStatus> {
-    const sub = await this.organizationApiService.getSubscription(org?.id);
-    const billing = await this.organizationApiService.getBilling(org?.id);
-
-    const isTrialing = sub?.subscription?.status === "trialing";
-    const isOwner = org?.isOwner ?? false;
-    const isPaymentSourceEmpty = !billing?.paymentSource;
-
-    const trialRemainingDays = this.trialFlowService.calculateTrialRemainingDays(
-      sub?.subscription?.trialEndDate,
-    );
-
-    return {
-      isTrialing,
-      isOwner,
-      trialRemainingDays,
-      isPaymentSourceEmpty,
-      orgId: org?.id,
-      orgName: org?.name ?? "Unknown Organization",
-    };
-  }
-
   ngOnDestroy() {
     this.broadcasterService.unsubscribe(BroadcasterSubscriptionId);
     this.destroy$.next();

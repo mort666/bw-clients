@@ -19,7 +19,7 @@ import { I18nPipe } from "@bitwarden/angular/platform/pipes/i18n.pipe";
 import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
-import { BillingResponse } from "@bitwarden/common/billing/models/response/billing.response";
+import { FreeTrial } from "@bitwarden/common/billing/types/free-trial";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
@@ -71,13 +71,6 @@ type OrganizationTasks = {
   createSecret: boolean;
   createProject: boolean;
   createServiceAccount: boolean;
-};
-type FreeTrial = {
-  trialing: boolean;
-  remainingDays: number;
-  message: string;
-  isOwner: boolean;
-  defaultPaymentSource: BillingResponse;
 };
 
 @Component({

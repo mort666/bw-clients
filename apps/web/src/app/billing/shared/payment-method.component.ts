@@ -12,6 +12,7 @@ import { PaymentMethodType } from "@bitwarden/common/billing/enums";
 import { BillingPaymentResponse } from "@bitwarden/common/billing/models/response/billing-payment.response";
 import { OrganizationSubscriptionResponse } from "@bitwarden/common/billing/models/response/organization-subscription.response";
 import { SubscriptionResponse } from "@bitwarden/common/billing/models/response/subscription.response";
+import { FreeTrial } from "@bitwarden/common/billing/types/free-trial";
 import { VerifyBankRequest } from "@bitwarden/common/models/request/verify-bank.request";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
@@ -41,10 +42,6 @@ export class PaymentMethodComponent implements OnInit, OnDestroy {
   paymentMethodType = PaymentMethodType;
   organizationId: string;
   isUnpaid = false;
-  isOwner: boolean = false;
-  isTrialing: boolean;
-  defaultPaymentSource: BillingPaymentResponse;
-  trialRemainingDays: number;
   organization: Organization;
 
   verifyBankForm = this.formBuilder.group({
@@ -62,6 +59,7 @@ export class PaymentMethodComponent implements OnInit, OnDestroy {
 
   taxForm = this.formBuilder.group({});
   launchPaymentModalAutomatically = false;
+  protected freeTrialData: FreeTrial;
 
   constructor(
     protected apiService: ApiService,
@@ -199,23 +197,11 @@ export class PaymentMethodComponent implements OnInit, OnDestroy {
   };
 
   determineOrgsWithUpcomingPaymentIssues() {
-    this.defaultPaymentSource = this.billing;
-    const freeTrial = this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(
+    this.freeTrialData = this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(
       this.organization,
       this.org,
       this.billing,
     );
-    this.isOwner = freeTrial.isOwner;
-    this.isTrialing = freeTrial.trialing;
-    this.trialRemainingDays = freeTrial.remainingDays;
-  }
-
-  get getTrialEndingMessage() {
-    return this.trialRemainingDays >= 2
-      ? this.i18nService.t("freeTrialEndPrompt", this.trialRemainingDays)
-      : this.trialRemainingDays == 1
-        ? this.i18nService.t("freeTrialEndPromptForOneDayNoOrgName")
-        : this.i18nService.t("freeTrialEndingSoonWithoutOrgName");
   }
 
   async navigateToPaymentMethod() {

@@ -12,9 +12,9 @@ import {
   BehaviorSubject,
   combineLatest,
   firstValueFrom,
-  from,
   lastValueFrom,
   Observable,
+  of,
   Subject,
 } from "rxjs";
 import {
@@ -40,7 +40,7 @@ import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-conso
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
-import { BillingPaymentResponse } from "@bitwarden/common/billing/models/response/billing-payment.response";
+import { FreeTrial } from "@bitwarden/common/billing/types/free-trial";
 import { EventType } from "@bitwarden/common/enums";
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -158,10 +158,6 @@ export class VaultComponent implements OnInit, OnDestroy {
   protected performingInitialLoad = true;
   protected refreshing = false;
   protected processingEvent = false;
-  protected trialRemainingDays: number;
-  protected defaultPaymentSource: BillingPaymentResponse;
-  protected isOwner: boolean;
-  protected isTrialing: boolean;
   protected filter: RoutedVaultFilterModel = {};
   protected organization: Organization;
   protected allCollections: CollectionAdminView[];
@@ -170,8 +166,10 @@ export class VaultComponent implements OnInit, OnDestroy {
   protected collections: CollectionAdminView[];
   protected selectedCollection: TreeNode<CollectionAdminView> | undefined;
   protected isEmpty: boolean;
+  private freeTrialData: FreeTrial;
   protected showCollectionAccessRestricted: boolean;
   protected currentSearchText$: Observable<string>;
+  protected freeTrial$: Observable<FreeTrial>;
   /**
    * A list of collections that the user can assign items to and edit those items within.
    * @protected
@@ -541,6 +539,25 @@ export class VaultComponent implements OnInit, OnDestroy {
       )
       .subscribe();
 
+    this.freeTrial$ = organization$.pipe(
+      switchMap((org) =>
+        combineLatest([
+          of(org),
+          this.organizationApiService.getSubscription(org.id),
+          this.organizationApiService.getBilling(org.id),
+        ]),
+      ),
+      map(([org, sub, billing]) => {
+        this.freeTrialData = this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(
+          org,
+          sub,
+          billing,
+        );
+        return this.freeTrialData;
+      }),
+      takeUntil(this.destroy$),
+    );
+
     firstSetup$
       .pipe(
         switchMap(() => this.refresh$),
@@ -559,8 +576,8 @@ export class VaultComponent implements OnInit, OnDestroy {
         ),
         takeUntil(this.destroy$),
       )
-      .subscribe({
-        next: async ([
+      .subscribe(
+        ([
           organization,
           filter,
           allCollections,
@@ -588,32 +605,7 @@ export class VaultComponent implements OnInit, OnDestroy {
           this.refreshing = false;
           this.performingInitialLoad = false;
         },
-      });
-
-    firstSetup$
-      .pipe(
-        switchMap(() => organization$),
-        switchMap((org) =>
-          combineLatest([
-            from(this.organizationApiService.getSubscription(org?.id)),
-            from(this.organizationApiService.getBilling(org?.id)),
-          ]),
-        ),
-        tap(([sub, billing]) => {
-          this.defaultPaymentSource = billing;
-          const freeTrial = this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(
-            this.organization,
-            sub,
-            billing,
-          );
-
-          this.isOwner = freeTrial.isOwner;
-          this.isTrialing = freeTrial.trialing;
-          this.trialRemainingDays = freeTrial.remainingDays;
-        }),
-        takeUntil(this.destroy$),
-      )
-      .subscribe();
+      );
   }
 
   async navigateToPaymentMethod() {
@@ -1362,14 +1354,6 @@ export class VaultComponent implements OnInit, OnDestroy {
       title: null,
       message: this.i18nService.t("missingPermissions"),
     });
-  }
-
-  get displayTrialEndingMessage() {
-    return this.trialRemainingDays >= 2
-      ? this.i18nService.t("freeTrialEndPrompt", this.trialRemainingDays)
-      : this.trialRemainingDays == 1
-        ? this.i18nService.t("freeTrialEndPromptForOneDayNoOrgName")
-        : this.i18nService.t("freeTrialEndingSoonWithoutOrgName");
   }
 }
 
