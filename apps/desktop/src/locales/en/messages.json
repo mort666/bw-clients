@@ -192,14 +192,11 @@
   "sshKeyAlgorithmED25519": {
     "message": "ED25519"
   },
-  "sshKeyAlgorithmRSA2048": {
-    "message": "RSA 2048-Bit"
+  "sshKeyAlgorithmRSA": {
+    "message": "RSA"
   },
-  "sshKeyAlgorithmRSA3072": {
-    "message": "RSA 3072-Bit"
-  },
-  "sshKeyAlgorithmRSA4096": {
-    "message": "RSA 4096-Bit"
+  "sshKeyLength": {
+    "message": "Key length"
   },
   "sshKeyGenerated": {
     "message": "A new SSH key was generated"

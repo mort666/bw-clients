@@ -71,6 +71,7 @@ import { DialogService } from "@bitwarden/components";
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
 import { BiometricStateService, BiometricsService } from "@bitwarden/key-management";
 
+import { SshKeyNativeGeneratorAbstraction } from "../../../../../libs/tools/generator/core/src/abstractions/sshkey-native-generator.abstraction";
 import { DesktopAutofillSettingsService } from "../../autofill/services/desktop-autofill-settings.service";
 import { ElectronBiometricsService } from "../../key-management/biometrics/electron-biometrics.service";
 import { DesktopSettingsService } from "../../platform/services/desktop-settings.service";
@@ -83,6 +84,7 @@ import {
 import { ElectronRendererMessageSender } from "../../platform/services/electron-renderer-message.sender";
 import { ElectronRendererSecureStorageService } from "../../platform/services/electron-renderer-secure-storage.service";
 import { ElectronRendererStorageService } from "../../platform/services/electron-renderer-storage.service";
+import { ElectronSshKeyGeneratorService } from "../../platform/services/electron-sshkey-generator.service";
 import { I18nRendererService } from "../../platform/services/i18n.renderer.service";
 import { fromIpcMessaging } from "../../platform/utils/from-ipc-messaging";
 import { fromIpcSystemTheme } from "../../platform/utils/from-ipc-system-theme";
@@ -294,6 +296,11 @@ const safeProviders: SafeProvider[] = [
       OrganizationUserApiService,
       InternalUserDecryptionOptionsServiceAbstraction,
     ],
+  }),
+  safeProvider({
+    provide: SshKeyNativeGeneratorAbstraction,
+    useClass: ElectronSshKeyGeneratorService,
+    deps: [],
   }),
 ];
 

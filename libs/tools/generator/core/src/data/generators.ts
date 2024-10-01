@@ -2,8 +2,10 @@ import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { IdentityConstraint } from "@bitwarden/common/tools/state/identity-state-constraint";
 
-import { Randomizer } from "../abstractions";
+import { SshKeyNativeGeneratorAbstraction } from "../abstractions/sshkey-native-generator.abstraction";
 import { EmailRandomizer, PasswordRandomizer, UsernameRandomizer } from "../engine";
+import { Randomizer } from "../engine/abstractions";
+import { SshKeyGenerator } from "../engine/sshkey-generator";
 import {
   DefaultPolicyEvaluator,
   DynamicPasswordPolicyConstraints,
@@ -18,12 +20,12 @@ import {
   EFF_USERNAME_SETTINGS,
   PASSPHRASE_SETTINGS,
   PASSWORD_SETTINGS,
+  SSHKEY_SETTINGS,
   SUBADDRESS_SETTINGS,
 } from "../strategies/storage";
 import {
   CatchallGenerationOptions,
   CredentialGenerator,
-  CredentialGeneratorConfiguration,
   EffUsernameGenerationOptions,
   NoPolicy,
   PassphraseGenerationOptions,
@@ -32,6 +34,9 @@ import {
   PasswordGeneratorPolicy,
   SubaddressGenerationOptions,
 } from "../types";
+import { CredentialGeneratorConfiguration } from "../types/credential-generator-configuration";
+import { SshKeyGenerationOptions } from "../types/sshkey-generation-options";
+import { SshKeyGeneratorPolicy } from "../types/sshkey-generator-policy";
 
 import { DefaultCatchallOptions } from "./default-catchall-options";
 import { DefaultEffUsernameOptions } from "./default-eff-username-options";
@@ -39,6 +44,7 @@ import { DefaultPassphraseBoundaries } from "./default-passphrase-boundaries";
 import { DefaultPassphraseGenerationOptions } from "./default-passphrase-generation-options";
 import { DefaultPasswordBoundaries } from "./default-password-boundaries";
 import { DefaultPasswordGenerationOptions } from "./default-password-generation-options";
+import { DefaultSshKeyGenerationOptions } from "./default-sshkey-generation-options";
 import { DefaultSubaddressOptions } from "./default-subaddress-generator-options";
 
 const PASSPHRASE = Object.freeze({
@@ -47,7 +53,10 @@ const PASSPHRASE = Object.freeze({
   nameKey: "passphrase",
   onlyOnRequest: false,
   engine: {
-    create(randomizer: Randomizer): CredentialGenerator<PassphraseGenerationOptions> {
+    create(
+      randomizer: Randomizer,
+      _sshGenerator: SshKeyNativeGeneratorAbstraction,
+    ): CredentialGenerator<PassphraseGenerationOptions> {
       return new PasswordRandomizer(randomizer);
     },
   },
@@ -84,7 +93,10 @@ const PASSWORD = Object.freeze({
   nameKey: "password",
   onlyOnRequest: false,
   engine: {
-    create(randomizer: Randomizer): CredentialGenerator<PasswordGenerationOptions> {
+    create(
+      randomizer: Randomizer,
+      _sshGenerator: SshKeyNativeGeneratorAbstraction,
+    ): CredentialGenerator<PasswordGenerationOptions> {
       return new PasswordRandomizer(randomizer);
     },
   },
@@ -153,6 +165,36 @@ const USERNAME = Object.freeze({
   },
 } satisfies CredentialGeneratorConfiguration<EffUsernameGenerationOptions, NoPolicy>);
 
+const SSHKEY = Object.freeze({
+  category: "sshkey",
+  engine: {
+    create(
+      _randomizer: Randomizer,
+      sshGenerator: SshKeyNativeGeneratorAbstraction,
+    ): CredentialGenerator<SshKeyGenerationOptions> {
+      return new SshKeyGenerator(sshGenerator);
+    },
+  },
+  settings: {
+    initial: DefaultSshKeyGenerationOptions,
+    constraints: {},
+    account: SSHKEY_SETTINGS,
+  },
+  policy: {
+    type: PolicyType.PasswordGenerator,
+    disabledValue: {},
+    combine(_acc: NoPolicy, _policy: Policy) {
+      return {};
+    },
+    createEvaluator(_policy: NoPolicy) {
+      return new DefaultPolicyEvaluator<SshKeyGenerationOptions>();
+    },
+    toConstraints(_policy: NoPolicy) {
+      return new IdentityConstraint<SshKeyGenerationOptions>();
+    },
+  },
+} satisfies CredentialGeneratorConfiguration<SshKeyGenerationOptions, SshKeyGeneratorPolicy>);
+
 const CATCHALL = Object.freeze({
   id: "catchall",
   category: "email",
@@ -220,7 +262,6 @@ export const Generators = Object.freeze({
   /** Passphrase generator configuration */
   passphrase: PASSPHRASE,
 
-  /** Password generator configuration */
   password: PASSWORD,
 
   /** Username generator configuration */
@@ -231,4 +272,6 @@ export const Generators = Object.freeze({
 
   /** Email subaddress generator configuration */
   subaddress: SUBADDRESS,
+
+  sshKey: SSHKEY,
 });

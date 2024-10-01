@@ -1,5 +1,7 @@
 import { WordOptions } from "../types";
 
+import { SshKeyRequest } from "./types";
+
 /** Entropy source for credential generation. */
 export interface Randomizer {
   /** picks a random entry from a list.
@@ -36,4 +38,8 @@ export interface Randomizer {
    *  @returns a promise that resolves with the randomized string.
    */
   uniform(min: number, max: number): Promise<number>;
+}
+
+export interface SshKeyGenerator {
+  generate(request: SshKeyRequest): Promise<string>;
 }

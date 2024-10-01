@@ -7,6 +7,7 @@ import {
   EffUsernameGenerationOptions,
   SubaddressGenerationOptions,
 } from "../types";
+import { SshKeyGenerationOptions } from "../types/sshkey-generation-options";
 
 /** plaintext password generation options */
 export const PASSWORD_SETTINGS = new UserKeyDefinition<PasswordGenerationOptions>(
@@ -52,6 +53,16 @@ export const CATCHALL_SETTINGS = new UserKeyDefinition<CatchallGenerationOptions
 export const SUBADDRESS_SETTINGS = new UserKeyDefinition<SubaddressGenerationOptions>(
   GENERATOR_DISK,
   "subaddressGeneratorSettings",
+  {
+    deserializer: (value) => value,
+    clearOn: [],
+  },
+);
+
+/** plaintext configuration for an ssh key. */
+export const SSHKEY_SETTINGS = new UserKeyDefinition<SshKeyGenerationOptions>(
+  GENERATOR_DISK,
+  "sshkeyGeneratorSettings",
   {
     deserializer: (value) => value,
     clearOn: [],

@@ -4,3 +4,4 @@ export { PasswordGeneratorStrategy } from "./password-generator-strategy";
 export { CatchallGeneratorStrategy } from "./catchall-generator-strategy";
 export { SubaddressGeneratorStrategy } from "./subaddress-generator-strategy";
 export { EffUsernameGeneratorStrategy } from "./eff-username-generator-strategy";
+export { SshKeyGeneratorStrategy } from "./sshkey-generator-strategy";
