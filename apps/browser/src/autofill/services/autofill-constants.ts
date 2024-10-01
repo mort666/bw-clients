@@ -44,16 +44,11 @@ export class AutoFillConstants {
     "twofactor",
     "twofa",
     "twofactorcode",
+    "verificationCode",
     "verification code",
   ];
 
-  static readonly AmbiguousTotpFieldNames: string[] = [
-    "code",
-    "pin",
-    "otc",
-    "otp",
-    ...AutoFillConstants.TotpFieldNames,
-  ];
+  static readonly AmbiguousTotpFieldNames: string[] = ["code", "pin", "otc", "otp"];
 
   static readonly SearchFieldNames: string[] = ["search", "query", "find", "go"];
 
