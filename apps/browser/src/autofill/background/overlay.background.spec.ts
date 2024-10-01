@@ -2023,6 +2023,7 @@ describe("OverlayBackground", () => {
 
     describe("openAutofillInlineMenu message handler", () => {
       let sender: chrome.runtime.MessageSender;
+      const topFrameSendOptions = { frameId: 0 };
 
       beforeEach(() => {
         sender = mock<chrome.runtime.MessageSender>({
@@ -2049,7 +2050,7 @@ describe("OverlayBackground", () => {
             command: "appendAutofillInlineMenuToDom",
             overlayElement: AutofillOverlayElement.Button,
           },
-          { frameId: 0 },
+          topFrameSendOptions,
         );
         expect(tabsSendMessageSpy).toHaveBeenCalledWith(
           sender.tab,
@@ -2057,7 +2058,7 @@ describe("OverlayBackground", () => {
             command: "appendAutofillInlineMenuToDom",
             overlayElement: AutofillOverlayElement.List,
           },
-          { frameId: 0 },
+          topFrameSendOptions,
         );
       });
 
@@ -2065,16 +2066,46 @@ describe("OverlayBackground", () => {
         beforeEach(() => {
           jest
             .spyOn(overlayBackground as any, "checkMostRecentlyFocusedFieldHasValue")
-            .mockResolvedValue(true);
+            .mockResolvedValue(false);
         });
 
-        it.todo(
-          "updates the position of the both button and list elements if the user has the inline menu set to show on field focus",
-        );
+        it("updates the position of the both button and list elements if the user has the inline menu set to show on field focus", async () => {
+          inlineMenuVisibilityMock$.next(AutofillOverlayVisibility.OnFieldFocus);
 
-        it.todo(
-          "closes the list if the user has the inline menu set to show on button click and the list is open",
-        );
+          sendMockExtensionMessage({ command: "openAutofillInlineMenu" }, sender);
+          await flushPromises();
+
+          expect(tabsSendMessageSpy).toHaveBeenCalledWith(
+            sender.tab,
+            {
+              command: "appendAutofillInlineMenuToDom",
+              overlayElement: AutofillOverlayElement.Button,
+            },
+            topFrameSendOptions,
+          );
+          expect(tabsSendMessageSpy).toHaveBeenCalledWith(
+            sender.tab,
+            {
+              command: "appendAutofillInlineMenuToDom",
+              overlayElement: AutofillOverlayElement.List,
+            },
+            topFrameSendOptions,
+          );
+        });
+
+        it("closes the list if the user has the inline menu set to show on button click and the list is open", async () => {
+          overlayBackground["isInlineMenuListVisible"] = true;
+          inlineMenuVisibilityMock$.next(AutofillOverlayVisibility.OnButtonClick);
+
+          sendMockExtensionMessage({ command: "openAutofillInlineMenu" }, sender);
+          await flushPromises();
+
+          expect(tabsSendMessageSpy).toHaveBeenCalledWith(
+            sender.tab,
+            { command: "closeAutofillInlineMenu", overlayElement: AutofillOverlayElement.List },
+            topFrameSendOptions,
+          );
+        });
 
         it.todo(
           "updates the position of the button if the user has the inline menu set to show on button click",
@@ -2085,7 +2116,7 @@ describe("OverlayBackground", () => {
         beforeEach(() => {
           jest
             .spyOn(overlayBackground as any, "checkMostRecentlyFocusedFieldHasValue")
-            .mockResolvedValue(false);
+            .mockResolvedValue(true);
         });
 
         it.todo(
