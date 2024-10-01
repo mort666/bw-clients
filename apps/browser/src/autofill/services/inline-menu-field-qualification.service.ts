@@ -1115,7 +1115,7 @@ export class InlineMenuFieldQualificationService
           keywordEl = keywordEl.replace(/-/g, "");
 
           // Split the keyword by non-alphanumeric characters to get the keywords without treating a space as a separator.
-          keywordEl.split(/[^\p{L}0-9]+/gu).forEach((keyword) => {
+          keywordEl.split(/[^\p{L}\d]+/gu).forEach((keyword) => {
             if (keyword) {
               keywordsSet.add(keyword);
             }
@@ -1124,7 +1124,7 @@ export class InlineMenuFieldQualificationService
           // Collapse all spaces and split by non-alphanumeric characters to get the keywords
           keywordEl
             .replace(/\s/g, "")
-            .split(/[^\p{L}0-9]+/gu)
+            .split(/[^\p{L}\d]+/gu)
             .forEach((keyword) => {
               if (keyword) {
                 keywordsSet.add(keyword);
