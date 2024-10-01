@@ -1483,34 +1483,17 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     this.focusedFieldData = { ...focusedFieldData, tabId: sender.tab.id, frameId: sender.frameId };
     this.isFieldCurrentlyFocused = true;
 
-    const accountCreationFieldBlurred =
-      this.focusedFieldMatchesFillType(
-        InlineMenuFillType.AccountCreationUsername,
-        previousFocusedFieldData,
-      ) && !this.focusedFieldMatchesFillType(InlineMenuFillType.AccountCreationUsername);
-
-    if (
-      this.isInlineMenuButtonVisible &&
-      this.focusedFieldMatchesFillType(InlineMenuFillType.PasswordGeneration)
-    ) {
-      if (focusedFieldHasValue) {
-        this.inlineMenuListPort?.postMessage({ command: "showSaveLoginInlineMenuList" });
-        return;
-      }
-
+    if (this.shouldUpdatePasswordGeneratorMenuOnFieldFocus(focusedFieldHasValue)) {
       this.updateGeneratedPassword().catch((error) => this.logService.error(error));
       return;
     }
 
-    if (accountCreationFieldBlurred || this.showInlineMenuAccountCreation()) {
-      if (focusedFieldHasValue) {
-        this.inlineMenuListPort?.postMessage({ command: "showSaveLoginInlineMenuList" });
-        return;
-      }
-
-      this.updateInlineMenuOnAccountCreationField(previousFocusedFieldData, sender).catch((error) =>
-        this.logService.error(error),
-      );
+    if (this.shouldUpdateAccountCreationMenuOnFocus(previousFocusedFieldData)) {
+      this.updateInlineMenuAccountCreationField(
+        previousFocusedFieldData,
+        focusedFieldHasValue,
+        sender,
+      ).catch((error) => this.logService.error(error));
       return;
     }
 
@@ -1530,16 +1513,39 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     }
   }
 
+  private shouldUpdatePasswordGeneratorMenuOnFieldFocus(focusedFieldHasValue: boolean) {
+    if (
+      !this.isInlineMenuButtonVisible ||
+      !this.focusedFieldMatchesFillType(InlineMenuFillType.PasswordGeneration)
+    ) {
+      return false;
+    }
+
+    if (focusedFieldHasValue) {
+      this.showSaveLoginInlineMenuList();
+      return false;
+    }
+
+    return true;
+  }
+
   /**
    * Triggers an update of populated identity ciphers when a login field is focused.
    *
    * @param previousFocusedFieldData - The data set of the previously focused field
+   * @param focusedFieldHasValue - Identifies whether the focused field has a value
    * @param sender - The sender of the extension message
    */
-  private async updateInlineMenuOnAccountCreationField(
+  private async updateInlineMenuAccountCreationField(
     previousFocusedFieldData: FocusedFieldData,
+    focusedFieldHasValue: boolean,
     sender: chrome.runtime.MessageSender,
   ) {
+    if (focusedFieldHasValue) {
+      this.showSaveLoginInlineMenuList();
+      return;
+    }
+
     if (
       !previousFocusedFieldData ||
       !this.isInlineMenuButtonVisible ||
@@ -1557,6 +1563,19 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     }
 
     await this.updateInlineMenuListCiphers(sender.tab);
+  }
+
+  private shouldUpdateAccountCreationMenuOnFocus(previousFocusedFieldData: FocusedFieldData) {
+    const accountCreationFieldBlurred =
+      this.focusedFieldMatchesFillType(
+        InlineMenuFillType.AccountCreationUsername,
+        previousFocusedFieldData,
+      ) && !this.focusedFieldMatchesFillType(InlineMenuFillType.AccountCreationUsername);
+    return accountCreationFieldBlurred || this.showInlineMenuAccountCreation();
+  }
+
+  private showSaveLoginInlineMenuList() {
+    this.inlineMenuListPort?.postMessage({ command: "showSaveLoginInlineMenuList" });
   }
 
   /**
