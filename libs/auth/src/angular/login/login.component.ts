@@ -161,7 +161,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.clientType === ClientType.Desktop) {
-      // TODO-rr-bw: refactor to not use deprecated broadcaster service.
+      // TODO: refactor to not use deprecated broadcaster service.
       this.broadcasterService.unsubscribe(BroadcasterSubscriptionId);
     }
 
@@ -534,7 +534,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   private async desktopOnInit(): Promise<void> {
     await this.getLoginWithDevice(this.loggedEmail);
 
-    // TODO-rr-bw: refactor to not use deprecated broadcaster service.
+    // TODO: refactor to not use deprecated broadcaster service.
     this.broadcasterService.subscribe(BroadcasterSubscriptionId, async (message: any) => {
       this.ngZone.run(() => {
         switch (message.command) {

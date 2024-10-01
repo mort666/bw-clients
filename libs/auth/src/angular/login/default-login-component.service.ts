@@ -16,7 +16,7 @@ export class DefaultLoginComponentService implements LoginComponentService {
   constructor(
     protected cryptoFunctionService: CryptoFunctionService,
     protected environmentService: EnvironmentService,
-    // TODO-rr-bw: refactor to not use deprecated service
+    // TODO: refactor to not use deprecated service
     protected passwordGenerationService: PasswordGenerationServiceAbstraction,
     protected platformUtilsService: PlatformUtilsService,
     protected ssoLoginService: SsoLoginServiceAbstraction,
