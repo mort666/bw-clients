@@ -247,7 +247,7 @@ export class TrialInitiationComponent implements OnInit, OnDestroy {
     });
 
     this.orgId = response?.id;
-    this.billingSubLabel = `${this.i18nService.t("annual")} ($${0}/${this.i18nService.t("yr")})`;
+    this.billingSubLabel = `${this.i18nService.t("annual")} ($0/${this.i18nService.t("yr")})`;
     this.loading = false;
     this.verticalStepper.next();
   }
