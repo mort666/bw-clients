@@ -35,10 +35,8 @@ export class AutoFillConstants {
     "2facode",
     "approvals_code",
     "mfacode",
-    "otc",
     "otc-code",
     "onetimecode",
-    "otp",
     "otp-code",
     "otpcode",
     "onetimepassword",
@@ -47,6 +45,14 @@ export class AutoFillConstants {
     "twofa",
     "twofactorcode",
     "verification code",
+  ];
+
+  static readonly AmbiguousTotpFieldNames: string[] = [
+    "code",
+    "pin",
+    "otc",
+    "otp",
+    ...AutoFillConstants.TotpFieldNames,
   ];
 
   static readonly SearchFieldNames: string[] = ["search", "query", "find", "go"];

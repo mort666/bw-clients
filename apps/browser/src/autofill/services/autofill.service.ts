@@ -887,7 +887,7 @@ export default class AutofillService implements AutofillServiceInterface {
           options.allowTotpAutofill &&
           f.viewable &&
           (f.type === "text" || f.type === "number") &&
-          (AutofillService.fieldIsFuzzyMatch(f, AutoFillConstants.TotpFieldNames) ||
+          (AutofillService.fieldIsFuzzyMatch(f, AutoFillConstants.AmbiguousTotpFieldNames) ||
             f.autoCompleteType === "one-time-code")
         ) {
           totps.push(f);
@@ -2675,12 +2675,12 @@ export default class AutofillService implements AutofillServiceInterface {
         (withoutForm || f.form === passwordField.form) &&
         (canBeHidden || f.viewable) &&
         (f.type === "text" || f.type === "number") &&
-        AutofillService.fieldIsFuzzyMatch(f, AutoFillConstants.TotpFieldNames)
+        AutofillService.fieldIsFuzzyMatch(f, AutoFillConstants.AmbiguousTotpFieldNames)
       ) {
         totpField = f;
 
         if (
-          this.findMatchingFieldIndex(f, AutoFillConstants.TotpFieldNames) > -1 ||
+          this.findMatchingFieldIndex(f, AutoFillConstants.AmbiguousTotpFieldNames) > -1 ||
           f.autoCompleteType === "one-time-code"
         ) {
           // We found an exact match. No need to keep looking.
