@@ -357,6 +357,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   onEmailBlur(event: Event) {
     const emailInput = event.target as HTMLInputElement;
     this.formGroup.controls.email.setValue(emailInput.value);
+    // Call setLoginEmail so that the email is pre-populated when navigating to the "enter password" screen.
     this.loginEmailService.setLoginEmail(this.formGroup.value.email);
   }
 
