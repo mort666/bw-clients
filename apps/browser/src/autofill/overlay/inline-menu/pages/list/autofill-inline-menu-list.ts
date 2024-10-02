@@ -58,7 +58,7 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
       updateAutofillInlineMenuListCiphers: ({ message }) => this.updateListItems(message),
       updateAutofillInlineMenuGeneratedPassword: ({ message }) =>
         this.handleUpdateAutofillInlineMenuGeneratedPassword(message),
-      showSaveLoginInlineMenuList: () => this.showSaveLoginInlineMenuList(),
+      showSaveLoginInlineMenuList: () => this.handleShowSaveLoginInlineMenuList(),
       focusAutofillInlineMenuList: () => this.focusInlineMenuList(),
     };
 
@@ -66,15 +66,6 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
     super();
 
     this.setupInlineMenuListGlobalListeners();
-  }
-
-  private showSaveLoginInlineMenuList() {
-    if (this.authStatus !== AuthenticationStatus.Unlocked) {
-      return;
-    }
-
-    this.resetInlineMenuContainer();
-    this.buildSaveLoginInlineMenuList();
   }
 
   /**
@@ -135,7 +126,6 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
     this.updateListItems({
       ciphers,
       showInlineMenuAccountCreation,
-      focusedFieldHasValue,
     });
   }
 
@@ -178,6 +168,13 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
     this.showInlineMenuAccountCreation = true;
 
     this.inlineMenuListContainer.append(saveLoginMessage, newItemButton);
+  }
+
+  private handleShowSaveLoginInlineMenuList() {
+    if (this.authStatus === AuthenticationStatus.Unlocked) {
+      this.resetInlineMenuContainer();
+      this.buildSaveLoginInlineMenuList();
+    }
   }
 
   /**
@@ -382,7 +379,6 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
   private updateListItems({
     ciphers,
     showInlineMenuAccountCreation,
-    focusedFieldHasValue,
   }: UpdateAutofillInlineMenuListCiphersParams) {
     if (this.isPasskeyAuthInProgress) {
       return;
@@ -1218,11 +1214,17 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
     this.postMessageToParent({ command: "checkAutofillInlineMenuButtonFocused" });
   }
 
+  /**
+   * Triggers a re-check of the list's focus status when the mouse leaves the list.
+   */
   private handleMouseOutEvent = () => {
     globalThis.document.removeEventListener(EVENTS.MOUSEOUT, this.handleMouseOutEvent);
     this.checkInlineMenuListFocused();
   };
 
+  /**
+   * Validates whether the inline menu list iframe is currently hovered.
+   */
   private isListHovered = () => {
     const hoveredElement = this.inlineMenuListContainer?.querySelector(":hover");
     return !!(

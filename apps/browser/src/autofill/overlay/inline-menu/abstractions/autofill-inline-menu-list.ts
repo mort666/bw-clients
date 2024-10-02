@@ -8,7 +8,6 @@ type AutofillInlineMenuListMessage = { command: string };
 export type UpdateAutofillInlineMenuListCiphersParams = {
   ciphers: InlineMenuCipherData[];
   showInlineMenuAccountCreation?: boolean;
-  focusedFieldHasValue?: boolean;
 };
 
 export type UpdateAutofillInlineMenuListCiphersMessage = AutofillInlineMenuListMessage &
