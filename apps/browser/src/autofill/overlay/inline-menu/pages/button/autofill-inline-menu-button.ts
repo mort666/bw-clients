@@ -129,11 +129,17 @@ export class AutofillInlineMenuButton extends AutofillInlineMenuPageElement {
     this.postMessageToParent({ command: "triggerDelayedAutofillInlineMenuClosure" });
   }
 
+  /**
+   * Triggers a re-check of the button's focus status when the mouse leaves the button.
+   */
   private handleMouseOutEvent = () => {
     globalThis.document.removeEventListener(EVENTS.MOUSEOUT, this.handleMouseOutEvent);
     this.checkButtonFocused();
   };
 
+  /**
+   * Identifies whether the button is currently hovered.
+   */
   private isButtonHovered() {
     const hoveredElement = this.buttonElement?.querySelector(":hover");
     return !!(
