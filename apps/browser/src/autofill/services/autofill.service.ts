@@ -130,10 +130,31 @@ export default class AutofillService implements AutofillServiceInterface {
   async loadAutofillScriptsOnInstall() {
     BrowserApi.addListener(chrome.runtime.onConnect, this.handleInjectedScriptPortConnection);
     void this.injectAutofillScriptsInAllTabs();
+
     this.autofillSettingsService.inlineMenuVisibility$
       .pipe(startWith(undefined), pairwise())
       .subscribe(([previousSetting, currentSetting]) =>
-        this.handleInlineMenuVisibilityChange(previousSetting, currentSetting),
+        this.handleInlineMenuVisibilitySettingsChange(previousSetting, currentSetting),
+      );
+
+    this.autofillSettingsService.showInlineMenuCards$
+      .pipe(startWith(undefined), pairwise())
+      .subscribe(([previousSetting, currentSetting]) =>
+        this.handleInlineMenuVisibilitySettingsChange(
+          previousSetting,
+          currentSetting,
+          CipherType.Card,
+        ),
+      );
+
+    this.autofillSettingsService.showInlineMenuIdentities$
+      .pipe(startWith(undefined), pairwise())
+      .subscribe(([previousSetting, currentSetting]) =>
+        this.handleInlineMenuVisibilitySettingsChange(
+          previousSetting,
+          currentSetting,
+          CipherType.Identity,
+        ),
       );
   }
 
@@ -3027,31 +3048,46 @@ export default class AutofillService implements AutofillServiceInterface {
   }
 
   /**
-   * Updates the autofill inline menu visibility setting in all active tabs
-   * when the InlineMenuVisibilitySetting observable is updated.
+   * Updates the autofill inline menu visibility settings in all active tabs
+   * when the inlineMenuVisibility, showInlineMenuCards, or showInlineMenuIdentities
+   * observables are updated.
    *
-   * @param previousSetting - The previous setting value
-   * @param currentSetting - The current setting value
+   * @param oldSettingValue - The previous setting value
+   * @param newSettingValue - The current setting value
+   * @param cipherType - The cipher type of the changed inline menu setting
    */
-  private async handleInlineMenuVisibilityChange(
-    previousSetting: InlineMenuVisibilitySetting,
-    currentSetting: InlineMenuVisibilitySetting,
+  private async handleInlineMenuVisibilitySettingsChange(
+    oldSettingValue: InlineMenuVisibilitySetting | boolean,
+    newSettingValue: InlineMenuVisibilitySetting | boolean,
+    cipherType?: CipherType,
   ) {
-    if (previousSetting === undefined || previousSetting === currentSetting) {
+    if (oldSettingValue === undefined || oldSettingValue === newSettingValue) {
       return;
     }
 
-    const inlineMenuPreviouslyDisabled = previousSetting === AutofillOverlayVisibility.Off;
-    const inlineMenuCurrentlyDisabled = currentSetting === AutofillOverlayVisibility.Off;
-    if (!inlineMenuPreviouslyDisabled && !inlineMenuCurrentlyDisabled) {
-      const tabs = await BrowserApi.tabsQuery({});
-      tabs.forEach((tab) =>
-        BrowserApi.tabSendMessageData(tab, "updateAutofillInlineMenuVisibility", {
-          inlineMenuVisibility: currentSetting,
-        }),
-      );
-      return;
+    const tabs = await BrowserApi.tabsQuery({});
+
+    // If the setting change is for the behavior of overall inline menu display
+    if (cipherType == null) {
+      const inlineMenuPreviouslyDisabled = oldSettingValue === AutofillOverlayVisibility.Off;
+      const inlineMenuCurrentlyDisabled = newSettingValue === AutofillOverlayVisibility.Off;
+
+      if (!inlineMenuPreviouslyDisabled && !inlineMenuCurrentlyDisabled) {
+        tabs.forEach((tab) =>
+          BrowserApi.tabSendMessageData(tab, "updateAutofillInlineMenuVisibility", {
+            newSettingValue,
+          }),
+        );
+        return;
+      }
     }
+
+    tabs.forEach((tab) =>
+      BrowserApi.tabSendMessageData(tab, "updateAutofillInlineMenuVisibility", {
+        settingType: cipherType,
+        newSettingValue,
+      }),
+    );
 
     await this.reloadAutofillScripts();
   }
