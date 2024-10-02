@@ -376,7 +376,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       ciphers: await this.getInlineMenuCipherData(),
       showInlineMenuAccountCreation: this.shouldShowInlineMenuAccountCreation(),
       showPasskeysLabels: this.showPasskeysLabelsWithinInlineMenu,
-      focusedFieldHasValue: await this.checkMostRecentlyFocusedFieldHasValue(tab),
+      focusedFieldHasValue: await this.checkFocusedFieldHasValue(tab),
     });
   }
 
@@ -998,7 +998,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     }
 
     if (
-      (await this.checkMostRecentlyFocusedFieldHasValue(sender.tab)) &&
+      (await this.checkFocusedFieldHasValue(sender.tab)) &&
       (this.checkIsInlineMenuCiphersPopulated(sender) ||
         (await this.getAuthStatus()) !== AuthenticationStatus.Unlocked)
     ) {
@@ -1015,7 +1015,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    *
    * @param tab - The tab to check the focused field for
    */
-  private async checkMostRecentlyFocusedFieldHasValue(tab: chrome.tabs.Tab) {
+  private async checkFocusedFieldHasValue(tab: chrome.tabs.Tab) {
     return !!(await BrowserApi.tabSendMessage(
       tab,
       { command: "checkMostRecentlyFocusedFieldHasValue" },
@@ -1664,8 +1664,32 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       allowTotpAutofill: false,
     });
 
-    globalThis.setTimeout(() => this.openInlineMenu(port.sender, true), 400);
+    globalThis.setTimeout(
+      () => this.triggerOpenInlineMenuAfterGeneratedPasswordFill(port.sender),
+      400,
+    );
   }
+
+  /**
+   * Handles the opening of the inline menu after a generated password has been filled.
+   *
+   * @param sender - The sender of the port message
+   */
+  private triggerOpenInlineMenuAfterGeneratedPasswordFill = async (
+    sender: chrome.runtime.MessageSender,
+  ) => {
+    if (!this.isFieldCurrentlyFocused || !(await this.checkFocusedFieldHasValue(sender.tab))) {
+      return;
+    }
+
+    if (
+      this.focusedFieldMatchesFillType(InlineMenuFillType.PasswordGeneration) ||
+      (this.shouldShowInlineMenuAccountCreation() &&
+        this.focusedFieldMatchesAccountCreationType(InlineMenuAccountCreationFieldType.Password))
+    ) {
+      await this.openInlineMenu(sender, true);
+    }
+  };
 
   /**
    * Updates the inline menu's visibility based on the display property passed in the extension message.
@@ -1731,7 +1755,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       return;
     }
 
-    if (!(await this.checkMostRecentlyFocusedFieldHasValue(sender.tab))) {
+    if (!(await this.checkFocusedFieldHasValue(sender.tab))) {
       await this.openInlineMenuOnEmptyField(sender);
       return;
     }
@@ -2691,7 +2715,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       inlineMenuFillType: this.focusedFieldData?.inlineMenuFillType,
       showPasskeysLabels: this.showPasskeysLabelsWithinInlineMenu,
       generatedPassword: showInlineMenuPasswordGenerator ? this.generatedPassword : null,
-      focusedFieldHasValue: await this.checkMostRecentlyFocusedFieldHasValue(port.sender.tab),
+      focusedFieldHasValue: await this.checkFocusedFieldHasValue(port.sender.tab),
       showInlineMenuAccountCreation,
       authStatus,
     });

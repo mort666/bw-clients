@@ -629,7 +629,7 @@ describe("OverlayBackground", () => {
           it("skips updating the inline menu list if the user has the inline menu set to open on button click", async () => {
             inlineMenuVisibilityMock$.next(AutofillOverlayVisibility.OnButtonClick);
             tabsSendMessageSpy.mockImplementation((_tab, message, _options) => {
-              if (message.command === "checkMostRecentlyFocusedFieldHasValue") {
+              if (message.command === "checkFocusedFieldHasValue") {
                 return Promise.resolve(true);
               }
 
@@ -660,7 +660,7 @@ describe("OverlayBackground", () => {
           it("skips updating the inline menu list if the focused field has a value and the user status is not unlocked", async () => {
             activeAccountStatusMock$.next(AuthenticationStatus.Locked);
             tabsSendMessageSpy.mockImplementation((_tab, message, _options) => {
-              if (message.command === "checkMostRecentlyFocusedFieldHasValue") {
+              if (message.command === "checkFocusedFieldHasValue") {
                 return Promise.resolve(true);
               }
 
@@ -2220,7 +2220,7 @@ describe("OverlayBackground", () => {
       describe("when the focused field does not have a value", () => {
         beforeEach(() => {
           jest
-            .spyOn(overlayBackground as any, "checkMostRecentlyFocusedFieldHasValue")
+            .spyOn(overlayBackground as any, "checkFocusedFieldHasValue")
             .mockResolvedValue(false);
         });
 
@@ -2292,9 +2292,7 @@ describe("OverlayBackground", () => {
           overlayBackground["inlineMenuCiphers"] = new Map([
             ["inline-menu-cipher-1", mock<CipherView>({ id: "inline-menu-cipher-1" })],
           ]);
-          jest
-            .spyOn(overlayBackground as any, "checkMostRecentlyFocusedFieldHasValue")
-            .mockResolvedValue(true);
+          jest.spyOn(overlayBackground as any, "checkFocusedFieldHasValue").mockResolvedValue(true);
         });
 
         it("updates the position of both button and list elements if the inline menu is showing an account creation view", async () => {
@@ -3492,15 +3490,62 @@ describe("OverlayBackground", () => {
         });
       });
 
-      it("triggers a delayed open of the inline menu", async () => {
-        jest.useFakeTimers();
-        jest.spyOn(overlayBackground as any, "openInlineMenu");
+      describe("opening the inline menu after filling the generated password", () => {
+        let openInlineMenuSpy: jest.SpyInstance;
+        let checkFocusedFieldHasValueSpy: jest.SpyInstance;
 
-        sendPortMessage(listMessageConnectorSpy, { command: "fillGeneratedPassword", portKey });
-        await flushPromises();
-        jest.advanceTimersByTime(400);
+        beforeEach(() => {
+          jest.useFakeTimers();
+          openInlineMenuSpy = jest.spyOn(overlayBackground as any, "openInlineMenu");
+          checkFocusedFieldHasValueSpy = jest
+            .spyOn(overlayBackground as any, "checkFocusedFieldHasValue")
+            .mockResolvedValue(true);
+          overlayBackground["isFieldCurrentlyFocused"] = true;
+        });
 
-        expect(overlayBackground["openInlineMenu"]).toHaveBeenCalled();
+        it("skips opening the inline menu if a field is not focused", async () => {
+          overlayBackground["isFieldCurrentlyFocused"] = false;
+
+          sendPortMessage(listMessageConnectorSpy, { command: "fillGeneratedPassword", portKey });
+          await flushPromises();
+          jest.advanceTimersByTime(400);
+          await flushPromises();
+
+          expect(openInlineMenuSpy).not.toHaveBeenCalled();
+        });
+
+        it("skips opening the inline menu if focused field does not have a value", () => {
+          checkFocusedFieldHasValueSpy.mockResolvedValue(false);
+
+          sendPortMessage(listMessageConnectorSpy, { command: "fillGeneratedPassword", portKey });
+          jest.advanceTimersByTime(400);
+
+          expect(openInlineMenuSpy).not.toHaveBeenCalled;
+        });
+
+        it("opens the inline menu for fields that fill a generated password", async () => {
+          sendPortMessage(listMessageConnectorSpy, { command: "fillGeneratedPassword", portKey });
+          await flushPromises();
+          jest.advanceTimersByTime(400);
+          await flushPromises();
+
+          expect(openInlineMenuSpy).toHaveBeenCalled();
+        });
+
+        it("opens the inline menu for fields that fill a login cipher if the field is a password field", async () => {
+          const focusedFieldData = createFocusedFieldDataMock({
+            inlineMenuFillType: CipherType.Login,
+            accountCreationFieldType: InlineMenuAccountCreationFieldType.Password,
+          });
+          sendMockExtensionMessage({ command: "updateFocusedFieldData", focusedFieldData });
+
+          sendPortMessage(listMessageConnectorSpy, { command: "fillGeneratedPassword", portKey });
+          await flushPromises();
+          jest.advanceTimersByTime(400);
+          await flushPromises();
+
+          expect(openInlineMenuSpy).toHaveBeenCalled();
+        });
       });
     });
   });

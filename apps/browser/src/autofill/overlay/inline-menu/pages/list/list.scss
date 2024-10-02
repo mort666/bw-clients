@@ -42,7 +42,8 @@ body * {
     color: themed("textColor");
   }
 
-  &.no-items {
+  &.no-items,
+  &.save-login {
     font-size: 1.6rem;
   }
 }
