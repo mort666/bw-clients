@@ -49,7 +49,7 @@ export class SecretsManagerTrialFreeStepperComponent implements OnInit {
     private router: Router,
   ) {}
 
-  async ngOnInit(): Promise<void> {
+  ngOnInit(): void {
     this.referenceEventRequest = new ReferenceEventRequest();
     this.referenceEventRequest.initiationPath = "Secrets Manager trial from marketing website";
   }
