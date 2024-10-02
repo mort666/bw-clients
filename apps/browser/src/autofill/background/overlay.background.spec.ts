@@ -1355,6 +1355,67 @@ describe("OverlayBackground", () => {
         focusedFieldHasValue: false,
       });
     });
+
+    it("updates the inline menu list with login ciphers when the field fill type is for updating the current password", async () => {
+      sendMockExtensionMessage(
+        {
+          command: "updateFocusedFieldData",
+          focusedFieldData: createFocusedFieldDataMock({
+            inlineMenuFillType: InlineMenuFillType.CurrentPasswordUpdate,
+          }),
+        },
+        mock<chrome.runtime.MessageSender>({ tab }),
+      );
+      getTabFromCurrentWindowIdSpy.mockResolvedValueOnce(tab);
+      cipherService.getAllDecryptedForUrl.mockResolvedValue([loginCipher2, loginCipher1]);
+      cipherService.sortCiphersByLastUsedThenName.mockReturnValue(-1);
+
+      await overlayBackground.updateOverlayCiphers(false);
+      await flushPromises();
+
+      expect(listPortSpy.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ciphers: [
+            {
+              id: "inline-menu-cipher-0",
+              name: loginCipher1.name,
+              type: CipherType.Login,
+              reprompt: loginCipher1.reprompt,
+              favorite: loginCipher1.favorite,
+              icon: {
+                fallbackImage: "images/bwi-globe.png",
+                icon: "bwi-globe",
+                image: "https://icons.bitwarden.com//jest-testing-website.com/icon.png",
+                imageEnabled: true,
+              },
+              accountCreationFieldType: undefined,
+              login: {
+                username: loginCipher1.login.username,
+                passkey: null,
+              },
+            },
+            {
+              id: "inline-menu-cipher-1",
+              name: loginCipher2.name,
+              type: CipherType.Login,
+              reprompt: loginCipher2.reprompt,
+              favorite: loginCipher2.favorite,
+              icon: {
+                fallbackImage: "images/bwi-globe.png",
+                icon: "bwi-globe",
+                image: "https://icons.bitwarden.com//jest-testing-website.com/icon.png",
+                imageEnabled: true,
+              },
+              accountCreationFieldType: undefined,
+              login: {
+                username: loginCipher2.login.username,
+                passkey: null,
+              },
+            },
+          ],
+        }),
+      );
+    });
   });
 
   describe("extension message handlers", () => {

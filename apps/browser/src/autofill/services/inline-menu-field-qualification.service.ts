@@ -39,7 +39,7 @@ export class InlineMenuFieldQualificationService
   private accountCreationFieldKeywords = [
     ...new Set(["register", "registration", "create", "confirm", ...this.newFieldKeywords]),
   ];
-  private updatePasswordFieldKeywords = ["update", "change", "confirm", "current password"];
+  private updatePasswordFieldKeywords = ["update", "change", "current"];
   private creditCardFieldKeywords = [
     ...new Set([
       ...CreditCardAutoFillConstants.CardHolderFieldNames,
