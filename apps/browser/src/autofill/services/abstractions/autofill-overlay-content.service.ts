@@ -18,8 +18,8 @@ export type NotificationFormFieldData = {
 export type AutofillOverlayContentExtensionMessageHandlers = {
   [key: string]: CallableFunction;
   addNewVaultItemFromOverlay: ({ message }: AutofillExtensionMessageParam) => void;
-  blurMostRecentlyFocusedField: () => Promise<void>;
   focusMostRecentlyFocusedField: () => void;
+  blurMostRecentlyFocusedField: () => Promise<void>;
   unsetMostRecentlyFocusedField: () => void;
   checkIsMostRecentlyFocusedFieldWithinViewport: () => Promise<boolean>;
   bgUnlockPopoutOpened: () => Promise<void>;

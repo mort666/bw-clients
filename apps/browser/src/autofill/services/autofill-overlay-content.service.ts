@@ -72,8 +72,8 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
   private eventHandlersMemo: { [key: string]: EventListener } = {};
   private readonly extensionMessageHandlers: AutofillOverlayContentExtensionMessageHandlers = {
     addNewVaultItemFromOverlay: ({ message }) => this.addNewVaultItem(message),
-    blurMostRecentlyFocusedField: () => this.blurMostRecentlyFocusedField(),
     focusMostRecentlyFocusedField: () => this.focusMostRecentlyFocusedField(),
+    blurMostRecentlyFocusedField: () => this.blurMostRecentlyFocusedField(),
     unsetMostRecentlyFocusedField: () => this.unsetMostRecentlyFocusedField(),
     checkIsMostRecentlyFocusedFieldWithinViewport: () =>
       this.checkIsMostRecentlyFocusedFieldWithinViewport(),
@@ -1262,13 +1262,6 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
    */
   private async isFieldCurrentlyFocused() {
     return (await this.sendExtensionMessage("checkIsFieldCurrentlyFocused")) === true;
-  }
-
-  /**
-   * Checks if the current tab contains ciphers that can be used to populate the inline menu.
-   */
-  private async isInlineMenuCiphersPopulated() {
-    return (await this.sendExtensionMessage("checkIsInlineMenuCiphersPopulated")) === true;
   }
 
   /**
