@@ -13,6 +13,7 @@ import { flushPromises, postWindowMessage } from "../../../../spec/testing-utils
 import { AutofillInlineMenuList } from "./autofill-inline-menu-list";
 
 describe("AutofillInlineMenuList", () => {
+  const generatedPassword = "generatedPassword!1";
   globalThis.customElements.define("autofill-inline-menu-list", AutofillInlineMenuList);
   global.ResizeObserver = jest.fn().mockImplementation(() => ({
     observe: jest.fn(),
@@ -719,6 +720,17 @@ describe("AutofillInlineMenuList", () => {
         });
       });
     });
+
+    it("creates the views for the password generator", async () => {
+      postWindowMessage(
+        createInitAutofillInlineMenuListMessageMock({
+          generatedPassword,
+        }),
+      );
+      await flushPromises();
+
+      expect(autofillInlineMenuList["passwordGeneratorContainer"]).toMatchSnapshot();
+    });
   });
 
   describe("global event listener handlers", () => {
@@ -782,6 +794,76 @@ describe("AutofillInlineMenuList", () => {
       postWindowMessage({ command: "updateAutofillInlineMenuListCiphers" });
 
       expect(updateCiphersSpy).toHaveBeenCalled();
+    });
+
+    describe("updating the password generator view", () => {
+      let buildPasswordGeneratorSpy: jest.SpyInstance;
+      let buildColorizedPasswordElementSpy: jest.SpyInstance;
+
+      beforeEach(() => {
+        buildPasswordGeneratorSpy = jest.spyOn(
+          autofillInlineMenuList as any,
+          "buildPasswordGenerator",
+        );
+        buildColorizedPasswordElementSpy = jest.spyOn(
+          autofillInlineMenuList as any,
+          "buildColorizedPasswordElement",
+        );
+      });
+
+      it("skips updating the password generator if the user is not authed", async () => {
+        postWindowMessage(
+          createInitAutofillInlineMenuListMessageMock({
+            authStatus: AuthenticationStatus.Locked,
+          }),
+        );
+        await flushPromises();
+
+        postWindowMessage({
+          command: "updateAutofillInlineMenuGeneratedPassword",
+          generatedPassword,
+        });
+
+        expect(buildColorizedPasswordElementSpy).not.toHaveBeenCalled();
+      });
+
+      it("skips update the password generator if the message does not contain a password", async () => {
+        postWindowMessage(createInitAutofillInlineMenuListMessageMock());
+        await flushPromises();
+
+        postWindowMessage({ command: "updateAutofillInlineMenuGeneratedPassword" });
+
+        expect(buildColorizedPasswordElementSpy).not.toHaveBeenCalled();
+      });
+
+      it("builds the password generator if the colorized password element is not present", async () => {
+        postWindowMessage(createInitAutofillInlineMenuListMessageMock());
+        await flushPromises();
+
+        postWindowMessage({
+          command: "updateAutofillInlineMenuGeneratedPassword",
+          generatedPassword,
+        });
+
+        expect(buildPasswordGeneratorSpy).toHaveBeenCalled();
+      });
+
+      it("replaces the colorized password element if it is present", async () => {
+        postWindowMessage(
+          createInitAutofillInlineMenuListMessageMock({
+            generatedPassword,
+          }),
+        );
+        await flushPromises();
+
+        postWindowMessage({
+          command: "updateAutofillInlineMenuGeneratedPassword",
+          generatedPassword,
+        });
+
+        expect(buildPasswordGeneratorSpy).toHaveBeenCalledTimes(1);
+        expect(buildColorizedPasswordElementSpy).toHaveBeenCalledTimes(2);
+      });
     });
 
     describe("directing user focus into the inline menu list", () => {

@@ -30,6 +30,7 @@ import { AutofillInlineMenuPageElement } from "../shared/autofill-inline-menu-pa
 
 export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
   private inlineMenuListContainer: HTMLDivElement;
+  private passwordGeneratorContainer: HTMLDivElement;
   private resizeObserver: ResizeObserver;
   private eventHandlersMemo: { [key: string]: EventListener } = {};
   private ciphers: InlineMenuCipherData[] = [];
@@ -197,8 +198,8 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
    * @param generatedPassword - The generated password to display.
    */
   private buildPasswordGenerator(generatedPassword: string) {
-    const passwordGeneratorContainer = globalThis.document.createElement("div");
-    passwordGeneratorContainer.classList.add("password-generator-container");
+    this.passwordGeneratorContainer = globalThis.document.createElement("div");
+    this.passwordGeneratorContainer.classList.add("password-generator-container");
 
     const passwordGeneratorActions = globalThis.document.createElement("div");
     passwordGeneratorActions.classList.add("password-generator-actions");
@@ -258,8 +259,8 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
 
     passwordGeneratorActions.append(fillGeneratedPasswordButton, refreshGeneratedPasswordButton);
 
-    passwordGeneratorContainer.appendChild(passwordGeneratorActions);
-    this.inlineMenuListContainer.appendChild(passwordGeneratorContainer);
+    this.passwordGeneratorContainer.appendChild(passwordGeneratorActions);
+    this.inlineMenuListContainer.appendChild(this.passwordGeneratorContainer);
   }
 
   /**
@@ -389,7 +390,7 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
   private handleUpdateAutofillInlineMenuGeneratedPassword(
     message: UpdateAutofillInlineMenuGeneratedPasswordMessage,
   ) {
-    if (this.authStatus !== AuthenticationStatus.Unlocked) {
+    if (this.authStatus !== AuthenticationStatus.Unlocked || !message.generatedPassword) {
       return;
     }
 
