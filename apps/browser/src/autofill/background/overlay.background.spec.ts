@@ -47,8 +47,9 @@ import {
   RedirectFocusDirection,
 } from "../enums/autofill-overlay.enum";
 import { AutofillService } from "../services/abstractions/autofill.service";
-import { InlineMenuFieldQualificationService } from "../services/abstractions/inline-menu-field-qualifications.service";
+import { InlineMenuFieldQualificationService } from "../services/inline-menu-field-qualification.service";
 import {
+  createAutofillFieldMock,
   createAutofillPageDetailsMock,
   createChromeTabMock,
   createFocusedFieldDataMock,
@@ -101,7 +102,7 @@ describe("OverlayBackground", () => {
   let vaultSettingsServiceMock: MockProxy<VaultSettingsService>;
   let fido2ActiveRequestManager: Fido2ActiveRequestManager;
   let selectedThemeMock$: BehaviorSubject<ThemeType>;
-  let inlineMenuFieldQualificationService: MockProxy<InlineMenuFieldQualificationService>;
+  let inlineMenuFieldQualificationService: InlineMenuFieldQualificationService;
   let themeStateService: MockProxy<ThemeStateService>;
   let overlayBackground: OverlayBackground;
   let portKeyForTabSpy: Record<number, string>;
@@ -178,7 +179,7 @@ describe("OverlayBackground", () => {
     vaultSettingsServiceMock.enablePasskeys$ = enablePasskeysMock$;
     fido2ActiveRequestManager = new Fido2ActiveRequestManager();
     selectedThemeMock$ = new BehaviorSubject(ThemeType.Light);
-    inlineMenuFieldQualificationService = mock<InlineMenuFieldQualificationService>();
+    inlineMenuFieldQualificationService = new InlineMenuFieldQualificationService();
     themeStateService = mock<ThemeStateService>();
     themeStateService.selectedTheme$ = selectedThemeMock$;
     overlayBackground = new OverlayBackground(
@@ -2981,7 +2982,7 @@ describe("OverlayBackground", () => {
         expect(autofillService.doAutoFill).not.toHaveBeenCalled();
       });
 
-      it("autofills the selected cipher and move it to the top of the front of the ciphers map", async () => {
+      it("autofills the selected cipher and moves it to the top of the front of the ciphers map", async () => {
         const cipher1 = mock<CipherView>({ id: "inline-menu-cipher-1" });
         const cipher2 = mock<CipherView>({ id: "inline-menu-cipher-2" });
         const cipher3 = mock<CipherView>({ id: "inline-menu-cipher-3" });
@@ -3138,6 +3139,54 @@ describe("OverlayBackground", () => {
             });
           });
         });
+      });
+
+      it("fills the current password fields exclusively when filling for a current password update", async () => {
+        globalThis.structuredClone = jest.fn((value) => value);
+        sendMockExtensionMessage(
+          {
+            command: "updateFocusedFieldData",
+            focusedFieldData: createFocusedFieldDataMock({
+              inlineMenuFillType: InlineMenuFillType.CurrentPasswordUpdate,
+            }),
+          },
+          sender,
+        );
+        const currentPasswordField = createAutofillFieldMock({
+          autoCompleteType: "current-password",
+          title: "Current Password",
+          type: "password",
+        });
+        const newPasswordField = createAutofillFieldMock({
+          autoCompleteType: "new-password",
+          title: "New Password",
+          type: "password",
+        });
+        const confirmNewPasswordField = createAutofillFieldMock({
+          autoCompleteType: "new-password",
+          title: "Confirm New Password",
+          type: "password",
+        });
+        const pageDetails = createAutofillPageDetailsMock({
+          fields: [currentPasswordField, newPasswordField, confirmNewPasswordField],
+        });
+        overlayBackground["pageDetailsForTab"][sender.tab.id] = new Map([
+          [sender.frameId, { frameId: sender.frameId, tab: sender.tab, details: pageDetails }],
+        ]);
+
+        sendPortMessage(listMessageConnectorSpy, {
+          command: "fillAutofillInlineMenuCipher",
+          inlineMenuCipherId: "inline-menu-cipher-2",
+          portKey,
+        });
+        await flushPromises();
+
+        pageDetails.fields = [currentPasswordField];
+        expect(autofillService.doAutoFill).toHaveBeenCalledWith(
+          expect.objectContaining({
+            pageDetails: [expect.objectContaining({ details: pageDetails })],
+          }),
+        );
       });
     });
 
@@ -3341,8 +3390,6 @@ describe("OverlayBackground", () => {
       });
 
       it("filters the page details to only include the new password fields before filling", async () => {
-        await flushPromises();
-
         sendPortMessage(listMessageConnectorSpy, { command: "fillGeneratedPassword", portKey });
         await flushPromises();
 
