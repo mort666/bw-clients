@@ -18,6 +18,13 @@ import { VerticalStepperComponent } from "../../trial-initiation/vertical-steppe
 import { SecretsManagerTrialFreeStepperComponent } from "../secrets-manager/secrets-manager-trial-free-stepper.component";
 import { ValidOrgParams } from "../trial-initiation.component";
 
+const trialFlowOrgs = [
+  ValidOrgParams.teams,
+  ValidOrgParams.teamsStarter,
+  ValidOrgParams.enterprise,
+  ValidOrgParams.families,
+];
+
 @Component({
   selector: "app-secrets-manager-trial-paid-stepper",
   templateUrl: "secrets-manager-trial-paid-stepper.component.html",
@@ -30,14 +37,7 @@ export class SecretsManagerTrialPaidStepperComponent
   @Input() organizationTypeQueryParameter: string;
 
   plan: PlanType;
-  org = "";
   createOrganizationLoading = false;
-  trialFlowOrgs: string[] = [
-    ValidOrgParams.teams,
-    ValidOrgParams.teamsStarter,
-    ValidOrgParams.enterprise,
-    ValidOrgParams.families,
-  ];
   billingSubLabel = this.i18nService.t("billingTrialSubLabel");
   organizationId: string;
 
@@ -47,8 +47,8 @@ export class SecretsManagerTrialPaidStepperComponent
   );
 
   constructor(
-    private route: ActivatedRoute,
-    private configService: ConfigService,
+    protected route: ActivatedRoute,
+    protected configService: ConfigService,
     formBuilder: UntypedFormBuilder,
     i18nService: I18nService,
     organizationBillingService: OrganizationBillingService,
@@ -56,16 +56,15 @@ export class SecretsManagerTrialPaidStepperComponent
   ) {
     super(formBuilder, i18nService, organizationBillingService, router);
   }
+
   async ngOnInit(): Promise<void> {
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe((qParams) => {
-      if (this.trialFlowOrgs.includes(qParams.org)) {
-        this.org = qParams.org;
-
-        if (this.org === ValidOrgParams.teamsStarter) {
+      if (trialFlowOrgs.includes(qParams.org)) {
+        if (qParams.org === ValidOrgParams.teamsStarter) {
           this.plan = PlanType.TeamsStarter;
-        } else if (this.org === ValidOrgParams.teams) {
+        } else if (qParams.org === ValidOrgParams.teams) {
           this.plan = PlanType.TeamsAnnually;
-        } else if (this.org === ValidOrgParams.enterprise) {
+        } else if (qParams.org === ValidOrgParams.enterprise) {
           this.plan = PlanType.EnterpriseAnnually;
         }
       }
