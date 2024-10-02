@@ -47,12 +47,12 @@ export class SecretsManagerTrialPaidStepperComponent
   );
 
   constructor(
-    protected route: ActivatedRoute,
-    protected configService: ConfigService,
-    formBuilder: UntypedFormBuilder,
-    i18nService: I18nService,
-    organizationBillingService: OrganizationBillingService,
-    router: Router,
+    private route: ActivatedRoute,
+    private configService: ConfigService,
+    protected formBuilder: UntypedFormBuilder,
+    protected i18nService: I18nService,
+    protected organizationBillingService: OrganizationBillingService,
+    protected router: Router,
   ) {
     super(formBuilder, i18nService, organizationBillingService, router);
   }
