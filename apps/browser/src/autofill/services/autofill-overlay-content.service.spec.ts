@@ -927,67 +927,67 @@ describe("AutofillOverlayContentService", () => {
             );
           });
         });
-      });
 
-      describe("input changes on a field for an account creation form", () => {
-        const inputFieldData = createAutofillFieldMock({
-          form: "validFormId",
-          autoCompleteType: "username",
-          type: "text",
-        });
-        const passwordFieldData = createAutofillFieldMock({
-          type: "password",
-          autoCompleteType: "new-password",
-          form: "validFormId",
-        });
-        const confirmPasswordFieldData = createAutofillFieldMock({
-          type: "password",
-          autoCompleteType: "new-password",
-          form: "validFormId",
-        });
+        describe("input changes on a field for an account creation form", () => {
+          const inputFieldData = createAutofillFieldMock({
+            form: "validFormId",
+            autoCompleteType: "username",
+            type: "text",
+          });
+          const passwordFieldData = createAutofillFieldMock({
+            type: "password",
+            autoCompleteType: "new-password",
+            form: "validFormId",
+          });
+          const confirmPasswordFieldData = createAutofillFieldMock({
+            type: "password",
+            autoCompleteType: "new-password",
+            form: "validFormId",
+          });
 
-        beforeEach(() => {
-          jest
-            .spyOn(inlineMenuFieldQualificationService, "isFieldForLoginForm")
-            .mockReturnValue(false);
-        });
+          beforeEach(() => {
+            jest
+              .spyOn(inlineMenuFieldQualificationService, "isFieldForLoginForm")
+              .mockReturnValue(false);
+          });
 
-        it("stores fields account username fields", async () => {
-          const inputFieldElement = document.createElement(
-            "input",
-          ) as ElementWithOpId<FillableFormFieldElement>;
+          it("stores fields account username fields", async () => {
+            const inputFieldElement = document.createElement(
+              "input",
+            ) as ElementWithOpId<FillableFormFieldElement>;
 
-          pageDetailsMock.fields = [inputFieldData, passwordFieldData, confirmPasswordFieldData];
-          await autofillOverlayContentService.setupOverlayListeners(
-            inputFieldElement,
-            inputFieldData,
-            pageDetailsMock,
-          );
+            pageDetailsMock.fields = [inputFieldData, passwordFieldData, confirmPasswordFieldData];
+            await autofillOverlayContentService.setupOverlayListeners(
+              inputFieldElement,
+              inputFieldData,
+              pageDetailsMock,
+            );
 
-          inputFieldElement.dispatchEvent(new Event("input"));
+            inputFieldElement.dispatchEvent(new Event("input"));
 
-          expect(autofillOverlayContentService["userFilledFields"].username).toEqual(
-            inputFieldElement,
-          );
-        });
+            expect(autofillOverlayContentService["userFilledFields"].username).toEqual(
+              inputFieldElement,
+            );
+          });
 
-        it("stores new password fields", async () => {
-          const inputFieldElement = document.createElement(
-            "input",
-          ) as ElementWithOpId<FillableFormFieldElement>;
+          it("stores new password fields", async () => {
+            const inputFieldElement = document.createElement(
+              "input",
+            ) as ElementWithOpId<FillableFormFieldElement>;
 
-          pageDetailsMock.fields = [inputFieldData, passwordFieldData, confirmPasswordFieldData];
-          await autofillOverlayContentService.setupOverlayListeners(
-            inputFieldElement,
-            passwordFieldData,
-            pageDetailsMock,
-          );
+            pageDetailsMock.fields = [inputFieldData, passwordFieldData, confirmPasswordFieldData];
+            await autofillOverlayContentService.setupOverlayListeners(
+              inputFieldElement,
+              passwordFieldData,
+              pageDetailsMock,
+            );
 
-          inputFieldElement.dispatchEvent(new Event("input"));
+            inputFieldElement.dispatchEvent(new Event("input"));
 
-          expect(autofillOverlayContentService["userFilledFields"].newPassword).toEqual(
-            inputFieldElement,
-          );
+            expect(autofillOverlayContentService["userFilledFields"].newPassword).toEqual(
+              inputFieldElement,
+            );
+          });
         });
       });
 
@@ -1313,10 +1313,10 @@ describe("AutofillOverlayContentService", () => {
           elementNumber: 3,
           autoCompleteType: "username",
           placeholder: "new username",
-          type: "text",
+          type: "email",
           viewable: true,
         });
-        const passwordAccountFieldData = createAutofillFieldMock({
+        const newPasswordFieldData = createAutofillFieldMock({
           opid: "create-account-password-field",
           form: "validFormId",
           elementNumber: 4,
@@ -1327,13 +1327,13 @@ describe("AutofillOverlayContentService", () => {
         });
 
         beforeEach(() => {
-          pageDetailsMock.fields = [inputAccountFieldData, passwordAccountFieldData];
+          pageDetailsMock.fields = [inputAccountFieldData, newPasswordFieldData];
           jest
             .spyOn(inlineMenuFieldQualificationService, "isFieldForLoginForm")
             .mockReturnValue(false);
         });
 
-        it("sets up the field listeners on the field", async () => {
+        it("sets up the field listeners on a username account creation field", async () => {
           await autofillOverlayContentService.setupOverlayListeners(
             autofillFieldElement,
             inputAccountFieldData,
@@ -1364,6 +1364,43 @@ describe("AutofillOverlayContentService", () => {
           expect(autofillFieldElement.removeEventListener).toHaveBeenCalled();
           expect(inputAccountFieldData.inlineMenuFillType).toEqual(
             InlineMenuFillType.AccountCreationUsername,
+          );
+        });
+
+        it("sets up field a current password field within an update password form", async () => {
+          const currentPasswordFieldData = createAutofillFieldMock({
+            opid: "current-password-field",
+            form: "validFormId",
+            elementNumber: 5,
+            autoCompleteType: "current-password",
+            placeholder: "current password",
+            type: "password",
+            viewable: true,
+          });
+          const confirmNewPasswordFieldData = createAutofillFieldMock({
+            opid: "confirm-new-password-field",
+            form: "validFormId",
+            elementNumber: 6,
+            autoCompleteType: "new-password",
+            placeholder: "confirm new password",
+            type: "password",
+            viewable: true,
+          });
+          pageDetailsMock.fields = [
+            currentPasswordFieldData,
+            newPasswordFieldData,
+            confirmNewPasswordFieldData,
+          ];
+
+          await autofillOverlayContentService.setupOverlayListeners(
+            autofillFieldElement,
+            currentPasswordFieldData,
+            pageDetailsMock,
+          );
+          await flushPromises();
+
+          expect(currentPasswordFieldData.inlineMenuFillType).toEqual(
+            InlineMenuFillType.CurrentPasswordUpdate,
           );
         });
       });
