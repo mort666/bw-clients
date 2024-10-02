@@ -9,7 +9,6 @@ export enum FeatureFlag {
   GeneratorToolsModernization = "generator-tools-modernization",
   EnableConsolidatedBilling = "enable-consolidated-billing",
   AC1795_UpdatedSubscriptionStatusSection = "AC-1795_updated-subscription-status-section",
-  EnableDeleteProvider = "AC-1218-delete-provider",
   ExtensionRefresh = "extension-refresh",
   PersistPopupView = "persist-popup-view",
   PM4154_BulkEncryptionService = "PM-4154-bulk-encryption-service",
@@ -34,6 +33,7 @@ export enum FeatureFlag {
   AC2476_DeprecateStripeSourcesAPI = "AC-2476-deprecate-stripe-sources-api",
   CipherKeyEncryption = "cipher-key-encryption",
   PM11901_RefactorSelfHostingLicenseUploader = "PM-11901-refactor-self-hosting-license-uploader",
+  Pm3478RefactorOrganizationUserApi = "pm-3478-refactor-organizationuser-api",
 }
 
 export type AllowedFeatureFlagTypes = boolean | number | string;
@@ -53,7 +53,6 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.GeneratorToolsModernization]: FALSE,
   [FeatureFlag.EnableConsolidatedBilling]: FALSE,
   [FeatureFlag.AC1795_UpdatedSubscriptionStatusSection]: FALSE,
-  [FeatureFlag.EnableDeleteProvider]: FALSE,
   [FeatureFlag.ExtensionRefresh]: FALSE,
   [FeatureFlag.PersistPopupView]: FALSE,
   [FeatureFlag.PM4154_BulkEncryptionService]: FALSE,
@@ -78,6 +77,7 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.AC2476_DeprecateStripeSourcesAPI]: FALSE,
   [FeatureFlag.CipherKeyEncryption]: FALSE,
   [FeatureFlag.PM11901_RefactorSelfHostingLicenseUploader]: FALSE,
+  [FeatureFlag.Pm3478RefactorOrganizationUserApi]: FALSE,
 } satisfies Record<FeatureFlag, AllowedFeatureFlagTypes>;
 
 export type DefaultFeatureFlagValueType = typeof DefaultFeatureFlagValue;

@@ -10,6 +10,7 @@ import {
   unauthGuardFn,
 } from "@bitwarden/angular/auth/guards";
 import { canAccessFeature } from "@bitwarden/angular/platform/guard/feature-flag.guard";
+import { extensionRefreshSwap } from "@bitwarden/angular/utils/extension-refresh-swap";
 import {
   AnonLayoutWrapperComponent,
   AnonLayoutWrapperData,
@@ -22,6 +23,7 @@ import {
   RegistrationLinkExpiredComponent,
   LoginComponent,
   LoginSecondaryContentComponent,
+  LockV2Component,
   LockIcon,
   UserLockIcon,
 } from "@bitwarden/auth/angular";
@@ -367,20 +369,58 @@ const routes: Routes = [
         ],
       },
       {
-        path: "lock",
-        canActivate: [deepLinkGuard(), lockGuard()],
+        path: "login",
+        canActivate: [unauthGuardFn()],
         children: [
           {
             path: "",
-            component: LockComponent,
+            component: LoginComponent,
+          },
+          {
+            path: "",
+            component: EnvironmentSelectorComponent,
+            outlet: "environment-selector",
           },
         ],
         data: {
-          pageTitle: "yourVaultIsLockedV2",
-          pageIcon: LockIcon,
-          showReadonlyHostname: true,
-        } satisfies AnonLayoutWrapperData,
+          pageTitle: "logIn",
+        },
       },
+      ...extensionRefreshSwap(
+        LockComponent,
+        LockV2Component,
+        {
+          path: "lock",
+          canActivate: [deepLinkGuard(), lockGuard()],
+          children: [
+            {
+              path: "",
+              component: LockComponent,
+            },
+          ],
+          data: {
+            pageTitle: "yourVaultIsLockedV2",
+            pageIcon: LockIcon,
+            showReadonlyHostname: true,
+          } satisfies AnonLayoutWrapperData,
+        },
+        {
+          path: "lock",
+          canActivate: [deepLinkGuard(), lockGuard()],
+          children: [
+            {
+              path: "",
+              component: LockV2Component,
+            },
+          ],
+          data: {
+            pageTitle: "yourAccountIsLocked",
+            pageIcon: LockIcon,
+            showReadonlyHostname: true,
+          } satisfies AnonLayoutWrapperData,
+        },
+      ),
+
       {
         path: "2fa",
         canActivate: [unauthGuardFn()],

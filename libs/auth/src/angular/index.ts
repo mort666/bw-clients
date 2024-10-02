@@ -49,5 +49,9 @@ export * from "./user-verification/user-verification-dialog.component";
 export * from "./user-verification/user-verification-dialog.types";
 export * from "./user-verification/user-verification-form-input.component";
 
-// vault timeout input
+// lock
+export * from "./lock/lock.component";
+export * from "./lock/lock-component.service";
+
+// vault timeout
 export * from "./vault-timeout-input/vault-timeout-input.component";

@@ -227,4 +227,11 @@ export class LoginComponentV1 extends BaseLoginComponent implements OnInit, OnDe
       );
     }
   }
+
+  /**
+   * Force the validatedEmail flag to false, which will show the login page.
+   */
+  invalidateEmail() {
+    this.validatedEmail = false;
+  }
 }

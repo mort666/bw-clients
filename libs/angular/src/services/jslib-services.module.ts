@@ -954,7 +954,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: OrganizationUserApiService,
     useClass: DefaultOrganizationUserApiService,
-    deps: [ApiServiceAbstraction],
+    deps: [ApiServiceAbstraction, ConfigService],
   }),
   safeProvider({
     provide: PasswordResetEnrollmentServiceAbstraction,
@@ -963,6 +963,7 @@ const safeProviders: SafeProvider[] = [
       OrganizationApiServiceAbstraction,
       AccountServiceAbstraction,
       CryptoServiceAbstraction,
+      EncryptService,
       OrganizationUserApiService,
       I18nServiceAbstraction,
     ],
@@ -1092,6 +1093,7 @@ const safeProviders: SafeProvider[] = [
       AccountServiceAbstraction,
       InternalMasterPasswordServiceAbstraction,
       CryptoServiceAbstraction,
+      EncryptService,
       ApiServiceAbstraction,
       StateProvider,
     ],
@@ -1287,6 +1289,7 @@ const safeProviders: SafeProvider[] = [
     deps: [
       ApiServiceAbstraction,
       CryptoServiceAbstraction,
+      EncryptService,
       I18nServiceAbstraction,
       KdfConfigServiceAbstraction,
       InternalMasterPasswordServiceAbstraction,
