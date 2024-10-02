@@ -873,6 +873,18 @@ describe("AutofillInlineMenuList", () => {
         });
       });
     });
+
+    it("creates the build save login item view", async () => {
+      postWindowMessage(
+        createInitAutofillInlineMenuListMessageMock({
+          focusedFieldHasValue: true,
+          generatedPassword,
+        }),
+      );
+      await flushPromises();
+
+      expect(autofillInlineMenuList["inlineMenuListContainer"]).toMatchSnapshot();
+    });
   });
 
   describe("global event listener handlers", () => {
@@ -1005,6 +1017,39 @@ describe("AutofillInlineMenuList", () => {
 
         expect(buildPasswordGeneratorSpy).toHaveBeenCalledTimes(1);
         expect(buildColorizedPasswordElementSpy).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    describe("displaying the save login view", () => {
+      let buildSaveLoginInlineMenuListSpy: jest.SpyInstance;
+
+      beforeEach(() => {
+        buildSaveLoginInlineMenuListSpy = jest.spyOn(
+          autofillInlineMenuList as any,
+          "buildSaveLoginInlineMenuList",
+        );
+      });
+
+      it("skips displaying the save login item view if the user is not authenticated", async () => {
+        postWindowMessage(
+          createInitAutofillInlineMenuListMessageMock({
+            authStatus: AuthenticationStatus.Locked,
+          }),
+        );
+        await flushPromises();
+
+        postWindowMessage({ command: "showSaveLoginInlineMenuList" });
+
+        expect(buildSaveLoginInlineMenuListSpy).not.toHaveBeenCalled();
+      });
+
+      it("builds the save login item view", async () => {
+        postWindowMessage(createInitAutofillInlineMenuListMessageMock());
+        await flushPromises();
+
+        postWindowMessage({ command: "showSaveLoginInlineMenuList" });
+
+        expect(buildSaveLoginInlineMenuListSpy).toHaveBeenCalled();
       });
     });
 
