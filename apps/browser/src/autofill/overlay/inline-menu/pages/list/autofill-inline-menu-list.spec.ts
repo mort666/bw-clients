@@ -741,15 +741,31 @@ describe("AutofillInlineMenuList", () => {
           await flushPromises();
         });
 
-        describe("filling a cipher", () => {
-          it("triggers a fill of the generated password on click", () => {
+        it("triggers a fill of the generated password on click", () => {
+          const fillGeneratedPasswordButton = autofillInlineMenuList[
+            "passwordGeneratorContainer"
+          ].querySelector(".fill-generated-password-button");
+
+          fillGeneratedPasswordButton.dispatchEvent(new Event("click"));
+
+          expect(globalThis.parent.postMessage).toHaveBeenCalledWith(
+            { command: "fillGeneratedPassword", portKey },
+            "*",
+          );
+        });
+
+        describe("keyup events on the fill generated password button", () => {
+          it("skips acting on keyup events that have the shiftKey pressed in combination", () => {
             const fillGeneratedPasswordButton = autofillInlineMenuList[
               "passwordGeneratorContainer"
             ].querySelector(".fill-generated-password-button");
+            jest.spyOn(fillGeneratedPasswordButton as HTMLElement, "focus");
 
-            fillGeneratedPasswordButton.dispatchEvent(new Event("click"));
+            fillGeneratedPasswordButton.dispatchEvent(
+              new KeyboardEvent("keyup", { code: "Space", shiftKey: true }),
+            );
 
-            expect(globalThis.parent.postMessage).toHaveBeenCalledWith(
+            expect(globalThis.parent.postMessage).not.toHaveBeenCalledWith(
               { command: "fillGeneratedPassword", portKey },
               "*",
             );
@@ -768,6 +784,22 @@ describe("AutofillInlineMenuList", () => {
               { command: "fillGeneratedPassword", portKey },
               "*",
             );
+          });
+
+          it("focuses the refresh generated password button on `ArrowRight`", () => {
+            const fillGeneratedPasswordButton = autofillInlineMenuList[
+              "passwordGeneratorContainer"
+            ].querySelector(".fill-generated-password-button");
+            const refreshGeneratedPasswordButton = autofillInlineMenuList[
+              "passwordGeneratorContainer"
+            ].querySelector(".refresh-generated-password-button");
+            jest.spyOn(refreshGeneratedPasswordButton as HTMLElement, "focus");
+
+            fillGeneratedPasswordButton.dispatchEvent(
+              new KeyboardEvent("keyup", { code: "ArrowRight" }),
+            );
+
+            expect((refreshGeneratedPasswordButton as HTMLElement).focus).toBeCalled();
           });
         });
       });
