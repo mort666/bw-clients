@@ -857,6 +857,11 @@ export class InlineMenuFieldQualificationService
     return this.isPasswordField(field);
   };
 
+  /**
+   * Validates the provided field as a current password field for an update password form.
+   *
+   * @param field - The field to validate
+   */
   isUpdateCurrentPasswordField = (field: AutofillField): boolean => {
     if (this.fieldContainsAutocompleteValues(field, this.newPasswordAutoCompleteValue)) {
       return false;

@@ -121,163 +121,125 @@ describe("InsertAutofillContentService", () => {
     mockQuerySelectorAll.mockRestore();
   });
 
-  // describe("fillForm", () => {
-  //   it("returns early if the passed fill script does not have a script property", async () => {
-  //     fillScript.script = [];
-  //     jest.spyOn(insertAutofillContentService as any, "fillingWithinSandboxedIframe");
-  //     jest.spyOn(insertAutofillContentService as any, "userCancelledInsecureUrlAutofill");
-  //     jest.spyOn(insertAutofillContentService as any, "userCancelledUntrustedIframeAutofill");
-  //     jest.spyOn(insertAutofillContentService as any, "runFillScriptAction");
-  //
-  //     await insertAutofillContentService.fillForm(fillScript);
-  //
-  //     expect(insertAutofillContentService["fillingWithinSandboxedIframe"]).not.toHaveBeenCalled();
-  //     expect(
-  //       insertAutofillContentService["userCancelledInsecureUrlAutofill"],
-  //     ).not.toHaveBeenCalled();
-  //     expect(
-  //       insertAutofillContentService["userCancelledUntrustedIframeAutofill"],
-  //     ).not.toHaveBeenCalled();
-  //     expect(insertAutofillContentService["runFillScriptAction"]).not.toHaveBeenCalled();
-  //   });
-  //
-  //   it("returns early if the script is filling within a sand boxed iframe", async () => {
-  //     jest
-  //       .spyOn(insertAutofillContentService as any, "fillingWithinSandboxedIframe")
-  //       .mockReturnValue(true);
-  //     jest.spyOn(insertAutofillContentService as any, "userCancelledInsecureUrlAutofill");
-  //     jest.spyOn(insertAutofillContentService as any, "userCancelledUntrustedIframeAutofill");
-  //     jest.spyOn(insertAutofillContentService as any, "runFillScriptAction");
-  //
-  //     await insertAutofillContentService.fillForm(fillScript);
-  //
-  //     expect(insertAutofillContentService["fillingWithinSandboxedIframe"]).toHaveBeenCalled();
-  //     expect(
-  //       insertAutofillContentService["userCancelledInsecureUrlAutofill"],
-  //     ).not.toHaveBeenCalled();
-  //     expect(
-  //       insertAutofillContentService["userCancelledUntrustedIframeAutofill"],
-  //     ).not.toHaveBeenCalled();
-  //     expect(insertAutofillContentService["runFillScriptAction"]).not.toHaveBeenCalled();
-  //   });
-  //
-  //   it("returns early if the autofill is occurring on an insecure url and the user cancels the autofill", async () => {
-  //     jest
-  //       .spyOn(insertAutofillContentService as any, "fillingWithinSandboxedIframe")
-  //       .mockReturnValue(false);
-  //     jest
-  //       .spyOn(insertAutofillContentService as any, "userCancelledInsecureUrlAutofill")
-  //       .mockReturnValue(true);
-  //     jest.spyOn(insertAutofillContentService as any, "userCancelledUntrustedIframeAutofill");
-  //     jest.spyOn(insertAutofillContentService as any, "runFillScriptAction");
-  //
-  //     await insertAutofillContentService.fillForm(fillScript);
-  //
-  //     expect(insertAutofillContentService["fillingWithinSandboxedIframe"]).toHaveBeenCalled();
-  //     expect(insertAutofillContentService["userCancelledInsecureUrlAutofill"]).toHaveBeenCalled();
-  //     expect(
-  //       insertAutofillContentService["userCancelledUntrustedIframeAutofill"],
-  //     ).not.toHaveBeenCalled();
-  //     expect(insertAutofillContentService["runFillScriptAction"]).not.toHaveBeenCalled();
-  //   });
-  //
-  //   it("returns early if the iframe is untrusted and the user cancelled the autofill", async () => {
-  //     jest
-  //       .spyOn(insertAutofillContentService as any, "fillingWithinSandboxedIframe")
-  //       .mockReturnValue(false);
-  //     jest
-  //       .spyOn(insertAutofillContentService as any, "userCancelledInsecureUrlAutofill")
-  //       .mockReturnValue(false);
-  //     jest
-  //       .spyOn(insertAutofillContentService as any, "userCancelledUntrustedIframeAutofill")
-  //       .mockReturnValue(true);
-  //     jest.spyOn(insertAutofillContentService as any, "runFillScriptAction");
-  //
-  //     await insertAutofillContentService.fillForm(fillScript);
-  //
-  //     expect(insertAutofillContentService["fillingWithinSandboxedIframe"]).toHaveBeenCalled();
-  //     expect(insertAutofillContentService["userCancelledInsecureUrlAutofill"]).toHaveBeenCalled();
-  //     expect(
-  //       insertAutofillContentService["userCancelledUntrustedIframeAutofill"],
-  //     ).toHaveBeenCalled();
-  //     expect(insertAutofillContentService["runFillScriptAction"]).not.toHaveBeenCalled();
-  //   });
-  //
-  //   it("runs the fill script action for all scripts found within the fill script", async () => {
-  //     jest
-  //       .spyOn(insertAutofillContentService as any, "fillingWithinSandboxedIframe")
-  //       .mockReturnValue(false);
-  //     jest
-  //       .spyOn(insertAutofillContentService as any, "userCancelledInsecureUrlAutofill")
-  //       .mockReturnValue(false);
-  //     jest
-  //       .spyOn(insertAutofillContentService as any, "userCancelledUntrustedIframeAutofill")
-  //       .mockReturnValue(false);
-  //     jest.spyOn(insertAutofillContentService as any, "runFillScriptAction");
-  //
-  //     await insertAutofillContentService.fillForm(fillScript);
-  //
-  //     expect(insertAutofillContentService["fillingWithinSandboxedIframe"]).toHaveBeenCalled();
-  //     expect(insertAutofillContentService["userCancelledInsecureUrlAutofill"]).toHaveBeenCalled();
-  //     expect(
-  //       insertAutofillContentService["userCancelledUntrustedIframeAutofill"],
-  //     ).toHaveBeenCalled();
-  //     expect(insertAutofillContentService["runFillScriptAction"]).toHaveBeenCalledTimes(3);
-  //     expect(insertAutofillContentService["runFillScriptAction"]).toHaveBeenNthCalledWith(
-  //       1,
-  //       fillScript.script[0],
-  //       0,
-  //       fillScript.script,
-  //     );
-  //     expect(insertAutofillContentService["runFillScriptAction"]).toHaveBeenNthCalledWith(
-  //       2,
-  //       fillScript.script[1],
-  //       1,
-  //       fillScript.script,
-  //     );
-  //     expect(insertAutofillContentService["runFillScriptAction"]).toHaveBeenNthCalledWith(
-  //       3,
-  //       fillScript.script[2],
-  //       2,
-  //       fillScript.script,
-  //     );
-  //   });
-  // });
-  //
-  // describe("fillingWithinSandboxedIframe", () => {
-  //   afterEach(() => {
-  //     Object.defineProperty(globalThis, "window", {
-  //       value: { frameElement: null },
-  //       writable: true,
-  //     });
-  //   });
-  //
-  //   it("returns false if the `self.origin` value is not null", () => {
-  //     const result = insertAutofillContentService["fillingWithinSandboxedIframe"]();
-  //
-  //     expect(result).toBe(false);
-  //     expect(self.origin).not.toBeNull();
-  //   });
-  //
-  //   it("returns true if the frameElement has a sandbox attribute", () => {
-  //     Object.defineProperty(globalThis, "frameElement", {
-  //       value: { hasAttribute: jest.fn(() => true) },
-  //       writable: true,
-  //     });
-  //
-  //     const result = insertAutofillContentService["fillingWithinSandboxedIframe"]();
-  //
-  //     expect(result).toBe(true);
-  //   });
-  //
-  //   it("returns true if the window location hostname is empty", () => {
-  //     setMockWindowLocation({ protocol: "http:", hostname: "" });
-  //
-  //     const result = insertAutofillContentService["fillingWithinSandboxedIframe"]();
-  //
-  //     expect(result).toBe(true);
-  //   });
-  // });
+  describe("fillForm", () => {
+    afterEach(() => {
+      Object.defineProperty(globalThis, "window", {
+        value: { frameElement: null },
+        writable: true,
+      });
+      Object.defineProperty(globalThis, "frameElement", {
+        value: { hasAttribute: jest.fn(() => false) },
+        writable: true,
+      });
+    });
+
+    it("returns early if the passed fill script does not have a script property", async () => {
+      fillScript.script = [];
+      jest.spyOn(insertAutofillContentService as any, "userCancelledInsecureUrlAutofill");
+      jest.spyOn(insertAutofillContentService as any, "userCancelledUntrustedIframeAutofill");
+      jest.spyOn(insertAutofillContentService as any, "runFillScriptAction");
+
+      await insertAutofillContentService.fillForm(fillScript);
+
+      expect(
+        insertAutofillContentService["userCancelledInsecureUrlAutofill"],
+      ).not.toHaveBeenCalled();
+      expect(
+        insertAutofillContentService["userCancelledUntrustedIframeAutofill"],
+      ).not.toHaveBeenCalled();
+      expect(insertAutofillContentService["runFillScriptAction"]).not.toHaveBeenCalled();
+    });
+
+    it("returns early if the script is filling within a sand boxed iframe", async () => {
+      Object.defineProperty(globalThis, "frameElement", {
+        value: { hasAttribute: jest.fn(() => true) },
+        writable: true,
+      });
+      jest.spyOn(insertAutofillContentService as any, "userCancelledInsecureUrlAutofill");
+      jest.spyOn(insertAutofillContentService as any, "userCancelledUntrustedIframeAutofill");
+      jest.spyOn(insertAutofillContentService as any, "runFillScriptAction");
+
+      await insertAutofillContentService.fillForm(fillScript);
+
+      expect(
+        insertAutofillContentService["userCancelledInsecureUrlAutofill"],
+      ).not.toHaveBeenCalled();
+      expect(
+        insertAutofillContentService["userCancelledUntrustedIframeAutofill"],
+      ).not.toHaveBeenCalled();
+      expect(insertAutofillContentService["runFillScriptAction"]).not.toHaveBeenCalled();
+    });
+
+    it("returns early if the autofill is occurring on an insecure url and the user cancels the autofill", async () => {
+      jest
+        .spyOn(insertAutofillContentService as any, "userCancelledInsecureUrlAutofill")
+        .mockReturnValue(true);
+      jest.spyOn(insertAutofillContentService as any, "userCancelledUntrustedIframeAutofill");
+      jest.spyOn(insertAutofillContentService as any, "runFillScriptAction");
+
+      await insertAutofillContentService.fillForm(fillScript);
+
+      expect(insertAutofillContentService["userCancelledInsecureUrlAutofill"]).toHaveBeenCalled();
+      expect(
+        insertAutofillContentService["userCancelledUntrustedIframeAutofill"],
+      ).not.toHaveBeenCalled();
+      expect(insertAutofillContentService["runFillScriptAction"]).not.toHaveBeenCalled();
+    });
+
+    it("returns early if the iframe is untrusted and the user cancelled the autofill", async () => {
+      jest
+        .spyOn(insertAutofillContentService as any, "userCancelledInsecureUrlAutofill")
+        .mockReturnValue(false);
+      jest
+        .spyOn(insertAutofillContentService as any, "userCancelledUntrustedIframeAutofill")
+        .mockReturnValue(true);
+      jest.spyOn(insertAutofillContentService as any, "runFillScriptAction");
+
+      await insertAutofillContentService.fillForm(fillScript);
+
+      expect(insertAutofillContentService["userCancelledInsecureUrlAutofill"]).toHaveBeenCalled();
+      expect(
+        insertAutofillContentService["userCancelledUntrustedIframeAutofill"],
+      ).toHaveBeenCalled();
+      expect(insertAutofillContentService["runFillScriptAction"]).not.toHaveBeenCalled();
+    });
+
+    it("runs the fill script action for all scripts found within the fill script", async () => {
+      jest
+        .spyOn(insertAutofillContentService as any, "userCancelledInsecureUrlAutofill")
+        .mockReturnValue(false);
+      jest
+        .spyOn(insertAutofillContentService as any, "userCancelledUntrustedIframeAutofill")
+        .mockReturnValue(false);
+      jest.spyOn(insertAutofillContentService as any, "runFillScriptAction");
+
+      await insertAutofillContentService.fillForm(fillScript);
+
+      expect(insertAutofillContentService["userCancelledInsecureUrlAutofill"]).toHaveBeenCalled();
+      expect(
+        insertAutofillContentService["userCancelledUntrustedIframeAutofill"],
+      ).toHaveBeenCalled();
+      expect(insertAutofillContentService["runFillScriptAction"]).toHaveBeenCalledTimes(3);
+      expect(insertAutofillContentService["runFillScriptAction"]).toHaveBeenNthCalledWith(
+        1,
+        fillScript.script[0],
+        0,
+        fillScript.script,
+      );
+      expect(insertAutofillContentService["runFillScriptAction"]).toHaveBeenNthCalledWith(
+        2,
+        fillScript.script[1],
+        1,
+        fillScript.script,
+      );
+      expect(insertAutofillContentService["runFillScriptAction"]).toHaveBeenNthCalledWith(
+        3,
+        fillScript.script[2],
+        2,
+        fillScript.script,
+      );
+    });
+  });
 
   describe("userCancelledInsecureUrlAutofill", () => {
     const currentHostname = "bitwarden.com";

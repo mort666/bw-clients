@@ -488,6 +488,9 @@ export function isInvalidResponseStatusCode(statusCode: number) {
   return statusCode < 200 || statusCode >= 300;
 }
 
+/**
+ * Determines if the current context is within a sandboxed iframe.
+ */
 export function currentlyInSandboxedIframe(): boolean {
   return (
     String(self.origin).toLowerCase() === "null" ||
@@ -496,6 +499,10 @@ export function currentlyInSandboxedIframe(): boolean {
   );
 }
 
+/**
+ * This object allows us to map a special character to a key name. The key name is used
+ * in gathering the i18n translation of the written version of the special character.
+ */
 export const specialCharacterToKeyMap: Record<string, string> = {
   " ": "keySpace",
   "~": "keyTilde",
