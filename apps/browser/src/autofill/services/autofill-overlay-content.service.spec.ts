@@ -1,6 +1,6 @@
 import { mock } from "jest-mock-extended";
 
-import { AutofillOverlayVisibility, EVENTS } from "@bitwarden/common/autofill/constants";
+import { EVENTS } from "@bitwarden/common/autofill/constants";
 import { CipherType } from "@bitwarden/common/vault/enums";
 
 import AutofillInit from "../content/autofill-init";
@@ -1051,8 +1051,6 @@ describe("AutofillOverlayContentService", () => {
         it("skips triggering the handler logic if autofill is currently filling", async () => {
           isFieldCurrentlyFillingSpy.mockResolvedValue(true);
           autofillOverlayContentService["mostRecentlyFocusedField"] = autofillFieldElement;
-          autofillOverlayContentService["inlineMenuVisibility"] =
-            AutofillOverlayVisibility.OnFieldFocus;
           await autofillOverlayContentService.setupOverlayListeners(
             autofillFieldElement,
             autofillFieldData,
