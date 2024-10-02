@@ -1222,7 +1222,7 @@ jobs:
       - name: Resign
         run: |
           security find-identity -v -p codesigning
-          codesign --entitlements apps/desktop/resources/entitlements.mac.plist --force --sign "Developer ID Application: 8bit Solutions LLC (LTZ2PFU5D6)" dist/mas-dev-universal/Bitwarden.app
+          codesign --entitlements apps/desktop/resources/entitlements.mas.plist --force --sign "Developer ID Application: 8bit Solutions LLC (LTZ2PFU5D6)" dist/mas-dev-universal/Bitwarden.app
 
       - name: Zip masdev asset
         run: |
