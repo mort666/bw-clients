@@ -129,13 +129,17 @@ export class AutofillInlineMenuIframeService implements AutofillInlineMenuIframe
     this.port.onDisconnect.addListener(this.handlePortDisconnect);
     this.port.onMessage.addListener(this.handlePortMessage);
 
-    this.announceAriaAlert(this.ariaAlert);
+    this.announceAriaAlert(this.ariaAlert, 2000);
   };
 
   /**
    * Announces the aria alert element to screen readers when the iframe is loaded.
+   *
+   * @param textContent - The text content to announce
+   * @param delay - The delay before announcing the text content
+   * @param triggeredByUser - Identifies whether we should present the alert regardless of field focus
    */
-  private announceAriaAlert(textContent: string, triggeredByUser = false) {
+  private announceAriaAlert(textContent: string, delay: number, triggeredByUser = false) {
     if (!this.ariaAlertElement || !textContent) {
       return;
     }
@@ -144,18 +148,18 @@ export class AutofillInlineMenuIframeService implements AutofillInlineMenuIframe
     this.ariaAlertElement.textContent = textContent;
     this.clearAriaAlert();
 
-    this.ariaAlertTimeout = globalThis.setTimeout(
-      async () => {
-        const isFieldFocused = await this.sendExtensionMessage("checkIsFieldCurrentlyFocused");
-        if (isFieldFocused || triggeredByUser) {
-          this.shadow.appendChild(this.ariaAlertElement);
-        }
-        this.ariaAlertTimeout = null;
-      },
-      triggeredByUser ? 500 : 2000,
-    );
+    this.ariaAlertTimeout = globalThis.setTimeout(async () => {
+      const isFieldFocused = await this.sendExtensionMessage("checkIsFieldCurrentlyFocused");
+      if (isFieldFocused || triggeredByUser) {
+        this.shadow.appendChild(this.ariaAlertElement);
+      }
+      this.ariaAlertTimeout = null;
+    }, delay);
   }
 
+  /**
+   * Clears any existing aria alert that could be announced.
+   */
   clearAriaAlert() {
     if (this.ariaAlertTimeout) {
       clearTimeout(this.ariaAlertTimeout);
@@ -279,7 +283,7 @@ export class AutofillInlineMenuIframeService implements AutofillInlineMenuIframe
       this.handleFadeInInlineMenuIframe();
     }
 
-    this.announceAriaAlert(this.ariaAlert);
+    this.announceAriaAlert(this.ariaAlert, 2000);
   }
 
   /**
@@ -380,7 +384,7 @@ export class AutofillInlineMenuIframeService implements AutofillInlineMenuIframe
 
     this.clearAriaAlert();
     this.createAriaAlertElement(true);
-    this.announceAriaAlert(chrome.i18n.getMessage("passwordRegenerated"), true);
+    this.announceAriaAlert(chrome.i18n.getMessage("passwordRegenerated"), 500, true);
   };
 
   /**
