@@ -1,6 +1,6 @@
 <bit-section [formGroup]="sendDetailsForm">
-  <bit-section-header>
-    <h2 bitTypography="h5">{{ "sendDetails" | i18n }}</h2>
+  <bit-section-header class="tw-mt-2">
+    <h2 bitTypography="h6">{{ "sendDetails" | i18n }}</h2>
   </bit-section-header>
 
   <bit-card>
@@ -13,10 +13,28 @@
       *ngIf="config.sendType === TextSendType"
       [config]="config"
       [originalSendView]="originalSendView"
-      [sendDetailsForm]="sendDetailsForm"
     ></tools-send-text-details>
 
-    <bit-form-field>
+    <tools-send-file-details
+      *ngIf="config.sendType === FileSendType"
+      [config]="config"
+      [originalSendView]="originalSendView"
+    ></tools-send-file-details>
+
+    <bit-form-field *ngIf="sendLink">
+      <bit-label>{{ "sendLink" | i18n }}</bit-label>
+      <input data-testid="send-link" bitInput type="text" [value]="sendLink" readonly />
+      <button
+        type="button"
+        bitSuffix
+        showToast
+        bitIconButton="bwi-clone"
+        [appCopyClick]="sendLink"
+        [appA11yTitle]="'copySendLink' | i18n"
+      ></button>
+    </bit-form-field>
+
+    <bit-form-field disableMargin>
       <bit-label>{{ "deletionDate" | i18n }}</bit-label>
       <bit-select
         id="deletionDate"
@@ -32,4 +50,5 @@
       <bit-hint>{{ "deletionDateDescV2" | i18n }}</bit-hint>
     </bit-form-field>
   </bit-card>
+  <tools-send-options [config]="config" [originalSendView]="originalSendView"></tools-send-options>
 </bit-section>

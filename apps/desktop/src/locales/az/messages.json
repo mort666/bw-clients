@@ -444,6 +444,10 @@
   "ambiguous": {
     "message": "Anlaşılmaz simvollardan çəkinin"
   },
+  "generatorPolicyInEffect": {
+    "message": "Müəssisə siyasət tələbləri, yaradıcı seçimlərinizə tətbiq edildi.",
+    "description": "Indicates that a policy limits the credential generator screen."
+  },
   "searchCollection": {
     "message": "Kolleksiya axtar"
   },
@@ -559,6 +563,18 @@
   },
   "settings": {
     "message": "Ayarlar"
+  },
+  "accountEmail": {
+    "message": "Hesab e-poçtu"
+  },
+  "requestHint": {
+    "message": "İpucu tələb et"
+  },
+  "requestPasswordHint": {
+    "message": "Parol ipucusu tələb et"
+  },
+  "enterYourAccountEmailAddressAndYourPasswordHintWillBeSentToYou": {
+    "message": "Hesabınızın e-poçt ünvanını daxil edin və parolunuz üçün ipucu sizə göndəriləcək"
   },
   "passwordHint": {
     "message": "Parol məsləhəti"
@@ -930,6 +946,9 @@
   "vaultTimeout": {
     "message": "Anbar vaxtının bitməsi"
   },
+  "vaultTimeout1": {
+    "message": "Vaxt bitmə"
+  },
   "vaultTimeoutDesc": {
     "message": "Anbarın vaxt bitmə əməliyyatını nə vaxt icra edəcəyini seçin."
   },
@@ -1286,7 +1305,7 @@
     }
   },
   "copySuccessful": {
-    "message": "Copy Successful"
+    "message": "Uğurla kopyalandı"
   },
   "errorRefreshingAccessToken": {
     "message": "Müraciət tokeni təzələmə xətası"
@@ -1555,7 +1574,7 @@
   "recommendedForSecurity": {
     "message": "Güvənlik üçün tövsiyə olunur."
   },
-  "lockWithMasterPassOnRestart": {
+  "lockWithMasterPassOnRestart1": {
     "message": "Yenidən başladılanda ana parol ilə kilidlə"
   },
   "deleteAccount": {
@@ -1633,7 +1652,7 @@
   },
   "lock": {
     "message": "Kilidlə",
-    "description": "Verb form: to make secure or inaccesible by"
+    "description": "Verb form: to make secure or inaccessible by"
   },
   "trash": {
     "message": "Tullantı qutusu",
@@ -1756,8 +1775,8 @@
   "enableBrowserIntegration": {
     "message": "Brauzer inteqrasiyasını fəallaşdır"
   },
-  "enableBrowserIntegrationDesc": {
-    "message": "Brauzerdə biometriklər üçün istifadə olunur."
+  "enableBrowserIntegrationDesc1": {
+    "message": "Used to allow biometric unlock in browsers that are not Safari."
   },
   "enableDuckDuckGoBrowserIntegration": {
     "message": "DuckDuckGo brauzer inteqrasiyasına icazə ver"
@@ -2087,8 +2106,8 @@
   "minutes": {
     "message": "Dəqiqə"
   },
-  "vaultTimeoutPolicyInEffect": {
-    "message": "Təşkilatınızın siyasətləri, anbarınızın vaxt bitişinə təsir edir. Anbar vaxt bitişi üçün icazə verilən maksimum vaxt $HOURS$ saat $MINUTES$ dəqiqədir",
+  "vaultTimeoutPolicyInEffect1": {
+    "message": "Maksimum $HOURS$ saat və $MINUTES$ dəqiqə.",
     "placeholders": {
       "hours": {
         "content": "$1",
@@ -3062,10 +3081,16 @@
   "textSends": {
     "message": "Mətn \"Send\"ləri"
   },
+  "allowScreenshots": {
+    "message": "Ekranı çəkməyə icazə ver"
+  },
+  "allowScreenshotsDesc": {
+    "message": "Bitwarden masaüstü tətbiqinin ekranını çəkməyə icazə ver."
+  },
   "ssoError": {
     "message": "SSO giriş üçün açıq port tapıla bilmədi."
   },
   "fileSavedToDevice": {
-    "message": "File saved to device. Manage from your device downloads."
+    "message": "Fayl cihazda saxlanıldı. Endirilənləri cihazınızdan idarə edin."
   }
 }

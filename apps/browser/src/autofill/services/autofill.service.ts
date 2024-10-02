@@ -6,11 +6,15 @@ import { AccountInfo, AccountService } from "@bitwarden/common/auth/abstractions
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
-import { AutofillOverlayVisibility } from "@bitwarden/common/autofill/constants";
+import {
+  AutofillOverlayVisibility,
+  CardExpiryDateDelimiters,
+} from "@bitwarden/common/autofill/constants";
 import { AutofillSettingsServiceAbstraction } from "@bitwarden/common/autofill/services/autofill-settings.service";
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { UserNotificationSettingsServiceAbstraction } from "@bitwarden/common/autofill/services/user-notification-settings.service";
 import { InlineMenuVisibilitySetting } from "@bitwarden/common/autofill/types";
+import { normalizeExpiryYearFormat } from "@bitwarden/common/autofill/utils";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { EventType } from "@bitwarden/common/enums";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
@@ -30,7 +34,6 @@ import { CardView } from "@bitwarden/common/vault/models/view/card.view";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { FieldView } from "@bitwarden/common/vault/models/view/field.view";
 import { IdentityView } from "@bitwarden/common/vault/models/view/identity.view";
-import { normalizeExpiryYearFormat } from "@bitwarden/common/vault/utils";
 
 import { BrowserApi } from "../../platform/browser/browser-api";
 import { ScriptInjectorService } from "../../platform/services/abstractions/script-injector.service";
@@ -1390,8 +1393,7 @@ export default class AutofillService implements AutofillServiceInterface {
     if (expectedExpiryDateFormat) {
       const { Month, MonthShort, Year } = expiryDateFormatPatterns;
 
-      const expiryDateDelimitersPattern =
-        "\\" + CreditCardAutoFillConstants.CardExpiryDateDelimiters.join("\\");
+      const expiryDateDelimitersPattern = "\\" + CardExpiryDateDelimiters.join("\\");
 
       // assign the delimiter from the expected format string
       delimiter =
@@ -1443,8 +1445,7 @@ export default class AutofillService implements AutofillServiceInterface {
     let expectedDateFormat = null;
     let dateFormatPatterns = null;
 
-    const expiryDateDelimitersPattern =
-      "\\" + CreditCardAutoFillConstants.CardExpiryDateDelimiters.join("\\");
+    const expiryDateDelimitersPattern = "\\" + CardExpiryDateDelimiters.join("\\");
 
     CreditCardAutoFillConstants.CardExpiryDateFormats.find((dateFormat) => {
       dateFormatPatterns = dateFormat;
@@ -1482,6 +1483,8 @@ export default class AutofillService implements AutofillServiceInterface {
         return false;
       });
     });
+    // @TODO if expectedDateFormat is still null, and there is a `pattern` attribute, cycle
+    // through generated formatted values, checking against the provided regex pattern
 
     return [expectedDateFormat, dateFormatPatterns];
   }
@@ -3007,9 +3010,11 @@ export default class AutofillService implements AutofillServiceInterface {
     const tabs = await BrowserApi.tabsQuery({});
     for (let index = 0; index < tabs.length; index++) {
       const tab = tabs[index];
-      if (tab.url?.startsWith("http")) {
+      if (tab?.id && tab.url?.startsWith("http")) {
         const frames = await BrowserApi.getAllFrameDetails(tab.id);
-        frames.forEach((frame) => this.injectAutofillScripts(tab, frame.frameId, false));
+        if (frames) {
+          frames.forEach((frame) => this.injectAutofillScripts(tab, frame.frameId, false));
+        }
       }
     }
   }

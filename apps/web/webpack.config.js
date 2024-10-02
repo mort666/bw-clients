@@ -135,6 +135,8 @@ const plugins = [
     template: "./src/404.html",
     filename: "404.html",
     chunks: ["styles"],
+    // 404 page is a wildcard, this ensures it uses absolute paths.
+    publicPath: "/",
   }),
   new CopyWebpackPlugin({
     patterns: [
@@ -176,7 +178,7 @@ const plugins = [
     ADDITIONAL_REGIONS: envConfig["additionalRegions"] ?? [],
   }),
   new AngularWebpackPlugin({
-    tsConfigPath: "tsconfig.json",
+    tsconfig: "tsconfig.build.json",
     entryModule: "src/app/app.module#AppModule",
     sourceMap: true,
   }),

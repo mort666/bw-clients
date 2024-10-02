@@ -14,6 +14,7 @@ import { EventType } from "@bitwarden/common/enums";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
+import { ViewPasswordHistoryService } from "@bitwarden/common/vault/abstractions/view-password-history.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { CollectionView } from "@bitwarden/common/vault/models/view/collection.view";
@@ -27,8 +28,12 @@ import {
   ToastService,
 } from "@bitwarden/components";
 
+import { PremiumUpgradePromptService } from "../../../../../../../../libs/common/src/vault/abstractions/premium-upgrade-prompt.service";
 import { CipherViewComponent } from "../../../../../../../../libs/vault/src/cipher-view";
 import { PopOutComponent } from "../../../../../platform/popup/components/pop-out.component";
+import { PopupRouterCacheService } from "../../../../../platform/popup/view-cache/popup-router-cache.service";
+import { BrowserPremiumUpgradePromptService } from "../../../services/browser-premium-upgrade-prompt.service";
+import { BrowserViewPasswordHistoryService } from "../../../services/browser-view-password-history.service";
 
 import { PopupFooterComponent } from "./../../../../../platform/popup/layout/popup-footer.component";
 import { PopupHeaderComponent } from "./../../../../../platform/popup/layout/popup-header.component";
@@ -53,6 +58,10 @@ import { VaultPopupAutofillService } from "./../../../services/vault-popup-autof
     AsyncActionsModule,
     PopOutComponent,
   ],
+  providers: [
+    { provide: ViewPasswordHistoryService, useClass: BrowserViewPasswordHistoryService },
+    { provide: PremiumUpgradePromptService, useClass: BrowserPremiumUpgradePromptService },
+  ],
 })
 export class ViewV2Component {
   headerText: string;
@@ -73,6 +82,7 @@ export class ViewV2Component {
     private vaultPopupAutofillService: VaultPopupAutofillService,
     private accountService: AccountService,
     private eventCollectionService: EventCollectionService,
+    private popupRouterCacheService: PopupRouterCacheService,
   ) {
     this.subscribeToParams();
   }
@@ -159,8 +169,8 @@ export class ViewV2Component {
       return false;
     }
 
-    const successRoute = this.cipher.isDeleted ? "/trash" : "/vault";
-    await this.router.navigate([successRoute]);
+    await this.popupRouterCacheService.back();
+
     this.toastService.showToast({
       variant: "success",
       title: null,
@@ -177,7 +187,7 @@ export class ViewV2Component {
       this.logService.error(e);
     }
 
-    await this.router.navigate(["/trash"]);
+    await this.popupRouterCacheService.back();
     this.toastService.showToast({
       variant: "success",
       title: null,
