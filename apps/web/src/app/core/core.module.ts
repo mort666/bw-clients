@@ -1,6 +1,5 @@
 import { CommonModule } from "@angular/common";
 import { APP_INITIALIZER, NgModule, Optional, SkipSelf } from "@angular/core";
-import { Router } from "@angular/router";
 
 import { OrganizationUserApiService } from "@bitwarden/admin-console/common";
 import { SafeProvider, safeProvider } from "@bitwarden/angular/platform/utils/safe-provider";
@@ -167,7 +166,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: EnvironmentService,
     useClass: WebEnvironmentService,
-    deps: [WINDOW, StateProvider, AccountService, Router],
+    deps: [WINDOW, StateProvider, AccountService],
   }),
   safeProvider({
     provide: BiometricsService,
