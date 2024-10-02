@@ -42,6 +42,7 @@ import { BrowserPlatformUtilsService } from "../../platform/services/platform-ut
 import {
   AutofillOverlayElement,
   AutofillOverlayPort,
+  InlineMenuAccountCreationFieldType,
   InlineMenuFillType,
   MAX_SUB_FRAME_DEPTH,
   RedirectFocusDirection,
@@ -1997,6 +1998,95 @@ describe("OverlayBackground", () => {
 
         expect(updateOverlayCiphersSpy).toHaveBeenCalled();
       });
+
+      describe("displaying the password generation menu", () => {
+        const tab = createChromeTabMock({ id: 2 });
+        const sender = mock<chrome.runtime.MessageSender>({ tab, frameId: 100 });
+        let focusedFieldData: FocusedFieldData;
+
+        beforeEach(async () => {
+          await initOverlayElementPorts();
+          activeAccountStatusMock$.next(AuthenticationStatus.Unlocked);
+          overlayBackground["focusedFieldData"] = createFocusedFieldDataMock();
+          overlayBackground["isInlineMenuButtonVisible"] = true;
+          focusedFieldData = createFocusedFieldDataMock({
+            tabId: tab.id,
+            frameId: sender.frameId,
+          });
+        });
+
+        it("displays the password generator when the focused field is for password generation", async () => {
+          focusedFieldData.inlineMenuFillType = InlineMenuFillType.PasswordGeneration;
+
+          sendMockExtensionMessage({ command: "updateFocusedFieldData", focusedFieldData }, sender);
+          await flushPromises();
+
+          expect(listPortSpy.postMessage).toHaveBeenCalledWith(
+            expect.objectContaining({
+              command: "updateAutofillInlineMenuGeneratedPassword",
+            }),
+          );
+        });
+
+        it("displays the password generator when the focused field is for login and the field has an account creation type of password", async () => {
+          focusedFieldData.inlineMenuFillType = CipherType.Login;
+          focusedFieldData.accountCreationFieldType = InlineMenuAccountCreationFieldType.Password;
+
+          sendMockExtensionMessage({ command: "updateFocusedFieldData", focusedFieldData }, sender);
+          await flushPromises();
+
+          expect(listPortSpy.postMessage).toHaveBeenCalledWith(
+            expect.objectContaining({
+              command: "updateAutofillInlineMenuGeneratedPassword",
+            }),
+          );
+        });
+      });
+
+      describe("displaying the save login menu", () => {
+        const tab = createChromeTabMock({ id: 2 });
+        const sender = mock<chrome.runtime.MessageSender>({ tab, frameId: 100 });
+        let focusedFieldData: FocusedFieldData;
+
+        beforeEach(async () => {
+          await initOverlayElementPorts();
+          activeAccountStatusMock$.next(AuthenticationStatus.Unlocked);
+          overlayBackground["focusedFieldData"] = createFocusedFieldDataMock();
+          overlayBackground["isInlineMenuButtonVisible"] = true;
+          focusedFieldData = createFocusedFieldDataMock({
+            tabId: tab.id,
+            frameId: sender.frameId,
+          });
+        });
+
+        it("shows the save login menu when the focused field type is for password generation and the field is filled", async () => {
+          focusedFieldData.inlineMenuFillType = InlineMenuFillType.PasswordGeneration;
+
+          sendMockExtensionMessage(
+            { command: "updateFocusedFieldData", focusedFieldData, focusedFieldHasValue: true },
+            sender,
+          );
+          await flushPromises();
+
+          expect(listPortSpy.postMessage).toHaveBeenCalledWith({
+            command: "showSaveLoginInlineMenuList",
+          });
+        });
+
+        it("shows the save login menu when the focused field type is for a login cipher and the field is filled", async () => {
+          focusedFieldData.inlineMenuFillType = CipherType.Login;
+
+          sendMockExtensionMessage(
+            { command: "updateFocusedFieldData", focusedFieldData, focusedFieldHasValue: true },
+            sender,
+          );
+          await flushPromises();
+
+          expect(listPortSpy.postMessage).toHaveBeenCalledWith({
+            command: "showSaveLoginInlineMenuList",
+          });
+        });
+      });
     });
 
     describe("updateIsFieldCurrentlyFocused message handler", () => {
@@ -3495,6 +3585,20 @@ describe("OverlayBackground", () => {
       await flushPromises();
 
       expect(overlayBackground["expiredPorts"].length).toBe(1);
+    });
+
+    it("generates a password for the password generator view", async () => {
+      activeAccountStatusMock$.next(AuthenticationStatus.Unlocked);
+      const focusedFieldData = createFocusedFieldDataMock({
+        inlineMenuFillType: CipherType.Login,
+        accountCreationFieldType: InlineMenuAccountCreationFieldType.Password,
+      });
+      sendMockExtensionMessage({ command: "updateFocusedFieldData", focusedFieldData });
+
+      await initOverlayElementPorts();
+      await flushPromises();
+
+      expect(generatedPasswordCallbackMock).toHaveBeenCalled();
     });
   });
 
