@@ -184,19 +184,24 @@
     "message": "Public key"
   },
   "sshFingerprint": {
-    "message": "Fingerprint"
+    "message": "Fingerprint",
+    "description": "Cryptographic fingerprint of the ssh key"
   },
   "sshKeyAlgorithm": {
-    "message": "Key type"
+    "message": "Key type",
+    "description": "Describes the algorithm the ssh key is using (e.g. RSA, ED25519)"
   },
   "sshKeyAlgorithmED25519": {
-    "message": "ED25519"
+    "message": "ED25519",
+    "description": "Name of the SSH key algorithm ED25519; does not need to be translated"
   },
   "sshKeyAlgorithmRSA": {
-    "message": "RSA"
+    "message": "RSA",
+    "description": "Name of the SSH key algorithm RSA; does not need to be translated"
   },
   "sshKeyLength": {
-    "message": "Key length"
+    "message": "Key length",
+    "description": "RSA keys can have different length (in bits) such as 2048, 3072, 4096, etc."
   },
   "sshKeyGenerated": {
     "message": "A new SSH key was generated"
