@@ -219,11 +219,9 @@ export class OverviewComponent implements OnInit, OnDestroy {
         switchMap(() => this.view$.pipe(take(1))),
         takeUntil(this.destroy$),
       )
-      .subscribe({
-        next: async (view) => {
-          this.showOnboarding = Object.values(view.tasks).includes(false);
-          this.loading = false;
-        },
+      .subscribe((view) => {
+        this.showOnboarding = Object.values(view.tasks).includes(false);
+        this.loading = false;
       });
   }
 
