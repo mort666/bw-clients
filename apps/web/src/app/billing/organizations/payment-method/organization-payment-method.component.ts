@@ -13,12 +13,12 @@ import { ExpandedTaxInfoUpdateRequest } from "@bitwarden/common/billing/models/r
 import { VerifyBankAccountRequest } from "@bitwarden/common/billing/models/request/verify-bank-account.request";
 import { OrganizationSubscriptionResponse } from "@bitwarden/common/billing/models/response/organization-subscription.response";
 import { PaymentSourceResponse } from "@bitwarden/common/billing/models/response/payment-source.response";
-import { FreeTrial } from "@bitwarden/common/billing/types/free-trial";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { DialogService, ToastService } from "@bitwarden/components";
 
 import { TrialFlowService } from "../../../core/trial-flow.service";
+import { FreeTrial } from "../../../core/types/free-trial";
 import { TaxInfoComponent } from "../../shared";
 import {
   AddCreditDialogResult,

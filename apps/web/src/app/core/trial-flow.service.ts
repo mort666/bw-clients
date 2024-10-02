@@ -4,8 +4,9 @@ import { Organization } from "@bitwarden/common/admin-console/models/domain/orga
 import { BillingSourceResponse } from "@bitwarden/common/billing/models/response/billing.response";
 import { OrganizationSubscriptionResponse } from "@bitwarden/common/billing/models/response/organization-subscription.response";
 import { PaymentSourceResponse } from "@bitwarden/common/billing/models/response/payment-source.response";
-import { FreeTrial } from "@bitwarden/common/billing/types/free-trial";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+
+import { FreeTrial } from "./../core/types/free-trial";
 
 @Injectable({ providedIn: "root" })
 export class TrialFlowService {

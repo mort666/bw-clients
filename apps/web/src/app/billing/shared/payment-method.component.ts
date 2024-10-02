@@ -12,12 +12,13 @@ import { PaymentMethodType } from "@bitwarden/common/billing/enums";
 import { BillingPaymentResponse } from "@bitwarden/common/billing/models/response/billing-payment.response";
 import { OrganizationSubscriptionResponse } from "@bitwarden/common/billing/models/response/organization-subscription.response";
 import { SubscriptionResponse } from "@bitwarden/common/billing/models/response/subscription.response";
-import { FreeTrial } from "@bitwarden/common/billing/types/free-trial";
 import { VerifyBankRequest } from "@bitwarden/common/models/request/verify-bank.request";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { DialogService, ToastService } from "@bitwarden/components";
+
+import { FreeTrial } from "../../core/types/free-trial";
 
 import { TrialFlowService } from "./../../core/trial-flow.service";
 import { AddCreditDialogResult, openAddCreditDialog } from "./add-credit-dialog.component";

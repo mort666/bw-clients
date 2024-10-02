@@ -38,7 +38,6 @@ import { OrganizationService } from "@bitwarden/common/admin-console/abstraction
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
-import { FreeTrial } from "@bitwarden/common/billing/types/free-trial";
 import { EventType } from "@bitwarden/common/enums";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
@@ -69,6 +68,7 @@ import {
   PasswordRepromptService,
 } from "@bitwarden/vault";
 
+import { FreeTrial } from "../../core/types/free-trial";
 import { SharedModule } from "../../shared/shared.module";
 import { AssignCollectionsWebComponent } from "../components/assign-collections";
 import {

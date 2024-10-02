@@ -19,12 +19,12 @@ import { I18nPipe } from "@bitwarden/angular/platform/pipes/i18n.pipe";
 import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
-import { FreeTrial } from "@bitwarden/common/billing/types/free-trial";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { DialogService } from "@bitwarden/components";
 import { TrialFlowService } from "@bitwarden/web-vault/app/core/trial-flow.service";
+import { FreeTrial } from "@bitwarden/web-vault/app/core/types/free-trial";
 
 import { OrganizationCounts } from "../models/view/counts.view";
 import { ProjectListView } from "../models/view/project-list.view";
@@ -87,7 +87,6 @@ export class OverviewComponent implements OnInit, OnDestroy {
   protected loading = true;
   protected organizationEnabled = false;
   protected organization: Organization;
-  private freeTrialData: FreeTrial;
   protected i18n: I18nPipe;
   protected onboardingTasks$: Observable<SMOnboardingTasks>;
 
@@ -147,12 +146,11 @@ export class OverviewComponent implements OnInit, OnDestroy {
         ]),
       ),
       map(([org, sub, billing]) => {
-        this.freeTrialData = this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(
+        return this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(
           org,
           sub,
           billing?.paymentSource,
         );
-        return this.freeTrialData;
       }),
       takeUntil(this.destroy$),
     );

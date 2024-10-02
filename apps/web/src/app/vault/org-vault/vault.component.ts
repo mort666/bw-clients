@@ -40,7 +40,6 @@ import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-conso
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
-import { FreeTrial } from "@bitwarden/common/billing/types/free-trial";
 import { EventType } from "@bitwarden/common/enums";
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -71,6 +70,7 @@ import { CollectionAssignmentResult, PasswordRepromptService } from "@bitwarden/
 import { GroupService, GroupView } from "../../admin-console/organizations/core";
 import { openEntityEventsDialog } from "../../admin-console/organizations/manage/entity-events.component";
 import { TrialFlowService } from "../../core/trial-flow.service";
+import { FreeTrial } from "../../core/types/free-trial";
 import { SharedModule } from "../../shared";
 import { VaultFilterService } from "../../vault/individual-vault/vault-filter/services/abstractions/vault-filter.service";
 import { VaultFilter } from "../../vault/individual-vault/vault-filter/shared/models/vault-filter.model";
@@ -166,7 +166,6 @@ export class VaultComponent implements OnInit, OnDestroy {
   protected collections: CollectionAdminView[];
   protected selectedCollection: TreeNode<CollectionAdminView> | undefined;
   protected isEmpty: boolean;
-  private freeTrialData: FreeTrial;
   protected showCollectionAccessRestricted: boolean;
   protected currentSearchText$: Observable<string>;
   protected freeTrial$: Observable<FreeTrial>;
@@ -548,12 +547,11 @@ export class VaultComponent implements OnInit, OnDestroy {
         ]),
       ),
       map(([org, sub, billing]) => {
-        this.freeTrialData = this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(
+        return this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(
           org,
           sub,
           billing?.paymentSource,
         );
-        return this.freeTrialData;
       }),
       takeUntil(this.destroy$),
     );
