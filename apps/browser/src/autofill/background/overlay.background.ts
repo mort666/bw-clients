@@ -1664,32 +1664,8 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       allowTotpAutofill: false,
     });
 
-    globalThis.setTimeout(
-      () => this.triggerOpenInlineMenuAfterGeneratedPasswordFill(port.sender),
-      400,
-    );
+    globalThis.setTimeout(() => this.openInlineMenu(port.sender, true), 400);
   }
-
-  /**
-   * Handles the opening of the inline menu after a generated password has been filled.
-   *
-   * @param sender - The sender of the port message
-   */
-  private triggerOpenInlineMenuAfterGeneratedPasswordFill = async (
-    sender: chrome.runtime.MessageSender,
-  ) => {
-    if (!this.isFieldCurrentlyFocused || !(await this.checkFocusedFieldHasValue(sender.tab))) {
-      return;
-    }
-
-    if (
-      this.focusedFieldMatchesFillType(InlineMenuFillType.PasswordGeneration) ||
-      (this.shouldShowInlineMenuAccountCreation() &&
-        this.focusedFieldMatchesAccountCreationType(InlineMenuAccountCreationFieldType.Password))
-    ) {
-      await this.openInlineMenu(sender, true);
-    }
-  };
 
   /**
    * Updates the inline menu's visibility based on the display property passed in the extension message.

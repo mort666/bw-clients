@@ -875,45 +875,14 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     await this.sendExtensionMessage("openAutofillInlineMenu");
   }
 
+  /**
+   * Triggers an update in the background script focused status of the form field element.
+   *
+   * @param isFieldCurrentlyFocused - The focused status of the form field element.
+   */
   private updateIsFieldCurrentlyFocused = async (isFieldCurrentlyFocused: boolean) => {
     await this.sendExtensionMessage("updateIsFieldCurrentlyFocused", { isFieldCurrentlyFocused });
   };
-
-  /**
-   * Validates that the most recently focused field is currently
-   * focused within the root node relative to the field.
-   */
-  private recentlyFocusedFieldIsCurrentlyFocused() {
-    return (
-      this.getRootNodeActiveElement(this.mostRecentlyFocusedField) === this.mostRecentlyFocusedField
-    );
-  }
-
-  /**
-   * Updates the position of both the inline menu button and list.
-   */
-  private updateInlineMenuElementsPosition() {
-    this.updateInlineMenuButtonPosition();
-    this.updateInlineMenuListPosition();
-  }
-
-  /**
-   * Updates the position of the inline menu button.
-   */
-  private updateInlineMenuButtonPosition() {
-    void this.sendExtensionMessage("updateAutofillInlineMenuPosition", {
-      overlayElement: AutofillOverlayElement.Button,
-    });
-  }
-
-  /**
-   * Updates the position of the inline menu list.
-   */
-  private updateInlineMenuListPosition() {
-    void this.sendExtensionMessage("updateAutofillInlineMenuPosition", {
-      overlayElement: AutofillOverlayElement.List,
-    });
-  }
 
   /**
    * Updates the data used to position the inline menu elements in relation
@@ -1062,12 +1031,22 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     return true;
   }
 
+  /**
+   * Sets the autofill field data that indicates this field is part of a login form
+   *
+   * @param autofillFieldData - Autofill field data captured from the form field element.
+   */
   private async setQualifiedLoginFillType(autofillFieldData: AutofillField) {
     autofillFieldData.inlineMenuFillType = CipherType.Login;
     autofillFieldData.showPasskeys = autofillFieldData.autoCompleteType.includes("webauthn");
     this.qualifyAccountCreationFieldType(autofillFieldData);
   }
 
+  /**
+   * Sets the autofill field data that indicates this field is part of an account creation or update form.
+   *
+   * @param autofillFieldData - Autofill field data captured from the form field element.
+   */
   private setQualifiedAccountCreationFillType(autofillFieldData: AutofillField) {
     if (this.inlineMenuFieldQualificationService.isNewPasswordField(autofillFieldData)) {
       autofillFieldData.inlineMenuFillType = InlineMenuFillType.PasswordGeneration;
@@ -1087,6 +1066,11 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     this.qualifyAccountCreationFieldType(autofillFieldData);
   }
 
+  /**
+   * Sets the account creation field type for the autofill field data based on the field's attributes.
+   *
+   * @param autofillFieldData - Autofill field data captured from the form field element.
+   */
   private qualifyAccountCreationFieldType(autofillFieldData: AutofillField) {
     if (!this.inlineMenuFieldQualificationService.isUsernameField(autofillFieldData)) {
       autofillFieldData.accountCreationFieldType = InlineMenuAccountCreationFieldType.Password;
