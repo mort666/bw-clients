@@ -92,7 +92,7 @@ describe("AutofillInlineMenuButton", () => {
       });
     });
 
-    it("triggers a recheck of the button focus on mouseout", async () => {
+    it("triggers a recheck of the button focus state on mouseout", async () => {
       jest.spyOn(globalThis.document, "removeEventListener");
       jest.spyOn(globalThis.document, "hasFocus").mockReturnValue(false);
       jest

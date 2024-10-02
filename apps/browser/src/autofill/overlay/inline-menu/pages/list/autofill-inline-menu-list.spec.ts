@@ -745,6 +745,22 @@ describe("AutofillInlineMenuList", () => {
       expect(globalThis.parent.postMessage).not.toHaveBeenCalled();
     });
 
+    it("triggers a recheck of the list focus state on mouseout", async () => {
+      jest.spyOn(globalThis.document, "removeEventListener");
+      jest.spyOn(globalThis.document, "hasFocus").mockReturnValue(false);
+      jest
+        .spyOn(autofillInlineMenuList["inlineMenuListContainer"], "querySelector")
+        .mockReturnValue(autofillInlineMenuList["inlineMenuListContainer"]);
+      postWindowMessage({ command: "checkAutofillInlineMenuListFocused" });
+      await flushPromises();
+
+      globalThis.document.dispatchEvent(new MouseEvent("mouseout"));
+      expect(globalThis.document.removeEventListener).toHaveBeenCalledWith(
+        "mouseout",
+        autofillInlineMenuList["handleMouseOutEvent"],
+      );
+    });
+
     it("posts a `checkAutofillInlineMenuButtonFocused` message to the parent if the inline menu is not currently focused", () => {
       jest.spyOn(globalThis.document, "hasFocus").mockReturnValue(false);
       jest

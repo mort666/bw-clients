@@ -159,6 +159,9 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
     this.inlineMenuListContainer.append(lockedInlineMenu, inlineMenuListButtonContainer);
   }
 
+  /**
+   * Builds the inline menu list as a prompt that asks the user if they'd like to save the login data.
+   */
   private buildSaveLoginInlineMenuList() {
     const saveLoginMessage = globalThis.document.createElement("div");
     saveLoginMessage.classList.add("save-login", "inline-menu-list-message");
@@ -170,6 +173,9 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
     this.inlineMenuListContainer.append(saveLoginMessage, newItemButton);
   }
 
+  /**
+   * Handles the show save login inline menu list message that is triggered from the background script.
+   */
   private handleShowSaveLoginInlineMenuList() {
     if (this.authStatus === AuthenticationStatus.Unlocked) {
       this.resetInlineMenuContainer();
@@ -185,6 +191,11 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
     this.postMessageToParent({ command: "unlockVault" });
   };
 
+  /**
+   * Builds the password generator within the inline menu.
+   *
+   * @param generatedPassword - The generated password to display.
+   */
   private buildPasswordGenerator(generatedPassword: string) {
     const passwordGeneratorContainer = globalThis.document.createElement("div");
     passwordGeneratorContainer.classList.add("password-generator-container");
@@ -251,6 +262,11 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
     this.inlineMenuListContainer.appendChild(passwordGeneratorContainer);
   }
 
+  /**
+   * Builds the colorized password content element.
+   *
+   * @param password - The password to display.
+   */
   private buildColorizedPasswordElement(password: string) {
     let ariaDescription = `${this.getTranslation("generatedPassword")}: `;
     const passwordContainer = globalThis.document.createElement("div");
@@ -290,10 +306,19 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
     return passwordContainer;
   }
 
+  /**
+   * Handles the click event for the fill generated password button. Triggers
+   * a message to the background script to fill the generated password.
+   */
   private handleFillGeneratedPasswordClick = () => {
     this.postMessageToParent({ command: "fillGeneratedPassword" });
   };
 
+  /**
+   * Handles the keyup event for the fill generated password button.
+   *
+   * @param event - The keyup event.
+   */
   private handleFillGeneratedPasswordKeyUp = (event: KeyboardEvent) => {
     if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) {
       return;
@@ -315,6 +340,11 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
     }
   };
 
+  /**
+   * Handles the click event of the password regenerator button.
+   *
+   * @param event - The click event.
+   */
   private handleRefreshGeneratedPasswordClick = (event?: MouseEvent) => {
     if (event) {
       (event.target as HTMLElement)
@@ -325,6 +355,11 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
     this.postMessageToParent({ command: "refreshGeneratedPassword" });
   };
 
+  /**
+   * Handles the keyup event for the password regenerator button.
+   *
+   * @param event - The keyup event.
+   */
   private handleRefreshGeneratedPasswordKeyUp = (event: KeyboardEvent) => {
     if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) {
       return;
@@ -346,6 +381,11 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
     }
   };
 
+  /**
+   * Updates the generated password content element with the passed generated password.
+   *
+   * @param message - The message containing the generated password.
+   */
   private handleUpdateAutofillInlineMenuGeneratedPassword(
     message: UpdateAutofillInlineMenuGeneratedPasswordMessage,
   ) {
