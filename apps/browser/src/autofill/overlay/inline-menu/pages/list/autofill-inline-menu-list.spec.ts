@@ -721,15 +721,56 @@ describe("AutofillInlineMenuList", () => {
       });
     });
 
-    it("creates the views for the password generator", async () => {
-      postWindowMessage(
-        createInitAutofillInlineMenuListMessageMock({
-          generatedPassword,
-        }),
-      );
-      await flushPromises();
+    describe("the password generator view", () => {
+      it("creates the views for the password generator", async () => {
+        postWindowMessage(
+          createInitAutofillInlineMenuListMessageMock({
+            generatedPassword,
+          }),
+        );
+        await flushPromises();
 
-      expect(autofillInlineMenuList["passwordGeneratorContainer"]).toMatchSnapshot();
+        expect(autofillInlineMenuList["passwordGeneratorContainer"]).toMatchSnapshot();
+      });
+
+      describe("fill generated password button event listeners", () => {
+        beforeEach(async () => {
+          postWindowMessage(
+            createInitAutofillInlineMenuListMessageMock({ generatedPassword, portKey }),
+          );
+          await flushPromises();
+        });
+
+        describe("filling a cipher", () => {
+          it("triggers a fill of the generated password on click", () => {
+            const fillGeneratedPasswordButton = autofillInlineMenuList[
+              "passwordGeneratorContainer"
+            ].querySelector(".fill-generated-password-button");
+
+            fillGeneratedPasswordButton.dispatchEvent(new Event("click"));
+
+            expect(globalThis.parent.postMessage).toHaveBeenCalledWith(
+              { command: "fillGeneratedPassword", portKey },
+              "*",
+            );
+          });
+
+          it("triggers a fill of the generated password on keyup of the `Space` key", () => {
+            const fillGeneratedPasswordButton = autofillInlineMenuList[
+              "passwordGeneratorContainer"
+            ].querySelector(".fill-generated-password-button");
+
+            fillGeneratedPasswordButton.dispatchEvent(
+              new KeyboardEvent("keyup", { code: "Space" }),
+            );
+
+            expect(globalThis.parent.postMessage).toHaveBeenCalledWith(
+              { command: "fillGeneratedPassword", portKey },
+              "*",
+            );
+          });
+        });
+      });
     });
   });
 
