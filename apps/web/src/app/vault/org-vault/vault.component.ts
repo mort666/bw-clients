@@ -11,7 +11,6 @@ import { ActivatedRoute, Params, Router } from "@angular/router";
 import {
   BehaviorSubject,
   combineLatest,
-  defer,
   firstValueFrom,
   lastValueFrom,
   Observable,
@@ -28,11 +27,13 @@ import {
   switchMap,
   takeUntil,
   tap,
+  withLatestFrom,
 } from "rxjs/operators";
 
 import {
-  OrganizationUserApiService,
-  OrganizationUserUserDetailsResponse,
+  CollectionAdminService,
+  CollectionAdminView,
+  Unassigned,
 } from "@bitwarden/admin-console/common";
 import { SearchPipe } from "@bitwarden/angular/pipes/search.pipe";
 import { ModalService } from "@bitwarden/angular/services/modal.service";
@@ -76,8 +77,6 @@ import {
 } from "../components/collection-dialog";
 import { VaultItemEvent } from "../components/vault-items/vault-item-event";
 import { VaultItemsModule } from "../components/vault-items/vault-items.module";
-import { CollectionAdminService } from "../core/collection-admin.service";
-import { CollectionAdminView } from "../core/views/collection-admin.view";
 import {
   BulkDeleteDialogResult,
   openBulkDeleteDialog,
@@ -89,7 +88,6 @@ import { createFilterFunction } from "../individual-vault/vault-filter/shared/mo
 import {
   All,
   RoutedVaultFilterModel,
-  Unassigned,
 } from "../individual-vault/vault-filter/shared/models/routed-vault-filter.model";
 import {
   openViewCipherDialog,
@@ -168,8 +166,6 @@ export class VaultComponent implements OnInit, OnDestroy {
   protected editableCollections$: Observable<CollectionAdminView[]>;
   protected allCollectionsWithoutUnassigned$: Observable<CollectionAdminView[]>;
 
-  protected orgRevokedUsers: OrganizationUserUserDetailsResponse[];
-
   protected get hideVaultFilters(): boolean {
     return this.organization?.isProviderUser && !this.organization?.isMember;
   }
@@ -206,7 +202,6 @@ export class VaultComponent implements OnInit, OnDestroy {
     private totpService: TotpService,
     private apiService: ApiService,
     private collectionService: CollectionService,
-    private organizationUserApiService: OrganizationUserApiService,
     private toastService: ToastService,
     private accountService: AccountService,
   ) {}
@@ -283,27 +278,10 @@ export class VaultComponent implements OnInit, OnDestroy {
 
     this.currentSearchText$ = this.route.queryParams.pipe(map((queryParams) => queryParams.search));
 
-    this.allCollectionsWithoutUnassigned$ = combineLatest([
-      organizationId$.pipe(switchMap((orgId) => this.collectionAdminService.getAll(orgId))),
-      defer(() => this.collectionService.getAllDecrypted()),
-    ]).pipe(
-      map(([adminCollections, syncCollections]) => {
-        const syncCollectionDict = Object.fromEntries(syncCollections.map((c) => [c.id, c]));
-
-        return adminCollections.map((collection) => {
-          const currentId: any = collection.id;
-
-          const match = syncCollectionDict[currentId];
-
-          if (match) {
-            collection.manage = match.manage;
-            collection.readOnly = match.readOnly;
-            collection.hidePasswords = match.hidePasswords;
-          }
-          return collection;
-        });
-      }),
-      shareReplay({ refCount: true, bufferSize: 1 }),
+    this.allCollectionsWithoutUnassigned$ = this.refresh$.pipe(
+      switchMap(() => organizationId$),
+      switchMap((orgId) => this.collectionAdminService.getAll(orgId)),
+      shareReplay({ refCount: false, bufferSize: 1 }),
     );
 
     this.editableCollections$ = this.allCollectionsWithoutUnassigned$.pipe(
@@ -336,8 +314,8 @@ export class VaultComponent implements OnInit, OnDestroy {
       shareReplay({ refCount: true, bufferSize: 1 }),
     );
 
-    const allCiphers$ = organization$.pipe(
-      concatMap(async (organization) => {
+    const allCiphers$ = combineLatest([organization$, this.refresh$]).pipe(
+      switchMap(async ([organization]) => {
         // If user swaps organization reset the addAccessToggle
         if (!this.showAddAccessToggle || organization) {
           this.addAccessToggle(0);
@@ -361,26 +339,19 @@ export class VaultComponent implements OnInit, OnDestroy {
         await this.searchService.indexCiphers(ciphers, organization.id);
         return ciphers;
       }),
+      shareReplay({ refCount: true, bufferSize: 1 }),
     );
 
     const allCipherMap$ = allCiphers$.pipe(
       map((ciphers) => {
         return Object.fromEntries(ciphers.map((c) => [c.id, c]));
       }),
-      shareReplay({ refCount: true, bufferSize: 1 }),
     );
 
     const nestedCollections$ = allCollections$.pipe(
       map((collections) => getNestedCollectionTree(collections)),
       shareReplay({ refCount: true, bufferSize: 1 }),
     );
-
-    // This will be passed into the usersCanManage call
-    this.orgRevokedUsers = (
-      await this.organizationUserApiService.getAllUsers(await firstValueFrom(organizationId$))
-    ).data.filter((user: OrganizationUserUserDetailsResponse) => {
-      return user.status === -1;
-    });
 
     const collections$ = combineLatest([
       nestedCollections$,
@@ -494,20 +465,21 @@ export class VaultComponent implements OnInit, OnDestroy {
 
     firstSetup$
       .pipe(
-        switchMap(() => combineLatest([this.route.queryParams, organization$])),
-        switchMap(async ([qParams, organization]) => {
+        switchMap(() => this.route.queryParams),
+        withLatestFrom(allCipherMap$, allCollections$, organization$),
+        switchMap(async ([qParams, allCiphersMap, allCollections]) => {
           const cipherId = getCipherIdFromParams(qParams);
           if (!cipherId) {
             return;
           }
+          const cipher = allCiphersMap[cipherId];
+          const cipherCollections = allCollections.filter((c) =>
+            cipher.collectionIds.includes(c.id),
+          );
 
-          const canEditCipher =
-            organization.canEditAllCiphers ||
-            (await firstValueFrom(allCipherMap$))[cipherId] != undefined;
-
-          if (canEditCipher) {
+          if (cipher) {
             if (qParams.action === "view") {
-              await this.viewCipherById(cipherId);
+              await this.viewCipher(cipher, cipherCollections);
             } else {
               await this.editCipherId(cipherId);
             }
@@ -625,9 +597,6 @@ export class VaultComponent implements OnInit, OnDestroy {
       switch (event.type) {
         case "viewAttachments":
           await this.editCipherAttachments(event.item);
-          break;
-        case "viewCipherCollections":
-          await this.editCipherCollections(event.item);
           break;
         case "clone":
           await this.cloneCipher(event.item);
@@ -775,10 +744,6 @@ export class VaultComponent implements OnInit, OnDestroy {
     });
   }
 
-  async navigateToCipher(cipher: CipherView) {
-    this.go({ itemId: cipher?.id });
-  }
-
   async editCipher(
     cipher: CipherView,
     additionalComponentParameters?: (comp: AddEditComponent) => void,
@@ -842,59 +807,46 @@ export class VaultComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Takes a CipherView and opens a dialog where it can be viewed (wraps viewCipherById).
-   * @param cipher - CipherView
-   * @returns Promise<void>
+   * Takes a cipher and its assigned collections to opens dialog where it can be viewed.
+   * @param cipher - the cipher to view
+   * @param collections - the collections the cipher is assigned to
    */
-  viewCipher(cipher: CipherView) {
-    return this.viewCipherById(cipher.id);
-  }
-
-  /**
-   * Takes a cipher id and opens a dialog where it can be viewed.
-   * @param id - string
-   * @returns Promise<void>
-   */
-  async viewCipherById(id: string) {
-    const cipher = await this.cipherService.get(id);
-    // if cipher exists (cipher is null when new) and MP reprompt
-    // is on for this cipher, then show password reprompt.
-    if (
-      cipher &&
-      cipher.reprompt !== 0 &&
-      !(await this.passwordRepromptService.showPasswordPrompt())
-    ) {
-      // didn't pass password prompt, so don't open add / edit modal.
+  async viewCipher(cipher: CipherView, collections: CollectionView[] = []) {
+    if (!cipher) {
       this.go({ cipherId: null, itemId: null });
       return;
     }
 
-    const activeUserId = await firstValueFrom(
-      this.accountService.activeAccount$.pipe(map((a) => a?.id)),
-    );
-    // Decrypt the cipher.
-    const cipherView = await cipher.decrypt(
-      await this.cipherService.getKeyForCipherKeyDecryption(cipher, activeUserId),
-    );
+    if (cipher.reprompt !== 0 && !(await this.passwordRepromptService.showPasswordPrompt())) {
+      // didn't pass password prompt, so don't open the dialog
+      this.go({ cipherId: null, itemId: null });
+      return;
+    }
 
-    // Open the dialog.
     const dialogRef = openViewCipherDialog(this.dialogService, {
-      data: { cipher: cipherView },
+      data: {
+        cipher: cipher,
+        collections: collections,
+        disableEdit: !cipher.edit && !this.organization.canEditAllCiphers,
+      },
     });
 
     // Wait for the dialog to close.
     const result: ViewCipherDialogCloseResult = await lastValueFrom(dialogRef.closed);
 
-    // If the dialog was closed by deleting the cipher, refresh the vault.
-    if (result.action === ViewCipherDialogResult.Deleted) {
-      this.refresh();
-      this.go({ cipherId: null, itemId: null, action: null });
+    // If the dialog was closed by clicking the edit button, navigate to open the edit dialog.
+    if (result?.action === ViewCipherDialogResult.Edited) {
+      this.go({ itemId: cipher.id, action: "edit" });
+      return;
     }
 
-    // If the dialog was closed by any other action (close button, escape key, etc), navigate back to the vault.
-    if (!result.action) {
-      this.go({ cipherId: null, itemId: null, action: null });
+    // If the dialog was closed by deleting the cipher, refresh the vault.
+    if (result?.action === ViewCipherDialogResult.Deleted) {
+      this.refresh();
     }
+
+    // Clear the query params when the view dialog closes
+    this.go({ cipherId: null, itemId: null, action: null });
   }
 
   async cloneCipher(cipher: CipherView) {

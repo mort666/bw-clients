@@ -444,6 +444,10 @@
   "ambiguous": {
     "message": "Hindari Karakter Ambigu"
   },
+  "generatorPolicyInEffect": {
+    "message": "Enterprise policy requirements have been applied to your generator options.",
+    "description": "Indicates that a policy limits the credential generator screen."
+  },
   "searchCollection": {
     "message": "Cari koleksi"
   },
@@ -559,6 +563,18 @@
   },
   "settings": {
     "message": "Setelan"
+  },
+  "accountEmail": {
+    "message": "Account email"
+  },
+  "requestHint": {
+    "message": "Request hint"
+  },
+  "requestPasswordHint": {
+    "message": "Request password hint"
+  },
+  "enterYourAccountEmailAddressAndYourPasswordHintWillBeSentToYou": {
+    "message": "Enter your account email address and your password hint will be sent to you"
   },
   "passwordHint": {
     "message": "Petunjuk Sandi"
@@ -929,6 +945,9 @@
   },
   "vaultTimeout": {
     "message": "Batas Waktu Brankas"
+  },
+  "vaultTimeout1": {
+    "message": "Timeout"
   },
   "vaultTimeoutDesc": {
     "message": "Pilih kapan brankas Anda akan timeout dan melakukan tindakan yang dipilih."
@@ -1555,8 +1574,8 @@
   "recommendedForSecurity": {
     "message": "Direkomendasikan untuk keamanan."
   },
-  "lockWithMasterPassOnRestart": {
-    "message": "Kunci dengan kata sandi utama saat komputer dihidupkan ulang"
+  "lockWithMasterPassOnRestart1": {
+    "message": "Lock with master password on restart"
   },
   "deleteAccount": {
     "message": "Hapus akun"
@@ -1633,7 +1652,7 @@
   },
   "lock": {
     "message": "Kunci",
-    "description": "Verb form: to make secure or inaccesible by"
+    "description": "Verb form: to make secure or inaccessible by"
   },
   "trash": {
     "message": "Sampah",
@@ -1756,8 +1775,8 @@
   "enableBrowserIntegration": {
     "message": "Aktifkan integrasi browser"
   },
-  "enableBrowserIntegrationDesc": {
-    "message": "Integrasi browser digunakan untuk biometrik di browser."
+  "enableBrowserIntegrationDesc1": {
+    "message": "Used to allow biometric unlock in browsers that are not Safari."
   },
   "enableDuckDuckGoBrowserIntegration": {
     "message": "Izinkan integrasi browser DuckDuckGo"
@@ -2087,8 +2106,8 @@
   "minutes": {
     "message": "Menit"
   },
-  "vaultTimeoutPolicyInEffect": {
-    "message": "Kebijakan organisasi Anda memengaruhi waktu tunggu brankas. Waktu tunggu brankas maksimum yang diizinkan adalah $HOURS$ jam dan $MINUTES$ menit",
+  "vaultTimeoutPolicyInEffect1": {
+    "message": "$HOURS$ hour(s) and $MINUTES$ minute(s) maximum.",
     "placeholders": {
       "hours": {
         "content": "$1",
@@ -3061,6 +3080,12 @@
   },
   "textSends": {
     "message": "Text Sends"
+  },
+  "allowScreenshots": {
+    "message": "Allow screen capture"
+  },
+  "allowScreenshotsDesc": {
+    "message": "Allow screen capture of the Bitwarden desktop application."
   },
   "ssoError": {
     "message": "No free ports could be found for the sso login."

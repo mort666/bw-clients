@@ -269,9 +269,18 @@
   "cfTypeBoolean": {
     "message": "Áno/Nie"
   },
+  "cfTypeCheckbox": {
+    "message": "Zaškrtávacie pole"
+  },
   "cfTypeLinked": {
     "message": "Prepojené",
     "description": "This describes a field that is 'linked' (related) to another field."
+  },
+  "fieldType": {
+    "message": "Typ poľa"
+  },
+  "fieldLabel": {
+    "message": "Názov poľa"
   },
   "remove": {
     "message": "Odstrániť"
@@ -511,6 +520,24 @@
   "viewItem": {
     "message": "Zobraziť položku"
   },
+  "newItemHeader": {
+    "message": "Nové $TYPE$",
+    "placeholders": {
+      "type": {
+        "content": "$1",
+        "example": "login"
+      }
+    }
+  },
+  "editItemHeader": {
+    "message": "Upraviť $TYPE$",
+    "placeholders": {
+      "type": {
+        "content": "$1",
+        "example": "login"
+      }
+    }
+  },
   "viewItemType": {
     "message": "Zobraziť $ITEMTYPE$",
     "placeholders": {
@@ -591,6 +618,45 @@
   "copyUri": {
     "message": "Kopírovať URI",
     "description": "Copy URI to clipboard"
+  },
+  "copyCustomField": {
+    "message": "Kopírovať $FIELD$",
+    "placeholders": {
+      "field": {
+        "content": "$1",
+        "example": "Custom field label"
+      }
+    }
+  },
+  "copyWebsite": {
+    "message": "Kopírovať webstránku"
+  },
+  "copyNotes": {
+    "message": "Kopírovať poznámky"
+  },
+  "copyAddress": {
+    "message": "Kopírovať adresu"
+  },
+  "copyPhone": {
+    "message": "Kopírovať telefón"
+  },
+  "copyEmail": {
+    "message": "Kopírovať email"
+  },
+  "copyCompany": {
+    "message": "Kopírovať spoločnosť"
+  },
+  "copySSN": {
+    "message": "Kopírovať číslo poistenca sociálnej poisťovne"
+  },
+  "copyPassportNumber": {
+    "message": "Kopírovať číslo pasu"
+  },
+  "copyLicenseNumber": {
+    "message": "Kopírovať číslo licencie"
+  },
+  "copyName": {
+    "message": "Kopírovať meno"
   },
   "me": {
     "message": "Ja"
@@ -959,6 +1025,18 @@
   },
   "settings": {
     "message": "Nastavenia"
+  },
+  "accountEmail": {
+    "message": "E-mail účtu"
+  },
+  "requestHint": {
+    "message": "Požiadať o nápoveď"
+  },
+  "requestPasswordHint": {
+    "message": "Požiadať o nápoveď k heslu"
+  },
+  "enterYourAccountEmailAddressAndYourPasswordHintWillBeSentToYou": {
+    "message": "Zadajte e-mailovú adresu účtu a zašleme vám nápoveď k heslu"
   },
   "passwordHint": {
     "message": "Nápoveď k heslu"
@@ -1396,6 +1474,10 @@
   },
   "includeNumber": {
     "message": "Zahrnúť číslo"
+  },
+  "generatorPolicyInEffect": {
+    "message": "Na nastavenie generátora boli uplatnené požiadavky pravidiel spoločnosti.",
+    "description": "Indicates that a policy limits the credential generator screen."
   },
   "passwordHistory": {
     "message": "História hesla"
@@ -3981,6 +4063,9 @@
   "vaultTimeout": {
     "message": "Časový limit pre trezor"
   },
+  "vaultTimeout1": {
+    "message": "Časový limit"
+  },
   "vaultTimeoutDesc": {
     "message": "Vyberte kedy vyprší časový limit trezora a vykoná sa zvolená akcia."
   },
@@ -4249,7 +4334,7 @@
   },
   "lock": {
     "message": "Uzamknúť",
-    "description": "Verb form: to make secure or inaccesible by"
+    "description": "Verb form: to make secure or inaccessible by"
   },
   "trash": {
     "message": "Kôš",
@@ -4845,12 +4930,6 @@
   },
   "deleteAnyCollection": {
     "message": "Odstrániť ľubovoľnú zbierku"
-  },
-  "editAssignedCollections": {
-    "message": "Upraviť priradené zbierky"
-  },
-  "deleteAssignedCollections": {
-    "message": "Odstrániť priradené zbierky"
   },
   "manageGroups": {
     "message": "Spravovať skupiny"
@@ -5459,6 +5538,19 @@
       }
     }
   },
+  "vaultTimeoutPolicyInEffect1": {
+    "message": "Maximálne $HOURS$ hodín a $MINUTES$ minút.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      },
+      "minutes": {
+        "content": "$2",
+        "example": "5"
+      }
+    }
+  },
   "vaultTimeoutPolicyWithActionInEffect": {
     "message": "Zásady vašej organizácie ovplyvňujú časový limit trezoru. Maximálny povolený časový limit trezoru je $HOURS$ h a $MINUTES$ m. Nastavenie akcie pri vypršaní časového limitu je $ACTION$.",
     "placeholders": {
@@ -5484,9 +5576,6 @@
         "example": "Lock"
       }
     }
-  },
-  "customVaultTimeout": {
-    "message": "Vlastný časový limit pre trezor"
   },
   "vaultTimeoutToLarge": {
     "message": "Časový limit vášho trezora prekračuje obmedzenia nastavené vašou organizáciou."
@@ -6210,7 +6299,7 @@
   },
   "lastSync": {
     "message": "Posledná synchronizácia",
-    "description": "Used as a prefix to indicate the last time a sync occured. Example \"Last sync 1968-11-16 00:00:00\""
+    "description": "Used as a prefix to indicate the last time a sync occurred. Example \"Last sync 1968-11-16 00:00:00\""
   },
   "sponsorshipsSynced": {
     "message": "Sponzorstvo s vlastným hostingom synchronizované."
@@ -6369,57 +6458,57 @@
   },
   "scim": {
     "message": "SCIM provisioning",
-    "description": "The text, 'SCIM', is an acronymn and should not be translated."
+    "description": "The text, 'SCIM', is an acronym and should not be translated."
   },
   "scimDescription": {
     "message": "Automatically provision users and groups with your preferred identity provider via SCIM provisioning",
-    "description": "the text, 'SCIM', is an acronymn and should not be translated."
+    "description": "the text, 'SCIM', is an acronym and should not be translated."
   },
   "scimEnabledCheckboxDesc": {
     "message": "Enable SCIM",
-    "description": "the text, 'SCIM', is an acronymn and should not be translated."
+    "description": "the text, 'SCIM', is an acronym and should not be translated."
   },
   "scimEnabledCheckboxDescHelpText": {
     "message": "Set up your preferred identity provider by configuring the URL and SCIM API Key",
-    "description": "the text, 'SCIM', is an acronymn and should not be translated."
+    "description": "the text, 'SCIM', is an acronym and should not be translated."
   },
   "scimApiKeyHelperText": {
     "message": "This API key has access to manage users within your organization. It should be kept secret."
   },
   "copyScimKey": {
     "message": "Copy the SCIM API key to your clipboard",
-    "description": "the text, 'SCIM' and 'API', are acronymns and should not be translated."
+    "description": "the text, 'SCIM' and 'API', are acronyms and should not be translated."
   },
   "rotateScimKey": {
     "message": "Obnovte SCIM API kľúč",
-    "description": "the text, 'SCIM' and 'API', are acronymns and should not be translated."
+    "description": "the text, 'SCIM' and 'API', are acronyms and should not be translated."
   },
   "rotateScimKeyWarning": {
     "message": "Are you sure you want to rotate the SCIM API Key? The current key will no longer work for any existing integrations.",
-    "description": "the text, 'SCIM' and 'API', are acronymns and should not be translated."
+    "description": "the text, 'SCIM' and 'API', are acronyms and should not be translated."
   },
   "rotateKey": {
     "message": "Obnoviť kľúč"
   },
   "scimApiKey": {
     "message": "SCIM API kľúč",
-    "description": "the text, 'SCIM' and 'API', are acronymns and should not be translated."
+    "description": "the text, 'SCIM' and 'API', are acronyms and should not be translated."
   },
   "copyScimUrl": {
     "message": "Copy the SCIM endpoint URL to your clipboard",
-    "description": "the text, 'SCIM' and 'URL', are acronymns and should not be translated."
+    "description": "the text, 'SCIM' and 'URL', are acronyms and should not be translated."
   },
   "scimUrl": {
     "message": "SCIM URL",
-    "description": "the text, 'SCIM' and 'URL', are acronymns and should not be translated."
+    "description": "the text, 'SCIM' and 'URL', are acronyms and should not be translated."
   },
   "scimApiKeyRotated": {
     "message": "SCIM API key successfully rotated",
-    "description": "the text, 'SCIM' and 'API', are acronymns and should not be translated."
+    "description": "the text, 'SCIM' and 'API', are acronyms and should not be translated."
   },
   "scimSettingsSaved": {
     "message": "SCIM settings saved",
-    "description": "the text, 'SCIM', is an acronymn and should not be translated."
+    "description": "the text, 'SCIM', is an acronym and should not be translated."
   },
   "inputRequired": {
     "message": "Vstup je povinný."
@@ -7341,6 +7430,9 @@
   "fileUpload": {
     "message": "Nahrať súbor"
   },
+  "upload": {
+    "message": "Nahrať"
+  },
   "acceptedFormats": {
     "message": "Akceptované formáty:"
   },
@@ -8202,6 +8294,9 @@
   "addField": {
     "message": "Pridať pole"
   },
+  "editField": {
+    "message": "Upraviť pole"
+  },
   "items": {
     "message": "Položky"
   },
@@ -8592,41 +8687,14 @@
   "manageBillingFromProviderPortalMessage": {
     "message": "Spravujte fakturáciu cez portál poskytovateľa"
   },
-  "startYour7DayFreeTrialOfBitwarden": {
-    "message": "Start your 7-Day free trial of Bitwarden"
+  "continueSettingUpFreeTrial": {
+    "message": "Pokračujte v nastavovaní vašej bezplatnej skúšobnej doby Bitwardenu"
   },
-  "startYour7DayFreeTrialOfBitwardenForTeams": {
-    "message": "Start your 7-Day free trial of Bitwarden for Teams"
+  "continueSettingUpFreeTrialPasswordManager": {
+    "message": "Pokračujte v nastavovaní vašej bezplatnej skúšobnej doby Bitwarden Správcu Hesiel"
   },
-  "startYour7DayFreeTrialOfBitwardenForFamilies": {
-    "message": "Start your 7-Day free trial of Bitwarden for Families"
-  },
-  "startYour7DayFreeTrialOfBitwardenForEnterprise": {
-    "message": "Start your 7-Day free trial of Bitwarden for Enterprise"
-  },
-  "startYour7DayFreeTrialOfBitwardenSecretsManager": {
-    "message": "Start your 7-Day free trial of Bitwarden Secrets Manager"
-  },
-  "startYour7DayFreeTrialOfBitwardenSecretsManagerForTeams": {
-    "message": "Start your 7-Day free trial of Bitwarden Secrets Manager for Teams"
-  },
-  "startYour7DayFreeTrialOfBitwardenSecretsManagerForFamilies": {
-    "message": "Start your 7-Day free trial of Bitwarden Secrets Manager for Families"
-  },
-  "startYour7DayFreeTrialOfBitwardenSecretsManagerForEnterprise": {
-    "message": "Start your 7-Day free trial of Bitwarden Secrets Manager for Enterprise"
-  },
-  "startYour7DayFreeTrialOfBitwardenPasswordManager": {
-    "message": "Start your 7-Day free trial of Bitwarden Password Manager"
-  },
-  "startYour7DayFreeTrialOfBitwardenPasswordManagerForTeams": {
-    "message": "Start your 7-Day free trial of Bitwarden Password Manager for Teams"
-  },
-  "startYour7DayFreeTrialOfBitwardenPasswordManagerForFamilies": {
-    "message": "Start your 7-Day free trial of Bitwarden Password Manager for Families"
-  },
-  "startYour7DayFreeTrialOfBitwardenPasswordManagerForEnterprise": {
-    "message": "Start your 7-Day free trial of Bitwarden Password Manager for Enterprise"
+  "continueSettingUpFreeTrialSecretsManager": {
+    "message": "Pokračujte v nastavovaní vašej bezplatnej skúšobnej doby Bitwarden správcu tajomstiev"
   },
   "enterTeamsOrgInfo": {
     "message": "Enter your Teams organization information"
@@ -8938,6 +9006,66 @@
   "purchasedSeatsRemoved": {
     "message": "zakúpené sedenia boli odstránené"
   },
+  "environmentVariables": {
+    "message": "Premenné prostredia"
+  },
+  "organizationId": {
+    "message": "ID organizácie"
+  },
+  "projectIds": {
+    "message": "ID projektov"
+  },
+  "projectId": {
+    "message": "ID projektu"
+  },
+  "projectsAccessedByMachineAccount": {
+    "message": "Tento strojový účet môže pristupovať k nasledujúcim projektom."
+  },
+  "config": {
+    "message": "Konfigurácia"
+  },
+  "learnMoreAboutEmergencyAccess": {
+    "message": "Dozvedieť sa viac o núdzovom prístupe"
+  },
+  "learnMoreAboutMatchDetection": {
+    "message": "Dozvedieť sa viac o spôsobe mapovania"
+  },
+  "learnMoreAboutMasterPasswordReprompt": {
+    "message": "Dozvedieť sa viac o opätovnej výzve na zadanie hlavného hesla"
+  },
+  "learnMoreAboutSearchingYourVault": {
+    "message": "Dozvedieť sa viac o vyhľadávaní vo vašom trezore"
+  },
+  "learnMoreAboutYourAccountFingerprintPhrase": {
+    "message": "Dozvedieť sa viac o fráze odtlačku účtu"
+  },
+  "impactOfRotatingYourEncryptionKey": {
+    "message": "Dozvedieť sa viac o obnove vášho šifrovacieho kľúča"
+  },
+  "learnMoreAboutEncryptionAlgorithms": {
+    "message": "Dozvedieť sa viac o šifrovacom algoritme"
+  },
+  "learnMoreAboutKDFIterations": {
+    "message": "Dozvedieť sa viac o KDF iteráciách"
+  },
+  "learnMoreAboutLocalization": {
+    "message": "Dozvedieť sa viac o lokalizácii"
+  },
+  "learnMoreAboutWebsiteIcons": {
+    "message": "Dozvedieť sa viac o ikonách stránok"
+  },
+  "learnMoreAboutUserAccess": {
+    "message": "Dozvedieť sa viac o používateľskom prístupe"
+  },
+  "learnMoreAboutMemberRoles": {
+    "message": "Dozvedieť sa viac o povoleniach a rolách členov"
+  },
+  "whatIsACvvNumber": {
+    "message": "Čo je číslo CVV?"
+  },
+  "learnMoreAboutApi": {
+    "message": "Dozvedieť sa viac o Bitwarden API"
+  },
   "fileSends": {
     "message": "Sendy so súborom"
   },
@@ -9073,7 +9201,7 @@
   "current": {
     "message": "Aktuálne"
   },
-  "secretsManagerSubInfo": {
+  "secretsManagerSubscriptionInfo": {
     "message": "Vaše predplatné Secrets Manager sa obnoví na základe vybraného plánu"
   },
   "bitwardenPasswordManager": {
@@ -9087,7 +9215,7 @@
   },
   "publicApi": {
     "message": "Verejné API",
-    "description": "The text, 'API', is an acronymn and should not be translated."
+    "description": "The text, 'API', is an acronym and should not be translated."
   },
   "showCharacterCount": {
     "message": "Zobraziť počítadlo znakov"

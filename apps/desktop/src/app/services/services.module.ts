@@ -19,7 +19,7 @@ import {
   CLIENT_TYPE,
 } from "@bitwarden/angular/services/injection-tokens";
 import { JslibServicesModule } from "@bitwarden/angular/services/jslib-services.module";
-import { SetPasswordJitService } from "@bitwarden/auth/angular";
+import { LockComponentService, SetPasswordJitService } from "@bitwarden/auth/angular";
 import {
   InternalUserDecryptionOptionsServiceAbstraction,
   PinServiceAbstraction,
@@ -55,8 +55,6 @@ import { PlatformUtilsService as PlatformUtilsServiceAbstraction } from "@bitwar
 import { StateService as StateServiceAbstraction } from "@bitwarden/common/platform/abstractions/state.service";
 import { AbstractStorageService } from "@bitwarden/common/platform/abstractions/storage.service";
 import { SystemService as SystemServiceAbstraction } from "@bitwarden/common/platform/abstractions/system.service";
-import { BiometricStateService } from "@bitwarden/common/platform/biometrics/biometric-state.service";
-import { BiometricsService } from "@bitwarden/common/platform/biometrics/biometric.service";
 import { Message, MessageListener, MessageSender } from "@bitwarden/common/platform/messaging";
 // eslint-disable-next-line no-restricted-imports -- Used for dependency injection
 import { SubjectMessageSender } from "@bitwarden/common/platform/messaging/internal";
@@ -66,14 +64,16 @@ import { SystemService } from "@bitwarden/common/platform/services/system.servic
 import { GlobalStateProvider, StateProvider } from "@bitwarden/common/platform/state";
 // eslint-disable-next-line import/no-restricted-paths -- Implementation for memory storage
 import { MemoryStorageService as MemoryStorageServiceForStateProviders } from "@bitwarden/common/platform/state/storage/memory-storage.service";
+import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
 import { VaultTimeoutStringType } from "@bitwarden/common/types/vault-timeout.type";
 import { CipherService as CipherServiceAbstraction } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { DialogService } from "@bitwarden/components";
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
+import { BiometricStateService, BiometricsService } from "@bitwarden/key-management";
 
 import { DesktopAutofillSettingsService } from "../../autofill/services/desktop-autofill-settings.service";
+import { ElectronBiometricsService } from "../../key-management/biometrics/electron-biometrics.service";
 import { DesktopSettingsService } from "../../platform/services/desktop-settings.service";
-import { ElectronBiometricsService } from "../../platform/services/electron-biometrics.service";
 import { ElectronCryptoService } from "../../platform/services/electron-crypto.service";
 import { ElectronLogRendererService } from "../../platform/services/electron-log.renderer.service";
 import {
@@ -86,6 +86,7 @@ import { ElectronRendererStorageService } from "../../platform/services/electron
 import { I18nRendererService } from "../../platform/services/i18n.renderer.service";
 import { fromIpcMessaging } from "../../platform/utils/from-ipc-messaging";
 import { fromIpcSystemTheme } from "../../platform/utils/from-ipc-system-theme";
+import { DesktopLockComponentService } from "../../services/desktop-lock-component.service";
 import { EncryptedMessageHandlerService } from "../../services/encrypted-message-handler.service";
 import { NativeMessageHandlerService } from "../../services/native-message-handler.service";
 import { NativeMessagingService } from "../../services/native-messaging.service";
@@ -93,6 +94,7 @@ import { SearchBarService } from "../layout/search/search-bar.service";
 
 import { DesktopFileDownloadService } from "./desktop-file-download.service";
 import { DesktopSetPasswordJitService } from "./desktop-set-password-jit.service";
+import { DesktopThemeStateService } from "./desktop-theme.service";
 import { InitService } from "./init.service";
 import { NativeMessagingManifestService } from "./native-messaging-manifest.service";
 import { RendererCryptoFunctionService } from "./renderer-crypto-function.service";
@@ -213,6 +215,11 @@ const safeProviders: SafeProvider[] = [
     deps: [],
   }),
   safeProvider({
+    provide: ThemeStateService,
+    useClass: DesktopThemeStateService,
+    deps: [GlobalStateProvider],
+  }),
+  safeProvider({
     provide: EncryptedMessageHandlerService,
     deps: [
       AccountServiceAbstraction,
@@ -227,7 +234,7 @@ const safeProviders: SafeProvider[] = [
     provide: NativeMessageHandlerService,
     deps: [
       StateServiceAbstraction,
-      CryptoServiceAbstraction,
+      EncryptService,
       CryptoFunctionServiceAbstraction,
       MessagingServiceAbstraction,
       EncryptedMessageHandlerService,
@@ -272,6 +279,11 @@ const safeProviders: SafeProvider[] = [
     deps: [],
   }),
   safeProvider({
+    provide: LockComponentService,
+    useClass: DesktopLockComponentService,
+    deps: [],
+  }),
+  safeProvider({
     provide: CLIENT_TYPE,
     useValue: ClientType.Desktop,
   }),
@@ -281,6 +293,7 @@ const safeProviders: SafeProvider[] = [
     deps: [
       ApiService,
       CryptoService,
+      EncryptService,
       I18nServiceAbstraction,
       KdfConfigService,
       InternalMasterPasswordServiceAbstraction,

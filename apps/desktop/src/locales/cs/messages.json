@@ -444,6 +444,10 @@
   "ambiguous": {
     "message": "Nepoužívat zaměnitelné znaky"
   },
+  "generatorPolicyInEffect": {
+    "message": "Na volby generátoru byly uplatněny požadavky podnikových zásad.",
+    "description": "Indicates that a policy limits the credential generator screen."
+  },
   "searchCollection": {
     "message": "Prohledat kolekci"
   },
@@ -559,6 +563,18 @@
   },
   "settings": {
     "message": "Nastavení"
+  },
+  "accountEmail": {
+    "message": "E-mail účtu"
+  },
+  "requestHint": {
+    "message": "Vyžádat nápovědu"
+  },
+  "requestPasswordHint": {
+    "message": "Vyžádat nápovědu k heslu"
+  },
+  "enterYourAccountEmailAddressAndYourPasswordHintWillBeSentToYou": {
+    "message": "Zadejte svou e-mailovou adresu, na kterou Vám zašleme nápovědu k heslu"
   },
   "passwordHint": {
     "message": "Nápověda pro heslo"
@@ -929,6 +945,9 @@
   },
   "vaultTimeout": {
     "message": "Časový limit trezoru"
+  },
+  "vaultTimeout1": {
+    "message": "Časový limit"
   },
   "vaultTimeoutDesc": {
     "message": "Vyberte, kdy vyprší bezpečnostní limit trezoru. Poté bude provedena vybraná akce."
@@ -1555,7 +1574,7 @@
   "recommendedForSecurity": {
     "message": "Doporučeno pro bezpečnost."
   },
-  "lockWithMasterPassOnRestart": {
+  "lockWithMasterPassOnRestart1": {
     "message": "Zamknout trezor při restartu pomocí hlavního hesla"
   },
   "deleteAccount": {
@@ -1633,7 +1652,7 @@
   },
   "lock": {
     "message": "Zamknout",
-    "description": "Verb form: to make secure or inaccesible by"
+    "description": "Verb form: to make secure or inaccessible by"
   },
   "trash": {
     "message": "Koš",
@@ -1756,8 +1775,8 @@
   "enableBrowserIntegration": {
     "message": "Povolit integraci prohlížeče"
   },
-  "enableBrowserIntegrationDesc": {
-    "message": "Integrace prohlížeče se používá pro biometriku v prohlížeči."
+  "enableBrowserIntegrationDesc1": {
+    "message": "Použito k povolení biometrického odemknutí v prohlížečích, které nejsou Safari."
   },
   "enableDuckDuckGoBrowserIntegration": {
     "message": "Povolit integraci prohlížeče DuckDuckGo"
@@ -2087,8 +2106,8 @@
   "minutes": {
     "message": "minut"
   },
-  "vaultTimeoutPolicyInEffect": {
-    "message": "Zásady Vaší organizace ovlivňují časový limit trezoru. Maximální povolený časový limit trezoru je $HOURS$ hodin a $MINUTES$ minut.",
+  "vaultTimeoutPolicyInEffect1": {
+    "message": "Maximálně $HOURS$ hodin a $MINUTES$ minut.",
     "placeholders": {
       "hours": {
         "content": "$1",
@@ -3061,6 +3080,12 @@
   },
   "textSends": {
     "message": "Sends s texty"
+  },
+  "allowScreenshots": {
+    "message": "Povolit záznam obrazovky"
+  },
+  "allowScreenshotsDesc": {
+    "message": "Povolí zachycování obrazovky desktopové aplikace Bitwarden."
   },
   "ssoError": {
     "message": "Pro přihlášení SSO nebyly nalezeny žádné volné porty."
