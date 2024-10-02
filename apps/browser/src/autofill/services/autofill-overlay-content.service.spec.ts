@@ -225,39 +225,6 @@ describe("AutofillOverlayContentService", () => {
       expect(autofillFieldElement.addEventListener).not.toHaveBeenCalled();
     });
 
-    describe("identifies the overlay visibility setting", () => {
-      it("defaults the overlay visibility setting to `OnFieldFocus` if a value is not set", async () => {
-        sendExtensionMessageSpy.mockResolvedValueOnce(undefined);
-        autofillOverlayContentService["inlineMenuVisibility"] = undefined;
-
-        await autofillOverlayContentService.setupOverlayListeners(
-          autofillFieldElement,
-          autofillFieldData,
-          pageDetailsMock,
-        );
-
-        expect(sendExtensionMessageSpy).toHaveBeenCalledWith("getAutofillInlineMenuVisibility");
-        expect(autofillOverlayContentService["inlineMenuVisibility"]).toEqual(
-          AutofillOverlayVisibility.OnFieldFocus,
-        );
-      });
-
-      it("sets the overlay visibility setting to the value returned from the background script", async () => {
-        sendExtensionMessageSpy.mockResolvedValueOnce(AutofillOverlayVisibility.OnFieldFocus);
-        autofillOverlayContentService["inlineMenuVisibility"] = undefined;
-
-        await autofillOverlayContentService.setupOverlayListeners(
-          autofillFieldElement,
-          autofillFieldData,
-          pageDetailsMock,
-        );
-
-        expect(autofillOverlayContentService["inlineMenuVisibility"]).toEqual(
-          AutofillOverlayVisibility.OnFieldFocus,
-        );
-      });
-    });
-
     describe("sets up form field element listeners", () => {
       it("removes all cached event listeners from the form field element", async () => {
         jest.spyOn(autofillFieldElement, "removeEventListener");
@@ -2029,19 +1996,6 @@ describe("AutofillOverlayContentService", () => {
         await flushPromises();
 
         expect(autofillFieldFocusSpy).toHaveBeenCalled();
-      });
-    });
-
-    describe("updateAutofillInlineMenuVisibility message handler", () => {
-      it("updates the inlineMenuVisibility property", () => {
-        sendMockExtensionMessage({
-          command: "updateAutofillInlineMenuVisibility",
-          data: { inlineMenuVisibility: AutofillOverlayVisibility.OnButtonClick },
-        });
-
-        expect(autofillOverlayContentService["inlineMenuVisibility"]).toEqual(
-          AutofillOverlayVisibility.OnButtonClick,
-        );
       });
     });
 

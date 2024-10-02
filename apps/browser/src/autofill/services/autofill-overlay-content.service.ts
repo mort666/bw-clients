@@ -5,7 +5,6 @@ import { FocusableElement, tabbable } from "tabbable";
 import {
   AUTOFILL_OVERLAY_HANDLE_REPOSITION,
   AUTOFILL_TRIGGER_FORM_FIELD_SUBMIT,
-  AutofillOverlayVisibility,
   EVENTS,
 } from "@bitwarden/common/autofill/constants";
 import { CipherType } from "@bitwarden/common/vault/enums";
@@ -53,7 +52,6 @@ import { AutoFillConstants } from "./autofill-constants";
 
 export class AutofillOverlayContentService implements AutofillOverlayContentServiceInterface {
   pageDetailsUpdateRequired = false;
-  inlineMenuVisibility: number;
   private readonly findTabs = tabbable;
   private readonly sendExtensionMessage = sendExtensionMessage;
   private formFieldElements: Map<ElementWithOpId<FormFieldElement>, AutofillField> = new Map();
@@ -81,7 +79,6 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     bgVaultItemRepromptPopoutOpened: () => this.blurMostRecentlyFocusedField(true),
     redirectAutofillInlineMenuFocusOut: ({ message }) =>
       this.redirectInlineMenuFocusOut(message?.data?.direction),
-    updateAutofillInlineMenuVisibility: ({ message }) => this.updateInlineMenuVisibility(message),
     getSubFrameOffsets: ({ message }) => this.getSubFrameOffsets(message),
     getSubFrameOffsetsFromWindowMessage: ({ message }) =>
       this.getSubFrameOffsetsFromWindowMessage(message),
@@ -1193,10 +1190,6 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
       await this.updateMostRecentlyFocusedField(formFieldElement);
     }
 
-    if (!this.inlineMenuVisibility) {
-      await this.getInlineMenuVisibility();
-    }
-
     this.setupFormFieldElementEventListeners(formFieldElement);
     this.setupFormSubmissionEventListeners(formFieldElement, autofillFieldData);
 
@@ -1209,31 +1202,10 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
   }
 
   /**
-   * Queries the background script for the autofill inline menu visibility setting.
-   * If the setting is not found, a default value of OnFieldFocus will be used
-   * @private
-   */
-  private async getInlineMenuVisibility() {
-    const inlineMenuVisibility = await this.sendExtensionMessage("getAutofillInlineMenuVisibility");
-    this.inlineMenuVisibility = inlineMenuVisibility || AutofillOverlayVisibility.OnFieldFocus;
-  }
-
-  /**
    * Indicates whether the most recently focused field has a value.
    */
   private mostRecentlyFocusedFieldHasValue() {
     return Boolean((this.mostRecentlyFocusedField as FillableFormFieldElement)?.value);
-  }
-
-  /**
-   * Updates the local reference to the inline menu visibility setting.
-   *
-   * @param data - The data object from the extension message.
-   */
-  private updateInlineMenuVisibility({ data }: AutofillExtensionMessage) {
-    if (!isNaN(data?.inlineMenuVisibility)) {
-      this.inlineMenuVisibility = data.inlineMenuVisibility;
-    }
   }
 
   /**

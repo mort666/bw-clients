@@ -25,7 +25,6 @@ export type AutofillOverlayContentExtensionMessageHandlers = {
   bgUnlockPopoutOpened: () => Promise<void>;
   bgVaultItemRepromptPopoutOpened: () => Promise<void>;
   redirectAutofillInlineMenuFocusOut: ({ message }: AutofillExtensionMessageParam) => void;
-  updateAutofillInlineMenuVisibility: ({ message }: AutofillExtensionMessageParam) => void;
   getSubFrameOffsets: ({ message }: AutofillExtensionMessageParam) => Promise<SubFrameOffsetData>;
   getSubFrameOffsetsFromWindowMessage: ({ message }: AutofillExtensionMessageParam) => void;
   checkMostRecentlyFocusedFieldHasValue: () => boolean;
