@@ -456,6 +456,19 @@ describe("AutofillInlineMenuIframeService", () => {
         jest.advanceTimersByTime(10);
         expect(autofillInlineMenuIframeService["iframe"].style.opacity).toBe("1");
       });
+
+      it("triggers an aria alert when the password in regenerated", () => {
+        jest.spyOn(autofillInlineMenuIframeService as any, "createAriaAlertElement");
+
+        sendPortMessage(portSpy, {
+          command: "updateAutofillInlineMenuGeneratedPassword",
+          refreshPassword: true,
+        });
+
+        expect(autofillInlineMenuIframeService["createAriaAlertElement"]).toHaveBeenCalledWith(
+          true,
+        );
+      });
     });
   });
 

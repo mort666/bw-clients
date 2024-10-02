@@ -375,16 +375,20 @@ export class AutofillInlineMenuIframeService implements AutofillInlineMenuIframe
     }, 100);
   }
 
+  /**
+   * Handles updating the generated password in the inline menu iframe. Triggers
+   * an aria alert if the user initiated the password regeneration.
+   *
+   * @param message - The message sent from the iframe
+   */
   private handleUpdateGeneratedPassword = (message: AutofillInlineMenuIframeExtensionMessage) => {
     this.postMessageToIFrame(message);
 
-    if (!message.refreshPassword) {
-      return;
+    if (message.refreshPassword) {
+      this.clearAriaAlert();
+      this.createAriaAlertElement(true);
+      this.announceAriaAlert(chrome.i18n.getMessage("passwordRegenerated"), 500, true);
     }
-
-    this.clearAriaAlert();
-    this.createAriaAlertElement(true);
-    this.announceAriaAlert(chrome.i18n.getMessage("passwordRegenerated"), 500, true);
   };
 
   /**
