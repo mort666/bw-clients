@@ -1056,11 +1056,10 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
       return;
     }
 
-    if (!this.inlineMenuFieldQualificationService.isUsernameField(autofillFieldData)) {
-      return;
+    if (this.inlineMenuFieldQualificationService.isUsernameField(autofillFieldData)) {
+      autofillFieldData.inlineMenuFillType = InlineMenuFillType.AccountCreationUsername;
+      this.qualifyAccountCreationFieldType(autofillFieldData);
     }
-    autofillFieldData.inlineMenuFillType = InlineMenuFillType.AccountCreationUsername;
-    this.qualifyAccountCreationFieldType(autofillFieldData);
   }
 
   /**
