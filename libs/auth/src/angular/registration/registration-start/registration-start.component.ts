@@ -6,12 +6,9 @@ import { Subject, takeUntil } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { AccountApiService } from "@bitwarden/common/auth/abstractions/account-api.service";
-import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
-import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { RegisterSendVerificationEmailRequest } from "@bitwarden/common/auth/models/request/registration/register-send-verification-email.request";
 import { RegionConfig, Region } from "@bitwarden/common/platform/abstractions/environment.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { StateProvider } from "@bitwarden/common/platform/state";
 import {
   AsyncActionsModule,
   ButtonModule,
@@ -51,17 +48,6 @@ const DEFAULT_MARKETING_EMAILS_PREF_BY_REGION: Record<Region, boolean> = {
     LinkModule,
     IconModule,
     RegistrationEnvSelectorComponent,
-  ],
-  providers: [
-    {
-      provide: LoginEmailService,
-      useFactory: (
-        accountService: AccountService,
-        authService: AuthService,
-        stateProvider: StateProvider,
-      ) => new LoginEmailService(accountService, authService, stateProvider),
-      deps: [AccountService, AuthService, StateProvider],
-    },
   ],
 })
 export class RegistrationStartComponent implements OnInit, OnDestroy {
