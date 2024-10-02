@@ -4,7 +4,7 @@
   bannerType="premium"
   icon="bwi-billing"
   [showClose]="false"
-  *ngIf="freeTrialData.shownBanner"
+  *ngIf="freeTrialData?.shownBanner"
 >
   {{ freeTrialData.message }}
   <a

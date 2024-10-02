@@ -115,7 +115,6 @@ export class OrganizationPaymentMethodComponent implements OnDestroy {
     this.accountCredit = accountCredit;
     this.paymentSource = paymentSource;
     this.subscriptionStatus = subscriptionStatus;
-    this.loading = false;
 
     if (this.organizationId) {
       const organizationSubscriptionPromise = this.organizationApiService.getSubscription(
@@ -134,7 +133,6 @@ export class OrganizationPaymentMethodComponent implements OnDestroy {
       );
     }
     this.isUnpaid = this.subscriptionStatus === "unpaid" ?? false;
-    this.loading = false;
     // If the flag `launchPaymentModalAutomatically` is set to true,
     // we schedule a timeout (delay of 800ms) to automatically launch the payment modal.
     // This delay ensures that any prior UI/rendering operations complete before triggering the modal.
@@ -145,6 +143,7 @@ export class OrganizationPaymentMethodComponent implements OnDestroy {
         this.location.replaceState(this.location.path(), "", {});
       }, 800);
     }
+    this.loading = false;
   };
 
   protected updatePaymentMethod = async (): Promise<void> => {
