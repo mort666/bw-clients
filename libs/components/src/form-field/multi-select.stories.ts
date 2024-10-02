@@ -202,7 +202,7 @@ export const Members: Story = {
       {
         id: "7",
         listName: "Final listName (fname@mail.me)",
-        labelName: "(fname@mail.me)",
+        labelName: "Final listName (fname@mail.me)",
         icon: "bwi-user",
       },
     ],

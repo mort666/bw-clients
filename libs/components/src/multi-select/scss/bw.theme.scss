@@ -107,7 +107,7 @@ $ng-dropdown-shadow: rgb(var(--color-secondary-100)) !default;
     }
     .ng-value-container {
       align-items: center;
-      padding-left: $ng-select-value-padding-left;
+      padding: 6px 0px 5px $ng-select-value-padding-left;
       @include rtl {
         padding-right: $ng-select-value-padding-left;
         padding-left: 0;
@@ -160,11 +160,10 @@ $ng-dropdown-shadow: rgb(var(--color-secondary-100)) !default;
         }
         .ng-value {
           font-size: $ng-select-value-font-size;
-          margin-bottom: 5px;
           color: $ng-select-value-text;
           background-color: $ng-select-selected;
           border-radius: 2px;
-          margin-right: 5px;
+          margin: 4px 5px 4px 0px;
           @include rtl {
             margin-right: 0;
             margin-left: 5px;
