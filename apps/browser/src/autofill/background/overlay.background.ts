@@ -1485,13 +1485,13 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     this.focusedFieldData = { ...focusedFieldData, tabId: sender.tab.id, frameId: sender.frameId };
     this.isFieldCurrentlyFocused = true;
 
-    if (this.shouldUpdatePasswordGeneratorMenuOnFieldFocus(focusedFieldHasValue)) {
-      this.updateGeneratedPassword().catch((error) => this.logService.error(error));
+    if (this.shouldUpdatePasswordGeneratorMenuOnFieldFocus()) {
+      this.updateInlineMenuGeneratedPasswordOnFocus(focusedFieldHasValue);
       return;
     }
 
     if (this.shouldUpdateAccountCreationMenuOnFieldFocus(previousFocusedFieldData)) {
-      this.updateInlineMenuAccountCreationField(
+      this.updateInlineMenuAccountCreationDataOnFocus(
         previousFocusedFieldData,
         focusedFieldHasValue,
         sender,
@@ -1517,24 +1517,27 @@ export class OverlayBackground implements OverlayBackgroundInterface {
 
   /**
    * Identifies if a recently focused field should update as a password generation field.
-   * Can also potentially show the save login inline menu list if the field has a value.
+   */
+  private shouldUpdatePasswordGeneratorMenuOnFieldFocus() {
+    return (
+      this.isInlineMenuButtonVisible &&
+      this.focusedFieldMatchesFillType(InlineMenuFillType.PasswordGeneration)
+    );
+  }
+
+  /**
+   * Handles updating the inline menu password generator on focus of a field.
+   * In the case that the field has a value, will show the save login view.
    *
    * @param focusedFieldHasValue - Identifies whether the focused field has a value
    */
-  private shouldUpdatePasswordGeneratorMenuOnFieldFocus(focusedFieldHasValue: boolean) {
-    if (
-      !this.isInlineMenuButtonVisible ||
-      !this.focusedFieldMatchesFillType(InlineMenuFillType.PasswordGeneration)
-    ) {
-      return false;
-    }
-
+  private updateInlineMenuGeneratedPasswordOnFocus(focusedFieldHasValue: boolean) {
     if (focusedFieldHasValue) {
       this.showSaveLoginInlineMenuList();
-      return false;
+      return;
     }
 
-    return true;
+    this.updateGeneratedPassword().catch((error) => this.logService.error(error));
   }
 
   /**
@@ -1544,7 +1547,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * @param focusedFieldHasValue - Identifies whether the focused field has a value
    * @param sender - The sender of the extension message
    */
-  private async updateInlineMenuAccountCreationField(
+  private async updateInlineMenuAccountCreationDataOnFocus(
     previousFocusedFieldData: FocusedFieldData,
     focusedFieldHasValue: boolean,
     sender: chrome.runtime.MessageSender,
