@@ -30,7 +30,7 @@ export type AutofillOverlayContentExtensionMessageHandlers = {
   checkMostRecentlyFocusedFieldHasValue: () => boolean;
   setupRebuildSubFrameOffsetsListeners: () => void;
   destroyAutofillInlineMenuListeners: () => void;
-  getLoginFormFieldData: () => Promise<NotificationFormFieldData>;
+  getFormFieldDataForNotification: () => Promise<NotificationFormFieldData>;
 };
 
 export interface AutofillOverlayContentService {

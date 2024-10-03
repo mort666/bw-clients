@@ -2367,14 +2367,14 @@ describe("AutofillOverlayContentService", () => {
       });
     });
 
-    describe("getLoginFormFieldData message handler", () => {
+    describe("getFormFieldDataForNotification message handler", () => {
       it("returns early if a field is currently focused", async () => {
         jest
           .spyOn(autofillOverlayContentService as any, "isFieldCurrentlyFocused")
           .mockReturnValue(true);
 
         sendMockExtensionMessage(
-          { command: "getLoginFormFieldData" },
+          { command: "getFormFieldDataForNotification" },
           mock<chrome.runtime.MessageSender>(),
           sendResponseSpy,
         );
@@ -2385,7 +2385,7 @@ describe("AutofillOverlayContentService", () => {
 
       it("returns the form field data for a notification", async () => {
         sendMockExtensionMessage(
-          { command: "getLoginFormFieldData" },
+          { command: "getFormFieldDataForNotification" },
           mock<chrome.runtime.MessageSender>(),
           sendResponseSpy,
         );
