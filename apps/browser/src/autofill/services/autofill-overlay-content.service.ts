@@ -87,7 +87,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     checkMostRecentlyFocusedFieldHasValue: () => this.mostRecentlyFocusedFieldHasValue(),
     setupRebuildSubFrameOffsetsListeners: () => this.setupRebuildSubFrameOffsetsListeners(),
     destroyAutofillInlineMenuListeners: () => this.destroy(),
-    getFormFieldDataForNotification: () => this.handleGetFormFieldDataForNotificationMessage(),
+    getLoginFormFieldData: () => this.handleGetLoginFormFieldDataMessage(),
   };
   private readonly loginFieldQualifiers: Record<string, CallableFunction> = {
     [AutofillFieldQualifier.username]: this.inlineMenuFieldQualificationService.isUsernameField,
@@ -575,7 +575,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
    * Handles the repositioning of the autofill overlay when the form is submitted.
    */
   private handleFormFieldSubmitEvent = () => {
-    void this.sendExtensionMessage("formFieldSubmitted", this.getFormFieldDataForNotification());
+    void this.sendExtensionMessage("formFieldSubmitted", this.getLoginFormFieldData());
   };
 
   /**
@@ -583,18 +583,18 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
    * background script when a POST request is encountered. Will not trigger this behavior
    * in the case where the user is still typing in the field.
    */
-  private handleGetFormFieldDataForNotificationMessage = async () => {
+  private handleGetLoginFormFieldDataMessage = async () => {
     if (await this.isFieldCurrentlyFocused()) {
       return;
     }
 
-    return this.getFormFieldDataForNotification();
+    return this.getLoginFormFieldData();
   };
 
   /**
    * Returns the form field data used for add login and change password notifications.
    */
-  private getFormFieldDataForNotification = (): NotificationFormFieldData => {
+  private getLoginFormFieldData = (): NotificationFormFieldData => {
     return {
       uri: globalThis.document.URL,
       username: this.userFilledFields["username"]?.value || "",
