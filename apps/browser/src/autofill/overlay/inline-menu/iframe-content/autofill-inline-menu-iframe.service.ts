@@ -181,6 +181,7 @@ export class AutofillInlineMenuIframeService implements AutofillInlineMenuIframe
 
     this.updateElementStyles(this.iframe, { opacity: "0", height: "0px" });
     this.unobserveIframe();
+    this.clearAriaAlert();
     this.port?.onMessage.removeListener(this.handlePortMessage);
     this.port?.onDisconnect.removeListener(this.handlePortDisconnect);
     this.port?.disconnect();
