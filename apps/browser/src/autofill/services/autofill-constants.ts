@@ -373,6 +373,7 @@ export class IdentityAutoFillConstants {
     "label-left",
     "label-top",
     "data-recurly",
+    "accountCreationFieldType",
   ];
 
   static readonly FullNameFieldNames: string[] = ["name", "full-name", "your-name"];
