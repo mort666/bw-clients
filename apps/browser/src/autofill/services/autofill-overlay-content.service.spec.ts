@@ -38,7 +38,7 @@ describe("AutofillOverlayContentService", () => {
   const sendResponseSpy = jest.fn();
   const mockQuerySelectorAll = mockQuerySelectorAllDefinedCall();
 
-  beforeEach(() => {
+  beforeEach(async () => {
     inlineMenuFieldQualificationService = new InlineMenuFieldQualificationService();
     domQueryService = new DomQueryService();
     autofillOverlayContentService = new AutofillOverlayContentService(
@@ -47,6 +47,8 @@ describe("AutofillOverlayContentService", () => {
     );
     autofillInit = new AutofillInit(domQueryService, autofillOverlayContentService);
     autofillInit.init();
+    autofillOverlayContentService["showInlineMenuCards"] = true;
+    autofillOverlayContentService["showInlineMenuIdentities"] = true;
     sendExtensionMessageSpy = jest
       .spyOn(autofillOverlayContentService as any, "sendExtensionMessage")
       .mockResolvedValue(undefined);

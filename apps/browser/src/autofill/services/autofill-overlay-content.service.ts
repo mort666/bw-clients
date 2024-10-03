@@ -157,6 +157,9 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
    * The observers will be instantiated on DOMContentLoaded if the page is current loading.
    */
   init() {
+    void this.getInlineMenuCardsVisibility();
+    void this.getInlineMenuIdentitiesVisibility();
+
     if (globalThis.document.readyState === "loading") {
       globalThis.document.addEventListener(EVENTS.DOMCONTENTLOADED, this.setupGlobalEventListeners);
       return;
@@ -186,14 +189,6 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     autofillFieldData: AutofillField,
     pageDetails: AutofillPageDetails,
   ) {
-    if (this.showInlineMenuCards == null) {
-      await this.getInlineMenuCardsVisibility();
-    }
-
-    if (this.showInlineMenuIdentities == null) {
-      await this.getInlineMenuIdentitiesVisibility();
-    }
-
     if (
       currentlyInSandboxedIframe() ||
       this.formFieldElements.has(formFieldElement) ||
