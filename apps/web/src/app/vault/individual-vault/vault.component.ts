@@ -469,16 +469,6 @@ export class VaultComponent implements OnInit, OnDestroy {
     );
   }
 
-  async navigateToPaymentMethod(organizationId: string): Promise<void> {
-    const navigationExtras = {
-      state: { launchPaymentModalAutomatically: true },
-    };
-
-    await this.router.navigate(
-      ["organizations", organizationId, "billing", "payment-method"],
-      navigationExtras,
-    );
-  }
   ngOnDestroy() {
     this.broadcasterService.unsubscribe(BroadcasterSubscriptionId);
     this.destroy$.next();
