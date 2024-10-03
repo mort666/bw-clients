@@ -36,7 +36,6 @@ import {
 } from "../types";
 import { CredentialGeneratorConfiguration } from "../types/credential-generator-configuration";
 import { SshKeyGenerationOptions } from "../types/sshkey-generation-options";
-import { SshKeyGeneratorPolicy } from "../types/sshkey-generator-policy";
 
 import { DefaultCatchallOptions } from "./default-catchall-options";
 import { DefaultEffUsernameOptions } from "./default-eff-username-options";
@@ -193,7 +192,7 @@ const SSHKEY = Object.freeze({
       return new IdentityConstraint<SshKeyGenerationOptions>();
     },
   },
-} satisfies CredentialGeneratorConfiguration<SshKeyGenerationOptions, SshKeyGeneratorPolicy>);
+} satisfies CredentialGeneratorConfiguration<SshKeyGenerationOptions, NoPolicy>);
 
 const CATCHALL = Object.freeze({
   id: "catchall",
