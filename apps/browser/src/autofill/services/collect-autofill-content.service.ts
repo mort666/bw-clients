@@ -367,6 +367,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
       tabindex: this.getPropertyOrAttribute(element, "tabindex"),
       title: this.getPropertyOrAttribute(element, "title"),
       tagName: this.getAttributeLowerCase(element, "tagName"),
+      dataSetValues: this.getDataSetValues(element),
     };
 
     if (!autofillFieldBase.viewable) {
@@ -798,6 +799,21 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
     }
 
     return elementValue;
+  }
+
+  /**
+   * Captures the `data-*` attribute metadata to help with validating the autofill data.
+   *
+   * @param element - The form field element to capture the `data-*` attribute metadata from
+   */
+  private getDataSetValues(element: ElementWithOpId<FormFieldElement>): string {
+    let datasetValues = "";
+    const dataset = element.dataset;
+    for (const key in dataset) {
+      datasetValues += `${dataset[key]}, `;
+    }
+
+    return datasetValues;
   }
 
   /**

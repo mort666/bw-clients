@@ -109,6 +109,8 @@ export default class AutofillField {
    */
   maxLength?: number | null;
 
+  dataSetValues?: string;
+
   rel?: string | null;
 
   checked?: boolean;

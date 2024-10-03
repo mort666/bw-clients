@@ -1103,6 +1103,7 @@ export class InlineMenuFieldQualificationService
         autofillFieldData.title,
         autofillFieldData.placeholder,
         autofillFieldData.autoCompleteType,
+        autofillFieldData.dataSetValues,
         autofillFieldData["label-data"],
         autofillFieldData["label-aria"],
         autofillFieldData["label-left"],
@@ -1120,7 +1121,7 @@ export class InlineMenuFieldQualificationService
           keywordEl = keywordEl.replace(/-/g, "");
 
           // Split the keyword by non-alphanumeric characters to get the keywords without treating a space as a separator.
-          keywordEl.split(/[^\p{L}\d]+/gu).forEach((keyword) => {
+          keywordEl.split(/[^\p{L}\d]+/gu).forEach((keyword: string) => {
             if (keyword) {
               keywordsSet.add(keyword);
             }
@@ -1130,7 +1131,7 @@ export class InlineMenuFieldQualificationService
           keywordEl
             .replace(/\s/g, "")
             .split(/[^\p{L}\d]+/gu)
-            .forEach((keyword) => {
+            .forEach((keyword: string) => {
               if (keyword) {
                 keywordsSet.add(keyword);
               }
