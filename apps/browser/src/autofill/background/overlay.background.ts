@@ -1683,6 +1683,12 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     }, 300);
   }
 
+  /**
+   * Verifies whether the save login inline menu view should be shown. This requires that
+   * the login data on the page contains a username and either a current or new password.
+   *
+   * @param tab - The tab to check for login data
+   */
   private async shouldShowSaveLoginInlineMenuList(tab: chrome.tabs.Tab) {
     const loginData = await this.getInlineMenuFormFieldData(tab);
     if (!loginData) {
@@ -1692,6 +1698,11 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     return !!(loginData.username && (loginData.password || loginData.newPassword));
   }
 
+  /**
+   * Gets the inline menu form field data from the provided tab.
+   *
+   * @param tab - The tab to get the form field data from
+   */
   private async getInlineMenuFormFieldData(tab: chrome.tabs.Tab): Promise<InlineMenuFormFieldData> {
     return await BrowserApi.tabSendMessage(tab, {
       command: "getInlineMenuFormFieldData",
