@@ -76,6 +76,8 @@ export class SshKeySettingsComponent implements OnInit, OnDestroy {
   });
 
   algorithmOptions: { name: string; value: string }[] = [];
+
+  // FIXME: This should be provided by a service so it can be target by a policy
   rsaKeyLengths: {
     name: string;
     value: number;
