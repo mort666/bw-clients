@@ -1,13 +1,13 @@
 import { SelectionModel } from "@angular/cdk/collections";
 import { Component, EventEmitter, Input, Output } from "@angular/core";
 
+import { Unassigned } from "@bitwarden/admin-console/common";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { CollectionView } from "@bitwarden/common/vault/models/view/collection.view";
 import { TableDataSource } from "@bitwarden/components";
 
 import { GroupView } from "../../../admin-console/organizations/core";
-import { Unassigned } from "../../individual-vault/vault-filter/shared/models/routed-vault-filter.model";
 
 import { VaultItem } from "./vault-item";
 import { VaultItemEvent } from "./vault-item-event";
@@ -46,7 +46,6 @@ export class VaultItemsComponent {
   @Input() viewingOrgVault: boolean;
   @Input() addAccessStatus: number;
   @Input() addAccessToggle: boolean;
-  @Input() vaultBulkManagementActionEnabled = false;
 
   private _ciphers?: CipherView[] = [];
   @Input() get ciphers(): CipherView[] {
@@ -93,21 +92,11 @@ export class VaultItemsComponent {
   }
 
   get disableMenu() {
-    return (
-      this.vaultBulkManagementActionEnabled &&
-      !this.bulkMoveAllowed &&
-      !this.showAssignToCollections() &&
-      !this.showDelete()
-    );
+    return !this.bulkMoveAllowed && !this.showAssignToCollections() && !this.showDelete();
   }
 
   get bulkAssignToCollectionsAllowed() {
     return this.showBulkAddToCollections && this.ciphers.length > 0;
-  }
-
-  // Use new bulk management delete if vaultBulkManagementActionEnabled feature flag is enabled
-  get deleteAllowed() {
-    return this.vaultBulkManagementActionEnabled ? this.showDelete() : true;
   }
 
   protected canEditCollection(collection: CollectionView): boolean {
@@ -150,15 +139,6 @@ export class VaultItemsComponent {
   protected bulkMoveToFolder() {
     this.event({
       type: "moveToFolder",
-      items: this.selection.selected
-        .filter((item) => item.cipher !== undefined)
-        .map((item) => item.cipher),
-    });
-  }
-
-  protected bulkMoveToOrganization() {
-    this.event({
-      type: "moveToOrganization",
       items: this.selection.selected
         .filter((item) => item.cipher !== undefined)
         .map((item) => item.cipher),

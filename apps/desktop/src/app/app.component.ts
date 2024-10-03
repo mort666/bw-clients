@@ -39,7 +39,6 @@ import { MessagingService } from "@bitwarden/common/platform/abstractions/messag
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { SystemService } from "@bitwarden/common/platform/abstractions/system.service";
-import { BiometricStateService } from "@bitwarden/common/platform/biometrics/biometric-state.service";
 import { clearCaches } from "@bitwarden/common/platform/misc/sequentialize";
 import { StateEventRunnerService } from "@bitwarden/common/platform/state";
 import { SyncService } from "@bitwarden/common/platform/sync";
@@ -51,6 +50,7 @@ import { InternalFolderService } from "@bitwarden/common/vault/abstractions/fold
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { DialogService, ToastOptions, ToastService } from "@bitwarden/components";
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
+import { BiometricStateService } from "@bitwarden/key-management";
 
 import { DeleteAccountComponent } from "../auth/delete-account.component";
 import { LoginApprovalComponent } from "../auth/login/login-approval.component";
@@ -235,7 +235,8 @@ export class AppComponent implements OnInit, OnDestroy {
             this.modalService.closeAll();
             if (
               message.userId == null ||
-              message.userId === (await this.stateService.getUserId())
+              message.userId ===
+                (await firstValueFrom(this.accountService.activeAccount$.pipe(map((a) => a?.id))))
             ) {
               await this.router.navigate(["lock"]);
             }
@@ -274,9 +275,11 @@ export class AppComponent implements OnInit, OnDestroy {
             await this.openModal<PremiumComponent>(PremiumComponent, this.premiumRef);
             break;
           case "showFingerprintPhrase": {
-            const fingerprint = await this.cryptoService.getFingerprint(
-              await this.stateService.getUserId(),
+            const activeUserId = await firstValueFrom(
+              this.accountService.activeAccount$.pipe(map((a) => a?.id)),
             );
+            const publicKey = await firstValueFrom(this.cryptoService.userPublicKey$(activeUserId));
+            const fingerprint = await this.cryptoService.getFingerprint(activeUserId, publicKey);
             const dialogRef = FingerprintDialogComponent.open(this.dialogService, { fingerprint });
             await firstValueFrom(dialogRef.closed);
             break;
