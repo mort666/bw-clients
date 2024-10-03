@@ -73,10 +73,10 @@ export class VaultBannersComponent implements OnInit {
         organization.organizationName,
         organization.remainingDays.toString(),
       );
-    }
-
-    if (organization.remainingDays === 1) {
+    } else if (organization.remainingDays === 1) {
       return this.i18nService.t("freeTrialEndPromptForOneDay", organization.organizationName);
+    } else {
+      return this.i18nService.t("freeTrialEndPromptForLessThanADay");
     }
   }
 

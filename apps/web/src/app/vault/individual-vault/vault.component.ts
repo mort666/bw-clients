@@ -125,15 +125,6 @@ import { VaultOnboardingComponent } from "./vault-onboarding/vault-onboarding.co
 const BroadcasterSubscriptionId = "VaultComponent";
 const SearchTextDebounceInterval = 200;
 
-export type OrganizationPaymentStatus = {
-  isTrialing: boolean;
-  isOwner: boolean;
-  trialRemainingDays: number;
-  isPaymentSourceEmpty: boolean;
-  orgId: string;
-  orgName: string;
-};
-
 @Component({
   standalone: true,
   selector: "app-vault",
@@ -167,7 +158,6 @@ export class VaultComponent implements OnInit, OnDestroy {
   trashCleanupWarning: string = null;
   kdfIterations: number;
   activeFilter: VaultFilter = new VaultFilter();
-  organizationId: string;
 
   protected noItemIcon = Icons.Search;
   protected performingInitialLoad = true;
