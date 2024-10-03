@@ -4,19 +4,19 @@ import { Subject, merge } from "rxjs";
 import { OrganizationUserApiService } from "@bitwarden/admin-console/common";
 import { SafeProvider, safeProvider } from "@bitwarden/angular/platform/utils/safe-provider";
 import {
-  SECURE_STORAGE,
-  LOCALES_DIRECTORY,
-  SYSTEM_LANGUAGE,
-  MEMORY_STORAGE,
-  OBSERVABLE_MEMORY_STORAGE,
-  OBSERVABLE_DISK_STORAGE,
-  WINDOW,
-  SUPPORTS_SECURE_STORAGE,
-  SYSTEM_THEME_OBSERVABLE,
-  SafeInjectionToken,
+  CLIENT_TYPE,
   DEFAULT_VAULT_TIMEOUT,
   INTRAPROCESS_MESSAGING_SUBJECT,
-  CLIENT_TYPE,
+  LOCALES_DIRECTORY,
+  MEMORY_STORAGE,
+  OBSERVABLE_DISK_STORAGE,
+  OBSERVABLE_MEMORY_STORAGE,
+  SECURE_STORAGE,
+  SUPPORTS_SECURE_STORAGE,
+  SYSTEM_LANGUAGE,
+  SYSTEM_THEME_OBSERVABLE,
+  SafeInjectionToken,
+  WINDOW,
 } from "@bitwarden/angular/services/injection-tokens";
 import { JslibServicesModule } from "@bitwarden/angular/services/jslib-services.module";
 import { SetPasswordJitService } from "@bitwarden/auth/angular";
@@ -68,10 +68,10 @@ import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-stat
 import { VaultTimeoutStringType } from "@bitwarden/common/types/vault-timeout.type";
 import { CipherService as CipherServiceAbstraction } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { DialogService } from "@bitwarden/components";
+import { SshKeyNativeGeneratorAbstraction } from "@bitwarden/generator-core";
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
 import { BiometricStateService, BiometricsService } from "@bitwarden/key-management";
 
-import { SshKeyNativeGeneratorAbstraction } from "../../../../../libs/tools/generator/core/src/abstractions/sshkey-native-generator.abstraction";
 import { DesktopAutofillSettingsService } from "../../autofill/services/desktop-autofill-settings.service";
 import { ElectronBiometricsService } from "../../key-management/biometrics/electron-biometrics.service";
 import { DesktopSettingsService } from "../../platform/services/desktop-settings.service";
