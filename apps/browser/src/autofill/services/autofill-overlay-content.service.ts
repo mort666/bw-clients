@@ -217,6 +217,17 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
   }
 
   /**
+   * Clears all cached user filled fields.
+   */
+  clearUserFilledFields() {
+    Object.keys(this.userFilledFields).forEach((key) => {
+      if (this.userFilledFields[key]) {
+        delete this.userFilledFields[key];
+      }
+    });
+  }
+
+  /**
    * Formats any found user filled fields for a login cipher and sends a message
    * to the background script to add a new cipher.
    */
@@ -1662,11 +1673,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
       formFieldElement.removeEventListener(EVENTS.KEYUP, this.handleFormFieldKeyupEvent);
       this.formFieldElements.delete(formFieldElement);
     });
-    Object.keys(this.userFilledFields).forEach((key) => {
-      if (this.userFilledFields[key]) {
-        delete this.userFilledFields[key];
-      }
-    });
+    this.clearUserFilledFields();
     this.userFilledFields = null;
     globalThis.removeEventListener(EVENTS.MESSAGE, this.handleWindowMessageEvent);
     globalThis.document.removeEventListener(

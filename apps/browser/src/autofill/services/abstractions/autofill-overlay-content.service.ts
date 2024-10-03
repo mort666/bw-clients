@@ -45,5 +45,6 @@ export interface AutofillOverlayContentService {
     pageDetails: AutofillPageDetails,
   ): Promise<void>;
   blurMostRecentlyFocusedField(isClosingInlineMenu?: boolean): void;
+  clearUserFilledFields(): void;
   destroy(): void;
 }
