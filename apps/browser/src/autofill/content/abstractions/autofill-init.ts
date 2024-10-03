@@ -24,8 +24,7 @@ export type AutofillExtensionMessage = {
   data?: {
     direction?: "previous" | "next" | "current";
     forceCloseInlineMenu?: boolean;
-    settingType?: CipherType;
-    newSettingValue?: InlineMenuVisibilitySetting | boolean;
+    newSettingValue?: InlineMenuVisibilitySetting;
   };
 };
 

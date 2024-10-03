@@ -1358,34 +1358,15 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
   }
 
   /**
-   * Updates the local reference to the passed inline menu visibility setting.
+   * Updates the local reference to the inline menu visibility setting.
    *
    * @param data - The data object from the extension message.
    */
   private updateInlineMenuVisibility({ data }: AutofillExtensionMessage) {
-    const settingNewValue = data?.newSettingValue;
+    const newSettingValue = data?.newSettingValue;
 
-    if (settingNewValue == null) {
-      return;
-    }
-
-    const settingType = data?.settingType;
-
-    // Setting value update is for overall inline menu visibility
-    if (settingType == null && !isNaN(settingNewValue as InlineMenuVisibilitySetting)) {
-      this.inlineMenuVisibility = settingNewValue as InlineMenuVisibilitySetting;
-
-      return;
-    }
-
-    if (typeof settingType === "boolean") {
-      if (settingType === CipherType.Card) {
-        this.showInlineMenuCards = settingNewValue as boolean;
-      }
-
-      if (settingType === CipherType.Identity) {
-        this.showInlineMenuIdentities = settingNewValue as boolean;
-      }
+    if (!isNaN(newSettingValue)) {
+      this.inlineMenuVisibility = newSettingValue;
     }
   }
 
