@@ -95,21 +95,10 @@ export class SshKeySettingsComponent implements OnInit, OnDestroy {
     const settings = await this.generatorService.settings(Generators.SshKey, { singleUserId$ });
 
     // bind settings to the UI
-    settings
-      .pipe(
-        map((settings) => {
-          // interface is "avoid" while storage is "include"
-          const s: any = { ...settings };
-          s.avoidAmbiguous = s.ambiguous;
-          delete s.ambiguous;
-          return s;
-        }),
-        takeUntil(this.destroyed$),
-      )
-      .subscribe((s) => {
-        // skips reactive event emissions to break a subscription cycle
-        this.settings.patchValue(s, { emitEvent: false });
-      });
+    settings.pipe(takeUntil(this.destroyed$)).subscribe((s) => {
+      // skips reactive event emissions to break a subscription cycle
+      this.settings.patchValue(s, { emitEvent: false });
+    });
 
     // `onUpdated` depends on `settings` because the UserStateSubject is asynchronous;
     // subscribing directly to `this.settings.valueChanges` introduces a race condition.
