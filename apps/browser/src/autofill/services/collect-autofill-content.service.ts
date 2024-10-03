@@ -810,7 +810,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
     let datasetValues = "";
     const dataset = element.dataset;
     for (const key in dataset) {
-      datasetValues += `${dataset[key]}, `;
+      datasetValues += `${key}: ${dataset[key]}, `;
     }
 
     return datasetValues;

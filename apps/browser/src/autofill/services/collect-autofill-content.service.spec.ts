@@ -1116,7 +1116,7 @@ describe("CollectAutofillContentService", () => {
         type: usernameField.type,
         value: usernameField.value,
         viewable: true,
-        dataSetValues: "username-data-label, data-stripe, ",
+        dataSetValues: "label: username-data-label, stripe: data-stripe, ",
       });
     });
 
@@ -1195,7 +1195,7 @@ describe("CollectAutofillContentService", () => {
         type: hiddenField.type,
         value: hiddenField.value,
         viewable: true,
-        dataSetValues: "data-stripe, ",
+        dataSetValues: "stripe: data-stripe, ",
       });
     });
   });
