@@ -262,6 +262,7 @@ export const Generators = Object.freeze({
   /** Passphrase generator configuration */
   passphrase: PASSPHRASE,
 
+  /** Password generator configuration */
   password: PASSWORD,
 
   /** Username generator configuration */
@@ -273,5 +274,6 @@ export const Generators = Object.freeze({
   /** Email subaddress generator configuration */
   subaddress: SUBADDRESS,
 
+  /** Ssh key generator configuration */
   sshKey: SSHKEY,
 });
