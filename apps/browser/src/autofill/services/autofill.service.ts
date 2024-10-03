@@ -3080,10 +3080,12 @@ export default class AutofillService implements AutofillServiceInterface {
       return;
     }
 
+    const isInlineMenuVisibilitySubSetting =
+      typeof oldSettingValue === "boolean" || typeof newSettingValue === "boolean";
     const inlineMenuPreviouslyDisabled = oldSettingValue === AutofillOverlayVisibility.Off;
     const inlineMenuCurrentlyDisabled = newSettingValue === AutofillOverlayVisibility.Off;
     if (
-      typeof newSettingValue !== "boolean" &&
+      !isInlineMenuVisibilitySubSetting &&
       !inlineMenuPreviouslyDisabled &&
       !inlineMenuCurrentlyDisabled
     ) {
