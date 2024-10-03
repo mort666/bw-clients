@@ -1223,7 +1223,7 @@ jobs:
         run: |
           security find-identity -v -p codesigning
           codesign --entitlements resources/entitlements.mas.loginhelper.plist --verbose --force --sign "Developer ID Application: 8bit Solutions LLC (LTZ2PFU5D6)" "dist/mas-dev-universal/Bitwarden.app/Contents/Library/LoginItems/Bitwarden Login Helper.app"
-          codesign --entitlements resources/entitlements.mas.loginhelper.plist --verbose --force --sign "Developer ID Application: 8bit Solutions LLC (LTZ2PFU5D6)" "dist/mas-dev-universal/Bitwarden.app/Contents/Library/LoginItems/Bitwarden Helper (GPU).app"
+          # codesign --entitlements resources/entitlements.mas.loginhelper.plist --verbose --force --sign "Developer ID Application: 8bit Solutions LLC (LTZ2PFU5D6)" "dist/mas-dev-universal/Bitwarden.app/Contents/Library/LoginItems/Bitwarden Helper (GPU).app"
           codesign --entitlements resources/entitlements.mas.plist --verbose --force --sign "Developer ID Application: 8bit Solutions LLC (LTZ2PFU5D6)" dist/mas-dev-universal/Bitwarden.app
 
       - name: Zip masdev asset
