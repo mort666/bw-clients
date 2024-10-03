@@ -28,7 +28,7 @@ export type InitAutofillInlineMenuListMessage = AutofillInlineMenuListMessage & 
   showPasskeysLabels?: boolean;
   portKey: string;
   generatedPassword?: string;
-  focusedFieldHasValue?: boolean;
+  showSaveLoginMenu?: boolean;
 };
 
 export type AutofillInlineMenuListWindowMessageHandlers = {

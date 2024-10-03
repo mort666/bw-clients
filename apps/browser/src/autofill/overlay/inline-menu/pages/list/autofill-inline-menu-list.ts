@@ -87,7 +87,7 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
       showInlineMenuAccountCreation,
       showPasskeysLabels,
       generatedPassword,
-      focusedFieldHasValue,
+      showSaveLoginMenu,
     } = message;
     const linkElement = await this.initAutofillInlineMenuPage(
       "list",
@@ -114,7 +114,7 @@ export class AutofillInlineMenuList extends AutofillInlineMenuPageElement {
       return;
     }
 
-    if (focusedFieldHasValue && (showInlineMenuAccountCreation || generatedPassword)) {
+    if (showSaveLoginMenu) {
       this.buildSaveLoginInlineMenuList();
       return;
     }

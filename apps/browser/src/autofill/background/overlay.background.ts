@@ -59,6 +59,7 @@ import {
   MAX_SUB_FRAME_DEPTH,
 } from "../enums/autofill-overlay.enum";
 import AutofillField from "../models/autofill-field";
+import { InlineMenuFormFieldData } from "../services/abstractions/autofill-overlay-content.service";
 import { AutofillService, PageDetail } from "../services/abstractions/autofill.service";
 import { InlineMenuFieldQualificationService } from "../services/abstractions/inline-menu-field-qualifications.service";
 import {
@@ -1486,7 +1487,9 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     this.isFieldCurrentlyFocused = true;
 
     if (this.shouldUpdatePasswordGeneratorMenuOnFieldFocus()) {
-      this.updateInlineMenuGeneratedPasswordOnFocus(focusedFieldHasValue);
+      this.updateInlineMenuGeneratedPasswordOnFocus(focusedFieldHasValue, sender.tab).catch(
+        (error) => this.logService.error(error),
+      );
       return;
     }
 
@@ -1530,14 +1533,18 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * In the case that the field has a value, will show the save login view.
    *
    * @param focusedFieldHasValue - Identifies whether the focused field has a value
+   * @param tab - The tab that the field is focused within
    */
-  private updateInlineMenuGeneratedPasswordOnFocus(focusedFieldHasValue: boolean) {
-    if (focusedFieldHasValue) {
+  private async updateInlineMenuGeneratedPasswordOnFocus(
+    focusedFieldHasValue: boolean,
+    tab: chrome.tabs.Tab,
+  ) {
+    if (focusedFieldHasValue && (await this.shouldShowSaveLoginInlineMenuList(tab))) {
       this.showSaveLoginInlineMenuList();
       return;
     }
 
-    this.updateGeneratedPassword().catch((error) => this.logService.error(error));
+    await this.updateGeneratedPassword();
   }
 
   /**
@@ -1552,7 +1559,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     focusedFieldHasValue: boolean,
     sender: chrome.runtime.MessageSender,
   ) {
-    if (focusedFieldHasValue) {
+    if (focusedFieldHasValue && (await this.shouldShowSaveLoginInlineMenuList(sender.tab))) {
       this.showSaveLoginInlineMenuList();
       return;
     }
@@ -1669,7 +1676,27 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       allowTotpAutofill: false,
     });
 
-    globalThis.setTimeout(() => this.openInlineMenu(port.sender, true), 400);
+    globalThis.setTimeout(async () => {
+      if (await this.shouldShowSaveLoginInlineMenuList(port.sender.tab)) {
+        await this.openInlineMenu(port.sender, true);
+      }
+    }, 300);
+  }
+
+  private async shouldShowSaveLoginInlineMenuList(tab: chrome.tabs.Tab) {
+    const loginData = await this.getInlineMenuFormFieldData(tab);
+    if (!loginData) {
+      return false;
+    }
+
+    return !!(loginData.username && (loginData.password || loginData.newPassword));
+  }
+
+  private async getInlineMenuFormFieldData(tab: chrome.tabs.Tab): Promise<InlineMenuFormFieldData> {
+    return await BrowserApi.tabSendMessage(tab, {
+      command: "getInlineMenuFormFieldData",
+      ignoreFieldFocus: true,
+    });
   }
 
   /**
@@ -2685,6 +2712,9 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       isInlineMenuListPort,
       showInlineMenuAccountCreation,
     );
+    const showSaveLoginMenu =
+      (await this.checkFocusedFieldHasValue(port.sender.tab)) &&
+      (await this.shouldShowSaveLoginInlineMenuList(port.sender.tab));
 
     this.storeOverlayPort(port);
     port.onDisconnect.addListener(this.handlePortOnDisconnect);
@@ -2710,7 +2740,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       inlineMenuFillType: this.focusedFieldData?.inlineMenuFillType,
       showPasskeysLabels: this.showPasskeysLabelsWithinInlineMenu,
       generatedPassword: showInlineMenuPasswordGenerator ? this.generatedPassword : null,
-      focusedFieldHasValue: await this.checkFocusedFieldHasValue(port.sender.tab),
+      showSaveLoginMenu,
       showInlineMenuAccountCreation,
       authStatus,
     });

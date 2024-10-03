@@ -47,6 +47,7 @@ import {
   MAX_SUB_FRAME_DEPTH,
   RedirectFocusDirection,
 } from "../enums/autofill-overlay.enum";
+import { InlineMenuFormFieldData } from "../services/abstractions/autofill-overlay-content.service";
 import { AutofillService } from "../services/abstractions/autofill.service";
 import { InlineMenuFieldQualificationService } from "../services/inline-menu-field-qualification.service";
 import {
@@ -2047,6 +2048,7 @@ describe("OverlayBackground", () => {
         const tab = createChromeTabMock({ id: 2 });
         const sender = mock<chrome.runtime.MessageSender>({ tab, frameId: 100 });
         let focusedFieldData: FocusedFieldData;
+        let formData: InlineMenuFormFieldData;
 
         beforeEach(async () => {
           await initOverlayElementPorts();
@@ -2056,6 +2058,19 @@ describe("OverlayBackground", () => {
           focusedFieldData = createFocusedFieldDataMock({
             tabId: tab.id,
             frameId: sender.frameId,
+          });
+          formData = {
+            uri: "https://example.com",
+            username: "username",
+            password: "password",
+            newPassword: "newPassword",
+          };
+          tabsSendMessageSpy.mockImplementation((_tab, message) => {
+            if (message.command === "getInlineMenuFormFieldData") {
+              return Promise.resolve(formData);
+            }
+
+            return Promise.resolve();
           });
         });
 
@@ -3492,6 +3507,19 @@ describe("OverlayBackground", () => {
 
       it("opens the inline menu for fields that fill a generated password", async () => {
         jest.useFakeTimers();
+        const formData = {
+          uri: "https://example.com",
+          username: "username",
+          password: "password",
+          newPassword: "newPassword",
+        };
+        tabsSendMessageSpy.mockImplementation((_tab, message) => {
+          if (message.command === "getInlineMenuFormFieldData") {
+            return Promise.resolve(formData);
+          }
+
+          return Promise.resolve();
+        });
         const openInlineMenuSpy = jest.spyOn(overlayBackground as any, "openInlineMenu");
 
         sendPortMessage(listMessageConnectorSpy, { command: "fillGeneratedPassword", portKey });

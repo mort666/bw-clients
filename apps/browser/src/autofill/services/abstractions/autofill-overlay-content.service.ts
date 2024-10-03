@@ -8,7 +8,7 @@ export type SubFrameDataFromWindowMessage = SubFrameOffsetData & {
   subFrameDepth: number;
 };
 
-export type NotificationFormFieldData = {
+export type InlineMenuFormFieldData = {
   uri: string;
   username: string;
   password: string;
@@ -32,7 +32,7 @@ export type AutofillOverlayContentExtensionMessageHandlers = {
   destroyAutofillInlineMenuListeners: () => void;
   getInlineMenuFormFieldData: ({
     message,
-  }: AutofillExtensionMessageParam) => Promise<NotificationFormFieldData>;
+  }: AutofillExtensionMessageParam) => Promise<InlineMenuFormFieldData>;
 };
 
 export interface AutofillOverlayContentService {

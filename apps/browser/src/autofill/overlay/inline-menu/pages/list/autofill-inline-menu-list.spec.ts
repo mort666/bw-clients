@@ -877,7 +877,7 @@ describe("AutofillInlineMenuList", () => {
     it("creates the build save login item view", async () => {
       postWindowMessage(
         createInitAutofillInlineMenuListMessageMock({
-          focusedFieldHasValue: true,
+          showSaveLoginMenu: true,
           generatedPassword,
         }),
       );

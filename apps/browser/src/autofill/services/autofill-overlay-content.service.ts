@@ -43,7 +43,7 @@ import {
 import {
   AutofillOverlayContentExtensionMessageHandlers,
   AutofillOverlayContentService as AutofillOverlayContentServiceInterface,
-  NotificationFormFieldData,
+  InlineMenuFormFieldData,
   SubFrameDataFromWindowMessage,
 } from "./abstractions/autofill-overlay-content.service";
 import { DomQueryService } from "./abstractions/dom-query.service";
@@ -596,7 +596,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
   /**
    * Returns the form field data used for add login and change password notifications.
    */
-  private getFormFieldData = (): NotificationFormFieldData => {
+  private getFormFieldData = (): InlineMenuFormFieldData => {
     return {
       uri: globalThis.document.URL,
       username: this.userFilledFields["username"]?.value || "",
@@ -748,6 +748,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     if (!autofillFieldData.fieldQualifier) {
       switch (autofillFieldData.inlineMenuFillType) {
         case CipherType.Login:
+        case InlineMenuFillType.CurrentPasswordUpdate:
           this.qualifyUserFilledField(autofillFieldData, this.loginFieldQualifiers);
           break;
         case InlineMenuFillType.AccountCreationUsername:
