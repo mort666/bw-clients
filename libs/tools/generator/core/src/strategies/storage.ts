@@ -65,6 +65,6 @@ export const SSHKEY_SETTINGS = new UserKeyDefinition<SshKeyGenerationOptions>(
   "sshkeyGeneratorSettings",
   {
     deserializer: (value) => value,
-    clearOn: [],
+    clearOn: ["logout"],
   },
 );
