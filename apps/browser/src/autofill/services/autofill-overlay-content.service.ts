@@ -933,7 +933,6 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
 
     await this.sendExtensionMessage("updateFocusedFieldData", {
       focusedFieldData: this.focusedFieldData,
-      focusedFieldHasValue: this.mostRecentlyFocusedFieldHasValue(),
     });
   }
 

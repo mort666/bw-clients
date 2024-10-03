@@ -1467,11 +1467,10 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * Sets the focused field data to the data passed in the extension message.
    *
    * @param focusedFieldData - Contains the rects and styles of the focused field.
-   * @param focusedFieldHasValue - Identifies whether the focused field has a value
    * @param sender - The sender of the extension message
    */
   private setFocusedFieldData(
-    { focusedFieldData, focusedFieldHasValue }: OverlayBackgroundExtensionMessage,
+    { focusedFieldData }: OverlayBackgroundExtensionMessage,
     sender: chrome.runtime.MessageSender,
   ) {
     if (this.focusedFieldData && !this.senderFrameHasFocusedField(sender)) {
@@ -1487,18 +1486,16 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     this.isFieldCurrentlyFocused = true;
 
     if (this.shouldUpdatePasswordGeneratorMenuOnFieldFocus()) {
-      this.updateInlineMenuGeneratedPasswordOnFocus(focusedFieldHasValue, sender.tab).catch(
-        (error) => this.logService.error(error),
+      this.updateInlineMenuGeneratedPasswordOnFocus(sender.tab).catch((error) =>
+        this.logService.error(error),
       );
       return;
     }
 
     if (this.shouldUpdateAccountCreationMenuOnFieldFocus(previousFocusedFieldData)) {
-      this.updateInlineMenuAccountCreationDataOnFocus(
-        previousFocusedFieldData,
-        focusedFieldHasValue,
-        sender,
-      ).catch((error) => this.logService.error(error));
+      this.updateInlineMenuAccountCreationDataOnFocus(previousFocusedFieldData, sender).catch(
+        (error) => this.logService.error(error),
+      );
       return;
     }
 
@@ -1532,14 +1529,10 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * Handles updating the inline menu password generator on focus of a field.
    * In the case that the field has a value, will show the save login view.
    *
-   * @param focusedFieldHasValue - Identifies whether the focused field has a value
    * @param tab - The tab that the field is focused within
    */
-  private async updateInlineMenuGeneratedPasswordOnFocus(
-    focusedFieldHasValue: boolean,
-    tab: chrome.tabs.Tab,
-  ) {
-    if (focusedFieldHasValue && (await this.shouldShowSaveLoginInlineMenuList(tab))) {
+  private async updateInlineMenuGeneratedPasswordOnFocus(tab: chrome.tabs.Tab) {
+    if (await this.shouldShowSaveLoginInlineMenuList(tab)) {
       this.showSaveLoginInlineMenuList();
       return;
     }
@@ -1551,15 +1544,13 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * Triggers an update of populated identity ciphers when a login field is focused.
    *
    * @param previousFocusedFieldData - The data set of the previously focused field
-   * @param focusedFieldHasValue - Identifies whether the focused field has a value
    * @param sender - The sender of the extension message
    */
   private async updateInlineMenuAccountCreationDataOnFocus(
     previousFocusedFieldData: FocusedFieldData,
-    focusedFieldHasValue: boolean,
     sender: chrome.runtime.MessageSender,
   ) {
-    if (focusedFieldHasValue && (await this.shouldShowSaveLoginInlineMenuList(sender.tab))) {
+    if (await this.shouldShowSaveLoginInlineMenuList(sender.tab)) {
       this.showSaveLoginInlineMenuList();
       return;
     }

@@ -132,7 +132,6 @@ export type OverlayBackgroundExtensionMessage = {
   isFieldCurrentlyFilling?: boolean;
   subFrameData?: SubFrameOffsetData;
   focusedFieldData?: FocusedFieldData;
-  focusedFieldHasValue?: boolean;
   isOpeningFullInlineMenu?: boolean;
   styles?: Partial<CSSStyleDeclaration>;
   data?: LockedVaultPendingNotificationsData;
