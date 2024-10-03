@@ -2,7 +2,7 @@ import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { IdentityConstraint } from "@bitwarden/common/tools/state/identity-state-constraint";
 
-import { SshKeyNativeGeneratorAbstraction } from "../abstractions/sshkey-native-generator.abstraction";
+import { SshKeyNativeGenerator } from "../abstractions/sshkey-native-generator.abstraction";
 import { EmailRandomizer, PasswordRandomizer, UsernameRandomizer } from "../engine";
 import { Randomizer } from "../engine/abstractions";
 import { SshKeyGenerator } from "../engine/sshkey-generator";
@@ -55,7 +55,7 @@ const PASSPHRASE = Object.freeze({
   engine: {
     create(
       randomizer: Randomizer,
-      _sshGenerator: SshKeyNativeGeneratorAbstraction,
+      _sshGenerator: SshKeyNativeGenerator,
     ): CredentialGenerator<PassphraseGenerationOptions> {
       return new PasswordRandomizer(randomizer);
     },
@@ -95,7 +95,7 @@ const PASSWORD = Object.freeze({
   engine: {
     create(
       randomizer: Randomizer,
-      _sshGenerator: SshKeyNativeGeneratorAbstraction,
+      _sshGenerator: SshKeyNativeGenerator,
     ): CredentialGenerator<PasswordGenerationOptions> {
       return new PasswordRandomizer(randomizer);
     },
@@ -170,7 +170,7 @@ const SSHKEY = Object.freeze({
   engine: {
     create(
       _randomizer: Randomizer,
-      sshGenerator: SshKeyNativeGeneratorAbstraction,
+      sshGenerator: SshKeyNativeGenerator,
     ): CredentialGenerator<SshKeyGenerationOptions> {
       return new SshKeyGenerator(sshGenerator);
     },

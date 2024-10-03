@@ -32,7 +32,7 @@ import { isDynamic } from "@bitwarden/common/tools/state/state-constraints-depen
 import { UserStateSubject } from "@bitwarden/common/tools/state/user-state-subject";
 
 import { Randomizer } from "../abstractions";
-import { SshKeyNativeGeneratorAbstraction } from "../abstractions/sshkey-native-generator.abstraction";
+import { SshKeyNativeGenerator } from "../abstractions/sshkey-native-generator.abstraction";
 import { Generators } from "../data";
 import { availableAlgorithms } from "../policies/available-algorithms-policy";
 import { mapPolicyToConstraints } from "../rx";
@@ -69,7 +69,7 @@ export class CredentialGeneratorService {
     private randomizer: Randomizer,
     private stateProvider: StateProvider,
     private policyService: PolicyService,
-    private sshNativeGenerator: SshKeyNativeGeneratorAbstraction,
+    private sshNativeGenerator: SshKeyNativeGenerator,
   ) {}
 
   // FIXME: the rxjs methods of this service can be a lot more resilient if

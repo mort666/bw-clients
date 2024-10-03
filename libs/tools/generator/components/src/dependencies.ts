@@ -28,7 +28,7 @@ import {
   Randomizer,
 } from "@bitwarden/generator-core";
 
-import { SshKeyNativeGeneratorAbstraction } from "../../core/src/abstractions/sshkey-native-generator.abstraction";
+import { SshKeyNativeGenerator } from "../../core/src/abstractions/sshkey-native-generator.abstraction";
 
 const RANDOMIZER = new SafeInjectionToken<Randomizer>("Randomizer");
 
@@ -61,7 +61,7 @@ const RANDOMIZER = new SafeInjectionToken<Randomizer>("Randomizer");
     safeProvider({
       provide: CredentialGeneratorService,
       useClass: CredentialGeneratorService,
-      deps: [RANDOMIZER, StateProvider, PolicyService, SshKeyNativeGeneratorAbstraction],
+      deps: [RANDOMIZER, StateProvider, PolicyService, SshKeyNativeGenerator],
     }),
   ],
   declarations: [],

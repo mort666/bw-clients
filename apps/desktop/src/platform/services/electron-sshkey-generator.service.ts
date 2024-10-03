@@ -1,9 +1,9 @@
 import { SshKeyApi } from "@bitwarden/common/vault/models/api/ssh-key.api";
 import { SshKeyData } from "@bitwarden/common/vault/models/data/ssh-key.data";
 
-import { SshKeyNativeGeneratorAbstraction } from "../../../../../libs/tools/generator/core/src/abstractions/sshkey-native-generator.abstraction";
+import { SshKeyNativeGenerator } from "../../../../../libs/tools/generator/core/src/abstractions/sshkey-native-generator.abstraction";
 
-export class ElectronSshKeyGeneratorService implements SshKeyNativeGeneratorAbstraction {
+export class ElectronSshKeyGeneratorService implements SshKeyNativeGenerator {
   /**
    * Generate a new SSH key pair. This is done via IPC to the main process. The ssh key generation happens in the desktop_native module because it is implemented in Rust.
    * This can be later replaced by an SDK-wasm implementation.
