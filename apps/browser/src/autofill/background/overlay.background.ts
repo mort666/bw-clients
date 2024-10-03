@@ -150,6 +150,8 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     getAutofillInlineMenuVisibility: () => this.getInlineMenuVisibility(),
     openAutofillInlineMenu: ({ message, sender }) =>
       this.openInlineMenu(sender, message.isOpeningFullInlineMenu),
+    getInlineMenuCardsVisibility: () => this.getInlineMenuCardsVisibility(),
+    getInlineMenuIdentitiesVisibility: () => this.getInlineMenuIdentitiesVisibility(),
     closeAutofillInlineMenu: ({ message, sender }) => this.closeInlineMenu(sender, message),
     checkAutofillInlineMenuFocused: ({ sender }) => this.checkInlineMenuFocused(sender),
     focusAutofillInlineMenuList: () => this.focusInlineMenuList(),
@@ -1790,6 +1792,20 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    */
   private async getInlineMenuVisibility(): Promise<InlineMenuVisibilitySetting> {
     return await firstValueFrom(this.autofillSettingsService.inlineMenuVisibility$);
+  }
+
+  /**
+   * Gets the inline menu's visibility setting for Cards from the settings service.
+   */
+  private async getInlineMenuCardsVisibility(): Promise<boolean> {
+    return await firstValueFrom(this.autofillSettingsService.showInlineMenuCards$);
+  }
+
+  /**
+   * Gets the inline menu's visibility setting for Identities from the settings service.
+   */
+  private async getInlineMenuIdentitiesVisibility(): Promise<boolean> {
+    return await firstValueFrom(this.autofillSettingsService.showInlineMenuIdentities$);
   }
 
   /**

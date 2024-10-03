@@ -52,6 +52,8 @@ import { AutoFillConstants } from "./autofill-constants";
 
 export class AutofillOverlayContentService implements AutofillOverlayContentServiceInterface {
   pageDetailsUpdateRequired = false;
+  private showInlineMenuIdentities: boolean;
+  private showInlineMenuCards: boolean;
   private readonly findTabs = tabbable;
   private readonly sendExtensionMessage = sendExtensionMessage;
   private formFieldElements: Map<ElementWithOpId<FormFieldElement>, AutofillField> = new Map();
@@ -184,6 +186,14 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     autofillFieldData: AutofillField,
     pageDetails: AutofillPageDetails,
   ) {
+    if (this.showInlineMenuCards == null) {
+      await this.getInlineMenuCardsVisibility();
+    }
+
+    if (this.showInlineMenuIdentities == null) {
+      await this.getInlineMenuIdentitiesVisibility();
+    }
+
     if (
       currentlyInSandboxedIframe() ||
       this.formFieldElements.has(formFieldElement) ||
@@ -996,6 +1006,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     }
 
     if (
+      this.showInlineMenuCards &&
       this.inlineMenuFieldQualificationService.isFieldForCreditCardForm(
         autofillFieldData,
         pageDetails,
@@ -1006,6 +1017,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     }
 
     if (
+      this.showInlineMenuIdentities &&
       this.inlineMenuFieldQualificationService.isFieldForAccountCreationForm(
         autofillFieldData,
         pageDetails,
@@ -1016,6 +1028,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     }
 
     if (
+      this.showInlineMenuIdentities &&
       this.inlineMenuFieldQualificationService.isFieldForIdentityForm(
         autofillFieldData,
         pageDetails,
@@ -1036,6 +1049,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
   private async setQualifiedLoginFillType(autofillFieldData: AutofillField) {
     autofillFieldData.inlineMenuFillType = CipherType.Login;
     autofillFieldData.showPasskeys = autofillFieldData.autoCompleteType.includes("webauthn");
+
     this.qualifyAccountCreationFieldType(autofillFieldData);
   }
 
@@ -1070,6 +1084,10 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
   private qualifyAccountCreationFieldType(autofillFieldData: AutofillField) {
     if (!this.inlineMenuFieldQualificationService.isUsernameField(autofillFieldData)) {
       autofillFieldData.accountCreationFieldType = InlineMenuAccountCreationFieldType.Password;
+      return;
+    }
+
+    if (!this.showInlineMenuIdentities) {
       return;
     }
 
@@ -1167,6 +1185,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
       autofillFieldData.readonly = getAttributeBoolean(formFieldElement, "disabled");
       autofillFieldData.disabled = getAttributeBoolean(formFieldElement, "disabled");
       autofillFieldData.viewable = true;
+
       void this.setupOverlayListenersOnQualifiedField(formFieldElement, autofillFieldData);
     }
 
@@ -1198,6 +1217,30 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     ) {
       await this.triggerFormFieldFocusedAction(formFieldElement);
     }
+  }
+
+  /**
+   * Queries the background script for the autofill inline menu's Cards visibility setting.
+   * If the setting is not found, a default value of true will be used
+   * @private
+   */
+  private async getInlineMenuCardsVisibility() {
+    const inlineMenuCardsVisibility = await this.sendExtensionMessage(
+      "getInlineMenuCardsVisibility",
+    );
+    this.showInlineMenuCards = inlineMenuCardsVisibility ?? true;
+  }
+
+  /**
+   * Queries the background script for the autofill inline menu's Identities visibility setting.
+   * If the setting is not found, a default value of true will be used
+   * @private
+   */
+  private async getInlineMenuIdentitiesVisibility() {
+    const inlineMenuIdentitiesVisibility = await this.sendExtensionMessage(
+      "getInlineMenuIdentitiesVisibility",
+    );
+    this.showInlineMenuIdentities = inlineMenuIdentitiesVisibility ?? true;
   }
 
   /**
