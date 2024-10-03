@@ -87,7 +87,8 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     checkMostRecentlyFocusedFieldHasValue: () => this.mostRecentlyFocusedFieldHasValue(),
     setupRebuildSubFrameOffsetsListeners: () => this.setupRebuildSubFrameOffsetsListeners(),
     destroyAutofillInlineMenuListeners: () => this.destroy(),
-    getFormFieldDataForNotification: () => this.handleGetFormFieldDataForNotificationMessage(),
+    getInlineMenuFormFieldData: ({ message }) =>
+      this.handleGetInlineMenuFormFieldDataMessage(message),
   };
   private readonly loginFieldQualifiers: Record<string, CallableFunction> = {
     [AutofillFieldQualifier.username]: this.inlineMenuFieldQualificationService.isUsernameField,
@@ -575,26 +576,27 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
    * Handles the repositioning of the autofill overlay when the form is submitted.
    */
   private handleFormFieldSubmitEvent = () => {
-    void this.sendExtensionMessage("formFieldSubmitted", this.getFormFieldDataForNotification());
+    void this.sendExtensionMessage("formFieldSubmitted", this.getFormFieldData());
   };
 
   /**
-   * Handles capturing the form field data for a notification message. Is triggered from the
-   * background script when a POST request is encountered. Will not trigger this behavior
-   * in the case where the user is still typing in the field.
+   * Handles capturing the form field data for a notification message. Will not trigger this behavior
+   * in the case where the user is still typing in the field unless the focus is ignored.
    */
-  private handleGetFormFieldDataForNotificationMessage = async () => {
-    if (await this.isFieldCurrentlyFocused()) {
+  private handleGetInlineMenuFormFieldDataMessage = async ({
+    ignoreFieldFocus,
+  }: AutofillExtensionMessage) => {
+    if (!ignoreFieldFocus && (await this.isFieldCurrentlyFocused())) {
       return;
     }
 
-    return this.getFormFieldDataForNotification();
+    return this.getFormFieldData();
   };
 
   /**
    * Returns the form field data used for add login and change password notifications.
    */
-  private getFormFieldDataForNotification = (): NotificationFormFieldData => {
+  private getFormFieldData = (): NotificationFormFieldData => {
     return {
       uri: globalThis.document.URL,
       username: this.userFilledFields["username"]?.value || "",

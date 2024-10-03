@@ -21,6 +21,7 @@ export type AutofillExtensionMessage = {
   authStatus?: AuthenticationStatus;
   isOpeningFullInlineMenu?: boolean;
   addNewCipherType?: CipherType;
+  ignoreFieldFocus?: boolean;
   data?: {
     direction?: "previous" | "next" | "current";
     forceCloseInlineMenu?: boolean;
