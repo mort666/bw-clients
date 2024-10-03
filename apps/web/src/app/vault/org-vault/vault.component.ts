@@ -27,11 +27,13 @@ import {
   switchMap,
   takeUntil,
   tap,
+  withLatestFrom,
 } from "rxjs/operators";
 
 import {
-  OrganizationUserApiService,
-  OrganizationUserUserDetailsResponse,
+  CollectionAdminService,
+  CollectionAdminView,
+  Unassigned,
 } from "@bitwarden/admin-console/common";
 import { SearchPipe } from "@bitwarden/angular/pipes/search.pipe";
 import { ModalService } from "@bitwarden/angular/services/modal.service";
@@ -75,8 +77,6 @@ import {
 } from "../components/collection-dialog";
 import { VaultItemEvent } from "../components/vault-items/vault-item-event";
 import { VaultItemsModule } from "../components/vault-items/vault-items.module";
-import { CollectionAdminService } from "../core/collection-admin.service";
-import { CollectionAdminView } from "../core/views/collection-admin.view";
 import {
   BulkDeleteDialogResult,
   openBulkDeleteDialog,
@@ -88,7 +88,6 @@ import { createFilterFunction } from "../individual-vault/vault-filter/shared/mo
 import {
   All,
   RoutedVaultFilterModel,
-  Unassigned,
 } from "../individual-vault/vault-filter/shared/models/routed-vault-filter.model";
 import {
   openViewCipherDialog,
@@ -167,8 +166,6 @@ export class VaultComponent implements OnInit, OnDestroy {
   protected editableCollections$: Observable<CollectionAdminView[]>;
   protected allCollectionsWithoutUnassigned$: Observable<CollectionAdminView[]>;
 
-  protected orgRevokedUsers: OrganizationUserUserDetailsResponse[];
-
   protected get hideVaultFilters(): boolean {
     return this.organization?.isProviderUser && !this.organization?.isMember;
   }
@@ -205,7 +202,6 @@ export class VaultComponent implements OnInit, OnDestroy {
     private totpService: TotpService,
     private apiService: ApiService,
     private collectionService: CollectionService,
-    private organizationUserApiService: OrganizationUserApiService,
     private toastService: ToastService,
     private accountService: AccountService,
   ) {}
@@ -357,13 +353,6 @@ export class VaultComponent implements OnInit, OnDestroy {
       shareReplay({ refCount: true, bufferSize: 1 }),
     );
 
-    // This will be passed into the usersCanManage call
-    this.orgRevokedUsers = (
-      await this.organizationUserApiService.getAllUsers(await firstValueFrom(organizationId$))
-    ).data.filter((user: OrganizationUserUserDetailsResponse) => {
-      return user.status === -1;
-    });
-
     const collections$ = combineLatest([
       nestedCollections$,
       filter$,
@@ -476,15 +465,13 @@ export class VaultComponent implements OnInit, OnDestroy {
 
     firstSetup$
       .pipe(
-        switchMap(() =>
-          combineLatest([this.route.queryParams, allCipherMap$, allCollections$, organization$]),
-        ),
+        switchMap(() => this.route.queryParams),
+        withLatestFrom(allCipherMap$, allCollections$, organization$),
         switchMap(async ([qParams, allCiphersMap, allCollections]) => {
           const cipherId = getCipherIdFromParams(qParams);
           if (!cipherId) {
             return;
           }
-
           const cipher = allCiphersMap[cipherId];
           const cipherCollections = allCollections.filter((c) =>
             cipher.collectionIds.includes(c.id),
@@ -610,9 +597,6 @@ export class VaultComponent implements OnInit, OnDestroy {
       switch (event.type) {
         case "viewAttachments":
           await this.editCipherAttachments(event.item);
-          break;
-        case "viewCipherCollections":
-          await this.editCipherCollections(event.item);
           break;
         case "clone":
           await this.cloneCipher(event.item);
