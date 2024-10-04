@@ -1,5 +1,6 @@
 import { CommonModule } from "@angular/common";
 import { APP_INITIALIZER, NgModule, Optional, SkipSelf } from "@angular/core";
+import { Router } from "@angular/router";
 
 import { OrganizationUserApiService } from "@bitwarden/admin-console/common";
 import { SafeProvider, safeProvider } from "@bitwarden/angular/platform/utils/safe-provider";
@@ -15,6 +16,7 @@ import {
   SafeInjectionToken,
   DEFAULT_VAULT_TIMEOUT,
   CLIENT_TYPE,
+  ENV_ADDITIONAL_REGIONS,
 } from "@bitwarden/angular/services/injection-tokens";
 import { JslibServicesModule } from "@bitwarden/angular/services/jslib-services.module";
 import { ModalService as ModalServiceAbstraction } from "@bitwarden/angular/services/modal.service";
@@ -35,7 +37,10 @@ import { ClientType } from "@bitwarden/common/enums";
 import { AppIdService } from "@bitwarden/common/platform/abstractions/app-id.service";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { CryptoService as CryptoServiceAbstraction } from "@bitwarden/common/platform/abstractions/crypto.service";
-import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
+import {
+  EnvironmentService,
+  Urls,
+} from "@bitwarden/common/platform/abstractions/environment.service";
 import { FileDownloadService } from "@bitwarden/common/platform/abstractions/file-download/file-download.service";
 import { I18nService as I18nServiceAbstraction } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
@@ -73,6 +78,7 @@ import { CollectionAdminService } from "../vault/core/collection-admin.service";
 
 import { EventService } from "./event.service";
 import { InitService } from "./init.service";
+import { ENV_URLS } from "./injection-tokens";
 import { ModalService } from "./modal.service";
 import { RouterService } from "./router.service";
 import { WebFileDownloadService } from "./web-file-download.service";
@@ -164,9 +170,13 @@ const safeProviders: SafeProvider[] = [
     deps: [AbstractStorageService, LogService, MigrationBuilderService, WindowStorageService],
   }),
   safeProvider({
+    provide: ENV_URLS,
+    useValue: process.env.URLS as Urls,
+  }),
+  safeProvider({
     provide: EnvironmentService,
     useClass: WebEnvironmentService,
-    deps: [WINDOW, StateProvider, AccountService],
+    deps: [WINDOW, StateProvider, AccountService, ENV_ADDITIONAL_REGIONS, Router, ENV_URLS],
   }),
   safeProvider({
     provide: BiometricsService,
