@@ -641,6 +641,12 @@ export class VaultComponent implements OnInit, OnDestroy {
     const result = await lastValueFrom(this.vaultItemDialogRef.closed);
     this.vaultItemDialogRef = undefined;
 
+    // When the dialog is closed for a premium upgrade, return early as the user
+    // should be navigated to the subscription settings elsewhere
+    if (result === VaultItemDialogResult.PremiumUpgrade) {
+      return;
+    }
+
     // If the dialog was closed by deleting the cipher, refresh the vault.
     if (result === VaultItemDialogResult.Deleted || result === VaultItemDialogResult.Saved) {
       this.refresh();
@@ -651,12 +657,14 @@ export class VaultComponent implements OnInit, OnDestroy {
   }
 
   async addCipher(cipherType?: CipherType) {
+    const type = cipherType ?? this.activeFilter.cipherType;
+
     if (this.extensionRefreshEnabled) {
-      return this.addCipherV2(cipherType);
+      return this.addCipherV2(type);
     }
 
     const component = (await this.editCipher(null)) as AddEditComponent;
-    component.type = cipherType || this.activeFilter.cipherType;
+    component.type = type;
     if (
       this.activeFilter.organizationId !== "MyVault" &&
       this.activeFilter.organizationId != null
