@@ -450,6 +450,13 @@ body * {
   justify-content: flex-start;
   padding: 0.8rem 0.4rem 1.1rem 0.65rem;
   border-radius: 0.4rem;
+  transition: background-color 0.2s ease-in-out;
+
+  &:hover {
+    @include themify($themes) {
+      background: themed("backgroundOffsetColor");
+    }
+  }
 
   &:has(:focus-visible):not(.remove-outline) {
     outline-width: 0.2rem;
