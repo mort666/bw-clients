@@ -152,6 +152,12 @@ If a checkbox group has more than 4 options a
   helper text.
   - **Example:** "Billing Email is required if owned by a business".
 
+### Icon Buttons in Form Fields
+
+When adding prefix or suffix icon buttons to a form field, be sure to use the `appA11yTitle`
+directive to provide a label for screenreaders. Typically, the label should follow this pattern:
+`{Action} {field label}`, i.e. "Copy username".
+
 ### Form Field Errors
 
 - When a resting field is filled out, validation is triggered when the user de-focuses the field

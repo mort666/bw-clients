@@ -10,6 +10,7 @@ import {
 } from "@angular/forms";
 import { Meta, StoryObj, moduleMetadata } from "@storybook/angular";
 
+import { A11yTitleDirective } from "@bitwarden/angular/src/directives/a11y-title.directive";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 
 import { AsyncActionsModule } from "../async-actions";
@@ -50,6 +51,7 @@ export default {
         TextFieldModule,
         BadgeModule,
       ],
+      declarations: [A11yTitleDirective],
       providers: [
         {
           provide: I18nService,
@@ -237,7 +239,7 @@ export const Readonly: Story = {
         <bit-label>Input</bit-label>
         <input bitInput type="password" value="Foobar" [readonly]="true" />
         <button type="button" bitIconButton bitSuffix bitPasswordInputToggle></button>
-        <button type="button" bitSuffix bitIconButton="bwi-clone" aria-label="Clone"></button>
+        <button type="button" bitSuffix bitIconButton="bwi-clone" [appA11yTitle]="'Clone Input'"></button>
       </bit-form-field>
 
       <bit-form-field>
@@ -258,7 +260,7 @@ export const Readonly: Story = {
               <bit-label>Input</bit-label>
               <input bitInput type="password" value="Foobar" readonly />
               <button type="button" bitIconButton bitSuffix bitPasswordInputToggle></button>
-              <button type="button" bitSuffix bitIconButton="bwi-clone" aria-label="Clone"></button>
+              <button type="button" bitSuffix bitIconButton="bwi-clone" [appA11yTitle]="'Clone Input'"></button>
             </bit-form-field>
 
             <bit-form-field>
@@ -302,14 +304,14 @@ export const ButtonInputGroup: Story = {
       <bit-form-field>
         <bit-label>
           Label
-          <a href="#" slot="end" bitLink>
+          <a href="#" slot="end" bitLink [appA11yTitle]="'More info'">
             <i class="bwi bwi-question-circle" aria-hidden="true"></i>
           </a>
         </bit-label>
-        <button bitPrefix bitIconButton="bwi-star" aria-label="Favorite"></button>
+        <button bitPrefix bitIconButton="bwi-star" [appA11yTitle]="'Favorite Label'"></button>
         <input bitInput placeholder="Placeholder" />
-        <button bitSuffix bitIconButton="bwi-eye" aria-label="Hide"></button>
-        <button bitSuffix bitIconButton="bwi-clone" aria-label="Clone"></button>
+        <button bitSuffix bitIconButton="bwi-eye" [appA11yTitle]="'Hide Label'"></button>
+        <button bitSuffix bitIconButton="bwi-clone" [appA11yTitle]="'Clone Label'"></button>
         <button bitSuffix bitLink>
           Apply
         </button>
@@ -325,10 +327,10 @@ export const DisabledButtonInputGroup: Story = {
     template: /*html*/ `
       <bit-form-field>
         <bit-label>Label</bit-label>
-        <button bitPrefix bitIconButton="bwi-star" disabled aria-label="Favorite"></button>
+        <button bitPrefix bitIconButton="bwi-star" disabled [appA11yTitle]="'Favorite Label'"></button>
         <input bitInput placeholder="Placeholder" disabled />
-        <button bitSuffix bitIconButton="bwi-eye" disabled aria-label="Hide"></button>
-        <button bitSuffix bitIconButton="bwi-clone" disabled aria-label="Clone"></button>
+        <button bitSuffix bitIconButton="bwi-eye" disabled [appA11yTitle]="'Hide Label'"></button>
+        <button bitSuffix bitIconButton="bwi-clone" disabled [appA11yTitle]="'Clone Label'"></button>
         <button bitSuffix bitLink disabled>
           Apply
         </button>
@@ -345,8 +347,8 @@ export const PartiallyDisabledButtonInputGroup: Story = {
       <bit-form-field>
         <bit-label>Label</bit-label>
         <input bitInput placeholder="Placeholder" disabled />
-        <button bitSuffix bitIconButton="bwi-eye" aria-label="Hide"></button>
-        <button bitSuffix bitIconButton="bwi-clone" aria-label="Clone"></button>
+        <button bitSuffix bitIconButton="bwi-eye" [appA11yTitle]="'Hide Label'"></button>
+        <button bitSuffix bitIconButton="bwi-clone" [appA11yTitle]="'Clone Label'"></button>
         <button bitSuffix bitLink disabled>
           Apply
         </button>
