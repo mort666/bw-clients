@@ -499,6 +499,7 @@ body * {
     svg {
       flex-shrink: 0;
       width: 3.2rem;
+      margin-top: 0.2rem;
       margin-right: 0.65rem;
     }
   }
@@ -522,6 +523,8 @@ body * {
     }
 
     svg {
+      margin-top: 0.2rem;
+
       path {
         @include themify($themes) {
           fill: themed("primaryColor") !important;

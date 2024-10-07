@@ -1801,10 +1801,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * @param sender - The sender of the port message
    */
   private async openInlineMenuOnFilledField(sender: chrome.runtime.MessageSender) {
-    if (
-      this.createAccountFillTypes.has(this.focusedFieldData?.inlineMenuFillType) ||
-      this.shouldShowInlineMenuAccountCreation()
-    ) {
+    if (await this.shouldShowSaveLoginInlineMenuList(sender.tab)) {
       await this.updateInlineMenuPosition(sender, AutofillOverlayElement.Button);
       await this.updateInlineMenuPosition(sender, AutofillOverlayElement.List);
       return;

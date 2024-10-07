@@ -2310,8 +2310,20 @@ describe("OverlayBackground", () => {
           jest.spyOn(overlayBackground as any, "checkFocusedFieldHasValue").mockResolvedValue(true);
         });
 
-        it("updates the position of both button and list elements if the inline menu is showing an account creation view", async () => {
-          overlayBackground["inlineMenuCiphers"] = new Map([]);
+        it("updates the position of both button and list elements if the inline menu is showing the save login view", async () => {
+          const formData = {
+            uri: "https://example.com",
+            username: "username",
+            password: "password",
+            newPassword: "newPassword",
+          };
+          tabsSendMessageSpy.mockImplementation((_tab, message) => {
+            if (message.command === "getInlineMenuFormFieldData") {
+              return Promise.resolve(formData);
+            }
+
+            return Promise.resolve();
+          });
 
           sendMockExtensionMessage({ command: "openAutofillInlineMenu" }, sender);
           await flushPromises();
