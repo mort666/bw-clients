@@ -163,7 +163,7 @@ export const NestedOptions: Story = {
         icon: "bwi-folder",
         children: [
           {
-            label: "Foo1",
+            label: "Foo1 very long name of folder but even longer than you thought",
             value: "foo1",
             icon: "bwi-folder",
             children: [

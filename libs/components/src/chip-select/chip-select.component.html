@@ -22,6 +22,7 @@
     [disabled]="disabled"
     [title]="label"
     #menuTrigger="menuTrigger"
+    (click)="setMenuWidth()"
   >
     <span class="tw-inline-flex tw-items-center tw-gap-1.5 tw-truncate">
       <i class="bwi !tw-text-[inherit]" [ngClass]="icon"></i>
@@ -57,7 +58,11 @@
 </div>
 
 <bit-menu #menu (closed)="handleMenuClosed()">
-  <div *ngIf="renderedOptions" class="tw-max-h-80 tw-min-w-52 tw-max-w-80 tw-text-sm">
+  <div
+    *ngIf="renderedOptions"
+    class="tw-max-h-80 tw-min-w-32 tw-max-w-80 tw-text-sm"
+    [ngStyle]="menuWidth && { width: menuWidth + 'px' }"
+  >
     <ng-container *ngIf="getParent(renderedOptions) as parent">
       <button
         type="button"

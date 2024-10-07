@@ -41,7 +41,7 @@ export class MenuItemDirective implements FocusableOption {
 
   @Input({ transform: coerceBooleanProperty }) disabled?: boolean = false;
 
-  constructor(private elementRef: ElementRef) {}
+  constructor(public elementRef: ElementRef<HTMLButtonElement>) {}
 
   focus() {
     this.elementRef.nativeElement.focus();
