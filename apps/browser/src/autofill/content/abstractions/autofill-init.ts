@@ -21,6 +21,7 @@ export type AutofillExtensionMessage = {
   isOpeningFullInlineMenu?: boolean;
   addNewCipherType?: CipherType;
   ignoreFieldFocus?: boolean;
+  fieldWithinDialog?: boolean;
   data?: {
     direction?: "previous" | "next" | "current";
     forceCloseInlineMenu?: boolean;

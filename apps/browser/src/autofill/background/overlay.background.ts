@@ -1306,7 +1306,11 @@ export class OverlayBackground implements OverlayBackgroundInterface {
 
     await BrowserApi.tabSendMessage(
       sender.tab,
-      { command: "appendAutofillInlineMenuToDom", overlayElement },
+      {
+        command: "appendAutofillInlineMenuToDom",
+        overlayElement,
+        fieldWithinDialog: this.focusedFieldData?.withinDialog,
+      },
       { frameId: 0 },
     );
 

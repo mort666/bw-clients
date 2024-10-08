@@ -135,25 +135,28 @@ export class AutofillInlineMenuContentService implements AutofillInlineMenuConte
   /**
    * Updates the position of both the inline menu button and inline menu list.
    */
-  private async appendInlineMenuElements({ overlayElement }: AutofillExtensionMessage) {
+  private async appendInlineMenuElements({
+    overlayElement,
+    fieldWithinDialog,
+  }: AutofillExtensionMessage) {
     if (overlayElement === AutofillOverlayElement.Button) {
-      return this.appendButtonElement();
+      return this.appendButtonElement(fieldWithinDialog);
     }
 
-    return this.appendListElement();
+    return this.appendListElement(fieldWithinDialog);
   }
 
   /**
    * Updates the position of the inline menu button.
    */
-  private async appendButtonElement(): Promise<void> {
+  private async appendButtonElement(fieldWithinDialog = false): Promise<void> {
     if (!this.buttonElement) {
       this.createButtonElement();
       this.updateCustomElementDefaultStyles(this.buttonElement);
     }
 
     if (!(await this.isInlineMenuButtonVisible())) {
-      this.appendInlineMenuElementToBody(this.buttonElement);
+      this.appendInlineMenuElementToDom(this.buttonElement, fieldWithinDialog);
       this.updateInlineMenuElementIsVisibleStatus(AutofillOverlayElement.Button, true);
     }
   }
@@ -161,14 +164,14 @@ export class AutofillInlineMenuContentService implements AutofillInlineMenuConte
   /**
    * Updates the position of the inline menu list.
    */
-  private async appendListElement(): Promise<void> {
+  private async appendListElement(fieldWithinDialog = false): Promise<void> {
     if (!this.listElement) {
       this.createListElement();
       this.updateCustomElementDefaultStyles(this.listElement);
     }
 
     if (!(await this.isInlineMenuListVisible())) {
-      this.appendInlineMenuElementToBody(this.listElement);
+      this.appendInlineMenuElementToDom(this.listElement, fieldWithinDialog);
       this.updateInlineMenuElementIsVisibleStatus(AutofillOverlayElement.List, true);
     }
   }
@@ -196,7 +199,12 @@ export class AutofillInlineMenuContentService implements AutofillInlineMenuConte
    *
    * @param element - The inline menu element to append to the body element.
    */
-  private appendInlineMenuElementToBody(element: HTMLElement) {
+  private appendInlineMenuElementToDom(element: HTMLElement, fieldWithinDialog: boolean) {
+    if (fieldWithinDialog && globalThis.document.activeElement?.closest("dialog")) {
+      globalThis.document.activeElement?.closest("dialog").appendChild(element);
+      return;
+    }
+
     this.observeBodyElement();
     globalThis.document.body.appendChild(element);
   }

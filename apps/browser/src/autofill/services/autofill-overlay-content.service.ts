@@ -950,6 +950,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
       inlineMenuFillType: autofillFieldData?.inlineMenuFillType,
       showPasskeys: !!autofillFieldData?.showPasskeys,
       accountCreationFieldType: autofillFieldData?.accountCreationFieldType,
+      withinDialog: !!formFieldElement.closest("dialog"),
     };
 
     await this.sendExtensionMessage("updateFocusedFieldData", {
