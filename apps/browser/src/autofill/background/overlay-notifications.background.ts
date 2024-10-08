@@ -24,6 +24,7 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
   private activeFormSubmissionRequests: ActiveFormSubmissionRequests = new Set();
   private modifyLoginCipherFormData: ModifyLoginCipherFormDataForTab = new Map();
   private clearLoginCipherFormDataSubject: Subject<void> = new Subject();
+  private notificationFallbackTimeout: number | NodeJS.Timeout | null;
   private readonly formSubmissionRequestMethods: Set<string> = new Set(["POST", "PUT", "PATCH"]);
   private readonly extensionMessageHandlers: OverlayNotificationsExtensionMessageHandlers = {
     formFieldSubmitted: ({ message, sender }) => this.storeModifiedLoginFormData(message, sender),
@@ -126,6 +127,10 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
     message: OverlayNotificationsExtensionMessage,
     sender: chrome.runtime.MessageSender,
   ) => {
+    if (!this.websiteOriginsWithFields.has(sender.tab.id)) {
+      return;
+    }
+
     const { uri, username, password, newPassword } = message;
     if (!username && !password && !newPassword) {
       return;
@@ -142,6 +147,21 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
     }
 
     this.modifyLoginCipherFormData.set(sender.tab.id, formData);
+
+    // CG TODO: In progress idea for fallback notification
+    if (this.notificationFallbackTimeout) {
+      clearTimeout(this.notificationFallbackTimeout);
+      this.notificationFallbackTimeout = null;
+    }
+
+    this.notificationFallbackTimeout = setTimeout(() => {
+      this.notificationFallbackTimeout = null;
+      this.setupNotificationInitTrigger(
+        sender.tab.id,
+        "",
+        this.modifyLoginCipherFormData.get(sender.tab.id),
+      ).catch((error) => this.logService.error(error));
+    }, 5000);
   };
 
   /**
@@ -315,6 +335,12 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
     const modifyLoginData = this.modifyLoginCipherFormData.get(details.tabId);
     if (!modifyLoginData) {
       return;
+    }
+
+    // CG TODO: In progress idea for fallback notification
+    if (this.notificationFallbackTimeout) {
+      clearTimeout(this.notificationFallbackTimeout);
+      this.notificationFallbackTimeout = null;
     }
 
     this.setupNotificationInitTrigger(details.tabId, details.requestId, modifyLoginData).catch(
