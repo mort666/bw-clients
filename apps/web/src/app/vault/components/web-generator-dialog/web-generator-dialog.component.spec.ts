@@ -1,21 +1,28 @@
 import { DialogRef, DIALOG_DATA } from "@angular/cdk/dialog";
+import { Component, EventEmitter, Input, Output } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { mock, MockProxy } from "jest-mock-extended";
-import { BehaviorSubject } from "rxjs";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
-
-import { UsernameGenerationServiceAbstraction } from "../../../../../../libs/tools/generator/extensions/legacy/src/username-generation.service.abstraction";
-import { CipherFormGeneratorComponent } from "../cipher-generator/cipher-form-generator.component";
+import { CipherFormGeneratorComponent } from "@bitwarden/vault";
 
 import {
+  WebVaultGeneratorDialogAction,
   WebVaultGeneratorDialogComponent,
   WebVaultGeneratorDialogParams,
-  WebVaultGeneratorDialogAction,
 } from "./web-generator-dialog.component";
+
+@Component({
+  selector: "vault-cipher-form-generator",
+  template: "",
+  standalone: true,
+})
+class MockCipherFormGenerator {
+  @Input() type: "password" | "username";
+  @Output() valueGenerated = new EventEmitter<string>();
+}
 
 describe("WebVaultGeneratorDialogComponent", () => {
   let component: WebVaultGeneratorDialogComponent;
@@ -23,26 +30,10 @@ describe("WebVaultGeneratorDialogComponent", () => {
 
   let dialogRef: MockProxy<DialogRef<any>>;
   let mockI18nService: MockProxy<I18nService>;
-  let passwordOptionsSubject: BehaviorSubject<any>;
-  let usernameOptionsSubject: BehaviorSubject<any>;
-  let mockPasswordGenerationService: MockProxy<PasswordGenerationServiceAbstraction>;
-  let mockUsernameGenerationService: MockProxy<UsernameGenerationServiceAbstraction>;
 
   beforeEach(async () => {
     dialogRef = mock<DialogRef<any>>();
     mockI18nService = mock<I18nService>();
-    passwordOptionsSubject = new BehaviorSubject([{ type: "password" }]);
-    usernameOptionsSubject = new BehaviorSubject([{ type: "username" }]);
-
-    mockPasswordGenerationService = mock<PasswordGenerationServiceAbstraction>();
-    mockPasswordGenerationService.getOptions$.mockReturnValue(
-      passwordOptionsSubject.asObservable(),
-    );
-
-    mockUsernameGenerationService = mock<UsernameGenerationServiceAbstraction>();
-    mockUsernameGenerationService.getOptions$.mockReturnValue(
-      usernameOptionsSubject.asObservable(),
-    );
 
     const mockDialogData: WebVaultGeneratorDialogParams = { type: "password" };
 
@@ -65,23 +56,13 @@ describe("WebVaultGeneratorDialogComponent", () => {
           provide: PlatformUtilsService,
           useValue: mock<PlatformUtilsService>(),
         },
-        {
-          provide: PasswordGenerationServiceAbstraction,
-          useValue: mockPasswordGenerationService,
-        },
-        {
-          provide: UsernameGenerationServiceAbstraction,
-          useValue: mockUsernameGenerationService,
-        },
-        {
-          provide: CipherFormGeneratorComponent,
-          useValue: {
-            passwordOptions$: passwordOptionsSubject.asObservable(),
-            usernameOptions$: usernameOptionsSubject.asObservable(),
-          },
-        },
       ],
-    }).compileComponents();
+    })
+      .overrideComponent(WebVaultGeneratorDialogComponent, {
+        remove: { imports: [CipherFormGeneratorComponent] },
+        add: { imports: [MockCipherFormGenerator] },
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(WebVaultGeneratorDialogComponent);
     component = fixture.componentInstance;

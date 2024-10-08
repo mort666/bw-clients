@@ -1,21 +1,27 @@
 import { Observable } from "rxjs";
 
-import { CollectionId, UserId } from "../../types/guid";
+import { CollectionId, OrganizationId, UserId } from "../../types/guid";
+import { OrgKey } from "../../types/key";
 import { CollectionData } from "../models/data/collection.data";
 import { Collection } from "../models/domain/collection";
 import { TreeNode } from "../models/domain/tree-node";
 import { CollectionView } from "../models/view/collection.view";
 
 export abstract class CollectionService {
+  encryptedCollections$: Observable<Collection[]>;
   decryptedCollections$: Observable<CollectionView[]>;
 
   clearActiveUserCache: () => Promise<void>;
   encrypt: (model: CollectionView) => Promise<Collection>;
   decryptedCollectionViews$: (ids: CollectionId[]) => Observable<CollectionView[]>;
   /**
-   * @deprecated This method will soon be made private, use `decryptedCollectionViews$` instead.
+   * @deprecated This method will soon be made private
+   * See PM-12375
    */
-  decryptMany: (collections: Collection[]) => Promise<CollectionView[]>;
+  decryptMany: (
+    collections: Collection[],
+    orgKeys?: Record<OrganizationId, OrgKey>,
+  ) => Promise<CollectionView[]>;
   get: (id: string) => Promise<Collection>;
   getAll: () => Promise<Collection[]>;
   getAllDecrypted: () => Promise<CollectionView[]>;
