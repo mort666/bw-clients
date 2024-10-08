@@ -148,21 +148,27 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
 
     this.modifyLoginCipherFormData.set(sender.tab.id, formData);
 
-    // CG TODO: In progress idea for fallback notification
+    this.clearNotificationFallbackTimeout();
+    this.notificationFallbackTimeout = setTimeout(
+      () =>
+        this.setupNotificationInitTrigger(
+          sender.tab.id,
+          "",
+          this.modifyLoginCipherFormData.get(sender.tab.id),
+        ).catch((error) => this.logService.error(error)),
+      1500,
+    );
+  };
+
+  /**
+   * Clears the timeout used when triggering a notification on click of the submit button.
+   */
+  private clearNotificationFallbackTimeout() {
     if (this.notificationFallbackTimeout) {
       clearTimeout(this.notificationFallbackTimeout);
       this.notificationFallbackTimeout = null;
     }
-
-    this.notificationFallbackTimeout = setTimeout(() => {
-      this.notificationFallbackTimeout = null;
-      this.setupNotificationInitTrigger(
-        sender.tab.id,
-        "",
-        this.modifyLoginCipherFormData.get(sender.tab.id),
-      ).catch((error) => this.logService.error(error));
-    }, 1500);
-  };
+  }
 
   /**
    * Determines if the sender of the message is from an excluded domain. This is used to prevent the
@@ -331,16 +337,14 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
     ) {
       return;
     }
+    if (isInvalidResponseStatusCode(details.statusCode)) {
+      this.clearNotificationFallbackTimeout();
+      return;
+    }
 
     const modifyLoginData = this.modifyLoginCipherFormData.get(details.tabId);
     if (!modifyLoginData) {
       return;
-    }
-
-    // CG TODO: In progress idea for fallback notification
-    if (this.notificationFallbackTimeout) {
-      clearTimeout(this.notificationFallbackTimeout);
-      this.notificationFallbackTimeout = null;
     }
 
     this.setupNotificationInitTrigger(details.tabId, details.requestId, modifyLoginData).catch(
@@ -361,6 +365,8 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
     requestId: string,
     modifyLoginData: ModifyLoginCipherFormData,
   ) => {
+    this.clearNotificationFallbackTimeout();
+
     const tab = await BrowserApi.getTab(tabId);
     if (tab.status !== "complete") {
       await this.delayNotificationInitUntilTabIsComplete(tabId, requestId, modifyLoginData);
