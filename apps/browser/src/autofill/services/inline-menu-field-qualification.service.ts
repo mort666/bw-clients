@@ -37,7 +37,13 @@ export class InlineMenuFieldQualificationService
   private autocompleteDisabledValues = new Set(["off", "false"]);
   private newFieldKeywords = new Set(["new", "neue", "ändern"]);
   private accountCreationFieldKeywords = [
-    ...new Set(["register", "registration", "create", "confirm", ...this.newFieldKeywords]),
+    ...new Set([
+      "register",
+      "registration",
+      "create",
+      "confirm password",
+      ...this.newFieldKeywords,
+    ]),
   ];
   private updatePasswordFieldKeywords = ["update", "change", "current"];
   private creditCardFieldKeywords = [
