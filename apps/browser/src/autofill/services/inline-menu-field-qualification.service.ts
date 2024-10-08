@@ -289,10 +289,22 @@ export class InlineMenuFieldQualificationService
     field: AutofillField,
     pageDetails: AutofillPageDetails,
   ): boolean {
+    const parentForm = pageDetails.forms[field.form];
+
     // If the provided field is set with an autocomplete value of "current-password", we should assume that
     // the page developer intends for this field to be interpreted as a password field for a login form.
     if (this.fieldContainsAutocompleteValues(field, this.currentPasswordAutocompleteValue)) {
-      return pageDetails.fields.filter(this.isNewPasswordField).length === 0;
+      if (!parentForm) {
+        return (
+          pageDetails.fields.filter(this.isNewPasswordField).filter((f) => f.viewable).length === 0
+        );
+      }
+
+      return (
+        pageDetails.fields
+          .filter(this.isNewPasswordField)
+          .filter((f) => f.viewable && f.form === field.form).length === 0
+      );
     }
 
     const usernameFieldsInPageDetails = pageDetails.fields.filter(this.isUsernameField);
@@ -306,7 +318,6 @@ export class InlineMenuFieldQualificationService
 
     // If the field is not structured within a form, we need to identify if the field is present on
     // a page with multiple password fields. If that isn't the case, we can assume this is a login form field.
-    const parentForm = pageDetails.forms[field.form];
     if (!parentForm) {
       // If no parent form is found, and multiple password fields are present, we should assume that
       // the passed field belongs to a user account creation form.
