@@ -14,6 +14,7 @@ import {
   DEFAULT_VAULT_TIMEOUT,
   INTRAPROCESS_MESSAGING_SUBJECT,
   CLIENT_TYPE,
+  ENV_ADDITIONAL_REGIONS,
 } from "@bitwarden/angular/services/injection-tokens";
 import { JslibServicesModule } from "@bitwarden/angular/services/jslib-services.module";
 import { AnonLayoutWrapperDataService, LockComponentService } from "@bitwarden/auth/angular";
@@ -57,6 +58,7 @@ import { KeyGenerationService } from "@bitwarden/common/platform/abstractions/ke
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService as MessagingServiceAbstraction } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { SdkClientFactory } from "@bitwarden/common/platform/abstractions/sdk/sdk-client-factory";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import {
   AbstractStorageService,
@@ -65,9 +67,11 @@ import {
 import { Message, MessageListener, MessageSender } from "@bitwarden/common/platform/messaging";
 // eslint-disable-next-line no-restricted-imports -- Used for dependency injection
 import { SubjectMessageSender } from "@bitwarden/common/platform/messaging/internal";
+import { flagEnabled } from "@bitwarden/common/platform/misc/flags";
 import { TaskSchedulerService } from "@bitwarden/common/platform/scheduling";
 import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
 import { ContainerService } from "@bitwarden/common/platform/services/container.service";
+import { NoopSdkClientFactory } from "@bitwarden/common/platform/services/sdk/noop-sdk-client-factory";
 import { StorageServiceProvider } from "@bitwarden/common/platform/services/storage-service.provider";
 import { WebCryptoFunctionService } from "@bitwarden/common/platform/services/web-crypto-function.service";
 import {
@@ -113,6 +117,7 @@ import BrowserLocalStorageService from "../../platform/services/browser-local-st
 import { BrowserScriptInjectorService } from "../../platform/services/browser-script-injector.service";
 import I18nService from "../../platform/services/i18n.service";
 import { ForegroundPlatformUtilsService } from "../../platform/services/platform-utils/foreground-platform-utils.service";
+import { BrowserSdkClientFactory } from "../../platform/services/sdk/browser-sdk-client-factory";
 import { ForegroundTaskSchedulerService } from "../../platform/services/task-scheduler/foreground-task-scheduler.service";
 import { BrowserStorageServiceProvider } from "../../platform/storage/browser-storage-service.provider";
 import { ForegroundMemoryStorageService } from "../../platform/storage/foreground-memory-storage.service";
@@ -197,7 +202,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: BrowserEnvironmentService,
     useClass: BrowserEnvironmentService,
-    deps: [LogService, StateProvider, AccountServiceAbstraction],
+    deps: [LogService, StateProvider, AccountServiceAbstraction, ENV_ADDITIONAL_REGIONS],
   }),
   safeProvider({
     provide: I18nServiceAbstraction,
@@ -570,6 +575,11 @@ const safeProviders: SafeProvider[] = [
     provide: LockService,
     useClass: ForegroundLockService,
     deps: [MessageSender, MessageListener],
+  }),
+  safeProvider({
+    provide: SdkClientFactory,
+    useClass: flagEnabled("sdk") ? BrowserSdkClientFactory : NoopSdkClientFactory,
+    deps: [],
   }),
 ];
 

@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 import * as jsdom from "jsdom";
-import { firstValueFrom } from "rxjs";
+import { firstValueFrom, map } from "rxjs";
 
 import {
   OrganizationUserApiService,
@@ -59,8 +59,12 @@ import { DefaultBillingAccountProfileStateService } from "@bitwarden/common/bill
 import { ClientType } from "@bitwarden/common/enums";
 import { ConfigApiServiceAbstraction } from "@bitwarden/common/platform/abstractions/config/config-api.service.abstraction";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
-import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
+import {
+  EnvironmentService,
+  RegionConfig,
+} from "@bitwarden/common/platform/abstractions/environment.service";
 import { KeyGenerationService as KeyGenerationServiceAbstraction } from "@bitwarden/common/platform/abstractions/key-generation.service";
+import { SdkService } from "@bitwarden/common/platform/abstractions/sdk/sdk.service";
 import { KeySuffixOptions, LogLevelType } from "@bitwarden/common/platform/enums";
 import { StateFactory } from "@bitwarden/common/platform/factories/state-factory";
 import { MessageSender } from "@bitwarden/common/platform/messaging";
@@ -83,6 +87,9 @@ import { KeyGenerationService } from "@bitwarden/common/platform/services/key-ge
 import { MemoryStorageService } from "@bitwarden/common/platform/services/memory-storage.service";
 import { MigrationBuilderService } from "@bitwarden/common/platform/services/migration-builder.service";
 import { MigrationRunner } from "@bitwarden/common/platform/services/migration-runner";
+import { DefaultSdkClientFactory } from "@bitwarden/common/platform/services/sdk/default-sdk-client-factory";
+import { DefaultSdkService } from "@bitwarden/common/platform/services/sdk/default-sdk.service";
+import { NoopSdkClientFactory } from "@bitwarden/common/platform/services/sdk/noop-sdk-client-factory";
 import { StateService } from "@bitwarden/common/platform/services/state.service";
 import { StorageServiceProvider } from "@bitwarden/common/platform/services/storage-service.provider";
 import { UserAutoUnlockKeyService } from "@bitwarden/common/platform/services/user-auto-unlock-key.service";
@@ -119,7 +126,6 @@ import {
 import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.service";
 import { SendStateProvider } from "@bitwarden/common/tools/send/services/send-state.provider";
 import { SendService } from "@bitwarden/common/tools/send/services/send.service";
-import { UserId } from "@bitwarden/common/types/guid";
 import { VaultTimeoutStringType } from "@bitwarden/common/types/vault-timeout.type";
 import { InternalFolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { CipherService } from "@bitwarden/common/vault/services/cipher.service";
@@ -149,6 +155,7 @@ import {
   VaultExportServiceAbstraction,
 } from "@bitwarden/vault-export-core";
 
+import { flagEnabled } from "../platform/flags";
 import { CliPlatformUtilsService } from "../platform/services/cli-platform-utils.service";
 import { ConsoleLogService } from "../platform/services/console-log.service";
 import { I18nService } from "../platform/services/i18n.service";
@@ -247,6 +254,7 @@ export class ServiceContainer {
   userAutoUnlockKeyService: UserAutoUnlockKeyService;
   kdfConfigService: KdfConfigServiceAbstraction;
   taskSchedulerService: TaskSchedulerService;
+  sdkService: SdkService;
 
   constructor() {
     let p = null;
@@ -347,6 +355,7 @@ export class ServiceContainer {
     this.environmentService = new DefaultEnvironmentService(
       this.stateProvider,
       this.accountService,
+      process.env.ADDITIONAL_REGIONS as unknown as RegionConfig[],
     );
 
     this.keyGenerationService = new KeyGenerationService(this.cryptoFunctionService);
@@ -517,6 +526,17 @@ export class ServiceContainer {
       this.i18nService,
       this.platformUtilsService,
       this.globalStateProvider,
+    );
+
+    const sdkClientFactory = flagEnabled("sdk")
+      ? new DefaultSdkClientFactory()
+      : new NoopSdkClientFactory();
+    this.sdkService = new DefaultSdkService(
+      sdkClientFactory,
+      this.environmentService,
+      this.platformUtilsService,
+      this.apiService,
+      customUserAgent,
     );
 
     this.passwordStrengthService = new PasswordStrengthService();
@@ -788,13 +808,13 @@ export class ServiceContainer {
     this.authService.logOut(() => {
       /* Do nothing */
     });
-    const userId = (await this.stateService.getUserId()) as UserId;
+    const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(map((a) => a?.id)));
     await Promise.all([
-      this.eventUploadService.uploadEvents(userId as UserId),
+      this.eventUploadService.uploadEvents(userId),
       this.cryptoService.clearKeys(),
       this.cipherService.clear(userId),
       this.folderService.clear(userId),
-      this.collectionService.clear(userId as UserId),
+      this.collectionService.clear(userId),
     ]);
 
     await this.stateEventRunnerService.handleEvent("logout", userId);
@@ -827,5 +847,19 @@ export class ServiceContainer {
     }
 
     this.inited = true;
+
+    if (flagEnabled("sdk")) {
+      // Warn if the SDK for some reason can't be initialized
+      let supported = false;
+      try {
+        supported = await firstValueFrom(this.sdkService.supported$);
+      } catch (e) {
+        // Do nothing.
+      }
+
+      if (!supported) {
+        this.sdkService.failedToInitialize().catch(this.logService.error);
+      }
+    }
   }
 }
