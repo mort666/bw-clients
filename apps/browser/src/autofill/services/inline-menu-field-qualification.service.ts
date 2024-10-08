@@ -435,7 +435,11 @@ export class InlineMenuFieldQualificationService
       const fieldsWithinForm = pageDetails.fields.filter(
         (pageDetailsField) => pageDetailsField.form === field.form,
       );
-      return fieldsWithinForm.length === 1;
+      if (fieldsWithinForm.length === 1) {
+        return true;
+      }
+
+      return fieldsWithinForm.filter((field) => field.viewable).length === 1;
     }
 
     // If a single password field exists within the page details, and that password field is part of

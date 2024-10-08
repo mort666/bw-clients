@@ -436,6 +436,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
 
       const closesSubmitButton = await this.findSubmitButton(formElement);
 
+      // If we cannot find a submit button within the form, check for a submit button outside the form.
       if (!closesSubmitButton) {
         await this.setupSubmitListenerOnFormlessField(formFieldElement);
         return;
