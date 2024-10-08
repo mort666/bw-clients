@@ -2616,8 +2616,11 @@
   "invoices": {
     "message": "Invoices"
   },
-  "noInvoices": {
-    "message": "No invoices."
+  "noUnpaidInvoices": {
+    "message": "No unpaid invoices."
+  },
+  "noPaidInvoices": {
+    "message": "No paid invoices."
   },
   "paid": {
     "message": "Paid",
@@ -6223,7 +6226,8 @@
     "message": "Account settings"
   },
   "generator": {
-    "message": "Generator"
+    "message": "Generator",
+    "description": "Short for 'credential generator'."
   },
   "whatWouldYouLikeToGenerate": {
     "message": "What would you like to generate?"
