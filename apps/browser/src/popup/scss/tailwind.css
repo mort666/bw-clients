@@ -5,24 +5,22 @@
 @import "../../../../../libs/components/src/tw-theme.css";
 
 @layer components {
-  /* Chrome / Safari support */
-  .tw-styled-scrollbar::-webkit-scrollbar {
+  /** Safari Support */
+  html.browser_safari .tw-styled-scrollbar::-webkit-scrollbar {
     @apply tw-overflow-auto;
   }
-  .tw-styled-scrollbar::-webkit-scrollbar-thumb {
+  html.browser_safari .tw-styled-scrollbar::-webkit-scrollbar-thumb {
     @apply tw-bg-secondary-500 tw-rounded-lg tw-border-4 tw-border-solid tw-border-transparent tw-bg-clip-content;
   }
-  .tw-styled-scrollbar::-webkit-scrollbar-track {
+  html.browser_safari .tw-styled-scrollbar::-webkit-scrollbar-track {
     @apply tw-bg-background-alt;
   }
-  .tw-styled-scrollbar::-webkit-scrollbar-thumb:hover {
+  html.browser_safari .tw-styled-scrollbar::-webkit-scrollbar-thumb:hover {
     @apply tw-bg-secondary-600;
   }
 
-  /* FireFox support */
-  .tw-styled-scrollbar {
-    @supports (-moz-appearance: none) {
-      scrollbar-color: rgb(var(--color-secondary-500)) rgb(var(--color-background-alt));
-    }
+  /* FireFox & Chrome support */
+  html:not(.browser_safari) .tw-styled-scrollbar {
+    scrollbar-color: rgb(var(--color-secondary-500)) rgb(var(--color-background-alt));
   }
 }
