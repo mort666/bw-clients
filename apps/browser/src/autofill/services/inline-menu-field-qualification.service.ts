@@ -430,8 +430,8 @@ export class InlineMenuFieldQualificationService
         return false;
       }
 
-      // If the form that contains the field has more than one visible field, we should assume
-      // that the field is part of an account creation form.
+      // If the form that contains a single field, we should assume that it is part
+      // of a multistep login form.
       const fieldsWithinForm = pageDetails.fields.filter(
         (pageDetailsField) => pageDetailsField.form === field.form,
       );
@@ -439,6 +439,8 @@ export class InlineMenuFieldQualificationService
         return true;
       }
 
+      // If multiple fields exist within the form, we should check if a single visible field exists.
+      // If so, we should assume that the field is part of a login form.
       return fieldsWithinForm.filter((field) => field.viewable).length === 1;
     }
 
@@ -457,8 +459,7 @@ export class InlineMenuFieldQualificationService
       return false;
     }
 
-    // If no visible fields are found on the page, but we have a single password
-    // field we should assume that the field is part of a login form.
+    // If we have a single password field we should assume that the field is part of a login form.
     if (passwordFieldsInPageDetails.length === 1) {
       return true;
     }
