@@ -6,6 +6,7 @@ import {
   CollectionAdminService,
   DefaultCollectionAdminService,
   OrganizationUserApiService,
+  CollectionService,
 } from "@bitwarden/admin-console/common";
 import { SafeProvider, safeProvider } from "@bitwarden/angular/platform/utils/safe-provider";
 import {
@@ -78,7 +79,6 @@ import {
   ThemeStateService,
 } from "@bitwarden/common/platform/theming/theme-state.service";
 import { VaultTimeout, VaultTimeoutStringType } from "@bitwarden/common/types/vault-timeout.type";
-import { CollectionService } from "@bitwarden/common/vault/abstractions/collection.service";
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
 import { BiometricsService } from "@bitwarden/key-management";
 
