@@ -161,7 +161,7 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
         "",
         this.modifyLoginCipherFormData.get(sender.tab.id),
       ).catch((error) => this.logService.error(error));
-    }, 5000);
+    }, 1500);
   };
 
   /**
