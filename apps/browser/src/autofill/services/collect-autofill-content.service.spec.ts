@@ -43,6 +43,7 @@ describe("CollectAutofillContentService", () => {
   const domQueryService = new DomQueryService();
   const autofillOverlayContentService = new AutofillOverlayContentService(
     domQueryService,
+    domElementVisibilityService,
     inlineMenuFieldQualificationService,
   );
   let collectAutofillContentService: CollectAutofillContentService;

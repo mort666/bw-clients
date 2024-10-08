@@ -6,7 +6,7 @@ import { DomElementVisibilityService as DomElementVisibilityServiceInterface } f
 class DomElementVisibilityService implements DomElementVisibilityServiceInterface {
   private cachedComputedStyle: CSSStyleDeclaration | null = null;
 
-  constructor(private inlineMenuElements?: AutofillInlineMenuContentService) {}
+  constructor(private inlineMenuContentService?: AutofillInlineMenuContentService) {}
 
   /**
    * Checks if a form field is viewable. This is done by checking if the element is within the
@@ -190,7 +190,7 @@ class DomElementVisibilityService implements DomElementVisibilityServiceInterfac
       return true;
     }
 
-    if (this.inlineMenuElements?.isElementInlineMenu(elementAtCenterPoint as HTMLElement)) {
+    if (this.inlineMenuContentService?.isElementInlineMenu(elementAtCenterPoint as HTMLElement)) {
       return true;
     }
 

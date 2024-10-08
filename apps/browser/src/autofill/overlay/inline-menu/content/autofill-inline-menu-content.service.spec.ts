@@ -3,6 +3,7 @@ import { mock, MockProxy } from "jest-mock-extended";
 import AutofillInit from "../../../content/autofill-init";
 import { AutofillOverlayElement } from "../../../enums/autofill-overlay.enum";
 import { DomQueryService } from "../../../services/abstractions/dom-query.service";
+import DomElementVisibilityService from "../../../services/dom-element-visibility.service";
 import { createMutationRecordMock } from "../../../spec/autofill-mocks";
 import { flushPromises, sendMockExtensionMessage } from "../../../spec/testing-utils";
 import { ElementWithOpId } from "../../../types";
@@ -11,6 +12,7 @@ import { AutofillInlineMenuContentService } from "./autofill-inline-menu-content
 
 describe("AutofillInlineMenuContentService", () => {
   let domQueryService: MockProxy<DomQueryService>;
+  let domElementVisibilityService: DomElementVisibilityService;
   let autofillInlineMenuContentService: AutofillInlineMenuContentService;
   let autofillInit: AutofillInit;
   let sendExtensionMessageSpy: jest.SpyInstance;
@@ -22,8 +24,14 @@ describe("AutofillInlineMenuContentService", () => {
     globalThis.document.body.innerHTML = "";
     globalThis.requestIdleCallback = jest.fn((cb, options) => setTimeout(cb, 100));
     domQueryService = mock<DomQueryService>();
+    domElementVisibilityService = new DomElementVisibilityService();
     autofillInlineMenuContentService = new AutofillInlineMenuContentService();
-    autofillInit = new AutofillInit(domQueryService, null, autofillInlineMenuContentService);
+    autofillInit = new AutofillInit(
+      domQueryService,
+      domElementVisibilityService,
+      null,
+      autofillInlineMenuContentService,
+    );
     autofillInit.init();
     observeBodyMutationsSpy = jest.spyOn(
       autofillInlineMenuContentService["bodyElementMutationObserver"] as any,

@@ -24,6 +24,7 @@ import { ElementWithOpId, FillableFormFieldElement, FormFieldElement } from "../
 
 import { AutoFillConstants } from "./autofill-constants";
 import { AutofillOverlayContentService } from "./autofill-overlay-content.service";
+import DomElementVisibilityService from "./dom-element-visibility.service";
 import { DomQueryService } from "./dom-query.service";
 import { InlineMenuFieldQualificationService } from "./inline-menu-field-qualification.service";
 
@@ -31,6 +32,7 @@ const defaultWindowReadyState = document.readyState;
 const defaultDocumentVisibilityState = document.visibilityState;
 describe("AutofillOverlayContentService", () => {
   let domQueryService: DomQueryService;
+  let domElementVisibilityService: DomElementVisibilityService;
   let autofillInit: AutofillInit;
   let inlineMenuFieldQualificationService: InlineMenuFieldQualificationService;
   let autofillOverlayContentService: AutofillOverlayContentService;
@@ -41,11 +43,17 @@ describe("AutofillOverlayContentService", () => {
   beforeEach(async () => {
     inlineMenuFieldQualificationService = new InlineMenuFieldQualificationService();
     domQueryService = new DomQueryService();
+    domElementVisibilityService = new DomElementVisibilityService();
     autofillOverlayContentService = new AutofillOverlayContentService(
       domQueryService,
+      domElementVisibilityService,
       inlineMenuFieldQualificationService,
     );
-    autofillInit = new AutofillInit(domQueryService, autofillOverlayContentService);
+    autofillInit = new AutofillInit(
+      domQueryService,
+      domElementVisibilityService,
+      autofillOverlayContentService,
+    );
     autofillInit.init();
     autofillOverlayContentService["showInlineMenuCards"] = true;
     autofillOverlayContentService["showInlineMenuIdentities"] = true;

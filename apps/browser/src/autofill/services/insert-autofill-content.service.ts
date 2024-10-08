@@ -10,9 +10,9 @@ import {
   elementIsTextAreaElement,
 } from "../utils";
 
+import { DomElementVisibilityService } from "./abstractions/dom-element-visibility.service";
 import { InsertAutofillContentService as InsertAutofillContentServiceInterface } from "./abstractions/insert-autofill-content.service";
 import { CollectAutofillContentService } from "./collect-autofill-content.service";
-import DomElementVisibilityService from "./dom-element-visibility.service";
 
 class InsertAutofillContentService implements InsertAutofillContentServiceInterface {
   private readonly autofillInsertActions: AutofillInsertActions = {
