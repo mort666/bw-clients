@@ -34,6 +34,7 @@ import {
   elementIsFillableFormField,
   elementIsSelectElement,
   getAttributeBoolean,
+  nodeIsAnchorElement,
   nodeIsButtonElement,
   nodeIsTypeSubmitElement,
   sendExtensionMessage,
@@ -434,6 +435,12 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
       formElement.addEventListener(EVENTS.SUBMIT, this.handleFormFieldSubmitEvent);
 
       const closesSubmitButton = await this.findSubmitButton(formElement);
+
+      if (!closesSubmitButton) {
+        await this.setupSubmitListenerOnFormlessField(formFieldElement);
+        return;
+      }
+
       this.setupSubmitButtonEventListeners(closesSubmitButton);
     }
   }
@@ -507,6 +514,14 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     );
     if (submitButtonElement) {
       return submitButtonElement;
+    }
+
+    // If the submit button is not a traditional button element, check for an anchor element that contains submission keywords.
+    const submitAnchorElement = await this.querySubmitButtonElement(element, "a", (node: Node) =>
+      nodeIsAnchorElement(node),
+    );
+    if (submitAnchorElement) {
+      return submitAnchorElement;
     }
   }
 

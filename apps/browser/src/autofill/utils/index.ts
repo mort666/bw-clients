@@ -323,6 +323,10 @@ export function nodeIsButtonElement(node: Node): node is HTMLButtonElement {
   );
 }
 
+export function nodeIsAnchorElement(node: Node): node is HTMLAnchorElement {
+  return nodeIsElement(node) && elementIsInstanceOf<HTMLAnchorElement>(node, "a");
+}
+
 /**
  * Returns a boolean representing the attribute value of an element.
  *
