@@ -1465,11 +1465,13 @@ describe("AutofillOverlayContentService", () => {
           });
 
           it("sends a `formFieldSubmitted` message to the background on interaction of a generic input element", async () => {
+            domElementVisibilityService.isElementViewable = jest.fn().mockReturnValue(true);
             await autofillOverlayContentService.setupOverlayListeners(
               autofillFieldElement,
               autofillFieldData,
               pageDetailsMock,
             );
+            await flushPromises();
             genericSubmitElement.dispatchEvent(new KeyboardEvent("keyup", { code: "Enter" }));
 
             expect(sendExtensionMessageSpy).toHaveBeenCalledWith(
@@ -1542,12 +1544,14 @@ describe("AutofillOverlayContentService", () => {
         });
 
         it("triggers submission through interaction of a submit button", async () => {
+          domElementVisibilityService.isElementViewable = jest.fn().mockReturnValue(true);
           const submitButton = document.querySelector("button");
           await autofillOverlayContentService.setupOverlayListeners(
             autofillFieldElement,
             autofillFieldData,
             pageDetailsMock,
           );
+          await flushPromises();
           submitButton.dispatchEvent(new KeyboardEvent("keyup", { code: "Enter" }));
 
           expect(sendExtensionMessageSpy).toHaveBeenCalledWith(
@@ -1557,6 +1561,7 @@ describe("AutofillOverlayContentService", () => {
         });
 
         it("captures submit buttons when the field is structured within a shadow DOM", async () => {
+          domElementVisibilityService.isElementViewable = jest.fn().mockReturnValue(true);
           document.body.innerHTML = `<div id="form-div">
             <div id="shadow-root"></div>
             <button id="button-el">Change Password</button>
@@ -1587,6 +1592,7 @@ describe("AutofillOverlayContentService", () => {
             autofillFieldData,
             pageDetailsMock,
           );
+          await flushPromises();
           buttonElement.dispatchEvent(new KeyboardEvent("keyup", { code: "Enter" }));
 
           expect(sendExtensionMessageSpy).toHaveBeenCalledWith(
