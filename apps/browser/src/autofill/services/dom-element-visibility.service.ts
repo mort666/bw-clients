@@ -9,12 +9,11 @@ class DomElementVisibilityService implements DomElementVisibilityServiceInterfac
   constructor(private inlineMenuContentService?: AutofillInlineMenuContentService) {}
 
   /**
-   * Checks if a form field is viewable. This is done by checking if the element is within the
+   * Checks if an element is viewable. This is done by checking if the element is within the
    * viewport bounds, not hidden by CSS, and not hidden behind another element.
-   * @param {FormFieldElement} element
-   * @returns {Promise<boolean>}
+   * @param element
    */
-  async isFormFieldViewable(element: FormFieldElement): Promise<boolean> {
+  async isElementViewable(element: HTMLElement): Promise<boolean> {
     const elementBoundingClientRect = element.getBoundingClientRect();
     if (
       this.isElementOutsideViewportBounds(element, elementBoundingClientRect) ||

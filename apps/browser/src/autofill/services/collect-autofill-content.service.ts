@@ -196,7 +196,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
   private updateCachedAutofillFieldVisibility() {
     this.autofillFieldElements.forEach(async (autofillField, element) => {
       const previouslyViewable = autofillField.viewable;
-      autofillField.viewable = await this.domElementVisibilityService.isFormFieldViewable(element);
+      autofillField.viewable = await this.domElementVisibilityService.isElementViewable(element);
 
       if (!previouslyViewable && autofillField.viewable) {
         this.setupOverlayOnField(element, autofillField);
@@ -360,7 +360,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
       opid: element.opid,
       elementNumber: index,
       maxLength: this.getAutofillFieldMaxLength(element),
-      viewable: await this.domElementVisibilityService.isFormFieldViewable(element),
+      viewable: await this.domElementVisibilityService.isElementViewable(element),
       htmlID: this.getPropertyOrAttribute(element, "id"),
       htmlName: this.getPropertyOrAttribute(element, "name"),
       htmlClass: this.getPropertyOrAttribute(element, "class"),
@@ -1332,8 +1332,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
         continue;
       }
 
-      const isViewable =
-        await this.domElementVisibilityService.isFormFieldViewable(formFieldElement);
+      const isViewable = await this.domElementVisibilityService.isElementViewable(formFieldElement);
       if (!isViewable) {
         continue;
       }
