@@ -21,7 +21,7 @@
         bitInput
         appAutofocus
         (blur)="onEmailBlur($event)"
-        (keyup.enter)="clientType === ClientType.Desktop ? continue() : null"
+        (keyup.enter)="clientType === ClientType.Desktop ? continue() : validateEmail()"
       />
     </bit-form-field>
 
