@@ -192,7 +192,7 @@
 @import "./toast/toast.tokens.css";
 @import "./toast/toastr.css";
 
-/** 
+/**
  * tw-break-words does not work with table cells:
  * https://github.com/tailwindlabs/tailwindcss/issues/835
  */
@@ -200,7 +200,7 @@ td.tw-break-words {
   overflow-wrap: anywhere;
 }
 
-/** 
+/**
  * tw-list-none hides summary arrow in Firefox & Chrome but not Safari:
  * https://github.com/tailwindlabs/tailwindcss/issues/924#issuecomment-915509785
  */
@@ -209,7 +209,7 @@ summary.tw-list-none::-webkit-details-marker {
   display: none;
 }
 
-/** 
+/**
  * Arbitrary values can't be used with `text-align`:
  * https://github.com/tailwindlabs/tailwindcss/issues/802#issuecomment-849013311
  */
@@ -218,10 +218,11 @@ summary.tw-list-none::-webkit-details-marker {
 }
 
 /**
- * Bootstrap uses z-index: 1050 for modals, dialogs should appear above them.
- * Remove once bootstrap is removed from our codebase.
- * CL-XYZ
+ * Bootstrap uses z-index: 1050 for modals, dialogs and drag-and-drop previews should appear above them.
+ * When bootstrap is removed, test if these styles are still needed and that overlays display properly over other content.
+ * CL-483
  */
+.cdk-drag-preview,
 .cdk-overlay-container,
 .cdk-global-overlay-wrapper,
 .cdk-overlay-connected-position-bounding-box,
