@@ -249,16 +249,16 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
 
     // If none of the above cases are true, proceed with login...
-    // ...on Web
     if (this.clientType === ClientType.Web) {
       await this.goAfterLogIn(authResult.userId);
-      // ...on Browser/Desktop
-    } else if (this.clientType === ClientType.Browser) {
-      this.loginEmailService.clearValues();
+    }
+
+    this.loginEmailService.clearValues();
+
+    if (this.clientType === ClientType.Browser) {
       await this.router.navigate(["/tabs/vault"]);
     } else {
       await this.router.navigate(["vault"]);
-      this.loginEmailService.clearValues();
     }
   }
 
