@@ -424,6 +424,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
         CipherType.Identity,
       ])
     ).sort((a, b) => this.cipherService.sortCiphersByLastUsedThenName(a, b));
+
     if (!this.cardAndIdentityCiphers) {
       return cipherViews;
     }
