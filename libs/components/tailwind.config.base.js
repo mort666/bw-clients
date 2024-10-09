@@ -23,6 +23,7 @@ module.exports = {
       },
       current: colors.current,
       black: colors.black,
+      shadow: rgba("--color-shadow"),
       primary: {
         100: rgba("--color-primary-100"),
         300: rgba("--color-primary-300"),

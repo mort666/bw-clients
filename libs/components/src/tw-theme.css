@@ -2,6 +2,7 @@
 
 :root {
   --color-transparent-hover: rgb(0 0 0 / 0.02);
+  --color-shadow: 168 179 200;
 
   --color-background: 255 255 255;
   --color-background-alt: 243 246 249;
@@ -56,6 +57,7 @@
 
 .theme_dark {
   --color-transparent-hover: rgb(255 255 255 / 0.02);
+  --color-shadow: 0 0 0;
 
   --color-background: 32 39 51;
   --color-background-alt: 18 26 39;
@@ -63,7 +65,7 @@
   --color-background-alt3: 48 57 70;
   --color-background-alt4: 18 26 39;
 
-  --color-primary-100: 2 15 102;
+  --color-primary-100: 26 39 78;
   --color-primary-300: 26 65 172;
   --color-primary-600: 101 171 255;
   --color-primary-700: 170 195 239;
