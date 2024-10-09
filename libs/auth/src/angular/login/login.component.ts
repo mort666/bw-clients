@@ -385,7 +385,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   protected async saveEmailSettings(): Promise<void> {
-    this.loginEmailService.setLoginEmail(this.formGroup.value.email);
+    await this.loginEmailService.setLoginEmail(this.formGroup.value.email);
     this.loginEmailService.setRememberEmail(this.formGroup.value.rememberEmail);
     await this.loginEmailService.saveEmailSettings();
   }
