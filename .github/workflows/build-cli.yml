@@ -68,7 +68,7 @@ jobs:
           [
             { base: "linux", distro: "ubuntu-22.04" },
             { base: "mac", distro: "macos-13" },
-            { base: "linux-arm64", distro: "ubuntu-arm64-22.04" }
+            { base: "linux-arm64", distro: "bre-shared-ubuntu-arm64-22" }
           ]
         license_type:
           [
