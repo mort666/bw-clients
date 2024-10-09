@@ -839,7 +839,8 @@ export class InlineMenuFieldQualificationService
   isUsernameField = (field: AutofillField): boolean => {
     if (
       !this.usernameFieldTypes.has(field.type) ||
-      this.isExcludedFieldType(field, this.excludedAutofillFieldTypesSet)
+      this.isExcludedFieldType(field, this.excludedAutofillFieldTypesSet) ||
+      this.keywordsFoundInFieldData(field, AutoFillConstants.FieldIgnoreList)
     ) {
       return false;
     }
