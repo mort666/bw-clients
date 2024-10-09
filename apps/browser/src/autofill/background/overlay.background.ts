@@ -431,7 +431,6 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     for (let cipherIndex = 0; cipherIndex < cipherViews.length; cipherIndex++) {
       const cipherView = cipherViews[cipherIndex];
       if (
-        this.cardAndIdentityCiphers &&
         !this.cardAndIdentityCiphers.has(cipherView) &&
         [CipherType.Card, CipherType.Identity].includes(cipherView.type)
       ) {
@@ -439,7 +438,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       }
     }
 
-    if (!this.cardAndIdentityCiphers?.size) {
+    if (!this.cardAndIdentityCiphers.size) {
       this.cardAndIdentityCiphers = null;
     }
 
