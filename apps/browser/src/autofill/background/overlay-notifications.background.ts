@@ -359,11 +359,6 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
       return;
     }
 
-    if (isInvalidResponseStatusCode(details.statusCode)) {
-      this.clearNotificationFallbackTimeout();
-      return;
-    }
-
     const modifyLoginData = this.modifyLoginCipherFormData.get(details.tabId);
     if (!modifyLoginData) {
       return;
@@ -580,8 +575,20 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
    * @param changeInfo - The change info of the tab
    */
   private handleTabUpdated = (tabId: number, changeInfo: chrome.tabs.TabChangeInfo) => {
-    if (changeInfo.status === "loading" && this.websiteOriginsWithFields.has(tabId)) {
-      this.websiteOriginsWithFields.delete(tabId);
+    if (changeInfo.status !== "loading" || !changeInfo.url) {
+      return;
     }
+
+    const originPatterns = this.websiteOriginsWithFields.get(tabId);
+    if (!originPatterns) {
+      return;
+    }
+
+    const matchPatters = generateDomainMatchPatterns(changeInfo.url);
+    if (matchPatters.some((pattern) => originPatterns.has(pattern))) {
+      return;
+    }
+
+    this.websiteOriginsWithFields.delete(tabId);
   };
 }
