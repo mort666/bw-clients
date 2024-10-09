@@ -83,7 +83,7 @@ a:not(popup-page a, popup-tab-navigation a) {
   }
 }
 
-input:not(bit-form-field input),
+input:not(bit-form-field input, bit-search input),
 select:not(bit-form-field select),
 textarea:not(bit-form-field textarea) {
   @include themify($themes) {
