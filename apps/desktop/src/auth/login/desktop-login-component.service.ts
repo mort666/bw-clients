@@ -1,6 +1,7 @@
 import { inject } from "@angular/core";
 
 import { DefaultLoginComponentService, LoginComponentService } from "@bitwarden/auth/angular";
+import { ClientType } from "@bitwarden/common/enums";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { ToastService } from "@bitwarden/components";
@@ -11,6 +12,7 @@ export class DesktopLoginComponentService
 {
   i18nService = inject(I18nService);
   toastService = inject(ToastService);
+  clientType = ClientType.Desktop;
 
   override async launchSsoBrowserWindow(email: string, clientId: "desktop"): Promise<void | null> {
     if (!ipc.platform.isAppImage && !ipc.platform.isSnapStore && !ipc.platform.isDev) {

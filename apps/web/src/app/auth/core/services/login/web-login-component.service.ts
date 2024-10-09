@@ -10,6 +10,7 @@ import {
 import { PolicyApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/policy/policy-api.service.abstraction";
 import { InternalPolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
+import { ClientType } from "@bitwarden/common/enums";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 
 import { flagEnabled } from "../../../../../utils/flags";
@@ -26,6 +27,7 @@ export class WebLoginComponentService
   policyService = inject(InternalPolicyService);
   router = inject(Router);
   routerService = inject(RouterService);
+  clientType = ClientType.Web;
 
   isLoginViaAuthRequestSupported(): boolean {
     return flagEnabled("showPasswordless");
