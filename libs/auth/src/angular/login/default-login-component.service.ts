@@ -20,7 +20,9 @@ export class DefaultLoginComponentService implements LoginComponentService {
     protected passwordGenerationService: PasswordGenerationServiceAbstraction,
     protected platformUtilsService: PlatformUtilsService,
     protected ssoLoginService: SsoLoginServiceAbstraction,
-  ) {}
+  ) {
+    this.clientType = this.platformUtilsService.getClientType();
+  }
 
   async getOrgPolicies(): Promise<PasswordPolicies | null> {
     return null;
