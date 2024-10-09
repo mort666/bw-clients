@@ -29,7 +29,13 @@ import {
   tap,
 } from "rxjs/operators";
 
-import { Unassigned } from "@bitwarden/admin-console/common";
+import {
+  Unassigned,
+  CollectionService,
+  CollectionData,
+  CollectionDetailsResponse,
+  CollectionView,
+} from "@bitwarden/admin-console/common";
 import { SearchPipe } from "@bitwarden/angular/pipes/search.pipe";
 import { ModalService } from "@bitwarden/angular/services/modal.service";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
@@ -51,16 +57,12 @@ import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { SyncService } from "@bitwarden/common/platform/sync";
 import { CipherId, CollectionId, OrganizationId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
-import { CollectionService } from "@bitwarden/common/vault/abstractions/collection.service";
 import { TotpService } from "@bitwarden/common/vault/abstractions/totp.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { CipherRepromptType } from "@bitwarden/common/vault/enums/cipher-reprompt-type";
-import { CollectionData } from "@bitwarden/common/vault/models/data/collection.data";
 import { Cipher } from "@bitwarden/common/vault/models/domain/cipher";
 import { TreeNode } from "@bitwarden/common/vault/models/domain/tree-node";
-import { CollectionDetailsResponse } from "@bitwarden/common/vault/models/response/collection.response";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
-import { CollectionView } from "@bitwarden/common/vault/models/view/collection.view";
 import { ServiceUtils } from "@bitwarden/common/vault/service-utils";
 import { DialogService, Icons, ToastService } from "@bitwarden/components";
 import {
@@ -611,6 +613,12 @@ export class VaultComponent implements OnInit, OnDestroy {
     const result = await lastValueFrom(this.vaultItemDialogRef.closed);
     this.vaultItemDialogRef = undefined;
 
+    // When the dialog is closed for a premium upgrade, return early as the user
+    // should be navigated to the subscription settings elsewhere
+    if (result === VaultItemDialogResult.PremiumUpgrade) {
+      return;
+    }
+
     // If the dialog was closed by deleting the cipher, refresh the vault.
     if (result === VaultItemDialogResult.Deleted || result === VaultItemDialogResult.Saved) {
       this.refresh();
@@ -621,12 +629,14 @@ export class VaultComponent implements OnInit, OnDestroy {
   }
 
   async addCipher(cipherType?: CipherType) {
+    const type = cipherType ?? this.activeFilter.cipherType;
+
     if (this.extensionRefreshEnabled) {
-      return this.addCipherV2(cipherType);
+      return this.addCipherV2(type);
     }
 
     const component = (await this.editCipher(null)) as AddEditComponent;
-    component.type = cipherType || this.activeFilter.cipherType;
+    component.type = type;
     if (
       this.activeFilter.organizationId !== "MyVault" &&
       this.activeFilter.organizationId != null
