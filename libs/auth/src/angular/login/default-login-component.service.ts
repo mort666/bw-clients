@@ -35,7 +35,7 @@ export class DefaultLoginComponentService implements LoginComponentService {
   }
 
   isLoginWithPasskeySupported(): boolean {
-    return this.clientType === ClientType.Web || this.clientType === ClientType.Desktop;
+    return this.clientType === ClientType.Web;
   }
 
   async launchSsoBrowserWindow(
