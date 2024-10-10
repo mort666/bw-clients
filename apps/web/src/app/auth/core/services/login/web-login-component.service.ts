@@ -1,5 +1,5 @@
-import { inject } from "@angular/core";
-import { Router, UrlTree } from "@angular/router";
+import { Injectable } from "@angular/core";
+import { UrlTree } from "@angular/router";
 import { firstValueFrom } from "rxjs";
 
 import {
@@ -10,24 +10,43 @@ import {
 import { PolicyApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/policy/policy-api.service.abstraction";
 import { InternalPolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
-import { ClientType } from "@bitwarden/common/enums";
+import { SsoLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/sso-login.service.abstraction";
+import { CryptoFunctionService } from "@bitwarden/common/platform/abstractions/crypto-function.service";
+import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
 
 import { flagEnabled } from "../../../../../utils/flags";
 import { RouterService } from "../../../../core/router.service";
 import { AcceptOrganizationInviteService } from "../../../organization-invite/accept-organization.service";
 
+@Injectable()
 export class WebLoginComponentService
   extends DefaultLoginComponentService
   implements LoginComponentService
 {
-  acceptOrganizationInviteService = inject(AcceptOrganizationInviteService);
-  logService = inject(LogService);
-  policyApiService = inject(PolicyApiServiceAbstraction);
-  policyService = inject(InternalPolicyService);
-  router = inject(Router);
-  routerService = inject(RouterService);
-  clientType = ClientType.Web;
+  constructor(
+    protected acceptOrganizationInviteService: AcceptOrganizationInviteService,
+    protected logService: LogService,
+    protected policyApiService: PolicyApiServiceAbstraction,
+    protected policyService: InternalPolicyService,
+    protected routerService: RouterService,
+    cryptoFunctionService: CryptoFunctionService,
+    environmentService: EnvironmentService,
+    passwordGenerationService: PasswordGenerationServiceAbstraction,
+    platformUtilsService: PlatformUtilsService,
+    ssoLoginService: SsoLoginServiceAbstraction,
+  ) {
+    super(
+      cryptoFunctionService,
+      environmentService,
+      passwordGenerationService,
+      platformUtilsService,
+      ssoLoginService,
+    );
+    this.clientType = this.platformUtilsService.getClientType();
+  }
 
   isLoginViaAuthRequestSupported(): boolean {
     return flagEnabled("showPasswordless");

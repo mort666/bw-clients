@@ -38,7 +38,10 @@ import {
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
 import { PolicyApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/policy/policy-api.service.abstraction";
-import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
+import {
+  InternalPolicyService,
+  PolicyService,
+} from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { AccountApiService as AccountApiServiceAbstraction } from "@bitwarden/common/auth/abstractions/account-api.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
@@ -257,6 +260,11 @@ const safeProviders: SafeProvider[] = [
     provide: LoginComponentService,
     useClass: WebLoginComponentService,
     deps: [
+      AcceptOrganizationInviteService,
+      LogService,
+      PolicyApiServiceAbstraction,
+      InternalPolicyService,
+      RouterService,
       CryptoFunctionServiceAbstraction,
       EnvironmentService,
       PasswordGenerationServiceAbstraction,

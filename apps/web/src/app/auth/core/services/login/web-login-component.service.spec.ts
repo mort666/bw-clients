@@ -1,10 +1,16 @@
 import { TestBed } from "@angular/core/testing";
 import { UrlTree } from "@angular/router";
+import { MockProxy, mock } from "jest-mock-extended";
 
 import { DefaultLoginComponentService } from "@bitwarden/auth/angular";
 import { PolicyApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/policy/policy-api.service.abstraction";
 import { InternalPolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
+import { SsoLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/sso-login.service.abstraction";
+import { CryptoFunctionService } from "@bitwarden/common/platform/abstractions/crypto-function.service";
+import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
 
 import { RouterService } from "../../../../../../../../apps/web/src/app/core";
 import { flagEnabled } from "../../../../../utils/flags";
@@ -18,37 +24,43 @@ jest.mock("../../../../../utils/flags", () => ({
 
 describe("WebLoginComponentService", () => {
   let service: WebLoginComponentService;
+  let acceptOrganizationInviteService: MockProxy<AcceptOrganizationInviteService>;
+  let logService: MockProxy<LogService>;
+  let policyApiService: MockProxy<PolicyApiServiceAbstraction>;
+  let internalPolicyService: MockProxy<InternalPolicyService>;
+  let routerService: MockProxy<RouterService>;
+  let cryptoFunctionService: MockProxy<CryptoFunctionService>;
+  let environmentService: MockProxy<EnvironmentService>;
+  let passwordGenerationService: MockProxy<PasswordGenerationServiceAbstraction>;
+  let platformUtilsService: MockProxy<PlatformUtilsService>;
+  let ssoLoginService: MockProxy<SsoLoginServiceAbstraction>;
 
   beforeEach(() => {
+    acceptOrganizationInviteService = mock<AcceptOrganizationInviteService>();
+    logService = mock<LogService>();
+    policyApiService = mock<PolicyApiServiceAbstraction>();
+    internalPolicyService = mock<InternalPolicyService>();
+    routerService = mock<RouterService>();
+    cryptoFunctionService = mock<CryptoFunctionService>();
+    environmentService = mock<EnvironmentService>();
+    passwordGenerationService = mock<PasswordGenerationServiceAbstraction>();
+    platformUtilsService = mock<PlatformUtilsService>();
+    ssoLoginService = mock<SsoLoginServiceAbstraction>();
+
     TestBed.configureTestingModule({
       providers: [
         WebLoginComponentService,
         { provide: DefaultLoginComponentService, useClass: WebLoginComponentService },
-        {
-          provide: AcceptOrganizationInviteService,
-          useValue: {
-            getOrganizationInvite: jest.fn(),
-          },
-        },
-        {
-          provide: LogService,
-          useValue: {
-            error: jest.fn(),
-          },
-        },
-        {
-          provide: PolicyApiServiceAbstraction,
-          useValue: {
-            getPoliciesByToken: jest.fn(),
-          },
-        },
-        { provide: InternalPolicyService, useValue: {} },
-        {
-          provide: RouterService,
-          useValue: {
-            setPreviousUrl: jest.fn(),
-          },
-        },
+        { provide: AcceptOrganizationInviteService, useValue: acceptOrganizationInviteService },
+        { provide: LogService, useValue: logService },
+        { provide: PolicyApiServiceAbstraction, useValue: policyApiService },
+        { provide: InternalPolicyService, useValue: internalPolicyService },
+        { provide: RouterService, useValue: routerService },
+        { provide: CryptoFunctionService, useValue: cryptoFunctionService },
+        { provide: EnvironmentService, useValue: environmentService },
+        { provide: PasswordGenerationServiceAbstraction, useValue: passwordGenerationService },
+        { provide: PlatformUtilsService, useValue: platformUtilsService },
+        { provide: SsoLoginServiceAbstraction, useValue: ssoLoginService },
       ],
     });
     service = TestBed.inject(WebLoginComponentService);
@@ -72,22 +84,19 @@ describe("WebLoginComponentService", () => {
 
   it("sets the previous URL", () => {
     const route = { toString: () => "test-url" } as UrlTree;
-    const routerServiceSpy = jest.spyOn(service.routerService, "setPreviousUrl");
     service.setPreviousUrl(route);
-    expect(routerServiceSpy).toHaveBeenCalledWith("test-url");
+    expect(routerService.setPreviousUrl).toHaveBeenCalledWith("test-url");
   });
 
   it("returns undefined if organization invite is null", async () => {
-    jest
-      .spyOn(service.acceptOrganizationInviteService, "getOrganizationInvite")
-      .mockResolvedValue(null);
+    acceptOrganizationInviteService.getOrganizationInvite.mockResolvedValue(null);
     const result = await service.getOrgPolicies();
     expect(result).toBeUndefined();
   });
 
   it("logs an error if getPoliciesByToken throws an error", async () => {
     const error = new Error("Test error");
-    jest.spyOn(service.acceptOrganizationInviteService, "getOrganizationInvite").mockResolvedValue({
+    acceptOrganizationInviteService.getOrganizationInvite.mockResolvedValue({
       organizationId: "org-id",
       token: "token",
       email: "email",
@@ -97,9 +106,8 @@ describe("WebLoginComponentService", () => {
       orgUserHasExistingUser: false,
       organizationName: "org-name",
     });
-    jest.spyOn(service.policyApiService, "getPoliciesByToken").mockRejectedValue(error);
-    const logServiceSpy = jest.spyOn(service.logService, "error");
+    policyApiService.getPoliciesByToken.mockRejectedValue(error);
     await service.getOrgPolicies();
-    expect(logServiceSpy).toHaveBeenCalledWith(error);
+    expect(logService.error).toHaveBeenCalledWith(error);
   });
 });

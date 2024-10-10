@@ -1,18 +1,38 @@
-import { inject } from "@angular/core";
+import { Injectable } from "@angular/core";
 
 import { DefaultLoginComponentService, LoginComponentService } from "@bitwarden/auth/angular";
-import { ClientType } from "@bitwarden/common/enums";
+import { SsoLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/sso-login.service.abstraction";
+import { CryptoFunctionService } from "@bitwarden/common/platform/abstractions/crypto-function.service";
+import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { ToastService } from "@bitwarden/components";
+import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
 
+@Injectable()
 export class DesktopLoginComponentService
   extends DefaultLoginComponentService
   implements LoginComponentService
 {
-  i18nService = inject(I18nService);
-  toastService = inject(ToastService);
-  clientType = ClientType.Desktop;
+  constructor(
+    protected cryptoFunctionService: CryptoFunctionService,
+    protected environmentService: EnvironmentService,
+    protected passwordGenerationService: PasswordGenerationServiceAbstraction,
+    protected platformUtilsService: PlatformUtilsService,
+    protected ssoLoginService: SsoLoginServiceAbstraction,
+    protected i18nService: I18nService,
+    protected toastService: ToastService,
+  ) {
+    super(
+      cryptoFunctionService,
+      environmentService,
+      passwordGenerationService,
+      platformUtilsService,
+      ssoLoginService,
+    );
+    this.clientType = this.platformUtilsService.getClientType();
+  }
 
   override async launchSsoBrowserWindow(email: string, clientId: "desktop"): Promise<void | null> {
     if (!ipc.platform.isAppImage && !ipc.platform.isSnapStore && !ipc.platform.isDev) {
