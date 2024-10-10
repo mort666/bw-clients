@@ -470,6 +470,10 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
   private shouldTriggerChangePasswordNotification = (
     modifyLoginData: ModifyLoginCipherFormData,
   ) => {
+    if (!modifyLoginData) {
+      return false;
+    }
+
     return modifyLoginData.newPassword && !modifyLoginData.username;
   };
 

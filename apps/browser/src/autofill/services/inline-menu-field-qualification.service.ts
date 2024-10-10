@@ -35,17 +35,25 @@ export class InlineMenuFieldQualificationService
   private autofillFieldKeywordsMap: AutofillKeywordsMap = new WeakMap();
   private submitButtonKeywordsMap: SubmitButtonKeywordsMap = new WeakMap();
   private autocompleteDisabledValues = new Set(["off", "false"]);
-  private newFieldKeywords = new Set(["new", "neue", "ändern"]);
   private accountCreationFieldKeywords = [
-    ...new Set([
-      "register",
-      "registration",
-      "create",
-      "confirm password",
-      ...this.newFieldKeywords,
-    ]),
+    "register",
+    "registration",
+    "create password",
+    "confirm password",
+    "new user",
+    "new email",
+    "new e-mail",
+    "new password",
+    "neuer benutzer",
+    "neues passwort",
+    "neue e-mail",
   ];
-  private updatePasswordFieldKeywords = ["update", "change", "current"];
+  private updatePasswordFieldKeywords = [
+    "update password",
+    "change password",
+    "current password",
+    "kennwort ändern",
+  ];
   private creditCardFieldKeywords = [
     ...new Set([
       ...CreditCardAutoFillConstants.CardHolderFieldNames,
@@ -180,12 +188,6 @@ export class InlineMenuFieldQualificationService
     // for credit card fields, we should assume that the field is part of a credit card form.
     if (this.fieldContainsAutocompleteValues(field, this.creditCardAutocompleteValues)) {
       return true;
-    }
-
-    // If the field contains any keywords indicating this is for a "new" or "changed" credit card
-    // field, we should assume that the field is not going to be autofilled.
-    if (this.keywordsFoundInFieldData(field, [...this.newFieldKeywords])) {
-      return false;
     }
 
     const parentForm = pageDetails.forms[field.form];
@@ -388,7 +390,7 @@ export class InlineMenuFieldQualificationService
 
     // If any keywords in the field's data indicates that this is a field for a "new" or "changed"
     // username, we should assume that this field is not for a login form.
-    if (this.keywordsFoundInFieldData(field, [...this.newFieldKeywords])) {
+    if (this.keywordsFoundInFieldData(field, this.accountCreationFieldKeywords)) {
       return false;
     }
 

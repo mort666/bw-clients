@@ -42,7 +42,7 @@ export class AutoFillConstants {
     "twofactor",
     "twofa",
     "twofactorcode",
-    "verificationCode",
+    "verificationcode",
     "verification code",
   ];
 
@@ -868,7 +868,14 @@ export class IdentityAutoFillConstants {
   };
 }
 
-export const SubmitLoginButtonNames: string[] = ["login", "signin", "submit", "continue", "next"];
+export const SubmitLoginButtonNames: string[] = [
+  "login",
+  "signin",
+  "submit",
+  "continue",
+  "next",
+  "verify",
+];
 
 export const SubmitChangePasswordButtonNames: string[] = [
   "change",
