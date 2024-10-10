@@ -1094,20 +1094,23 @@ jobs:
             --file $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             --output none
 
-          az storage blob download --account-name $ACCOUNT_NAME --container-name $CONTAINER_NAME \
-            --name bitwarden_desktop_autofill_app_store_2024.provisionprofile \
-            --file $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
-            --output none
+          # az storage blob download --account-name $ACCOUNT_NAME --container-name $CONTAINER_NAME \
+          #   --name bitwarden_desktop_autofill_app_store_2024.provisionprofile \
+          #   --file $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
+          #   --output none
 
       - name: Set up provisioning profiles
         run: |
-          AUTOFILL_PROFILE_PATH=$HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile
-          PROFILES_DIR_PATH=$HOME/Library/MobileDevice/Provisioning\ Profiles
+          # AUTOFILL_PROFILE_PATH=$HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile
+          # PROFILES_DIR_PATH=$HOME/Library/MobileDevice/Provisioning\ Profiles
 
-          mkdir -p "$PROFILES_DIR_PATH"
+          # mkdir -p "$PROFILES_DIR_PATH"
 
-          AUTOFILL_UUID=$(grep UUID -A1 -a $AUTOFILL_PROFILE_PATH | grep -io "[-A-F0-9]\{36\}")
-          cp $AUTOFILL_PROFILE_PATH "$PROFILES_DIR_PATH/$AUTOFILL_UUID.provisionprofile"
+          # AUTOFILL_UUID=$(grep UUID -A1 -a $AUTOFILL_PROFILE_PATH | grep -io "[-A-F0-9]\{36\}")
+          # cp $AUTOFILL_PROFILE_PATH "$PROFILES_DIR_PATH/$AUTOFILL_UUID.provisionprofile"
+
+          cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
+            $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
 
       - name: Get certificates
         run: |
