@@ -13,34 +13,32 @@ import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { PasswordRepromptService } from "@bitwarden/vault";
 
 // eslint-disable-next-line no-restricted-imports
-import { WeakPasswordsReportComponent as BaseWeakPasswordsReportComponent } from "../../../tools/reports/pages/weak-passwords-report.component";
+import { PasswordsReportComponent as BasePasswordsReportComponent } from "../../../tools/reports/pages/passwords-report.component";
 
 @Component({
-  selector: "app-weak-passwords-report",
-  templateUrl: "../../../tools/reports/pages/weak-passwords-report.component.html",
+  standalone: true,
+  selector: "app-passwords-report",
+  templateUrl: "../../../tools/reports/pages/passwords-report.component.html",
 })
-// eslint-disable-next-line rxjs-angular/prefer-takeuntil
-export class WeakPasswordsReportComponent
-  extends BaseWeakPasswordsReportComponent
-  implements OnInit
-{
+export class PasswordsReportComponent extends BasePasswordsReportComponent implements OnInit {
   manageableCiphers: Cipher[];
 
   constructor(
     cipherService: CipherService,
     passwordStrengthService: PasswordStrengthServiceAbstraction,
-    modalService: ModalService,
     private route: ActivatedRoute,
     organizationService: OrganizationService,
+    protected auditService: AuditService,
+    modalService: ModalService,
     passwordRepromptService: PasswordRepromptService,
     i18nService: I18nService,
     syncService: SyncService,
-    protected auditService: AuditService,
   ) {
     super(
       cipherService,
       passwordStrengthService,
       organizationService,
+      auditService,
       modalService,
       passwordRepromptService,
       i18nService,
@@ -51,7 +49,7 @@ export class WeakPasswordsReportComponent
   async ngOnInit() {
     this.isAdminConsoleActive = true;
     // eslint-disable-next-line rxjs-angular/prefer-takeuntil, rxjs/no-async-subscribe
-    this.route.parent.parent.params.subscribe(async (params) => {
+    this.route.parent?.parent?.params.subscribe(async (params) => {
       this.organization = await this.organizationService.get(params.organizationId);
       this.manageableCiphers = await this.cipherService.getAll();
       await super.ngOnInit();
