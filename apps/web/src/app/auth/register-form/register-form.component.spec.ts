@@ -1,7 +1,7 @@
-import { ComponentFixture, TestBed, fakeAsync, tick, flush } from "@angular/core/testing";
+import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { ReactiveFormsModule } from "@angular/forms";
 import { RouterTestingModule } from "@angular/router/testing";
-import { of, BehaviorSubject } from "rxjs";
+import { of } from "rxjs";
 
 import { OrganizationUserApiService } from "@bitwarden/admin-console/common";
 import { FormValidationErrorsService } from "@bitwarden/angular/platform/abstractions/form-validation-errors.service";
@@ -26,7 +26,6 @@ import { PasswordStrengthServiceAbstraction } from "@bitwarden/common/tools/pass
 import { DialogService, ToastService } from "@bitwarden/components";
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
 
-import { LoginEmailService } from "../../../../../../libs/auth/src/common/services/login-email/login-email.service";
 import { SharedModule } from "../../shared";
 import { AcceptOrganizationInviteService } from "../organization-invite/accept-organization.service";
 
@@ -59,15 +58,8 @@ class MockPasswordStrengthServiceAbstraction {
 describe("RegisterFormComponent", () => {
   let component: RegisterFormComponent;
   let fixture: ComponentFixture<RegisterFormComponent>;
-  let loginEmailService: LoginEmailService;
-  let loginEmailSubject: BehaviorSubject<string>;
 
   beforeEach(async () => {
-    loginEmailSubject = new BehaviorSubject<string>("");
-    const loginEmailServiceMock = {
-      loginEmail$: loginEmailSubject.asObservable(),
-    };
-
     const authServiceMock = {
       authStatuses$: of([]),
     };
@@ -89,7 +81,6 @@ describe("RegisterFormComponent", () => {
       imports: [ReactiveFormsModule, RouterTestingModule, SharedModule],
       declarations: [RegisterFormComponent],
       providers: [
-        { provide: LoginEmailService, useValue: loginEmailServiceMock },
         { provide: AuthService, useValue: authServiceMock },
         { provide: EncryptService, useValue: encryptServiceMock },
         { provide: PolicyApiServiceAbstraction, useValue: policyApiServiceMock },
@@ -123,33 +114,9 @@ describe("RegisterFormComponent", () => {
 
     fixture = TestBed.createComponent(RegisterFormComponent);
     component = fixture.componentInstance;
-    loginEmailService = TestBed.inject(LoginEmailService);
-
-    // Ensure the form group is initialized
-    await component.ngOnInit();
-
-    // Subscribe to loginEmail$ to set the email value
-    loginEmailService.loginEmail$.subscribe((email) => {
-      component.formGroup.get("email")?.setValue(email);
-    });
-
-    fixture.detectChanges();
   });
 
-  it("creates without", () => {
+  it("creates without error", () => {
     expect(component).toBeTruthy();
   });
-
-  it("sets email from loginEmailService", fakeAsync(() => {
-    // Emit a new email value to the loginEmailSubject
-    loginEmailSubject.next("test@example.com");
-    // Simulate the passage of time to allow for async operations
-    tick();
-    // Trigger change detection to update the view
-    fixture.detectChanges();
-    // Ensure all pending asynchronous activities are completed
-    flush();
-
-    expect(component.formGroup.get("email")?.value).toBe("test@example.com");
-  }));
 });

@@ -2,11 +2,7 @@ import { Directive, EventEmitter, Input, OnInit, Output } from "@angular/core";
 import { AbstractControl, UntypedFormBuilder, ValidatorFn, Validators } from "@angular/forms";
 import { Router } from "@angular/router";
 
-import {
-  LoginEmailService,
-  LoginStrategyServiceAbstraction,
-  PasswordLoginCredentials,
-} from "@bitwarden/auth/common";
+import { LoginStrategyServiceAbstraction, PasswordLoginCredentials } from "@bitwarden/auth/common";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
 import { DEFAULT_KDF_CONFIG } from "@bitwarden/common/auth/models/domain/kdf-config";
@@ -103,7 +99,6 @@ export class RegisterComponent extends CaptchaProtectedComponent implements OnIn
     protected auditService: AuditService,
     protected dialogService: DialogService,
     protected toastService: ToastService,
-    protected loginEmailService: LoginEmailService,
   ) {
     super(environmentService, i18nService, platformUtilsService, toastService);
     this.showTerms = !platformUtilsService.isSelfHost();

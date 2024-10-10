@@ -20,7 +20,6 @@ import { StateService } from "@bitwarden/common/platform/abstractions/state.serv
 import { DialogService, ToastService } from "@bitwarden/components";
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
 
-import { LoginEmailService } from "../../../../../../libs/auth/src/common/services/login-email/login-email.service";
 import { AcceptOrganizationInviteService } from "../organization-invite/accept-organization.service";
 
 @Component({
@@ -54,7 +53,6 @@ export class RegisterFormComponent extends BaseRegisterComponent implements OnIn
     dialogService: DialogService,
     acceptOrgInviteService: AcceptOrganizationInviteService,
     toastService: ToastService,
-    loginEmailService: LoginEmailService,
   ) {
     super(
       formValidationErrorService,
@@ -72,7 +70,6 @@ export class RegisterFormComponent extends BaseRegisterComponent implements OnIn
       auditService,
       dialogService,
       toastService,
-      loginEmailService,
     );
     super.modifyRegisterRequest = async (request: RegisterRequest) => {
       // Org invites are deep linked. Non-existent accounts are redirected to the register page.
