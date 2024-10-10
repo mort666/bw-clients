@@ -840,7 +840,7 @@ export class InlineMenuFieldQualificationService
     if (
       !this.usernameFieldTypes.has(field.type) ||
       this.isExcludedFieldType(field, this.excludedAutofillFieldTypesSet) ||
-      this.keywordsFoundInFieldData(field, AutoFillConstants.FieldIgnoreList)
+      this.fieldHasDisqualifyingAttributeValue(field)
     ) {
       return false;
     }
