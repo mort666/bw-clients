@@ -370,9 +370,14 @@ const safeProviders: SafeProvider[] = [
     deps: [WINDOW],
   }),
   safeProvider({
+    provide: LabsSettingsServiceAbstraction,
+    useClass: LabsSettingsService,
+    deps: [StateProvider, ConfigService],
+  }),
+  safeProvider({
     provide: ThemeStateService,
     useClass: DefaultThemeStateService,
-    deps: [GlobalStateProvider, ConfigService],
+    deps: [GlobalStateProvider, ConfigService, LabsSettingsServiceAbstraction],
   }),
   safeProvider({
     provide: AbstractThemingService,
@@ -1208,11 +1213,6 @@ const safeProviders: SafeProvider[] = [
     provide: AutofillSettingsServiceAbstraction,
     useClass: AutofillSettingsService,
     deps: [StateProvider, PolicyServiceAbstraction],
-  }),
-  safeProvider({
-    provide: LabsSettingsServiceAbstraction,
-    useClass: LabsSettingsService,
-    deps: [StateProvider, ConfigService],
   }),
   safeProvider({
     provide: BadgeSettingsServiceAbstraction,

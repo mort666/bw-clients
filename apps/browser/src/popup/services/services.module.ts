@@ -216,6 +216,11 @@ const safeProviders: SafeProvider[] = [
     deps: [GlobalStateProvider],
   }),
   safeProvider({
+    provide: LabsSettingsServiceAbstraction,
+    useClass: LabsSettingsService,
+    deps: [StateProvider, ConfigService],
+  }),
+  safeProvider({
     provide: CryptoService,
     useFactory: (
       pinService: PinServiceAbstraction,
@@ -457,11 +462,6 @@ const safeProviders: SafeProvider[] = [
     provide: AutofillSettingsServiceAbstraction,
     useClass: AutofillSettingsService,
     deps: [StateProvider, PolicyService],
-  }),
-  safeProvider({
-    provide: LabsSettingsServiceAbstraction,
-    useClass: LabsSettingsService,
-    deps: [StateProvider, ConfigService],
   }),
   safeProvider({
     provide: UserNotificationSettingsServiceAbstraction,

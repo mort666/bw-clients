@@ -341,6 +341,7 @@ export default class MainBackground {
   mainContextMenuHandler: MainContextMenuHandler;
   cipherContextMenuHandler: CipherContextMenuHandler;
   configService: ConfigService;
+  labsSettingsService: LabsSettingsServiceAbstraction;
   configApiService: ConfigApiServiceAbstraction;
   devicesApiService: DevicesApiServiceAbstraction;
   devicesService: DevicesServiceAbstraction;
@@ -372,7 +373,6 @@ export default class MainBackground {
   syncServiceListener: SyncServiceListener;
   themeStateService: DefaultThemeStateService;
   autoSubmitLoginBackground: AutoSubmitLoginBackground;
-  labsSettingsService: LabsSettingsServiceAbstraction;
   sdkService: SdkService;
 
   onUpdatedRan: boolean;
@@ -814,6 +814,7 @@ export default class MainBackground {
     this.themeStateService = new DefaultThemeStateService(
       this.globalStateProvider,
       this.configService,
+      this.labsSettingsService,
     );
 
     this.bulkEncryptService = new FallbackBulkEncryptService(this.encryptService);
