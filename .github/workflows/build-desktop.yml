@@ -1114,7 +1114,7 @@ jobs:
           AUTOFILL_UUID=$(grep UUID -A1 -a $AUTOFILL_PROFILE_PATH | grep -io "[-A-F0-9]\{36\}")
           cp $AUTOFILL_PROFILE_PATH "$PROFILES_DIR_PATH/$AUTOFILL_UUID.provisionprofile"
 
-          desktop_profile_path=$HOME/secrets/Bitwarden_Desktop_App_Store_2024_w_autofill.provisionprofile
+          desktop_profile_path="$HOME/secrets/Bitwarden_Desktop_App_Store_2024_w_autofill.provisionprofile"
           DESKTOP_UUID=$(grep UUID -A1 -a $desktop_profile_path | grep -io "[-A-F0-9]\{36\}")
           cp $desktop_profile_path "$PROFILES_DIR_PATH/$DESKTOP_UUID.provisionprofile"
 
