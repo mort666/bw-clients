@@ -12,7 +12,6 @@ import {
   unauthGuardFn,
 } from "@bitwarden/angular/auth/guards";
 import { canAccessFeature } from "@bitwarden/angular/platform/guard/feature-flag.guard";
-import { generatorSwap } from "@bitwarden/angular/tools/generator/generator-swap";
 import { extensionRefreshRedirect } from "@bitwarden/angular/utils/extension-refresh-redirect";
 import { extensionRefreshSwap } from "@bitwarden/angular/utils/extension-refresh-swap";
 import {
@@ -582,7 +581,7 @@ const routes: Routes = [
         canDeactivate: [clearVaultStateGuard],
         data: { state: "tabs_vault" } satisfies RouteDataProperties,
       }),
-      ...generatorSwap(GeneratorComponent, CredentialGeneratorComponent, {
+      ...extensionRefreshSwap(GeneratorComponent, CredentialGeneratorComponent, {
         path: "generator",
         canActivate: [authGuard],
         data: { state: "tabs_generator" } satisfies RouteDataProperties,
