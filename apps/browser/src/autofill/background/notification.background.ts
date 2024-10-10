@@ -828,9 +828,6 @@ export default class NotificationBackground {
     tab: chrome.tabs.Tab,
   ) {
     const tabDomain = Utils.getDomain(tab.url);
-    return (
-      tabDomain != null &&
-      (tabDomain === queueMessage.domain || tabDomain === Utils.getDomain(queueMessage.tab.url))
-    );
+    return tabDomain === queueMessage.domain || tabDomain === Utils.getDomain(queueMessage.tab.url);
   }
 }

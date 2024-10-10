@@ -948,11 +948,13 @@ describe("AutofillOverlayContentService", () => {
             type: "password",
             autoCompleteType: "new-password",
             form: "validFormId",
+            placeholder: "new password",
           });
           const confirmPasswordFieldData = createAutofillFieldMock({
             type: "password",
             autoCompleteType: "new-password",
             form: "validFormId",
+            placeholder: "confirm password",
           });
 
           beforeEach(() => {
