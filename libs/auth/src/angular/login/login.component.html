@@ -130,6 +130,19 @@
           {{ "loginWithDevice" | i18n }}
         </button>
       </ng-container>
+
+      <!-- Back button -->
+      <ng-container *ngIf="showBackButton()">
+        <button
+          type="button"
+          bitButton
+          block
+          buttonType="secondary"
+          (click)="toggleValidateEmail(false)"
+        >
+          {{ "back" | i18n }}
+        </button>
+      </ng-container>
     </div>
   </ng-container>
 </form>

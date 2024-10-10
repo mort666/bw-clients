@@ -557,4 +557,12 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     this.messagingService.send("getWindowIsFocused");
   }
+
+  /**
+   * Helper function to determine if the back button should be shown.
+   * @returns true if the back button should be shown.
+   */
+  protected showBackButton(): boolean {
+    return this.validatedEmail && this.clientType !== ClientType.Browser;
+  }
 }
