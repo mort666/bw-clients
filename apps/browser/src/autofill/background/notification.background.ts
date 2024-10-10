@@ -173,13 +173,8 @@ export default class NotificationBackground {
   }
 
   private async doNotificationQueueCheck(tab: chrome.tabs.Tab): Promise<void> {
-    const tabDomain = Utils.getDomain(tab?.url);
-    if (!tabDomain) {
-      return;
-    }
-
     const queueMessage = this.notificationQueue.find(
-      (message) => message.tab.id === tab.id && message.domain === tabDomain,
+      (message) => message.tab.id === tab.id && this.queueMessageIsFromDomain(message, tab),
     );
     if (queueMessage) {
       await this.sendNotificationQueueMessage(tab, queueMessage);
@@ -537,8 +532,7 @@ export default class NotificationBackground {
         continue;
       }
 
-      const tabDomain = Utils.getDomain(tab.url);
-      if (tabDomain != null && tabDomain !== queueMessage.domain) {
+      if (!this.queueMessageIsFromDomain(queueMessage, tab)) {
         continue;
       }
 
@@ -685,8 +679,7 @@ export default class NotificationBackground {
         continue;
       }
 
-      const tabDomain = Utils.getDomain(tab.url);
-      if (tabDomain != null && tabDomain !== queueMessage.domain) {
+      if (!this.queueMessageIsFromDomain(queueMessage, tab)) {
         continue;
       }
 
@@ -829,4 +822,15 @@ export default class NotificationBackground {
       .catch((error) => this.logService.error(error));
     return true;
   };
+
+  private queueMessageIsFromDomain(
+    queueMessage: NotificationQueueMessageItem,
+    tab: chrome.tabs.Tab,
+  ) {
+    const tabDomain = Utils.getDomain(tab.url);
+    return (
+      tabDomain != null &&
+      (tabDomain === queueMessage.domain || tabDomain === Utils.getDomain(queueMessage.tab.url))
+    );
+  }
 }
