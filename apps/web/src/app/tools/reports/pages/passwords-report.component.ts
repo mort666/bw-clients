@@ -14,6 +14,8 @@ import { BadgeVariant } from "@bitwarden/components";
 import { PasswordRepromptService } from "@bitwarden/vault";
 
 import { CipherReportComponent } from "./cipher-report.component";
+import { userData } from "./passwords-report.mock";
+import { cipherData } from "./reports-ciphers.mock";
 
 @Component({
   selector: "app-passwords-report",
@@ -34,6 +36,8 @@ export class PasswordsReportComponent extends CipherReportComponent implements O
 
   reportCiphers: CipherView[] = [];
   reportCipherIds: string[] = [];
+
+  totalMembersMap = new Map<string, number>();
 
   constructor(
     protected cipherService: CipherService,
@@ -60,11 +64,23 @@ export class PasswordsReportComponent extends CipherReportComponent implements O
   }
 
   async setCiphers() {
-    const allCiphers = await this.getAllCiphers();
+    // const allCiphers = await this.getAllCiphers();
+    const allCiphers = cipherData; // mock data
     this.filterStatus = [0];
     this.setWeakPasswordMap(allCiphers);
     this.setReusedPasswordMap(allCiphers);
     await this.setExposedPasswordMap(allCiphers);
+
+    // Populate totalMembersMap based on userData
+    userData.forEach((user) => {
+      user.cipherIds.forEach((cipherId: string) => {
+        if (this.totalMembersMap.has(cipherId)) {
+          this.totalMembersMap.set(cipherId, this.totalMembersMap.get(cipherId) + 1);
+        } else {
+          this.totalMembersMap.set(cipherId, 1);
+        }
+      });
+    });
 
     // const reportIssues = allCiphers.map((c) => {
     //   if (this.passwordStrengthMap.has(c.id)) {
