@@ -198,7 +198,7 @@ export class AutofillInlineMenuContentService implements AutofillInlineMenuConte
    */
   private appendInlineMenuElementToDom(element: HTMLElement) {
     const parentDialogElement = globalThis.document.activeElement?.closest("dialog");
-    if (parentDialogElement) {
+    if (parentDialogElement && parentDialogElement.open && parentDialogElement.matches(":modal")) {
       this.observeContainerElement(parentDialogElement);
       parentDialogElement.appendChild(element);
       return;
