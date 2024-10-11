@@ -1,6 +1,8 @@
 import { ProviderOrganizationOrganizationDetailsResponse } from "@bitwarden/common/admin-console/models/response/provider/provider-organization.response";
+import { CalculateTaxRequest } from "@bitwarden/common/billing/models/request/calculate-tax.request";
 import { UpdatePaymentMethodRequest } from "@bitwarden/common/billing/models/request/update-payment-method.request";
 import { VerifyBankAccountRequest } from "@bitwarden/common/billing/models/request/verify-bank-account.request";
+import { CalculateTaxResponse } from "@bitwarden/common/billing/models/response/calculate-tax.response";
 import { InvoicesResponse } from "@bitwarden/common/billing/models/response/invoices.response";
 import { PaymentMethodResponse } from "@bitwarden/common/billing/models/response/payment-method.response";
 import { ErrorResponse } from "@bitwarden/common/models/response/error.response";
@@ -18,8 +20,6 @@ import { ListResponse } from "../../models/response/list.response";
 import { CreateClientOrganizationRequest } from "../models/request/create-client-organization.request";
 import { UpdateClientOrganizationRequest } from "../models/request/update-client-organization.request";
 import { ProviderSubscriptionResponse } from "../models/response/provider-subscription-response";
-import { CalculateTaxRequest } from "@bitwarden/common/billing/models/request/calculate-tax.request";
-import { CalculateTaxResponse } from "@bitwarden/common/billing/models/response/calculate-tax.response";
 
 export class BillingApiService implements BillingApiServiceAbstraction {
   constructor(
