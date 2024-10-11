@@ -66,6 +66,7 @@ export class PasswordsReportComponent extends CipherReportComponent implements O
   async setCiphers() {
     // const allCiphers = await this.getAllCiphers();
     const allCiphers = cipherData; // mock data
+    this.allCiphers = allCiphers;
     this.filterStatus = [0];
     this.setWeakPasswordMap(allCiphers);
     this.setReusedPasswordMap(allCiphers);
@@ -130,7 +131,9 @@ export class PasswordsReportComponent extends CipherReportComponent implements O
           this.exposedPasswordMap.set(id, exposedCount);
           if (!this.reportCipherIds.includes(ciph.id)) {
             this.reportCipherIds.push(ciph.id);
-            this.reportCiphers.push(ciph);
+            if (!this.reportCiphers.includes(ciph)) {
+              this.reportCiphers.push(ciph);
+            }
           }
         }
       });
@@ -157,6 +160,9 @@ export class PasswordsReportComponent extends CipherReportComponent implements O
       }
 
       ciphersWithPasswords.push(ciph);
+      if (!this.reportCiphers.includes(ciph)) {
+        this.reportCiphers.push(ciph);
+      }
       if (this.passwordUseMap.has(login.password)) {
         this.passwordUseMap.set(login.password, this.passwordUseMap.get(login.password) + 1);
       } else {
@@ -219,6 +225,9 @@ export class PasswordsReportComponent extends CipherReportComponent implements O
       if (score != null && score <= 2) {
         this.passwordStrengthMap.set(id, this.scoreKey(score));
         this.weakPasswordCiphers.push(ciph);
+        if (!this.reportCiphers.includes(ciph)) {
+          this.reportCiphers.push(ciph);
+        }
       }
     });
     this.weakPasswordCiphers.sort((a, b) => {
