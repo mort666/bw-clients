@@ -54,8 +54,8 @@ function selfHostedEnvSettingsFormValidator(): ValidatorFn {
  */
 @Component({
   standalone: true,
-  selector: "auth-registration-self-hosted-env-config-dialog",
-  templateUrl: "registration-self-hosted-env-config-dialog.component.html",
+  selector: "auth-self-hosted-env-config-dialog",
+  templateUrl: "self-hosted-env-config-dialog.component.html",
   imports: [
     CommonModule,
     JslibModule,
@@ -68,14 +68,14 @@ function selfHostedEnvSettingsFormValidator(): ValidatorFn {
     AsyncActionsModule,
   ],
 })
-export class RegistrationSelfHostedEnvConfigDialogComponent implements OnInit, OnDestroy {
+export class SelfHostedEnvConfigDialogComponent implements OnInit, OnDestroy {
   /**
    * Opens the dialog.
    * @param dialogService - Dialog service.
    * @returns Promise that resolves to true if the dialog was closed with a successful result, false otherwise.
    */
   static async open(dialogService: DialogService): Promise<boolean> {
-    const dialogRef = dialogService.open<boolean>(RegistrationSelfHostedEnvConfigDialogComponent, {
+    const dialogRef = dialogService.open<boolean>(SelfHostedEnvConfigDialogComponent, {
       disableClose: false,
     });
 
