@@ -13,8 +13,12 @@ import { ListResponse } from "../../models/response/list.response";
 import { CreateClientOrganizationRequest } from "../models/request/create-client-organization.request";
 import { UpdateClientOrganizationRequest } from "../models/request/update-client-organization.request";
 import { ProviderSubscriptionResponse } from "../models/response/provider-subscription-response";
+import { CalculateTaxRequest } from "@bitwarden/common/billing/models/request/calculate-tax.request";
+import { CalculateTaxResponse } from "@bitwarden/common/billing/models/response/calculate-tax.response";
 
 export abstract class BillingApiServiceAbstraction {
+  calculateTax: (request: CalculateTaxRequest) => Promise<CalculateTaxResponse>;
+
   cancelOrganizationSubscription: (
     organizationId: string,
     request: SubscriptionCancellationRequest,

@@ -307,6 +307,8 @@ import {
   ENV_ADDITIONAL_REGIONS,
 } from "./injection-tokens";
 import { ModalService } from "./modal.service";
+import { TaxServiceAbstraction } from "@bitwarden/common/billing/abstractions/tax.service.abstraction";
+import { TaxService } from "@bitwarden/common/billing/services/tax.service";
 
 /**
  * Provider definitions used in the ngModule.
@@ -1244,6 +1246,11 @@ const safeProviders: SafeProvider[] = [
     provide: BillingAccountProfileStateService,
     useClass: DefaultBillingAccountProfileStateService,
     deps: [StateProvider],
+  }),
+  safeProvider({
+    provide: TaxServiceAbstraction,
+    useClass: TaxService,
+    deps: [],
   }),
   safeProvider({
     provide: OrganizationManagementPreferencesService,

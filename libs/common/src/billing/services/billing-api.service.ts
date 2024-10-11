@@ -18,6 +18,8 @@ import { ListResponse } from "../../models/response/list.response";
 import { CreateClientOrganizationRequest } from "../models/request/create-client-organization.request";
 import { UpdateClientOrganizationRequest } from "../models/request/update-client-organization.request";
 import { ProviderSubscriptionResponse } from "../models/response/provider-subscription-response";
+import { CalculateTaxRequest } from "@bitwarden/common/billing/models/request/calculate-tax.request";
+import { CalculateTaxResponse } from "@bitwarden/common/billing/models/response/calculate-tax.response";
 
 export class BillingApiService implements BillingApiServiceAbstraction {
   constructor(
@@ -25,6 +27,10 @@ export class BillingApiService implements BillingApiServiceAbstraction {
     private logService: LogService,
     private toastService: ToastService,
   ) {}
+
+  calculateTax(request: CalculateTaxRequest): Promise<CalculateTaxResponse> {
+    return this.apiService.send("POST", "/tax/calculate", request, true, true);
+  }
 
   cancelOrganizationSubscription(
     organizationId: string,
