@@ -2,8 +2,8 @@ import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from "@angu
 import { FormBuilder, Validators } from "@angular/forms";
 import { Subject, takeUntil } from "rxjs";
 
-import { TaxInformation } from "@bitwarden/common/billing/models/domain";
 import { TaxServiceAbstraction } from "@bitwarden/common/billing/abstractions/tax.service.abstraction";
+import { TaxInformation } from "@bitwarden/common/billing/models/domain";
 import { TaxableCountry } from "@bitwarden/common/billing/models/domain/taxable-country";
 
 @Component({
