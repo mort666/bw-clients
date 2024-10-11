@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
 import { FormControl, FormGroup, Validators } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
 import { from, Subject, takeUntil, tap } from "rxjs";
-import { switchMap } from "rxjs/operators";
+import { debounceTime, switchMap } from "rxjs/operators";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
@@ -204,7 +204,7 @@ export class TaxInfoComponent implements OnInit {
           }
           this.taxFormGroup.get("postalCode").updateValueAndValidity();
         }),
-        // Use `from` to handle async call as an Observable
+        debounceTime(1000),
         switchMap(() => from(this.calculateSalesTax())),
         takeUntil(this.destroy$),
       )
@@ -212,6 +212,7 @@ export class TaxInfoComponent implements OnInit {
     this.taxFormGroup
       .get("postalCode")
       .valueChanges.pipe(
+        debounceTime(1000),
         switchMap(() => from(this.calculateSalesTax())),
         takeUntil(this.destroy$),
       )
