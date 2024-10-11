@@ -11,9 +11,12 @@ import {
   unauthGuardFn,
 } from "@bitwarden/angular/auth/guards";
 import { canAccessFeature } from "@bitwarden/angular/platform/guard/feature-flag.guard";
+import { extensionRefreshRedirect } from "@bitwarden/angular/utils/extension-refresh-redirect";
 import {
   AnonLayoutWrapperComponent,
   AnonLayoutWrapperData,
+  LockIcon,
+  LockV2Component,
   PasswordHintComponent,
   RegistrationFinishComponent,
   RegistrationStartComponent,
@@ -43,6 +46,14 @@ import { VaultComponent } from "../vault/app/vault/vault.component";
 
 import { SendComponent } from "./tools/send/send.component";
 
+/**
+ * Data properties acceptable for use in route objects in the desktop
+ */
+export interface RouteDataProperties {
+  // For any new route data properties, add them here.
+  // then assert that the data object satisfies this interface in the route object.
+}
+
 const routes: Routes = [
   {
     path: "",
@@ -54,6 +65,7 @@ const routes: Routes = [
     path: "lock",
     component: LockComponent,
     canActivate: [lockGuard()],
+    canMatch: [extensionRefreshRedirect("/lockV2")],
   },
   {
     path: "login",
@@ -114,7 +126,6 @@ const routes: Routes = [
     path: "remove-password",
     component: RemovePasswordComponent,
     canActivate: [authGuard],
-    data: { titleId: "removeMasterPassword" },
   },
   ...unauthUiRefreshSwap(
     HintComponent,
@@ -122,10 +133,6 @@ const routes: Routes = [
     {
       path: "hint",
       canActivate: [unauthGuardFn()],
-      data: {
-        pageTitle: "passwordHint",
-        titleId: "passwordHint",
-      },
     },
     {
       path: "",
@@ -134,11 +141,14 @@ const routes: Routes = [
           path: "hint",
           canActivate: [unauthGuardFn()],
           data: {
-            pageTitle: "requestPasswordHint",
-            pageSubtitle: "enterYourAccountEmailAddressAndYourPasswordHintWillBeSentToYou",
+            pageTitle: {
+              key: "requestPasswordHint",
+            },
+            pageSubtitle: {
+              key: "enterYourAccountEmailAddressAndYourPasswordHintWillBeSentToYou",
+            },
             pageIcon: UserLockIcon,
-            state: "hint",
-          },
+          } satisfies AnonLayoutWrapperData,
           children: [
             { path: "", component: PasswordHintComponent },
             {
@@ -158,7 +168,11 @@ const routes: Routes = [
       {
         path: "signup",
         canActivate: [canAccessFeature(FeatureFlag.EmailVerification), unauthGuardFn()],
-        data: { pageTitle: "createAccount" } satisfies AnonLayoutWrapperData,
+        data: {
+          pageTitle: {
+            key: "createAccount",
+          },
+        } satisfies AnonLayoutWrapperData,
         children: [
           {
             path: "",
@@ -178,8 +192,12 @@ const routes: Routes = [
         path: "finish-signup",
         canActivate: [canAccessFeature(FeatureFlag.EmailVerification), unauthGuardFn()],
         data: {
-          pageTitle: "setAStrongPassword",
-          pageSubtitle: "finishCreatingYourAccountBySettingAPassword",
+          pageTitle: {
+            key: "setAStrongPassword",
+          },
+          pageSubtitle: {
+            key: "finishCreatingYourAccountBySettingAPassword",
+          },
         } satisfies AnonLayoutWrapperData,
         children: [
           {
@@ -189,12 +207,33 @@ const routes: Routes = [
         ],
       },
       {
+        path: "lockV2",
+        canActivate: [canAccessFeature(FeatureFlag.ExtensionRefresh), lockGuard()],
+        data: {
+          pageIcon: LockIcon,
+          pageTitle: {
+            key: "yourVaultIsLockedV2",
+          },
+          showReadonlyHostname: true,
+        } satisfies AnonLayoutWrapperData,
+        children: [
+          {
+            path: "",
+            component: LockV2Component,
+          },
+        ],
+      },
+      {
         path: "set-password-jit",
         canActivate: [canAccessFeature(FeatureFlag.EmailVerification)],
         component: SetPasswordJitComponent,
         data: {
-          pageTitle: "joinOrganization",
-          pageSubtitle: "finishJoiningThisOrganizationBySettingAMasterPassword",
+          pageTitle: {
+            key: "joinOrganization",
+          },
+          pageSubtitle: {
+            key: "finishJoiningThisOrganizationBySettingAMasterPassword",
+          },
         } satisfies AnonLayoutWrapperData,
       },
     ],

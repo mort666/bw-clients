@@ -381,7 +381,7 @@
   },
   "generator": {
     "message": "Gerador",
-    "description": "Short for 'Password Generator'."
+    "description": "Short for 'credential generator'."
   },
   "passGenInfo": {
     "message": "Gera automaticamente palavras-passe fortes e únicas para as suas credenciais."
@@ -490,7 +490,7 @@
     "description": "Label for the avoid ambiguous characters checkbox."
   },
   "generatorPolicyInEffect": {
-    "message": "Enterprise policy requirements have been applied to your generator options.",
+    "message": "Os requisitos da política empresarial foram aplicados às suas opções de gerador.",
     "description": "Indicates that a policy limits the credential generator screen."
   },
   "searchVault": {
@@ -603,6 +603,15 @@
   },
   "yourVaultIsLocked": {
     "message": "O seu cofre está bloqueado. Verifique a sua identidade para continuar."
+  },
+  "yourVaultIsLockedV2": {
+    "message": "O seu cofre está bloqueado"
+  },
+  "yourAccountIsLocked": {
+    "message": "A sua conta está bloqueada"
+  },
+  "or": {
+    "message": "ou"
   },
   "unlock": {
     "message": "Desbloquear"
@@ -1936,6 +1945,9 @@
   "unlockWithBiometrics": {
     "message": "Desbloquear com biometria"
   },
+  "unlockWithMasterPassword": {
+    "message": "Desbloquear com a palavra-passe mestra"
+  },
   "awaitDesktop": {
     "message": "A aguardar confirmação da aplicação para computador"
   },
@@ -2374,6 +2386,10 @@
     "message": "Tem a certeza de que pretende eliminar este Send?",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "deleteSendPermanentConfirmation": {
+    "message": "Tem a certeza de que pretende eliminar permanentemente este Send?",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "editSend": {
     "message": "Editar Send",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
@@ -2482,7 +2498,25 @@
     "message": "Send criado com sucesso!",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
-  "sendAvailability": {
+  "sendExpiresInHoursSingle": {
+    "message": "O Send estará disponível para qualquer pessoa que tenha o link durante a próxima hora.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInHours": {
+    "message": "O Send estará disponível para qualquer pessoa que tenha o link durante as próximas $HOURS$.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "sendExpiresInDaysSingle": {
+    "message": "O Send estará disponível para qualquer pessoa que tenha o link durante o próximo dia.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInDays": {
     "message": "O Send estará disponível para qualquer pessoa que tenha o link durante os próximos $DAYS$ dias.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
     "placeholders": {
@@ -2500,6 +2534,14 @@
     "message": "Send editado",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "sendFilePopoutDialogText": {
+    "message": "Abrir a extensão numa nova janela?",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendFilePopoutDialogDesc": {
+    "message": "Para criar um ficheiro Send, precisa de abrir a extensão para uma nova janela.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "sendLinuxChromiumFileWarning": {
     "message": "Para escolher um ficheiro, abra a extensão na barra lateral (se possível) ou abra uma nova janela clicando neste banner."
   },
@@ -2508,6 +2550,9 @@
   },
   "sendSafariFileWarning": {
     "message": "Para escolher um ficheiro utilizando o Safari, abra uma nova janela clicando neste banner."
+  },
+  "popOut": {
+    "message": "Abrir numa nova janela"
   },
   "sendFileCalloutHeader": {
     "message": "Antes de começar"
@@ -3608,6 +3653,9 @@
   "typePasskey": {
     "message": "Chave de acesso"
   },
+  "accessing": {
+    "message": "A aceder"
+  },
   "passkeyNotCopied": {
     "message": "A chave de acesso não será copiada"
   },
@@ -3632,6 +3680,9 @@
   "noMatchingLoginsForSite": {
     "message": "Sem credenciais correspondentes para este site"
   },
+  "searchSavePasskeyNewLogin": {
+    "message": "Procure ou guarde a chave de acesso como uma nova credencial"
+  },
   "confirm": {
     "message": "Confirmar"
   },
@@ -3639,7 +3690,7 @@
     "message": "Guardar a chave de acesso"
   },
   "savePasskeyNewLogin": {
-    "message": "Guardar a chave de acesso como uma nova credencial"
+    "message": "Guarde a chave de acesso como uma nova credencial"
   },
   "chooseCipherForPasskeySave": {
     "message": "Escolha uma credencial para guardar esta chave de acesso"
@@ -4201,6 +4252,9 @@
   "enableAnimations": {
     "message": "Ativar animações"
   },
+  "showAnimations": {
+    "message": "Mostrar animações"
+  },
   "addAccount": {
     "message": "Adicionar conta"
   },
@@ -4478,5 +4532,8 @@
   },
   "noEditPermissions": {
     "message": "Não tem permissão para editar este item"
+  },
+  "authenticating": {
+    "message": "A autenticar"
   }
 }

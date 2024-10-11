@@ -381,7 +381,7 @@
   },
   "generator": {
     "message": "Generator",
-    "description": "Short for 'Password Generator'."
+    "description": "Short for 'credential generator'."
   },
   "passGenInfo": {
     "message": "Opret automatisk stærke, unikke adgangskoder til dine logins."
@@ -490,7 +490,7 @@
     "description": "Label for the avoid ambiguous characters checkbox."
   },
   "generatorPolicyInEffect": {
-    "message": "Enterprise policy requirements have been applied to your generator options.",
+    "message": "Virksomhedspolitikkrav gør sig gældende på generatorvalgmulighder.",
     "description": "Indicates that a policy limits the credential generator screen."
   },
   "searchVault": {
@@ -603,6 +603,15 @@
   },
   "yourVaultIsLocked": {
     "message": "Din boks er låst. Bekræft din identitet for at fortsætte."
+  },
+  "yourVaultIsLockedV2": {
+    "message": "Boksen er låst"
+  },
+  "yourAccountIsLocked": {
+    "message": "Kontoen er låst"
+  },
+  "or": {
+    "message": "eller"
   },
   "unlock": {
     "message": "Lås op"
@@ -1936,6 +1945,9 @@
   "unlockWithBiometrics": {
     "message": "Lås op med biometri"
   },
+  "unlockWithMasterPassword": {
+    "message": "Oplås med hovedadgangskode"
+  },
   "awaitDesktop": {
     "message": "Afventer bekræftelse fra skrivebordet"
   },
@@ -2374,6 +2386,10 @@
     "message": "Er du sikker på, at du vil slette denne Send?",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "deleteSendPermanentConfirmation": {
+    "message": "Sikker på, at denne Send skal slettes permanent?",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "editSend": {
     "message": "Redigér Send",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
@@ -2482,8 +2498,26 @@
     "message": "Send er hermed oprettet!",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
-  "sendAvailability": {
-    "message": "Denne Send vil være tilgængelig for alle med linket i de næste $DAYS$ dage.",
+  "sendExpiresInHoursSingle": {
+    "message": "Denne Send vil være tilgængelig for alle med linket den kommende time.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInHours": {
+    "message": "Denne Send vil være tilgængelig for alle med linket de kommende $HOURS$ timer.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "sendExpiresInDaysSingle": {
+    "message": "Denne Send vil være tilgængelig for alle med linket den kommende dag.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInDays": {
+    "message": "Denne Send vil være tilgængelig for alle med linket de kommende $DAYS$ dage.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
     "placeholders": {
       "days": {
@@ -2500,6 +2534,14 @@
     "message": "Send gemt",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "sendFilePopoutDialogText": {
+    "message": "Pop udvidelsen ud?",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendFilePopoutDialogDesc": {
+    "message": "For at oprette en fil-Send, skal udvidelsen poppes ud til et nyt vindue.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "sendLinuxChromiumFileWarning": {
     "message": "For at vælge en fil, åben udvidelsen i sidepanelet (om muligt) eller pop ud til et nyt vindue ved at klikke på dette banner."
   },
@@ -2508,6 +2550,9 @@
   },
   "sendSafariFileWarning": {
     "message": "For at vælge en fil i Safari skal du åbne i et nyt vindue ved at klikke på dette banner."
+  },
+  "popOut": {
+    "message": "Pop ud"
   },
   "sendFileCalloutHeader": {
     "message": "Før du starter"
@@ -3608,6 +3653,9 @@
   "typePasskey": {
     "message": "Adgangsnøgle"
   },
+  "accessing": {
+    "message": "Tilgår"
+  },
   "passkeyNotCopied": {
     "message": "Adgangsnøglen kopieres ikke"
   },
@@ -3631,6 +3679,9 @@
   },
   "noMatchingLoginsForSite": {
     "message": "Ingen matchende logins for dette websted"
+  },
+  "searchSavePasskeyNewLogin": {
+    "message": "Søg eller gem adgangsnøgle som nyt login"
   },
   "confirm": {
     "message": "Bekræft"
@@ -4201,6 +4252,9 @@
   "enableAnimations": {
     "message": "Aktivér animationer"
   },
+  "showAnimations": {
+    "message": "Vis animationer"
+  },
   "addAccount": {
     "message": "Tilføj konto"
   },
@@ -4478,5 +4532,8 @@
   },
   "noEditPermissions": {
     "message": "Ingen tilladelse til at redigere dette emne"
+  },
+  "authenticating": {
+    "message": "Godkender"
   }
 }

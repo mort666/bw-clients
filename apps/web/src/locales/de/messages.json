@@ -1,4 +1,64 @@
 {
+  "allApplications": {
+    "message": "Alle Anwendungen"
+  },
+  "priorityApplications": {
+    "message": "Vorrangige Anwendungen"
+  },
+  "accessIntelligence": {
+    "message": "Access Intelligence"
+  },
+  "notifiedMembers": {
+    "message": "Benachrichtigte Mitglieder"
+  },
+  "allApplicationsWithCount": {
+    "message": "Alle Anwendungen ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "priorityApplicationsWithCount": {
+    "message": "Vorrangige Anwendungen ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "notifiedMembersWithCount": {
+    "message": "Benachrichtigte Mitglieder ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "application": {
+    "message": "Anwendung"
+  },
+  "atRiskPasswords": {
+    "message": "Risikoreiche Passwörter"
+  },
+  "totalPasswords": {
+    "message": "Passwörter insgesamt"
+  },
+  "atRiskMembers": {
+    "message": "Risikoreiche Mitglieder"
+  },
+  "totalMembers": {
+    "message": "Mitglieder insgesamt"
+  },
+  "atRiskApplications": {
+    "message": "Risikoreiche Anwendungen"
+  },
+  "totalApplications": {
+    "message": "Anwendungen insgesamt"
+  },
   "whatTypeOfItem": {
     "message": "Um welche Art von Eintrag handelt es sich hierbei?"
   },
@@ -1099,6 +1159,9 @@
   "yourVaultIsLockedV2": {
     "message": "Dein Tresor ist gesperrt."
   },
+  "yourAccountIsLocked": {
+    "message": "Dein Konto ist gesperrt"
+  },
   "uuid": {
     "message": "UUID"
   },
@@ -1437,7 +1500,12 @@
     "description": "Minimum special characters"
   },
   "ambiguous": {
-    "message": "Mehrdeutige Zeichen vermeiden"
+    "message": "Mehrdeutige Zeichen vermeiden",
+    "description": "deprecated. Use avoidAmbiguous instead."
+  },
+  "avoidAmbiguous": {
+    "message": "Mehrdeutige Zeichen vermeiden",
+    "description": "Label for the avoid ambiguous characters checkbox."
   },
   "regeneratePassword": {
     "message": "Passwort neu generieren"
@@ -1450,17 +1518,50 @@
   },
   "uppercase": {
     "message": "Großbuchstaben (A-Z)",
-    "description": "Include uppercase letters in the password generator."
+    "description": "deprecated. Use uppercaseLabel instead."
   },
   "lowercase": {
     "message": "Kleinbuchstaben (a-z)",
-    "description": "Include lowercase letters in the password generator."
+    "description": "deprecated. Use lowercaseLabel instead."
   },
   "numbers": {
-    "message": "Zahlen (0-9)"
+    "message": "Zahlen (0-9)",
+    "description": "deprecated. Use numbersLabel instead."
   },
   "specialCharacters": {
     "message": "Sonderzeichen (!@#$%^&*)"
+  },
+  "uppercaseDescription": {
+    "message": "Großbuchstaben einschließen",
+    "description": "Tooltip for the password generator uppercase character checkbox"
+  },
+  "uppercaseLabel": {
+    "message": "A-Z",
+    "description": "Label for the password generator uppercase character checkbox"
+  },
+  "lowercaseDescription": {
+    "message": "Kleinbuchstaben einschließen",
+    "description": "Full description for the password generator lowercase character checkbox"
+  },
+  "lowercaseLabel": {
+    "message": "a-z",
+    "description": "Label for the password generator lowercase character checkbox"
+  },
+  "numbersDescription": {
+    "message": "Ziffern einschließen",
+    "description": "Full description for the password generator numbers checkbox"
+  },
+  "numbersLabel": {
+    "message": "0-9",
+    "description": "Label for the password generator numbers checkbox"
+  },
+  "specialCharactersDescription": {
+    "message": "Sonderzeichen einschließen",
+    "description": "Full description for the password generator special characters checkbox"
+  },
+  "specialCharactersLabel": {
+    "message": "!@#$%^&*",
+    "description": "Label for the password generator special characters checkbox"
   },
   "numWords": {
     "message": "Anzahl der Wörter"
@@ -1474,6 +1575,10 @@
   },
   "includeNumber": {
     "message": "Ziffern einschließen"
+  },
+  "generatorPolicyInEffect": {
+    "message": "Die Unternehmensrichtlinien-Anforderungen wurden auf deine Generator-Optionen angewendet.",
+    "description": "Indicates that a policy limits the credential generator screen."
   },
   "passwordHistory": {
     "message": "Passwortverlauf"
@@ -2195,6 +2300,9 @@
   "checkExposedPasswords": {
     "message": "Auf kompromittierte Passwörter prüfen"
   },
+  "timesExposed": {
+    "message": "Mal kompromittiert"
+  },
   "exposedXTimes": {
     "message": "$COUNT$ mal kompromittiert",
     "placeholders": {
@@ -2229,6 +2337,9 @@
   "noWeakPasswords": {
     "message": "Keine Einträge in deinem Tresor haben schwache Passwörter."
   },
+  "weakness": {
+    "message": "Schwäche"
+  },
   "reusedPasswordsReport": {
     "message": "Wiederverwendete Passwörter"
   },
@@ -2253,6 +2364,9 @@
   },
   "noReusedPasswords": {
     "message": "In deinem Tresor wurden keine Einträge mit wiederverwendeten Passwörtern gefunden."
+  },
+  "timesReused": {
+    "message": "Mal wiederverwendet"
   },
   "reusedXTimes": {
     "message": "$COUNT$ Mal wiederverwendet",
@@ -2551,6 +2665,9 @@
   "downloadLicense": {
     "message": "Lizenz herunterladen"
   },
+  "viewBillingToken": {
+    "message": "Abrechnungstoken anzeigen"
+  },
   "updateLicense": {
     "message": "Lizenz aktualisieren"
   },
@@ -2597,8 +2714,11 @@
   "invoices": {
     "message": "Rechnungen"
   },
-  "noInvoices": {
-    "message": "Keine Rechnungen."
+  "noUnpaidInvoices": {
+    "message": "Keine unbezahlten Rechnungen."
+  },
+  "noPaidInvoices": {
+    "message": "Keine bezahlten Rechnungen."
   },
   "paid": {
     "message": "Bezahlt",
@@ -3155,6 +3275,10 @@
   },
   "incorrectPin": {
     "message": "Falsche PIN"
+  },
+  "pin": {
+    "message": "PIN",
+    "description": "PIN code. Ex. The short code (often numeric) that you use to unlock a device."
   },
   "exportedVault": {
     "message": "Tresor exportiert."
@@ -5981,8 +6105,8 @@
   "viewBillingSyncToken": {
     "message": "Rechnungssynchronisations-Token ansehen"
   },
-  "generateBillingSyncToken": {
-    "message": "Rechnungssynchronisations-Token generieren"
+  "generateBillingToken": {
+    "message": "Abrechnungstoken generieren"
   },
   "copyPasteBillingSync": {
     "message": "Kopiere diesen Token und füge ihn in die Rechnungssynchronisations-Einstellungen deiner selbst gehosteten Organisation ein."
@@ -5990,8 +6114,8 @@
   "billingSyncCanAccess": {
     "message": "Dein Rechnungssynchronisations-Token kann auf die Abonnement-Einstellungen dieser Organisation zugreifen und diese bearbeiten."
   },
-  "manageBillingSync": {
-    "message": "Rechnungssynchronisation verwalten"
+  "manageBillingTokenSync": {
+    "message": "Abrechnungstoken verwalten"
   },
   "setUpBillingSync": {
     "message": "Rechnungssynchronisation einrichten"
@@ -6050,14 +6174,14 @@
   "billingSyncApiKeyRotated": {
     "message": "Token erneuert"
   },
-  "billingSyncDesc": {
-    "message": "Die Rechnungssynchronisation schaltet Sponsorings für Families und eine automatische Lizenz-Synchronisation auf deinem Server frei. Nach der Aktualisierung des Bitwarden Cloud-Servers, wähle Lizenz synchronisieren aus, um die Änderungen anzuwenden."
-  },
   "billingSyncKeyDesc": {
     "message": "Um dieses Formular auszufüllen, ist ein Rechnungssynchronisations-Token aus den Abonnement-Einstellungen deiner Cloud-Organisation erforderlich."
   },
   "billingSyncKey": {
     "message": "Rechnungssynchronisations-Token"
+  },
+  "automaticBillingSyncDesc": {
+    "message": "Die automatische Synchronisierung schaltet Sponsoring für Families frei und ermöglicht dir die Synchronisierung deiner Lizenz ohne eine Datei hochzuladen. Nachdem du Aktualisierungen auf dem Bitwarden Cloud-Server durchgeführt hast, wähle Lizenz synchronisieren aus, um die Änderungen zu übernehmen."
   },
   "active": {
     "message": "Aktiv"
@@ -6200,7 +6324,8 @@
     "message": "Kontoeinstellungen"
   },
   "generator": {
-    "message": "Generator"
+    "message": "Generator",
+    "description": "Short for 'credential generator'."
   },
   "whatWouldYouLikeToGenerate": {
     "message": "Was möchtest du generieren?"
@@ -6575,6 +6700,18 @@
       "count": {
         "content": "$1",
         "example": "4"
+      }
+    }
+  },
+  "singleFieldNeedsAttention": {
+    "message": "1 Feld erfordert deine Aufmerksamkeit."
+  },
+  "multipleFieldsNeedAttention": {
+    "message": "$COUNT$ Felder erfordern deine Aufmerksamkeit.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
       }
     }
   },
@@ -7438,6 +7575,15 @@
   "or": {
     "message": "oder"
   },
+  "unlockWithBiometrics": {
+    "message": "Mit Biometrie entsperren"
+  },
+  "unlockWithPin": {
+    "message": "Mit PIN-Code entsperren"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Mit Master-Passwort entsperren"
+  },
   "licenseAndBillingManagement": {
     "message": "Lizenz- und Abrechnungsverwaltung"
   },
@@ -7447,8 +7593,8 @@
   "manualUpload": {
     "message": "Manuelles Hochladen"
   },
-  "manualUploadDesc": {
-    "message": "Wenn du dich nicht für die Rechnungssynchronisation entscheiden möchtest, lade deine Lizenz hier manuell hoch."
+  "manualBillingTokenUploadDesc": {
+    "message": "Wenn du dich nicht für die Rechnungssynchronisation entscheiden möchtest, lade deine Lizenz hier manuell hoch. Dies wird nicht automatisch Sponsoring für Families freischalten."
   },
   "syncLicense": {
     "message": "Lizenz synchronisieren"
@@ -9221,5 +9367,14 @@
   },
   "editAccess": {
     "message": "Zugriff bearbeiten"
+  },
+  "addAttachment": {
+    "message": "Anhang hinzufügen"
+  },
+  "maxFileSizeSansPunctuation": {
+    "message": "Die maximale Dateigröße beträgt 500 MB"
+  },
+  "permanentlyDeleteAttachmentConfirmation": {
+    "message": "Bist du sicher, dass du diesen Anhang dauerhaft löschen möchtest?"
   }
 }

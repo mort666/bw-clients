@@ -381,7 +381,7 @@
   },
   "generator": {
     "message": "Генератор",
-    "description": "Short for 'Password Generator'."
+    "description": "Short for 'credential generator'."
   },
   "passGenInfo": {
     "message": "Автоматичне генерування стійких, унікальних паролів."
@@ -490,7 +490,7 @@
     "description": "Label for the avoid ambiguous characters checkbox."
   },
   "generatorPolicyInEffect": {
-    "message": "Enterprise policy requirements have been applied to your generator options.",
+    "message": "До налаштувань генератора застосовано вимоги політики компанії.",
     "description": "Indicates that a policy limits the credential generator screen."
   },
   "searchVault": {
@@ -603,6 +603,15 @@
   },
   "yourVaultIsLocked": {
     "message": "Ваше сховище заблоковане. Для продовження виконайте перевірку."
+  },
+  "yourVaultIsLockedV2": {
+    "message": "Ваше сховище заблоковано"
+  },
+  "yourAccountIsLocked": {
+    "message": "Ваш обліковий запис заблоковано"
+  },
+  "or": {
+    "message": "або"
   },
   "unlock": {
     "message": "Розблокувати"
@@ -1936,6 +1945,9 @@
   "unlockWithBiometrics": {
     "message": "Розблокувати з біометрією"
   },
+  "unlockWithMasterPassword": {
+    "message": "Розблокувати з головним паролем"
+  },
   "awaitDesktop": {
     "message": "Очікується підтвердження з комп'ютера"
   },
@@ -2374,6 +2386,10 @@
     "message": "Ви дійсно хочете видалити це відправлення?",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "deleteSendPermanentConfirmation": {
+    "message": "Ви дійсно хочете остаточно видалити це відправлення?",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "editSend": {
     "message": "Редагування",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
@@ -2482,8 +2498,26 @@
     "message": "Відправлення успішно створено!",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
-  "sendAvailability": {
-    "message": "Це відправлення буде доступним будь-кому за посиланням протягом $DAYS$ днів.",
+  "sendExpiresInHoursSingle": {
+    "message": "The Send will be available to anyone with the link for the next 1 hour.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInHours": {
+    "message": "The Send will be available to anyone with the link for the next $HOURS$ hours.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "sendExpiresInDaysSingle": {
+    "message": "The Send will be available to anyone with the link for the next 1 day.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInDays": {
+    "message": "The Send will be available to anyone with the link for the next $DAYS$ days.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
     "placeholders": {
       "days": {
@@ -2500,6 +2534,14 @@
     "message": "Відправлення збережено",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "sendFilePopoutDialogText": {
+    "message": "Відкріпити розширення?",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendFilePopoutDialogDesc": {
+    "message": "Щоб створити відправлення файлу, необхідно відкріпити розширення в окреме вікно.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "sendLinuxChromiumFileWarning": {
     "message": "Щоб вибрати файл, відкрийте розширення в бічній панелі (якщо можливо) або в новому вікні, натиснувши цей банер."
   },
@@ -2508,6 +2550,9 @@
   },
   "sendSafariFileWarning": {
     "message": "Щоб вибрати файл з використанням Safari, відкрийте розширення в новому вікні, натиснувши на цей банер."
+  },
+  "popOut": {
+    "message": "Відкріпити"
   },
   "sendFileCalloutHeader": {
     "message": "Перед початком"
@@ -3608,6 +3653,9 @@
   "typePasskey": {
     "message": "Ключ доступу"
   },
+  "accessing": {
+    "message": "Доступ"
+  },
   "passkeyNotCopied": {
     "message": "Ключ доступу не буде скопійовано"
   },
@@ -3631,6 +3679,9 @@
   },
   "noMatchingLoginsForSite": {
     "message": "Немає відповідних записів для цього сайту"
+  },
+  "searchSavePasskeyNewLogin": {
+    "message": "Search or save passkey as new login"
   },
   "confirm": {
     "message": "Підтвердити"
@@ -4201,6 +4252,9 @@
   "enableAnimations": {
     "message": "Увімкнути анімацію"
   },
+  "showAnimations": {
+    "message": "Показати анімації"
+  },
   "addAccount": {
     "message": "Додати обліковий запис"
   },
@@ -4478,5 +4532,8 @@
   },
   "noEditPermissions": {
     "message": "Вам не дозволено редагувати цей запис"
+  },
+  "authenticating": {
+    "message": "Аутентифікація"
   }
 }

@@ -381,7 +381,7 @@
   },
   "generator": {
     "message": "パス生成",
-    "description": "Short for 'Password Generator'."
+    "description": "Short for 'credential generator'."
   },
   "passGenInfo": {
     "message": "ログインのために強固なユニークパスワードを自動的に生成します。"
@@ -490,7 +490,7 @@
     "description": "Label for the avoid ambiguous characters checkbox."
   },
   "generatorPolicyInEffect": {
-    "message": "Enterprise policy requirements have been applied to your generator options.",
+    "message": "生成オプションにエンタープライズポリシー要件を適用しました",
     "description": "Indicates that a policy limits the credential generator screen."
   },
   "searchVault": {
@@ -603,6 +603,15 @@
   },
   "yourVaultIsLocked": {
     "message": "保管庫がロックされています。続行するには本人確認を行ってください。"
+  },
+  "yourVaultIsLockedV2": {
+    "message": "保管庫がロックされています"
+  },
+  "yourAccountIsLocked": {
+    "message": "アカウントがロックされています"
+  },
+  "or": {
+    "message": "または"
   },
   "unlock": {
     "message": "ロック解除"
@@ -1936,6 +1945,9 @@
   "unlockWithBiometrics": {
     "message": "生体認証でロック解除"
   },
+  "unlockWithMasterPassword": {
+    "message": "マスターパスワードでロック解除"
+  },
   "awaitDesktop": {
     "message": "デスクトップからの確認待ち"
   },
@@ -2374,6 +2386,10 @@
     "message": "この Send を削除してもよろしいですか?",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "deleteSendPermanentConfirmation": {
+    "message": "この Send を完全に削除してもよろしいですか？",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "editSend": {
     "message": "Send を編集",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
@@ -2482,8 +2498,26 @@
     "message": "Send を作成しました！",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
-  "sendAvailability": {
-    "message": "Send は、次の $DAYS$ 日間はリンクを知っている人全員が利用できます。",
+  "sendExpiresInHoursSingle": {
+    "message": "Send は、次の1時間はリンクを知っている全員が利用できます。",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInHours": {
+    "message": "Send は、次の$HOURS$時間はリンクを知っている人全員が利用できます。",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "sendExpiresInDaysSingle": {
+    "message": "Send は、次の1日間はリンクを知っている全員が利用できます。",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInDays": {
+    "message": "Send は、次の$DAYS$日間はリンクを知っている人全員が利用できます。",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
     "placeholders": {
       "days": {
@@ -2500,6 +2534,14 @@
     "message": "編集済みの Send",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "sendFilePopoutDialogText": {
+    "message": "拡張機能をポップアウトしますか？",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendFilePopoutDialogDesc": {
+    "message": "ファイル Send を作成するには、拡張機能を新しいウィンドウでポップアウト表示する必要があります。",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "sendLinuxChromiumFileWarning": {
     "message": "ファイルを選択するには、可能な場合サイドバーで拡張子を開くか、このバナーをクリックして新しいウィンドウにポップアップしてください。"
   },
@@ -2508,6 +2550,9 @@
   },
   "sendSafariFileWarning": {
     "message": "Safari を使用してファイルを選択するには、このバナーをクリックして新しいウィンドウで開いてください。"
+  },
+  "popOut": {
+    "message": "ポップアウト"
   },
   "sendFileCalloutHeader": {
     "message": "はじめる前に"
@@ -3608,6 +3653,9 @@
   "typePasskey": {
     "message": "パスキー"
   },
+  "accessing": {
+    "message": "アクセス中"
+  },
   "passkeyNotCopied": {
     "message": "パスキーはコピーされません"
   },
@@ -3631,6 +3679,9 @@
   },
   "noMatchingLoginsForSite": {
     "message": "このサイトに一致するログイン情報がありません"
+  },
+  "searchSavePasskeyNewLogin": {
+    "message": "パスキーを検索または新しいログインとして保存"
   },
   "confirm": {
     "message": "確認"
@@ -4201,6 +4252,9 @@
   "enableAnimations": {
     "message": "アニメーションを有効化"
   },
+  "showAnimations": {
+    "message": "アニメーションを表示"
+  },
   "addAccount": {
     "message": "アカウントを追加"
   },
@@ -4478,5 +4532,8 @@
   },
   "noEditPermissions": {
     "message": "このアイテムを編集する権限がありません"
+  },
+  "authenticating": {
+    "message": "認証中"
   }
 }

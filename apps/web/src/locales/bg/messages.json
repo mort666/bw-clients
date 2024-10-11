@@ -1,4 +1,64 @@
 {
+  "allApplications": {
+    "message": "Всички приложения"
+  },
+  "priorityApplications": {
+    "message": "Приложения с приоритет"
+  },
+  "accessIntelligence": {
+    "message": "Access Intelligence"
+  },
+  "notifiedMembers": {
+    "message": "Известени членове"
+  },
+  "allApplicationsWithCount": {
+    "message": "Всички приложения ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "priorityApplicationsWithCount": {
+    "message": "Приложения с приоритет ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "notifiedMembersWithCount": {
+    "message": "Известени членове ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "application": {
+    "message": "Приложение"
+  },
+  "atRiskPasswords": {
+    "message": "Пароли в риск"
+  },
+  "totalPasswords": {
+    "message": "Общо пароли"
+  },
+  "atRiskMembers": {
+    "message": "Членове в риск"
+  },
+  "totalMembers": {
+    "message": "Общо членове"
+  },
+  "atRiskApplications": {
+    "message": "Приложения в риск"
+  },
+  "totalApplications": {
+    "message": "Общо приложения"
+  },
   "whatTypeOfItem": {
     "message": "Вид на елемента"
   },
@@ -1099,6 +1159,9 @@
   "yourVaultIsLockedV2": {
     "message": "Трезорът Ви е заключен."
   },
+  "yourAccountIsLocked": {
+    "message": "Регистрацията Ви е заключена"
+  },
   "uuid": {
     "message": "ИН на универсален потребител - UUID"
   },
@@ -1437,7 +1500,12 @@
     "description": "Minimum special characters"
   },
   "ambiguous": {
-    "message": "Без нееднозначни знаци"
+    "message": "Без нееднозначни знаци",
+    "description": "deprecated. Use avoidAmbiguous instead."
+  },
+  "avoidAmbiguous": {
+    "message": "Без нееднозначни знаци",
+    "description": "Label for the avoid ambiguous characters checkbox."
   },
   "regeneratePassword": {
     "message": "Друга парола"
@@ -1450,17 +1518,50 @@
   },
   "uppercase": {
     "message": "Главни букви (A-Z)",
-    "description": "Include uppercase letters in the password generator."
+    "description": "deprecated. Use uppercaseLabel instead."
   },
   "lowercase": {
     "message": "Малки букви (a-z)",
-    "description": "Include lowercase letters in the password generator."
+    "description": "deprecated. Use lowercaseLabel instead."
   },
   "numbers": {
-    "message": "Числа (0-9)"
+    "message": "Числа (0-9)",
+    "description": "deprecated. Use numbersLabel instead."
   },
   "specialCharacters": {
     "message": "Специални знаци (!@#$%^&*)"
+  },
+  "uppercaseDescription": {
+    "message": "Включване на главни букви",
+    "description": "Tooltip for the password generator uppercase character checkbox"
+  },
+  "uppercaseLabel": {
+    "message": "A-Z",
+    "description": "Label for the password generator uppercase character checkbox"
+  },
+  "lowercaseDescription": {
+    "message": "Включване на малки букви",
+    "description": "Full description for the password generator lowercase character checkbox"
+  },
+  "lowercaseLabel": {
+    "message": "a-z",
+    "description": "Label for the password generator lowercase character checkbox"
+  },
+  "numbersDescription": {
+    "message": "Включване на цифри",
+    "description": "Full description for the password generator numbers checkbox"
+  },
+  "numbersLabel": {
+    "message": "0-9",
+    "description": "Label for the password generator numbers checkbox"
+  },
+  "specialCharactersDescription": {
+    "message": "Включване на специални знаци",
+    "description": "Full description for the password generator special characters checkbox"
+  },
+  "specialCharactersLabel": {
+    "message": "!@#$%^&*",
+    "description": "Label for the password generator special characters checkbox"
   },
   "numWords": {
     "message": "Брой думи"
@@ -1474,6 +1575,10 @@
   },
   "includeNumber": {
     "message": "И цифри"
+  },
+  "generatorPolicyInEffect": {
+    "message": "Изискванията на политиката за големи компании бяха приложени към настройките на генератора.",
+    "description": "Indicates that a policy limits the credential generator screen."
   },
   "passwordHistory": {
     "message": "Хронология на паролата"
@@ -2195,6 +2300,9 @@
   "checkExposedPasswords": {
     "message": "Проверка за разкрити пароли"
   },
+  "timesExposed": {
+    "message": "Times exposed"
+  },
   "exposedXTimes": {
     "message": "Разкрити $COUNT$ път/и",
     "placeholders": {
@@ -2229,6 +2337,9 @@
   "noWeakPasswords": {
     "message": "Всички записи в трезора са с надеждни пароли."
   },
+  "weakness": {
+    "message": "Слабост"
+  },
   "reusedPasswordsReport": {
     "message": "Доклад за повтарящи се пароли"
   },
@@ -2253,6 +2364,9 @@
   },
   "noReusedPasswords": {
     "message": "В трезора ви няма записи с пароли, които се ползват и другаде."
+  },
+  "timesReused": {
+    "message": "Брой преизползвания"
   },
   "reusedXTimes": {
     "message": "Преизползвана $COUNT$ пъти",
@@ -2551,6 +2665,9 @@
   "downloadLicense": {
     "message": "Изтегляне на лиценз"
   },
+  "viewBillingToken": {
+    "message": "Преглед на идентификатора за плащанията"
+  },
   "updateLicense": {
     "message": "Обновяване на лиценз"
   },
@@ -2597,8 +2714,11 @@
   "invoices": {
     "message": "Фактури"
   },
-  "noInvoices": {
-    "message": "Няма фактури."
+  "noUnpaidInvoices": {
+    "message": "Няма неплатени фактури."
+  },
+  "noPaidInvoices": {
+    "message": "Няма платени фактури."
   },
   "paid": {
     "message": "Платено",
@@ -3155,6 +3275,10 @@
   },
   "incorrectPin": {
     "message": "Неправилен ПИН"
+  },
+  "pin": {
+    "message": "ПИН",
+    "description": "PIN code. Ex. The short code (often numeric) that you use to unlock a device."
   },
   "exportedVault": {
     "message": "Трезорът е изнесен."
@@ -5981,8 +6105,8 @@
   "viewBillingSyncToken": {
     "message": "Преглед на идентификатора за синхронизиране на плащанията"
   },
-  "generateBillingSyncToken": {
-    "message": "Създаване на идентификатор за синхронизиране на плащанията"
+  "generateBillingToken": {
+    "message": "Създаване на идентификатор за плащания"
   },
   "copyPasteBillingSync": {
     "message": "Копирайте този идентификатор в настройките за синхронизиране на плащанията във Вашата организация."
@@ -5990,8 +6114,8 @@
   "billingSyncCanAccess": {
     "message": "Чрез своя идентификатор за синхронизиране на плащанията Вие имате достъп и можете да редактирате настройките за абонамента на тази организация."
   },
-  "manageBillingSync": {
-    "message": "Управление на синхронизирането на плащанията"
+  "manageBillingTokenSync": {
+    "message": "Управление на идентификатора за плащания"
   },
   "setUpBillingSync": {
     "message": "Настройване на синхронизирането на плащанията"
@@ -6050,14 +6174,14 @@
   "billingSyncApiKeyRotated": {
     "message": "Идентификаторът е пресъздаден."
   },
-  "billingSyncDesc": {
-    "message": "Billing sync unlocks Families sponsorships and automatic license syncing on your server. After making updates in the Bitwarden cloud server, select Sync License to apply changes."
-  },
   "billingSyncKeyDesc": {
     "message": "За да попълните този формуляр, се нуждаете от идентификатор за синхронизиране на плащанията, който може да намерите или създадете в настройките за абонамента на организацията си в облака."
   },
   "billingSyncKey": {
     "message": "Идентификатор за синхронизиране на плащанията"
+  },
+  "automaticBillingSyncDesc": {
+    "message": "Автоматичното синхронизиране отключва спонсорирането на Семейния план и позволява да синхронизирате лиценза си без да качвате файл. След като направите промени по облачния сървър на Битуорден, изберете „Синхронизиране на лиценза“, за да приложите промените."
   },
   "active": {
     "message": "Активно"
@@ -6200,7 +6324,8 @@
     "message": "Настройки на регистрацията"
   },
   "generator": {
-    "message": "Генератор"
+    "message": "Генератор",
+    "description": "Short for 'credential generator'."
   },
   "whatWouldYouLikeToGenerate": {
     "message": "Какво бихте искали да генерирате?"
@@ -6575,6 +6700,18 @@
       "count": {
         "content": "$1",
         "example": "4"
+      }
+    }
+  },
+  "singleFieldNeedsAttention": {
+    "message": "1 поле се нуждае от вниманието Ви."
+  },
+  "multipleFieldsNeedAttention": {
+    "message": "$COUNT$ полета се нуждаят от вниманието Ви.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
       }
     }
   },
@@ -7438,6 +7575,15 @@
   "or": {
     "message": "или"
   },
+  "unlockWithBiometrics": {
+    "message": "Отключване с биометрични данни"
+  },
+  "unlockWithPin": {
+    "message": "Отключване с ПИН"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Отключване с главната парола"
+  },
   "licenseAndBillingManagement": {
     "message": "Управление на лицензи и таксуване"
   },
@@ -7447,8 +7593,8 @@
   "manualUpload": {
     "message": "Ръчно качване"
   },
-  "manualUploadDesc": {
-    "message": "Ако не искате да се възползвате от автоматичното синхронизиране на информацията за таксуване, качете ръчно лиценза си тук."
+  "manualBillingTokenUploadDesc": {
+    "message": "Ако не искате да се възползвате от синхронизирането на плащанията, качете лиценза си тук. Това няма да отключи автоматично спонсорирането на Семейния план."
   },
   "syncLicense": {
     "message": "Синхронизиране на лиценза"
@@ -9221,5 +9367,14 @@
   },
   "editAccess": {
     "message": "Редактиране на достъпа"
+  },
+  "addAttachment": {
+    "message": "Добавяне на прикачен файл"
+  },
+  "maxFileSizeSansPunctuation": {
+    "message": "Максималният размер на файла е 500 MB"
+  },
+  "permanentlyDeleteAttachmentConfirmation": {
+    "message": "Наистина ли искате да изтриете завинаги този прикачен файл?"
   }
 }

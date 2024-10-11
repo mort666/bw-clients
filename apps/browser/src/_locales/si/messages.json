@@ -381,7 +381,7 @@
   },
   "generator": {
     "message": "උත්පාදක යන්ත්රය",
-    "description": "Short for 'Password Generator'."
+    "description": "Short for 'credential generator'."
   },
   "passGenInfo": {
     "message": "ඔබේ පිවිසුම් සඳහා ශක්තිමත්, අද්විතීය මුරපද ස්වයංක්රීයව ජනනය කරන්න."
@@ -603,6 +603,15 @@
   },
   "yourVaultIsLocked": {
     "message": "ඔබේ සුරක්ෂිතාගාරය අගුළු දමා ඇත. දිගටම කරගෙන යාමට ඔබේ අනන්යතාවය සත්යාපනය කරන්න."
+  },
+  "yourVaultIsLockedV2": {
+    "message": "Your vault is locked"
+  },
+  "yourAccountIsLocked": {
+    "message": "Your account is locked"
+  },
+  "or": {
+    "message": "or"
   },
   "unlock": {
     "message": "අගුලුහරින්න"
@@ -1936,6 +1945,9 @@
   "unlockWithBiometrics": {
     "message": "ජෛව විද්යාව සමඟ අගුළු ඇරීම"
   },
+  "unlockWithMasterPassword": {
+    "message": "Unlock with master password"
+  },
   "awaitDesktop": {
     "message": "ඩෙස්ක්ටොප් සිට තහවුරු කිරීම බලාපොරොත්තුවෙන්"
   },
@@ -2374,6 +2386,10 @@
     "message": "ඔබට මෙය මකා දැමීමට අවශ්ය බව ඔබට විශ්වාසද?",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "deleteSendPermanentConfirmation": {
+    "message": "Are you sure you want to permanently delete this Send?",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "editSend": {
     "message": "යැවීම සංස්කරණය",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
@@ -2482,7 +2498,25 @@
     "message": "Send created successfully!",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
-  "sendAvailability": {
+  "sendExpiresInHoursSingle": {
+    "message": "The Send will be available to anyone with the link for the next 1 hour.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInHours": {
+    "message": "The Send will be available to anyone with the link for the next $HOURS$ hours.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "sendExpiresInDaysSingle": {
+    "message": "The Send will be available to anyone with the link for the next 1 day.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInDays": {
     "message": "The Send will be available to anyone with the link for the next $DAYS$ days.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
     "placeholders": {
@@ -2500,6 +2534,14 @@
     "message": "සංස්කරණය යවන්න",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "sendFilePopoutDialogText": {
+    "message": "Pop out extension?",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendFilePopoutDialogDesc": {
+    "message": "To create a file Send, you need to pop out the extension to a new window.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "sendLinuxChromiumFileWarning": {
     "message": "ගොනුවක් තෝරා ගැනීම සඳහා, පැති තීරුවේ දිගුව විවෘත කරන්න (හැකි නම්) හෝ මෙම බැනරය ක්ලික් කිරීමෙන් නව කවුළුවකට පොප් කරන්න."
   },
@@ -2508,6 +2550,9 @@
   },
   "sendSafariFileWarning": {
     "message": "සෆාරි භාවිතා ගොනුවක් තෝරා ගැනීම සඳහා, මෙම බැනරය ක්ලික් කිරීමෙන් නව කවුළුවකට දිස්වේ."
+  },
+  "popOut": {
+    "message": "Pop out"
   },
   "sendFileCalloutHeader": {
     "message": "ඔබ ආරම්භ කිරීමට පෙර"
@@ -3608,6 +3653,9 @@
   "typePasskey": {
     "message": "Passkey"
   },
+  "accessing": {
+    "message": "Accessing"
+  },
   "passkeyNotCopied": {
     "message": "Passkey will not be copied"
   },
@@ -3631,6 +3679,9 @@
   },
   "noMatchingLoginsForSite": {
     "message": "No matching logins for this site"
+  },
+  "searchSavePasskeyNewLogin": {
+    "message": "Search or save passkey as new login"
   },
   "confirm": {
     "message": "Confirm"
@@ -4201,6 +4252,9 @@
   "enableAnimations": {
     "message": "Enable animations"
   },
+  "showAnimations": {
+    "message": "Show animations"
+  },
   "addAccount": {
     "message": "Add account"
   },
@@ -4478,5 +4532,8 @@
   },
   "noEditPermissions": {
     "message": "You don't have permission to edit this item"
+  },
+  "authenticating": {
+    "message": "Authenticating"
   }
 }

@@ -381,7 +381,7 @@
   },
   "generator": {
     "message": "Генератор",
-    "description": "Short for 'Password Generator'."
+    "description": "Short for 'credential generator'."
   },
   "passGenInfo": {
     "message": "Аутоматски генеришите јаке, јединствене лозинке за ваше пријаве."
@@ -490,7 +490,7 @@
     "description": "Label for the avoid ambiguous characters checkbox."
   },
   "generatorPolicyInEffect": {
-    "message": "Enterprise policy requirements have been applied to your generator options.",
+    "message": "Захтеви политике предузећа су примењени на опције генератора.",
     "description": "Indicates that a policy limits the credential generator screen."
   },
   "searchVault": {
@@ -603,6 +603,15 @@
   },
   "yourVaultIsLocked": {
     "message": "Сеф је закључан. Унесите главну лозинку за наставак."
+  },
+  "yourVaultIsLockedV2": {
+    "message": "Ваш сеф је блокиран"
+  },
+  "yourAccountIsLocked": {
+    "message": "Ваш налог је закључан"
+  },
+  "or": {
+    "message": "или"
   },
   "unlock": {
     "message": "Откључај"
@@ -1936,6 +1945,9 @@
   "unlockWithBiometrics": {
     "message": "Откључавајте помоћу биометрије"
   },
+  "unlockWithMasterPassword": {
+    "message": "Откључај са главном лозинком"
+  },
   "awaitDesktop": {
     "message": "Чекање потврде са десктопа"
   },
@@ -2374,6 +2386,10 @@
     "message": "Сигурно избрисати овај „Send“?",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "deleteSendPermanentConfirmation": {
+    "message": "Да ли сте сигурни да желите да трајно избришете овај Send?",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "editSend": {
     "message": "Уреди „Send“",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
@@ -2482,7 +2498,25 @@
     "message": "Send је успешно направљен!",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
-  "sendAvailability": {
+  "sendExpiresInHoursSingle": {
+    "message": "Send ће бити доступно свима који имају везу наредних 1 сат.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInHours": {
+    "message": "The Send will be available to anyone with the link for the next $HOURS$ hours.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "sendExpiresInDaysSingle": {
+    "message": "Send ће бити доступно свима који имају везу наредних 1 дан.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInDays": {
     "message": "The Send will be available to anyone with the link for the next $DAYS$ days.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
     "placeholders": {
@@ -2500,6 +2534,14 @@
     "message": "Измењено слање",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "sendFilePopoutDialogText": {
+    "message": "Искачући додатак?",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendFilePopoutDialogDesc": {
+    "message": "Да бисте креирали датотеку Send, потребно је да искочите екстензију у нови прозор.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "sendLinuxChromiumFileWarning": {
     "message": "Да бисте изабрали датотеку, отворите екстензију на бочној траци (ако је могуће) или отворите у нови прозор кликом на овај банер."
   },
@@ -2508,6 +2550,9 @@
   },
   "sendSafariFileWarning": {
     "message": "Да бисте изабрали датотеку са Safari-ом, отворите у нови прозор кликом на овај банер."
+  },
+  "popOut": {
+    "message": "Искочити"
   },
   "sendFileCalloutHeader": {
     "message": "Пре него што почнеш"
@@ -3608,6 +3653,9 @@
   "typePasskey": {
     "message": "Приступачни кључ"
   },
+  "accessing": {
+    "message": "Приступ"
+  },
   "passkeyNotCopied": {
     "message": "Приступачни кључ неће бити копиран"
   },
@@ -3631,6 +3679,9 @@
   },
   "noMatchingLoginsForSite": {
     "message": "Нема одговарајућих пријава за овај сајт"
+  },
+  "searchSavePasskeyNewLogin": {
+    "message": "Претражити или сачувати приступни кључ као нову пријаву"
   },
   "confirm": {
     "message": "Потврди"
@@ -4201,6 +4252,9 @@
   "enableAnimations": {
     "message": "Омогући анимације"
   },
+  "showAnimations": {
+    "message": "Прикажи анимације"
+  },
   "addAccount": {
     "message": "Додај налог"
   },
@@ -4478,5 +4532,8 @@
   },
   "noEditPermissions": {
     "message": "Немате дозволу да уређујете ову ставку"
+  },
+  "authenticating": {
+    "message": "Аутентификација"
   }
 }

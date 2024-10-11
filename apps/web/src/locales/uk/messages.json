@@ -1,4 +1,64 @@
 {
+  "allApplications": {
+    "message": "All applications"
+  },
+  "priorityApplications": {
+    "message": "Priority applications"
+  },
+  "accessIntelligence": {
+    "message": "Access Intelligence"
+  },
+  "notifiedMembers": {
+    "message": "Notified members"
+  },
+  "allApplicationsWithCount": {
+    "message": "All applications ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "priorityApplicationsWithCount": {
+    "message": "Priority applications ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "notifiedMembersWithCount": {
+    "message": "Notified members ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "application": {
+    "message": "Application"
+  },
+  "atRiskPasswords": {
+    "message": "At-risk passwords"
+  },
+  "totalPasswords": {
+    "message": "Total passwords"
+  },
+  "atRiskMembers": {
+    "message": "At-risk members"
+  },
+  "totalMembers": {
+    "message": "Total members"
+  },
+  "atRiskApplications": {
+    "message": "At-risk applications"
+  },
+  "totalApplications": {
+    "message": "Total applications"
+  },
   "whatTypeOfItem": {
     "message": "Який це тип запису?"
   },
@@ -1099,6 +1159,9 @@
   "yourVaultIsLockedV2": {
     "message": "Ваше сховище заблоковано"
   },
+  "yourAccountIsLocked": {
+    "message": "Ваш обліковий запис заблоковано"
+  },
   "uuid": {
     "message": "UUID"
   },
@@ -1437,7 +1500,12 @@
     "description": "Minimum special characters"
   },
   "ambiguous": {
-    "message": "Уникати неоднозначних символів"
+    "message": "Уникати неоднозначних символів",
+    "description": "deprecated. Use avoidAmbiguous instead."
+  },
+  "avoidAmbiguous": {
+    "message": "Уникати неоднозначних символів",
+    "description": "Label for the avoid ambiguous characters checkbox."
   },
   "regeneratePassword": {
     "message": "Генерувати новий"
@@ -1450,17 +1518,50 @@
   },
   "uppercase": {
     "message": "Верхній регістр (A-Z)",
-    "description": "Include uppercase letters in the password generator."
+    "description": "deprecated. Use uppercaseLabel instead."
   },
   "lowercase": {
     "message": "Нижній регістр (a-z)",
-    "description": "Include lowercase letters in the password generator."
+    "description": "deprecated. Use lowercaseLabel instead."
   },
   "numbers": {
-    "message": "Числа (0-9)"
+    "message": "Числа (0-9)",
+    "description": "deprecated. Use numbersLabel instead."
   },
   "specialCharacters": {
     "message": "Спеціальні символи (!@#$%^&*)"
+  },
+  "uppercaseDescription": {
+    "message": "Символи верхнього регістру",
+    "description": "Tooltip for the password generator uppercase character checkbox"
+  },
+  "uppercaseLabel": {
+    "message": "A-Z",
+    "description": "Label for the password generator uppercase character checkbox"
+  },
+  "lowercaseDescription": {
+    "message": "Символи нижнього регістру",
+    "description": "Full description for the password generator lowercase character checkbox"
+  },
+  "lowercaseLabel": {
+    "message": "a-z",
+    "description": "Label for the password generator lowercase character checkbox"
+  },
+  "numbersDescription": {
+    "message": "Цифри",
+    "description": "Full description for the password generator numbers checkbox"
+  },
+  "numbersLabel": {
+    "message": "0-9",
+    "description": "Label for the password generator numbers checkbox"
+  },
+  "specialCharactersDescription": {
+    "message": "Спеціальні символи",
+    "description": "Full description for the password generator special characters checkbox"
+  },
+  "specialCharactersLabel": {
+    "message": "!@#$%^&*",
+    "description": "Label for the password generator special characters checkbox"
   },
   "numWords": {
     "message": "Кількість слів"
@@ -1474,6 +1575,10 @@
   },
   "includeNumber": {
     "message": "Включити число"
+  },
+  "generatorPolicyInEffect": {
+    "message": "До налаштувань генератора застосовано вимоги політики компанії.",
+    "description": "Indicates that a policy limits the credential generator screen."
   },
   "passwordHistory": {
     "message": "Історія паролів"
@@ -2195,6 +2300,9 @@
   "checkExposedPasswords": {
     "message": "Перевірка викритих паролів"
   },
+  "timesExposed": {
+    "message": "Кількість витоків"
+  },
   "exposedXTimes": {
     "message": "Викрито $COUNT$ разів",
     "placeholders": {
@@ -2229,6 +2337,9 @@
   "noWeakPasswords": {
     "message": "У вашому сховищі немає ненадійних паролів."
   },
+  "weakness": {
+    "message": "Вразливість"
+  },
   "reusedPasswordsReport": {
     "message": "Повторювані паролі"
   },
@@ -2253,6 +2364,9 @@
   },
   "noReusedPasswords": {
     "message": "У вашому сховищі не знайдено паролів з повторним використанням."
+  },
+  "timesReused": {
+    "message": "Кількість повторних використань"
   },
   "reusedXTimes": {
     "message": "Повторюється $COUNT$ разів",
@@ -2551,6 +2665,9 @@
   "downloadLicense": {
     "message": "Завантажити ліцензію"
   },
+  "viewBillingToken": {
+    "message": "Переглянути платіжний токен"
+  },
   "updateLicense": {
     "message": "Оновити ліцензію"
   },
@@ -2597,8 +2714,11 @@
   "invoices": {
     "message": "Рахунки"
   },
-  "noInvoices": {
-    "message": "Немає рахунків."
+  "noUnpaidInvoices": {
+    "message": "No unpaid invoices."
+  },
+  "noPaidInvoices": {
+    "message": "No paid invoices."
   },
   "paid": {
     "message": "Сплачено",
@@ -3155,6 +3275,10 @@
   },
   "incorrectPin": {
     "message": "Неправильний PIN-код"
+  },
+  "pin": {
+    "message": "PIN-код",
+    "description": "PIN code. Ex. The short code (often numeric) that you use to unlock a device."
   },
   "exportedVault": {
     "message": "Сховище експортовано"
@@ -5981,8 +6105,8 @@
   "viewBillingSyncToken": {
     "message": "Переглянути токен платіжної синхронізації"
   },
-  "generateBillingSyncToken": {
-    "message": "Генерувати токен платіжної синхронізації"
+  "generateBillingToken": {
+    "message": "Генерувати платіжний токен"
   },
   "copyPasteBillingSync": {
     "message": "Скопіюйте і вставте цей токен у налаштування платіжної синхронізації власної розміщеної організації."
@@ -5990,8 +6114,8 @@
   "billingSyncCanAccess": {
     "message": "Ваш токен платіжної синхронізації може отримувати доступ і редагувати налаштування передплати цієї організації."
   },
-  "manageBillingSync": {
-    "message": "Керувати платіжною синхронізацією"
+  "manageBillingTokenSync": {
+    "message": "Керувати платіжним токеном"
   },
   "setUpBillingSync": {
     "message": "Налаштувати платіжну синхронізацію"
@@ -6050,14 +6174,14 @@
   "billingSyncApiKeyRotated": {
     "message": "Токен оновлено"
   },
-  "billingSyncDesc": {
-    "message": "Платіжна синхронізація дає доступ до спонсорованих сімейних тарифних планів та автоматичної синхронізації ліцензій на вашому сервері. Виконавши оновлення на сервері Bitwarden, виберіть \"Синхронізувати ліцензію\" для застосування змін."
-  },
   "billingSyncKeyDesc": {
     "message": "Для завершення цієї форми необхідний токен платіжної синхронізації з налаштувань передплати організації в хмарному сховищі."
   },
   "billingSyncKey": {
     "message": "Токен платіжної синхронізації"
+  },
+  "automaticBillingSyncDesc": {
+    "message": "Автоматична синхронізація дає доступ до спонсорованих сімейних тарифних планів і можливість синхронізації ліцензій без вивантаження файлу. Виконавши оновлення на сервері Bitwarden, виберіть \"Синхронізувати ліцензію\" для застосування змін."
   },
   "active": {
     "message": "Активний"
@@ -6200,7 +6324,8 @@
     "message": "Налаштування облікового запису"
   },
   "generator": {
-    "message": "Генератор"
+    "message": "Генератор",
+    "description": "Short for 'credential generator'."
   },
   "whatWouldYouLikeToGenerate": {
     "message": "Що ви бажаєте згенерувати?"
@@ -6575,6 +6700,18 @@
       "count": {
         "content": "$1",
         "example": "4"
+      }
+    }
+  },
+  "singleFieldNeedsAttention": {
+    "message": "1 поле потребує вашої уваги."
+  },
+  "multipleFieldsNeedAttention": {
+    "message": "$COUNT$ полів потребують вашої уваги.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
       }
     }
   },
@@ -7438,6 +7575,15 @@
   "or": {
     "message": "або"
   },
+  "unlockWithBiometrics": {
+    "message": "Розблокувати з біометрією"
+  },
+  "unlockWithPin": {
+    "message": "Розблокувати з PIN-кодом"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Розблокувати з головним паролем"
+  },
   "licenseAndBillingManagement": {
     "message": "Керування ліцензіями й платежами"
   },
@@ -7447,8 +7593,8 @@
   "manualUpload": {
     "message": "Ручне вивантаження"
   },
-  "manualUploadDesc": {
-    "message": "Якщо ви не хочете користуватися платіжною синхронізацією, вивантажте вашу ліцензію вручну."
+  "manualBillingTokenUploadDesc": {
+    "message": "Якщо ви не хочете користуватися платіжною синхронізацією, вивантажте свій файл ліцензії власноруч. В такому разі не буде автоматично розблоковано спонсоровані сімейні тарифні плани."
   },
   "syncLicense": {
     "message": "Синхронізувати ліцензію"
@@ -9221,5 +9367,14 @@
   },
   "editAccess": {
     "message": "Редагувати доступ"
+  },
+  "addAttachment": {
+    "message": "Додати вкладення"
+  },
+  "maxFileSizeSansPunctuation": {
+    "message": "Максимальний розмір файлу – 500 МБ"
+  },
+  "permanentlyDeleteAttachmentConfirmation": {
+    "message": "Ви дійсно хочете остаточно видалити це вкладення?"
   }
 }

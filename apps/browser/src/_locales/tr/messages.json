@@ -381,7 +381,7 @@
   },
   "generator": {
     "message": "Oluşturucu",
-    "description": "Short for 'Password Generator'."
+    "description": "Short for 'credential generator'."
   },
   "passGenInfo": {
     "message": "Hesaplarınız için otomatik olarak güçlü, özgün parolalar oluşturun."
@@ -490,7 +490,7 @@
     "description": "Label for the avoid ambiguous characters checkbox."
   },
   "generatorPolicyInEffect": {
-    "message": "Enterprise policy requirements have been applied to your generator options.",
+    "message": "Üreteç seçeneklerinize kurumsal ilke gereksinimleri uygulandı.",
     "description": "Indicates that a policy limits the credential generator screen."
   },
   "searchVault": {
@@ -603,6 +603,15 @@
   },
   "yourVaultIsLocked": {
     "message": "Kasanız kilitli. Devam etmek için kimliğinizi doğrulayın."
+  },
+  "yourVaultIsLockedV2": {
+    "message": "Kasanız kilitli"
+  },
+  "yourAccountIsLocked": {
+    "message": "Hesabınız kilitlendi"
+  },
+  "or": {
+    "message": "veya"
   },
   "unlock": {
     "message": "Kilidi aç"
@@ -1936,6 +1945,9 @@
   "unlockWithBiometrics": {
     "message": "Kilidi biyometri ile aç"
   },
+  "unlockWithMasterPassword": {
+    "message": "Kilidi ana parola ile aç"
+  },
   "awaitDesktop": {
     "message": "Masaüstünden onay bekleniyor"
   },
@@ -2374,6 +2386,10 @@
     "message": "Bu Send'i silmek istediğinizden emin misiniz?",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "deleteSendPermanentConfirmation": {
+    "message": "Bu Send'i kalıcı olarak silmek istediğinizden emin misiniz?",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "editSend": {
     "message": "Send'i düzenle",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
@@ -2482,8 +2498,26 @@
     "message": "Send başarıyla oluşturuldu.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
-  "sendAvailability": {
-    "message": "$DAYS$ gün boyunca bu bağlantıya sahip olan herkes bu Send'e ulaşabilir.",
+  "sendExpiresInHoursSingle": {
+    "message": "Önümüzdeki 1 saat boyunca bu bağlantıya sahip olan herkes bu Send'e ulaşabilir.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInHours": {
+    "message": "Önümüzdeki $HOURS$ saat boyunca bu bağlantıya sahip olan herkes bu Send'e ulaşabilir.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "sendExpiresInDaysSingle": {
+    "message": "Önümüzdeki 1 gün boyunca bu bağlantıya sahip olan herkes bu Send'e ulaşabilir.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInDays": {
+    "message": "Önümüzdeki $DAYS$ gün boyunca bu bağlantıya sahip olan herkes bu Send'e ulaşabilir.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
     "placeholders": {
       "days": {
@@ -2500,6 +2534,14 @@
     "message": "Send kaydedildi",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "sendFilePopoutDialogText": {
+    "message": "Uzantı dışarı alınsın mı?",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendFilePopoutDialogDesc": {
+    "message": "Dosya Send'i oluşturmak için uzantıyı yeni bir pencere halinde dışarı almalısınız.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "sendLinuxChromiumFileWarning": {
     "message": "Dosya seçmek için eklentiyi kenar çubuğunda açın (mümkünse) veya bu banner'a tıklayarak yeni bir pencerede açın."
   },
@@ -2508,6 +2550,9 @@
   },
   "sendSafariFileWarning": {
     "message": "Safari ile dosya seçmek için bu banner'a tıklayarak eklentiyi yeni bir pencerede açın."
+  },
+  "popOut": {
+    "message": "Dışarı al"
   },
   "sendFileCalloutHeader": {
     "message": "Başlamadan önce"
@@ -3608,6 +3653,9 @@
   "typePasskey": {
     "message": "Geçiş anahtarı"
   },
+  "accessing": {
+    "message": "Accessing"
+  },
   "passkeyNotCopied": {
     "message": "Geçiş anahtarı kopyalanmayacak"
   },
@@ -3631,6 +3679,9 @@
   },
   "noMatchingLoginsForSite": {
     "message": "Bu siteyle eşleşen hesap bulunamadı"
+  },
+  "searchSavePasskeyNewLogin": {
+    "message": "Search or save passkey as new login"
   },
   "confirm": {
     "message": "Onayla"
@@ -4201,6 +4252,9 @@
   "enableAnimations": {
     "message": "Animasyonları etkinleştir"
   },
+  "showAnimations": {
+    "message": "Animasyonları göster"
+  },
   "addAccount": {
     "message": "Hesap ekle"
   },
@@ -4478,5 +4532,8 @@
   },
   "noEditPermissions": {
     "message": "Bu kaydı düzenleme yetkisine sahip değilsiniz"
+  },
+  "authenticating": {
+    "message": "Kimlik doğrulanıyor"
   }
 }

@@ -381,7 +381,7 @@
   },
   "generator": {
     "message": "Generátor",
-    "description": "Short for 'Password Generator'."
+    "description": "Short for 'credential generator'."
   },
   "passGenInfo": {
     "message": "Automatikusan létrehoz erős, egyedi jelszavakat a bejelentkezéseidhez."
@@ -490,7 +490,7 @@
     "description": "Label for the avoid ambiguous characters checkbox."
   },
   "generatorPolicyInEffect": {
-    "message": "Enterprise policy requirements have been applied to your generator options.",
+    "message": "A vállalati házirend követelményei kerülnek alkalmazásra a generátor beállításaira.",
     "description": "Indicates that a policy limits the credential generator screen."
   },
   "searchVault": {
@@ -603,6 +603,15 @@
   },
   "yourVaultIsLocked": {
     "message": "A széf zárolásra került. A folytatáshoz meg kell adni a mesterjelszót."
+  },
+  "yourVaultIsLockedV2": {
+    "message": "A széf zárolva van."
+  },
+  "yourAccountIsLocked": {
+    "message": "A fiók zárolva van."
+  },
+  "or": {
+    "message": "vagy"
   },
   "unlock": {
     "message": "Feloldás"
@@ -1936,6 +1945,9 @@
   "unlockWithBiometrics": {
     "message": "Biometrikus feloldás"
   },
+  "unlockWithMasterPassword": {
+    "message": "Feloldás mesterjelszóval"
+  },
   "awaitDesktop": {
     "message": "Várakozás megerősítésre az asztali alkalmazásból"
   },
@@ -2374,6 +2386,10 @@
     "message": "Biztosan törlésre kerüljön ez a Send?",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "deleteSendPermanentConfirmation": {
+    "message": "Biztosan véglegesen törlésre kerüljön ez a Send elem?",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "editSend": {
     "message": "Send szerkesztése",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
@@ -2482,7 +2498,25 @@
     "message": "A Send sikeresen létrejött!",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
-  "sendAvailability": {
+  "sendExpiresInHoursSingle": {
+    "message": "A Send bárki számára elérhető a hivatkozással a következő 1 órában.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInHours": {
+    "message": "A Send bárki számára elérhető a hivatkozással a következő $HOURS$ órában.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "sendExpiresInDaysSingle": {
+    "message": "A Send bárki számára elérhető a hivatkozással a következő 1 napban.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInDays": {
     "message": "A Send bárki számára elérhető a hivatkozással a következő $DAYS$ napban.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
     "placeholders": {
@@ -2500,6 +2534,14 @@
     "message": "A Send mentésre került.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "sendFilePopoutDialogText": {
+    "message": "Bővítmény átthelyezése?",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendFilePopoutDialogDesc": {
+    "message": "A Send fájl létrehozásához át kell helyezni a bővítményt egy új ablakba.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "sendLinuxChromiumFileWarning": {
     "message": "A fájl kiválasztásához nyissuk meg a kiterjesztést az oldalsávon (ha lehetséges) vagy kattintsunk erre a sávra új ablak felbukkanásához."
   },
@@ -2508,6 +2550,9 @@
   },
   "sendSafariFileWarning": {
     "message": "A fájl kiválasztásához Safariban kattintsunk erre a hirdetőtáblára kattintva új ablak nyílik meg."
+  },
+  "popOut": {
+    "message": "Áthelyezés"
   },
   "sendFileCalloutHeader": {
     "message": "Mielőtt belevágnánk"
@@ -3608,6 +3653,9 @@
   "typePasskey": {
     "message": "Hozzáférési kulcs"
   },
+  "accessing": {
+    "message": "Elérés"
+  },
   "passkeyNotCopied": {
     "message": "A hozzáférési kulcs nem kerül másolásra."
   },
@@ -3631,6 +3679,9 @@
   },
   "noMatchingLoginsForSite": {
     "message": "Nincsenek egyező bejelentkezések ehhez a webhelyhez."
+  },
+  "searchSavePasskeyNewLogin": {
+    "message": "Keressés vagy a belépőkulcs mentése bejelentkezésként."
   },
   "confirm": {
     "message": "Megerősítés"
@@ -4201,6 +4252,9 @@
   "enableAnimations": {
     "message": "Animációk engedélyezése"
   },
+  "showAnimations": {
+    "message": "Animációk megjelenítése"
+  },
   "addAccount": {
     "message": "Fiók hozzáadása"
   },
@@ -4478,5 +4532,8 @@
   },
   "noEditPermissions": {
     "message": "Nincs jogosulltság ezen elem szerkesztéséheu."
+  },
+  "authenticating": {
+    "message": "Authenticating"
   }
 }

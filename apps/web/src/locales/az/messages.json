@@ -1,4 +1,64 @@
 {
+  "allApplications": {
+    "message": "Bütün tətbiqlər"
+  },
+  "priorityApplications": {
+    "message": "Prioritet tətbiqlər"
+  },
+  "accessIntelligence": {
+    "message": "Müraciət Kəşfiyyatı"
+  },
+  "notifiedMembers": {
+    "message": "Məlumatlandırılan üzvlər"
+  },
+  "allApplicationsWithCount": {
+    "message": "Bütün tətbiqlər ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "priorityApplicationsWithCount": {
+    "message": "Prioritet tətbiqlər ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "notifiedMembersWithCount": {
+    "message": "Məlumatlandırılan üzvlər ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "application": {
+    "message": "Tətbiq"
+  },
+  "atRiskPasswords": {
+    "message": "Riskli parollar"
+  },
+  "totalPasswords": {
+    "message": "Cəmi parol"
+  },
+  "atRiskMembers": {
+    "message": "Riskli üzvlər"
+  },
+  "totalMembers": {
+    "message": "Cəmi üzv"
+  },
+  "atRiskApplications": {
+    "message": "Riskli tətbiqlər"
+  },
+  "totalApplications": {
+    "message": "Cəmi tətbiq"
+  },
   "whatTypeOfItem": {
     "message": "Bu elementin növü nədir?"
   },
@@ -1099,6 +1159,9 @@
   "yourVaultIsLockedV2": {
     "message": "Anbarınız kilidlənib."
   },
+  "yourAccountIsLocked": {
+    "message": "Hesabınız kilidlənib"
+  },
   "uuid": {
     "message": "UUID"
   },
@@ -1437,7 +1500,12 @@
     "description": "Minimum special characters"
   },
   "ambiguous": {
-    "message": "Anlaşılmaz simvollardan çəkinin"
+    "message": "Anlaşılmaz simvollardan çəkinin",
+    "description": "deprecated. Use avoidAmbiguous instead."
+  },
+  "avoidAmbiguous": {
+    "message": "Anlaşılmaz xarakterlərdən çəkin",
+    "description": "Label for the avoid ambiguous characters checkbox."
   },
   "regeneratePassword": {
     "message": "Parolu yenidən yarat"
@@ -1450,17 +1518,50 @@
   },
   "uppercase": {
     "message": "Böyük hərf (A-Z)",
-    "description": "Include uppercase letters in the password generator."
+    "description": "deprecated. Use uppercaseLabel instead."
   },
   "lowercase": {
     "message": "Kiçik hərf (a-z)",
-    "description": "Include lowercase letters in the password generator."
+    "description": "deprecated. Use lowercaseLabel instead."
   },
   "numbers": {
-    "message": "Rəqəmlər (0-9)"
+    "message": "Rəqəmlər (0-9)",
+    "description": "deprecated. Use numbersLabel instead."
   },
   "specialCharacters": {
     "message": "Xüsusi simvollar (!@#$%^&*)"
+  },
+  "uppercaseDescription": {
+    "message": "Böyük hərf xarakterlərini daxil et",
+    "description": "Tooltip for the password generator uppercase character checkbox"
+  },
+  "uppercaseLabel": {
+    "message": "A-Z",
+    "description": "Label for the password generator uppercase character checkbox"
+  },
+  "lowercaseDescription": {
+    "message": "Kiçik hərf xarakterlərini daxil et",
+    "description": "Full description for the password generator lowercase character checkbox"
+  },
+  "lowercaseLabel": {
+    "message": "a-z",
+    "description": "Label for the password generator lowercase character checkbox"
+  },
+  "numbersDescription": {
+    "message": "Rəqəmləri daxil et",
+    "description": "Full description for the password generator numbers checkbox"
+  },
+  "numbersLabel": {
+    "message": "0-9",
+    "description": "Label for the password generator numbers checkbox"
+  },
+  "specialCharactersDescription": {
+    "message": "Xüsusi xarakterləri daxil et",
+    "description": "Full description for the password generator special characters checkbox"
+  },
+  "specialCharactersLabel": {
+    "message": "!@#$%^&*",
+    "description": "Label for the password generator special characters checkbox"
   },
   "numWords": {
     "message": "Söz sayı"
@@ -1474,6 +1575,10 @@
   },
   "includeNumber": {
     "message": "Rəqəm əlavə et"
+  },
+  "generatorPolicyInEffect": {
+    "message": "Müəssisə siyasət tələbləri, yaradıcı seçimlərinizə tətbiq edildi.",
+    "description": "Indicates that a policy limits the credential generator screen."
   },
   "passwordHistory": {
     "message": "Parol tarixçəsi"
@@ -2195,6 +2300,9 @@
   "checkExposedPasswords": {
     "message": "İfşa olunmuş parolları yoxla"
   },
+  "timesExposed": {
+    "message": "Dəfə ifşa olundu"
+  },
   "exposedXTimes": {
     "message": "$COUNT$ dəfə ifşa olunub",
     "placeholders": {
@@ -2229,6 +2337,9 @@
   "noWeakPasswords": {
     "message": "Anbarınızdakı heç bir elementin zəif parolu yoxdur."
   },
+  "weakness": {
+    "message": "Zəiflik"
+  },
   "reusedPasswordsReport": {
     "message": "Təkrar istifadə edilmiş parollar"
   },
@@ -2253,6 +2364,9 @@
   },
   "noReusedPasswords": {
     "message": "Anbarınızda heç bir hesabda təkrar istifadə olunan parollar yoxdur."
+  },
+  "timesReused": {
+    "message": "Dəfə təkrar istifadə olundu"
   },
   "reusedXTimes": {
     "message": "$COUNT$ dəfə təkrar istifadə olunub",
@@ -2551,6 +2665,9 @@
   "downloadLicense": {
     "message": "Lisenziyanı endir"
   },
+  "viewBillingToken": {
+    "message": "Faktura tokeninə bax"
+  },
   "updateLicense": {
     "message": "Lisenziyanı güncəllə"
   },
@@ -2597,8 +2714,11 @@
   "invoices": {
     "message": "Fakturalar"
   },
-  "noInvoices": {
-    "message": "Faktura yoxdur."
+  "noUnpaidInvoices": {
+    "message": "Ödənilməmiş faktura yoxdur."
+  },
+  "noPaidInvoices": {
+    "message": "Ödənilmiş faktura yoxdur."
   },
   "paid": {
     "message": "Ödənilib",
@@ -3155,6 +3275,10 @@
   },
   "incorrectPin": {
     "message": "Yanlış PIN"
+  },
+  "pin": {
+    "message": "PIN",
+    "description": "PIN code. Ex. The short code (often numeric) that you use to unlock a device."
   },
   "exportedVault": {
     "message": "Anbar ixrac edildi."
@@ -5013,7 +5137,7 @@
     "description": "This will be used as part of a larger sentence, broken up to include links. The full sentence will read 'Learn more, see how it works, **or** try it now.'"
   },
   "developmentDevOpsAndITTeamsChooseBWSecret": {
-    "message": "Development, DevOps, and IT teams choose Bitwarden Secrets Manager to securely manage and deploy their infrastructure and machine secrets."
+    "message": "Development, DevOps və IT komandları, infrastrukturlarını və maşın sirlərini güvənli şəkildə idarə etmək və yerləşdirmək üçün Bitwarden Sirr Menecerini seçir."
   },
   "centralizeSecretsManagement": {
     "message": "Sirlərin idarə edilməsini mərkəzləşdirin."
@@ -5076,7 +5200,7 @@
     "message": "Təşkilatınızın"
   },
   "usingTheMenuSelect": {
-    "message": "Using the menu, select"
+    "message": "Menyunu istifadə edin və seçin"
   },
   "toGrantAccessToSelectedMembers": {
     "message": "seçilmiş üzvlərə müraciət verin."
@@ -5981,8 +6105,8 @@
   "viewBillingSyncToken": {
     "message": "Faktura sinxr tokeninə bax"
   },
-  "generateBillingSyncToken": {
-    "message": "Faktura sinxr tokenini yarat"
+  "generateBillingToken": {
+    "message": "Faktura tokenini yarat"
   },
   "copyPasteBillingSync": {
     "message": "Bu tokeni kopyalayın və self-hosted təşkilatınızın faktura sinxronlaşdırma ayarlarında yapışdırın."
@@ -5990,8 +6114,8 @@
   "billingSyncCanAccess": {
     "message": "Faktura sinxr tokeniniz, bu təşkilatın abunəlik ayarlarına müraciət edə və düzəliş edə bilər."
   },
-  "manageBillingSync": {
-    "message": "Faktura sinxr idarə et"
+  "manageBillingTokenSync": {
+    "message": "Faktura tokenini idarə et"
   },
   "setUpBillingSync": {
     "message": "Faktura sinxr quraşdır"
@@ -6050,14 +6174,14 @@
   "billingSyncApiKeyRotated": {
     "message": "Token döndərildi."
   },
-  "billingSyncDesc": {
-    "message": "Faktura sinxr, öz-özünə sahiblik edən Bitwarden-inizi Bitwarden bulud serveri ilə əlaqələndirərək ailələr üçün Ödənişsiz Ailələr planını və qabaqcıl faktura özəlliklərini təmin edir."
-  },
   "billingSyncKeyDesc": {
     "message": "Bu forumu tamamlamaq üçün bulud təşkilatınızın abunəlik ayarlarından Faktura sinxr tokeni tələb olunur."
   },
   "billingSyncKey": {
     "message": "Faktura sinxr tokeni"
+  },
+  "automaticBillingSyncDesc": {
+    "message": "Avto-sinxronlaşdırma, Ailələr sponsorluğunun kilidini açır və bir fayl yükləmədən lisenziyanızı sinxronlaşdırmağınıza imkan verir. Bitwarden bulud serverində güncəlləmələri etdikdən sonra dəyişiklikləri tətbiq etmək üçün \"Lisenziyanı sinxronlaşdır\"ı seçin."
   },
   "active": {
     "message": "Aktiv"
@@ -6200,7 +6324,8 @@
     "message": "Hesab ayarları"
   },
   "generator": {
-    "message": "Yaradıcı"
+    "message": "Yaradıcı",
+    "description": "Short for 'credential generator'."
   },
   "whatWouldYouLikeToGenerate": {
     "message": "Nə yaratmaq istəyirsiniz?"
@@ -6575,6 +6700,18 @@
       "count": {
         "content": "$1",
         "example": "4"
+      }
+    }
+  },
+  "singleFieldNeedsAttention": {
+    "message": "1 xananın diqqətinizə ehtiyacı var."
+  },
+  "multipleFieldsNeedAttention": {
+    "message": "$COUNT$ xananın diqqətinizə ehtiyacı var.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
       }
     }
   },
@@ -7438,6 +7575,15 @@
   "or": {
     "message": "və ya"
   },
+  "unlockWithBiometrics": {
+    "message": "Biometriklə kilidi aç"
+  },
+  "unlockWithPin": {
+    "message": "PIN ilə kilidi aç"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Ana parollar kilidi aç"
+  },
   "licenseAndBillingManagement": {
     "message": "Lisenziya və faktura idarəetməsi"
   },
@@ -7447,8 +7593,8 @@
   "manualUpload": {
     "message": "Əllə yükləmə"
   },
-  "manualUploadDesc": {
-    "message": "Faktura sinxronlaşdırmasını fəallaşdırmaq istəmirsinizsə, lisenziyanızı burada əllə yükləyin."
+  "manualBillingTokenUploadDesc": {
+    "message": "Faktura sinxronlaşdırmanı açmaq istəmirsinizsə, lisenziyanızı manual olaraq bura yükləyin. Bu, Ailələr sponsorluğunun kilidini avtomatik açmayacaq."
   },
   "syncLicense": {
     "message": "Lisenziyanı sinxronlaşdır"
@@ -7889,7 +8035,7 @@
     "message": "Tələb edilən cihaz təsdiqi."
   },
   "tdeOffboardingPasswordSet": {
-    "message": "User set a master password during TDE offboarding."
+    "message": "İstifadəçi, TDE offboarding zamanı ana parolu təyin etdi."
   },
   "startYour7DayFreeTrialOfBitwardenFor": {
     "message": "$ORG$ üçün Bitwarden 7 günlük ödənişsiz sınağı başladın",
@@ -9087,7 +9233,7 @@
     }
   },
   "optionalOnPremHosting": {
-    "message": "Optional on-premises hosting"
+    "message": "İxtiyari şirkətdaxili hostinq"
   },
   "upgradeFreeOrganization": {
     "message": "$NAME$ təşkilatınızı yüksəldin ",
@@ -9221,5 +9367,14 @@
   },
   "editAccess": {
     "message": "Müraciətə düzəliş et"
+  },
+  "addAttachment": {
+    "message": "Qoşma əlavə et"
+  },
+  "maxFileSizeSansPunctuation": {
+    "message": "Maksimal fayl həcmi 500 MB-dır"
+  },
+  "permanentlyDeleteAttachmentConfirmation": {
+    "message": "Bu qoşmanı birdəfəlik silmək istədiyinizə əminsiniz?"
   }
 }

@@ -381,7 +381,7 @@
   },
   "generator": {
     "message": "Generatorius",
-    "description": "Short for 'Password Generator'."
+    "description": "Short for 'credential generator'."
   },
   "passGenInfo": {
     "message": "Automatiškai generuokite stiprius, unikalius prisijungimo slaptažodžius."
@@ -603,6 +603,15 @@
   },
   "yourVaultIsLocked": {
     "message": "Jūsų saugykla užrakinta. Norėdami tęsti, patikrinkite pagrindinį slaptažodį."
+  },
+  "yourVaultIsLockedV2": {
+    "message": "Your vault is locked"
+  },
+  "yourAccountIsLocked": {
+    "message": "Your account is locked"
+  },
+  "or": {
+    "message": "or"
   },
   "unlock": {
     "message": "Atrakinti"
@@ -1144,7 +1153,7 @@
     "message": "Failas"
   },
   "fileToShare": {
-    "message": "File to share"
+    "message": "Failas, kuri bendrinti"
   },
   "selectFile": {
     "message": "Pasirinkite failą."
@@ -1936,6 +1945,9 @@
   "unlockWithBiometrics": {
     "message": "Atrakinti naudojant biometrinius duomenis"
   },
+  "unlockWithMasterPassword": {
+    "message": "Unlock with master password"
+  },
   "awaitDesktop": {
     "message": "Laukiama patvirtinimo iš darbalaukio"
   },
@@ -2374,6 +2386,10 @@
     "message": "Ar tikrai norite ištrinti šį „Send“?",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "deleteSendPermanentConfirmation": {
+    "message": "Are you sure you want to permanently delete this Send?",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "editSend": {
     "message": "Redaguoti „Send“",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
@@ -2482,7 +2498,25 @@
     "message": "Send created successfully!",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
-  "sendAvailability": {
+  "sendExpiresInHoursSingle": {
+    "message": "The Send will be available to anyone with the link for the next 1 hour.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInHours": {
+    "message": "The Send will be available to anyone with the link for the next $HOURS$ hours.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "sendExpiresInDaysSingle": {
+    "message": "The Send will be available to anyone with the link for the next 1 day.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInDays": {
     "message": "The Send will be available to anyone with the link for the next $DAYS$ days.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
     "placeholders": {
@@ -2500,6 +2534,14 @@
     "message": "Siuntinys išsaugotas",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "sendFilePopoutDialogText": {
+    "message": "Pop out extension?",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendFilePopoutDialogDesc": {
+    "message": "To create a file Send, you need to pop out the extension to a new window.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "sendLinuxChromiumFileWarning": {
     "message": "Norėdami pasirinkti failą, atidarykite plėtinį šoninėje juostoje (jei įmanoma) arba iššokkite į naują langą spustelėdami šią reklamjuostę."
   },
@@ -2508,6 +2550,9 @@
   },
   "sendSafariFileWarning": {
     "message": "Norėdami pasirinkti failą naudodami „Safari“, iššokkite į naują langą spustelėdami šią reklamjuostę."
+  },
+  "popOut": {
+    "message": "Pop out"
   },
   "sendFileCalloutHeader": {
     "message": "Prieš pradedant"
@@ -3608,6 +3653,9 @@
   "typePasskey": {
     "message": "Prieigos raktas"
   },
+  "accessing": {
+    "message": "Accessing"
+  },
   "passkeyNotCopied": {
     "message": "Passkey will not be copied"
   },
@@ -3631,6 +3679,9 @@
   },
   "noMatchingLoginsForSite": {
     "message": "No matching logins for this site"
+  },
+  "searchSavePasskeyNewLogin": {
+    "message": "Search or save passkey as new login"
   },
   "confirm": {
     "message": "Confirm"
@@ -4201,6 +4252,9 @@
   "enableAnimations": {
     "message": "Enable animations"
   },
+  "showAnimations": {
+    "message": "Show animations"
+  },
   "addAccount": {
     "message": "Pridėti paskyrą"
   },
@@ -4478,5 +4532,8 @@
   },
   "noEditPermissions": {
     "message": "You don't have permission to edit this item"
+  },
+  "authenticating": {
+    "message": "Authenticating"
   }
 }

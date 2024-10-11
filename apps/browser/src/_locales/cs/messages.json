@@ -381,7 +381,7 @@
   },
   "generator": {
     "message": "Generátor",
-    "description": "Short for 'Password Generator'."
+    "description": "Short for 'credential generator'."
   },
   "passGenInfo": {
     "message": "Vygenerujte si silné a unikátní heslo pro přihlašovací údaje."
@@ -490,7 +490,7 @@
     "description": "Label for the avoid ambiguous characters checkbox."
   },
   "generatorPolicyInEffect": {
-    "message": "Enterprise policy requirements have been applied to your generator options.",
+    "message": "Na volby generátoru byly uplatněny požadavky podnikových zásad.",
     "description": "Indicates that a policy limits the credential generator screen."
   },
   "searchVault": {
@@ -603,6 +603,15 @@
   },
   "yourVaultIsLocked": {
     "message": "Váš trezor je uzamčen. Pro pokračování musíte zadat hlavní heslo."
+  },
+  "yourVaultIsLockedV2": {
+    "message": "Váš trezor je uzamčen"
+  },
+  "yourAccountIsLocked": {
+    "message": "Váš účet je uzamčen"
+  },
+  "or": {
+    "message": "nebo"
   },
   "unlock": {
     "message": "Odemknout"
@@ -1936,6 +1945,9 @@
   "unlockWithBiometrics": {
     "message": "Odemknout pomocí biometrie"
   },
+  "unlockWithMasterPassword": {
+    "message": "Odemknout pomocí hlavního hesla"
+  },
   "awaitDesktop": {
     "message": "Čeká se na potvrzení z aplikace v počítači"
   },
@@ -2374,6 +2386,10 @@
     "message": "Opravdu chcete smazat tento Send?",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "deleteSendPermanentConfirmation": {
+    "message": "Opravdu chcete tento Send trvale smazat?",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "editSend": {
     "message": "Upravit Send",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
@@ -2482,7 +2498,25 @@
     "message": "Send byl úspěšně vytvořen!",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
-  "sendAvailability": {
+  "sendExpiresInHoursSingle": {
+    "message": "Send bude k dispozici na příští 1 hodinu každému, kdo má odkaz.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInHours": {
+    "message": "Send bude k dispozici na příštích $HOURS$ hodin každému, kdo má odkaz.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "sendExpiresInDaysSingle": {
+    "message": "Send bude k dispozici na příští 1 den každému, kdo má odkaz.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInDays": {
     "message": "Send bude k dispozici na příštích $DAYS$ dnů každému, kdo má odkaz.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
     "placeholders": {
@@ -2500,6 +2534,14 @@
     "message": "Send upraven",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "sendFilePopoutDialogText": {
+    "message": "Zobrazit rozšíření v novém okně?",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendFilePopoutDialogDesc": {
+    "message": "Chcete-li vytvořit Send souboru, musí se zobrazit rozšíření v novém okně.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "sendLinuxChromiumFileWarning": {
     "message": "Chcete-li vybrat soubor, otevřete rozšíření v postranním panelu (pokud je to možné) nebo jej otevřete v novém okně klepnutím na tento banner."
   },
@@ -2508,6 +2550,9 @@
   },
   "sendSafariFileWarning": {
     "message": "Chcete-li vybrat soubor pomocí prohlížeče Safari, otevřete nové okno klepnutím na tento banner."
+  },
+  "popOut": {
+    "message": "Nové okno"
   },
   "sendFileCalloutHeader": {
     "message": "Než začnete"
@@ -3608,6 +3653,9 @@
   "typePasskey": {
     "message": "Přístupový klíč"
   },
+  "accessing": {
+    "message": "Přistupování"
+  },
   "passkeyNotCopied": {
     "message": "Přístupový klíč nebude zkopírován"
   },
@@ -3631,6 +3679,9 @@
   },
   "noMatchingLoginsForSite": {
     "message": "Žádné odpovídající přihlašovací údaje pro tento web"
+  },
+  "searchSavePasskeyNewLogin": {
+    "message": "Vyhledat nebo uložit přístupový klíč jako nové přihlášení"
   },
   "confirm": {
     "message": "Potvrdit"
@@ -4201,6 +4252,9 @@
   "enableAnimations": {
     "message": "Povolit animace"
   },
+  "showAnimations": {
+    "message": "Zobrazit animaci"
+  },
   "addAccount": {
     "message": "Přidat účet"
   },
@@ -4478,5 +4532,8 @@
   },
   "noEditPermissions": {
     "message": "Nemáte oprávnění upravit tuto položku"
+  },
+  "authenticating": {
+    "message": "Ověřování"
   }
 }
