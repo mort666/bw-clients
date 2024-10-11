@@ -74,7 +74,7 @@ describe("ReusedPasswordsReportComponent", () => {
     jest.spyOn(component as any, "getAllCiphers").mockReturnValue(Promise.resolve<any>(cipherData));
     await component.setCiphers();
 
-    expect(component.ciphers.length).toEqual(2);
+    expect(component.ciphers.length).toEqual(3);
     expect(component.ciphers[0].id).toEqual(expectedIdOne);
     expect(component.ciphers[0].edit).toEqual(true);
     expect(component.ciphers[1].id).toEqual(expectedIdTwo);
