@@ -209,12 +209,13 @@ export class TaxInfoComponent implements OnInit {
         takeUntil(this.destroy$),
       )
       .subscribe();
-    /**this.taxFormGroup
+    this.taxFormGroup
       .get("postalCode")
-      .valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.calculateSalesTax();
-      });**/
+      .valueChanges.pipe(
+        switchMap(() => from(this.calculateSalesTax())),
+        takeUntil(this.destroy$),
+      )
+      .subscribe();
   }
 
   setTaxInfoObject() {
