@@ -4,7 +4,7 @@
 <div class="tw-grid tw-grid-cols-12 tw-gap-4">
   <div class="tw-col-span-9">
     <div *ngIf="view$ | async as view">
-      <ng-container *ngIf="!loading">
+      <ng-container *ngIf="!loading && view?.tasks">
         <sm-app-onboarding-section
           [title]="'setUpSecretsManagerForYourOrganization' | i18n"
           [open]="true"
