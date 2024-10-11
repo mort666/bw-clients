@@ -62,7 +62,6 @@ describe("PasswordsReportComponent", () => {
     fixture = TestBed.createComponent(PasswordsReportComponent);
     component = fixture.componentInstance;
 
-    // Mock cipherData and userData
     (component as any).cipherData = cipherData;
     (component as any).userData = userData;
 
@@ -74,16 +73,12 @@ describe("PasswordsReportComponent", () => {
   });
 
   it("should populate reportCiphers with ciphers that have password issues", async () => {
-    // Mock the password strength service to return weak passwords
-    passwordStrengthService.getPasswordStrength.mockReturnValue({ score: 1 } as any); // Weak password
+    passwordStrengthService.getPasswordStrength.mockReturnValue({ score: 1 } as any);
 
-    // Mock auditService.passwordLeaked to return a resolved promise
-    auditServiceMock.passwordLeaked.mockResolvedValue(5); // Assume passwords are exposed 5 times
+    auditServiceMock.passwordLeaked.mockResolvedValue(5);
 
-    // Call setCiphers to initialize data
     await component.setCiphers();
 
-    // Check that reportCiphers include the expected ciphers
     const cipherIds = component.reportCiphers.map((c) => c.id);
 
     expect(cipherIds).toEqual([
@@ -100,23 +95,20 @@ describe("PasswordsReportComponent", () => {
   });
 
   it("should correctly populate passwordStrengthMap", async () => {
-    // Mock the password strength service to return varying scores
     passwordStrengthService.getPasswordStrength.mockImplementation((password) => {
       let score = 0;
       if (password === "123") {
-        score = 1; // Weak password
+        score = 1;
       } else {
-        score = 4; // Strong password
+        score = 4;
       }
       return { score } as any;
     });
 
-    // Mock auditService.passwordLeaked to return a resolved promise
     auditServiceMock.passwordLeaked.mockResolvedValue(0);
 
     await component.setCiphers();
 
-    // Check that passwordStrengthMap has entries for ciphers with weak passwords
     expect(component.passwordStrengthMap.size).toBeGreaterThan(0);
     expect(component.passwordStrengthMap.get("cbea34a8-bde4-46ad-9d19-b05001228ab2")).toEqual([
       "veryWeak",
@@ -129,34 +121,26 @@ describe("PasswordsReportComponent", () => {
   });
 
   it("should display totalMembers in the template", async () => {
-    // Mock the password strength service
     passwordStrengthService.getPasswordStrength.mockReturnValue({ score: 1 } as any);
 
-    // Mock auditService.passwordLeaked to return a resolved promise
     auditServiceMock.passwordLeaked.mockResolvedValue(0);
 
-    // Call ngOnInit to initialize data and load the component
     await component.ngOnInit();
 
-    // Manually set hasLoaded to true if it's not set within ngOnInit
     component.hasLoaded = true;
 
-    // Wait for all asynchronous tasks to complete
     await fixture.whenStable();
     fixture.detectChanges();
 
-    // Access the rendered DOM
     const totalMembersCells = fixture.debugElement
       .queryAll(By.css('[data-testid="total-membership"]'))
       .map((cell) => cell.nativeElement);
 
-    // Get the text content of each cell
     const totalMembersValues = totalMembersCells.map((cell) => cell.textContent.trim());
 
-    // Check if totalMembers values are displayed correctly
-    expect(totalMembersValues).toContain("2"); // Adjust based on actual expected values
-    expect(totalMembersValues).toContain("4");
-    expect(totalMembersValues).toContain("6");
-    expect(totalMembersValues).toContain("4");
+    expect(totalMembersValues[0]).toBe("4");
+    expect(totalMembersValues[1]).toBe("5");
+    expect(totalMembersValues[2]).toBe("0");
+    expect(totalMembersValues[3]).toBe("1");
   });
 });
