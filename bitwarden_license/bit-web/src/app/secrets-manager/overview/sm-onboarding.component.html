@@ -5,7 +5,7 @@
   <div class="tw-col-span-9">
     <div *ngIf="view$ | async as view">
       <ng-container *ngIf="!loading">
-        <sm-app-onboarding
+        <sm-app-onboarding-section
           [title]="'setUpSecretsManagerForYourOrganization' | i18n"
           [open]="true"
           *ngIf="view.userIsAdmin"
@@ -44,12 +44,11 @@
             }}</a
             >{{ "setUpIntegrationsDescription2" | i18n }}
           </sm-app-onboarding-task>
-        </sm-app-onboarding>
+        </sm-app-onboarding-section>
 
-        <sm-app-onboarding [title]="'setUpYourFirstAutomation' | i18n" [open]="true">
+        <sm-app-onboarding-section [title]="'setUpYourFirstAutomation' | i18n" [open]="true">
           <sm-app-onboarding-task
             [title]="'installTheCLI' | i18n"
-            [description]="'' | i18n"
             [completed]="view.tasks.installTheCLI"
             [onCompleteButtonPress]="completeInstallTheCLI.bind(this)"
             [open]="'installTheCLI' == firstIncompleteTaskKey"
@@ -99,7 +98,7 @@
           </sm-app-onboarding-task>
           <sm-app-onboarding-task
             [title]="'createProject' | i18n"
-            [callbackFunction]="openNewProjectDialog.bind(this)"
+            [onAction]="openNewProjectDialog.bind(this)"
             [completed]="view.tasks.createProject"
             [onCompleteButtonPress]="completeCreateProject.bind(this)"
             [open]="'createProject' == firstIncompleteTaskKey"
@@ -112,7 +111,7 @@
 
           <sm-app-onboarding-task
             [title]="'createSecret' | i18n"
-            [callbackFunction]="openNewSecretDialog.bind(this)"
+            [onAction]="openNewSecretDialog.bind(this)"
             [completed]="view.tasks.createSecret"
             [onCompleteButtonPress]="completeCreateSecret.bind(this)"
             [open]="'createSecret' == firstIncompleteTaskKey"
@@ -123,7 +122,7 @@
           <sm-app-onboarding-task
             [title]="'createMachineAccount' | i18n"
             [completed]="view.tasks.createServiceAccount"
-            [callbackFunction]="openServiceAccountDialog.bind(this)"
+            [onAction]="openServiceAccountDialog.bind(this)"
             [onCompleteButtonPress]="completeCreateServiceAccount.bind(this)"
             [open]="'createServiceAccount' == firstIncompleteTaskKey"
           >
@@ -139,7 +138,7 @@
           <sm-app-onboarding-task
             [title]="'createAnAccessToken' | i18n"
             [completed]="view.tasks.createAccessToken"
-            [callbackFunction]="openCreateAccessTokenDocumentation.bind(this)"
+            [onAction]="openCreateAccessTokenDocumentation.bind(this)"
             icon="bwi-collection"
             [onCompleteButtonPress]="completeCreateAccessToken.bind(this)"
             [open]="'createAccessToken' == firstIncompleteTaskKey"
@@ -150,7 +149,7 @@
             }}</a
             >{{ "createAnSMAccessTokenOnboardingDescription" | i18n }}
           </sm-app-onboarding-task>
-        </sm-app-onboarding>
+        </sm-app-onboarding-section>
       </ng-container>
     </div>
   </div>

@@ -90,6 +90,7 @@ const routes: Routes = [
           },
           {
             path: "sm-onboarding",
+            //canActivate: [organizationEnabledGuard],
             loadChildren: () => SMOnboardingModule,
             data: {
               titleId: "smOnboarding",

@@ -21,13 +21,13 @@ export class SMOnboardingTaskComponent {
   description: string = "";
 
   @Input()
-  externalLink: string = "";
+  externalLink: string = undefined;
 
   @Input()
-  externalButton: string = "";
+  externalButton: string = undefined;
 
   @Input()
-  callbackFunction: (setComplete: boolean) => void;
+  onAction: (setComplete: boolean) => void;
 
   @Input()
   onCompleteButtonPress: () => void;
@@ -47,30 +47,19 @@ export class SMOnboardingTaskComponent {
   }
 
   onClick() {
-    if (this.callbackFunction) {
-      this.callbackFunction(!this.completed);
-      this.open = null;
-    }
+    this.onAction(!this.completed);
+    this.open = null;
   }
 
   navigateExternalLink() {
-    if (this.callbackFunction) {
-      this.callbackFunction(!this.completed);
+    if (this.onAction) {
+      this.onAction(!this.completed);
     }
     window.open(this.externalLink, "_blank");
   }
 
   completeButtonPress() {
-    if (this.onCompleteButtonPress) {
-      this.onCompleteButtonPress();
-      this.open = null;
-    }
-  }
-
-  handleClick(ev: MouseEvent) {
-    /**
-     * If the main `ng-content` is clicked, we don't want to trigger the task's click handler.
-     */
-    ev.stopPropagation();
+    this.onCompleteButtonPress();
+    this.open = null;
   }
 }

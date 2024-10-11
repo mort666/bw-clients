@@ -38,7 +38,7 @@
             linkType="primary"
             class="tw-mr-2"
             (click)="navigateExternalLink()"
-            *ngIf="this.externalLink"
+            *ngIf="externalLink"
           >
             <i class="bwi bwi-lg bwi-external-link"></i>{{ this.title }}
           </a>
@@ -52,7 +52,7 @@
             [href]="this.externalButton"
             *ngIf="this.externalButton"
           >
-            {{ this.title }}
+            {{ title }}
           </a>
 
           <button
@@ -61,7 +61,7 @@
             class="tw-mr-1"
             buttonType="primary"
             (click)="onClick()"
-            *ngIf="this.callbackFunction && !this.externalLink"
+            *ngIf="onAction && !externalLink"
           >
             {{ title }}
           </button>

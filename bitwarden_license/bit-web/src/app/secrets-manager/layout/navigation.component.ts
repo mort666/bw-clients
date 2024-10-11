@@ -39,8 +39,8 @@ export class NavigationComponent implements OnInit, OnDestroy {
   protected isOrgEnabled$: Observable<boolean>;
   protected organizationCounts: OrganizationCounts;
   private destroy$: Subject<void> = new Subject<void>();
-  showOnboarding: boolean;
-  onboardingTasks$: Observable<SMOnboardingTasks>;
+  showOnboarding: boolean = false;
+  protected onboardingTasks$: Observable<SMOnboardingTasks>;
 
   constructor(
     protected route: ActivatedRoute,
@@ -55,7 +55,6 @@ export class NavigationComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.onboardingTasks$ = this.smOnboardingTasksService.smOnboardingTasks$;
-
     const org$ = this.route.params.pipe(
       concatMap((params) => this.organizationService.get(params.organizationId)),
       distinctUntilChanged(),

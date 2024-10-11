@@ -3,7 +3,7 @@ import { Component, ContentChildren, ElementRef, Input, QueryList, ViewChild } f
 import { SMOnboardingTaskComponent } from "./sm-onboarding-task.component";
 
 @Component({
-  selector: "sm-app-onboarding",
+  selector: "sm-app-onboarding-section",
   templateUrl: "./sm-onboarding-section.component.html",
 })
 export class SMOnboardingSectionComponent {
@@ -33,7 +33,7 @@ export class SMOnboardingSectionComponent {
       return "0";
     }
 
-    return Math.round((this.amountCompleted / this.tasks.length) * 100).toString();
+    return this.barWidth.toString();
   }
 
   onToggle(event: Event) {
