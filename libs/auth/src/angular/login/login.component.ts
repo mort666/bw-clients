@@ -12,7 +12,6 @@ import {
   RegisterRouteService,
 } from "@bitwarden/auth/common";
 import { InternalPolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
-import { PolicyData } from "@bitwarden/common/admin-console/models/data/policy.data";
 import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/models/domain/master-password-policy-options";
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { DevicesApiServiceAbstraction } from "@bitwarden/common/auth/abstractions/devices-api.service.abstraction";
@@ -24,12 +23,12 @@ import { AppIdService } from "@bitwarden/common/platform/abstractions/app-id.ser
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { SyncService } from "@bitwarden/common/platform/sync";
 import { PasswordStrengthServiceAbstraction } from "@bitwarden/common/tools/password-strength";
-import { UserId } from "@bitwarden/common/types/guid";
 import {
   AsyncActionsModule,
   ButtonModule,
@@ -71,6 +70,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   @Input() captchaSiteKey: string = null;
 
   private destroy$ = new Subject<void>();
+  private enforcedMasterPasswordOptions: MasterPasswordPolicyOptions = undefined;
   readonly Icons = { WaveIcon };
 
   captcha: CaptchaIFrame;
@@ -136,6 +136,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     private router: Router,
     private syncService: SyncService,
     private toastService: ToastService,
+    private logService: LogService,
   ) {
     this.clientType = this.platformUtilsService.getClientType();
     this.loginViaAuthRequestSupported = this.loginComponentService.isLoginViaAuthRequestSupported();
@@ -249,9 +250,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
 
     // If none of the above cases are true, proceed with login...
-    if (this.clientType === ClientType.Web) {
-      await this.goAfterLogIn(authResult.userId);
-    }
+    await this.evaluatePassword();
 
     this.loginEmailService.clearValues();
 
@@ -266,32 +265,49 @@ export class LoginComponent implements OnInit, OnDestroy {
     await this.loginComponentService.launchSsoBrowserWindow(this.loggedEmail, clientId);
   }
 
-  protected async goAfterLogIn(userId: UserId): Promise<void> {
-    const masterPassword = this.formGroup.value.masterPassword;
+  protected async evaluatePassword(): Promise<void> {
+    try {
+      // If we do not have any saved policies, attempt to load them from the service
+      if (this.enforcedMasterPasswordOptions == undefined) {
+        this.enforcedMasterPasswordOptions = await firstValueFrom(
+          this.policyService.masterPasswordPolicyOptions$(),
+        );
+      }
 
-    // Check master password against policy
-    if (this.enforcedPasswordPolicyOptions != null) {
-      const strengthResult = this.passwordStrengthService.getPasswordStrength(
-        masterPassword,
-        this.formGroup.value.email,
-      );
-      const masterPasswordScore = strengthResult == null ? null : strengthResult.score;
-
-      // If invalid, save policies and require update
-      if (
-        !this.policyService.evaluateMasterPassword(
-          masterPasswordScore,
-          masterPassword,
-          this.enforcedPasswordPolicyOptions,
-        )
-      ) {
-        const policiesData: { [id: string]: PolicyData } = {};
-        this.policies.map((p) => (policiesData[p.id] = PolicyData.fromPolicy(p)));
-        await this.policyService.replace(policiesData, userId);
+      if (this.requirePasswordChange()) {
         await this.router.navigate(["update-password"]);
         return;
       }
+    } catch (e) {
+      // Do not prevent unlock if there is an error evaluating policies
+      this.logService.error(e);
     }
+  }
+
+  /**
+   * Checks if the master password meets the enforced policy requirements
+   * If not, returns false
+   */
+  private requirePasswordChange(): boolean {
+    if (
+      this.enforcedMasterPasswordOptions == undefined ||
+      !this.enforcedMasterPasswordOptions.enforceOnLogin
+    ) {
+      return false;
+    }
+
+    const masterPassword = this.formGroup.controls.masterPassword.value;
+
+    const passwordStrength = this.passwordStrengthService.getPasswordStrength(
+      masterPassword,
+      this.formGroup.value.email,
+    )?.score;
+
+    return !this.policyService.evaluateMasterPassword(
+      passwordStrength,
+      masterPassword,
+      this.enforcedMasterPasswordOptions,
+    );
   }
 
   protected showCaptcha(): boolean {
