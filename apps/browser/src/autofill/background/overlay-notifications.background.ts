@@ -354,6 +354,7 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
     ) {
       return;
     }
+
     if (isInvalidResponseStatusCode(details.statusCode)) {
       this.clearNotificationFallbackTimeout();
       return;
@@ -470,11 +471,7 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
   private shouldTriggerChangePasswordNotification = (
     modifyLoginData: ModifyLoginCipherFormData,
   ) => {
-    if (!modifyLoginData) {
-      return false;
-    }
-
-    return modifyLoginData.newPassword && !modifyLoginData.username;
+    return modifyLoginData?.newPassword && !modifyLoginData.username;
   };
 
   /**
@@ -483,7 +480,7 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
    * @param modifyLoginData - The modified login form data
    */
   private shouldTriggerAddLoginNotification = (modifyLoginData: ModifyLoginCipherFormData) => {
-    return modifyLoginData.username && (modifyLoginData.password || modifyLoginData.newPassword);
+    return modifyLoginData?.username && (modifyLoginData.password || modifyLoginData.newPassword);
   };
 
   /**
