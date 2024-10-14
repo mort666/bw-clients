@@ -1482,6 +1482,59 @@ describe("AutofillOverlayContentService", () => {
             );
           });
         });
+
+        describe("triggering submission trough interaction of a button element", () => {
+          let buttonElement: HTMLButtonElement;
+
+          beforeEach(() => {
+            buttonElement = document.createElement("button");
+            buttonElement.textContent = "Login In";
+            buttonElement.type = "button";
+            form.appendChild(buttonElement);
+          });
+
+          it("sends a `formFieldSubmitted` message to the background on interaction of a button element", async () => {
+            domElementVisibilityService.isElementViewable = jest.fn().mockReturnValue(true);
+            await autofillOverlayContentService.setupOverlayListeners(
+              autofillFieldElement,
+              autofillFieldData,
+              pageDetailsMock,
+            );
+            await flushPromises();
+            buttonElement.dispatchEvent(new KeyboardEvent("keyup", { code: "Enter" }));
+
+            expect(sendExtensionMessageSpy).toHaveBeenCalledWith(
+              "formFieldSubmitted",
+              expect.any(Object),
+            );
+          });
+        });
+
+        describe("triggering submission through interaction of an anchor element", () => {
+          let anchorElement: HTMLAnchorElement;
+
+          beforeEach(() => {
+            anchorElement = document.createElement("a");
+            anchorElement.textContent = "Login In";
+            form.appendChild(anchorElement);
+          });
+
+          it("sends a `formFieldSubmitted` message to the background on interaction of an anchor element", async () => {
+            domElementVisibilityService.isElementViewable = jest.fn().mockReturnValue(true);
+            await autofillOverlayContentService.setupOverlayListeners(
+              autofillFieldElement,
+              autofillFieldData,
+              pageDetailsMock,
+            );
+            await flushPromises();
+            anchorElement.dispatchEvent(new KeyboardEvent("keyup", { code: "Enter" }));
+
+            expect(sendExtensionMessageSpy).toHaveBeenCalledWith(
+              "formFieldSubmitted",
+              expect.any(Object),
+            );
+          });
+        });
       });
 
       describe("listeners set up on a fields without a form", () => {
