@@ -204,7 +204,9 @@ const routes: Routes = [
       path: "login",
       canActivate: [unauthGuardFn()],
       data: {
-        pageTitle: "logInToBitwarden",
+        pageTitle: {
+          key: "logInToBitwarden",
+        },
       } satisfies RouteDataProperties & AnonLayoutWrapperData,
       children: [
         {
