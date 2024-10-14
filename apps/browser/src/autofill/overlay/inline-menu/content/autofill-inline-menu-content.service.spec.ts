@@ -45,6 +45,11 @@ describe("AutofillInlineMenuContentService", () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+
+    Object.defineProperty(document, "activeElement", {
+      value: null,
+      writable: true,
+    });
   });
 
   describe("isElementInlineMenu", () => {
@@ -204,6 +209,31 @@ describe("AutofillInlineMenuContentService", () => {
             },
           );
         });
+      });
+
+      it("appends the inline menu element to a containing `dialog` element if the element is a modal", async () => {
+        isInlineMenuButtonVisibleSpy.mockResolvedValue(false);
+        const dialogElement = document.createElement("dialog");
+        dialogElement.setAttribute("open", "true");
+        jest.spyOn(dialogElement, "matches").mockReturnValue(true);
+        const dialogAppendSpy = jest.spyOn(dialogElement, "appendChild");
+        const inputElement = document.createElement("input");
+        dialogElement.appendChild(inputElement);
+        document.body.appendChild(dialogElement);
+        Object.defineProperty(document, "activeElement", {
+          value: inputElement,
+          writable: true,
+        });
+
+        sendMockExtensionMessage({
+          command: "appendAutofillInlineMenuToDom",
+          overlayElement: AutofillOverlayElement.Button,
+        });
+        await flushPromises();
+
+        expect(dialogAppendSpy).toHaveBeenCalledWith(
+          autofillInlineMenuContentService["buttonElement"],
+        );
       });
     });
   });
