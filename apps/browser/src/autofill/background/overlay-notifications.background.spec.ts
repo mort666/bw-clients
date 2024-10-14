@@ -60,6 +60,27 @@ describe("OverlayNotificationsBackground", () => {
     jest.clearAllTimers();
   });
 
+  describe("feature flag behavior", () => {
+    let runtimeRemoveListenerSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      runtimeRemoveListenerSpy = jest.spyOn(chrome.runtime.onMessage, "removeListener");
+    });
+
+    it("removes the extension listeners if the current flag value is set to `false`", () => {
+      getFeatureFlagMock$.next(false);
+
+      expect(runtimeRemoveListenerSpy).toHaveBeenCalled();
+    });
+
+    it("ignores the feature flag change if the previous flag value is equal to the current flag value", () => {
+      getFeatureFlagMock$.next(false);
+      getFeatureFlagMock$.next(false);
+
+      expect(runtimeRemoveListenerSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe("setting up the form submission listeners", () => {
     let fields: MockProxy<AutofillField>[];
     let details: MockProxy<AutofillPageDetails>;
