@@ -2,7 +2,7 @@ import { CommonModule } from "@angular/common";
 import { Component, ElementRef, Input, NgZone, OnDestroy, OnInit, ViewChild } from "@angular/core";
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angular/forms";
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
-import { first, firstValueFrom, of, Subject, switchMap, take, takeUntil } from "rxjs";
+import { firstValueFrom, of, Subject, switchMap, take, takeUntil } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import {
@@ -143,10 +143,6 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
-    if (this.clientType === ClientType.Web) {
-      await this.webOnInit();
-    }
-
     await this.defaultOnInit();
 
     if (this.clientType === ClientType.Browser) {
@@ -485,6 +481,15 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   private async defaultOnInit(): Promise<void> {
+    await this.getLoginWithDevice(this.loggedEmail);
+
+    // If there's an existing org invite, use it to get the password policies
+    const orgPolicies = await this.loginComponentService.getOrgPolicies();
+
+    this.policies = orgPolicies?.policies;
+    this.showResetPasswordAutoEnrollWarning = orgPolicies?.isPolicyAndAutoEnrollEnabled;
+    this.enforcedPasswordPolicyOptions = orgPolicies?.enforcedPasswordPolicyOptions;
+
     let paramEmailIsSet = false;
 
     this.activatedRoute?.queryParams
@@ -517,37 +522,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async webOnInit(): Promise<void> {
-    this.activatedRoute.queryParams.pipe(first(), takeUntil(this.destroy$)).subscribe((qParams) => {
-      if (qParams.org != null) {
-        const route = this.router.createUrlTree(["create-organization"], {
-          queryParams: { plan: qParams.org },
-        });
-        this.loginComponentService.setPreviousUrl(route);
-      }
-
-      /* If there is a parameter called 'sponsorshipToken', they are coming
-         from an email for sponsoring a families organization. Therefore set
-         the prevousUrl to /setup/families-for-enterprise?token=<paramValue> */
-      if (qParams.sponsorshipToken != null) {
-        const route = this.router.createUrlTree(["setup/families-for-enterprise"], {
-          queryParams: { token: qParams.sponsorshipToken },
-        });
-        this.loginComponentService.setPreviousUrl(route);
-      }
-    });
-
-    // If there's an existing org invite, use it to get the password policies
-    const orgPolicies = await this.loginComponentService.getOrgPolicies();
-
-    this.policies = orgPolicies?.policies;
-    this.showResetPasswordAutoEnrollWarning = orgPolicies?.isPolicyAndAutoEnrollEnabled;
-    this.enforcedPasswordPolicyOptions = orgPolicies?.enforcedPasswordPolicyOptions;
-  }
-
   private async desktopOnInit(): Promise<void> {
-    await this.getLoginWithDevice(this.loggedEmail);
-
     // TODO: refactor to not use deprecated broadcaster service.
     this.broadcasterService.subscribe(BroadcasterSubscriptionId, async (message: any) => {
       this.ngZone.run(() => {
