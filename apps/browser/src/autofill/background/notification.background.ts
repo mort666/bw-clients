@@ -174,7 +174,7 @@ export default class NotificationBackground {
 
   private async doNotificationQueueCheck(tab: chrome.tabs.Tab): Promise<void> {
     const queueMessage = this.notificationQueue.find(
-      (message) => message.tab.id === tab.id && this.queueMessageIsFromDomain(message, tab),
+      (message) => message.tab.id === tab.id && this.queueMessageIsFromTabOrigin(message, tab),
     );
     if (queueMessage) {
       await this.sendNotificationQueueMessage(tab, queueMessage);
@@ -532,7 +532,7 @@ export default class NotificationBackground {
         continue;
       }
 
-      if (!this.queueMessageIsFromDomain(queueMessage, tab)) {
+      if (!this.queueMessageIsFromTabOrigin(queueMessage, tab)) {
         continue;
       }
 
@@ -679,7 +679,7 @@ export default class NotificationBackground {
         continue;
       }
 
-      if (!this.queueMessageIsFromDomain(queueMessage, tab)) {
+      if (!this.queueMessageIsFromTabOrigin(queueMessage, tab)) {
         continue;
       }
 
@@ -823,7 +823,13 @@ export default class NotificationBackground {
     return true;
   };
 
-  private queueMessageIsFromDomain(
+  /**
+   * Validates whether the queue message is associated with the passed tab.
+   *
+   * @param queueMessage - The queue message to check
+   * @param tab - The tab to check the queue message against
+   */
+  private queueMessageIsFromTabOrigin(
     queueMessage: NotificationQueueMessageItem,
     tab: chrome.tabs.Tab,
   ) {
