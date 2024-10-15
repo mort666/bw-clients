@@ -559,27 +559,28 @@ export default class NotificationBackground {
 
       if (queueMessage.type === NotificationQueueMessageType.ChangePassword) {
         const cipherView = await this.getDecryptedCipherById(queueMessage.cipherId);
-        if (!cipherView) {
-          const allCiphers = await this.cipherService.getAllDecryptedForUrl(queueMessage.uri);
-          const existingCiphers = allCiphers.filter(
-            (c) => c.login.password != null && c.login.password === queueMessage.currentPassword,
-          );
-
-          if (existingCiphers?.length === 1) {
-            await this.updatePassword(existingCiphers[0], queueMessage.newPassword, edit, tab);
-            return;
-          }
-
-          await BrowserApi.tabSendMessageData(tab, "saveCipherAttemptCompleted", {
-            error:
-              existingCiphers?.length === 0
-                ? "Unable to identify login credentials to update."
-                : "Multiple login credentials found when attempting to update.",
-          });
+        if (cipherView) {
+          await this.updatePassword(cipherView, queueMessage.newPassword, edit, tab);
           return;
         }
 
-        await this.updatePassword(cipherView, queueMessage.newPassword, edit, tab);
+        const allCiphers = await this.cipherService.getAllDecryptedForUrl(queueMessage.uri);
+        const existingCiphers = allCiphers.filter(
+          (c) => c.login.password != null && c.login.password === queueMessage.currentPassword,
+        );
+
+        if (existingCiphers?.length === 1) {
+          await this.updatePassword(existingCiphers[0], queueMessage.newPassword, edit, tab);
+          return;
+        }
+
+        await BrowserApi.tabSendMessageData(tab, "saveCipherAttemptCompleted", {
+          error:
+            existingCiphers?.length === 0
+              ? "Unable to identify login credentials to update."
+              : "Multiple login credentials found when attempting to update.",
+        });
+
         return;
       }
 

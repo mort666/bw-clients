@@ -529,16 +529,17 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
       return;
     }
 
-    // TODO: Currently, this will only handle the first cipher that matches the provided password.
+    if (!password) {
+      return;
+    }
+
+    // TODO: Currently, this will only handle cases where a single cipher matches the password.
     // In a future improvement, we will be reworking this to pass a list of ciphers that match the
     // password and prompt the user to select the correct one.
-    for (let cipherIndex = 0; cipherIndex < ciphers.length; cipherIndex++) {
-      const cipher = ciphers[cipherIndex];
-      if (cipher.login.password !== password) {
-        modifyLoginData.cipherId = cipher.id;
-        await this.createChangePasswordNotification(modifyLoginData, tab);
-        return;
-      }
+    const ciphersMatchedByPassword = ciphers.filter((cipher) => cipher.login.password === password);
+    if (ciphersMatchedByPassword.length === 1) {
+      modifyLoginData.cipherId = ciphersMatchedByPassword[0].id;
+      await this.createChangePasswordNotification(modifyLoginData, tab);
     }
   }
 
@@ -576,12 +577,13 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
     // TODO: Currently, this will only handle the first cipher that matches the username but not the password.
     // In a future improvement, we will be reworking this to pass a list of ciphers that match the username
     // and prompt the user to select the correct one.
-    for (let cipherIndex = 0; cipherIndex < ciphersMatchedByUsername.length; cipherIndex++) {
-      const cipher = ciphersMatchedByUsername[cipherIndex];
-      if (cipher.login.password !== password) {
-        await this.createChangePasswordNotification(modifyLoginData, tab);
-        return;
-      }
+    if (ciphersMatchedByUsername.length > 1) {
+      return;
+    }
+
+    const cipher = ciphersMatchedByUsername[0];
+    if (cipher.login.password !== password) {
+      await this.createChangePasswordNotification(modifyLoginData, tab);
     }
   }
 
