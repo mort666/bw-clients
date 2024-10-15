@@ -277,13 +277,17 @@ export default class NotificationBackground {
       await this.pushChangePasswordToQueue(
         usernameMatches[0].id,
         loginDomain,
-        loginInfo.password,
+        {
+          newPassword: loginInfo.password,
+          currentPassword: usernameMatches[0].login.password,
+          url: loginInfo.url,
+        },
         sender.tab,
       );
     }
   }
 
-  private async pushAddLoginToQueue(
+  async pushAddLoginToQueue(
     loginDomain: string,
     loginInfo: AddLoginMessageData,
     tab: chrome.tabs.Tab,
@@ -328,7 +332,11 @@ export default class NotificationBackground {
       await this.pushChangePasswordToQueue(
         null,
         loginDomain,
-        changeData.newPassword,
+        {
+          newPassword: changeData.newPassword,
+          currentPassword: changeData.currentPassword,
+          url: changeData.url,
+        },
         sender.tab,
         true,
       );
@@ -348,7 +356,16 @@ export default class NotificationBackground {
       id = ciphers[0].id;
     }
     if (id != null) {
-      await this.pushChangePasswordToQueue(id, loginDomain, changeData.newPassword, sender.tab);
+      await this.pushChangePasswordToQueue(
+        id,
+        loginDomain,
+        {
+          newPassword: changeData.newPassword,
+          currentPassword: changeData.currentPassword,
+          url: changeData.url,
+        },
+        sender.tab,
+      );
     }
   }
 
@@ -414,10 +431,10 @@ export default class NotificationBackground {
     }
   }
 
-  private async pushChangePasswordToQueue(
+  async pushChangePasswordToQueue(
     cipherId: string,
     loginDomain: string,
-    newPassword: string,
+    changePasswordData: ChangePasswordMessageData,
     tab: chrome.tabs.Tab,
     isVaultLocked = false,
   ) {
@@ -427,7 +444,9 @@ export default class NotificationBackground {
     const message: AddChangePasswordQueueMessage = {
       type: NotificationQueueMessageType.ChangePassword,
       cipherId: cipherId,
-      newPassword: newPassword,
+      uri: changePasswordData.url,
+      currentPassword: changePasswordData.currentPassword,
+      newPassword: changePasswordData.newPassword,
       domain: loginDomain,
       tab: tab,
       launchTimestamp,
@@ -540,6 +559,26 @@ export default class NotificationBackground {
 
       if (queueMessage.type === NotificationQueueMessageType.ChangePassword) {
         const cipherView = await this.getDecryptedCipherById(queueMessage.cipherId);
+        if (!cipherView) {
+          const allCiphers = await this.cipherService.getAllDecryptedForUrl(queueMessage.uri);
+          const existingCiphers = allCiphers.filter(
+            (c) => c.login.password != null && c.login.password === queueMessage.currentPassword,
+          );
+
+          if (existingCiphers?.length === 1) {
+            await this.updatePassword(existingCiphers[0], queueMessage.newPassword, edit, tab);
+            return;
+          }
+
+          await BrowserApi.tabSendMessageData(tab, "saveCipherAttemptCompleted", {
+            error:
+              existingCiphers?.length === 0
+                ? "Unable to identify login credentials to update."
+                : "Multiple login credentials found when attempting to update.",
+          });
+          return;
+        }
+
         await this.updatePassword(cipherView, queueMessage.newPassword, edit, tab);
         return;
       }

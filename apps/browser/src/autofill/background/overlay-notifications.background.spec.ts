@@ -8,6 +8,7 @@ import { ConfigService } from "@bitwarden/common/platform/abstractions/config/co
 import { ServerConfig } from "@bitwarden/common/platform/abstractions/config/server-config";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { EnvironmentServerConfigData } from "@bitwarden/common/platform/models/data/server-config.data";
+import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 
 import { BrowserApi } from "../../platform/browser/browser-api";
 import AutofillField from "../models/autofill-field";
@@ -31,6 +32,7 @@ describe("OverlayNotificationsBackground", () => {
   let configService: MockProxy<ConfigService>;
   let authService: MockProxy<AuthService>;
   let userNotificationSettingsService: MockProxy<UserNotificationSettingsServiceAbstraction>;
+  let cipherService: MockProxy<CipherService>;
   let notificationBackground: NotificationBackground;
   let getEnableChangedPasswordPromptSpy: jest.SpyInstance;
   let getEnableAddedLoginPromptSpy: jest.SpyInstance;
@@ -43,6 +45,7 @@ describe("OverlayNotificationsBackground", () => {
     configService = mock<ConfigService>({
       getFeatureFlag$: jest.fn().mockReturnValue(getFeatureFlagMock$),
     });
+    cipherService = mock<CipherService>();
     notificationBackground = mock<NotificationBackground>();
     getEnableChangedPasswordPromptSpy = jest
       .spyOn(notificationBackground, "getEnableChangedPasswordPrompt")
@@ -54,6 +57,7 @@ describe("OverlayNotificationsBackground", () => {
       logService,
       configService,
       authService,
+      cipherService,
       userNotificationSettingsService,
       notificationBackground,
     );

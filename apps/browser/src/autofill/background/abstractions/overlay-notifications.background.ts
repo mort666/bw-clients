@@ -17,6 +17,8 @@ export type ModifyLoginCipherFormData = {
   username: string;
   password: string;
   newPassword: string;
+  domain?: string;
+  cipherId?: string;
 };
 
 export type ModifyLoginCipherFormDataForTab = Map<
