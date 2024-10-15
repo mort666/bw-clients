@@ -177,7 +177,9 @@ const routes: Routes = [
           path: "login",
           canActivate: [maxAccountsGuardFn()],
           data: {
-            pageTitle: "logInToBitwarden",
+            pageTitle: {
+              key: "logInToBitwarden",
+            },
           },
           children: [
             { path: "", component: LoginComponent },

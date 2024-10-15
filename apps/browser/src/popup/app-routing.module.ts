@@ -454,7 +454,9 @@ const routes: Routes = [
           canActivate: [unauthGuardFn(unauthRouteOverrides)],
           data: {
             pageIcon: VaultIcon,
-            pageTitle: "logInToBitwarden",
+            pageTitle: {
+              key: "logInToBitwarden",
+            },
             state: "login",
             showAcctSwitcher: true,
           } satisfies RouteDataProperties & ExtensionAnonLayoutWrapperData,
