@@ -31,8 +31,10 @@ export enum FeatureFlag {
   NotificationBarAddLoginImprovements = "notification-bar-add-login-improvements",
   AC2476_DeprecateStripeSourcesAPI = "AC-2476-deprecate-stripe-sources-api",
   CipherKeyEncryption = "cipher-key-encryption",
+  VerifiedSsoDomainEndpoint = "pm-12337-refactor-sso-details-endpoint",
   PM11901_RefactorSelfHostingLicenseUploader = "PM-11901-refactor-self-hosting-license-uploader",
   Pm3478RefactorOrganizationUserApi = "pm-3478-refactor-organizationuser-api",
+  AccessIntelligence = "pm-13227-access-intelligence",
 }
 
 export type AllowedFeatureFlagTypes = boolean | number | string;
@@ -74,8 +76,10 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.NotificationBarAddLoginImprovements]: FALSE,
   [FeatureFlag.AC2476_DeprecateStripeSourcesAPI]: FALSE,
   [FeatureFlag.CipherKeyEncryption]: FALSE,
+  [FeatureFlag.VerifiedSsoDomainEndpoint]: FALSE,
   [FeatureFlag.PM11901_RefactorSelfHostingLicenseUploader]: FALSE,
   [FeatureFlag.Pm3478RefactorOrganizationUserApi]: FALSE,
+  [FeatureFlag.AccessIntelligence]: FALSE,
 } satisfies Record<FeatureFlag, AllowedFeatureFlagTypes>;
 
 export type DefaultFeatureFlagValueType = typeof DefaultFeatureFlagValue;
