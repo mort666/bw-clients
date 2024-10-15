@@ -3,10 +3,10 @@ import "lit/polyfill-support.js";
 import { FocusableElement, tabbable } from "tabbable";
 
 import {
+  EVENTS,
   AUTOFILL_OVERLAY_HANDLE_REPOSITION,
   AUTOFILL_TRIGGER_FORM_FIELD_SUBMIT,
   AUTOFILL_OVERLAY_HANDLE_SCROLL,
-  EVENTS,
 } from "@bitwarden/common/autofill/constants";
 import { CipherType } from "@bitwarden/common/vault/enums";
 

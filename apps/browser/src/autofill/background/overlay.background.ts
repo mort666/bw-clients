@@ -439,7 +439,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       }
     }
 
-    if (!this.cardAndIdentityCiphers.size) {
+    if (!this.cardAndIdentityCiphers?.size) {
       this.cardAndIdentityCiphers = null;
     }
 
