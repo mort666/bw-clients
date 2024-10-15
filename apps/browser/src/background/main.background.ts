@@ -1341,7 +1341,7 @@ export default class MainBackground {
       }
 
       if (!supported) {
-        this.sdkService.failedToInitialize().catch(this.logService.error);
+        this.sdkService.failedToInitialize().catch((e) => this.logService.error(e));
       }
     }
 
