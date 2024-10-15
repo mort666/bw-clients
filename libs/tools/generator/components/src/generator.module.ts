@@ -10,8 +10,8 @@ import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.se
 import { StateProvider } from "@bitwarden/common/platform/state";
 import {
   CardComponent,
-  CheckboxModule,
   ColorPasswordModule,
+  CheckboxModule,
   FormFieldModule,
   IconButtonModule,
   InputModule,
@@ -20,6 +20,7 @@ import {
   SectionHeaderComponent,
   SelectModule,
   ToggleGroupModule,
+  TypographyModule,
 } from "@bitwarden/components";
 import {
   createRandomizer,
@@ -27,16 +28,24 @@ import {
   Randomizer,
 } from "@bitwarden/generator-core";
 
+import { CatchallSettingsComponent } from "./catchall-settings.component";
+import { CredentialGeneratorComponent } from "./credential-generator.component";
+import { PassphraseSettingsComponent } from "./passphrase-settings.component";
+import { PasswordGeneratorComponent } from "./password-generator.component";
+import { PasswordSettingsComponent } from "./password-settings.component";
+import { SubaddressSettingsComponent } from "./subaddress-settings.component";
+import { UsernameGeneratorComponent } from "./username-generator.component";
+import { UsernameSettingsComponent } from "./username-settings.component";
+
 const RANDOMIZER = new SafeInjectionToken<Randomizer>("Randomizer");
 
 /** Shared module containing generator component dependencies */
 @NgModule({
-  imports: [CardComponent, SectionComponent, SectionHeaderComponent],
-  exports: [
+  imports: [
     CardComponent,
+    ColorPasswordModule,
     CheckboxModule,
     CommonModule,
-    ColorPasswordModule,
     FormFieldModule,
     IconButtonModule,
     InputModule,
@@ -47,6 +56,7 @@ const RANDOMIZER = new SafeInjectionToken<Randomizer>("Randomizer");
     SectionHeaderComponent,
     SelectModule,
     ToggleGroupModule,
+    TypographyModule,
   ],
   providers: [
     safeProvider({
@@ -60,8 +70,18 @@ const RANDOMIZER = new SafeInjectionToken<Randomizer>("Randomizer");
       deps: [RANDOMIZER, StateProvider, PolicyService],
     }),
   ],
-  declarations: [],
+  declarations: [
+    CatchallSettingsComponent,
+    CredentialGeneratorComponent,
+    SubaddressSettingsComponent,
+    UsernameSettingsComponent,
+    PasswordGeneratorComponent,
+    PasswordSettingsComponent,
+    PassphraseSettingsComponent,
+    UsernameGeneratorComponent,
+  ],
+  exports: [CredentialGeneratorComponent, PasswordGeneratorComponent, UsernameGeneratorComponent],
 })
-export class DependenciesModule {
+export class GeneratorModule {
   constructor() {}
 }

@@ -132,6 +132,8 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     updateIsFieldCurrentlyFilling: ({ message }) => this.updateIsFieldCurrentlyFilling(message),
     checkIsFieldCurrentlyFilling: () => this.checkIsFieldCurrentlyFilling(),
     getAutofillInlineMenuVisibility: () => this.getInlineMenuVisibility(),
+    getInlineMenuCardsVisibility: () => this.getInlineMenuCardsVisibility(),
+    getInlineMenuIdentitiesVisibility: () => this.getInlineMenuIdentitiesVisibility(),
     openAutofillInlineMenu: () => this.openInlineMenu(false),
     closeAutofillInlineMenu: ({ message, sender }) => this.closeInlineMenu(sender, message),
     checkAutofillInlineMenuFocused: ({ sender }) => this.checkInlineMenuFocused(sender),
@@ -365,7 +367,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       }
     }
 
-    if (!this.cardAndIdentityCiphers.size) {
+    if (!this.cardAndIdentityCiphers?.size) {
       this.cardAndIdentityCiphers = null;
     }
 
@@ -1484,9 +1486,21 @@ export class OverlayBackground implements OverlayBackgroundInterface {
   }
 
   /**
-   * Gets the user's authentication status from the auth service. If the user's authentication
-   * status has changed, the inline menu button's authentication status will be updated
-   * and the inline menu list's ciphers will be updated.
+   * Gets the inline menu's visibility setting for Cards from the settings service.
+   */
+  private async getInlineMenuCardsVisibility(): Promise<boolean> {
+    return await firstValueFrom(this.autofillSettingsService.showInlineMenuCards$);
+  }
+
+  /**
+   * Gets the inline menu's visibility setting for Identities from the settings service.
+   */
+  private async getInlineMenuIdentitiesVisibility(): Promise<boolean> {
+    return await firstValueFrom(this.autofillSettingsService.showInlineMenuIdentities$);
+  }
+
+  /**
+   * Gets the user's authentication status from the auth service.
    */
   private async getAuthStatus() {
     return await firstValueFrom(this.authService.activeAccountStatus$);

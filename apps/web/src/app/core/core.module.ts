@@ -6,11 +6,13 @@ import {
   CollectionAdminService,
   DefaultCollectionAdminService,
   OrganizationUserApiService,
+  CollectionService,
 } from "@bitwarden/admin-console/common";
 import { SafeProvider, safeProvider } from "@bitwarden/angular/platform/utils/safe-provider";
 import {
   CLIENT_TYPE,
   DEFAULT_VAULT_TIMEOUT,
+  ENV_ADDITIONAL_REGIONS,
   LOCALES_DIRECTORY,
   MEMORY_STORAGE,
   OBSERVABLE_DISK_LOCAL_STORAGE,
@@ -42,11 +44,15 @@ import { AppIdService } from "@bitwarden/common/platform/abstractions/app-id.ser
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { CryptoService as CryptoServiceAbstraction } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
-import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
+import {
+  EnvironmentService,
+  Urls,
+} from "@bitwarden/common/platform/abstractions/environment.service";
 import { FileDownloadService } from "@bitwarden/common/platform/abstractions/file-download/file-download.service";
 import { I18nService as I18nServiceAbstraction } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService as PlatformUtilsServiceAbstraction } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { SdkClientFactory } from "@bitwarden/common/platform/abstractions/sdk/sdk-client-factory";
 import { AbstractStorageService } from "@bitwarden/common/platform/abstractions/storage.service";
 import { ThemeType } from "@bitwarden/common/platform/enums";
 import { AppIdService as DefaultAppIdService } from "@bitwarden/common/platform/services/app-id.service";
@@ -54,6 +60,7 @@ import { MemoryStorageService } from "@bitwarden/common/platform/services/memory
 // eslint-disable-next-line import/no-restricted-paths -- Implementation for memory storage
 import { MigrationBuilderService } from "@bitwarden/common/platform/services/migration-builder.service";
 import { MigrationRunner } from "@bitwarden/common/platform/services/migration-runner";
+import { NoopSdkClientFactory } from "@bitwarden/common/platform/services/sdk/noop-sdk-client-factory";
 import { StorageServiceProvider } from "@bitwarden/common/platform/services/storage-service.provider";
 /* eslint-disable import/no-restricted-paths -- Implementation for memory storage */
 import { GlobalStateProvider, StateProvider } from "@bitwarden/common/platform/state";
@@ -65,9 +72,9 @@ import {
   ThemeStateService,
 } from "@bitwarden/common/platform/theming/theme-state.service";
 import { VaultTimeout, VaultTimeoutStringType } from "@bitwarden/common/types/vault-timeout.type";
-import { CollectionService } from "@bitwarden/common/vault/abstractions/collection.service";
 import { BiometricsService } from "@bitwarden/key-management";
 
+import { flagEnabled } from "../../utils/flags";
 import { PolicyListService } from "../admin-console/core/policy-list.service";
 import {
   WebSetPasswordJitService,
@@ -80,10 +87,12 @@ import { I18nService } from "../core/i18n.service";
 import { WebBiometricsService } from "../key-management/web-biometric.service";
 import { WebEnvironmentService } from "../platform/web-environment.service";
 import { WebMigrationRunner } from "../platform/web-migration-runner";
+import { WebSdkClientFactory } from "../platform/web-sdk-client-factory";
 import { WebStorageServiceProvider } from "../platform/web-storage-service.provider";
 
 import { EventService } from "./event.service";
 import { InitService } from "./init.service";
+import { ENV_URLS } from "./injection-tokens";
 import { ModalService } from "./modal.service";
 import { RouterService } from "./router.service";
 import { WebFileDownloadService } from "./web-file-download.service";
@@ -174,9 +183,13 @@ const safeProviders: SafeProvider[] = [
     deps: [AbstractStorageService, LogService, MigrationBuilderService, WindowStorageService],
   }),
   safeProvider({
+    provide: ENV_URLS,
+    useValue: process.env.URLS as Urls,
+  }),
+  safeProvider({
     provide: EnvironmentService,
     useClass: WebEnvironmentService,
-    deps: [WINDOW, StateProvider, AccountService, Router],
+    deps: [WINDOW, StateProvider, AccountService, ENV_ADDITIONAL_REGIONS, Router, ENV_URLS],
   }),
   safeProvider({
     provide: BiometricsService,
@@ -235,6 +248,11 @@ const safeProviders: SafeProvider[] = [
     provide: CollectionAdminService,
     useClass: DefaultCollectionAdminService,
     deps: [ApiService, CryptoServiceAbstraction, EncryptService, CollectionService],
+  }),
+  safeProvider({
+    provide: SdkClientFactory,
+    useClass: flagEnabled("sdk") ? WebSdkClientFactory : NoopSdkClientFactory,
+    deps: [],
   }),
 ];
 
