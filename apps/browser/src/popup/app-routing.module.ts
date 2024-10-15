@@ -476,7 +476,9 @@ const routes: Routes = [
         canActivate: [canAccessFeature(FeatureFlag.ExtensionRefresh), lockGuard()],
         data: {
           pageIcon: LockIcon,
-          pageTitle: "yourVaultIsLockedV2",
+          pageTitle: {
+            key: "yourVaultIsLockedV2",
+          },
           showReadonlyHostname: true,
           showAcctSwitcher: true,
         } satisfies ExtensionAnonLayoutWrapperData,
@@ -498,7 +500,9 @@ const routes: Routes = [
         canActivate: [canAccessFeature(FeatureFlag.EmailVerification), unauthGuardFn()],
         data: {
           state: "signup",
-          pageTitle: "createAccount",
+          pageTitle: {
+            key: "createAccount",
+          },
         } satisfies RouteDataProperties & AnonLayoutWrapperData,
         children: [
           {
@@ -519,8 +523,12 @@ const routes: Routes = [
         path: "finish-signup",
         canActivate: [canAccessFeature(FeatureFlag.EmailVerification), unauthGuardFn()],
         data: {
-          pageTitle: "setAStrongPassword",
-          pageSubtitle: "finishCreatingYourAccountBySettingAPassword",
+          pageTitle: {
+            key: "setAStrongPassword",
+          },
+          pageSubtitle: {
+            key: "finishCreatingYourAccountBySettingAPassword",
+          },
           state: "finish-signup",
         } satisfies RouteDataProperties & AnonLayoutWrapperData,
         children: [
@@ -535,8 +543,12 @@ const routes: Routes = [
         canActivate: [canAccessFeature(FeatureFlag.EmailVerification)],
         component: SetPasswordJitComponent,
         data: {
-          pageTitle: "joinOrganization",
-          pageSubtitle: "finishJoiningThisOrganizationBySettingAMasterPassword",
+          pageTitle: {
+            key: "joinOrganization",
+          },
+          pageSubtitle: {
+            key: "finishJoiningThisOrganizationBySettingAMasterPassword",
+          },
           state: "set-password-jit",
         } satisfies RouteDataProperties & AnonLayoutWrapperData,
       },
