@@ -381,7 +381,7 @@
   },
   "generator": {
     "message": "Генератор",
-    "description": "Short for 'Password Generator'."
+    "description": "Short for 'credential generator'."
   },
   "passGenInfo": {
     "message": "Автоматичне генерування стійких, унікальних паролів."
@@ -603,6 +603,15 @@
   },
   "yourVaultIsLocked": {
     "message": "Ваше сховище заблоковане. Для продовження виконайте перевірку."
+  },
+  "yourVaultIsLockedV2": {
+    "message": "Ваше сховище заблоковано"
+  },
+  "yourAccountIsLocked": {
+    "message": "Ваш обліковий запис заблоковано"
+  },
+  "or": {
+    "message": "або"
   },
   "unlock": {
     "message": "Розблокувати"
@@ -1936,6 +1945,9 @@
   "unlockWithBiometrics": {
     "message": "Розблокувати з біометрією"
   },
+  "unlockWithMasterPassword": {
+    "message": "Розблокувати з головним паролем"
+  },
   "awaitDesktop": {
     "message": "Очікується підтвердження з комп'ютера"
   },
@@ -2486,8 +2498,26 @@
     "message": "Відправлення успішно створено!",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
-  "sendAvailability": {
-    "message": "Це відправлення буде доступним будь-кому за посиланням протягом $DAYS$ днів.",
+  "sendExpiresInHoursSingle": {
+    "message": "The Send will be available to anyone with the link for the next 1 hour.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInHours": {
+    "message": "The Send will be available to anyone with the link for the next $HOURS$ hours.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "sendExpiresInDaysSingle": {
+    "message": "The Send will be available to anyone with the link for the next 1 day.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInDays": {
+    "message": "The Send will be available to anyone with the link for the next $DAYS$ days.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
     "placeholders": {
       "days": {
@@ -3623,6 +3653,9 @@
   "typePasskey": {
     "message": "Ключ доступу"
   },
+  "accessing": {
+    "message": "Доступ"
+  },
   "passkeyNotCopied": {
     "message": "Ключ доступу не буде скопійовано"
   },
@@ -3646,6 +3679,9 @@
   },
   "noMatchingLoginsForSite": {
     "message": "Немає відповідних записів для цього сайту"
+  },
+  "searchSavePasskeyNewLogin": {
+    "message": "Search or save passkey as new login"
   },
   "confirm": {
     "message": "Підтвердити"

@@ -381,7 +381,7 @@
   },
   "generator": {
     "message": "生成器",
-    "description": "Short for 'Password Generator'."
+    "description": "Short for 'credential generator'."
   },
   "passGenInfo": {
     "message": "自动生成安全可靠唯一的登录密码。"
@@ -490,7 +490,7 @@
     "description": "Label for the avoid ambiguous characters checkbox."
   },
   "generatorPolicyInEffect": {
-    "message": "企业策略要求应用到您的生成器选项中。",
+    "message": "企业策略要求已应用到您的生成器选项中。",
     "description": "Indicates that a policy limits the credential generator screen."
   },
   "searchVault": {
@@ -603,6 +603,15 @@
   },
   "yourVaultIsLocked": {
     "message": "您的密码库已锁定。请先验证您的身份。"
+  },
+  "yourVaultIsLockedV2": {
+    "message": "您的密码库已锁定"
+  },
+  "yourAccountIsLocked": {
+    "message": "您的账户已锁定"
+  },
+  "or": {
+    "message": "或"
   },
   "unlock": {
     "message": "解锁"
@@ -1936,6 +1945,9 @@
   "unlockWithBiometrics": {
     "message": "使用生物识别解锁"
   },
+  "unlockWithMasterPassword": {
+    "message": "使用主密码解锁"
+  },
   "awaitDesktop": {
     "message": "等待来自桌面应用程序的确认"
   },
@@ -2486,8 +2498,26 @@
     "message": "Send 创建成功！",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
-  "sendAvailability": {
-    "message": "在接下来的 $DAYS$ 天内，任何拥有链接的人都可以访问此 Send。",
+  "sendExpiresInHoursSingle": {
+    "message": "The Send will be available to anyone with the link for the next 1 hour.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInHours": {
+    "message": "The Send will be available to anyone with the link for the next $HOURS$ hours.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "sendExpiresInDaysSingle": {
+    "message": "The Send will be available to anyone with the link for the next 1 day.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInDays": {
+    "message": "The Send will be available to anyone with the link for the next $DAYS$ days.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
     "placeholders": {
       "days": {
@@ -3529,7 +3559,7 @@
     }
   },
   "duoHealthCheckResultsInNullAuthUrlError": {
-    "message": "与 Duo 服务连接时出错。使用不同的两步登录方式或联系 Duo 寻求帮助。"
+    "message": "与 Duo 服务连接时出错。请使用不同的两步登录方式或联系 Duo 寻求帮助。"
   },
   "launchDuoAndFollowStepsToFinishLoggingIn": {
     "message": "启动 DUO 并按照步骤完成登录。"
@@ -3623,6 +3653,9 @@
   "typePasskey": {
     "message": "通行密钥"
   },
+  "accessing": {
+    "message": "正在访问"
+  },
   "passkeyNotCopied": {
     "message": "通行密钥不会被复制"
   },
@@ -3646,6 +3679,9 @@
   },
   "noMatchingLoginsForSite": {
     "message": "此站点没有匹配的登录项目"
+  },
+  "searchSavePasskeyNewLogin": {
+    "message": "搜索或将通行密钥保存为一个新的登录"
   },
   "confirm": {
     "message": "确认"

@@ -381,7 +381,7 @@
   },
   "generator": {
     "message": "Генератор",
-    "description": "Short for 'Password Generator'."
+    "description": "Short for 'credential generator'."
   },
   "passGenInfo": {
     "message": "Автоматично създаване на силни и неповторими пароли."
@@ -603,6 +603,15 @@
   },
   "yourVaultIsLocked": {
     "message": "Трезорът е заключен — въведете главната си парола, за да продължите."
+  },
+  "yourVaultIsLockedV2": {
+    "message": "Трезорът Ви е заключен"
+  },
+  "yourAccountIsLocked": {
+    "message": "Регистрацията Ви е заключена"
+  },
+  "or": {
+    "message": "или"
   },
   "unlock": {
     "message": "Отключване"
@@ -1936,6 +1945,9 @@
   "unlockWithBiometrics": {
     "message": "Отключване с биометрични данни"
   },
+  "unlockWithMasterPassword": {
+    "message": "Отключване с главната парола"
+  },
   "awaitDesktop": {
     "message": "Чака се потвърждение от самостоятелното приложение"
   },
@@ -2486,7 +2498,25 @@
     "message": "Изпращането е създадено успешно!",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
-  "sendAvailability": {
+  "sendExpiresInHoursSingle": {
+    "message": "Изпращането ще бъде достъпно за всеки с връзката през следващия 1 час.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInHours": {
+    "message": "Изпращането ще бъде достъпно за всеки с връзката през следващите $HOURS$ часа.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "sendExpiresInDaysSingle": {
+    "message": "Изпращането ще бъде достъпно за всеки с връзката през следващия 1 ден.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInDays": {
     "message": "Изпращането ще бъде достъпно за всеки с връзката през следващите $DAYS$ дни.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
     "placeholders": {
@@ -3623,6 +3653,9 @@
   "typePasskey": {
     "message": "Секретен ключ"
   },
+  "accessing": {
+    "message": "Използване на"
+  },
   "passkeyNotCopied": {
     "message": "Секретният ключ няма да бъде копиран"
   },
@@ -3646,6 +3679,9 @@
   },
   "noMatchingLoginsForSite": {
     "message": "Няма записи за вписване отговарящи на този уеб сайт"
+  },
+  "searchSavePasskeyNewLogin": {
+    "message": "Търсене или запазване на секретния ключ като нов елемент за вписване"
   },
   "confirm": {
     "message": "Потвърждаване"

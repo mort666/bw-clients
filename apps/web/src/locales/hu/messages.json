@@ -1,4 +1,64 @@
 {
+  "allApplications": {
+    "message": "Összes alkalmazás"
+  },
+  "priorityApplications": {
+    "message": "Prioritás alkalmazások"
+  },
+  "accessIntelligence": {
+    "message": "Elérés intelligencia"
+  },
+  "notifiedMembers": {
+    "message": "Értesített tagok"
+  },
+  "allApplicationsWithCount": {
+    "message": "Összes alkalmazás ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "priorityApplicationsWithCount": {
+    "message": "Prioriitás alkalmazások ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "notifiedMembersWithCount": {
+    "message": "Értesített tagok ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "application": {
+    "message": "Alkalmazás"
+  },
+  "atRiskPasswords": {
+    "message": "Veszélyes jelszavak"
+  },
+  "totalPasswords": {
+    "message": "Összes jelszavak száma"
+  },
+  "atRiskMembers": {
+    "message": "Veszélyes tagok"
+  },
+  "totalMembers": {
+    "message": "Összes tagok száma"
+  },
+  "atRiskApplications": {
+    "message": "Veszélyes alkalmazások"
+  },
+  "totalApplications": {
+    "message": "Összes alkalmazás"
+  },
   "whatTypeOfItem": {
     "message": "Milyen típusú elem ez?"
   },
@@ -1099,6 +1159,9 @@
   "yourVaultIsLockedV2": {
     "message": "A széf zárolva van."
   },
+  "yourAccountIsLocked": {
+    "message": "A fiók zárolva van."
+  },
   "uuid": {
     "message": "UUID"
   },
@@ -1437,7 +1500,12 @@
     "description": "Minimum special characters"
   },
   "ambiguous": {
-    "message": "Félreérthető karakterek mellőzése"
+    "message": "Félreérthető karakterek mellőzése",
+    "description": "deprecated. Use avoidAmbiguous instead."
+  },
+  "avoidAmbiguous": {
+    "message": "Félreérthető karakterek mellőzése",
+    "description": "Label for the avoid ambiguous characters checkbox."
   },
   "regeneratePassword": {
     "message": "Jelszó újragenerálása"
@@ -1450,17 +1518,50 @@
   },
   "uppercase": {
     "message": "Nagybetűs (A-Z)",
-    "description": "Include uppercase letters in the password generator."
+    "description": "deprecated. Use uppercaseLabel instead."
   },
   "lowercase": {
     "message": "Kisbetűs (a-z)",
-    "description": "Include lowercase letters in the password generator."
+    "description": "deprecated. Use lowercaseLabel instead."
   },
   "numbers": {
-    "message": "Számok (0-9)"
+    "message": "Számok (0-9)",
+    "description": "deprecated. Use numbersLabel instead."
   },
   "specialCharacters": {
     "message": "Speciális karakterek (!@#$%^&*)"
+  },
+  "uppercaseDescription": {
+    "message": "Nagybetűs karakterek bevonása",
+    "description": "Tooltip for the password generator uppercase character checkbox"
+  },
+  "uppercaseLabel": {
+    "message": "A-Z",
+    "description": "Label for the password generator uppercase character checkbox"
+  },
+  "lowercaseDescription": {
+    "message": "Kisbetűs karakterek bevonása",
+    "description": "Full description for the password generator lowercase character checkbox"
+  },
+  "lowercaseLabel": {
+    "message": "a-z",
+    "description": "Label for the password generator lowercase character checkbox"
+  },
+  "numbersDescription": {
+    "message": "Számok bevonása",
+    "description": "Full description for the password generator numbers checkbox"
+  },
+  "numbersLabel": {
+    "message": "0-9",
+    "description": "Label for the password generator numbers checkbox"
+  },
+  "specialCharactersDescription": {
+    "message": "Speciális karakterek bevonása",
+    "description": "Full description for the password generator special characters checkbox"
+  },
+  "specialCharactersLabel": {
+    "message": "!@#$%^&*",
+    "description": "Label for the password generator special characters checkbox"
   },
   "numWords": {
     "message": "Szavak száma"
@@ -2199,6 +2300,9 @@
   "checkExposedPasswords": {
     "message": "Kiszivárgott jelszavak ellenőrzése"
   },
+  "timesExposed": {
+    "message": "Kitett alkalmak"
+  },
   "exposedXTimes": {
     "message": "$COUNT$ alkalommal szivárgott ki",
     "placeholders": {
@@ -2233,6 +2337,9 @@
   "noWeakPasswords": {
     "message": "Egyik elemnél sincsenek gyenge jelszavak."
   },
+  "weakness": {
+    "message": "Gyengeség"
+  },
   "reusedPasswordsReport": {
     "message": "Újrahasznált jelszavak jelentés"
   },
@@ -2257,6 +2364,9 @@
   },
   "noReusedPasswords": {
     "message": "A széfben nincsenek újrahasznált jelszóval rendelkező bejelentkezések."
+  },
+  "timesReused": {
+    "message": "Újra felhasznált alkalmak"
   },
   "reusedXTimes": {
     "message": "$COUNT$ alkalommal újrafelhasználva",
@@ -2555,6 +2665,9 @@
   "downloadLicense": {
     "message": "Licensz letöltése"
   },
+  "viewBillingToken": {
+    "message": "Számlázási vezérjel megtekintése"
+  },
   "updateLicense": {
     "message": "Licensz frissítése"
   },
@@ -2601,8 +2714,11 @@
   "invoices": {
     "message": "Számlák"
   },
-  "noInvoices": {
-    "message": "Nincsenek számlák."
+  "noUnpaidInvoices": {
+    "message": "Nincsenek befizetetlen számlák."
+  },
+  "noPaidInvoices": {
+    "message": "Nincsenek befizetettt számlák."
   },
   "paid": {
     "message": "Fizetve",
@@ -3159,6 +3275,10 @@
   },
   "incorrectPin": {
     "message": "Helytelen PIN kód"
+  },
+  "pin": {
+    "message": "Pinkód",
+    "description": "PIN code. Ex. The short code (often numeric) that you use to unlock a device."
   },
   "exportedVault": {
     "message": "A széf exportálásra került."
@@ -5985,8 +6105,8 @@
   "viewBillingSyncToken": {
     "message": "A Számlázási szinkron vezérjel megtekintése"
   },
-  "generateBillingSyncToken": {
-    "message": "Számlázási szinkron vezérjel generálása"
+  "generateBillingToken": {
+    "message": "Számlázási vezérjel generálása"
   },
   "copyPasteBillingSync": {
     "message": "Másoljuk ezt a vezérjelet a saját kiszolgálójú szervezet Számlázási szinkron vezérjel beállításaiba."
@@ -5994,8 +6114,8 @@
   "billingSyncCanAccess": {
     "message": "A Számlázási szinkron vezérjel elérheti és szerkesztheti a szervezet előfizetési beállításait."
   },
-  "manageBillingSync": {
-    "message": "Számlázási szinkron kezelés"
+  "manageBillingTokenSync": {
+    "message": "Számlázási vezérjel kezelés"
   },
   "setUpBillingSync": {
     "message": "Számlázási szinkron beüzemelés"
@@ -6054,14 +6174,14 @@
   "billingSyncApiKeyRotated": {
     "message": "A vezérjel gördülő váltásra került."
   },
-  "billingSyncDesc": {
-    "message": "A Számlázási szinkron a Free Familes előfizetési lehetőségeket nyújt a tagoknak a saját kiszolgálójú Bitwarden és a Bitwarden felhőszerver összekapcsolásával."
-  },
   "billingSyncKeyDesc": {
     "message": "Egy, a saját felhőszervezet előfizetési beállításaiból származó Számlázási szinkron vezérjel szükséges az űrlapkitöltés befejezéséhez."
   },
   "billingSyncKey": {
     "message": "Számlázási szinkron vezérjel"
+  },
+  "automaticBillingSyncDesc": {
+    "message": "Az automatikus szinkronizálás feloldja a Családok szponzorálását és lehetővé teszi a licenszek szinkronizálását fájl feltöltése nélkül. Miután frissítettük a Bitwarden felhőszervert, válasszuk a Szinkronizálási licensz lehetőséget a módosítások alkalmazásához."
   },
   "active": {
     "message": "Bekapcsolva"
@@ -6204,7 +6324,8 @@
     "message": "Fiókbeállítások"
   },
   "generator": {
-    "message": "Generátor"
+    "message": "Generátor",
+    "description": "Short for 'credential generator'."
   },
   "whatWouldYouLikeToGenerate": {
     "message": "Mit szeretnénk generálni?"
@@ -6579,6 +6700,18 @@
       "count": {
         "content": "$1",
         "example": "4"
+      }
+    }
+  },
+  "singleFieldNeedsAttention": {
+    "message": "1 mező igényel figyelmet."
+  },
+  "multipleFieldsNeedAttention": {
+    "message": "$COUNT$ mező igényel figyelmet.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
       }
     }
   },
@@ -7442,6 +7575,15 @@
   "or": {
     "message": "vagy"
   },
+  "unlockWithBiometrics": {
+    "message": "Biometrikus feloldás"
+  },
+  "unlockWithPin": {
+    "message": "Feloldás pinkóddal"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Feloldás mesterjelszóval"
+  },
   "licenseAndBillingManagement": {
     "message": "Licensz és számlázás kezelés"
   },
@@ -7451,8 +7593,8 @@
   "manualUpload": {
     "message": "Manuális feltöltés"
   },
-  "manualUploadDesc": {
-    "message": "Ha nem szeretnénk feliratkozni a számlázási szinkronizálásra, manuálisan töltsük fel a licenszet ide."
+  "manualBillingTokenUploadDesc": {
+    "message": "Ha nem szeretnénk feliratkozni a számlázási szinkronizálásra, manuálisan töltsük fel a licenszet ide. Ezzel nem oldjuk fel automatikusan a Családok szponzorálását."
   },
   "syncLicense": {
     "message": "Licensz szinkronizálása"
@@ -9225,5 +9367,14 @@
   },
   "editAccess": {
     "message": "Hozzáférés szerkesztése"
+  },
+  "addAttachment": {
+    "message": "Melléklet hozzáadása"
+  },
+  "maxFileSizeSansPunctuation": {
+    "message": "A maximális fájlméret 500 MB."
+  },
+  "permanentlyDeleteAttachmentConfirmation": {
+    "message": "Biztosan véglegesen törlésre kerüljön ez a melléklet?"
   }
 }
