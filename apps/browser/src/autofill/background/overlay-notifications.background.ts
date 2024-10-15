@@ -1,22 +1,27 @@
-import { startWith, Subject, Subscription, switchMap, timer } from "rxjs";
+import { firstValueFrom, startWith, Subject, switchMap, timer } from "rxjs";
 import { pairwise } from "rxjs/operators";
 
+import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
+import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
 import { CLEAR_NOTIFICATION_LOGIN_DATA_DURATION } from "@bitwarden/common/autofill/constants";
+import { UserNotificationSettingsServiceAbstraction } from "@bitwarden/common/autofill/services/user-notification-settings.service";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
 
 import { BrowserApi } from "../../platform/browser/browser-api";
 import { generateDomainMatchPatterns, isInvalidResponseStatusCode } from "../utils";
 
+import { AddLoginMessageData } from "./abstractions/notification.background";
 import {
   ActiveFormSubmissionRequests,
   ModifyLoginCipherFormData,
   ModifyLoginCipherFormDataForTab,
-  OverlayNotificationsBackground as OverlayNotificationsBackgroundInterface,
   OverlayNotificationsExtensionMessage,
   OverlayNotificationsExtensionMessageHandlers,
   WebsiteOriginsWithFields,
+  OverlayNotificationsBackground as OverlayNotificationsBackgroundInterface,
 } from "./abstractions/overlay-notifications.background";
 import NotificationBackground from "./notification.background";
 
@@ -24,8 +29,7 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
   private websiteOriginsWithFields: WebsiteOriginsWithFields = new Map();
   private activeFormSubmissionRequests: ActiveFormSubmissionRequests = new Set();
   private modifyLoginCipherFormData: ModifyLoginCipherFormDataForTab = new Map();
-  private featureFlagState$: Subscription;
-  private clearLoginCipherFormDataSubject: Subject<void> = new Subject();
+  private clearLoginCipherFormData$: Subject<void> = new Subject();
   private notificationFallbackTimeout: number | NodeJS.Timeout | null;
   private readonly formSubmissionRequestMethods: Set<string> = new Set(["POST", "PUT", "PATCH"]);
   private readonly extensionMessageHandlers: OverlayNotificationsExtensionMessageHandlers = {
@@ -37,6 +41,8 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
   constructor(
     private logService: LogService,
     private configService: ConfigService,
+    private authService: AuthService,
+    private userNotificationSettingsService: UserNotificationSettingsServiceAbstraction,
     private notificationBackground: NotificationBackground,
   ) {}
 
@@ -44,13 +50,31 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
    * Initialize the overlay notifications background service.
    */
   async init() {
-    this.featureFlagState$ = this.configService
+    this.configService
       .getFeatureFlag$(FeatureFlag.NotificationBarAddLoginImprovements)
       .pipe(startWith(undefined), pairwise())
       .subscribe(([prev, current]) => this.handleInitFeatureFlagChange(prev, current));
-    this.clearLoginCipherFormDataSubject
+    this.clearLoginCipherFormData$
       .pipe(switchMap(() => timer(CLEAR_NOTIFICATION_LOGIN_DATA_DURATION)))
       .subscribe(() => this.modifyLoginCipherFormData.clear());
+  }
+
+  private async getAuthStatus() {
+    return await firstValueFrom(this.authService.activeAccountStatus$);
+  }
+
+  /**
+   * Gets the enableAddedLoginPrompt setting from the user notification settings service.
+   */
+  async getEnableAddedLoginPrompt(): Promise<boolean> {
+    return await firstValueFrom(this.userNotificationSettingsService.enableAddedLoginPrompt$);
+  }
+
+  /**
+   * Gets the enableChangedPasswordPrompt setting from the user notification settings service.
+   */
+  async getEnableChangedPasswordPrompt(): Promise<boolean> {
+    return await firstValueFrom(this.userNotificationSettingsService.enableChangedPasswordPrompt$);
   }
 
   /**
@@ -116,8 +140,7 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
    */
   private async isAddLoginOrChangePasswordNotificationEnabled() {
     return (
-      (await this.notificationBackground.getEnableChangedPasswordPrompt()) ||
-      (await this.notificationBackground.getEnableAddedLoginPrompt())
+      (await this.getEnableChangedPasswordPrompt()) || (await this.getEnableAddedLoginPrompt())
     );
   }
 
@@ -154,7 +177,7 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
       return;
     }
 
-    this.clearLoginCipherFormDataSubject.next();
+    this.clearLoginCipherFormData$.next();
     const formData = { uri, username, password, newPassword };
 
     const existingModifyLoginData = this.modifyLoginCipherFormData.get(sender.tab.id);
@@ -284,8 +307,8 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
     const modifyLoginData = this.modifyLoginCipherFormData.get(tabId);
     return (
       !modifyLoginData ||
-      !this.shouldTriggerAddLoginNotification(modifyLoginData) ||
-      !this.shouldTriggerChangePasswordNotification(modifyLoginData)
+      !this.shouldTriggerAddNewLoginNotification(modifyLoginData) ||
+      !this.shouldTriggerChangeExistingLoginNotification(modifyLoginData)
     );
   };
 
@@ -429,7 +452,22 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
     modifyLoginData: ModifyLoginCipherFormData,
     tab: chrome.tabs.Tab,
   ) => {
-    if (this.shouldTriggerChangePasswordNotification(modifyLoginData)) {
+    const authStatus = await this.getAuthStatus();
+    if (authStatus === AuthenticationStatus.LoggedOut) {
+      return;
+    }
+
+    const changePasswordIsEnabled = await this.getEnableChangedPasswordPrompt();
+    const addLoginIsEnabled = await this.getEnableAddedLoginPrompt();
+
+    if (authStatus === AuthenticationStatus.Locked) {
+      // Handle Locked State
+    }
+
+    if (
+      changePasswordIsEnabled &&
+      this.shouldTriggerChangeExistingLoginNotification(modifyLoginData)
+    ) {
       // These notifications are temporarily setup as "messages" to the notification background.
       // This will be structured differently in a future refactor.
       await this.notificationBackground.changedPassword(
@@ -447,7 +485,7 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
       return;
     }
 
-    if (this.shouldTriggerAddLoginNotification(modifyLoginData)) {
+    if (addLoginIsEnabled && this.shouldTriggerAddNewLoginNotification(modifyLoginData)) {
       await this.notificationBackground.addLogin(
         {
           command: "bgAddLogin",
@@ -464,24 +502,41 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
   };
 
   /**
-   * Determines if the change password notification should be triggered.
+   * Determines if the change existing login notification should be triggered.
    *
    * @param modifyLoginData - The modified login form data
    */
-  private shouldTriggerChangePasswordNotification = (
+  private shouldTriggerChangeExistingLoginNotification = (
     modifyLoginData: ModifyLoginCipherFormData,
   ) => {
     return modifyLoginData?.newPassword && !modifyLoginData.username;
   };
 
   /**
-   * Determines if the add login notification should be triggered.
+   * Determines if the add new login notification should be triggered.
    *
    * @param modifyLoginData - The modified login form data
    */
-  private shouldTriggerAddLoginNotification = (modifyLoginData: ModifyLoginCipherFormData) => {
+  private shouldTriggerAddNewLoginNotification = (modifyLoginData: ModifyLoginCipherFormData) => {
     return modifyLoginData?.username && (modifyLoginData.password || modifyLoginData.newPassword);
   };
+
+  private async createAddNewLoginNotification(
+    loginData: AddLoginMessageData,
+    tab: chrome.tabs.Tab,
+  ) {
+    const {
+      // username,
+      //password,
+      url,
+    } = loginData;
+    const domain = Utils.getDomain(url);
+    if (!domain) {
+      return;
+    }
+  }
+
+  private async createAddLoginToLockedVaultNotification() {}
 
   /**
    * Clears the completed web request and removes the modified login form data for the tab.
