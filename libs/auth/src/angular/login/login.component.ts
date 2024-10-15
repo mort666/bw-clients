@@ -320,10 +320,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
       this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
         pageTitle: "welcomeBack",
-        pageSubtitle: {
-          subtitle: `${this.loggedEmail}`,
-          translate: false,
-        },
+        pageSubtitle: this.loggedEmail,
         pageIcon: this.Icons.WaveIcon,
       });
     }
