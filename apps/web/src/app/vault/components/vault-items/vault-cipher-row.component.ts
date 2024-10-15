@@ -1,12 +1,12 @@
 import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 
+import { CollectionView } from "@bitwarden/admin-console/common";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
-import { CollectionView } from "@bitwarden/common/vault/models/view/collection.view";
 
 import { VaultItemEvent } from "./vault-item-event";
 import { RowHeightClass } from "./vault-items.component";
@@ -42,6 +42,7 @@ export class VaultCipherRowComponent implements OnInit {
   @Output() checkedToggled = new EventEmitter<void>();
 
   protected CipherType = CipherType;
+  protected organization?: Organization;
 
   constructor(private configService: ConfigService) {}
 
@@ -53,6 +54,9 @@ export class VaultCipherRowComponent implements OnInit {
     this.extensionRefreshEnabled = await firstValueFrom(
       this.configService.getFeatureFlag$(FeatureFlag.ExtensionRefresh),
     );
+    if (this.cipher.organizationId != null) {
+      this.organization = this.organizations.find((o) => o.id === this.cipher.organizationId);
+    }
   }
 
   protected get showTotpCopyButton() {
@@ -137,5 +141,13 @@ export class VaultCipherRowComponent implements OnInit {
 
   protected assignToCollections() {
     this.onEvent.emit({ type: "assignToCollections", items: [this.cipher] });
+  }
+
+  protected get showCheckbox() {
+    if (!this.viewingOrgVault || !this.organization) {
+      return true; // Always show checkbox in individual vault or for non-org items
+    }
+
+    return this.organization.canEditAllCiphers || this.cipher.edit;
   }
 }
