@@ -488,7 +488,6 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     this.policies = orgPolicies?.policies;
     this.showResetPasswordAutoEnrollWarning = orgPolicies?.isPolicyAndAutoEnrollEnabled;
-    this.enforcedPasswordPolicyOptions = orgPolicies?.enforcedPasswordPolicyOptions;
 
     let paramEmailIsSet = false;
 
