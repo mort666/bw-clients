@@ -50,6 +50,7 @@ export class InlineMenuFieldQualificationService
     "new email",
     "new e-mail",
     "new password",
+    "new-password",
     "neuer benutzer",
     "neues passwort",
     "neue e-mail",
