@@ -39,6 +39,8 @@ export class InlineMenuFieldQualificationService
     "register",
     "registration",
     "create password",
+    "create a password",
+    "create an account",
     "create account password",
     "create user password",
     "confirm password",
