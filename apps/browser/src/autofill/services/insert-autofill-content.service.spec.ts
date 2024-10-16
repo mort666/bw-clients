@@ -74,6 +74,7 @@ describe("InsertAutofillContentService", () => {
   const domElementVisibilityService = new DomElementVisibilityService();
   const autofillOverlayContentService = new AutofillOverlayContentService(
     domQueryService,
+    domElementVisibilityService,
     inlineMenuFieldQualificationService,
   );
   const collectAutofillContentService = new CollectAutofillContentService(

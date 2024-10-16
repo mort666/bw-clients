@@ -35,6 +35,7 @@ import {
   elementIsFillableFormField,
   elementIsSelectElement,
   getAttributeBoolean,
+  nodeIsAnchorElement,
   nodeIsButtonElement,
   nodeIsTypeSubmitElement,
   sendExtensionMessage,
@@ -47,6 +48,7 @@ import {
   InlineMenuFormFieldData,
   SubFrameDataFromWindowMessage,
 } from "./abstractions/autofill-overlay-content.service";
+import { DomElementVisibilityService } from "./abstractions/dom-element-visibility.service";
 import { DomQueryService } from "./abstractions/dom-query.service";
 import { InlineMenuFieldQualificationService } from "./abstractions/inline-menu-field-qualifications.service";
 import { AutoFillConstants } from "./autofill-constants";
@@ -151,6 +153,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
 
   constructor(
     private domQueryService: DomQueryService,
+    private domElementVisibilityService: DomElementVisibilityService,
     private inlineMenuFieldQualificationService: InlineMenuFieldQualificationService,
   ) {}
 
@@ -400,7 +403,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
    * @param formFieldElement - The form field element to set up the submit button listeners for.
    * @param autofillFieldData - Autofill field data captured from the form field element.
    */
-  private setupFormSubmissionEventListeners(
+  private async setupFormSubmissionEventListeners(
     formFieldElement: ElementWithOpId<FormFieldElement>,
     autofillFieldData: AutofillField,
   ) {
@@ -412,11 +415,11 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     }
 
     if (autofillFieldData.form) {
-      this.setupSubmitListenerOnFieldWithForms(formFieldElement);
+      await this.setupSubmitListenerOnFieldWithForms(formFieldElement);
       return;
     }
 
-    this.setupSubmitListenerOnFormlessField(formFieldElement);
+    await this.setupSubmitListenerOnFormlessField(formFieldElement);
   }
 
   /**
@@ -426,13 +429,20 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
    *
    * @param formFieldElement - The form field element to set up the submit listener for.
    */
-  private setupSubmitListenerOnFieldWithForms(formFieldElement: FillableFormFieldElement) {
+  private async setupSubmitListenerOnFieldWithForms(formFieldElement: FillableFormFieldElement) {
     const formElement = formFieldElement.form;
     if (formElement && !this.formElements.has(formElement)) {
       this.formElements.add(formElement);
       formElement.addEventListener(EVENTS.SUBMIT, this.handleFormFieldSubmitEvent);
 
-      const closesSubmitButton = this.findSubmitButton(formElement);
+      const closesSubmitButton = await this.findSubmitButton(formElement);
+
+      // If we cannot find a submit button within the form, check for a submit button outside the form.
+      if (!closesSubmitButton) {
+        await this.setupSubmitListenerOnFormlessField(formFieldElement);
+        return;
+      }
+
       this.setupSubmitButtonEventListeners(closesSubmitButton);
     }
   }
@@ -443,9 +453,9 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
    *
    * @param formFieldElement - The form field element to set up the submit listener for.
    */
-  private setupSubmitListenerOnFormlessField(formFieldElement: FillableFormFieldElement) {
+  private async setupSubmitListenerOnFormlessField(formFieldElement: FillableFormFieldElement) {
     if (formFieldElement && !this.fieldsWithSubmitElements.has(formFieldElement)) {
-      const closesSubmitButton = this.findClosestFormlessSubmitButton(formFieldElement);
+      const closesSubmitButton = await this.findClosestFormlessSubmitButton(formFieldElement);
       this.setupSubmitButtonEventListeners(closesSubmitButton);
     }
   }
@@ -455,13 +465,13 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
    *
    * @param formFieldElement - The form field element to find the closest formless submit button for.
    */
-  private findClosestFormlessSubmitButton(
+  private async findClosestFormlessSubmitButton(
     formFieldElement: FillableFormFieldElement,
-  ): HTMLElement | null {
+  ): Promise<HTMLElement | null> {
     let currentElement: HTMLElement = formFieldElement;
 
     while (currentElement && currentElement.tagName !== "HTML") {
-      const submitButton = this.findSubmitButton(currentElement);
+      const submitButton = await this.findSubmitButton(currentElement);
       if (submitButton) {
         this.formFieldElements.forEach((_, element) => {
           if (currentElement.contains(element)) {
@@ -489,8 +499,8 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
    *
    * @param element - The element to find the submit button within.
    */
-  private findSubmitButton(element: HTMLElement): HTMLElement | null {
-    const genericSubmitElement = this.querySubmitButtonElement(
+  private async findSubmitButton(element: HTMLElement): Promise<HTMLElement | null> {
+    const genericSubmitElement = await this.querySubmitButtonElement(
       element,
       "[type='submit']",
       (node: Node) => nodeIsTypeSubmitElement(node),
@@ -499,13 +509,21 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
       return genericSubmitElement;
     }
 
-    const submitButtonElement = this.querySubmitButtonElement(
+    const submitButtonElement = await this.querySubmitButtonElement(
       element,
       "button, [type='button']",
       (node: Node) => nodeIsButtonElement(node),
     );
     if (submitButtonElement) {
       return submitButtonElement;
+    }
+
+    // If the submit button is not a traditional button element, check for an anchor element that contains submission keywords.
+    const submitAnchorElement = await this.querySubmitButtonElement(element, "a", (node: Node) =>
+      nodeIsAnchorElement(node),
+    );
+    if (submitAnchorElement) {
+      return submitAnchorElement;
     }
   }
 
@@ -516,7 +534,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
    * @param selector - The selector to use to query the element for a submit button.
    * @param treeWalkerFilter - The tree walker filter to use when querying the element.
    */
-  private querySubmitButtonElement(
+  private async querySubmitButtonElement(
     element: HTMLElement,
     selector: string,
     treeWalkerFilter: CallableFunction,
@@ -528,7 +546,10 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     );
     for (let index = 0; index < submitButtonElements.length; index++) {
       const submitElement = submitButtonElements[index];
-      if (this.isElementSubmitButton(submitElement)) {
+      if (
+        this.isElementSubmitButton(submitElement) &&
+        (await this.domElementVisibilityService.isElementViewable(submitElement))
+      ) {
         return submitElement;
       }
     }
@@ -1213,12 +1234,16 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
   ) {
     this.formFieldElements.set(formFieldElement, autofillFieldData);
 
+    if (elementIsFillableFormField(formFieldElement) && !!formFieldElement.value) {
+      this.storeModifiedFormElement(formFieldElement);
+    }
+
     if (!this.mostRecentlyFocusedField) {
       await this.updateMostRecentlyFocusedField(formFieldElement);
     }
 
     this.setupFormFieldElementEventListeners(formFieldElement);
-    this.setupFormSubmissionEventListeners(formFieldElement, autofillFieldData);
+    await this.setupFormSubmissionEventListeners(formFieldElement, autofillFieldData);
 
     if (
       globalThis.document.hasFocus() &&

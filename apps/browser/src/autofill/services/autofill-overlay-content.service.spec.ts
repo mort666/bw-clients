@@ -24,6 +24,7 @@ import { ElementWithOpId, FillableFormFieldElement, FormFieldElement } from "../
 
 import { AutoFillConstants } from "./autofill-constants";
 import { AutofillOverlayContentService } from "./autofill-overlay-content.service";
+import DomElementVisibilityService from "./dom-element-visibility.service";
 import { DomQueryService } from "./dom-query.service";
 import { InlineMenuFieldQualificationService } from "./inline-menu-field-qualification.service";
 
@@ -31,6 +32,7 @@ const defaultWindowReadyState = document.readyState;
 const defaultDocumentVisibilityState = document.visibilityState;
 describe("AutofillOverlayContentService", () => {
   let domQueryService: DomQueryService;
+  let domElementVisibilityService: DomElementVisibilityService;
   let autofillInit: AutofillInit;
   let inlineMenuFieldQualificationService: InlineMenuFieldQualificationService;
   let autofillOverlayContentService: AutofillOverlayContentService;
@@ -41,11 +43,17 @@ describe("AutofillOverlayContentService", () => {
   beforeEach(async () => {
     inlineMenuFieldQualificationService = new InlineMenuFieldQualificationService();
     domQueryService = new DomQueryService();
+    domElementVisibilityService = new DomElementVisibilityService();
     autofillOverlayContentService = new AutofillOverlayContentService(
       domQueryService,
+      domElementVisibilityService,
       inlineMenuFieldQualificationService,
     );
-    autofillInit = new AutofillInit(domQueryService, autofillOverlayContentService);
+    autofillInit = new AutofillInit(
+      domQueryService,
+      domElementVisibilityService,
+      autofillOverlayContentService,
+    );
     autofillInit.init();
     autofillOverlayContentService["showInlineMenuCards"] = true;
     autofillOverlayContentService["showInlineMenuIdentities"] = true;
@@ -940,11 +948,13 @@ describe("AutofillOverlayContentService", () => {
             type: "password",
             autoCompleteType: "new-password",
             form: "validFormId",
+            placeholder: "new password",
           });
           const confirmPasswordFieldData = createAutofillFieldMock({
             type: "password",
             autoCompleteType: "new-password",
             form: "validFormId",
+            placeholder: "confirm password",
           });
 
           beforeEach(() => {
@@ -1457,12 +1467,67 @@ describe("AutofillOverlayContentService", () => {
           });
 
           it("sends a `formFieldSubmitted` message to the background on interaction of a generic input element", async () => {
+            domElementVisibilityService.isElementViewable = jest.fn().mockReturnValue(true);
             await autofillOverlayContentService.setupOverlayListeners(
               autofillFieldElement,
               autofillFieldData,
               pageDetailsMock,
             );
+            await flushPromises();
             genericSubmitElement.dispatchEvent(new KeyboardEvent("keyup", { code: "Enter" }));
+
+            expect(sendExtensionMessageSpy).toHaveBeenCalledWith(
+              "formFieldSubmitted",
+              expect.any(Object),
+            );
+          });
+        });
+
+        describe("triggering submission trough interaction of a button element", () => {
+          let buttonElement: HTMLButtonElement;
+
+          beforeEach(() => {
+            buttonElement = document.createElement("button");
+            buttonElement.textContent = "Login In";
+            buttonElement.type = "button";
+            form.appendChild(buttonElement);
+          });
+
+          it("sends a `formFieldSubmitted` message to the background on interaction of a button element", async () => {
+            domElementVisibilityService.isElementViewable = jest.fn().mockReturnValue(true);
+            await autofillOverlayContentService.setupOverlayListeners(
+              autofillFieldElement,
+              autofillFieldData,
+              pageDetailsMock,
+            );
+            await flushPromises();
+            buttonElement.dispatchEvent(new KeyboardEvent("keyup", { code: "Enter" }));
+
+            expect(sendExtensionMessageSpy).toHaveBeenCalledWith(
+              "formFieldSubmitted",
+              expect.any(Object),
+            );
+          });
+        });
+
+        describe("triggering submission through interaction of an anchor element", () => {
+          let anchorElement: HTMLAnchorElement;
+
+          beforeEach(() => {
+            anchorElement = document.createElement("a");
+            anchorElement.textContent = "Login In";
+            form.appendChild(anchorElement);
+          });
+
+          it("sends a `formFieldSubmitted` message to the background on interaction of an anchor element", async () => {
+            domElementVisibilityService.isElementViewable = jest.fn().mockReturnValue(true);
+            await autofillOverlayContentService.setupOverlayListeners(
+              autofillFieldElement,
+              autofillFieldData,
+              pageDetailsMock,
+            );
+            await flushPromises();
+            anchorElement.dispatchEvent(new KeyboardEvent("keyup", { code: "Enter" }));
 
             expect(sendExtensionMessageSpy).toHaveBeenCalledWith(
               "formFieldSubmitted",
@@ -1534,12 +1599,14 @@ describe("AutofillOverlayContentService", () => {
         });
 
         it("triggers submission through interaction of a submit button", async () => {
+          domElementVisibilityService.isElementViewable = jest.fn().mockReturnValue(true);
           const submitButton = document.querySelector("button");
           await autofillOverlayContentService.setupOverlayListeners(
             autofillFieldElement,
             autofillFieldData,
             pageDetailsMock,
           );
+          await flushPromises();
           submitButton.dispatchEvent(new KeyboardEvent("keyup", { code: "Enter" }));
 
           expect(sendExtensionMessageSpy).toHaveBeenCalledWith(
@@ -1549,6 +1616,7 @@ describe("AutofillOverlayContentService", () => {
         });
 
         it("captures submit buttons when the field is structured within a shadow DOM", async () => {
+          domElementVisibilityService.isElementViewable = jest.fn().mockReturnValue(true);
           document.body.innerHTML = `<div id="form-div">
             <div id="shadow-root"></div>
             <button id="button-el">Change Password</button>
@@ -1579,6 +1647,7 @@ describe("AutofillOverlayContentService", () => {
             autofillFieldData,
             pageDetailsMock,
           );
+          await flushPromises();
           buttonElement.dispatchEvent(new KeyboardEvent("keyup", { code: "Enter" }));
 
           expect(sendExtensionMessageSpy).toHaveBeenCalledWith(
