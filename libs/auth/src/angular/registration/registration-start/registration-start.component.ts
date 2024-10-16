@@ -91,7 +91,7 @@ export class RegistrationStartComponent implements OnInit, OnDestroy {
     private router: Router,
     private anonLayoutWrapperDataService: AnonLayoutWrapperDataService,
   ) {
-    this.isSelfHost = platformUtilsService.isSelfHost();
+    this.isSelfHost = this.platformUtilsService.isSelfHost();
   }
 
   async ngOnInit() {
