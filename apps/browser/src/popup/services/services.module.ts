@@ -23,12 +23,7 @@ import {
   LoginComponentService,
   LockComponentService,
 } from "@bitwarden/auth/angular";
-import {
-  LockService,
-  LoginEmailService,
-  LoginEmailService,
-  PinServiceAbstraction,
-} from "@bitwarden/auth/common";
+import { LockService, LoginEmailService, PinServiceAbstraction } from "@bitwarden/auth/common";
 import { EventCollectionService as EventCollectionServiceAbstraction } from "@bitwarden/common/abstractions/event/event-collection.service";
 import { NotificationsService } from "@bitwarden/common/abstractions/notifications.service";
 import { VaultTimeoutService } from "@bitwarden/common/abstractions/vault-timeout/vault-timeout.service";
