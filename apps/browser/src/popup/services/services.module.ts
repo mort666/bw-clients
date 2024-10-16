@@ -23,13 +23,21 @@ import {
   LoginComponentService,
   LockComponentService,
 } from "@bitwarden/auth/angular";
-import { LockService, PinServiceAbstraction } from "@bitwarden/auth/common";
+import {
+  LockService,
+  LoginEmailService,
+  LoginEmailService,
+  PinServiceAbstraction,
+} from "@bitwarden/auth/common";
 import { EventCollectionService as EventCollectionServiceAbstraction } from "@bitwarden/common/abstractions/event/event-collection.service";
 import { NotificationsService } from "@bitwarden/common/abstractions/notifications.service";
 import { VaultTimeoutService } from "@bitwarden/common/abstractions/vault-timeout/vault-timeout.service";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
-import { AccountService as AccountServiceAbstraction } from "@bitwarden/common/auth/abstractions/account.service";
+import {
+  AccountService,
+  AccountService as AccountServiceAbstraction,
+} from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { KdfConfigService } from "@bitwarden/common/auth/abstractions/kdf-config.service";
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/auth/abstractions/master-password.service.abstraction";
@@ -610,6 +618,11 @@ const safeProviders: SafeProvider[] = [
     provide: SdkClientFactory,
     useClass: flagEnabled("sdk") ? BrowserSdkClientFactory : NoopSdkClientFactory,
     deps: [],
+  }),
+  safeProvider({
+    provide: LoginEmailService,
+    useClass: LoginEmailService,
+    deps: [AccountService, AuthService, StateProvider],
   }),
 ];
 
