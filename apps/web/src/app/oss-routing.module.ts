@@ -197,7 +197,9 @@ const routes: Routes = [
         },
       ],
       data: {
-        pageTitle: "logIn",
+        pageTitle: {
+          key: "logIn",
+        },
       },
     },
     {
