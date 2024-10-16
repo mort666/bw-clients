@@ -436,6 +436,17 @@ const routes: Routes = [
               path: "",
               component: EnvironmentSelectorComponent,
               outlet: "environment-selector",
+              data: {
+                overlayPosition: [
+                  {
+                    originX: "start",
+                    originY: "top",
+                    overlayX: "start",
+                    overlayY: "bottom",
+                  },
+                ],
+                test: "test",
+              },
             },
           ],
         },
@@ -467,7 +478,21 @@ const routes: Routes = [
           children: [
             { path: "", component: LoginComponent },
             { path: "", component: LoginSecondaryContentComponent, outlet: "secondary" },
-            { path: "", component: EnvironmentSelectorComponent, outlet: "environment-selector" },
+            {
+              path: "",
+              component: EnvironmentSelectorComponent,
+              outlet: "environment-selector",
+              data: {
+                overlayPosition: [
+                  {
+                    originX: "start",
+                    originY: "top",
+                    overlayX: "start",
+                    overlayY: "bottom",
+                  },
+                ],
+              },
+            },
           ],
         },
       ],
