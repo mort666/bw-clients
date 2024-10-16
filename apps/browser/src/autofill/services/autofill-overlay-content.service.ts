@@ -1047,7 +1047,6 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     }
 
     if (
-      this.showInlineMenuIdentities &&
       this.inlineMenuFieldQualificationService.isFieldForAccountCreationForm(
         autofillFieldData,
         pageDetails,
