@@ -12,10 +12,6 @@ import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/pl
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
 
-
-
-
-
 import { DefaultLoginComponentService } from "./default-login-component.service";
 
 jest.mock("@bitwarden/common/platform/abstractions/crypto-function.service");
