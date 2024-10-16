@@ -75,20 +75,15 @@
   <div class="tw-w-full tw-relative">
     <label
       class="tw-flex tw-gap-1 tw-text-sm tw-text-muted tw-mb-0 tw-max-w-full"
-      [ngClass]="
-        defaultContentIsFocused() ? 'tw-text-primary-600 tw-font-semibold' : 'tw-text-muted'
-      "
       [attr.for]="input.labelForId"
     >
       <ng-container *ngTemplateOutlet="labelContent"></ng-container>
     </label>
     <div
-      class="tw-gap-1 tw-flex tw-min-h-[1.85rem] tw-pb-[2px] tw-border-0 tw-border-solid"
+      class="tw-gap-1 tw-flex tw-min-h-[1.85rem] tw-border-0 tw-border-solid"
       [ngClass]="{
-        'tw-border-secondary-300/50 tw-border-b tw-pb-[3px]':
-          !disableReadOnlyBorder && !defaultContentIsFocused(),
-        'tw-border-transparent tw-pb-[4px]': disableReadOnlyBorder && !defaultContentIsFocused(),
-        'tw-border-b-2 tw-border-primary-600': defaultContentIsFocused(),
+        'tw-border-secondary-300/50 tw-border-b tw-pb-[2px]': !disableReadOnlyBorder,
+        'tw-border-transparent tw-pb-[3px]': disableReadOnlyBorder,
       }"
     >
       <div
@@ -98,7 +93,9 @@
       >
         <ng-container *ngTemplateOutlet="prefixContent"></ng-container>
       </div>
-      <div class="default-content tw-w-full tw-pb-0 tw-relative [&>*]:tw-p-0">
+      <div
+        class="default-content tw-w-full tw-pb-0 tw-relative [&>*]:tw-p-0 [&>*::selection]:tw-bg-primary-700 [&>*::selection]:tw-text-contrast"
+      >
         <ng-container *ngTemplateOutlet="defaultContent"></ng-container>
       </div>
       <div
