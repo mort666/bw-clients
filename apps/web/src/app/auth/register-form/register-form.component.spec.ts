@@ -36,7 +36,6 @@ import { OrganizationInvite } from "../organization-invite/organization-invite";
 
 import { RegisterFormComponent } from "./register-form.component";
 
-
 describe("RegisterFormComponent", () => {
   let component: RegisterFormComponent;
   let fixture: ComponentFixture<RegisterFormComponent>;
@@ -248,13 +247,13 @@ describe("RegisterFormComponent", () => {
   /**
    * Sets up the password policy test.
    *
-   * @param policyMet - Whether the password policy is met.
+   * @param isPolicyMet - Whether the password policy is met.
    * @param passwordScore - The score of the password.
    * @param password - The password to set.
    * @returns The spy on the submit method.
    */
-  function setupPasswordPolicyTest(policyMet: boolean, passwordScore: number, password: string) {
-    policyServiceMock.evaluateMasterPassword.mockReturnValue(policyMet);
+  function setupPasswordPolicyTest(isPolicyMet: boolean, passwordScore: number, password: string) {
+    policyServiceMock.evaluateMasterPassword.mockReturnValue(isPolicyMet);
     component.enforcedPolicyOptions = { minLength: 10 } as MasterPasswordPolicyOptions;
     component.passwordStrengthResult = { score: passwordScore };
     component.formGroup.patchValue({ masterPassword: password });
