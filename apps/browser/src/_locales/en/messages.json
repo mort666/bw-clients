@@ -4563,135 +4563,135 @@
     "message": "Save login to Bitwarden?",
     "description": "Confirmation message for saving a login to Bitwarden"
   },
-  "keySpace": {
+  "spaceCharacterDescriptor": {
     "message": "Space",
     "description": "Represents the space key in screen reader content as a readable word"
   },
-  "keyTilde": {
+  "tildeCharacterDescriptor": {
     "message": "Tilde",
     "description": "Represents the ~ key in screen reader content as a readable word"
   },
-  "keyBacktick": {
+  "backtickCharacterDescriptor": {
     "message": "Backtick",
     "description": "Represents the ` key in screen reader content as a readable word"
   },
-  "keyExclamation": {
+  "exclamationCharacterDescriptor": {
     "message": "Exclamation mark",
     "description": "Represents the ! key in screen reader content as a readable word"
   },
-  "keyAtSign": {
+  "atSignCharacterDescriptor": {
     "message": "At sign",
     "description": "Represents the @ key in screen reader content as a readable word"
   },
-  "keyHashSign": {
+  "hashSignCharacterDescriptor": {
     "message": "Hash sign",
     "description": "Represents the # key in screen reader content as a readable word"
   },
-  "keyDollarSign": {
+  "dollarSignCharacterDescriptor": {
     "message": "Dollar sign",
     "description": "Represents the $ key in screen reader content as a readable word"
   },
-  "keyPercentSign": {
+  "percentSignCharacterDescriptor": {
     "message": "Percent sign",
     "description": "Represents the % key in screen reader content as a readable word"
   },
-  "keyCaret": {
+  "caretCharacterDescriptor": {
     "message": "Caret",
     "description": "Represents the ^ key in screen reader content as a readable word"
   },
-  "keyAmpersand": {
+  "ampersandCharacterDescriptor": {
     "message": "Ampersand",
     "description": "Represents the & key in screen reader content as a readable word"
   },
-  "keyAsterisk": {
+  "asteriskCharacterDescriptor": {
     "message": "Asterisk",
     "description": "Represents the * key in screen reader content as a readable word"
   },
-  "keyParenLeft": {
+  "parenLeftCharacterDescriptor": {
     "message": "Left parenthesis",
     "description": "Represents the ( key in screen reader content as a readable word"
   },
-  "keyParenRight": {
+  "parenRightCharacterDescriptor": {
     "message": "Right parenthesis",
     "description": "Represents the ) key in screen reader content as a readable word"
   },
-  "keyHyphen": {
+  "hyphenCharacterDescriptor": {
     "message": "Underscore",
     "description": "Represents the _ key in screen reader content as a readable word"
   },
-  "keyUnderscore": {
+  "underscoreCharacterDescriptor": {
     "message": "Hyphen",
     "description": "Represents the - key in screen reader content as a readable word"
   },
-  "keyPlus": {
+  "plusCharacterDescriptor": {
     "message": "Plus",
     "description": "Represents the + key in screen reader content as a readable word"
   },
-  "keyEquals": {
+  "equalsCharacterDescriptor": {
     "message": "Equals",
     "description": "Represents the = key in screen reader content as a readable word"
   },
-  "keyBraceLeft": {
+  "braceLeftCharacterDescriptor": {
     "message": "Left brace",
     "description": "Represents the { key in screen reader content as a readable word"
   },
-  "keyBraceRight": {
+  "braceRightCharacterDescriptor": {
     "message": "Right brace",
     "description": "Represents the } key in screen reader content as a readable word"
   },
-  "keyBracketLeft": {
+  "bracketLeftCharacterDescriptor": {
     "message": "Left bracket",
     "description": "Represents the [ key in screen reader content as a readable word"
   },
-  "keyBracketRight": {
+  "bracketRightCharacterDescriptor": {
     "message": "Right bracket",
     "description": "Represents the ] key in screen reader content as a readable word"
   },
-  "keyPipe": {
+  "pipeCharacterDescriptor": {
     "message": "Pipe",
     "description": "Represents the | key in screen reader content as a readable word"
   },
-  "keyBackSlash": {
+  "backSlashCharacterDescriptor": {
     "message": "Back slash",
-    "description": "Represents the \\ key in screen reader content as a readable word"
+    "description": "Represents the back slash key in screen reader content as a readable word"
   },
-  "keyColon": {
+  "colonCharacterDescriptor": {
     "message": "Colon",
     "description": "Represents the : key in screen reader content as a readable word"
   },
-  "keySemicolon": {
+  "semicolonCharacterDescriptor": {
     "message": "Semicolon",
     "description": "Represents the ; key in screen reader content as a readable word"
   },
-  "keyDoubleQuote": {
+  "doubleQuoteCharacterDescriptor": {
     "message": "Double quote",
-    "description": "Represents the \" key in screen reader content as a readable word"
+    "description": "Represents the double quote key in screen reader content as a readable word"
   },
-  "keySingleQuote": {
+  "singleQuoteCharacterDescriptor": {
     "message": "Single quote",
     "description": "Represents the ' key in screen reader content as a readable word"
   },
-  "keyLessThan": {
+  "lessThanCharacterDescriptor": {
     "message": "Less than",
     "description": "Represents the < key in screen reader content as a readable word"
   },
-  "keyGreaterThan": {
+  "greaterThanCharacterDescriptor": {
     "message": "Greater than",
     "description": "Represents the > key in screen reader content as a readable word"
   },
-  "keyComma": {
+  "commaCharacterDescriptor": {
     "message": "Comma",
     "description": "Represents the , key in screen reader content as a readable word"
   },
-  "keyPeriod": {
+  "periodCharacterDescriptor": {
     "message": "Period",
     "description": "Represents the . key in screen reader content as a readable word"
   },
-  "keyQuestion": {
+  "questionCharacterDescriptor": {
     "message": "Question mark",
     "description": "Represents the ? key in screen reader content as a readable word"
   },
-  "keyForwardSlash": {
+  "forwardSlashCharacterDescriptor": {
     "message": "Forward slash",
     "description": "Represents the / key in screen reader content as a readable word"
   },
