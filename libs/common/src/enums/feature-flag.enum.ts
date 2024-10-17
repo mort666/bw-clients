@@ -35,6 +35,7 @@ export enum FeatureFlag {
   PM11901_RefactorSelfHostingLicenseUploader = "PM-11901-refactor-self-hosting-license-uploader",
   Pm3478RefactorOrganizationUserApi = "pm-3478-refactor-organizationuser-api",
   AccessIntelligence = "pm-13227-access-intelligence",
+  Pm13322AddPolicyDefinitions = "pm-13322-add-policy-definitions",
   TrialPaymentOptional = "PM-8163-trial-payment",
 }
 
@@ -81,6 +82,7 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.PM11901_RefactorSelfHostingLicenseUploader]: FALSE,
   [FeatureFlag.Pm3478RefactorOrganizationUserApi]: FALSE,
   [FeatureFlag.AccessIntelligence]: FALSE,
+  [FeatureFlag.Pm13322AddPolicyDefinitions]: FALSE,
   [FeatureFlag.TrialPaymentOptional]: FALSE,
 } satisfies Record<FeatureFlag, AllowedFeatureFlagTypes>;
 
