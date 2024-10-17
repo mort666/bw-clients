@@ -23,9 +23,11 @@ import {
   LockV2Component,
   PasswordHintComponent,
   RegistrationFinishComponent,
+  RegistrationLockAltIcon,
   RegistrationStartComponent,
   RegistrationStartSecondaryComponent,
   RegistrationStartSecondaryComponentData,
+  RegistrationUserAddIcon,
   SetPasswordJitComponent,
   UserLockIcon,
   VaultIcon,
@@ -503,6 +505,47 @@ const routes: Routes = [
     component: ExtensionAnonLayoutWrapperComponent,
     children: [
       {
+        path: "signup",
+        canActivate: [canAccessFeature(FeatureFlag.EmailVerification), unauthGuardFn()],
+        data: {
+          state: "signup",
+          pageIcon: RegistrationUserAddIcon,
+          pageTitle: {
+            key: "createAccount",
+          },
+          showBackButton: true,
+        } satisfies RouteDataProperties & ExtensionAnonLayoutWrapperData,
+        children: [
+          {
+            path: "",
+            component: RegistrationStartComponent,
+          },
+          {
+            path: "",
+            component: RegistrationStartSecondaryComponent,
+            outlet: "secondary",
+            data: {
+              loginRoute: "/home",
+            } satisfies RegistrationStartSecondaryComponentData,
+          },
+        ],
+      },
+      {
+        path: "finish-signup",
+        canActivate: [canAccessFeature(FeatureFlag.EmailVerification), unauthGuardFn()],
+        data: {
+          pageIcon: RegistrationLockAltIcon,
+          state: "finish-signup",
+          showBackButton: true,
+        } satisfies RouteDataProperties & ExtensionAnonLayoutWrapperData,
+        children: [
+          {
+            path: "",
+            component: RegistrationFinishComponent,
+          },
+        ],
+      },
+      {
         path: "lockV2",
         canActivate: [canAccessFeature(FeatureFlag.ExtensionRefresh), lockGuard()],
         data: {
@@ -526,49 +569,6 @@ const routes: Routes = [
     path: "",
     component: AnonLayoutWrapperComponent,
     children: [
-      {
-        path: "signup",
-        canActivate: [canAccessFeature(FeatureFlag.EmailVerification), unauthGuardFn()],
-        data: {
-          state: "signup",
-          pageTitle: {
-            key: "createAccount",
-          },
-        } satisfies RouteDataProperties & AnonLayoutWrapperData,
-        children: [
-          {
-            path: "",
-            component: RegistrationStartComponent,
-          },
-          {
-            path: "",
-            component: RegistrationStartSecondaryComponent,
-            outlet: "secondary",
-            data: {
-              loginRoute: "/home",
-            } satisfies RegistrationStartSecondaryComponentData,
-          },
-        ],
-      },
-      {
-        path: "finish-signup",
-        canActivate: [canAccessFeature(FeatureFlag.EmailVerification), unauthGuardFn()],
-        data: {
-          pageTitle: {
-            key: "setAStrongPassword",
-          },
-          pageSubtitle: {
-            key: "finishCreatingYourAccountBySettingAPassword",
-          },
-          state: "finish-signup",
-        } satisfies RouteDataProperties & AnonLayoutWrapperData,
-        children: [
-          {
-            path: "",
-            component: RegistrationFinishComponent,
-          },
-        ],
-      },
       {
         path: "set-password-jit",
         canActivate: [canAccessFeature(FeatureFlag.EmailVerification)],
