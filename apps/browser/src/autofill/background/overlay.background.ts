@@ -110,10 +110,6 @@ export class OverlayBackground implements OverlayBackgroundInterface {
   private readonly repositionInlineMenu$ = new Subject<chrome.runtime.MessageSender>();
   private readonly rebuildSubFrameOffsets$ = new Subject<chrome.runtime.MessageSender>();
   private readonly addNewVaultItem$ = new Subject<CurrentAddNewItemData>();
-  private readonly createAccountFillTypes: Set<InlineMenuFillTypes> = new Set([
-    InlineMenuFillType.PasswordGeneration,
-    InlineMenuFillType.AccountCreationUsername,
-  ]);
   private pageDetailsForTab: PageDetailsForTab = {};
   private subFrameOffsetsForTab: SubFrameOffsetsForTab = {};
   private portKeyForTab: Record<number, string> = {};
