@@ -6,6 +6,7 @@ import { Subject, takeUntil } from "rxjs";
 import { OrganizationBillingServiceAbstraction as OrganizationBillingService } from "@bitwarden/common/billing/abstractions/organization-billing.service";
 import { PlanType, ProductTierType } from "@bitwarden/common/billing/enums";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { ReferenceEventRequest } from "@bitwarden/common/models/request/reference-event.request";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 
@@ -58,6 +59,9 @@ export class SecretsManagerTrialPaidStepperComponent
   }
 
   async ngOnInit(): Promise<void> {
+    this.referenceEventRequest = new ReferenceEventRequest();
+    this.referenceEventRequest.initiationPath = "Secrets Manager trial from marketing website";
+
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe((qParams) => {
       if (trialFlowOrgs.includes(qParams.org)) {
         if (qParams.org === ValidOrgParams.teamsStarter) {
