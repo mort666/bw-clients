@@ -36,6 +36,7 @@ export enum FeatureFlag {
   Pm3478RefactorOrganizationUserApi = "pm-3478-refactor-organizationuser-api",
   AccessIntelligence = "pm-13227-access-intelligence",
   Pm13322AddPolicyDefinitions = "pm-13322-add-policy-definitions",
+  LimitCollectionCreationDeletionSplit = "pm-10863-limit-collection-creation-deletion-split",
   TrialPaymentOptional = "PM-8163-trial-payment",
 }
 
@@ -83,6 +84,7 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.Pm3478RefactorOrganizationUserApi]: FALSE,
   [FeatureFlag.AccessIntelligence]: FALSE,
   [FeatureFlag.Pm13322AddPolicyDefinitions]: FALSE,
+  [FeatureFlag.LimitCollectionCreationDeletionSplit]: FALSE,
   [FeatureFlag.TrialPaymentOptional]: FALSE,
 } satisfies Record<FeatureFlag, AllowedFeatureFlagTypes>;
 
