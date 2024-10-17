@@ -797,7 +797,6 @@ jobs:
           APP_STORE_CONNECT_AUTH_KEY_PATH: ~/private_keys/AuthKey_6TV9MKN3GP.p8
           CSC_FOR_PULL_REQUEST: true
         run: npm run pack:mac
-        continue-on-error: true
 
       - name: Upload .zip artifact
         uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
@@ -1024,7 +1023,6 @@ jobs:
           APP_STORE_CONNECT_AUTH_KEY_PATH: ~/private_keys/AuthKey_6TV9MKN3GP.p8
           CSC_FOR_PULL_REQUEST: true
         run: npm run pack:mac:mas
-        continue-on-error: true
 
       - name: Upload .pkg artifact
         uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
@@ -1033,22 +1031,22 @@ jobs:
           path: apps/desktop/dist/mas-universal/Bitwarden-${{ env._PACKAGE_VERSION }}-universal.pkg
           if-no-files-found: error
 
-      - name: Deploy to TestFlight
-        id: testflight-deploy
-        if: |
-            (github.ref == 'refs/heads/main'
-            || github.ref == 'refs/heads/rc'
-            || github.ref == 'refs/heads/hotfix-rc-desktop')
-        env:
-          APP_STORE_CONNECT_TEAM_ISSUER: ${{ secrets.APP_STORE_CONNECT_TEAM_ISSUER }}
-          APP_STORE_CONNECT_AUTH_KEY: 6TV9MKN3GP
-        run: |
-          xcrun altool \
-            --upload-app \
-            --type macos \
-            --file "$(find ./dist/mas-universal/Bitwarden*.pkg)" \
-            --apiKey $APP_STORE_CONNECT_AUTH_KEY \
-            --apiIssuer $APP_STORE_CONNECT_TEAM_ISSUER
+      # - name: Deploy to TestFlight
+      #   id: testflight-deploy
+      #   if: |
+      #       (github.ref == 'refs/heads/main'
+      #       || github.ref == 'refs/heads/rc'
+      #       || github.ref == 'refs/heads/hotfix-rc-desktop')
+      #   env:
+      #     APP_STORE_CONNECT_TEAM_ISSUER: ${{ secrets.APP_STORE_CONNECT_TEAM_ISSUER }}
+      #     APP_STORE_CONNECT_AUTH_KEY: 6TV9MKN3GP
+      #   run: |
+      #     xcrun altool \
+      #       --upload-app \
+      #       --type macos \
+      #       --file "$(find ./dist/mas-universal/Bitwarden*.pkg)" \
+      #       --apiKey $APP_STORE_CONNECT_AUTH_KEY \
+      #       --apiIssuer $APP_STORE_CONNECT_TEAM_ISSUER
 
       - name: Post message to a Slack channel
         id: slack-message
@@ -1258,7 +1256,6 @@ jobs:
           APP_STORE_CONNECT_TEAM_ISSUER: ${{ secrets.APP_STORE_CONNECT_TEAM_ISSUER }}
           APP_STORE_CONNECT_AUTH_KEY_PATH: ~/private_keys/AuthKey_6TV9MKN3GP.p8
         run: npm run pack:mac:masdev
-        continue-on-error: true
 
       - name: Zip masdev asset
         run: |
