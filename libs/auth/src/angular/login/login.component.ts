@@ -254,7 +254,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   protected async launchSsoBrowserWindow(clientId: "browser" | "desktop"): Promise<void> {
-    await this.loginComponentService.launchSsoBrowserWindow(this.loggedEmail, clientId);
+    await this.loginComponentService.launchSsoBrowserWindow(this.emailFormControl.value, clientId);
   }
 
   protected async evaluatePassword(): Promise<void> {
@@ -324,11 +324,11 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     if (emailValid) {
       this.toggleValidateEmail(true);
-      await this.getLoginWithDevice(this.loggedEmail);
+      await this.getLoginWithDevice(this.emailFormControl.value);
 
       this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
         pageTitle: { key: "welcomeBack" },
-        pageSubtitle: this.loggedEmail,
+        pageSubtitle: this.emailFormControl.value,
         pageIcon: this.Icons.WaveIcon,
       });
     }
