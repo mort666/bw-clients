@@ -60,7 +60,7 @@
           block
           buttonType="secondary"
           routerLink="/sso"
-          [queryParams]="{ email: formGroup.value.email }"
+          [queryParams]="formGroup.value.email ? { email: formGroup.value.email } : {}"
           (click)="saveEmailSettings()"
         >
           <i class="bwi bwi-provider tw-mr-1"></i>
