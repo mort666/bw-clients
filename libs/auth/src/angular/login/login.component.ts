@@ -398,6 +398,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   protected async continue(): Promise<void> {
     await this.validateEmail();
 
+    // TODO: Toast will be replaced with inline error message in PM-3301
     if (!this.formGroup.controls.email.valid) {
       this.toastService.showToast({
         variant: "error",
