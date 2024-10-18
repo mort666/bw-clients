@@ -1,6 +1,14 @@
 import { BooleanInput, coerceBooleanProperty } from "@angular/cdk/coercion";
 import { CommonModule } from "@angular/common";
-import { Component, Input, Signal, inject } from "@angular/core";
+import {
+  Component,
+  Input,
+  Signal,
+  inject,
+  AfterViewInit,
+  ElementRef,
+  ViewChild,
+} from "@angular/core";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import {
@@ -20,9 +28,10 @@ import { PopupPageComponent } from "./popup-page.component";
   standalone: true,
   imports: [TypographyModule, CommonModule, IconButtonModule, JslibModule, AsyncActionsModule],
 })
-export class PopupHeaderComponent {
+export class PopupHeaderComponent implements AfterViewInit {
   private popupRouterCacheService = inject(PopupRouterCacheService);
   protected pageContentScrolled: Signal<boolean> = inject(PopupPageComponent).isScrolled;
+  @ViewChild("heading") heading: ElementRef<HTMLElement>;
 
   /** Background color */
   @Input()
@@ -51,4 +60,11 @@ export class PopupHeaderComponent {
   backAction: FunctionReturningAwaitable = async () => {
     return this.popupRouterCacheService.back();
   };
+
+  ngAfterViewInit() {
+    // This needs to happen immediately when the view is ready rather than after 500ms.
+    // The timeout here just ensures the heading ref is ready to be to focused, but
+    // there is likely a better approach.
+    setTimeout(() => this.heading?.nativeElement.focus(), 500);
+  }
 }
