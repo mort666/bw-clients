@@ -1,7 +1,7 @@
 import { svgIcon } from "@bitwarden/components";
 
 export const VaultIcon = svgIcon`
-  <svg width="120" height="100" viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect x="5.61279" y="1.5" width="108.775" height="89.1503" rx="9.25741" class="tw-stroke-art-primary" stroke-width="2"/>
     <path d="M49.5854 61.4941L49.5854 70.4652" class="tw-stroke-art-primary" stroke-width="2" stroke-linecap="round"/>
     <path d="M49.5854 21.6851L49.5854 30.6562" class="tw-stroke-art-primary" stroke-width="2" stroke-linecap="round"/>
