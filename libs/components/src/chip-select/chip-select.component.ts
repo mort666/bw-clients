@@ -10,6 +10,7 @@ import {
   booleanAttribute,
   inject,
   signal,
+  ElementRef,
 } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from "@angular/forms";
@@ -44,6 +45,7 @@ export type ChipSelectOption<T> = Option<T> & {
 export class ChipSelectComponent<T = unknown> implements ControlValueAccessor, AfterViewInit {
   @ViewChild(MenuComponent) menu: MenuComponent;
   @ViewChildren(MenuItemDirective) menuItems: QueryList<MenuItemDirective>;
+  @ViewChild("menuTriggerButton") menuTriggerButton: ElementRef<HTMLElement>;
 
   /** Text to show when there is no selected option */
   @Input({ required: true }) placeholderText: string;
@@ -103,6 +105,7 @@ export class ChipSelectComponent<T = unknown> implements ControlValueAccessor, A
   }
 
   protected selectOption(option: ChipSelectOption<T>, _event: MouseEvent) {
+    this.menuTriggerButton.nativeElement.focus();
     this.selectedOption = option;
     this.onChange(option);
   }
