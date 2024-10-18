@@ -447,7 +447,6 @@ const routes: Routes = [
                     overlayY: "bottom",
                   },
                 ],
-                test: "test",
               },
             },
           ],
