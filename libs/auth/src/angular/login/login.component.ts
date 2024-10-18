@@ -469,6 +469,8 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.formGroup.controls.rememberEmail.setValue(true);
       }
     }
+
+    await this.getLoginWithDevice(this.emailFormControl.value);
   }
 
   private focusInput() {
@@ -482,8 +484,6 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   private async defaultOnInit(): Promise<void> {
-    await this.getLoginWithDevice(this.emailFormControl.value);
-
     // If there's an existing org invite, use it to get the password policies
     const orgPolicies = await this.loginComponentService.getOrgPolicies();
 
