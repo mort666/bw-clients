@@ -98,10 +98,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     return this.formGroup.controls.email;
   }
 
-  get loggedEmail(): string {
-    return this.formGroup.value.email;
-  }
-
   get uiState(): LoginUiState {
     return this.validatedEmail ? LoginUiState.MASTER_PASSWORD_ENTRY : LoginUiState.EMAIL_ENTRY;
   }
@@ -476,12 +472,17 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   private focusInput() {
-    const email = this.loggedEmail;
-    document.getElementById(email == null || email === "" ? "email" : "masterPassword")?.focus();
+    document
+      .getElementById(
+        this.emailFormControl.value == null || this.emailFormControl.value === ""
+          ? "email"
+          : "masterPassword",
+      )
+      ?.focus();
   }
 
   private async defaultOnInit(): Promise<void> {
-    await this.getLoginWithDevice(this.loggedEmail);
+    await this.getLoginWithDevice(this.emailFormControl.value);
 
     // If there's an existing org invite, use it to get the password policies
     const orgPolicies = await this.loginComponentService.getOrgPolicies();
