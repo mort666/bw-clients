@@ -8,6 +8,7 @@ import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/pl
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
 
 import { flagEnabled } from "../../../platform/flags";
+import { ExtensionAnonLayoutWrapperDataService } from "../extension-anon-layout-wrapper/extension-anon-layout-wrapper-data.service";
 
 @Injectable()
 export class ExtensionLoginComponentService
@@ -20,6 +21,7 @@ export class ExtensionLoginComponentService
     passwordGenerationService: PasswordGenerationServiceAbstraction,
     platformUtilsService: PlatformUtilsService,
     ssoLoginService: SsoLoginServiceAbstraction,
+    private extensionAnonLayoutWrapperDataService: ExtensionAnonLayoutWrapperDataService,
   ) {
     super(
       cryptoFunctionService,
@@ -33,5 +35,9 @@ export class ExtensionLoginComponentService
 
   isLoginViaAuthRequestSupported(): boolean {
     return flagEnabled("showPasswordless");
+  }
+
+  showBackButton(): void {
+    this.extensionAnonLayoutWrapperDataService.setAnonLayoutWrapperData({ showBackButton: true });
   }
 }

@@ -80,7 +80,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   LoginUiState = LoginUiState;
   registerRoute$ = this.registerRouteService.registerRoute$(); // TODO: remove when email verification flag is removed
   isKnownDevice = false;
-  validatedEmail = false;
+  loginUiState: LoginUiState = LoginUiState.EMAIL_ENTRY;
 
   formGroup = this.formBuilder.group(
     {
@@ -96,10 +96,6 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   get emailFormControl(): FormControl<string> {
     return this.formGroup.controls.email;
-  }
-
-  get uiState(): LoginUiState {
-    return this.validatedEmail ? LoginUiState.MASTER_PASSWORD_ENTRY : LoginUiState.EMAIL_ENTRY;
   }
 
   // Web properties
@@ -164,7 +160,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   submit = async (): Promise<void> => {
     if (this.clientType === ClientType.Desktop) {
-      if (!this.validatedEmail) {
+      if (this.loginUiState !== LoginUiState.MASTER_PASSWORD_ENTRY) {
         return;
       }
     }
@@ -323,7 +319,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     const emailValid = this.formGroup.controls.email.valid;
 
     if (emailValid) {
-      this.toggleValidateEmail(true);
+      this.toggleLoginUiState(LoginUiState.MASTER_PASSWORD_ENTRY);
       await this.getLoginWithDevice(this.emailFormControl.value);
 
       this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
@@ -334,10 +330,10 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected toggleValidateEmail(value: boolean): void {
-    this.validatedEmail = value;
+  protected toggleLoginUiState(value: LoginUiState): void {
+    this.loginUiState = value;
 
-    if (!this.validatedEmail) {
+    if (this.loginUiState !== LoginUiState.MASTER_PASSWORD_ENTRY) {
       // Reset master password only when going from validated to not validated so that autofill can work properly
       this.formGroup.controls.masterPassword.reset();
     } else {
@@ -352,6 +348,8 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.masterPasswordInputRef?.nativeElement?.focus();
         });
       }
+
+      this.loginComponentService.showBackButton();
     }
   }
 
@@ -551,7 +549,10 @@ export class LoginComponent implements OnInit, OnDestroy {
    * Helper function to determine if the back button should be shown.
    * @returns true if the back button should be shown.
    */
-  protected showBackButton(): boolean {
-    return this.validatedEmail && this.clientType !== ClientType.Browser;
+  protected shouldShowBackButton(): boolean {
+    return (
+      this.loginUiState === LoginUiState.MASTER_PASSWORD_ENTRY &&
+      this.clientType !== ClientType.Browser
+    );
   }
 }

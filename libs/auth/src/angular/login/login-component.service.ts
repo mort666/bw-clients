@@ -38,4 +38,9 @@ export abstract class LoginComponentService {
    * - Used by: Browser, Desktop
    */
   launchSsoBrowserWindow: (email: string, clientId: "browser" | "desktop") => Promise<void>;
+
+  /**
+   * Shows the back button.
+   */
+  showBackButton: () => void;
 }

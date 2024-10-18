@@ -89,4 +89,11 @@ export class DefaultLoginComponentService implements LoginComponentService {
         encodeURIComponent(email),
     );
   }
+
+  /**
+   * No-op implementation of showBackButton
+   */
+  showBackButton(): void {
+    return;
+  }
 }

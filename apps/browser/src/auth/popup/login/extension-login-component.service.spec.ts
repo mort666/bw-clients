@@ -10,6 +10,7 @@ import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legac
 
 import { flagEnabled } from "../../../platform/flags";
 import { BrowserPlatformUtilsService } from "../../../platform/services/platform-utils/browser-platform-utils.service";
+import { ExtensionAnonLayoutWrapperDataService } from "../extension-anon-layout-wrapper/extension-anon-layout-wrapper-data.service";
 
 import { ExtensionLoginComponentService } from "./extension-login-component.service";
 
@@ -24,14 +25,14 @@ describe("ExtensionLoginComponentService", () => {
   let passwordGenerationService: MockProxy<PasswordGenerationServiceAbstraction>;
   let platformUtilsService: MockProxy<BrowserPlatformUtilsService>;
   let ssoLoginService: MockProxy<SsoLoginServiceAbstraction>;
-
+  let extensionAnonLayoutWrapperDataService: MockProxy<ExtensionAnonLayoutWrapperDataService>;
   beforeEach(() => {
     cryptoFunctionService = mock<CryptoFunctionService>();
     environmentService = mock<EnvironmentService>();
     passwordGenerationService = mock<PasswordGenerationServiceAbstraction>();
     platformUtilsService = mock<BrowserPlatformUtilsService>();
     ssoLoginService = mock<SsoLoginServiceAbstraction>();
-
+    extensionAnonLayoutWrapperDataService = mock<ExtensionAnonLayoutWrapperDataService>();
     TestBed.configureTestingModule({
       providers: [
         {
@@ -43,6 +44,7 @@ describe("ExtensionLoginComponentService", () => {
               passwordGenerationService,
               platformUtilsService,
               ssoLoginService,
+              extensionAnonLayoutWrapperDataService,
             ),
         },
         { provide: DefaultLoginComponentService, useExisting: ExtensionLoginComponentService },

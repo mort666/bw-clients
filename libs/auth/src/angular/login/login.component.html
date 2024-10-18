@@ -11,7 +11,7 @@
 -->
 
 <form [bitSubmit]="submit" [formGroup]="formGroup">
-  <ng-container *ngIf="uiState === LoginUiState.EMAIL_ENTRY">
+  <ng-container *ngIf="loginUiState === LoginUiState.EMAIL_ENTRY">
     <!-- Email Address input -->
     <bit-form-field class="!tw-mb-4">
       <bit-label>{{ "emailAddress" | i18n }}</bit-label>
@@ -84,7 +84,7 @@
     </div>
   </ng-container>
 
-  <ng-container *ngIf="uiState === LoginUiState.MASTER_PASSWORD_ENTRY">
+  <ng-container *ngIf="loginUiState === LoginUiState.MASTER_PASSWORD_ENTRY">
     <!-- Master Password input -->
     <bit-form-field class="!tw-mb-1">
       <bit-label>{{ "masterPass" | i18n }}</bit-label>
@@ -132,13 +132,13 @@
       </ng-container>
 
       <!-- Back button -->
-      <ng-container *ngIf="showBackButton()">
+      <ng-container *ngIf="shouldShowBackButton()">
         <button
           type="button"
           bitButton
           block
           buttonType="secondary"
-          (click)="toggleValidateEmail(false)"
+          (click)="toggleLoginUiState(LoginUiState.EMAIL_ENTRY)"
         >
           {{ "back" | i18n }}
         </button>

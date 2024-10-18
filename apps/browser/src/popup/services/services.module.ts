@@ -602,6 +602,7 @@ const safeProviders: SafeProvider[] = [
       PasswordGenerationServiceAbstraction,
       PlatformUtilsServiceAbstraction,
       SsoLoginServiceAbstraction,
+      ExtensionAnonLayoutWrapperDataService,
     ],
   }),
   safeProvider({
@@ -618,6 +619,11 @@ const safeProviders: SafeProvider[] = [
     provide: LoginEmailService,
     useClass: LoginEmailService,
     deps: [AccountService, AuthService, StateProvider],
+  }),
+  safeProvider({
+    provide: ExtensionAnonLayoutWrapperDataService,
+    useClass: ExtensionAnonLayoutWrapperDataService,
+    deps: [],
   }),
 ];
 
