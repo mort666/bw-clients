@@ -23,13 +23,14 @@
     #menuTriggerButton
   >
     <span class="tw-inline-flex tw-items-center tw-gap-1.5 tw-truncate">
-      <i class="bwi !tw-text-[inherit]" [ngClass]="icon"></i>
+      <i class="bwi !tw-text-[inherit]" [ngClass]="icon" aria-hidden="true"></i>
       <span class="tw-truncate">{{ label }}</span>
     </span>
     <i
       *ngIf="!selectedOption"
       class="bwi"
       [ngClass]="menuTrigger.isOpen ? 'bwi-angle-up' : 'bwi-angle-down'"
+      aria-hidden="true"
     ></i>
   </button>
 
