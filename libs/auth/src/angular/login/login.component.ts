@@ -2,7 +2,7 @@ import { CommonModule } from "@angular/common";
 import { Component, ElementRef, Input, NgZone, OnDestroy, OnInit, ViewChild } from "@angular/core";
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angular/forms";
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
-import { firstValueFrom, of, Subject, switchMap, take, takeUntil } from "rxjs";
+import { firstValueFrom, Subject, take, takeUntil } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import {
@@ -468,8 +468,6 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.formGroup.controls.rememberEmail.setValue(true);
       }
     }
-
-    await this.getLoginWithDevice(this.emailFormControl.value);
   }
 
   private focusInput() {
@@ -491,28 +489,24 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     let paramEmailIsSet = false;
 
-    this.activatedRoute?.queryParams
-      .pipe(
-        switchMap((params) => {
-          if (!params) {
-            // If no params,loadEmailSettings from state
-            return this.loadEmailSettings();
-          }
+    const params = await firstValueFrom(this.activatedRoute.queryParams);
 
-          const qParamsEmail = params.email;
+    if (params) {
+      const qParamsEmail = params.email;
 
-          // If there is an email in the query params, set that email as the form field value
-          if (qParamsEmail != null && qParamsEmail.indexOf("@") > -1) {
-            this.formGroup.controls.email.setValue(qParamsEmail);
-            paramEmailIsSet = true;
-          }
+      // If there is an email in the query params, set that email as the form field value
+      if (qParamsEmail != null && qParamsEmail.indexOf("@") > -1) {
+        this.formGroup.controls.email.setValue(qParamsEmail);
+        paramEmailIsSet = true;
+      }
+    }
 
-          // If there is no email in the query params, loadEmailSettings from state
-          return paramEmailIsSet ? of(null) : this.loadEmailSettings();
-        }),
-        takeUntil(this.destroy$),
-      )
-      .subscribe();
+    // If there are no params or no email in the query params, loadEmailSettings from state
+    if (!paramEmailIsSet) {
+      await this.loadEmailSettings();
+    }
+
+    await this.getLoginWithDevice(this.emailFormControl.value);
 
     // Backup check to handle unknown case where activatedRoute is not available
     // This shouldn't happen under normal circumstances
