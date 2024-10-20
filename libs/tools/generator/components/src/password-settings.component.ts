@@ -1,3 +1,4 @@
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import { OnInit, Input, Output, EventEmitter, Component, OnDestroy } from "@angular/core";
 import { FormBuilder } from "@angular/forms";
 import { BehaviorSubject, takeUntil, Subject, map, filter, tap, debounceTime, skip } from "rxjs";
@@ -10,7 +11,6 @@ import {
   PasswordGenerationOptions,
 } from "@bitwarden/generator-core";
 
-import { DependenciesModule } from "./dependencies";
 import { completeOnAccountSwitch, toValidators } from "./util";
 
 const Controls = Object.freeze({
@@ -26,10 +26,8 @@ const Controls = Object.freeze({
 
 /** Options group for passwords */
 @Component({
-  standalone: true,
   selector: "tools-password-settings",
   templateUrl: "password-settings.component.html",
-  imports: [DependenciesModule],
 })
 export class PasswordSettingsComponent implements OnInit, OnDestroy {
   /** Instantiates the component
@@ -57,6 +55,9 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
   /** Number of milliseconds to wait before accepting user input. */
   @Input()
   waitMs: number = 100;
+
+  /** Removes bottom margin from `bit-section` */
+  @Input({ transform: coerceBooleanProperty }) disableMargin = false;
 
   /** Emits settings updates and completes if the settings become unavailable.
    * @remarks this does not emit the initial settings. If you would like

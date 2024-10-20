@@ -71,6 +71,15 @@
   "joinOrganization": {
     "message": "Lid van organisatie worden"
   },
+  "joinOrganizationName": {
+    "message": "Aansluiten bij $ORGANIZATIONNAME$",
+    "placeholders": {
+      "organizationName": {
+        "content": "$1",
+        "example": "My Org Name"
+      }
+    }
+  },
   "finishJoiningThisOrganizationBySettingAMasterPassword": {
     "message": "Voltooi je lidmaatschap aan deze organisatie door een hoofdwachtwoord in te stellen."
   },
@@ -381,7 +390,7 @@
   },
   "generator": {
     "message": "Generator",
-    "description": "Short for 'Password Generator'."
+    "description": "Short for 'credential generator'."
   },
   "passGenInfo": {
     "message": "Automatisch sterke, unieke wachtwoorden voor je logins genereren."
@@ -603,6 +612,15 @@
   },
   "yourVaultIsLocked": {
     "message": "Je kluis is vergrendeld. Bevestig je identiteit om door te gaan."
+  },
+  "yourVaultIsLockedV2": {
+    "message": "Je kluis is vergrendeld"
+  },
+  "yourAccountIsLocked": {
+    "message": "Je account is vergrendeld"
+  },
+  "or": {
+    "message": "of"
   },
   "unlock": {
     "message": "Ontgrendelen"
@@ -1037,7 +1055,7 @@
     "message": "Bestandsindeling"
   },
   "fileEncryptedExportWarningDesc": {
-    "message": "We beveiligen deze bestandsexport met een wachtwoord beveiligd, je hebt het bestandswachtwoord nodig om het te decoderen."
+    "message": "We beveiligen deze bestandsexport met een wachtwoord, je hebt het bestandswachtwoord nodig om het bestand te decoderen."
   },
   "filePassword": {
     "message": "Bestandswachtwoord"
@@ -1398,6 +1416,12 @@
   },
   "showInlineMenuLabel": {
     "message": "Suggesties voor automatisch invullen op formuliervelden weergeven"
+  },
+  "showInlineMenuIdentitiesLabel": {
+    "message": "Identiteiten als suggesties weergeven"
+  },
+  "showInlineMenuCardsLabel": {
+    "message": "Kaarten als suggesties weergeven"
   },
   "showInlineMenuOnIconSelectionLabel": {
     "message": "Suggesties weergeven wanneer pictogram is geselecteerd"
@@ -1935,6 +1959,9 @@
   },
   "unlockWithBiometrics": {
     "message": "Biometrisch ontgrendelen"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Ontgrendelen met hoofdwachtwoord"
   },
   "awaitDesktop": {
     "message": "Wacht op bevestiging van de desktop"
@@ -2486,7 +2513,25 @@
     "message": "Send succesvol aangemaakt!",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
-  "sendAvailability": {
+  "sendExpiresInHoursSingle": {
+    "message": "De Send is het komende uur beschikbaar voor iedereen met de link.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInHours": {
+    "message": "De Send is de komende $HOURS$ uur beschikbaar voor iedereen met de link.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "sendExpiresInDaysSingle": {
+    "message": "De Send is de komende dag beschikbaar voor iedereen met de link.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInDays": {
     "message": "De Send is de komende $DAYS$ dagen beschikbaar voor iedereen met de link.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
     "placeholders": {
@@ -2616,6 +2661,15 @@
   "orgRequiresYouToSetPassword": {
     "message": "Your organization requires you to set a master password.",
     "description": "Used as a card title description on the set password page to explain why the user is there"
+  },
+  "cardMetrics": {
+    "message": "van $TOTAL$",
+    "placeholders": {
+      "total": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
   },
   "verificationRequired": {
     "message": "Verificatie vereist",
@@ -3623,6 +3677,9 @@
   "typePasskey": {
     "message": "Passkey"
   },
+  "accessing": {
+    "message": "Toegang verkrijgen"
+  },
   "passkeyNotCopied": {
     "message": "Passkey wordt niet gekopieerd"
   },
@@ -3646,6 +3703,9 @@
   },
   "noMatchingLoginsForSite": {
     "message": "Geen overeenkomende logins voor deze site"
+  },
+  "searchSavePasskeyNewLogin": {
+    "message": "Passkey zoeken of als nieuwe login opslaan"
   },
   "confirm": {
     "message": "Bevestigen"
@@ -4100,7 +4160,7 @@
     }
   },
   "permanentlyDeleteAttachmentConfirmation": {
-    "message": "Weet je zeker dat je deze bijlage definitief permanen wilt verwijderen?"
+    "message": "Weet je zeker dat je deze bijlage definitief wilt verwijderen?"
   },
   "premium": {
     "message": "Premium"

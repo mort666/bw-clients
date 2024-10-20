@@ -71,6 +71,15 @@
   "joinOrganization": {
     "message": "Bliv medlem af organisation"
   },
+  "joinOrganizationName": {
+    "message": "Bliv nedlem af $ORGANIZATIONNAME$",
+    "placeholders": {
+      "organizationName": {
+        "content": "$1",
+        "example": "My Org Name"
+      }
+    }
+  },
   "finishJoiningThisOrganizationBySettingAMasterPassword": {
     "message": "Færdiggør tilmeldingen til denne organisation ved at opsætte en hovedadgangskode."
   },
@@ -381,7 +390,7 @@
   },
   "generator": {
     "message": "Generator",
-    "description": "Short for 'Password Generator'."
+    "description": "Short for 'credential generator'."
   },
   "passGenInfo": {
     "message": "Opret automatisk stærke, unikke adgangskoder til dine logins."
@@ -603,6 +612,15 @@
   },
   "yourVaultIsLocked": {
     "message": "Din boks er låst. Bekræft din identitet for at fortsætte."
+  },
+  "yourVaultIsLockedV2": {
+    "message": "Boksen er låst"
+  },
+  "yourAccountIsLocked": {
+    "message": "Kontoen er låst"
+  },
+  "or": {
+    "message": "eller"
   },
   "unlock": {
     "message": "Lås op"
@@ -1399,6 +1417,12 @@
   "showInlineMenuLabel": {
     "message": "Vis autoudfyld-menu i formularfelter"
   },
+  "showInlineMenuIdentitiesLabel": {
+    "message": "Vis identiteter som forslag"
+  },
+  "showInlineMenuCardsLabel": {
+    "message": "Vis kort som forslag"
+  },
   "showInlineMenuOnIconSelectionLabel": {
     "message": "Vis forslag, når ikonet vælges"
   },
@@ -1935,6 +1959,9 @@
   },
   "unlockWithBiometrics": {
     "message": "Lås op med biometri"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Oplås med hovedadgangskode"
   },
   "awaitDesktop": {
     "message": "Afventer bekræftelse fra skrivebordet"
@@ -2486,8 +2513,26 @@
     "message": "Send er hermed oprettet!",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
-  "sendAvailability": {
-    "message": "Denne Send vil være tilgængelig for alle med linket i de næste $DAYS$ dage.",
+  "sendExpiresInHoursSingle": {
+    "message": "Denne Send vil være tilgængelig for alle med linket den kommende time.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInHours": {
+    "message": "Denne Send vil være tilgængelig for alle med linket de kommende $HOURS$ timer.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "sendExpiresInDaysSingle": {
+    "message": "Denne Send vil være tilgængelig for alle med linket den kommende dag.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInDays": {
+    "message": "Denne Send vil være tilgængelig for alle med linket de kommende $DAYS$ dage.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
     "placeholders": {
       "days": {
@@ -2616,6 +2661,15 @@
   "orgRequiresYouToSetPassword": {
     "message": "Organisationen kræver, at der oprettes en hovedadgangskode.",
     "description": "Used as a card title description on the set password page to explain why the user is there"
+  },
+  "cardMetrics": {
+    "message": "ud af $TOTAL$",
+    "placeholders": {
+      "total": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
   },
   "verificationRequired": {
     "message": "Bekræftelse kræves",
@@ -3623,6 +3677,9 @@
   "typePasskey": {
     "message": "Adgangsnøgle"
   },
+  "accessing": {
+    "message": "Tilgår"
+  },
   "passkeyNotCopied": {
     "message": "Adgangsnøglen kopieres ikke"
   },
@@ -3646,6 +3703,9 @@
   },
   "noMatchingLoginsForSite": {
     "message": "Ingen matchende logins for dette websted"
+  },
+  "searchSavePasskeyNewLogin": {
+    "message": "Søg eller gem adgangsnøgle som nyt login"
   },
   "confirm": {
     "message": "Bekræft"

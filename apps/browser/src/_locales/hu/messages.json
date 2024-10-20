@@ -71,6 +71,15 @@
   "joinOrganization": {
     "message": "Csatlakozás szervezethez"
   },
+  "joinOrganizationName": {
+    "message": "Csatlakozás: $ORGANIZATIONNAME$",
+    "placeholders": {
+      "organizationName": {
+        "content": "$1",
+        "example": "My Org Name"
+      }
+    }
+  },
   "finishJoiningThisOrganizationBySettingAMasterPassword": {
     "message": "Fejezzük be a szervezethez csatlakozást egy mesterjelszó beállításával."
   },
@@ -381,7 +390,7 @@
   },
   "generator": {
     "message": "Generátor",
-    "description": "Short for 'Password Generator'."
+    "description": "Short for 'credential generator'."
   },
   "passGenInfo": {
     "message": "Automatikusan létrehoz erős, egyedi jelszavakat a bejelentkezéseidhez."
@@ -603,6 +612,15 @@
   },
   "yourVaultIsLocked": {
     "message": "A széf zárolásra került. A folytatáshoz meg kell adni a mesterjelszót."
+  },
+  "yourVaultIsLockedV2": {
+    "message": "A széf zárolva van."
+  },
+  "yourAccountIsLocked": {
+    "message": "A fiók zárolva van."
+  },
+  "or": {
+    "message": "vagy"
   },
   "unlock": {
     "message": "Feloldás"
@@ -1399,6 +1417,12 @@
   "showInlineMenuLabel": {
     "message": "Show autofill suggestions on form fields"
   },
+  "showInlineMenuIdentitiesLabel": {
+    "message": "Az identitások megjelenítése javaslatként"
+  },
+  "showInlineMenuCardsLabel": {
+    "message": "A kártyák megjelenítése javaslatként"
+  },
   "showInlineMenuOnIconSelectionLabel": {
     "message": "Display suggestions when icon is selected"
   },
@@ -1935,6 +1959,9 @@
   },
   "unlockWithBiometrics": {
     "message": "Biometrikus feloldás"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Feloldás mesterjelszóval"
   },
   "awaitDesktop": {
     "message": "Várakozás megerősítésre az asztali alkalmazásból"
@@ -2486,7 +2513,25 @@
     "message": "A Send sikeresen létrejött!",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
-  "sendAvailability": {
+  "sendExpiresInHoursSingle": {
+    "message": "A Send bárki számára elérhető a hivatkozással a következő 1 órában.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInHours": {
+    "message": "A Send bárki számára elérhető a hivatkozással a következő $HOURS$ órában.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "sendExpiresInDaysSingle": {
+    "message": "A Send bárki számára elérhető a hivatkozással a következő 1 napban.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInDays": {
     "message": "A Send bárki számára elérhető a hivatkozással a következő $DAYS$ napban.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
     "placeholders": {
@@ -2616,6 +2661,15 @@
   "orgRequiresYouToSetPassword": {
     "message": "A szervezet megköveteli egy mesterjelszó beállítását.",
     "description": "Used as a card title description on the set password page to explain why the user is there"
+  },
+  "cardMetrics": {
+    "message": "/ $TOTAL$",
+    "placeholders": {
+      "total": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
   },
   "verificationRequired": {
     "message": "Ellenőrzés szükséges",
@@ -3623,6 +3677,9 @@
   "typePasskey": {
     "message": "Hozzáférési kulcs"
   },
+  "accessing": {
+    "message": "Elérés"
+  },
   "passkeyNotCopied": {
     "message": "A hozzáférési kulcs nem kerül másolásra."
   },
@@ -3646,6 +3703,9 @@
   },
   "noMatchingLoginsForSite": {
     "message": "Nincsenek egyező bejelentkezések ehhez a webhelyhez."
+  },
+  "searchSavePasskeyNewLogin": {
+    "message": "Keressés vagy a belépőkulcs mentése bejelentkezésként."
   },
   "confirm": {
     "message": "Megerősítés"

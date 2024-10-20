@@ -71,6 +71,15 @@
   "joinOrganization": {
     "message": "Pripojte sa k organizácii"
   },
+  "joinOrganizationName": {
+    "message": "Pripojiť sa k $ORGANIZATIONNAME$",
+    "placeholders": {
+      "organizationName": {
+        "content": "$1",
+        "example": "My Org Name"
+      }
+    }
+  },
   "finishJoiningThisOrganizationBySettingAMasterPassword": {
     "message": "Dokončite pripojenie k tejto organizácii nastavením hlavného hesla."
   },
@@ -381,7 +390,7 @@
   },
   "generator": {
     "message": "Generátor",
-    "description": "Short for 'Password Generator'."
+    "description": "Short for 'credential generator'."
   },
   "passGenInfo": {
     "message": "Automaticky generovať silné a unikátne heslá k prihlasovacím údajom."
@@ -603,6 +612,15 @@
   },
   "yourVaultIsLocked": {
     "message": "Váš trezor je uzamknutý. Ak chcete pokračovať, overte svoju identitu."
+  },
+  "yourVaultIsLockedV2": {
+    "message": "Váš trezor je zamknutý"
+  },
+  "yourAccountIsLocked": {
+    "message": "Váš účet je zamknutý"
+  },
+  "or": {
+    "message": "alebo"
   },
   "unlock": {
     "message": "Odomknúť"
@@ -1399,6 +1417,12 @@
   "showInlineMenuLabel": {
     "message": "Zobraziť návrhy automatického vypĺňania v poliach formulára"
   },
+  "showInlineMenuIdentitiesLabel": {
+    "message": "Zobrazovať identity ako návrhy"
+  },
+  "showInlineMenuCardsLabel": {
+    "message": "Zobrazovať karty ako návrhy"
+  },
   "showInlineMenuOnIconSelectionLabel": {
     "message": "Zobraziť návrhy, keď je vybratá ikona"
   },
@@ -1935,6 +1959,9 @@
   },
   "unlockWithBiometrics": {
     "message": "Odomknúť pomocou biometrie"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Odomknúť pomocou hlavného hesla"
   },
   "awaitDesktop": {
     "message": "Čaká sa na potvrdenie z desktopu"
@@ -2486,7 +2513,25 @@
     "message": "Send bol úspešne vytvorený!",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
-  "sendAvailability": {
+  "sendExpiresInHoursSingle": {
+    "message": "Send bude k dispozícii každému s odkazom nasledujúcu hodinu.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInHours": {
+    "message": "Send bude k dispozícii každému s odkazom po dobu $HOURS$ hod.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "sendExpiresInDaysSingle": {
+    "message": "Send bude k dispozícii každému s odkazom nasledujúci deň.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInDays": {
     "message": "Send bude k dispozícii každému s odkazom po dobu $DAYS$ dní.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
     "placeholders": {
@@ -2616,6 +2661,15 @@
   "orgRequiresYouToSetPassword": {
     "message": "Vaša organizácia vyžaduje, aby ste nastavili hlavné heslo.",
     "description": "Used as a card title description on the set password page to explain why the user is there"
+  },
+  "cardMetrics": {
+    "message": "z $TOTAL$",
+    "placeholders": {
+      "total": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
   },
   "verificationRequired": {
     "message": "Vyžaduje sa overenie",
@@ -3623,6 +3677,9 @@
   "typePasskey": {
     "message": "Prístupový kľúč"
   },
+  "accessing": {
+    "message": "Accessing"
+  },
   "passkeyNotCopied": {
     "message": "Prístupový kód sa neskopíruje"
   },
@@ -3646,6 +3703,9 @@
   },
   "noMatchingLoginsForSite": {
     "message": "Pre túto stránku sa nenašli prihlasovacie údaje"
+  },
+  "searchSavePasskeyNewLogin": {
+    "message": "Vyhľadať alebo uložiť prístupový kľúč ako nové prihlasovacie údaje"
   },
   "confirm": {
     "message": "Potvrdiť"
