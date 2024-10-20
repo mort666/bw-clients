@@ -71,6 +71,15 @@
   "joinOrganization": {
     "message": "Rejoindre l'organisation"
   },
+  "joinOrganizationName": {
+    "message": "Rejoindre $ORGANIZATIONNAME$",
+    "placeholders": {
+      "organizationName": {
+        "content": "$1",
+        "example": "My Org Name"
+      }
+    }
+  },
   "finishJoiningThisOrganizationBySettingAMasterPassword": {
     "message": "Terminer de rejoindre cette organisation en configurant un mot de passe principal."
   },
@@ -381,7 +390,7 @@
   },
   "generator": {
     "message": "Générateur",
-    "description": "Short for 'Password Generator'."
+    "description": "Short for 'credential generator'."
   },
   "passGenInfo": {
     "message": "Générer automatiquement des mots de passe robustes et uniques pour vos identifiants."
@@ -603,6 +612,15 @@
   },
   "yourVaultIsLocked": {
     "message": "Votre coffre est verrouillé. Vérifiez votre identité pour continuer."
+  },
+  "yourVaultIsLockedV2": {
+    "message": "Votre coffre est verrouillé"
+  },
+  "yourAccountIsLocked": {
+    "message": "Votre compte est verrouillé"
+  },
+  "or": {
+    "message": "ou"
   },
   "unlock": {
     "message": "Déverrouiller"
@@ -1399,6 +1417,12 @@
   "showInlineMenuLabel": {
     "message": "Afficher les suggestions de saisie automatique dans les champs d'un formulaire"
   },
+  "showInlineMenuIdentitiesLabel": {
+    "message": "Afficher les identités sous forme de suggestions"
+  },
+  "showInlineMenuCardsLabel": {
+    "message": "Afficher les cartes de paiement sous forme de suggestions"
+  },
   "showInlineMenuOnIconSelectionLabel": {
     "message": "Afficher les suggestions lorsque l'icône est sélectionnée"
   },
@@ -1935,6 +1959,9 @@
   },
   "unlockWithBiometrics": {
     "message": "Déverrouiller par biométrie"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Déverrouiller avec le mot de passe principal"
   },
   "awaitDesktop": {
     "message": "En attente de confirmation de l'application de bureau"
@@ -2486,8 +2513,26 @@
     "message": "Send créé avec succès !",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
-  "sendAvailability": {
-    "message": "Le Send est disponible à toute personne ayant le lien durant les $DAYS$ prochains jours.",
+  "sendExpiresInHoursSingle": {
+    "message": "Le Send sera accessible à toute personne disposant du lien pendant une heure.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInHours": {
+    "message": "Le Send sera accessible à toute personne disposant du lien pendant les prochaines $HOURS$ heures.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "sendExpiresInDaysSingle": {
+    "message": "Le Send sera accessible à toute personne disposant du lien pendant un jour.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInDays": {
+    "message": "Le Send sera accessible à toute personne disposant du lien pendant les prochains $DAYS$ jours.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
     "placeholders": {
       "days": {
@@ -2616,6 +2661,15 @@
   "orgRequiresYouToSetPassword": {
     "message": "Votre organisation exige que vous définissiez un mot de passe principal.",
     "description": "Used as a card title description on the set password page to explain why the user is there"
+  },
+  "cardMetrics": {
+    "message": "sur $TOTAL$",
+    "placeholders": {
+      "total": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
   },
   "verificationRequired": {
     "message": "Vérification requise",
@@ -3623,6 +3677,9 @@
   "typePasskey": {
     "message": "Clé d'identification (passkey)"
   },
+  "accessing": {
+    "message": "Accès en cours"
+  },
   "passkeyNotCopied": {
     "message": "La clé d'identification (passkey) ne sera pas copiée"
   },
@@ -3646,6 +3703,9 @@
   },
   "noMatchingLoginsForSite": {
     "message": "Aucun identifiant correspondant pour ce site"
+  },
+  "searchSavePasskeyNewLogin": {
+    "message": "Rechercher ou enregistrer la clé d'accès comme nouvel identifiant"
   },
   "confirm": {
     "message": "Confirmer"

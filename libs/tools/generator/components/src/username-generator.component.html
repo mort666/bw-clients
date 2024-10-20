@@ -2,7 +2,7 @@
   <div class="tw-grow tw-flex tw-items-center">
     <bit-color-password class="tw-font-mono" [password]="value$ | async"></bit-color-password>
   </div>
-  <div class="tw-space-x-1">
+  <div class="tw-flex tw-items-center tw-space-x-1">
     <button type="button" bitIconButton="bwi-generate" buttonType="main" (click)="generate$.next()">
       {{ "generatePassword" | i18n }}
     </button>
@@ -10,17 +10,18 @@
       type="button"
       bitIconButton="bwi-clone"
       buttonType="main"
+      showToast
       [appCopyClick]="value$ | async"
     >
       {{ "copyPassword" | i18n }}
     </button>
   </div>
 </bit-card>
-<bit-section>
+<bit-section [disableMargin]="disableMargin">
   <bit-section-header>
     <h6 bitTypography="h6">{{ "options" | i18n }}</h6>
   </bit-section-header>
-  <div class="tw-mb-4">
+  <div [ngClass]="{ 'tw-mb-4': !disableMargin }">
     <bit-card>
       <form class="box" [formGroup]="credential" class="tw-container">
         <bit-form-field>

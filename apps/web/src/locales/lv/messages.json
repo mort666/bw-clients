@@ -1,4 +1,64 @@
 {
+  "allApplications": {
+    "message": "Visas lietotnes"
+  },
+  "priorityApplications": {
+    "message": "Svarīgas lietotnes"
+  },
+  "accessIntelligence": {
+    "message": "Piekļuves inteliģence"
+  },
+  "notifiedMembers": {
+    "message": "Apziņotie dalībnieki"
+  },
+  "allApplicationsWithCount": {
+    "message": "Visas lietotnes ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "priorityApplicationsWithCount": {
+    "message": "Svarīgas lietotnes ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "notifiedMembersWithCount": {
+    "message": "Apziņotie dalībnieki ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "application": {
+    "message": "Lietotne"
+  },
+  "atRiskPasswords": {
+    "message": "Riskam pakļautās paroles"
+  },
+  "totalPasswords": {
+    "message": "Kopējais paroļu skaits"
+  },
+  "atRiskMembers": {
+    "message": "Riskam pakļautie dalībnieki"
+  },
+  "totalMembers": {
+    "message": "Kopējais dalībnieku skaits"
+  },
+  "atRiskApplications": {
+    "message": "Riskam pakļautās lietotnes"
+  },
+  "totalApplications": {
+    "message": "Kopējais lietotņu skaits"
+  },
   "whatTypeOfItem": {
     "message": "Kāda veida vienums tas ir?"
   },
@@ -1099,6 +1159,9 @@
   "yourVaultIsLockedV2": {
     "message": "Glabātava ir slēgta."
   },
+  "yourAccountIsLocked": {
+    "message": "Konts ir slēgts"
+  },
   "uuid": {
     "message": "UUID"
   },
@@ -1132,6 +1195,9 @@
   },
   "noPermissionToViewAllCollectionItems": {
     "message": "Nav atļaujas apskatīt visus šī krājuma vienumus."
+  },
+  "youDoNotHavePermissions": {
+    "message": "You do not have permissions to this collection"
   },
   "noCollectionsInList": {
     "message": "Nav krājumu, ko parādīt."
@@ -1437,7 +1503,12 @@
     "description": "Minimum special characters"
   },
   "ambiguous": {
-    "message": "Izvairīties no viegli sajaucamām rakstzīmēm"
+    "message": "Izvairīties no viegli sajaucamām rakstzīmēm",
+    "description": "deprecated. Use avoidAmbiguous instead."
+  },
+  "avoidAmbiguous": {
+    "message": "Izvairīties no viegli sajaucamām rakstzīmēm",
+    "description": "Label for the avoid ambiguous characters checkbox."
   },
   "regeneratePassword": {
     "message": "Pārizveidot paroli"
@@ -1450,17 +1521,50 @@
   },
   "uppercase": {
     "message": "Lielie burti (A-Z)",
-    "description": "Include uppercase letters in the password generator."
+    "description": "deprecated. Use uppercaseLabel instead."
   },
   "lowercase": {
     "message": "Mazie burti (a-z)",
-    "description": "Include lowercase letters in the password generator."
+    "description": "deprecated. Use lowercaseLabel instead."
   },
   "numbers": {
-    "message": "Cipari (0-9)"
+    "message": "Cipari (0-9)",
+    "description": "deprecated. Use numbersLabel instead."
   },
   "specialCharacters": {
     "message": "Īpašās rakstzīmes (!@#$%^&*)"
+  },
+  "uppercaseDescription": {
+    "message": "Iekļaut lielos burtus",
+    "description": "Tooltip for the password generator uppercase character checkbox"
+  },
+  "uppercaseLabel": {
+    "message": "A-Z",
+    "description": "Label for the password generator uppercase character checkbox"
+  },
+  "lowercaseDescription": {
+    "message": "Iekļaut mazos burtus",
+    "description": "Full description for the password generator lowercase character checkbox"
+  },
+  "lowercaseLabel": {
+    "message": "a-z",
+    "description": "Label for the password generator lowercase character checkbox"
+  },
+  "numbersDescription": {
+    "message": "Iekļaut ciparus",
+    "description": "Full description for the password generator numbers checkbox"
+  },
+  "numbersLabel": {
+    "message": "0-9",
+    "description": "Label for the password generator numbers checkbox"
+  },
+  "specialCharactersDescription": {
+    "message": "Iekļaut īpašās rakstzīmes",
+    "description": "Full description for the password generator special characters checkbox"
+  },
+  "specialCharactersLabel": {
+    "message": "!@#$%^&*",
+    "description": "Label for the password generator special characters checkbox"
   },
   "numWords": {
     "message": "Vārdu skaits"
@@ -2199,6 +2303,9 @@
   "checkExposedPasswords": {
     "message": "Pārbaudīt atklātās paroles"
   },
+  "timesExposed": {
+    "message": "Nopludināšanu skaits"
+  },
   "exposedXTimes": {
     "message": "Atklātas $COUNT$ reizi(-es)",
     "placeholders": {
@@ -2233,6 +2340,9 @@
   "noWeakPasswords": {
     "message": "Glabātavā nav vienumu ar vājām parolēm."
   },
+  "weakness": {
+    "message": "Vājība"
+  },
   "reusedPasswordsReport": {
     "message": "Vairākkārt izmantoto paroļu pārskats"
   },
@@ -2257,6 +2367,9 @@
   },
   "noReusedPasswords": {
     "message": "Glabātavā nav pieteikšanās vienumu ar vairākkārt izmantotām parolēm."
+  },
+  "timesReused": {
+    "message": "Atkārtotu izmantošanu skaits"
   },
   "reusedXTimes": {
     "message": "Izmantota $COUNT$ reizes",
@@ -2555,6 +2668,9 @@
   "downloadLicense": {
     "message": "Lejupielādēt licenci"
   },
+  "viewBillingToken": {
+    "message": "Skatīt norēķinu pilnvaru"
+  },
   "updateLicense": {
     "message": "Atjaunināt licenci"
   },
@@ -2601,8 +2717,11 @@
   "invoices": {
     "message": "Rēķini"
   },
-  "noInvoices": {
-    "message": "Nav rēķinu."
+  "noUnpaidInvoices": {
+    "message": "Nav neapmaksātu rēķinu."
+  },
+  "noPaidInvoices": {
+    "message": "Nav apmaksātu rēķinu."
   },
   "paid": {
     "message": "Apmaksāts",
@@ -3160,6 +3279,10 @@
   "incorrectPin": {
     "message": "Nepareizs PIN"
   },
+  "pin": {
+    "message": "PIN",
+    "description": "PIN code. Ex. The short code (often numeric) that you use to unlock a device."
+  },
   "exportedVault": {
     "message": "Glabātavas saturs izgūts."
   },
@@ -3660,6 +3783,15 @@
   },
   "joinOrganization": {
     "message": "Pievienoties apvienībai"
+  },
+  "joinOrganizationName": {
+    "message": "Pievienoties $ORGANIZATIONNAME$",
+    "placeholders": {
+      "organizationName": {
+        "content": "$1",
+        "example": "My Org Name"
+      }
+    }
   },
   "joinOrganizationDesc": {
     "message": "Tu esi uzaicināts pievienoties augstāk norādītajai apvienībai. Lai to pieņemtu, jāpiesakās vai jāizveido jauns Bitwarden konts."
@@ -5985,8 +6117,8 @@
   "viewBillingSyncToken": {
     "message": "Skatīt norēķinu sinhronizācijas pilnvaru"
   },
-  "generateBillingSyncToken": {
-    "message": "Izveidot norēķinu sinhronizācijas pilnvaru"
+  "generateBillingToken": {
+    "message": "Izveidot norēķinu pilnvaru"
   },
   "copyPasteBillingSync": {
     "message": "Ievietot starpliktuvē šo pilnvaru un ielīmēt to pašizvietotās apvienības norēķinu sinhronizācijas iestatījumos."
@@ -5994,8 +6126,8 @@
   "billingSyncCanAccess": {
     "message": "Norēķinu pilvara nodrošina piekļuvi šīs apvienības abonēšanas iestatījumiem un to labošanu."
   },
-  "manageBillingSync": {
-    "message": "Pārvaldīt norēķinu sinhronizāciju"
+  "manageBillingTokenSync": {
+    "message": "Pārvaldīt norēķinu pilnvaru"
   },
   "setUpBillingSync": {
     "message": "Uzstādīt norēķinu sinhronizāciju"
@@ -6054,14 +6186,14 @@
   "billingSyncApiKeyRotated": {
     "message": "Pilnvara nomainīta."
   },
-  "billingSyncDesc": {
-    "message": "Norēķinu sinhronizācija nodrošina bezmaksas ģimeņu plānus locekļiem un papildu norēķinu iespējas, sasaistot pašizvietoto Bitwarden ar Bitwarden mākoņa serveri."
-  },
   "billingSyncKeyDesc": {
     "message": "Ir nepieciešama norēķinu sinhronizācijas pilnvara no mākoņa apvienības abonomenta iestatījumiem, lai pabeigtu šo veidlapu."
   },
   "billingSyncKey": {
     "message": "Norēķinu sinhronizācijas pilnvara"
+  },
+  "automaticBillingSyncDesc": {
+    "message": "Automātiska sinhronizēšana atslēdz Ģimenēm pabalstītājdarbību un ļauj sinhronizēt savu licenci bez datnes augšupielādes. Pēc atjauninājumu veikšanas Bitwarden mākoņa serverī jāatlasa \"Sinhronizēt licenci\", lai pielietotu izmaiņas."
   },
   "active": {
     "message": "Izmantots"
@@ -6204,7 +6336,8 @@
     "message": "Konta iestatījumi"
   },
   "generator": {
-    "message": "Veidotājs"
+    "message": "Veidotājs",
+    "description": "Short for 'credential generator'."
   },
   "whatWouldYouLikeToGenerate": {
     "message": "Ko ir vēlme izveidot?"
@@ -6579,6 +6712,18 @@
       "count": {
         "content": "$1",
         "example": "4"
+      }
+    }
+  },
+  "singleFieldNeedsAttention": {
+    "message": "1 laukam jāpievērš uzmanība."
+  },
+  "multipleFieldsNeedAttention": {
+    "message": "$COUNT$ laukiem ir jāpievērš uzmanība.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
       }
     }
   },
@@ -7442,6 +7587,15 @@
   "or": {
     "message": "vai"
   },
+  "unlockWithBiometrics": {
+    "message": "Atslēgt ar biometriju"
+  },
+  "unlockWithPin": {
+    "message": "Atslēgt ar PIN"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Atslēgt ar galveno paroli"
+  },
   "licenseAndBillingManagement": {
     "message": "Licenču un norēķinu pārvaldība"
   },
@@ -7451,8 +7605,8 @@
   "manualUpload": {
     "message": "Pašrocīga augšupielāde"
   },
-  "manualUploadDesc": {
-    "message": "Ja nav vēlmes izmantot norēķinu sinhronizāciju, šeit pašrocīgi jāaugšupielādē licence."
+  "manualBillingTokenUploadDesc": {
+    "message": "Ja nevēlies izmantot norēķinu sinhronizēšanu, pašrocīgi šeit jāaugšupielādē sava licence. Nenotiks automātiksa Ģimenēm pabalstītājdarbības atslēgšana."
   },
   "syncLicense": {
     "message": "Sinhronizēt licenci"
@@ -7780,6 +7934,15 @@
     "message": "Apvienība pieprasa iestatīt galveno paroli.",
     "description": "Used as a card title description on the set password page to explain why the user is there"
   },
+  "cardMetrics": {
+    "message": "no $TOTAL$",
+    "placeholders": {
+      "total": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
   "notFound": {
     "message": "$RESOURCE$ netika atrasts",
     "placeholders": {
@@ -8040,6 +8203,12 @@
   },
   "limitCollectionCreationDeletionDesc": {
     "message": "Ļaut krājumu izveidošanu un izdzēšanu tikai īpašniekiem un pārvaldniekiem"
+  },
+  "limitCollectionCreationDesc": {
+    "message": "Limit collection creation to owners and admins"
+  },
+  "limitCollectionDeletionDesc": {
+    "message": "Limit collection deletion to owners and admins"
   },
   "allowAdminAccessToAllCollectionItemsDesc": {
     "message": "Īpašnieki un pārvaldnieki var pārvaldīt visus krājumus un vienumus"
@@ -9225,5 +9394,29 @@
   },
   "editAccess": {
     "message": "Labot piekļuvi"
+  },
+  "textHelpText": {
+    "message": "Teksta lauki ir izmantojami tādai informācijai kā drošības jautājumi"
+  },
+  "hiddenHelpText": {
+    "message": "Paslēptie lauki ir izmantojami tādai slepenai informācijai kā parole"
+  },
+  "checkBoxHelpText": {
+    "message": "Izvēles rūtiņas ir izmantojamas, ja ir vajadzība automātiski aizpildīt veidlapas izvēles rūtiņu, piemēram, atcerēties e-pasta adresi"
+  },
+  "linkedHelpText": {
+    "message": "Saistītais lauks ir izmantojams, kad noteiktā lapā tiek pieredzētas nepilnības ar automātisko aizpildi."
+  },
+  "linkedLabelHelpText": {
+    "message": "Jāievada lauka HTML id, name, aria-label vai placeholder vērtība."
+  },
+  "addAttachment": {
+    "message": "Pievienot pielikumu"
+  },
+  "maxFileSizeSansPunctuation": {
+    "message": "Lielākais pieļaujamais datnes izmērs ir 500 MB"
+  },
+  "permanentlyDeleteAttachmentConfirmation": {
+    "message": "Vai tiešām neatgriezeniski izdzēst šo pielikumu?"
   }
 }

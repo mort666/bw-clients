@@ -1,4 +1,64 @@
 {
+  "allApplications": {
+    "message": "Všetky aplikácie"
+  },
+  "priorityApplications": {
+    "message": "Prioritné aplikácie"
+  },
+  "accessIntelligence": {
+    "message": "Access Intelligence"
+  },
+  "notifiedMembers": {
+    "message": "Notified members"
+  },
+  "allApplicationsWithCount": {
+    "message": "Všetky aplikácie ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "priorityApplicationsWithCount": {
+    "message": "Prioritné aplikácie ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "notifiedMembersWithCount": {
+    "message": "Notified members ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "application": {
+    "message": "Aplikácia"
+  },
+  "atRiskPasswords": {
+    "message": "Ohrozených hesiel"
+  },
+  "totalPasswords": {
+    "message": "Celkom hesiel"
+  },
+  "atRiskMembers": {
+    "message": "Ohrozených členov"
+  },
+  "totalMembers": {
+    "message": "Celkový počet členov"
+  },
+  "atRiskApplications": {
+    "message": "Ohrozených aplikácii"
+  },
+  "totalApplications": {
+    "message": "Všetkých aplikácii"
+  },
   "whatTypeOfItem": {
     "message": "Aký typ položky to je?"
   },
@@ -1099,6 +1159,9 @@
   "yourVaultIsLockedV2": {
     "message": "Váš trezor je zamknutý."
   },
+  "yourAccountIsLocked": {
+    "message": "Váš účet je zamknutý"
+  },
   "uuid": {
     "message": "UUID"
   },
@@ -1132,6 +1195,9 @@
   },
   "noPermissionToViewAllCollectionItems": {
     "message": "Nemáte povolenie pre zobrazenie všetkých položiek v tejto zbierke."
+  },
+  "youDoNotHavePermissions": {
+    "message": "K tejto zbierke nemáte oprávnenia"
   },
   "noCollectionsInList": {
     "message": "Neexistujú žiadne zbierky na zobrazenie."
@@ -1437,7 +1503,12 @@
     "description": "Minimum special characters"
   },
   "ambiguous": {
-    "message": "Vyhnúť sa zameniteľným znakom"
+    "message": "Vyhnúť sa zameniteľným znakom",
+    "description": "deprecated. Use avoidAmbiguous instead."
+  },
+  "avoidAmbiguous": {
+    "message": "Vyhnúť sa zameniteľným znakom",
+    "description": "Label for the avoid ambiguous characters checkbox."
   },
   "regeneratePassword": {
     "message": "Vygenerovať nové heslo"
@@ -1450,17 +1521,50 @@
   },
   "uppercase": {
     "message": "Veľké písmená (A-Z)",
-    "description": "Include uppercase letters in the password generator."
+    "description": "deprecated. Use uppercaseLabel instead."
   },
   "lowercase": {
     "message": "Malé písmená (a-z)",
-    "description": "Include lowercase letters in the password generator."
+    "description": "deprecated. Use lowercaseLabel instead."
   },
   "numbers": {
-    "message": "Čísla (0-9)"
+    "message": "Čísla (0-9)",
+    "description": "deprecated. Use numbersLabel instead."
   },
   "specialCharacters": {
     "message": "Špeciálne znaky (!@#$%^&*)"
+  },
+  "uppercaseDescription": {
+    "message": "Zahrnúť veľké písmená",
+    "description": "Tooltip for the password generator uppercase character checkbox"
+  },
+  "uppercaseLabel": {
+    "message": "A-Z",
+    "description": "Label for the password generator uppercase character checkbox"
+  },
+  "lowercaseDescription": {
+    "message": "Zahrnúť malé písmená",
+    "description": "Full description for the password generator lowercase character checkbox"
+  },
+  "lowercaseLabel": {
+    "message": "a-z",
+    "description": "Label for the password generator lowercase character checkbox"
+  },
+  "numbersDescription": {
+    "message": "Vrátane čísiel",
+    "description": "Full description for the password generator numbers checkbox"
+  },
+  "numbersLabel": {
+    "message": "0-9",
+    "description": "Label for the password generator numbers checkbox"
+  },
+  "specialCharactersDescription": {
+    "message": "Zahrnúť špeciálne znaky",
+    "description": "Full description for the password generator special characters checkbox"
+  },
+  "specialCharactersLabel": {
+    "message": "!@#$%^&*",
+    "description": "Label for the password generator special characters checkbox"
   },
   "numWords": {
     "message": "Počet slov"
@@ -2199,6 +2303,9 @@
   "checkExposedPasswords": {
     "message": "Overiť uniknuté heslá"
   },
+  "timesExposed": {
+    "message": "Počet únikov"
+  },
   "exposedXTimes": {
     "message": "Uniklo $COUNT$ krát",
     "placeholders": {
@@ -2233,6 +2340,9 @@
   "noWeakPasswords": {
     "message": "Žiadne položky vo vašom hesle nepoužívajú slabé heslá."
   },
+  "weakness": {
+    "message": "Oslabenie"
+  },
   "reusedPasswordsReport": {
     "message": "Viacnásobne použité heslá"
   },
@@ -2257,6 +2367,9 @@
   },
   "noReusedPasswords": {
     "message": "Vo vašom trezore nie sú žiadne heslá ktoré sú používané na viacerých stránkach."
+  },
+  "timesReused": {
+    "message": "Počet znovu použití"
   },
   "reusedXTimes": {
     "message": "Použité $COUNT$ krát",
@@ -2555,6 +2668,9 @@
   "downloadLicense": {
     "message": "Stiahnuť licenciu"
   },
+  "viewBillingToken": {
+    "message": "View Billing Token"
+  },
   "updateLicense": {
     "message": "Aktualizovať licenciu"
   },
@@ -2601,8 +2717,11 @@
   "invoices": {
     "message": "Faktúry"
   },
-  "noInvoices": {
-    "message": "Žiadne faktúry."
+  "noUnpaidInvoices": {
+    "message": "Žiadne neuhradené faktúry."
+  },
+  "noPaidInvoices": {
+    "message": "Žiadne uhradené faktúry."
   },
   "paid": {
     "message": "Zaplatené",
@@ -3160,6 +3279,10 @@
   "incorrectPin": {
     "message": "Nesprávny PIN"
   },
+  "pin": {
+    "message": "PIN",
+    "description": "PIN code. Ex. The short code (often numeric) that you use to unlock a device."
+  },
   "exportedVault": {
     "message": "Trezor exportovaný."
   },
@@ -3660,6 +3783,15 @@
   },
   "joinOrganization": {
     "message": "Pripojte sa k organizácii"
+  },
+  "joinOrganizationName": {
+    "message": "Pripojiť sa k $ORGANIZATIONNAME$",
+    "placeholders": {
+      "organizationName": {
+        "content": "$1",
+        "example": "My Org Name"
+      }
+    }
   },
   "joinOrganizationDesc": {
     "message": "Obdržali ste pozvánku do vyššie menovanej Organizácie. Ak chcete pozvánku prijať, musíte sa prihlásiť alebo si vytvoriť nový Bitwarden účet."
@@ -5985,8 +6117,8 @@
   "viewBillingSyncToken": {
     "message": "View billing sync token"
   },
-  "generateBillingSyncToken": {
-    "message": "Generate billing sync token"
+  "generateBillingToken": {
+    "message": "Generate billing token"
   },
   "copyPasteBillingSync": {
     "message": "Copy and paste this token into the billing sync settings of your self-hosted organization."
@@ -5994,8 +6126,8 @@
   "billingSyncCanAccess": {
     "message": "Your billing sync token can access and edit this organization's subscription settings."
   },
-  "manageBillingSync": {
-    "message": "Manage billing sync"
+  "manageBillingTokenSync": {
+    "message": "Manage Billing Token"
   },
   "setUpBillingSync": {
     "message": "Set up billing sync"
@@ -6054,14 +6186,14 @@
   "billingSyncApiKeyRotated": {
     "message": "Token rotated"
   },
-  "billingSyncDesc": {
-    "message": "Billing sync unlocks Families sponsorships and automatic license syncing on your server. After making updates in the Bitwarden cloud server, select Sync License to apply changes."
-  },
   "billingSyncKeyDesc": {
     "message": "A billing sync token from your cloud organization's subscription settings is required to complete this form."
   },
   "billingSyncKey": {
     "message": "Billing sync token"
+  },
+  "automaticBillingSyncDesc": {
+    "message": "Automatic sync unlocks Families sponsorships and allows you to sync your license without uploading a file. After making updates in the Bitwarden cloud server, select Sync License to apply changes."
   },
   "active": {
     "message": "Aktívny"
@@ -6204,7 +6336,8 @@
     "message": "Nastavenia účtu"
   },
   "generator": {
-    "message": "Generátor"
+    "message": "Generátor",
+    "description": "Short for 'credential generator'."
   },
   "whatWouldYouLikeToGenerate": {
     "message": "Čo by ste chceli vygenerovať?"
@@ -6579,6 +6712,18 @@
       "count": {
         "content": "$1",
         "example": "4"
+      }
+    }
+  },
+  "singleFieldNeedsAttention": {
+    "message": "Jedno pole vyžaduje vašu pozornosť."
+  },
+  "multipleFieldsNeedAttention": {
+    "message": "Niektoré polia ($COUNT$) vyžadujú vašu pozornosť.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
       }
     }
   },
@@ -7442,6 +7587,15 @@
   "or": {
     "message": "alebo"
   },
+  "unlockWithBiometrics": {
+    "message": "Odomknúť pomocou biometrie"
+  },
+  "unlockWithPin": {
+    "message": "Odomknúť s PIN"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Odomknúť pomocou hlavného hesla"
+  },
   "licenseAndBillingManagement": {
     "message": "License and billing management"
   },
@@ -7451,11 +7605,11 @@
   "manualUpload": {
     "message": "Manual upload"
   },
-  "manualUploadDesc": {
-    "message": "If you do not want to opt into billing sync, manually upload your license here."
+  "manualBillingTokenUploadDesc": {
+    "message": "If you do not want to opt into billing sync, manually upload your license here. This will not automatically unlock Families sponsorships."
   },
   "syncLicense": {
-    "message": "Sync license"
+    "message": "Sync License"
   },
   "licenseSyncSuccess": {
     "message": "Successfully synced license"
@@ -7780,6 +7934,15 @@
     "message": "Vaša organizácia vyžaduje, aby ste nastavili hlavné heslo.",
     "description": "Used as a card title description on the set password page to explain why the user is there"
   },
+  "cardMetrics": {
+    "message": "z $TOTAL$",
+    "placeholders": {
+      "total": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
   "notFound": {
     "message": "$RESOURCE$ nenájdené",
     "placeholders": {
@@ -8040,6 +8203,12 @@
   },
   "limitCollectionCreationDeletionDesc": {
     "message": "Obmedziť vytváranie a vymazávanie zbierky len pre vlastníkov a administrátorov"
+  },
+  "limitCollectionCreationDesc": {
+    "message": "Obmedziť vytváranie zbierky len pre vlastníkov a administrátorov"
+  },
+  "limitCollectionDeletionDesc": {
+    "message": "Obmedziť vymazávanie zbierky len pre vlastníkov a administrátorov"
   },
   "allowAdminAccessToAllCollectionItemsDesc": {
     "message": "Vlastníci a správcovia môžu spravovať všetky zbierky a položky"
@@ -9225,5 +9394,29 @@
   },
   "editAccess": {
     "message": "Upraviť prístup"
+  },
+  "textHelpText": {
+    "message": "Textové polia používajte pre také údaje, ako sú bezpečnostné otázky"
+  },
+  "hiddenHelpText": {
+    "message": "Skryté polia požívajte pre citlivé údaje ako je heslo"
+  },
+  "checkBoxHelpText": {
+    "message": "Ak chcete automaticky vyplniť začiarkávacie políčko formulára, napríklad zapamätať e-mail, použite začiarkávacie políčka"
+  },
+  "linkedHelpText": {
+    "message": "Ak máte problémy s automatickým vypĺňaním pre konkrétnu webovú stránku, použite prepojené pole."
+  },
+  "linkedLabelHelpText": {
+    "message": "Zadajte html atribút poľa id, name, aria-label, alebo placeholder."
+  },
+  "addAttachment": {
+    "message": "Priložiť prílohu"
+  },
+  "maxFileSizeSansPunctuation": {
+    "message": "Maximálna veľkosť súboru je 500 MB"
+  },
+  "permanentlyDeleteAttachmentConfirmation": {
+    "message": "Naozaj chcete natrvalo odstrániť túto prílohu?"
   }
 }
