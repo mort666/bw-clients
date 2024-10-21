@@ -1,4 +1,3 @@
-import { UrlTree } from "@angular/router";
 import { firstValueFrom } from "rxjs";
 
 import { LoginComponentService, PasswordPolicies } from "@bitwarden/auth/angular";
@@ -23,10 +22,6 @@ export class DefaultLoginComponentService implements LoginComponentService {
   ) {}
 
   async getOrgPolicies(): Promise<PasswordPolicies | null> {
-    return null;
-  }
-
-  setPreviousUrl(route: UrlTree): void | null {
     return null;
   }
 

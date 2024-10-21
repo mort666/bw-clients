@@ -1,5 +1,4 @@
 import { TestBed } from "@angular/core/testing";
-import { UrlTree } from "@angular/router";
 import { MockProxy, mock } from "jest-mock-extended";
 
 import { DefaultLoginComponentService } from "@bitwarden/auth/angular";
@@ -80,12 +79,6 @@ describe("WebLoginComponentService", () => {
       (flagEnabled as jest.Mock).mockReturnValue(false);
       expect(service.isLoginViaAuthRequestSupported()).toBeFalsy();
     });
-  });
-
-  it("sets the previous URL", () => {
-    const route = { toString: () => "test-url" } as UrlTree;
-    service.setPreviousUrl(route);
-    expect(routerService.setPreviousUrl).toHaveBeenCalledWith("test-url");
   });
 
   it("returns undefined if organization invite is null", async () => {

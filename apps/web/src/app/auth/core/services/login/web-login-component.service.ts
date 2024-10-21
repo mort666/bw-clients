@@ -1,5 +1,4 @@
 import { Injectable } from "@angular/core";
-import { UrlTree } from "@angular/router";
 import { firstValueFrom } from "rxjs";
 
 import {
@@ -50,10 +49,6 @@ export class WebLoginComponentService
 
   isLoginViaAuthRequestSupported(): boolean {
     return flagEnabled("showPasswordless");
-  }
-
-  setPreviousUrl(route: UrlTree): void | null {
-    this.routerService.setPreviousUrl(route.toString());
   }
 
   async getOrgPolicies(): Promise<PasswordPolicies | null> {
