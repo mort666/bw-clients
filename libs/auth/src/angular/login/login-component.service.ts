@@ -42,5 +42,5 @@ export abstract class LoginComponentService {
   /**
    * Shows the back button.
    */
-  showBackButton: () => void;
+  showBackButton: (showBackButton: boolean) => void;
 }

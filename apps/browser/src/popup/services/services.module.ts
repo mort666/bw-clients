@@ -590,7 +590,7 @@ const safeProviders: SafeProvider[] = [
   }),
   safeProvider({
     provide: AnonLayoutWrapperDataService,
-    useClass: ExtensionAnonLayoutWrapperDataService,
+    useExisting: ExtensionAnonLayoutWrapperDataService,
     deps: [],
   }),
   safeProvider({

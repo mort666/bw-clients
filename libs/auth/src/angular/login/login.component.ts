@@ -325,7 +325,11 @@ export class LoginComponent implements OnInit, OnDestroy {
     if (this.loginUiState !== LoginUiState.MASTER_PASSWORD_ENTRY) {
       // Reset master password only when going from validated to not validated so that autofill can work properly
       this.formGroup.controls.masterPassword.reset();
+
+      this.loginComponentService.showBackButton(false);
     } else {
+      this.loginComponentService.showBackButton(true);
+
       // Mark MP as untouched so that, when users enter email and hit enter, the MP field doesn't load with validation errors
       this.formGroup.controls.masterPassword.markAsUntouched();
 
@@ -337,8 +341,6 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.masterPasswordInputRef?.nativeElement?.focus();
         });
       }
-
-      this.loginComponentService.showBackButton();
     }
   }
 
