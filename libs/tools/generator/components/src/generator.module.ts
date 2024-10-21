@@ -35,11 +35,11 @@ import { CredentialGeneratorComponent } from "./credential-generator.component";
 import { PassphraseSettingsComponent } from "./passphrase-settings.component";
 import { PasswordGeneratorComponent } from "./password-generator.component";
 import { PasswordSettingsComponent } from "./password-settings.component";
+import { SshKeyGeneratorComponent } from "./sshkey-generator.component";
+import { SshKeySettingsComponent } from "./sshkey-settings.component";
 import { SubaddressSettingsComponent } from "./subaddress-settings.component";
 import { UsernameGeneratorComponent } from "./username-generator.component";
 import { UsernameSettingsComponent } from "./username-settings.component";
-import { SshKeyGeneratorComponent } from "./sshkey-generator.component";
-import { SshKeySettingsComponent } from "./sshkey-settings.component";
 
 const RANDOMIZER = new SafeInjectionToken<Randomizer>("Randomizer");
 
