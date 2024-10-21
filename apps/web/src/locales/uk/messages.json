@@ -1,18 +1,18 @@
 {
   "allApplications": {
-    "message": "All applications"
+    "message": "Всі програми"
   },
   "priorityApplications": {
-    "message": "Priority applications"
+    "message": "Пріоритетні програми"
   },
   "accessIntelligence": {
-    "message": "Access Intelligence"
+    "message": "Керування доступом"
   },
   "notifiedMembers": {
-    "message": "Notified members"
+    "message": "Сповіщення учасників"
   },
   "allApplicationsWithCount": {
-    "message": "All applications ($COUNT$)",
+    "message": "Всі програми ($COUNT$)",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -21,7 +21,7 @@
     }
   },
   "priorityApplicationsWithCount": {
-    "message": "Priority applications ($COUNT$)",
+    "message": "Пріоритетні програми ($COUNT$)",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -30,7 +30,7 @@
     }
   },
   "notifiedMembersWithCount": {
-    "message": "Notified members ($COUNT$)",
+    "message": "Сповіщення учасників ($COUNT$)",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -39,25 +39,25 @@
     }
   },
   "application": {
-    "message": "Application"
+    "message": "Програма"
   },
   "atRiskPasswords": {
-    "message": "At-risk passwords"
+    "message": "Ризиковані паролі"
   },
   "totalPasswords": {
-    "message": "Total passwords"
+    "message": "Всього паролів"
   },
   "atRiskMembers": {
-    "message": "At-risk members"
+    "message": "Ризиковані учасники"
   },
   "totalMembers": {
-    "message": "Total members"
+    "message": "Всього учасників"
   },
   "atRiskApplications": {
-    "message": "At-risk applications"
+    "message": "Ризиковані програми"
   },
   "totalApplications": {
-    "message": "Total applications"
+    "message": "Всього програм"
   },
   "whatTypeOfItem": {
     "message": "Який це тип запису?"
@@ -663,6 +663,9 @@
     "message": "Копіювати пароль",
     "description": "Copy password to clipboard"
   },
+  "passwordCopied": {
+    "message": "Пароль скопійовано"
+  },
   "copyUsername": {
     "message": "Копіювати ім'я користувача",
     "description": "Copy username to clipboard"
@@ -1195,6 +1198,9 @@
   },
   "noPermissionToViewAllCollectionItems": {
     "message": "У вас немає повноважень на перегляд усіх записів у цій збірці."
+  },
+  "youDoNotHavePermissions": {
+    "message": "У вас немає дозволів для цієї збірки"
   },
   "noCollectionsInList": {
     "message": "Немає збірок."
@@ -2715,10 +2721,10 @@
     "message": "Рахунки"
   },
   "noUnpaidInvoices": {
-    "message": "No unpaid invoices."
+    "message": "Немає несплачених рахунків."
   },
   "noPaidInvoices": {
-    "message": "No paid invoices."
+    "message": "Немає сплачених рахунків."
   },
   "paid": {
     "message": "Сплачено",
@@ -3780,6 +3786,15 @@
   },
   "joinOrganization": {
     "message": "Приєднатися до організації"
+  },
+  "joinOrganizationName": {
+    "message": "Приєднатися до $ORGANIZATIONNAME$",
+    "placeholders": {
+      "organizationName": {
+        "content": "$1",
+        "example": "My Org Name"
+      }
+    }
   },
   "joinOrganizationDesc": {
     "message": "Вас було запрошено приєднатися до зазначеної вгорі організації. Щоб підтвердити запрошення, вам необхідно увійти в обліковий запис Bitwarden, або створити його."
@@ -7922,6 +7937,15 @@
     "message": "Ваша організація вимагає, щоб ви встановили головний пароль.",
     "description": "Used as a card title description on the set password page to explain why the user is there"
   },
+  "cardMetrics": {
+    "message": "з $TOTAL$",
+    "placeholders": {
+      "total": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
   "notFound": {
     "message": "$RESOURCE$ не знайдено",
     "placeholders": {
@@ -8182,6 +8206,12 @@
   },
   "limitCollectionCreationDeletionDesc": {
     "message": "Дозволити створення та видалення збірок лише власникам та адміністраторам"
+  },
+  "limitCollectionCreationDesc": {
+    "message": "Дозволити створення збірок лише власникам та адміністраторам"
+  },
+  "limitCollectionDeletionDesc": {
+    "message": "Дозволити видалення збірок лише власникам та адміністраторам"
   },
   "allowAdminAccessToAllCollectionItemsDesc": {
     "message": "Власники та адміністратори можуть керувати всіма збірками та записами"
@@ -9367,6 +9397,21 @@
   },
   "editAccess": {
     "message": "Редагувати доступ"
+  },
+  "textHelpText": {
+    "message": "Використовуйте текстові поля для даних, як-от секретні запитання"
+  },
+  "hiddenHelpText": {
+    "message": "Використовуйте приховані поля для конфіденційних даних, як-от пароль"
+  },
+  "checkBoxHelpText": {
+    "message": "Використовуйте прапорці, якщо хочете автоматично заповнювати поля, як-от адресу е-пошти"
+  },
+  "linkedHelpText": {
+    "message": "Використовуйте пов'язане поле у разі виникнення проблем з автозаповненням для певного вебсайту."
+  },
+  "linkedLabelHelpText": {
+    "message": "Введіть html-ідентифікатор поля, назву, мітку або заповнювач."
   },
   "addAttachment": {
     "message": "Додати вкладення"
