@@ -93,7 +93,7 @@ export class DefaultLoginComponentService implements LoginComponentService {
   /**
    * No-op implementation of showBackButton
    */
-  showBackButton(show: boolean): void {
+  showBackButton(): void {
     return;
   }
 }

@@ -3,7 +3,11 @@ import { Component, OnDestroy, OnInit } from "@angular/core";
 import { ActivatedRoute, Data, NavigationEnd, Router, RouterModule } from "@angular/router";
 import { Subject, filter, switchMap, takeUntil, tap } from "rxjs";
 
-import { AnonLayoutComponent, AnonLayoutWrapperData } from "@bitwarden/auth/angular";
+import {
+  AnonLayoutComponent,
+  AnonLayoutWrapperData,
+  AnonLayoutWrapperDataService,
+} from "@bitwarden/auth/angular";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { Icon, IconModule, Translation } from "@bitwarden/components";
 
@@ -12,7 +16,6 @@ import { PopupHeaderComponent } from "../../../platform/popup/layout/popup-heade
 import { PopupPageComponent } from "../../../platform/popup/layout/popup-page.component";
 import { CurrentAccountComponent } from "../account-switching/current-account.component";
 
-import { ExtensionAnonLayoutWrapperDataService } from "./extension-anon-layout-wrapper-data.service";
 import { ExtensionBitwardenLogo } from "./extension-bitwarden-logo.icon";
 
 export interface ExtensionAnonLayoutWrapperData extends AnonLayoutWrapperData {
@@ -55,7 +58,7 @@ export class ExtensionAnonLayoutWrapperComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private i18nService: I18nService,
-    private extensionAnonLayoutWrapperDataService: ExtensionAnonLayoutWrapperDataService,
+    private extensionAnonLayoutWrapperDataService: AnonLayoutWrapperDataService,
   ) {}
 
   async ngOnInit(): Promise<void> {
