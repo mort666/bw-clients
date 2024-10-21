@@ -476,6 +476,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   private async defaultOnInit(): Promise<void> {
+    this.loginComponentService.showBackButton(false);
+
     // If there's an existing org invite, use it to get the password policies
     const orgPolicies = await this.loginComponentService.getOrgPolicies();
 
