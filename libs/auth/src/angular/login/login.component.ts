@@ -412,13 +412,6 @@ export class LoginComponent implements OnInit, OnDestroy {
   protected async continue(): Promise<void> {
     if (await this.validateEmail()) {
       await this.toggleLoginUiState(LoginUiState.MASTER_PASSWORD_ENTRY);
-    } else {
-      // TODO: Toast will be replaced with inline error message in PM-3301
-      this.toastService.showToast({
-        variant: "error",
-        title: this.i18nService.t("errorOccured"),
-        message: this.i18nService.t("invalidEmail"),
-      });
     }
   }
 
