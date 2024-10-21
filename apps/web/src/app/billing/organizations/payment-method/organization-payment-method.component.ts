@@ -171,6 +171,7 @@ export class OrganizationPaymentMethodComponent implements OnDestroy {
     const result = await lastValueFrom(dialogRef.closed);
     if (result === AdjustPaymentDialogV2ResultType.Submitted) {
       this.location.replaceState(this.location.path(), "", {});
+      this.launchPaymentModalAutomatically = false;
       await this.load();
     }
   };

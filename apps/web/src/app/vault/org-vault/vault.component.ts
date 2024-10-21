@@ -13,6 +13,7 @@ import {
   BehaviorSubject,
   combineLatest,
   firstValueFrom,
+  from,
   lastValueFrom,
   Observable,
   of,
@@ -567,7 +568,13 @@ export class VaultComponent implements OnInit, OnDestroy {
           of(org),
           this.organizationApiService.getSubscription(org.id),
           this.organizationApiService.getBilling(org.id),
-        ]),
+        ]).pipe(
+          tap(([org, sub, _]) =>
+            from(this.trialFlowService.handleUnpaidSubscriptionDialog(org, sub))
+              .pipe(takeUntil(this.destroy$))
+              .subscribe(),
+          ),
+        ),
       ),
       map(([org, sub, billing]) => {
         return this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(

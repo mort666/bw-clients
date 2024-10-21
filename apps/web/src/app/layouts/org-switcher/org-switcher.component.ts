@@ -10,6 +10,8 @@ import type { Organization } from "@bitwarden/common/admin-console/models/domain
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { DialogService, NavigationModule } from "@bitwarden/components";
 
+import { TrialFlowService } from "../../core/trial-flow.service";
+
 @Component({
   selector: "org-switcher",
   templateUrl: "org-switcher.component.html",
@@ -59,6 +61,7 @@ export class OrgSwitcherComponent {
     private i18nService: I18nService,
     private router: Router,
     private organizationApiService: OrganizationApiServiceAbstraction,
+    private trialFlowService: TrialFlowService,
   ) {}
 
   protected toggle(event?: MouseEvent) {
@@ -69,29 +72,6 @@ export class OrgSwitcherComponent {
 
   async handleUnpaidSubscription(org: Organization) {
     const sub = await this.organizationApiService.getSubscription(org.id);
-    if (sub?.subscription?.status === "unpaid") {
-      const confirmed = await this.promptForPaymentNavigation(org);
-      if (confirmed) {
-        await this.navigateToPaymentMethod(org?.id);
-      }
-    }
-  }
-
-  private async promptForPaymentNavigation(org: Organization): Promise<boolean> {
-    return await this.dialogService.openSimpleDialog({
-      title: this.i18nService.t("suspendedOrganizationTitle", org?.name),
-      content: org?.isOwner
-        ? { key: "suspendedOwnerOrgMessage" }
-        : { key: "suspendedUserOrgMessage" },
-      type: "danger",
-      acceptButtonText: this.i18nService.t("continue"),
-      cancelButtonText: this.i18nService.t("close"),
-    });
-  }
-
-  private async navigateToPaymentMethod(orgId: string) {
-    await this.router.navigate(["organizations", `${orgId}`, "billing", "payment-method"], {
-      state: { launchPaymentModalAutomatically: true },
-    });
+    await this.trialFlowService.handleUnpaidSubscriptionDialog(org, sub);
   }
 }
