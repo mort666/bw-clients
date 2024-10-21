@@ -30,6 +30,7 @@ import {
   RegistrationUserAddIcon,
   RegistrationLockAltIcon,
   RegistrationExpiredLinkIcon,
+  VaultIcon,
 } from "@bitwarden/auth/angular";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 
@@ -212,6 +213,7 @@ const routes: Routes = [
         pageTitle: {
           key: "logInToBitwarden",
         },
+        pageIcon: VaultIcon,
       } satisfies RouteDataProperties & AnonLayoutWrapperData,
       children: [
         {

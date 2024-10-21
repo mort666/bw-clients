@@ -39,7 +39,7 @@ import {
 } from "@bitwarden/components";
 
 import { AnonLayoutWrapperDataService } from "../anon-layout/anon-layout-wrapper-data.service";
-import { WaveIcon } from "../icons";
+import { VaultIcon, WaveIcon } from "../icons";
 
 import { LoginComponentService } from "./login-component.service";
 
@@ -71,7 +71,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
   private enforcedMasterPasswordOptions: MasterPasswordPolicyOptions = undefined;
-  readonly Icons = { WaveIcon };
+  readonly Icons = { WaveIcon, VaultIcon };
 
   captcha: CaptchaIFrame;
   captchaToken: string = null;
@@ -323,12 +323,24 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.loginUiState = value;
 
     if (this.loginUiState !== LoginUiState.MASTER_PASSWORD_ENTRY) {
+      // EMAIL_ENTRY State
+      this.loginComponentService.showBackButton(false);
+
+      this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
+        pageTitle: { key: "logInToBitwarden" },
+        pageIcon: this.Icons.VaultIcon,
+      });
+
       // Reset master password only when going from validated to not validated so that autofill can work properly
       this.formGroup.controls.masterPassword.reset();
-
-      this.loginComponentService.showBackButton(false);
     } else {
+      // MASTER_PASSWORD_ENTRY State
       this.loginComponentService.showBackButton(true);
+      this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
+        pageTitle: { key: "welcomeBack" },
+        pageSubtitle: this.emailFormControl.value,
+        pageIcon: this.Icons.WaveIcon,
+      });
 
       // Mark MP as untouched so that, when users enter email and hit enter, the MP field doesn't load with validation errors
       this.formGroup.controls.masterPassword.markAsUntouched();
@@ -389,11 +401,6 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.toggleLoginUiState(LoginUiState.MASTER_PASSWORD_ENTRY);
       await this.getLoginWithDevice(this.emailFormControl.value);
 
-      this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
-        pageTitle: { key: "welcomeBack" },
-        pageSubtitle: this.emailFormControl.value,
-        pageIcon: this.Icons.WaveIcon,
-      });
       this.focusInput();
     } else {
       // TODO: Toast will be replaced with inline error message in PM-3301

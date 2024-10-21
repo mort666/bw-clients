@@ -28,6 +28,7 @@ import {
   RegistrationUserAddIcon,
   SetPasswordJitComponent,
   UserLockIcon,
+  VaultIcon,
 } from "@bitwarden/auth/angular";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 
@@ -182,6 +183,7 @@ const routes: Routes = [
             pageTitle: {
               key: "logInToBitwarden",
             },
+            pageIcon: VaultIcon,
           },
           children: [
             { path: "", component: LoginComponent },
