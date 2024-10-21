@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Output } from "@angular/core";
+import { BehaviorSubject, map } from "rxjs";
 
 import { GeneratedCredential } from "@bitwarden/generator-core";
 
@@ -7,15 +8,17 @@ import { GeneratedCredential } from "@bitwarden/generator-core";
   templateUrl: "sshkey-generator.component.html",
 })
 export class SshKeyGeneratorDialogComponent {
-  privateKey: GeneratedCredential;
+  private privateKey = new BehaviorSubject<GeneratedCredential>(null);
+  protected canSaveKey$ = this.privateKey.pipe(map((key) => !key));
+
   @Output() generated = new EventEmitter<GeneratedCredential>();
 
   onGenerated(privateKey: GeneratedCredential) {
-    this.privateKey = privateKey;
+    this.privateKey.next(privateKey);
   }
 
   onSave() {
-    this.generated.emit(this.privateKey);
+    this.generated.emit(this.privateKey.value);
   }
 
   onCancel() {
