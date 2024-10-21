@@ -329,6 +329,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
         pageTitle: { key: "logInToBitwarden" },
         pageIcon: this.Icons.VaultIcon,
+        pageSubtitle: null, // remove subtitle when going back to email entry
       });
 
       // Reset master password only when going from validated to not validated so that autofill can work properly
