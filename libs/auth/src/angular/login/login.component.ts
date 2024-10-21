@@ -422,6 +422,11 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Call to check if the device is known.
+   * Known means that the user has logged in with this device before.
+   * @param email - The user's email
+   */
   private async getKnownDevice(email: string): Promise<void> {
     try {
       const deviceIdentifier = await this.appIdService.getAppId();
