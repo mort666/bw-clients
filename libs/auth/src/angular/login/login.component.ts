@@ -327,6 +327,8 @@ export class LoginComponent implements OnInit, OnDestroy {
         pageSubtitle: this.emailFormControl.value,
         pageIcon: this.Icons.WaveIcon,
       });
+
+      this.loginComponentService.showBackButton(true);
     }
   }
 
@@ -348,8 +350,6 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.masterPasswordInputRef?.nativeElement?.focus();
         });
       }
-
-      this.loginComponentService.showBackButton();
     }
   }
 

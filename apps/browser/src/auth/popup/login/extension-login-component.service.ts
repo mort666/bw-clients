@@ -37,7 +37,9 @@ export class ExtensionLoginComponentService
     return flagEnabled("showPasswordless");
   }
 
-  showBackButton(): void {
-    this.extensionAnonLayoutWrapperDataService.setAnonLayoutWrapperData({ showBackButton: true });
+  showBackButton(show: boolean): void {
+    this.extensionAnonLayoutWrapperDataService.setAnonLayoutWrapperData({
+      showBackButton: show,
+    });
   }
 }
