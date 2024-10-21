@@ -7,7 +7,6 @@ import {
   CredentialGeneratorService,
   GeneratedCredential,
   Generators,
-  GeneratorType,
 } from "@bitwarden/generator-core";
 
 /** Options group for passwords */
@@ -29,27 +28,8 @@ export class SshKeyGeneratorComponent implements OnInit, OnDestroy {
   @Input()
   userId: UserId | null;
 
-  /** tracks the currently selected credential type */
-  protected credentialType$ = new BehaviorSubject<GeneratorType>("password");
-
-  /** Emits the last generated value. */
-  protected readonly value$ = new BehaviorSubject<GeneratedCredential>(null);
-
   /** Emits when the userId changes */
   protected readonly userId$ = new BehaviorSubject<UserId>(null);
-
-  /** Emits when a new credential is requested */
-  protected readonly generate$ = new Subject<void>();
-
-  /** Tracks changes to the selected credential type
-   * @param type the new credential type
-   */
-  protected onCredentialTypeChanged(type: GeneratorType) {
-    if (this.credentialType$.value !== type) {
-      this.credentialType$.next(type);
-      this.generate$.next();
-    }
-  }
 
   /** Emits credentials created from a generation request. */
   @Output()
@@ -80,7 +60,6 @@ export class SshKeyGeneratorComponent implements OnInit, OnDestroy {
         // template bindings refresh immediately
         this.zone.run(() => {
           this.onGenerated.next(generated);
-          this.value$.next(generated);
         });
       });
     this.generatorService
@@ -91,7 +70,6 @@ export class SshKeyGeneratorComponent implements OnInit, OnDestroy {
         // template bindings refresh immediately
         this.zone.run(() => {
           this.onGenerated.next(generated);
-          this.value$.next(generated);
         });
       });
   }
@@ -99,11 +77,8 @@ export class SshKeyGeneratorComponent implements OnInit, OnDestroy {
   private readonly destroyed = new Subject<void>();
   ngOnDestroy(): void {
     // tear down subscriptions
+    this.destroyed.next();
     this.destroyed.complete();
-
-    // finalize subjects
-    this.generate$.complete();
-    this.value$.complete();
 
     // finalize component bindings
     this.onGenerated.complete();
