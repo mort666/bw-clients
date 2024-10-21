@@ -322,8 +322,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   protected toggleLoginUiState(value: LoginUiState): void {
     this.loginUiState = value;
 
-    if (this.loginUiState !== LoginUiState.MASTER_PASSWORD_ENTRY) {
-      // EMAIL_ENTRY State
+    if (this.loginUiState === LoginUiState.EMAIL_ENTRY) {
       this.loginComponentService.showBackButton(false);
 
       this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
@@ -334,8 +333,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
       // Reset master password only when going from validated to not validated so that autofill can work properly
       this.formGroup.controls.masterPassword.reset();
-    } else {
-      // MASTER_PASSWORD_ENTRY State
+    } else if (this.loginUiState === LoginUiState.MASTER_PASSWORD_ENTRY) {
       this.loginComponentService.showBackButton(true);
       this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
         pageTitle: { key: "welcomeBack" },
