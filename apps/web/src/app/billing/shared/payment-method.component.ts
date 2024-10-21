@@ -16,6 +16,7 @@ import { VerifyBankRequest } from "@bitwarden/common/models/request/verify-bank.
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { SyncService } from "@bitwarden/common/platform/sync";
 import { DialogService, ToastService } from "@bitwarden/components";
 
 import { FreeTrial } from "../../core/types/free-trial";
@@ -76,6 +77,7 @@ export class PaymentMethodComponent implements OnInit, OnDestroy {
     private toastService: ToastService,
     private trialFlowService: TrialFlowService,
     private organizationService: OrganizationService,
+    protected syncService: SyncService,
   ) {
     const state = this.router.getCurrentNavigation()?.extras?.state;
     // incase the above state is undefined or null we use redundantState
@@ -169,6 +171,7 @@ export class PaymentMethodComponent implements OnInit, OnDestroy {
     const result = await lastValueFrom(dialogRef.closed);
     if (result === AdjustPaymentDialogResult.Adjusted) {
       this.location.replaceState(this.location.path(), "", {});
+      this.launchPaymentModalAutomatically = false;
       await this.load();
     }
   };

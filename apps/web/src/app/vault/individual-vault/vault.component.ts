@@ -13,6 +13,7 @@ import {
   BehaviorSubject,
   combineLatest,
   firstValueFrom,
+  from,
   lastValueFrom,
   Observable,
   Subject,
@@ -310,7 +311,6 @@ export class VaultComponent implements OnInit, OnDestroy {
         if (filter.collectionId === undefined || filter.collectionId === Unassigned) {
           return [];
         }
-
         let collectionsToReturn = [];
         if (filter.organizationId !== undefined && filter.collectionId === All) {
           collectionsToReturn = collections
@@ -363,7 +363,6 @@ export class VaultComponent implements OnInit, OnDestroy {
         filter(() => this.vaultItemDialogRef == undefined || !this.extensionRefreshEnabled),
         switchMap(async (params) => {
           const cipherId = getCipherIdFromParams(params);
-
           if (cipherId) {
             if (await this.cipherService.get(cipherId)) {
               let action = params.action;
@@ -395,14 +394,20 @@ export class VaultComponent implements OnInit, OnDestroy {
       .subscribe();
 
     const organizationsPaymentStatus$ = this.organizationService.organizations$.pipe(
-      switchMap((allOrganizations) =>
-        combineLatest(
+      switchMap((allOrganizations) => {
+        const { length } = allOrganizations;
+        return combineLatest(
           allOrganizations.map((org) =>
             combineLatest([
               this.organizationApiService.getSubscription(org.id),
               this.organizationApiService.getBilling(org.id),
             ]).pipe(
               map(([subscription, billing]) => {
+                if (length == 1) {
+                  from(this.trialFlowService.handleUnpaidSubscriptionDialog(org, subscription))
+                    .pipe(takeUntil(this.destroy$))
+                    .subscribe();
+                }
                 return this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(
                   org,
                   subscription,
@@ -411,8 +416,8 @@ export class VaultComponent implements OnInit, OnDestroy {
               }),
             ),
           ),
-        ),
-      ),
+        );
+      }),
       map((results) => results.filter((result) => result.shownBanner)),
     );
 
