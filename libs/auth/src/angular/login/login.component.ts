@@ -314,9 +314,22 @@ export class LoginComponent implements OnInit, OnDestroy {
     await this.router.navigate(["/login-with-device"]);
   }
 
-  protected async validateEmail(): Promise<boolean> {
+  protected async validateEmail(): Promise<void> {
     this.formGroup.controls.email.markAsTouched();
-    return this.formGroup.controls.email.valid;
+    const emailValid = this.formGroup.controls.email.valid;
+
+    if (emailValid) {
+      this.toggleLoginUiState(LoginUiState.MASTER_PASSWORD_ENTRY);
+      await this.getLoginWithDevice(this.emailFormControl.value);
+
+      this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
+        pageTitle: { key: "welcomeBack" },
+        pageSubtitle: this.emailFormControl.value,
+        pageIcon: this.Icons.WaveIcon,
+      });
+
+      this.loginComponentService.showBackButton(true);
+    }
   }
 
   protected toggleLoginUiState(value: LoginUiState): void {
@@ -381,27 +394,19 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   protected async continue(): Promise<void> {
-    if (await this.validateEmail()) {
-      this.toggleLoginUiState(LoginUiState.MASTER_PASSWORD_ENTRY);
-      await this.getLoginWithDevice(this.emailFormControl.value);
+    await this.validateEmail();
 
-      this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
-        pageTitle: { key: "welcomeBack" },
-        pageSubtitle: this.emailFormControl.value,
-        pageIcon: this.Icons.WaveIcon,
-      });
-
-      this.loginComponentService.showBackButton(true);
-
-      this.focusInput();
-    } else {
-      // TODO: Toast will be replaced with inline error message in PM-3301
+    // TODO: Toast will be replaced with inline error message in PM-3301
+    if (!this.formGroup.controls.email.valid) {
       this.toastService.showToast({
         variant: "error",
         title: this.i18nService.t("errorOccured"),
         message: this.i18nService.t("invalidEmail"),
       });
+      return;
     }
+
+    this.focusInput();
   }
 
   private async getLoginWithDevice(email: string): Promise<void> {

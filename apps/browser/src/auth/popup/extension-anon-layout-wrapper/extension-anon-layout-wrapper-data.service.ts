@@ -1,7 +1,8 @@
 import { BehaviorSubject, Observable } from "rxjs";
-import { AnonLayoutWrapperData, AnonLayoutWrapperDataService } from "@bitwarden/auth/angular";
+
+import { AnonLayoutWrapperData, AnonLayoutWrapperDataService , DefaultAnonLayoutWrapperDataService } from "@bitwarden/auth/angular";
+
 import { ExtensionAnonLayoutWrapperData } from "./extension-anon-layout-wrapper.component";
-import { DefaultAnonLayoutWrapperDataService } from "@bitwarden/auth/angular";
 
 export class ExtensionAnonLayoutWrapperDataService
   extends DefaultAnonLayoutWrapperDataService
