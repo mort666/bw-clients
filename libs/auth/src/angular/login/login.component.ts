@@ -319,7 +319,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     return this.formGroup.controls.email.valid;
   }
 
-  protected toggleLoginUiState(value: LoginUiState): void {
+  protected async toggleLoginUiState(value: LoginUiState): Promise<void> {
     this.loginUiState = value;
 
     if (this.loginUiState === LoginUiState.EMAIL_ENTRY) {
@@ -333,6 +333,9 @@ export class LoginComponent implements OnInit, OnDestroy {
 
       // Reset master password only when going from validated to not validated so that autofill can work properly
       this.formGroup.controls.masterPassword.reset();
+
+      // Reset known device state when going back to email entry
+      this.isKnownDevice = false;
     } else if (this.loginUiState === LoginUiState.MASTER_PASSWORD_ENTRY) {
       this.loginComponentService.showBackButton(true);
       this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
@@ -352,6 +355,8 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.masterPasswordInputRef?.nativeElement?.focus();
         });
       }
+
+      await this.getLoginWithDevice(this.emailFormControl.value);
     }
   }
 
@@ -397,10 +402,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   protected async continue(): Promise<void> {
     if (await this.validateEmail()) {
-      this.toggleLoginUiState(LoginUiState.MASTER_PASSWORD_ENTRY);
-      await this.getLoginWithDevice(this.emailFormControl.value);
-
-      this.focusInput();
+      await this.toggleLoginUiState(LoginUiState.MASTER_PASSWORD_ENTRY);
     } else {
       // TODO: Toast will be replaced with inline error message in PM-3301
       this.toastService.showToast({
