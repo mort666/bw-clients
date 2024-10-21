@@ -123,14 +123,6 @@ export class DefaultConfigService implements ConfigService {
     serverConfig: ServerConfig | null,
     flag: Flag,
   ) {
-    if (
-      flag === FeatureFlag.ExtensionRefresh ||
-      flag === FeatureFlag.UnauthenticatedExtensionUIRefresh ||
-      flag === FeatureFlag.EmailVerification
-    ) {
-      return true as FeatureFlagValueType<Flag>;
-    }
-
     if (serverConfig?.featureStates == null || serverConfig.featureStates[flag] == null) {
       return DefaultFeatureFlagValue[flag];
     }
