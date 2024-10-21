@@ -60,9 +60,19 @@ export const SUBADDRESS_SETTINGS = new UserKeyDefinition<SubaddressGenerationOpt
 );
 
 /** plaintext configuration for an ssh key. */
-export const SSHKEY_SETTINGS = new UserKeyDefinition<SshKeyGenerationOptions>(
+export const ED25519_SSHKEY_SETTINGS = new UserKeyDefinition<SshKeyGenerationOptions>(
   GENERATOR_DISK,
-  "sshkeyGeneratorSettings",
+  "sshkeyEd25519GeneratorSettings",
+  {
+    deserializer: (value) => value,
+    clearOn: ["logout"],
+  },
+);
+
+/** plaintext configuration for an ssh key. */
+export const RSA_SSHKEY_SETTINGS = new UserKeyDefinition<SshKeyGenerationOptions>(
+  GENERATOR_DISK,
+  "sshkeyRsaGeneratorSettings",
   {
     deserializer: (value) => value,
     clearOn: ["logout"],

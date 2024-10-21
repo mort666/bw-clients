@@ -15,4 +15,8 @@ export const DefaultCredentialPreferences: CredentialPreference = Object.freeze(
     algorithm: UsernameAlgorithms[0],
     updated: new Date(0),
   }),
+  sshKey: Object.freeze({
+    algorithm: "ed25519",
+    updated: new Date(0),
+  }),
 });

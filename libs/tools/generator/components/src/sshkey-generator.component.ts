@@ -3,17 +3,17 @@ import { BehaviorSubject, distinctUntilChanged, map, Subject, takeUntil } from "
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { UserId } from "@bitwarden/common/types/guid";
-import { CredentialGeneratorService, Generators, GeneratorType } from "@bitwarden/generator-core";
-
-import { DependenciesModule } from "./dependencies";
-import { SshKeySettingsComponent } from "./sshkey-settings.component";
+import {
+  CredentialGeneratorService,
+  GeneratedCredential,
+  Generators,
+  GeneratorType,
+} from "@bitwarden/generator-core";
 
 /** Options group for passwords */
 @Component({
-  standalone: true,
   selector: "tools-ssh-generator",
   templateUrl: "sshkey-generator.component.html",
-  imports: [DependenciesModule, SshKeySettingsComponent],
 })
 export class SshKeyGeneratorComponent implements OnInit, OnDestroy {
   constructor(
@@ -33,7 +33,7 @@ export class SshKeyGeneratorComponent implements OnInit, OnDestroy {
   protected credentialType$ = new BehaviorSubject<GeneratorType>("password");
 
   /** Emits the last generated value. */
-  protected readonly value$ = new BehaviorSubject<string>("");
+  protected readonly value$ = new BehaviorSubject<GeneratedCredential>(null);
 
   /** Emits when the userId changes */
   protected readonly userId$ = new BehaviorSubject<UserId>(null);
@@ -53,7 +53,7 @@ export class SshKeyGeneratorComponent implements OnInit, OnDestroy {
 
   /** Emits credentials created from a generation request. */
   @Output()
-  readonly onGenerated = new EventEmitter<string>();
+  readonly onGenerated = new EventEmitter<GeneratedCredential>();
 
   async ngOnInit() {
     if (this.userId) {
@@ -73,14 +73,25 @@ export class SshKeyGeneratorComponent implements OnInit, OnDestroy {
     };
 
     this.generatorService
-      .generate$(Generators.SshKey, dependencies)
+      .generate$(Generators.rsa, dependencies)
       .pipe(takeUntil(this.destroyed))
       .subscribe((generated) => {
         // update subjects within the angular zone so that the
         // template bindings refresh immediately
         this.zone.run(() => {
-          this.onGenerated.next(generated.credential);
-          this.value$.next(generated.credential);
+          this.onGenerated.next(generated);
+          this.value$.next(generated);
+        });
+      });
+    this.generatorService
+      .generate$(Generators.ed25519, dependencies)
+      .pipe(takeUntil(this.destroyed))
+      .subscribe((generated) => {
+        // update subjects within the angular zone so that the
+        // template bindings refresh immediately
+        this.zone.run(() => {
+          this.onGenerated.next(generated);
+          this.value$.next(generated);
         });
       });
   }

@@ -1,18 +1,20 @@
-import { SshKeyNativeGenerator } from "../abstractions/sshkey-native-generator.abstraction";
-import { CredentialGenerator, GeneratedCredential } from "../types";
-import { SshKeyGenerationOptions } from "../types/sshkey-generation-options";
+import { GenerationRequest } from "@bitwarden/common/tools/types";
 
-import { SshKeyRequest } from "./types";
+import { SshKeyNativeGenerator } from "../abstractions/sshkey-native-generator.abstraction";
+import { CredentialAlgorithm, CredentialGenerator, GeneratedCredential } from "../types";
+import { SshKeyGenerationOptions } from "../types/sshkey-generation-options";
 
 export class SshKeyGenerator implements CredentialGenerator<SshKeyGenerationOptions> {
   constructor(private sshkeyNativeGenerator: SshKeyNativeGenerator) {}
 
   async generate(
-    _request: SshKeyRequest,
+    _request: GenerationRequest,
+    algorithm: CredentialAlgorithm,
     settings: SshKeyGenerationOptions,
   ): Promise<GeneratedCredential> {
-    const key = (await this.sshkeyNativeGenerator.generate(settings.keyAlgorithm, settings.bits))
-      .privateKey;
-    return new GeneratedCredential(key, "sshkey", Date.now());
+    const key = (
+      await this.sshkeyNativeGenerator.generate(algorithm as "rsa" | "ed25519", settings.bits)
+    ).privateKey;
+    return new GeneratedCredential(key, algorithm, Date.now());
   }
 }

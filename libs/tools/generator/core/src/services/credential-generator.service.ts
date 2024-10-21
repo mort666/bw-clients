@@ -117,7 +117,7 @@ export class CredentialGeneratorService {
     // generation proper
     const generate$ = (readyOn$ ?? settings$).pipe(
       withLatestFrom(request$, settings$),
-      concatMap(([, request, settings]) => engine.generate(request, settings)),
+      concatMap(([, request, settings]) => engine.generate(request, configuration.id, settings)),
       takeUntil(complete$),
     );
 

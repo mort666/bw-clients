@@ -1,18 +1,14 @@
-import { CommonModule } from "@angular/common";
 import { OnInit, Input, Output, EventEmitter, Component, OnDestroy } from "@angular/core";
-import { FormBuilder, ReactiveFormsModule } from "@angular/forms";
-import { BehaviorSubject, takeUntil, Subject, skip } from "rxjs";
+import { FormBuilder } from "@angular/forms";
+import { BehaviorSubject, takeUntil, Subject, skip, map, combineLatest } from "rxjs";
 
-import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { UserId } from "@bitwarden/common/types/guid";
-import { FormFieldModule, SelectModule } from "@bitwarden/components";
 import { Generators, CredentialGeneratorService } from "@bitwarden/generator-core";
 
 import { SshKeyGenerationOptions } from "../../core/src/types/sshkey-generation-options";
 
-import { DependenciesModule } from "./dependencies";
 import { completeOnAccountSwitch } from "./util";
 
 const Controls = Object.freeze({
@@ -22,17 +18,8 @@ const Controls = Object.freeze({
 
 /** Options group for passwords */
 @Component({
-  standalone: true,
   selector: "tools-sshkey-settings",
   templateUrl: "sshkey-settings.component.html",
-  imports: [
-    CommonModule,
-    JslibModule,
-    DependenciesModule,
-    FormFieldModule,
-    SelectModule,
-    ReactiveFormsModule,
-  ],
 })
 export class SshKeySettingsComponent implements OnInit, OnDestroy {
   /** Instantiates the component
@@ -68,11 +55,14 @@ export class SshKeySettingsComponent implements OnInit, OnDestroy {
    *   use `CredentialGeneratorService.settings$(...)` instead.
    */
   @Output()
-  readonly onUpdated = new EventEmitter<SshKeyGenerationOptions>();
+  readonly onUpdated = new EventEmitter<{
+    algorithm: "ed25519" | "rsa";
+    settings: SshKeyGenerationOptions;
+  }>();
 
   protected settings = this.formBuilder.group({
-    [Controls.keyAlgorithm]: [Generators.sshKey.settings.initial.keyAlgorithm],
-    [Controls.bits]: [Generators.sshKey.settings.initial.bits],
+    [Controls.keyAlgorithm]: ["ed25519"],
+    [Controls.bits]: [Generators.ed25519.settings.initial.bits],
   });
 
   algorithmOptions: { name: string; value: string }[] = [];
@@ -94,18 +84,61 @@ export class SshKeySettingsComponent implements OnInit, OnDestroy {
     ];
 
     const singleUserId$ = this.singleUserId$();
-    const settings = await this.generatorService.settings(Generators.sshKey, { singleUserId$ });
+
+    const rsaSettings = await this.generatorService.settings(Generators.rsa, { singleUserId$ });
+    const ed25519Settings = await this.generatorService.settings(Generators.ed25519, {
+      singleUserId$,
+    });
+
+    const settings = combineLatest([
+      this.settings.controls[Controls.keyAlgorithm].valueChanges,
+      rsaSettings,
+      ed25519Settings,
+    ]).pipe(
+      map(([algorithm, rsa, ed25519]) => {
+        return algorithm == "rsa"
+          ? {
+              algorithm,
+              settings: {
+                keyAlgorithm: algorithm,
+                bits: rsa.bits,
+              } as SshKeyGenerationOptions,
+            }
+          : {
+              algorithm,
+              settings: {
+                keyAlgorithm: algorithm,
+                bits: ed25519.bits,
+              } as SshKeyGenerationOptions,
+            };
+      }),
+    );
 
     // bind settings to the UI
     settings.pipe(takeUntil(this.destroyed$)).subscribe((s) => {
       // skips reactive event emissions to break a subscription cycle
-      this.settings.patchValue(s, { emitEvent: false });
+      this.settings.patchValue(
+        { bits: s.settings.bits, keyAlgorithm: s.algorithm },
+        { emitEvent: false },
+      );
     });
 
     // `onUpdated` depends on `settings` because the UserStateSubject is asynchronous;
     // subscribing directly to `this.settings.valueChanges` introduces a race condition.
     // skip the first emission because it's the initial value, not an update.
     settings.pipe(skip(1), takeUntil(this.destroyed$)).subscribe(this.onUpdated);
+
+    this.settings.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((v) => {
+      if (v.keyAlgorithm == "rsa") {
+        rsaSettings.next({
+          bits: v.bits,
+        });
+      } else {
+        ed25519Settings.next({
+          bits: v.bits,
+        });
+      }
+    });
   }
 
   private singleUserId$() {
