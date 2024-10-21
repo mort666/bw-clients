@@ -98,10 +98,15 @@ export class LoginComponent implements OnInit, OnDestroy {
     return this.formGroup.controls.email;
   }
 
+  /**
+   * LoginViaAuthRequestSupported is a boolean that determines if we show the Login with device button.
+   * An AuthRequest is the mechanism that allows users to login to the client via a device that is already logged in.
+   */
+  loginViaAuthRequestSupported = false;
+
   // Web properties
   enforcedPasswordPolicyOptions: MasterPasswordPolicyOptions;
   policies: Policy[];
-  loginViaAuthRequestSupported = false;
   showResetPasswordAutoEnrollWarning = false;
 
   // Desktop properties
@@ -334,8 +339,10 @@ export class LoginComponent implements OnInit, OnDestroy {
       // Reset master password only when going from validated to not validated so that autofill can work properly
       this.formGroup.controls.masterPassword.reset();
 
-      // Reset known device state when going back to email entry
-      this.isKnownDevice = false;
+      if (this.loginViaAuthRequestSupported) {
+        // Reset known device state when going back to email entry if it is supported
+        this.isKnownDevice = false;
+      }
     } else if (this.loginUiState === LoginUiState.MASTER_PASSWORD_ENTRY) {
       this.loginComponentService.showBackButton(true);
       this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
@@ -356,7 +363,9 @@ export class LoginComponent implements OnInit, OnDestroy {
         });
       }
 
-      await this.getLoginWithDevice(this.emailFormControl.value);
+      if (this.loginViaAuthRequestSupported) {
+        await this.getKnownDevice(this.emailFormControl.value);
+      }
     }
   }
 
@@ -413,7 +422,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async getLoginWithDevice(email: string): Promise<void> {
+  private async getKnownDevice(email: string): Promise<void> {
     try {
       const deviceIdentifier = await this.appIdService.getAppId();
       this.isKnownDevice = await this.devicesApiService.getKnownDevice(email, deviceIdentifier);
@@ -510,7 +519,9 @@ export class LoginComponent implements OnInit, OnDestroy {
       await this.loadEmailSettings();
     }
 
-    await this.getLoginWithDevice(this.emailFormControl.value);
+    if (this.loginViaAuthRequestSupported) {
+      await this.getKnownDevice(this.emailFormControl.value);
+    }
 
     // Backup check to handle unknown case where activatedRoute is not available
     // This shouldn't happen under normal circumstances
