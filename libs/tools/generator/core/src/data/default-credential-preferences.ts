@@ -1,6 +1,11 @@
 import { CredentialPreference } from "../types";
 
-import { EmailAlgorithms, PasswordAlgorithms, UsernameAlgorithms } from "./generator-types";
+import {
+  EmailAlgorithms,
+  PasswordAlgorithms,
+  SshKeyAlgorithms,
+  UsernameAlgorithms,
+} from "./generator-types";
 
 export const DefaultCredentialPreferences: CredentialPreference = Object.freeze({
   email: Object.freeze({
@@ -16,7 +21,7 @@ export const DefaultCredentialPreferences: CredentialPreference = Object.freeze(
     updated: new Date(0),
   }),
   sshKey: Object.freeze({
-    algorithm: "ed25519",
+    algorithm: SshKeyAlgorithms[0],
     updated: new Date(0),
   }),
 });
