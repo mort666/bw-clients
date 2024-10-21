@@ -7,11 +7,11 @@ import { GeneratedCredential } from "@bitwarden/generator-core";
   templateUrl: "sshkey-generator.component.html",
 })
 export class SshKeyGeneratorDialogComponent {
-  privateKey: string;
-  @Output() generated = new EventEmitter<string>();
+  privateKey: GeneratedCredential;
+  @Output() generated = new EventEmitter<GeneratedCredential>();
 
   onGenerated(privateKey: GeneratedCredential) {
-    this.privateKey = privateKey.credential;
+    this.privateKey = privateKey;
   }
 
   onSave() {

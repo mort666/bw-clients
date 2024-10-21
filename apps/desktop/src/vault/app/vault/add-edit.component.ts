@@ -174,7 +174,7 @@ export class AddEditComponent extends BaseAddEditComponent implements OnInit, On
       if (res == null) {
         return;
       } else {
-        sshKey = (await ipc.platform.sshAgent.importKey(res, "")).sshKey;
+        sshKey = (await ipc.platform.sshAgent.importKey(res.credential, "")).sshKey;
       }
     } else {
       sshKey = await ipc.platform.sshAgent.generateKey("ed25519");
