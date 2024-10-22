@@ -17,6 +17,6 @@ export class SshKeyGenerator implements CredentialGenerator<SshKeyGenerationOpti
         settings.bits,
       )
     ).privateKey;
-    return new GeneratedCredential(key, request.algorithm, Date.now());
+    return new GeneratedCredential(key, request.algorithm as "rsa" | "ed25519", Date.now());
   }
 }

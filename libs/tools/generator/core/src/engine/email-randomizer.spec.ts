@@ -226,9 +226,12 @@ describe("EmailRandomizer", () => {
     it("processes subaddress generation options", async () => {
       const email = new EmailRandomizer(randomizer);
 
-      const result = await email.generate({}, "subaddress", {
-        subaddressEmail: "foo@example.com",
-      });
+      const result = await email.generate(
+        {},
+        {
+          subaddressEmail: "foo@example.com",
+        },
+      );
 
       expect(result.category).toEqual("subaddress");
     });
@@ -236,7 +239,7 @@ describe("EmailRandomizer", () => {
     it("throws when it cannot recognize the options type", async () => {
       const email = new EmailRandomizer(randomizer);
 
-      const result = email.generate({}, "subaddress", {});
+      const result = email.generate({}, {});
 
       await expect(result).rejects.toBeInstanceOf(Error);
     });

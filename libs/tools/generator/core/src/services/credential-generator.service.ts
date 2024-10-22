@@ -74,9 +74,6 @@ export class CredentialGeneratorService {
     private sshNativeGenerator: SshKeyNativeGenerator,
   ) {}
 
-  // FIXME: the rxjs methods of this service can be a lot more resilient if
-  // `Subjects` are introduced where sharing occurs
-
   /** Generates a stream of credentials
    * @param configuration determines which generator's settings are loaded
    * @param dependencies.on$ when specified, a new credential is emitted when
@@ -99,9 +96,10 @@ export class CredentialGeneratorService {
     const settings$ = this.settings$(configuration, dependencies);
 
     // monitor completion
-    const requestComplete$ = request$.pipe(ignoreElements(), endWith(true));
-    const settingsComplete$ = request$.pipe(ignoreElements(), endWith(true));
-    const complete$ = race(requestComplete$, settingsComplete$);
+    const websiteComplete$ = website$.pipe(ignoreElements(), endWith(true));
+    const algorithmComplete$ = algorithm$.pipe(ignoreElements(), endWith(true));
+    const settingsComplete$ = settings$.pipe(ignoreElements(), endWith(true));
+    const complete$ = race(websiteComplete$, algorithmComplete$, settingsComplete$);
 
     // if on$ triggers before settings are loaded, trigger as soon
     // as they become available.
