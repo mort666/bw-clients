@@ -362,6 +362,7 @@ export class VaultComponent implements OnInit, OnDestroy {
         // If the user can edit all ciphers for the organization then fetch them ALL.
         if (organization.canEditAllCiphers) {
           ciphers = await this.cipherService.getAllFromApiForOrganization(organization.id);
+          ciphers?.forEach((c) => (c.edit = true));
         } else {
           // Otherwise, only fetch ciphers they have access to (includes unassigned for admins).
           ciphers = await this.cipherService.getManyFromApiForOrganization(organization.id);
@@ -874,6 +875,7 @@ export class VaultComponent implements OnInit, OnDestroy {
       comp.organization = this.organization;
       comp.organizationId = this.organization.id;
       comp.cipherId = cipher?.id;
+      comp.collectionId = this.activeFilter.collectionId;
       comp.onSavedCipher.pipe(takeUntil(this.destroy$)).subscribe(() => {
         modal.close();
         this.refresh();
@@ -943,7 +945,12 @@ export class VaultComponent implements OnInit, OnDestroy {
       cipher.type,
     );
 
-    await this.openVaultItemDialog("view", cipherFormConfig, cipher);
+    await this.openVaultItemDialog(
+      "view",
+      cipherFormConfig,
+      cipher,
+      this.activeFilter.collectionId as CollectionId,
+    );
   }
 
   /**
@@ -953,6 +960,7 @@ export class VaultComponent implements OnInit, OnDestroy {
     mode: VaultItemDialogMode,
     formConfig: CipherFormConfig,
     cipher?: CipherView,
+    activeCollectionId?: CollectionId,
   ) {
     const disableForm = cipher ? !cipher.edit && !this.organization.canEditAllCiphers : false;
     // If the form is disabled, force the mode into `view`
@@ -961,6 +969,8 @@ export class VaultComponent implements OnInit, OnDestroy {
       mode: dialogMode,
       formConfig,
       disableForm,
+      activeCollectionId,
+      isAdminConsoleAction: true,
     });
 
     const result = await lastValueFrom(this.vaultItemDialogRef.closed);

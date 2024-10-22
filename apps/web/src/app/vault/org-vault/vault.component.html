@@ -92,6 +92,7 @@
       [viewingOrgVault]="true"
       [addAccessStatus]="addAccessStatus$ | async"
       [addAccessToggle]="showAddAccessToggle"
+      [activeCollection]="selectedCollection?.node"
     >
     </app-vault-items>
     <ng-container *ngIf="!performingInitialLoad && isEmpty">
