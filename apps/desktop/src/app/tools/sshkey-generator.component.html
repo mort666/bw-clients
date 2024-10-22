@@ -6,7 +6,13 @@
         <tools-ssh-generator (onGenerated)="onGenerated($event)"></tools-ssh-generator>
       </div>
       <div class="modal-footer">
-        <button type="button" [disabled]="canSaveKey$ | async" class="primary" (click)="onSave()">
+        <button
+          type="button"
+          [disabled]="canSaveKey$ | async"
+          class="primary"
+          attr.aria-label="{{ 'save' | i18n }}"
+          (click)="onSave()"
+        >
           <i class="bwi bwi-lg bwi-fw bwi-check" aria-hidden="true"></i>
         </button>
         <button type="button" data-dismiss="modal" (click)="onCancel()">
