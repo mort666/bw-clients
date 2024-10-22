@@ -10,7 +10,7 @@
       {{ "labsSettingsWarning" | i18n }}
     </app-callout>
     <bit-section>
-      <button buttonType="danger" bitButton block (click)="handleResetClick()">
+      <button type="button" buttonType="danger" bitButton block (click)="handleResetClick()">
         {{ "resetDisableLabsSettingsAction" | i18n }}
       </button>
     </bit-section>
@@ -18,30 +18,14 @@
       <bit-section-header>
         <h2 bitTypography="h6">{{ "userSettingsTitle" | i18n }}</h2>
       </bit-section-header>
+      <bit-card>{{ "noUserSettings" | i18n }}</bit-card>
+    </bit-section>
+    <bit-section>
+      <bit-section-header>
+        <h2 bitTypography="h6">{{ "globalSettingsTitle" | i18n }}</h2>
+      </bit-section-header>
       <bit-card>
-        <bit-form-control>
-          <input
-            bitCheckbox
-            id="designRefresh"
-            type="checkbox"
-            (change)="updateDesignRefreshEnabled()"
-            [(ngModel)]="designRefreshEnabled"
-          />
-          <bit-label for="designRefresh">{{ "designRefreshSettingLabel" | i18n }}</bit-label>
-        </bit-form-control>
-        <bit-form-control>
-          <input
-            bitCheckbox
-            id="notificationBarImprovements"
-            type="checkbox"
-            (change)="updateNotificationBarImprovementsEnabled()"
-            [(ngModel)]="notificationBarImprovementsEnabled"
-          />
-          <bit-label for="notificationBarImprovements">
-            {{ "notificationBarImprovementsSettingLabel" | i18n }}
-          </bit-label>
-        </bit-form-control>
-        <bit-form-control>
+        <bit-form-control *ngIf="false">
           <input
             bitCheckbox
             id="improvedFieldQualificationForInlineMenu"
@@ -53,7 +37,7 @@
             {{ "improvedFieldQualificationForInlineMenuSettingLabel" | i18n }}
           </bit-label>
         </bit-form-control>
-        <bit-form-control disableMargin>
+        <bit-form-control *ngIf="false">
           <input
             bitCheckbox
             id="updateAdditionalInlineMenuCipherTypes"
@@ -65,13 +49,29 @@
             {{ "updateAdditionalInlineMenuCipherTypesSettingLabel" | i18n }}
           </bit-label>
         </bit-form-control>
+        <bit-form-control>
+          <input
+            bitCheckbox
+            id="designRefresh"
+            type="checkbox"
+            (change)="updateDesignRefreshEnabled()"
+            [(ngModel)]="designRefreshEnabled"
+          />
+          <bit-label for="designRefresh">{{ "designRefreshSettingLabel" | i18n }}</bit-label>
+        </bit-form-control>
+        <bit-form-control disableMargin>
+          <input
+            bitCheckbox
+            id="notificationBarImprovements"
+            type="checkbox"
+            (change)="updateNotificationBarImprovementsEnabled()"
+            [(ngModel)]="notificationBarImprovementsEnabled"
+          />
+          <bit-label for="notificationBarImprovements">
+            {{ "notificationBarImprovementsSettingLabel" | i18n }}
+          </bit-label>
+        </bit-form-control>
       </bit-card>
-    </bit-section>
-    <bit-section>
-      <bit-section-header>
-        <h2 bitTypography="h6">{{ "globalSettingsTitle" | i18n }}</h2>
-      </bit-section-header>
-      <bit-card>{{ "noGlobalSettings" | i18n }}</bit-card>
     </bit-section>
   </div>
 </popup-page>

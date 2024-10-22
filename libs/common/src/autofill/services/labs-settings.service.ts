@@ -5,46 +5,41 @@ import { ConfigService } from "@bitwarden/common/platform/abstractions/config/co
 
 import {
   LABS_SETTINGS_DISK,
-  ActiveUserState,
+  GlobalState,
+  KeyDefinition,
   StateProvider,
-  UserKeyDefinition,
 } from "../../platform/state";
 
-const LABS_SETTINGS_ENABLED = new UserKeyDefinition(LABS_SETTINGS_DISK, "labsSettingsEnabled", {
+const LABS_SETTINGS_ENABLED = new KeyDefinition(LABS_SETTINGS_DISK, "labsSettingsEnabled", {
   deserializer: (value: boolean) => value ?? false,
-  clearOn: [],
 });
 
-const IMPROVED_FIELD_QUALIFICATION_FOR_INLINE_MENU_ENABLED = new UserKeyDefinition(
+const IMPROVED_FIELD_QUALIFICATION_FOR_INLINE_MENU_ENABLED = new KeyDefinition(
   LABS_SETTINGS_DISK,
   "improvedFieldQualificationForInlineMenuEnabled",
   {
     deserializer: (value: boolean) => value ?? null,
-    clearOn: [],
   },
 );
 
-const ADDITIONAL_INLINE_MENU_CIPHER_TYPES_ENABLED = new UserKeyDefinition(
+const ADDITIONAL_INLINE_MENU_CIPHER_TYPES_ENABLED = new KeyDefinition(
   LABS_SETTINGS_DISK,
   "additionalInlineMenuCipherTypesEnabled",
   {
     deserializer: (value: boolean) => value ?? null,
-    clearOn: [],
   },
 );
 
-const NOTIFICATION_BAR_IMPROVEMENTS_ENABLED = new UserKeyDefinition(
+const NOTIFICATION_BAR_IMPROVEMENTS_ENABLED = new KeyDefinition(
   LABS_SETTINGS_DISK,
   "notificationBarImprovementsEnabled",
   {
     deserializer: (value: boolean) => value ?? null,
-    clearOn: [],
   },
 );
 
-const DESIGN_REFRESH_ENABLED = new UserKeyDefinition(LABS_SETTINGS_DISK, "designRefreshEnabled", {
+const DESIGN_REFRESH_ENABLED = new KeyDefinition(LABS_SETTINGS_DISK, "designRefreshEnabled", {
   deserializer: (value: boolean) => value ?? null,
-  clearOn: [],
 });
 
 export abstract class LabsSettingsServiceAbstraction {
@@ -67,18 +62,18 @@ export abstract class LabsSettingsServiceAbstraction {
 }
 
 export class LabsSettingsService implements LabsSettingsServiceAbstraction {
-  private labsSettingsEnabledState: ActiveUserState<boolean>;
+  private labsSettingsEnabledState: GlobalState<boolean>;
   readonly labsSettingsEnabled$: Observable<boolean>;
-  private improvedFieldQualificationForInlineMenuEnabledState: ActiveUserState<boolean>;
+  private improvedFieldQualificationForInlineMenuEnabledState: GlobalState<boolean>;
   readonly improvedFieldQualificationForInlineMenuEnabled$: Observable<boolean>;
   readonly resolvedImprovedFieldQualificationForInlineMenuEnabled$: Observable<boolean>;
-  private additionalInlineMenuCipherTypesEnabledState: ActiveUserState<boolean>;
+  private additionalInlineMenuCipherTypesEnabledState: GlobalState<boolean>;
   readonly additionalInlineMenuCipherTypesEnabled$: Observable<boolean>;
   readonly resolvedAdditionalInlineMenuCipherTypesEnabled$: Observable<boolean>;
-  private notificationBarImprovementsState: ActiveUserState<boolean>;
+  private notificationBarImprovementsState: GlobalState<boolean>;
   readonly notificationBarImprovementsEnabled$: Observable<boolean>;
   readonly resolvedNotificationBarImprovementsEnabled$: Observable<boolean>;
-  private designRefreshEnabledState: ActiveUserState<boolean>;
+  private designRefreshEnabledState: GlobalState<boolean>;
   readonly designRefreshEnabled$: Observable<boolean>;
   readonly resolvedDesignRefreshEnabled$: Observable<boolean>;
   private preserveLabSettings: boolean = true;
@@ -87,11 +82,11 @@ export class LabsSettingsService implements LabsSettingsServiceAbstraction {
     private stateProvider: StateProvider,
     private configService: ConfigService,
   ) {
-    this.labsSettingsEnabledState = this.stateProvider.getActive(LABS_SETTINGS_ENABLED);
+    this.labsSettingsEnabledState = this.stateProvider.getGlobal(LABS_SETTINGS_ENABLED);
     this.labsSettingsEnabled$ = this.labsSettingsEnabledState.state$.pipe(map((x) => x ?? false));
 
     // This setting may improve the accuracy of the inline menu appearing in login forms
-    this.improvedFieldQualificationForInlineMenuEnabledState = this.stateProvider.getActive(
+    this.improvedFieldQualificationForInlineMenuEnabledState = this.stateProvider.getGlobal(
       IMPROVED_FIELD_QUALIFICATION_FOR_INLINE_MENU_ENABLED,
     );
     this.improvedFieldQualificationForInlineMenuEnabled$ =
@@ -104,7 +99,7 @@ export class LabsSettingsService implements LabsSettingsServiceAbstraction {
     ]).pipe(switchMap((stateResults) => this.resolveSettingStates(stateResults)));
 
     // This flag turns on inline menu credit card and identity features
-    this.additionalInlineMenuCipherTypesEnabledState = this.stateProvider.getActive(
+    this.additionalInlineMenuCipherTypesEnabledState = this.stateProvider.getGlobal(
       ADDITIONAL_INLINE_MENU_CIPHER_TYPES_ENABLED,
     );
     this.additionalInlineMenuCipherTypesEnabled$ =
@@ -116,7 +111,7 @@ export class LabsSettingsService implements LabsSettingsServiceAbstraction {
       this.configService.getFeatureFlag(FeatureFlag.InlineMenuPositioningImprovements),
     ]).pipe(switchMap((stateResults) => this.resolveSettingStates(stateResults)));
 
-    this.notificationBarImprovementsState = this.stateProvider.getActive(
+    this.notificationBarImprovementsState = this.stateProvider.getGlobal(
       NOTIFICATION_BAR_IMPROVEMENTS_ENABLED,
     );
     this.notificationBarImprovementsEnabled$ = this.notificationBarImprovementsState.state$.pipe(
@@ -129,7 +124,7 @@ export class LabsSettingsService implements LabsSettingsServiceAbstraction {
       this.configService.getFeatureFlag(FeatureFlag.NotificationBarAddLoginImprovements),
     ]).pipe(switchMap((stateResults) => this.resolveSettingStates(stateResults)));
 
-    this.designRefreshEnabledState = this.stateProvider.getActive(DESIGN_REFRESH_ENABLED);
+    this.designRefreshEnabledState = this.stateProvider.getGlobal(DESIGN_REFRESH_ENABLED);
     this.designRefreshEnabled$ = this.designRefreshEnabledState.state$.pipe(map((x) => x ?? null));
     // Get user setting or feature-flag value for `extension-refresh`
     this.resolvedDesignRefreshEnabled$ = combineLatest([
