@@ -142,12 +142,6 @@ export class LoginComponent implements OnInit, OnDestroy {
   async ngOnInit(): Promise<void> {
     await this.defaultOnInit();
 
-    if (this.clientType === ClientType.Browser) {
-      if (this.loginViaAuthRequestSupported) {
-        await this.validateEmail();
-      }
-    }
-
     if (this.clientType === ClientType.Desktop) {
       await this.desktopOnInit();
     }
