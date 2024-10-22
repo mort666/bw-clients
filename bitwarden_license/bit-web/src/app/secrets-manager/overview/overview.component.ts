@@ -13,8 +13,6 @@ import {
   share,
   firstValueFrom,
   of,
-  tap,
-  from,
 } from "rxjs";
 
 import { I18nPipe } from "@bitwarden/angular/platform/pipes/i18n.pipe";
@@ -145,13 +143,7 @@ export class OverviewComponent implements OnInit, OnDestroy {
           of(org),
           this.organizationApiService.getSubscription(org.id),
           this.organizationApiService.getBilling(org.id),
-        ]).pipe(
-          tap(([org, sub, _]) =>
-            from(this.trialFlowService.handleUnpaidSubscriptionDialog(org, sub))
-              .pipe(takeUntil(this.destroy$))
-              .subscribe(),
-          ),
-        ),
+        ]),
       ),
       map(([org, sub, billing]) => {
         return this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(
