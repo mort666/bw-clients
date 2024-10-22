@@ -1,11 +1,14 @@
 import * as JSZip from "jszip";
 import * as papa from "papaparse";
+import { firstValueFrom, map } from "rxjs";
 
 import { PinServiceAbstraction } from "@bitwarden/auth/common";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { KdfConfigService } from "@bitwarden/common/auth/abstractions/kdf-config.service";
 import { CipherWithIdExport, FolderWithIdExport } from "@bitwarden/common/models/export";
 import { CryptoFunctionService } from "@bitwarden/common/platform/abstractions/crypto-function.service";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
+import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { EncArrayBuffer } from "@bitwarden/common/platform/models/domain/enc-array-buffer";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
@@ -34,11 +37,13 @@ export class IndividualVaultExportService
     private folderService: FolderService,
     private cipherService: CipherService,
     pinService: PinServiceAbstraction,
-    cryptoService: CryptoService,
+    private cryptoService: CryptoService,
+    encryptService: EncryptService,
     cryptoFunctionService: CryptoFunctionService,
     kdfConfigService: KdfConfigService,
+    private accountService: AccountService,
   ) {
-    super(pinService, cryptoService, cryptoFunctionService, kdfConfigService);
+    super(pinService, encryptService, cryptoFunctionService, kdfConfigService);
   }
 
   async getExport(format: ExportFormat = "csv"): Promise<string | Blob> {
@@ -131,7 +136,11 @@ export class IndividualVaultExportService
 
     await Promise.all(promises);
 
-    const encKeyValidation = await this.cryptoService.encrypt(Utils.newGuid());
+    const activeUserId = await firstValueFrom(
+      this.accountService.activeAccount$.pipe(map((a) => a?.id)),
+    );
+    const userKey = await this.cryptoService.getUserKeyWithLegacySupport(activeUserId);
+    const encKeyValidation = await this.encryptService.encrypt(Utils.newGuid(), userKey);
 
     const jsonDoc: BitwardenEncryptedIndividualJsonExport = {
       encrypted: true,

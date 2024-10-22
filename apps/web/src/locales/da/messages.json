@@ -1,4 +1,64 @@
 {
+  "allApplications": {
+    "message": "Alle applikationer"
+  },
+  "priorityApplications": {
+    "message": "Prioriterede applikationer"
+  },
+  "accessIntelligence": {
+    "message": "Adgangsintelligens"
+  },
+  "notifiedMembers": {
+    "message": "Underrettede medlemmer"
+  },
+  "allApplicationsWithCount": {
+    "message": "Alle applikationer ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "priorityApplicationsWithCount": {
+    "message": "Prioriterede applikationer ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "notifiedMembersWithCount": {
+    "message": "Underrettede medlemmer ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "application": {
+    "message": "Applikation"
+  },
+  "atRiskPasswords": {
+    "message": "Udsatte adgangskoder"
+  },
+  "totalPasswords": {
+    "message": "Adgangskoder i alt"
+  },
+  "atRiskMembers": {
+    "message": "Udsatte medlemmer"
+  },
+  "totalMembers": {
+    "message": "Medlemmer i alt"
+  },
+  "atRiskApplications": {
+    "message": "Udsatte applikationer"
+  },
+  "totalApplications": {
+    "message": "Applikationer i alt"
+  },
   "whatTypeOfItem": {
     "message": "Hvilken emnetype er denne?"
   },
@@ -603,6 +663,9 @@
     "message": "Kopiér adgangskode",
     "description": "Copy password to clipboard"
   },
+  "passwordCopied": {
+    "message": "Adgangskode kopieret"
+  },
   "copyUsername": {
     "message": "Kopiér brugernavn",
     "description": "Copy username to clipboard"
@@ -1099,6 +1162,9 @@
   "yourVaultIsLockedV2": {
     "message": "Boksen er låst."
   },
+  "yourAccountIsLocked": {
+    "message": "Kontoen er låst"
+  },
   "uuid": {
     "message": "UUID"
   },
@@ -1132,6 +1198,9 @@
   },
   "noPermissionToViewAllCollectionItems": {
     "message": "Ingen tilladelse til at se alle emner i denne samling."
+  },
+  "youDoNotHavePermissions": {
+    "message": "Ingen rettigheder til denne samling"
   },
   "noCollectionsInList": {
     "message": "Der er ingen samlinger at vise."
@@ -1437,7 +1506,12 @@
     "description": "Minimum special characters"
   },
   "ambiguous": {
-    "message": "Undgå tvetydige tegn"
+    "message": "Undgå tvetydige tegn",
+    "description": "deprecated. Use avoidAmbiguous instead."
+  },
+  "avoidAmbiguous": {
+    "message": "Undgå tvetydige tegn",
+    "description": "Label for the avoid ambiguous characters checkbox."
   },
   "regeneratePassword": {
     "message": "Regenerér adgangskode"
@@ -1450,17 +1524,50 @@
   },
   "uppercase": {
     "message": "Majuskler (A-Z)",
-    "description": "Include uppercase letters in the password generator."
+    "description": "deprecated. Use uppercaseLabel instead."
   },
   "lowercase": {
     "message": "Minuskler (a-z)",
-    "description": "Include lowercase letters in the password generator."
+    "description": "deprecated. Use lowercaseLabel instead."
   },
   "numbers": {
-    "message": "Cifre (0-9)"
+    "message": "Cifre (0-9)",
+    "description": "deprecated. Use numbersLabel instead."
   },
   "specialCharacters": {
     "message": "Specialtegn (!@#$%^&*)"
+  },
+  "uppercaseDescription": {
+    "message": "Inkludér majuskler",
+    "description": "Tooltip for the password generator uppercase character checkbox"
+  },
+  "uppercaseLabel": {
+    "message": "A-Z",
+    "description": "Label for the password generator uppercase character checkbox"
+  },
+  "lowercaseDescription": {
+    "message": "Inkludér minuskler",
+    "description": "Full description for the password generator lowercase character checkbox"
+  },
+  "lowercaseLabel": {
+    "message": "a-z",
+    "description": "Label for the password generator lowercase character checkbox"
+  },
+  "numbersDescription": {
+    "message": "Inkludér tal",
+    "description": "Full description for the password generator numbers checkbox"
+  },
+  "numbersLabel": {
+    "message": "0-9",
+    "description": "Label for the password generator numbers checkbox"
+  },
+  "specialCharactersDescription": {
+    "message": "Inkludér specialtegn",
+    "description": "Full description for the password generator special characters checkbox"
+  },
+  "specialCharactersLabel": {
+    "message": "!@#$%^&*",
+    "description": "Label for the password generator special characters checkbox"
   },
   "numWords": {
     "message": "Antal ord"
@@ -1474,6 +1581,10 @@
   },
   "includeNumber": {
     "message": "Inkludér ciffer"
+  },
+  "generatorPolicyInEffect": {
+    "message": "Virksomhedspolitikkrav gør sig gældende på generatorvalgmulighder.",
+    "description": "Indicates that a policy limits the credential generator screen."
   },
   "passwordHistory": {
     "message": "Adgangskodehistorik"
@@ -2195,6 +2306,9 @@
   "checkExposedPasswords": {
     "message": "Tjek for kompromitterede adgangskoder"
   },
+  "timesExposed": {
+    "message": "Afsløret antal gange"
+  },
   "exposedXTimes": {
     "message": "$COUNT$ kompromittering(er)",
     "placeholders": {
@@ -2229,6 +2343,9 @@
   "noWeakPasswords": {
     "message": "Ingen elementer i din boks har svage adgangskoder."
   },
+  "weakness": {
+    "message": "Svaghed"
+  },
   "reusedPasswordsReport": {
     "message": "Genbrugte adgangskoder"
   },
@@ -2253,6 +2370,9 @@
   },
   "noReusedPasswords": {
     "message": "Ingen logins i din boks har adgangskoder, der genbruges."
+  },
+  "timesReused": {
+    "message": "Genbrugt antal gange"
   },
   "reusedXTimes": {
     "message": "Genbrugt $COUNT$ gange",
@@ -2551,6 +2671,9 @@
   "downloadLicense": {
     "message": "Download licens"
   },
+  "viewBillingToken": {
+    "message": "Vis fakturerings-token"
+  },
   "updateLicense": {
     "message": "Opdatér licens"
   },
@@ -2597,8 +2720,11 @@
   "invoices": {
     "message": "Fakturaer"
   },
-  "noInvoices": {
-    "message": "Ingen fakturaer."
+  "noUnpaidInvoices": {
+    "message": "Ingen ubetalte fakturaer."
+  },
+  "noPaidInvoices": {
+    "message": "Ingen betalte fakturaer."
   },
   "paid": {
     "message": "Betalt",
@@ -3156,6 +3282,10 @@
   "incorrectPin": {
     "message": "Forkert PIN-kode"
   },
+  "pin": {
+    "message": "PIN-kode",
+    "description": "PIN code. Ex. The short code (often numeric) that you use to unlock a device."
+  },
   "exportedVault": {
     "message": "Boks eksporteret"
   },
@@ -3656,6 +3786,15 @@
   },
   "joinOrganization": {
     "message": "Bliv medlem af organisation"
+  },
+  "joinOrganizationName": {
+    "message": "Bliv nedlem af $ORGANIZATIONNAME$",
+    "placeholders": {
+      "organizationName": {
+        "content": "$1",
+        "example": "My Org Name"
+      }
+    }
   },
   "joinOrganizationDesc": {
     "message": "Du er blevet inviteret til at blive medlem af organisationen anført ovenfor. For at acceptere invitationen skal du logge ind eller oprette en ny Bitwarden-konto."
@@ -5981,8 +6120,8 @@
   "viewBillingSyncToken": {
     "message": "Vis faktureringssynk-token"
   },
-  "generateBillingSyncToken": {
-    "message": "Generering af faktureringssynk-token"
+  "generateBillingToken": {
+    "message": "Generér fakturerings-token"
   },
   "copyPasteBillingSync": {
     "message": "Kopiér og indsæt dette token i indstillingerne Faktureringssynk i din selv-hostede organisation."
@@ -5990,8 +6129,8 @@
   "billingSyncCanAccess": {
     "message": "Din faktureringssynk-token kan tilgå og redigere denne organisations abonnementsindstillinger."
   },
-  "manageBillingSync": {
-    "message": "Håndtering af faktureringssynk"
+  "manageBillingTokenSync": {
+    "message": "Håndtér fakturerings-token"
   },
   "setUpBillingSync": {
     "message": "Opsæt faktureringssynk"
@@ -6050,14 +6189,14 @@
   "billingSyncApiKeyRotated": {
     "message": "Token roteret."
   },
-  "billingSyncDesc": {
-    "message": "Faktureringssynk oplåser Familier-sponsorater og automatisk licenssynk på din server. Når opdateringer i Bitwarden cloud-serveren er foretaget, så vælg Synk licens for at anvende ændringer."
-  },
   "billingSyncKeyDesc": {
     "message": "Et faktureringssynk-token fra din cloud-organisations abonnementsindstillinger kræves for at udfylde denne formular."
   },
   "billingSyncKey": {
     "message": "Faktureringssynk-token"
+  },
+  "automaticBillingSyncDesc": {
+    "message": "Automatisk synk oplåser Familier-sponsorater og muliggør synk af licenser uden at uploade en fil. Når opdateringer på Bitwarden cloud-serveren er foretaget, vælg Synk licens for at anvende ændringer."
   },
   "active": {
     "message": "Aktiv"
@@ -6200,7 +6339,8 @@
     "message": "Kontoindstillinger"
   },
   "generator": {
-    "message": "Generator"
+    "message": "Generator",
+    "description": "Short for 'credential generator'."
   },
   "whatWouldYouLikeToGenerate": {
     "message": "Hvad ønskes genereret?"
@@ -6575,6 +6715,18 @@
       "count": {
         "content": "$1",
         "example": "4"
+      }
+    }
+  },
+  "singleFieldNeedsAttention": {
+    "message": "1 felt kræver opmærksomhed."
+  },
+  "multipleFieldsNeedAttention": {
+    "message": "$COUNT$ felter kræver opmærksomhed.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
       }
     }
   },
@@ -7438,6 +7590,15 @@
   "or": {
     "message": "eller"
   },
+  "unlockWithBiometrics": {
+    "message": "Oplås med biometri"
+  },
+  "unlockWithPin": {
+    "message": "Oplås med PIN-kode"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Oplås med hovedadgangskode"
+  },
   "licenseAndBillingManagement": {
     "message": "Håndtering af licens og fakturering"
   },
@@ -7447,8 +7608,8 @@
   "manualUpload": {
     "message": "Manuel upload"
   },
-  "manualUploadDesc": {
-    "message": "Ønskes ikke tilmelding til faktureringssynk, så upload manuelt din licens her."
+  "manualBillingTokenUploadDesc": {
+    "message": "Ønsker man ikke at tilvælge faktureringssynk, skal licensen manuelt uploades her. Dette oplåser ikke automatisk Familier-sponsorater."
   },
   "syncLicense": {
     "message": "Synk licens"
@@ -7776,6 +7937,15 @@
     "message": "Organisationen kræver, at der oprettes en hovedadgangskode.",
     "description": "Used as a card title description on the set password page to explain why the user is there"
   },
+  "cardMetrics": {
+    "message": "ud af $TOTAL$",
+    "placeholders": {
+      "total": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
   "notFound": {
     "message": "$RESOURCE$ ikke fundet",
     "placeholders": {
@@ -8036,6 +8206,12 @@
   },
   "limitCollectionCreationDeletionDesc": {
     "message": "Begræns samlingsoprettelse og -sletning til ejere og admins"
+  },
+  "limitCollectionCreationDesc": {
+    "message": "Begræns samlingsoprettelse til ejere og admins"
+  },
+  "limitCollectionDeletionDesc": {
+    "message": "Begræns samlingsslettelse til ejere og admins"
   },
   "allowAdminAccessToAllCollectionItemsDesc": {
     "message": "Ejere og admins kan håndtere alle samlinger og emner"
@@ -9221,5 +9397,29 @@
   },
   "editAccess": {
     "message": "Redigér adgang"
+  },
+  "textHelpText": {
+    "message": "Brug tekstfelter til data, såsom sikkerhedsspørgsmål"
+  },
+  "hiddenHelpText": {
+    "message": "Brug skjulte felter til sensitiv data, såsom en adgangskode"
+  },
+  "checkBoxHelpText": {
+    "message": "Brug afkrydsningsfelter, hvis et formularafkrydsningsfelt skal autoudfyldes, såsom en husket e-mail"
+  },
+  "linkedHelpText": {
+    "message": "Brug et linket felt ved autoudfyldningsproblemer for et bestemt websted."
+  },
+  "linkedLabelHelpText": {
+    "message": "Angiv feltets HTML-ID, navn, aria-label eller pladsholder."
+  },
+  "addAttachment": {
+    "message": "Tilføj vedhæftning"
+  },
+  "maxFileSizeSansPunctuation": {
+    "message": "Maks. filstørrelse er 500 MB"
+  },
+  "permanentlyDeleteAttachmentConfirmation": {
+    "message": "Sikker på, at denne vedhæftning skal slettes permanent?"
   }
 }

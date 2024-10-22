@@ -407,16 +407,55 @@
     "message": "Mazākais pieļaujamais paroles garums"
   },
   "uppercase": {
-    "message": "Lielie burti (A-Z)"
+    "message": "Lielie burti (A-Z)",
+    "description": "deprecated. Use uppercaseLabel instead."
   },
   "lowercase": {
-    "message": "Mazie burti (a-z)"
+    "message": "Mazie burti (a-z)",
+    "description": "deprecated. Use lowercaseLabel instead."
   },
   "numbers": {
-    "message": "Cipari (0-9)"
+    "message": "Cipari (0-9)",
+    "description": "deprecated. Use numbersLabel instead."
   },
   "specialCharacters": {
     "message": "Īpašās rakstzīmes (!@#$%^&*)"
+  },
+  "include": {
+    "message": "Iekļaut",
+    "description": "Card header for password generator include block"
+  },
+  "uppercaseDescription": {
+    "message": "Iekļaut lielos burtus",
+    "description": "Tooltip for the password generator uppercase character checkbox"
+  },
+  "uppercaseLabel": {
+    "message": "A-Z",
+    "description": "Label for the password generator uppercase character checkbox"
+  },
+  "lowercaseDescription": {
+    "message": "Iekļaut mazos burtus",
+    "description": "Full description for the password generator lowercase character checkbox"
+  },
+  "lowercaseLabel": {
+    "message": "a-z",
+    "description": "Label for the password generator lowercase character checkbox"
+  },
+  "numbersDescription": {
+    "message": "Iekļaut ciparus",
+    "description": "Full description for the password generator numbers checkbox"
+  },
+  "numbersLabel": {
+    "message": "0-9",
+    "description": "Label for the password generator numbers checkbox"
+  },
+  "specialCharactersDescription": {
+    "message": "Iekļaut īpašās rakstzīmes",
+    "description": "Full description for the password generator special characters checkbox"
+  },
+  "specialCharactersLabel": {
+    "message": "!@#$%^&*",
+    "description": "Label for the password generator special characters checkbox"
   },
   "numWords": {
     "message": "Vārdu skaits"
@@ -442,7 +481,16 @@
     "description": "Minimum Special Characters"
   },
   "ambiguous": {
-    "message": "Izvairīties no viegli sajaucamām rakstzīmēm"
+    "message": "Izvairīties no viegli sajaucamām rakstzīmēm",
+    "description": "deprecated. Use avoidAmbiguous instead."
+  },
+  "avoidAmbiguous": {
+    "message": "Izvairīties no viegli sajaucamām rakstzīmēm",
+    "description": "Label for the avoid ambiguous characters checkbox."
+  },
+  "generatorPolicyInEffect": {
+    "message": "Veidotāja iespējām tika piemērotas uzņēmējdarbības nosacījumu prasības.",
+    "description": "Indicates that a policy limits the credential generator screen."
   },
   "searchCollection": {
     "message": "Meklēt krājumā"
@@ -553,6 +601,15 @@
   },
   "joinOrganization": {
     "message": "Pievienoties apvienībai"
+  },
+  "joinOrganizationName": {
+    "message": "Pievienoties $ORGANIZATIONNAME$",
+    "placeholders": {
+      "organizationName": {
+        "content": "$1",
+        "example": "My Org Name"
+      }
+    }
   },
   "finishJoiningThisOrganizationBySettingAMasterPassword": {
     "message": "Pabeigt pievienošanos šai apvienībai ar galvenās paroles iestatīšanu."
@@ -913,6 +970,18 @@
   },
   "yourVaultIsLocked": {
     "message": "Glabātava ir aizslēgta. Jāapliecina sava identitāte, lai turpinātu."
+  },
+  "yourAccountIsLocked": {
+    "message": "Konts ir slēgts"
+  },
+  "or": {
+    "message": "vai"
+  },
+  "unlockWithBiometrics": {
+    "message": "Atslēgt ar biometriju"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Atslēgt ar galveno paroli"
   },
   "unlock": {
     "message": "Atslēgt"
@@ -1692,6 +1761,15 @@
     "message": "Apvienība pieprasa iestatīt galveno paroli.",
     "description": "Used as a card title description on the set password page to explain why the user is there"
   },
+  "cardMetrics": {
+    "message": "no $TOTAL$",
+    "placeholders": {
+      "total": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
   "verificationRequired": {
     "message": "Nepieciešams apliecinājums",
     "description": "Default title for the user verification dialog."
@@ -1771,8 +1849,8 @@
   "enableBrowserIntegration": {
     "message": "Iespējot sasaistīšanu ar pārlūku"
   },
-  "enableBrowserIntegrationDesc": {
-    "message": "Tiek izmantota biometrijai pārlūkā."
+  "enableBrowserIntegrationDesc1": {
+    "message": "Tiek izmantots, lai ļautu atslēgšanu pārlūkos, kas nav Safari."
   },
   "enableDuckDuckGoBrowserIntegration": {
     "message": "Atļaut sasaistīšanu ar DuckDuckGo pārlūku"
@@ -2252,11 +2330,15 @@
   "locked": {
     "message": "Aizslēgta"
   },
+  "yourVaultIsLockedV2": {
+    "message": "Glabātava ir slēgta"
+  },
   "unlocked": {
     "message": "Atslēgta"
   },
   "generator": {
-    "message": "Veidotājs"
+    "message": "Veidotājs",
+    "description": "Short for 'credential generator'."
   },
   "whatWouldYouLikeToGenerate": {
     "message": "Ko jūs vēlētos izveidot?"
@@ -2603,6 +2685,9 @@
   },
   "important": {
     "message": "Svarīgi:"
+  },
+  "accessing": {
+    "message": "Piekļūst"
   },
   "accessTokenUnableToBeDecrypted": {
     "message": "Notika izrakstīšanās, jo Tavu piekļuves pilnvaru nevarēja atšifrēt. Lūgums pieteikties atkārtoti, lai novērstu šo sarežģījumu."

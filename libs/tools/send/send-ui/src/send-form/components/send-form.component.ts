@@ -16,6 +16,7 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormBuilder, ReactiveFormsModule } from "@angular/forms";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { SendType } from "@bitwarden/common/tools/send/enums/send-type";
 import { SendView } from "@bitwarden/common/tools/send/models/view/send.view";
 import {
@@ -84,9 +85,14 @@ export class SendFormComponent implements AfterViewInit, OnInit, OnChanges, Send
   submitBtn?: ButtonComponent;
 
   /**
-   * Event emitted when the send is saved successfully.
+   * Event emitted when the send is created successfully.
    */
-  @Output() sendSaved = new EventEmitter<SendView>();
+  @Output() onSendCreated = new EventEmitter<SendView>();
+
+  /**
+   * Event emitted when the send is updated successfully.
+   */
+  @Output() onSendUpdated = new EventEmitter<SendView>();
 
   /**
    * The original send being edited or cloned. Null for add mode.
@@ -199,18 +205,26 @@ export class SendFormComponent implements AfterViewInit, OnInit, OnChanges, Send
       return;
     }
 
-    await this.addEditFormService.saveSend(this.updatedSendView, this.file, this.config);
+    const sendView = await this.addEditFormService.saveSend(
+      this.updatedSendView,
+      this.file,
+      this.config,
+    );
+
+    if (this.config.mode === "add") {
+      this.onSendCreated.emit(sendView);
+      return;
+    }
+
+    if (Utils.isNullOrWhitespace(this.updatedSendView.password)) {
+      this.updatedSendView.password = null;
+    }
 
     this.toastService.showToast({
       variant: "success",
       title: null,
-      message: this.i18nService.t(
-        this.config.mode === "edit" || this.config.mode === "partial-edit"
-          ? "editedItem"
-          : "addedItem",
-      ),
+      message: this.i18nService.t("editedItem"),
     });
-
-    this.sendSaved.emit(this.updatedSendView);
+    this.onSendUpdated.emit(this.updatedSendView);
   };
 }

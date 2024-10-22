@@ -1,4 +1,64 @@
 {
+  "allApplications": {
+    "message": "All applications"
+  },
+  "priorityApplications": {
+    "message": "Priority applications"
+  },
+  "accessIntelligence": {
+    "message": "Access Intelligence"
+  },
+  "notifiedMembers": {
+    "message": "Notified members"
+  },
+  "allApplicationsWithCount": {
+    "message": "All applications ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "priorityApplicationsWithCount": {
+    "message": "Priority applications ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "notifiedMembersWithCount": {
+    "message": "Notified members ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "application": {
+    "message": "Application"
+  },
+  "atRiskPasswords": {
+    "message": "At-risk passwords"
+  },
+  "totalPasswords": {
+    "message": "Total passwords"
+  },
+  "atRiskMembers": {
+    "message": "At-risk members"
+  },
+  "totalMembers": {
+    "message": "Total members"
+  },
+  "atRiskApplications": {
+    "message": "At-risk applications"
+  },
+  "totalApplications": {
+    "message": "Total applications"
+  },
   "whatTypeOfItem": {
     "message": "Che tipo di elemento è questo?"
   },
@@ -603,6 +663,9 @@
     "message": "Copia password",
     "description": "Copy password to clipboard"
   },
+  "passwordCopied": {
+    "message": "Password copied"
+  },
   "copyUsername": {
     "message": "Copia nome utente",
     "description": "Copy username to clipboard"
@@ -1099,6 +1162,9 @@
   "yourVaultIsLockedV2": {
     "message": "La cassaforte è bloccata"
   },
+  "yourAccountIsLocked": {
+    "message": "Your account is locked"
+  },
   "uuid": {
     "message": "UUID"
   },
@@ -1132,6 +1198,9 @@
   },
   "noPermissionToViewAllCollectionItems": {
     "message": "Non hai i permessi necessari per visualizzare tutti gli elementi in questa raccolta."
+  },
+  "youDoNotHavePermissions": {
+    "message": "You do not have permissions to this collection"
   },
   "noCollectionsInList": {
     "message": "Nessuna raccolta da mostrare."
@@ -1437,7 +1506,12 @@
     "description": "Minimum special characters"
   },
   "ambiguous": {
-    "message": "Evita caratteri ambigui"
+    "message": "Evita caratteri ambigui",
+    "description": "deprecated. Use avoidAmbiguous instead."
+  },
+  "avoidAmbiguous": {
+    "message": "Avoid ambiguous characters",
+    "description": "Label for the avoid ambiguous characters checkbox."
   },
   "regeneratePassword": {
     "message": "Rigenera password"
@@ -1450,17 +1524,50 @@
   },
   "uppercase": {
     "message": "Maiuscole (A-Z)",
-    "description": "Include uppercase letters in the password generator."
+    "description": "deprecated. Use uppercaseLabel instead."
   },
   "lowercase": {
     "message": "Minuscole (a-z)",
-    "description": "Include lowercase letters in the password generator."
+    "description": "deprecated. Use lowercaseLabel instead."
   },
   "numbers": {
-    "message": "Numeri (0-9)"
+    "message": "Numeri (0-9)",
+    "description": "deprecated. Use numbersLabel instead."
   },
   "specialCharacters": {
     "message": "Caratteri speciali (!@#$%^&*)"
+  },
+  "uppercaseDescription": {
+    "message": "Include uppercase characters",
+    "description": "Tooltip for the password generator uppercase character checkbox"
+  },
+  "uppercaseLabel": {
+    "message": "A-Z",
+    "description": "Label for the password generator uppercase character checkbox"
+  },
+  "lowercaseDescription": {
+    "message": "Include lowercase characters",
+    "description": "Full description for the password generator lowercase character checkbox"
+  },
+  "lowercaseLabel": {
+    "message": "a-z",
+    "description": "Label for the password generator lowercase character checkbox"
+  },
+  "numbersDescription": {
+    "message": "Include numbers",
+    "description": "Full description for the password generator numbers checkbox"
+  },
+  "numbersLabel": {
+    "message": "0-9",
+    "description": "Label for the password generator numbers checkbox"
+  },
+  "specialCharactersDescription": {
+    "message": "Include special characters",
+    "description": "Full description for the password generator special characters checkbox"
+  },
+  "specialCharactersLabel": {
+    "message": "!@#$%^&*",
+    "description": "Label for the password generator special characters checkbox"
   },
   "numWords": {
     "message": "Numero di parole"
@@ -1474,6 +1581,10 @@
   },
   "includeNumber": {
     "message": "Includi numero"
+  },
+  "generatorPolicyInEffect": {
+    "message": "Enterprise policy requirements have been applied to your generator options.",
+    "description": "Indicates that a policy limits the credential generator screen."
   },
   "passwordHistory": {
     "message": "Cronologia delle password"
@@ -2195,6 +2306,9 @@
   "checkExposedPasswords": {
     "message": "Controlla password esposte"
   },
+  "timesExposed": {
+    "message": "Times exposed"
+  },
   "exposedXTimes": {
     "message": "Esposta $COUNT$ volte",
     "placeholders": {
@@ -2229,6 +2343,9 @@
   "noWeakPasswords": {
     "message": "Nessun elemento nella tua cassaforte ha password deboli."
   },
+  "weakness": {
+    "message": "Weakness"
+  },
   "reusedPasswordsReport": {
     "message": "Password riutilizzate"
   },
@@ -2253,6 +2370,9 @@
   },
   "noReusedPasswords": {
     "message": "Nessun login nella tua cassaforte ha password riutilizzate."
+  },
+  "timesReused": {
+    "message": "Times reused"
   },
   "reusedXTimes": {
     "message": "Riutilizzata $COUNT$ volte",
@@ -2551,6 +2671,9 @@
   "downloadLicense": {
     "message": "Scarica licenza"
   },
+  "viewBillingToken": {
+    "message": "View Billing Token"
+  },
   "updateLicense": {
     "message": "Aggiorna licenza"
   },
@@ -2597,8 +2720,11 @@
   "invoices": {
     "message": "Fatture"
   },
-  "noInvoices": {
-    "message": "Nessuna fattura."
+  "noUnpaidInvoices": {
+    "message": "No unpaid invoices."
+  },
+  "noPaidInvoices": {
+    "message": "No paid invoices."
   },
   "paid": {
     "message": "Pagata",
@@ -3156,6 +3282,10 @@
   "incorrectPin": {
     "message": "PIN errato"
   },
+  "pin": {
+    "message": "PIN",
+    "description": "PIN code. Ex. The short code (often numeric) that you use to unlock a device."
+  },
   "exportedVault": {
     "message": "Cassaforte esportata"
   },
@@ -3656,6 +3786,15 @@
   },
   "joinOrganization": {
     "message": "Unisciti all'organizzazione"
+  },
+  "joinOrganizationName": {
+    "message": "Join $ORGANIZATIONNAME$",
+    "placeholders": {
+      "organizationName": {
+        "content": "$1",
+        "example": "My Org Name"
+      }
+    }
   },
   "joinOrganizationDesc": {
     "message": "Sei stato invitato a far parte dell'organizzazione qui sopra. Per accettare l'invito, accedi o crea un nuovo account Bitwarden."
@@ -5981,8 +6120,8 @@
   "viewBillingSyncToken": {
     "message": "Visualizza token di sincronizzazione della fatturazione"
   },
-  "generateBillingSyncToken": {
-    "message": "Genera token di sincronizzazione della fatturazione"
+  "generateBillingToken": {
+    "message": "Generate billing token"
   },
   "copyPasteBillingSync": {
     "message": "Copia e incolla questo token nelle impostazioni di sincronizzazione della fatturazione della tua organizzazione self-hosted."
@@ -5990,8 +6129,8 @@
   "billingSyncCanAccess": {
     "message": "Il token di sincronizzazione della fatturazione può accedere e modificare le impostazioni di abbonamento di questa organizzazione."
   },
-  "manageBillingSync": {
-    "message": "Gestisci sincronizzazione della fatturazione"
+  "manageBillingTokenSync": {
+    "message": "Manage Billing Token"
   },
   "setUpBillingSync": {
     "message": "Configura sincronizzazione della fatturazione"
@@ -6050,14 +6189,14 @@
   "billingSyncApiKeyRotated": {
     "message": "Token ruotato"
   },
-  "billingSyncDesc": {
-    "message": "La sincronizzazione della fatturazione sblocca le sponsorizzazioni Families e la sincronizzazione automatica delle licenze sul tuo server. Dopo aver aggiornato il server cloud di Bitwarden, seleziona Sincronizza Licenza per applicare le modifiche."
-  },
   "billingSyncKeyDesc": {
     "message": "Per completare questo modulo è necessario un token di sincronizzazione della fatturazione dalle impostazioni di abbonamento della tua organizzazione cloud."
   },
   "billingSyncKey": {
     "message": "Token di sincronizzazione della fatturazione"
+  },
+  "automaticBillingSyncDesc": {
+    "message": "Automatic sync unlocks Families sponsorships and allows you to sync your license without uploading a file. After making updates in the Bitwarden cloud server, select Sync License to apply changes."
   },
   "active": {
     "message": "Attivo"
@@ -6200,7 +6339,8 @@
     "message": "Impostazioni account"
   },
   "generator": {
-    "message": "Generatore"
+    "message": "Generatore",
+    "description": "Short for 'credential generator'."
   },
   "whatWouldYouLikeToGenerate": {
     "message": "Cosa vuoi generare?"
@@ -6575,6 +6715,18 @@
       "count": {
         "content": "$1",
         "example": "4"
+      }
+    }
+  },
+  "singleFieldNeedsAttention": {
+    "message": "1 field needs your attention."
+  },
+  "multipleFieldsNeedAttention": {
+    "message": "$COUNT$ fields need your attention.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
       }
     }
   },
@@ -7438,6 +7590,15 @@
   "or": {
     "message": "o"
   },
+  "unlockWithBiometrics": {
+    "message": "Unlock with biometrics"
+  },
+  "unlockWithPin": {
+    "message": "Unlock with PIN"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Unlock with master password"
+  },
   "licenseAndBillingManagement": {
     "message": "Licenza e gestione della fatturazione"
   },
@@ -7447,8 +7608,8 @@
   "manualUpload": {
     "message": "Caricamento manuale"
   },
-  "manualUploadDesc": {
-    "message": "Se non vuoi sincronizzare la fattura, carica la licenza manualmente."
+  "manualBillingTokenUploadDesc": {
+    "message": "If you do not want to opt into billing sync, manually upload your license here. This will not automatically unlock Families sponsorships."
   },
   "syncLicense": {
     "message": "Sincronizza licenza"
@@ -7776,6 +7937,15 @@
     "message": "La tua organizzazione ti obbliga di impostare di una password principale.",
     "description": "Used as a card title description on the set password page to explain why the user is there"
   },
+  "cardMetrics": {
+    "message": "out of $TOTAL$",
+    "placeholders": {
+      "total": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
   "notFound": {
     "message": "$RESOURCE$ non trovato",
     "placeholders": {
@@ -8036,6 +8206,12 @@
   },
   "limitCollectionCreationDeletionDesc": {
     "message": "Limita la creazione e l'eliminazione delle raccolte a proprietari e amministratori"
+  },
+  "limitCollectionCreationDesc": {
+    "message": "Limit collection creation to owners and admins"
+  },
+  "limitCollectionDeletionDesc": {
+    "message": "Limit collection deletion to owners and admins"
   },
   "allowAdminAccessToAllCollectionItemsDesc": {
     "message": "Proprietari e amministratori possono gestire tutte le raccolte e gli elementi"
@@ -9221,5 +9397,29 @@
   },
   "editAccess": {
     "message": "Modifica accesso"
+  },
+  "textHelpText": {
+    "message": "Use text fields for data like security questions"
+  },
+  "hiddenHelpText": {
+    "message": "Use hidden fields for sensitive data like a password"
+  },
+  "checkBoxHelpText": {
+    "message": "Usa le caselle di controllo se vuoi riempire automaticamente una casella di controllo, come \"Rimani connesso\""
+  },
+  "linkedHelpText": {
+    "message": "Usa un campo collegato quando si verificano problemi di riempimento automatico per un sito web specifico."
+  },
+  "linkedLabelHelpText": {
+    "message": "Enter the the field's html id, name, aria-label, or placeholder."
+  },
+  "addAttachment": {
+    "message": "Add attachment"
+  },
+  "maxFileSizeSansPunctuation": {
+    "message": "Maximum file size is 500 MB"
+  },
+  "permanentlyDeleteAttachmentConfirmation": {
+    "message": "Are you sure you want to permanently delete this attachment?"
   }
 }

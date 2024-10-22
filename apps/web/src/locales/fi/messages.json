@@ -1,4 +1,64 @@
 {
+  "allApplications": {
+    "message": "Kaikki sovellukset"
+  },
+  "priorityApplications": {
+    "message": "Ensisijaiset sovellukset"
+  },
+  "accessIntelligence": {
+    "message": "Access Intelligence"
+  },
+  "notifiedMembers": {
+    "message": "Notified members"
+  },
+  "allApplicationsWithCount": {
+    "message": "Kaikki sovellukset ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "priorityApplicationsWithCount": {
+    "message": "Ensisijaiset sovellukset ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "notifiedMembersWithCount": {
+    "message": "Notified members ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "application": {
+    "message": "Sovellus"
+  },
+  "atRiskPasswords": {
+    "message": "Riskialttiit salasanat"
+  },
+  "totalPasswords": {
+    "message": "Salasanoja yhteensä"
+  },
+  "atRiskMembers": {
+    "message": "Riskialttiit jäsenet"
+  },
+  "totalMembers": {
+    "message": "Jäseniä yhteensä"
+  },
+  "atRiskApplications": {
+    "message": "Riskialttiit sovellukset"
+  },
+  "totalApplications": {
+    "message": "Sovelluksia yhteensä"
+  },
   "whatTypeOfItem": {
     "message": "Minkä tyyppinen kohde tämä on?"
   },
@@ -603,6 +663,9 @@
     "message": "Kopioi salasana",
     "description": "Copy password to clipboard"
   },
+  "passwordCopied": {
+    "message": "Password copied"
+  },
   "copyUsername": {
     "message": "Kopioi käyttäjätunnus",
     "description": "Copy username to clipboard"
@@ -1099,6 +1162,9 @@
   "yourVaultIsLockedV2": {
     "message": "Holvisi on lukittu"
   },
+  "yourAccountIsLocked": {
+    "message": "Tilisi on lukittu"
+  },
   "uuid": {
     "message": "UUID"
   },
@@ -1132,6 +1198,9 @@
   },
   "noPermissionToViewAllCollectionItems": {
     "message": "Sinulla ei ole kokoelman kaikkien kohteiden tarkastelun sallivia käyttöoikeuksia."
+  },
+  "youDoNotHavePermissions": {
+    "message": "You do not have permissions to this collection"
   },
   "noCollectionsInList": {
     "message": "Näytettäviä kokoelmia ei ole."
@@ -1437,7 +1506,12 @@
     "description": "Minimum special characters"
   },
   "ambiguous": {
-    "message": "Vältä epäselviä merkkejä"
+    "message": "Vältä epäselviä merkkejä",
+    "description": "deprecated. Use avoidAmbiguous instead."
+  },
+  "avoidAmbiguous": {
+    "message": "Vältä epäselviä merkkejä",
+    "description": "Label for the avoid ambiguous characters checkbox."
   },
   "regeneratePassword": {
     "message": "Luo uusi salasana"
@@ -1450,17 +1524,50 @@
   },
   "uppercase": {
     "message": "Isot kirjaimet (A-Z)",
-    "description": "Include uppercase letters in the password generator."
+    "description": "deprecated. Use uppercaseLabel instead."
   },
   "lowercase": {
     "message": "Pienet kirjaimet (a-z)",
-    "description": "Include lowercase letters in the password generator."
+    "description": "deprecated. Use lowercaseLabel instead."
   },
   "numbers": {
-    "message": "Numerot (0-9)"
+    "message": "Numerot (0-9)",
+    "description": "deprecated. Use numbersLabel instead."
   },
   "specialCharacters": {
     "message": "Erikoismerkit (!@#$%^&*)"
+  },
+  "uppercaseDescription": {
+    "message": "Sisällytä isoja kirjaimia",
+    "description": "Tooltip for the password generator uppercase character checkbox"
+  },
+  "uppercaseLabel": {
+    "message": "A-Ö",
+    "description": "Label for the password generator uppercase character checkbox"
+  },
+  "lowercaseDescription": {
+    "message": "Sisällytä pieniä kirjaimia",
+    "description": "Full description for the password generator lowercase character checkbox"
+  },
+  "lowercaseLabel": {
+    "message": "a-ö",
+    "description": "Label for the password generator lowercase character checkbox"
+  },
+  "numbersDescription": {
+    "message": "Sisällytä numeroita",
+    "description": "Full description for the password generator numbers checkbox"
+  },
+  "numbersLabel": {
+    "message": "0-9",
+    "description": "Label for the password generator numbers checkbox"
+  },
+  "specialCharactersDescription": {
+    "message": "Sisällytä erikoismerkkejä",
+    "description": "Full description for the password generator special characters checkbox"
+  },
+  "specialCharactersLabel": {
+    "message": "!@#$%^&*",
+    "description": "Label for the password generator special characters checkbox"
   },
   "numWords": {
     "message": "Sanojen määrä"
@@ -1474,6 +1581,10 @@
   },
   "includeNumber": {
     "message": "Sisällytä numero"
+  },
+  "generatorPolicyInEffect": {
+    "message": "Yrityskäytännön säännöt vaikuttavat generaattoriasetuksiisi.",
+    "description": "Indicates that a policy limits the credential generator screen."
   },
   "passwordHistory": {
     "message": "Salasanahistoria"
@@ -2195,6 +2306,9 @@
   "checkExposedPasswords": {
     "message": "Tarkasta paljastuneet salasanat"
   },
+  "timesExposed": {
+    "message": "Paljastumiskertaa"
+  },
   "exposedXTimes": {
     "message": "Paljastunut $COUNT$ kertaa",
     "placeholders": {
@@ -2229,6 +2343,9 @@
   "noWeakPasswords": {
     "message": "Holviisi tallennetuista kirjautumistiedoista ei löydetty heikkoja salasanoja."
   },
+  "weakness": {
+    "message": "Heikkous"
+  },
   "reusedPasswordsReport": {
     "message": "Toistuvat salasanat"
   },
@@ -2253,6 +2370,9 @@
   },
   "noReusedPasswords": {
     "message": "Holvissasi ei ole toistuvasti käytettyjä salasanoja."
+  },
+  "timesReused": {
+    "message": "Uudelleenkäyttökertaa"
   },
   "reusedXTimes": {
     "message": "Käytetty toistuvasti $COUNT$ kertaa",
@@ -2551,6 +2671,9 @@
   "downloadLicense": {
     "message": "Lataa lisenssi"
   },
+  "viewBillingToken": {
+    "message": "View Billing Token"
+  },
   "updateLicense": {
     "message": "Päivitä lisenssi"
   },
@@ -2597,8 +2720,11 @@
   "invoices": {
     "message": "Laskut"
   },
-  "noInvoices": {
-    "message": "Laskuja ei ole."
+  "noUnpaidInvoices": {
+    "message": "Ei maksamattomia laskuja."
+  },
+  "noPaidInvoices": {
+    "message": "Ei maksettuja laskuja."
   },
   "paid": {
     "message": "Maksettu",
@@ -3156,6 +3282,10 @@
   "incorrectPin": {
     "message": "Virheellinen PIN-koodi"
   },
+  "pin": {
+    "message": "PIN",
+    "description": "PIN code. Ex. The short code (often numeric) that you use to unlock a device."
+  },
   "exportedVault": {
     "message": "Holvi vietiin"
   },
@@ -3656,6 +3786,15 @@
   },
   "joinOrganization": {
     "message": "Liity organisaatioon"
+  },
+  "joinOrganizationName": {
+    "message": "Join $ORGANIZATIONNAME$",
+    "placeholders": {
+      "organizationName": {
+        "content": "$1",
+        "example": "My Org Name"
+      }
+    }
   },
   "joinOrganizationDesc": {
     "message": "Sinut on kutsuttu liittymään yllä mainittuun organisaatioon. Hyväksyäksesi kutsun, sinun tulee kirjautua tilillesi tai luoda uusi Bitwarden-tili."
@@ -5981,8 +6120,8 @@
   "viewBillingSyncToken": {
     "message": "Näytä laskutuksen synkronointitunniste"
   },
-  "generateBillingSyncToken": {
-    "message": "Luo laskutuksen synkronointitunniste"
+  "generateBillingToken": {
+    "message": "Generate billing token"
   },
   "copyPasteBillingSync": {
     "message": "Kopioi ja liitä tämä tunniste itse ylläpitämäsi organisaation laskutuksen synkronoinnin asetuksiin."
@@ -5990,8 +6129,8 @@
   "billingSyncCanAccess": {
     "message": "Laskutuksen synkronointitunniste mahdollistaa organisaation tilausasetusten tarkastelun ja muokkauksen."
   },
-  "manageBillingSync": {
-    "message": "Hallitse laskutuksen synkronointia"
+  "manageBillingTokenSync": {
+    "message": "Manage Billing Token"
   },
   "setUpBillingSync": {
     "message": "Määritä laskutuksen synkronointi"
@@ -6050,14 +6189,14 @@
   "billingSyncApiKeyRotated": {
     "message": "Tunniste uudistettiin"
   },
-  "billingSyncDesc": {
-    "message": "Laskutuksen synkronointi avaa palvelimellesi Families-sponsoroinnin ja automaattisen lisenssin synkronoinnin. Tehtyäsi muutokset Bitwardenin pilvipalvelimelle, ota ne käyttöön valitsemalla \"Synkronoi lisenssi\"."
-  },
   "billingSyncKeyDesc": {
     "message": "Lomakkeen täyttöön tarvitaan laskutuksen synkronointitunniste pilviorganisaatiosi tilausasetuksista."
   },
   "billingSyncKey": {
     "message": "Laskutuksen synkronointitunniste"
+  },
+  "automaticBillingSyncDesc": {
+    "message": "Automatic sync unlocks Families sponsorships and allows you to sync your license without uploading a file. After making updates in the Bitwarden cloud server, select Sync License to apply changes."
   },
   "active": {
     "message": "Aktiivinen"
@@ -6200,7 +6339,8 @@
     "message": "Tilin asetukset"
   },
   "generator": {
-    "message": "Generaattori"
+    "message": "Generaattori",
+    "description": "Short for 'credential generator'."
   },
   "whatWouldYouLikeToGenerate": {
     "message": "Mitä haluat luoda?"
@@ -6575,6 +6715,18 @@
       "count": {
         "content": "$1",
         "example": "4"
+      }
+    }
+  },
+  "singleFieldNeedsAttention": {
+    "message": "Yksi kenttä vaatii huomiotasi."
+  },
+  "multipleFieldsNeedAttention": {
+    "message": "$COUNT$ kenttää vaatii huomiotasi.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
       }
     }
   },
@@ -7438,6 +7590,15 @@
   "or": {
     "message": "tai"
   },
+  "unlockWithBiometrics": {
+    "message": "Avaa biometrialla"
+  },
+  "unlockWithPin": {
+    "message": "Avaa PIN-koodilla"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Avaa pääsalasanalla"
+  },
   "licenseAndBillingManagement": {
     "message": "Lisenssien ja laskutuksen hallinta"
   },
@@ -7447,8 +7608,8 @@
   "manualUpload": {
     "message": "Manuaalinen tallennus"
   },
-  "manualUploadDesc": {
-    "message": "Jos et halua liittyä laskutuksen synkronointiin, tallenna lisenssisi tänne manuallisesti."
+  "manualBillingTokenUploadDesc": {
+    "message": "If you do not want to opt into billing sync, manually upload your license here. This will not automatically unlock Families sponsorships."
   },
   "syncLicense": {
     "message": "Synkronoi lisenssi"
@@ -7776,6 +7937,15 @@
     "message": "Organisaatiosi edellyttää, että asetat pääsalasanan.",
     "description": "Used as a card title description on the set password page to explain why the user is there"
   },
+  "cardMetrics": {
+    "message": "out of $TOTAL$",
+    "placeholders": {
+      "total": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
   "notFound": {
     "message": "Resurssia $RESOURCE$ ei löytynyt",
     "placeholders": {
@@ -8036,6 +8206,12 @@
   },
   "limitCollectionCreationDeletionDesc": {
     "message": "Rajoita kokoelmien luonti ja poisto omistajille ja ylläpitäjille"
+  },
+  "limitCollectionCreationDesc": {
+    "message": "Limit collection creation to owners and admins"
+  },
+  "limitCollectionDeletionDesc": {
+    "message": "Limit collection deletion to owners and admins"
   },
   "allowAdminAccessToAllCollectionItemsDesc": {
     "message": "Omistajat ja ylläpitäjät voivat hallita kaikkia kokoelmia ja kohteita"
@@ -9221,5 +9397,29 @@
   },
   "editAccess": {
     "message": "Muokkaa käyttöoikeuksia"
+  },
+  "textHelpText": {
+    "message": "Use text fields for data like security questions"
+  },
+  "hiddenHelpText": {
+    "message": "Use hidden fields for sensitive data like a password"
+  },
+  "checkBoxHelpText": {
+    "message": "Use checkboxes if you'd like to autofill a form's checkbox, like a remember email"
+  },
+  "linkedHelpText": {
+    "message": "Use a linked field when you are experiencing autofill issues for a specific website."
+  },
+  "linkedLabelHelpText": {
+    "message": "Enter the the field's html id, name, aria-label, or placeholder."
+  },
+  "addAttachment": {
+    "message": "Lisää liite"
+  },
+  "maxFileSizeSansPunctuation": {
+    "message": "Tiedoston enimmäiskoko on 500 Mt"
+  },
+  "permanentlyDeleteAttachmentConfirmation": {
+    "message": "Haluatko varmasti poistaa liitteen pysyvästi?"
   }
 }

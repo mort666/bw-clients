@@ -403,11 +403,13 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
   }
 
   get upgradeRequiresPaymentMethod() {
-    return (
-      this.organization?.productTierType === ProductTierType.Free &&
-      !this.showFree &&
-      !this.billing?.paymentSource
-    );
+    const isFreeTier = this.organization?.productTierType === ProductTierType.Free;
+    const shouldHideFree = !this.showFree;
+    const hasNoPaymentSource = this.deprecateStripeSourcesAPI
+      ? !this.paymentSource
+      : !this.billing?.paymentSource;
+
+    return isFreeTier && shouldHideFree && hasNoPaymentSource;
   }
 
   get selectedSecretsManagerPlan() {
@@ -495,7 +497,7 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
       return 0;
     }
 
-    const result = plan.PasswordManager.seatPrice * Math.abs(this.organization.seats || 0);
+    const result = plan.PasswordManager.seatPrice * Math.abs(this.sub?.seats || 0);
     return result;
   }
 
