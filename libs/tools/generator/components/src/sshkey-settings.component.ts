@@ -1,6 +1,13 @@
 import { OnInit, Input, Output, EventEmitter, Component, OnDestroy } from "@angular/core";
 import { FormBuilder } from "@angular/forms";
-import { BehaviorSubject, takeUntil, Subject, skip, map, combineLatest } from "rxjs";
+import {
+  BehaviorSubject,
+  takeUntil,
+  Subject,
+  map,
+  combineLatest,
+  distinctUntilChanged,
+} from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -100,14 +107,12 @@ export class SshKeySettingsComponent implements OnInit, OnDestroy {
           ? {
               algorithm,
               settings: {
-                keyAlgorithm: algorithm,
                 bits: rsa.bits,
               } as SshKeyGenerationOptions,
             }
           : {
               algorithm,
               settings: {
-                keyAlgorithm: algorithm,
                 bits: ed25519.bits,
               } as SshKeyGenerationOptions,
             };
@@ -126,7 +131,7 @@ export class SshKeySettingsComponent implements OnInit, OnDestroy {
     // `onUpdated` depends on `settings` because the UserStateSubject is asynchronous;
     // subscribing directly to `this.settings.valueChanges` introduces a race condition.
     // skip the first emission because it's the initial value, not an update.
-    settings.pipe(skip(1), takeUntil(this.destroyed$)).subscribe(this.onUpdated);
+    settings.pipe(distinctUntilChanged(), takeUntil(this.destroyed$)).subscribe(this.onUpdated);
 
     this.settings.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((v) => {
       if (v.keyAlgorithm == "rsa") {

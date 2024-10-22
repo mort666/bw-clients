@@ -1,1 +1,1 @@
-<tools-sshkey-settings [userId]="this.userId$ | async" />
+<tools-sshkey-settings (onUpdated)="updated$.next($event)" [userId]="this.userId$ | async" />

@@ -79,7 +79,7 @@ const SomeConfiguration: CredentialGeneratorConfiguration<SomeSettings, SomePoli
   engine: {
     create: (randomizer) => {
       return {
-        generate: (request, _algorithm, settings) => {
+        generate: (request, settings) => {
           const credential = request.website ? `${request.website}|${settings.foo}` : settings.foo;
           const result = new GeneratedCredential(credential, SomeAlgorithm, SomeTime);
           return Promise.resolve(result);

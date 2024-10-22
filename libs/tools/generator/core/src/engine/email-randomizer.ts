@@ -3,7 +3,6 @@ import { GenerationRequest } from "@bitwarden/common/tools/types";
 
 import {
   CatchallGenerationOptions,
-  CredentialAlgorithm,
   CredentialGenerator,
   GeneratedCredential,
   SubaddressGenerationOptions,
@@ -112,17 +111,14 @@ export class EmailRandomizer
 
   generate(
     request: GenerationRequest,
-    algorithm: CredentialAlgorithm,
     settings: CatchallGenerationOptions,
   ): Promise<GeneratedCredential>;
   generate(
     request: GenerationRequest,
-    algorithm: CredentialAlgorithm,
     settings: SubaddressGenerationOptions,
   ): Promise<GeneratedCredential>;
   async generate(
     _request: GenerationRequest,
-    algorithm: CredentialAlgorithm,
     settings: CatchallGenerationOptions | SubaddressGenerationOptions,
   ) {
     if (isCatchallGenerationOptions(settings)) {

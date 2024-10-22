@@ -60,6 +60,8 @@ type Generate$Dependencies = Simplify<Partial<OnDependency> & Partial<UserDepend
    *  When `website$` errors, the generator forwards the error.
    */
   website$?: Observable<string>;
+
+  algorithm$?: Observable<CredentialAlgorithm>;
 };
 
 type Algorithms$Dependencies = Partial<UserDependency>;
@@ -90,7 +92,10 @@ export class CredentialGeneratorService {
 
     // stream blocks until all of these values are received
     const website$ = dependencies?.website$ ?? new BehaviorSubject<string>(null);
-    const request$ = website$.pipe(map((website) => ({ website })));
+    const algorithm$ = dependencies?.algorithm$ ?? new BehaviorSubject<CredentialAlgorithm>(null);
+    const request$ = combineLatest([website$, algorithm$]).pipe(
+      map(([website, algorithm]) => ({ website, algorithm })),
+    );
     const settings$ = this.settings$(configuration, dependencies);
 
     // monitor completion
@@ -117,7 +122,7 @@ export class CredentialGeneratorService {
     // generation proper
     const generate$ = (readyOn$ ?? settings$).pipe(
       withLatestFrom(request$, settings$),
-      concatMap(([, request, settings]) => engine.generate(request, configuration.id, settings)),
+      concatMap(([, request, settings]) => engine.generate(request, settings)),
       takeUntil(complete$),
     );
 

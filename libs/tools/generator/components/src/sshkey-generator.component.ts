@@ -8,6 +8,7 @@ import {
   GeneratedCredential,
   Generators,
 } from "@bitwarden/generator-core";
+import { SshKeyGenerationOptions } from "../../core/src/types/sshkey-generation-options";
 
 /** Options group for passwords */
 @Component({
@@ -35,6 +36,14 @@ export class SshKeyGeneratorComponent implements OnInit, OnDestroy {
   @Output()
   readonly onGenerated = new EventEmitter<GeneratedCredential>();
 
+  protected readonly updated$ = new BehaviorSubject<{
+    algorithm: "ed25519" | "rsa";
+    settings: SshKeyGenerationOptions;
+  }>({
+    algorithm: "ed25519",
+    settings: { bits: null },
+  });
+
   async ngOnInit() {
     if (this.userId) {
       this.userId$.next(this.userId);
@@ -50,6 +59,10 @@ export class SshKeyGeneratorComponent implements OnInit, OnDestroy {
 
     const dependencies = {
       userId$: this.userId$,
+      algorithm$: this.updated$.pipe(
+        map((update) => update.algorithm),
+        distinctUntilChanged(),
+      ),
     };
 
     this.generatorService

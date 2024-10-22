@@ -213,9 +213,12 @@ describe("EmailRandomizer", () => {
     it("processes catchall generation options", async () => {
       const email = new EmailRandomizer(randomizer);
 
-      const result = await email.generate({}, "catchall", {
-        catchallDomain: "example.com",
-      });
+      const result = await email.generate(
+        {},
+        {
+          catchallDomain: "example.com",
+        },
+      );
 
       expect(result.category).toEqual("catchall");
     });
