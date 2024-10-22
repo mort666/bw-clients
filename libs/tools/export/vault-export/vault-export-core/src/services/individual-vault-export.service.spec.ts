@@ -252,7 +252,7 @@ describe("VaultExportService", () => {
 
       cipherService.getAllDecrypted.mockResolvedValue([cipherView]);
       folderService.getAllDecryptedFromState.mockResolvedValue([]);
-      cryptoService.decryptFromBytes.mockResolvedValue(new Uint8Array(255));
+      encryptService.decryptToBytes.mockResolvedValue(new Uint8Array(255));
 
       global.fetch = jest.fn(() =>
         Promise.resolve({
