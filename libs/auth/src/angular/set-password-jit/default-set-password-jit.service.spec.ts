@@ -1,13 +1,13 @@
 import { MockProxy, mock } from "jest-mock-extended";
 import { BehaviorSubject, of } from "rxjs";
 
+import { OrganizationUserApiService } from "@bitwarden/admin-console/common";
 import {
   FakeUserDecryptionOptions as UserDecryptionOptions,
   InternalUserDecryptionOptionsServiceAbstraction,
 } from "@bitwarden/auth/common";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
-import { OrganizationUserService } from "@bitwarden/common/admin-console/abstractions/organization-user/organization-user.service";
 import { OrganizationKeysResponse } from "@bitwarden/common/admin-console/models/response/organization-keys.response";
 import { KdfConfigService } from "@bitwarden/common/auth/abstractions/kdf-config.service";
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/auth/abstractions/master-password.service.abstraction";
@@ -15,6 +15,7 @@ import { DEFAULT_KDF_CONFIG } from "@bitwarden/common/auth/models/domain/kdf-con
 import { SetPasswordRequest } from "@bitwarden/common/auth/models/request/set-password.request";
 import { KeysRequest } from "@bitwarden/common/models/request/keys.request";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
+import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
@@ -33,31 +34,34 @@ describe("DefaultSetPasswordJitService", () => {
 
   let apiService: MockProxy<ApiService>;
   let cryptoService: MockProxy<CryptoService>;
+  let encryptService: MockProxy<EncryptService>;
   let i18nService: MockProxy<I18nService>;
   let kdfConfigService: MockProxy<KdfConfigService>;
   let masterPasswordService: MockProxy<InternalMasterPasswordServiceAbstraction>;
   let organizationApiService: MockProxy<OrganizationApiServiceAbstraction>;
-  let organizationUserService: MockProxy<OrganizationUserService>;
+  let organizationUserApiService: MockProxy<OrganizationUserApiService>;
   let userDecryptionOptionsService: MockProxy<InternalUserDecryptionOptionsServiceAbstraction>;
 
   beforeEach(() => {
     apiService = mock<ApiService>();
     cryptoService = mock<CryptoService>();
+    encryptService = mock<EncryptService>();
     i18nService = mock<I18nService>();
     kdfConfigService = mock<KdfConfigService>();
     masterPasswordService = mock<InternalMasterPasswordServiceAbstraction>();
     organizationApiService = mock<OrganizationApiServiceAbstraction>();
-    organizationUserService = mock<OrganizationUserService>();
+    organizationUserApiService = mock<OrganizationUserApiService>();
     userDecryptionOptionsService = mock<InternalUserDecryptionOptionsServiceAbstraction>();
 
     sut = new DefaultSetPasswordJitService(
       apiService,
       cryptoService,
+      encryptService,
       i18nService,
       kdfConfigService,
       masterPasswordService,
       organizationApiService,
-      organizationUserService,
+      organizationUserApiService,
       userDecryptionOptionsService,
     );
   });
@@ -168,9 +172,9 @@ describe("DefaultSetPasswordJitService", () => {
       }
 
       cryptoService.userKey$.mockReturnValue(of(userKey));
-      cryptoService.rsaEncrypt.mockResolvedValue(userKeyEncString);
+      encryptService.rsaEncrypt.mockResolvedValue(userKeyEncString);
 
-      organizationUserService.putOrganizationUserResetPasswordEnrollment.mockResolvedValue(
+      organizationUserApiService.putOrganizationUserResetPasswordEnrollment.mockResolvedValue(
         undefined,
       );
     }
@@ -210,8 +214,10 @@ describe("DefaultSetPasswordJitService", () => {
       // Assert
       expect(apiService.setPassword).toHaveBeenCalledWith(setPasswordRequest);
       expect(organizationApiService.getKeys).toHaveBeenCalledWith(orgId);
-      expect(cryptoService.rsaEncrypt).toHaveBeenCalledWith(userKey.key, orgPublicKey);
-      expect(organizationUserService.putOrganizationUserResetPasswordEnrollment).toHaveBeenCalled();
+      expect(encryptService.rsaEncrypt).toHaveBeenCalledWith(userKey.key, orgPublicKey);
+      expect(
+        organizationUserApiService.putOrganizationUserResetPasswordEnrollment,
+      ).toHaveBeenCalled();
     });
 
     it("when handling reset password auto enroll, it should throw an error if organization keys are not found", async () => {
@@ -224,7 +230,7 @@ describe("DefaultSetPasswordJitService", () => {
       // Act and Assert
       await expect(sut.setPassword(credentials)).rejects.toThrow();
       expect(
-        organizationUserService.putOrganizationUserResetPasswordEnrollment,
+        organizationUserApiService.putOrganizationUserResetPasswordEnrollment,
       ).not.toHaveBeenCalled();
     });
   });

@@ -23,10 +23,10 @@ import { LogService } from "@bitwarden/common/platform/abstractions/log.service"
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
-import { BiometricStateService } from "@bitwarden/common/platform/biometrics/biometric-state.service";
 import { PasswordStrengthServiceAbstraction } from "@bitwarden/common/tools/password-strength";
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
-import { DialogService } from "@bitwarden/components";
+import { DialogService, ToastService } from "@bitwarden/components";
+import { BiometricsService, BiometricStateService } from "@bitwarden/key-management";
 
 import { BiometricErrors, BiometricErrorTypes } from "../../models/biometricErrors";
 import { BrowserRouterService } from "../../platform/popup/services/browser-router.service";
@@ -67,9 +67,11 @@ export class LockComponent extends BaseLockComponent implements OnInit {
     pinService: PinServiceAbstraction,
     private routerService: BrowserRouterService,
     biometricStateService: BiometricStateService,
+    biometricsService: BiometricsService,
     accountService: AccountService,
     kdfConfigService: KdfConfigService,
     syncService: SyncService,
+    toastService: ToastService,
   ) {
     super(
       masterPasswordService,
@@ -93,15 +95,17 @@ export class LockComponent extends BaseLockComponent implements OnInit {
       userVerificationService,
       pinService,
       biometricStateService,
+      biometricsService,
       accountService,
       authService,
       kdfConfigService,
       syncService,
+      toastService,
     );
     this.successRoute = "/tabs/current";
     this.isInitialLockScreen = (window as any).previousPopupUrl == null;
 
-    super.onSuccessfulSubmit = async () => {
+    this.onSuccessfulSubmit = async () => {
       const previousUrl = this.routerService.getPreviousUrl();
       if (previousUrl) {
         // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
@@ -129,22 +133,35 @@ export class LockComponent extends BaseLockComponent implements OnInit {
         this.isInitialLockScreen &&
         (await this.authService.getAuthStatus()) === AuthenticationStatus.Locked
       ) {
-        await this.unlockBiometric();
+        await this.unlockBiometric(true);
       }
     }, 100);
   }
 
-  override async unlockBiometric(): Promise<boolean> {
+  override async unlockBiometric(automaticPrompt: boolean = false): Promise<boolean> {
     if (!this.biometricLock) {
       return;
     }
 
-    this.pendingBiometric = true;
     this.biometricError = null;
 
     let success;
     try {
-      success = await super.unlockBiometric();
+      const available = await super.isBiometricUnlockAvailable();
+      if (!available) {
+        if (!automaticPrompt) {
+          await this.dialogService.openSimpleDialog({
+            type: "warning",
+            title: { key: "biometricsNotAvailableTitle" },
+            content: { key: "biometricsNotAvailableDesc" },
+            acceptButtonText: { key: "ok" },
+            cancelButtonText: null,
+          });
+        }
+      } else {
+        this.pendingBiometric = true;
+        success = await super.unlockBiometric();
+      }
     } catch (e) {
       const error = BiometricErrors[e?.message as BiometricErrorTypes];
 

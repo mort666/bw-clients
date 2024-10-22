@@ -21,10 +21,12 @@ import {
   DisablePasswordManagerUri,
   InlineMenuVisibilitySetting,
 } from "@bitwarden/common/autofill/types";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import {
   UriMatchStrategy,
   UriMatchStrategySetting,
 } from "@bitwarden/common/models/domain/domain-service";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
@@ -78,30 +80,36 @@ export class AutofillComponent implements OnInit {
    * Default values set here are used in component state operations
    * until corresponding stored settings have loaded on init.
    */
-  protected canOverrideBrowserAutofillSetting = false;
-  protected defaultBrowserAutofillDisabled = false;
+  protected canOverrideBrowserAutofillSetting: boolean = false;
+  protected defaultBrowserAutofillDisabled: boolean = false;
   protected inlineMenuVisibility: InlineMenuVisibilitySetting =
     AutofillOverlayVisibility.OnFieldFocus;
+  protected inlineMenuPositioningImprovementsEnabled: boolean = false;
   protected browserClientVendor: BrowserClientVendor = BrowserClientVendors.Unknown;
   protected disablePasswordManagerURI: DisablePasswordManagerUri =
     DisablePasswordManagerUris.Unknown;
   protected browserShortcutsURI: BrowserShortcutsUri = BrowserShortcutsUris.Unknown;
   protected browserClientIsUnknown: boolean;
-  enableAutofillOnPageLoad = false;
-  enableInlineMenu = false;
-  enableInlineMenuOnIconSelect = false;
-  autofillOnPageLoadDefault = false;
+  protected autofillOnPageLoadFromPolicy$ =
+    this.autofillSettingsService.activateAutofillOnPageLoadFromPolicy$;
+
+  enableAutofillOnPageLoad: boolean = false;
+  enableInlineMenu: boolean = false;
+  enableInlineMenuOnIconSelect: boolean = false;
+  showInlineMenuIdentities: boolean = true;
+  showInlineMenuCards: boolean = true;
+  autofillOnPageLoadDefault: boolean = false;
   autofillOnPageLoadOptions: { name: string; value: boolean }[];
-  enableContextMenuItem = false;
-  enableAutoTotpCopy = false;
+  enableContextMenuItem: boolean = false;
+  enableAutoTotpCopy: boolean = false;
   clearClipboard: ClearClipboardDelaySetting;
   clearClipboardOptions: { name: string; value: ClearClipboardDelaySetting }[];
   defaultUriMatch: UriMatchStrategySetting = UriMatchStrategy.Domain;
   uriMatchOptions: { name: string; value: UriMatchStrategySetting }[];
-  showCardsCurrentTab = true;
-  showIdentitiesCurrentTab = true;
+  showCardsCurrentTab: boolean = true;
+  showIdentitiesCurrentTab: boolean = true;
   autofillKeyboardHelperText: string;
-  accountSwitcherEnabled = false;
+  accountSwitcherEnabled: boolean = false;
 
   constructor(
     private i18nService: I18nService,
@@ -111,6 +119,7 @@ export class AutofillComponent implements OnInit {
     private autofillSettingsService: AutofillSettingsServiceAbstraction,
     private messagingService: MessagingService,
     private vaultSettingsService: VaultSettingsService,
+    private configService: ConfigService,
   ) {
     this.autofillOnPageLoadOptions = [
       { name: i18nService.t("autoFillOnPageLoadYes"), value: true },
@@ -147,6 +156,18 @@ export class AutofillComponent implements OnInit {
     this.inlineMenuVisibility = await firstValueFrom(
       this.autofillSettingsService.inlineMenuVisibility$,
     );
+
+    this.inlineMenuPositioningImprovementsEnabled = await this.configService.getFeatureFlag(
+      FeatureFlag.InlineMenuPositioningImprovements,
+    );
+
+    this.showInlineMenuIdentities =
+      this.inlineMenuPositioningImprovementsEnabled &&
+      (await firstValueFrom(this.autofillSettingsService.showInlineMenuIdentities$));
+
+    this.showInlineMenuCards =
+      this.inlineMenuPositioningImprovementsEnabled &&
+      (await firstValueFrom(this.autofillSettingsService.showInlineMenuCards$));
 
     this.enableInlineMenuOnIconSelect =
       this.inlineMenuVisibility === AutofillOverlayVisibility.OnButtonClick;
@@ -377,5 +398,13 @@ export class AutofillComponent implements OnInit {
 
   async updateShowIdentitiesCurrentTab() {
     await this.vaultSettingsService.setShowIdentitiesCurrentTab(this.showIdentitiesCurrentTab);
+  }
+
+  async updateShowInlineMenuCards() {
+    await this.autofillSettingsService.setShowInlineMenuCards(this.showInlineMenuCards);
+  }
+
+  async updateShowInlineMenuIdentities() {
+    await this.autofillSettingsService.setShowInlineMenuIdentities(this.showInlineMenuIdentities);
   }
 }

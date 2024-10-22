@@ -1,9 +1,12 @@
-import { Component, EventEmitter, Input, Output } from "@angular/core";
+import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
+import { firstValueFrom } from "rxjs";
 
+import { CollectionView } from "@bitwarden/admin-console/common";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
-import { CollectionView } from "@bitwarden/common/vault/models/view/collection.view";
 
 import { VaultItemEvent } from "./vault-item-event";
 import { RowHeightClass } from "./vault-items.component";
@@ -12,8 +15,13 @@ import { RowHeightClass } from "./vault-items.component";
   selector: "tr[appVaultCipherRow]",
   templateUrl: "vault-cipher-row.component.html",
 })
-export class VaultCipherRowComponent {
+export class VaultCipherRowComponent implements OnInit {
   protected RowHeightClass = RowHeightClass;
+
+  /**
+   * Flag to determine if the extension refresh feature flag is enabled.
+   */
+  protected extensionRefreshEnabled = false;
 
   @Input() disabled: boolean;
   @Input() cipher: CipherView;
@@ -27,7 +35,7 @@ export class VaultCipherRowComponent {
   @Input() collections: CollectionView[];
   @Input() viewingOrgVault: boolean;
   @Input() canEditCipher: boolean;
-  @Input() vaultBulkManagementActionEnabled: boolean;
+  @Input() canManageCollection: boolean;
 
   @Output() onEvent = new EventEmitter<VaultItemEvent>();
 
@@ -35,6 +43,22 @@ export class VaultCipherRowComponent {
   @Output() checkedToggled = new EventEmitter<void>();
 
   protected CipherType = CipherType;
+  protected organization?: Organization;
+
+  constructor(private configService: ConfigService) {}
+
+  /**
+   * Lifecycle hook for component initialization.
+   * Checks if the extension refresh feature flag is enabled to provide to template.
+   */
+  async ngOnInit(): Promise<void> {
+    this.extensionRefreshEnabled = await firstValueFrom(
+      this.configService.getFeatureFlag$(FeatureFlag.ExtensionRefresh),
+    );
+    if (this.cipher.organizationId != null) {
+      this.organization = this.organizations.find((o) => o.id === this.cipher.organizationId);
+    }
+  }
 
   protected get showTotpCopyButton() {
     return (
@@ -80,17 +104,15 @@ export class VaultCipherRowComponent {
   }
 
   protected get disableMenu() {
-    return (
-      !(
-        this.isNotDeletedLoginCipher ||
-        this.showCopyPassword ||
-        this.showCopyTotp ||
-        this.showLaunchUri ||
-        this.showAttachments ||
-        this.showClone ||
-        this.canEditCipher ||
-        this.cipher.isDeleted
-      ) && this.vaultBulkManagementActionEnabled
+    return !(
+      this.isNotDeletedLoginCipher ||
+      this.showCopyPassword ||
+      this.showCopyTotp ||
+      this.showLaunchUri ||
+      this.showAttachments ||
+      this.showClone ||
+      this.canEditCipher ||
+      this.cipher.isDeleted
     );
   }
 
@@ -100,14 +122,6 @@ export class VaultCipherRowComponent {
 
   protected clone() {
     this.onEvent.emit({ type: "clone", item: this.cipher });
-  }
-
-  protected moveToOrganization() {
-    this.onEvent.emit({ type: "moveToOrganization", items: [this.cipher] });
-  }
-
-  protected editCollections() {
-    this.onEvent.emit({ type: "viewCipherCollections", item: this.cipher });
   }
 
   protected events() {
@@ -128,5 +142,13 @@ export class VaultCipherRowComponent {
 
   protected assignToCollections() {
     this.onEvent.emit({ type: "assignToCollections", items: [this.cipher] });
+  }
+
+  protected get showCheckbox() {
+    if (!this.viewingOrgVault || !this.organization) {
+      return true; // Always show checkbox in individual vault or for non-org items
+    }
+
+    return this.organization.canEditAllCiphers || this.cipher.edit;
   }
 }

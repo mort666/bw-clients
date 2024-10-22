@@ -3,11 +3,12 @@ import { Directive, OnInit } from "@angular/core";
 import {
   OrganizationUserBulkPublicKeyResponse,
   OrganizationUserBulkResponse,
-} from "@bitwarden/common/admin-console/abstractions/organization-user/responses";
+} from "@bitwarden/admin-console/common";
 import { ProviderUserBulkPublicKeyResponse } from "@bitwarden/common/admin-console/models/response/provider/provider-user-bulk-public-key.response";
 import { ProviderUserBulkResponse } from "@bitwarden/common/admin-console/models/response/provider/provider-user-bulk.response";
 import { ListResponse } from "@bitwarden/common/models/response/list.response";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
+import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
@@ -31,6 +32,7 @@ export abstract class BaseBulkConfirmComponent implements OnInit {
 
   protected constructor(
     protected cryptoService: CryptoService,
+    protected encryptService: EncryptService,
     protected i18nService: I18nService,
   ) {}
 
@@ -67,7 +69,7 @@ export abstract class BaseBulkConfirmComponent implements OnInit {
         if (publicKey == null) {
           continue;
         }
-        const encryptedKey = await this.cryptoService.rsaEncrypt(key.key, publicKey);
+        const encryptedKey = await this.encryptService.rsaEncrypt(key.key, publicKey);
         userIdsWithKeys.push({
           id: user.id,
           key: encryptedKey.encryptedString,

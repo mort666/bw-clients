@@ -40,6 +40,7 @@ export type FocusedFieldData = {
   frameId?: number;
   accountCreationFieldType?: string;
   showInlineMenuAccountCreation?: boolean;
+  showPasskeys?: boolean;
 };
 
 export type InlineMenuElementPosition = {
@@ -187,6 +188,8 @@ export type OverlayBackgroundExtensionMessageHandlers = {
   updateIsFieldCurrentlyFilling: ({ message }: BackgroundMessageParam) => void;
   checkIsFieldCurrentlyFilling: () => boolean;
   getAutofillInlineMenuVisibility: () => void;
+  getInlineMenuCardsVisibility: () => void;
+  getInlineMenuIdentitiesVisibility: () => void;
   openAutofillInlineMenu: () => void;
   closeAutofillInlineMenu: ({ message, sender }: BackgroundOnMessageHandlerParams) => void;
   checkAutofillInlineMenuFocused: ({ sender }: BackgroundSenderParam) => void;
@@ -211,10 +214,12 @@ export type OverlayBackgroundExtensionMessageHandlers = {
   }: BackgroundOnMessageHandlerParams) => void;
   collectPageDetailsResponse: ({ message, sender }: BackgroundOnMessageHandlerParams) => void;
   unlockCompleted: ({ message }: BackgroundMessageParam) => void;
+  doFullSync: () => void;
   addedCipher: () => void;
   addEditCipherSubmitted: () => void;
   editedCipher: () => void;
   deletedCipher: () => void;
+  fido2AbortRequest: ({ message, sender }: BackgroundOnMessageHandlerParams) => void;
 };
 
 export type PortMessageParam = {

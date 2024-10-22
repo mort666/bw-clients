@@ -101,6 +101,11 @@
           {
             "zones": [
               {
+                "target": ["libs/**/*"],
+                "from": ["apps/**/*"],
+                "message": "Libs should not import app-specific code."
+              },
+              {
                 // avoid specific frameworks or large dependencies in common
                 "target": "./libs/common/**/*",
                 "from": [
@@ -286,6 +291,12 @@
       "files": ["libs/tools/send/send-ui/src/**/*.ts"],
       "rules": {
         "no-restricted-imports": ["error", { "patterns": ["@bitwarden/send-ui/*", "src/**/*"] }]
+      }
+    },
+    {
+      "files": ["libs/tools/card/src/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": ["error", { "patterns": ["@bitwarden/tools-card/*", "src/**/*"] }]
       }
     },
     {

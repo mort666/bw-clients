@@ -1,5 +1,8 @@
+import { mock, MockProxy } from "jest-mock-extended";
+
 import AutofillInit from "../../../content/autofill-init";
 import { AutofillOverlayElement } from "../../../enums/autofill-overlay.enum";
+import { DomQueryService } from "../../../services/abstractions/dom-query.service";
 import { createMutationRecordMock } from "../../../spec/autofill-mocks";
 import { flushPromises, sendMockExtensionMessage } from "../../../spec/testing-utils";
 import { ElementWithOpId } from "../../../types";
@@ -7,21 +10,23 @@ import { ElementWithOpId } from "../../../types";
 import { AutofillInlineMenuContentService } from "./autofill-inline-menu-content.service";
 
 describe("AutofillInlineMenuContentService", () => {
+  let domQueryService: MockProxy<DomQueryService>;
   let autofillInlineMenuContentService: AutofillInlineMenuContentService;
   let autofillInit: AutofillInit;
   let sendExtensionMessageSpy: jest.SpyInstance;
-  let observeBodyMutationsSpy: jest.SpyInstance;
+  let observeContainerMutationsSpy: jest.SpyInstance;
   const waitForIdleCallback = () =>
     new Promise((resolve) => globalThis.requestIdleCallback(resolve));
 
   beforeEach(() => {
     globalThis.document.body.innerHTML = "";
     globalThis.requestIdleCallback = jest.fn((cb, options) => setTimeout(cb, 100));
+    domQueryService = mock<DomQueryService>();
     autofillInlineMenuContentService = new AutofillInlineMenuContentService();
-    autofillInit = new AutofillInit(null, autofillInlineMenuContentService);
+    autofillInit = new AutofillInit(domQueryService, null, autofillInlineMenuContentService);
     autofillInit.init();
-    observeBodyMutationsSpy = jest.spyOn(
-      autofillInlineMenuContentService["bodyElementMutationObserver"] as any,
+    observeContainerMutationsSpy = jest.spyOn(
+      autofillInlineMenuContentService["containerElementMutationObserver"] as any,
       "observe",
     );
     sendExtensionMessageSpy = jest.spyOn(
@@ -46,7 +51,7 @@ describe("AutofillInlineMenuContentService", () => {
   describe("extension message handlers", () => {
     describe("closeAutofillInlineMenu message handler", () => {
       beforeEach(() => {
-        observeBodyMutationsSpy.mockImplementation();
+        observeContainerMutationsSpy.mockImplementation();
       });
 
       it("closes the inline menu button", async () => {
@@ -82,9 +87,9 @@ describe("AutofillInlineMenuContentService", () => {
       });
 
       it("closes both inline menu elements and removes the body element mutation observer", async () => {
-        const unobserveBodyElementSpy = jest.spyOn(
+        const unobserveContainerElementSpy = jest.spyOn(
           autofillInlineMenuContentService as any,
-          "unobserveBodyElement",
+          "unobserveContainerElement",
         );
         sendMockExtensionMessage({
           command: "appendAutofillInlineMenuToDom",
@@ -99,7 +104,7 @@ describe("AutofillInlineMenuContentService", () => {
           command: "closeAutofillInlineMenu",
         });
 
-        expect(unobserveBodyElementSpy).toHaveBeenCalled();
+        expect(unobserveContainerElementSpy).toHaveBeenCalled();
         expect(sendExtensionMessageSpy).toHaveBeenCalledWith("autofillOverlayElementClosed", {
           overlayElement: AutofillOverlayElement.Button,
         });
@@ -122,7 +127,7 @@ describe("AutofillInlineMenuContentService", () => {
           .spyOn(autofillInlineMenuContentService as any, "isInlineMenuListVisible")
           .mockResolvedValue(true);
         jest.spyOn(globalThis.document.body, "appendChild");
-        observeBodyMutationsSpy.mockImplementation();
+        observeContainerMutationsSpy.mockImplementation();
       });
 
       describe("creating the inline menu button", () => {
@@ -274,7 +279,8 @@ describe("AutofillInlineMenuContentService", () => {
     });
   });
 
-  describe("handleBodyElementMutationObserverUpdate", () => {
+  describe("handleContainerElementMutationObserverUpdate", () => {
+    let mockMutationRecord: MockProxy<MutationRecord>;
     let buttonElement: HTMLElement;
     let listElement: HTMLElement;
     let isInlineMenuListVisibleSpy: jest.SpyInstance;
@@ -284,6 +290,7 @@ describe("AutofillInlineMenuContentService", () => {
       <div class="overlay-button"></div>
       <div class="overlay-list"></div>
       `;
+      mockMutationRecord = mock<MutationRecord>({ target: globalThis.document.body } as any);
       buttonElement = document.querySelector(".overlay-button") as HTMLElement;
       listElement = document.querySelector(".overlay-list") as HTMLElement;
       autofillInlineMenuContentService["buttonElement"] = buttonElement;
@@ -304,7 +311,9 @@ describe("AutofillInlineMenuContentService", () => {
       autofillInlineMenuContentService["buttonElement"] = undefined;
       autofillInlineMenuContentService["listElement"] = undefined;
 
-      await autofillInlineMenuContentService["handleBodyElementMutationObserverUpdate"]();
+      autofillInlineMenuContentService["handleContainerElementMutationObserverUpdate"]([
+        mockMutationRecord,
+      ]);
       await waitForIdleCallback();
 
       expect(globalThis.document.body.insertBefore).not.toHaveBeenCalled();
@@ -318,7 +327,9 @@ describe("AutofillInlineMenuContentService", () => {
         )
         .mockReturnValue(true);
 
-      await autofillInlineMenuContentService["handleBodyElementMutationObserverUpdate"]();
+      autofillInlineMenuContentService["handleContainerElementMutationObserverUpdate"]([
+        mockMutationRecord,
+      ]);
       await waitForIdleCallback();
 
       expect(globalThis.document.body.insertBefore).not.toHaveBeenCalled();
@@ -327,14 +338,18 @@ describe("AutofillInlineMenuContentService", () => {
     it("skips re-arranging the DOM elements if the last child of the body is non-existent", async () => {
       document.body.innerHTML = "";
 
-      await autofillInlineMenuContentService["handleBodyElementMutationObserverUpdate"]();
+      autofillInlineMenuContentService["handleContainerElementMutationObserverUpdate"]([
+        mockMutationRecord,
+      ]);
       await waitForIdleCallback();
 
       expect(globalThis.document.body.insertBefore).not.toHaveBeenCalled();
     });
 
     it("skips re-arranging the DOM elements if the last child of the body is the overlay list and the second to last child of the body is the overlay button", async () => {
-      await autofillInlineMenuContentService["handleBodyElementMutationObserverUpdate"]();
+      autofillInlineMenuContentService["handleContainerElementMutationObserverUpdate"]([
+        mockMutationRecord,
+      ]);
       await waitForIdleCallback();
 
       expect(globalThis.document.body.insertBefore).not.toHaveBeenCalled();
@@ -344,7 +359,9 @@ describe("AutofillInlineMenuContentService", () => {
       listElement.remove();
       isInlineMenuListVisibleSpy.mockResolvedValue(false);
 
-      await autofillInlineMenuContentService["handleBodyElementMutationObserverUpdate"]();
+      autofillInlineMenuContentService["handleContainerElementMutationObserverUpdate"]([
+        mockMutationRecord,
+      ]);
       await waitForIdleCallback();
 
       expect(globalThis.document.body.insertBefore).not.toHaveBeenCalled();
@@ -354,7 +371,9 @@ describe("AutofillInlineMenuContentService", () => {
       const injectedElement = document.createElement("div");
       document.body.insertBefore(injectedElement, listElement);
 
-      await autofillInlineMenuContentService["handleBodyElementMutationObserverUpdate"]();
+      autofillInlineMenuContentService["handleContainerElementMutationObserverUpdate"]([
+        mockMutationRecord,
+      ]);
       await waitForIdleCallback();
 
       expect(globalThis.document.body.insertBefore).toHaveBeenCalledWith(
@@ -366,7 +385,9 @@ describe("AutofillInlineMenuContentService", () => {
     it("positions the overlay button before the overlay list if the elements have inserted in incorrect order", async () => {
       document.body.appendChild(buttonElement);
 
-      await autofillInlineMenuContentService["handleBodyElementMutationObserverUpdate"]();
+      autofillInlineMenuContentService["handleContainerElementMutationObserverUpdate"]([
+        mockMutationRecord,
+      ]);
       await waitForIdleCallback();
 
       expect(globalThis.document.body.insertBefore).toHaveBeenCalledWith(
@@ -379,7 +400,9 @@ describe("AutofillInlineMenuContentService", () => {
       const injectedElement = document.createElement("div");
       document.body.appendChild(injectedElement);
 
-      await autofillInlineMenuContentService["handleBodyElementMutationObserverUpdate"]();
+      autofillInlineMenuContentService["handleContainerElementMutationObserverUpdate"]([
+        mockMutationRecord,
+      ]);
       await waitForIdleCallback();
 
       expect(globalThis.document.body.insertBefore).toHaveBeenCalledWith(
@@ -404,7 +427,9 @@ describe("AutofillInlineMenuContentService", () => {
           1000,
         );
 
-        await autofillInlineMenuContentService["handleBodyElementMutationObserverUpdate"]();
+        autofillInlineMenuContentService["handleContainerElementMutationObserverUpdate"]([
+          mockMutationRecord,
+        ]);
         await waitForIdleCallback();
 
         expect(persistentLastChild.style.getPropertyValue("z-index")).toBe("2147483646");

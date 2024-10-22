@@ -3,7 +3,7 @@ import { Injectable } from "@angular/core";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { OrganizationKeysRequest } from "@bitwarden/common/admin-console/models/request/organization-keys.request";
 import { ProviderAddOrganizationRequest } from "@bitwarden/common/admin-console/models/request/provider/provider-add-organization.request";
-import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions/billilng-api.service.abstraction";
+import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions/billing-api.service.abstraction";
 import { PlanType } from "@bitwarden/common/billing/enums";
 import { CreateClientOrganizationRequest } from "@bitwarden/common/billing/models/request/create-client-organization.request";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
@@ -27,7 +27,7 @@ export class WebProviderService {
     const orgKey = await this.cryptoService.getOrgKey(organizationId);
     const providerKey = await this.cryptoService.getProviderKey(providerId);
 
-    const encryptedOrgKey = await this.cryptoService.encrypt(orgKey.key, providerKey);
+    const encryptedOrgKey = await this.encryptService.encrypt(orgKey.key, providerKey);
 
     const request = new ProviderAddOrganizationRequest();
     request.organizationId = organizationId;

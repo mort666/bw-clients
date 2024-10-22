@@ -32,6 +32,15 @@ export class WebRegistrationFinishService
     super(cryptoService, accountApiService);
   }
 
+  override async getOrgNameFromOrgInvite(): Promise<string | null> {
+    const orgInvite = await this.acceptOrgInviteService.getOrganizationInvite();
+    if (orgInvite == null) {
+      return null;
+    }
+
+    return orgInvite.organizationName;
+  }
+
   override async getMasterPasswordPolicyOptsFromOrgInvite(): Promise<MasterPasswordPolicyOptions | null> {
     // If there's a deep linked org invite, use it to get the password policies
     const orgInvite = await this.acceptOrgInviteService.getOrganizationInvite();
@@ -66,17 +75,20 @@ export class WebRegistrationFinishService
   // Note: the org invite token and email verification are mutually exclusive. Only one will be present.
   override async buildRegisterRequest(
     email: string,
-    emailVerificationToken: string,
     passwordInputResult: PasswordInputResult,
     encryptedUserKey: EncryptedString,
     userAsymmetricKeys: [string, EncString],
+    emailVerificationToken?: string,
+    orgSponsoredFreeFamilyPlanToken?: string,
+    acceptEmergencyAccessInviteToken?: string,
+    emergencyAccessId?: string,
   ): Promise<RegisterFinishRequest> {
     const registerRequest = await super.buildRegisterRequest(
       email,
-      emailVerificationToken,
       passwordInputResult,
       encryptedUserKey,
       userAsymmetricKeys,
+      emailVerificationToken,
     );
 
     // web specific logic
@@ -88,6 +100,15 @@ export class WebRegistrationFinishService
       registerRequest.orgInviteToken = orgInvite.token;
     }
     // Invite is accepted after login (on deep link redirect).
+
+    if (orgSponsoredFreeFamilyPlanToken) {
+      registerRequest.orgSponsoredFreeFamilyPlanToken = orgSponsoredFreeFamilyPlanToken;
+    }
+
+    if (acceptEmergencyAccessInviteToken && emergencyAccessId) {
+      registerRequest.acceptEmergencyAccessInviteToken = acceptEmergencyAccessInviteToken;
+      registerRequest.acceptEmergencyAccessId = emergencyAccessId;
+    }
 
     return registerRequest;
   }

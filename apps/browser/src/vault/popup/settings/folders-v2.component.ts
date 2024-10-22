@@ -10,8 +10,8 @@ import {
   ButtonModule,
   DialogService,
   IconButtonModule,
-  Icons,
 } from "@bitwarden/components";
+import { VaultIcons } from "@bitwarden/vault";
 
 import { ItemGroupComponent } from "../../../../../../libs/components/src/item/item-group.component";
 import { ItemModule } from "../../../../../../libs/components/src/item/item.module";
@@ -23,7 +23,6 @@ import {
   AddEditFolderDialogComponent,
   AddEditFolderDialogData,
 } from "../components/vault-v2/add-edit-folder-dialog/add-edit-folder-dialog.component";
-import { NewItemDropdownV2Component } from "../components/vault-v2/new-item-dropdown/new-item-dropdown-v2.component";
 
 @Component({
   standalone: true,
@@ -31,7 +30,6 @@ import { NewItemDropdownV2Component } from "../components/vault-v2/new-item-drop
   imports: [
     CommonModule,
     JslibModule,
-    NewItemDropdownV2Component,
     PopOutComponent,
     PopupPageComponent,
     PopupHeaderComponent,
@@ -46,7 +44,7 @@ import { NewItemDropdownV2Component } from "../components/vault-v2/new-item-drop
 export class FoldersV2Component {
   folders$: Observable<FolderView[]>;
 
-  NoFoldersIcon = Icons.NoFolders;
+  NoFoldersIcon = VaultIcons.NoFolders;
 
   constructor(
     private folderService: FolderService,

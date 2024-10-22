@@ -12,6 +12,7 @@ import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abs
 import { VaultTimeoutAction } from "@bitwarden/common/enums/vault-timeout-action.enum";
 import { AppIdService } from "@bitwarden/common/platform/abstractions/app-id.service";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
+import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
@@ -37,6 +38,7 @@ describe("AuthRequestLoginStrategy", () => {
   let cache: AuthRequestLoginStrategyData;
 
   let cryptoService: MockProxy<CryptoService>;
+  let encryptService: MockProxy<EncryptService>;
   let apiService: MockProxy<ApiService>;
   let tokenService: MockProxy<TokenService>;
   let appIdService: MockProxy<AppIdService>;
@@ -101,6 +103,7 @@ describe("AuthRequestLoginStrategy", () => {
       accountService,
       masterPasswordService,
       cryptoService,
+      encryptService,
       apiService,
       tokenService,
       appIdService,
@@ -158,8 +161,11 @@ describe("AuthRequestLoginStrategy", () => {
       decMasterKeyHash,
       mockUserId,
     );
-    expect(cryptoService.setMasterKeyEncryptedUserKey).toHaveBeenCalledWith(tokenResponse.key);
-    expect(cryptoService.setUserKey).toHaveBeenCalledWith(userKey);
+    expect(cryptoService.setMasterKeyEncryptedUserKey).toHaveBeenCalledWith(
+      tokenResponse.key,
+      mockUserId,
+    );
+    expect(cryptoService.setUserKey).toHaveBeenCalledWith(userKey, mockUserId);
     expect(deviceTrustService.trustDeviceIfRequired).toHaveBeenCalled();
     expect(cryptoService.setPrivateKey).toHaveBeenCalledWith(tokenResponse.privateKey, mockUserId);
   });
@@ -183,8 +189,11 @@ describe("AuthRequestLoginStrategy", () => {
     expect(masterPasswordService.mock.setMasterKeyHash).not.toHaveBeenCalled();
 
     // setMasterKeyEncryptedUserKey, setUserKey, and setPrivateKey should still be called
-    expect(cryptoService.setMasterKeyEncryptedUserKey).toHaveBeenCalledWith(tokenResponse.key);
-    expect(cryptoService.setUserKey).toHaveBeenCalledWith(decUserKey);
+    expect(cryptoService.setMasterKeyEncryptedUserKey).toHaveBeenCalledWith(
+      tokenResponse.key,
+      mockUserId,
+    );
+    expect(cryptoService.setUserKey).toHaveBeenCalledWith(decUserKey, mockUserId);
     expect(cryptoService.setPrivateKey).toHaveBeenCalledWith(tokenResponse.privateKey, mockUserId);
 
     // trustDeviceIfRequired should be called

@@ -4,12 +4,12 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angular/forms";
 import { concatMap, map } from "rxjs";
 
+import { CollectionView } from "@bitwarden/admin-console/common";
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { CollectionId, OrganizationId } from "@bitwarden/common/types/guid";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
-import { CollectionView } from "@bitwarden/common/vault/models/view/collection.view";
 import {
   CardComponent,
   FormFieldModule,
@@ -190,9 +190,9 @@ export class ItemDetailsSectionComponent implements OnInit {
 
   private async initFromExistingCipher() {
     this.itemDetailsForm.setValue({
-      name: this.originalCipherView.name,
-      organizationId: this.originalCipherView.organizationId,
-      folderId: this.originalCipherView.folderId,
+      name: this.initialValues?.name ?? this.originalCipherView.name,
+      organizationId: this.originalCipherView.organizationId, // We do not allow changing ownership of an existing cipher.
+      folderId: this.initialValues?.folderId ?? this.originalCipherView.folderId,
       collectionIds: [],
       favorite: this.originalCipherView.favorite,
     });
@@ -208,7 +208,10 @@ export class ItemDetailsSectionComponent implements OnInit {
       }
     }
 
-    await this.updateCollectionOptions(this.originalCipherView.collectionIds as CollectionId[]);
+    await this.updateCollectionOptions(
+      this.initialValues?.collectionIds ??
+        (this.originalCipherView.collectionIds as CollectionId[]),
+    );
 
     if (this.partialEdit) {
       this.itemDetailsForm.disable();

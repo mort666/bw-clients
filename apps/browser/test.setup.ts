@@ -153,6 +153,25 @@ const webNavigation = {
     addListener: jest.fn(),
     removeListener: jest.fn(),
   },
+  onCompleted: {
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+  },
+};
+
+const webRequest = {
+  onBeforeRequest: {
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+  },
+  onBeforeRedirect: {
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+  },
+  onCompleted: {
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+  },
 };
 
 const alarms = {
@@ -182,5 +201,6 @@ global.chrome = {
   offscreen,
   permissions,
   webNavigation,
+  webRequest,
   alarms,
 } as any;
