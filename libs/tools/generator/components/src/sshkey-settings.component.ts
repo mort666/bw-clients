@@ -130,9 +130,9 @@ export class SshKeySettingsComponent implements OnInit, OnDestroy {
 
     // `onUpdated` depends on `settings` because the UserStateSubject is asynchronous;
     // subscribing directly to `this.settings.valueChanges` introduces a race condition.
-    // skip the first emission because it's the initial value, not an update.
     settings.pipe(distinctUntilChanged(), takeUntil(this.destroyed$)).subscribe(this.onUpdated);
 
+    // update settings based on user input
     this.settings.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((v) => {
       if (v.keyAlgorithm == "rsa") {
         rsaSettings.next({
