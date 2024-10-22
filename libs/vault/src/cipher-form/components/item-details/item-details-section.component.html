@@ -2,6 +2,7 @@
   <bit-section-header>
     <h2 bitTypography="h6">{{ "itemDetails" | i18n }}</h2>
     <button
+      *ngIf="!config.hideIndividualVaultFields"
       slot="end"
       type="button"
       size="small"
@@ -17,11 +18,11 @@
       <bit-label>{{ "itemName" | i18n }}</bit-label>
       <input bitInput formControlName="name" />
     </bit-form-field>
-    <div class="tw-flex tw-flex-wrap tw-gap-1">
+    <div class="tw-grid tw-grid-cols-2 tw-gap-1">
       <bit-form-field
-        class="tw-flex-1"
         *ngIf="showOwnership"
         [disableMargin]="!showCollectionsControl"
+        [class.tw-col-span-2]="config.hideIndividualVaultFields"
       >
         <bit-label>{{ "owner" | i18n }}</bit-label>
         <bit-select formControlName="organizationId">
@@ -37,7 +38,11 @@
           ></bit-option>
         </bit-select>
       </bit-form-field>
-      <bit-form-field class="tw-flex-1" [disableMargin]="!showCollectionsControl">
+      <bit-form-field
+        [class.tw-col-span-2]="!showOwnership"
+        [disableMargin]="!showCollectionsControl"
+        *ngIf="!config.hideIndividualVaultFields"
+      >
         <bit-label>{{ "folder" | i18n }}</bit-label>
         <bit-select formControlName="folderId">
           <bit-option

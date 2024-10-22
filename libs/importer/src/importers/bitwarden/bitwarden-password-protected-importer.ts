@@ -1,10 +1,12 @@
 import { PinServiceAbstraction } from "@bitwarden/auth/common";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import {
   Argon2KdfConfig,
   KdfConfig,
   PBKDF2KdfConfig,
 } from "@bitwarden/common/auth/models/domain/kdf-config";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
+import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { KdfType } from "@bitwarden/common/platform/enums";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
@@ -22,12 +24,14 @@ export class BitwardenPasswordProtectedImporter extends BitwardenJsonImporter im
 
   constructor(
     cryptoService: CryptoService,
+    encryptService: EncryptService,
     i18nService: I18nService,
     cipherService: CipherService,
     pinService: PinServiceAbstraction,
+    accountService: AccountService,
     private promptForPassword_callback: () => Promise<string>,
   ) {
-    super(cryptoService, i18nService, cipherService, pinService);
+    super(cryptoService, encryptService, i18nService, cipherService, pinService, accountService);
   }
 
   async parse(data: string): Promise<ImportResult> {
@@ -63,7 +67,7 @@ export class BitwardenPasswordProtectedImporter extends BitwardenJsonImporter im
     }
 
     const encData = new EncString(parsedData.data);
-    const clearTextData = await this.cryptoService.decryptToUtf8(encData, this.key);
+    const clearTextData = await this.encryptService.decryptToUtf8(encData, this.key);
     return await super.parse(clearTextData);
   }
 
@@ -84,7 +88,7 @@ export class BitwardenPasswordProtectedImporter extends BitwardenJsonImporter im
 
     const encKeyValidation = new EncString(jdoc.encKeyValidation_DO_NOT_EDIT);
 
-    const encKeyValidationDecrypt = await this.cryptoService.decryptToUtf8(
+    const encKeyValidationDecrypt = await this.encryptService.decryptToUtf8(
       encKeyValidation,
       this.key,
     );

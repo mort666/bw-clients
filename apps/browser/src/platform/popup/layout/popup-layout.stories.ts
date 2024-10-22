@@ -3,7 +3,9 @@ import { Component, importProvidersFrom } from "@angular/core";
 import { RouterModule } from "@angular/router";
 import { Meta, StoryObj, applicationConfig, moduleMetadata } from "@storybook/angular";
 
+import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { SendService } from "@bitwarden/common/tools/send/services/send.service.abstraction";
 import {
   AvatarModule,
   BadgeModule,
@@ -15,6 +17,8 @@ import {
   SearchModule,
   SectionComponent,
 } from "@bitwarden/components";
+
+import { PopupRouterCacheService } from "../view-cache/popup-router-cache.service";
 
 import { PopupFooterComponent } from "./popup-footer.component";
 import { PopupHeaderComponent } from "./popup-header.component";
@@ -316,6 +320,30 @@ export default {
             });
           },
         },
+        {
+          provide: PolicyService,
+          useFactory: () => {
+            return {
+              policyAppliesToActiveUser$: () => {
+                return {
+                  pipe: () => ({
+                    subscribe: () => ({}),
+                  }),
+                };
+              },
+            };
+          },
+        },
+        {
+          provide: SendService,
+          useFactory: () => {
+            return {
+              sends$: () => {
+                return { pipe: () => ({}) };
+              },
+            };
+          },
+        },
       ],
     }),
     applicationConfig({
@@ -334,6 +362,12 @@ export default {
             { useHash: true },
           ),
         ),
+        {
+          provide: PopupRouterCacheService,
+          useValue: {
+            back() {},
+          } as Partial<PopupRouterCacheService>,
+        },
       ],
     }),
   ],

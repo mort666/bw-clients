@@ -16,7 +16,7 @@ import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.se
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
-import { DialogService } from "@bitwarden/components";
+import { DialogService, ToastService } from "@bitwarden/components";
 
 import { ApiKeyComponent } from "../../../auth/settings/security/api-key.component";
 import { PurgeVaultComponent } from "../../../vault/settings/purge-vault.component";
@@ -40,9 +40,7 @@ export class AccountComponent implements OnInit, OnDestroy {
   org: OrganizationResponse;
   taxFormPromise: Promise<unknown>;
 
-  flexibleCollectionsV1Enabled$ = this.configService.getFeatureFlag$(
-    FeatureFlag.FlexibleCollectionsV1,
-  );
+  limitCollectionCreationDeletionSplitFeatureFlagIsEnabled: boolean;
 
   // FormGroup validators taken from server Organization domain object
   protected formGroup = this.formBuilder.group({
@@ -59,11 +57,21 @@ export class AccountComponent implements OnInit, OnDestroy {
     ),
   });
 
+  // Deprecated. Delete with https://bitwarden.atlassian.net/browse/PM-10863
   protected collectionManagementFormGroup = this.formBuilder.group({
     limitCollectionCreationDeletion: this.formBuilder.control({ value: false, disabled: true }),
     allowAdminAccessToAllCollectionItems: this.formBuilder.control({
       value: false,
       disabled: true,
+    }),
+  });
+
+  protected collectionManagementFormGroup_VNext = this.formBuilder.group({
+    limitCollectionCreation: this.formBuilder.control({ value: false, disabled: false }),
+    limitCollectionDeletion: this.formBuilder.control({ value: false, disabled: false }),
+    allowAdminAccessToAllCollectionItems: this.formBuilder.control({
+      value: false,
+      disabled: false,
     }),
   });
 
@@ -83,11 +91,17 @@ export class AccountComponent implements OnInit, OnDestroy {
     private organizationApiService: OrganizationApiServiceAbstraction,
     private dialogService: DialogService,
     private formBuilder: FormBuilder,
+    private toastService: ToastService,
     private configService: ConfigService,
   ) {}
 
   async ngOnInit() {
     this.selfHosted = this.platformUtilsService.isSelfHost();
+
+    this.configService
+      .getFeatureFlag$(FeatureFlag.LimitCollectionCreationDeletionSplit)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((x) => (this.limitCollectionCreationDeletionSplitFeatureFlagIsEnabled = x));
 
     this.route.params
       .pipe(
@@ -110,10 +124,15 @@ export class AccountComponent implements OnInit, OnDestroy {
         this.canUseApi = organization.useApi;
 
         // Update disabled states - reactive forms prefers not using disabled attribute
-        if (!this.selfHosted) {
-          this.formGroup.get("orgName").enable();
-          this.collectionManagementFormGroup.get("limitCollectionCreationDeletion").enable();
-          this.collectionManagementFormGroup.get("allowAdminAccessToAllCollectionItems").enable();
+        // Disabling these fields for self hosted orgs is deprecated
+        // This block can be completely removed as part of
+        // https://bitwarden.atlassian.net/browse/PM-10863
+        if (!this.limitCollectionCreationDeletionSplitFeatureFlagIsEnabled) {
+          if (!this.selfHosted) {
+            this.formGroup.get("orgName").enable();
+            this.collectionManagementFormGroup.get("limitCollectionCreationDeletion").enable();
+            this.collectionManagementFormGroup.get("allowAdminAccessToAllCollectionItems").enable();
+          }
         }
 
         if (!this.selfHosted && this.canEditSubscription) {
@@ -131,10 +150,18 @@ export class AccountComponent implements OnInit, OnDestroy {
           orgName: this.org.name,
           billingEmail: this.org.billingEmail,
         });
-        this.collectionManagementFormGroup.patchValue({
-          limitCollectionCreationDeletion: this.org.limitCollectionCreationDeletion,
-          allowAdminAccessToAllCollectionItems: this.org.allowAdminAccessToAllCollectionItems,
-        });
+        if (this.limitCollectionCreationDeletionSplitFeatureFlagIsEnabled) {
+          this.collectionManagementFormGroup_VNext.patchValue({
+            limitCollectionCreation: this.org.limitCollectionCreation,
+            limitCollectionDeletion: this.org.limitCollectionDeletion,
+            allowAdminAccessToAllCollectionItems: this.org.allowAdminAccessToAllCollectionItems,
+          });
+        } else {
+          this.collectionManagementFormGroup.patchValue({
+            limitCollectionCreationDeletion: this.org.limitCollectionCreationDeletion,
+            allowAdminAccessToAllCollectionItems: this.org.allowAdminAccessToAllCollectionItems,
+          });
+        }
 
         this.loading = false;
       });
@@ -174,28 +201,40 @@ export class AccountComponent implements OnInit, OnDestroy {
 
     await this.organizationApiService.save(this.organizationId, request);
 
-    this.platformUtilsService.showToast("success", null, this.i18nService.t("organizationUpdated"));
+    this.toastService.showToast({
+      variant: "success",
+      title: null,
+      message: this.i18nService.t("organizationUpdated"),
+    });
   };
 
   submitCollectionManagement = async () => {
     // Early exit if self-hosted
-    if (this.selfHosted) {
+    if (this.selfHosted && !this.limitCollectionCreationDeletionSplitFeatureFlagIsEnabled) {
       return;
     }
-
     const request = new OrganizationCollectionManagementUpdateRequest();
-    request.limitCreateDeleteOwnerAdmin =
-      this.collectionManagementFormGroup.value.limitCollectionCreationDeletion;
-    request.allowAdminAccessToAllCollectionItems =
-      this.collectionManagementFormGroup.value.allowAdminAccessToAllCollectionItems;
+    if (this.limitCollectionCreationDeletionSplitFeatureFlagIsEnabled) {
+      request.limitCollectionCreation =
+        this.collectionManagementFormGroup_VNext.value.limitCollectionCreation;
+      request.limitCollectionDeletion =
+        this.collectionManagementFormGroup_VNext.value.limitCollectionDeletion;
+      request.allowAdminAccessToAllCollectionItems =
+        this.collectionManagementFormGroup_VNext.value.allowAdminAccessToAllCollectionItems;
+    } else {
+      request.limitCreateDeleteOwnerAdmin =
+        this.collectionManagementFormGroup.value.limitCollectionCreationDeletion;
+      request.allowAdminAccessToAllCollectionItems =
+        this.collectionManagementFormGroup.value.allowAdminAccessToAllCollectionItems;
+    }
 
     await this.organizationApiService.updateCollectionManagement(this.organizationId, request);
 
-    this.platformUtilsService.showToast(
-      "success",
-      null,
-      this.i18nService.t("updatedCollectionManagement"),
-    );
+    this.toastService.showToast({
+      variant: "success",
+      title: null,
+      message: this.i18nService.t("updatedCollectionManagement"),
+    });
   };
 
   async deleteOrganization() {

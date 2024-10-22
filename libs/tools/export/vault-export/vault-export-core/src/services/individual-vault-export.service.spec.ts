@@ -1,7 +1,9 @@
 import { mock, MockProxy } from "jest-mock-extended";
 import * as JSZip from "jszip";
+import { BehaviorSubject } from "rxjs";
 
 import { PinServiceAbstraction } from "@bitwarden/auth/common";
+import { AccountInfo, AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { KdfConfigService } from "@bitwarden/common/auth/abstractions/kdf-config.service";
 import {
   DEFAULT_KDF_CONFIG,
@@ -10,9 +12,11 @@ import {
 import { CipherWithIdExport } from "@bitwarden/common/models/export/cipher-with-ids.export";
 import { CryptoFunctionService } from "@bitwarden/common/platform/abstractions/crypto-function.service";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
+import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { KdfType } from "@bitwarden/common/platform/enums";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { EncryptedString, EncString } from "@bitwarden/common/platform/models/domain/enc-string";
+import { UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { CipherType } from "@bitwarden/common/vault/enums";
@@ -154,7 +158,9 @@ describe("VaultExportService", () => {
   let pinService: MockProxy<PinServiceAbstraction>;
   let folderService: MockProxy<FolderService>;
   let cryptoService: MockProxy<CryptoService>;
+  let encryptService: MockProxy<EncryptService>;
   let kdfConfigService: MockProxy<KdfConfigService>;
+  let accountService: MockProxy<AccountService>;
 
   beforeEach(() => {
     cryptoFunctionService = mock<CryptoFunctionService>();
@@ -162,20 +168,35 @@ describe("VaultExportService", () => {
     pinService = mock<PinServiceAbstraction>();
     folderService = mock<FolderService>();
     cryptoService = mock<CryptoService>();
+    encryptService = mock<EncryptService>();
     kdfConfigService = mock<KdfConfigService>();
+    accountService = mock<AccountService>();
+
+    cryptoService.userKey$.mockReturnValue(new BehaviorSubject("mockOriginalUserKey" as any));
+
+    const userId = "" as UserId;
+    const accountInfo: AccountInfo = {
+      email: "",
+      emailVerified: true,
+      name: undefined,
+    };
+    const activeAccount = { id: userId, ...accountInfo };
+    accountService.activeAccount$ = new BehaviorSubject(activeAccount);
 
     folderService.getAllDecryptedFromState.mockResolvedValue(UserFolderViews);
     folderService.getAllFromState.mockResolvedValue(UserFolders);
     kdfConfigService.getKdfConfig.mockResolvedValue(DEFAULT_KDF_CONFIG);
-    cryptoService.encrypt.mockResolvedValue(new EncString("encrypted"));
+    encryptService.encrypt.mockResolvedValue(new EncString("encrypted"));
 
     exportService = new IndividualVaultExportService(
       folderService,
       cipherService,
       pinService,
       cryptoService,
+      encryptService,
       cryptoFunctionService,
       kdfConfigService,
+      accountService,
     );
   });
 
@@ -294,7 +315,7 @@ describe("VaultExportService", () => {
       });
 
       it("has a mac property", async () => {
-        cryptoService.encrypt.mockResolvedValue(mac);
+        encryptService.encrypt.mockResolvedValue(mac);
         exportString = (await exportService.getPasswordProtectedExport(
           "encrypted_json",
           password,
@@ -305,7 +326,7 @@ describe("VaultExportService", () => {
       });
 
       it("has data property", async () => {
-        cryptoService.encrypt.mockResolvedValue(data);
+        encryptService.encrypt.mockResolvedValue(data);
         exportString = (await exportService.getPasswordProtectedExport(
           "encrypted_json",
           password,

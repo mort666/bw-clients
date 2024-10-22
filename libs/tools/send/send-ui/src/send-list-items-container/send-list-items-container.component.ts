@@ -64,7 +64,7 @@ export class SendListItemsContainerComponent {
   async deleteSend(s: SendView): Promise<boolean> {
     const confirmed = await this.dialogService.openSimpleDialog({
       title: { key: "deleteSend" },
-      content: { key: "deleteSendConfirmation" },
+      content: { key: "deleteSendPermanentConfirmation" },
       type: "warning",
     });
 
@@ -85,9 +85,9 @@ export class SendListItemsContainerComponent {
     }
   }
 
-  async copySendLink(s: SendView) {
+  async copySendLink(send: SendView) {
     const env = await firstValueFrom(this.environmentService.environment$);
-    const link = env.getSendUrl() + s.accessId + "/" + s.urlB64Key;
+    const link = env.getSendUrl() + send.accessId + "/" + send.urlB64Key;
     this.platformUtilsService.copyToClipboard(link);
     this.toastService.showToast({
       variant: "success",

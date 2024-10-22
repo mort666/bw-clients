@@ -1,6 +1,9 @@
-import { OrganizationUserService } from "@bitwarden/common/admin-console/abstractions/organization-user/organization-user.service";
-import { OrganizationUserResetPasswordDetailsResponse } from "@bitwarden/common/admin-console/abstractions/organization-user/responses";
+import {
+  OrganizationUserApiService,
+  OrganizationUserResetPasswordDetailsResponse,
+} from "@bitwarden/admin-console/common";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
+import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
@@ -13,7 +16,8 @@ export class OrganizationAuthRequestService {
   constructor(
     private organizationAuthRequestApiService: OrganizationAuthRequestApiService,
     private cryptoService: CryptoService,
-    private organizationUserService: OrganizationUserService,
+    private encryptService: EncryptService,
+    private organizationUserApiService: OrganizationUserApiService,
   ) {}
 
   async listPendingRequests(organizationId: string): Promise<PendingAuthRequestView[]> {
@@ -30,7 +34,7 @@ export class OrganizationAuthRequestService {
   ): Promise<void> {
     const organizationUserIds = authRequests.map((r) => r.organizationUserId);
     const details =
-      await this.organizationUserService.getManyOrganizationUserAccountRecoveryDetails(
+      await this.organizationUserApiService.getManyOrganizationUserAccountRecoveryDetails(
         organizationId,
         organizationUserIds,
       );
@@ -61,7 +65,7 @@ export class OrganizationAuthRequestService {
   }
 
   async approvePendingRequest(organizationId: string, authRequest: PendingAuthRequestView) {
-    const details = await this.organizationUserService.getOrganizationUserResetPasswordDetails(
+    const details = await this.organizationUserApiService.getOrganizationUserResetPasswordDetails(
       organizationId,
       authRequest.organizationUserId,
     );
@@ -107,16 +111,19 @@ export class OrganizationAuthRequestService {
 
     // Decrypt Organization's encrypted Private Key with org key
     const orgSymKey = await this.cryptoService.getOrgKey(organizationId);
-    const decOrgPrivateKey = await this.cryptoService.decryptToBytes(
+    const decOrgPrivateKey = await this.encryptService.decryptToBytes(
       new EncString(encryptedOrgPrivateKey),
       orgSymKey,
     );
 
     // Decrypt user key with decrypted org private key
-    const decValue = await this.cryptoService.rsaDecrypt(encryptedUserKey, decOrgPrivateKey);
+    const decValue = await this.encryptService.rsaDecrypt(
+      new EncString(encryptedUserKey),
+      decOrgPrivateKey,
+    );
     const userKey = new SymmetricCryptoKey(decValue);
 
     // Re-encrypt user Key with the Device Public Key
-    return await this.cryptoService.rsaEncrypt(userKey.key, devicePubKey);
+    return await this.encryptService.rsaEncrypt(userKey.key, devicePubKey);
   }
 }

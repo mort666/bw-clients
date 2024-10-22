@@ -10,13 +10,13 @@ import { KeyGenerationService } from "@bitwarden/common/platform/abstractions/ke
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
-import { BiometricStateService } from "@bitwarden/common/platform/biometrics/biometric-state.service";
 import { KeySuffixOptions } from "@bitwarden/common/platform/enums";
 import { CryptoService } from "@bitwarden/common/platform/services/crypto.service";
 import { USER_KEY } from "@bitwarden/common/platform/services/key-state/user-key.state";
 import { StateProvider } from "@bitwarden/common/platform/state";
 import { UserId } from "@bitwarden/common/types/guid";
 import { UserKey } from "@bitwarden/common/types/key";
+import { BiometricsService, BiometricStateService } from "@bitwarden/key-management";
 
 export class BrowserCryptoService extends CryptoService {
   constructor(
@@ -31,6 +31,7 @@ export class BrowserCryptoService extends CryptoService {
     accountService: AccountService,
     stateProvider: StateProvider,
     private biometricStateService: BiometricStateService,
+    private biometricsService: BiometricsService,
     kdfConfigService: KdfConfigService,
   ) {
     super(
@@ -68,7 +69,7 @@ export class BrowserCryptoService extends CryptoService {
     userId?: UserId,
   ): Promise<UserKey> {
     if (keySuffix === KeySuffixOptions.Biometric) {
-      const biometricsResult = await this.platformUtilService.authenticateBiometric();
+      const biometricsResult = await this.biometricsService.authenticateBiometric();
 
       if (!biometricsResult) {
         return null;

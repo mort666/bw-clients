@@ -1,21 +1,17 @@
 import { CommonModule } from "@angular/common";
-import { Component, Input, OnDestroy, OnInit } from "@angular/core";
-import { Observable, Subject, takeUntil } from "rxjs";
+import { Component, Input, OnChanges, OnDestroy } from "@angular/core";
+import { firstValueFrom, Observable, Subject, takeUntil } from "rxjs";
 
+import { CollectionService, CollectionView } from "@bitwarden/admin-console/common";
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
+import { isCardExpired } from "@bitwarden/common/autofill/utils";
 import { CollectionId } from "@bitwarden/common/types/guid";
-import { CollectionService } from "@bitwarden/common/vault/abstractions/collection.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
-import { CollectionView } from "@bitwarden/common/vault/models/view/collection.view";
 import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
-import { SearchModule } from "@bitwarden/components";
-
-import { PopupFooterComponent } from "../../../../apps/browser/src/platform/popup/layout/popup-footer.component";
-import { PopupHeaderComponent } from "../../../../apps/browser/src/platform/popup/layout/popup-header.component";
-import { PopupPageComponent } from "../../../../apps/browser/src/platform/popup/layout/popup-page.component";
+import { CalloutModule, SearchModule } from "@bitwarden/components";
 
 import { AdditionalOptionsComponent } from "./additional-options/additional-options.component";
 import { AttachmentsV2ViewComponent } from "./attachments/attachments-v2-view.component";
@@ -32,12 +28,10 @@ import { ViewIdentitySectionsComponent } from "./view-identity-sections/view-ide
   templateUrl: "cipher-view.component.html",
   standalone: true,
   imports: [
+    CalloutModule,
     CommonModule,
     SearchModule,
     JslibModule,
-    PopupPageComponent,
-    PopupHeaderComponent,
-    PopupFooterComponent,
     ItemDetailsV2Component,
     AdditionalOptionsComponent,
     AttachmentsV2ViewComponent,
@@ -49,12 +43,18 @@ import { ViewIdentitySectionsComponent } from "./view-identity-sections/view-ide
     AutofillOptionsViewComponent,
   ],
 })
-export class CipherViewComponent implements OnInit, OnDestroy {
-  @Input() cipher: CipherView;
+export class CipherViewComponent implements OnChanges, OnDestroy {
+  @Input({ required: true }) cipher: CipherView;
+
+  /**
+   * Optional list of collections the cipher is assigned to. If none are provided, they will be fetched using the
+   * `CipherService` and the `collectionIds` property of the cipher.
+   */
+  @Input() collections: CollectionView[];
   organization$: Observable<Organization>;
   folder$: Observable<FolderView>;
-  collections$: Observable<CollectionView[]>;
   private destroyed$: Subject<void> = new Subject();
+  cardIsExpired: boolean = false;
 
   constructor(
     private organizationService: OrganizationService,
@@ -62,8 +62,14 @@ export class CipherViewComponent implements OnInit, OnDestroy {
     private folderService: FolderService,
   ) {}
 
-  async ngOnInit() {
+  async ngOnChanges() {
+    if (this.cipher == null) {
+      return;
+    }
+
     await this.loadCipherData();
+
+    this.cardIsExpired = isCardExpired(this.cipher.card);
   }
 
   ngOnDestroy(): void {
@@ -72,8 +78,8 @@ export class CipherViewComponent implements OnInit, OnDestroy {
   }
 
   get hasCard() {
-    const { cardholderName, code, expMonth, expYear, brand, number } = this.cipher.card;
-    return cardholderName || code || expMonth || expYear || brand || number;
+    const { cardholderName, code, expMonth, expYear, number } = this.cipher.card;
+    return cardholderName || code || expMonth || expYear || number;
   }
 
   get hasLogin() {
@@ -86,10 +92,16 @@ export class CipherViewComponent implements OnInit, OnDestroy {
   }
 
   async loadCipherData() {
-    if (this.cipher.collectionIds.length > 0) {
-      this.collections$ = this.collectionService
-        .decryptedCollectionViews$(this.cipher.collectionIds as CollectionId[])
-        .pipe(takeUntil(this.destroyed$));
+    // Load collections if not provided and the cipher has collectionIds
+    if (
+      this.cipher.collectionIds.length > 0 &&
+      (!this.collections || this.collections.length === 0)
+    ) {
+      this.collections = await firstValueFrom(
+        this.collectionService.decryptedCollectionViews$(
+          this.cipher.collectionIds as CollectionId[],
+        ),
+      );
     }
 
     if (this.cipher.organizationId) {

@@ -1,8 +1,12 @@
 import { firstValueFrom, map } from "rxjs";
 
+import {
+  OrganizationUserApiService,
+  OrganizationUserResetPasswordEnrollmentRequest,
+} from "@bitwarden/admin-console/common";
+import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
+
 import { OrganizationApiServiceAbstraction } from "../../admin-console/abstractions/organization/organization-api.service.abstraction";
-import { OrganizationUserService } from "../../admin-console/abstractions/organization-user/organization-user.service";
-import { OrganizationUserResetPasswordEnrollmentRequest } from "../../admin-console/abstractions/organization-user/requests";
 import { CryptoService } from "../../platform/abstractions/crypto.service";
 import { I18nService } from "../../platform/abstractions/i18n.service";
 import { Utils } from "../../platform/misc/utils";
@@ -17,7 +21,8 @@ export class PasswordResetEnrollmentServiceImplementation
     protected organizationApiService: OrganizationApiServiceAbstraction,
     protected accountService: AccountService,
     protected cryptoService: CryptoService,
-    protected organizationUserService: OrganizationUserService,
+    protected encryptService: EncryptService,
+    protected organizationUserApiService: OrganizationUserApiService,
     protected i18nService: I18nService,
   ) {}
 
@@ -44,12 +49,12 @@ export class PasswordResetEnrollmentServiceImplementation
       userId ?? (await firstValueFrom(this.accountService.activeAccount$.pipe(map((a) => a?.id))));
     userKey = userKey ?? (await this.cryptoService.getUserKey(userId));
     // RSA Encrypt user's userKey.key with organization public key
-    const encryptedKey = await this.cryptoService.rsaEncrypt(userKey.key, orgPublicKey);
+    const encryptedKey = await this.encryptService.rsaEncrypt(userKey.key, orgPublicKey);
 
     const resetRequest = new OrganizationUserResetPasswordEnrollmentRequest();
     resetRequest.resetPasswordKey = encryptedKey.encryptedString;
 
-    await this.organizationUserService.putOrganizationUserResetPasswordEnrollment(
+    await this.organizationUserApiService.putOrganizationUserResetPasswordEnrollment(
       organizationId,
       userId,
       resetRequest,

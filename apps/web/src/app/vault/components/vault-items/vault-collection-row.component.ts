@@ -1,12 +1,10 @@
 import { Component, EventEmitter, Input, Output } from "@angular/core";
 
+import { CollectionAdminView, Unassigned, CollectionView } from "@bitwarden/admin-console/common";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { CollectionView } from "@bitwarden/common/vault/models/view/collection.view";
 
 import { GroupView } from "../../../admin-console/organizations/core";
-import { CollectionAdminView } from "../../core/views/collection-admin.view";
-import { Unassigned } from "../../individual-vault/vault-filter/shared/models/routed-vault-filter.model";
 
 import {
   convertToPermission,
@@ -34,8 +32,6 @@ export class VaultCollectionRowComponent {
   @Input() organizations: Organization[];
   @Input() groups: GroupView[];
   @Input() showPermissionsColumn: boolean;
-  @Input() flexibleCollectionsV1Enabled: boolean;
-  @Input() restrictProviderAccess: boolean;
 
   @Output() onEvent = new EventEmitter<VaultItemEvent>();
 
@@ -57,10 +53,6 @@ export class VaultCollectionRowComponent {
   }
 
   get showAddAccess() {
-    if (!this.flexibleCollectionsV1Enabled) {
-      return false;
-    }
-
     if (this.collection.id == Unassigned) {
       return false;
     }
@@ -71,7 +63,7 @@ export class VaultCollectionRowComponent {
       return (
         !this.organization?.allowAdminAccessToAllCollectionItems &&
         this.collection.unmanaged &&
-        this.organization?.canEditUnmanagedCollections()
+        this.organization?.canEditUnmanagedCollections
       );
     }
 
@@ -79,10 +71,7 @@ export class VaultCollectionRowComponent {
   }
 
   get permissionText() {
-    if (
-      this.collection.id == Unassigned &&
-      this.organization?.canEditUnassignedCiphers(this.restrictProviderAccess)
-    ) {
+    if (this.collection.id == Unassigned && this.organization?.canEditUnassignedCiphers) {
       return this.i18nService.t("canEdit");
     }
     if ((this.collection as CollectionAdminView).assigned) {
@@ -114,10 +103,10 @@ export class VaultCollectionRowComponent {
   }
 
   protected get showCheckbox() {
-    if (this.flexibleCollectionsV1Enabled) {
-      return this.collection?.id !== Unassigned;
+    if (this.collection?.id === Unassigned) {
+      return false; // Never show checkbox for Unassigned
     }
 
-    return this.canDeleteCollection;
+    return this.canEditCollection || this.canDeleteCollection;
   }
 }

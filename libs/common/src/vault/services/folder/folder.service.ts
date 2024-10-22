@@ -1,5 +1,7 @@
 import { Observable, firstValueFrom, map, shareReplay } from "rxjs";
 
+import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
+
 import { CryptoService } from "../../../platform/abstractions/crypto.service";
 import { I18nService } from "../../../platform/abstractions/i18n.service";
 import { Utils } from "../../../platform/misc/utils";
@@ -25,6 +27,7 @@ export class FolderService implements InternalFolderServiceAbstraction {
 
   constructor(
     private cryptoService: CryptoService,
+    private encryptService: EncryptService,
     private i18nService: I18nService,
     private cipherService: CipherService,
     private stateProvider: StateProvider,
@@ -48,10 +51,10 @@ export class FolderService implements InternalFolderServiceAbstraction {
   }
 
   // TODO: This should be moved to EncryptService or something
-  async encrypt(model: FolderView, key?: SymmetricCryptoKey): Promise<Folder> {
+  async encrypt(model: FolderView, key: SymmetricCryptoKey): Promise<Folder> {
     const folder = new Folder();
     folder.id = model.id;
-    folder.name = await this.cryptoService.encrypt(model.name, key);
+    folder.name = await this.encryptService.encrypt(model.name, key);
     return folder;
   }
 
@@ -111,12 +114,12 @@ export class FolderService implements InternalFolderServiceAbstraction {
     });
   }
 
-  async replace(folders: { [id: string]: FolderData }): Promise<void> {
+  async replace(folders: { [id: string]: FolderData }, userId: UserId): Promise<void> {
     if (!folders) {
       return;
     }
 
-    await this.encryptedFoldersState.update(() => {
+    await this.stateProvider.getUser(userId, FOLDER_ENCRYPTED_FOLDERS).update(() => {
       const newFolders: Record<string, FolderData> = { ...folders };
       return newFolders;
     });

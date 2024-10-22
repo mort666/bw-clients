@@ -78,9 +78,9 @@ describe("KeyConnectorService", () => {
 
       const newValue = true;
 
-      await keyConnectorService.setUsesKeyConnector(newValue);
+      await keyConnectorService.setUsesKeyConnector(newValue, mockUserId);
 
-      expect(await keyConnectorService.getUsesKeyConnector()).toBe(newValue);
+      expect(await keyConnectorService.getUsesKeyConnector(mockUserId)).toBe(newValue);
     });
   });
 
@@ -185,7 +185,7 @@ describe("KeyConnectorService", () => {
       const state = stateProvider.activeUser.getFake(USES_KEY_CONNECTOR);
       state.nextState(false);
 
-      const result = await keyConnectorService.userNeedsMigration();
+      const result = await keyConnectorService.userNeedsMigration(mockUserId);
 
       expect(result).toBe(true);
     });
@@ -197,7 +197,7 @@ describe("KeyConnectorService", () => {
 
       const state = stateProvider.activeUser.getFake(USES_KEY_CONNECTOR);
       state.nextState(true);
-      const result = await keyConnectorService.userNeedsMigration();
+      const result = await keyConnectorService.userNeedsMigration(mockUserId);
 
       expect(result).toBe(false);
     });
@@ -340,8 +340,6 @@ describe("KeyConnectorService", () => {
             createNewCollections: false,
             editAnyCollection: false,
             deleteAnyCollection: false,
-            editAssignedCollections: false,
-            deleteAssignedCollections: false,
             manageGroups: false,
             managePolicies: false,
             manageSso: false,
@@ -364,7 +362,8 @@ describe("KeyConnectorService", () => {
           familySponsorshipValidUntil: null,
           familySponsorshipToDelete: null,
           accessSecretsManager: false,
-          limitCollectionCreationDeletion: true,
+          limitCollectionCreation: true,
+          limitCollectionDeletion: true,
           allowAdminAccessToAllCollectionItems: true,
           flexibleCollections: false,
           object: "profileOrganization",

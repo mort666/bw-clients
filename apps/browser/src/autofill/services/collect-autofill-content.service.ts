@@ -20,6 +20,7 @@ import {
   getPropertyOrAttribute,
   requestIdleCallbackPolyfill,
   cancelIdleCallbackPolyfill,
+  debounce,
 } from "../utils";
 
 import { AutofillOverlayContentService } from "./abstractions/autofill-overlay-content.service";
@@ -30,16 +31,15 @@ import {
   UpdateAutofillDataAttributeParams,
 } from "./abstractions/collect-autofill-content.service";
 import { DomElementVisibilityService } from "./abstractions/dom-element-visibility.service";
+import { DomQueryService } from "./abstractions/dom-query.service";
 
-class CollectAutofillContentService implements CollectAutofillContentServiceInterface {
+export class CollectAutofillContentService implements CollectAutofillContentServiceInterface {
   private readonly sendExtensionMessage = sendExtensionMessage;
-  private readonly domElementVisibilityService: DomElementVisibilityService;
-  private readonly autofillOverlayContentService: AutofillOverlayContentService;
   private readonly getAttributeBoolean = getAttributeBoolean;
   private readonly getPropertyOrAttribute = getPropertyOrAttribute;
   private noFieldsFound = false;
   private domRecentlyMutated = true;
-  private autofillFormElements: AutofillFormElements = new Map();
+  private _autofillFormElements: AutofillFormElements = new Map();
   private autofillFieldElements: AutofillFieldElements = new Map();
   private currentLocationHref = "";
   private intersectionObserver: IntersectionObserver;
@@ -58,25 +58,21 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
     "image",
     "file",
   ]);
-  private useTreeWalkerStrategyFlagSet = true;
 
   constructor(
-    domElementVisibilityService: DomElementVisibilityService,
-    autofillOverlayContentService?: AutofillOverlayContentService,
+    private domElementVisibilityService: DomElementVisibilityService,
+    private domQueryService: DomQueryService,
+    private autofillOverlayContentService?: AutofillOverlayContentService,
   ) {
-    this.domElementVisibilityService = domElementVisibilityService;
-    this.autofillOverlayContentService = autofillOverlayContentService;
-
     let inputQuery = "input:not([data-bwignore])";
     for (const type of this.ignoredInputTypes) {
       inputQuery += `:not([type="${type}"])`;
     }
     this.formFieldQueryString = `${inputQuery}, textarea:not([data-bwignore]), select:not([data-bwignore]), span[data-bwautofill]`;
+  }
 
-    // void sendExtensionMessage("getUseTreeWalkerApiForPageDetailsCollectionFeatureFlag").then(
-    //   (useTreeWalkerStrategyFlag) =>
-    //     (this.useTreeWalkerStrategyFlagSet = !!useTreeWalkerStrategyFlag?.result),
-    // );
+  get autofillFormElements(): AutofillFormElements {
+    return this._autofillFormElements;
   }
 
   /**
@@ -122,7 +118,7 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
 
     this.domRecentlyMutated = false;
     const pageDetails = this.getFormattedPageDetails(autofillFormsData, autofillFieldsData);
-    this.setupInlineMenuListeners(pageDetails);
+    this.setupOverlayListeners(pageDetails);
 
     return pageDetails;
   }
@@ -155,89 +151,6 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
     }
 
     return fieldElementsWithOpid[0];
-  }
-
-  /**
-   * Queries all elements in the DOM that match the given query string.
-   * Also, recursively queries all shadow roots for the element.
-   *
-   * @param root - The root element to start the query from
-   * @param queryString - The query string to match elements against
-   * @param isObservingShadowRoot - Determines whether to observe shadow roots
-   */
-  deepQueryElements<T>(
-    root: Document | ShadowRoot | Element,
-    queryString: string,
-    isObservingShadowRoot = false,
-  ): T[] {
-    let elements = this.queryElements<T>(root, queryString);
-    const shadowRoots = this.recursivelyQueryShadowRoots(root, isObservingShadowRoot);
-    for (let index = 0; index < shadowRoots.length; index++) {
-      const shadowRoot = shadowRoots[index];
-      elements = elements.concat(this.queryElements<T>(shadowRoot, queryString));
-    }
-
-    return elements;
-  }
-
-  /**
-   * Queries the DOM for elements based on the given query string.
-   *
-   * @param root - The root element to start the query from
-   * @param queryString - The query string to match elements against
-   */
-  private queryElements<T>(root: Document | ShadowRoot | Element, queryString: string): T[] {
-    if (!root.querySelector(queryString)) {
-      return [];
-    }
-
-    return Array.from(root.querySelectorAll(queryString)) as T[];
-  }
-
-  /**
-   * Recursively queries all shadow roots found within the given root element.
-   * Will also set up a mutation observer on the shadow root if the
-   * `isObservingShadowRoot` parameter is set to true.
-   *
-   * @param root - The root element to start the query from
-   * @param isObservingShadowRoot - Determines whether to observe shadow roots
-   */
-  private recursivelyQueryShadowRoots(
-    root: Document | ShadowRoot | Element,
-    isObservingShadowRoot = false,
-  ): ShadowRoot[] {
-    let shadowRoots = this.queryShadowRoots(root);
-    for (let index = 0; index < shadowRoots.length; index++) {
-      const shadowRoot = shadowRoots[index];
-      shadowRoots = shadowRoots.concat(this.recursivelyQueryShadowRoots(shadowRoot));
-      if (isObservingShadowRoot) {
-        this.mutationObserver.observe(shadowRoot, {
-          attributes: true,
-          childList: true,
-          subtree: true,
-        });
-      }
-    }
-
-    return shadowRoots;
-  }
-
-  /**
-   * Queries any immediate shadow roots found within the given root element.
-   *
-   * @param root - The root element to start the query from
-   */
-  private queryShadowRoots(root: Document | ShadowRoot | Element): ShadowRoot[] {
-    const shadowRoots: ShadowRoot[] = [];
-    const potentialShadowRoots = root.querySelectorAll(":defined");
-    for (let index = 0; index < potentialShadowRoots.length; index++) {
-      const shadowRoot = this.getShadowRoot(potentialShadowRoots[index]);
-      if (shadowRoot) {
-        shadowRoots.push(shadowRoot);
-      }
-    }
-
-    return shadowRoots;
   }
 
   /**
@@ -286,7 +199,7 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
       autofillField.viewable = await this.domElementVisibilityService.isFormFieldViewable(element);
 
       if (!previouslyViewable && autofillField.viewable) {
-        this.setupInlineMenu(element, autofillField);
+        this.setupOverlayOnField(element, autofillField);
       }
     });
   }
@@ -302,14 +215,14 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
       const formElement = formElements[index] as ElementWithOpId<HTMLFormElement>;
       formElement.opid = `__form__${index}`;
 
-      const existingAutofillForm = this.autofillFormElements.get(formElement);
+      const existingAutofillForm = this._autofillFormElements.get(formElement);
       if (existingAutofillForm) {
         existingAutofillForm.opid = formElement.opid;
-        this.autofillFormElements.set(formElement, existingAutofillForm);
+        this._autofillFormElements.set(formElement, existingAutofillForm);
         continue;
       }
 
-      this.autofillFormElements.set(formElement, {
+      this._autofillFormElements.set(formElement, {
         opid: formElement.opid,
         htmlAction: this.getFormActionAttribute(formElement),
         htmlName: this.getPropertyOrAttribute(formElement, "name"),
@@ -340,7 +253,7 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
    */
   private getFormattedAutofillFormsData(): Record<string, AutofillForm> {
     const autofillForms: Record<string, AutofillForm> = {};
-    const autofillFormElements = Array.from(this.autofillFormElements);
+    const autofillFormElements = Array.from(this._autofillFormElements);
     for (let index = 0; index < autofillFormElements.length; index++) {
       const [formElement, autofillForm] = autofillFormElements[index];
       autofillForms[formElement.opid] = autofillForm;
@@ -379,9 +292,12 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
   ): FormFieldElement[] {
     let formFieldElements = previouslyFoundFormFieldElements;
     if (!formFieldElements) {
-      formFieldElements = this.useTreeWalkerStrategyFlagSet
-        ? this.queryTreeWalkerForAutofillFormFieldElements()
-        : this.deepQueryElements(document, this.formFieldQueryString, true);
+      formFieldElements = this.domQueryService.query<FormFieldElement>(
+        globalThis.document.documentElement,
+        this.formFieldQueryString,
+        (node: Node) => this.isNodeFormFieldElement(node),
+        this.mutationObserver,
+      );
     }
 
     if (!fieldsLimit || formFieldElements.length <= fieldsLimit) {
@@ -722,6 +638,10 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
     }
 
     const tableDataElementIndex = tableDataElement.cellIndex;
+    if (tableDataElementIndex < 0) {
+      return null;
+    }
+
     const parentSiblingTableRowElement = tableDataElement.closest("tr")
       ?.previousElementSibling as HTMLTableRowElement;
 
@@ -910,17 +830,32 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
     formElements: HTMLFormElement[];
     formFieldElements: FormFieldElement[];
   } {
-    if (this.useTreeWalkerStrategyFlagSet) {
-      return this.queryTreeWalkerForAutofillFormAndFieldElements();
-    }
-
-    const queriedElements = this.deepQueryElements<HTMLElement>(
-      document,
-      `form, ${this.formFieldQueryString}`,
-      true,
-    );
     const formElements: HTMLFormElement[] = [];
     const formFieldElements: FormFieldElement[] = [];
+
+    const queriedElements = this.domQueryService.query<HTMLElement>(
+      globalThis.document.documentElement,
+      `form, ${this.formFieldQueryString}`,
+      (node: Node) => {
+        if (nodeIsFormElement(node)) {
+          formElements.push(node);
+          return true;
+        }
+
+        if (this.isNodeFormFieldElement(node)) {
+          formFieldElements.push(node as FormFieldElement);
+          return true;
+        }
+
+        return false;
+      },
+      this.mutationObserver,
+    );
+
+    if (formElements.length || formFieldElements.length) {
+      return { formElements, formFieldElements };
+    }
+
     for (let index = 0; index < queriedElements.length; index++) {
       const element = queriedElements[index];
       if (elementIsFormElement(element)) {
@@ -966,34 +901,6 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
   }
 
   /**
-   * Attempts to get the ShadowRoot of the passed node. If support for the
-   * extension based openOrClosedShadowRoot API is available, it will be used.
-   * Will return null if the node is not an HTMLElement or if the node has
-   * child nodes.
-   *
-   * @param {Node} node
-   */
-  private getShadowRoot(node: Node): ShadowRoot | null {
-    if (!nodeIsElement(node)) {
-      return null;
-    }
-
-    if (node.shadowRoot) {
-      return node.shadowRoot;
-    }
-
-    if ((chrome as any).dom?.openOrClosedShadowRoot) {
-      try {
-        return (chrome as any).dom.openOrClosedShadowRoot(node);
-      } catch (error) {
-        return null;
-      }
-    }
-
-    return (node as any).openOrClosedShadowRoot;
-  }
-
-  /**
    * Sets up a mutation observer on the body of the document. Observes changes to
    * DOM elements to ensure we have an updated set of autofill field data.
    * @private
@@ -1022,7 +929,7 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
     }
 
     if (!this.mutationsQueue.length) {
-      requestIdleCallbackPolyfill(this.processMutations, { timeout: 500 });
+      requestIdleCallbackPolyfill(debounce(this.processMutations, 100), { timeout: 500 });
     }
     this.mutationsQueue.push(mutations);
   };
@@ -1042,7 +949,7 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
     }
     this.noFieldsFound = false;
 
-    this.autofillFormElements.clear();
+    this._autofillFormElements.clear();
     this.autofillFieldElements.clear();
 
     this.updateAutofillElementsAfterMutation();
@@ -1053,41 +960,62 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
    * within an idle callback to help with performance and prevent excessive updates.
    */
   private processMutations = () => {
-    for (let queueIndex = 0; queueIndex < this.mutationsQueue.length; queueIndex++) {
-      this.processMutationRecord(this.mutationsQueue[queueIndex]);
+    const queueLength = this.mutationsQueue.length;
+
+    if (!this.domQueryService.pageContainsShadowDomElements()) {
+      this.domQueryService.checkPageContainsShadowDom();
     }
 
-    if (this.domRecentlyMutated) {
-      this.updateAutofillElementsAfterMutation();
+    for (let queueIndex = 0; queueIndex < queueLength; queueIndex++) {
+      const mutations = this.mutationsQueue[queueIndex];
+      const processMutationRecords = () => {
+        this.processMutationRecords(mutations);
+
+        if (queueIndex === queueLength - 1 && this.domRecentlyMutated) {
+          this.updateAutofillElementsAfterMutation();
+        }
+      };
+
+      requestIdleCallbackPolyfill(processMutationRecords, { timeout: 500 });
     }
 
     this.mutationsQueue = [];
   };
 
   /**
-   * Processes a mutation record and updates the autofill elements if necessary.
+   * Processes all mutation records encountered by the mutation observer.
    *
    * @param mutations - The mutation record to process
    */
-  private processMutationRecord(mutations: MutationRecord[]) {
+  private processMutationRecords(mutations: MutationRecord[]) {
     for (let mutationIndex = 0; mutationIndex < mutations.length; mutationIndex++) {
-      const mutation = mutations[mutationIndex];
-      if (
-        mutation.type === "childList" &&
-        (this.isAutofillElementNodeMutated(mutation.removedNodes, true) ||
-          this.isAutofillElementNodeMutated(mutation.addedNodes))
-      ) {
-        this.domRecentlyMutated = true;
-        if (this.autofillOverlayContentService) {
-          this.autofillOverlayContentService.pageDetailsUpdateRequired = true;
-        }
-        this.noFieldsFound = false;
-        continue;
-      }
+      const mutation: MutationRecord = mutations[mutationIndex];
+      const processMutationRecord = () => this.processMutationRecord(mutation);
+      requestIdleCallbackPolyfill(processMutationRecord, { timeout: 500 });
+    }
+  }
 
-      if (mutation.type === "attributes") {
-        this.handleAutofillElementAttributeMutation(mutation);
+  /**
+   * Processes a single mutation record and updates the autofill elements if necessary.
+   * @param mutation
+   * @private
+   */
+  private processMutationRecord(mutation: MutationRecord) {
+    if (
+      mutation.type === "childList" &&
+      (this.isAutofillElementNodeMutated(mutation.removedNodes, true) ||
+        this.isAutofillElementNodeMutated(mutation.addedNodes))
+    ) {
+      this.domRecentlyMutated = true;
+      if (this.autofillOverlayContentService) {
+        this.autofillOverlayContentService.pageDetailsUpdateRequired = true;
       }
+      this.noFieldsFound = false;
+      return;
+    }
+
+    if (mutation.type === "attributes") {
+      this.handleAutofillElementAttributeMutation(mutation);
     }
   }
 
@@ -1110,16 +1038,19 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
         continue;
       }
 
-      if (
-        !this.useTreeWalkerStrategyFlagSet &&
-        (nodeIsFormElement(node) || this.isNodeFormFieldElement(node))
-      ) {
+      if (nodeIsFormElement(node) || this.isNodeFormFieldElement(node)) {
         mutatedElements.push(node as HTMLElement);
       }
 
-      const autofillElements = this.useTreeWalkerStrategyFlagSet
-        ? this.queryTreeWalkerForMutatedElements(node)
-        : this.deepQueryElements<HTMLElement>(node, `form, ${this.formFieldQueryString}`, true);
+      const autofillElements = this.domQueryService.query<HTMLElement>(
+        node,
+        `form, ${this.formFieldQueryString}`,
+        (walkerNode: Node) =>
+          nodeIsFormElement(walkerNode) || this.isNodeFormFieldElement(walkerNode),
+        this.mutationObserver,
+        true,
+      );
+
       if (autofillElements.length) {
         mutatedElements = mutatedElements.concat(autofillElements);
       }
@@ -1153,19 +1084,20 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
   private setupOverlayListenersOnMutatedElements(mutatedElements: Node[]) {
     for (let elementIndex = 0; elementIndex < mutatedElements.length; elementIndex++) {
       const node = mutatedElements[elementIndex];
-      if (
-        !this.isNodeFormFieldElement(node) ||
-        this.autofillFieldElements.get(node as ElementWithOpId<FormFieldElement>)
-      ) {
-        continue;
-      }
+      const buildAutofillFieldItem = () => {
+        if (
+          !this.isNodeFormFieldElement(node) ||
+          this.autofillFieldElements.get(node as ElementWithOpId<FormFieldElement>)
+        ) {
+          return;
+        }
 
-      requestIdleCallbackPolyfill(
         // We are setting this item to a -1 index because we do not know its position in the DOM.
         // This value should be updated with the next call to collect page details.
-        () => void this.buildAutofillFieldItem(node as ElementWithOpId<FormFieldElement>, -1),
-        { timeout: 1000 },
-      );
+        void this.buildAutofillFieldItem(node as ElementWithOpId<FormFieldElement>, -1);
+      };
+
+      requestIdleCallbackPolyfill(buildAutofillFieldItem, { timeout: 1000 });
     }
   }
 
@@ -1178,8 +1110,8 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
   private deleteCachedAutofillElement(
     element: ElementWithOpId<HTMLFormElement> | ElementWithOpId<FormFieldElement>,
   ) {
-    if (elementIsFormElement(element) && this.autofillFormElements.has(element)) {
-      this.autofillFormElements.delete(element);
+    if (elementIsFormElement(element) && this._autofillFormElements.has(element)) {
+      this._autofillFormElements.delete(element);
       return;
     }
 
@@ -1216,7 +1148,7 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
     }
 
     const attributeName = mutation.attributeName?.toLowerCase();
-    const autofillForm = this.autofillFormElements.get(
+    const autofillForm = this._autofillFormElements.get(
       targetElement as ElementWithOpId<HTMLFormElement>,
     );
 
@@ -1271,8 +1203,8 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
     }
 
     updateActions[attributeName]();
-    if (this.autofillFormElements.has(element)) {
-      this.autofillFormElements.set(element, dataTarget);
+    if (this._autofillFormElements.has(element)) {
+      this._autofillFormElements.set(element, dataTarget);
     }
   }
 
@@ -1390,7 +1322,7 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
       }
 
       cachedAutofillFieldElement.viewable = true;
-      this.setupInlineMenu(formFieldElement, cachedAutofillFieldElement);
+      this.setupOverlayOnField(formFieldElement, cachedAutofillFieldElement);
 
       this.intersectionObserver?.unobserve(entry.target);
     }
@@ -1401,14 +1333,12 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
    *
    * @param pageDetails - The page details to use for the inline menu listeners
    */
-  private setupInlineMenuListeners(pageDetails: AutofillPageDetails) {
-    if (!this.autofillOverlayContentService) {
-      return;
+  private setupOverlayListeners(pageDetails: AutofillPageDetails) {
+    if (this.autofillOverlayContentService) {
+      this.autofillFieldElements.forEach((autofillField, formFieldElement) => {
+        this.setupOverlayOnField(formFieldElement, autofillField, pageDetails);
+      });
     }
-
-    this.autofillFieldElements.forEach((autofillField, formFieldElement) => {
-      this.setupInlineMenu(formFieldElement, autofillField, pageDetails);
-    });
   }
 
   /**
@@ -1418,26 +1348,37 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
    * @param autofillField - The metadata for the form field
    * @param pageDetails - The page details to use for the inline menu listeners
    */
-  private setupInlineMenu(
+  private setupOverlayOnField(
     formFieldElement: ElementWithOpId<FormFieldElement>,
     autofillField: AutofillField,
     pageDetails?: AutofillPageDetails,
   ) {
-    if (!this.autofillOverlayContentService) {
-      return;
-    }
+    if (this.autofillOverlayContentService) {
+      const autofillPageDetails =
+        pageDetails ||
+        this.getFormattedPageDetails(
+          this.getFormattedAutofillFormsData(),
+          this.getFormattedAutofillFieldsData(),
+        );
 
-    const autofillPageDetails =
-      pageDetails ||
-      this.getFormattedPageDetails(
-        this.getFormattedAutofillFormsData(),
-        this.getFormattedAutofillFieldsData(),
+      void this.autofillOverlayContentService.setupOverlayListeners(
+        formFieldElement,
+        autofillField,
+        autofillPageDetails,
       );
+    }
+  }
 
-    void this.autofillOverlayContentService.setupInlineMenu(
-      formFieldElement,
-      autofillField,
-      autofillPageDetails,
+  /**
+   * Validates whether a password field is within the document.
+   */
+  isPasswordFieldWithinDocument(): boolean {
+    return (
+      this.domQueryService.query<HTMLInputElement>(
+        globalThis.document.documentElement,
+        `input[type="password"]`,
+        (node: Node) => nodeIsInputElement(node) && node.type === "password",
+      )?.length > 0
     );
   }
 
@@ -1452,150 +1393,4 @@ class CollectAutofillContentService implements CollectAutofillContentServiceInte
     this.mutationObserver?.disconnect();
     this.intersectionObserver?.disconnect();
   }
-
-  /**
-   * Queries the DOM for all the nodes that match the given filter callback
-   * and returns a collection of nodes.
-   * @param rootNode
-   * @param filterCallback
-   * @param isObservingShadowRoot
-   *
-   * @deprecated - This method remains as a fallback in the case that the deepQuery implementation fails.
-   */
-  private queryAllTreeWalkerNodes(
-    rootNode: Node,
-    filterCallback: CallableFunction,
-    isObservingShadowRoot = true,
-  ): Node[] {
-    const treeWalkerQueryResults: Node[] = [];
-
-    this.buildTreeWalkerNodesQueryResults(
-      rootNode,
-      treeWalkerQueryResults,
-      filterCallback,
-      isObservingShadowRoot,
-    );
-
-    return treeWalkerQueryResults;
-  }
-
-  /**
-   * Recursively builds a collection of nodes that match the given filter callback.
-   * If a node has a ShadowRoot, it will be observed for mutations.
-   *
-   * @param rootNode
-   * @param treeWalkerQueryResults
-   * @param filterCallback
-   *
-   * @deprecated - This method remains as a fallback in the case that the deepQuery implementation fails.
-   */
-  private buildTreeWalkerNodesQueryResults(
-    rootNode: Node,
-    treeWalkerQueryResults: Node[],
-    filterCallback: CallableFunction,
-    isObservingShadowRoot: boolean,
-  ) {
-    const treeWalker = document?.createTreeWalker(rootNode, NodeFilter.SHOW_ELEMENT);
-    let currentNode = treeWalker?.currentNode;
-
-    while (currentNode) {
-      if (filterCallback(currentNode)) {
-        treeWalkerQueryResults.push(currentNode);
-      }
-
-      const nodeShadowRoot = this.getShadowRoot(currentNode);
-      if (nodeShadowRoot) {
-        if (isObservingShadowRoot) {
-          this.mutationObserver.observe(nodeShadowRoot, {
-            attributes: true,
-            childList: true,
-            subtree: true,
-          });
-        }
-
-        this.buildTreeWalkerNodesQueryResults(
-          nodeShadowRoot,
-          treeWalkerQueryResults,
-          filterCallback,
-          isObservingShadowRoot,
-        );
-      }
-
-      currentNode = treeWalker?.nextNode();
-    }
-  }
-
-  /**
-   * @deprecated - This method remains as a fallback in the case that the deepQuery implementation fails.
-   */
-  private queryTreeWalkerForAutofillFormAndFieldElements(): {
-    formElements: HTMLFormElement[];
-    formFieldElements: FormFieldElement[];
-  } {
-    const formElements: HTMLFormElement[] = [];
-    const formFieldElements: FormFieldElement[] = [];
-    this.queryAllTreeWalkerNodes(document.documentElement, (node: Node) => {
-      if (nodeIsFormElement(node)) {
-        formElements.push(node);
-        return true;
-      }
-
-      if (this.isNodeFormFieldElement(node)) {
-        formFieldElements.push(node as FormFieldElement);
-        return true;
-      }
-
-      return false;
-    });
-
-    return { formElements, formFieldElements };
-  }
-
-  /**
-   * @deprecated - This method remains as a fallback in the case that the deepQuery implementation fails.
-   */
-  private queryTreeWalkerForAutofillFormFieldElements(): FormFieldElement[] {
-    return this.queryAllTreeWalkerNodes(document.documentElement, (node: Node) =>
-      this.isNodeFormFieldElement(node),
-    ) as FormFieldElement[];
-  }
-
-  /**
-   * @deprecated - This method remains as a fallback in the case that the deepQuery implementation fails.
-   *
-   * @param node - The node to query
-   */
-  private queryTreeWalkerForMutatedElements(node: Node): HTMLElement[] {
-    return this.queryAllTreeWalkerNodes(
-      node,
-      (walkerNode: Node) =>
-        nodeIsFormElement(walkerNode) || this.isNodeFormFieldElement(walkerNode),
-    ) as HTMLElement[];
-  }
-
-  /**
-   * @deprecated - This method remains as a fallback in the case that the deepQuery implementation fails.
-   */
-  private queryTreeWalkerForPasswordElements(): HTMLElement[] {
-    return this.queryAllTreeWalkerNodes(
-      document.documentElement,
-      (node: Node) => nodeIsInputElement(node) && node.type === "password",
-      false,
-    ) as HTMLElement[];
-  }
-
-  /**
-   * This is a temporary method to maintain a fallback strategy for the tree walker API
-   *
-   * @deprecated - This method remains as a fallback in the case that the deepQuery implementation fails.
-   */
-  isPasswordFieldWithinDocument(): boolean {
-    if (this.useTreeWalkerStrategyFlagSet) {
-      return Boolean(this.queryTreeWalkerForPasswordElements()?.length);
-    }
-
-    return Boolean(this.deepQueryElements(document, `input[type="password"]`)?.length);
-  }
 }
-
-export default CollectAutofillContentService;

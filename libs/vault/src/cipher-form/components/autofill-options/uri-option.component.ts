@@ -83,11 +83,21 @@ export class UriOptionComponent implements ControlValueAccessor {
    */
   @Input({ required: true })
   set defaultMatchDetection(value: UriMatchStrategySetting) {
+    // The default selection has a value of `null` avoid showing "Default (Default)"
+    if (value === null) {
+      return;
+    }
+
     this.uriMatchOptions[0].label = this.i18nService.t(
       "defaultLabel",
       this.uriMatchOptions.find((o) => o.value === value)?.label,
     );
   }
+
+  /**
+   * The index of the URI in the form. Used to render the correct label.
+   */
+  @Input({ required: true }) index: number;
 
   /**
    * Emits when the remove button is clicked and URI should be removed from the form.
@@ -102,6 +112,12 @@ export class UriOptionComponent implements ControlValueAccessor {
     if (this.showMatchDetection) {
       setTimeout(() => this.matchDetectionSelect?.select?.focus(), 0);
     }
+  }
+
+  protected get uriLabel() {
+    return this.index === 0
+      ? this.i18nService.t("websiteUri")
+      : this.i18nService.t("websiteUriCount", this.index + 1);
   }
 
   protected get toggleTitle() {
@@ -138,12 +154,12 @@ export class UriOptionComponent implements ControlValueAccessor {
   }
 
   // NG_VALUE_ACCESSOR implementation
-  writeValue(value: any): void {
+  writeValue(value: { uri: string; matchDetection: UriMatchStrategySetting | null }): void {
     if (value) {
       this.uriForm.setValue(
         {
           uri: value.uri ?? "",
-          matchDetection: value.match ?? null,
+          matchDetection: value.matchDetection ?? null,
         },
         { emitEvent: false },
       );
