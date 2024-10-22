@@ -87,7 +87,7 @@ export class IndividualVaultExportService
           attachment.key != null
             ? attachment.key
             : await this.cryptoService.getOrgKey(cipher.organizationId);
-        const decBuf = await this.cryptoService.decryptFromBytes(encBuf, key);
+        const decBuf = await this.encryptService.decryptToBytes(encBuf, key);
         await zipWriter.add(
           `attachments/${cipher.id}/${attachment.fileName}`,
           new Uint8ArrayReader(decBuf),
