@@ -83,7 +83,7 @@ export class IndividualVaultExportService
           attachment.key != null
             ? attachment.key
             : await this.cryptoService.getOrgKey(cipher.organizationId);
-        const decBuf = await this.cryptoService.decryptFromBytes(encBuf, key);
+        const decBuf = await this.encryptService.decryptToBytes(encBuf, key);
         cipherFolder.file(attachment.fileName, decBuf);
       }
     }
