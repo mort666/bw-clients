@@ -21,9 +21,9 @@ import {
   Generators,
   PasswordAlgorithm,
   GeneratedCredential,
-  CredentialGeneratorInfo,
   CredentialAlgorithm,
   isPasswordAlgorithm,
+  AlgorithmInfo,
 } from "@bitwarden/generator-core";
 
 /** Options group for passwords */
@@ -59,7 +59,15 @@ export class PasswordGeneratorComponent implements OnInit, OnDestroy {
   protected readonly userId$ = new BehaviorSubject<UserId>(null);
 
   /** Emits when a new credential is requested */
-  protected readonly generate$ = new Subject<void>();
+  private readonly generate$ = new Subject<string>();
+
+  /** Request a new value from the generator
+   * @param requestor a label used to trace generation request
+   *  origin in the debugger.
+   */
+  protected generate(requestor: string) {
+    this.generate$.next(requestor);
+  }
 
   /** Tracks changes to the selected credential type
    * @param type the new credential type
@@ -154,7 +162,7 @@ export class PasswordGeneratorComponent implements OnInit, OnDestroy {
         filter((a) => !a.onlyOnRequest),
         takeUntil(this.destroyed),
       )
-      .subscribe(() => this.generate$.next());
+      .subscribe(() => this.generate("autogenerate"));
   }
 
   private typeToGenerator$(type: CredentialAlgorithm) {
@@ -178,12 +186,28 @@ export class PasswordGeneratorComponent implements OnInit, OnDestroy {
   protected passwordOptions$ = new BehaviorSubject<Option<CredentialAlgorithm>[]>([]);
 
   /** tracks the currently selected credential type */
-  protected algorithm$ = new ReplaySubject<CredentialGeneratorInfo>(1);
+  protected algorithm$ = new ReplaySubject<AlgorithmInfo>(1);
 
-  private toOptions(algorithms: CredentialGeneratorInfo[]) {
+  /**
+   * Emits the copy button aria-label respective of the selected credential type
+   */
+  protected credentialTypeCopyLabel$ = this.algorithm$.pipe(
+    filter((algorithm) => !!algorithm),
+    map(({ copy }) => copy),
+  );
+
+  /**
+   * Emits the generate button aria-label respective of the selected credential type
+   */
+  protected credentialTypeGenerateLabel$ = this.algorithm$.pipe(
+    filter((algorithm) => !!algorithm),
+    map(({ generate }) => generate),
+  );
+
+  private toOptions(algorithms: AlgorithmInfo[]) {
     const options: Option<CredentialAlgorithm>[] = algorithms.map((algorithm) => ({
       value: algorithm.id,
-      label: this.i18nService.t(algorithm.nameKey),
+      label: this.i18nService.t(algorithm.name),
     }));
 
     return options;
