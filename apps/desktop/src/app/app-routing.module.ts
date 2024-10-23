@@ -77,10 +77,6 @@ const routes: Routes = [
     component: LoginViaAuthRequestComponent,
   },
   {
-    path: "login-with-passkey",
-    component: LoginViaAuthRequestComponent,
-  },
-  {
     path: "admin-approval-requested",
     component: LoginViaAuthRequestComponent,
   },
