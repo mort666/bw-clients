@@ -62,13 +62,24 @@ describe("ExtensionLoginComponentService", () => {
     expect(service).toBeTruthy();
   });
 
-  it("returns true if showPasswordless flag is enabled", () => {
-    (flagEnabled as jest.Mock).mockReturnValue(true);
-    expect(service.isLoginViaAuthRequestSupported()).toBe(true);
+  describe("isLoginViaAuthRequestSupported", () => {
+    it("returns true if showPasswordless flag is enabled", () => {
+      (flagEnabled as jest.Mock).mockReturnValue(true);
+      expect(service.isLoginViaAuthRequestSupported()).toBe(true);
+    });
+
+    it("returns false if showPasswordless flag is disabled", () => {
+      (flagEnabled as jest.Mock).mockReturnValue(false);
+      expect(service.isLoginViaAuthRequestSupported()).toBeFalsy();
+    });
   });
 
-  it("returns false if showPasswordless flag is disabled", () => {
-    (flagEnabled as jest.Mock).mockReturnValue(false);
-    expect(service.isLoginViaAuthRequestSupported()).toBeFalsy();
+  describe("showBackButton", () => {
+    it("sets showBackButton in extensionAnonLayoutWrapperDataService", () => {
+      service.showBackButton(true);
+      expect(extensionAnonLayoutWrapperDataService.setAnonLayoutWrapperData).toHaveBeenCalledWith({
+        showBackButton: true,
+      });
+    });
   });
 });
