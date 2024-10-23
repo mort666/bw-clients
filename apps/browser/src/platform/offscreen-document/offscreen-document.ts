@@ -1,5 +1,6 @@
 import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
 
+import { BrowserConsoleLogService } from "../../services/browser-console-log.service";
 import { BrowserApi } from "../browser/browser-api";
 import BrowserClipboardService from "../services/browser-clipboard.service";
 
@@ -10,7 +11,7 @@ import {
 } from "./abstractions/offscreen-document";
 
 class OffscreenDocument implements OffscreenDocumentInterface {
-  private consoleLogService: ConsoleLogService = new ConsoleLogService(false);
+  private consoleLogService: ConsoleLogService = new BrowserConsoleLogService(false);
   private readonly extensionMessageHandlers: OffscreenDocumentExtensionMessageHandlers = {
     offscreenCopyToClipboard: ({ message }) => this.handleOffscreenCopyToClipboard(message),
     offscreenReadFromClipboard: () => this.handleOffscreenReadFromClipboard(),

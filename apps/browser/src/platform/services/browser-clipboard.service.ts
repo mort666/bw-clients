@@ -1,7 +1,9 @@
 import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
 
+import { BrowserConsoleLogService } from "../../services/browser-console-log.service";
+
 class BrowserClipboardService {
-  private static consoleLogService: ConsoleLogService = new ConsoleLogService(false);
+  private static consoleLogService: ConsoleLogService = new BrowserConsoleLogService(false);
 
   /**
    * Copies the given text to the user's clipboard.

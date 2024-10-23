@@ -12,7 +12,8 @@
  * @see https://github.com/fregante/content-scripts-register-polyfill
  * @version 4.0.2
  */
-import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
+
+import { BrowserConsoleLogService } from "../../services/browser-console-log.service";
 
 import { BrowserApi } from "./browser-api";
 
@@ -32,7 +33,7 @@ export async function registerContentScriptsPolyfill(
 }
 
 function buildRegisterContentScriptsPolyfill() {
-  const logService = new ConsoleLogService(false);
+  const logService = new BrowserConsoleLogService(false);
   const chromeProxy = globalThis.chrome && NestedProxy<typeof globalThis.chrome>(globalThis.chrome);
   const patternValidationRegex =
     /^(https?|wss?|file|ftp|\*):\/\/(\*|\*\.[^*/]+|[^*/]+)\/.*$|^file:\/\/\/.*$|^resource:\/\/(\*|\*\.[^*/]+|[^*/]+)\/.*$|^about:/;

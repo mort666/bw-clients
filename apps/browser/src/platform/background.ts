@@ -1,10 +1,9 @@
-import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
-
 import MainBackground from "../background/main.background";
+import { BrowserConsoleLogService } from "../services/browser-console-log.service";
 
 import { BrowserApi } from "./browser/browser-api";
 
-const logService = new ConsoleLogService(false);
+const logService = new BrowserConsoleLogService(false);
 if (BrowserApi.isManifestVersion(3)) {
   startHeartbeat().catch((error) => logService.error(error));
 }

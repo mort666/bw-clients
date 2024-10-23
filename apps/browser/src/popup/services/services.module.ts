@@ -70,7 +70,6 @@ import { Message, MessageListener, MessageSender } from "@bitwarden/common/platf
 import { SubjectMessageSender } from "@bitwarden/common/platform/messaging/internal";
 import { flagEnabled } from "@bitwarden/common/platform/misc/flags";
 import { TaskSchedulerService } from "@bitwarden/common/platform/scheduling";
-import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
 import { ContainerService } from "@bitwarden/common/platform/services/container.service";
 import { NoopSdkClientFactory } from "@bitwarden/common/platform/services/sdk/noop-sdk-client-factory";
 import { StorageServiceProvider } from "@bitwarden/common/platform/services/storage-service.provider";
@@ -122,6 +121,7 @@ import { ForegroundTaskSchedulerService } from "../../platform/services/task-sch
 import { BrowserStorageServiceProvider } from "../../platform/storage/browser-storage-service.provider";
 import { ForegroundMemoryStorageService } from "../../platform/storage/foreground-memory-storage.service";
 import { fromChromeRuntimeMessaging } from "../../platform/utils/from-chrome-runtime-messaging";
+import { BrowserConsoleLogService } from "../../services/browser-console-log.service";
 import { ExtensionLockComponentService } from "../../services/extension-lock-component.service";
 import { ForegroundVaultTimeoutService } from "../../services/vault-timeout/foreground-vault-timeout.service";
 import { BrowserSendStateService } from "../../tools/popup/services/browser-send-state.service";
@@ -191,7 +191,7 @@ const safeProviders: SafeProvider[] = [
     provide: LogService,
     useFactory: () => {
       const isDev = process.env.ENV === "development";
-      return new ConsoleLogService(isDev);
+      return new BrowserConsoleLogService(isDev);
     },
     deps: [],
   }),

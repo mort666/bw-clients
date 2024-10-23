@@ -1,7 +1,7 @@
 import { ThemeType } from "@bitwarden/common/platform/enums";
-import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
 import type { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
 
+import { BrowserConsoleLogService } from "../../services/browser-console-log.service";
 import { FilelessImportPort, FilelessImportType } from "../../tools/enums/fileless-import.enums";
 import { AdjustNotificationBarMessageData } from "../background/abstractions/notification.background";
 import { buildSvgDomElement } from "../utils";
@@ -15,7 +15,7 @@ import {
 
 require("./bar.scss");
 
-const logService = new ConsoleLogService(false);
+const logService = new BrowserConsoleLogService(false);
 let notificationBarIframeInitData: NotificationBarIframeInitData = {};
 let windowMessageOrigin: string;
 const notificationBarWindowMessageHandlers: NotificationBarWindowMessageHandlers = {
