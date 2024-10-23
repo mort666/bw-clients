@@ -35,6 +35,7 @@ import {
   CheckboxModule,
   FormFieldModule,
   IconButtonModule,
+  LinkModule,
   ToastService,
 } from "@bitwarden/components";
 
@@ -60,6 +61,7 @@ export enum LoginUiState {
     CommonModule,
     FormFieldModule,
     IconButtonModule,
+    LinkModule,
     JslibModule,
     ReactiveFormsModule,
     RouterModule,

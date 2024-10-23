@@ -13,7 +13,7 @@
 <form [bitSubmit]="submit" [formGroup]="formGroup">
   <ng-container *ngIf="loginUiState === LoginUiState.EMAIL_ENTRY">
     <!-- Email Address input -->
-    <bit-form-field class="!tw-mb-4">
+    <bit-form-field>
       <bit-label>{{ "emailAddress" | i18n }}</bit-label>
       <input
         type="email"
@@ -26,7 +26,7 @@
     </bit-form-field>
 
     <!-- Remember Email input -->
-    <bit-form-control class="!tw-mb-4">
+    <bit-form-control>
       <input type="checkbox" formControlName="rememberEmail" bitCheckbox />
       <bit-label>{{ "rememberEmail" | i18n }}</bit-label>
     </bit-form-control>
@@ -92,12 +92,8 @@
       <button type="button" bitIconButton bitSuffix bitPasswordInputToggle></button>
     </bit-form-field>
 
-    <!-- Link to Password Hint page -->
-    <a
-      class="tw-inline-block tw-mb-4 tw-font-semibold tw-no-underline hover:tw-underline tw-text-primary-600"
-      routerLink="/hint"
-      (click)="goToHint()"
-    >
+    <!-- Link to Password Hint page - doesn't use bit-hint so that it doesn't get hidden on input validation errors -->
+    <a bitLink routerLink="/hint" (click)="goToHint()" class="tw-inline-block tw-mb-4">
       {{ "getMasterPasswordHint" | i18n }}
     </a>
 
