@@ -10,7 +10,7 @@
           type="button"
           [disabled]="canSaveKey$ | async"
           class="primary"
-          attr.aria-label="{{ 'save' | i18n }}"
+          appA11yTitle="{{ 'save' | i18n }}"
           (click)="onSave()"
         >
           <i class="bwi bwi-lg bwi-fw bwi-check" aria-hidden="true"></i>
