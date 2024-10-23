@@ -1,7 +1,89 @@
-import { interceptConsole, restoreConsole } from "../../../spec";
+import { awaitAsync, interceptConsole, restoreConsole } from "../../../spec";
 import { LogLevelType } from "../enums";
 
 import { ConsoleLogService } from "./console-log.service";
+
+class MissingInitConsoleLogService extends ConsoleLogService {
+  constructor(isDev: boolean, defaultLogLevel?: LogLevelType) {
+    super(isDev, defaultLogLevel, 10);
+  }
+  protected async readStoredLogLevel(): Promise<LogLevelType> {
+    return Promise.resolve(null);
+  }
+
+  protected writeStoredLogLevel(level: LogLevelType): Promise<void> {
+    return Promise.resolve();
+  }
+}
+
+class TestConsoleLogService extends ConsoleLogService {
+  constructor(
+    isDev: boolean,
+    defaultLogLevel?: LogLevelType,
+    public storedLogLevel: LogLevelType | null = null,
+  ) {
+    super(isDev, defaultLogLevel, 500);
+    void super.init();
+  }
+
+  protected async readStoredLogLevel(): Promise<LogLevelType> {
+    return Promise.resolve(this.storedLogLevel);
+  }
+
+  protected writeStoredLogLevel(level: LogLevelType): Promise<void> {
+    this.storedLogLevel = level;
+    return Promise.resolve();
+  }
+}
+
+describe("ConsoleLogService failure to init", () => {
+  let consoleSpy: {
+    log: jest.Mock<any, any>;
+    warn: jest.Mock<any, any>;
+    error: jest.Mock<any, any>;
+  };
+
+  beforeEach(() => {
+    consoleSpy = interceptConsole();
+  });
+
+  afterEach(() => {
+    restoreConsole();
+    jest.resetAllMocks();
+  });
+
+  it("warns if not initialized", async () => {
+    new MissingInitConsoleLogService(true);
+    await awaitAsync(25);
+    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+    expect(consoleSpy.warn.mock.calls[0][0]).toEqual(
+      "ConsoleLogService has not been initialized. Child Logging classes may not have called init",
+    );
+  });
+});
+
+describe("ConsoleLogService properly initialized", () => {
+  let consoleSpy: {
+    log: jest.Mock<any, any>;
+    warn: jest.Mock<any, any>;
+    error: jest.Mock<any, any>;
+  };
+
+  beforeEach(() => {
+    consoleSpy = interceptConsole();
+  });
+
+  afterEach(() => {
+    restoreConsole();
+    jest.resetAllMocks();
+  });
+
+  it("warns if not initialized", async () => {
+    new TestConsoleLogService(true);
+    await awaitAsync(750);
+    expect(consoleSpy.warn).not.toHaveBeenCalled;
+  });
+});
 
 describe("ConsoleLogService", () => {
   const error = new Error("this is an error");
@@ -13,9 +95,12 @@ describe("ConsoleLogService", () => {
   };
   let logService: ConsoleLogService;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     consoleSpy = interceptConsole();
-    logService = new ConsoleLogService(true);
+    logService = new TestConsoleLogService(true, LogLevelType.Debug);
+
+    // let the read stored level resolve
+    await awaitAsync();
   });
 
   afterEach(() => {
@@ -23,58 +108,68 @@ describe("ConsoleLogService", () => {
     jest.resetAllMocks();
   });
 
-  it("filters messages below the set threshold", () => {
-    logService = new ConsoleLogService(true, () => false);
+  it("filters messages below the set threshold", async () => {
+    logService = new TestConsoleLogService(true, LogLevelType.Error);
     logService.debug("debug", error, obj);
     logService.info("info", error, obj);
     logService.warning("warning", error, obj);
     logService.error("error", error, obj);
+
+    await awaitAsync();
 
     expect(consoleSpy.log).not.toHaveBeenCalled();
     expect(consoleSpy.warn).not.toHaveBeenCalled();
-    expect(consoleSpy.error).not.toHaveBeenCalled();
+    expect(consoleSpy.error).toHaveBeenCalled();
   });
 
-  it("writes messages when no filter is set", () => {
-    logService = new ConsoleLogService(true, null);
+  it("writes messages when no filter is set", async () => {
+    logService = new TestConsoleLogService(true, null);
     logService.debug("debug", error, obj);
     logService.info("info", error, obj);
     logService.warning("warning", error, obj);
     logService.error("error", error, obj);
+
+    await awaitAsync();
 
     expect(consoleSpy.log).toHaveBeenCalledTimes(2);
     expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
     expect(consoleSpy.error).toHaveBeenCalledTimes;
   });
 
-  describe("updateFilter", () => {
-    it("updates filter behavior", () => {
-      logService = new ConsoleLogService(true, () => false);
+  describe("updateLogLevel", () => {
+    it("updates filter behavior", async () => {
+      logService = new TestConsoleLogService(true, LogLevelType.Error);
       logService.debug("debug", error, obj);
+
+      await awaitAsync();
 
       expect(consoleSpy.log).not.toHaveBeenCalled();
 
-      logService.updateFilter(() => true);
+      logService.updateLogLevel(LogLevelType.Debug);
 
       logService.debug("debug", error, obj);
       expect(consoleSpy.log).toHaveBeenCalledTimes(1);
     });
 
-    it("does not update filter if null is passed", () => {
-      logService = new ConsoleLogService(true, (level) => level === LogLevelType.Debug);
-      logService.debug("debug", error, obj);
+    it("updates store log level", async () => {
+      expect((logService as TestConsoleLogService).storedLogLevel).toBe(null);
+      logService.updateLogLevel(LogLevelType.Info);
+      expect((logService as TestConsoleLogService).storedLogLevel).toBe(LogLevelType.Info);
+    });
 
-      expect(consoleSpy.log).toHaveBeenCalled();
+    it("respects the stored log level", async () => {
+      const sut = new TestConsoleLogService(true, LogLevelType.Debug, LogLevelType.Error);
 
-      logService.updateFilter(null);
+      await awaitAsync();
 
-      logService.debug("debug", error, obj);
-      expect(consoleSpy.log).toHaveBeenCalled();
+      expect(sut.logLevel).toBe(LogLevelType.Error);
     });
   });
 
-  it("only writes debug messages in dev mode", () => {
-    logService = new ConsoleLogService(false);
+  it("only writes debug messages in dev mode", async () => {
+    logService = new TestConsoleLogService(false);
+
+    await awaitAsync();
 
     logService.debug("debug message");
     expect(consoleSpy.log).not.toHaveBeenCalled();
