@@ -74,6 +74,7 @@ import {
   PasswordRepromptService,
 } from "@bitwarden/vault";
 
+import { TrialFlowService } from "../../billing/services/trial-flow.service";
 import { FreeTrial } from "../../core/types/free-trial";
 import { SharedModule } from "../../shared/shared.module";
 import { AssignCollectionsWebComponent } from "../components/assign-collections";
@@ -92,7 +93,6 @@ import { VaultItemEvent } from "../components/vault-items/vault-item-event";
 import { VaultItemsModule } from "../components/vault-items/vault-items.module";
 import { getNestedCollectionTree } from "../utils/collection-utils";
 
-import { TrialFlowService } from "./../../core/trial-flow.service";
 import { AddEditComponent } from "./add-edit.component";
 import {
   AttachmentDialogCloseResult,
@@ -398,9 +398,10 @@ export class VaultComponent implements OnInit, OnDestroy {
       )
       .subscribe();
 
+    this.unpaidSubscriptionDialog$.pipe(takeUntil(this.destroy$)).subscribe();
+
     const organizationsPaymentStatus$ = this.organizationService.organizations$.pipe(
       switchMap((allOrganizations) => {
-        const { length } = allOrganizations;
         return combineLatest(
           allOrganizations.map((org) =>
             combineLatest([
@@ -408,11 +409,6 @@ export class VaultComponent implements OnInit, OnDestroy {
               this.organizationApiService.getBilling(org.id),
             ]).pipe(
               map(([subscription, billing]) => {
-                if (length == 1) {
-                  from(this.trialFlowService.handleUnpaidSubscriptionDialog(org, subscription))
-                    .pipe(takeUntil(this.destroy$))
-                    .subscribe();
-                }
                 return this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(
                   org,
                   subscription,
@@ -487,6 +483,17 @@ export class VaultComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
     this.vaultFilterService.clearOrganizationFilter();
   }
+
+  private readonly unpaidSubscriptionDialog$ = this.organizationService.organizations$.pipe(
+    filter((organizations) => organizations.length === 1),
+    switchMap(([organization]) =>
+      from(this.organizationApiService.getSubscription(organization.id)).pipe(
+        switchMap((subscription) =>
+          from(this.trialFlowService.handleUnpaidSubscriptionDialog(organization, subscription)),
+        ),
+      ),
+    ),
+  );
 
   async onVaultItemsEvent(event: VaultItemEvent) {
     this.processingEvent = true;

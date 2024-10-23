@@ -20,8 +20,8 @@ import { SyncService } from "@bitwarden/common/platform/sync";
 import { DialogService, ToastService } from "@bitwarden/components";
 
 import { FreeTrial } from "../../core/types/free-trial";
+import { TrialFlowService } from "../services/trial-flow.service";
 
-import { TrialFlowService } from "./../../core/trial-flow.service";
 import { AddCreditDialogResult, openAddCreditDialog } from "./add-credit-dialog.component";
 import {
   AdjustPaymentDialogResult,

@@ -17,8 +17,8 @@ import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.servic
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { DialogService, ToastService } from "@bitwarden/components";
 
-import { TrialFlowService } from "../../../core/trial-flow.service";
 import { FreeTrial } from "../../../core/types/free-trial";
+import { TrialFlowService } from "../../services/trial-flow.service";
 import { TaxInfoComponent } from "../../shared";
 import {
   AddCreditDialogResult,

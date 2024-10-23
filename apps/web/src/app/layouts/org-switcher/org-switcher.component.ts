@@ -10,7 +10,7 @@ import type { Organization } from "@bitwarden/common/admin-console/models/domain
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { DialogService, NavigationModule } from "@bitwarden/components";
 
-import { TrialFlowService } from "../../core/trial-flow.service";
+import { TrialFlowService } from "../../billing/services/trial-flow.service";
 
 @Component({
   selector: "org-switcher",

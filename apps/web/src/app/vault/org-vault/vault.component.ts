@@ -82,7 +82,7 @@ import {
 
 import { GroupService, GroupView } from "../../admin-console/organizations/core";
 import { openEntityEventsDialog } from "../../admin-console/organizations/manage/entity-events.component";
-import { TrialFlowService } from "../../core/trial-flow.service";
+import { TrialFlowService } from "../../billing/services/trial-flow.service";
 import { FreeTrial } from "../../core/types/free-trial";
 import { SharedModule } from "../../shared";
 import { VaultFilterService } from "../../vault/individual-vault/vault-filter/services/abstractions/vault-filter.service";
@@ -563,19 +563,15 @@ export class VaultComponent implements OnInit, OnDestroy {
       )
       .subscribe();
 
+    this.unpaidSubscriptionDialog$.pipe(takeUntil(this.destroy$)).subscribe();
+
     this.freeTrial$ = organization$.pipe(
       switchMap((org) =>
         combineLatest([
           of(org),
           this.organizationApiService.getSubscription(org.id),
           this.organizationApiService.getBilling(org.id),
-        ]).pipe(
-          tap(([org, sub, _]) =>
-            from(this.trialFlowService.handleUnpaidSubscriptionDialog(org, sub))
-              .pipe(takeUntil(this.destroy$))
-              .subscribe(),
-          ),
-        ),
+        ]),
       ),
       map(([org, sub, billing]) => {
         return this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(
@@ -584,7 +580,6 @@ export class VaultComponent implements OnInit, OnDestroy {
           billing?.paymentSource,
         );
       }),
-      takeUntil(this.destroy$),
     );
 
     firstSetup$
@@ -636,6 +631,17 @@ export class VaultComponent implements OnInit, OnDestroy {
         },
       );
   }
+
+  private readonly unpaidSubscriptionDialog$ = this.organizationService.organizations$.pipe(
+    filter((organizations) => organizations.length === 1),
+    switchMap(([organization]) =>
+      from(this.organizationApiService.getSubscription(organization.id)).pipe(
+        switchMap((subscription) =>
+          from(this.trialFlowService.handleUnpaidSubscriptionDialog(organization, subscription)),
+        ),
+      ),
+    ),
+  );
 
   async navigateToPaymentMethod() {
     await this.router.navigate(
