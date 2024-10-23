@@ -10,6 +10,19 @@ import {
   RegionConfig,
 } from "@bitwarden/common/platform/abstractions/environment.service";
 
+export const ExtensionDefaultOverlayPosition: ConnectedPosition[] = [
+  {
+    originX: "start",
+    originY: "top",
+    overlayX: "start",
+    overlayY: "bottom",
+  },
+];
+
+export interface EnvironmentSelectorRouteData {
+  overlayPosition?: ConnectedPosition[];
+}
+
 @Component({
   selector: "environment-selector",
   templateUrl: "environment-selector.component.html",

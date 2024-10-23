@@ -1,7 +1,11 @@
 import { Injectable, NgModule } from "@angular/core";
 import { ActivatedRouteSnapshot, RouteReuseStrategy, RouterModule, Routes } from "@angular/router";
 
-import { EnvironmentSelectorComponent } from "@bitwarden/angular/auth/components/environment-selector.component";
+import {
+  EnvironmentSelectorComponent,
+  EnvironmentSelectorRouteData,
+  ExtensionDefaultOverlayPosition,
+} from "@bitwarden/angular/auth/components/environment-selector.component";
 import { unauthUiRefreshRedirect } from "@bitwarden/angular/auth/functions/unauth-ui-refresh-redirect";
 import { unauthUiRefreshSwap } from "@bitwarden/angular/auth/functions/unauth-ui-refresh-route-swap";
 import {
@@ -439,15 +443,8 @@ const routes: Routes = [
               component: EnvironmentSelectorComponent,
               outlet: "environment-selector",
               data: {
-                overlayPosition: [
-                  {
-                    originX: "start",
-                    originY: "top",
-                    overlayX: "start",
-                    overlayY: "bottom",
-                  },
-                ],
-              },
+                overlayPosition: ExtensionDefaultOverlayPosition,
+              } satisfies EnvironmentSelectorRouteData,
             },
           ],
         },
@@ -484,15 +481,8 @@ const routes: Routes = [
               component: EnvironmentSelectorComponent,
               outlet: "environment-selector",
               data: {
-                overlayPosition: [
-                  {
-                    originX: "start",
-                    originY: "top",
-                    overlayX: "start",
-                    overlayY: "bottom",
-                  },
-                ],
-              },
+                overlayPosition: ExtensionDefaultOverlayPosition,
+              } satisfies EnvironmentSelectorRouteData,
             },
           ],
         },
