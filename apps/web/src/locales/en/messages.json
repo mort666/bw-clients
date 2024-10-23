@@ -405,6 +405,9 @@
   "generatePassword": {
     "message": "Generate password"
   },
+  "generatePassphrase": {
+    "message": "Generate passphrase"
+  },
   "checkPassword": {
     "message": "Check if password has been exposed."
   },
@@ -662,6 +665,10 @@
   "copyPassword": {
     "message": "Copy password",
     "description": "Copy password to clipboard"
+  },
+  "copyPassphrase": {
+    "message": "Copy passphrase",
+    "description": "Copy passphrase to clipboard"
   },
   "passwordCopied": {
     "message": "Password copied"
@@ -6366,6 +6373,9 @@
   "generateUsername": {
     "message": "Generate username"
   },
+  "generateEmail": {
+    "message": "Generate email"
+  },
   "usernameType": {
     "message": "Username type"
   },
@@ -6470,6 +6480,14 @@
   },
   "forwardedEmailDesc": {
     "message": "Generate an email alias with an external forwarding service."
+  },
+  "forwarderDomainName": {
+    "message": "Email domain",
+    "description": "Labels the domain name email forwarder service option"
+  },
+  "forwarderDomainNameHint": {
+    "message": "Choose a domain that is supported by the selected service",
+    "description": "Guidance provided for email forwarding services that support multiple email domains."
   },
   "forwarderError": {
     "message": "$SERVICENAME$ error: $ERRORMESSAGE$",
@@ -8269,6 +8287,10 @@
   },
   "baseUrl": {
     "message": "Server URL"
+  },
+  "selfHostBaseUrl": {
+    "message": "Self-host server URL",
+    "description": "Label for field requesting a self-hosted integration service URL"
   },
   "aliasDomain": {
     "message": "Alias domain"
