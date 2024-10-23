@@ -185,6 +185,16 @@ export class VaultComponent implements OnInit, OnDestroy {
   private extensionRefreshEnabled: boolean;
 
   private vaultItemDialogRef?: DialogRef<VaultItemDialogResult> | undefined;
+  private readonly unpaidSubscriptionDialog$ = this.organizationService.organizations$.pipe(
+    filter((organizations) => organizations.length === 1),
+    switchMap(([organization]) =>
+      from(this.organizationApiService.getSubscription(organization.id)).pipe(
+        switchMap((subscription) =>
+          from(this.trialFlowService.handleUnpaidSubscriptionDialog(organization, subscription)),
+        ),
+      ),
+    ),
+  );
 
   constructor(
     private syncService: SyncService,
@@ -483,17 +493,6 @@ export class VaultComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
     this.vaultFilterService.clearOrganizationFilter();
   }
-
-  private readonly unpaidSubscriptionDialog$ = this.organizationService.organizations$.pipe(
-    filter((organizations) => organizations.length === 1),
-    switchMap(([organization]) =>
-      from(this.organizationApiService.getSubscription(organization.id)).pipe(
-        switchMap((subscription) =>
-          from(this.trialFlowService.handleUnpaidSubscriptionDialog(organization, subscription)),
-        ),
-      ),
-    ),
-  );
 
   async onVaultItemsEvent(event: VaultItemEvent) {
     this.processingEvent = true;

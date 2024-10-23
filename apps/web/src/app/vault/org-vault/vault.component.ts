@@ -198,6 +198,16 @@ export class VaultComponent implements OnInit, OnDestroy {
   protected addAccessStatus$ = new BehaviorSubject<AddAccessStatusType>(0);
   private extensionRefreshEnabled: boolean;
   private vaultItemDialogRef?: DialogRef<VaultItemDialogResult> | undefined;
+  private readonly unpaidSubscriptionDialog$ = this.organizationService.organizations$.pipe(
+    filter((organizations) => organizations.length === 1),
+    switchMap(([organization]) =>
+      from(this.organizationApiService.getSubscription(organization.id)).pipe(
+        switchMap((subscription) =>
+          from(this.trialFlowService.handleUnpaidSubscriptionDialog(organization, subscription)),
+        ),
+      ),
+    ),
+  );
 
   constructor(
     private route: ActivatedRoute,
@@ -631,17 +641,6 @@ export class VaultComponent implements OnInit, OnDestroy {
         },
       );
   }
-
-  private readonly unpaidSubscriptionDialog$ = this.organizationService.organizations$.pipe(
-    filter((organizations) => organizations.length === 1),
-    switchMap(([organization]) =>
-      from(this.organizationApiService.getSubscription(organization.id)).pipe(
-        switchMap((subscription) =>
-          from(this.trialFlowService.handleUnpaidSubscriptionDialog(organization, subscription)),
-        ),
-      ),
-    ),
-  );
 
   async navigateToPaymentMethod() {
     await this.router.navigate(
