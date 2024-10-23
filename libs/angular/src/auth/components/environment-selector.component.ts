@@ -18,6 +18,14 @@ export const ExtensionDefaultOverlayPosition: ConnectedPosition[] = [
     overlayY: "bottom",
   },
 ];
+export const DesktopDefaultOverlayPosition: ConnectedPosition[] = [
+  {
+    originX: "start",
+    originY: "top",
+    overlayX: "start",
+    overlayY: "bottom",
+  },
+];
 
 export interface EnvironmentSelectorRouteData {
   overlayPosition?: ConnectedPosition[];

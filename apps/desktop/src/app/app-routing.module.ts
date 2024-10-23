@@ -1,7 +1,10 @@
 import { NgModule } from "@angular/core";
 import { RouterModule, Routes } from "@angular/router";
 
-import { EnvironmentSelectorComponent } from "@bitwarden/angular/auth/components/environment-selector.component";
+import {
+  DesktopDefaultOverlayPosition,
+  EnvironmentSelectorComponent,
+} from "@bitwarden/angular/auth/components/environment-selector.component";
 import { unauthUiRefreshSwap } from "@bitwarden/angular/auth/functions/unauth-ui-refresh-route-swap";
 import {
   authGuard,
@@ -189,14 +192,7 @@ const routes: Routes = [
               component: EnvironmentSelectorComponent,
               outlet: "environment-selector",
               data: {
-                overlayPosition: [
-                  {
-                    originX: "start",
-                    originY: "top",
-                    overlayX: "start",
-                    overlayY: "bottom",
-                  },
-                ],
+                overlayPosition: DesktopDefaultOverlayPosition,
               },
             },
           ],
