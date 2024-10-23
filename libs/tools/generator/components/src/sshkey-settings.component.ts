@@ -12,9 +12,9 @@ import {
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { UserId } from "@bitwarden/common/types/guid";
-import { Generators, CredentialGeneratorService } from "@bitwarden/generator-core";
+import { Generators, CredentialGeneratorService, SshKeyAlgorithm } from "@bitwarden/generator-core";
 
-import { SshKeyGenerationOptions } from "../../core/src/types/sshkey-generation-options";
+import { RsaSshKeyGenerationOptions } from "../../core/src/types/sshkey-generation-options";
 
 import { completeOnAccountSwitch } from "./util";
 
@@ -63,13 +63,13 @@ export class SshKeySettingsComponent implements OnInit, OnDestroy {
    */
   @Output()
   readonly onUpdated = new EventEmitter<{
-    algorithm: "ed25519" | "rsa";
-    settings: SshKeyGenerationOptions;
+    algorithm: SshKeyAlgorithm;
+    settings: RsaSshKeyGenerationOptions;
   }>();
 
   protected settings = this.formBuilder.group({
     [Controls.keyAlgorithm]: ["ed25519"],
-    [Controls.bits]: [Generators.ed25519.settings.initial.bits],
+    [Controls.bits]: [null],
   });
 
   algorithmOptions: { name: string; value: string }[] = [];
@@ -108,13 +108,13 @@ export class SshKeySettingsComponent implements OnInit, OnDestroy {
               algorithm,
               settings: {
                 bits: rsa.bits,
-              } as SshKeyGenerationOptions,
+              } as RsaSshKeyGenerationOptions,
             }
           : {
               algorithm,
               settings: {
                 bits: ed25519.bits,
-              } as SshKeyGenerationOptions,
+              } as RsaSshKeyGenerationOptions,
             };
       }),
     );
@@ -139,9 +139,7 @@ export class SshKeySettingsComponent implements OnInit, OnDestroy {
           bits: v.bits,
         });
       } else {
-        ed25519Settings.next({
-          bits: v.bits,
-        });
+        ed25519Settings.next({});
       }
     });
   }

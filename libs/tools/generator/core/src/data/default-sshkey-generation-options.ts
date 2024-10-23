@@ -1,11 +1,14 @@
-import { SshKeyGenerationOptions } from "../types/sshkey-generation-options";
+import {
+  Ed25519KeyGenrationOptions,
+  RsaSshKeyGenerationOptions,
+} from "../types/sshkey-generation-options";
 
 /** The default options for sshkey generation. */
-export const DefaultRsaSshKeyGenerationOptions: Partial<SshKeyGenerationOptions> = Object.freeze({
-  bits: 3072,
-});
+export const DefaultRsaSshKeyGenerationOptions: Partial<RsaSshKeyGenerationOptions> = Object.freeze(
+  {
+    bits: 3072,
+  },
+);
 
-export const DefaultEd25519SshKeyGenerationOptions: Partial<SshKeyGenerationOptions> =
-  Object.freeze({
-    bits: null,
-  });
+export const DefaultEd25519SshKeyGenerationOptions: Partial<Ed25519KeyGenrationOptions> =
+  Object.freeze({});

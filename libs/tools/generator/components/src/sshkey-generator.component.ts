@@ -9,7 +9,7 @@ import {
   Generators,
 } from "@bitwarden/generator-core";
 
-import { SshKeyGenerationOptions } from "../../core/src/types/sshkey-generation-options";
+import { RsaSshKeyGenerationOptions } from "../../core/src/types/sshkey-generation-options";
 
 /** Options group for passwords */
 @Component({
@@ -39,7 +39,7 @@ export class SshKeyGeneratorComponent implements OnInit, OnDestroy {
 
   protected readonly updated$ = new BehaviorSubject<{
     algorithm: "ed25519" | "rsa";
-    settings: SshKeyGenerationOptions;
+    settings: RsaSshKeyGenerationOptions;
   }>({
     algorithm: "ed25519",
     settings: { bits: null },

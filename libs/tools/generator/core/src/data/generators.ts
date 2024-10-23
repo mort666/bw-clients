@@ -36,7 +36,10 @@ import {
   SubaddressGenerationOptions,
 } from "../types";
 import { CredentialGeneratorConfiguration } from "../types/credential-generator-configuration";
-import { SshKeyGenerationOptions } from "../types/sshkey-generation-options";
+import {
+  Ed25519KeyGenrationOptions,
+  RsaSshKeyGenerationOptions,
+} from "../types/sshkey-generation-options";
 
 import { DefaultCatchallOptions } from "./default-catchall-options";
 import { DefaultEffUsernameOptions } from "./default-eff-username-options";
@@ -177,7 +180,7 @@ const SSH_ED25519 = Object.freeze({
     create(
       _randomizer: Randomizer,
       sshGenerator: SshKeyNativeGenerator,
-    ): CredentialGenerator<SshKeyGenerationOptions> {
+    ): CredentialGenerator<Ed25519KeyGenrationOptions> {
       return new SshKeyGenerator(sshGenerator);
     },
   },
@@ -193,13 +196,13 @@ const SSH_ED25519 = Object.freeze({
       return {};
     },
     createEvaluator(_policy: NoPolicy) {
-      return new DefaultPolicyEvaluator<SshKeyGenerationOptions>();
+      return new DefaultPolicyEvaluator<Ed25519KeyGenrationOptions>();
     },
     toConstraints(_policy: NoPolicy) {
-      return new IdentityConstraint<SshKeyGenerationOptions>();
+      return new IdentityConstraint<Ed25519KeyGenrationOptions>();
     },
   },
-} satisfies CredentialGeneratorConfiguration<SshKeyGenerationOptions, NoPolicy>);
+} satisfies CredentialGeneratorConfiguration<Ed25519KeyGenrationOptions, NoPolicy>);
 
 const SSH_RSA = Object.freeze({
   id: "rsa",
@@ -210,7 +213,7 @@ const SSH_RSA = Object.freeze({
     create(
       _randomizer: Randomizer,
       sshGenerator: SshKeyNativeGenerator,
-    ): CredentialGenerator<SshKeyGenerationOptions> {
+    ): CredentialGenerator<RsaSshKeyGenerationOptions> {
       return new SshKeyGenerator(sshGenerator);
     },
   },
@@ -226,13 +229,13 @@ const SSH_RSA = Object.freeze({
       return {};
     },
     createEvaluator(_policy: NoPolicy) {
-      return new DefaultPolicyEvaluator<SshKeyGenerationOptions>();
+      return new DefaultPolicyEvaluator<RsaSshKeyGenerationOptions>();
     },
     toConstraints(_policy: NoPolicy) {
-      return new IdentityConstraint<SshKeyGenerationOptions>();
+      return new IdentityConstraint<RsaSshKeyGenerationOptions>();
     },
   },
-} satisfies CredentialGeneratorConfiguration<SshKeyGenerationOptions, NoPolicy>);
+} satisfies CredentialGeneratorConfiguration<RsaSshKeyGenerationOptions, NoPolicy>);
 
 const CATCHALL = Object.freeze({
   id: "catchall",
