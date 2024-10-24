@@ -19,6 +19,7 @@ let encryptService: EncryptServiceImplementation;
  */
 export function init() {
   const cryptoFunctionService = new WebCryptoFunctionService(self);
+  // TODO: this service should follow the log settings of the main thread
   const logService = new ConsoleLogService(false);
   encryptService = new EncryptServiceImplementation(cryptoFunctionService, logService, true);
 
