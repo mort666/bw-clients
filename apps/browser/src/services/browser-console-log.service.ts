@@ -1,9 +1,9 @@
 import { LogLevelType } from "@bitwarden/common/platform/enums";
-import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
+import { ConfigurableConsoleLogService } from "@bitwarden/common/platform/services/configurable-console-log.service";
 
 const LOG_LEVEL_KEY = "logLevel";
 
-export class BrowserConsoleLogService extends ConsoleLogService {
+export class BrowserConsoleLogService extends ConfigurableConsoleLogService {
   protected async readStoredLogLevel(): Promise<LogLevelType> {
     return new Promise((resolve, reject) => {
       chrome.storage.local.get(LOG_LEVEL_KEY, (obj) => {
