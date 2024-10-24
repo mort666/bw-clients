@@ -70,6 +70,11 @@ describe("DefaultLoginComponentService", () => {
     expect(service.isLoginWithPasskeySupported()).toBe(true);
   });
 
+  it("isLoginWithPasskeySupported returns false when clientType is not Web", () => {
+    service["clientType"] = ClientType.Desktop;
+    expect(service.isLoginWithPasskeySupported()).toBe(false);
+  });
+
   it("launches SSO browser window with correct URL", async () => {
     const email = "test@bitwarden.com";
     const clientId = "browser";
