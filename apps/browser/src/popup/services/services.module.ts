@@ -57,10 +57,7 @@ import {
   DefaultAnimationControlService,
 } from "@bitwarden/common/platform/abstractions/animation-control.service";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
-import {
-  CryptoFunctionService,
-  CryptoFunctionService as CryptoFunctionServiceAbstraction,
-} from "@bitwarden/common/platform/abstractions/crypto-function.service";
+import { CryptoFunctionService } from "@bitwarden/common/platform/abstractions/crypto-function.service";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
@@ -69,10 +66,7 @@ import { I18nService as I18nServiceAbstraction } from "@bitwarden/common/platfor
 import { KeyGenerationService } from "@bitwarden/common/platform/abstractions/key-generation.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService as MessagingServiceAbstraction } from "@bitwarden/common/platform/abstractions/messaging.service";
-import {
-  PlatformUtilsService,
-  PlatformUtilsService as PlatformUtilsServiceAbstraction,
-} from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { SdkClientFactory } from "@bitwarden/common/platform/abstractions/sdk/sdk-client-factory";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import {
@@ -597,10 +591,10 @@ const safeProviders: SafeProvider[] = [
     provide: LoginComponentService,
     useClass: ExtensionLoginComponentService,
     deps: [
-      CryptoFunctionServiceAbstraction,
+      CryptoFunctionService,
       EnvironmentService,
       PasswordGenerationServiceAbstraction,
-      PlatformUtilsServiceAbstraction,
+      PlatformUtilsService,
       SsoLoginServiceAbstraction,
       ExtensionAnonLayoutWrapperDataService,
     ],
