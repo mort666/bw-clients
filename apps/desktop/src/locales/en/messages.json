@@ -578,9 +578,6 @@
   "loginWithDevice": {
     "message": "Log in with device"
   },
-  "or": {
-    "message": "or"
-  },
   "useSingleSignOn": {
     "message": "Use single sign-on"
   },
