@@ -1,9 +1,13 @@
 import { TestBed } from "@angular/core/testing";
 import { MockProxy, mock } from "jest-mock-extended";
+import { of } from "rxjs";
 
 import { DefaultLoginComponentService } from "@bitwarden/auth/angular";
 import { PolicyApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/policy/policy-api.service.abstraction";
 import { InternalPolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
+import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/models/domain/master-password-policy-options";
+import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
+import { ResetPasswordPolicyOptions } from "@bitwarden/common/admin-console/models/domain/reset-password-policy-options";
 import { SsoLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/sso-login.service.abstraction";
 import { CryptoFunctionService } from "@bitwarden/common/platform/abstractions/crypto-function.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
@@ -81,26 +85,71 @@ describe("WebLoginComponentService", () => {
     });
   });
 
-  it("returns undefined if organization invite is null", async () => {
-    acceptOrganizationInviteService.getOrganizationInvite.mockResolvedValue(null);
-    const result = await service.getOrgPolicies();
-    expect(result).toBeUndefined();
-  });
-
-  it("logs an error if getPoliciesByToken throws an error", async () => {
-    const error = new Error("Test error");
-    acceptOrganizationInviteService.getOrganizationInvite.mockResolvedValue({
-      organizationId: "org-id",
-      token: "token",
-      email: "email",
-      organizationUserId: "org-user-id",
-      initOrganization: false,
-      orgSsoIdentifier: "sso-id",
-      orgUserHasExistingUser: false,
-      organizationName: "org-name",
+  describe("getOrgPolicies", () => {
+    it("returns undefined if organization invite is null", async () => {
+      acceptOrganizationInviteService.getOrganizationInvite.mockResolvedValue(null);
+      const result = await service.getOrgPolicies();
+      expect(result).toBeUndefined();
     });
-    policyApiService.getPoliciesByToken.mockRejectedValue(error);
-    await service.getOrgPolicies();
-    expect(logService.error).toHaveBeenCalledWith(error);
+
+    it("logs an error if getPoliciesByToken throws an error", async () => {
+      const error = new Error("Test error");
+      acceptOrganizationInviteService.getOrganizationInvite.mockResolvedValue({
+        organizationId: "org-id",
+        token: "token",
+        email: "email",
+        organizationUserId: "org-user-id",
+        initOrganization: false,
+        orgSsoIdentifier: "sso-id",
+        orgUserHasExistingUser: false,
+        organizationName: "org-name",
+      });
+      policyApiService.getPoliciesByToken.mockRejectedValue(error);
+      await service.getOrgPolicies();
+      expect(logService.error).toHaveBeenCalledWith(error);
+    });
+
+    it.each([
+      [false, false], // autoEnrollEnabled, resetPasswordPolicyEnabled
+      [true, true], // autoEnrollEnabled, resetPasswordPolicyEnabled
+    ])(
+      "returns policies successfully with autoEnrollEnabled=%s and resetPasswordPolicyEnabled=%s",
+      async (autoEnrollEnabled, resetPasswordPolicyEnabled) => {
+        const policies: Policy[] = [new Policy()];
+        const masterPasswordPolicyOptions = new MasterPasswordPolicyOptions();
+        const resetPasswordPolicyOptions = new ResetPasswordPolicyOptions();
+        resetPasswordPolicyOptions.autoEnrollEnabled = autoEnrollEnabled;
+
+        acceptOrganizationInviteService.getOrganizationInvite.mockResolvedValue({
+          organizationId: "org-id",
+          token: "token",
+          email: "email",
+          organizationUserId: "org-user-id",
+          initOrganization: false,
+          orgSsoIdentifier: "sso-id",
+          orgUserHasExistingUser: false,
+          organizationName: "org-name",
+        });
+        policyApiService.getPoliciesByToken.mockResolvedValue(policies);
+
+        internalPolicyService.getResetPasswordPolicyOptions.mockReturnValue([
+          resetPasswordPolicyOptions,
+          resetPasswordPolicyEnabled,
+        ]);
+
+        internalPolicyService.masterPasswordPolicyOptions$.mockReturnValue(
+          of(masterPasswordPolicyOptions),
+        );
+
+        const result = await service.getOrgPolicies();
+
+        expect(result).toEqual({
+          policies: policies,
+          isPolicyAndAutoEnrollEnabled:
+            resetPasswordPolicyEnabled && resetPasswordPolicyOptions.autoEnrollEnabled,
+          enforcedPasswordPolicyOptions: masterPasswordPolicyOptions,
+        });
+      },
+    );
   });
 });
