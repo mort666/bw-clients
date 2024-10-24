@@ -160,8 +160,8 @@ import {
 } from "@bitwarden/vault-export-core";
 
 import { flagEnabled } from "../platform/flags";
+import { CliConsoleLogService } from "../platform/services/cli-console-log.service";
 import { CliPlatformUtilsService } from "../platform/services/cli-platform-utils.service";
-import { ConsoleLogService } from "../platform/services/console-log.service";
 import { I18nService } from "../platform/services/i18n.service";
 import { LowdbStorageService } from "../platform/services/lowdb-storage.service";
 import { NodeApiService } from "../platform/services/node-api.service";
@@ -220,7 +220,7 @@ export class ServiceContainer {
   authService: AuthService;
   policyService: PolicyService;
   policyApiService: PolicyApiServiceAbstraction;
-  logService: ConsoleLogService;
+  logService: CliConsoleLogService;
   sendService: SendService;
   sendStateProvider: SendStateProvider;
   fileUploadService: FileUploadService;
@@ -281,9 +281,9 @@ export class ServiceContainer {
     const logoutCallback = async () => await this.logout();
 
     this.platformUtilsService = new CliPlatformUtilsService(ClientType.Cli, packageJson);
-    this.logService = new ConsoleLogService(
+    this.logService = new CliConsoleLogService(
       this.platformUtilsService.isDev(),
-      (level) => process.env.BITWARDENCLI_DEBUG !== "true" && level <= LogLevelType.Info,
+      process.env.BITWARDENCLI_DEBUG === "true" ? LogLevelType.Debug : LogLevelType.Info,
     );
     this.cryptoFunctionService = new NodeCryptoFunctionService();
     this.encryptService = new EncryptServiceImplementation(
