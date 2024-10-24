@@ -259,6 +259,9 @@
   "generatePassword": {
     "message": "Generate password"
   },
+  "generatePassphrase": {
+    "message": "Generate passphrase"
+  },
   "type": {
     "message": "Type"
   },
@@ -393,6 +396,10 @@
   },
   "copyPassword": {
     "message": "Copy password"
+  },
+  "copyPassphrase": {
+    "message": "Copy passphrase",
+    "description": "Copy passphrase to clipboard"
   },
   "copyUri": {
     "message": "Copy URI"
@@ -828,6 +835,10 @@
   "baseUrl": {
     "message": "Server URL"
   },
+  "selfHostBaseUrl": {
+    "message": "Self-host server URL",
+    "description": "Label for field requesting a self-hosted integration service URL"
+  },
   "apiUrl": {
     "message": "API server URL"
   },
@@ -1217,6 +1228,9 @@
   "copyNumber": {
     "message": "Copy number",
     "description": "Copy credit card number"
+  },
+  "copyEmail": {
+    "message": "Copy email"
   },
   "copySecurityCode": {
     "message": "Copy security code",
@@ -2352,6 +2366,9 @@
   "generateUsername": {
     "message": "Generate username"
   },
+  "generateEmail": {
+    "message": "Generate email"
+  },
   "usernameType": {
     "message": "Username type"
   },
@@ -2394,6 +2411,14 @@
   },
   "forwardedEmailDesc": {
     "message": "Generate an email alias with an external forwarding service."
+  },
+  "forwarderDomainName": {
+    "message": "Email domain",
+    "description": "Labels the domain name email forwarder service option"
+  },
+  "forwarderDomainNameHint": {
+    "message": "Choose a domain that is supported by the selected service",
+    "description": "Guidance provided for email forwarding services that support multiple email domains."
   },
   "forwarderError": {
     "message": "$SERVICENAME$ error: $ERRORMESSAGE$",
@@ -3161,12 +3186,6 @@
   },
   "textSends": {
     "message": "Text Sends"
-  },
-  "allowScreenshots": {
-    "message": "Allow screen capture"
-  },
-  "allowScreenshotsDesc": {
-    "message": "Allow screen capture of the Bitwarden desktop application."
   },
   "ssoError": {
     "message": "No free ports could be found for the sso login."
