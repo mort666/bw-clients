@@ -82,25 +82,43 @@ describe("DefaultLoginComponentService", () => {
   });
 
   describe("launchSsoBrowserWindow", () => {
-    it("launches SSO browser window with correct URL", async () => {
-      const email = "test@bitwarden.com";
-      const clientId = "browser";
-      const state = "testState";
-      const codeVerifier = "testCodeVerifier";
-      const codeChallenge = "testCodeChallenge";
+    const email = "test@bitwarden.com";
+    const state = "testState";
+    const codeVerifier = "testCodeVerifier";
+    const codeChallenge = "testCodeChallenge";
+    const baseUrl = "https://webvault.bitwarden.com/#/sso";
 
+    beforeEach(() => {
       passwordGenerationService.generatePassword.mockResolvedValueOnce(state);
       passwordGenerationService.generatePassword.mockResolvedValueOnce(codeVerifier);
       jest.spyOn(Utils, "fromBufferToUrlB64").mockReturnValue(codeChallenge);
-
-      await service.launchSsoBrowserWindow(email, clientId);
-
-      expect(ssoLoginService.setSsoEmail).toHaveBeenCalledWith(email);
-      expect(ssoLoginService.setSsoState).toHaveBeenCalledWith(state);
-      expect(ssoLoginService.setCodeVerifier).toHaveBeenCalledWith(codeVerifier);
-      expect(platformUtilsService.launchUri).toHaveBeenCalledWith(
-        "https://webvault.bitwarden.com/#/sso?clientId=browser&redirectUri=https%3A%2F%2Fwebvault.bitwarden.com%2Fsso-connector.html&state=testState&codeChallenge=testCodeChallenge&email=test%40bitwarden.com",
-      );
     });
+
+    it.each([
+      {
+        clientType: ClientType.Browser,
+        clientId: "browser",
+        expectedRedirectUri: "https://webvault.bitwarden.com/sso-connector.html",
+      },
+      {
+        clientType: ClientType.Desktop,
+        clientId: "desktop",
+        expectedRedirectUri: "bitwarden://sso-callback",
+      },
+    ])(
+      "launches SSO browser window with correct URL for $clientId client",
+      async ({ clientType, clientId, expectedRedirectUri }) => {
+        service["clientType"] = clientType;
+
+        await service.launchSsoBrowserWindow(email, clientId as "browser" | "desktop");
+
+        const expectedUrl = `${baseUrl}?clientId=${clientId}&redirectUri=${encodeURIComponent(expectedRedirectUri)}&state=${state}&codeChallenge=${codeChallenge}&email=${encodeURIComponent(email)}`;
+
+        expect(ssoLoginService.setSsoEmail).toHaveBeenCalledWith(email);
+        expect(ssoLoginService.setSsoState).toHaveBeenCalledWith(state);
+        expect(ssoLoginService.setCodeVerifier).toHaveBeenCalledWith(codeVerifier);
+        expect(platformUtilsService.launchUri).toHaveBeenCalledWith(expectedUrl);
+      },
+    );
   });
 });
