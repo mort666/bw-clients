@@ -5,7 +5,7 @@ import { FocusableElement } from "../shared/focusable-element";
 
 export type IconButtonType = ButtonType | "contrast" | "main" | "muted" | "light";
 
-const focusRing = [
+export const focusRing = [
   // Workaround for box-shadow with transparent offset issue:
   // https://github.com/tailwindlabs/tailwindcss/issues/3595
   // Remove `before:` and use regular `tw-ring` when browser no longer has bug, or better:

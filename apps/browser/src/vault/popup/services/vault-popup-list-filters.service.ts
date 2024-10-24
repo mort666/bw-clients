@@ -1,4 +1,4 @@
-import { Injectable } from "@angular/core";
+import { inject, Injectable, NgZone } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormBuilder } from "@angular/forms";
 import {
@@ -6,12 +6,13 @@ import {
   distinctUntilChanged,
   map,
   Observable,
+  shareReplay,
   startWith,
   switchMap,
   tap,
 } from "rxjs";
 
-import { CollectionService, Collection, CollectionView } from "@bitwarden/admin-console/common";
+import { Collection, CollectionService, CollectionView } from "@bitwarden/admin-console/common";
 import { DynamicTreeNode } from "@bitwarden/angular/vault/vault-filter/models/dynamic-tree-node.model";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
@@ -20,6 +21,11 @@ import { Organization } from "@bitwarden/common/admin-console/models/domain/orga
 import { ProductTierType } from "@bitwarden/common/billing/enums";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
+import {
+  KeyDefinition,
+  StateProvider,
+  VAULT_SETTINGS_DISK,
+} from "@bitwarden/common/platform/state";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { CipherType } from "@bitwarden/common/vault/enums";
@@ -28,6 +34,9 @@ import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
 import { ServiceUtils } from "@bitwarden/common/vault/service-utils";
 import { ChipSelectOption } from "@bitwarden/components";
+
+import { runInsideAngular } from "../../../platform/browser/run-inside-angular.operator";
+import { PopupViewCacheService } from "../../../platform/popup/view-cache/popup-view-cache.service";
 
 /** All available cipher filters */
 export type PopupListFilter = {
@@ -50,6 +59,10 @@ const INITIAL_FILTERS: PopupListFilter = {
   cipherType: null,
 };
 
+const FILTER_VISIBILITY_KEY = new KeyDefinition<boolean>(VAULT_SETTINGS_DISK, "filterVisibility2", {
+  deserializer: (obj) => obj,
+});
+
 @Injectable({
   providedIn: "root",
 })
@@ -65,6 +78,20 @@ export class VaultPopupListFiltersService {
   filters$ = this.filterForm.valueChanges.pipe(
     startWith(INITIAL_FILTERS),
   ) as Observable<PopupListFilter>;
+
+  private _filterVisibleState = this.stateProvider.getGlobal(FILTER_VISIBILITY_KEY);
+
+  filtersVisible$ = this._filterVisibleState.state$.pipe(
+    runInsideAngular(inject(NgZone)),
+    map((visible) => (visible === undefined ? true : visible)),
+  );
+
+  filterCount$ = this.filters$.pipe(
+    map((filters) => {
+      return Object.values(filters).filter((filter) => filter !== null).length;
+    }),
+    shareReplay({ bufferSize: 1, refCount: false }),
+  );
 
   /**
    * Static list of ciphers views used in synchronous context
@@ -89,6 +116,8 @@ export class VaultPopupListFiltersService {
     private collectionService: CollectionService,
     private formBuilder: FormBuilder,
     private policyService: PolicyService,
+    private stateProvider: StateProvider,
+    private cacheService: PopupViewCacheService,
   ) {
     this.filterForm.controls.organization.valueChanges
       .pipe(takeUntilDestroyed())
@@ -168,6 +197,10 @@ export class VaultPopupListFiltersService {
   /** Resets `filterForm` to the original state */
   resetFilterForm(): void {
     this.filterForm.reset(INITIAL_FILTERS);
+  }
+
+  async setFiltersVisible(visible: boolean) {
+    await this._filterVisibleState.update(() => visible);
   }
 
   /**
