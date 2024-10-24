@@ -4,6 +4,10 @@ import { ConfigurableConsoleLogService } from "@bitwarden/common/platform/servic
 const LOG_LEVEL_KEY = "logLevel";
 
 export class BrowserConsoleLogService extends ConfigurableConsoleLogService {
+  constructor(shouldRedirect: boolean, defaultLogLevel: LogLevelType = LogLevelType.Warning) {
+    super(shouldRedirect, defaultLogLevel);
+    void super.init();
+  }
   protected async readStoredLogLevel(): Promise<LogLevelType> {
     return new Promise((resolve, reject) => {
       chrome.storage.local.get(LOG_LEVEL_KEY, (obj) => {

@@ -54,9 +54,10 @@ export abstract class ConfigurableConsoleLogService extends ConsoleLogService {
   async updateLogLevel(level: LogLevelType) {
     this._storedLogLevel = level;
     await this.writeStoredLogLevel(level);
+    this.debug("Log level updated to: ", level);
   }
 
-  override write(level: LogLevelType, message?: any, ...optionalParams: any[]) {
+  override write(level: LogLevelType, message?: any, ...optionalParams: any[]): void {
     if (this.initialized === false) {
       // If log level is not set, enqueue the message
       this._preInitQueue.push([level, message, ...optionalParams]);

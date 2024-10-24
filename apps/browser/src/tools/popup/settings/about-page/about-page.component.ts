@@ -14,6 +14,7 @@ import { DialogService } from "@bitwarden/components";
 import { BrowserApi } from "../../../../platform/browser/browser-api";
 import { PopOutComponent } from "../../../../platform/popup/components/pop-out.component";
 import { AboutDialogComponent } from "../about-dialog/about-dialog.component";
+import { SetLogLevelComponent } from "../set-log-level-dialog/set-log-level.component";
 
 const RateUrls = {
   [DeviceType.ChromeExtension]:
@@ -45,6 +46,10 @@ export class AboutPageComponent {
 
   about() {
     this.dialogService.open(AboutDialogComponent);
+  }
+
+  setLogLevel() {
+    this.dialogService.open(SetLogLevelComponent);
   }
 
   async launchHelp() {
@@ -84,10 +89,5 @@ export class AboutPageComponent {
       const deviceType = this.platformUtilsService.getDevice();
       await BrowserApi.createNewTab((RateUrls as any)[deviceType]);
     }
-  }
-
-  async onLogLevelUpdated(e) {
-    this.logService.updateFilter((level) => level >= e.level);
-    this.messageSender.send("logLevelUpdated", { level: e.level });
   }
 }

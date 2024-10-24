@@ -27,6 +27,14 @@
         type="button"
         class="box-content-row box-content-row-flex text-default"
         appStopClick
+        (click)="setLogLevel()"
+      >
+        <div class="row-main">{{ "setLogLevel" | i18n }}</div>
+      </button>
+      <button
+        type="button"
+        class="box-content-row box-content-row-flex text-default"
+        appStopClick
         (click)="launchHelp()"
       >
         <div class="row-main">{{ "helpCenter" | i18n }}</div>

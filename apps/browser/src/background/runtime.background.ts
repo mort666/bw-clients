@@ -113,7 +113,7 @@ export default class RuntimeBackground {
         await this.autofillService.injectAutofillScripts(sender.tab, sender.frameId);
         break;
       case "logLevelUpdated":
-        this.logService.updateFilter((level) => level >= msg.level);
+        await this.logService.updateLogLevel(msg.level);
         break;
       case "bgCollectPageDetails":
         await this.main.collectPageDetailsForContentScript(sender.tab, msg.sender, sender.frameId);
