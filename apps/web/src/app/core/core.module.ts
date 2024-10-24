@@ -51,7 +51,7 @@ import { SsoLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/
 import { ClientType } from "@bitwarden/common/enums";
 import { AppIdService } from "@bitwarden/common/platform/abstractions/app-id.service";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
-import { CryptoFunctionService as CryptoFunctionServiceAbstraction } from "@bitwarden/common/platform/abstractions/crypto-function.service";
+import { CryptoFunctionService } from "@bitwarden/common/platform/abstractions/crypto-function.service";
 import { CryptoService as CryptoServiceAbstraction } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import {
@@ -61,7 +61,7 @@ import {
 import { FileDownloadService } from "@bitwarden/common/platform/abstractions/file-download/file-download.service";
 import { I18nService as I18nServiceAbstraction } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
-import { PlatformUtilsService as PlatformUtilsServiceAbstraction } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { SdkClientFactory } from "@bitwarden/common/platform/abstractions/sdk/sdk-client-factory";
 import { AbstractStorageService } from "@bitwarden/common/platform/abstractions/storage.service";
 import { ThemeType } from "@bitwarden/common/platform/enums";
@@ -122,8 +122,8 @@ const safeProviders: SafeProvider[] = [
   safeProvider(PolicyListService),
   safeProvider({
     provide: DEFAULT_VAULT_TIMEOUT,
-    deps: [PlatformUtilsServiceAbstraction],
-    useFactory: (platformUtilsService: PlatformUtilsServiceAbstraction): VaultTimeout =>
+    deps: [PlatformUtilsService],
+    useFactory: (platformUtilsService: PlatformUtilsService): VaultTimeout =>
       platformUtilsService.isDev() ? VaultTimeoutStringType.Never : 15,
   }),
   safeProvider({
@@ -161,7 +161,7 @@ const safeProviders: SafeProvider[] = [
     deps: [],
   }),
   safeProvider({
-    provide: PlatformUtilsServiceAbstraction,
+    provide: PlatformUtilsService,
     useClass: WebPlatformUtilsService,
     useAngularDecorators: true,
   }),
@@ -265,10 +265,10 @@ const safeProviders: SafeProvider[] = [
       PolicyApiServiceAbstraction,
       InternalPolicyService,
       RouterService,
-      CryptoFunctionServiceAbstraction,
+      CryptoFunctionService,
       EnvironmentService,
       PasswordGenerationServiceAbstraction,
-      PlatformUtilsServiceAbstraction,
+      PlatformUtilsService,
       SsoLoginServiceAbstraction,
     ],
   }),
