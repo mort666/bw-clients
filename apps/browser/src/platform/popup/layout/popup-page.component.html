@@ -12,9 +12,10 @@
     <ng-content select="[slot=above-scroll-area]"></ng-content>
   </div>
   <div
-    class="tw-max-w-screen-sm tw-mx-auto tw-overflow-y-auto tw-flex tw-flex-col tw-w-full tw-h-full tw-styled-scrollbar"
+    class="tw-max-w-screen-sm tw-mx-auto tw-overflow-y-auto tw-flex tw-flex-col tw-w-full tw-h-full tw-styled-scrollbar tw-relative"
     (scroll)="handleScroll($event)"
     [ngClass]="{ 'tw-invisible': loading }"
+    id="attachMeHere"
   >
     <div
       class="tw-max-w-screen-sm tw-mx-auto tw-flex-1 tw-flex tw-flex-col tw-h-full tw-w-full"
