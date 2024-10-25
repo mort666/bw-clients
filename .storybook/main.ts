@@ -57,6 +57,7 @@ const config: StorybookConfig = {
     return config;
   },
   docs: {},
+  previewBody: (body) => `<div id="ng-select-append-target">${body}</div>`,
 };
 
 export default config;
