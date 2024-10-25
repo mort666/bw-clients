@@ -18,14 +18,13 @@ export class ValidationTestComponent implements OnInit, OnDestroy {
 
   protected form = this.formBuilder.group({
     someNumber: [null as number],
-    someText: [null as string],
   });
 
   ngOnInit(): void {
+    // dynamically configured validator
     this.form.get("someNumber").setValidators([Validators.max(10), Validators.min(4)]);
 
-    this.form.get("someText").setValidators([Validators.required]);
-
+    // watch the form's values
     /* eslint no-console: 0 */
     this.form.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((v) => console.log(v));
   }
