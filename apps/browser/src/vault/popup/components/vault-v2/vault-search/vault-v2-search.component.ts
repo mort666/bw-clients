@@ -33,7 +33,9 @@ export class VaultV2SearchComponent {
   protected startingVisible$ = this.filtersVisible$.pipe(take(1));
   protected filterCount$ = this.vaultPopupListFiltersService.filtersVisible$.pipe(
     switchMap((visible) =>
-      this.vaultPopupListFiltersService.filterCount$.pipe(map((c) => (visible ? 0 : c))),
+      this.vaultPopupListFiltersService.filterCount$.pipe(
+        map((c) => (visible || c == 0 ? null : c)),
+      ),
     ),
   );
 
@@ -45,8 +47,8 @@ export class VaultV2SearchComponent {
     this.subscribeToApplyFilter();
   }
 
-  onFilterToggle(toggled: boolean) {
-    this.vaultPopupListFiltersService.setFiltersVisible(toggled);
+  async onFilterToggle(toggled: boolean) {
+    await this.vaultPopupListFiltersService.setFiltersVisible(toggled);
   }
 
   onSearchTextChanged() {

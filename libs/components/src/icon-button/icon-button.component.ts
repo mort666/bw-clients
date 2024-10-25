@@ -1,5 +1,6 @@
 import { Component, ElementRef, HostBinding, Input } from "@angular/core";
 
+import { BadgeVariant } from "../badge";
 import { ButtonLikeAbstraction, ButtonType } from "../shared/button-like.abstraction";
 import { FocusableElement } from "../shared/focusable-element";
 
@@ -135,6 +136,10 @@ export class BitIconButtonComponent implements ButtonLikeAbstraction, FocusableE
   @Input() buttonType: IconButtonType;
 
   @Input() size: IconButtonSize = "default";
+
+  @Input() berry: number | null = null;
+
+  @Input() berryVariant: BadgeVariant = "primary";
 
   @HostBinding("class") get classList() {
     return [

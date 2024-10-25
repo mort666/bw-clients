@@ -13,16 +13,11 @@ import { IconButtonModule } from "./icon-button.module";
       [class]="buttonClassList"
       (click)="onClick()"
       [bitIconButton]="icon"
+      [berry]="berry"
+      berryVariant="danger"
       [size]="size"
       buttonType="unstyled"
     ></button>
-    <span
-      bitBadge
-      variant="danger"
-      *ngIf="berry"
-      class="tw-text-xs tw-absolute tw-right-0 tw-top-0 tw-block"
-      >{{ berry }}</span
-    >
   `,
   host: {
     class: "tw-relative",
@@ -40,7 +35,7 @@ export class BitIconToggleComponent {
   size: IconButtonSize = "default";
 
   @Input()
-  berry: string | number;
+  berry: number | null;
 
   @Output()
   toggledChange = new EventEmitter<boolean>();

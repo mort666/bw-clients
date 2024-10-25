@@ -13,3 +13,11 @@
     ></i>
   </span>
 </span>
+<span
+  *ngIf="!loading && berry != null"
+  bitBadge
+  [variant]="berryVariant"
+  class="tw-absolute tw-top-0 tw-right-0 tw-text-xs tw-block"
+>
+  {{ berry }}
+</span>
