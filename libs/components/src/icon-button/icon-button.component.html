@@ -12,12 +12,13 @@
       [ngClass]="{ 'bwi-lg': size === 'default' }"
     ></i>
   </span>
+  <span
+    *ngIf="!loading && berry != null"
+    class="tw-absolute -tw-top-4 -tw-end-2"
+  >
+    <div class="tw-inline-flex tw-font-normal tw-text-[.625rem] tw-leading-[.625rem] tw-px-1 tw-py-0.5 tw-tex tw-items-center tw-justify-center tw-min-w-4 tw-min-h-4 tw-bg-danger-100 tw-border-danger-700 tw-border-[0.5px] tw-border-solid tw-text-danger-700 tw-rounded-full">
+    {{ berry }}
+    </div>
+  </span>
 </span>
-<span
-  *ngIf="!loading && berry != null"
-  bitBadge
-  [variant]="berryVariant"
-  class="tw-absolute tw-top-0 tw-right-0 tw-text-xs tw-block"
->
-  {{ berry }}
-</span>
+

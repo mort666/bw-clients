@@ -10,6 +10,7 @@ import { IconButtonModule } from "./icon-button.module";
   selector: "bit-icon-toggle",
   template: `
     <button
+      class="tw-text-xl"
       [class]="buttonClassList"
       (click)="onClick()"
       [bitIconButton]="icon"
