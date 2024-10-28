@@ -197,7 +197,7 @@ export class WindowMain {
     }
   }
 
-  async createWindow(template: "full-app" | "minimal-app" = "full-app"): Promise<void> {
+  async createWindow(template: "full-app" | "modal-app" = "full-app"): Promise<void> {
     this.windowStates[mainWindowSizeKey] = await this.getWindowState(
       this.defaultWidth,
       this.defaultHeight,
@@ -231,7 +231,7 @@ export class WindowMain {
       },
     });
 
-    if (template === "minimal-app") {
+    if (template === "modal-app") {
       applyPopupModalStyles(this.win);
     } else {
       applyMainWindowStyles(this.win, this.windowStates[mainWindowSizeKey]);
