@@ -27,6 +27,7 @@ anyhow = "=1.0.86"
 arboard = { version = "=3.4.1", default-features = false, features = [
   "wayland-data-control",
 ] }
+argon2 = "0.5.3"
 base64 = "=0.22.1"
 cbc = { version = "=0.1.2", features = ["alloc"] }
 dirs = "=5.0.1"

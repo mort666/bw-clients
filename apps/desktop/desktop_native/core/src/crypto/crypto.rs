@@ -5,7 +5,7 @@ use aes::cipher::{
     BlockEncryptMut, KeyIvInit,
 };
 
-use crate::error::{CryptoError, Result};
+use crate::error::{CryptoError, KdfParamError, Result};
 
 use super::CipherString;
 
@@ -36,4 +36,34 @@ pub fn encrypt_aes256(
         .encrypt_padded_vec_mut::<Pkcs7>(data_dec);
 
     Ok(CipherString::AesCbc256_B64 { iv, data })
+}
+
+pub fn argon2(
+    secret: &[u8],
+    salt: &[u8],
+    iterations: u32,
+    memory: u32,
+    parallelism: u32,
+) -> Result<[u8; 32]> {
+    use argon2::*;
+
+    let params = Params::new(memory, iterations, parallelism, Some(32)).map_err(|e| {
+        KdfParamError::InvalidParams(format!(
+            "Argon2 parameters are invalid: {}",
+            e.to_string()
+        ))
+    })?;
+    let argon = Argon2::new(Algorithm::Argon2id, Version::V0x13, params);
+
+    let mut hash = [0u8; 32];
+    let _ = argon.hash_password_into(secret, &salt, &mut hash);
+
+    // Argon2 is using some stack memory that is not zeroed. Eventually some function will
+    // overwrite the stack, but we use this trick to force the used stack to be zeroed.
+    #[inline(never)]
+    fn clear_stack() {
+        std::hint::black_box([0u8; 4096]);
+    }
+    clear_stack();
+    Ok(hash)
 }
