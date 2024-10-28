@@ -60,6 +60,9 @@
       }
     }
   },
+  "welcomeBack": {
+    "message": "Καλωσορίσατε και πάλι"
+  },
   "moveToOrgDesc": {
     "message": "Επιλέξτε έναν οργανισμό στον οποίο θέλετε να μετακινήσετε αυτό το στοιχείο. Η μετακίνηση σε έναν οργανισμό μεταβιβάζει την ιδιοκτησία του στοιχείου σε αυτό τον οργανισμό. Δεν θα είστε πλέον ο άμεσος ιδιοκτήτης αυτού του στοιχείου μόλις το μετακινήσετε."
   },
@@ -259,6 +262,9 @@
   "generatePassword": {
     "message": "Γέννηση κωδικού πρόσβασης"
   },
+  "generatePassphrase": {
+    "message": "Δημιουργία φράσης πρόσβασης"
+  },
   "type": {
     "message": "Τύπος"
   },
@@ -393,6 +399,10 @@
   },
   "copyPassword": {
     "message": "Αντιγραφή κωδικού πρόσβασης"
+  },
+  "copyPassphrase": {
+    "message": "Αντιγραφή φράσης πρόσβασης",
+    "description": "Copy passphrase to clipboard"
   },
   "copyUri": {
     "message": "Αντιγραφή URI"
@@ -547,6 +557,9 @@
   "createAccount": {
     "message": "Δημιουργία λογαριασμού"
   },
+  "newToBitwarden": {
+    "message": "Νέος/α στο Bitwarden;"
+  },
   "setAStrongPassword": {
     "message": "Ορίστε έναν ισχυρό κωδικό πρόσβασης"
   },
@@ -555,6 +568,18 @@
   },
   "logIn": {
     "message": "Είσοδος"
+  },
+  "logInToBitwarden": {
+    "message": "Σύνδεση στο Bitwarden"
+  },
+  "logInWithPasskey": {
+    "message": "Σύνδεση με κλειδί πρόσβασης"
+  },
+  "loginWithDevice": {
+    "message": "Σύνδεση με χρήση συσκευής"
+  },
+  "useSingleSignOn": {
+    "message": "Χρήση ενιαίας σύνδεσης"
   },
   "submit": {
     "message": "Υποβολή"
@@ -618,16 +643,16 @@
     "message": "Ρυθμίσεις"
   },
   "accountEmail": {
-    "message": "Email λογαριασμού"
+    "message": "Διεύθυνση ηλ. ταχυδρομείου λογαριασμού"
   },
   "requestHint": {
     "message": "Αίτηση υπόδειξης"
   },
   "requestPasswordHint": {
-    "message": "Υπόδειξη κωδικού πρόσβασης"
+    "message": "Αίτηση υπόδειξης κωδικού πρόσβασης"
   },
   "enterYourAccountEmailAddressAndYourPasswordHintWillBeSentToYou": {
-    "message": "Εισάγετε τη διεύθυνση ηλεκτρονικού ταχυδρομείου του λογαριασμού σας και θα σας αποσταλεί η υπόδειξη κωδικού πρόσβασης"
+    "message": "Εισάγετε τη διεύθυνση ηλ. ταχυδρομείου του λογαριασμού σας και θα σας αποσταλεί η υπόδειξη κωδικού πρόσβασης"
   },
   "passwordHint": {
     "message": "Υπόδειξη κωδικού πρόσβασης"
@@ -827,6 +852,10 @@
   },
   "baseUrl": {
     "message": "URL Διακομιστή"
+  },
+  "selfHostBaseUrl": {
+    "message": "URL διακομιστή αυτο-φιλοξενίας",
+    "description": "Label for field requesting a self-hosted integration service URL"
   },
   "apiUrl": {
     "message": "URL διακομιστή API"
@@ -1217,6 +1246,9 @@
   "copyNumber": {
     "message": "Αντιγραφή αριθμού",
     "description": "Copy credit card number"
+  },
+  "copyEmail": {
+    "message": "Αντιγραφή διεύθυνσης ηλ. ταχυδρομείου"
   },
   "copySecurityCode": {
     "message": "Αντιγραφή κωδικού ασφαλείας",
@@ -1650,6 +1682,12 @@
   },
   "deleteAccountWarning": {
     "message": "Η διαγραφή του λογαριασμού σας είναι μόνιμη. Δεν μπορεί να αναιρεθεί."
+  },
+  "cannotDeleteAccount": {
+    "message": "Αδυναμία διαγραφής λογαριασμού"
+  },
+  "cannotDeleteAccountDesc": {
+    "message": "Αυτή η ενέργεια δεν μπορεί να ολοκληρωθεί επειδή ο λογαριασμός σας ανήκει σε έναν οργανισμό. Επικοινωνήστε με το διαχειριστή του οργανισμού σας για πρόσθετες λεπτομέρειες."
   },
   "accountDeleted": {
     "message": "Ο λογαριασμός διαγράφηκε"
@@ -2352,6 +2390,9 @@
   "generateUsername": {
     "message": "Δημιουργία ονόματος χρήστη"
   },
+  "generateEmail": {
+    "message": "Δημιουργία διεύθυνσης ηλ. ταχυδρομείου"
+  },
   "usernameType": {
     "message": "Τύπος ονόματος χρήστη"
   },
@@ -2394,6 +2435,14 @@
   },
   "forwardedEmailDesc": {
     "message": "Δημιουργήστε ένα alias email με μια εξωτερική υπηρεσία προώθησης."
+  },
+  "forwarderDomainName": {
+    "message": "Τομέας ηλ. ταχυδρομείου",
+    "description": "Labels the domain name email forwarder service option"
+  },
+  "forwarderDomainNameHint": {
+    "message": "Επιλέξτε ένα τομέα που υποστηρίζεται από την επιλεγμένη υπηρεσία",
+    "description": "Guidance provided for email forwarding services that support multiple email domains."
   },
   "forwarderError": {
     "message": "$SERVICENAME$ σφάλμα: $ERRORMESSAGE$",
@@ -3161,12 +3210,6 @@
   },
   "textSends": {
     "message": "Send κειμένων"
-  },
-  "allowScreenshots": {
-    "message": "Να επιτρέπεται η καταγραφή οθόνης"
-  },
-  "allowScreenshotsDesc": {
-    "message": "Να επιτρέπεται η καταγραφή οθόνης της εφαρμογής Bitwarden για υπολογιστή."
   },
   "ssoError": {
     "message": "Δεν βρέθηκαν ελεύθερες θύρες για τη σύνδεση sso."
