@@ -118,7 +118,8 @@
         "node-forge",
         "rxjs",
         "type-fest",
-        "typescript"
+        "typescript",
+        "@yao-pkg/pkg"
       ],
       "description": "Platform owned dependencies",
       "commitMessagePrefix": "[deps] Platform:",
