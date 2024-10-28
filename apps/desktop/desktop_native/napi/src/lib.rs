@@ -43,7 +43,67 @@ pub mod passwords {
 
 #[napi]
 pub mod biometrics {
+    use core_foundation::{base::{CFGetTypeID, CFTypeRef, TCFType}, boolean::CFBoolean, data::{CFData, CFDataRef}, dictionary::CFDictionary, string::CFString};
     use desktop_core::biometric::{Biometric, BiometricTrait};
+    use security_framework::passwords_options::{AccessControlOptions, PasswordOptions};
+    use security_framework_sys::{item::{kSecReturnData, kSecValueData}, keychain_item::{SecItemAdd, SecItemCopyMatching, SecItemDelete}};
+
+    fn test () {
+
+        
+        /*println!("setting up keychain");
+        let acl: AccessControlOptions = AccessControlOptions::BIOMETRY_ANY;
+        let bits = acl.bits();
+        println!("Bits: {}", bits);
+        let mut options = PasswordOptions::new_generic_password("test", "testaccount");
+        options.set_access_control_options(acl);
+        let query_len = options.query.len();
+        let passwordBuffer = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        options.query.push((
+            unsafe { CFString::wrap_under_get_rule(kSecValueData) },
+            CFData::from_buffer(&passwordBuffer).into_CFType(),
+        ));
+    
+        let params = CFDictionary::from_CFType_pairs(&options.query);
+        let mut ret = std::ptr::null();
+    
+        let status = unsafe { SecItemAdd(params.as_concrete_TypeRef(), &mut ret) };
+        println!("registered status: {}", status);*/
+    
+
+
+        println!("authenticating");
+        // access item
+        let mut options = PasswordOptions::new_generic_password("test", "testaccount");
+        let query_len = options.query.len();
+        options.query.push((
+            unsafe { CFString::wrap_under_get_rule(kSecReturnData) },
+            CFBoolean::from(true).into_CFType(),
+        ));
+        let params = CFDictionary::from_CFType_pairs(&options.query);
+        let mut ret: CFTypeRef = std::ptr::null();
+        let status = unsafe { SecItemCopyMatching(params.as_concrete_TypeRef(), &mut ret) };
+        
+        println!("Status: {}", status);
+        println!("ret {:?}", ret);
+        println!("data is null {:?}", ret.is_null());
+
+        let type_id = unsafe { CFGetTypeID(ret) };
+        if type_id == CFData::type_id() {
+            let val = unsafe { CFData::wrap_under_create_rule(ret as CFDataRef) };
+            let mut vec = Vec::new();
+            if val.len() > 0 {
+                vec.extend_from_slice(val.bytes());
+            }
+            println!("data: {:?}", vec);
+        }
+        
+
+        //let status = unsafe { SecItemDelete(params.as_concrete_TypeRef()) };
+        //println!("Delete Status: {}", status);
+
+        println!("Status: {}", status);
+    }
 
     // Prompt for biometric confirmation
     #[napi]
@@ -51,6 +111,9 @@ pub mod biometrics {
         hwnd: napi::bindgen_prelude::Buffer,
         message: String,
     ) -> napi::Result<bool> {
+        println!("aaaaa");
+        test();
+
         Biometric::prompt(hwnd.into(), message).await.map_err(|e| napi::Error::from_reason(e.to_string()))
     }
 

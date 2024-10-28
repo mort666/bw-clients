@@ -15,9 +15,12 @@ manual_test = []
 
 [dependencies]
 anyhow = "=1.0.86"
+core-foundation = "0.10.0"
 desktop_core = { path = "../core" }
 napi = { version = "=2.16.11", features = ["async"] }
 napi-derive = "=2.16.12"
+security-framework = { version = "3.0.0", features = ["OSX_10_13"] }
+security-framework-sys = { version = "2.12.0", features = ["OSX_10_13"] }
 tokio = { version = "1.38.0" }
 tokio-util = "0.7.11"
 

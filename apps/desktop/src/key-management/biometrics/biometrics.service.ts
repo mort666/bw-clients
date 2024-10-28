@@ -49,7 +49,7 @@ export class BiometricsService extends DesktopBiometricsService {
   private loadMacOSService() {
     // eslint-disable-next-line
     const BiometricDarwinMain = require("./biometric.darwin.main").default;
-    this.platformSpecificService = new BiometricDarwinMain(this.i18nService);
+    this.platformSpecificService = new BiometricDarwinMain(this.i18nService, this.windowMain);
   }
 
   private loadUnixService() {
