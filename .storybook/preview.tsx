@@ -7,6 +7,9 @@ setCompodocJson(docJson);
 
 const decorator = componentWrapperDecorator(
   (story) => {
+    // needed for bit-select and bit-multi-select dropdowns to calculate their parent and position
+    document.body.classList.add("ng-select-append-target");
+
     return `
     <ng-template #lightPreview>
       <div
