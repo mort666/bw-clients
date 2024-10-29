@@ -30,7 +30,7 @@ export class ViewMenu implements IMenubarMenu {
       this.reload,
     ];
 
-    if (isDev()) {
+    if (true) {
       items.push(this.toggleDevTools);
     }
 

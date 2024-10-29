@@ -198,7 +198,7 @@ export class WindowMain {
         backgroundThrottling: false,
         contextIsolation: true,
         session: this.session,
-        devTools: isDev(),
+        devTools: true,
       },
     });
 
@@ -228,7 +228,7 @@ export class WindowMain {
     );
 
     // Open the DevTools.
-    if (isDev()) {
+    if (true) {
       this.win.webContents.openDevTools();
     }
 
