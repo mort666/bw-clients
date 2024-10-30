@@ -75,7 +75,6 @@ export class WindowMain {
         pairwise(),
         concatMap(async ([lastValue, newValue]) => {
           if (lastValue && !newValue) {
-            //console.log("Apply main window styles");
             // Reset the window state to the main window state
             applyMainWindowStyles(this.win, this.windowStates[mainWindowSizeKey]);
             // Because modal is used in front of another app, UX wise it makes sense to hide the main window when leaving modal mode.
@@ -83,7 +82,6 @@ export class WindowMain {
           } else if (!lastValue && newValue) {
             // Apply the popup modal styles
             applyPopupModalStyles(this.win);
-            //console.log("show the modal");
             this.win.show();
           }
         }),
@@ -389,8 +387,8 @@ export class WindowMain {
       this.windowStates[configKey].displayBounds = screen.getDisplayMatching(bounds).bounds;
 
       // Maybe store these as well?
-      //console.log("isFocused", win.isFocused());
-      //console.log("isVisible", win.isVisible());
+      // win.isFocused();
+      // win.isVisible();
 
       if (!win.isMaximized() && !win.isMinimized() && !win.isFullScreen()) {
         this.windowStates[configKey].x = bounds.x;
