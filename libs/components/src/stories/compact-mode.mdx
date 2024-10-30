@@ -1,18 +1,13 @@
 import { Meta, Story } from "@storybook/addon-docs";
 
 import * as itemStories from "../item/item.stories";
+import * as popupLayoutStories from "../../../../apps/browser/src/platform/popup/layout/popup-layout.stories";
 
 <Meta title="Documentation/Compact Mode" />
 
 # Compact Mode
 
-Bitwarden has a global compact mode setting to support users who prefer a more information-dense
-experience.
-
-## Toggling compact mode
-
-Compact mode can be enabled by adding the `tw-bit-compact` class to an ancestor element and disabled
-by removing the class. Alternatively
+Bitwarden has a global compact mode setting for users who prefer a more information-dense UI.
 
 ## Tailwind
 
@@ -38,7 +33,11 @@ following example, the paragraph's padding is reduced when compact mode is enabl
 To get/set compact mode in TypeScript, the `BitSettingsService` exposes a `compactMode` signal.
 However, using the Tailwind variant should be preferred as it is more performant.
 
-## Components that support compact mode
+## Examples
+
+### [Popup Layout](?path=/story/browser-popup-layout--compact-mode)
+
+<Story autoplay={true} of={popupLayoutStories.CompactMode} />
 
 ### [Item](?path=/story/component-library-item--compact-mode)
 
