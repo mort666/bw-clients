@@ -1,0 +1,45 @@
+import { Meta, Story } from "@storybook/addon-docs";
+
+import * as itemStories from "../item/item.stories";
+
+<Meta title="Documentation/Compact Mode" />
+
+# Compact Mode
+
+Bitwarden has a global compact mode setting to support users who prefer a more information-dense
+experience.
+
+## Toggling compact mode
+
+Compact mode can be enabled by adding the `tw-bit-compact` class to an ancestor element and disabled
+by removing the class. Alternatively
+
+## Tailwind
+
+Component authors can hook into this setting with the `bit-compact` Tailwind variant. In the
+following example, the paragraph's padding is removed when compact mode is enabled.
+
+```html
+<p class="tw-bg-primary-100 tw-p-4 bit-compact:tw-p-0.5">Lorem impsum doggo dolor...</p>
+
+<div class="tw-bit-compact">
+  <p class="tw-bg-primary-100 tw-p-4 bit-compact:tw-p-0.5">Lorem impsum doggo dolor...</p>
+</div>
+```
+
+<p class="tw-bg-primary-100 tw-p-4 bit-compact:tw-p-0.5">Lorem impsum doggo dolor...</p>
+
+<div class="tw-bit-compact">
+  <p class="tw-bg-primary-100 tw-p-4 bit-compact:tw-p-0.5">Lorem impsum doggo dolor...</p>
+</div>
+
+## Toggling compact mode
+
+Compact mode can be enabled by adding the `tw-bit-compact` class to an ancestor element and disabled
+by removing the class.
+
+## Components that support compact mode
+
+### [Item](?path=/story/component-library-item--compact-mode)
+
+<Story of={itemStories.CompactMode} />
