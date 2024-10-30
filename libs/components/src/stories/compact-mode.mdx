@@ -17,7 +17,7 @@ by removing the class. Alternatively
 ## Tailwind
 
 Component authors can hook into this setting with the `bit-compact` Tailwind variant. In the
-following example, the paragraph's padding is removed when compact mode is enabled.
+following example, the paragraph's padding is reduced when compact mode is enabled.
 
 ```html
 <p class="tw-bg-primary-100 tw-p-4 bit-compact:tw-p-0.5">Lorem impsum doggo dolor...</p>
@@ -33,10 +33,10 @@ following example, the paragraph's padding is removed when compact mode is enabl
   <p class="tw-bg-primary-100 tw-p-4 bit-compact:tw-p-0.5">Lorem impsum doggo dolor...</p>
 </div>
 
-## Toggling compact mode
+## Settings Service
 
-Compact mode can be enabled by adding the `tw-bit-compact` class to an ancestor element and disabled
-by removing the class.
+To get/set compact mode in TypeScript, the `BitSettingsService` exposes a `compactMode` signal.
+However, using the Tailwind variant should be preferred as it is more performant.
 
 ## Components that support compact mode
 
