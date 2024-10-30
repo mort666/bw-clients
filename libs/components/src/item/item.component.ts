@@ -34,7 +34,7 @@ export const BitItemHeight = 59;
   providers: [{ provide: A11yRowDirective, useExisting: ItemComponent }],
   host: {
     class:
-      "tw-block tw-box-border tw-overflow-auto tw-flex tw-bg-background [&:has(.item-main-content_button:hover,.item-main-content_a:hover)]:tw-cursor-pointer [&:has(.item-main-content_button:hover,.item-main-content_a:hover)]:tw-bg-primary-100 tw-text-main tw-border-solid tw-border-b tw-border-0 [&:not(bit-layout_*)]:tw-rounded-lg bit-compact:[&:not(bit-layout_*)]:tw-rounded-none bit-compact:[&:not(bit-layout_*)]:last:tw-mb-1.5 bit-compact:[&:not(bit-layout_*)]:last:tw-rounded-b-lg bit-compact:[&:not(bit-layout_*)]:first:tw-rounded-t-lg tw-mb-1.5 bit-compact:tw-mb-0",
+      "tw-block tw-box-border tw-overflow-auto tw-flex tw-bg-background [&:has(.item-main-content_button:hover,.item-main-content_a:hover)]:tw-cursor-pointer [&:has(.item-main-content_button:hover,.item-main-content_a:hover)]:tw-bg-primary-100 tw-text-main tw-border-solid tw-border-b tw-border-0 [&:not(bit-layout_*)]:tw-rounded-lg bit-compact:[&:not(bit-layout_*)]:tw-rounded-none bit-compact:[&:not(bit-layout_*)]:last:tw-mb-1.5 bit-compact:[&:not(bit-layout_*)]:last:tw-border-b-0 bit-compact:[&:not(bit-layout_*)]:last:tw-rounded-b-lg bit-compact:[&:not(bit-layout_*)]:first:tw-rounded-t-lg tw-mb-1.5 bit-compact:tw-mb-0",
   },
 })
 export class ItemComponent extends A11yRowDirective {
