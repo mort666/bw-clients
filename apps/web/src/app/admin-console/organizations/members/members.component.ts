@@ -40,7 +40,6 @@ import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { OrganizationKeysRequest } from "@bitwarden/common/admin-console/models/request/organization-keys.request";
 import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions/billing-api.service.abstraction";
 import { isNotSelfUpgradable, ProductTierType } from "@bitwarden/common/billing/enums";
-import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -97,10 +96,6 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
   orgIsOnSecretsManagerStandalone = false;
 
   protected canUseSecretsManager$: Observable<boolean>;
-
-  protected enableUpgradePasswordManagerSub$ = this.configService.getFeatureFlag$(
-    FeatureFlag.EnableUpgradePasswordManagerSub,
-  );
 
   // Fixed sizes used for cdkVirtualScroll
   protected rowHeight = 62;
@@ -483,29 +478,20 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
         this.organization.productTierType === ProductTierType.TeamsStarter ||
         this.organization.productTierType === ProductTierType.Families)
     ) {
-      const enableUpgradePasswordManagerSub = await firstValueFrom(
-        this.enableUpgradePasswordManagerSub$,
-      );
-      if (enableUpgradePasswordManagerSub) {
-        const reference = openChangePlanDialog(this.dialogService, {
-          data: {
-            organizationId: this.organization.id,
-            subscription: null,
-            productTierType: this.organization.productTierType,
-          },
-        });
+      const reference = openChangePlanDialog(this.dialogService, {
+        data: {
+          organizationId: this.organization.id,
+          subscription: null,
+          productTierType: this.organization.productTierType,
+        },
+      });
 
-        const result = await lastValueFrom(reference.closed);
+      const result = await lastValueFrom(reference.closed);
 
-        if (result === ChangePlanDialogResultType.Submitted) {
-          await this.load();
-        }
-        return;
-      } else {
-        // Show org upgrade modal
-        await this.showSeatLimitReachedDialog();
-        return;
+      if (result === ChangePlanDialogResultType.Submitted) {
+        await this.load();
       }
+      return;
     }
 
     const dialog = openUserAddEditDialog(this.dialogService, {
