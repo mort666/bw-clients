@@ -83,11 +83,16 @@ is too long, such as info link buttons or badges.
 
 Select and multiselect both allow users to type to filter the results.
 
-If you are using these components in a new client, please ensure that the root scrollable element
-(usually `body`) has the `ng-select-append-target` class. This tells the `ng-select` library, which
-both components use under the hood, where to attach itself. When done correctly, the dropdown popup
-should be positioned just underneath the dropdown trigger and should scroll with the page (not float
-on top).
+If you are using these components in a new client or seeing unusual scroll positioning behavior,
+please ensure that the root scrollable element (usually `body`) has the `ng-select-append-target`
+and `tw-position-relative` classes (or is otherwise positioned relatively). This tells the
+`ng-select` library, which both components use under the hood, where to attach itself. When done
+correctly, the dropdown popup should be positioned just underneath the dropdown trigger and should
+scroll with the page (not float on top). Note that if more than one element on the page has the
+`ng-select-append-target` class, the first `ng-select-append-target` that does not have a descendant
+with `ng-select-append-target` (aka the most nested `ng-select-append-target`, which should be the
+one closest to the `ng-select`) will be used as the append target. This allows us some flexibility
+to specify appropriate append targets for things like dialogs.
 
 #### Searchable single select (default)
 

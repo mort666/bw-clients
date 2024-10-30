@@ -44,7 +44,7 @@
     <div
       [ngClass]="{
         'tw-p-4': !disablePadding,
-        'tw-overflow-y-auto': !loading,
+        'tw-overflow-y-auto tw-relative ng-select-append-target': !loading,
         'tw-invisible tw-overflow-y-hidden': loading,
         'tw-bg-background': background === 'default',
         'tw-bg-background-alt': background === 'alt',
