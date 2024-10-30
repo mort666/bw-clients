@@ -30,6 +30,7 @@ export * from "./radio-button";
 export * from "./search";
 export * from "./section";
 export * from "./select";
+export * from "./shared/bit-settings.service";
 export * from "./table";
 export * from "./tabs";
 export * from "./toast";
