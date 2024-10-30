@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
-import { Subject, takeUntil } from "rxjs";
+import { combineLatest, Subject, takeUntil } from "rxjs";
 
 import { FormFieldModule, InputModule } from "@bitwarden/components";
 
@@ -26,7 +26,24 @@ export class ValidationTestComponent implements OnInit, OnDestroy {
 
     // watch the form's values
     /* eslint no-console: 0 */
-    this.form.valueChanges.pipe(takeUntil(this.destroyed$)).subscribe((v) => console.log(v));
+    const someNumber = this.form.get("someNumber");
+    someNumber.statusChanges
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe((v) => console.log(`someNumber status: ${JSON.stringify(v)}`));
+    someNumber.valueChanges
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe((v) => console.log(`someNumber value: ${JSON.stringify(v)}`));
+
+    this.form.statusChanges
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe((v) => console.log(`form status: ${JSON.stringify(v)}`));
+    this.form.valueChanges
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe((v) => console.log(`form value: ${JSON.stringify(v)}`));
+
+    combineLatest([this.form.valueChanges, this.form.statusChanges])
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe((v) => console.log(`combined form value: ${JSON.stringify(v)}`));
   }
 
   private readonly destroyed$ = new Subject<void>();
