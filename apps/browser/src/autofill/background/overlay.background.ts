@@ -168,6 +168,8 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     getCurrentTabFrameId: ({ sender }) => this.getSenderFrameId(sender),
     updateSubFrameData: ({ message, sender }) => this.updateSubFrameData(message, sender),
     triggerSubFrameFocusInRebuild: ({ sender }) => this.triggerSubFrameFocusInRebuild(sender),
+    shouldRepositionSubFrameInlineMenuOnScroll: ({ sender }) =>
+      this.shouldRepositionSubFrameInlineMenuOnScroll(sender),
     destroyAutofillInlineMenuListeners: ({ message, sender }) =>
       this.triggerDestroyInlineMenuListeners(sender.tab, message.subFrameData.frameId),
     collectPageDetailsResponse: ({ message, sender }) => this.storePageDetails(message, sender),
@@ -1007,7 +1009,10 @@ export class OverlayBackground implements OverlayBackgroundInterface {
       this.logService.error(error),
     );
 
-    if ((await this.getInlineMenuVisibility()) === AutofillOverlayVisibility.OnButtonClick) {
+    if (
+      !this.checkIsInlineMenuListVisible() &&
+      (await this.getInlineMenuVisibility()) === AutofillOverlayVisibility.OnButtonClick
+    ) {
       return;
     }
 
@@ -2577,7 +2582,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    * @param sender
    */
   private resetFocusedFieldSubFrameOffsets(sender: chrome.runtime.MessageSender) {
-    if (this.focusedFieldData.frameId > 0 && this.subFrameOffsetsForTab[sender.tab.id]) {
+    if (this.focusedFieldData?.frameId > 0 && this.subFrameOffsetsForTab[sender.tab.id]) {
       this.subFrameOffsetsForTab[sender.tab.id].set(this.focusedFieldData.frameId, null);
     }
   }
@@ -2590,8 +2595,23 @@ export class OverlayBackground implements OverlayBackgroundInterface {
    */
   private async triggerSubFrameFocusInRebuild(sender: chrome.runtime.MessageSender) {
     this.cancelInlineMenuFadeInAndPositionUpdate();
+    this.resetFocusedFieldSubFrameOffsets(sender);
     this.rebuildSubFrameOffsets$.next(sender);
     this.repositionInlineMenu$.next(sender);
+  }
+
+  /**
+   * Triggers on scroll of a frame within the tab. Will reposition the inline menu
+   * if the focused field is within a sub-frame and the inline menu is visible.
+   *
+   * @param sender - The sender of the message
+   */
+  private shouldRepositionSubFrameInlineMenuOnScroll(sender: chrome.runtime.MessageSender) {
+    if (!this.isInlineMenuButtonVisible || sender.tab.id !== this.focusedFieldData?.tabId) {
+      return false;
+    }
+
+    return this.focusedFieldData.frameId > 0;
   }
 
   /**
