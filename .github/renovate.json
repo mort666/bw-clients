@@ -36,6 +36,10 @@
       "matchUpdateTypes": "major"
     },
     {
+      "groupName": "macOS/iOS bindings",
+      "matchPackageNames": ["core-foundation", "security-framework", "security-framework-sys"]
+    },
+    {
       "matchPackageNames": [
         "@ngtools/webpack",
         "base64-loader",
@@ -81,7 +85,6 @@
         "cross-env",
         "del",
         "gulp",
-        "gulp-filter",
         "gulp-if",
         "gulp-json-editor",
         "gulp-replace",
