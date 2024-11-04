@@ -21,7 +21,6 @@ import { DesktopLoginComponentService } from "./desktop-login-component.service"
 
 const defaultIpc = {
   platform: {
-    isAppImage: false,
     isSnapStore: false,
     isDev: false,
     localhostCallbackService: {
@@ -107,21 +106,16 @@ describe("DesktopLoginComponentService", () => {
   });
 
   describe("launchSsoBrowserWindow", () => {
-    // Array of all permutations of isAppImage, isSnapStore, and isDev
+    // Array of all permutations of isSnapStore, and isDev
     const permutations = [
-      [true, false, false], // Case 1: isAppImage true
-      [false, true, false], // Case 2: isSnapStore true
-      [false, false, true], // Case 3: isDev true
-      [true, true, false], // Case 4: isAppImage and isSnapStore true
-      [true, false, true], // Case 5: isAppImage and isDev true
-      [false, true, true], // Case 6: isSnapStore and isDev true
-      [true, true, true], // Case 7: all true
-      [false, false, false], // Case 8: all false
+      [false, false], // Case 1: both false
+      [true, false], // Case 2: isSnapStore true
+      [false, true], // Case 3: isDev true
+      [true, true], // Case 4: both true
     ];
 
-    permutations.forEach(([isAppImage, isSnapStore, isDev]) => {
-      it(`executes correct logic for isAppImage=${isAppImage}, isSnapStore=${isSnapStore}, isDev=${isDev}`, async () => {
-        (global as any).ipc.platform.isAppImage = isAppImage;
+    permutations.forEach(([isSnapStore, isDev]) => {
+      it(`executes correct logic for isSnapStore=${isSnapStore}, isDev=${isDev}`, async () => {
         (global as any).ipc.platform.isSnapStore = isSnapStore;
         (global as any).ipc.platform.isDev = isDev;
 
@@ -139,7 +133,7 @@ describe("DesktopLoginComponentService", () => {
 
         await service.launchSsoBrowserWindow(email, clientId);
 
-        if (isAppImage || isSnapStore || isDev) {
+        if (isSnapStore || isDev) {
           expect(superLaunchSsoBrowserWindowSpy).not.toHaveBeenCalled();
 
           // Assert that the standard logic is executed

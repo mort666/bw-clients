@@ -8,7 +8,7 @@ import { MessageSender } from "@bitwarden/common/platform/messaging";
 
 /**
  * The SSO Localhost login service uses a local host listener as fallback in case scheme handling deeplinks does not work.
- * This way it is possible to log in with SSO on appimage, snap, and electron dev using the same methods that the cli uses.
+ * This way it is possible to log in with SSO on snap, and electron dev using the same methods that the cli uses.
  */
 export class SSOLocalhostCallbackService {
   private ssoRedirectUri = "";

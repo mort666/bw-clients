@@ -113,7 +113,7 @@
         "to": "desktop_proxy"
       }
     ],
-    "target": ["deb", "freebsd", "rpm", "AppImage", "snap"],
+    "target": ["deb", "freebsd", "rpm", "snap"],
     "desktop": {
       "Name": "Bitwarden",
       "Type": "Application",
@@ -237,9 +237,6 @@
   "deb": {
     "artifactName": "${productName}-${version}-${arch}.${ext}",
     "depends": ["libnotify4", "libxtst6", "libnss3", "libsecret-1-0", "libxss1"]
-  },
-  "appImage": {
-    "artifactName": "${productName}-${version}-${arch}.${ext}"
   },
   "rpm": {
     "artifactName": "${productName}-${version}-${arch}.${ext}"

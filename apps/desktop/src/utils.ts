@@ -29,10 +29,6 @@ export function isLinux() {
   return process.platform === "linux";
 }
 
-export function isAppImage() {
-  return isLinux() && "APPIMAGE" in process.env;
-}
-
 export function isSnapStore() {
   return isLinux() && process.env.SNAP_USER_DATA != null;
 }

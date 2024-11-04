@@ -4,7 +4,7 @@ import { autoUpdater } from "electron-updater";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 
-import { isAppImage, isDev, isMacAppStore, isWindowsPortable, isWindowsStore } from "../utils";
+import { isDev, isMacAppStore, isWindowsPortable, isWindowsStore } from "../utils";
 
 import { WindowMain } from "./window.main";
 
@@ -22,12 +22,10 @@ export class UpdaterMain {
   ) {
     autoUpdater.logger = log;
 
-    const linuxCanUpdate = process.platform === "linux" && isAppImage();
     const windowsCanUpdate =
       process.platform === "win32" && !isWindowsStore() && !isWindowsPortable();
     const macCanUpdate = process.platform === "darwin" && !isMacAppStore();
-    this.canUpdate =
-      !this.userDisabledUpdates() && (linuxCanUpdate || windowsCanUpdate || macCanUpdate);
+    this.canUpdate = !this.userDisabledUpdates() && (windowsCanUpdate || macCanUpdate);
   }
 
   async init() {
