@@ -36,7 +36,14 @@
       "@bitwarden/key-management": ["../../libs/key-management/src"],
       "@bitwarden/vault": ["../../libs/vault/src"]
     },
-    "useDefineForClassFields": false
+    "useDefineForClassFields": false,
+    "plugins": [
+      {
+        "name": "typescript-strict-plugin",
+        "paths": ["./src/key-management"],
+        "excludePattern": ["**/*.spec.ts"]
+      }
+    ]
   },
   "angularCompilerOptions": {
     "strictTemplates": true,
