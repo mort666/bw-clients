@@ -30,7 +30,14 @@
       "@bitwarden/tools-card": ["../../libs/tools/card/src"],
       "@bitwarden/vault": ["../../libs/vault/src"],
       "@bitwarden/web-vault/*": ["src/*"]
-    }
+    },
+    "plugins": [
+      {
+        "name": "typescript-strict-plugin",
+        "paths": ["./src/app/key-management"],
+        "excludePattern": ["**/*.spec.ts"]
+      }
+    ]
   },
   "angularCompilerOptions": {
     "strictTemplates": true,
