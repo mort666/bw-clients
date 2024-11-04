@@ -40,7 +40,7 @@
     "plugins": [
       {
         "name": "typescript-strict-plugin",
-        "paths": ["./src/key-management"],
+        "paths": ["./src/key-management", "../../libs/key-management"],
         "excludePattern": ["**/*.spec.ts"]
       }
     ]
