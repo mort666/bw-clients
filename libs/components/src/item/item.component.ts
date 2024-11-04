@@ -54,8 +54,10 @@ export class ItemComponent extends A11yRowDirective {
   @HostBinding("class") get classList(): string[] {
     return [
       this.focusVisibleWithin()
-        ? "tw-z-10 tw-rounded tw-outline-none tw-ring tw-ring-primary-600 tw-border-transparent"
+        ? "tw-z-10 tw-rounded tw-outline-none tw-ring bit-compact:tw-ring-inset tw-ring-primary-600 tw-border-transparent".split(
+            " ",
+          )
         : "tw-border-b-shadow",
-    ];
+    ].flat();
   }
 }
