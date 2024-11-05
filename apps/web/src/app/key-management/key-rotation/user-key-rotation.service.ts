@@ -96,8 +96,8 @@ export class UserKeyRotationService {
 
     // Create new request
     const request = new UpdateKeyRequest(
-      newEncUserKey.encryptedString!,
       masterPasswordHash,
+      newEncUserKey.encryptedString!,
       privateKey,
     );
 

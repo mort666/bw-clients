@@ -9,8 +9,8 @@ import { EmergencyAccessWithIdRequest } from "../../../auth/emergency-access/req
 
 export class UpdateKeyRequest {
   constructor(
-    readonly masterPasswordHash: EncryptedString,
-    readonly key: string,
+    readonly masterPasswordHash: string,
+    readonly key: EncryptedString,
     readonly privateKey: EncryptedString,
   ) {}
 
