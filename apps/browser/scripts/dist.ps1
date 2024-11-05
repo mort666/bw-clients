@@ -22,6 +22,11 @@ if (-not $browser) {
     }
 }
 
+$manifestVersion = $env:MANIFEST_VERSION
+if (-not $manifestVersion) {
+    $manifestVersion = 2
+}
+
 $buildDir = Join-Path $PSScriptRoot "../build"
 $distDir = Join-Path $PSScriptRoot "../dist"
 
@@ -38,7 +43,12 @@ if (-not (Test-Path $distDir)) {
 }
 
 if ($browser -ne 'safari') {
-    $distPath = Join-Path $distDir "dist-$browser.zip"
+    if ($manifestVersion -eq 2) {
+        $distPath = Join-Path $distDir "dist-$browser.zip"
+    }
+    else {
+        $distPath = Join-Path $distDir "dist-$browser-mv3.zip"
+    }
 
     if (Test-Path $distPath) {
         Remove-Item $distPath
