@@ -33,7 +33,8 @@ export default class BiometricUnixMain implements OsBiometricService {
     private i18nservice: I18nService,
     private windowMain: WindowMain,
   ) {}
-  private _iv: string | null = null;
+
+  private _iv?: string;
   // Use getKeyMaterial helper instead of direct access
   private _osKeyHalf: string | null = null;
 
@@ -52,6 +53,7 @@ export default class BiometricUnixMain implements OsBiometricService {
       storageDetails.ivB64,
     );
   }
+
   async deleteBiometricKey(service: string, key: string): Promise<void> {
     await passwords.deletePassword(service, key);
   }
@@ -73,14 +75,9 @@ export default class BiometricUnixMain implements OsBiometricService {
       return null;
     } else {
       const encValue = new EncString(value);
-      this.setIv(encValue.iv ?? null);
+      this.setIv(encValue.iv);
       const storageDetails = await this.getStorageDetails({ clientKeyHalfB64: clientKeyPartB64 });
-      const storedValue = await biometrics.getBiometricSecret(
-        service,
-        storageKey,
-        storageDetails.key_material,
-      );
-      return storedValue;
+      return await biometrics.getBiometricSecret(service, storageKey, storageDetails.key_material);
     }
   }
 
@@ -132,7 +129,7 @@ export default class BiometricUnixMain implements OsBiometricService {
 
   // Nulls out key material in order to force a re-derive. This should only be used in getBiometricKey
   // when we want to force a re-derive of the key material.
-  private setIv(iv: string | null) {
+  private setIv(iv?: string) {
     this._iv = iv;
     this._osKeyHalf = null;
   }
@@ -141,12 +138,16 @@ export default class BiometricUnixMain implements OsBiometricService {
     clientKeyHalfB64,
   }: {
     clientKeyHalfB64: string | undefined;
-  }): Promise<{ key_material: biometrics.KeyMaterial; ivB64: string | null }> {
+  }): Promise<{ key_material: biometrics.KeyMaterial; ivB64: string }> {
     if (this._osKeyHalf == null) {
       const keyMaterial = await biometrics.deriveKeyMaterial(this._iv);
-      // osKeyHalf is based on the iv and in contrast to windows is not locked behind user verefication!
+      // osKeyHalf is based on the iv and in contrast to windows is not locked behind user verification!
       this._osKeyHalf = keyMaterial.keyB64;
       this._iv = keyMaterial.ivB64;
+    }
+
+    if (this._iv == null) {
+      throw new Error("Initialization Vector is null");
     }
 
     return {

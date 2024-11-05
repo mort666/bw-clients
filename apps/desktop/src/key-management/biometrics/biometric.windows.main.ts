@@ -13,7 +13,7 @@ const WITNESS_VALUE = "known key";
 
 export default class BiometricWindowsMain implements OsBiometricService {
   // Use set helper method instead of direct access
-  private _iv: string | null = null;
+  private _iv?: string;
   // Use getKeyMaterial helper instead of direct access
   private _osKeyHalf: string | null = null;
 
@@ -52,7 +52,7 @@ export default class BiometricWindowsMain implements OsBiometricService {
       return value;
     } else {
       const encValue = new EncString(value);
-      this.setIv(encValue.iv ?? null);
+      this.setIv(encValue.iv);
       const storageDetails = await this.getStorageDetails({
         clientKeyHalfB64,
       });
@@ -103,12 +103,16 @@ export default class BiometricWindowsMain implements OsBiometricService {
     clientKeyHalfB64,
   }: {
     clientKeyHalfB64: string | undefined;
-  }): Promise<{ key_material: biometrics.KeyMaterial; ivB64: string | null }> {
+  }): Promise<{ key_material: biometrics.KeyMaterial; ivB64: string }> {
     if (this._osKeyHalf == null) {
       // Prompts Windows Hello
       const keyMaterial = await biometrics.deriveKeyMaterial(this._iv);
       this._osKeyHalf = keyMaterial.keyB64;
       this._iv = keyMaterial.ivB64;
+    }
+
+    if (this._iv == null) {
+      throw new Error("Initialization Vector is null");
     }
 
     return {
@@ -122,7 +126,7 @@ export default class BiometricWindowsMain implements OsBiometricService {
 
   // Nulls out key material in order to force a re-derive. This should only be used in getBiometricKey
   // when we want to force a re-derive of the key material.
-  private setIv(iv: string | null) {
+  private setIv(iv?: string) {
     this._iv = iv;
     this._osKeyHalf = null;
   }
