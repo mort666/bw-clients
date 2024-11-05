@@ -1,12 +1,12 @@
 import { LogMeOnceCsvImporter } from "../src/importers/logmeonce-csv-importer";
 import { ImportResult } from "../src/models/import-result";
 
-import { invalidRowData } from "./test-data/logmeonce-csv/logmeonce.test.invalidRow.csv";
-import { invalidUrlData } from "./test-data/logmeonce-csv/logmeonce.test.invalidUrl.csv";
-import { missingNameData } from "./test-data/logmeonce-csv/logmeonce.test.missingName.csv";
-import { mixedData } from "./test-data/logmeonce-csv/logmeonce.test.mixedData.csv";
-import { multipleEntriesData } from "./test-data/logmeonce-csv/logmeonce.test.multipleEntries.csv";
-import { validData } from "./test-data/logmeonce-csv/logmeonce.test.validData.csv";
+import { invalidRowData } from "./test-data/logmeonce-csv/invalid-row.csv";
+import { invalidUrlData } from "./test-data/logmeonce-csv/invalid-url.csv";
+import { missingNameData } from "./test-data/logmeonce-csv/missing-name.csv";
+import { mixedData } from "./test-data/logmeonce-csv/mixed-data.csv";
+import { multipleEntriesData } from "./test-data/logmeonce-csv/multiple-entries.csv";
+import { validData } from "./test-data/logmeonce-csv/valid-data.csv";
 
 describe("LogMeOnceCsvImporter", () => {
   let importer: LogMeOnceCsvImporter;
