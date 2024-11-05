@@ -98,7 +98,7 @@ const requiredPlugins = [
 
 const plugins = [
   new HtmlWebpackPlugin({
-    template: "./src/popup/index.ebs",
+    template: "./src/popup/index.ejs",
     filename: "popup/index.html",
     chunks: ["popup/polyfills", "popup/vendor-angular", "popup/vendor", "popup/main"],
     browser: browser,

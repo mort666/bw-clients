@@ -39,6 +39,9 @@
     }
   ],
   "background": {
+    "scripts": ["background.js"]
+  },
+  "__chrome__background": {
     "service_worker": "background.js"
   },
   "action": {
@@ -90,7 +93,7 @@
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
     "sandbox": "sandbox allow-scripts; script-src 'self'"
   },
-  "sandbox": {
+  "__chrome__sandbox": {
     "pages": [
       "overlay/menu-button.html",
       "overlay/menu-list.html",
