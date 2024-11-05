@@ -48,7 +48,7 @@ export class MigrateFromLegacyEncryptionComponent {
     }
 
     const activeUser = await firstValueFrom(this.accountService.activeAccount$);
-    if (activeUser === null) {
+    if (activeUser == null) {
       throw new Error("No active user.");
     }
 
@@ -59,7 +59,7 @@ export class MigrateFromLegacyEncryptionComponent {
     }
 
     const masterPassword = this.formGroup.value.masterPassword;
-    if (!masterPassword) {
+    if (masterPassword == null) {
       throw new Error("Master password cannot be empty.");
     }
 

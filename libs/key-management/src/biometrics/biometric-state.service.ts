@@ -161,7 +161,7 @@ export class DefaultBiometricStateService implements BiometricStateService {
       this.promptCancelledState.state$,
     ]).pipe(
       map(([userId, record]) => {
-        return userId ? (record?.[userId] ?? false) : false;
+        return userId != null ? (record?.[userId] ?? false) : false;
       }),
     );
     this.promptAutomaticallyState = this.stateProvider.getActive(PROMPT_AUTOMATICALLY);
@@ -238,7 +238,7 @@ export class DefaultBiometricStateService implements BiometricStateService {
   async resetUserPromptCancelled(userId: UserId): Promise<void> {
     await this.stateProvider.getGlobal(PROMPT_CANCELLED).update(
       (data, activeUserId) => {
-        if (data) {
+        if (data != null) {
           delete data[userId ?? activeUserId];
         }
         return data;
@@ -253,7 +253,7 @@ export class DefaultBiometricStateService implements BiometricStateService {
   async setUserPromptCancelled(): Promise<void> {
     await this.promptCancelledState.update(
       (record, userId) => {
-        if (userId) {
+        if (userId != null) {
           record ??= {};
           record[userId] = true;
         }
@@ -262,7 +262,7 @@ export class DefaultBiometricStateService implements BiometricStateService {
       {
         combineLatestWith: this.stateProvider.activeUserId$,
         shouldUpdate: (_, userId) => {
-          if (!userId) {
+          if (userId == null) {
             throw new Error(
               "Cannot update biometric prompt cancelled state without an active user",
             );

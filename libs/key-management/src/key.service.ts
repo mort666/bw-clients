@@ -85,15 +85,15 @@ export class DefaultKeyService implements KeyServiceAbstraction {
     this.everHadUserKey$ = this.activeUserEverHadUserKey.state$.pipe(map((x) => x ?? false));
 
     this.activeUserOrgKeys$ = this.stateProvider.activeUserId$.pipe(
-      switchMap((userId) => (userId ? this.orgKeys$(userId) : NEVER)),
+      switchMap((userId) => (userId != null ? this.orgKeys$(userId) : NEVER)),
     ) as Observable<Record<OrganizationId, OrgKey>>;
   }
 
   async setUserKey(key: UserKey | null, userId?: UserId): Promise<void> {
-    if (!key) {
+    if (key == null) {
       throw new Error("No key provided. Lock the user to clear the key");
     }
-    if (!userId) {
+    if (userId == null) {
       throw new Error("No userId provided.");
     }
 
@@ -149,7 +149,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
 
   async isLegacyUser(masterKey?: MasterKey, userId?: UserId): Promise<boolean> {
     userId ??= await firstValueFrom(this.stateProvider.activeUserId$);
-    if (!userId) {
+    if (userId == null) {
       throw new Error("User ID is required.");
     }
 
@@ -162,7 +162,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
   async getUserKeyWithLegacySupport(userId?: UserId): Promise<UserKey> {
     userId ??= await firstValueFrom(this.stateProvider.activeUserId$);
 
-    if (!userId) {
+    if (userId == null) {
       throw new Error("User ID is required.");
     }
 
@@ -182,7 +182,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
     userId?: UserId,
   ): Promise<UserKey | null> {
     userId ??= await firstValueFrom(this.stateProvider.activeUserId$);
-    if (!userId) {
+    if (userId == null) {
       throw new Error("User ID is required.");
     }
 
@@ -222,7 +222,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
   async makeUserKey(masterKey: MasterKey): Promise<[UserKey, EncString]> {
     if (!masterKey) {
       const userId = await firstValueFrom(this.stateProvider.activeUserId$);
-      if (!userId) {
+      if (userId == null) {
         throw new Error("User ID is required.");
       }
 
@@ -271,7 +271,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
 
   async setMasterKeyEncryptedUserKey(userKeyMasterKey: string, userId?: UserId): Promise<void> {
     userId ??= await firstValueFrom(this.stateProvider.activeUserId$);
-    if (!userId) {
+    if (userId == null) {
       throw new Error("User ID is required.");
     }
 
@@ -287,7 +287,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
       combineLatest([this.accountService.activeAccount$, this.accountService.accounts$]).pipe(
         map(([activeAccount, accounts]) => {
           userId ??= activeAccount?.id;
-          if (!userId) {
+          if (userId == null) {
             throw new Error("User ID is required");
           }
 
@@ -334,7 +334,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
   ): Promise<string> {
     if (!key) {
       const userId = await firstValueFrom(this.stateProvider.activeUserId$);
-      if (!userId) {
+      if (userId == null) {
         throw new Error("User ID is required.");
       }
       key = await firstValueFrom(this.masterPasswordService.masterKey$(userId));
@@ -418,13 +418,15 @@ export class DefaultKeyService implements KeyServiceAbstraction {
 
   async getOrgKey(orgId: OrganizationId): Promise<OrgKey> {
     const activeUserId = await firstValueFrom(this.stateProvider.activeUserId$);
-    if (!activeUserId) {
+    if (activeUserId == null) {
       throw new Error("A user must be active to retrieve an org key");
     }
+
     const orgKeys = await firstValueFrom(this.orgKeys$(activeUserId));
-    if (!orgKeys) {
+    if (orgKeys == null) {
       throw new Error("No org keys found");
     }
+
     return orgKeys[orgId];
   }
 
@@ -466,12 +468,12 @@ export class DefaultKeyService implements KeyServiceAbstraction {
     }
 
     const activeUserId = await firstValueFrom(this.stateProvider.activeUserId$);
-    if (!activeUserId) {
+    if (activeUserId == null) {
       throw new Error("A user must be active to retrieve a provider key");
     }
 
     const providerKeys = await firstValueFrom(this.providerKeys$(activeUserId));
-    if (!providerKeys) {
+    if (providerKeys == null) {
       throw new Error("No provider keys found");
     }
 
@@ -490,12 +492,12 @@ export class DefaultKeyService implements KeyServiceAbstraction {
   async makeOrgKey<T extends OrgKey | ProviderKey>(userId?: UserId): Promise<[EncString, T]> {
     const shareKey = await this.keyGenerationService.createKey(512);
     userId ??= await firstValueFrom(this.stateProvider.activeUserId$);
-    if (!userId) {
+    if (userId == null) {
       throw new Error("User ID is required.");
     }
 
     const publicKey = await firstValueFrom(this.userPublicKey$(userId));
-    if (!publicKey) {
+    if (publicKey == null) {
       throw new Error("No public key found");
     }
 
@@ -515,8 +517,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
 
   async getPrivateKey(): Promise<Uint8Array | null> {
     const activeUserId = await firstValueFrom(this.stateProvider.activeUserId$);
-
-    if (!activeUserId) {
+    if (activeUserId == null) {
       throw new Error("User must be active while attempting to retrieve private key.");
     }
 
@@ -528,16 +529,16 @@ export class DefaultKeyService implements KeyServiceAbstraction {
     fingerprintMaterial: string,
     publicKey?: Uint8Array | null,
   ): Promise<string[]> {
-    if (!publicKey) {
+    if (publicKey == null) {
       const activeUserId = await firstValueFrom(this.stateProvider.activeUserId$);
-      if (!activeUserId) {
+      if (activeUserId == null) {
         throw new Error("A user must be active to retrieve a fingerprint");
       }
 
       publicKey = await firstValueFrom(this.userPublicKey$(activeUserId));
     }
 
-    if (!publicKey) {
+    if (publicKey == null) {
       throw new Error("No public key available.");
     }
 
@@ -567,7 +568,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
    * @param userId The desired user
    */
   private async clearKeyPair(userId?: UserId): Promise<void> {
-    if (!userId) {
+    if (userId == null) {
       // nothing to do
       return;
     }
@@ -698,8 +699,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
     privateKey: EncString;
   }> {
     const activeUserId = await firstValueFrom(this.stateProvider.activeUserId$);
-
-    if (!activeUserId) {
+    if (activeUserId == null) {
       throw new Error("Cannot initilize an account if one is not active.");
     }
 
@@ -787,7 +787,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
         break;
       }
       case KeySuffixOptions.Pin: {
-        if (!userId) {
+        if (userId == null) {
           throw new Error("User ID is required.");
         }
         const userKeyEncryptedPin = await this.pinService.getUserKeyEncryptedPin(userId);
@@ -899,7 +899,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
   }
 
   private async derivePublicKey(privateKey: UserPrivateKey | null) {
-    if (!privateKey) {
+    if (privateKey == null) {
       return null;
     }
 
@@ -949,7 +949,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
     encryptedPrivateKey: EncryptedString | null,
     key: SymmetricCryptoKey,
   ) {
-    if (!encryptedPrivateKey) {
+    if (encryptedPrivateKey == null) {
       return null;
     }
 
@@ -1041,18 +1041,18 @@ export class DefaultKeyService implements KeyServiceAbstraction {
 
             const result: Record<OrganizationId, OrgKey> = {};
             for (const orgId of Object.keys(encryptedOrgKeys) as OrganizationId[]) {
-              if (result[orgId] !== undefined) {
+              if (result[orgId] != null) {
                 continue;
               }
               const encrypted = BaseEncryptedOrganizationKey.fromData(encryptedOrgKeys[orgId]);
-              if (encrypted === null) {
+              if (encrypted == null) {
                 continue;
               }
 
               let decrypted: OrgKey;
 
               if (BaseEncryptedOrganizationKey.isProviderEncrypted(encrypted)) {
-                if (!providerKeys) {
+                if (providerKeys == null) {
                   throw new Error("No provider keys found.");
                 }
                 decrypted = await encrypted.decrypt(this.encryptService, providerKeys);
