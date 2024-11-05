@@ -3,6 +3,7 @@
   "flags": {
     "showPasswordless": true,
     "accountSwitching": false,
-    "sdk": true
+    "sdk": true,
+    "prereleaseBuild": true
   }
 }
