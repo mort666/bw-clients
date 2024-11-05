@@ -9,7 +9,7 @@ import { WindowMain } from "../../main/window.main";
 import { DesktopBiometricsService, OsBiometricService } from "./desktop.biometrics.service";
 
 export class BiometricsService extends DesktopBiometricsService {
-  private platformSpecificService: OsBiometricService;
+  private platformSpecificService: OsBiometricService | undefined;
   private clientKeyHalves = new Map<string, string>();
 
   constructor(
@@ -65,18 +65,30 @@ export class BiometricsService extends DesktopBiometricsService {
   }
 
   async supportsBiometric() {
+    if (this.platformSpecificService === undefined) {
+      throw new Error("Biometric service not loaded");
+    }
     return await this.platformSpecificService.osSupportsBiometric();
   }
 
   async biometricsNeedsSetup() {
+    if (this.platformSpecificService === undefined) {
+      throw new Error("Biometric service not loaded");
+    }
     return await this.platformSpecificService.osBiometricsNeedsSetup();
   }
 
   async biometricsSupportsAutoSetup() {
+    if (this.platformSpecificService === undefined) {
+      throw new Error("Biometric service not loaded");
+    }
     return await this.platformSpecificService.osBiometricsCanAutoSetup();
   }
 
   async biometricsSetup() {
+    if (this.platformSpecificService === undefined) {
+      throw new Error("Biometric service not loaded");
+    }
     await this.platformSpecificService.osBiometricsSetup();
   }
 
@@ -96,12 +108,16 @@ export class BiometricsService extends DesktopBiometricsService {
   }
 
   async authenticateBiometric(): Promise<boolean> {
+    if (this.platformSpecificService === undefined) {
+      throw new Error("Biometric service not loaded");
+    }
+
     let result = false;
     // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.interruptProcessReload(
       () => {
-        return this.platformSpecificService.authenticateBiometric();
+        return this.platformSpecificService!.authenticateBiometric();
       },
       (response) => {
         result = response;
@@ -112,14 +128,22 @@ export class BiometricsService extends DesktopBiometricsService {
   }
 
   async isBiometricUnlockAvailable(): Promise<boolean> {
+    if (this.platformSpecificService === undefined) {
+      throw new Error("Biometric service not loaded");
+    }
+
     return await this.platformSpecificService.osSupportsBiometric();
   }
 
   async getBiometricKey(service: string, storageKey: string): Promise<string | null> {
+    if (this.platformSpecificService === undefined) {
+      throw new Error("Biometric service not loaded");
+    }
+
     return await this.interruptProcessReload(async () => {
       await this.enforceClientKeyHalf(service, storageKey);
 
-      return await this.platformSpecificService.getBiometricKey(
+      return await this.platformSpecificService!.getBiometricKey(
         service,
         storageKey,
         this.getClientKeyHalf(service, storageKey),
@@ -128,6 +152,10 @@ export class BiometricsService extends DesktopBiometricsService {
   }
 
   async setBiometricKey(service: string, storageKey: string, value: string): Promise<void> {
+    if (this.platformSpecificService === undefined) {
+      throw new Error("Biometric service not loaded");
+    }
+
     await this.enforceClientKeyHalf(service, storageKey);
 
     return await this.platformSpecificService.setBiometricKey(
@@ -156,6 +184,10 @@ export class BiometricsService extends DesktopBiometricsService {
   }
 
   async deleteBiometricKey(service: string, storageKey: string): Promise<void> {
+    if (this.platformSpecificService === undefined) {
+      throw new Error("Biometric service not loaded");
+    }
+
     this.clientKeyHalves.delete(this.clientKeyHalfKey(service, storageKey));
     return await this.platformSpecificService.deleteBiometricKey(service, storageKey);
   }
@@ -163,15 +195,15 @@ export class BiometricsService extends DesktopBiometricsService {
   private async interruptProcessReload<T>(
     callback: () => Promise<T>,
     restartReloadCallback: (arg: T) => boolean = () => false,
-  ): Promise<T> {
+  ): Promise<T | null> {
     this.messagingService.send("cancelProcessReload");
     let restartReload = false;
-    let response: T;
+    let response: T | null = null;
     try {
       response = await callback();
       restartReload ||= restartReloadCallback(response);
     } catch (error) {
-      if (error.message === "Biometric authentication failed") {
+      if (error instanceof Error && error.message === "Biometric authentication failed") {
         restartReload = false;
       } else {
         restartReload = true;

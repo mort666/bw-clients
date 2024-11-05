@@ -22,7 +22,7 @@ export class BiometricsRendererIPCListener {
           serviceName += message.keySuffix;
         }
 
-        let val: string | boolean = null;
+        let val: string | boolean | null = null;
 
         if (!message.action) {
           return val;

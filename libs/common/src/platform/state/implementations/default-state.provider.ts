@@ -52,7 +52,7 @@ export class DefaultStateProvider implements StateProvider {
 
   async setUserState<T>(
     userKeyDefinition: UserKeyDefinition<T>,
-    value: T,
+    value: T | null,
     userId?: UserId,
   ): Promise<[UserId, T]> {
     if (userId) {

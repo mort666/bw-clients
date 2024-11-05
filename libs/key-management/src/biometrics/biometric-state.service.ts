@@ -1,8 +1,8 @@
 import { Observable, firstValueFrom, map, combineLatest } from "rxjs";
 
-import { EncryptedString, EncString } from "../../../common/src/platform/models/domain/enc-string";
-import { ActiveUserState, GlobalState, StateProvider } from "../../../common/src/platform/state";
-import { UserId } from "../../../common/src/types/guid";
+import { EncryptedString, EncString } from "@bitwarden/common/platform/models/domain/enc-string";
+import { ActiveUserState, GlobalState, StateProvider } from "@bitwarden/common/platform/state";
+import { UserId } from "@bitwarden/common/types/guid";
 
 import {
   BIOMETRIC_UNLOCK_ENABLED,
@@ -25,7 +25,7 @@ export abstract class BiometricStateService {
    *
    * Tracks the currently active user
    */
-  abstract encryptedClientKeyHalf$: Observable<EncString | undefined>;
+  abstract encryptedClientKeyHalf$: Observable<EncString | null>;
   /**
    * whether or not a password is required on first unlock after opening the application
    *
@@ -62,42 +62,54 @@ export abstract class BiometricStateService {
    * @param value whether or not a password is required on first unlock after opening the application
    */
   abstract setRequirePasswordOnStart(value: boolean): Promise<void>;
+
   /**
    * Updates the biometric unlock enabled state for the currently active user.
    * @param enabled whether or not to store a biometric key to unlock the vault
    */
   abstract setBiometricUnlockEnabled(enabled: boolean): Promise<void>;
+
   /**
    * Gets the biometric unlock enabled state for the given user.
    * @param userId user Id to check
    */
   abstract getBiometricUnlockEnabled(userId: UserId): Promise<boolean>;
+
   abstract setEncryptedClientKeyHalf(encryptedKeyHalf: EncString, userId?: UserId): Promise<void>;
-  abstract getEncryptedClientKeyHalf(userId: UserId): Promise<EncString>;
+
+  abstract getEncryptedClientKeyHalf(userId: UserId): Promise<EncString | null>;
+
   abstract getRequirePasswordOnStart(userId: UserId): Promise<boolean>;
+
   abstract removeEncryptedClientKeyHalf(userId: UserId): Promise<void>;
+
   /**
    * Updates the active user's state to reflect that they've been warned about requiring password on start.
    */
   abstract setDismissedRequirePasswordOnStartCallout(): Promise<void>;
+
   /**
    * Updates the active user's state to reflect that they've cancelled the biometric prompt.
    */
   abstract setUserPromptCancelled(): Promise<void>;
+
   /**
    * Resets the given user's state to reflect that they haven't cancelled the biometric prompt.
    * @param userId the user to reset the prompt cancelled state for. If not provided, the currently active user will be used.
    */
   abstract resetUserPromptCancelled(userId?: UserId): Promise<void>;
+
   /**
    * Resets all user's state to reflect that they haven't cancelled the biometric prompt.
    */
   abstract resetAllPromptCancelled(): Promise<void>;
+
   /**
    * Updates the currently active user's setting for auto prompting for biometrics on application start and lock
    * @param prompt Whether or not to prompt for biometrics on application start.
    */
   abstract setPromptAutomatically(prompt: boolean): Promise<void>;
+
   /**
    * Updates whether or not IPC has been validated by the user this session
    * @param validated the value to save
@@ -110,13 +122,13 @@ export abstract class BiometricStateService {
 export class DefaultBiometricStateService implements BiometricStateService {
   private biometricUnlockEnabledState: ActiveUserState<boolean>;
   private requirePasswordOnStartState: ActiveUserState<boolean>;
-  private encryptedClientKeyHalfState: ActiveUserState<EncryptedString | undefined>;
+  private encryptedClientKeyHalfState: ActiveUserState<EncryptedString>;
   private dismissedRequirePasswordOnStartCalloutState: ActiveUserState<boolean>;
-  private promptCancelledState: GlobalState<Record<UserId, boolean>>;
+  private promptCancelledState: GlobalState<Record<UserId, boolean> | null>;
   private promptAutomaticallyState: ActiveUserState<boolean>;
-  private fingerprintValidatedState: GlobalState<boolean>;
+  private fingerprintValidatedState: GlobalState<boolean | null>;
   biometricUnlockEnabled$: Observable<boolean>;
-  encryptedClientKeyHalf$: Observable<EncString | undefined>;
+  encryptedClientKeyHalf$: Observable<EncString | null>;
   requirePasswordOnStart$: Observable<boolean>;
   dismissedRequirePasswordOnStartCallout$: Observable<boolean>;
   promptCancelled$: Observable<boolean>;
@@ -149,7 +161,7 @@ export class DefaultBiometricStateService implements BiometricStateService {
       this.promptCancelledState.state$,
     ]).pipe(
       map(([userId, record]) => {
-        return record?.[userId] ?? false;
+        return userId ? (record?.[userId] ?? false) : false;
       }),
     );
     this.promptAutomaticallyState = this.stateProvider.getActive(PROMPT_AUTOMATICALLY);
@@ -170,7 +182,7 @@ export class DefaultBiometricStateService implements BiometricStateService {
   }
 
   async setRequirePasswordOnStart(value: boolean): Promise<void> {
-    let currentActiveId: UserId;
+    let currentActiveId: UserId | undefined = undefined;
     await this.requirePasswordOnStartState.update(
       (_, [userId]) => {
         currentActiveId = userId;
@@ -180,7 +192,7 @@ export class DefaultBiometricStateService implements BiometricStateService {
         combineLatestWith: this.requirePasswordOnStartState.combinedState$,
       },
     );
-    if (!value) {
+    if (!value && currentActiveId) {
       await this.removeEncryptedClientKeyHalf(currentActiveId);
     }
   }
@@ -204,7 +216,7 @@ export class DefaultBiometricStateService implements BiometricStateService {
     ));
   }
 
-  async getEncryptedClientKeyHalf(userId: UserId): Promise<EncString> {
+  async getEncryptedClientKeyHalf(userId: UserId): Promise<EncString | null> {
     return await firstValueFrom(
       this.stateProvider
         .getUser(userId, ENCRYPTED_CLIENT_KEY_HALF)
@@ -226,7 +238,9 @@ export class DefaultBiometricStateService implements BiometricStateService {
   async resetUserPromptCancelled(userId: UserId): Promise<void> {
     await this.stateProvider.getGlobal(PROMPT_CANCELLED).update(
       (data, activeUserId) => {
-        delete data[userId ?? activeUserId];
+        if (data) {
+          delete data[userId ?? activeUserId];
+        }
         return data;
       },
       {
@@ -239,14 +253,16 @@ export class DefaultBiometricStateService implements BiometricStateService {
   async setUserPromptCancelled(): Promise<void> {
     await this.promptCancelledState.update(
       (record, userId) => {
-        record ??= {};
-        record[userId] = true;
+        if (userId) {
+          record ??= {};
+          record[userId] = true;
+        }
         return record;
       },
       {
         combineLatestWith: this.stateProvider.activeUserId$,
         shouldUpdate: (_, userId) => {
-          if (userId == null) {
+          if (!userId) {
             throw new Error(
               "Cannot update biometric prompt cancelled state without an active user",
             );
@@ -271,7 +287,7 @@ export class DefaultBiometricStateService implements BiometricStateService {
 }
 
 function encryptedClientKeyHalfToEncString(
-  encryptedKeyHalf: EncryptedString | undefined,
-): EncString {
-  return encryptedKeyHalf == null ? null : new EncString(encryptedKeyHalf);
+  encryptedKeyHalf: EncryptedString | null | undefined,
+): EncString | null {
+  return !encryptedKeyHalf ? null : new EncString(encryptedKeyHalf);
 }

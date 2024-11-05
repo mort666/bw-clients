@@ -168,7 +168,7 @@ export class PinService implements PinServiceAbstraction {
     );
   }
 
-  async clearPinKeyEncryptedUserKeyEphemeral(userId: UserId): Promise<void> {
+  async clearPinKeyEncryptedUserKeyEphemeral(userId?: UserId): Promise<void> {
     this.validateUserId(userId, "Cannot clear pinKeyEncryptedUserKeyEphemeral.");
 
     await this.stateProvider.setUserState(PIN_KEY_ENCRYPTED_USER_KEY_EPHEMERAL, null, userId);
@@ -249,7 +249,7 @@ export class PinService implements PinServiceAbstraction {
     );
   }
 
-  async clearOldPinKeyEncryptedMasterKey(userId: UserId): Promise<void> {
+  async clearOldPinKeyEncryptedMasterKey(userId?: UserId): Promise<void> {
     this.validateUserId(userId, "Cannot clear oldPinKeyEncryptedMasterKey.");
 
     await this.stateProvider.setUserState(OLD_PIN_KEY_ENCRYPTED_MASTER_KEY, null, userId);

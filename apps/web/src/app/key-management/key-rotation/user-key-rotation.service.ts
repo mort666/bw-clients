@@ -80,15 +80,8 @@ export class UserKeyRotationService {
       throw new Error("User key could not be created");
     }
 
-    // Create new request
-    const request = new UpdateKeyRequest();
-
-    // Add new user key
-    request.key = newEncUserKey.encryptedString;
-
     // Add master key hash
     const masterPasswordHash = await this.keyService.hashMasterKey(masterPassword, masterKey);
-    request.masterPasswordHash = masterPasswordHash;
 
     // Get original user key
     // Note: We distribute the legacy key, but not all domains actually use it. If any of those
@@ -99,7 +92,14 @@ export class UserKeyRotationService {
     this.logService.info("[Userkey rotation] Is legacy user: " + isMasterKey);
 
     // Add re-encrypted data
-    request.privateKey = await this.encryptPrivateKey(newUserKey, user.id);
+    const privateKey = (await this.encryptPrivateKey(newUserKey, user.id))!;
+
+    // Create new request
+    const request = new UpdateKeyRequest(
+      newEncUserKey.encryptedString!,
+      masterPasswordHash,
+      privateKey,
+    );
 
     const rotatedCiphers = await this.cipherService.getRotatedData(
       originalUserKey,
@@ -177,6 +177,6 @@ export class UserKeyRotationService {
     if (!privateKey) {
       throw new Error("No private key found for user key rotation");
     }
-    return (await this.encryptService.encrypt(privateKey, newUserKey)).encryptedString;
+    return (await this.encryptService.encrypt(privateKey, newUserKey)).encryptedString!;
   }
 }

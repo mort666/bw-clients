@@ -22,9 +22,8 @@ import { FolderWithIdRequest } from "@bitwarden/common/vault/models/request/fold
 import { KeyService } from "@bitwarden/key-management";
 
 import { OrganizationUserResetPasswordService } from "../../admin-console/organizations/members/services/organization-user-reset-password/organization-user-reset-password.service";
-import { WebauthnLoginAdminService } from "../core";
-import { EmergencyAccessService } from "../emergency-access";
-import { EmergencyAccessWithIdRequest } from "../emergency-access/request/emergency-access-update.request";
+import { WebauthnLoginAdminService } from "../../auth/core";
+import { EmergencyAccessService, EmergencyAccessWithIdRequest } from "../../auth/emergency-access";
 
 import { UserKeyRotationApiService } from "./user-key-rotation-api.service";
 import { UserKeyRotationService } from "./user-key-rotation.service";

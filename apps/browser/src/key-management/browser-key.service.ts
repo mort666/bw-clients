@@ -70,7 +70,7 @@ export class BrowserKeyService extends DefaultKeyService {
   protected override async getKeyFromStorage(
     keySuffix: KeySuffixOptions,
     userId?: UserId,
-  ): Promise<UserKey> {
+  ): Promise<UserKey | null> {
     if (keySuffix === KeySuffixOptions.Biometric) {
       const biometricsResult = await this.biometricsService.authenticateBiometric();
 

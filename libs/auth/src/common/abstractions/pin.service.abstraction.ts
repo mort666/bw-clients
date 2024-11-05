@@ -45,7 +45,7 @@ export abstract class PinServiceAbstraction {
   /**
    * Clears the ephemeral (stored in memory) version of the UserKey, encrypted by the PinKey.
    */
-  abstract clearPinKeyEncryptedUserKeyEphemeral(userId: UserId): Promise<void>;
+  abstract clearPinKeyEncryptedUserKeyEphemeral(userId?: UserId): Promise<void>;
 
   /**
    * Creates a pinKeyEncryptedUserKey from the provided PIN and UserKey.
@@ -99,7 +99,7 @@ export abstract class PinServiceAbstraction {
   /**
    * Clears the old MasterKey, encrypted by the PinKey.
    */
-  abstract clearOldPinKeyEncryptedMasterKey: (userId: UserId) => Promise<void>;
+  abstract clearOldPinKeyEncryptedMasterKey: (userId?: UserId) => Promise<void>;
 
   /**
    * Makes a PinKey from the provided PIN.

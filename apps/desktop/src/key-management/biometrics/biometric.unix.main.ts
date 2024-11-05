@@ -73,7 +73,7 @@ export default class BiometricUnixMain implements OsBiometricService {
       return null;
     } else {
       const encValue = new EncString(value);
-      this.setIv(encValue.iv);
+      this.setIv(encValue.iv ?? null);
       const storageDetails = await this.getStorageDetails({ clientKeyHalfB64: clientKeyPartB64 });
       const storedValue = await biometrics.getBiometricSecret(
         service,
@@ -132,7 +132,7 @@ export default class BiometricUnixMain implements OsBiometricService {
 
   // Nulls out key material in order to force a re-derive. This should only be used in getBiometricKey
   // when we want to force a re-derive of the key material.
-  private setIv(iv: string) {
+  private setIv(iv: string | null) {
     this._iv = iv;
     this._osKeyHalf = null;
   }
@@ -140,8 +140,8 @@ export default class BiometricUnixMain implements OsBiometricService {
   private async getStorageDetails({
     clientKeyHalfB64,
   }: {
-    clientKeyHalfB64: string;
-  }): Promise<{ key_material: biometrics.KeyMaterial; ivB64: string }> {
+    clientKeyHalfB64: string | undefined;
+  }): Promise<{ key_material: biometrics.KeyMaterial; ivB64: string | null }> {
     if (this._osKeyHalf == null) {
       const keyMaterial = await biometrics.deriveKeyMaterial(this._iv);
       // osKeyHalf is based on the iv and in contrast to windows is not locked behind user verefication!
