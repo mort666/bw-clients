@@ -161,10 +161,10 @@ export abstract class KeyService {
 
   /**
    * Generates a new user key
-   * @param masterKey The user's master key
+   * @param key The user's master key
    * @returns A new user key and the master key protected version of it
    */
-  abstract makeUserKey(key: MasterKey): Promise<[UserKey, EncString]>;
+  abstract makeUserKey(key: MasterKey | null): Promise<[UserKey, EncString]>;
 
   /**
    * Clears the user's stored version of the user key
@@ -178,7 +178,7 @@ export abstract class KeyService {
    * @param userKeyMasterKey The master key encrypted user key to set
    * @param userId The desired user
    */
-  abstract setMasterKeyEncryptedUserKey(UserKeyMasterKey: string, userId?: string): Promise<void>;
+  abstract setMasterKeyEncryptedUserKey(userKeyMasterKey: string, userId?: string): Promise<void>;
 
   /**
    * @param password The user's master password that will be used to derive a master key if one isn't found
@@ -254,7 +254,7 @@ export abstract class KeyService {
    *
    * @deprecated Use {@link orgKeys$} with a required {@link UserId} instead.
    */
-  abstract activeUserOrgKeys$: Observable<Record<OrganizationId, OrgKey>>;
+  abstract activeUserOrgKeys$: Observable<Record<OrganizationId, OrgKey> | null>;
 
   /**
    * Returns the organization's symmetric key

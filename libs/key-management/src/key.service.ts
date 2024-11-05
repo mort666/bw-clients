@@ -65,7 +65,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
 
   readonly everHadUserKey$: Observable<boolean>;
 
-  readonly activeUserOrgKeys$: Observable<Record<OrganizationId, OrgKey>>;
+  readonly activeUserOrgKeys$: Observable<Record<OrganizationId, OrgKey> | null>;
 
   constructor(
     protected pinService: PinServiceAbstraction,
@@ -86,7 +86,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
 
     this.activeUserOrgKeys$ = this.stateProvider.activeUserId$.pipe(
       switchMap((userId) => (userId != null ? this.orgKeys$(userId) : NEVER)),
-    ) as Observable<Record<OrganizationId, OrgKey>>;
+    );
   }
 
   async setUserKey(key: UserKey | null, userId?: UserId): Promise<void> {
@@ -219,7 +219,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
     return (await this.getKeyFromStorage(keySuffix, userId)) != null;
   }
 
-  async makeUserKey(masterKey: MasterKey): Promise<[UserKey, EncString]> {
+  async makeUserKey(masterKey: MasterKey | null): Promise<[UserKey, EncString]> {
     if (!masterKey) {
       const userId = await firstValueFrom(this.stateProvider.activeUserId$);
       if (userId == null) {
