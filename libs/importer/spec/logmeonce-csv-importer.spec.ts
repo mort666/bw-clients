@@ -1,12 +1,12 @@
 import { LogMeOnceCsvImporter } from "../src/importers/logmeonce-csv-importer";
 import { ImportResult } from "../src/models/import-result";
 
-import { data as logmeonceData2 } from "./test-data/logmeonce-csv/logmeonce.test.invalidRow.csv";
-import { data as logmeonceData6 } from "./test-data/logmeonce-csv/logmeonce.test.invalidUrl.csv";
-import { data as logmeonceData5 } from "./test-data/logmeonce-csv/logmeonce.test.missingName.csv";
-import { data as logmeonceData4 } from "./test-data/logmeonce-csv/logmeonce.test.mixedData.csv";
-import { data as logmeonceData3 } from "./test-data/logmeonce-csv/logmeonce.test.multipleEntries.csv";
-import { data as logmeonceData } from "./test-data/logmeonce-csv/logmeonce.test.validData.csv";
+import { invalidRowData } from "./test-data/logmeonce-csv/logmeonce.test.invalidRow.csv";
+import { invalidUrlData } from "./test-data/logmeonce-csv/logmeonce.test.invalidUrl.csv";
+import { missingNameData } from "./test-data/logmeonce-csv/logmeonce.test.missingName.csv";
+import { mixedData } from "./test-data/logmeonce-csv/logmeonce.test.mixedData.csv";
+import { multipleEntriesData } from "./test-data/logmeonce-csv/logmeonce.test.multipleEntries.csv";
+import { validData } from "./test-data/logmeonce-csv/logmeonce.test.validData.csv";
 
 describe("LogMeOnceCsvImporter", () => {
   let importer: LogMeOnceCsvImporter;
@@ -31,7 +31,7 @@ describe("LogMeOnceCsvImporter", () => {
   });
 
   it("should parse valid CSV data correctly", async () => {
-    const result = await importer.parse(logmeonceData);
+    const result = await importer.parse(validData);
     expect(result.success).toBe(true);
     expect(result.ciphers.length).toBe(1);
     const cipher = result.ciphers[0];
@@ -43,7 +43,7 @@ describe("LogMeOnceCsvImporter", () => {
   });
 
   it("should skip rows with insufficient columns", async () => {
-    const result = await importer.parse(logmeonceData2);
+    const result = await importer.parse(invalidRowData);
     expect(result.success).toBe(true);
     expect(result.ciphers.length).toBe(1);
     const cipher = result.ciphers[0];
@@ -51,7 +51,7 @@ describe("LogMeOnceCsvImporter", () => {
   });
 
   it("should handle CSV data with multiple entries", async () => {
-    const result = await importer.parse(logmeonceData3);
+    const result = await importer.parse(multipleEntriesData);
     expect(result.success).toBe(true);
     expect(result.ciphers.length).toBe(2);
     expect(result.ciphers[0].name).toBe("Example1");
@@ -59,7 +59,7 @@ describe("LogMeOnceCsvImporter", () => {
   });
 
   it("should handle CSV data with multiple entries and invalid rows", async () => {
-    const result = await importer.parse(logmeonceData4);
+    const result = await importer.parse(mixedData);
     expect(result.success).toBe(true);
     expect(result.ciphers.length).toBe(2);
     expect(result.ciphers[0].name).toBe("Example1");
@@ -67,7 +67,7 @@ describe("LogMeOnceCsvImporter", () => {
   });
 
   it("should use default values for missing columns", async () => {
-    const result = await importer.parse(logmeonceData5);
+    const result = await importer.parse(missingNameData);
     expect(result.success).toBe(true);
     expect(result.ciphers.length).toBe(1);
     const cipher = result.ciphers[0];
@@ -75,7 +75,7 @@ describe("LogMeOnceCsvImporter", () => {
   });
 
   it("should handle invalid URLs gracefully", async () => {
-    const result = await importer.parse(logmeonceData6);
+    const result = await importer.parse(invalidUrlData);
     expect(result.success).toBe(true);
     expect(result.ciphers.length).toBe(1);
     const cipher = result.ciphers[0];
