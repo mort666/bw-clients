@@ -261,7 +261,7 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
     ];
     this.discountPercentageFromSub = this.isSecretsManagerTrial()
       ? 0
-      : this.sub?.customerDiscount?.percentOff ?? 0;
+      : (this.sub?.customerDiscount?.percentOff ?? 0);
 
     this.setInitialPlanSelection();
     this.loading = false;

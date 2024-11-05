@@ -73,7 +73,7 @@
                 class="tw-bg-secondary-100 tw-text-center !tw-border-0 tw-text-sm tw-font-bold tw-py-1"
                 [ngClass]="{
                   'tw-bg-primary-700 !tw-text-contrast': selectableProduct === selectedPlan,
-                  'tw-bg-secondary-100': !(selectableProduct === selectedPlan)
+                  'tw-bg-secondary-100': !(selectableProduct === selectedPlan),
                 }"
               >
                 {{ "recommended" | i18n }}
@@ -82,7 +82,7 @@
                 class="tw-px-2 tw-pb-[4px]"
                 [ngClass]="{
                   'tw-py-1': !(selectableProduct === selectedPlan),
-                  'tw-py-0': selectableProduct === selectedPlan
+                  'tw-py-0': selectableProduct === selectedPlan,
                 }"
               >
                 <h3

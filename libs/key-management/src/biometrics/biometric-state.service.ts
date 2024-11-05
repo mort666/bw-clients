@@ -161,7 +161,7 @@ export class DefaultBiometricStateService implements BiometricStateService {
       this.promptCancelledState.state$,
     ]).pipe(
       map(([userId, record]) => {
-        return userId ? record?.[userId] ?? false : false;
+        return userId ? (record?.[userId] ?? false) : false;
       }),
     );
     this.promptAutomaticallyState = this.stateProvider.getActive(PROMPT_AUTOMATICALLY);

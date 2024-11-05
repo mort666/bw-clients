@@ -59,7 +59,7 @@ export class EmailRandomizer
    *    is empty, resolves to null instead.
    */
   async randomAsciiCatchall(domain: string, options?: { length?: number }) {
-    const emailDomain = domain?.startsWith("@") ? domain.substring(1, Infinity) : domain ?? "";
+    const emailDomain = domain?.startsWith("@") ? domain.substring(1, Infinity) : (domain ?? "");
     if (emailDomain.length < 1) {
       return null;
     }
@@ -87,7 +87,7 @@ export class EmailRandomizer
     domain: string,
     options?: { numberOfWords?: number; words?: Array<string> },
   ) {
-    const emailDomain = domain?.startsWith("@") ? domain.substring(1, Infinity) : domain ?? "";
+    const emailDomain = domain?.startsWith("@") ? domain.substring(1, Infinity) : (domain ?? "");
     if (emailDomain.length < 1) {
       return null;
     }

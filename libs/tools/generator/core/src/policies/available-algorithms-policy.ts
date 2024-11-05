@@ -17,7 +17,7 @@ export function availableAlgorithms(policies: Policy[]): CredentialAlgorithm[] {
   const overridePassword = policies
     .filter((policy) => policy.type === PolicyType.PasswordGenerator && policy.enabled)
     .reduce(
-      (type, policy) => (type === "password" ? type : policy.data.overridePasswordType ?? type),
+      (type, policy) => (type === "password" ? type : (policy.data.overridePasswordType ?? type)),
       null as CredentialAlgorithm,
     );
 
