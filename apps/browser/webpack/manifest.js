@@ -30,7 +30,7 @@ function transform(browser) {
   };
 }
 
-const browsers = ["chrome", "firefox", "opera", "edge", "safari"];
+const browsers = ["chrome", "edge", "firefox", "opera", "safari"];
 
 /**
  * Flatten the browser prefixes in the manifest.
@@ -44,8 +44,7 @@ function transformPrefixes(manifest, browser) {
   function transformObject(obj) {
     return Object.keys(obj).reduce((acc, key) => {
       // Determine if we need to recurse into the object.
-      const isObjectNotArray =
-        typeof obj[key] === "object" && obj[key] !== null && !Array.isArray(obj[key]);
+      const nested = typeof obj[key] === "object" && obj[key] !== null && !Array.isArray(obj[key]);
 
       if (key.startsWith(prefix)) {
         const newKey = key.slice(prefix.length);
@@ -56,9 +55,9 @@ function transformPrefixes(manifest, browser) {
           return acc;
         }
 
-        acc[newKey] = isObjectNotArray ? transformObject(obj[key]) : obj[key];
+        acc[newKey] = nested ? transformObject(obj[key]) : obj[key];
       } else if (!browsers.some((b) => key.startsWith(`__${b}__`))) {
-        acc[key] = isObjectNotArray ? transformObject(obj[key]) : obj[key];
+        acc[key] = nested ? transformObject(obj[key]) : obj[key];
       }
 
       return acc;
