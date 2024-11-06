@@ -11,23 +11,22 @@ import { FolderWithIdRequest } from "../../models/request/folder-with-id.request
 import { FolderView } from "../../models/view/folder.view";
 
 export abstract class FolderService implements UserKeyRotationDataProvider<FolderWithIdRequest> {
-  folders$: Observable<Folder[]>;
-  folderViews$: Observable<FolderView[]>;
+  folders$: (userId$: Observable<UserId>) => Observable<Folder[]>;
+  folderViews$: (userId$: Observable<UserId>) => Observable<FolderView[]>;
 
-  clearCache: () => Promise<void>;
+  clearDecryptedFolderState: (userId: UserId) => Promise<void>;
   encrypt: (model: FolderView, key: SymmetricCryptoKey) => Promise<Folder>;
-  get: (id: string) => Promise<Folder>;
-  getDecrypted$: (id: string) => Observable<FolderView | undefined>;
-  getAllFromState: () => Promise<Folder[]>;
+  get: (id: string, userId$: Observable<UserId>) => Promise<Folder>;
+  getDecrypted$: (id: string, userId$: Observable<UserId>) => Observable<FolderView | undefined>;
+  getAllFromState: (userId$: Observable<UserId>) => Promise<Folder[]>;
   /**
    * @deprecated Only use in CLI!
    */
-  getFromState: (id: string) => Promise<Folder>;
+  getFromState: (id: string, userId$: Observable<UserId>) => Promise<Folder>;
   /**
    * @deprecated Only use in CLI!
    */
-  getAllDecryptedFromState: () => Promise<FolderView[]>;
-  decryptFolders: (folders: Folder[]) => Promise<FolderView[]>;
+  getAllDecryptedFromState: (userId$: Observable<UserId>) => Promise<FolderView[]>;
   /**
    * Returns user folders re-encrypted with the new user key.
    * @param originalUserKey the original user key
@@ -44,8 +43,8 @@ export abstract class FolderService implements UserKeyRotationDataProvider<Folde
 }
 
 export abstract class InternalFolderService extends FolderService {
-  upsert: (folder: FolderData | FolderData[]) => Promise<void>;
+  upsert: (folder: FolderData | FolderData[], userId: UserId) => Promise<void>;
   replace: (folders: { [id: string]: FolderData }, userId: UserId) => Promise<void>;
-  clear: (userId?: string) => Promise<void>;
-  delete: (id: string | string[]) => Promise<any>;
+  clear: (userId: UserId) => Promise<void>;
+  delete: (id: string | string[], userId: UserId) => Promise<any>;
 }
