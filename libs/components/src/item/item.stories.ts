@@ -153,7 +153,6 @@ export const TextOverflow: Story = {
 };
 
 const multipleActionListTemplate = /*html*/ `
-<div class="tw-bit-compact tw-max-h-">
   <bit-item-group aria-label="Multiple Action List">
     <bit-item>
       <button bit-item-content>
@@ -270,7 +269,6 @@ const multipleActionListTemplate = /*html*/ `
       </ng-container>
     </bit-item>
   </bit-item-group>
-</div>
 `;
 
 export const MultipleActionList: Story = {
