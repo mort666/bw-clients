@@ -81,6 +81,8 @@ export default class NotificationBackground {
     getWebVaultUrlForNotification: () => this.getWebVaultUrl(),
   };
 
+  private activeUserId$ = this.accountService.activeAccount$.pipe(map((a) => a?.id));
+
   constructor(
     private autofillService: AutofillService,
     private cipherService: CipherService,
@@ -609,11 +611,10 @@ export default class NotificationBackground {
       return;
     }
 
-    const activeUserId = await firstValueFrom(
-      this.accountService.activeAccount$.pipe(map((a) => a?.id)),
+    const cipher = await this.cipherService.encrypt(
+      cipherView,
+      await firstValueFrom(this.activeUserId$),
     );
-
-    const cipher = await this.cipherService.encrypt(cipherView, activeUserId);
     try {
       // We've only updated the password, no need to broadcast editedCipher message
       await this.cipherService.updateWithServer(cipher);
@@ -646,7 +647,7 @@ export default class NotificationBackground {
       return false;
     }
 
-    const folders = await firstValueFrom(this.folderService.folderViews$);
+    const folders = await firstValueFrom(this.folderService.folderViews$(this.activeUserId$));
     return folders.some((x) => x.id === folderId);
   }
 
@@ -695,7 +696,7 @@ export default class NotificationBackground {
    * Returns the first value found from the folder service's folderViews$ observable.
    */
   private async getFolderData() {
-    return await firstValueFrom(this.folderService.folderViews$);
+    return await firstValueFrom(this.folderService.folderViews$(this.activeUserId$));
   }
 
   private async getWebVaultUrl(): Promise<string> {

@@ -17,6 +17,7 @@ import { OrganizationService } from "@bitwarden/common/admin-console/abstraction
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { ProductTierType } from "@bitwarden/common/billing/enums";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
@@ -81,6 +82,8 @@ export class VaultPopupListFiltersService {
     map((ciphers) => Object.values(ciphers)),
   );
 
+  private activeUserId$ = this.accountService.activeAccount$.pipe(map((a) => a?.id));
+
   constructor(
     private folderService: FolderService,
     private cipherService: CipherService,
@@ -89,6 +92,7 @@ export class VaultPopupListFiltersService {
     private collectionService: CollectionService,
     private formBuilder: FormBuilder,
     private policyService: PolicyService,
+    private accountService: AccountService,
   ) {
     this.filterForm.controls.organization.valueChanges
       .pipe(takeUntilDestroyed())
@@ -242,7 +246,7 @@ export class VaultPopupListFiltersService {
           previousFilter.organization?.id === currentFilter.organization?.id,
       ),
     ),
-    this.folderService.folderViews$,
+    this.folderService.folderViews$(this.activeUserId$),
     this.cipherViews$,
   ]).pipe(
     map(([filters, folders, cipherViews]): [PopupListFilter, FolderView[], CipherView[]] => {

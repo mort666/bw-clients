@@ -2,6 +2,7 @@ import { Component } from "@angular/core";
 import { Router } from "@angular/router";
 import { map, Observable } from "rxjs";
 
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
 
@@ -12,11 +13,14 @@ import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
 export class FoldersComponent {
   folders$: Observable<FolderView[]>;
 
+  private activeUserId$ = this.accountService.activeAccount$.pipe(map((a) => a?.id));
+
   constructor(
     private folderService: FolderService,
     private router: Router,
+    private accountService: AccountService,
   ) {
-    this.folders$ = this.folderService.folderViews$.pipe(
+    this.folders$ = this.folderService.folderViews$(this.activeUserId$).pipe(
       map((folders) => {
         if (folders.length > 0) {
           folders = folders.slice(0, folders.length - 1);
