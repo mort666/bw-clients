@@ -1,6 +1,6 @@
 import { Directive, EventEmitter, Input, OnInit, Output } from "@angular/core";
 import { Validators, FormBuilder } from "@angular/forms";
-import { firstValueFrom } from "rxjs";
+import { firstValueFrom, map } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -24,6 +24,8 @@ export class FolderAddEditComponent implements OnInit {
   formPromise: Promise<any>;
   deletePromise: Promise<any>;
   protected componentName = "";
+
+  private activeUserId$ = this.accountService.activeAccount$.pipe(map((a) => a?.id));
 
   formGroup = this.formBuilder.group({
     name: ["", [Validators.required]],
@@ -105,8 +107,9 @@ export class FolderAddEditComponent implements OnInit {
     if (this.editMode) {
       this.editMode = true;
       this.title = this.i18nService.t("editFolder");
-      const folder = await this.folderService.get(this.folderId);
-      this.folder = await folder.decrypt();
+      this.folder = await firstValueFrom(
+        this.folderService.getDecrypted$(this.folderId, this.activeUserId$),
+      );
     } else {
       this.title = this.i18nService.t("addFolder");
     }

@@ -31,6 +31,8 @@ export class IndividualVaultExportService
   extends BaseVaultExportService
   implements IndividualVaultExportServiceAbstraction
 {
+  private activeUserId$ = this.accountService.activeAccount$.pipe(map((a) => a?.id));
+
   constructor(
     private folderService: FolderService,
     private cipherService: CipherService,
@@ -62,7 +64,7 @@ export class IndividualVaultExportService
     const promises = [];
 
     promises.push(
-      this.folderService.getAllDecryptedFromState().then((folders) => {
+      firstValueFrom(this.folderService.folderViews$(this.activeUserId$)).then((folders) => {
         decFolders = folders;
       }),
     );
@@ -88,7 +90,7 @@ export class IndividualVaultExportService
     const promises = [];
 
     promises.push(
-      this.folderService.getAllFromState().then((f) => {
+      firstValueFrom(this.folderService.folders$(this.activeUserId$)).then((f) => {
         folders = f;
       }),
     );

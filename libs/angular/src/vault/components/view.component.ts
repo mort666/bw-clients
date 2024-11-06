@@ -76,6 +76,8 @@ export class ViewComponent implements OnDestroy, OnInit {
   private previousCipherId: string;
   private passwordReprompted = false;
 
+  private activeUserId$ = this.accountService.activeAccount$.pipe(map((a) => a?.id));
+
   get fido2CredentialCreationDateValue(): string {
     const dateCreated = this.i18nService.t("dateCreated");
     const creationDate = this.datePipe.transform(
@@ -155,7 +157,7 @@ export class ViewComponent implements OnDestroy, OnInit {
 
     if (this.cipher.folderId) {
       this.folder = await (
-        await firstValueFrom(this.folderService.folderViews$)
+        await firstValueFrom(this.folderService.folderViews$(this.activeUserId$))
       ).find((f) => f.id == this.cipher.folderId);
     }
 

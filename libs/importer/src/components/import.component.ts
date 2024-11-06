@@ -152,6 +152,8 @@ export class ImportComponent implements OnInit, OnDestroy, AfterViewInit {
   private _importBlockedByPolicy = false;
   protected isFromAC = false;
 
+  private activeUserId$ = this.accountService.activeAccount$.pipe(map((a) => a?.id));
+
   formGroup = this.formBuilder.group({
     vaultSelector: [
       "myVault",
@@ -205,6 +207,7 @@ export class ImportComponent implements OnInit, OnDestroy, AfterViewInit {
     @Optional()
     protected importCollectionService: ImportCollectionServiceAbstraction,
     protected toastService: ToastService,
+    protected accountService: AccountService,
   ) {}
 
   protected get importBlockedByPolicy(): boolean {
@@ -256,9 +259,9 @@ export class ImportComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private handleImportInit() {
     // Filter out the no folder-item from folderViews$
-    this.folders$ = this.folderService.folderViews$.pipe(
-      map((folders) => folders.filter((f) => f.id != null)),
-    );
+    this.folders$ = this.folderService
+      .folderViews$(this.activeUserId$)
+      .pipe(map((folders) => folders.filter((f) => f.id != null)));
 
     this.formGroup.controls.targetSelector.disable();
 

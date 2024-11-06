@@ -9,6 +9,7 @@ import {
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { ActiveUserState, StateProvider } from "@bitwarden/common/platform/state";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
@@ -30,6 +31,8 @@ export class VaultFilterService implements DeprecatedVaultFilterServiceAbstracti
   private readonly collapsedGroupings$: Observable<Set<string>> =
     this.collapsedGroupingsState.state$.pipe(map((c) => new Set(c)));
 
+  private activeUserId$ = this.accountService.activeAccount$.pipe(map((a) => a?.id));
+
   constructor(
     protected organizationService: OrganizationService,
     protected folderService: FolderService,
@@ -37,6 +40,7 @@ export class VaultFilterService implements DeprecatedVaultFilterServiceAbstracti
     protected collectionService: CollectionService,
     protected policyService: PolicyService,
     protected stateProvider: StateProvider,
+    protected accountService: AccountService,
   ) {}
 
   async storeCollapsedFilterNodes(collapsedFilterNodes: Set<string>): Promise<void> {
@@ -79,9 +83,9 @@ export class VaultFilterService implements DeprecatedVaultFilterServiceAbstracti
       });
     };
 
-    return this.folderService.folderViews$.pipe(
-      mergeMap((folders) => from(transformation(folders))),
-    );
+    return this.folderService
+      .folderViews$(this.activeUserId$)
+      .pipe(mergeMap((folders) => from(transformation(folders))));
   }
 
   async buildCollections(organizationId?: string): Promise<DynamicTreeNode<CollectionView>> {
@@ -125,7 +129,7 @@ export class VaultFilterService implements DeprecatedVaultFilterServiceAbstracti
 
   async getFolderNested(id: string): Promise<TreeNode<FolderView>> {
     const folders = await this.getAllFoldersNested(
-      await firstValueFrom(this.folderService.folderViews$),
+      await firstValueFrom(this.folderService.folderViews$(this.activeUserId$)),
     );
     return ServiceUtils.getTreeNodeObjectFromList(folders, id) as TreeNode<FolderView>;
   }

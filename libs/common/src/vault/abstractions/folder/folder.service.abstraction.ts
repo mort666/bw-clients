@@ -18,6 +18,11 @@ export abstract class FolderService implements UserKeyRotationDataProvider<Folde
   encrypt: (model: FolderView, key: SymmetricCryptoKey) => Promise<Folder>;
   get: (id: string, userId$: Observable<UserId>) => Promise<Folder>;
   getDecrypted$: (id: string, userId$: Observable<UserId>) => Observable<FolderView | undefined>;
+  /**
+   * @deprecated Use firstValueFrom(folders$) directly instead
+   * @param userId$ The observable of user ID
+   * @returns Promise of folders array
+   */
   getAllFromState: (userId$: Observable<UserId>) => Promise<Folder[]>;
   /**
    * @deprecated Only use in CLI!
