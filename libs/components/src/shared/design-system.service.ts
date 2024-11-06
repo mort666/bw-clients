@@ -1,8 +1,13 @@
 import { effect, Injectable, signal, WritableSignal } from "@angular/core";
 
-/** Global settings for the Bitwarden Design System */
+/** Global config for the Bitwarden Design System */
 @Injectable({ providedIn: "root" })
-export class BitSettingsService {
+export class DesignSystemService {
+  /**
+   * When true, enables "compact mode".
+   *
+   * Component authors can hook into compact mode with the `bit-compact:` Tailwind variant.
+   **/
   compactMode: WritableSignal<boolean> = signal(false);
 
   constructor() {
