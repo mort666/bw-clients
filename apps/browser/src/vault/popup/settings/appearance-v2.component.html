@@ -28,9 +28,14 @@
         <bit-label>{{ "enableFavicon" | i18n }}</bit-label>
       </bit-form-control>
 
-      <bit-form-control disableMargin>
+      <bit-form-control>
         <input bitCheckbox formControlName="enableAnimations" type="checkbox" />
         <bit-label>{{ "showAnimations" | i18n }}</bit-label>
+      </bit-form-control>
+
+      <bit-form-control disableMargin>
+        <input bitCheckbox formControlName="compactMode" type="checkbox" />
+        <bit-label>{{ "Compact Mode" }}</bit-label>
       </bit-form-control>
     </bit-card>
   </form>

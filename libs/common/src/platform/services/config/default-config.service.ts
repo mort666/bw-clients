@@ -114,6 +114,9 @@ export class DefaultConfigService implements ConfigService {
   }
 
   getFeatureFlag$<Flag extends FeatureFlag>(key: Flag) {
+    if (key === FeatureFlag.ExtensionRefresh) {
+      return of(true);
+    }
     return this.serverConfig$.pipe(
       map((serverConfig) => this.getFeatureFlagValue(serverConfig, key)),
     );

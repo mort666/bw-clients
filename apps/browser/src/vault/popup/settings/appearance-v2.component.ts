@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, DestroyRef, OnInit } from "@angular/core";
+import { Component, DestroyRef, inject, OnInit } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormBuilder, ReactiveFormsModule } from "@angular/forms";
 import { firstValueFrom } from "rxjs";
@@ -12,7 +12,7 @@ import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.servic
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { ThemeType } from "@bitwarden/common/platform/enums";
 import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
-import { CheckboxModule } from "@bitwarden/components";
+import { CheckboxModule, DesignSystemService } from "@bitwarden/components";
 
 import { CardComponent } from "../../../../../../libs/components/src/card/card.component";
 import { FormFieldModule } from "../../../../../../libs/components/src/form-field/form-field.module";
@@ -38,11 +38,14 @@ import { PopupPageComponent } from "../../../platform/popup/layout/popup-page.co
   ],
 })
 export class AppearanceV2Component implements OnInit {
+  private designSystemService = inject(DesignSystemService);
+
   appearanceForm = this.formBuilder.group({
     enableFavicon: false,
     enableBadgeCounter: true,
     theme: ThemeType.System,
     enableAnimations: true,
+    compactMode: false,
   });
 
   /** To avoid flashes of inaccurate values, only show the form after the entire form is populated. */
@@ -82,6 +85,7 @@ export class AppearanceV2Component implements OnInit {
       enableBadgeCounter,
       theme,
       enableAnimations,
+      compactMode: false,
     });
 
     this.formLoading = false;
@@ -108,6 +112,12 @@ export class AppearanceV2Component implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((enableBadgeCounter) => {
         void this.updateAnimations(enableBadgeCounter);
+      });
+
+    this.appearanceForm.controls.compactMode.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((compactMode) => {
+        this.designSystemService.compactMode.set(true);
       });
   }
 
