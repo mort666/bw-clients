@@ -117,7 +117,7 @@ export class AppearanceV2Component implements OnInit {
     this.appearanceForm.controls.compactMode.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((compactMode) => {
-        this.designSystemService.compactMode.set(true);
+        this.designSystemService.compactMode.set(compactMode);
       });
   }
 
