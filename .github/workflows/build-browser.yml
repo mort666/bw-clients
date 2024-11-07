@@ -170,7 +170,7 @@ jobs:
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: dist-chrome-MV3-${{ env._BUILD_NUMBER }}.zip
-          path: browser-source/apps/browser/dist/dist-chrome-mv3.zip
+          path: browser-source/apps/browser/dist/dist-chrome.zip
           if-no-files-found: error
 
       - name: Build Edge
@@ -192,7 +192,7 @@ jobs:
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: DO-NOT-USE-FOR-PROD-dist-edge-MV3-${{ env._BUILD_NUMBER }}.zip
-          path: browser-source/apps/browser/dist/dist-edge-mv3.zip
+          path: browser-source/apps/browser/dist/dist-edge.zip
           if-no-files-found: error
 
       - name: Build Firefox
@@ -214,7 +214,7 @@ jobs:
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: DO-NOT-USE-FOR-PROD-dist-firefox-MV3-${{ env._BUILD_NUMBER }}.zip
-          path: browser-source/apps/browser/dist/dist-firefox-mv3.zip
+          path: browser-source/apps/browser/dist/dist-firefox.zip
           if-no-files-found: error
 
       - name: Build Opera
@@ -236,7 +236,7 @@ jobs:
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: DO-NOT-USE-FOR-PROD-dist-opera-MV3-${{ env._BUILD_NUMBER }}.zip
-          path: browser-source/apps/browser/dist/dist-opera-mv3.zip
+          path: browser-source/apps/browser/dist/dist-opera.zip
           if-no-files-found: error
 
   build-safari:
