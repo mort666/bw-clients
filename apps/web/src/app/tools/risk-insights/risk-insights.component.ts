@@ -1,34 +1,35 @@
 import { CommonModule } from "@angular/common";
 import { Component } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { ActivatedRoute } from "@angular/router";
-import { first } from "rxjs";
+import { ActivatedRoute, Router } from "@angular/router";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { AsyncActionsModule, ButtonModule, TabsModule } from "@bitwarden/components";
 
 import { HeaderModule } from "../../layouts/header/header.module";
 
-import { ApplicationTableComponent } from "./application-table.component";
+import { AllApplicationsComponent } from "./all-applications.component";
+import { CriticalApplicationsComponent } from "./critical-applications.component";
 import { NotifiedMembersTableComponent } from "./notified-members-table.component";
 import { PasswordHealthMembersURIComponent } from "./password-health-members-uri.component";
 import { PasswordHealthMembersComponent } from "./password-health-members.component";
 import { PasswordHealthComponent } from "./password-health.component";
 
-export enum AccessIntelligenceTabType {
+export enum RiskInsightsTabType {
   AllApps = 0,
-  PriorityApps = 1,
+  CriticalApps = 1,
   NotifiedMembers = 2,
 }
 
 @Component({
   standalone: true,
-  templateUrl: "./access-intelligence.component.html",
+  templateUrl: "./risk-insights.component.html",
   imports: [
-    ApplicationTableComponent,
+    AllApplicationsComponent,
     AsyncActionsModule,
     ButtonModule,
     CommonModule,
+    CriticalApplicationsComponent,
     JslibModule,
     HeaderModule,
     PasswordHealthComponent,
@@ -38,12 +39,12 @@ export enum AccessIntelligenceTabType {
     TabsModule,
   ],
 })
-export class AccessIntelligenceComponent {
-  tabIndex: AccessIntelligenceTabType;
+export class RiskInsightsComponent {
+  tabIndex: RiskInsightsTabType;
   dataLastUpdated = new Date();
 
   apps: any[] = [];
-  priorityApps: any[] = [];
+  criticalApps: any[] = [];
   notifiedMembers: any[] = [];
 
   async refreshData() {
@@ -56,9 +57,20 @@ export class AccessIntelligenceComponent {
     );
   }
 
-  constructor(route: ActivatedRoute) {
-    route.queryParams.pipe(takeUntilDestroyed(), first()).subscribe(({ tabIndex }) => {
-      this.tabIndex = !isNaN(tabIndex) ? tabIndex : AccessIntelligenceTabType.AllApps;
+  onTabChange = async (newIndex: number) => {
+    await this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tabIndex: newIndex },
+      queryParamsHandling: "merge",
+    });
+  };
+
+  constructor(
+    protected route: ActivatedRoute,
+    private router: Router,
+  ) {
+    route.queryParams.pipe(takeUntilDestroyed()).subscribe(({ tabIndex }) => {
+      this.tabIndex = !isNaN(tabIndex) ? tabIndex : RiskInsightsTabType.AllApps;
     });
   }
 }

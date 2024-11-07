@@ -54,6 +54,10 @@ export class CipherViewComponent implements OnChanges, OnDestroy {
    * `CipherService` and the `collectionIds` property of the cipher.
    */
   @Input() collections: CollectionView[];
+
+  /** Should be set to true when the component is used within the Admin Console */
+  @Input() isAdminConsole?: boolean = false;
+
   organization$: Observable<Organization>;
   folder$: Observable<FolderView>;
   private destroyed$: Subject<void> = new Subject();
@@ -98,6 +102,7 @@ export class CipherViewComponent implements OnChanges, OnDestroy {
   async loadCipherData() {
     // Load collections if not provided and the cipher has collectionIds
     if (
+      this.cipher.collectionIds &&
       this.cipher.collectionIds.length > 0 &&
       (!this.collections || this.collections.length === 0)
     ) {
