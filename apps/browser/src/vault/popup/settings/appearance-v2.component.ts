@@ -46,6 +46,7 @@ export class AppearanceV2Component implements OnInit {
     theme: ThemeType.System,
     enableAnimations: true,
     compactMode: false,
+    width: 380,
   });
 
   /** To avoid flashes of inaccurate values, only show the form after the entire form is populated. */
@@ -86,6 +87,7 @@ export class AppearanceV2Component implements OnInit {
       theme,
       enableAnimations,
       compactMode: false,
+      width: document.body.clientWidth,
     });
 
     this.formLoading = false;
@@ -118,6 +120,12 @@ export class AppearanceV2Component implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((compactMode) => {
         this.designSystemService.compactMode.set(compactMode);
+      });
+
+    this.appearanceForm.controls.width.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((width) => {
+        document.body.style.width = `${width}px`;
       });
   }
 

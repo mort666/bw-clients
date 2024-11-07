@@ -37,6 +37,11 @@
         <input bitCheckbox formControlName="compactMode" type="checkbox" />
         <bit-label>{{ "Compact Mode" }}</bit-label>
       </bit-form-control>
+
+      <label>
+        Width {{ appearanceForm.value.width }}px
+        <input type="range" min="380" max="800" formControlName="width" />
+      </label>
     </bit-card>
   </form>
 </popup-page>
