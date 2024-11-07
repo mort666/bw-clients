@@ -28,6 +28,8 @@ import { CipherResponse } from "./models/cipher.response";
 import { FolderResponse } from "./models/folder.response";
 
 export class CreateCommand {
+  private activeUserId$ = this.accountService.activeAccount$.pipe(map((a) => a?.id));
+
   constructor(
     private cipherService: CipherService,
     private folderService: FolderService,
@@ -150,9 +152,7 @@ export class CreateCommand {
     }
 
     try {
-      const activeUserId = await firstValueFrom(
-        this.accountService.activeAccount$.pipe(map((a) => a?.id)),
-      );
+      const activeUserId = await firstValueFrom(this.activeUserId$);
       const updatedCipher = await this.cipherService.saveAttachmentRawWithServer(
         cipher,
         fileName,
@@ -174,7 +174,7 @@ export class CreateCommand {
     const folder = await this.folderService.encrypt(FolderExport.toView(req), userKey);
     try {
       await this.folderApiService.save(folder);
-      const newFolder = await this.folderService.get(folder.id);
+      const newFolder = await this.folderService.get(folder.id, this.activeUserId$);
       const decFolder = await newFolder.decrypt();
       const res = new FolderResponse(decFolder);
       return Response.success(res);

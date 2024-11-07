@@ -50,6 +50,8 @@ import { FolderResponse } from "../vault/models/folder.response";
 import { DownloadCommand } from "./download.command";
 
 export class GetCommand extends DownloadCommand {
+  private activeUserId$ = this.accountService.activeAccount$.pipe(map((a) => a?.id));
+
   constructor(
     private cipherService: CipherService,
     private folderService: FolderService,
@@ -113,12 +115,12 @@ export class GetCommand extends DownloadCommand {
     let decCipher: CipherView = null;
     if (Utils.isGuid(id)) {
       const cipher = await this.cipherService.get(id);
-      const activeUserId = await firstValueFrom(
-        this.accountService.activeAccount$.pipe(map((a) => a?.id)),
-      );
       if (cipher != null) {
         decCipher = await cipher.decrypt(
-          await this.cipherService.getKeyForCipherKeyDecryption(cipher, activeUserId),
+          await this.cipherService.getKeyForCipherKeyDecryption(
+            cipher,
+            await firstValueFrom(this.activeUserId$),
+          ),
         );
       }
     } else if (id.trim() !== "") {
@@ -384,12 +386,12 @@ export class GetCommand extends DownloadCommand {
   private async getFolder(id: string) {
     let decFolder: FolderView = null;
     if (Utils.isGuid(id)) {
-      const folder = await this.folderService.getFromState(id);
+      const folder = await this.folderService.getFromState(id, this.activeUserId$);
       if (folder != null) {
         decFolder = await folder.decrypt();
       }
     } else if (id.trim() !== "") {
-      let folders = await this.folderService.getAllDecryptedFromState();
+      let folders = await this.folderService.getAllDecryptedFromState(this.activeUserId$);
       folders = CliUtils.searchFolders(folders, id);
       if (folders.length > 1) {
         return Response.multipleResults(folders.map((f) => f.id));
@@ -551,11 +553,9 @@ export class GetCommand extends DownloadCommand {
   private async getFingerprint(id: string) {
     let fingerprint: string[] = null;
     if (id === "me") {
-      const activeUserId = await firstValueFrom(
-        this.accountService.activeAccount$.pipe(map((a) => a?.id)),
-      );
-      const publicKey = await firstValueFrom(this.keyService.userPublicKey$(activeUserId));
-      fingerprint = await this.keyService.getFingerprint(activeUserId, publicKey);
+      const userId = await firstValueFrom(this.activeUserId$);
+      const publicKey = await firstValueFrom(this.keyService.userPublicKey$(userId));
+      fingerprint = await this.keyService.getFingerprint(userId, publicKey);
     } else if (Utils.isGuid(id)) {
       try {
         const response = await this.apiService.getUserPublicKey(id);

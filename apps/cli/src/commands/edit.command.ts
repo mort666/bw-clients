@@ -22,6 +22,8 @@ import { CipherResponse } from "../vault/models/cipher.response";
 import { FolderResponse } from "../vault/models/folder.response";
 
 export class EditCommand {
+  private activeUserId$ = this.accountService.activeAccount$.pipe(map((a) => a?.id));
+
   constructor(
     private cipherService: CipherService,
     private folderService: FolderService,
@@ -119,12 +121,12 @@ export class EditCommand {
 
     cipher.collectionIds = req;
     try {
-      const activeUserId = await firstValueFrom(
-        this.accountService.activeAccount$.pipe(map((a) => a?.id)),
-      );
       const updatedCipher = await this.cipherService.saveCollectionsWithServer(cipher);
       const decCipher = await updatedCipher.decrypt(
-        await this.cipherService.getKeyForCipherKeyDecryption(updatedCipher, activeUserId),
+        await this.cipherService.getKeyForCipherKeyDecryption(
+          updatedCipher,
+          await firstValueFrom(this.activeUserId$),
+        ),
       );
       const res = new CipherResponse(decCipher);
       return Response.success(res);
@@ -134,7 +136,7 @@ export class EditCommand {
   }
 
   private async editFolder(id: string, req: FolderExport) {
-    const folder = await this.folderService.getFromState(id);
+    const folder = await this.folderService.getFromState(id, this.activeUserId$);
     if (folder == null) {
       return Response.notFound();
     }
@@ -147,7 +149,7 @@ export class EditCommand {
     const encFolder = await this.folderService.encrypt(folderView, userKey);
     try {
       await this.folderApiService.save(encFolder);
-      const updatedFolder = await this.folderService.get(folder.id);
+      const updatedFolder = await this.folderService.get(folder.id, this.activeUserId$);
       const decFolder = await updatedFolder.decrypt();
       const res = new FolderResponse(decFolder);
       return Response.success(res);
