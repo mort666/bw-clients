@@ -39,10 +39,10 @@
     }
   ],
   "background": {
-    "scripts": ["background.js"]
-  },
-  "__chrome__background": {
     "service_worker": "background.js"
+  },
+  "__firefox__background": {
+    "scripts": ["background.js"]
   },
   "action": {
     "default_icon": {
@@ -93,7 +93,7 @@
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
     "sandbox": "sandbox allow-scripts; script-src 'self'"
   },
-  "__chrome__sandbox": {
+  "sandbox": {
     "pages": [
       "overlay/menu-button.html",
       "overlay/menu-list.html",
@@ -101,6 +101,7 @@
       "overlay/list.html"
     ]
   },
+  "__firefox__sandbox": null,
   "commands": {
     "_execute_action": {
       "suggested_key": {
