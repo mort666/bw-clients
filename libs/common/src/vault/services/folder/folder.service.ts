@@ -1,4 +1,4 @@
-import { Observable, firstValueFrom, map, of, shareReplay, switchMap } from "rxjs";
+import { Observable, firstValueFrom, map, of, shareReplay, switchMap, takeWhile } from "rxjs";
 
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 
@@ -28,6 +28,7 @@ export class FolderService implements InternalFolderServiceAbstraction {
 
   folders$(userId$: Observable<UserId>): Observable<Folder[]> {
     return userId$.pipe(
+      takeWhile((userId) => userId != null),
       switchMap((userId) => this.encryptedFoldersState(userId).state$),
       map((folders) => {
         if (folders == null) {
@@ -39,8 +40,11 @@ export class FolderService implements InternalFolderServiceAbstraction {
     );
   }
 
-  folderViews$(userId$: Observable<UserId>) {
-    return userId$.pipe(switchMap((userId) => this.decryptedFoldersState(userId).state$));
+  folderViews$(userId$: Observable<UserId>): Observable<FolderView[]> {
+    return userId$.pipe(
+      takeWhile((userId) => userId != null),
+      switchMap((userId) => this.decryptedFoldersState(userId).state$),
+    );
   }
 
   async clearDecryptedFolderState(userId: UserId): Promise<void> {
