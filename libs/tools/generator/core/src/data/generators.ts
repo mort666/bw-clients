@@ -25,11 +25,6 @@ import {
 import { CatchallConstraints } from "../policies/catchall-constraints";
 import { SubaddressConstraints } from "../policies/subaddress-constraints";
 import {
-  EFF_USERNAME_SETTINGS,
-  PASSPHRASE_SETTINGS,
-  PASSWORD_SETTINGS,
-} from "../strategies/storage";
-import {
   CatchallGenerationOptions,
   CredentialGenerator,
   CredentialGeneratorConfiguration,
@@ -76,7 +71,23 @@ const PASSPHRASE = Object.freeze({
       },
       wordSeparator: { maxLength: 1 },
     },
-    account: PASSPHRASE_SETTINGS,
+    account: {
+      key: "passphraseGeneratorSettings",
+      target: "object",
+      format: "plain",
+      classifier: new PublicClassifier<PassphraseGenerationOptions>([
+        "numWords",
+        "wordSeparator",
+        "capitalize",
+        "includeNumber",
+      ]),
+      state: GENERATOR_DISK,
+      initial: DefaultPassphraseGenerationOptions,
+      options: {
+        deserializer: (value) => value,
+        clearOn: ["logout"],
+      },
+    } satisfies ObjectKey<PassphraseGenerationOptions>,
   },
   policy: {
     type: PolicyType.PasswordGenerator,
@@ -126,7 +137,29 @@ const PASSWORD = Object.freeze({
         max: DefaultPasswordBoundaries.minSpecialCharacters.max,
       },
     },
-    account: PASSWORD_SETTINGS,
+    account: {
+      key: "passwordGeneratorSettings",
+      target: "object",
+      format: "plain",
+      classifier: new PublicClassifier<PasswordGenerationOptions>([
+        "length",
+        "ambiguous",
+        "uppercase",
+        "minUppercase",
+        "lowercase",
+        "minLowercase",
+        "number",
+        "minNumber",
+        "special",
+        "minSpecial",
+      ]),
+      state: GENERATOR_DISK,
+      initial: DefaultPasswordGenerationOptions,
+      options: {
+        deserializer: (value) => value,
+        clearOn: ["logout"],
+      },
+    } satisfies ObjectKey<PasswordGenerationOptions>,
   },
   policy: {
     type: PolicyType.PasswordGenerator,
@@ -164,7 +197,21 @@ const USERNAME = Object.freeze({
   settings: {
     initial: DefaultEffUsernameOptions,
     constraints: {},
-    account: EFF_USERNAME_SETTINGS,
+    account: {
+      key: "effUsernameGeneratorSettings",
+      target: "object",
+      format: "plain",
+      classifier: new PublicClassifier<EffUsernameGenerationOptions>([
+        "wordCapitalize",
+        "wordIncludeNumber",
+      ]),
+      state: GENERATOR_DISK,
+      initial: DefaultEffUsernameOptions,
+      options: {
+        deserializer: (value) => value,
+        clearOn: ["logout"],
+      },
+    } satisfies ObjectKey<EffUsernameGenerationOptions>,
   },
   policy: {
     type: PolicyType.PasswordGenerator,
