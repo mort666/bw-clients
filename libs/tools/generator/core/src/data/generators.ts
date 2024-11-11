@@ -46,7 +46,10 @@ import { DefaultPasswordBoundaries } from "./default-password-boundaries";
 import { DefaultPasswordGenerationOptions } from "./default-password-generation-options";
 import { DefaultSubaddressOptions } from "./default-subaddress-generator-options";
 
-const PASSPHRASE = Object.freeze({
+const PASSPHRASE: CredentialGeneratorConfiguration<
+  PassphraseGenerationOptions,
+  PassphraseGeneratorPolicy
+> = Object.freeze({
   id: "passphrase",
   category: "password",
   nameKey: "passphrase",
@@ -100,12 +103,12 @@ const PASSPHRASE = Object.freeze({
     createEvaluator: (policy) => new PassphraseGeneratorOptionsEvaluator(policy),
     toConstraints: (policy) => new PassphrasePolicyConstraints(policy),
   },
-} satisfies CredentialGeneratorConfiguration<
-  PassphraseGenerationOptions,
-  PassphraseGeneratorPolicy
->);
+});
 
-const PASSWORD = Object.freeze({
+const PASSWORD: CredentialGeneratorConfiguration<
+  PasswordGenerationOptions,
+  PasswordGeneratorPolicy
+> = Object.freeze({
   id: "password",
   category: "password",
   nameKey: "password",
@@ -176,57 +179,58 @@ const PASSWORD = Object.freeze({
     createEvaluator: (policy) => new PasswordGeneratorOptionsEvaluator(policy),
     toConstraints: (policy) => new DynamicPasswordPolicyConstraints(policy),
   },
-} satisfies CredentialGeneratorConfiguration<PasswordGenerationOptions, PasswordGeneratorPolicy>);
+});
 
-const USERNAME = Object.freeze({
-  id: "username",
-  category: "username",
-  nameKey: "randomWord",
-  generateKey: "generateUsername",
-  generatedValueKey: "username",
-  copyKey: "copyUsername",
-  onlyOnRequest: false,
-  request: [],
-  engine: {
-    create(
-      dependencies: GeneratorDependencyProvider,
-    ): CredentialGenerator<EffUsernameGenerationOptions> {
-      return new UsernameRandomizer(dependencies.randomizer);
-    },
-  },
-  settings: {
-    initial: DefaultEffUsernameOptions,
-    constraints: {},
-    account: {
-      key: "effUsernameGeneratorSettings",
-      target: "object",
-      format: "plain",
-      classifier: new PublicClassifier<EffUsernameGenerationOptions>([
-        "wordCapitalize",
-        "wordIncludeNumber",
-      ]),
-      state: GENERATOR_DISK,
-      initial: DefaultEffUsernameOptions,
-      options: {
-        deserializer: (value) => value,
-        clearOn: ["logout"],
+const USERNAME: CredentialGeneratorConfiguration<EffUsernameGenerationOptions, NoPolicy> =
+  Object.freeze({
+    id: "username",
+    category: "username",
+    nameKey: "randomWord",
+    generateKey: "generateUsername",
+    generatedValueKey: "username",
+    copyKey: "copyUsername",
+    onlyOnRequest: false,
+    request: [],
+    engine: {
+      create(
+        dependencies: GeneratorDependencyProvider,
+      ): CredentialGenerator<EffUsernameGenerationOptions> {
+        return new UsernameRandomizer(dependencies.randomizer);
       },
-    } satisfies ObjectKey<EffUsernameGenerationOptions>,
-  },
-  policy: {
-    type: PolicyType.PasswordGenerator,
-    disabledValue: {},
-    combine(_acc: NoPolicy, _policy: Policy) {
-      return {};
     },
-    createEvaluator(_policy: NoPolicy) {
-      return new DefaultPolicyEvaluator<EffUsernameGenerationOptions>();
+    settings: {
+      initial: DefaultEffUsernameOptions,
+      constraints: {},
+      account: {
+        key: "effUsernameGeneratorSettings",
+        target: "object",
+        format: "plain",
+        classifier: new PublicClassifier<EffUsernameGenerationOptions>([
+          "wordCapitalize",
+          "wordIncludeNumber",
+        ]),
+        state: GENERATOR_DISK,
+        initial: DefaultEffUsernameOptions,
+        options: {
+          deserializer: (value) => value,
+          clearOn: ["logout"],
+        },
+      } satisfies ObjectKey<EffUsernameGenerationOptions>,
     },
-    toConstraints(_policy: NoPolicy) {
-      return new IdentityConstraint<EffUsernameGenerationOptions>();
+    policy: {
+      type: PolicyType.PasswordGenerator,
+      disabledValue: {},
+      combine(_acc: NoPolicy, _policy: Policy) {
+        return {};
+      },
+      createEvaluator(_policy: NoPolicy) {
+        return new DefaultPolicyEvaluator<EffUsernameGenerationOptions>();
+      },
+      toConstraints(_policy: NoPolicy) {
+        return new IdentityConstraint<EffUsernameGenerationOptions>();
+      },
     },
-  },
-} satisfies CredentialGeneratorConfiguration<EffUsernameGenerationOptions, NoPolicy>);
+  });
 
 const CATCHALL: CredentialGeneratorConfiguration<CatchallGenerationOptions, NoPolicy> =
   Object.freeze({
