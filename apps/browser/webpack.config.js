@@ -335,6 +335,8 @@ if (manifestVersion == 2) {
     }),
   );
 
+  const target = browser === "firefox" ? "web" : "webworker";
+
   /**
    * @type {import("webpack").Configuration}
    */
@@ -343,7 +345,7 @@ if (manifestVersion == 2) {
     mode: ENV,
     devtool: false,
     entry: "./src/platform/background.ts",
-    target: "webworker",
+    target: target,
     output: {
       filename: "background.js",
       path: path.resolve(__dirname, "build"),
