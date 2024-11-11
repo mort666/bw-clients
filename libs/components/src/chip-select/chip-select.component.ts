@@ -2,6 +2,7 @@ import {
   AfterViewInit,
   Component,
   DestroyRef,
+  ElementRef,
   HostBinding,
   HostListener,
   Input,
@@ -45,6 +46,7 @@ export type ChipSelectOption<T> = Option<T> & {
 export class ChipSelectComponent<T = unknown> implements ControlValueAccessor, AfterViewInit {
   @ViewChild(MenuComponent) menu: MenuComponent;
   @ViewChildren(MenuItemDirective) menuItems: QueryList<MenuItemDirective>;
+  @ViewChild("chipSelectButton") chipSelectButton: ElementRef<HTMLButtonElement>;
 
   /** Text to show when there is no selected option */
   @Input({ required: true }) placeholderText: string;
@@ -210,11 +212,16 @@ export class ChipSelectComponent<T = unknown> implements ControlValueAccessor, A
   }
 
   /**
-   * Calculate the width of the menu according to the initially rendered options
+   * Calculate the width of the menu based on whichever is larger, the chip select width or the width of
+   * the initially rendered options
    */
   protected setMenuWidth() {
-    this.menuWidth =
+    const chipWidth = this.chipSelectButton.nativeElement.getBoundingClientRect().width;
+
+    const firstMenuItemWidth =
       this.menu.menuItems.first.elementRef.nativeElement.getBoundingClientRect().width;
+
+    this.menuWidth = Math.max(chipWidth, firstMenuItemWidth);
   }
 
   /** Control Value Accessor */
