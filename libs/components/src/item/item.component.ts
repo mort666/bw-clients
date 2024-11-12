@@ -21,9 +21,9 @@ export const BitItemHeightClass = `tw-h-[52px]`;
  * to estimate how many items can be displayed at once and how large the virtual container should be.
  * Needs to be updated if the item height or spacing changes.
  *
- * 52px + 6px bottom margin + 1px border = 59px
+ * 52px + 1px border = 53px
  */
-export const BitItemHeight = 59;
+export const BitItemHeight = 53;
 
 @Component({
   selector: "bit-item",
@@ -34,7 +34,7 @@ export const BitItemHeight = 59;
   providers: [{ provide: A11yRowDirective, useExisting: ItemComponent }],
   host: {
     class:
-      "tw-block tw-box-border tw-overflow-auto tw-flex tw-bg-background [&:has(.item-main-content_button:hover,.item-main-content_a:hover)]:tw-cursor-pointer [&:has(.item-main-content_button:hover,.item-main-content_a:hover)]:tw-bg-primary-100 tw-text-main tw-border-solid tw-border-b tw-border-0 [&:not(bit-layout_*)]:tw-rounded-lg bit-compact:[&:not(bit-layout_*)]:tw-rounded-none bit-compact:[&:not(bit-layout_*)]:last:tw-mb-1.5 bit-compact:[&:not(bit-layout_*)]:last:tw-border-b-0 bit-compact:[&:not(bit-layout_*)]:last:tw-rounded-b-lg bit-compact:[&:not(bit-layout_*)]:first:tw-rounded-t-lg tw-mb-1.5 bit-compact:tw-mb-0",
+      "tw-block tw-box-border tw-overflow-auto tw-flex tw-bg-background [&:has(.item-main-content_button:hover,.item-main-content_a:hover)]:tw-cursor-pointer [&:has(.item-main-content_button:hover,.item-main-content_a:hover)]:tw-bg-primary-100 tw-text-main tw-border-solid tw-border-b tw-border-0 [&:not(bit-layout_*)]:tw-rounded-lg bit-compact:[&:not(bit-layout_*)]:tw-rounded-none bit-compact:[&:not(bit-layout_*)]:last-of-type:tw-rounded-b-lg bit-compact:[&:not(bit-layout_*)]:first-of-type:tw-rounded-t-lg tw-min-h-9",
   },
 })
 export class ItemComponent extends A11yRowDirective {

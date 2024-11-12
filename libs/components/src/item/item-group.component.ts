@@ -7,7 +7,7 @@ import { ChangeDetectionStrategy, Component } from "@angular/core";
   template: `<ng-content></ng-content>`,
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class: "tw-block",
+    class: "tw-block tw-flex tw-flex-col tw-gap-1.5 bit-compact:tw-gap-0",
   },
 })
 export class ItemGroupComponent {}
