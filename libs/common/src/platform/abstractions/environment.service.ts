@@ -92,23 +92,9 @@ export interface Environment {
  * The environment service. Provides access to set the current environment urls and region.
  */
 export abstract class EnvironmentService {
-  /**
-   * An observable that follows the environment of the active user if there is one or falls
-   * back to the environment saved in global state.
-   */
   abstract environment$: Observable<Environment>;
-
-  /**
-   * An observable that follows the cloud web vault url for the active user if there is one
-   * or falls back to the cloud web vault url saved in global state.
-   */
   abstract cloudWebVaultUrl$: Observable<string>;
 
-  /**
-   * Gets an observable stream of the configured Environment for a given user.
-   * @param userId The id of the user to get the environment for.
-   */
-  abstract userEnvironment$(userId: UserId): Observable<Environment>;
   /**
    * Retrieve all the available regions for environment selectors.
    *
@@ -141,8 +127,6 @@ export abstract class EnvironmentService {
 
   /**
    * Get the environment from state. Useful if you need to get the environment for another user.
-   *
-   * @deprecated Use {@link userEnvironment$} with a {@link UserId} to get the environment for a given user.
    */
   abstract getEnvironment(userId?: string): Promise<Environment | undefined>;
 }
