@@ -69,11 +69,23 @@ export abstract class TokenService {
   clearAccessToken: (userId?: UserId) => Promise<void>;
 
   /**
+   * Gets a stream of the given users access token data.
+   * @param userId The user id of the user to get the access tokens for.
+   */
+  abstract accessToken$(userId: UserId): Observable<string | null>;
+
+  /**
    * Gets the access token
    * @param userId - The optional user id to get the access token for; if not provided, the active user is used.
    * @returns A promise that resolves with the access token or null.
    */
   getAccessToken: (userId?: UserId) => Promise<string | null>;
+
+  /**
+   * Gets a stream of the given users refresh token data.
+   * @param userId The user id of the user to get the refresh tokens for.
+   */
+  abstract refreshToken$(userId: UserId): Observable<string | null>;
 
   /**
    * Gets the refresh token.

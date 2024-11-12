@@ -1,4 +1,4 @@
-import { Observable, combineLatest, firstValueFrom, map } from "rxjs";
+import { Observable, combineLatest, defer, firstValueFrom, map, of, switchMap } from "rxjs";
 import { Opaque } from "type-fest";
 
 import { LogoutReason, decodeJwtTokenToJson } from "@bitwarden/auth/common";
@@ -425,87 +425,102 @@ export class TokenService implements TokenServiceAbstraction {
     await this.singleUserStateProvider.get(userId, ACCESS_TOKEN_MEMORY).update((_) => null);
   }
 
+  accessToken$(userId: UserId): Observable<string | null> {
+    return this.getStateByUserIdAndKeyDef$(userId, ACCESS_TOKEN_MEMORY).pipe(
+      switchMap((accessTokenMemory) => {
+        if (accessTokenMemory != null) {
+          return of(accessTokenMemory);
+        }
+
+        // If memory is null, read from disk
+        return this.getStateByUserIdAndKeyDef$(userId, ACCESS_TOKEN_DISK).pipe(
+          switchMap((accessTokenDisk) => {
+            if (!accessTokenDisk) {
+              return of(null);
+            }
+
+            if (!this.platformSupportsSecureStorage) {
+              // If the platform doesn't support secure storage then we will not have encrypted it
+              // and can just return this value.
+              return of(accessTokenDisk);
+            }
+
+            // Secure storage isn't observable in order to make it "feel" observable
+            // we rely on disk storage emitting the encrypted value that we decrypt
+            return defer(async () => {
+              let accessTokenKey: AccessTokenKey;
+              try {
+                accessTokenKey = await this.getAccessTokenKey(userId);
+              } catch (error) {
+                if (EncString.isSerializedEncString(accessTokenDisk)) {
+                  this.logService.error(
+                    "Access token key retrieval failed. Unable to decrypt encrypted access token. Logging user out.",
+                    error,
+                  );
+                  await this.logoutCallback("accessTokenUnableToBeDecrypted", userId);
+                  return null;
+                }
+
+                // If the access token key is not found, but the access token is unencrypted then
+                // this indicates that this is the pre-migration state where the access token
+                // was stored unencrypted on disk. We can return the access token as is.
+                // Note: this is likely to only be hit for linux users who don't
+                // have a secure storage provider configured.
+                return accessTokenDisk;
+              }
+
+              if (!accessTokenKey) {
+                if (EncString.isSerializedEncString(accessTokenDisk)) {
+                  // The access token is encrypted but we don't have the key to decrypt it for
+                  // whatever reason so we have to log the user out.
+                  this.logService.error(
+                    "Access token key not found to decrypt encrypted access token. Logging user out.",
+                  );
+
+                  await this.logoutCallback("accessTokenUnableToBeDecrypted", userId);
+
+                  return null;
+                }
+
+                // We know this is an unencrypted access token
+                return accessTokenDisk;
+              }
+
+              try {
+                const encryptedAccessTokenEncString = new EncString(
+                  accessTokenDisk as EncryptedString,
+                );
+
+                const decryptedAccessToken = await this.decryptAccessToken(
+                  accessTokenKey,
+                  encryptedAccessTokenEncString,
+                );
+                return decryptedAccessToken;
+              } catch (error) {
+                // If an error occurs during decryption, logout and then return null.
+                // We don't try to recover here since we'd like to know
+                // if access token and key are getting out of sync.
+                this.logService.error(`Failed to decrypt access token`, error);
+
+                await this.logoutCallback("accessTokenUnableToBeDecrypted", userId);
+
+                return null;
+              }
+            });
+          }),
+        );
+      }),
+    );
+  }
+
   async getAccessToken(userId?: UserId): Promise<string | null> {
     userId ??= await firstValueFrom(this.activeUserIdGlobalState.state$);
 
-    if (!userId) {
+    if (userId == null) {
       return null;
     }
 
-    // Try to get the access token from memory
-    const accessTokenMemory = await this.getStateValueByUserIdAndKeyDef(
-      userId,
-      ACCESS_TOKEN_MEMORY,
-    );
-    if (accessTokenMemory != null) {
-      return accessTokenMemory;
-    }
-
-    // If memory is null, read from disk
-    const accessTokenDisk = await this.getStateValueByUserIdAndKeyDef(userId, ACCESS_TOKEN_DISK);
-    if (!accessTokenDisk) {
-      return null;
-    }
-
-    if (this.platformSupportsSecureStorage) {
-      let accessTokenKey: AccessTokenKey;
-      try {
-        accessTokenKey = await this.getAccessTokenKey(userId);
-      } catch (error) {
-        if (EncString.isSerializedEncString(accessTokenDisk)) {
-          this.logService.error(
-            "Access token key retrieval failed. Unable to decrypt encrypted access token. Logging user out.",
-            error,
-          );
-          await this.logoutCallback("accessTokenUnableToBeDecrypted", userId);
-          return null;
-        }
-
-        // If the access token key is not found, but the access token is unencrypted then
-        // this indicates that this is the pre-migration state where the access token
-        // was stored unencrypted on disk. We can return the access token as is.
-        // Note: this is likely to only be hit for linux users who don't
-        // have a secure storage provider configured.
-        return accessTokenDisk;
-      }
-
-      if (!accessTokenKey) {
-        if (EncString.isSerializedEncString(accessTokenDisk)) {
-          // The access token is encrypted but we don't have the key to decrypt it for
-          // whatever reason so we have to log the user out.
-          this.logService.error(
-            "Access token key not found to decrypt encrypted access token. Logging user out.",
-          );
-
-          await this.logoutCallback("accessTokenUnableToBeDecrypted", userId);
-
-          return null;
-        }
-
-        // We know this is an unencrypted access token
-        return accessTokenDisk;
-      }
-
-      try {
-        const encryptedAccessTokenEncString = new EncString(accessTokenDisk as EncryptedString);
-
-        const decryptedAccessToken = await this.decryptAccessToken(
-          accessTokenKey,
-          encryptedAccessTokenEncString,
-        );
-        return decryptedAccessToken;
-      } catch (error) {
-        // If an error occurs during decryption, logout and then return null.
-        // We don't try to recover here since we'd like to know
-        // if access token and key are getting out of sync.
-        this.logService.error(`Failed to decrypt access token`, error);
-
-        await this.logoutCallback("accessTokenUnableToBeDecrypted", userId);
-
-        return null;
-      }
-    }
-    return accessTokenDisk;
+    return await firstValueFrom(this.accessToken$(userId));
   }
 
   // Private because we only ever set the refresh token when also setting the access token
@@ -565,10 +580,14 @@ export class TokenService implements TokenServiceAbstraction {
           // so that the caller can use it immediately.
           decryptedRefreshToken = refreshToken;
 
+          // We continue to set disk storage to null so that the `refreshToken$` observable will get
+          // an emission then go to secure storage to get a new value. This is because secure storage
+          // isn't observable. It's very important that we do this AFTER the value has been saved to
+          // secure storage.
+          await this.singleUserStateProvider.get(userId, REFRESH_TOKEN_DISK).update((_) => null);
           // TODO: PM-6408
           // 2024-02-20: Remove refresh token from memory and disk so that we migrate to secure storage over time.
-          // Remove these 2 calls to remove the refresh token from memory and disk after 3 months.
-          await this.singleUserStateProvider.get(userId, REFRESH_TOKEN_DISK).update((_) => null);
+          // Remove this call to remove the refresh token from memory after 3 months.
           await this.singleUserStateProvider.get(userId, REFRESH_TOKEN_MEMORY).update((_) => null);
         } catch (error) {
           // This case could be hit for both Linux users who don't have secure storage configured
@@ -598,56 +617,71 @@ export class TokenService implements TokenServiceAbstraction {
     }
   }
 
+  refreshToken$(userId: UserId): Observable<string | null> {
+    // pre-secure storage migration:
+    // Always read memory first b/c faster
+    return this.getStateByUserIdAndKeyDef$(userId, REFRESH_TOKEN_MEMORY).pipe(
+      switchMap((refreshTokenMemory) => {
+        if (refreshTokenMemory != null) {
+          return of(refreshTokenMemory);
+        }
+
+        // if memory is null, read from disk and then secure storage
+        return this.getStateByUserIdAndKeyDef$(userId, REFRESH_TOKEN_DISK).pipe(
+          switchMap((refreshTokenDisk) => {
+            if (refreshTokenDisk != null) {
+              // This handles the scenario pre-secure storage migration where the refresh token was stored on disk.
+              return of(refreshTokenDisk);
+            }
+
+            if (!this.platformSupportsSecureStorage) {
+              return of(null);
+            }
+
+            // Secure storage isn't observable, so it secure storage alone changes,
+            // this observable won't emit an update. Because of this we need to always emit
+            // a change to the disk storage (even if setting it to just null) so the outer
+            // observable will re-emit and run this code once more.
+            return defer(async () => {
+              try {
+                const refreshTokenSecureStorage = await this.getStringFromSecureStorage(
+                  userId,
+                  this.refreshTokenSecureStorageKey,
+                );
+
+                if (refreshTokenSecureStorage != null) {
+                  return refreshTokenSecureStorage;
+                }
+
+                this.logService.error(
+                  "Refresh token not found in secure storage. Access token will fail to refresh upon expiration or manual refresh.",
+                );
+              } catch (error) {
+                // This case will be hit for Linux users who don't have secure storage configured.
+
+                this.logService.error(
+                  `Failed to retrieve refresh token from secure storage`,
+                  error,
+                );
+
+                await this.logoutCallback("refreshTokenSecureStorageRetrievalFailure", userId);
+              }
+              return null;
+            });
+          }),
+        );
+      }),
+    );
+  }
+
   async getRefreshToken(userId?: UserId): Promise<string | null> {
     userId ??= await firstValueFrom(this.activeUserIdGlobalState.state$);
 
-    if (!userId) {
+    if (userId == null) {
       return null;
     }
 
-    // pre-secure storage migration:
-    // Always read memory first b/c faster
-    const refreshTokenMemory = await this.getStateValueByUserIdAndKeyDef(
-      userId,
-      REFRESH_TOKEN_MEMORY,
-    );
-
-    if (refreshTokenMemory != null) {
-      return refreshTokenMemory;
-    }
-
-    // if memory is null, read from disk and then secure storage
-    const refreshTokenDisk = await this.getStateValueByUserIdAndKeyDef(userId, REFRESH_TOKEN_DISK);
-
-    if (refreshTokenDisk != null) {
-      // This handles the scenario pre-secure storage migration where the refresh token was stored on disk.
-      return refreshTokenDisk;
-    }
-
-    if (this.platformSupportsSecureStorage) {
-      try {
-        const refreshTokenSecureStorage = await this.getStringFromSecureStorage(
-          userId,
-          this.refreshTokenSecureStorageKey,
-        );
-
-        if (refreshTokenSecureStorage != null) {
-          return refreshTokenSecureStorage;
-        }
-
-        this.logService.error(
-          "Refresh token not found in secure storage. Access token will fail to refresh upon expiration or manual refresh.",
-        );
-      } catch (error) {
-        // This case will be hit for Linux users who don't have secure storage configured.
-
-        this.logService.error(`Failed to retrieve refresh token from secure storage`, error);
-
-        await this.logoutCallback("refreshTokenSecureStorageRetrievalFailure", userId);
-      }
-    }
-
-    return null;
+    return await firstValueFrom(this.refreshToken$(userId));
   }
 
   private async clearRefreshToken(userId: UserId): Promise<void> {
@@ -1052,7 +1086,11 @@ export class TokenService implements TokenServiceAbstraction {
     storageLocation: UserKeyDefinition<string>,
   ): Promise<string | undefined> {
     // read from single user state provider
-    return await firstValueFrom(this.singleUserStateProvider.get(userId, storageLocation).state$);
+    return await firstValueFrom(this.getStateByUserIdAndKeyDef$(userId, storageLocation));
+  }
+
+  private getStateByUserIdAndKeyDef$(userId: UserId, storageLocation: UserKeyDefinition<string>) {
+    return this.singleUserStateProvider.get(userId, storageLocation).state$;
   }
 
   private async determineStorageLocation(

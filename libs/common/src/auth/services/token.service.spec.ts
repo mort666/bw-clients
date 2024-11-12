@@ -1,5 +1,5 @@
 import { MockProxy, mock } from "jest-mock-extended";
-import { firstValueFrom } from "rxjs";
+import { bufferCount, firstValueFrom } from "rxjs";
 
 import { LogoutReason } from "@bitwarden/auth/common";
 
@@ -624,6 +624,33 @@ describe("TokenService", () => {
             userIdFromAccessToken,
           );
         });
+      });
+    });
+
+    describe("accessToken$", () => {
+      it("returns an observable that follows possible changes", async () => {
+        const finishedPromise = firstValueFrom(
+          tokenService.accessToken$(userIdFromAccessToken).pipe(bufferCount(4)),
+        );
+
+        singleUserStateProvider
+          .getFake(userIdFromAccessToken, ACCESS_TOKEN_MEMORY)
+          .stateSubject.next([userIdFromAccessToken, "accessToken_memory"]);
+
+        singleUserStateProvider
+          .getFake(userIdFromAccessToken, ACCESS_TOKEN_MEMORY)
+          .stateSubject.next([userIdFromAccessToken, null]);
+
+        singleUserStateProvider
+          .getFake(userIdFromAccessToken, ACCESS_TOKEN_DISK)
+          .stateSubject.next([userIdFromAccessToken, "accessToken_disk"]);
+
+        const values = await finishedPromise;
+
+        expect(values[0]).toBeNull();
+        expect(values[1]).toEqual("accessToken_memory");
+        expect(values[2]).toBeNull();
+        expect(values[3]).toEqual("accessToken_disk");
       });
     });
 
@@ -1510,10 +1537,46 @@ describe("TokenService", () => {
       });
     });
 
+    describe("refreshToken$", () => {
+      it("returns observable that follows possible changes", async () => {
+        const finishedPromise = firstValueFrom(
+          tokenService.refreshToken$(userIdFromAccessToken).pipe(bufferCount(5)),
+        );
+
+        // Set a token in memory
+        singleUserStateProvider
+          .getFake(userIdFromAccessToken, REFRESH_TOKEN_MEMORY)
+          .stateSubject.next([userIdFromAccessToken, refreshToken + "_memory"]);
+
+        // Null out the memory location so that it will look at other locations
+        singleUserStateProvider
+          .getFake(userIdFromAccessToken, REFRESH_TOKEN_MEMORY)
+          .stateSubject.next([userIdFromAccessToken, null]);
+
+        // The refresh token is saved in disk
+        singleUserStateProvider
+          .getFake(userIdFromAccessToken, REFRESH_TOKEN_DISK)
+          .stateSubject.next([userIdFromAccessToken, refreshToken + "_disk"]);
+
+        // A new refresh token is saved to disk
+        singleUserStateProvider
+          .getFake(userIdFromAccessToken, REFRESH_TOKEN_DISK)
+          .stateSubject.next([userIdFromAccessToken, refreshToken + "_disk2"]);
+
+        const values = await finishedPromise;
+
+        expect(values[0]).toBeNull();
+        expect(values[1]).toBe(refreshToken + "_memory");
+        expect(values[2]).toBeNull();
+        expect(values[3]).toBe(refreshToken + "_disk");
+        expect(values[4]).toBe(refreshToken + "_disk2");
+      });
+    });
+
     describe("getRefreshToken", () => {
       it("returns null when no user id is provided and there is no active user in global state", async () => {
         // Act
-        const result = await (tokenService as any).getRefreshToken();
+        const result = await tokenService.getRefreshToken();
         // Assert
         expect(result).toBeNull();
       });
@@ -1525,7 +1588,7 @@ describe("TokenService", () => {
           .stateSubject.next(userIdFromAccessToken);
 
         // Act
-        const result = await (tokenService as any).getRefreshToken();
+        const result = await tokenService.getRefreshToken();
         // Assert
         expect(result).toBeNull();
       });
