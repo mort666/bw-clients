@@ -23,10 +23,10 @@
   </div>
 
   <!-- Show search & filters outside of the scroll area of the page -->
-  <div slot="above-scroll-area" class="tw-p-4" *ngIf="vaultState !== VaultStateEnum.Empty">
+  <ng-container slot="above-scroll-area" *ngIf="vaultState !== VaultStateEnum.Empty">
     <app-vault-v2-search> </app-vault-v2-search>
     <app-vault-list-filters></app-vault-list-filters>
-  </div>
+  </ng-container>
 
   <ng-container *ngIf="vaultState !== VaultStateEnum.Empty">
     <div
