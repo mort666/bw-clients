@@ -1,4 +1,115 @@
 {
+  "allApplications": {
+    "message": "Alla applikationer"
+  },
+  "criticalApplications": {
+    "message": "Kritiska applikationer"
+  },
+  "riskInsights": {
+    "message": "Risk Insights"
+  },
+  "passwordRisk": {
+    "message": "Lösenordsrisk"
+  },
+  "discoverAtRiskPasswords": {
+    "message": "Upptäck sårbara lösenord och meddela användarna att de ska byta lösenord."
+  },
+  "dataLastUpdated": {
+    "message": "Data last updated: $DATE$",
+    "placeholders": {
+      "date": {
+        "content": "$1",
+        "example": "2021-01-01"
+      }
+    }
+  },
+  "notifiedMembers": {
+    "message": "Notified members"
+  },
+  "allApplicationsWithCount": {
+    "message": "Alla applikationer ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "createNewLoginItem": {
+    "message": "Create new login item"
+  },
+  "criticalApplicationsWithCount": {
+    "message": "Kritiska applikationer ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "notifiedMembersWithCount": {
+    "message": "Notified members ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "noAppsInOrgTitle": {
+    "message": "Inga applikationer hittades i $ORG NAME$",
+    "placeholders": {
+      "org name": {
+        "content": "$1",
+        "example": "Company Name"
+      }
+    }
+  },
+  "noAppsInOrgDescription": {
+    "message": "As users save logins, applications appear here, showing any at-risk passwords. Mark critical apps and notify users to update passwords."
+  },
+  "noCriticalAppsTitle": {
+    "message": "You haven't marked any applications as a Critical"
+  },
+  "noCriticalAppsDescription": {
+    "message": "Select your most critical applications to discover at-risk passwords, and notify users to change those passwords."
+  },
+  "markCriticalApps": {
+    "message": "Markera kritiska applikationer"
+  },
+  "markAppAsCritical": {
+    "message": "Markera app som kritisk"
+  },
+  "appsMarkedAsCritical": {
+    "message": "Appar markerade som kritiska"
+  },
+  "application": {
+    "message": "Applikation"
+  },
+  "atRiskPasswords": {
+    "message": "At-risk passwords"
+  },
+  "requestPasswordChange": {
+    "message": "Request password change"
+  },
+  "totalPasswords": {
+    "message": "Total passwords"
+  },
+  "searchApps": {
+    "message": "Search applications"
+  },
+  "atRiskMembers": {
+    "message": "At-risk members"
+  },
+  "totalMembers": {
+    "message": "Total members"
+  },
+  "atRiskApplications": {
+    "message": "At-risk applications"
+  },
+  "totalApplications": {
+    "message": "Total applications"
+  },
   "whatTypeOfItem": {
     "message": "Vilken typ av objekt är detta?"
   },
@@ -36,11 +147,100 @@
   "notes": {
     "message": "Anteckningar"
   },
+  "note": {
+    "message": "Anteckning"
+  },
   "customFields": {
     "message": "Anpassade fält"
   },
   "cardholderName": {
     "message": "Kortinnehavarens namn"
+  },
+  "loginCredentials": {
+    "message": "Inloggningsuppgifter"
+  },
+  "personalDetails": {
+    "message": "Personal details"
+  },
+  "identification": {
+    "message": "Identifikation"
+  },
+  "contactInfo": {
+    "message": "Contact info"
+  },
+  "cardDetails": {
+    "message": "Card details"
+  },
+  "cardBrandDetails": {
+    "message": "$BRAND$ details",
+    "placeholders": {
+      "brand": {
+        "content": "$1",
+        "example": "Visa"
+      }
+    }
+  },
+  "itemHistory": {
+    "message": "Objekthistorik"
+  },
+  "authenticatorKey": {
+    "message": "Autentiseringsnyckel"
+  },
+  "autofillOptions": {
+    "message": "Alternativ för autofyll"
+  },
+  "websiteUri": {
+    "message": "Webbplats (URI)"
+  },
+  "websiteUriCount": {
+    "message": "Webbplats (URI) $COUNT$",
+    "description": "Label for an input field that contains a website URI. The input field is part of a list of fields, and the count indicates the position of the field in the list.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "websiteAdded": {
+    "message": "Website added"
+  },
+  "addWebsite": {
+    "message": "Lägg till webbplats"
+  },
+  "deleteWebsite": {
+    "message": "Radera webbplats"
+  },
+  "defaultLabel": {
+    "message": "Standard ($VALUE$)",
+    "description": "A label that indicates the default value for a field with the current default value in parentheses.",
+    "placeholders": {
+      "value": {
+        "content": "$1",
+        "example": "Base domain"
+      }
+    }
+  },
+  "showMatchDetection": {
+    "message": "Show match detection $WEBSITE$",
+    "placeholders": {
+      "website": {
+        "content": "$1",
+        "example": "https://example.com"
+      }
+    }
+  },
+  "hideMatchDetection": {
+    "message": "Hide match detection $WEBSITE$",
+    "placeholders": {
+      "website": {
+        "content": "$1",
+        "example": "https://example.com"
+      }
+    }
+  },
+  "autoFillOnPageLoad": {
+    "message": "Autofill on page load?"
   },
   "number": {
     "message": "Nummer"
@@ -53,6 +253,9 @@
   },
   "securityCode": {
     "message": "Säkerhetskod (CVV)"
+  },
+  "securityCodeSlashCVV": {
+    "message": "Security code / CVV"
   },
   "identityName": {
     "message": "Identitetsnamn"
@@ -129,6 +332,12 @@
   "dr": {
     "message": "Dr"
   },
+  "cardExpiredTitle": {
+    "message": "Expired card"
+  },
+  "cardExpiredMessage": {
+    "message": "If you've renewed it, update the card's information"
+  },
   "expirationMonth": {
     "message": "Utgångsmånad"
   },
@@ -137,6 +346,18 @@
   },
   "authenticatorKeyTotp": {
     "message": "Autentiseringsnyckel (TOTP)"
+  },
+  "totpHelperTitle": {
+    "message": "Make 2-step verification seamless"
+  },
+  "totpHelper": {
+    "message": "Bitwarden can store and fill 2-step verification codes. Copy and paste the key into this field."
+  },
+  "totpHelperWithCapture": {
+    "message": "Bitwarden can store and fill 2-step verification codes. Select the camera icon to take a screenshot of this website's authenticator QR code, or copy and paste the key into this field."
+  },
+  "learnMoreAboutAuthenticators": {
+    "message": "Läs mer om autentiserare"
   },
   "folder": {
     "message": "Mapp"
@@ -159,9 +380,18 @@
   "cfTypeBoolean": {
     "message": "Booleskt värde"
   },
+  "cfTypeCheckbox": {
+    "message": "Checkbox"
+  },
   "cfTypeLinked": {
     "message": "Länkad",
     "description": "This describes a field that is 'linked' (related) to another field."
+  },
+  "fieldType": {
+    "message": "Fälttyp"
+  },
+  "fieldLabel": {
+    "message": "Fältetikett"
   },
   "remove": {
     "message": "Ta bort"
@@ -172,6 +402,10 @@
   "noneFolder": {
     "message": "Ingen mapp",
     "description": "This is the folder for uncategorized items"
+  },
+  "selfOwnershipLabel": {
+    "message": "Du",
+    "description": "Used as a label to indicate that the user is the owner of an item."
   },
   "addFolder": {
     "message": "Lägg till mapp"
@@ -221,6 +455,9 @@
   },
   "generatePassword": {
     "message": "Generera lösenord"
+  },
+  "generatePassphrase": {
+    "message": "Generera lösenfras"
   },
   "checkPassword": {
     "message": "Kontrollera om lösenordet har avslöjats."
@@ -352,6 +589,9 @@
   "fullName": {
     "message": "Fullständigt namn"
   },
+  "address": {
+    "message": "Adress"
+  },
   "address1": {
     "message": "Adress 1"
   },
@@ -394,12 +634,54 @@
   "viewItem": {
     "message": "Visa objekt"
   },
+  "newItemHeader": {
+    "message": "Ny $TYPE$",
+    "placeholders": {
+      "type": {
+        "content": "$1",
+        "example": "login"
+      }
+    }
+  },
+  "editItemHeader": {
+    "message": "Redigera $TYPE$",
+    "placeholders": {
+      "type": {
+        "content": "$1",
+        "example": "login"
+      }
+    }
+  },
+  "viewItemType": {
+    "message": "Visa $ITEMTYPE$",
+    "placeholders": {
+      "itemtype": {
+        "content": "$1",
+        "example": "login"
+      }
+    }
+  },
   "new": {
     "message": "Nytt",
     "description": "for adding new items"
   },
   "item": {
     "message": "Objekt"
+  },
+  "itemDetails": {
+    "message": "Item details"
+  },
+  "itemName": {
+    "message": "Objektnamn"
+  },
+  "cannotRemoveViewOnlyCollections": {
+    "message": "You cannot remove collections with View only permissions: $COLLECTIONS$",
+    "placeholders": {
+      "collections": {
+        "content": "$1",
+        "example": "Work, Personal"
+      }
+    }
   },
   "ex": {
     "message": "t.ex.",
@@ -424,6 +706,9 @@
       }
     }
   },
+  "copySuccessful": {
+    "message": "Copy Successful"
+  },
   "copyValue": {
     "message": "Kopiera värde",
     "description": "Copy value to clipboard"
@@ -431,6 +716,13 @@
   "copyPassword": {
     "message": "Kopiera lösenord",
     "description": "Copy password to clipboard"
+  },
+  "copyPassphrase": {
+    "message": "Kopiera lösenfras",
+    "description": "Copy passphrase to clipboard"
+  },
+  "passwordCopied": {
+    "message": "Lösenord kopierades"
   },
   "copyUsername": {
     "message": "Kopiera användarnamn",
@@ -447,6 +739,45 @@
   "copyUri": {
     "message": "Kopiera URI",
     "description": "Copy URI to clipboard"
+  },
+  "copyCustomField": {
+    "message": "Kopiera $FIELD$",
+    "placeholders": {
+      "field": {
+        "content": "$1",
+        "example": "Custom field label"
+      }
+    }
+  },
+  "copyWebsite": {
+    "message": "Kopiera webbplats"
+  },
+  "copyNotes": {
+    "message": "Kopiera anteckningar"
+  },
+  "copyAddress": {
+    "message": "Kopiera adress"
+  },
+  "copyPhone": {
+    "message": "Kopiera telefon"
+  },
+  "copyEmail": {
+    "message": "Copy email"
+  },
+  "copyCompany": {
+    "message": "Kopiera företag"
+  },
+  "copySSN": {
+    "message": "Kopiera personnummer"
+  },
+  "copyPassportNumber": {
+    "message": "Kopiera passnummer"
+  },
+  "copyLicenseNumber": {
+    "message": "Copy license number"
+  },
+  "copyName": {
+    "message": "Kopiera namn"
   },
   "me": {
     "message": "Jag"
@@ -536,6 +867,24 @@
       }
     }
   },
+  "itemsMovedToOrg": {
+    "message": "Items moved to $ORGNAME$",
+    "placeholders": {
+      "orgname": {
+        "content": "$1",
+        "example": "Company Name"
+      }
+    }
+  },
+  "itemMovedToOrg": {
+    "message": "Item moved to $ORGNAME$",
+    "placeholders": {
+      "orgname": {
+        "content": "$1",
+        "example": "Company Name"
+      }
+    }
+  },
   "deleteItem": {
     "message": "Radera objekt"
   },
@@ -593,6 +942,18 @@
   "loginExpired": {
     "message": "Din inloggningssession har upphört."
   },
+  "restartRegistration": {
+    "message": "Restart registration"
+  },
+  "expiredLink": {
+    "message": "Expired link"
+  },
+  "pleaseRestartRegistrationOrTryLoggingIn": {
+    "message": "Please restart registration or try logging in."
+  },
+  "youMayAlreadyHaveAnAccount": {
+    "message": "Du kanske redan har ett konto"
+  },
   "logOutConfirmation": {
     "message": "Är du säker på att du vill logga ut?"
   },
@@ -629,11 +990,17 @@
   "useADifferentLogInMethod": {
     "message": "Använd en annan inloggningsmetod"
   },
-  "loginWithPasskey": {
+  "logInWithPasskey": {
     "message": "Logga in med nyckel"
   },
+  "useSingleSignOn": {
+    "message": "Använd Single Sign-On"
+  },
+  "welcomeBack": {
+    "message": "Välkommen tillbaka"
+  },
   "invalidPasskeyPleaseTryAgain": {
-    "message": "Ogiltig nyckel. Vänligen försök igen."
+    "message": "Ogiltig nyckel. Försök igen."
   },
   "twoFactorForPasskeysNotSupportedOnClientUpdateToLogIn": {
     "message": "Tvåstegsverifiering stöds inte för nycklar. Uppdatera appen för att logga in."
@@ -713,6 +1080,9 @@
   "createAccount": {
     "message": "Skapa konto"
   },
+  "newToBitwarden": {
+    "message": "Ny på Bitwarden?"
+  },
   "setAStrongPassword": {
     "message": "Ställ in ett starkt lösenord"
   },
@@ -727,6 +1097,9 @@
   },
   "logIn": {
     "message": "Logga in"
+  },
+  "logInToBitwarden": {
+    "message": "Logga in på Bitwarden"
   },
   "verifyIdentity": {
     "message": "Verify your Identity"
@@ -764,11 +1137,39 @@
   "masterPassHint": {
     "message": "Huvudlösenordsledtråd (valfritt)"
   },
+  "newMasterPassHint": {
+    "message": "Ny huvudlösenordsledtråd (valfritt)"
+  },
   "masterPassHintLabel": {
     "message": "Huvudlösenordsledtråd"
   },
+  "masterPassHintText": {
+    "message": "Om du glömmer ditt lösenord kan lösenordsledtråden skickas till din e-postadress. $CURRENT$/$MAXIMUM$ tecken max.",
+    "placeholders": {
+      "current": {
+        "content": "$1",
+        "example": "0"
+      },
+      "maximum": {
+        "content": "$2",
+        "example": "50"
+      }
+    }
+  },
   "settings": {
     "message": "Inställningar"
+  },
+  "accountEmail": {
+    "message": "Account email"
+  },
+  "requestHint": {
+    "message": "Begär ledtråd"
+  },
+  "requestPasswordHint": {
+    "message": "Begär lösenordsledtråd"
+  },
+  "enterYourAccountEmailAddressAndYourPasswordHintWillBeSentToYou": {
+    "message": "Enter your account email address and your password hint will be sent to you"
   },
   "passwordHint": {
     "message": "Lösenordsledtråd"
@@ -807,6 +1208,12 @@
   "newAccountCreated": {
     "message": "Ditt nya konto har skapats! Du kan nu logga in."
   },
+  "newAccountCreated2": {
+    "message": "Ditt nya konto har skapats!"
+  },
+  "youHaveBeenLoggedIn": {
+    "message": "Du har blivit inloggad!"
+  },
   "trialAccountCreated": {
     "message": "Kontot har skapats."
   },
@@ -822,8 +1229,11 @@
   "emailAddress": {
     "message": "E-postadress"
   },
-  "yourVaultIsLocked": {
-    "message": "Valvet är låst. Bekräfta ditt huvudlösenord för att fortsätta."
+  "yourVaultIsLockedV2": {
+    "message": "Ditt valv är låst"
+  },
+  "yourAccountIsLocked": {
+    "message": "Ditt konto är låst"
   },
   "uuid": {
     "message": "UUID"
@@ -858,6 +1268,9 @@
   },
   "noPermissionToViewAllCollectionItems": {
     "message": "Du har inte behörighet att se alla objekt i denna samling."
+  },
+  "youDoNotHavePermissions": {
+    "message": "You do not have permissions to this collection"
   },
   "noCollectionsInList": {
     "message": "Det finns inga samlingar att visa."
@@ -949,18 +1362,18 @@
   "authenticatorAppTitle": {
     "message": "Autentiseringsapp"
   },
-  "authenticatorAppDesc": {
-    "message": "Använd en autentiseringsapp (t.ex. Authy eller Google Authenticator) för att skapa tidsbaserade verifieringskoder.",
-    "description": "'Authy' and 'Google Authenticator' are product names and should not be translated."
+  "authenticatorAppDescV2": {
+    "message": "Ange en kod som genererats av en autentiseringsapp, t ex. Bitwarden Authenticator.",
+    "description": "'Bitwarden Authenticator' is a product name and should not be translated."
   },
-  "yubiKeyTitle": {
-    "message": "YubiKey OTP-säkerhetsnyckel"
+  "yubiKeyTitleV2": {
+    "message": "Yubico OTP-säkerhetsnyckel"
   },
   "yubiKeyDesc": {
-    "message": "Använd en YubiKey för att komma åt ditt konto. Fungerar med YubiKey 4-serien, 5-serien och NEO-enheter."
+    "message": "Använd en YubiKey 4-, 5- eller NEO-enhet."
   },
-  "duoDesc": {
-    "message": "Verifiera med Duo Security genom att använda Duo Mobile-appen, SMS, telefonsamtal eller en U2F-säkerhetsnyckel.",
+  "duoDescV2": {
+    "message": "Ange en kod som genererats av Duo Security.",
     "description": "'Duo Security' and 'Duo Mobile' are product names and should not be translated."
   },
   "duoOrganizationDesc": {
@@ -974,10 +1387,10 @@
     "message": "FIDO U2F-säkerhetsnyckel"
   },
   "webAuthnTitle": {
-    "message": "FIDO2 WebAuthn"
+    "message": "Nyckel"
   },
   "webAuthnDesc": {
-    "message": "Använd en WebAuthn-aktiverad säkerhetsnyckel för att komma åt ditt konto."
+    "message": "Använd enhetens biometri eller en FIDO2-kompatibel säkerhetsnyckel."
   },
   "webAuthnMigrated": {
     "message": "(Migrerad från FIDO)"
@@ -985,8 +1398,8 @@
   "emailTitle": {
     "message": "E-post"
   },
-  "emailDesc": {
-    "message": "Verifieringskoder kommer skickas till dig via e-post."
+  "emailDescV2": {
+    "message": "Ange en kod som skickas per e-post."
   },
   "continue": {
     "message": "Fortsätt"
@@ -1028,7 +1441,7 @@
     "message": "Är du säker på att du vill fortsätta?"
   },
   "moveSelectedItemsDesc": {
-    "message": "Välj en mapp som du vill flytta de $COUNT$ markerade objekten till.",
+    "message": "Choose a folder that you would like to add the $COUNT$ selected item(s) to.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -1163,7 +1576,12 @@
     "description": "Minimum special characters"
   },
   "ambiguous": {
-    "message": "Undvik tvetydiga tecken"
+    "message": "Undvik tvetydiga tecken",
+    "description": "deprecated. Use avoidAmbiguous instead."
+  },
+  "avoidAmbiguous": {
+    "message": "Undvik tvetydiga tecken",
+    "description": "Label for the avoid ambiguous characters checkbox."
   },
   "regeneratePassword": {
     "message": "Återskapa lösenord"
@@ -1176,14 +1594,15 @@
   },
   "uppercase": {
     "message": "Versaler (A-Ö)",
-    "description": "Include uppercase letters in the password generator."
+    "description": "deprecated. Use uppercaseLabel instead."
   },
   "lowercase": {
     "message": "Gemener (a-ö)",
-    "description": "Include lowercase letters in the password generator."
+    "description": "deprecated. Use lowercaseLabel instead."
   },
   "numbers": {
-    "message": "Siffror (0-9)"
+    "message": "Siffror (0-9)",
+    "description": "deprecated. Use numbersLabel instead."
   },
   "specialCharacters": {
     "message": "Specialtecken (!@#$%^&*)"
@@ -1200,6 +1619,10 @@
   },
   "includeNumber": {
     "message": "Inkludera siffra"
+  },
+  "generatorPolicyInEffect": {
+    "message": "Enterprise policy requirements have been applied to your generator options.",
+    "description": "Indicates that a policy limits the credential generator screen."
   },
   "passwordHistory": {
     "message": "Lösenordshistorik"
@@ -1314,6 +1737,9 @@
   "dangerZoneDesc": {
     "message": "Var försiktig, dessa åtgärder går inte att ångra!"
   },
+  "dangerZoneDescSingular": {
+    "message": "Careful, this action is not reversible!"
+  },
   "deauthorizeSessions": {
     "message": "Avauktorisera sessioner"
   },
@@ -1325,6 +1751,15 @@
   },
   "sessionsDeauthorized": {
     "message": "Alla sessioner avauktoriserades"
+  },
+  "accountIsManagedMessage": {
+    "message": "Detta konto hanteras av $ORGANIZATIONNAME$",
+    "placeholders": {
+      "organizationName": {
+        "content": "$1",
+        "example": "Organization"
+      }
+    }
   },
   "purgeVault": {
     "message": "Rensa valv"
@@ -1382,6 +1817,10 @@
     "message": "nytt objekt",
     "description": "This will be part of a larger sentence, that will read like this: If you don't have any data to import, you can create a new item instead. (Optional second half: You may need to wait until your administrator confirms your organization membership.)"
   },
+  "onboardingImportDataDetailsLoginLink": {
+    "message": "ny inloggning",
+    "description": "This will be part of a larger sentence, that will read like this: If you don't have any data to import, you can create a new login instead. (Optional second half: You may need to wait until your administrator confirms your organization membership.)"
+  },
   "onboardingImportDataDetailsPartTwoNoOrgs": {
     "message": " istället.",
     "description": "This will be part of a larger sentence, that will read like this: If you don't have any data to import, you can create a new item instead."
@@ -1429,8 +1868,8 @@
   "importEncKeyError": {
     "message": "Ett fel uppstod vid dekryptering av den exporterade filen. Din krypteringsnyckel matchar inte krypteringsnyckeln som användes för att exportera datan."
   },
-  "importDestination": {
-    "message": "Importdestination"
+  "destination": {
+    "message": "Destination"
   },
   "learnAboutImportOptions": {
     "message": "Läs mer om dina importalternativ"
@@ -1626,35 +2065,47 @@
   "twoStepLoginAuthDesc": {
     "message": "Ange ditt huvudlösenord för att ändra inställningarna för tvåstegsverifiering."
   },
-  "twoStepAuthenticatorDesc": {
-    "message": "Följ dessa steg för att konfigurera tvåstegsverifiering med en autentiseringsapp:"
+  "twoStepAuthenticatorInstructionPrefix": {
+    "message": "Download an authenticator app such as"
   },
-  "twoStepAuthenticatorDownloadApp": {
-    "message": "Hämta en tvåstegsverifieringsapp"
+  "twoStepAuthenticatorInstructionInfix1": {
+    "message": ","
   },
-  "twoStepAuthenticatorNeedApp": {
-    "message": "Behöver du en tvåstegsverifieringsapp? Hämta en av följande"
+  "twoStepAuthenticatorInstructionInfix2": {
+    "message": "eller"
   },
-  "iosDevices": {
-    "message": "iOS-enheter"
+  "twoStepAuthenticatorInstructionSuffix": {
+    "message": "."
   },
-  "androidDevices": {
-    "message": "Android-enheter"
+  "continueToExternalUrlTitle": {
+    "message": "Fortsätt till $URL$?",
+    "placeholders": {
+      "url": {
+        "content": "$1",
+        "example": "bitwarden.com"
+      }
+    }
   },
-  "windowsDevices": {
-    "message": "Windows-enheter"
+  "continueToExternalUrlDesc": {
+    "message": "You are leaving Bitwarden and launching an external website in a new window."
   },
-  "twoStepAuthenticatorAppsRecommended": {
-    "message": "Dessa appar rekommenderas, men även andra autentiseringsappar fungerar."
+  "twoStepContinueToBitwardenUrlTitle": {
+    "message": "Fortsätt till bitwarden.com?"
   },
-  "twoStepAuthenticatorScanCode": {
-    "message": "Skanna denna QR-kod med din autentiseringsapp"
+  "twoStepContinueToBitwardenUrlDesc": {
+    "message": "Bitwarden Authenticator allows you to store authenticator keys and generate TOTP codes for 2-step verification flows. Learn more on the bitwarden.com website."
+  },
+  "twoStepAuthenticatorScanCodeV2": {
+    "message": "Skanna QR-koden nedan med din autentiseringsapp eller ange nyckeln."
+  },
+  "twoStepAuthenticatorQRCanvasError": {
+    "message": "Could not load QR code. Try again or use the key below."
   },
   "key": {
     "message": "Nyckel"
   },
-  "twoStepAuthenticatorEnterCode": {
-    "message": "Ange den 6-siffriga verifieringskoden från appen"
+  "twoStepAuthenticatorEnterCodeV2": {
+    "message": "Verifieringskod"
   },
   "twoStepAuthenticatorReaddDesc": {
     "message": "Om du behöver lägga till den på en annan enhet, finns QR-koden (eller nyckeln) som krävs av din autentiseringsapp nedan."
@@ -1905,6 +2356,9 @@
   "checkExposedPasswords": {
     "message": "Kontrollera avslöjade lösenord"
   },
+  "timesExposed": {
+    "message": "Times exposed"
+  },
   "exposedXTimes": {
     "message": "Avslöjad $COUNT$ gång(er)",
     "placeholders": {
@@ -1939,6 +2393,9 @@
   "noWeakPasswords": {
     "message": "Inga objekt i ditt valv har svaga lösenord."
   },
+  "weakness": {
+    "message": "Weakness"
+  },
   "reusedPasswordsReport": {
     "message": "Rapport om återanvända lösenord"
   },
@@ -1963,6 +2420,9 @@
   },
   "noReusedPasswords": {
     "message": "Inga inloggningar i ditt valv har lösenord som återanvänds."
+  },
+  "timesReused": {
+    "message": "Times reused"
   },
   "reusedXTimes": {
     "message": "Återanvänt $COUNT$ gånger",
@@ -2261,6 +2721,9 @@
   "downloadLicense": {
     "message": "Hämta licens"
   },
+  "viewBillingToken": {
+    "message": "View Billing Token"
+  },
   "updateLicense": {
     "message": "Uppdatera licens"
   },
@@ -2307,8 +2770,11 @@
   "invoices": {
     "message": "Fakturor"
   },
-  "noInvoices": {
-    "message": "Inga fakturor."
+  "noUnpaidInvoices": {
+    "message": "Inga obetalda fakturor."
+  },
+  "noPaidInvoices": {
+    "message": "Inga betalda fakturor."
   },
   "paid": {
     "message": "Betald",
@@ -2710,12 +3176,6 @@
   "accessControl": {
     "message": "Åtkomstkontroll"
   },
-  "groupAccessAllItems": {
-    "message": "Denna grupp kan komma åt och ändra alla objekt."
-  },
-  "groupAccessSelectedCollections": {
-    "message": "Denna grupp kan endast komma åt de markerade samlingarna."
-  },
   "readOnly": {
     "message": "Skrivskyddad"
   },
@@ -2761,20 +3221,11 @@
   "userUsingTwoStep": {
     "message": "Denna användare använder tvåstegsverifiering för att skydda sitt konto."
   },
-  "userAccessAllItems": {
-    "message": "Denna användare kan komma åt och ändra alla objekt."
-  },
-  "userAccessSelectedCollections": {
-    "message": "Denna användare kan endast komma åt de markerade samlingarna."
-  },
   "search": {
     "message": "Sök"
   },
   "invited": {
     "message": "Inbjuden"
-  },
-  "accepted": {
-    "message": "Accepterad"
   },
   "confirmed": {
     "message": "Bekräftad"
@@ -2880,6 +3331,10 @@
   },
   "incorrectPin": {
     "message": "Felaktig PIN-kod"
+  },
+  "pin": {
+    "message": "PIN-kod",
+    "description": "PIN code. Ex. The short code (often numeric) that you use to unlock a device."
   },
   "exportedVault": {
     "message": "Exporterade valv"
@@ -3361,6 +3816,9 @@
   "emailVerified": {
     "message": "E-postadressen har verifierats"
   },
+  "emailVerifiedV2": {
+    "message": "Email verified"
+  },
   "emailVerifiedFailed": {
     "message": "Det gick inte att verifiera din e-postadress. Prova att skicka ett nytt verifieringsmeddelande."
   },
@@ -3379,8 +3837,20 @@
   "joinOrganization": {
     "message": "Gå med i organisation"
   },
+  "joinOrganizationName": {
+    "message": "Join $ORGANIZATIONNAME$",
+    "placeholders": {
+      "organizationName": {
+        "content": "$1",
+        "example": "My Org Name"
+      }
+    }
+  },
   "joinOrganizationDesc": {
     "message": "Du har bjudits in att gå med i organisationen ovan. För att acceptera inbjudan måste du logga in eller skapa ett nytt Bitwarden-konto."
+  },
+  "finishJoiningThisOrganizationBySettingAMasterPassword": {
+    "message": "Finish joining this organization by setting a master password."
   },
   "inviteAccepted": {
     "message": "Inbjudan accepterades"
@@ -3667,6 +4137,15 @@
       }
     }
   },
+  "subscriptionSeatMaxReached": {
+    "message": "You cannot invite more than $COUNT$ members without increasing your subscription seats.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "50"
+      }
+    }
+  },
   "seatsToAdd": {
     "message": "Platser att lägga till"
   },
@@ -3687,6 +4166,12 @@
         "example": "15"
       }
     }
+  },
+  "encryptionKeyUpdateCannotProceed": {
+    "message": "Encryption key update cannot proceed"
+  },
+  "keyUpdateFoldersFailed": {
+    "message": "When updating your encryption key, your folders could not be decrypted. To continue with the update, your folders must be deleted. No vault items will be deleted if you proceed."
   },
   "keyUpdated": {
     "message": "Nyckeln uppdaterades"
@@ -3730,8 +4215,8 @@
   "nothingSelected": {
     "message": "Du har inte markerat något."
   },
-  "receiveMarketingEmails": {
-    "message": "Get emails from Bitwarden for announcements, advice, and research opportunities."
+  "receiveMarketingEmailsV2": {
+    "message": "Get advice, announcements, and research opportunities from Bitwarden in your inbox."
   },
   "unsubscribe": {
     "message": "Unsubscribe"
@@ -3762,6 +4247,9 @@
   },
   "vaultTimeout": {
     "message": "Valvets tidsgräns"
+  },
+  "vaultTimeout1": {
+    "message": "Timeout"
   },
   "vaultTimeoutDesc": {
     "message": "Välj när valvets tidsgräns överskrids och den valda åtgärden utförs."
@@ -3828,6 +4316,9 @@
   },
   "selected": {
     "message": "Markerade"
+  },
+  "recommended": {
+    "message": "Recommended"
   },
   "ownership": {
     "message": "Ägarskap"
@@ -4010,8 +4501,9 @@
   "minimumNumberOfWords": {
     "message": "Minsta antal ord"
   },
-  "defaultType": {
-    "message": "Standardtyp"
+  "overridePasswordTypePolicy": {
+    "message": "Lösenordstyp",
+    "description": "Name of the password generator policy that overrides the user's password/passphrase selection."
   },
   "userPreference": {
     "message": "Användarpreferens"
@@ -4027,7 +4519,7 @@
   },
   "lock": {
     "message": "Lås",
-    "description": "Verb form: to make secure or inaccesible by"
+    "description": "Verb form: to make secure or inaccessible by"
   },
   "trash": {
     "message": "Papperskorg",
@@ -4138,6 +4630,9 @@
   "thisWindowWillCloseIn5Seconds": {
     "message": "This window will automatically close in 5 seconds"
   },
+  "youMayCloseThisWindow": {
+    "message": "Du kan stänga detta fönster"
+  },
   "includeAllTeamsFeatures": {
     "message": "Alla funktioner för team, plus:"
   },
@@ -4190,11 +4685,17 @@
   "singleOrgDesc": {
     "message": "Hindra användare från att gå med i några andra organisationer."
   },
+  "singleOrgPolicyDesc": {
+    "message": "Restrict members from joining other organizations. This policy is required for organizations that have enabled domain verification."
+  },
   "singleOrgBlockCreateMessage": {
     "message": "Din nuvarande organisation har en policy som hindrar dig från att gå med i fler än en organisation. Vänligen kontakta din organisations administratörer eller registrera ett annat Bitwarden-konto."
   },
   "singleOrgPolicyWarning": {
     "message": "Medlemmar som inte är ägare eller administratörer och redan är med i en annan organisation kommer att tas bort från organisationen."
+  },
+  "singleOrgPolicyMemberWarning": {
+    "message": "Non-compliant members will be placed in revoked status until they leave all other organizations. Administrators are exempt and can restore members once compliance is met."
   },
   "requireSso": {
     "message": "Kräv autentisering med Single Sign-On"
@@ -4293,6 +4794,9 @@
   "sendLink": {
     "message": "Send-länk",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "copyLink": {
+    "message": "Kopiera länk"
   },
   "copySendLink": {
     "message": "Kopiera Send-länk",
@@ -4618,12 +5122,6 @@
   "deleteAnyCollection": {
     "message": "Ta bort valfri samling"
   },
-  "editAssignedCollections": {
-    "message": "Redigera tilldelade samlingar"
-  },
-  "deleteAssignedCollections": {
-    "message": "Radera tilldelade samlingar"
-  },
   "manageGroups": {
     "message": "Hantera grupper"
   },
@@ -4709,6 +5207,75 @@
     "message": "eller",
     "description": "This will be used as part of a larger sentence, broken up to include links. The full sentence will read 'Learn more, see how it works, **or** try it now.'"
   },
+  "developmentDevOpsAndITTeamsChooseBWSecret": {
+    "message": "Development, DevOps, and IT teams choose Bitwarden Secrets Manager to securely manage and deploy their infrastructure and machine secrets."
+  },
+  "centralizeSecretsManagement": {
+    "message": "Centralize secrets management."
+  },
+  "centralizeSecretsManagementDescription": {
+    "message": "Securely store and manage secrets in one location to prevent secret sprawl across your organization."
+  },
+  "preventSecretLeaks": {
+    "message": "Prevent secret leaks."
+  },
+  "preventSecretLeaksDescription": {
+    "message": "Protect secrets with end-to-end encryption. No more hard coding secrets or sharing through .env files."
+  },
+  "enhanceDeveloperProductivity": {
+    "message": "Enhance developer productivity."
+  },
+  "enhanceDeveloperProductivityDescription": {
+    "message": "Programmatically retrieve and deploy secrets at runtime so developers can focus on what matters most, like improving code quality."
+  },
+  "strengthenBusinessSecurity": {
+    "message": "Strengthen business security."
+  },
+  "strengthenBusinessSecurityDescription": {
+    "message": "Maintain tight control over machine and human access to secrets with SSO integrations, event logs, and access rotation."
+  },
+  "tryItNow": {
+    "message": "Try it now"
+  },
+  "sendRequest": {
+    "message": "Send request"
+  },
+  "addANote": {
+    "message": "Add a note"
+  },
+  "bitwardenSecretsManager": {
+    "message": "Bitwarden Secrets Manager"
+  },
+  "moreProductsFromBitwarden": {
+    "message": "More products from Bitwarden"
+  },
+  "requestAccessToSecretsManager": {
+    "message": "Request access to Secrets Manager"
+  },
+  "youNeedApprovalFromYourAdminToTrySecretsManager": {
+    "message": "You need approval from your administrator to try Secrets Manager."
+  },
+  "smAccessRequestEmailSent": {
+    "message": "Access request for secrets manager email sent to admins."
+  },
+  "requestAccessSMDefaultEmailContent": {
+    "message": "Hi,\n\nI am requesting a subscription to Bitwarden Secrets Manager for our team. Your support would mean a great deal!\n\nBitwarden Secrets Manager is an end-to-end encrypted secrets management solution for securely storing, sharing, and deploying machine credentials like API keys, database passwords, and authentication certificates.\n\nSecrets Manager will help us to:\n\n- Improve security\n- Streamline operations\n- Prevent costly secret leaks\n\nTo request a free trial for our team, please reach out to Bitwarden.\n\nThank you for your help!"
+  },
+  "giveMembersAccess": {
+    "message": "Give members access:"
+  },
+  "viewAndSelectTheMembers": {
+    "message": "view and select the members you want to give access to Secrets Manager."
+  },
+  "openYourOrganizations": {
+    "message": "Open your organization's"
+  },
+  "usingTheMenuSelect": {
+    "message": "Using the menu, select"
+  },
+  "toGrantAccessToSelectedMembers": {
+    "message": "to grant access to selected members."
+  },
   "sendVaultCardTryItNow": {
     "message": "prova det nu",
     "description": "This will be used as part of a larger sentence, broken up to include links. The full sentence will read 'Learn more, see how it works, or **try it now**.'"
@@ -4733,6 +5300,10 @@
         "example": "An email address"
       }
     }
+  },
+  "viewSend": {
+    "message": "Visa Send",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
   "viewSendHiddenEmailWarning": {
     "message": "Bitwarden-användaren som skapade denna Send har valt att dölja sin e-postadress. Du bör se till att du litar på källan till denna länk innan du använder eller hämtar innehållet.",
@@ -5025,7 +5596,7 @@
     "message": "Provider"
   },
   "newClientOrganization": {
-    "message": "New client organization"
+    "message": "Ny klientorganisation"
   },
   "newClientOrganizationDesc": {
     "message": "Create a new client organization that will be associated with you as the Provider. You will be able to access and manage this organization."
@@ -5112,6 +5683,21 @@
   "updateWeakMasterPasswordWarning": {
     "message": "Your master password does not meet one or more of your organization policies. In order to access the vault, you must update your master password now. Proceeding will log you out of your current session, requiring you to log back in. Active sessions on other devices may continue to remain active for up to one hour."
   },
+  "automaticAppLogin": {
+    "message": "Automatically log in users for allowed applications"
+  },
+  "automaticAppLoginDesc": {
+    "message": "Login forms will automatically be filled and submitted for apps launched from your configured identity provider."
+  },
+  "automaticAppLoginIdpHostLabel": {
+    "message": "Identity provider host"
+  },
+  "automaticAppLoginIdpHostDesc": {
+    "message": "Enter your identity provider host URL. Enter multiple URLs by separating with a comma."
+  },
+  "tdeDisabledMasterPasswordRequired": {
+    "message": "Your organization has updated your decryption options. Please set a master password to access your vault."
+  },
   "maximumVaultTimeout": {
     "message": "Vault timeout"
   },
@@ -5132,6 +5718,19 @@
   },
   "vaultTimeoutPolicyInEffect": {
     "message": "Your organization policies have set your maximum allowed vault timeout to $HOURS$ hour(s) and $MINUTES$ minute(s).",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      },
+      "minutes": {
+        "content": "$2",
+        "example": "5"
+      }
+    }
+  },
+  "vaultTimeoutPolicyInEffect1": {
+    "message": "$HOURS$ timme(ar) och $MINUTES$ minut(er) max.",
     "placeholders": {
       "hours": {
         "content": "$1",
@@ -5168,9 +5767,6 @@
         "example": "Lock"
       }
     }
-  },
-  "customVaultTimeout": {
-    "message": "Custom vault timeout"
   },
   "vaultTimeoutToLarge": {
     "message": "Your vault timeout exceeds the restriction set by your organization."
@@ -5463,6 +6059,9 @@
   "verificationCodeRequired": {
     "message": "Verification code is required."
   },
+  "webauthnCancelOrTimeout": {
+    "message": "The authentication was cancelled or took too long. Please try again."
+  },
   "invalidVerificationCode": {
     "message": "Ogiltig verifieringskod"
   },
@@ -5577,8 +6176,8 @@
   "viewBillingSyncToken": {
     "message": "View billing sync token"
   },
-  "generateBillingSyncToken": {
-    "message": "Generate billing sync token"
+  "generateBillingToken": {
+    "message": "Generate billing token"
   },
   "copyPasteBillingSync": {
     "message": "Copy and paste this token into the billing sync settings of your self-hosted organization."
@@ -5586,8 +6185,8 @@
   "billingSyncCanAccess": {
     "message": "Your billing sync token can access and edit this organization's subscription settings."
   },
-  "manageBillingSync": {
-    "message": "Manage billing sync"
+  "manageBillingTokenSync": {
+    "message": "Manage Billing Token"
   },
   "setUpBillingSync": {
     "message": "Set up billing sync"
@@ -5646,14 +6245,14 @@
   "billingSyncApiKeyRotated": {
     "message": "Token rotated"
   },
-  "billingSyncDesc": {
-    "message": "Billing sync unlocks Families sponsorships and automatic license syncing on your server. After making updates in the Bitwarden cloud server, select Sync License to apply changes."
-  },
   "billingSyncKeyDesc": {
     "message": "A billing sync token from your cloud organization's subscription settings is required to complete this form."
   },
   "billingSyncKey": {
     "message": "Billing sync token"
+  },
+  "automaticBillingSyncDesc": {
+    "message": "Automatic sync unlocks Families sponsorships and allows you to sync your license without uploading a file. After making updates in the Bitwarden cloud server, select Sync License to apply changes."
   },
   "active": {
     "message": "Aktiv"
@@ -5796,7 +6395,8 @@
     "message": "Kontoinställningar"
   },
   "generator": {
-    "message": "Generator"
+    "message": "Generator",
+    "description": "Short for 'credential generator'."
   },
   "whatWouldYouLikeToGenerate": {
     "message": "Vad skulle du vilja generera?"
@@ -5809,6 +6409,23 @@
   },
   "generateUsername": {
     "message": "Generera användarnamn"
+  },
+  "generateEmail": {
+    "message": "Generate email"
+  },
+  "generatorBoundariesHint": {
+    "message": "Value must be between $MIN$ and $MAX$",
+    "description": "Explains spin box minimum and maximum values to the user",
+    "placeholders": {
+      "min": {
+        "content": "$1",
+        "example": "8"
+      },
+      "max": {
+        "content": "$2",
+        "example": "128"
+      }
+    }
   },
   "usernameType": {
     "message": "Användarnamnstyp"
@@ -5832,6 +6449,26 @@
   },
   "randomWord": {
     "message": "Slumpmässigt ord"
+  },
+  "usernameGenerator": {
+    "message": "Username generator"
+  },
+  "useThisPassword": {
+    "message": "Use this password"
+  },
+  "useThisUsername": {
+    "message": "Use this username"
+  },
+  "securePasswordGenerated": {
+    "message": "Secure password generated! Don't forget to also update your password on the website."
+  },
+  "useGeneratorHelpTextPartOne": {
+    "message": "Use the generator",
+    "description": "This will be used as part of a larger sentence, broken up to include the generator icon. The full sentence will read 'Use the generator [GENERATOR_ICON] to create a strong unique password'"
+  },
+  "useGeneratorHelpTextPartTwo": {
+    "message": "to create a strong unique password",
+    "description": "This will be used as part of a larger sentence, broken up to include the generator icon. The full sentence will read 'Use the generator [GENERATOR_ICON] to create a strong unique password'"
   },
   "service": {
     "message": "Tjänst"
@@ -5871,7 +6508,7 @@
   },
   "lastSync": {
     "message": "Senaste synkronisering",
-    "description": "Used as a prefix to indicate the last time a sync occured. Example \"Last sync 1968-11-16 00:00:00\""
+    "description": "Used as a prefix to indicate the last time a sync occurred. Example \"Last sync 1968-11-16 00:00:00\""
   },
   "sponsorshipsSynced": {
     "message": "Self-hosted sponsorships synced."
@@ -5894,6 +6531,14 @@
   },
   "forwardedEmailDesc": {
     "message": "Generera ett e-postalias med en extern vidarebefordranstjänst."
+  },
+  "forwarderDomainName": {
+    "message": "E-postdomän",
+    "description": "Labels the domain name email forwarder service option"
+  },
+  "forwarderDomainNameHint": {
+    "message": "Choose a domain that is supported by the selected service",
+    "description": "Guidance provided for email forwarding services that support multiple email domains."
   },
   "forwarderError": {
     "message": "$SERVICENAME$-fel: $ERRORMESSAGE$",
@@ -5998,7 +6643,7 @@
     }
   },
   "hostname": {
-    "message": "Hostname",
+    "message": "Värdnamn",
     "description": "Part of a URL."
   },
   "apiAccessToken": {
@@ -6030,57 +6675,57 @@
   },
   "scim": {
     "message": "SCIM provisioning",
-    "description": "The text, 'SCIM', is an acronymn and should not be translated."
+    "description": "The text, 'SCIM', is an acronym and should not be translated."
   },
   "scimDescription": {
     "message": "Automatically provision users and groups with your preferred identity provider via SCIM provisioning",
-    "description": "the text, 'SCIM', is an acronymn and should not be translated."
+    "description": "the text, 'SCIM', is an acronym and should not be translated."
   },
   "scimEnabledCheckboxDesc": {
     "message": "Aktivera SCIM",
-    "description": "the text, 'SCIM', is an acronymn and should not be translated."
+    "description": "the text, 'SCIM', is an acronym and should not be translated."
   },
   "scimEnabledCheckboxDescHelpText": {
     "message": "Set up your preferred identity provider by configuring the URL and SCIM API Key",
-    "description": "the text, 'SCIM', is an acronymn and should not be translated."
+    "description": "the text, 'SCIM', is an acronym and should not be translated."
   },
   "scimApiKeyHelperText": {
     "message": "This API key has access to manage users within your organization. It should be kept secret."
   },
   "copyScimKey": {
     "message": "Copy the SCIM API key to your clipboard",
-    "description": "the text, 'SCIM' and 'API', are acronymns and should not be translated."
+    "description": "the text, 'SCIM' and 'API', are acronyms and should not be translated."
   },
   "rotateScimKey": {
     "message": "Rotate the SCIM API key",
-    "description": "the text, 'SCIM' and 'API', are acronymns and should not be translated."
+    "description": "the text, 'SCIM' and 'API', are acronyms and should not be translated."
   },
   "rotateScimKeyWarning": {
     "message": "Are you sure you want to rotate the SCIM API Key? The current key will no longer work for any existing integrations.",
-    "description": "the text, 'SCIM' and 'API', are acronymns and should not be translated."
+    "description": "the text, 'SCIM' and 'API', are acronyms and should not be translated."
   },
   "rotateKey": {
-    "message": "Rotate key"
+    "message": "Rotera nyckel"
   },
   "scimApiKey": {
-    "message": "SCIM API key",
-    "description": "the text, 'SCIM' and 'API', are acronymns and should not be translated."
+    "message": "SCIM API-nyckel",
+    "description": "the text, 'SCIM' and 'API', are acronyms and should not be translated."
   },
   "copyScimUrl": {
     "message": "Copy the SCIM endpoint URL to your clipboard",
-    "description": "the text, 'SCIM' and 'URL', are acronymns and should not be translated."
+    "description": "the text, 'SCIM' and 'URL', are acronyms and should not be translated."
   },
   "scimUrl": {
     "message": "SCIM URL",
-    "description": "the text, 'SCIM' and 'URL', are acronymns and should not be translated."
+    "description": "the text, 'SCIM' and 'URL', are acronyms and should not be translated."
   },
   "scimApiKeyRotated": {
     "message": "SCIM API key successfully rotated",
-    "description": "the text, 'SCIM' and 'API', are acronymns and should not be translated."
+    "description": "the text, 'SCIM' and 'API', are acronyms and should not be translated."
   },
   "scimSettingsSaved": {
     "message": "SCIM settings saved",
-    "description": "the text, 'SCIM', is an acronymn and should not be translated."
+    "description": "the text, 'SCIM', is an acronym and should not be translated."
   },
   "inputRequired": {
     "message": "Inmatning är obligatoriskt."
@@ -6154,6 +6799,21 @@
       }
     }
   },
+  "singleFieldNeedsAttention": {
+    "message": "1 fält behöver din uppmärksamhet."
+  },
+  "multipleFieldsNeedAttention": {
+    "message": "$COUNT$ fält kräver din uppmärksamhet.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "duoHealthCheckResultsInNullAuthUrlError": {
+    "message": "Error connecting with the Duo service. Use a different two-step login method or contact Duo for assistance."
+  },
   "launchDuoAndFollowStepsToFinishLoggingIn": {
     "message": "Launch Duo and follow the steps to finish logging in."
   },
@@ -6161,7 +6821,7 @@
     "message": "Duo two-step login is required for your account."
   },
   "launchDuo": {
-    "message": "Launch Duo"
+    "message": "Starta Duo"
   },
   "turnOn": {
     "message": "Turn on"
@@ -6739,10 +7399,10 @@
     "message": "Reverify domain"
   },
   "copyDnsTxtRecord": {
-    "message": "Copy DNS TXT record"
+    "message": "Kopiera DNS TXT-post"
   },
   "dnsTxtRecord": {
-    "message": "DNS TXT record"
+    "message": "DNS TXT-post"
   },
   "dnsTxtRecordInputHint": {
     "message": "Copy and paste the TXT record into your DNS Provider."
@@ -6999,6 +7659,9 @@
   "fileUpload": {
     "message": "File upload"
   },
+  "upload": {
+    "message": "Upload"
+  },
   "acceptedFormats": {
     "message": "Accepted Formats:"
   },
@@ -7007,6 +7670,15 @@
   },
   "or": {
     "message": "eller"
+  },
+  "unlockWithBiometrics": {
+    "message": "Lås upp med biometri"
+  },
+  "unlockWithPin": {
+    "message": "Lås upp med PIN-kod"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Lås upp med huvudlösenord"
   },
   "licenseAndBillingManagement": {
     "message": "License and billing management"
@@ -7017,8 +7689,8 @@
   "manualUpload": {
     "message": "Manuell uppladdning"
   },
-  "manualUploadDesc": {
-    "message": "If you do not want to opt into billing sync, manually upload your license here."
+  "manualBillingTokenUploadDesc": {
+    "message": "If you do not want to opt into billing sync, manually upload your license here. This will not automatically unlock Families sponsorships."
   },
   "syncLicense": {
     "message": "Synkronisera licens"
@@ -7238,7 +7910,7 @@
     "message": "Weak password identified and found in a data breach. Use a strong and unique password to protect your account. Are you sure you want to use this password?"
   },
   "characterMinimum": {
-    "message": "$LENGTH$ character minimum",
+    "message": "Minst $LENGTH$ tecken",
     "placeholders": {
       "length": {
         "content": "$1",
@@ -7346,6 +8018,15 @@
     "message": "Your organization requires you to set a master password.",
     "description": "Used as a card title description on the set password page to explain why the user is there"
   },
+  "cardMetrics": {
+    "message": "av $TOTAL$",
+    "placeholders": {
+      "total": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
   "notFound": {
     "message": "$RESOURCE$ not found",
     "placeholders": {
@@ -7405,7 +8086,7 @@
     "message": "Approve request"
   },
   "noDeviceRequests": {
-    "message": "No device requests"
+    "message": "Inga enhetsförfrågningar"
   },
   "noDeviceRequestsDesc": {
     "message": "Member device approval requests will appear here"
@@ -7457,6 +8138,9 @@
   },
   "requestedDeviceApproval": {
     "message": "Requested device approval."
+  },
+  "tdeOffboardingPasswordSet": {
+    "message": "User set a master password during TDE offboarding."
   },
   "startYour7DayFreeTrialOfBitwardenFor": {
     "message": "Start your 7-Day free trial of Bitwarden for $ORG$",
@@ -7596,13 +8280,19 @@
     }
   },
   "collectionManagement": {
-    "message": "Collection management"
+    "message": "Samlingshantering"
   },
   "collectionManagementDesc": {
     "message": "Manage the collection behavior for the organization"
   },
   "limitCollectionCreationDeletionDesc": {
     "message": "Limit collection creation and deletion to owners and admins"
+  },
+  "limitCollectionCreationDesc": {
+    "message": "Limit collection creation to owners and admins"
+  },
+  "limitCollectionDeletionDesc": {
+    "message": "Limit collection deletion to owners and admins"
   },
   "allowAdminAccessToAllCollectionItemsDesc": {
     "message": "Ägare och administratörer kan hantera alla samlingar och objekt"
@@ -7649,11 +8339,18 @@
   "baseUrl": {
     "message": "Server-URL"
   },
+  "selfHostBaseUrl": {
+    "message": "Self-host server URL",
+    "description": "Label for field requesting a self-hosted integration service URL"
+  },
   "aliasDomain": {
     "message": "Aliasdomän"
   },
   "alreadyHaveAccount": {
     "message": "Har du redan ett konto?"
+  },
+  "toggleSideNavigation": {
+    "message": "Toggle side navigation"
   },
   "skipToContent": {
     "message": "Skip to content"
@@ -7662,7 +8359,7 @@
     "message": "At least one member or group must have can manage permission."
   },
   "typePasskey": {
-    "message": "Passkey"
+    "message": "Nyckel"
   },
   "passkeyNotCopied": {
     "message": "Passkey will not be copied"
@@ -7823,8 +8520,11 @@
   "assignToTheseCollections": {
     "message": "Assign to these collections"
   },
-  "bulkCollectionAssignmentDialogDescription": {
-    "message": "Select the collections that the items will be shared with. Once an item is updated in one collection, it will be reflected in all collections. Only organization members with access to these collections will be able to see the items."
+  "bulkCollectionAssignmentDialogDescriptionSingular": {
+    "message": "Only organization members with access to these collections will be able to see the item."
+  },
+  "bulkCollectionAssignmentDialogDescriptionPlural": {
+    "message": "Only organization members with access to these collections will be able to see the items."
   },
   "selectCollectionsToAssign": {
     "message": "Välj samlingar att tilldela"
@@ -7847,6 +8547,12 @@
         "example": "3"
       }
     }
+  },
+  "addField": {
+    "message": "Lägg till fält"
+  },
+  "editField": {
+    "message": "Redigera fält"
   },
   "items": {
     "message": "Objekt"
@@ -7873,7 +8579,7 @@
     "message": "Adjustments to seats will be reflected in the next billing cycle."
   },
   "unassignedSeatsDescription": {
-    "message": "Unassigned subscription seats"
+    "message": "Unassigned seats"
   },
   "purchaseSeatDescription": {
     "message": "Additional seats purchased"
@@ -7948,7 +8654,7 @@
     "description": "The title for the section that deals with machine accounts."
   },
   "newMachineAccount": {
-    "message": "New machine account",
+    "message": "Nytt maskinkonto",
     "description": "Title for creating a new machine account."
   },
   "machineAccountsNoItemsMessage": {
@@ -7960,15 +8666,15 @@
     "description": "Title to indicate that there are no machine accounts to display."
   },
   "deleteMachineAccounts": {
-    "message": "Delete machine accounts",
+    "message": "Radera maskinkonton",
     "description": "Title for the action to delete one or multiple machine accounts."
   },
   "deleteMachineAccount": {
-    "message": "Delete machine account",
+    "message": "Radera maskinkonto",
     "description": "Title for the action to delete a single machine account."
   },
   "viewMachineAccount": {
-    "message": "View machine account",
+    "message": "Visa maskinkonto",
     "description": "Action to view the details of a machine account."
   },
   "deleteMachineAccountDialogMessage": {
@@ -7984,7 +8690,7 @@
     "message": "Deleting machine accounts is permanent and irreversible."
   },
   "deleteMachineAccountsConfirmMessage": {
-    "message": "Delete $COUNT$ machine accounts",
+    "message": "Radera $COUNT$ maskinkonton",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -8003,7 +8709,7 @@
     "description": "Placeholder text for searching machine accounts."
   },
   "editMachineAccount": {
-    "message": "Edit machine account",
+    "message": "Redigera maskinkonto",
     "description": "Title for editing a machine account."
   },
   "machineAccountName": {
@@ -8034,7 +8740,7 @@
     "message": "Assign projects to this machine account. "
   },
   "createMachineAccount": {
-    "message": "Create a machine account"
+    "message": "Skapa ett maskinkonto"
   },
   "maPeopleWarningMessage": {
     "message": "Removing people from a machine account does not remove the access tokens they created. For security best practice, it is recommended to revoke access tokens created by people removed from a machine account."
@@ -8101,23 +8807,6 @@
   },
   "restrictedGroupAccessDesc": {
     "message": "Du kan inte lägga till dig själv i en grupp."
-  },
-  "unassignedItemsBannerSelfHost": {
-    "message": "Notice: On May 2, 2024, unassigned organization items will no longer be visible in your All Vaults view across devices and will only be accessible via the Admin Console. Assign these items to a collection from the Admin Console to make them visible."
-  },
-  "unassignedItemsBannerNotice": {
-    "message": "Notice: Unassigned organization items are no longer visible in your All Vaults view across devices and are now only accessible via the Admin Console."
-  },
-  "unassignedItemsBannerSelfHostNotice": {
-    "message": "Notice: On May 16, 2024, unassigned organization items will no longer be visible in your All Vaults view across devices and will only be accessible via the Admin Console."
-  },
-  "unassignedItemsBannerCTAPartOne": {
-    "message": "Assign these items to a collection from the",
-    "description": "This will be part of a larger sentence, which will read like so: Assign these items to a collection from the Admin Console to make them visible."
-  },
-  "unassignedItemsBannerCTAPartTwo": {
-    "message": "to make them visible.",
-    "description": "This will be part of a larger sentence, which will read like so: Assign these items to a collection from the Admin Console to make them visible."
   },
   "deleteProvider": {
     "message": "Radera leverantör"
@@ -8223,16 +8912,16 @@
     "message": "Select a plan"
   },
   "thirtyFivePercentDiscount": {
-    "message": "35% Discount"
+    "message": "35% rabatt"
   },
   "monthPerMember": {
-    "message": "month per member"
+    "message": "månad per medlem"
   },
   "seats": {
     "message": "Seats"
   },
   "addOrganization": {
-    "message": "Add organization"
+    "message": "Lägg till organisation"
   },
   "createdNewClient": {
     "message": "Successfully created new client"
@@ -8255,8 +8944,26 @@
   "manageBillingFromProviderPortalMessage": {
     "message": "Manage billing from the Provider Portal"
   },
+  "continueSettingUpFreeTrial": {
+    "message": "Continue setting up your free trial of Bitwarden"
+  },
+  "continueSettingUpFreeTrialPasswordManager": {
+    "message": "Continue setting up your free trial of Bitwarden Password Manager"
+  },
+  "continueSettingUpFreeTrialSecretsManager": {
+    "message": "Continue setting up your free trial of Bitwarden Secrets Manager"
+  },
+  "enterTeamsOrgInfo": {
+    "message": "Enter your Teams organization information"
+  },
+  "enterFamiliesOrgInfo": {
+    "message": "Enter your Families organization information"
+  },
+  "enterEnterpriseOrgInfo": {
+    "message": "Enter your Enterprise organization information"
+  },
   "viewItemsIn": {
-    "message": "View items in $NAME$",
+    "message": "Visa objekt i $NAME$",
     "description": "Button to view the contents of a folder or collection",
     "placeholders": {
       "name": {
@@ -8368,14 +9075,510 @@
     "message": "This email address will receive all invoices pertaining to this provider",
     "description": "A hint that shows up on the Provider setup page to inform the admin the billing email will receive the provider's invoices."
   },
+  "upgradeOrganizationEnterprise": {
+    "message": "Identify security risks by auditing member access"
+  },
+  "onlyAvailableForEnterpriseOrganization": {
+    "message": "Quickly view member access across the organization by upgrading to an Enterprise plan."
+  },
   "date": {
     "message": "Datum"
   },
   "exportClientReport": {
     "message": "Exportera klientrapport"
   },
-  "invoiceNumberHeader": {
-    "message": "Fakturanummer",
-    "description": "A table header for an invoice's number"
+  "memberAccessReport": {
+    "message": "Medlemsåtkomst"
+  },
+  "memberAccessReportDesc": {
+    "message": "Ensure members have access to the right credentials and their accounts are secure. Use this report to obtain a CSV of member access and account configurations."
+  },
+  "memberAccessReportPageDesc": {
+    "message": "Audit organization member access across groups, collections, and collection items. The CSV export provides a detailed breakdown per member, including information on collection permissions and account configurations."
+  },
+  "memberAccessReportNoCollection": {
+    "message": "(Ingen samling)"
+  },
+  "memberAccessReportNoCollectionPermission": {
+    "message": "(No Collection Permission)"
+  },
+  "memberAccessReportNoGroup": {
+    "message": "(Ingen grupp)"
+  },
+  "memberAccessReportTwoFactorEnabledTrue": {
+    "message": "On"
+  },
+  "memberAccessReportTwoFactorEnabledFalse": {
+    "message": "Off"
+  },
+  "memberAccessReportAuthenticationEnabledTrue": {
+    "message": "On"
+  },
+  "memberAccessReportAuthenticationEnabledFalse": {
+    "message": "Off"
+  },
+  "higherKDFIterations": {
+    "message": "Higher KDF iterations can help protect your master password from being brute forced by an attacker."
+  },
+  "incrementsOf100,000": {
+    "message": "increments of 100,000"
+  },
+  "smallIncrements": {
+    "message": "small increments"
+  },
+  "kdfIterationRecommends": {
+    "message": "Vi rekommenderar 600.000 eller mer"
+  },
+  "kdfToHighWarningIncreaseInIncrements": {
+    "message": "For older devices, setting your KDF too high may lead to performance issues. Increase the value in $VALUE$ and test your devices.",
+    "placeholders": {
+      "value": {
+        "content": "$1",
+        "example": "increments of 100,000"
+      }
+    }
+  },
+  "providerReinstate": {
+    "message": " Contact Customer Support to reinstate your subscription."
+  },
+  "secretPeopleDescription": {
+    "message": "Grant groups or people access to this secret. Permissions set for people will override permissions set by groups."
+  },
+  "secretPeopleEmptyMessage": {
+    "message": "Add people or groups to share access to this secret"
+  },
+  "secretMachineAccountsDescription": {
+    "message": "Grant machine accounts access to this secret."
+  },
+  "secretMachineAccountsEmptyMessage": {
+    "message": "Add machine accounts to grant access to this secret"
+  },
+  "smAccessRemovalWarningSecretTitle": {
+    "message": "Remove access to this secret"
+  },
+  "smAccessRemovalSecretMessage": {
+    "message": "This action will remove your access to this secret."
+  },
+  "invoice": {
+    "message": "Faktura"
+  },
+  "unassignedSeatsAvailable": {
+    "message": "You have $SEATS$ unassigned seats available.",
+    "placeholders": {
+      "seats": {
+        "content": "$1",
+        "example": "10"
+      }
+    },
+    "description": "A message showing how many unassigned seats are available for a provider."
+  },
+  "contactYourProviderForAdditionalSeats": {
+    "message": "Contact your provider admin to purchase additional seats."
+  },
+  "open": {
+    "message": "Öppen",
+    "description": "The status of an invoice."
+  },
+  "uncollectible": {
+    "message": "Uncollectible",
+    "description": "The status of an invoice."
+  },
+  "clientDetails": {
+    "message": "Client details"
+  },
+  "downloadCSV": {
+    "message": "Ladda ner CSV"
+  },
+  "monthlySubscriptionUserSeatsMessage": {
+    "message": "Adjustments to your subscription will result in prorated charges to your billing totals on your next billing period. "
+  },
+  "annualSubscriptionUserSeatsMessage": {
+    "message": "Adjustments to your subscription will result in prorated charges on a monthly billing cycle. "
+  },
+  "billingHistoryDescription": {
+    "message": "Download a CSV to obtain client details for each billing date. Prorated charges are not included in the CSV and may vary from the linked invoice. For the most accurate billing details, refer to your monthly invoices.",
+    "description": "A paragraph on the Billing History page of the Provider Portal letting users know they can download a CSV report for their invoices that does not include prorations."
+  },
+  "noInvoicesToList": {
+    "message": "There are no invoices to list",
+    "description": "A paragraph on the Billing History page of the Provider Portal letting users know they can download a CSV report for their invoices that does not include prorations."
+  },
+  "providerClientVaultPrivacyNotification": {
+    "message": "Notice: Later this month, client vault privacy will be improved and provider members will no longer have direct access to client vault items. For questions,",
+    "description": "This will be displayed as part of a larger sentence. The whole sentence reads: 'Notice: Later this month, client vault privacy will be improved and provider members will no longer have direct access to client vault items. For questions, please contact Bitwarden support'."
+  },
+  "contactBitwardenSupport": {
+    "message": "contact Bitwarden support.",
+    "description": "This will be displayed as part of a larger sentence. The whole sentence reads: 'Notice: Later this month, client vault privacy will be improved and provider members will no longer have direct access to client vault items. For questions, please contact Bitwarden support'. 'Bitwarden' should not be translated"
+  },
+  "sponsored": {
+    "message": "Sponsored"
+  },
+  "licenseAndBillingManagementDesc": {
+    "message": "After making updates in the Bitwarden cloud server, upload your license file to apply the most recent changes."
+  },
+  "addToFolder": {
+    "message": "Lägg till i mapp"
+  },
+  "selectFolder": {
+    "message": "Välj mapp"
+  },
+  "personalItemTransferWarningSingular": {
+    "message": "1 item will be permanently transferred to the selected organization. You will no longer own this item."
+  },
+  "personalItemsTransferWarningPlural": {
+    "message": "$PERSONAL_ITEMS_COUNT$ items will be permanently transferred to the selected organization. You will no longer own these items.",
+    "placeholders": {
+      "personal_items_count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "personalItemWithOrgTransferWarningSingular": {
+    "message": "1 item will be permanently transferred to $ORG$. You will no longer own this item.",
+    "placeholders": {
+      "org": {
+        "content": "$1",
+        "example": "Organization name"
+      }
+    }
+  },
+  "personalItemsWithOrgTransferWarningPlural": {
+    "message": "$PERSONAL_ITEMS_COUNT$ items will be permanently transferred to $ORG$. You will no longer own these items.",
+    "placeholders": {
+      "personal_items_count": {
+        "content": "$1",
+        "example": "2"
+      },
+      "org": {
+        "content": "$2",
+        "example": "Organization name"
+      }
+    }
+  },
+  "data": {
+    "message": "Data"
+  },
+  "purchasedSeatsRemoved": {
+    "message": "purchased seats removed"
+  },
+  "environmentVariables": {
+    "message": "Miljövariabler"
+  },
+  "organizationId": {
+    "message": "Organisations-ID"
+  },
+  "projectIds": {
+    "message": "Project IDs"
+  },
+  "projectId": {
+    "message": "Projekt-ID"
+  },
+  "projectsAccessedByMachineAccount": {
+    "message": "The following projects can be accessed by this machine account."
+  },
+  "config": {
+    "message": "Config"
+  },
+  "learnMoreAboutEmergencyAccess": {
+    "message": "Läs mer om nödåtkomst"
+  },
+  "learnMoreAboutMatchDetection": {
+    "message": "Learn more about match detection"
+  },
+  "learnMoreAboutMasterPasswordReprompt": {
+    "message": "Learn more about master password re-prompt"
+  },
+  "learnMoreAboutSearchingYourVault": {
+    "message": "Learn more about searching your vault"
+  },
+  "learnMoreAboutYourAccountFingerprintPhrase": {
+    "message": "Learn about your account fingerprint phrase"
+  },
+  "impactOfRotatingYourEncryptionKey": {
+    "message": "Impact of rotating your encryption key"
+  },
+  "learnMoreAboutEncryptionAlgorithms": {
+    "message": "Läs mer om krypteringsalgoritmer"
+  },
+  "learnMoreAboutKDFIterations": {
+    "message": "Learn more about KDF iterations"
+  },
+  "learnMoreAboutLocalization": {
+    "message": "Läs mer om lokalisering"
+  },
+  "learnMoreAboutWebsiteIcons": {
+    "message": "Learn more about using website icons"
+  },
+  "learnMoreAboutUserAccess": {
+    "message": "Läs mer om användaråtkomst"
+  },
+  "learnMoreAboutMemberRoles": {
+    "message": "Learn more about member roles and permissions"
+  },
+  "whatIsACvvNumber": {
+    "message": "Vad är ett CVV-nummer?"
+  },
+  "learnMoreAboutApi": {
+    "message": "Läs mer om Bitwardens API"
+  },
+  "fileSends": {
+    "message": "File Sends"
+  },
+  "textSends": {
+    "message": "Text Sends"
+  },
+  "includesXMembers": {
+    "message": "för $COUNT$ medlem",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "costPerMember": {
+    "message": "$COST$",
+    "placeholders": {
+      "cost": {
+        "content": "$1",
+        "example": "$3"
+      }
+    }
+  },
+  "optionalOnPremHosting": {
+    "message": "Optional on-premises hosting"
+  },
+  "upgradeFreeOrganization": {
+    "message": "Upgrade your $NAME$ organization ",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "Teams"
+      }
+    }
+  },
+  "includeSsoAuthenticationMessage": {
+    "message": "SSO-autentisering"
+  },
+  "familiesPlanInvLimitReachedManageBilling": {
+    "message": "Families organizations may have up to $SEATCOUNT$ members. Upgrade to a paid plan to invite more members.",
+    "placeholders": {
+      "seatcount": {
+        "content": "$1",
+        "example": "6"
+      }
+    }
+  },
+  "familiesPlanInvLimitReachedNoManageBilling": {
+    "message": "Families organizations may have up to $SEATCOUNT$ members. Contact your organization owner to upgrade.",
+    "placeholders": {
+      "seatcount": {
+        "content": "$1",
+        "example": "6"
+      }
+    }
+  },
+  "upgradePlans": {
+    "message": "Upgrade your plan to invite members and experience powerful security features."
+  },
+  "upgradeDiscount": {
+    "message": "Spara $AMOUNT$%",
+    "placeholders": {
+      "amount": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "enterprisePlanUpgradeMessage": {
+    "message": "Advanced capabilities for larger organizations"
+  },
+  "teamsPlanUpgradeMessage": {
+    "message": "Resilient protection for growing teams"
+  },
+  "teamsInviteMessage": {
+    "message": "Invite unlimited members"
+  },
+  "accessToCreateGroups": {
+    "message": "Access to create groups"
+  },
+  "syncGroupsAndUsersFromDirectory": {
+    "message": "Sync groups and users from a directory"
+  },
+  "familyPlanUpgradeMessage": {
+    "message": "Säkra dina familjeinloggningar"
+  },
+  "accessToPremiumFeatures": {
+    "message": "Tillgång till Premium-funktioner"
+  },
+  "additionalStorageGbMessage": {
+    "message": "GB additional storage"
+  },
+  "premiumAccounts": {
+    "message": "6 premium accounts"
+  },
+  "unlimitedSharing": {
+    "message": "Obegränsad delning"
+  },
+  "unlimitedCollections": {
+    "message": "Obegränsat antal samlingar"
+  },
+  "secureDataSharing": {
+    "message": "Säker datadelning"
+  },
+  "eventLogMonitoring": {
+    "message": "Event log monitoring"
+  },
+  "directoryIntegration": {
+    "message": "Directory integration"
+  },
+  "passwordLessSso": {
+    "message": "PasswordLess SSO"
+  },
+  "accountRecovery": {
+    "message": "Kontoåterställning"
+  },
+  "customRoles": {
+    "message": "Anpassade roller"
+  },
+  "unlimitedSecretsStorage": {
+    "message": "Unlimited secrets storage"
+  },
+  "unlimitedUsers": {
+    "message": "Obegränsat antal användare"
+  },
+  "UpTo50MachineAccounts": {
+    "message": "Upp till 50 maskinkonton"
+  },
+  "UpTo20MachineAccounts": {
+    "message": "Upp till 20 maskinkonton"
+  },
+  "current": {
+    "message": "Current"
+  },
+  "secretsManagerSubscriptionInfo": {
+    "message": "Your Secrets Manager subscription will upgrade based on the plan selected"
+  },
+  "bitwardenPasswordManager": {
+    "message": "Bitwarden Lösenordshanterare"
+  },
+  "secretsManagerComplimentaryPasswordManager": {
+    "message": "Your complimentary one year Password Manager subscription will upgrade to the selected plan. You will not be charged until the complimentary period is over."
+  },
+  "fileSavedToDevice": {
+    "message": "File saved to device. Manage from your device downloads."
+  },
+  "publicApi": {
+    "message": "Public API",
+    "description": "The text, 'API', is an acronym and should not be translated."
+  },
+  "showCharacterCount": {
+    "message": "Visa teckenantal"
+  },
+  "hideCharacterCount": {
+    "message": "Dölj teckenantal"
+  },
+  "editAccess": {
+    "message": "Redigera åtkomst"
+  },
+  "textHelpText": {
+    "message": "Använd textfält för data, som t. ex. säkerhetsfrågor"
+  },
+  "hiddenHelpText": {
+    "message": "Använd dolda fält för känslig data, som t. ex. ett lösenord"
+  },
+  "checkBoxHelpText": {
+    "message": "Use checkboxes if you'd like to autofill a form's checkbox, like a remember email"
+  },
+  "linkedHelpText": {
+    "message": "Use a linked field when you are experiencing autofill issues for a specific website."
+  },
+  "linkedLabelHelpText": {
+    "message": "Enter the the field's html id, name, aria-label, or placeholder."
+  },
+  "uppercaseDescription": {
+    "message": "Include uppercase characters",
+    "description": "Tooltip for the password generator uppercase character checkbox"
+  },
+  "uppercaseLabel": {
+    "message": "A-Z",
+    "description": "Label for the password generator uppercase character checkbox"
+  },
+  "lowercaseDescription": {
+    "message": "Include lowercase characters",
+    "description": "Full description for the password generator lowercase character checkbox"
+  },
+  "lowercaseLabel": {
+    "message": "a-z",
+    "description": "Label for the password generator lowercase character checkbox"
+  },
+  "numbersDescription": {
+    "message": "Include numbers",
+    "description": "Full description for the password generator numbers checkbox"
+  },
+  "numbersLabel": {
+    "message": "0-9",
+    "description": "Label for the password generator numbers checkbox"
+  },
+  "specialCharactersDescription": {
+    "message": "Inkludera specialtecken",
+    "description": "Full description for the password generator special characters checkbox"
+  },
+  "specialCharactersLabel": {
+    "message": "!@#$%^&*",
+    "description": "Label for the password generator special characters checkbox"
+  },
+  "addAttachment": {
+    "message": "Lägg till bilaga"
+  },
+  "maxFileSizeSansPunctuation": {
+    "message": "Maximal filstorlek är 500 MB"
+  },
+  "permanentlyDeleteAttachmentConfirmation": {
+    "message": "Are you sure you want to permanently delete this attachment?"
+  },
+  "manageSubscriptionFromThe": {
+    "message": "Manage subscription from the",
+    "description": "This represents the beginning of a sentence. The full sentence will be 'Manage subscription from the Provider Portal', but 'Provider Portal' will be a link and thus cannot be included in the translation file."
+  },
+  "toHostBitwardenOnYourOwnServer": {
+    "message": "To host Bitwarden on your own server, you will need to upload your license file. To support Free Families plans and advanced billing capabilities for your self-hosted organization, you will need to set up automatic sync in your self-hosted organization."
+  },
+  "selfHostingTitleProper": {
+    "message": "Self-Hosting"
+  },
+  "verified-domain-single-org-warning": {
+    "message": "Verifying a domain will turn on the single organization policy."
+  },
+  "single-org-revoked-user-warning": {
+    "message": "Non-compliant members will be revoked. Administrators can restore members once they leave all other organizations."
+  },
+  "deleteOrganizationUser": {
+    "message": "Radera $NAME$",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "John Doe"
+      },
+      "description": "Title for the delete organization user dialog"
+    }
+  },
+  "deleteOrganizationUserWarning": {
+    "message": "When a member is deleted, their Bitwarden account and individual vault data will be permanently deleted. Collection data will remain in the organization. To reinstate them they must create an account and be onboarded again.",
+    "description": "Warning for the delete organization user dialog"
+  },
+  "organizationUserDeleted": {
+    "message": "Deleted $NAME$",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "John Doe"
+      }
+    }
+  },
+  "organizationUserDeletedDesc": {
+    "message": "The user was removed from the organization and all associated user data has been deleted."
   }
 }

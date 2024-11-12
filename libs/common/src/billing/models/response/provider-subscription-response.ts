@@ -1,28 +1,43 @@
+import { ProviderType } from "@bitwarden/common/admin-console/enums";
+import { PlanType, ProductTierType } from "@bitwarden/common/billing/enums";
+import { SubscriptionSuspensionResponse } from "@bitwarden/common/billing/models/response/subscription-suspension.response";
+import { TaxInfoResponse } from "@bitwarden/common/billing/models/response/tax-info.response";
+
 import { BaseResponse } from "../../../models/response/base.response";
 
 export class ProviderSubscriptionResponse extends BaseResponse {
   status: string;
-  currentPeriodEndDate: Date;
+  currentPeriodEndDate: string;
   discountPercentage?: number | null;
-  plans: ProviderPlanResponse[] = [];
   collectionMethod: string;
-  unpaidPeriodEndDate?: string;
-  gracePeriod?: number | null;
-  suspensionDate?: string;
+  plans: ProviderPlanResponse[] = [];
+  accountCredit: number;
+  taxInformation?: TaxInfoResponse;
+  cancelAt?: string;
+  suspension?: SubscriptionSuspensionResponse;
+  providerType: ProviderType;
 
   constructor(response: any) {
     super(response);
     this.status = this.getResponseProperty("status");
-    this.currentPeriodEndDate = new Date(this.getResponseProperty("currentPeriodEndDate"));
+    this.currentPeriodEndDate = this.getResponseProperty("currentPeriodEndDate");
     this.discountPercentage = this.getResponseProperty("discountPercentage");
     this.collectionMethod = this.getResponseProperty("collectionMethod");
-    this.unpaidPeriodEndDate = this.getResponseProperty("unpaidPeriodEndDate");
-    this.gracePeriod = this.getResponseProperty("gracePeriod");
-    this.suspensionDate = this.getResponseProperty("suspensionDate");
     const plans = this.getResponseProperty("plans");
     if (plans != null) {
-      this.plans = plans.map((i: any) => new ProviderPlanResponse(i));
+      this.plans = plans.map((plan: any) => new ProviderPlanResponse(plan));
     }
+    this.accountCredit = this.getResponseProperty("accountCredit");
+    const taxInformation = this.getResponseProperty("taxInformation");
+    if (taxInformation != null) {
+      this.taxInformation = new TaxInfoResponse(taxInformation);
+    }
+    this.cancelAt = this.getResponseProperty("cancelAt");
+    const suspension = this.getResponseProperty("suspension");
+    if (suspension != null) {
+      this.suspension = new SubscriptionSuspensionResponse(suspension);
+    }
+    this.providerType = this.getResponseProperty("providerType");
   }
 }
 
@@ -33,6 +48,8 @@ export class ProviderPlanResponse extends BaseResponse {
   purchasedSeats: number;
   cost: number;
   cadence: string;
+  type: PlanType;
+  productTier: ProductTierType;
 
   constructor(response: any) {
     super(response);
@@ -42,5 +59,7 @@ export class ProviderPlanResponse extends BaseResponse {
     this.purchasedSeats = this.getResponseProperty("PurchasedSeats");
     this.cost = this.getResponseProperty("Cost");
     this.cadence = this.getResponseProperty("Cadence");
+    this.type = this.getResponseProperty("Type");
+    this.productTier = this.getResponseProperty("ProductTier");
   }
 }

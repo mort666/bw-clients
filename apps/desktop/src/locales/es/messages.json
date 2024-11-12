@@ -60,6 +60,9 @@
       }
     }
   },
+  "welcomeBack": {
+    "message": "Welcome back"
+  },
   "moveToOrgDesc": {
     "message": "Elige una organización a la que deseas mover este objeto. Moviendo a una organización transfiere la propiedad del objeto a esa organización. Ya no serás el dueño directo de este objeto una vez que haya sido movido."
   },
@@ -157,7 +160,7 @@
     "message": "Empresa"
   },
   "ssn": {
-    "message": "Nº de la seguridad social"
+    "message": "Nº de seguridad social"
   },
   "passportNumber": {
     "message": "Nº de pasaporte"
@@ -258,6 +261,9 @@
   },
   "generatePassword": {
     "message": "Generar contraseña"
+  },
+  "generatePassphrase": {
+    "message": "Generate passphrase"
   },
   "type": {
     "message": "Tipo"
@@ -394,6 +400,10 @@
   "copyPassword": {
     "message": "Copiar contraseña"
   },
+  "copyPassphrase": {
+    "message": "Copy passphrase",
+    "description": "Copy passphrase to clipboard"
+  },
   "copyUri": {
     "message": "Copiar URI"
   },
@@ -407,16 +417,55 @@
     "message": "Longitud mínima de la contraseña"
   },
   "uppercase": {
-    "message": "Mayúsculas (A-Z)"
+    "message": "Mayúsculas (A-Z)",
+    "description": "deprecated. Use uppercaseLabel instead."
   },
   "lowercase": {
-    "message": "Minúsculas (a-z)"
+    "message": "Minúsculas (a-z)",
+    "description": "deprecated. Use lowercaseLabel instead."
   },
   "numbers": {
-    "message": "Números (0-9)"
+    "message": "Números (0-9)",
+    "description": "deprecated. Use numbersLabel instead."
   },
   "specialCharacters": {
     "message": "Carácteres especiales (!@#$%^&*)"
+  },
+  "include": {
+    "message": "Include",
+    "description": "Card header for password generator include block"
+  },
+  "uppercaseDescription": {
+    "message": "Include uppercase characters",
+    "description": "Tooltip for the password generator uppercase character checkbox"
+  },
+  "uppercaseLabel": {
+    "message": "A-Z",
+    "description": "Label for the password generator uppercase character checkbox"
+  },
+  "lowercaseDescription": {
+    "message": "Include lowercase characters",
+    "description": "Full description for the password generator lowercase character checkbox"
+  },
+  "lowercaseLabel": {
+    "message": "a-z",
+    "description": "Label for the password generator lowercase character checkbox"
+  },
+  "numbersDescription": {
+    "message": "Include numbers",
+    "description": "Full description for the password generator numbers checkbox"
+  },
+  "numbersLabel": {
+    "message": "0-9",
+    "description": "Label for the password generator numbers checkbox"
+  },
+  "specialCharactersDescription": {
+    "message": "Include special characters",
+    "description": "Full description for the password generator special characters checkbox"
+  },
+  "specialCharactersLabel": {
+    "message": "!@#$%^&*",
+    "description": "Label for the password generator special characters checkbox"
   },
   "numWords": {
     "message": "Número de palabras"
@@ -442,7 +491,16 @@
     "description": "Minimum Special Characters"
   },
   "ambiguous": {
-    "message": "Evitar caracteres ambiguos"
+    "message": "Evitar caracteres ambiguos",
+    "description": "deprecated. Use avoidAmbiguous instead."
+  },
+  "avoidAmbiguous": {
+    "message": "Avoid ambiguous characters",
+    "description": "Label for the avoid ambiguous characters checkbox."
+  },
+  "generatorPolicyInEffect": {
+    "message": "Enterprise policy requirements have been applied to your generator options.",
+    "description": "Indicates that a policy limits the credential generator screen."
   },
   "searchCollection": {
     "message": "Buscar en colección"
@@ -499,14 +557,29 @@
   "createAccount": {
     "message": "Crear cuenta"
   },
+  "newToBitwarden": {
+    "message": "New to Bitwarden?"
+  },
   "setAStrongPassword": {
-    "message": "Set a strong password"
+    "message": "Establece una contraseña fuerte"
   },
   "finishCreatingYourAccountBySettingAPassword": {
-    "message": "Finish creating your account by setting a password"
+    "message": "Termina de crear tu cuenta estableciendo una contraseña"
   },
   "logIn": {
     "message": "Identificarse"
+  },
+  "logInToBitwarden": {
+    "message": "Log in to Bitwarden"
+  },
+  "logInWithPasskey": {
+    "message": "Log in with passkey"
+  },
+  "loginWithDevice": {
+    "message": "Log in with device"
+  },
+  "useSingleSignOn": {
+    "message": "Use single sign-on"
   },
   "submit": {
     "message": "Enviar"
@@ -526,8 +599,60 @@
   "masterPassHint": {
     "message": "Pista de contraseña maestra (opcional)"
   },
+  "masterPassHintText": {
+    "message": "Si olvidas tu contraseña, la pista de contraseña puede ser enviada a tu correo electrónico. Máximo de caracteres de $CURRENT$/$MAXIMUM$.",
+    "placeholders": {
+      "current": {
+        "content": "$1",
+        "example": "0"
+      },
+      "maximum": {
+        "content": "$2",
+        "example": "50"
+      }
+    }
+  },
+  "masterPassword": {
+    "message": "Contraseña maestra"
+  },
+  "masterPassImportant": {
+    "message": "¡Tu contraseña maestra no se puede recuperar si la olvidas!"
+  },
+  "confirmMasterPassword": {
+    "message": "Confirmar contraseña maestra"
+  },
+  "masterPassHintLabel": {
+    "message": "Pista de la contraseña maestra"
+  },
+  "joinOrganization": {
+    "message": "Unirse a organización"
+  },
+  "joinOrganizationName": {
+    "message": "Join $ORGANIZATIONNAME$",
+    "placeholders": {
+      "organizationName": {
+        "content": "$1",
+        "example": "My Org Name"
+      }
+    }
+  },
+  "finishJoiningThisOrganizationBySettingAMasterPassword": {
+    "message": "Termina de unirte a esta organización estableciendo una contraseña maestra."
+  },
   "settings": {
     "message": "Ajustes"
+  },
+  "accountEmail": {
+    "message": "Correo electrónico de la cuenta"
+  },
+  "requestHint": {
+    "message": "Solicitar pista"
+  },
+  "requestPasswordHint": {
+    "message": "Solicitar pista de la contraseña"
+  },
+  "enterYourAccountEmailAddressAndYourPasswordHintWillBeSentToYou": {
+    "message": "Introduce la dirección de correo electrónico de tu cuenta y se te enviará la pista de tu contraseña"
   },
   "passwordHint": {
     "message": "Pista de contraseña"
@@ -560,17 +685,23 @@
       }
     }
   },
+  "youSuccessfullyLoggedIn": {
+    "message": "Has iniciado sesión correctamente"
+  },
+  "youMayCloseThisWindow": {
+    "message": "Puedes cerrar esta ventana"
+  },
   "masterPassDoesntMatch": {
     "message": "La confirmación de contraseña maestra no coincide."
   },
   "newAccountCreated": {
     "message": "¡Tu nueva cuenta ha sido creada! Ahora puedes acceder."
   },
-  "youSuccessfullyLoggedIn": {
-    "message": "Has iniciado sesión correctamente"
+  "newAccountCreated2": {
+    "message": "¡Tu nueva cuenta ha sido creada!"
   },
-  "youMayCloseThisWindow": {
-    "message": "Puedes cerrar esta ventana"
+  "youHaveBeenLoggedIn": {
+    "message": "¡Has iniciado sesión!"
   },
   "masterPassSent": {
     "message": "Te hemos enviado un correo electrónico con la pista de tu contraseña maestra."
@@ -601,6 +732,9 @@
   },
   "verificationCodeRequired": {
     "message": "Código de verificación requerido."
+  },
+  "webauthnCancelOrTimeout": {
+    "message": "La autenticación fue cancelada o tardó demasiado. Por favor, inténtalo de nuevo."
   },
   "invalidVerificationCode": {
     "message": "Código de verificación incorrecto"
@@ -653,18 +787,18 @@
   "authenticatorAppTitle": {
     "message": "Aplicación de autenticación"
   },
-  "authenticatorAppDesc": {
-    "message": "Utiliza una aplicación de autenticación (como Authy o Google Authenticator) para generar código de verificación basados en tiempo.",
-    "description": "'Authy' and 'Google Authenticator' are product names and should not be translated."
+  "authenticatorAppDescV2": {
+    "message": "Introduce un código generado por una aplicación de autenticación como Bitwarden Authenticator.",
+    "description": "'Bitwarden Authenticator' is a product name and should not be translated."
   },
-  "yubiKeyTitle": {
-    "message": "Llave de seguridad YubiKey OTP"
+  "yubiKeyTitleV2": {
+    "message": "Llave de seguridad Yubico OTP"
   },
   "yubiKeyDesc": {
     "message": "Usa un Yubikey para acceder a tu cuenta. Funciona con YubiKey 4, 4 Nano, 4C y dispositivos NEO."
   },
-  "duoDesc": {
-    "message": "Verificar con Duo Security usando la aplicación Duo Mobile, SMS, llamada telefónica o llave de seguridad U2F.",
+  "duoDescV2": {
+    "message": "Introduce un código generado por Duo Security.",
     "description": "'Duo Security' and 'Duo Mobile' are product names and should not be translated."
   },
   "duoOrganizationDesc": {
@@ -680,8 +814,8 @@
   "emailTitle": {
     "message": "Correo electrónico"
   },
-  "emailDesc": {
-    "message": "Los códigos de verificación te serán enviados por correo electrónico."
+  "emailDescV2": {
+    "message": "Introduce el código enviado a tu dirección de correo electrónico."
   },
   "loginUnavailable": {
     "message": "Entrada no disponible"
@@ -702,13 +836,13 @@
     "message": "Especifica la URL base de tu instalación de Bitwarden de alojamiento propio."
   },
   "selfHostedBaseUrlHint": {
-    "message": "Specify the base URL of your on-premises hosted Bitwarden installation. Example: https://bitwarden.company.com"
+    "message": "Especifica la dirección URL base de tu instalación alojada localmente de Bitwarden. Por ejemplo: https://bitwarden.empresa.com"
   },
   "selfHostedCustomEnvHeader": {
-    "message": "For advanced configuration, you can specify the base URL of each service independently."
+    "message": "Para la configuración avanzada, puedes especificar la URL base de cada servicio de forma independiente."
   },
   "selfHostedEnvFormInvalid": {
-    "message": "You must add either the base Server URL or at least one custom environment."
+    "message": "Debes añadir o bien la URL del servidor base, o al menos un entorno personalizado."
   },
   "customEnvironment": {
     "message": "Entorno personalizado"
@@ -718,6 +852,10 @@
   },
   "baseUrl": {
     "message": "URL del servidor"
+  },
+  "selfHostBaseUrl": {
+    "message": "Self-host server URL",
+    "description": "Label for field requesting a self-hosted integration service URL"
   },
   "apiUrl": {
     "message": "URL del servidor de la API"
@@ -759,10 +897,22 @@
     "message": "Sesión terminada"
   },
   "loggedOutDesc": {
-    "message": "You have been logged out of your account."
+    "message": "Has cerrado sesión de tu cuenta."
   },
   "loginExpired": {
     "message": "Tu sesión ha expirado."
+  },
+  "restartRegistration": {
+    "message": "Reiniciar registro"
+  },
+  "expiredLink": {
+    "message": "Enlace expirado"
+  },
+  "pleaseRestartRegistrationOrTryLoggingIn": {
+    "message": "Por favor, reinicia el registro o intenta iniciar sesión."
+  },
+  "youMayAlreadyHaveAnAccount": {
+    "message": "Puede que ya tengas una cuenta"
   },
   "logOutConfirmation": {
     "message": "¿Estás seguro de querer cerrar sesión?"
@@ -850,6 +1000,18 @@
   "yourVaultIsLocked": {
     "message": "Tu caja fuerte está bloqueada. Verifica tu contraseña maestra para continuar."
   },
+  "yourAccountIsLocked": {
+    "message": "Your account is locked"
+  },
+  "or": {
+    "message": "or"
+  },
+  "unlockWithBiometrics": {
+    "message": "Unlock with biometrics"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Unlock with master password"
+  },
   "unlock": {
     "message": "Desbloquear"
   },
@@ -877,6 +1039,9 @@
   },
   "vaultTimeout": {
     "message": "Tiempo de espera de la caja fuerte excedido"
+  },
+  "vaultTimeout1": {
+    "message": "Timeout"
   },
   "vaultTimeoutDesc": {
     "message": "Elije cuando se agotará el tiempo de espera de tu caja fuerte y se ejecutará la acción seleccionada."
@@ -1082,6 +1247,9 @@
     "message": "Copiar número",
     "description": "Copy credit card number"
   },
+  "copyEmail": {
+    "message": "Copy email"
+  },
   "copySecurityCode": {
     "message": "Copiar código de seguridad",
     "description": "Copy credit card security code (CVV)"
@@ -1127,6 +1295,9 @@
   },
   "premiumPurchaseAlert": {
     "message": "Puedes comprar la membresía Premium en la caja fuerte web de bitwarden.com. ¿Quieres visitar el sitio web ahora?"
+  },
+  "premiumPurchaseAlertV2": {
+    "message": "You can purchase Premium from your account settings on the Bitwarden web app."
   },
   "premiumCurrentMember": {
     "message": "¡Eres un miembro Premium!"
@@ -1230,11 +1401,14 @@
       }
     }
   },
+  "copySuccessful": {
+    "message": "Copy Successful"
+  },
   "errorRefreshingAccessToken": {
-    "message": "Access Token Refresh Error"
+    "message": "Error de actualización del token de acceso"
   },
   "errorRefreshingAccessTokenDesc": {
-    "message": "No refresh token or API keys found. Please try logging out and logging back in."
+    "message": "No se encontró un token de actualización o clave de API. Por favor, intenta cerrar la sesión y volver a iniciarla."
   },
   "help": {
     "message": "Ayuda"
@@ -1324,7 +1498,7 @@
     "description": "ex. Date this password was updated"
   },
   "exportFrom": {
-    "message": "Export from"
+    "message": "Exportar desde"
   },
   "exportVault": {
     "message": "Exportar caja fuerte"
@@ -1333,31 +1507,31 @@
     "message": "Formato de archivo"
   },
   "fileEncryptedExportWarningDesc": {
-    "message": "This file export will be password protected and require the file password to decrypt."
+    "message": "Esta exportación de archivo estará protegida por contraseña, y requerirá la contraseña del archivo para descifrarla."
   },
   "filePassword": {
-    "message": "File password"
+    "message": "Contraseña del archivo"
   },
   "exportPasswordDescription": {
-    "message": "This password will be used to export and import this file"
+    "message": "Esta contraseña será utilizada para exportar e importar este archivo"
   },
   "accountRestrictedOptionDescription": {
-    "message": "Use your account encryption key, derived from your account's username and Master Password, to encrypt the export and restrict import to only the current Bitwarden account."
+    "message": "Utiliza la clave de cifrado de tu cuenta, derivada del nombre de usuario y contraseña maestra de tu cuenta, para cifrar la exportación y restringir la importación sólo a la cuenta actual de Bitwarden."
   },
   "passwordProtected": {
-    "message": "Password protected"
+    "message": "Protegido por contraseña"
   },
   "passwordProtectedOptionDescription": {
-    "message": "Set a file password to encrypt the export and import it to any Bitwarden account using the password for decryption."
+    "message": "Establece una contraseña de archivo para cifrar la exportación e importarla a cualquier cuenta de Bitwarden utilizando la contraseña para descifrarla."
   },
   "exportTypeHeading": {
-    "message": "Export type"
+    "message": "Tipo de exportación"
   },
   "accountRestricted": {
-    "message": "Account restricted"
+    "message": "Cuenta restringida"
   },
   "filePasswordAndConfirmFilePasswordDoNotMatch": {
-    "message": "“File password”  and “Confirm file password“ do not match."
+    "message": "\"Contraseña del archivo\" y \"Confirmar contraseña del archivo\" no coinciden."
   },
   "hCaptchaUrl": {
     "message": "hCaptcha Url",
@@ -1464,8 +1638,14 @@
   "additionalWindowsHelloSettings": {
     "message": "Ajustes adicionales de Windows Hello"
   },
+  "unlockWithPolkit": {
+    "message": "Unlock with system authentication"
+  },
   "windowsHelloConsentMessage": {
     "message": "Verificar para Bitwarden."
+  },
+  "polkitConsentMessage": {
+    "message": "Authenticate to unlock Bitwarden."
   },
   "unlockWithTouchId": {
     "message": "Desbloquear con Touch ID"
@@ -1479,6 +1659,9 @@
   "autoPromptWindowsHello": {
     "message": "Solicitar Windows Hello al iniciar"
   },
+  "autoPromptPolkit": {
+    "message": "Ask for system authentication on launch"
+  },
   "autoPromptTouchId": {
     "message": "Solicitar Touch ID al iniciar"
   },
@@ -1488,8 +1671,8 @@
   "recommendedForSecurity": {
     "message": "Recomendado por seguridad."
   },
-  "lockWithMasterPassOnRestart": {
-    "message": "Bloquear con contraseña maestra al reiniciar"
+  "lockWithMasterPassOnRestart1": {
+    "message": "Lock with master password on restart"
   },
   "deleteAccount": {
     "message": "Eliminar cuenta"
@@ -1499,6 +1682,12 @@
   },
   "deleteAccountWarning": {
     "message": "El borrado de su cuenta es una operación permanente. No se puede deshacer."
+  },
+  "cannotDeleteAccount": {
+    "message": "Cannot delete account"
+  },
+  "cannotDeleteAccountDesc": {
+    "message": "This action cannot be completed because your account is owned by an organization. Contact your organization administrator for additional details."
   },
   "accountDeleted": {
     "message": "Cuenta eliminada"
@@ -1566,7 +1755,7 @@
   },
   "lock": {
     "message": "Bloquear",
-    "description": "Verb form: to make secure or inaccesible by"
+    "description": "Verb form: to make secure or inaccessible by"
   },
   "trash": {
     "message": "Papelera",
@@ -1609,6 +1798,15 @@
   "orgRequiresYouToSetPassword": {
     "message": "Tu organización requiere que establezcas una contraseña maestra.",
     "description": "Used as a card title description on the set password page to explain why the user is there"
+  },
+  "cardMetrics": {
+    "message": "out of $TOTAL$",
+    "placeholders": {
+      "total": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
   },
   "verificationRequired": {
     "message": "Verificación requerida",
@@ -1665,20 +1863,20 @@
   "masterPasswordPolicyRequirementsNotMet": {
     "message": "Su nueva contraseña maestra no cumple con los requisitos de la política."
   },
-  "receiveMarketingEmails": {
-    "message": "Get emails from Bitwarden for announcements, advice, and research opportunities."
+  "receiveMarketingEmailsV2": {
+    "message": "Get advice, announcements, and research opportunities from Bitwarden in your inbox."
   },
   "unsubscribe": {
-    "message": "Unsubscribe"
+    "message": "Darse de baja"
   },
   "atAnyTime": {
-    "message": "at any time."
+    "message": "en cualquier momento."
   },
   "byContinuingYouAgreeToThe": {
-    "message": "By continuing, you agree to the"
+    "message": "Al continuar, aceptas los"
   },
   "and": {
-    "message": "and"
+    "message": "y"
   },
   "acceptPolicies": {
     "message": "Al seleccionar esta casilla, acepto lo siguiente:"
@@ -1689,8 +1887,8 @@
   "enableBrowserIntegration": {
     "message": "Habilitar integración con el navegador"
   },
-  "enableBrowserIntegrationDesc": {
-    "message": "La integración del navegador se usa para la biometría en el mismo."
+  "enableBrowserIntegrationDesc1": {
+    "message": "Used to allow biometric unlock in browsers that are not Safari."
   },
   "enableDuckDuckGoBrowserIntegration": {
     "message": "Permitir integración con el navegador DuckDuckGo"
@@ -1757,6 +1955,12 @@
   },
   "biometricsNotEnabledDesc": {
     "message": "La biometría del navegador requiere habilitar primero la biometría de escritorio en los ajustes."
+  },
+  "biometricsManualSetupTitle": {
+    "message": "Automatic setup not available"
+  },
+  "biometricsManualSetupDesc": {
+    "message": "Due to the installation method, biometrics support could not be automatically enabled. Would you like to open the documentation on how to do this manually?"
   },
   "personalOwnershipSubmitError": {
     "message": "Debido a una política de organización, tiene restringido el guardar elementos a su caja fuerte personal. Cambie la configuración de propietario a organización y elija entre las colecciones disponibles."
@@ -1942,6 +2146,9 @@
   "emailVerificationRequired": {
     "message": "Verificación de correo electrónico requerida"
   },
+  "emailVerifiedV2": {
+    "message": "Correo electrónico verificado"
+  },
   "emailVerificationRequiredDesc": {
     "message": "Debes verificar tu correo electrónico para usar esta característica."
   },
@@ -1961,10 +2168,13 @@
     "message": "Actualizar contraseña maestra"
   },
   "updateMasterPasswordWarning": {
-    "message": "Su contraseña maestra ha sido cambiada recientemente por un administrador de su organización. Para acceder a la caja fuerte, debe actualizarla ahora. Proceder le desconectará de su sesión actual, requiriendo que vuelva a iniciar sesión. Las sesiones activas en otros dispositivos pueden seguir estando activas durante una hora."
+    "message": "Tu contraseña maestra ha sido cambiada recientemente por un administrador de tu organización. Para acceder a la caja fuerte, debes actualizarla ahora. Proceder te desconectará de tu sesión actual, requiriendo que vuelvas a iniciar sesión. Las sesiones activas en otros dispositivos pueden seguir estando activas durante una hora."
   },
   "updateWeakMasterPasswordWarning": {
-    "message": "Su contraseña maestra no cumple con una o más de las políticas de su organización. Para acceder a la caja fuerte, debe actualizar su contraseña maestra ahora. Proceder le desconectará de su sesión actual, requiriendo que vuelva a iniciar sesión. Las sesiones activas en otros dispositivos pueden seguir estando activas durante hasta una hora."
+    "message": "Tu contraseña maestra no cumple con una o más de las políticas de tu organización. Para acceder a la caja fuerte, debes actualizar tu contraseña maestra ahora. Proceder te desconectará de tu sesión actual, requiriendo que vuelva a iniciar sesión. Las sesiones activas en otros dispositivos pueden seguir estando activas durante hasta una hora."
+  },
+  "tdeDisabledMasterPasswordRequired": {
+    "message": "Your organization has disabled trusted device encryption. Please set a master password to access your vault."
   },
   "tryAgain": {
     "message": "Intentar de nuevo"
@@ -2008,8 +2218,8 @@
   "minutes": {
     "message": "Minutos"
   },
-  "vaultTimeoutPolicyInEffect": {
-    "message": "Las políticas de tu organización están afectando el tiempo de espera de tu caja fuerte. El máximo permitido de espera es de $HOURS$ hora(s) y de $MINUTES$ minuto(s)",
+  "vaultTimeoutPolicyInEffect1": {
+    "message": "$HOURS$ hour(s) and $MINUTES$ minute(s) maximum.",
     "placeholders": {
       "hours": {
         "content": "$1",
@@ -2049,6 +2259,9 @@
   },
   "vaultTimeoutTooLarge": {
     "message": "El tiempo de espera de tu caja fuerte excede las restricciones establecidas por tu organización."
+  },
+  "inviteAccepted": {
+    "message": "Invitación aceptada"
   },
   "resetPasswordPolicyAutoEnroll": {
     "message": "Inscripción automática"
@@ -2141,10 +2354,10 @@
     }
   },
   "exportingOrganizationVaultTitle": {
-    "message": "Exporting organization vault"
+    "message": "Exportando caja fuerte de la organización"
   },
   "exportingOrganizationVaultDesc": {
-    "message": "Only the organization vault associated with $ORGANIZATION$ will be exported. Items in individual vaults or other organizations will not be included.",
+    "message": "Solo se exportará la caja fuerte de la organización asociada a $ORGANIZATION$. Los elementos en las cajas fuertes individuales o de otras organizaciones no serán incluidos.",
     "placeholders": {
       "organization": {
         "content": "$1",
@@ -2155,11 +2368,15 @@
   "locked": {
     "message": "Bloqueado"
   },
+  "yourVaultIsLockedV2": {
+    "message": "Your vault is locked"
+  },
   "unlocked": {
     "message": "Desbloqueado"
   },
   "generator": {
-    "message": "Generador"
+    "message": "Generador",
+    "description": "Short for 'credential generator'."
   },
   "whatWouldYouLikeToGenerate": {
     "message": "¿Qué deseas generar?"
@@ -2172,6 +2389,23 @@
   },
   "generateUsername": {
     "message": "Generar nombre de usuario"
+  },
+  "generateEmail": {
+    "message": "Generate email"
+  },
+  "generatorBoundariesHint": {
+    "message": "Value must be between $MIN$ and $MAX$",
+    "description": "Explains spin box minimum and maximum values to the user",
+    "placeholders": {
+      "min": {
+        "content": "$1",
+        "example": "8"
+      },
+      "max": {
+        "content": "$2",
+        "example": "128"
+      }
+    }
   },
   "usernameType": {
     "message": "Tipo de nombre de usuario"
@@ -2215,6 +2449,14 @@
   },
   "forwardedEmailDesc": {
     "message": "Generar un alias de correo electrónico con un servicio de reenvío externo."
+  },
+  "forwarderDomainName": {
+    "message": "Email domain",
+    "description": "Labels the domain name email forwarder service option"
+  },
+  "forwarderDomainNameHint": {
+    "message": "Choose a domain that is supported by the selected service",
+    "description": "Guidance provided for email forwarding services that support multiple email domains."
   },
   "forwarderError": {
     "message": "$SERVICENAME$ error: $ERRORMESSAGE$",
@@ -2478,7 +2720,7 @@
     "message": "Sigue el enlace en el correo electrónico enviado a"
   },
   "andContinueCreatingYourAccount": {
-    "message": "y contunúa creando una cuenta."
+    "message": "y continúa creando tu cuenta."
   },
   "noEmail": {
     "message": "¿Sin correo electrónico?"
@@ -2507,11 +2749,14 @@
   "important": {
     "message": "Importante:"
   },
+  "accessing": {
+    "message": "Accessing"
+  },
   "accessTokenUnableToBeDecrypted": {
-    "message": "You have been logged out because your access token could not be decrypted. Please log in again to resolve this issue."
+    "message": "Se ha cerrado la sesión porque tu token de acceso no pudo ser descifrado. Por favor, inicia sesión de nuevo para resolver este problema."
   },
   "refreshTokenSecureStorageRetrievalFailure": {
-    "message": "You have been logged out because your refresh token could not be retrieved. Please log in again to resolve this issue."
+    "message": "Se ha cerrado la sesión porque tu token de actualización no pudo ser recuperado. Por favor, inicia sesión de nuevo para resolver este problema."
   },
   "masterPasswordHint": {
     "message": "Tu contraseña maestra no se puede recuperar si la olvidas"
@@ -2558,9 +2803,6 @@
   "eu": {
     "message": "Unión Europea",
     "description": "European Union"
-  },
-  "loggingInOn": {
-    "message": "Iniciando sesión en"
   },
   "selfHostedServer": {
     "message": "autoalojado"
@@ -2692,6 +2934,9 @@
   "submenu": {
     "message": "Submenú"
   },
+  "toggleSideNavigation": {
+    "message": "Alternar navegación lateral"
+  },
   "skipToContent": {
     "message": "Saltar al contenido"
   },
@@ -2747,6 +2992,9 @@
       }
     }
   },
+  "duoHealthCheckResultsInNullAuthUrlError": {
+    "message": "Error connecting with the Duo service. Use a different two-step login method or contact Duo for assistance."
+  },
   "launchDuoAndFollowStepsToFinishLoggingIn": {
     "message": "Inicia Duo y sigue los pasos para terminar de iniciar sesión."
   },
@@ -2768,8 +3016,8 @@
   "invalidFilePassword": {
     "message": "Contraseña de archivo no válida, por favor utiliza la contraseña que introdujiste cuando creaste el archivo de exportación."
   },
-  "importDestination": {
-    "message": "Destino de importación"
+  "destination": {
+    "message": "Destino"
   },
   "learnAboutImportOptions": {
     "message": "Aprende acerca de tus opciones de importación"
@@ -2826,6 +3074,9 @@
   },
   "confirmFilePassword": {
     "message": "Confirma la contraseña del archivo"
+  },
+  "exportSuccess": {
+    "message": "Datos de la caja fuerte exportados"
   },
   "multifactorAuthenticationCancelled": {
     "message": "Autenticación multifactor cancelada"
@@ -2961,5 +3212,20 @@
         "example": "Work"
       }
     }
+  },
+  "data": {
+    "message": "Datos"
+  },
+  "fileSends": {
+    "message": "Envío de archivo"
+  },
+  "textSends": {
+    "message": "Envío de texto"
+  },
+  "ssoError": {
+    "message": "No free ports could be found for the sso login."
+  },
+  "fileSavedToDevice": {
+    "message": "File saved to device. Manage from your device downloads."
   }
 }

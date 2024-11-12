@@ -13,6 +13,11 @@ export interface NewCredentialParams {
   userName: string;
 
   /**
+   * The userhandle (userid) of the user.
+   */
+  userHandle: string;
+
+  /**
    * Whether or not the user must be verified before completing the operation.
    */
   userVerification: boolean;
@@ -35,6 +40,16 @@ export interface PickCredentialParams {
    * Whether or not the user must be verified before completing the operation.
    */
   userVerification: boolean;
+
+  /**
+   * Bypass the UI and assume that the user has already interacted with the authenticator.
+   */
+  assumeUserPresence?: boolean;
+
+  /**
+   * Identifies whether a cipher requires a master password reprompt when getting a credential.
+   */
+  masterPasswordRepromptRequired?: boolean;
 }
 
 /**

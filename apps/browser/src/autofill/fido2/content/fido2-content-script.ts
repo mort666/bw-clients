@@ -17,7 +17,9 @@ import { MessageWithMetadata, Messenger } from "./messaging/messenger";
 (function (globalContext) {
   const shouldExecuteContentScript =
     globalContext.document.contentType === "text/html" &&
-    globalContext.document.location.protocol === "https:";
+    (globalContext.document.location.protocol === "https:" ||
+      (globalContext.document.location.protocol === "http:" &&
+        globalContext.document.location.hostname === "localhost"));
 
   if (!shouldExecuteContentScript) {
     return;
@@ -57,6 +59,10 @@ import { MessageWithMetadata, Messenger } from "./messaging/messenger";
           requestId,
           message.data as InsecureAssertCredentialParams,
         );
+      }
+
+      if (message.type === MessageType.AbortRequest) {
+        return sendExtensionMessage("fido2AbortRequest", { abortedRequestId: requestId });
       }
     } finally {
       abortController.signal.removeEventListener("abort", abortHandler);

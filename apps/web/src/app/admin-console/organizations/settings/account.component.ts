@@ -1,4 +1,4 @@
-import { Component, ViewChild, ViewContainerRef } from "@angular/core";
+import { Component, OnDestroy, OnInit, ViewChild, ViewContainerRef } from "@angular/core";
 import { FormBuilder, Validators } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
 import { combineLatest, from, lastValueFrom, of, Subject, switchMap, takeUntil } from "rxjs";
@@ -12,11 +12,11 @@ import { OrganizationUpdateRequest } from "@bitwarden/common/admin-console/model
 import { OrganizationResponse } from "@bitwarden/common/admin-console/models/response/organization.response";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
-import { DialogService } from "@bitwarden/components";
+import { DialogService, ToastService } from "@bitwarden/components";
+import { KeyService } from "@bitwarden/key-management";
 
 import { ApiKeyComponent } from "../../../auth/settings/security/api-key.component";
 import { PurgeVaultComponent } from "../../../vault/settings/purge-vault.component";
@@ -27,7 +27,7 @@ import { DeleteOrganizationDialogResult, openDeleteOrganizationDialog } from "./
   selector: "app-org-account",
   templateUrl: "account.component.html",
 })
-export class AccountComponent {
+export class AccountComponent implements OnInit, OnDestroy {
   @ViewChild("apiKeyTemplate", { read: ViewContainerRef, static: true })
   apiKeyModalRef: ViewContainerRef;
   @ViewChild("rotateApiKeyTemplate", { read: ViewContainerRef, static: true })
@@ -40,9 +40,7 @@ export class AccountComponent {
   org: OrganizationResponse;
   taxFormPromise: Promise<unknown>;
 
-  flexibleCollectionsV1Enabled$ = this.configService.getFeatureFlag$(
-    FeatureFlag.FlexibleCollectionsV1,
-  );
+  limitCollectionCreationDeletionSplitFeatureFlagIsEnabled: boolean;
 
   // FormGroup validators taken from server Organization domain object
   protected formGroup = this.formBuilder.group({
@@ -59,11 +57,21 @@ export class AccountComponent {
     ),
   });
 
+  // Deprecated. Delete with https://bitwarden.atlassian.net/browse/PM-10863
   protected collectionManagementFormGroup = this.formBuilder.group({
     limitCollectionCreationDeletion: this.formBuilder.control({ value: false, disabled: true }),
     allowAdminAccessToAllCollectionItems: this.formBuilder.control({
       value: false,
       disabled: true,
+    }),
+  });
+
+  protected collectionManagementFormGroup_VNext = this.formBuilder.group({
+    limitCollectionCreation: this.formBuilder.control({ value: false, disabled: false }),
+    limitCollectionDeletion: this.formBuilder.control({ value: false, disabled: false }),
+    allowAdminAccessToAllCollectionItems: this.formBuilder.control({
+      value: false,
+      disabled: false,
     }),
   });
 
@@ -77,17 +85,23 @@ export class AccountComponent {
     private i18nService: I18nService,
     private route: ActivatedRoute,
     private platformUtilsService: PlatformUtilsService,
-    private cryptoService: CryptoService,
+    private keyService: KeyService,
     private router: Router,
     private organizationService: OrganizationService,
     private organizationApiService: OrganizationApiServiceAbstraction,
     private dialogService: DialogService,
     private formBuilder: FormBuilder,
+    private toastService: ToastService,
     private configService: ConfigService,
   ) {}
 
   async ngOnInit() {
     this.selfHosted = this.platformUtilsService.isSelfHost();
+
+    this.configService
+      .getFeatureFlag$(FeatureFlag.LimitCollectionCreationDeletionSplit)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((x) => (this.limitCollectionCreationDeletionSplitFeatureFlagIsEnabled = x));
 
     this.route.params
       .pipe(
@@ -109,15 +123,22 @@ export class AccountComponent {
         this.canEditSubscription = organization.canEditSubscription;
         this.canUseApi = organization.useApi;
 
+        // Disabling these fields for self hosted orgs is deprecated
+        // This block can be completely removed as part of
+        // https://bitwarden.atlassian.net/browse/PM-10863
+        if (!this.limitCollectionCreationDeletionSplitFeatureFlagIsEnabled) {
+          if (!this.selfHosted) {
+            this.collectionManagementFormGroup.get("limitCollectionCreationDeletion").enable();
+            this.collectionManagementFormGroup.get("allowAdminAccessToAllCollectionItems").enable();
+          }
+        }
+
         // Update disabled states - reactive forms prefers not using disabled attribute
         if (!this.selfHosted) {
           this.formGroup.get("orgName").enable();
-          this.collectionManagementFormGroup.get("limitCollectionCreationDeletion").enable();
-          this.collectionManagementFormGroup.get("allowAdminAccessToAllCollectionItems").enable();
-        }
-
-        if (!this.selfHosted && this.canEditSubscription) {
-          this.formGroup.get("billingEmail").enable();
+          if (this.canEditSubscription) {
+            this.formGroup.get("billingEmail").enable();
+          }
         }
 
         // Org Response
@@ -131,10 +152,18 @@ export class AccountComponent {
           orgName: this.org.name,
           billingEmail: this.org.billingEmail,
         });
-        this.collectionManagementFormGroup.patchValue({
-          limitCollectionCreationDeletion: this.org.limitCollectionCreationDeletion,
-          allowAdminAccessToAllCollectionItems: this.org.allowAdminAccessToAllCollectionItems,
-        });
+        if (this.limitCollectionCreationDeletionSplitFeatureFlagIsEnabled) {
+          this.collectionManagementFormGroup_VNext.patchValue({
+            limitCollectionCreation: this.org.limitCollectionCreation,
+            limitCollectionDeletion: this.org.limitCollectionDeletion,
+            allowAdminAccessToAllCollectionItems: this.org.allowAdminAccessToAllCollectionItems,
+          });
+        } else {
+          this.collectionManagementFormGroup.patchValue({
+            limitCollectionCreationDeletion: this.org.limitCollectionCreationDeletion,
+            allowAdminAccessToAllCollectionItems: this.org.allowAdminAccessToAllCollectionItems,
+          });
+        }
 
         this.loading = false;
       });
@@ -153,40 +182,61 @@ export class AccountComponent {
     }
 
     const request = new OrganizationUpdateRequest();
-    request.name = this.formGroup.value.orgName;
-    request.billingEmail = this.formGroup.value.billingEmail;
+
+    /*
+     * When you disable a FormControl, it is removed from formGroup.values, so we have to use
+     * the original value.
+     * */
+    request.name = this.formGroup.get("orgName").disabled
+      ? this.org.name
+      : this.formGroup.value.orgName;
+    request.billingEmail = this.formGroup.get("billingEmail").disabled
+      ? this.org.billingEmail
+      : this.formGroup.value.billingEmail;
 
     // Backfill pub/priv key if necessary
     if (!this.org.hasPublicAndPrivateKeys) {
-      const orgShareKey = await this.cryptoService.getOrgKey(this.organizationId);
-      const orgKeys = await this.cryptoService.makeKeyPair(orgShareKey);
+      const orgShareKey = await this.keyService.getOrgKey(this.organizationId);
+      const orgKeys = await this.keyService.makeKeyPair(orgShareKey);
       request.keys = new OrganizationKeysRequest(orgKeys[0], orgKeys[1].encryptedString);
     }
 
     await this.organizationApiService.save(this.organizationId, request);
 
-    this.platformUtilsService.showToast("success", null, this.i18nService.t("organizationUpdated"));
+    this.toastService.showToast({
+      variant: "success",
+      title: null,
+      message: this.i18nService.t("organizationUpdated"),
+    });
   };
 
   submitCollectionManagement = async () => {
     // Early exit if self-hosted
-    if (this.selfHosted) {
+    if (this.selfHosted && !this.limitCollectionCreationDeletionSplitFeatureFlagIsEnabled) {
       return;
     }
-
     const request = new OrganizationCollectionManagementUpdateRequest();
-    request.limitCreateDeleteOwnerAdmin =
-      this.collectionManagementFormGroup.value.limitCollectionCreationDeletion;
-    request.allowAdminAccessToAllCollectionItems =
-      this.collectionManagementFormGroup.value.allowAdminAccessToAllCollectionItems;
+    if (this.limitCollectionCreationDeletionSplitFeatureFlagIsEnabled) {
+      request.limitCollectionCreation =
+        this.collectionManagementFormGroup_VNext.value.limitCollectionCreation;
+      request.limitCollectionDeletion =
+        this.collectionManagementFormGroup_VNext.value.limitCollectionDeletion;
+      request.allowAdminAccessToAllCollectionItems =
+        this.collectionManagementFormGroup_VNext.value.allowAdminAccessToAllCollectionItems;
+    } else {
+      request.limitCreateDeleteOwnerAdmin =
+        this.collectionManagementFormGroup.value.limitCollectionCreationDeletion;
+      request.allowAdminAccessToAllCollectionItems =
+        this.collectionManagementFormGroup.value.allowAdminAccessToAllCollectionItems;
+    }
 
     await this.organizationApiService.updateCollectionManagement(this.organizationId, request);
 
-    this.platformUtilsService.showToast(
-      "success",
-      null,
-      this.i18nService.t("updatedCollectionManagement"),
-    );
+    this.toastService.showToast({
+      variant: "success",
+      title: null,
+      message: this.i18nService.t("updatedCollectionManagement"),
+    });
   };
 
   async deleteOrganization() {

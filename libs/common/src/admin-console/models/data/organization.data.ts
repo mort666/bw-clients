@@ -52,9 +52,12 @@ export class OrganizationData {
   familySponsorshipValidUntil?: Date;
   familySponsorshipToDelete?: boolean;
   accessSecretsManager: boolean;
+  limitCollectionCreation: boolean;
+  limitCollectionDeletion: boolean;
+  // Deprecated: https://bitwarden.atlassian.net/browse/PM-10863
   limitCollectionCreationDeletion: boolean;
   allowAdminAccessToAllCollectionItems: boolean;
-  flexibleCollections: boolean;
+  userIsManagedByOrganization: boolean;
 
   constructor(
     response?: ProfileOrganizationResponse,
@@ -104,16 +107,19 @@ export class OrganizationData {
     this.providerType = response.providerType;
     this.familySponsorshipFriendlyName = response.familySponsorshipFriendlyName;
     this.familySponsorshipAvailable = response.familySponsorshipAvailable;
-    this.productTierType = response.planProductType;
+    this.productTierType = response.productTierType;
     this.keyConnectorEnabled = response.keyConnectorEnabled;
     this.keyConnectorUrl = response.keyConnectorUrl;
     this.familySponsorshipLastSyncDate = response.familySponsorshipLastSyncDate;
     this.familySponsorshipValidUntil = response.familySponsorshipValidUntil;
     this.familySponsorshipToDelete = response.familySponsorshipToDelete;
     this.accessSecretsManager = response.accessSecretsManager;
+    this.limitCollectionCreation = response.limitCollectionCreation;
+    this.limitCollectionDeletion = response.limitCollectionDeletion;
+    // Deprecated: https://bitwarden.atlassian.net/browse/PM-10863
     this.limitCollectionCreationDeletion = response.limitCollectionCreationDeletion;
     this.allowAdminAccessToAllCollectionItems = response.allowAdminAccessToAllCollectionItems;
-    this.flexibleCollections = response.flexibleCollections;
+    this.userIsManagedByOrganization = response.userIsManagedByOrganization;
 
     this.isMember = options.isMember;
     this.isProviderUser = options.isProviderUser;

@@ -3,13 +3,15 @@ import { BehaviorSubject, filter, from, map, Observable, shareReplay, switchMap,
 
 import { PrfKeySet } from "@bitwarden/auth/common";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
-import { WebAuthnLoginPrfCryptoServiceAbstraction } from "@bitwarden/common/auth/abstractions/webauthn/webauthn-login-prf-crypto.service.abstraction";
+import { WebAuthnLoginPrfKeyServiceAbstraction } from "@bitwarden/common/auth/abstractions/webauthn/webauthn-login-prf-key.service.abstraction";
 import { WebauthnRotateCredentialRequest } from "@bitwarden/common/auth/models/request/webauthn-rotate-credential.request";
 import { WebAuthnLoginCredentialAssertionOptionsView } from "@bitwarden/common/auth/models/view/webauthn-login/webauthn-login-credential-assertion-options.view";
 import { WebAuthnLoginCredentialAssertionView } from "@bitwarden/common/auth/models/view/webauthn-login/webauthn-login-credential-assertion.view";
 import { Verification } from "@bitwarden/common/auth/types/verification";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
+import { UserId } from "@bitwarden/common/types/guid";
 import { UserKey } from "@bitwarden/common/types/key";
+import { UserKeyRotationDataProvider } from "@bitwarden/key-management";
 
 import { CredentialCreateOptionsView } from "../../views/credential-create-options.view";
 import { PendingWebauthnLoginCredentialView } from "../../views/pending-webauthn-login-credential.view";
@@ -25,7 +27,9 @@ import { WebAuthnLoginAdminApiService } from "./webauthn-login-admin-api.service
 /**
  * Service for managing WebAuthnLogin credentials.
  */
-export class WebauthnLoginAdminService {
+export class WebauthnLoginAdminService
+  implements UserKeyRotationDataProvider<WebauthnRotateCredentialRequest>
+{
   static readonly MaxCredentialCount = 5;
 
   private navigatorCredentials: CredentialsContainer;
@@ -48,7 +52,7 @@ export class WebauthnLoginAdminService {
     private apiService: WebAuthnLoginAdminApiService,
     private userVerificationService: UserVerificationService,
     private rotateableKeySetService: RotateableKeySetService,
-    private webAuthnLoginPrfCryptoService: WebAuthnLoginPrfCryptoServiceAbstraction,
+    private webAuthnLoginPrfKeyService: WebAuthnLoginPrfKeyServiceAbstraction,
     @Optional() navigatorCredentials?: CredentialsContainer,
     @Optional() private logService?: LogService,
   ) {
@@ -140,7 +144,7 @@ export class WebauthnLoginAdminService {
           pendingCredential.createOptions.options.authenticatorSelection.userVerification,
         // TODO: Remove `any` when typescript typings add support for PRF
         extensions: {
-          prf: { eval: { first: await this.webAuthnLoginPrfCryptoService.getLoginWithPrfSalt() } },
+          prf: { eval: { first: await this.webAuthnLoginPrfKeyService.getLoginWithPrfSalt() } },
         } as any,
       },
     };
@@ -159,7 +163,7 @@ export class WebauthnLoginAdminService {
       }
 
       const symmetricPrfKey =
-        await this.webAuthnLoginPrfCryptoService.createSymmetricKeyFromPrf(prfResult);
+        await this.webAuthnLoginPrfKeyService.createSymmetricKeyFromPrf(prfResult);
       return await this.rotateableKeySetService.createKeySet(symmetricPrfKey);
     } catch (error) {
       this.logService?.error(error);
@@ -283,11 +287,13 @@ export class WebauthnLoginAdminService {
    *
    * @param oldUserKey The old user key
    * @param newUserKey The new user key
+   * @param userId The user id
    * @returns A promise that returns an array of rotate credential requests when resolved.
    */
-  async rotateWebAuthnKeys(
+  async getRotatedData(
     oldUserKey: UserKey,
     newUserKey: UserKey,
+    userId: UserId,
   ): Promise<WebauthnRotateCredentialRequest[]> {
     if (!oldUserKey) {
       throw new Error("oldUserKey is required");

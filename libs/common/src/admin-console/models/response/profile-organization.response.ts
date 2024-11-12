@@ -42,16 +42,19 @@ export class ProfileOrganizationResponse extends BaseResponse {
   providerType?: ProviderType;
   familySponsorshipFriendlyName: string;
   familySponsorshipAvailable: boolean;
-  planProductType: ProductTierType;
+  productTierType: ProductTierType;
   keyConnectorEnabled: boolean;
   keyConnectorUrl: string;
   familySponsorshipLastSyncDate?: Date;
   familySponsorshipValidUntil?: Date;
   familySponsorshipToDelete?: boolean;
   accessSecretsManager: boolean;
+  limitCollectionCreation: boolean;
+  limitCollectionDeletion: boolean;
+  // Deprecated: https://bitwarden.atlassian.net/browse/PM-10863
   limitCollectionCreationDeletion: boolean;
   allowAdminAccessToAllCollectionItems: boolean;
-  flexibleCollections: boolean;
+  userIsManagedByOrganization: boolean;
 
   constructor(response: any) {
     super(response);
@@ -93,7 +96,7 @@ export class ProfileOrganizationResponse extends BaseResponse {
     this.providerType = this.getResponseProperty("ProviderType");
     this.familySponsorshipFriendlyName = this.getResponseProperty("FamilySponsorshipFriendlyName");
     this.familySponsorshipAvailable = this.getResponseProperty("FamilySponsorshipAvailable");
-    this.planProductType = this.getResponseProperty("PlanProductType");
+    this.productTierType = this.getResponseProperty("ProductTierType");
     this.keyConnectorEnabled = this.getResponseProperty("KeyConnectorEnabled") ?? false;
     this.keyConnectorUrl = this.getResponseProperty("KeyConnectorUrl");
     const familySponsorshipLastSyncDateString = this.getResponseProperty(
@@ -110,12 +113,15 @@ export class ProfileOrganizationResponse extends BaseResponse {
     }
     this.familySponsorshipToDelete = this.getResponseProperty("FamilySponsorshipToDelete");
     this.accessSecretsManager = this.getResponseProperty("AccessSecretsManager");
+    this.limitCollectionCreation = this.getResponseProperty("LimitCollectionCreation");
+    this.limitCollectionDeletion = this.getResponseProperty("LimitCollectionDeletion");
+    // Deprecated: https://bitwarden.atlassian.net/browse/PM-10863
     this.limitCollectionCreationDeletion = this.getResponseProperty(
       "LimitCollectionCreationDeletion",
     );
     this.allowAdminAccessToAllCollectionItems = this.getResponseProperty(
       "AllowAdminAccessToAllCollectionItems",
     );
-    this.flexibleCollections = this.getResponseProperty("FlexibleCollections");
+    this.userIsManagedByOrganization = this.getResponseProperty("UserIsManagedByOrganization");
   }
 }

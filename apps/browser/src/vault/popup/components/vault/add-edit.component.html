@@ -144,6 +144,7 @@
                   appStopClick
                   (click)="removePasskey()"
                   appA11yTitle="{{ 'removePasskey' | i18n }}"
+                  *ngIf="!(!cipher.edit && editMode)"
                 >
                   <i class="bwi bwi-fw bwi-minus-circle bwi-lg" aria-hidden="true"></i>
                 </button>
@@ -528,6 +529,26 @@
             />
           </div>
         </div>
+
+        <!-- SshKey -->
+        <div *ngIf="cipher.sshKey">
+          <div class="box-content-row" *ngIf="cipher.sshKey.privateKey" style="overflow: hidden">
+            <span class="row-label"> {{ "sshPrivateKey" | i18n }}</span>
+            {{ cipher.sshKey.privateKey }}
+          </div>
+          <div class="box-content-row" *ngIf="cipher.sshKey.publicKey" style="overflow: hidden">
+            <span class="row-label"> {{ "sshPublicKey" | i18n }}</span>
+            {{ cipher.sshKey.publicKey }}
+          </div>
+          <div
+            class="box-content-row"
+            *ngIf="cipher.sshKey.keyFingerprint"
+            style="overflow: hidden"
+          >
+            <span class="row-label"> {{ "sshKeyFingerprint" | i18n }}</span>
+            {{ cipher.sshKey.keyFingerprint }}
+          </div>
+        </div>
       </div>
     </div>
     <div class="box" *ngIf="cipher.type === cipherType.Login">
@@ -542,6 +563,7 @@
           >
             <button
               type="button"
+              *ngIf="!(!cipher.edit && editMode)"
               appStopClick
               (click)="removeUri(u)"
               appA11yTitle="{{ 'remove' | i18n }}"
@@ -558,6 +580,7 @@
                 [hidden]="$any(u).showUriOptionsInput === true"
                 placeholder="{{ 'ex' | i18n }} https://google.com"
                 inputmode="url"
+                [readonly]="!cipher.edit && editMode"
                 appInputVerbatim
               />
               <label for="loginUriMatch{{ i }}" class="sr-only">
@@ -607,6 +630,7 @@
                 appA11yTitle="{{ 'toggleOptions' | i18n }}"
                 (click)="toggleUriOptions(u)"
                 [attr.aria-pressed]="$any(u).showOptions === true"
+                [disabled]="!cipher.edit && editMode"
               >
                 <i class="bwi bwi-fw bwi-lg bwi-cog" aria-hidden="true"></i>
               </button>
@@ -775,7 +799,7 @@
         </div>
       </div>
     </div>
-    <div class="box list" *ngIf="editMode && !cloneMode && !(!cipher.edit && editMode)">
+    <div class="box list" *ngIf="editMode && !cloneMode && (canDeleteCipher$ | async)">
       <div class="box-content single-line">
         <button
           type="button"

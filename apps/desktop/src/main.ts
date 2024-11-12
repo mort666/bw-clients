@@ -1,11 +1,11 @@
 import * as path from "path";
 
-import { app } from "electron";
+import { app, ipcMain } from "electron";
 import { Subject, firstValueFrom } from "rxjs";
 
 import { AccountServiceImplementation } from "@bitwarden/common/auth/services/account.service";
 import { ClientType } from "@bitwarden/common/enums";
-import { DefaultBiometricStateService } from "@bitwarden/common/platform/biometrics/biometric-state.service";
+import { RegionConfig } from "@bitwarden/common/platform/abstractions/environment.service";
 import { Message, MessageSender } from "@bitwarden/common/platform/messaging";
 // eslint-disable-next-line no-restricted-imports -- For dependency creation
 import { SubjectMessageSender } from "@bitwarden/common/platform/messaging/internal";
@@ -22,9 +22,12 @@ import { DefaultSingleUserStateProvider } from "@bitwarden/common/platform/state
 import { DefaultStateProvider } from "@bitwarden/common/platform/state/implementations/default-state.provider";
 import { StateEventRegistrarService } from "@bitwarden/common/platform/state/state-event-registrar.service";
 import { MemoryStorageService as MemoryStorageServiceForStateProviders } from "@bitwarden/common/platform/state/storage/memory-storage.service";
+import { DefaultBiometricStateService } from "@bitwarden/key-management";
 /* eslint-enable import/no-restricted-paths */
 
 import { DesktopAutofillSettingsService } from "./autofill/services/desktop-autofill-settings.service";
+import { BiometricsRendererIPCListener } from "./key-management/biometrics/biometric.renderer-ipc.listener";
+import { BiometricsService, DesktopBiometricsService } from "./key-management/biometrics/index";
 import { MenuMain } from "./main/menu/menu.main";
 import { MessagingMain } from "./main/messaging.main";
 import { NativeMessagingMain } from "./main/native-messaging.main";
@@ -32,14 +35,16 @@ import { PowerMonitorMain } from "./main/power-monitor.main";
 import { TrayMain } from "./main/tray.main";
 import { UpdaterMain } from "./main/updater.main";
 import { WindowMain } from "./main/window.main";
-import { BiometricsService, BiometricsServiceAbstraction } from "./platform/main/biometric/index";
 import { ClipboardMain } from "./platform/main/clipboard.main";
 import { DesktopCredentialStorageListener } from "./platform/main/desktop-credential-storage-listener";
 import { MainCryptoFunctionService } from "./platform/main/main-crypto-function.service";
+import { MainSshAgentService } from "./platform/main/main-ssh-agent.service";
 import { DesktopSettingsService } from "./platform/services/desktop-settings.service";
 import { ElectronLogMainService } from "./platform/services/electron-log.main.service";
 import { ElectronStorageService } from "./platform/services/electron-storage.service";
+import { EphemeralValueStorageService } from "./platform/services/ephemeral-value-storage.main.service";
 import { I18nMainService } from "./platform/services/i18n.main.service";
+import { SSOLocalhostCallbackService } from "./platform/services/sso-localhost-callback.service";
 import { ElectronMainMessagingService } from "./services/electron-main-messaging.service";
 import { isMacAppStore } from "./utils";
 
@@ -52,6 +57,7 @@ export class Main {
   messagingService: MessageSender;
   environmentService: DefaultEnvironmentService;
   desktopCredentialStorageListener: DesktopCredentialStorageListener;
+  biometricsRendererIPCListener: BiometricsRendererIPCListener;
   desktopSettingsService: DesktopSettingsService;
   mainCryptoFunctionService: MainCryptoFunctionService;
   migrationRunner: MigrationRunner;
@@ -62,10 +68,11 @@ export class Main {
   menuMain: MenuMain;
   powerMonitorMain: PowerMonitorMain;
   trayMain: TrayMain;
-  biometricsService: BiometricsServiceAbstraction;
+  biometricsService: DesktopBiometricsService;
   nativeMessagingMain: NativeMessagingMain;
   clipboardMain: ClipboardMain;
   desktopAutofillSettingsService: DesktopAutofillSettingsService;
+  sshAgentService: MainSshAgentService;
 
   constructor() {
     // Set paths for portable builds
@@ -109,7 +116,10 @@ export class Main {
       this.storageService,
       this.memoryStorageForStateProviders,
     );
-    const globalStateProvider = new DefaultGlobalStateProvider(storageServiceProvider);
+    const globalStateProvider = new DefaultGlobalStateProvider(
+      storageServiceProvider,
+      this.logService,
+    );
 
     this.i18nService = new I18nMainService("en", "./locales/", globalStateProvider);
 
@@ -130,6 +140,7 @@ export class Main {
     const singleUserStateProvider = new DefaultSingleUserStateProvider(
       storageServiceProvider,
       stateEventRegistrarService,
+      this.logService,
     );
 
     const activeUserStateProvider = new DefaultActiveUserStateProvider(
@@ -144,7 +155,11 @@ export class Main {
       new DefaultDerivedStateProvider(),
     );
 
-    this.environmentService = new DefaultEnvironmentService(stateProvider, accountService);
+    this.environmentService = new DefaultEnvironmentService(
+      stateProvider,
+      accountService,
+      process.env.ADDITIONAL_REGIONS as unknown as RegionConfig[],
+    );
 
     this.migrationRunner = new MigrationRunner(
       this.storageService,
@@ -184,7 +199,7 @@ export class Main {
       });
     });
 
-    this.powerMonitorMain = new PowerMonitorMain(this.messagingService);
+    this.powerMonitorMain = new PowerMonitorMain(this.messagingService, this.logService);
     this.menuMain = new MenuMain(
       this.i18nService,
       this.messagingService,
@@ -208,22 +223,39 @@ export class Main {
       this.biometricsService,
       this.logService,
     );
+    this.biometricsRendererIPCListener = new BiometricsRendererIPCListener(
+      "Bitwarden",
+      this.biometricsService,
+      this.logService,
+    );
 
     this.nativeMessagingMain = new NativeMessagingMain(
       this.logService,
       this.windowMain,
       app.getPath("userData"),
       app.getPath("exe"),
+      app.getAppPath(),
     );
 
     this.desktopAutofillSettingsService = new DesktopAutofillSettingsService(stateProvider);
 
     this.clipboardMain = new ClipboardMain();
     this.clipboardMain.init();
+
+    ipcMain.handle("sshagent.init", async (event: any, message: any) => {
+      if (this.sshAgentService == null) {
+        this.sshAgentService = new MainSshAgentService(this.logService, this.messagingService);
+        this.sshAgentService.init();
+      }
+    });
+
+    new EphemeralValueStorageService();
+    new SSOLocalhostCallbackService(this.environmentService, this.messagingService);
   }
 
   bootstrap() {
     this.desktopCredentialStorageListener.init();
+    this.biometricsRendererIPCListener.init();
     // Run migrations first, then other things
     this.migrationRunner.run().then(
       async () => {
@@ -256,13 +288,21 @@ export class Main {
         if (browserIntegrationEnabled || ddgIntegrationEnabled) {
           // Re-register the native messaging host integrations on startup, in case they are not present
           if (browserIntegrationEnabled) {
-            this.nativeMessagingMain.generateManifests().catch(this.logService.error);
+            this.nativeMessagingMain
+              .generateManifests()
+              .catch((err) => this.logService.error("Error while generating manifests", err));
           }
           if (ddgIntegrationEnabled) {
-            this.nativeMessagingMain.generateDdgManifests().catch(this.logService.error);
+            this.nativeMessagingMain
+              .generateDdgManifests()
+              .catch((err) => this.logService.error("Error while generating DDG manifests", err));
           }
 
-          this.nativeMessagingMain.listen();
+          this.nativeMessagingMain
+            .listen()
+            .catch((err) =>
+              this.logService.error("Error while starting native message listener", err),
+            );
         }
 
         app.removeAsDefaultProtocolClient("bitwarden");
@@ -291,8 +331,7 @@ export class Main {
         });
       },
       (e: any) => {
-        // eslint-disable-next-line
-        console.error(e);
+        this.logService.error("Error while running migrations:", e);
       },
     );
   }

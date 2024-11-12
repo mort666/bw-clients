@@ -33,7 +33,7 @@
     "message": "Kolleksiyalar"
   },
   "searchVault": {
-    "message": "Anbarda axtar"
+    "message": "Seyfdə axtar"
   },
   "addItem": {
     "message": "Element əlavə et"
@@ -59,6 +59,9 @@
         "example": "Company Name"
       }
     }
+  },
+  "welcomeBack": {
+    "message": "Yenidən xoş gəlmisiniz"
   },
   "moveToOrgDesc": {
     "message": "Bu elementi daşımaq istədiyiniz təşkilatı seçin. Bir təşkilata daşımaq, elementin sahibliyini də həmin təşkilata daşıyacaq. Daşıdıqdan sonra bu elementə birbaşa sahibliyiniz olmayacaq."
@@ -113,7 +116,7 @@
     "message": "Notlar"
   },
   "customFields": {
-    "message": "Özəl sahələr"
+    "message": "Özəl xanalar"
   },
   "launch": {
     "message": "Başlat"
@@ -259,6 +262,9 @@
   "generatePassword": {
     "message": "Parol yarat"
   },
+  "generatePassphrase": {
+    "message": "Keçid ifadələri yarat"
+  },
   "type": {
     "message": "Növ"
   },
@@ -317,7 +323,7 @@
     "message": "Qovluq"
   },
   "newCustomField": {
-    "message": "Yeni özəl sahə"
+    "message": "Yeni özəl xana"
   },
   "value": {
     "message": "Dəyər"
@@ -394,6 +400,10 @@
   "copyPassword": {
     "message": "Parolu kopyala"
   },
+  "copyPassphrase": {
+    "message": "Keçid ifadəsini kopyala",
+    "description": "Copy passphrase to clipboard"
+  },
   "copyUri": {
     "message": "URI-ni kopyala"
   },
@@ -407,16 +417,55 @@
     "message": "Minimal parol uzunluğu"
   },
   "uppercase": {
-    "message": "Böyük hərf (A-Z)"
+    "message": "Böyük hərf (A-Z)",
+    "description": "deprecated. Use uppercaseLabel instead."
   },
   "lowercase": {
-    "message": "Kiçik hərf (a-z)"
+    "message": "Kiçik hərf (a-z)",
+    "description": "deprecated. Use lowercaseLabel instead."
   },
   "numbers": {
-    "message": "Rəqəmlər (0-9)"
+    "message": "Rəqəmlər (0-9)",
+    "description": "deprecated. Use numbersLabel instead."
   },
   "specialCharacters": {
     "message": "Xüsusi simvollar (!@#$%^&*)"
+  },
+  "include": {
+    "message": "Daxil et",
+    "description": "Card header for password generator include block"
+  },
+  "uppercaseDescription": {
+    "message": "Böyük hərf xarakterlərini daxil et",
+    "description": "Tooltip for the password generator uppercase character checkbox"
+  },
+  "uppercaseLabel": {
+    "message": "A-Z",
+    "description": "Label for the password generator uppercase character checkbox"
+  },
+  "lowercaseDescription": {
+    "message": "Kiçik hərf xarakterlərini daxil et",
+    "description": "Full description for the password generator lowercase character checkbox"
+  },
+  "lowercaseLabel": {
+    "message": "a-z",
+    "description": "Label for the password generator lowercase character checkbox"
+  },
+  "numbersDescription": {
+    "message": "Rəqəmləri daxil et",
+    "description": "Full description for the password generator numbers checkbox"
+  },
+  "numbersLabel": {
+    "message": "0-9",
+    "description": "Label for the password generator numbers checkbox"
+  },
+  "specialCharactersDescription": {
+    "message": "Xüsusi xarakterləri daxil et",
+    "description": "Full description for the password generator special characters checkbox"
+  },
+  "specialCharactersLabel": {
+    "message": "!@#$%^&*",
+    "description": "Label for the password generator special characters checkbox"
   },
   "numWords": {
     "message": "Söz sayı"
@@ -442,7 +491,16 @@
     "description": "Minimum Special Characters"
   },
   "ambiguous": {
-    "message": "Anlaşılmaz simvollardan çəkinin"
+    "message": "Anlaşılmaz simvollardan çəkinin",
+    "description": "deprecated. Use avoidAmbiguous instead."
+  },
+  "avoidAmbiguous": {
+    "message": "Anlaşılmaz xarakterlərdən çəkin",
+    "description": "Label for the avoid ambiguous characters checkbox."
+  },
+  "generatorPolicyInEffect": {
+    "message": "Müəssisə siyasət tələbləri, yaradıcı seçimlərinizə tətbiq edildi.",
+    "description": "Indicates that a policy limits the credential generator screen."
   },
   "searchCollection": {
     "message": "Kolleksiya axtar"
@@ -479,7 +537,7 @@
     "message": "Maksimal fayl həcmi 500 MB-dır."
   },
   "encryptionKeyMigrationRequired": {
-    "message": "Şifrələmə açarının daşınması tələb olunur. Şifrələmə açarınızı güncəlləmək üçün lütfən veb anbar üzərindən giriş edin."
+    "message": "Şifrələmə açarının daşınması tələb olunur. Şifrələmə açarınızı güncəlləmək üçün lütfən veb seyfinizə giriş edin."
   },
   "editedFolder": {
     "message": "Qovluğa düzəliş edildi"
@@ -494,10 +552,13 @@
     "message": "Qovluq silindi"
   },
   "loginOrCreateNewAccount": {
-    "message": "Güvənli anbarınıza müraciət etmək üçün giriş edin və ya yeni bir hesab yaradın."
+    "message": "Güvənli seyfinizə müraciət etmək üçün giriş edin və ya yeni bir hesab yaradın."
   },
   "createAccount": {
     "message": "Hesab yarat"
+  },
+  "newToBitwarden": {
+    "message": "Bitwarden-də yenisiniz?"
   },
   "setAStrongPassword": {
     "message": "Güclü bir parol təyin et"
@@ -508,6 +569,18 @@
   "logIn": {
     "message": "Giriş et"
   },
+  "logInToBitwarden": {
+    "message": "Bitwarden-ə giriş edin"
+  },
+  "logInWithPasskey": {
+    "message": "Keçid açarı ilə giriş et"
+  },
+  "loginWithDevice": {
+    "message": "Cihazla giriş et"
+  },
+  "useSingleSignOn": {
+    "message": "Tək daxil olma üsulunu istifadə et"
+  },
   "submit": {
     "message": "Göndər"
   },
@@ -515,7 +588,7 @@
     "message": "Ana parol"
   },
   "masterPassDesc": {
-    "message": "Ana parol, anbarınıza müraciət etmək üçün istifadə edəcəyiniz paroldur. Ana parolu yadda saxlamaq çox vacibdir. Unutsanız, parolu bərpa etməyin heç bir yolu yoxdur."
+    "message": "Ana parol, seyfinizə müraciət etmək üçün istifadə edəcəyiniz paroldur. Ana parolu yadda saxlamaq çox vacibdir. Unutsanız, parolu bərpa etməyin heç bir yolu yoxdur."
   },
   "masterPassHintDesc": {
     "message": "Ana parol məsləhəti, unutduğunuz parolunuzu xatırlamağınıza kömək edir."
@@ -526,8 +599,60 @@
   "masterPassHint": {
     "message": "Ana parol məsləhəti (ixtiyari)"
   },
+  "masterPassHintText": {
+    "message": "Parolunuzu unutsanız, parol ipucu e-poçtunuza göndərilə bilər. Maksimum $CURRENT$/$MAXIMUM$ simvol.",
+    "placeholders": {
+      "current": {
+        "content": "$1",
+        "example": "0"
+      },
+      "maximum": {
+        "content": "$2",
+        "example": "50"
+      }
+    }
+  },
+  "masterPassword": {
+    "message": "Ana parol"
+  },
+  "masterPassImportant": {
+    "message": "Unutsanız, ana parolunuz geri qaytarıla bilməz!"
+  },
+  "confirmMasterPassword": {
+    "message": "Ana parolu təsdiqlə"
+  },
+  "masterPassHintLabel": {
+    "message": "Ana parol ipucusu"
+  },
+  "joinOrganization": {
+    "message": "Təşkilata qoşul"
+  },
+  "joinOrganizationName": {
+    "message": "$ORGANIZATIONNAME$ - qoşul",
+    "placeholders": {
+      "organizationName": {
+        "content": "$1",
+        "example": "My Org Name"
+      }
+    }
+  },
+  "finishJoiningThisOrganizationBySettingAMasterPassword": {
+    "message": "Bu ana parol təyin edərək bu təşkilata qoşulmağı tamamlayın."
+  },
   "settings": {
     "message": "Ayarlar"
+  },
+  "accountEmail": {
+    "message": "Hesab e-poçtu"
+  },
+  "requestHint": {
+    "message": "İpucu tələb et"
+  },
+  "requestPasswordHint": {
+    "message": "Parol ipucusu tələb et"
+  },
+  "enterYourAccountEmailAddressAndYourPasswordHintWillBeSentToYou": {
+    "message": "Hesabınızın e-poçt ünvanını daxil edin və parolunuz üçün ipucu sizə göndəriləcək"
   },
   "passwordHint": {
     "message": "Parol məsləhəti"
@@ -560,17 +685,23 @@
       }
     }
   },
+  "youSuccessfullyLoggedIn": {
+    "message": "Uğurla giriş etdiniz"
+  },
+  "youMayCloseThisWindow": {
+    "message": "Bu pəncərəni bağlaya bilərsiniz"
+  },
   "masterPassDoesntMatch": {
     "message": "Ana parolun təsdiqi uyuşmur."
   },
   "newAccountCreated": {
     "message": "Yeni hesabınız yaradıldı! İndi giriş edə bilərsiniz."
   },
-  "youSuccessfullyLoggedIn": {
-    "message": "Uğurla giriş etdiniz"
+  "newAccountCreated2": {
+    "message": "Yeni hesabınız yaradıldı!"
   },
-  "youMayCloseThisWindow": {
-    "message": "Bu pəncərəni bağlaya bilərsiniz"
+  "youHaveBeenLoggedIn": {
+    "message": "Giriş etdiniz!"
   },
   "masterPassSent": {
     "message": "Ana parol məsləhətini ehtiva edən bir e-poçt göndərdik."
@@ -601,6 +732,9 @@
   },
   "verificationCodeRequired": {
     "message": "Doğrulama kodu tələb olunur."
+  },
+  "webauthnCancelOrTimeout": {
+    "message": "Kimlik doğrulama ləğv edildi və ya çox uzun çəkdi. Lütfən yenidən sınayın."
   },
   "invalidVerificationCode": {
     "message": "Yararsız doğrulama kodu"
@@ -653,18 +787,18 @@
   "authenticatorAppTitle": {
     "message": "Kimlik doğrulayıcı tətbiqi"
   },
-  "authenticatorAppDesc": {
-    "message": "Vaxt əsaslı doğrulama kodları yaratmaq üçün (Authy və ya Google Authenticator kimi) kimlik doğrulayıcı tətbiq istifadə edin.",
-    "description": "'Authy' and 'Google Authenticator' are product names and should not be translated."
+  "authenticatorAppDescV2": {
+    "message": "Bitwarden Authenticator kimi bir kimlik doğrulama tətbiqi tərəfindən yaradılan kodu daxil edin.",
+    "description": "'Bitwarden Authenticator' is a product name and should not be translated."
   },
-  "yubiKeyTitle": {
-    "message": "YubiKey OTP güvənlik açarı"
+  "yubiKeyTitleV2": {
+    "message": "Yubico OTP güvənlik açarı"
   },
   "yubiKeyDesc": {
     "message": "Hesabınıza müraciət etmək üçün bir YubiKey istifadə edin. YubiKey 4, 4 Nano, 4C və NEO cihazları ilə işləyir."
   },
-  "duoDesc": {
-    "message": "Duo Security ilə doğrulamaq üçün Duo Mobile tətbiqi, SMS, telefon zəngi və ya U2F güvənlik açarını istifadə edin.",
+  "duoDescV2": {
+    "message": "Duo Security tərəfindən yaradılan kodu daxil edin.",
     "description": "'Duo Security' and 'Duo Mobile' are product names and should not be translated."
   },
   "duoOrganizationDesc": {
@@ -680,8 +814,8 @@
   "emailTitle": {
     "message": "E-poçt"
   },
-  "emailDesc": {
-    "message": "Doğrulama kodları e-poçt ünvanınıza göndəriləcək."
+  "emailDescV2": {
+    "message": "E-poçtunuza göndərilən kodu daxil edin."
   },
   "loginUnavailable": {
     "message": "Giriş edilə bilmir"
@@ -696,13 +830,13 @@
     "message": "İki mərhələli giriş seçimləri"
   },
   "selfHostedEnvironment": {
-    "message": "Öz-özünə sahiblik edən mühit"
+    "message": "Self-hosted mühit"
   },
   "selfHostedEnvironmentFooter": {
-    "message": "Öz-özünə sahiblik edən Bitwarden quraşdırmasının baza URL-sini müəyyənləşdirin."
+    "message": "Öz-özünə sahiblik edən Bitwarden quraşdırmasının təməl URL-sini müəyyənləşdirin."
   },
   "selfHostedBaseUrlHint": {
-    "message": "Şirkət daxili sahiblik edən Bitwarden quraşdırmasının təməl URL-sini qeyd edin. Nümunə: https://bitwarden.company.com"
+    "message": "Öz-özünə sahiblik edən Bitwarden quraşdırmasının təməl URL-sini müəyyənləşdirin. Nümunə: https://bitwarden.company.com"
   },
   "selfHostedCustomEnvHeader": {
     "message": "Qabaqcıl konfiqurasiya üçün hər xidmətin təməl URL-sini müstəqil olaraq qeyd edə bilərsiniz."
@@ -719,11 +853,15 @@
   "baseUrl": {
     "message": "Server URL-si"
   },
+  "selfHostBaseUrl": {
+    "message": "Self-host server URL-si",
+    "description": "Label for field requesting a self-hosted integration service URL"
+  },
   "apiUrl": {
     "message": "API server URL-si"
   },
   "webVaultUrl": {
-    "message": "Veb anbar server URL-si"
+    "message": "Veb seyf server URL-si"
   },
   "identityUrl": {
     "message": "Kimlik server URL-si"
@@ -764,6 +902,18 @@
   "loginExpired": {
     "message": "Seansın müddəti bitdi."
   },
+  "restartRegistration": {
+    "message": "Qeydiyyatı yenidən başlat"
+  },
+  "expiredLink": {
+    "message": "Vaxtı bitmiş keçid"
+  },
+  "pleaseRestartRegistrationOrTryLoggingIn": {
+    "message": "Lütfən qeydiyyatı yenidən başladın və ya giriş etməyə çalışın."
+  },
+  "youMayAlreadyHaveAnAccount": {
+    "message": "Artıq bir hesabınız ola bilər"
+  },
   "logOutConfirmation": {
     "message": "Çıxış etmək istədiyinizə əminsiniz?"
   },
@@ -789,7 +939,7 @@
     "message": "Yüklənir..."
   },
   "lockVault": {
-    "message": "Anbarı kilidlə"
+    "message": "Seyfi kilidlə"
   },
   "passwordGenerator": {
     "message": "Parol yaradıcı"
@@ -813,7 +963,7 @@
     "message": "Bizi izləyin"
   },
   "syncVault": {
-    "message": "Anbarı eyniləşdir"
+    "message": "Seyfi sinxronlaşdır"
   },
   "changeMasterPass": {
     "message": "Ana parolu dəyişdir"
@@ -833,7 +983,7 @@
     "description": "A 'fingerprint phrase' is a unique word phrase (similar to a passphrase) that a user can use to authenticate their public key with another user, for the purposes of sharing."
   },
   "goToWebVault": {
-    "message": "Veb anbara get"
+    "message": "Veb seyfə get"
   },
   "getMobileApp": {
     "message": "Mobil tətbiqə get"
@@ -842,13 +992,25 @@
     "message": "Brauzer uzantısını al"
   },
   "syncingComplete": {
-    "message": "Eyniləşdirmə tamamlandı"
+    "message": "Sinxr tamamlandı"
   },
   "syncingFailed": {
-    "message": "Uğursuz eyniləşdirmə"
+    "message": "Sinxr uğursuz oldu"
   },
   "yourVaultIsLocked": {
-    "message": "Anbarınız kilidlənib. Davam etmək üçün kimliyinizi doğrulayın."
+    "message": "Seyfiniz kilidlənib. Davam etmək üçün kimliyinizi doğrulayın."
+  },
+  "yourAccountIsLocked": {
+    "message": "Hesabınız kilidlənib"
+  },
+  "or": {
+    "message": "və ya"
+  },
+  "unlockWithBiometrics": {
+    "message": "Biometriklə kilidi aç"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Ana parolla kilidi aç"
   },
   "unlock": {
     "message": "Kilidi aç"
@@ -870,16 +1032,19 @@
     "message": "Yararsız ana parol"
   },
   "twoStepLoginConfirmation": {
-    "message": "İki addımlı giriş, güvənlik açarı, kimlik doğrulayıcı tətbiq, SMS, telefon zəngi və ya e-poçt kimi digər cihazlarla girişinizi doğrulamanızı tələb edərək hesabınızı daha da güvənli edir. İki addımlı giriş, bitwarden.com veb anbarında qurula bilər. Veb saytı indi ziyarət etmək istəyirsiniz?"
+    "message": "İki addımlı giriş, güvənlik açarı, kimlik doğrulayıcı tətbiq, SMS, telefon zəngi və ya e-poçt kimi digər cihazlarla girişinizi doğrulamanızı tələb edərək hesabınızı daha da güvənli edir. İki addımlı giriş, bitwarden.com veb seyfində qurula bilər. Veb saytı indi ziyarət etmək istəyirsiniz?"
   },
   "twoStepLogin": {
     "message": "İki mərhələli giriş"
   },
   "vaultTimeout": {
-    "message": "Anbara müraciət bitəcək"
+    "message": "Seyf vaxtının bitməsi"
+  },
+  "vaultTimeout1": {
+    "message": "Vaxt bitmə"
   },
   "vaultTimeoutDesc": {
-    "message": "Anbara müraciətin bitəcəyi vaxtı seçin və seçilən əməliyyatı icra edin."
+    "message": "Seyfinizin vaxt bitmə əməliyyatını nə vaxt icra edəcəyini seçin."
   },
   "immediately": {
     "message": "Dərhal"
@@ -1082,6 +1247,9 @@
     "message": "Nömrəni kopyala",
     "description": "Copy credit card number"
   },
+  "copyEmail": {
+    "message": "E-poçtu kopyala"
+  },
   "copySecurityCode": {
     "message": "Güvənlik kodunu kopyala",
     "description": "Copy credit card security code (CVV)"
@@ -1093,7 +1261,7 @@
     "message": "Üzvlüyü idarə edin"
   },
   "premiumManageAlert": {
-    "message": "Üzvlüyünüzü bitwarden.com veb anbarında idarə edə bilərsiniz. İndi saytı ziyarət etmək istəyirsiniz?"
+    "message": "Üzvlüyünüzü bitwarden.com veb seyfində idarə edə bilərsiniz. İndi saytı ziyarət etmək istəyirsiniz?"
   },
   "premiumRefresh": {
     "message": "Üzvlüyü təzələ"
@@ -1111,10 +1279,10 @@
     "message": "YubiKey və Duo kimi mülkiyyətçi iki addımlı giriş seçimləri."
   },
   "premiumSignUpReports": {
-    "message": "Anbarınızın təhlükəsiyini təmin etmək üçün parol gigiyenası, hesab sağlamlığı və datanın pozulması hesabatları."
+    "message": "Seyfinizi güvəndə saxlamaq üçün parol gigiyenası, hesab sağlamlığı və data pozuntusu hesabatları."
   },
   "premiumSignUpTotp": {
-    "message": "Anbarınızdakı hesablar üçün TOTP doğrulama kodu (2FA) yaradıcısı."
+    "message": "Seyfinizdəki girişlər üçün TOTP doğrulama kodu (2FA) yaradıcısı."
   },
   "premiumSignUpSupport": {
     "message": "Prioritet müştəri dəstəyi."
@@ -1126,7 +1294,10 @@
     "message": "Premium satın al"
   },
   "premiumPurchaseAlert": {
-    "message": "Premium üzvlüyü bitwarden.com veb anbarında satın ala bilərsiniz. İndi saytı ziyarət etmək istəyirsiniz?"
+    "message": "Premium üzvlüyü bitwarden.com veb seyfində satın ala bilərsiniz. İndi saytı ziyarət etmək istəyirsiniz?"
+  },
+  "premiumPurchaseAlertV2": {
+    "message": "Bitwarden veb tətbiqindəki hesab ayarlarınızda Premium satın ala bilərsiniz."
   },
   "premiumCurrentMember": {
     "message": "Premium üzvsünüz!"
@@ -1230,6 +1401,9 @@
       }
     }
   },
+  "copySuccessful": {
+    "message": "Uğurla kopyalandı"
+  },
   "errorRefreshingAccessToken": {
     "message": "Müraciət tokeni təzələmə xətası"
   },
@@ -1327,7 +1501,7 @@
     "message": "Buradan xaricə köçür"
   },
   "exportVault": {
-    "message": "Anbarı xaricə köçür"
+    "message": "Seyfi xaricə köçür"
   },
   "fileFormat": {
     "message": "Fayl formatı"
@@ -1371,7 +1545,7 @@
     "description": "ex. Register as an accessibility user at hcaptcha.com"
   },
   "copyPasteLink": {
-    "message": "E-poçtunuza göndərilən bağlantını kopyalayıb aşağıda yapışdırın"
+    "message": "E-poçtunuza göndərilən keçidi kopyalayıb aşağıda yapışdırın"
   },
   "enterhCaptchaUrl": {
     "message": "hCaptcha əlçatımlılıq çərəzini yükləmək üçün ünvanı daxil edin",
@@ -1398,7 +1572,7 @@
     "description": "WARNING (should stay in capitalized letters if the language permits)"
   },
   "confirmVaultExport": {
-    "message": "Anbarın xaricə köçürülməsini təsdiqlə"
+    "message": "Seyfi xaricə köçürməyi təsdiqlə"
   },
   "exportWarningDesc": {
     "message": "Xaricə köçürdüyünüz bu fayldakı datanız şifrələnməmiş formatdadır. Bu faylı güvənli olmayan kanallar (e-poçt kimi) üzərində saxlamamalı və ya göndərməməlisiniz. İşiniz bitdikdən sonra faylı dərhal silin."
@@ -1464,8 +1638,14 @@
   "additionalWindowsHelloSettings": {
     "message": "Əlavə Windows Hello ayarları"
   },
+  "unlockWithPolkit": {
+    "message": "Sistem kimlik doğrulaması ilə kilidi aç"
+  },
   "windowsHelloConsentMessage": {
     "message": "Bitwarden üçün doğrula."
+  },
+  "polkitConsentMessage": {
+    "message": "Bitwarden kilidini açmaq üçün kimliyi doğrula."
   },
   "unlockWithTouchId": {
     "message": "Touch ID kilidini aç"
@@ -1474,10 +1654,13 @@
     "message": "Əlavə Touch ID ayarları"
   },
   "touchIdConsentMessage": {
-    "message": "anbarınızın kilidini açın"
+    "message": "seyfinizin kilidini açın"
   },
   "autoPromptWindowsHello": {
     "message": "Açılışda Windows Hello-nu soruşun"
+  },
+  "autoPromptPolkit": {
+    "message": "Açılışda sistem kimlik doğrulamasını tələb et"
   },
   "autoPromptTouchId": {
     "message": "Açılışda Touch ID-ni soruşun"
@@ -1488,17 +1671,23 @@
   "recommendedForSecurity": {
     "message": "Güvənlik üçün tövsiyə olunur."
   },
-  "lockWithMasterPassOnRestart": {
+  "lockWithMasterPassOnRestart1": {
     "message": "Yenidən başladılanda ana parol ilə kilidlə"
   },
   "deleteAccount": {
     "message": "Hesabı sil"
   },
   "deleteAccountDesc": {
-    "message": "Hesabınızı və bütün anbar datasını silmək üçün aşağıda davam edin."
+    "message": "Hesabınızı və bütün seyf datasını silmək üçün aşağıdakı addımları izləyin."
   },
   "deleteAccountWarning": {
     "message": "Hesabınızı silmək birdəfəlik prosesdir. Bu əməliyyatın geri dönüşü yoxdur."
+  },
+  "cannotDeleteAccount": {
+    "message": "Hesab silinə bilmir"
+  },
+  "cannotDeleteAccountDesc": {
+    "message": "Hesabınız bir təşkilata aid olduğu üçün bu əməliyyat icra edilə bilməz. Əlavə məlumat üçün təşkilatınızın administratoru ilə əlaqə saxlayın."
   },
   "accountDeleted": {
     "message": "Hesab silindi"
@@ -1553,20 +1742,20 @@
     "message": "Bir və ya daha çox təşkilat siyasətləri yaradıcı seçimlərinizə təsir edir."
   },
   "vaultTimeoutAction": {
-    "message": "Anbara müraciət vaxtının bitmə əməliyyatı"
+    "message": "Seyf vaxtının bitmə əməliyyatı"
   },
   "vaultTimeoutActionLockDesc": {
-    "message": "Kilidli bir anbar, təkrar müraciət etmək üçün ana parolunuzu yenidən yazmağınızı tələb edir."
+    "message": "Seyfinizə təkrar müraciət etmək üçün ana parol və ya digər kilid açma üsulu tələb olunur."
   },
   "vaultTimeoutActionLogOutDesc": {
-    "message": "Anbarınıza yenidən müraciət etmək üçün təkrar kimlik doğrulama tələb olunur."
+    "message": "Seyfinizə təkrar müraciət etmək üçün təkrar kimlik doğrulama tələb olunur."
   },
   "unlockMethodNeededToChangeTimeoutActionDesc": {
-    "message": "Anbar vaxt bitməsi əməliyyatınızı dəyişdirmək üçün bir kilid açma üsulu quraşdırın."
+    "message": "Seyf vaxt bitmə əməliyyatınızı dəyişdirmək üçün bir kilid açma üsulu qurun."
   },
   "lock": {
     "message": "Kilidlə",
-    "description": "Verb form: to make secure or inaccesible by"
+    "description": "Verb form: to make secure or inaccessible by"
   },
   "trash": {
     "message": "Tullantı qutusu",
@@ -1591,7 +1780,7 @@
     "message": "Birdəfəlik sil"
   },
   "vaultTimeoutLogOutConfirmation": {
-    "message": "Çıxış edəndə, anbarınıza bütün müraciətiniz dayanacaq və vaxt bitməsindən sonra onlayn kimlik doğrulaması tələb olunacaq. Bu ayarı istifadə etmək istədiyinizə əminsiniz?"
+    "message": "Çıxış etdikdə, seyfinizə bütün müraciətiniz dayanacaq və vaxt bitməsindən sonra onlayn kimlik doğrulaması tələb olunacaq. Bu ayarı istifadə etmək istədiyinizə əminsiniz?"
   },
   "vaultTimeoutLogOutConfirmationTitle": {
     "message": "Vaxt bitmə əməliyyat təsdiqi"
@@ -1609,6 +1798,15 @@
   "orgRequiresYouToSetPassword": {
     "message": "Təşkilatınız bir ana parol ayarlamağı tələb edir.",
     "description": "Used as a card title description on the set password page to explain why the user is there"
+  },
+  "cardMetrics": {
+    "message": "/$TOTAL$",
+    "placeholders": {
+      "total": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
   },
   "verificationRequired": {
     "message": "Doğrulama tələb olunur",
@@ -1665,8 +1863,8 @@
   "masterPasswordPolicyRequirementsNotMet": {
     "message": "Yeni ana parolunuz siyasət tələblərini qarşılamır."
   },
-  "receiveMarketingEmails": {
-    "message": "Elanlar, məsləhətlər və araşdırma fürsətləri üçün Bitwarden-dən e-poçt alın."
+  "receiveMarketingEmailsV2": {
+    "message": "Bitwarden-in tövsiyə, elan və araşdırma imkanlarını gələn qutunuzda əldə edin."
   },
   "unsubscribe": {
     "message": "Abunəlikdən çıx"
@@ -1689,14 +1887,14 @@
   "enableBrowserIntegration": {
     "message": "Brauzer inteqrasiyasını fəallaşdır"
   },
-  "enableBrowserIntegrationDesc": {
-    "message": "Brauzerdə biometriklər üçün istifadə olunur."
+  "enableBrowserIntegrationDesc1": {
+    "message": "Safari xaricindəki brauzerlərdə biometrik kilid açmağa icazə vermək üçün istifadə olunur."
   },
   "enableDuckDuckGoBrowserIntegration": {
     "message": "DuckDuckGo brauzer inteqrasiyasına icazə ver"
   },
   "enableDuckDuckGoBrowserIntegrationDesc": {
-    "message": "DuckDuckGo ilə gəzinərkən Bitwarden anbarınızı istifadə edin."
+    "message": "DuckDuckGo ilə gəzinərkən Bitwarden seyfinizi istifadə edin."
   },
   "browserIntegrationUnsupportedTitle": {
     "message": "Brauzer inteqrasiyası dəstəklənmir"
@@ -1758,8 +1956,14 @@
   "biometricsNotEnabledDesc": {
     "message": "Brauzer biometrikləri, əvvəlcə ayarlarda masaüstü biometriklərinin qurulmasını tələb edir."
   },
+  "biometricsManualSetupTitle": {
+    "message": "Avtomatik quraşdırma mövcud deyil"
+  },
+  "biometricsManualSetupDesc": {
+    "message": "Quraşdırma üsuluna görə, biometrik dəstəyi avtomatik fəallaşdırıla bilmədi. Bunun necə manual edildiyi ilə bağlı sənədləşdirmələri açmaq istəyirsiniz?"
+  },
   "personalOwnershipSubmitError": {
-    "message": "Müəssisə Siyasətinə görə, elementləri şəxsi anbarınızda saxlamağınız məhdudlaşdırılıb. Sahiblik seçimini təşkilat olaraq dəyişdirin və mövcud kolleksiyalar arasından seçim edin."
+    "message": "Müəssisə siyasətinə görə, elementləri şəxsi seyfinizdə saxlamağınız məhdudlaşdırılıb. Sahiblik seçimini təşkilat olaraq dəyişdirin və mövcud kolleksiyalar arasından seçim edin."
   },
   "hintEqualsPassword": {
     "message": "Parol məsləhəti, parolunuzla eyni ola bilməz."
@@ -1768,7 +1972,7 @@
     "message": "Bir təşkilat siyasəti, sahiblik seçimlərinizə təsir edir."
   },
   "personalOwnershipPolicyInEffectImports": {
-    "message": "Bir təşkilat siyasəti, elementlərin fərdi anbarınıza köçürülməsini əngəllədi."
+    "message": "Bir təşkilat siyasəti, elementlərin fərdi seyfinizə köçürülməsini əngəllədi."
   },
   "allSends": {
     "message": "Bütün \"Send\"lər",
@@ -1789,7 +1993,7 @@
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
   "myVault": {
-    "message": "Anbarım"
+    "message": "Seyfim"
   },
   "text": {
     "message": "Mətn"
@@ -1832,11 +2036,11 @@
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
   "sendLink": {
-    "message": "\"Send\" bağlantısı",
+    "message": "\"Send\" keçidi",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
   "sendLinkLabel": {
-    "message": "\"Send\" bağlantısı",
+    "message": "\"Send\" keçidi",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
   "textHiddenByDefault": {
@@ -1892,11 +2096,11 @@
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
   "copySendLinkToClipboard": {
-    "message": "Send bağlantısını lövhəyə kopyala",
+    "message": "Send keçidini lövhəyə kopyala",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
   "copySendLinkOnSave": {
-    "message": "Saxladıqdan sonra bu \"Send\"in paylaşma bağlantısını lövhəmə kopyala."
+    "message": "Saxladıqdan sonra bu \"Send\"in paylaşma keçidini lövhəmə kopyala."
   },
   "sendDisabled": {
     "message": "Send sıradan çıxarıldı",
@@ -1907,7 +2111,7 @@
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
   "copyLink": {
-    "message": "Bağlantını kopyala"
+    "message": "Keçidi kopyala"
   },
   "disabled": {
     "message": "Sıradan çıxarıldı"
@@ -1942,6 +2146,9 @@
   "emailVerificationRequired": {
     "message": "E-poçtun doğrulanması tələb olunur"
   },
+  "emailVerifiedV2": {
+    "message": "E-poçt doğrulandı"
+  },
   "emailVerificationRequiredDesc": {
     "message": "Bu özəlliyi istifadə etmək üçün e-poçtunuzu doğrulamalısınız."
   },
@@ -1961,10 +2168,13 @@
     "message": "Ana parolu güncəllə"
   },
   "updateMasterPasswordWarning": {
-    "message": "Ana parolunuz təzəlikcə təşkilatınızdakı bir administrator tərəfindən dəyişdirildi. Anbara müraciət üçün indi güncəlləməlisiniz. Davam etsəniz, hazırkı seansdan çıxış etmiş və təkrar giriş etməli olacaqsınız. Digər cihazlardakı aktiv seanslar bir saata qədər aktiv qalmağa davam edə bilər."
+    "message": "Ana parolunuz təzəlikcə təşkilatınızdakı bir administrator tərəfindən dəyişdirildi. Seyfə müraciət etmək üçün onu indi güncəlləməlisiniz. Davam etsəniz, hazırkı seansdan çıxış edəcəksiniz və təkrar giriş etməli olacaqsınız. Digər cihazlardakı aktiv seanslar bir saata qədər aktiv qalmağa davam edə bilər."
   },
   "updateWeakMasterPasswordWarning": {
-    "message": "Ana parolunuz təşkilatınızdakı siyasətlərdən birinə və ya bir neçəsinə uyğun gəlmir. Anbara müraciət üçün ana parolunuzu indi güncəlləməlisiniz. Davam etsəniz, hazırkı seansdan çıxış etmiş və təkrar giriş etməli olacaqsınız. Digər cihazlardakı aktiv seanslar bir saata qədər aktiv qalmağa davam edə bilər."
+    "message": "Ana parolunuz təşkilatınızdakı siyasətlərdən birinə və ya bir neçəsinə uyğun gəlmir. Seyfə müraciət üçün ana parolunuzu indi güncəlləməlisiniz. Davam etsəniz, hazırkı seansdan çıxış etmiş və təkrar giriş etməli olacaqsınız. Digər cihazlardakı aktiv seanslar bir saata qədər aktiv qalmağa davam edə bilər."
+  },
+  "tdeDisabledMasterPasswordRequired": {
+    "message": "Təşkilatınız, güvənli cihaz şifrələməsini sıradan çıxartdı. Seyfinizə müraciət etmək üçün lütfən ana parol təyin edin."
   },
   "tryAgain": {
     "message": "Yenidən sına"
@@ -2008,8 +2218,8 @@
   "minutes": {
     "message": "Dəqiqə"
   },
-  "vaultTimeoutPolicyInEffect": {
-    "message": "Təşkilatınızın siyasətləri, anbarınızın vaxt bitişinə təsir edir. Anbar vaxt bitişi üçün icazə verilən maksimum vaxt $HOURS$ saat $MINUTES$ dəqiqədir",
+  "vaultTimeoutPolicyInEffect1": {
+    "message": "Maksimum $HOURS$ saat və $MINUTES$ dəqiqə.",
     "placeholders": {
       "hours": {
         "content": "$1",
@@ -2022,7 +2232,7 @@
     }
   },
   "vaultTimeoutPolicyWithActionInEffect": {
-    "message": "Təşkilatınızın siyasətləri, anbarınızın vaxt bitişinə təsir edir. Anbar vaxt bitişi üçün icazə verilən maksimum vaxt $HOURS$ saat $MINUTES$ dəqiqədir. Anbar vaxt bitişi əməliyyatı $ACTION$ olaraq ayarlandı.",
+    "message": "Təşkilatınızın siyasətləri, seyfinizin bitmə vaxtına təsir edir. İcazə verilən maksimum seyf bitmə vaxtı $HOURS$ saat $MINUTES$ dəqiqədir. Seyf vaxt bitmə əməliyyatı $ACTION$ olaraq ayarlandı.",
     "placeholders": {
       "hours": {
         "content": "$1",
@@ -2039,7 +2249,7 @@
     }
   },
   "vaultTimeoutActionPolicyInEffect": {
-    "message": "Təşkilatınızın siyasətləri, anbar vaxt bitişi əməliyyatınızı $ACTION$ olaraq ayarladı.",
+    "message": "Təşkilatınızın siyasətləri, seyfinizin vaxt bitmə əməliyyatını $ACTION$ olaraq ayarladı.",
     "placeholders": {
       "action": {
         "content": "$1",
@@ -2048,7 +2258,10 @@
     }
   },
   "vaultTimeoutTooLarge": {
-    "message": "Anbar vaxt bitişi, təşkilatınız tərəfindən ayarlanan məhdudiyyətləri aşır."
+    "message": "Seyfin bitmə vaxtı, təşkilatınız tərəfindən ayarlanan məhdudiyyətləri aşır."
+  },
+  "inviteAccepted": {
+    "message": "Dəvət qəbul edildi"
   },
   "resetPasswordPolicyAutoEnroll": {
     "message": "Avtomatik qeydiyyat"
@@ -2057,10 +2270,10 @@
     "message": "Bu təşkilat, sizi \"parol sıfırlama\"da avtomatik olaraq qeydiyyata alan müəssisə siyasətinə sahibdir. Qeydiyyat, təşkilat administratorlarına ana parolunuzu dəyişdirmə icazəsi verəcək."
   },
   "vaultExportDisabled": {
-    "message": "Anbarın xaricə köçürülməsi silindi"
+    "message": "Seyf xaricə köçürmə silindi"
   },
   "personalVaultExportPolicyInEffect": {
-    "message": "Bir və ya daha çox təşkilat siyasəti, fərdi anbarınızı xaricə köçürməyinizi əngəlləyir."
+    "message": "Bir və ya daha çox təşkilat siyasəti, fərdi seyfi xaricə köçürməyinizi əngəlləyir."
   },
   "addAccount": {
     "message": "Hesab əlavə et"
@@ -2072,7 +2285,7 @@
     "message": "Ana parol silindi."
   },
   "convertOrganizationEncryptionDesc": {
-    "message": "$ORGANIZATION$, öz-özünə sahiblik edən açar serveri ilə SSO istifadə edir. Bu təşkilatın üzvlərinin giriş etməsi üçün artıq ana parol tələb edilməyəcək.",
+    "message": "$ORGANIZATION$, self-hosted açar serveri ilə SSO istifadə edir. Bu təşkilatın üzvlərinin giriş etməsi üçün artıq ana parol tələb edilməyəcək.",
     "placeholders": {
       "organization": {
         "content": "$1",
@@ -2093,7 +2306,7 @@
     "message": "Açar bağlayıcı xətası: Açar Bağlayıcının mövcud olduğuna və düzgün işlədiyinə əmin olun."
   },
   "lockAllVaults": {
-    "message": "Bütün anbarları kilidlə"
+    "message": "Bütün seyfləri kilidlə"
   },
   "accountLimitReached": {
     "message": "Eyni vaxtda 5-dən çox hesaba giriş edilə bilməz."
@@ -2129,10 +2342,10 @@
     "message": "Seansınızın vaxtı bitdi. Lütfən geri qayıdıb yenidən giriş etməyə cəhd edin."
   },
   "exportingPersonalVaultTitle": {
-    "message": "Fərdi anbarın xaricə köçürülməsi"
+    "message": "Fərdi seyfin xaricə köçürülməsi"
   },
   "exportingIndividualVaultDescription": {
-    "message": "Yalnız $EMAIL$ ilə əlaqələndirilmiş fərdi anbar elementləri xaricə köçürüləcək. Təşkilat anbar elementləri daxil edilməyəcək. Yalnız anbar element məlumatları xaricə köçürüləcək və əlaqələndirilmiş qoşmalar daxil edilməyəcək.",
+    "message": "Yalnız $EMAIL$ ilə əlaqələndirilmiş fərdi seyf elementləri xaricə köçürüləcək. Təşkilat seyf elementləri daxil edilməyəcək. Yalnız seyf element məlumatları xaricə köçürüləcək və əlaqələndirilmiş qoşmalar daxil edilməyəcək.",
     "placeholders": {
       "email": {
         "content": "$1",
@@ -2141,10 +2354,10 @@
     }
   },
   "exportingOrganizationVaultTitle": {
-    "message": "Təşkilat anbarını xaricə köçürmə"
+    "message": "Təşkilat seyfini xaricə köçürmə"
   },
   "exportingOrganizationVaultDesc": {
-    "message": "Yalnız $ORGANIZATION$ ilə əlaqələndirilmiş təşkilat anbarı ixrac ediləcək. Fərdi anbardakı və digər təşkilat elementlər daxil edilmir.",
+    "message": "Yalnız $ORGANIZATION$ ilə əlaqələndirilmiş təşkilat seyfi xaricə köçürüləcək. Fərdi seyfdə və digər təşkilatlardakı elementlər daxil edilməyəcək.",
     "placeholders": {
       "organization": {
         "content": "$1",
@@ -2155,11 +2368,15 @@
   "locked": {
     "message": "Kilidli"
   },
+  "yourVaultIsLockedV2": {
+    "message": "Seyfiniz kilidlənib"
+  },
   "unlocked": {
     "message": "Kilidi açıldı"
   },
   "generator": {
-    "message": "Yaradıcı"
+    "message": "Yaradıcı",
+    "description": "Short for 'credential generator'."
   },
   "whatWouldYouLikeToGenerate": {
     "message": "Nə yaratmaq istəyirsiniz?"
@@ -2172,6 +2389,23 @@
   },
   "generateUsername": {
     "message": "İstifadəçi adı yarat"
+  },
+  "generateEmail": {
+    "message": "E-poçt yarat"
+  },
+  "generatorBoundariesHint": {
+    "message": "Dəyər $MIN$-$MAX$ arasında olmalıdır",
+    "description": "Explains spin box minimum and maximum values to the user",
+    "placeholders": {
+      "min": {
+        "content": "$1",
+        "example": "8"
+      },
+      "max": {
+        "content": "$2",
+        "example": "128"
+      }
+    }
   },
   "usernameType": {
     "message": "İstifadəçi adı növü"
@@ -2202,19 +2436,27 @@
     "message": "Xidmət"
   },
   "allVaults": {
-    "message": "Bütün anbarlar"
+    "message": "Bütün seyflər"
   },
   "searchOrganization": {
     "message": "Təşkilat axtar"
   },
   "searchMyVault": {
-    "message": "Anbarlarımı axtar"
+    "message": "Seyfimdə axtar"
   },
   "forwardedEmail": {
     "message": "Yönləndirilən e-poçt ləqəbi"
   },
   "forwardedEmailDesc": {
     "message": "Xarici yönləndirmə xidməti ilə e-poçt ləqəbi yaradın."
+  },
+  "forwarderDomainName": {
+    "message": "E-poçt domeni",
+    "description": "Labels the domain name email forwarder service option"
+  },
+  "forwarderDomainNameHint": {
+    "message": "Seçilmiş xidmət tərəfindən dəstəklənən bir domen seçin",
+    "description": "Guidance provided for email forwarding services that support multiple email domains."
   },
   "forwarderError": {
     "message": "$SERVICENAME$ xətası: $ERRORMESSAGE$",
@@ -2338,10 +2580,10 @@
     "message": "Sıradan çıxarılmış Təşkilatlardakı elementlərə müraciət edilə bilmir. Kömək üçün Təşkilatınızın sahibi ilə əlaqə saxlayın."
   },
   "neverLockWarning": {
-    "message": "\"Heç vaxt\" seçimini istifadə etmək istədiyinizə əminsiniz? Kilid seçimini \"Heç vaxt\" olaraq ayarlasanız, anbarınızın şifrələmə açarı cihazınızda saxlanılacaq. Bu seçimi istifadə etsəniz, cihazınızı daha yaxşı mühafizə etməlisiniz."
+    "message": "\"Heç vaxt\"i seçmək istədiyinizə əminsiniz? Kilid seçimini \"Heç vaxt\" olaraq ayarlasanız, seyfinizin şifrələmə açarı cihazınızda saxlanılacaq. Bu seçimi istifadə etsəniz, cihazınızı daha yaxşı mühafizə etdiyinizə əmin olmalısınız."
   },
   "vault": {
-    "message": "Anbar"
+    "message": "Seyf"
   },
   "loginWithMasterPassword": {
     "message": "Ana parolla giriş et"
@@ -2377,7 +2619,7 @@
     "message": "Cihazınıza bir bildiriş göndərildi."
   },
   "fingerprintMatchInfo": {
-    "message": "Lütfən anbarınızın kilidinin açıq olduğuna və Barmaq izi ifadəsinin digər cihazla uyuşduğuna əmin olun."
+    "message": "Lütfən seyfinizin kilidinin açıq olduğuna və Barmaq izi ifadəsinin digər cihazla uyuşduğuna əmin olun."
   },
   "fingerprintPhraseHeader": {
     "message": "Barmaq izi ifadəsi"
@@ -2507,6 +2749,9 @@
   "important": {
     "message": "Vacib:"
   },
+  "accessing": {
+    "message": "Müraciət edilir"
+  },
   "accessTokenUnableToBeDecrypted": {
     "message": "Müraciət tokeninizin şifrəsi açıla bilmədiyi üçün çıxış etdiniz. Bu problemi həll etmək üçün lütfən yenidən giriş edin."
   },
@@ -2559,11 +2804,8 @@
     "message": "AB",
     "description": "European Union"
   },
-  "loggingInOn": {
-    "message": "Giriş edilir"
-  },
   "selfHostedServer": {
-    "message": "öz-özünə sahiblik edən"
+    "message": "self-hosted"
   },
   "accessDenied": {
     "message": "Müraciət rədd edildi. Bu səhifəyə baxmaq üçün icazəniz yoxdur."
@@ -2657,7 +2899,7 @@
     "message": "Giriş, bir e-poçt ünvanı deyil."
   },
   "fieldsNeedAttention": {
-    "message": "Yuxarıdakı $COUNT$ sahənin diqqətinizə ehtiyacı var.",
+    "message": "Yuxarıdakı $COUNT$ xananın diqqətinizə ehtiyacı var.",
     "placeholders": {
       "count": {
         "content": "$1",
@@ -2691,6 +2933,9 @@
   },
   "submenu": {
     "message": "Alt menyu"
+  },
+  "toggleSideNavigation": {
+    "message": "Yan naviqasiyanı aç/bağla"
   },
   "skipToContent": {
     "message": "Məzmunu ötür"
@@ -2747,6 +2992,9 @@
       }
     }
   },
+  "duoHealthCheckResultsInNullAuthUrlError": {
+    "message": "Duo xidmətinə bağlanarkən xəta baş verdi. Fərqli iki addımlı giriş üsulu istifadə edin və ya kömək üçün Duo ilə əlaqə saxlayın."
+  },
   "launchDuoAndFollowStepsToFinishLoggingIn": {
     "message": "Duo-nu başladın və giriş prosesini tamamlamaq üçün addımları izləyin."
   },
@@ -2768,8 +3016,8 @@
   "invalidFilePassword": {
     "message": "Yararsız fayl parolu, lütfən xaricə köçürmə faylını yaradarkən daxil etdiyiniz parolu istifadə edin."
   },
-  "importDestination": {
-    "message": "Hədəfi daxilə köçür"
+  "destination": {
+    "message": "Hədəf"
   },
   "learnAboutImportOptions": {
     "message": "Daxilə köçürmə seçimlərinizi öyrənin"
@@ -2819,13 +3067,16 @@
     }
   },
   "confirmVaultImport": {
-    "message": "Anbarın daxilə köçürülməsini təsdiqləyin"
+    "message": "Seyfi daxilə köçürməyi təsdiqlə"
   },
   "confirmVaultImportDesc": {
     "message": "Bu fayl parolla qorunur. Məlumatları daxilə köçürmək üçün fayl parolunu daxil edin."
   },
   "confirmFilePassword": {
     "message": "Fayl parolunu təsdiqlə"
+  },
+  "exportSuccess": {
+    "message": "Seyf datası xaricə köçürüldü"
   },
   "multifactorAuthenticationCancelled": {
     "message": "Çox faktorlu kimlik doğrulama ləğv edildi"
@@ -2961,5 +3212,20 @@
         "example": "Work"
       }
     }
+  },
+  "data": {
+    "message": "Data"
+  },
+  "fileSends": {
+    "message": "Fayl \"Send\"ləri"
+  },
+  "textSends": {
+    "message": "Mətn \"Send\"ləri"
+  },
+  "ssoError": {
+    "message": "SSO giriş üçün açıq port tapıla bilmədi."
+  },
+  "fileSavedToDevice": {
+    "message": "Fayl cihazda saxlanıldı. Endirilənləri cihazınızdan idarə edin."
   }
 }

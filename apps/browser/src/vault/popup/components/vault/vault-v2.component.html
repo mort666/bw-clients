@@ -1,7 +1,7 @@
-<popup-page>
+<popup-page [loading]="loading$ | async" disablePadding>
   <popup-header slot="header" [pageTitle]="'vault' | i18n">
     <ng-container slot="end">
-      <app-new-item-dropdown></app-new-item-dropdown>
+      <app-new-item-dropdown [initialValues]="newItemItemValues$ | async"></app-new-item-dropdown>
 
       <app-pop-out></app-pop-out>
       <app-current-account></app-current-account>
@@ -15,14 +15,24 @@
     <bit-no-items [icon]="vaultIcon">
       <ng-container slot="title">{{ "yourVaultIsEmpty" | i18n }}</ng-container>
       <ng-container slot="description">{{ "autofillSuggestionsTip" | i18n }}</ng-container>
-      <app-new-item-dropdown slot="button"></app-new-item-dropdown>
+      <app-new-item-dropdown
+        slot="button"
+        [initialValues]="newItemItemValues$ | async"
+      ></app-new-item-dropdown>
     </bit-no-items>
   </div>
 
-  <ng-container *ngIf="vaultState !== VaultStateEnum.Empty">
+  <!-- Show search & filters outside of the scroll area of the page -->
+  <div
+    slot="above-scroll-area"
+    class="tw-p-4"
+    *ngIf="vaultState !== VaultStateEnum.Empty && !(loading$ | async)"
+  >
     <app-vault-v2-search> </app-vault-v2-search>
-
     <app-vault-list-filters></app-vault-list-filters>
+  </div>
+
+  <ng-container *ngIf="vaultState !== VaultStateEnum.Empty">
     <div
       *ngIf="vaultState === VaultStateEnum.NoResults"
       class="tw-flex tw-flex-col tw-justify-center tw-h-auto tw-pt-12"
@@ -33,17 +43,22 @@
       </bit-no-items>
     </div>
 
-    <div
-      *ngIf="vaultState === VaultStateEnum.DeactivatedOrg"
-      class="tw-flex tw-flex-col tw-justify-center tw-h-auto tw-pt-12"
-    >
-      <bit-no-items [icon]="deactivatedIcon">
-        <ng-container slot="title">{{ "organizationIsDeactivated" | i18n }}</ng-container>
-        <ng-container slot="description">{{ "contactYourOrgAdmin" | i18n }}</ng-container>
-      </bit-no-items>
+    <!-- For better consistency with screen readers, the role/aria needs to be on an element that isn't dynamic by *ngIf -->
+    <div role="status" aria-live="polite">
+      <div
+        *ngIf="vaultState === VaultStateEnum.DeactivatedOrg"
+        class="tw-flex tw-flex-col tw-justify-center tw-h-auto tw-pt-12"
+      >
+        <bit-no-items [icon]="deactivatedIcon">
+          <ng-container slot="title">
+            {{ "organizationIsDeactivated" | i18n }}
+          </ng-container>
+          <ng-container slot="description">{{ "contactYourOrgAdmin" | i18n }}</ng-container>
+        </bit-no-items>
+      </div>
     </div>
 
-    <ng-container *ngIf="vaultState === null">
+    <div *ngIf="vaultState === null" cdkVirtualScrollingElement class="tw-h-full tw-p-3">
       <app-autofill-vault-list-items></app-autofill-vault-list-items>
       <app-vault-list-items-container
         [title]="'favorites' | i18n"
@@ -54,7 +69,8 @@
         [title]="'allItems' | i18n"
         [ciphers]="remainingCiphers$ | async"
         id="allItems"
+        disableSectionMargin
       ></app-vault-list-items-container>
-    </ng-container>
+    </div>
   </ng-container>
 </popup-page>

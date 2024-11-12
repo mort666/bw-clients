@@ -64,8 +64,10 @@ function mapToSingleOrganization(organizationId: string) {
 }
 
 export class OrganizationService implements InternalOrganizationServiceAbstraction {
-  organizations$ = this.getOrganizationsFromState$();
-  memberOrganizations$ = this.organizations$.pipe(mapToExcludeProviderOrganizations());
+  organizations$: Observable<Organization[]> = this.getOrganizationsFromState$();
+  memberOrganizations$: Observable<Organization[]> = this.organizations$.pipe(
+    mapToExcludeProviderOrganizations(),
+  );
 
   constructor(private stateProvider: StateProvider) {}
 
@@ -84,6 +86,10 @@ export class OrganizationService implements InternalOrganizationServiceAbstracti
   canManageSponsorships$ = this.organizations$.pipe(
     mapToExcludeOrganizationsWithoutFamilySponsorshipSupport(),
     mapToBooleanHasAnyOrganizations(),
+  );
+
+  familySponsorshipAvailable$ = this.organizations$.pipe(
+    map((orgs) => orgs.some((o) => o.familySponsorshipAvailable)),
   );
 
   async hasOrganizations(): Promise<boolean> {

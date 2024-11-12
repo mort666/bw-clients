@@ -15,29 +15,39 @@ import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { ColorPasswordCountPipe } from "@bitwarden/angular/pipes/color-password-count.pipe";
 import { ColorPasswordPipe } from "@bitwarden/angular/pipes/color-password.pipe";
 import { UserVerificationDialogComponent } from "@bitwarden/auth/angular";
-import { AvatarModule, ButtonModule, ToastModule } from "@bitwarden/components";
+import { AvatarModule, ButtonModule, FormFieldModule, ToastModule } from "@bitwarden/components";
 
-import { AccountSwitcherComponent } from "../auth/popup/account-switching/account-switcher.component";
 import { AccountComponent } from "../auth/popup/account-switching/account.component";
 import { CurrentAccountComponent } from "../auth/popup/account-switching/current-account.component";
 import { EnvironmentComponent } from "../auth/popup/environment.component";
+import { ExtensionAnonLayoutWrapperComponent } from "../auth/popup/extension-anon-layout-wrapper/extension-anon-layout-wrapper.component";
 import { HintComponent } from "../auth/popup/hint.component";
 import { HomeComponent } from "../auth/popup/home.component";
 import { LockComponent } from "../auth/popup/lock.component";
 import { LoginDecryptionOptionsComponent } from "../auth/popup/login-decryption-options/login-decryption-options.component";
+import { LoginComponentV1 } from "../auth/popup/login-v1.component";
 import { LoginViaAuthRequestComponent } from "../auth/popup/login-via-auth-request.component";
-import { LoginComponent } from "../auth/popup/login.component";
 import { RegisterComponent } from "../auth/popup/register.component";
 import { RemovePasswordComponent } from "../auth/popup/remove-password.component";
 import { SetPasswordComponent } from "../auth/popup/set-password.component";
+import { AccountSecurityComponent as AccountSecurityComponentV1 } from "../auth/popup/settings/account-security-v1.component";
 import { AccountSecurityComponent } from "../auth/popup/settings/account-security.component";
 import { VaultTimeoutInputComponent } from "../auth/popup/settings/vault-timeout-input.component";
 import { SsoComponent } from "../auth/popup/sso.component";
 import { TwoFactorOptionsComponent } from "../auth/popup/two-factor-options.component";
 import { TwoFactorComponent } from "../auth/popup/two-factor.component";
 import { UpdateTempPasswordComponent } from "../auth/popup/update-temp-password.component";
+import { Fido2CipherRowV1Component } from "../autofill/popup/fido2/fido2-cipher-row-v1.component";
+import { Fido2CipherRowComponent } from "../autofill/popup/fido2/fido2-cipher-row.component";
+import { Fido2UseBrowserLinkV1Component } from "../autofill/popup/fido2/fido2-use-browser-link-v1.component";
+import { Fido2UseBrowserLinkComponent } from "../autofill/popup/fido2/fido2-use-browser-link.component";
+import { Fido2V1Component } from "../autofill/popup/fido2/fido2-v1.component";
+import { Fido2Component } from "../autofill/popup/fido2/fido2.component";
+import { AutofillV1Component } from "../autofill/popup/settings/autofill-v1.component";
 import { AutofillComponent } from "../autofill/popup/settings/autofill.component";
+import { ExcludedDomainsV1Component } from "../autofill/popup/settings/excluded-domains-v1.component";
 import { ExcludedDomainsComponent } from "../autofill/popup/settings/excluded-domains.component";
+import { NotificationsSettingsV1Component } from "../autofill/popup/settings/notifications-v1.component";
 import { NotificationsSettingsComponent } from "../autofill/popup/settings/notifications.component";
 import { PremiumComponent } from "../billing/popup/settings/premium.component";
 import { PopOutComponent } from "../platform/popup/components/pop-out.component";
@@ -56,9 +66,6 @@ import { SendTypeComponent } from "../tools/popup/send/send-type.component";
 import { SettingsComponent } from "../tools/popup/settings/settings.component";
 import { ActionButtonsComponent } from "../vault/popup/components/action-buttons.component";
 import { CipherRowComponent } from "../vault/popup/components/cipher-row.component";
-import { Fido2CipherRowComponent } from "../vault/popup/components/fido2/fido2-cipher-row.component";
-import { Fido2UseBrowserLinkComponent } from "../vault/popup/components/fido2/fido2-use-browser-link.component";
-import { Fido2Component } from "../vault/popup/components/fido2/fido2.component";
 import { AddEditCustomFieldsComponent } from "../vault/popup/components/vault/add-edit-custom-fields.component";
 import { AddEditComponent } from "../vault/popup/components/vault/add-edit.component";
 import { AttachmentsComponent } from "../vault/popup/components/vault/attachments.component";
@@ -91,6 +98,8 @@ import "../platform/popup/locales";
   imports: [
     A11yModule,
     AppRoutingModule,
+    AutofillComponent,
+    AccountSecurityComponent,
     ToastModule.forRoot({
       maxOpened: 2,
       autoDismiss: true,
@@ -108,17 +117,25 @@ import "../platform/popup/locales";
     ScrollingModule,
     ServicesModule,
     DialogModule,
+    ExcludedDomainsComponent,
+    Fido2CipherRowComponent,
+    Fido2Component,
+    Fido2UseBrowserLinkComponent,
     FilePopoutCalloutComponent,
     AvatarModule,
     AccountComponent,
     ButtonModule,
+    NotificationsSettingsComponent,
     PopOutComponent,
     PopupPageComponent,
     PopupTabNavigationComponent,
     PopupFooterComponent,
     PopupHeaderComponent,
+    HeaderComponent,
     UserVerificationDialogComponent,
     CurrentAccountComponent,
+    FormFieldModule,
+    ExtensionAnonLayoutWrapperComponent,
   ],
   declarations: [
     ActionButtonsComponent,
@@ -133,20 +150,19 @@ import "../platform/popup/locales";
     ColorPasswordCountPipe,
     CurrentTabComponent,
     EnvironmentComponent,
-    ExcludedDomainsComponent,
-    Fido2CipherRowComponent,
-    Fido2UseBrowserLinkComponent,
+    ExcludedDomainsV1Component,
+    Fido2CipherRowV1Component,
+    Fido2UseBrowserLinkV1Component,
     FolderAddEditComponent,
     FoldersComponent,
     VaultFilterComponent,
-    HeaderComponent,
     HintComponent,
     HomeComponent,
     LockComponent,
-    LoginComponent,
+    LoginComponentV1,
     LoginViaAuthRequestComponent,
     LoginDecryptionOptionsComponent,
-    NotificationsSettingsComponent,
+    NotificationsSettingsV1Component,
     AppearanceComponent,
     GeneratorComponent,
     PasswordGeneratorHistoryComponent,
@@ -158,7 +174,6 @@ import "../platform/popup/locales";
     SendListComponent,
     SendTypeComponent,
     SetPasswordComponent,
-    AccountSecurityComponent,
     SettingsComponent,
     VaultSettingsComponent,
     ShareComponent,
@@ -170,16 +185,17 @@ import "../platform/popup/locales";
     TwoFactorOptionsComponent,
     UpdateTempPasswordComponent,
     UserVerificationComponent,
+    AccountSecurityComponentV1,
     VaultTimeoutInputComponent,
     ViewComponent,
     ViewCustomFieldsComponent,
     RemovePasswordComponent,
     VaultSelectComponent,
-    Fido2Component,
-    AutofillComponent,
+    Fido2V1Component,
+    AutofillV1Component,
     EnvironmentSelectorComponent,
-    AccountSwitcherComponent,
   ],
+  exports: [],
   providers: [CurrencyPipe, DatePipe],
   bootstrap: [AppComponent],
 })

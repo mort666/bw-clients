@@ -1,5 +1,12 @@
 import { DIALOG_DATA, DialogConfig, DialogRef } from "@angular/cdk/dialog";
-import { ChangeDetectorRef, Component, Inject, ViewChild, ViewContainerRef } from "@angular/core";
+import {
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  Inject,
+  ViewChild,
+  ViewContainerRef,
+} from "@angular/core";
 import { FormBuilder } from "@angular/forms";
 
 import { PolicyApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/policy/policy-api.service.abstraction";
@@ -8,7 +15,7 @@ import { PolicyRequest } from "@bitwarden/common/admin-console/models/request/po
 import { PolicyResponse } from "@bitwarden/common/admin-console/models/response/policy.response";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { DialogService } from "@bitwarden/components";
+import { DialogService, ToastService } from "@bitwarden/components";
 
 import { BasePolicy, BasePolicyComponent } from "../policies";
 
@@ -28,14 +35,14 @@ export enum PolicyEditDialogResult {
   selector: "app-policy-edit",
   templateUrl: "policy-edit.component.html",
 })
-export class PolicyEditComponent {
+export class PolicyEditComponent implements AfterViewInit {
   @ViewChild("policyForm", { read: ViewContainerRef, static: true })
   policyFormRef: ViewContainerRef;
 
   policyType = PolicyType;
   loading = true;
   enabled = false;
-  formPromise: Promise<any>;
+  saveDisabled = false;
   defaultTypes: any[];
   policyComponent: BasePolicyComponent;
 
@@ -51,6 +58,7 @@ export class PolicyEditComponent {
     private cdr: ChangeDetectorRef,
     private formBuilder: FormBuilder,
     private dialogRef: DialogRef<PolicyEditDialogResult>,
+    private toastService: ToastService,
   ) {}
   get policy(): BasePolicy {
     return this.data.policy;
@@ -64,6 +72,8 @@ export class PolicyEditComponent {
       .instance as BasePolicyComponent;
     this.policyComponent.policy = this.data.policy;
     this.policyComponent.policyResponse = this.policyResponse;
+
+    this.saveDisabled = !this.policyResponse.canToggleState;
 
     this.cdr.detectChanges();
   }
@@ -88,20 +98,15 @@ export class PolicyEditComponent {
     try {
       request = await this.policyComponent.buildRequest(this.data.policiesEnabledMap);
     } catch (e) {
-      this.platformUtilsService.showToast("error", null, e.message);
+      this.toastService.showToast({ variant: "error", title: null, message: e.message });
       return;
     }
-    this.formPromise = this.policyApiService.putPolicy(
-      this.data.organizationId,
-      this.data.policy.type,
-      request,
-    );
-    await this.formPromise;
-    this.platformUtilsService.showToast(
-      "success",
-      null,
-      this.i18nService.t("editedPolicyId", this.i18nService.t(this.data.policy.name)),
-    );
+    await this.policyApiService.putPolicy(this.data.organizationId, this.data.policy.type, request);
+    this.toastService.showToast({
+      variant: "success",
+      title: null,
+      message: this.i18nService.t("editedPolicyId", this.i18nService.t(this.data.policy.name)),
+    });
     this.dialogRef.close(PolicyEditDialogResult.Saved);
   };
 

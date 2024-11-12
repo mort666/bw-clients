@@ -1,10 +1,11 @@
 import { Component } from "@angular/core";
 import { ActivatedRoute, Params, Router } from "@angular/router";
+import { firstValueFrom } from "rxjs";
 
+import { RegisterRouteService } from "@bitwarden/auth/common";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { ProviderUserAcceptRequest } from "@bitwarden/common/admin-console/models/request/provider/provider-user-accept.request";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
-import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { BaseAcceptComponent } from "@bitwarden/web-vault/app/common/base.accept.component";
@@ -15,6 +16,9 @@ import { BaseAcceptComponent } from "@bitwarden/web-vault/app/common/base.accept
 })
 export class AcceptProviderComponent extends BaseAcceptComponent {
   providerName: string;
+  providerId: string;
+  providerUserId: string;
+  providerInviteToken: string;
 
   failedMessage = "providerInviteAcceptFailed";
 
@@ -27,9 +31,9 @@ export class AcceptProviderComponent extends BaseAcceptComponent {
     authService: AuthService,
     private apiService: ApiService,
     platformUtilService: PlatformUtilsService,
-    configService: ConfigService,
+    registerRouteService: RegisterRouteService,
   ) {
-    super(router, platformUtilService, i18nService, route, authService, configService);
+    super(router, platformUtilService, i18nService, route, authService, registerRouteService);
   }
 
   async authedHandler(qParams: Params) {
@@ -52,5 +56,31 @@ export class AcceptProviderComponent extends BaseAcceptComponent {
 
   async unauthedHandler(qParams: Params) {
     this.providerName = qParams.providerName;
+    this.providerId = qParams.providerId;
+    this.providerUserId = qParams.providerUserId;
+    this.providerInviteToken = qParams.token;
+  }
+
+  async register() {
+    let queryParams: Params;
+    let registerRoute = await firstValueFrom(this.registerRoute$);
+    if (registerRoute === "/register") {
+      queryParams = {
+        email: this.email,
+      };
+    } else if (registerRoute === "/signup") {
+      // We have to override the base component route as we don't need users to
+      // complete email verification if they are coming directly an emailed invite.
+      registerRoute = "/finish-signup";
+      queryParams = {
+        email: this.email,
+        providerUserId: this.providerUserId,
+        providerInviteToken: this.providerInviteToken,
+      };
+    }
+
+    await this.router.navigate([registerRoute], {
+      queryParams: queryParams,
+    });
   }
 }
