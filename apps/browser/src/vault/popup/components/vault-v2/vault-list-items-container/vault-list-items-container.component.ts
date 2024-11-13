@@ -1,6 +1,14 @@
 import { ScrollingModule } from "@angular/cdk/scrolling";
 import { CommonModule } from "@angular/common";
-import { booleanAttribute, Component, EventEmitter, Input, Output } from "@angular/core";
+import {
+  booleanAttribute,
+  Component,
+  computed,
+  EventEmitter,
+  inject,
+  Input,
+  Output,
+} from "@angular/core";
 import { Router, RouterLink } from "@angular/router";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
@@ -9,9 +17,8 @@ import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.servi
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
   BadgeModule,
-  BitItemHeight,
-  BitItemHeightClass,
   ButtonModule,
+  DesignSystemService,
   IconButtonModule,
   ItemModule,
   SectionComponent,
@@ -49,8 +56,25 @@ import { ItemMoreOptionsComponent } from "../item-more-options/item-more-options
   standalone: true,
 })
 export class VaultListItemsContainerComponent {
-  protected ItemHeightClass = BitItemHeightClass;
-  protected ItemHeight = BitItemHeight;
+  private designSystemService = inject(DesignSystemService);
+
+  /**
+   * The class used to set the height of a bit item's inner content.
+   */
+  protected readonly ItemHeightClass = `tw-h-[52px]`;
+
+  /**
+   * The height of a bit item in pixels. Includes any margin, padding, or border. Used by the virtual scroll
+   * to estimate how many items can be displayed at once and how large the virtual container should be.
+   * Needs to be updated if the item height or spacing changes.
+   *
+   * Default: 52px + 1px border + 6px bottom margin = 59px
+   *
+   * Compact mode: 52px + 1px border = 53px
+   */
+  protected readonly ItemHeight = computed(() =>
+    this.designSystemService.compactMode() ? 53 : 59,
+  );
 
   /**
    * Timeout used to add a small delay when selecting a cipher to allow for double click to launch

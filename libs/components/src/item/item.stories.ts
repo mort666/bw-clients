@@ -16,7 +16,7 @@ import { I18nMockService } from "../utils/i18n-mock.service";
 import { ItemActionComponent } from "./item-action.component";
 import { ItemContentComponent } from "./item-content.component";
 import { ItemGroupComponent } from "./item-group.component";
-import { ItemComponent, BitItemHeight, BitItemHeightClass } from "./item.component";
+import { ItemComponent } from "./item.component";
 
 export default {
   title: "Component Library/Item",
@@ -363,14 +363,12 @@ export const VirtualScrolling: Story = {
   render: (_args) => ({
     props: {
       data: Array.from(Array(100000).keys()),
-      itemSize: BitItemHeight,
-      itemClass: BitItemHeightClass,
     },
     template: /*html*/ `
-      <cdk-virtual-scroll-viewport [itemSize]="itemSize" class="tw-h-[500px]">
+      <cdk-virtual-scroll-viewport [itemSize]="59" class="tw-h-[500px]">
         <bit-item-group aria-label="Virtual Scrolling">
           <bit-item *cdkVirtualFor="let item of data">
-            <button bit-item-content [ngClass]="itemClass">
+            <button bit-item-content>
               <i slot="start" class="bwi bwi-globe tw-text-2xl tw-text-muted" aria-hidden="true"></i>
               {{ item }}
             </button>
