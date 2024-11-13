@@ -1,15 +1,8 @@
 import { ScrollingModule } from "@angular/cdk/scrolling";
 import { CommonModule } from "@angular/common";
-import {
-  booleanAttribute,
-  Component,
-  computed,
-  EventEmitter,
-  inject,
-  Input,
-  Output,
-} from "@angular/core";
+import { booleanAttribute, Component, EventEmitter, inject, Input, Output } from "@angular/core";
 import { Router, RouterLink } from "@angular/router";
+import { map } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -18,7 +11,7 @@ import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
   BadgeModule,
   ButtonModule,
-  DesignSystemService,
+  CompactModeService,
   IconButtonModule,
   ItemModule,
   SectionComponent,
@@ -56,12 +49,12 @@ import { ItemMoreOptionsComponent } from "../item-more-options/item-more-options
   standalone: true,
 })
 export class VaultListItemsContainerComponent {
-  private designSystemService = inject(DesignSystemService);
+  private compactModeService = inject(CompactModeService);
 
   /**
    * The class used to set the height of a bit item's inner content.
    */
-  protected readonly ItemHeightClass = `tw-h-[52px]`;
+  protected readonly itemHeightClass = `tw-h-[52px]`;
 
   /**
    * The height of a bit item in pixels. Includes any margin, padding, or border. Used by the virtual scroll
@@ -72,8 +65,8 @@ export class VaultListItemsContainerComponent {
    *
    * Compact mode: 52px + 1px border = 53px
    */
-  protected readonly ItemHeight = computed(() =>
-    this.designSystemService.compactMode() ? 53 : 59,
+  protected readonly itemHeight$ = this.compactModeService.enabled$.pipe(
+    map((enabled) => (enabled ? 53 : 59)),
   );
 
   /**
