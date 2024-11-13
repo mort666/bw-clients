@@ -625,15 +625,21 @@ describe("TokenService", () => {
 
         singleUserStateProvider
           .getFake(userIdFromAccessToken, ACCESS_TOKEN_MEMORY)
-          .stateSubject.next([userIdFromAccessToken, "accessToken_memory"]);
+          .stateSubject.next({
+            syncValue: true,
+            combinedState: [userIdFromAccessToken, "accessToken_memory"],
+          });
 
         singleUserStateProvider
           .getFake(userIdFromAccessToken, ACCESS_TOKEN_MEMORY)
-          .stateSubject.next([userIdFromAccessToken, null]);
+          .stateSubject.next({ syncValue: true, combinedState: [userIdFromAccessToken, null] });
 
         singleUserStateProvider
           .getFake(userIdFromAccessToken, ACCESS_TOKEN_DISK)
-          .stateSubject.next([userIdFromAccessToken, "accessToken_disk"]);
+          .stateSubject.next({
+            syncValue: true,
+            combinedState: [userIdFromAccessToken, "accessToken_disk"],
+          });
 
         const values = await finishedPromise;
 
@@ -1569,22 +1575,31 @@ describe("TokenService", () => {
         // Set a token in memory
         singleUserStateProvider
           .getFake(userIdFromAccessToken, REFRESH_TOKEN_MEMORY)
-          .stateSubject.next([userIdFromAccessToken, refreshToken + "_memory"]);
+          .stateSubject.next({
+            syncValue: true,
+            combinedState: [userIdFromAccessToken, refreshToken + "_memory"],
+          });
 
         // Null out the memory location so that it will look at other locations
         singleUserStateProvider
           .getFake(userIdFromAccessToken, REFRESH_TOKEN_MEMORY)
-          .stateSubject.next([userIdFromAccessToken, null]);
+          .stateSubject.next({ syncValue: true, combinedState: [userIdFromAccessToken, null] });
 
         // The refresh token is saved in disk
         singleUserStateProvider
           .getFake(userIdFromAccessToken, REFRESH_TOKEN_DISK)
-          .stateSubject.next([userIdFromAccessToken, refreshToken + "_disk"]);
+          .stateSubject.next({
+            syncValue: true,
+            combinedState: [userIdFromAccessToken, refreshToken + "_disk"],
+          });
 
         // A new refresh token is saved to disk
         singleUserStateProvider
           .getFake(userIdFromAccessToken, REFRESH_TOKEN_DISK)
-          .stateSubject.next([userIdFromAccessToken, refreshToken + "_disk2"]);
+          .stateSubject.next({
+            syncValue: true,
+            combinedState: [userIdFromAccessToken, refreshToken + "_disk2"],
+          });
 
         const values = await finishedPromise;
 
