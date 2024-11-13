@@ -37,6 +37,9 @@
   --color-success-600: 12 128 24;
   --color-success-700: 11 111 21;
 
+  --color-notification-100: 255 225 247;
+  --color-notification-600: 192 17 118;
+
   --color-art-primary: 2 15 102;
   --color-art-accent: 44 221 223;
 
@@ -91,6 +94,9 @@
   --color-info-100: 26 65 172;
   --color-info-600: 121 161 233;
   --color-info-700: 219 229 246;
+
+  --color-notification-100: 117 37 83;
+  --color-notification-600: 255 143 208;
 
   --color-art-primary: 243 246 249;
   --color-art-accent: 44 221 233;

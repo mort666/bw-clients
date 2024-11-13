@@ -58,6 +58,10 @@ module.exports = {
         600: rgba("--color-info-600"),
         700: rgba("--color-info-700"),
       },
+      notification: {
+        100: rgba("--color-notification-100"),
+        600: rgba("--color-notification-600"),
+      },
       art: {
         primary: rgba("--color-art-primary"),
         accent: rgba("--color-art-accent"),
@@ -115,6 +119,9 @@ module.exports = {
       secondary: {
         300: rgba("--color-secondary-300"),
         700: rgba("--color-secondary-700"),
+      },
+      notification: {
+        600: rgba("--color-notification-600"),
       },
     },
     ringOffsetColor: ({ theme }) => ({

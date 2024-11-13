@@ -6,6 +6,10 @@
   margin: 0;
 }
 
+html {
+  overflow: hidden;
+}
+
 html,
 body {
   font-family: $font-family-sans-serif;

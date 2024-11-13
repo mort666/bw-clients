@@ -28,6 +28,7 @@ const commonStyles = [
   "tw-border-none",
   "tw-rounded",
   "tw-transition",
+  "tw-no-underline",
   "hover:tw-underline",
   "hover:tw-decoration-1",
   "disabled:tw-no-underline",

@@ -59,6 +59,7 @@ export class ToggleComponent<TValue> implements AfterContentChecked {
       "tw-leading-5",
       "tw-transition",
       "tw-text-center",
+      "tw-text-sm",
       "tw-border-primary-600",
       "!tw-text-primary-600",
       "tw-border-solid",
@@ -85,7 +86,7 @@ export class ToggleComponent<TValue> implements AfterContentChecked {
       "peer-checked/toggle-input:tw-border-primary-600",
       "peer-checked/toggle-input:!tw-text-contrast",
       "tw-py-1.5",
-      "tw-px-4",
+      "tw-px-3",
 
       // Fix for bootstrap styles that add bottom margin
       "!tw-mb-0",

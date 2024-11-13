@@ -56,7 +56,7 @@ import {
 } from "../../../billing/organizations/change-plan-dialog.component";
 import { BaseMembersComponent } from "../../common/base-members.component";
 import { PeopleTableDataSource } from "../../common/people-table-data-source";
-import { GroupService } from "../core";
+import { GroupApiService } from "../core";
 import { OrganizationUserView } from "../core/views/organization-user.view";
 import { openEntityEventsDialog } from "../manage/entity-events.component";
 
@@ -102,6 +102,10 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     FeatureFlag.EnableUpgradePasswordManagerSub,
   );
 
+  protected accountDeprovisioningEnabled$: Observable<boolean> = this.configService.getFeatureFlag$(
+    FeatureFlag.AccountDeprovisioning,
+  );
+
   // Fixed sizes used for cdkVirtualScroll
   protected rowHeight = 69;
   protected rowHeightClass = `tw-h-[69px]`;
@@ -125,7 +129,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     private organizationApiService: OrganizationApiServiceAbstraction,
     private organizationUserApiService: OrganizationUserApiService,
     private router: Router,
-    private groupService: GroupService,
+    private groupService: GroupApiService,
     private collectionService: CollectionService,
     private billingApiService: BillingApiServiceAbstraction,
     private modalService: ModalService,
@@ -486,7 +490,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
       const enableUpgradePasswordManagerSub = await firstValueFrom(
         this.enableUpgradePasswordManagerSub$,
       );
-      if (enableUpgradePasswordManagerSub) {
+      if (enableUpgradePasswordManagerSub && this.organization.canEditSubscription) {
         const reference = openChangePlanDialog(this.dialogService, {
           data: {
             organizationId: this.organization.id,
@@ -518,6 +522,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
         isOnSecretsManagerStandalone: this.orgIsOnSecretsManagerStandalone,
         initialTab: initialTab,
         numConfirmedMembers: this.dataSource.confirmedUserCount,
+        managedByOrganization: user?.managedByOrganization,
       },
     });
 
@@ -723,6 +728,40 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     }
 
     return true;
+  }
+
+  async deleteUser(user: OrganizationUserView) {
+    const confirmed = await this.dialogService.openSimpleDialog({
+      title: {
+        key: "deleteOrganizationUser",
+        placeholders: [this.userNamePipe.transform(user)],
+      },
+      content: { key: "deleteOrganizationUserWarning" },
+      type: "warning",
+      acceptButtonText: { key: "delete" },
+      cancelButtonText: { key: "cancel" },
+    });
+
+    if (!confirmed) {
+      return false;
+    }
+
+    this.actionPromise = this.organizationUserApiService.deleteOrganizationUser(
+      this.organization.id,
+      user.id,
+    );
+    try {
+      await this.actionPromise;
+      this.toastService.showToast({
+        variant: "success",
+        title: null,
+        message: this.i18nService.t("organizationUserDeleted", this.userNamePipe.transform(user)),
+      });
+      this.dataSource.removeUser(user);
+    } catch (e) {
+      this.validationService.showError(e);
+    }
+    this.actionPromise = null;
   }
 
   private async noMasterPasswordConfirmationDialog(user: OrganizationUserView) {
