@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{collections::HashMap, hash::Hash, str::FromStr, string};
 
 use anyhow::Result;
 use base64::Engine;
@@ -6,31 +6,71 @@ use rand::RngCore;
 use sha2::{Digest, Sha256};
 
 use crate::biometric::{base64_engine, KeyMaterial, OsDerivedKey};
-use zbus::Connection;
+use zbus::{names::OwnedUniqueName, zvariant::OwnedValue, Connection};
 use zbus_polkit::policykit1::*;
 
 use super::{decrypt, encrypt};
 use crate::crypto::CipherString;
 use anyhow::anyhow;
 
+const BITWARDEN_ACTION: &str = "com.bitwarden.Bitwarden.unlock";
+const SYSTEM_ACTION: &str = "org.freedesktop.policykit.exec";
+
 /// The Unix implementation of the biometric trait.
 pub struct Biometric {}
+
+async fn action_available(action_id: String) -> Result<bool> {
+    let connection = Connection::system().await?;
+    let proxy = AuthorityProxy::new(&connection).await?;
+    let res = proxy.enumerate_actions("en").await?;
+    for action in res {
+        if action.action_id == action_id {
+            return Ok(true);
+        }
+    }
+    return Ok(false);
+}
 
 impl super::BiometricTrait for Biometric {
     async fn prompt(_hwnd: Vec<u8>, _message: String) -> Result<bool> {
         let connection = Connection::system().await?;
         let proxy = AuthorityProxy::new(&connection).await?;
-        let subject = Subject::new_for_owner(std::process::id(), None, None)?;
+        let mut subject_details = HashMap::new();
+        let bus_name = if let Some(name) = connection.unique_name() {
+            name
+        } else {
+            println!("polkit: could not get bus name");
+            return Ok(false);
+        };
+
+        subject_details.insert("name".to_string(), OwnedUniqueName::from(bus_name.clone()).try_into()?);
+        let subject = Subject{
+            subject_kind: "system-bus-name".to_string(),
+            subject_details,
+        };
         let details = std::collections::HashMap::new();
-        let result = proxy
+
+        let result = if action_available(BITWARDEN_ACTION.to_string()).await? {
+            proxy
+                .check_authorization(
+                    &subject,
+                    BITWARDEN_ACTION,
+                    &details,
+                    CheckAuthorizationFlags::AllowUserInteraction.into(),
+                    "",
+                )
+                .await
+        } else  {
+            proxy
             .check_authorization(
                 &subject,
-                "com.bitwarden.Bitwarden.unlock",
+                SYSTEM_ACTION,
                 &details,
                 CheckAuthorizationFlags::AllowUserInteraction.into(),
                 "",
             )
-            .await;
+            .await
+        };
 
         match result {
             Ok(result) => {
@@ -44,15 +84,17 @@ impl super::BiometricTrait for Biometric {
     }
 
     async fn available() -> Result<bool> {
-        let connection = Connection::system().await?;
-        let proxy = AuthorityProxy::new(&connection).await?;
-        let res = proxy.enumerate_actions("en").await?;
-        for action in res {
-            if action.action_id == "com.bitwarden.Bitwarden.unlock" {
-                return Ok(true);
-            }
+        if action_available(BITWARDEN_ACTION.to_string()).await? || action_available(SYSTEM_ACTION.to_string()).await? {
+            return Ok(true);
         }
         return Ok(false);
+    }
+
+    async fn needs_setup() -> Result<bool> {
+        if action_available(BITWARDEN_ACTION.to_string()).await? {
+            return Ok(false);
+        }
+        return Ok(true);
     }
 
     fn derive_key_material(challenge_str: Option<&str>) -> Result<OsDerivedKey> {

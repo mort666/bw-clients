@@ -22,10 +22,9 @@ pub struct OsDerivedKey {
     pub iv_b64: String,
 }
 
+#[allow(async_fn_in_trait)]
 pub trait BiometricTrait {
-    #[allow(async_fn_in_trait)]
     async fn prompt(hwnd: Vec<u8>, message: String) -> Result<bool>;
-    #[allow(async_fn_in_trait)]
     async fn available() -> Result<bool>;
     fn derive_key_material(secret: Option<&str>) -> Result<OsDerivedKey>;
     fn set_biometric_secret(
@@ -40,6 +39,7 @@ pub trait BiometricTrait {
         account: &str,
         key_material: Option<KeyMaterial>,
     ) -> Result<String>;
+    async fn needs_setup() -> Result<bool>;
 }
 
 fn encrypt(secret: &str, key_material: &KeyMaterial, iv_b64: &str) -> Result<String> {

@@ -101,23 +101,32 @@ export default class BiometricUnixMain implements OsBiometricService {
 
   async osBiometricsNeedsSetup(): Promise<boolean> {
     // check whether the polkit policy is loaded via dbus call to polkit
-    return !(await biometrics.available());
+    return await biometrics.needsSetup();
   }
 
   async osBiometricsCanAutoSetup(): Promise<boolean> {
-    // We cannot auto setup on snap or flatpak since the filesystem is sandboxed.
-    // The user needs to manually set up the polkit policy outside of the sandbox
-    // since we allow access to polkit via dbus for the sandboxed clients, the authentication works from
-    // the sandbox, once the policy is set up outside of the sandbox.
-    return isLinux() && !isSnapStore() && !isFlatpak();
+    // We cannot auto setup on snap since the filesystem is sandboxed.
+    return isLinux() && !isSnapStore();
   }
 
   async osBiometricsSetup(): Promise<void> {
-    const process = spawn("pkexec", [
-      "bash",
-      "-c",
-      `echo '${polkitPolicy}' > ${policyPath + policyFileName} && chown root:root ${policyPath + policyFileName} && chcon system_u:object_r:usr_t:s0 ${policyPath + policyFileName}`,
-    ]);
+    let process = null;
+    if (isFlatpak()) {
+      // To set up on flatpak, we escape the sandbox via the flatpak portal
+      process = spawn("flatpak-spawn", [
+        "--host",
+        "pkexec",
+        "bash",
+        "-c",
+        `echo '${polkitPolicy}' > ${policyPath + policyFileName} && chown root:root ${policyPath + policyFileName} && chcon system_u:object_r:usr_t:s0 ${policyPath + policyFileName}`,
+      ]);
+    } else {
+      process = spawn("pkexec", [
+        "bash",
+        "-c",
+        `echo '${polkitPolicy}' > ${policyPath + policyFileName} && chown root:root ${policyPath + policyFileName} && chcon system_u:object_r:usr_t:s0 ${policyPath + policyFileName}`,
+      ]);
+    }
 
     await new Promise((resolve, reject) => {
       process.on("close", (code) => {

@@ -7,7 +7,7 @@ import { ipcMain } from "electron";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { ipc, windows_registry } from "@bitwarden/desktop-napi";
 
-import { isDev } from "../utils";
+import { isDev, isFlatpak } from "../utils";
 
 import { WindowMain } from "./window.main";
 
@@ -134,7 +134,7 @@ export class NativeMessagingMain {
       type: "stdio",
     };
 
-    if (!existsSync(baseJson.path)) {
+    if (!existsSync(baseJson.path) && !isFlatpak()) {
       throw new Error(`Unable to find binary: ${baseJson.path}`);
     }
 
@@ -185,11 +185,29 @@ export class NativeMessagingMain {
         for (const [key, value] of Object.entries(this.getLinuxNMHS())) {
           if (existsSync(value)) {
             if (key === "Firefox") {
+              if (isFlatpak()) {
+                const proxyScriptLocation = path.join(
+                  value,
+                  "native-messaging-hosts",
+                  "com.8bit.bitwarden.sh",
+                );
+                await this.writeFlatpakProxyScript(proxyScriptLocation);
+                firefoxJson.path = proxyScriptLocation;
+              }
               await this.writeManifest(
                 path.join(value, "native-messaging-hosts", "com.8bit.bitwarden.json"),
                 firefoxJson,
               );
             } else {
+              if (isFlatpak()) {
+                const proxyScriptLocation = path.join(
+                  value,
+                  "native-messaging-hosts",
+                  "com.8bit.bitwarden.sh",
+                );
+                await this.writeFlatpakProxyScript(proxyScriptLocation);
+                chromeJson.path = proxyScriptLocation;
+              }
               await this.writeManifest(
                 path.join(value, "NativeMessagingHosts", "com.8bit.bitwarden.json"),
                 chromeJson,
@@ -257,9 +275,15 @@ export class NativeMessagingMain {
             await this.removeIfExists(
               path.join(value, "native-messaging-hosts", "com.8bit.bitwarden.json"),
             );
+            await this.removeIfExists(
+              path.join(value, "native-messaging-hosts", "com.8bit.bitwarden.sh"),
+            );
           } else {
             await this.removeIfExists(
               path.join(value, "NativeMessagingHosts", "com.8bit.bitwarden.json"),
+            );
+            await this.removeIfExists(
+              path.join(value, "native-messaging-hosts", "com.8bit.bitwarden.sh"),
             );
           }
         }
@@ -332,6 +356,16 @@ export class NativeMessagingMain {
     }
 
     await fs.writeFile(destination, JSON.stringify(manifest, null, 2));
+  }
+
+  private async writeFlatpakProxyScript(destination: string) {
+    const content =
+      "#!/bin/bash\n/usr/bin/flatpak run --command=desktop_proxy com.bitwarden.desktop $@";
+    if (!existsSync(path.dirname(destination))) {
+      await fs.mkdir(path.dirname(destination));
+    }
+    await fs.writeFile(destination, content);
+    await fs.chmod(destination, 0o755);
   }
 
   private async loadChromeIds(): Promise<string[]> {

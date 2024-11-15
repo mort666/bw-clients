@@ -67,6 +67,10 @@ impl super::BiometricTrait for Biometric {
         }
     }
 
+    async fn needs_setup() -> Result<bool> {
+        Ok(false)
+    }
+
     /// Derive the symmetric encryption key from the Windows Hello signature.
     ///
     /// This works by signing a static challenge string with Windows Hello protected key store. The

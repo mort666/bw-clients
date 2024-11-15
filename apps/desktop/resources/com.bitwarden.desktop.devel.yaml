@@ -18,11 +18,15 @@ finish-args:
   - --talk-name=org.freedesktop.secrets
   - --talk-name=com.canonical.AppMenu.Registrar
   - --system-talk-name=org.freedesktop.PolicyKit1
-    # Lock on lockscreen
+  # Lock on lockscreen
   - --talk-name=org.gnome.ScreenSaver
   - --talk-name=org.freedesktop.ScreenSaver
   - --system-talk-name=org.freedesktop.login1
   - --filesystem=xdg-download
+  # setup biometrics
+  # note: this allows bitwarden to spawn processes outside of the sandbox
+  - --talk-name=org.freedesktop.Flatpak
+  - --filesystem=home:rw
 modules:
   - name: bitwarden-desktop
     buildsystem: simple
