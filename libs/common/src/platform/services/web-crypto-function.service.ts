@@ -273,13 +273,16 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
     return p;
   }
 
-  aesDecryptFast(parameters: DecryptParameters<string>, mode: "cbc" | "ecb"): Promise<string> {
+  aesDecryptFast(
+    parameters: DecryptParameters<string>,
+    mode: "cbc" | "ecb" | "gcm",
+  ): Promise<string> {
     const decipher = (forge as any).cipher.createDecipher(
       this.toWebCryptoAesMode(mode),
       parameters.encKey,
     );
     const options = {} as any;
-    if (mode === "cbc") {
+    if (mode === "cbc" || mode === "gcm") {
       options.iv = parameters.iv;
     }
     const dataBuffer = (forge as any).util.createBuffer(parameters.data);
@@ -294,21 +297,34 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
     data: Uint8Array,
     iv: Uint8Array,
     key: Uint8Array,
-    mode: "cbc" | "ecb",
+    mode: "cbc" | "ecb" | "gcm",
   ): Promise<Uint8Array> {
-    if (mode === "ecb") {
-      // Web crypto does not support AES-ECB mode, so we need to do this in forge.
-      const params = new DecryptParameters<string>();
-      params.data = this.toByteString(data);
-      params.encKey = this.toByteString(key);
-      const result = await this.aesDecryptFast(params, "ecb");
-      return Utils.fromByteStringToArray(result);
+    switch (mode) {
+      case "ecb": {
+        // Web crypto does not support AES-ECB mode, so we need to do this in forge.
+        const params = new DecryptParameters<string>();
+        params.data = this.toByteString(data);
+        params.encKey = this.toByteString(key);
+        const result = await this.aesDecryptFast(params, "ecb");
+        return Utils.fromByteStringToArray(result);
+      }
+      case "cbc":
+      case "gcm": {
+        const impKey = await this.subtle.importKey(
+          "raw",
+          key,
+          { name: this.toWebCryptoAesMode(mode) } as any,
+          false,
+          ["decrypt"],
+        );
+        const buffer = await this.subtle.decrypt(
+          { name: this.toWebCryptoAesMode(mode), iv: iv },
+          impKey,
+          data,
+        );
+        return new Uint8Array(buffer);
+      }
     }
-    const impKey = await this.subtle.importKey("raw", key, { name: "AES-CBC" } as any, false, [
-      "decrypt",
-    ]);
-    const buffer = await this.subtle.decrypt({ name: "AES-CBC", iv: iv }, impKey, data);
-    return new Uint8Array(buffer);
   }
 
   async rsaEncrypt(
@@ -384,6 +400,61 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
     return new Uint8Array(rawKey) as CsprngArray;
   }
 
+  async diffieHellmanGenerateKeyPair(
+    algorithm: "x25519" | "ecdh",
+    curve: undefined | "P-256" | "P-384" | "P-521",
+  ): Promise<{
+    keyPair: CryptoKeyPair;
+    publicKey: Uint8Array;
+  }> {
+    if (algorithm === "x25519" && curve != null) {
+      throw new Error("x25519 does not use the curve parameter.");
+    }
+
+    const keys = await this.subtle.generateKey(
+      {
+        name: algorithm,
+        namedCurve: curve,
+      },
+      true,
+      ["deriveKey", "deriveBits"],
+    );
+    return {
+      keyPair: keys,
+      publicKey: new Uint8Array(await this.subtle.exportKey("raw", keys.publicKey)),
+    };
+  }
+
+  async deriveSharedKeyBits(
+    privateKey: CryptoKey,
+    publicKeyRaw: Uint8Array,
+    algorithm: "x25519" | "ecdh",
+    curve: undefined | "P-256" | "P-384" | "P-521",
+  ): Promise<Uint8Array> {
+    if (algorithm === "x25519" && curve != null) {
+      throw new Error("x25519 does not use the curve parameter.");
+    }
+
+    const publicKey = await crypto.subtle.importKey(
+      "raw",
+      publicKeyRaw,
+      { name: algorithm, namedCurve: curve },
+      true,
+      [],
+    );
+
+    const dhSecret = await crypto.subtle.deriveBits(
+      {
+        name: algorithm,
+        public: publicKey,
+      },
+      privateKey,
+      256,
+    );
+
+    return new Uint8Array(dhSecret);
+  }
+
   async rsaGenerateKeyPair(length: 1024 | 2048 | 4096): Promise<[Uint8Array, Uint8Array]> {
     const rsaParams = {
       name: "RSA-OAEP",
@@ -431,8 +502,13 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
     return algorithm === "sha1" ? "SHA-1" : algorithm === "sha256" ? "SHA-256" : "SHA-512";
   }
 
-  private toWebCryptoAesMode(mode: "cbc" | "ecb"): string {
-    return mode === "cbc" ? "AES-CBC" : "AES-ECB";
+  private readonly WEB_CRYPTO_AES_MODES = Object.freeze({
+    cbc: "AES-CBC",
+    ecb: "AES-ECB",
+    gcm: "AES-GCM",
+  } as const);
+  private toWebCryptoAesMode(mode: "cbc" | "ecb" | "gcm"): string {
+    return this.WEB_CRYPTO_AES_MODES[mode];
   }
 
   // ref: https://stackoverflow.com/a/47880734/1090359

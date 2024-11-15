@@ -191,7 +191,7 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
 
   async aesDecryptFast(
     parameters: DecryptParameters<Uint8Array>,
-    mode: "cbc" | "ecb",
+    mode: "cbc" | "ecb" | "gcm",
   ): Promise<string> {
     const decBuf = await this.aesDecrypt(parameters.data, parameters.iv, parameters.encKey, mode);
     return Utils.fromBufferToUtf8(decBuf);
@@ -201,12 +201,16 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
     data: Uint8Array,
     iv: Uint8Array,
     key: Uint8Array,
-    mode: "cbc" | "ecb",
+    mode: "cbc" | "ecb" | "gcm",
   ): Promise<Uint8Array> {
-    const nodeData = this.toNodeBuffer(data);
+    const nodeData =
+      mode !== "gcm" ? this.toNodeBuffer(data) : this.toNodeBuffer(data.slice(0, -16)); // remove gcm tag
     const nodeIv = mode === "ecb" ? null : this.toNodeBuffer(iv);
     const nodeKey = this.toNodeBuffer(key);
     const decipher = crypto.createDecipheriv(this.toNodeCryptoAesMode(mode), nodeKey, nodeIv);
+    if (mode === "gcm") {
+      (decipher as crypto.DecipherGCM).setAuthTag(data.slice(-16));
+    }
     const decBuf = Buffer.concat([decipher.update(nodeData), decipher.final()]);
     return Promise.resolve(this.toUint8Buffer(decBuf));
   }
@@ -279,6 +283,61 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
     });
   }
 
+  async diffieHellmanGenerateKeyPair(
+    algorithm: "x25519" | "ecdh",
+    curve: undefined | "P-256" | "P-384" | "P-521",
+  ): Promise<{
+    keyPair: CryptoKeyPair;
+    publicKey: Uint8Array;
+  }> {
+    if (algorithm === "x25519" && curve != null) {
+      throw new Error("x25519 does not use the curve parameter.");
+    }
+
+    const keys = await crypto.subtle.generateKey(
+      {
+        name: algorithm,
+        namedCurve: curve,
+      },
+      true,
+      ["deriveKey", "deriveBits"],
+    );
+    return {
+      keyPair: keys,
+      publicKey: new Uint8Array(await crypto.subtle.exportKey("raw", keys.publicKey)),
+    };
+  }
+
+  async deriveSharedKeyBits(
+    privateKey: CryptoKey,
+    publicKeyRaw: Uint8Array,
+    algorithm: "x25519" | "ecdh",
+    curve: undefined | "P-256" | "P-384" | "P-521",
+  ): Promise<Uint8Array> {
+    if (algorithm === "x25519" && curve != null) {
+      throw new Error("x25519 does not use the curve parameter.");
+    }
+
+    const publicKey = await crypto.subtle.importKey(
+      "raw",
+      publicKeyRaw,
+      { name: algorithm, namedCurve: curve },
+      true,
+      [],
+    );
+
+    const dhSecret = await crypto.subtle.deriveBits(
+      {
+        name: algorithm,
+        public: publicKey,
+      },
+      privateKey,
+      256,
+    );
+
+    return new Uint8Array(dhSecret);
+  }
+
   aesGenerateKey(bitLength: 128 | 192 | 256 | 512): Promise<CsprngArray> {
     return this.randomBytes(bitLength / 8);
   }
@@ -335,7 +394,12 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
     return forge.pki.publicKeyToPem(publicKey);
   }
 
-  private toNodeCryptoAesMode(mode: "cbc" | "ecb"): string {
-    return mode === "cbc" ? "aes-256-cbc" : "aes-256-ecb";
+  private readonly NODE_CRYPTO_AES_MODES = Object.freeze({
+    cbc: "aes-256-cbc",
+    ecb: "aes-256-ecb",
+    gcm: "aes-256-gcm",
+  } as const);
+  private toNodeCryptoAesMode(mode: "cbc" | "ecb" | "gcm"): string {
+    return this.NODE_CRYPTO_AES_MODES[mode];
   }
 }
