@@ -145,7 +145,6 @@ export class PasswordHealthService {
       }
     }
 
-    // Convert map to array
     return {
       totalAtRiskMembers: totalAtRiskMembers.size,
       totalMembers: members.length,
