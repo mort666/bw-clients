@@ -14,6 +14,17 @@ export abstract class EncryptService {
     decryptContext?: string,
   ): Promise<string>;
   abstract decryptToBytes(encThing: Encrypted, key: SymmetricCryptoKey): Promise<Uint8Array>;
+  /**
+   * Decrypts aes gcm encrypted data given a key.
+   *
+   * The data is expected to be a concatenation of cipherText, tag, and iv in that order.
+   * Tag is required to be 16 bytes.
+   * iv is required to be 12 bytes
+   *
+   * @param data The encrypted data + tag + iv
+   * @param key The key to decrypt the data
+   */
+  abstract aesGcmDecryptToBytes(data: Uint8Array, key: Uint8Array): Promise<Uint8Array>;
   abstract rsaEncrypt(data: Uint8Array, publicKey: Uint8Array): Promise<EncString>;
   abstract rsaDecrypt(data: EncString, privateKey: Uint8Array): Promise<Uint8Array>;
   abstract resolveLegacyKey(key: SymmetricCryptoKey, encThing: Encrypted): SymmetricCryptoKey;

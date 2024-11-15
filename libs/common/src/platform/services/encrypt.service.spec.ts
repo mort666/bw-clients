@@ -82,6 +82,41 @@ describe("EncryptService", () => {
     });
   });
 
+  describe("aesGcmDecryptToBytes", () => {
+    const data = makeStaticByteArray(10, 100);
+    const key = makeStaticByteArray(32, 200);
+    const encryptedData = new Uint8Array(1);
+
+    beforeEach(() => {
+      cryptoFunctionService.aesDecrypt.mockResolvedValue(data);
+    });
+
+    it("throws if no data is provided", () => {
+      return expect(encryptService.aesGcmDecryptToBytes(null, key)).rejects.toThrow(
+        "Nothing provided for decryption",
+      );
+    });
+
+    it("throws if no key is provided", () => {
+      return expect(encryptService.aesGcmDecryptToBytes(encryptedData, null)).rejects.toThrow(
+        "No encryption key",
+      );
+    });
+
+    it("strips off the tag and decrypts data with provided key and iv", async () => {
+      const actual = await encryptService.aesGcmDecryptToBytes(encryptedData, key);
+
+      expect(cryptoFunctionService.aesDecrypt).toHaveBeenCalledWith(
+        expect.toEqualBuffer(encryptedData.slice(0, -12)),
+        expect.toEqualBuffer(encryptedData.slice(-12)),
+        expect.toEqualBuffer(key),
+        "gcm",
+      );
+
+      expect(actual).toEqualBuffer(data);
+    });
+  });
+
   describe("decryptToBytes", () => {
     const encType = EncryptionType.AesCbc256_HmacSha256_B64;
     const key = new SymmetricCryptoKey(makeStaticByteArray(64, 100), encType);

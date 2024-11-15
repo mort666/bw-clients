@@ -126,6 +126,23 @@ export class EncryptServiceImplementation implements EncryptService {
     return await this.cryptoFunctionService.aesDecryptFast(fastParams, "cbc");
   }
 
+  async aesGcmDecryptToBytes(data: Uint8Array, key: Uint8Array): Promise<Uint8Array> {
+    if (key == null) {
+      throw new Error("No encryption key provided.");
+    }
+
+    if (data == null) {
+      throw new Error("Nothing provided for decryption.");
+    }
+
+    // split data into cipherText + tag and iv
+    const dataAndTag = data.slice(0, -12); // 12 bytes is the iv length
+    const iv = data.slice(-12);
+
+    // aesDecrypt expects cipher + tag, but iv split
+    return await this.cryptoFunctionService.aesDecrypt(dataAndTag, iv, key, "gcm");
+  }
+
   async decryptToBytes(encThing: Encrypted, key: SymmetricCryptoKey): Promise<Uint8Array> {
     if (key == null) {
       throw new Error("No encryption key provided.");
