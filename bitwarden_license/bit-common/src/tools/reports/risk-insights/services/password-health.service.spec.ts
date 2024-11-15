@@ -53,7 +53,6 @@ describe("PasswordHealthService", () => {
   });
 
   it("should build the application health report correctly", async () => {
-    // Execute the method
     const result = await service.generateReportDetails("orgId");
 
     const expected = [
@@ -87,7 +86,6 @@ describe("PasswordHealthService", () => {
       },
     ];
 
-    // Sort for comparison
     const sortFn = (a: any, b: any) => a.application.localeCompare(b.application);
 
     expect(result.details.sort(sortFn)).toEqual(expected.sort(sortFn));
