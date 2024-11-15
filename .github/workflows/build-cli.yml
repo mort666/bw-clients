@@ -68,7 +68,7 @@ jobs:
           [
             { base: "linux", distro: "ubuntu-22.04" },
             { base: "mac", distro: "macos-13" },
-            { base: "linux-arm64", distro: "bre-ubuntu-tsd-908" }
+            { base: "linux-arm64", distro: "clients" }
           ]
         license_type:
           [
