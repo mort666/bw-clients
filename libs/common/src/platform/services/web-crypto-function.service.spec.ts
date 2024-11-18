@@ -270,6 +270,47 @@ describe("WebCrypto Function Service", () => {
     });
   });
 
+  describe("aes encrypt GCM mode", () => {
+    it("should successfully encrypt data", async () => {
+      const cryptoFunctionService = getWebCryptoFunctionService();
+      const iv = makeStaticByteArray(12);
+      const key = makeStaticByteArray(32);
+      const data = Utils.fromUtf8ToArray("EncryptMe!");
+      const encValue = await cryptoFunctionService.aesGcmEncrypt(data, iv, key);
+      expect(encValue).toEqual(
+        new Uint8Array(
+          Buffer.concat([Utils.fromB64ToArray("Amy1abyVtlboYFBtLnDAzAwAgb3Qg2m4fMo="), iv]),
+        ),
+      );
+    });
+
+    it("should successfully encrypt with aad", async () => {
+      const cryptoFunctionService = getWebCryptoFunctionService();
+      const iv = makeStaticByteArray(12);
+      const key = makeStaticByteArray(32);
+      const data = Utils.fromUtf8ToArray("EncryptMe!");
+      const aad = Utils.fromUtf8ToArray("aad");
+      const encValue = await cryptoFunctionService.aesGcmEncrypt(data, iv, key, aad);
+      expect(encValue).toEqual(
+        new Uint8Array(
+          Buffer.concat([Utils.fromB64ToArray("Amy1abyVtlboYJTbBTRtNtA4JtxBgjhhSCE="), iv]),
+        ),
+      );
+    });
+
+    it("should successfully encrypt and then decrypt data", async () => {
+      const cryptoFunctionService = getWebCryptoFunctionService();
+      const iv = makeStaticByteArray(12);
+      const key = makeStaticByteArray(32);
+      const value = "EncryptMe!";
+      const data = Utils.fromUtf8ToArray(value);
+      const encAndIv = new Uint8Array(await cryptoFunctionService.aesGcmEncrypt(data, iv, key));
+      const envValue = encAndIv.slice(0, encAndIv.length - 12);
+      const decValue = await cryptoFunctionService.aesDecrypt(envValue, iv, key, "gcm");
+      expect(Utils.fromBufferToUtf8(decValue)).toBe(value);
+    });
+  });
+
   describe("aesDecryptFast CBC mode", () => {
     it("should successfully decrypt data", async () => {
       const cryptoFunctionService = getWebCryptoFunctionService();

@@ -163,6 +163,25 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
     return Promise.resolve(this.toUint8Buffer(encBuf));
   }
 
+  async aesGcmEncrypt(
+    data: Uint8Array,
+    iv: Uint8Array,
+    key: Uint8Array,
+    additionalData?: Uint8Array,
+  ): Promise<Uint8Array> {
+    const nodeData = this.toNodeBuffer(data);
+    const nodeIv = this.toNodeBuffer(iv);
+    const nodeKey = this.toNodeBuffer(key);
+    const cipher = crypto.createCipheriv("aes-256-gcm", nodeKey, nodeIv, { authTagLength: 16 });
+    if (additionalData != null) {
+      const nodeAdditionalData = this.toNodeBuffer(additionalData);
+      cipher.setAAD(nodeAdditionalData);
+    }
+    const encBuf = Buffer.concat([cipher.update(nodeData), cipher.final()]);
+    const tag = cipher.getAuthTag();
+    return Promise.resolve(this.toUint8Buffer(Buffer.concat([encBuf, tag, nodeIv])));
+  }
+
   aesDecryptFastParameters(
     data: string,
     iv: string,
@@ -318,7 +337,7 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
     if (typeof value === "string") {
       buf = Utils.fromUtf8ToArray(value);
     } else {
-      buf = value;
+      buf = new Uint8Array(value);
     }
     return buf;
   }

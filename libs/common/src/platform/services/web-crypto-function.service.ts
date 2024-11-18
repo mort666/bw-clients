@@ -234,6 +234,26 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
     return new Uint8Array(buffer);
   }
 
+  async aesGcmEncrypt(
+    data: Uint8Array,
+    iv: Uint8Array,
+    key: Uint8Array,
+    additionalData?: Uint8Array,
+  ): Promise<Uint8Array> {
+    const impKey = await this.subtle.importKey("raw", key, { name: "AES-GCM" } as any, false, [
+      "encrypt",
+    ]);
+    const buffer = await this.subtle.encrypt(
+      { name: "AES-GCM", iv: iv, tagLength: 128, additionalData },
+      impKey,
+      data,
+    );
+    const result = new Uint8Array(buffer.byteLength + iv.byteLength);
+    result.set(new Uint8Array(buffer), 0);
+    result.set(iv, buffer.byteLength);
+    return result;
+  }
+
   aesDecryptFastParameters(
     data: string,
     iv: string,
