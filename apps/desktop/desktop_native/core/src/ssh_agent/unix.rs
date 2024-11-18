@@ -8,6 +8,8 @@ use homedir::my_home;
 use tokio::{net::UnixListener, sync::Mutex};
 use tokio_util::sync::CancellationToken;
 
+use crate::ssh_agent::peercred_unix_listener_stream::PeercredUnixListenerStream;
+
 use super::BitwardenDesktopAgent;
 
 impl BitwardenDesktopAgent {
@@ -51,11 +53,11 @@ impl BitwardenDesktopAgent {
             let _ = std::fs::remove_file(sockname);
             match UnixListener::bind(sockname) {
                 Ok(listener) => {
-                    let wrapper = tokio_stream::wrappers::UnixListenerStream::new(listener);
+                    let stream = PeercredUnixListenerStream::new(listener);
                     let cloned_keystore = cloned_agent_state.keystore.clone();
                     let cloned_cancellation_token = cloned_agent_state.cancellation_token.clone();
                     let _ = ssh_agent::serve(
-                        wrapper,
+                        stream,
                         cloned_agent_state,
                         cloned_keystore,
                         cloned_cancellation_token,
