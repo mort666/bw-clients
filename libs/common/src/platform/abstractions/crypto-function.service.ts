@@ -105,33 +105,4 @@ export abstract class CryptoFunctionService {
    * Do not use this for generating encryption keys. Use aesGenerateKey or rsaGenerateKeyPair instead.
    */
   abstract randomBytes(length: number): Promise<CsprngArray>;
-  /**
-   * Generate a random asymmetric key pair using the given algorithm on the given curve
-   *
-   * x25519: Curve25519, does not use the curve parameter and will throw if passed in a non-nullish curve
-   * ecdh: Elliptic Curve Diffie-Hellman, uses the curve parameter to specify the curve to use
-   * P-256: NIST P-256
-   * P-384: NIST P-384
-   * P-521: NIST P-521
-   * @param algorithm the algorithm to use
-   * @param curve the curve to use for ecdh, or undefined for x25519
-   * @returns a promise that resolves to an object containing the private and public keys
-   */
-  abstract diffieHellmanGenerateKeyPair(
-    algorithm: "x25519" | "ecdh",
-    curve: undefined | "P-256" | "P-384" | "P-521",
-  ): Promise<{ keyPair: CryptoKeyPair; publicKey: Uint8Array }>;
-  /**
-   * Derive a shared key from a private key and an external public key
-   *
-   * @param privateKey the private key to use
-   * @param publicKey the public key to use
-   * @returns a promise that resolves to the shared key bits
-   */
-  abstract deriveSharedKeyBits(
-    privateKey: CryptoKey,
-    publicKeyRaw: Uint8Array,
-    algorithm: "x25519" | "ecdh",
-    curve: undefined | "P-256" | "P-384" | "P-521",
-  ): Promise<Uint8Array>;
 }

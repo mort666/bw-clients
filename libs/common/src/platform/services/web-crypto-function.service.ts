@@ -400,61 +400,6 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
     return new Uint8Array(rawKey) as CsprngArray;
   }
 
-  async diffieHellmanGenerateKeyPair(
-    algorithm: "x25519" | "ecdh",
-    curve: undefined | "P-256" | "P-384" | "P-521",
-  ): Promise<{
-    keyPair: CryptoKeyPair;
-    publicKey: Uint8Array;
-  }> {
-    if (algorithm === "x25519" && curve != null) {
-      throw new Error("x25519 does not use the curve parameter.");
-    }
-
-    const keys = await this.subtle.generateKey(
-      {
-        name: algorithm,
-        namedCurve: curve,
-      },
-      true,
-      ["deriveKey", "deriveBits"],
-    );
-    return {
-      keyPair: keys,
-      publicKey: new Uint8Array(await this.subtle.exportKey("raw", keys.publicKey)),
-    };
-  }
-
-  async deriveSharedKeyBits(
-    privateKey: CryptoKey,
-    publicKeyRaw: Uint8Array,
-    algorithm: "x25519" | "ecdh",
-    curve: undefined | "P-256" | "P-384" | "P-521",
-  ): Promise<Uint8Array> {
-    if (algorithm === "x25519" && curve != null) {
-      throw new Error("x25519 does not use the curve parameter.");
-    }
-
-    const publicKey = await crypto.subtle.importKey(
-      "raw",
-      publicKeyRaw,
-      { name: algorithm, namedCurve: curve },
-      true,
-      [],
-    );
-
-    const dhSecret = await crypto.subtle.deriveBits(
-      {
-        name: algorithm,
-        public: publicKey,
-      },
-      privateKey,
-      256,
-    );
-
-    return new Uint8Array(dhSecret);
-  }
-
   async rsaGenerateKeyPair(length: 1024 | 2048 | 4096): Promise<[Uint8Array, Uint8Array]> {
     const rsaParams = {
       name: "RSA-OAEP",
