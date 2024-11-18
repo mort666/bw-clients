@@ -309,6 +309,21 @@ describe("WebCrypto Function Service", () => {
       const decValue = await cryptoFunctionService.aesDecrypt(envValue, iv, key, "gcm");
       expect(Utils.fromBufferToUtf8(decValue)).toBe(value);
     });
+
+    it("should successfully encrypt and then decrypt data with aad", async () => {
+      const cryptoFunctionService = getWebCryptoFunctionService();
+      const iv = makeStaticByteArray(12);
+      const key = makeStaticByteArray(32);
+      const value = "EncryptMe!";
+      const data = Utils.fromUtf8ToArray(value);
+      const aad = Utils.fromUtf8ToArray("aad");
+      const encAndIv = new Uint8Array(
+        await cryptoFunctionService.aesGcmEncrypt(data, iv, key, aad),
+      );
+      const envValue = encAndIv.slice(0, encAndIv.length - 12);
+      const decValue = await cryptoFunctionService.aesDecrypt(envValue, iv, key, "gcm", aad);
+      expect(Utils.fromBufferToUtf8(decValue)).toBe(value);
+    });
   });
 
   describe("aesDecryptFast CBC mode", () => {
@@ -333,17 +348,6 @@ describe("WebCrypto Function Service", () => {
       params.data = Utils.fromBufferToByteString(data);
       const decValue = await cryptoFunctionService.aesDecryptFast(params, "ecb");
       expect(decValue).toBe("EncryptMe!");
-    });
-  });
-
-  describe("aesDecryptFast GCM mode", () => {
-    it("should successfully decrypt data", async () => {
-      const cryptoFunctionService = getWebCryptoFunctionService();
-      const iv = makeStaticByteArray(12);
-      const key = makeStaticByteArray(32);
-      const data = Utils.fromB64ToArray("Amy1abyVtlboYFBtLnDAzAwAgb3Qg2m4fMo=");
-      const decValue = await cryptoFunctionService.aesDecrypt(data, iv, key, "gcm");
-      expect(Utils.fromBufferToUtf8(decValue)).toBe("EncryptMe!");
     });
   });
 

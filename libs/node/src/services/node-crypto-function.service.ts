@@ -210,7 +210,7 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
 
   async aesDecryptFast(
     parameters: DecryptParameters<Uint8Array>,
-    mode: "cbc" | "ecb" | "gcm",
+    mode: "cbc" | "ecb",
   ): Promise<string> {
     const decBuf = await this.aesDecrypt(parameters.data, parameters.iv, parameters.encKey, mode);
     return Utils.fromBufferToUtf8(decBuf);
@@ -221,15 +221,22 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
     iv: Uint8Array,
     key: Uint8Array,
     mode: "cbc" | "ecb" | "gcm",
+    additionalData?: Uint8Array,
   ): Promise<Uint8Array> {
     const nodeData =
       mode !== "gcm" ? this.toNodeBuffer(data) : this.toNodeBuffer(data.slice(0, -16)); // remove gcm tag
     const nodeIv = mode === "ecb" ? null : this.toNodeBuffer(iv);
     const nodeKey = this.toNodeBuffer(key);
     const decipher = crypto.createDecipheriv(this.toNodeCryptoAesMode(mode), nodeKey, nodeIv);
+
     if (mode === "gcm") {
       (decipher as crypto.DecipherGCM).setAuthTag(data.slice(-16));
     }
+    if (additionalData != null && mode === "gcm") {
+      const nodeAdditionalData = this.toNodeBuffer(additionalData);
+      (decipher as crypto.DecipherGCM).setAAD(nodeAdditionalData);
+    }
+
     const decBuf = Buffer.concat([decipher.update(nodeData), decipher.final()]);
     return Promise.resolve(this.toUint8Buffer(decBuf));
   }

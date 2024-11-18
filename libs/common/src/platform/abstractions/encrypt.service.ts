@@ -23,8 +23,28 @@ export abstract class EncryptService {
    *
    * @param data The encrypted data + tag + iv
    * @param key The key to decrypt the data
+   * @param additionalData Additional data to authenticate
    */
-  abstract aesGcmDecryptToBytes(data: Uint8Array, key: Uint8Array): Promise<Uint8Array>;
+  abstract aesGcmDecryptToBytes(
+    data: Uint8Array,
+    key: Uint8Array,
+    additionalData?: Uint8Array,
+  ): Promise<Uint8Array>;
+  /**
+   * Encrypts data using AES-256-GCM.
+   *
+   * @remarks this is currently used only for Key Connector communications. Do not use for general encryption.
+   *
+   * @param data data to encrypt
+   * @param key key to encrypt with
+   * @param additionalData additional data to authenticate
+   * @returns the encrypted data in the form of data + tag + iv
+   */
+  abstract aesGcmEncryptToBytes(
+    data: Uint8Array,
+    key: Uint8Array,
+    additionalData?: Uint8Array,
+  ): Promise<Uint8Array>;
   abstract rsaEncrypt(data: Uint8Array, publicKey: Uint8Array): Promise<EncString>;
   abstract rsaDecrypt(data: EncString, privateKey: Uint8Array): Promise<Uint8Array>;
   abstract resolveLegacyKey(key: SymmetricCryptoKey, encThing: Encrypted): SymmetricCryptoKey;

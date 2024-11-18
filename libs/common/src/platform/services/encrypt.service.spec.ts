@@ -82,38 +82,96 @@ describe("EncryptService", () => {
     });
   });
 
-  describe("aesGcmDecryptToBytes", () => {
+  describe("aesGcm", () => {
     const data = makeStaticByteArray(10, 100);
     const key = makeStaticByteArray(32, 200);
+    const iv = makeStaticByteArray(12, 300);
     const encryptedData = new Uint8Array(1);
 
     beforeEach(() => {
+      cryptoFunctionService.randomBytes.calledWith(12).mockResolvedValueOnce(iv as CsprngArray);
+      cryptoFunctionService.aesGcmEncrypt.mockResolvedValue(encryptedData);
       cryptoFunctionService.aesDecrypt.mockResolvedValue(data);
     });
 
-    it("throws if no data is provided", () => {
-      return expect(encryptService.aesGcmDecryptToBytes(null, key)).rejects.toThrow(
-        "Nothing provided for decryption",
-      );
+    describe("aesGcmEncryptToBytes", () => {
+      it("throws if no data is provided", () => {
+        return expect(encryptService.aesGcmEncryptToBytes(null, key)).rejects.toThrow(
+          "Nothing provided for encryption",
+        );
+      });
+
+      it("throws if no key is provided", () => {
+        return expect(encryptService.aesGcmEncryptToBytes(data, null)).rejects.toThrow(
+          "No encryption key",
+        );
+      });
+
+      it("encrypts data with provided key", async () => {
+        const actual = await encryptService.aesGcmEncryptToBytes(data, key);
+
+        expect(cryptoFunctionService.aesGcmEncrypt).toHaveBeenCalledWith(
+          expect.toEqualBuffer(data),
+          expect.toEqualBuffer(iv),
+          expect.toEqualBuffer(key),
+          undefined,
+        );
+
+        expect(actual).toEqualBuffer(encryptedData);
+      });
+
+      it("encrypts data with the provided additional data", async () => {
+        const additionalData = makeStaticByteArray(10, 400);
+        await encryptService.aesGcmEncryptToBytes(data, key, additionalData);
+
+        expect(cryptoFunctionService.aesGcmEncrypt).toHaveBeenCalledWith(
+          expect.toEqualBuffer(data),
+          expect.toEqualBuffer(iv),
+          expect.toEqualBuffer(key),
+          expect.toEqualBuffer(additionalData),
+        );
+      });
     });
 
-    it("throws if no key is provided", () => {
-      return expect(encryptService.aesGcmDecryptToBytes(encryptedData, null)).rejects.toThrow(
-        "No encryption key",
-      );
-    });
+    describe("aesGcmDecryptToBytes", () => {
+      it("throws if no data is provided", () => {
+        return expect(encryptService.aesGcmDecryptToBytes(null, key)).rejects.toThrow(
+          "Nothing provided for decryption",
+        );
+      });
 
-    it("strips off the tag and decrypts data with provided key and iv", async () => {
-      const actual = await encryptService.aesGcmDecryptToBytes(encryptedData, key);
+      it("throws if no key is provided", () => {
+        return expect(encryptService.aesGcmDecryptToBytes(encryptedData, null)).rejects.toThrow(
+          "No encryption key",
+        );
+      });
 
-      expect(cryptoFunctionService.aesDecrypt).toHaveBeenCalledWith(
-        expect.toEqualBuffer(encryptedData.slice(0, -12)),
-        expect.toEqualBuffer(encryptedData.slice(-12)),
-        expect.toEqualBuffer(key),
-        "gcm",
-      );
+      it("strips off the tag and decrypts data with provided key and iv", async () => {
+        const actual = await encryptService.aesGcmDecryptToBytes(encryptedData, key);
 
-      expect(actual).toEqualBuffer(data);
+        expect(cryptoFunctionService.aesDecrypt).toHaveBeenCalledWith(
+          expect.toEqualBuffer(encryptedData.slice(0, -12)),
+          expect.toEqualBuffer(encryptedData.slice(-12)),
+          expect.toEqualBuffer(key),
+          "gcm",
+          undefined,
+        );
+
+        expect(actual).toEqualBuffer(data);
+      });
+
+      it("decrypts data with the provided additional data", async () => {
+        const additionalData = makeStaticByteArray(10, 400);
+        await encryptService.aesGcmDecryptToBytes(encryptedData, key, additionalData);
+
+        expect(cryptoFunctionService.aesDecrypt).toHaveBeenCalledWith(
+          expect.toEqualBuffer(encryptedData.slice(0, -12)),
+          expect.toEqualBuffer(encryptedData.slice(-12)),
+          expect.toEqualBuffer(key),
+          "gcm",
+          expect.toEqualBuffer(additionalData),
+        );
+      });
     });
   });
 

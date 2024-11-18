@@ -126,7 +126,28 @@ export class EncryptServiceImplementation implements EncryptService {
     return await this.cryptoFunctionService.aesDecryptFast(fastParams, "cbc");
   }
 
-  async aesGcmDecryptToBytes(data: Uint8Array, key: Uint8Array): Promise<Uint8Array> {
+  async aesGcmEncryptToBytes(
+    data: Uint8Array,
+    key: Uint8Array,
+    additionalData?: Uint8Array,
+  ): Promise<Uint8Array> {
+    if (key == null) {
+      throw new Error("No encryption key provided.");
+    }
+
+    if (data == null) {
+      throw new Error("Nothing provided for encryption.");
+    }
+
+    const iv = await this.cryptoFunctionService.randomBytes(12);
+    return await this.cryptoFunctionService.aesGcmEncrypt(data, iv, key, additionalData);
+  }
+
+  async aesGcmDecryptToBytes(
+    data: Uint8Array,
+    key: Uint8Array,
+    additionalData?: Uint8Array,
+  ): Promise<Uint8Array> {
     if (key == null) {
       throw new Error("No encryption key provided.");
     }
@@ -140,7 +161,7 @@ export class EncryptServiceImplementation implements EncryptService {
     const iv = data.slice(-12);
 
     // aesDecrypt expects cipher + tag, but iv split
-    return await this.cryptoFunctionService.aesDecrypt(dataAndTag, iv, key, "gcm");
+    return await this.cryptoFunctionService.aesDecrypt(dataAndTag, iv, key, "gcm", additionalData);
   }
 
   async decryptToBytes(encThing: Encrypted, key: SymmetricCryptoKey): Promise<Uint8Array> {

@@ -293,16 +293,13 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
     return p;
   }
 
-  aesDecryptFast(
-    parameters: DecryptParameters<string>,
-    mode: "cbc" | "ecb" | "gcm",
-  ): Promise<string> {
+  aesDecryptFast(parameters: DecryptParameters<string>, mode: "cbc" | "ecb"): Promise<string> {
     const decipher = (forge as any).cipher.createDecipher(
       this.toWebCryptoAesMode(mode),
       parameters.encKey,
     );
     const options = {} as any;
-    if (mode === "cbc" || mode === "gcm") {
+    if (mode === "cbc") {
       options.iv = parameters.iv;
     }
     const dataBuffer = (forge as any).util.createBuffer(parameters.data);
@@ -318,6 +315,7 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
     iv: Uint8Array,
     key: Uint8Array,
     mode: "cbc" | "ecb" | "gcm",
+    additionalData?: Uint8Array,
   ): Promise<Uint8Array> {
     switch (mode) {
       case "ecb": {
@@ -337,11 +335,15 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
           false,
           ["decrypt"],
         );
-        const buffer = await this.subtle.decrypt(
-          { name: this.toWebCryptoAesMode(mode), iv: iv },
-          impKey,
-          data,
-        );
+        const parameters: AesGcmParams | AesCbcParams = {
+          name: this.toWebCryptoAesMode(mode),
+          iv: iv,
+        };
+        if (mode === "gcm") {
+          (parameters as AesGcmParams).tagLength = 128;
+          (parameters as AesGcmParams).additionalData = additionalData;
+        }
+        const buffer = await this.subtle.decrypt(parameters, impKey, data);
         return new Uint8Array(buffer);
       }
     }

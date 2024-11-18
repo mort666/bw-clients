@@ -46,6 +46,20 @@ export abstract class CryptoFunctionService {
   ): Promise<Uint8Array | string>;
   abstract compareFast(a: Uint8Array | string, b: Uint8Array | string): Promise<boolean>;
   abstract aesEncrypt(data: Uint8Array, iv: Uint8Array, key: Uint8Array): Promise<Uint8Array>;
+  /**
+   * encrypt data using AES-256-GCM.
+   *
+   * @param data data to encrypt
+   * @param iv the iv to use for encryption
+   * @param key the key to use for encryption
+   * @returns the encrypted data in the form of data + tag + iv
+   */
+  abstract aesGcmEncrypt(
+    data: Uint8Array,
+    iv: Uint8Array,
+    key: Uint8Array,
+    additionalData?: Uint8Array,
+  ): Promise<Uint8Array>;
   abstract aesDecryptFastParameters(
     data: string,
     iv: string,
@@ -53,11 +67,10 @@ export abstract class CryptoFunctionService {
     key: SymmetricCryptoKey,
   ): DecryptParameters<Uint8Array | string>;
   /**
-   * Decrypts AES encrypted data using Forge in the web. Available modes are CBC, ECB, and GCM.
+   * Decrypts AES encrypted data using Forge in the web. Available modes are CBC and ECB.
    *
-   * GCM mode supports only GCM 256 with a 12 byte IV and a 16 byte tag.
    *
-   * @param data the data to decrypt. For CBC and ECB mode, this should be the ciphertext. For GCM mode, this should be the ciphertext + tag.
+   * @param data the data to decrypt.
    * @param iv the initialization vector to use for decryption
    * @param key the key to use for decryption
    * @param mode the mode to use for decryption
@@ -65,7 +78,8 @@ export abstract class CryptoFunctionService {
 
   abstract aesDecryptFast(
     parameters: DecryptParameters<Uint8Array | string>,
-    mode: "cbc" | "ecb" | "gcm",
+    mode: "cbc" | "ecb",
+    additionalData?: Uint8Array,
   ): Promise<string>;
   /**
    * Decrypts AES encrypted data. Available modes are CBC, ECB, and GCM.
@@ -76,12 +90,14 @@ export abstract class CryptoFunctionService {
    * @param iv the initialization vector to use for decryption
    * @param key the key to use for decryption
    * @param mode the mode to use for decryption
+   * @param additionalData additional data to use for decryption in GCM mode. Ignored for CBC and ECB mode.
    */
   abstract aesDecrypt(
     data: Uint8Array,
     iv: Uint8Array,
     key: Uint8Array,
     mode: "cbc" | "ecb" | "gcm",
+    additionalData?: Uint8Array,
   ): Promise<Uint8Array>;
   abstract rsaEncrypt(
     data: Uint8Array,
