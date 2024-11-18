@@ -9,6 +9,7 @@ import { TaxServiceAbstraction } from "@bitwarden/common/billing/abstractions/ta
 import { CountryListItem } from "@bitwarden/common/billing/models/domain";
 import { ExpandedTaxInfoUpdateRequest } from "@bitwarden/common/billing/models/request/expanded-tax-info-update.request";
 import { TaxInfoUpdateRequest } from "@bitwarden/common/billing/models/request/tax-info-update.request";
+import { TaxIdTypeResponse } from "@bitwarden/common/billing/models/response/tax-id-types.response";
 import { TaxInfoResponse } from "@bitwarden/common/billing/models/response/tax-info.response";
 import { TaxRateResponse } from "@bitwarden/common/billing/models/response/tax-rate.response";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
@@ -37,6 +38,7 @@ export class TaxInfoComponent implements OnInit {
     postalCode: new FormControl(null),
     includeTaxId: new FormControl(null),
     taxId: new FormControl(null),
+    taxIdType: new FormControl(null),
     line1: new FormControl(null),
     line2: new FormControl(null),
     city: new FormControl(null),
@@ -58,6 +60,7 @@ export class TaxInfoComponent implements OnInit {
   };
   countryList: CountryListItem[] = this.taxService.getCountries();
   taxRates: TaxRateResponse[];
+  taxIdTypes: TaxIdTypeResponse[];
 
   constructor(
     private apiService: ApiService,
@@ -207,6 +210,10 @@ export class TaxInfoComponent implements OnInit {
       if (taxRates) {
         this.taxRates = taxRates.data;
       }
+      const taxIdTypes = await this.taxService.getTaxIdTypes();
+      if (taxIdTypes) {
+        this.taxIdTypes = taxIdTypes.taxIdTypes;
+      }
     } catch (e) {
       this.logService.error(e);
     } finally {
@@ -300,6 +307,16 @@ export class TaxInfoComponent implements OnInit {
       this.state = null;
       this.setTaxInfoObject();
     }
+    // reorder tax id types based on country
+    this.taxIdTypes = this.taxIdTypes.sort((a, b) => {
+      if (a.country === this.country && b.country !== this.country) {
+        return -1;
+      } else if (a.country !== this.country && b.country === this.country) {
+        return 1;
+      } else {
+        return a.description.localeCompare(b.description);
+      }
+    });
     this.onCountryChanged.emit();
   }
 

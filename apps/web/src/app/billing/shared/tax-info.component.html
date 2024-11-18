@@ -33,6 +33,18 @@
         <input bitInput type="text" formControlName="taxId" />
       </bit-form-field>
     </div>
+    <div class="tw-col-span-6">
+      <bit-form-field>
+        <bit-label>{{ "taxIdType" | i18n }}</bit-label>
+        <bit-select formControlName="taxIdType">
+          <bit-option
+            *ngFor="let taxIdType of taxIdTypes"
+            [value]="taxIdType.code"
+            [label]="taxIdType.description"
+          />
+        </bit-select>
+      </bit-form-field>
+    </div>
   </div>
   <div class="tw-grid tw-grid-cols-12 tw-gap-4" *ngIf="showTaxIdFields">
     <div class="tw-col-span-6">

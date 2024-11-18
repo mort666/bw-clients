@@ -4655,6 +4655,9 @@
   "taxIdNumber": {
     "message": "VAT/GST Tax ID"
   },
+  "taxIdType": {
+    "message": "Tax ID Type"
+  },
   "taxInfoUpdated": {
     "message": "Tax information updated."
   },
