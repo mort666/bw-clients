@@ -4,6 +4,8 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ActivatedRoute, Router } from "@angular/router";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
+// eslint-disable-next-line no-restricted-imports
+import { CriticalAppsApiService } from "@bitwarden/bit-common/tools/reports/risk-insights";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { AsyncActionsModule, ButtonModule, TabsModule } from "@bitwarden/components";
@@ -11,6 +13,7 @@ import { AsyncActionsModule, ButtonModule, TabsModule } from "@bitwarden/compone
 import { HeaderModule } from "../../layouts/header/header.module";
 
 import { AllApplicationsComponent } from "./all-applications.component";
+import { applicationTableMockData } from "./application-table.mock";
 import { CriticalApplicationsComponent } from "./critical-applications.component";
 import { NotifiedMembersTableComponent } from "./notified-members-table.component";
 import { PasswordHealthMembersURIComponent } from "./password-health-members-uri.component";
@@ -46,7 +49,7 @@ export class RiskInsightsComponent implements OnInit {
   dataLastUpdated = new Date();
   isCritialAppsFeatureEnabled = false;
 
-  apps: any[] = [];
+  apps: any[] = applicationTableMockData;
   criticalApps: any[] = [];
   notifiedMembers: any[] = [];
 
@@ -78,9 +81,14 @@ export class RiskInsightsComponent implements OnInit {
     protected route: ActivatedRoute,
     private router: Router,
     private configService: ConfigService,
+    private criticalAppsApiService: CriticalAppsApiService,
   ) {
     route.queryParams.pipe(takeUntilDestroyed()).subscribe(({ tabIndex }) => {
       this.tabIndex = !isNaN(tabIndex) ? tabIndex : RiskInsightsTabType.AllApps;
+    });
+
+    this.criticalAppsApiService.criticalApps$.pipe(takeUntilDestroyed()).subscribe((apps) => {
+      this.criticalApps = apps;
     });
   }
 }
