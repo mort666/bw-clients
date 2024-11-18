@@ -69,10 +69,12 @@ export class PasswordHealthService {
     // Set to store at-risk cipher IDs
     const atRiskCipherIds = new Set<string>();
 
+    const reusedPasswords = this.getReusedPasswords(ciphers);
+
     // Determine at-risk ciphers
     for (const cipher of ciphers) {
+      const isReused = reusedPasswords.has(cipher.login.password);
       const isWeak = this.isWeakPassword(cipher);
-      const isReused = this.isReusedPassword(cipher);
       const isExposed = await this.isExposedPassword(cipher);
       if (isWeak || isReused || isExposed) {
         atRiskCipherIds.add(cipher.id);
@@ -154,53 +156,50 @@ export class PasswordHealthService {
     };
   }
 
-  async isExposedPassword(cipher: CipherView) {
-    const { type, login, isDeleted, viewPassword } = cipher;
-    if (
-      type !== CipherType.Login ||
-      login.password == null ||
-      login.password === "" ||
-      isDeleted ||
-      !viewPassword
-    ) {
-      return;
+  getReusedPasswords(ciphers: CipherView[]): Set<string> {
+    const seenPasswords = new Set<string>();
+    const reusedPasswords = new Set<string>();
+
+    for (const cipher of ciphers) {
+      if (this.isValidPassword(cipher)) {
+        const password = cipher.login.password;
+        if (seenPasswords.has(password)) {
+          reusedPasswords.add(password);
+        } else {
+          seenPasswords.add(password);
+        }
+      }
     }
 
-    const exposedCount = await this.auditService.passwordLeaked(login.password);
+    return reusedPasswords;
+  }
+
+  isValidPassword(cipher: CipherView) {
+    const { type, login, isDeleted, viewPassword } = cipher;
+    return (
+      type === CipherType.Login &&
+      login.password != null &&
+      login.password !== "" &&
+      !isDeleted &&
+      viewPassword
+    );
+  }
+
+  async isExposedPassword(cipher: CipherView) {
+    if (!this.isValidPassword(cipher)) {
+      return false;
+    }
+
+    const exposedCount = await this.auditService.passwordLeaked(cipher.login.password);
     return exposedCount > 0;
   }
 
-  isReusedPassword(cipher: CipherView) {
-    const { type, login, isDeleted, viewPassword } = cipher;
-    if (
-      type !== CipherType.Login ||
-      login.password == null ||
-      login.password === "" ||
-      isDeleted ||
-      !viewPassword
-    ) {
-      return;
-    }
-
-    if (this.usedPasswords.includes(login.password)) {
-      return true;
-    }
-
-    this.usedPasswords.push(login.password);
-    return false;
-  }
-
   isWeakPassword(cipher: CipherView) {
-    const { type, login, isDeleted, viewPassword } = cipher;
-    if (
-      type !== CipherType.Login ||
-      login.password == null ||
-      login.password === "" ||
-      isDeleted ||
-      !viewPassword
-    ) {
-      return;
+    if (!this.isValidPassword(cipher)) {
+      return false;
     }
+
+    const { login } = cipher;
 
     const hasUserName = !Utils.isNullOrWhitespace(cipher.login.username);
     let userInput: string[] = [];

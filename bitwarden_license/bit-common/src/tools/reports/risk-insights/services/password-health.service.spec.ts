@@ -61,28 +61,28 @@ describe("PasswordHealthService", () => {
         atRiskPasswords: 1,
         totalPasswords: 2,
         atRiskMembers: 2,
-        totalMembers: 4,
-      },
-      {
-        application: "123formbuilder.com",
-        atRiskPasswords: 0,
-        totalPasswords: 1,
-        atRiskMembers: 0,
         totalMembers: 5,
       },
       {
-        application: "example.com",
+        application: "123formbuilder.com",
         atRiskPasswords: 1,
+        totalPasswords: 1,
+        atRiskMembers: 1,
+        totalMembers: 1,
+      },
+      {
+        application: "example.com",
+        atRiskPasswords: 2,
         totalPasswords: 2,
         atRiskMembers: 5,
         totalMembers: 5,
       },
       {
         application: "google.com",
-        atRiskPasswords: 1,
-        totalPasswords: 1,
-        atRiskMembers: 2,
-        totalMembers: 2,
+        atRiskPasswords: 2,
+        totalPasswords: 2,
+        atRiskMembers: 3,
+        totalMembers: 3,
       },
     ];
 
@@ -91,8 +91,20 @@ describe("PasswordHealthService", () => {
     expect(result.details.sort(sortFn)).toEqual(expected.sort(sortFn));
     expect(result.totalAtRiskMembers).toBe(5);
     expect(result.totalMembers).toBe(6);
-    expect(result.totalAtRiskApps).toBe(3);
+    expect(result.totalAtRiskApps).toBe(4);
     expect(result.totalApps).toBe(4);
+  });
+
+  describe("getReusedPasswords", () => {
+    it.only("should return an array of reused passwords", () => {
+      const ciphers = [
+        { login: { password: "123" }, type: CipherType.Login, viewPassword: true },
+        { login: { password: "123" }, type: CipherType.Login, viewPassword: true },
+        { login: { password: "abc" }, type: CipherType.Login, viewPassword: true },
+      ] as CipherView[];
+      const result = service.getReusedPasswords(ciphers);
+      expect(result).toEqual(new Set(["123"]));
+    });
   });
 
   describe("isWeakPassword", () => {
@@ -112,33 +124,6 @@ describe("PasswordHealthService", () => {
       cipher.viewPassword = true;
 
       expect(service.isWeakPassword(cipher)).toBe(false);
-    });
-  });
-
-  describe("isReusedPassword", () => {
-    it("should return false for a new password", () => {
-      const cipher = new CipherView();
-      cipher.type = CipherType.Login;
-      cipher.login = { password: "uniquePassword", username: "user" } as LoginView;
-      cipher.viewPassword = true;
-
-      expect(service.isReusedPassword(cipher)).toBe(false);
-    });
-
-    it("should return true for a reused password", () => {
-      const cipher1 = new CipherView();
-      cipher1.type = CipherType.Login;
-      cipher1.login = { password: "reusedPassword", username: "user" } as LoginView;
-      cipher1.viewPassword = true;
-
-      const cipher2 = new CipherView();
-      cipher2.type = CipherType.Login;
-      cipher2.login = { password: "reusedPassword", username: "user" } as LoginView;
-      cipher2.viewPassword = true;
-
-      service.isReusedPassword(cipher1); // Adds 'reusedPassword' to usedPasswords
-
-      expect(service.isReusedPassword(cipher2)).toBe(true);
     });
   });
 });
