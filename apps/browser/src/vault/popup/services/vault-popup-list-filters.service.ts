@@ -243,60 +243,64 @@ export class VaultPopupListFiltersService {
   /**
    * Folder array structured to be directly passed to `ChipSelectComponent`
    */
-  folders$: Observable<ChipSelectOption<FolderView>[]> = combineLatest([
-    this.filters$.pipe(
-      distinctUntilChanged(
-        (previousFilter, currentFilter) =>
-          // Only update the collections when the organizationId filter changes
-          previousFilter.organization?.id === currentFilter.organization?.id,
+  folders$: Observable<ChipSelectOption<FolderView>[]> = this.activeUserId$.pipe(
+    switchMap((userId) =>
+      combineLatest([
+        this.filters$.pipe(
+          distinctUntilChanged(
+            (previousFilter, currentFilter) =>
+              // Only update the collections when the organizationId filter changes
+              previousFilter.organization?.id === currentFilter.organization?.id,
+          ),
+        ),
+        this.folderService.folderViews$(userId),
+        this.cipherViews$,
+      ]).pipe(
+        map(([filters, folders, cipherViews]): [PopupListFilter, FolderView[], CipherView[]] => {
+          if (folders.length === 1 && folders[0].id === null) {
+            // Do not display folder selections when only the "no folder" option is available.
+            return [filters, [], cipherViews];
+          }
+
+          // Sort folders by alphabetic name
+          folders.sort(Utils.getSortFunction(this.i18nService, "name"));
+          let arrangedFolders = folders;
+
+          const noFolder = folders.find((f) => f.id === null);
+
+          if (noFolder) {
+            // Update `name` of the "no folder" option to "Items with no folder"
+            noFolder.name = this.i18nService.t("itemsWithNoFolder");
+
+            // Move the "no folder" option to the end of the list
+            arrangedFolders = [...folders.filter((f) => f.id !== null), noFolder];
+          }
+          return [filters, arrangedFolders, cipherViews];
+        }),
+        map(([filters, folders, cipherViews]) => {
+          const organizationId = filters.organization?.id ?? null;
+
+          // When no org or "My vault" is selected, return all folders
+          if (organizationId === null || organizationId === MY_VAULT_ID) {
+            return folders;
+          }
+
+          const orgCiphers = cipherViews.filter((c) => c.organizationId === organizationId);
+
+          // Return only the folders that have ciphers within the filtered organization
+          return folders.filter((f) => orgCiphers.some((oc) => oc.folderId === f.id));
+        }),
+        map((folders) => {
+          const nestedFolders = this.getAllFoldersNested(folders);
+          return new DynamicTreeNode<FolderView>({
+            fullList: folders,
+            nestedList: nestedFolders,
+          });
+        }),
+        map((folders) =>
+          folders.nestedList.map((f) => this.convertToChipSelectOption(f, "bwi-folder")),
+        ),
       ),
-    ),
-    this.folderService.folderViews$(this.activeUserId$),
-    this.cipherViews$,
-  ]).pipe(
-    map(([filters, folders, cipherViews]): [PopupListFilter, FolderView[], CipherView[]] => {
-      if (folders.length === 1 && folders[0].id === null) {
-        // Do not display folder selections when only the "no folder" option is available.
-        return [filters, [], cipherViews];
-      }
-
-      // Sort folders by alphabetic name
-      folders.sort(Utils.getSortFunction(this.i18nService, "name"));
-      let arrangedFolders = folders;
-
-      const noFolder = folders.find((f) => f.id === null);
-
-      if (noFolder) {
-        // Update `name` of the "no folder" option to "Items with no folder"
-        noFolder.name = this.i18nService.t("itemsWithNoFolder");
-
-        // Move the "no folder" option to the end of the list
-        arrangedFolders = [...folders.filter((f) => f.id !== null), noFolder];
-      }
-      return [filters, arrangedFolders, cipherViews];
-    }),
-    map(([filters, folders, cipherViews]) => {
-      const organizationId = filters.organization?.id ?? null;
-
-      // When no org or "My vault" is selected, return all folders
-      if (organizationId === null || organizationId === MY_VAULT_ID) {
-        return folders;
-      }
-
-      const orgCiphers = cipherViews.filter((c) => c.organizationId === organizationId);
-
-      // Return only the folders that have ciphers within the filtered organization
-      return folders.filter((f) => orgCiphers.some((oc) => oc.folderId === f.id));
-    }),
-    map((folders) => {
-      const nestedFolders = this.getAllFoldersNested(folders);
-      return new DynamicTreeNode<FolderView>({
-        fullList: folders,
-        nestedList: nestedFolders,
-      });
-    }),
-    map((folders) =>
-      folders.nestedList.map((f) => this.convertToChipSelectOption(f, "bwi-folder")),
     ),
   );
 

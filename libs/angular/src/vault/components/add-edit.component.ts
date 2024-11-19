@@ -261,14 +261,12 @@ export class AddEditComponent implements OnInit, OnDestroy {
 
     const loadedAddEditCipherInfo = await this.loadAddEditCipherInfo();
 
+    const activeUserId = await firstValueFrom(this.activeUserId$);
     if (this.cipher == null) {
       if (this.editMode) {
         const cipher = await this.loadCipher();
         this.cipher = await cipher.decrypt(
-          await this.cipherService.getKeyForCipherKeyDecryption(
-            cipher,
-            await firstValueFrom(this.activeUserId$),
-          ),
+          await this.cipherService.getKeyForCipherKeyDecryption(cipher, activeUserId),
         );
 
         // Adjust Cipher Name if Cloning
@@ -325,7 +323,7 @@ export class AddEditComponent implements OnInit, OnDestroy {
       this.cipher.login.fido2Credentials = null;
     }
 
-    this.folders$ = this.folderService.folderViews$(this.activeUserId$);
+    this.folders$ = this.folderService.folderViews$(activeUserId);
 
     if (this.editMode && this.previousCipherId !== this.cipherId) {
       void this.eventCollectionService.collectMany(EventType.Cipher_ClientViewed, [this.cipher]);

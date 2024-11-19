@@ -62,7 +62,8 @@ export class BulkMoveDialogComponent implements OnInit {
   }
 
   async ngOnInit() {
-    this.folders$ = this.folderService.folderViews$(this.activeUserId$);
+    const activeUserId = await firstValueFrom(this.activeUserId$);
+    this.folders$ = this.folderService.folderViews$(activeUserId);
     this.formGroup.patchValue({
       folderId: (await firstValueFrom(this.folders$))[0].id,
     });

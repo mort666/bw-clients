@@ -39,6 +39,8 @@ export class DefaultCipherFormConfigService implements CipherFormConfigService {
     cipherId?: CipherId,
     cipherType?: CipherType,
   ): Promise<CipherFormConfig> {
+    const activeUserId = await firstValueFrom(this.activeUserId$);
+
     const [organizations, collections, allowPersonalOwnership, folders, cipher] =
       await firstValueFrom(
         combineLatest([
@@ -51,9 +53,9 @@ export class DefaultCipherFormConfigService implements CipherFormConfigService {
             ),
           ),
           this.allowPersonalOwnership$,
-          this.folderService.folders$(this.activeUserId$).pipe(
+          this.folderService.folders$(activeUserId).pipe(
             switchMap((f) =>
-              this.folderService.folderViews$(this.activeUserId$).pipe(
+              this.folderService.folderViews$(activeUserId).pipe(
                 filter((d) => d.length - 1 === f.length), // -1 for "No Folder" in folderViews$
               ),
             ),

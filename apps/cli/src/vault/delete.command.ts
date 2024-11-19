@@ -105,14 +105,16 @@ export class DeleteCommand {
   }
 
   private async deleteFolder(id: string) {
-    const activeUserId$ = this.accountService.activeAccount$.pipe(map((a) => a?.id));
-    const folder = await this.folderService.getFromState(id, activeUserId$);
+    const activeUserId = await firstValueFrom(
+      this.accountService.activeAccount$.pipe(map((a) => a?.id)),
+    );
+    const folder = await this.folderService.getFromState(id, activeUserId);
     if (folder == null) {
       return Response.notFound();
     }
 
     try {
-      await this.folderApiService.delete(id);
+      await this.folderApiService.delete(id, activeUserId);
       return Response.success();
     } catch (e) {
       return Response.error(e);

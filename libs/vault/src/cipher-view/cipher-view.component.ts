@@ -126,8 +126,9 @@ export class CipherViewComponent implements OnChanges, OnDestroy {
     }
 
     if (this.cipher.folderId) {
+      const activeUserId = await firstValueFrom(this.activeUserId$);
       this.folder$ = this.folderService
-        .getDecrypted$(this.cipher.folderId, this.activeUserId$)
+        .getDecrypted$(this.cipher.folderId, activeUserId)
         .pipe(takeUntil(this.destroyed$));
     }
   }

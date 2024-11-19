@@ -1,6 +1,6 @@
 import { CommonModule } from "@angular/common";
 import { Component } from "@angular/core";
-import { map, Observable } from "rxjs";
+import { map, Observable, switchMap } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
@@ -53,13 +53,13 @@ export class FoldersV2Component {
     private dialogService: DialogService,
     private accountService: AccountService,
   ) {
-    this.folders$ = this.folderService.folderViews$(this.activeUserId$).pipe(
+    this.folders$ = this.activeUserId$.pipe(
+      switchMap((userId) => this.folderService.folderViews$(userId)),
       map((folders) => {
         // Remove the last folder, which is the "no folder" option folder
         if (folders.length > 0) {
           return folders.slice(0, folders.length - 1);
         }
-
         return folders;
       }),
     );

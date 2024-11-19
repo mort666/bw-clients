@@ -141,9 +141,7 @@ export class ViewComponent implements OnDestroy, OnInit {
     this.cleanUp();
 
     const cipher = await this.cipherService.get(this.cipherId);
-    const activeUserId = await firstValueFrom(
-      this.accountService.activeAccount$.pipe(map((a) => a?.id)),
-    );
+    const activeUserId = await firstValueFrom(this.activeUserId$);
     this.cipher = await cipher.decrypt(
       await this.cipherService.getKeyForCipherKeyDecryption(cipher, activeUserId),
     );
@@ -158,7 +156,7 @@ export class ViewComponent implements OnDestroy, OnInit {
 
     if (this.cipher.folderId) {
       this.folder = await (
-        await firstValueFrom(this.folderService.folderViews$(this.activeUserId$))
+        await firstValueFrom(this.folderService.folderViews$(activeUserId))
       ).find((f) => f.id == this.cipher.folderId);
     }
 

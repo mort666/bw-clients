@@ -62,9 +62,10 @@ export class IndividualVaultExportService
     let decFolders: FolderView[] = [];
     let decCiphers: CipherView[] = [];
     const promises = [];
+    const activeUserId = await firstValueFrom(this.activeUserId$);
 
     promises.push(
-      firstValueFrom(this.folderService.folderViews$(this.activeUserId$)).then((folders) => {
+      firstValueFrom(this.folderService.folderViews$(activeUserId)).then((folders) => {
         decFolders = folders;
       }),
     );
@@ -88,9 +89,10 @@ export class IndividualVaultExportService
     let folders: Folder[] = [];
     let ciphers: Cipher[] = [];
     const promises = [];
+    const activeUserId = await firstValueFrom(this.activeUserId$);
 
     promises.push(
-      firstValueFrom(this.folderService.folders$(this.activeUserId$)).then((f) => {
+      firstValueFrom(this.folderService.folders$(activeUserId)).then((f) => {
         folders = f;
       }),
     );

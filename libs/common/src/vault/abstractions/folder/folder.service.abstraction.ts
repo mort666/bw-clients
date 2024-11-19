@@ -11,27 +11,27 @@ import { FolderWithIdRequest } from "../../models/request/folder-with-id.request
 import { FolderView } from "../../models/view/folder.view";
 
 export abstract class FolderService implements UserKeyRotationDataProvider<FolderWithIdRequest> {
-  folders$: (userId$: Observable<UserId>) => Observable<Folder[]>;
-  folderViews$: (userId$: Observable<UserId>) => Observable<FolderView[]>;
+  folders$: (userId: UserId) => Observable<Folder[]>;
+  folderViews$: (userId: UserId) => Observable<FolderView[]>;
 
   clearDecryptedFolderState: (userId: UserId) => Promise<void>;
   encrypt: (model: FolderView, key: SymmetricCryptoKey) => Promise<Folder>;
-  get: (id: string, userId$: Observable<UserId>) => Promise<Folder>;
-  getDecrypted$: (id: string, userId$: Observable<UserId>) => Observable<FolderView | undefined>;
+  get: (id: string, userId: UserId) => Promise<Folder>;
+  getDecrypted$: (id: string, userId: UserId) => Observable<FolderView | undefined>;
   /**
    * @deprecated Use firstValueFrom(folders$) directly instead
-   * @param userId$ The observable of user ID
+   * @param userId The user id
    * @returns Promise of folders array
    */
-  getAllFromState: (userId$: Observable<UserId>) => Promise<Folder[]>;
+  getAllFromState: (userId: UserId) => Promise<Folder[]>;
   /**
    * @deprecated Only use in CLI!
    */
-  getFromState: (id: string, userId$: Observable<UserId>) => Promise<Folder>;
+  getFromState: (id: string, userId: UserId) => Promise<Folder>;
   /**
    * @deprecated Only use in CLI!
    */
-  getAllDecryptedFromState: (userId$: Observable<UserId>) => Promise<FolderView[]>;
+  getAllDecryptedFromState: (userId: UserId) => Promise<FolderView[]>;
   /**
    * Returns user folders re-encrypted with the new user key.
    * @param originalUserKey the original user key

@@ -1,4 +1,4 @@
-import { Observable, firstValueFrom, map, of, shareReplay, switchMap, takeWhile } from "rxjs";
+import { Observable, firstValueFrom, map, shareReplay } from "rxjs";
 
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 
@@ -26,10 +26,8 @@ export class FolderService implements InternalFolderServiceAbstraction {
     private stateProvider: StateProvider,
   ) {}
 
-  folders$(userId$: Observable<UserId>): Observable<Folder[]> {
-    return userId$.pipe(
-      takeWhile((userId) => userId != null),
-      switchMap((userId) => this.encryptedFoldersState(userId).state$),
+  folders$(userId: UserId): Observable<Folder[]> {
+    return this.encryptedFoldersState(userId).state$.pipe(
       map((folders) => {
         if (folders == null) {
           return [];
@@ -40,11 +38,8 @@ export class FolderService implements InternalFolderServiceAbstraction {
     );
   }
 
-  folderViews$(userId$: Observable<UserId>): Observable<FolderView[]> {
-    return userId$.pipe(
-      takeWhile((userId) => userId != null),
-      switchMap((userId) => this.decryptedFoldersState(userId).state$),
-    );
+  folderViews$(userId: UserId): Observable<FolderView[]> {
+    return this.decryptedFoldersState(userId).state$;
   }
 
   async clearDecryptedFolderState(userId: UserId): Promise<void> {
@@ -63,29 +58,29 @@ export class FolderService implements InternalFolderServiceAbstraction {
     return folder;
   }
 
-  async get(id: string, userId$: Observable<UserId>): Promise<Folder> {
-    const folders = await firstValueFrom(this.folders$(userId$));
+  async get(id: string, userId: UserId): Promise<Folder> {
+    const folders = await firstValueFrom(this.folders$(userId));
 
     return folders.find((folder) => folder.id === id);
   }
 
-  getDecrypted$(id: string, userId$: Observable<UserId>): Observable<FolderView | undefined> {
-    return this.folderViews$(userId$).pipe(
+  getDecrypted$(id: string, userId: UserId): Observable<FolderView | undefined> {
+    return this.folderViews$(userId).pipe(
       map((folders) => folders.find((folder) => folder.id === id)),
       shareReplay({ refCount: true, bufferSize: 1 }),
     );
   }
 
-  async getAllFromState(userId$: Observable<UserId>): Promise<Folder[]> {
-    return await firstValueFrom(this.folders$(userId$));
+  async getAllFromState(userId: UserId): Promise<Folder[]> {
+    return await firstValueFrom(this.folders$(userId));
   }
 
   /**
    * @deprecated For the CLI only
    * @param id id of the folder
    */
-  async getFromState(id: string, userId$: Observable<UserId>): Promise<Folder> {
-    const folder = await this.get(id, userId$);
+  async getFromState(id: string, userId: UserId): Promise<Folder> {
+    const folder = await this.get(id, userId);
     if (!folder) {
       return null;
     }
@@ -96,8 +91,8 @@ export class FolderService implements InternalFolderServiceAbstraction {
   /**
    * @deprecated Only use in CLI!
    */
-  async getAllDecryptedFromState(userId$: Observable<UserId>): Promise<FolderView[]> {
-    return await firstValueFrom(this.folderViews$(userId$));
+  async getAllDecryptedFromState(userId: UserId): Promise<FolderView[]> {
+    return await firstValueFrom(this.folderViews$(userId));
   }
 
   async upsert(folderData: FolderData | FolderData[], userId: UserId): Promise<void> {
@@ -178,7 +173,7 @@ export class FolderService implements InternalFolderServiceAbstraction {
     }
 
     let encryptedFolders: FolderWithIdRequest[] = [];
-    const folders = await firstValueFrom(this.folderViews$(of(userId)));
+    const folders = await firstValueFrom(this.folderViews$(userId));
     if (!folders) {
       return encryptedFolders;
     }

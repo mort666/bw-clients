@@ -25,7 +25,7 @@ export class FolderAddEditComponent implements OnInit {
   deletePromise: Promise<any>;
   protected componentName = "";
 
-  private activeUserId$ = this.accountService.activeAccount$.pipe(map((a) => a?.id));
+  protected activeUserId$ = this.accountService.activeAccount$.pipe(map((a) => a?.id));
 
   formGroup = this.formBuilder.group({
     name: ["", [Validators.required]],
@@ -59,10 +59,10 @@ export class FolderAddEditComponent implements OnInit {
     }
 
     try {
-      const activeAccountId = await firstValueFrom(this.accountService.activeAccount$);
-      const userKey = await this.keyService.getUserKeyWithLegacySupport(activeAccountId.id);
+      const activeUserId = await firstValueFrom(this.activeUserId$);
+      const userKey = await this.keyService.getUserKeyWithLegacySupport(activeUserId);
       const folder = await this.folderService.encrypt(this.folder, userKey);
-      this.formPromise = this.folderApiService.save(folder);
+      this.formPromise = this.folderApiService.save(folder, activeUserId);
       await this.formPromise;
       this.platformUtilsService.showToast(
         "success",
@@ -90,7 +90,8 @@ export class FolderAddEditComponent implements OnInit {
     }
 
     try {
-      this.deletePromise = this.folderApiService.delete(this.folder.id);
+      const activeUserId = await firstValueFrom(this.activeUserId$);
+      this.deletePromise = this.folderApiService.delete(this.folder.id, activeUserId);
       await this.deletePromise;
       this.platformUtilsService.showToast("success", null, this.i18nService.t("deletedFolder"));
       this.onDeletedFolder.emit(this.folder);
@@ -107,8 +108,9 @@ export class FolderAddEditComponent implements OnInit {
     if (this.editMode) {
       this.editMode = true;
       this.title = this.i18nService.t("editFolder");
+      const activeUserId = await firstValueFrom(this.activeUserId$);
       this.folder = await firstValueFrom(
-        this.folderService.getDecrypted$(this.folderId, this.activeUserId$),
+        this.folderService.getDecrypted$(this.folderId, activeUserId),
       );
     } else {
       this.title = this.i18nService.t("addFolder");

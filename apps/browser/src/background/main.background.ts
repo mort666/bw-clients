@@ -833,11 +833,7 @@ export default class MainBackground {
       this.cipherService,
       this.stateProvider,
     );
-    this.folderApiService = new FolderApiService(
-      this.folderService,
-      this.apiService,
-      this.accountService,
-    );
+    this.folderApiService = new FolderApiService(this.folderService, this.apiService);
 
     this.userVerificationService = new UserVerificationService(
       this.keyService,

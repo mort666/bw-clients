@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { firstValueFrom, from, map, mergeMap, Observable } from "rxjs";
+import { firstValueFrom, from, map, mergeMap, Observable, switchMap } from "rxjs";
 
 import { CollectionService, CollectionView } from "@bitwarden/admin-console/common";
 import {
@@ -83,9 +83,10 @@ export class VaultFilterService implements DeprecatedVaultFilterServiceAbstracti
       });
     };
 
-    return this.folderService
-      .folderViews$(this.activeUserId$)
-      .pipe(mergeMap((folders) => from(transformation(folders))));
+    return this.activeUserId$.pipe(
+      switchMap((userId) => this.folderService.folderViews$(userId)),
+      mergeMap((folders) => from(transformation(folders))),
+    );
   }
 
   async buildCollections(organizationId?: string): Promise<DynamicTreeNode<CollectionView>> {
@@ -128,8 +129,9 @@ export class VaultFilterService implements DeprecatedVaultFilterServiceAbstracti
   }
 
   async getFolderNested(id: string): Promise<TreeNode<FolderView>> {
+    const activeUserId = await firstValueFrom(this.activeUserId$);
     const folders = await this.getAllFoldersNested(
-      await firstValueFrom(this.folderService.folderViews$(this.activeUserId$)),
+      await firstValueFrom(this.folderService.folderViews$(activeUserId)),
     );
     return ServiceUtils.getTreeNodeObjectFromList(folders, id) as TreeNode<FolderView>;
   }

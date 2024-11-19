@@ -136,7 +136,8 @@ export class EditCommand {
   }
 
   private async editFolder(id: string, req: FolderExport) {
-    const folder = await this.folderService.getFromState(id, this.activeUserId$);
+    const activeUserId = await firstValueFrom(this.activeUserId$);
+    const folder = await this.folderService.getFromState(id, activeUserId);
     if (folder == null) {
       return Response.notFound();
     }
@@ -144,12 +145,11 @@ export class EditCommand {
     let folderView = await folder.decrypt();
     folderView = FolderExport.toView(req, folderView);
 
-    const activeUserId = await firstValueFrom(this.accountService.activeAccount$);
-    const userKey = await this.keyService.getUserKeyWithLegacySupport(activeUserId.id);
+    const userKey = await this.keyService.getUserKeyWithLegacySupport(activeUserId);
     const encFolder = await this.folderService.encrypt(folderView, userKey);
     try {
-      await this.folderApiService.save(encFolder);
-      const updatedFolder = await this.folderService.get(folder.id, this.activeUserId$);
+      await this.folderApiService.save(encFolder, activeUserId);
+      const updatedFolder = await this.folderService.get(folder.id, activeUserId);
       const decFolder = await updatedFolder.decrypt();
       const res = new FolderResponse(decFolder);
       return Response.success(res);

@@ -58,14 +58,18 @@ export class VaultFilterService implements VaultFilterServiceAbstraction {
 
   protected _organizationFilter = new BehaviorSubject<Organization>(null);
 
-  filteredFolders$: Observable<FolderView[]> = this.folderService
-    .folderViews$(this.activeUserId$)
-    .pipe(
-      combineLatestWith(this.cipherService.cipherViews$, this._organizationFilter),
-      switchMap(([folders, ciphers, org]) => {
-        return this.filterFolders(folders, ciphers, org);
-      }),
-    );
+  filteredFolders$: Observable<FolderView[]> = this.activeUserId$.pipe(
+    switchMap((userId) =>
+      combineLatest([
+        this.folderService.folderViews$(userId),
+        this.cipherService.cipherViews$,
+        this._organizationFilter,
+      ]),
+    ),
+    switchMap(([folders, ciphers, org]) => {
+      return this.filterFolders(folders, ciphers, org);
+    }),
+  );
   folderTree$: Observable<TreeNode<FolderFilter>> = this.filteredFolders$.pipe(
     map((folders) => this.buildFolderTree(folders)),
   );

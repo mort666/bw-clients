@@ -672,11 +672,7 @@ export class ServiceContainer {
       this.stateProvider,
     );
 
-    this.folderApiService = new FolderApiService(
-      this.folderService,
-      this.apiService,
-      this.accountService,
-    );
+    this.folderApiService = new FolderApiService(this.folderService, this.apiService);
 
     const lockedCallback = async (userId?: string) =>
       await this.keyService.clearStoredUserKey(KeySuffixOptions.Auto);

@@ -2,7 +2,7 @@ import { mock, MockProxy } from "jest-mock-extended";
 import { BehaviorSubject, firstValueFrom } from "rxjs";
 
 import { PolicyService } from "@bitwarden/common/admin-console/services/policy/policy.service";
-import { AccountInfo } from "@bitwarden/common/auth/abstractions/account.service";
+import { AccountInfo, AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
 import { AuthService } from "@bitwarden/common/auth/services/auth.service";
 import { ExtensionCommand } from "@bitwarden/common/autofill/constants";
@@ -11,10 +11,8 @@ import { UserNotificationSettingsService } from "@bitwarden/common/autofill/serv
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
-import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { SelfHostedEnvironment } from "@bitwarden/common/platform/services/default-environment.service";
 import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
-import { FakeAccountService, mockAccountServiceWith } from "@bitwarden/common/spec";
 import { UserId } from "@bitwarden/common/types/guid";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
@@ -60,15 +58,20 @@ describe("NotificationBackground", () => {
   const logService = mock<LogService>();
   const themeStateService = mock<ThemeStateService>();
   const configService = mock<ConfigService>();
-  let accountService: FakeAccountService;
+  const accountService = mock<AccountService>();
 
-  const userId = Utils.newGuid() as UserId;
+  const activeAccountSubject = new BehaviorSubject<{ id: UserId } & AccountInfo>({
+    id: "testId" as UserId,
+    email: "test@example.com",
+    emailVerified: true,
+    name: "Test User",
+  });
 
   beforeEach(() => {
-    accountService = mockAccountServiceWith(userId);
     activeAccountStatusMock$ = new BehaviorSubject(AuthenticationStatus.Locked);
     authService = mock<AuthService>();
     authService.activeAccountStatus$ = activeAccountStatusMock$;
+    accountService.activeAccount$ = activeAccountSubject;
     notificationBackground = new NotificationBackground(
       autofillService,
       cipherService,
@@ -688,13 +691,6 @@ describe("NotificationBackground", () => {
       });
 
       describe("saveOrUpdateCredentials", () => {
-        const activeAccountSubject = new BehaviorSubject<{ id: UserId } & AccountInfo>({
-          id: "testId" as UserId,
-          email: "test@example.com",
-          emailVerified: true,
-          name: "Test User",
-        });
-
         let getDecryptedCipherByIdSpy: jest.SpyInstance;
         let getAllDecryptedForUrlSpy: jest.SpyInstance;
         let updatePasswordSpy: jest.SpyInstance;

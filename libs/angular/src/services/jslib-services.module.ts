@@ -514,7 +514,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: FolderApiServiceAbstraction,
     useClass: FolderApiService,
-    deps: [InternalFolderService, ApiServiceAbstraction, AccountServiceAbstraction],
+    deps: [InternalFolderService, ApiServiceAbstraction],
   }),
   safeProvider({
     provide: AccountApiServiceAbstraction,

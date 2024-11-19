@@ -116,11 +116,9 @@ export class GetCommand extends DownloadCommand {
     if (Utils.isGuid(id)) {
       const cipher = await this.cipherService.get(id);
       if (cipher != null) {
+        const activeUserId = await firstValueFrom(this.activeUserId$);
         decCipher = await cipher.decrypt(
-          await this.cipherService.getKeyForCipherKeyDecryption(
-            cipher,
-            await firstValueFrom(this.activeUserId$),
-          ),
+          await this.cipherService.getKeyForCipherKeyDecryption(cipher, activeUserId),
         );
       }
     } else if (id.trim() !== "") {
@@ -385,13 +383,14 @@ export class GetCommand extends DownloadCommand {
 
   private async getFolder(id: string) {
     let decFolder: FolderView = null;
+    const activeUserId = await firstValueFrom(this.activeUserId$);
     if (Utils.isGuid(id)) {
-      const folder = await this.folderService.getFromState(id, this.activeUserId$);
+      const folder = await this.folderService.getFromState(id, activeUserId);
       if (folder != null) {
         decFolder = await folder.decrypt();
       }
     } else if (id.trim() !== "") {
-      let folders = await this.folderService.getAllDecryptedFromState(this.activeUserId$);
+      let folders = await this.folderService.getAllDecryptedFromState(activeUserId);
       folders = CliUtils.searchFolders(folders, id);
       if (folders.length > 1) {
         return Response.multipleResults(folders.map((f) => f.id));
@@ -553,9 +552,9 @@ export class GetCommand extends DownloadCommand {
   private async getFingerprint(id: string) {
     let fingerprint: string[] = null;
     if (id === "me") {
-      const userId = await firstValueFrom(this.activeUserId$);
-      const publicKey = await firstValueFrom(this.keyService.userPublicKey$(userId));
-      fingerprint = await this.keyService.getFingerprint(userId, publicKey);
+      const activeUserId = await firstValueFrom(this.activeUserId$);
+      const publicKey = await firstValueFrom(this.keyService.userPublicKey$(activeUserId));
+      fingerprint = await this.keyService.getFingerprint(activeUserId, publicKey);
     } else if (Utils.isGuid(id)) {
       try {
         const response = await this.apiService.getUserPublicKey(id);

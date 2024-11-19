@@ -1,6 +1,4 @@
-import { firstValueFrom, map } from "rxjs";
-
-import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { UserId } from "@bitwarden/common/types/guid";
 
 import { ApiService } from "../../../abstractions/api.service";
 import { FolderApiServiceAbstraction } from "../../../vault/abstractions/folder/folder-api.service.abstraction";
@@ -11,15 +9,12 @@ import { FolderRequest } from "../../../vault/models/request/folder.request";
 import { FolderResponse } from "../../../vault/models/response/folder.response";
 
 export class FolderApiService implements FolderApiServiceAbstraction {
-  private activeUserId$ = this.accountService.activeAccount$.pipe(map((a) => a?.id));
-
   constructor(
     private folderService: InternalFolderService,
     private apiService: ApiService,
-    private accountService: AccountService,
   ) {}
 
-  async save(folder: Folder): Promise<any> {
+  async save(folder: Folder, userId: UserId): Promise<any> {
     const request = new FolderRequest(folder);
 
     let response: FolderResponse;
@@ -31,17 +26,17 @@ export class FolderApiService implements FolderApiServiceAbstraction {
     }
 
     const data = new FolderData(response);
-    await this.folderService.upsert(data, await firstValueFrom(this.activeUserId$));
+    await this.folderService.upsert(data, userId);
   }
 
-  async delete(id: string): Promise<any> {
+  async delete(id: string, userId: UserId): Promise<any> {
     await this.deleteFolder(id);
-    await this.folderService.delete(id, await firstValueFrom(this.activeUserId$));
+    await this.folderService.delete(id, userId);
   }
 
-  async deleteAll(): Promise<void> {
+  async deleteAll(userId: UserId): Promise<void> {
     await this.apiService.send("DELETE", "/folders/all", null, true, false);
-    await this.folderService.clear(await firstValueFrom(this.activeUserId$));
+    await this.folderService.clear(userId);
   }
 
   async get(id: string): Promise<FolderResponse> {

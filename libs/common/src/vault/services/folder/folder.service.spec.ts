@@ -1,5 +1,5 @@
 import { mock, MockProxy } from "jest-mock-extended";
-import { BehaviorSubject, firstValueFrom, of } from "rxjs";
+import { BehaviorSubject, firstValueFrom } from "rxjs";
 
 import { KeyService } from "../../../../../key-management/src/abstractions/key.service";
 import { makeEncString } from "../../../../spec";
@@ -29,7 +29,6 @@ describe("Folder Service", () => {
   let stateProvider: FakeStateProvider;
 
   const mockUserId = Utils.newGuid() as UserId;
-  const mockUserId$ = of(mockUserId);
   let accountService: FakeAccountService;
   let folderState: FakeSingleUserState<Record<string, FolderData>>;
 
@@ -73,7 +72,7 @@ describe("Folder Service", () => {
         mockUserId,
       );
 
-      const result = await firstValueFrom(folderService.folders$(mockUserId$));
+      const result = await firstValueFrom(folderService.folders$(mockUserId));
 
       expect(result.length).toBe(2);
       expect(result).toIncludeAllPartialMembers([
@@ -94,7 +93,7 @@ describe("Folder Service", () => {
         mockUserId,
       );
 
-      const result = await firstValueFrom(folderService.folderViews$(mockUserId$));
+      const result = await firstValueFrom(folderService.folderViews$(mockUserId));
 
       expect(result.length).toBe(3);
       expect(result).toIncludeAllPartialMembers([
@@ -125,7 +124,7 @@ describe("Folder Service", () => {
 
   describe("get", () => {
     it("exists", async () => {
-      const result = await folderService.get("1", mockUserId$);
+      const result = await folderService.get("1", mockUserId);
 
       expect(result).toEqual({
         id: "1",
@@ -135,7 +134,7 @@ describe("Folder Service", () => {
     });
 
     it("not exists", async () => {
-      const result = await folderService.get("2", mockUserId$);
+      const result = await folderService.get("2", mockUserId);
 
       expect(result).toBe(undefined);
     });
@@ -144,7 +143,7 @@ describe("Folder Service", () => {
   it("upsert", async () => {
     await folderService.upsert(folderData("2"), mockUserId);
 
-    expect(await firstValueFrom(folderService.folders$(mockUserId$))).toEqual([
+    expect(await firstValueFrom(folderService.folders$(mockUserId))).toEqual([
       {
         id: "1",
         name: makeEncString("ENC_STRING_" + 1),
@@ -161,7 +160,7 @@ describe("Folder Service", () => {
   it("replace", async () => {
     await folderService.replace({ "4": folderData("4") }, mockUserId);
 
-    expect(await firstValueFrom(folderService.folders$(mockUserId$))).toEqual([
+    expect(await firstValueFrom(folderService.folders$(mockUserId))).toEqual([
       {
         id: "4",
         name: makeEncString("ENC_STRING_" + 4),
@@ -173,7 +172,7 @@ describe("Folder Service", () => {
   it("delete", async () => {
     await folderService.delete("1", mockUserId);
 
-    expect((await firstValueFrom(folderService.folders$(mockUserId$))).length).toBe(0);
+    expect((await firstValueFrom(folderService.folders$(mockUserId))).length).toBe(0);
   });
 
   describe("clearDecryptedFolderState", () => {
@@ -186,16 +185,16 @@ describe("Folder Service", () => {
     it("userId provided", async () => {
       await folderService.clearDecryptedFolderState(mockUserId);
 
-      expect((await firstValueFrom(folderService.folders$(mockUserId$))).length).toBe(1);
-      expect((await firstValueFrom(folderService.folderViews$(mockUserId$))).length).toBe(0);
+      expect((await firstValueFrom(folderService.folders$(mockUserId))).length).toBe(1);
+      expect((await firstValueFrom(folderService.folderViews$(mockUserId))).length).toBe(0);
     });
   });
 
   it("clear", async () => {
     await folderService.clear(mockUserId);
 
-    expect((await firstValueFrom(folderService.folders$(mockUserId$))).length).toBe(0);
-    expect((await firstValueFrom(folderService.folderViews$(mockUserId$))).length).toBe(0);
+    expect((await firstValueFrom(folderService.folders$(mockUserId))).length).toBe(0);
+    expect((await firstValueFrom(folderService.folderViews$(mockUserId))).length).toBe(0);
   });
 
   describe("getRotatedData", () => {
