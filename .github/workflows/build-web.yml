@@ -32,6 +32,10 @@ on:
       custom_tag_extension:
         description: "Custom image tag extension"
         required: false
+      sdk_branch:
+        description: "Custom SDK branch"
+        required: false
+        type: string
 
 env:
   _AZ_REGISTRY: bitwardenprod.azurecr.io
@@ -44,6 +48,8 @@ jobs:
   setup:
     name: Setup
     runs-on: ubuntu-22.04
+    needs:
+      - check-run
     outputs:
       version: ${{ steps.version.outputs.value }}
       node_version: ${{ steps.retrieve-node-version.outputs.node_version }}
@@ -67,7 +73,8 @@ jobs:
   build-artifacts:
     name: Build artifacts
     runs-on: ubuntu-22.04
-    needs: setup
+    needs:
+      - setup
     env:
       _VERSION: ${{ needs.setup.outputs.version }}
       _NODE_VERSION: ${{ needs.setup.outputs.node_version }}
@@ -121,6 +128,26 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Download SDK Artifacts
+        if: ${{ inputs.sdk_branch != '' }}
+        uses: bitwarden/gh-actions/download-artifacts@main
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          workflow: build-wasm-internal.yml
+          workflow_conclusion: success
+          branch: ${{ inputs.sdk_branch }}
+          artifacts: sdk-internal
+          repo: bitwarden/sdk-internal
+          path: ../sdk-internal
+          if_no_artifact_found: fail
+
+      - name: Override SDK
+        if: ${{ inputs.sdk_branch != '' }}
+        working-directory: ./
+        run: |
+          ls -l ../
+          npm link ../sdk-internal
+
       - name: Add Git metadata to build version
         working-directory: apps/web
         if: matrix.git_metadata
@@ -151,7 +178,6 @@ jobs:
     needs:
       - setup
       - build-artifacts
-      - check-run
     strategy:
       fail-fast: false
       matrix:
@@ -214,7 +240,7 @@ jobs:
       - name: Generate Docker image tag
         id: tag
         run: |
-          if [[ $(grep "pull" <<< "${GITHUB_REF}") ]]; then
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request_target" ]]; then
             IMAGE_TAG=$(echo "${GITHUB_HEAD_REF}" | sed "s#/#-#g")
           else
             IMAGE_TAG=$(echo "${GITHUB_REF_NAME}" | sed "s#/#-#g")
@@ -261,10 +287,9 @@ jobs:
 
   crowdin-push:
     name: Crowdin Push
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request_target' && github.ref == 'refs/heads/main'
     needs:
       - build-artifacts
-      - check-run
     runs-on: ubuntu-22.04
     steps:
       - name: Check out repo
@@ -302,7 +327,6 @@ jobs:
     runs-on: ubuntu-22.04
     needs:
       - build-artifacts
-      - check-run
     steps:
       - name: Login to Azure - CI Subscription
         uses: Azure/login@e15b166166a8746d1a47596803bd8c1b595455cf # v1.6.0
@@ -346,7 +370,7 @@ jobs:
       - name: Check if any job failed
         if: |
           github.event_name != 'pull_request_target'
-          && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/rc' || github.ref == 'refs/heads/hotfix-rc')
+          && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/rc' || github.ref == 'refs/heads/hotfix-rc-web')
           && contains(needs.*.result, 'failure')
         run: exit 1
 

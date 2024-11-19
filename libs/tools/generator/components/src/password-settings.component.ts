@@ -112,20 +112,33 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
     const settings = await this.generatorService.settings(Generators.password, { singleUserId$ });
 
     // bind settings to the UI
-    settings
+    settings.withConstraints$
       .pipe(
-        map((settings) => {
+        map(({ state, constraints }) => {
           // interface is "avoid" while storage is "include"
-          const s: any = { ...settings };
-          s.avoidAmbiguous = s.ambiguous;
+          const s: any = { ...state };
+          s.avoidAmbiguous = !s.ambiguous;
           delete s.ambiguous;
-          return s;
+          return [s, constraints] as const;
         }),
         takeUntil(this.destroyed$),
       )
-      .subscribe((s) => {
+      .subscribe(([state, constraints]) => {
+        let boundariesHint = this.i18nService.t(
+          "spinboxBoundariesHint",
+          constraints.length.min?.toString(),
+          constraints.length.max?.toString(),
+        );
+        if (state.length <= (constraints.length.recommendation ?? 0)) {
+          boundariesHint += this.i18nService.t(
+            "passwordLengthRecommendationHint",
+            constraints.length.recommendation?.toString(),
+          );
+        }
+        this.lengthBoundariesHint.next(boundariesHint);
+
         // skips reactive event emissions to break a subscription cycle
-        this.settings.patchValue(s, { emitEvent: false });
+        this.settings.patchValue(state, { emitEvent: false });
       });
 
     // explain policy & disable policy-overridden fields
@@ -148,13 +161,6 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
         for (const [control, enabled] of toggles) {
           this.toggleEnabled(control, enabled);
         }
-
-        const boundariesHint = this.i18nService.t(
-          "generatorBoundariesHint",
-          constraints.length.min?.toString(),
-          constraints.length.max?.toString(),
-        );
-        this.lengthBoundariesHint.next(boundariesHint);
       });
 
     // cascade selections between checkboxes and spinboxes
@@ -171,10 +177,10 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
     this.minNumber.valueChanges
       .pipe(
         map((value) => [value, value > 0] as const),
-        tap(([value]) => (lastMinNumber = this.numbers.value ? value : lastMinNumber)),
+        tap(([value, checkNumbers]) => (lastMinNumber = checkNumbers ? value : lastMinNumber)),
         takeUntil(this.destroyed$),
       )
-      .subscribe(([, checked]) => this.numbers.setValue(checked, { emitEvent: false }));
+      .subscribe(([, checkNumbers]) => this.numbers.setValue(checkNumbers, { emitEvent: false }));
 
     let lastMinSpecial = 1;
     this.special.valueChanges
@@ -188,10 +194,10 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
     this.minSpecial.valueChanges
       .pipe(
         map((value) => [value, value > 0] as const),
-        tap(([value]) => (lastMinSpecial = this.special.value ? value : lastMinSpecial)),
+        tap(([value, checkSpecial]) => (lastMinSpecial = checkSpecial ? value : lastMinSpecial)),
         takeUntil(this.destroyed$),
       )
-      .subscribe(([, checked]) => this.special.setValue(checked, { emitEvent: false }));
+      .subscribe(([, checkSpecial]) => this.special.setValue(checkSpecial, { emitEvent: false }));
 
     // `onUpdated` depends on `settings` because the UserStateSubject is asynchronous;
     // subscribing directly to `this.settings.valueChanges` introduces a race condition.
@@ -205,7 +211,7 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
         map(([, settings]) => {
           // interface is "avoid" while storage is "include"
           const s: any = { ...settings };
-          s.ambiguous = s.avoidAmbiguous;
+          s.ambiguous = !s.avoidAmbiguous;
           delete s.avoidAmbiguous;
           return s;
         }),
