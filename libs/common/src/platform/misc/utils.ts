@@ -64,6 +64,11 @@ export class Utils {
     }
   }
 
+  /**
+   * Converts a base64 encoded string to a Uint8Array.
+   * @param str string or nullish to convert
+   * @returns a Uint8Array or null if str is nullish
+   */
   static fromB64ToArray(str: string): Uint8Array {
     if (str == null) {
       return null;
