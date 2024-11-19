@@ -1559,6 +1559,32 @@ export class ApiService implements ApiServiceAbstraction {
     }
   }
 
+  async initCommunicationTunnel(
+    url: string,
+    request: InitTunnelRequest,
+  ): Promise<InitTunnelResponse> {
+    const authHeader = await this.getActiveBearerToken();
+
+    const response = await this.fetch(
+      new Request(url + "/init-communication", {
+        cache: "no-store",
+        method: "POST",
+        headers: new Headers({
+          Accept: "application/json",
+          Authorization: "Bearer " + authHeader,
+        }),
+        body: JSON.stringify(request),
+      }),
+    );
+
+    if (response.status !== 200) {
+      const error = await this.handleError(response, false, true);
+      return Promise.reject(error);
+    }
+
+    return new InitTunnelResponse(await response.json());
+  }
+
   async getOrganizationExport(organizationId: string): Promise<OrganizationExportResponse> {
     const r = await this.send(
       "GET",

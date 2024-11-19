@@ -502,6 +502,14 @@ export abstract class ApiService {
     keyConnectorUrl: string,
     request: KeyConnectorUserKeyRequest,
   ) => Promise<void>;
+  /**
+   * Negotiate a tunneled communication protocol with the supplied url.
+   *
+   * @param url The URL of the server to create a tunnel with.
+   * @param request The request to send to the server.
+   * @returns The response from the server.
+   */
+  initCommunicationTunnel: (url: string, request: InitTunnelRequest) => Promise<InitTunnelResponse>;
   getKeyConnectorAlive: (keyConnectorUrl: string) => Promise<void>;
   getOrganizationExport: (organizationId: string) => Promise<OrganizationExportResponse>;
 }
