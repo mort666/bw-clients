@@ -27,6 +27,7 @@ impl NamedPipeServerStream {
                 PIPE_NAME
             );
             let mut listener = ServerOptions::new().create(PIPE_NAME).unwrap();
+
             loop {
                 println!("[SSH Agent Native Module] Waiting for connection");
                 select! {

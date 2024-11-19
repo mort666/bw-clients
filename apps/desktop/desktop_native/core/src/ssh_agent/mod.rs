@@ -13,7 +13,7 @@ mod platform_ssh_agent;
 pub mod generator;
 pub mod importer;
 mod peercred_unix_listener_stream;
-
+pub mod peerinfo;
 #[derive(Clone)]
 pub struct BitwardenDesktopAgent {
     keystore: ssh_agent::KeyStore,
@@ -31,8 +31,8 @@ impl BitwardenDesktopAgent {
     }
 }
 
-impl ssh_agent::Agent for BitwardenDesktopAgent {
-    async fn confirm(&self, ssh_key: Key) -> bool {
+impl ssh_agent::Agent<peerinfo::models::PeerInfo> for BitwardenDesktopAgent {
+    async fn confirm(&self, ssh_key: Key, _info: &peerinfo::models::PeerInfo) -> bool {
         let request_id = self.get_request_id().await;
 
         let mut rx_channel = self.get_ui_response_rx.lock().await.resubscribe();
@@ -46,6 +46,10 @@ impl ssh_agent::Agent for BitwardenDesktopAgent {
             }
         }
         false
+    }
+    
+    fn can_list(&self, _connection_info: &peerinfo::models::PeerInfo) -> impl std::future::Future<Output = bool> + Send {
+        async { true }
     }
 }
 

@@ -2,8 +2,10 @@ use futures::Stream;
 use std::io;
 use std::pin::Pin;
 use std::task::{Context, Poll};
-use sysinfo::{Pid, System};
 use tokio::net::{UnixListener, UnixStream};
+
+use super::peerinfo;
+use super::peerinfo::models::PeerInfo;
 
 #[derive(Debug)]
 pub struct PeercredUnixListenerStream {
@@ -14,31 +16,49 @@ impl PeercredUnixListenerStream {
     pub fn new(listener: UnixListener) -> Self {
         Self { inner: listener }
     }
-
-    pub fn into_inner(self) -> UnixListener {
-        self.inner
-    }
 }
 
 impl Stream for PeercredUnixListenerStream {
-    type Item = io::Result<UnixStream>;
+    type Item = io::Result<(UnixStream, PeerInfo)>;
 
     fn poll_next(
         self: Pin<&mut Self>,
         cx: &mut Context<'_>,
-    ) -> Poll<Option<io::Result<UnixStream>>> {
+    ) -> Poll<Option<io::Result<(UnixStream, PeerInfo)>>> {
         match self.inner.poll_accept(cx) {
             Poll::Ready(Ok((stream, _))) => {
-                println!("{:?}", stream.peer_cred());
-                println!("{:?}", stream.peer_cred().unwrap().pid());
-                let peer = stream.peer_cred().unwrap();
-                let s = System::new_all();
-                if let Some(process) = s.process(Pid::from_u32(peer.pid().unwrap() as u32)) {
-                    println!("name {:?}", process.name());
-                    println!("cmd {:?}", process.cmd());
+                let pid = match stream.peer_cred() {
+                    Ok(peer) => match peer.pid() {
+                        Some(pid) => pid,
+                        None => {
+                            return Poll::Ready(Some(Err(io::Error::new(
+                                io::ErrorKind::Other,
+                                "Failed to get peer PID",
+                            ))));
+                        }
+                    },
+                    Err(err) => {
+                        return Poll::Ready(Some(Err(io::Error::new(
+                            io::ErrorKind::Other,
+                            format!("Failed to get peer credentials: {}", err),
+                        ))));
+                    }
+                };
+                let peer_info = peerinfo::gather::get_peer_info(pid as u32);
+                match peer_info {
+                    Ok(info) => {
+                        println!("name {:?}", info.process_name());
+                        println!("uid {:?}", info.uid());
+                        Poll::Ready(Some(Ok((stream, info))))
+                    }
+                    Err(err) => {
+                        println!("Failed to get peer info: {}", err);
+                        Poll::Ready(Some(Err(io::Error::new(
+                            io::ErrorKind::Other,
+                            format!("Failed to get peer info: {}", err),
+                        ))))
+                    }
                 }
-
-                Poll::Ready(Some(Ok(stream)))
             }
             Poll::Ready(Err(err)) => Poll::Ready(Some(Err(err))),
             Poll::Pending => Poll::Pending,
