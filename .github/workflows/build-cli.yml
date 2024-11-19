@@ -28,7 +28,11 @@ on:
       - '.github/workflows/build-cli.yml'
       - 'bitwarden_license/bit-cli/**'
   workflow_dispatch:
-    inputs: {}
+    inputs:
+      sdk_branch:
+        description: "Custom SDK branch"
+        required: false
+        type: string
 
 defaults:
   run:
@@ -42,6 +46,8 @@ jobs:
   setup:
     name: Setup
     runs-on: ubuntu-22.04
+    needs:
+      - check-run
     outputs:
       package_version: ${{ steps.retrieve-package-version.outputs.package_version }}
       node_version: ${{ steps.retrieve-node-version.outputs.node_version }}
@@ -109,6 +115,26 @@ jobs:
       - name: Install
         run: npm ci
         working-directory: ./
+
+      - name: Download SDK Artifacts
+        if: ${{ inputs.sdk_branch != '' }}
+        uses: bitwarden/gh-actions/download-artifacts@main
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          workflow: build-wasm-internal.yml
+          workflow_conclusion: success
+          branch: ${{ inputs.sdk_branch }}
+          artifacts: sdk-internal
+          repo: bitwarden/sdk-internal
+          path: ../sdk-internal
+          if_no_artifact_found: fail
+
+      - name: Override SDK
+        if: ${{ inputs.sdk_branch != '' }}
+        working-directory: ./
+        run: |
+          ls -l ../
+          npm link ../sdk-internal
 
       - name: Build & Package Unix
         run: npm run dist:${{ matrix.license_type.build_prefix }}:${{ env.SHORT_RUNNER_OS }} --quiet
@@ -244,6 +270,26 @@ jobs:
       - name: Install
         run: npm ci
         working-directory: ./
+
+      - name: Download SDK Artifacts
+        if: ${{ inputs.sdk_branch != '' }}
+        uses: bitwarden/gh-actions/download-artifacts@main
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          workflow: build-wasm-internal.yml
+          workflow_conclusion: success
+          branch: ${{ inputs.sdk_branch }}
+          artifacts: sdk-internal
+          repo: bitwarden/sdk-internal
+          path: ../sdk-internal
+          if_no_artifact_found: fail
+
+      - name: Override SDK
+        if: ${{ inputs.sdk_branch != '' }}
+        working-directory: ./
+        run: |
+          ls -l ../
+          npm link ../sdk-internal
 
       - name: Build & Package Windows
         run: npm run dist:${{ matrix.license_type.build_prefix }}:win --quiet
@@ -398,13 +444,12 @@ jobs:
       - cli
       - cli-windows
       - snap
-      - check-run
     steps:
       - name: Check if any job failed
         working-directory: ${{ github.workspace }}
         if: |
           github.event_name != 'pull_request_target'
-          && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/rc' || github.ref == 'refs/heads/hotfix-rc')
+          && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/rc' || github.ref == 'refs/heads/hotfix-rc-cli')
           && contains(needs.*.result, 'failure')
         run: exit 1
 
