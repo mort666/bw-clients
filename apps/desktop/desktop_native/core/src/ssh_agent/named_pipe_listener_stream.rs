@@ -11,11 +11,14 @@ use tokio::{
 };
 use tokio_util::sync::CancellationToken;
 
+use super::peerinfo;
+use super::peerinfo::models::PeerInfo;
+
 const PIPE_NAME: &str = r"\\.\pipe\openssh-ssh-agent";
 
 #[pin_project::pin_project]
 pub struct NamedPipeServerStream {
-    rx: tokio::sync::mpsc::Receiver<NamedPipeServer>,
+    rx: tokio::sync::mpsc::Receiver<(NamedPipeServer, PeerInfo)>,
 }
 
 impl NamedPipeServerStream {
@@ -48,12 +51,12 @@ impl NamedPipeServerStream {
 }
 
 impl Stream for NamedPipeServerStream {
-    type Item = io::Result<NamedPipeServer>;
+    type Item = io::Result<(NamedPipeServer, PeerInfo)>;
 
     fn poll_next(
         self: Pin<&mut Self>,
         cx: &mut Context<'_>,
-    ) -> Poll<Option<io::Result<NamedPipeServer>>> {
+    ) -> Poll<Option<io::Result<(NamedPipeServer, PeerInfo)>>> {
         let this = self.project();
 
         this.rx.poll_recv(cx).map(|v| v.map(Ok))
