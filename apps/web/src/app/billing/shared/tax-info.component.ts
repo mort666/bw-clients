@@ -10,16 +10,10 @@ import { TaxServiceAbstraction } from "@bitwarden/common/billing/abstractions/ta
 import { CountryListItem } from "@bitwarden/common/billing/models/domain";
 import { ExpandedTaxInfoUpdateRequest } from "@bitwarden/common/billing/models/request/expanded-tax-info-update.request";
 import { TaxInfoUpdateRequest } from "@bitwarden/common/billing/models/request/tax-info-update.request";
-import { TaxInfoResponse } from "@bitwarden/common/billing/models/response/tax-info.response";
 import { TaxRateResponse } from "@bitwarden/common/billing/models/response/tax-rate.response";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 
 import { SharedModule } from "../../shared";
-
-type TaxInfoView = Omit<TaxInfoResponse, "taxIdType"> & {
-  includeTaxId: boolean;
-  [key: string]: unknown;
-};
 
 @Component({
   selector: "app-tax-info",
@@ -49,16 +43,6 @@ export class TaxInfoComponent implements OnInit, OnDestroy {
   loading = true;
   organizationId: string;
   providerId: string;
-  taxInfo: TaxInfoView = {
-    taxId: null,
-    line1: null,
-    line2: null,
-    city: null,
-    state: null,
-    postalCode: null,
-    country: "US",
-    includeTaxId: false,
-  };
   countryList: CountryListItem[] = this.taxService.getCountries();
   taxRates: TaxRateResponse[];
   private taxSupportedCountryCodes: string[] = this.taxService.getSupportedCountries();
@@ -132,7 +116,6 @@ export class TaxInfoComponent implements OnInit, OnDestroy {
                   !!taxInfo.city ||
                   !!taxInfo.state),
             );
-            this.setTaxInfoObject();
           }
         } catch (e) {
           this.logService.error(e);
@@ -144,7 +127,6 @@ export class TaxInfoComponent implements OnInit, OnDestroy {
             this.taxFormGroup.controls.postalCode.setValue(taxInfo.postalCode);
             this.taxFormGroup.controls.country.setValue(taxInfo.country || "US");
           }
-          this.setTaxInfoObject();
         } catch (e) {
           this.logService.error(e);
         }
@@ -169,7 +151,6 @@ export class TaxInfoComponent implements OnInit, OnDestroy {
           this.taxFormGroup.get("postalCode").clearValidators();
         }
         this.taxFormGroup.get("postalCode").updateValueAndValidity();
-        this.setTaxInfoObject();
         this.changeCountry();
         this.onTaxInformationChanged.emit();
       });
@@ -218,17 +199,6 @@ export class TaxInfoComponent implements OnInit, OnDestroy {
     }
   }
 
-  setTaxInfoObject() {
-    this.taxInfo.country = this.country;
-    this.taxInfo.postalCode = this.postalCode;
-    this.taxInfo.includeTaxId = this.includeTaxId;
-    this.taxInfo.taxId = this.taxId;
-    this.taxInfo.line1 = this.line1;
-    this.taxInfo.line2 = this.line2;
-    this.taxInfo.city = this.city;
-    this.taxInfo.state = this.state;
-  }
-
   get showTaxIdFields(): boolean {
     return this.includeTaxId && this.countrySupportsTax(this.country);
   }
@@ -261,7 +231,6 @@ export class TaxInfoComponent implements OnInit, OnDestroy {
     if (!this.countrySupportsTax(this.country)) {
       this.taxFormGroup.controls.includeTaxId.setValue(false);
       this.clearTaxInformationFields();
-      this.setTaxInfoObject();
     }
 
     this.onCountryChanged.emit();

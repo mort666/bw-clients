@@ -84,7 +84,7 @@ export class AdjustPaymentDialogComponent {
   };
 
   changeCountry() {
-    if (this.taxInfoComponent.taxInfo.country === "US") {
+    if (this.taxInfoComponent.country === "US") {
       this.paymentComponent.hideBank = !this.organizationId;
     } else {
       this.paymentComponent.hideBank = true;

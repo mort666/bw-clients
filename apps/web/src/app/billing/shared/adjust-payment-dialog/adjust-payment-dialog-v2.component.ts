@@ -51,7 +51,7 @@ export class AdjustPaymentDialogV2Component {
   }
 
   onCountryChanged = () => {
-    if (this.taxInfoComponent.taxInfo.country === "US") {
+    if (this.taxInfoComponent.country === "US") {
       this.paymentComponent.showBankAccount = !!this.organizationId;
     } else {
       this.paymentComponent.showBankAccount = false;
