@@ -78,6 +78,7 @@ export class CriticalApplicationsComponent implements OnInit {
       variant: "warning",
       message: "API not yet implemented",
     });
+    this.dataSource.data = this.dataSource.data.filter((app) => app.name !== hostname);
   };
 
   constructor(
