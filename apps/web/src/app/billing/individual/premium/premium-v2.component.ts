@@ -209,7 +209,6 @@ export class PremiumV2Component {
           variant: "error",
           message: this.i18nService.t(error.message),
         });
-        this.estimatedTax = 0;
       });
   }
 
