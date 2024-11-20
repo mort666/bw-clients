@@ -103,7 +103,7 @@ import {
 } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { TotpService as TotpServiceAbstraction } from "@bitwarden/common/vault/abstractions/totp.service";
 import { TotpService } from "@bitwarden/common/vault/services/totp.service";
-import { DialogService, ToastService } from "@bitwarden/components";
+import { CompactModeService, DialogService, ToastService } from "@bitwarden/components";
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
 import { BiometricStateService, BiometricsService, KeyService } from "@bitwarden/key-management";
 import { PasswordRepromptService } from "@bitwarden/vault";
@@ -113,6 +113,7 @@ import { ExtensionAnonLayoutWrapperDataService } from "../../auth/popup/extensio
 import { ExtensionLoginComponentService } from "../../auth/popup/login/extension-login-component.service";
 import { AutofillService as AutofillServiceAbstraction } from "../../autofill/services/abstractions/autofill.service";
 import AutofillService from "../../autofill/services/autofill.service";
+import { InlineMenuFieldQualificationService } from "../../autofill/services/inline-menu-field-qualification.service";
 import { ForegroundBrowserBiometricsService } from "../../key-management/biometrics/foreground-browser-biometrics";
 import { BrowserKeyService } from "../../key-management/browser-key.service";
 import { BrowserApi } from "../../platform/browser/browser-api";
@@ -122,6 +123,7 @@ import { ChromeMessageSender } from "../../platform/messaging/chrome-message.sen
 /* eslint-enable no-restricted-imports */
 import { OffscreenDocumentService } from "../../platform/offscreen-document/abstractions/offscreen-document";
 import { DefaultOffscreenDocumentService } from "../../platform/offscreen-document/offscreen-document.service";
+import { PopupCompactModeService } from "../../platform/popup/layout/popup-compact-mode.service";
 import { BrowserFileDownloadService } from "../../platform/popup/services/browser-file-download.service";
 import { PopupViewCacheService } from "../../platform/popup/view-cache/popup-view-cache.service";
 import { ScriptInjectorService } from "../../platform/services/abstractions/script-injector.service";
@@ -167,6 +169,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider(DebounceNavigationService),
   safeProvider(DialogService),
   safeProvider(PopupCloseWarningService),
+  safeProvider(InlineMenuFieldQualificationService),
   safeProvider({
     provide: DEFAULT_VAULT_TIMEOUT,
     useValue: VaultTimeoutStringType.OnRestart,
@@ -577,6 +580,11 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: ExtensionAnonLayoutWrapperDataService,
     useClass: ExtensionAnonLayoutWrapperDataService,
+    deps: [],
+  }),
+  safeProvider({
+    provide: CompactModeService,
+    useExisting: PopupCompactModeService,
     deps: [],
   }),
 ];
