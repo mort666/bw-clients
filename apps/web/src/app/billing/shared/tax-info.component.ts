@@ -16,7 +16,6 @@ import { LogService } from "@bitwarden/common/platform/abstractions/log.service"
 
 import { SharedModule } from "../../shared";
 
-
 type TaxInfoView = Omit<TaxInfoResponse, "taxIdType"> & {
   includeTaxId: boolean;
   [key: string]: unknown;
