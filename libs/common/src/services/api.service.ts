@@ -1589,7 +1589,7 @@ export class ApiService implements ApiServiceAbstraction {
     const authHeader = await this.getActiveBearerToken();
 
     const response = await this.fetch(
-      new Request(url + "/init-communication", {
+      new Request(url + "/init-tunnel", {
         cache: "no-store",
         method: "POST",
         headers: new Headers({
