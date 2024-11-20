@@ -69,7 +69,7 @@ export declare namespace sshagent {
     status: SshKeyImportStatus
     sshKey?: SshKey
   }
-  export function serve(callback: (err: Error | null, arg: string) => any): Promise<SshAgentState>
+  export function serve(callback: (err: Error | null, arg0: string, arg1: string) => any): Promise<SshAgentState>
   export function stop(agentState: SshAgentState): void
   export function setKeys(agentState: SshAgentState, newKeys: Array<PrivateKey>): void
   export function lock(agentState: SshAgentState): void

@@ -14,7 +14,7 @@ use super::BitwardenDesktopAgent;
 
 impl BitwardenDesktopAgent{
     pub async fn start_server(
-        auth_request_tx: tokio::sync::mpsc::Sender<(u32, String)>,
+        auth_request_tx: tokio::sync::mpsc::Sender<(u32, (String, String))>,
         auth_response_rx: Arc<Mutex<tokio::sync::broadcast::Receiver<(u32, bool)>>>,
     ) -> Result<Self, anyhow::Error> {
         use std::path::PathBuf;

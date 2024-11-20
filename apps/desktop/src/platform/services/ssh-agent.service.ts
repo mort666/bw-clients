@@ -115,6 +115,10 @@ export class SshAgentService implements OnDestroy {
           concatMap(([message, decryptedCiphers]) => {
             const cipherId = message.cipherId as string;
             const requestId = message.requestId as number;
+            let application = message.processName as string;
+            if (application == "") {
+              application = this.i18nService.t("unknownApplication");
+            }
 
             if (decryptedCiphers === undefined) {
               return of(false).pipe(
@@ -130,7 +134,7 @@ export class SshAgentService implements OnDestroy {
             const dialogRef = ApproveSshRequestComponent.open(
               this.dialogService,
               cipher.name,
-              this.i18nService.t("unknownApplication"),
+              application,
             );
 
             return dialogRef.closed.pipe(
