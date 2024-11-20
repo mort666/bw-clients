@@ -19,7 +19,7 @@
         <input bitInput type="text" formControlName="postalCode" autocomplete="postal-code" />
       </bit-form-field>
     </div>
-    <div class="tw-col-span-6">
+    <div class="tw-col-span-6" *ngIf="isTaxSupported">
       <bit-form-control>
         <input bitCheckbox type="checkbox" formControlName="includeTaxId" />
         <bit-label>{{ "includeVAT" | i18n }}</bit-label>

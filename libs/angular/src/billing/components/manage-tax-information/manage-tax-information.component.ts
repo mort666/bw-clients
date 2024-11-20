@@ -26,6 +26,8 @@ export class ManageTaxInformationComponent implements OnInit, OnDestroy {
     state: "",
   });
 
+  isTaxSupported: boolean;
+
   private destroy$ = new Subject<void>();
 
   protected readonly countries: CountryListItem[] = this.taxService.getCountries();
@@ -61,7 +63,7 @@ export class ManageTaxInformationComponent implements OnInit, OnDestroy {
       this.formGroup.patchValue({
         ...this.startWith,
         includeTaxId:
-          this.countrySupportsTax(this.startWith.country) &&
+          this.isTaxSupported &&
           (!!this.startWith.taxId ||
             !!this.startWith.line1 ||
             !!this.startWith.line2 ||
@@ -81,7 +83,13 @@ export class ManageTaxInformationComponent implements OnInit, OnDestroy {
         city: values.city,
         state: values.state,
       };
+      this.taxService
+        .isCountrySupported(this.taxInformation.country)
+        .then((isSupported) => (this.isTaxSupported = isSupported))
+        .catch(() => (this.isTaxSupported = false));
     });
+
+    this.isTaxSupported = await this.taxService.isCountrySupported(this.taxInformation.country);
   }
 
   ngOnDestroy() {
@@ -89,17 +97,11 @@ export class ManageTaxInformationComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  protected countrySupportsTax(countryCode: string) {
-    return this.taxService.getSupportedCountries().includes(countryCode);
-  }
-
   protected get includeTaxIdIsSelected() {
     return this.formGroup.value.includeTaxId;
   }
 
   protected get selectionSupportsAdditionalOptions() {
-    return (
-      this.formGroup.value.country !== "US" && this.countrySupportsTax(this.formGroup.value.country)
-    );
+    return this.formGroup.value.country !== "US" && this.isTaxSupported;
   }
 }

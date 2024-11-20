@@ -40,12 +40,13 @@ export class TaxInfoComponent implements OnInit, OnDestroy {
     state: new FormControl(null),
   });
 
+  protected isTaxSupported: boolean;
+
   loading = true;
   organizationId: string;
   providerId: string;
   countryList: CountryListItem[] = this.taxService.getCountries();
   taxRates: TaxRateResponse[];
-  private taxSupportedCountryCodes: string[] = this.taxService.getSupportedCountries();
 
   constructor(
     private apiService: ApiService,
@@ -109,12 +110,11 @@ export class TaxInfoComponent implements OnInit, OnDestroy {
             this.taxFormGroup.controls.postalCode.setValue(taxInfo.postalCode);
             this.taxFormGroup.controls.country.setValue(taxInfo.country || "US");
             this.taxFormGroup.controls.includeTaxId.setValue(
-              this.countrySupportsTax(this.country) &&
-                (!!taxInfo.taxId ||
-                  !!taxInfo.line1 ||
-                  !!taxInfo.line2 ||
-                  !!taxInfo.city ||
-                  !!taxInfo.state),
+              !!taxInfo.taxId ||
+                !!taxInfo.line1 ||
+                !!taxInfo.line2 ||
+                !!taxInfo.city ||
+                !!taxInfo.state,
             );
           }
         } catch (e) {
@@ -131,6 +131,10 @@ export class TaxInfoComponent implements OnInit, OnDestroy {
           this.logService.error(e);
         }
       }
+
+      this.isTaxSupported = await this.taxService.isCountrySupported(
+        this.taxFormGroup.controls.country.value,
+      );
 
       if (this.country === "US") {
         this.taxFormGroup.controls.postalCode.setValidators([Validators.required]);
@@ -200,7 +204,7 @@ export class TaxInfoComponent implements OnInit, OnDestroy {
   }
 
   get showTaxIdFields(): boolean {
-    return this.includeTaxId && this.countrySupportsTax(this.country);
+    return this.includeTaxId && this.isTaxSupported;
   }
 
   getTaxInfoRequest(): TaxInfoUpdateRequest {
@@ -227,13 +231,23 @@ export class TaxInfoComponent implements OnInit, OnDestroy {
       : this.apiService.putTaxInfo(request);
   }
 
-  changeCountry() {
-    if (!this.countrySupportsTax(this.country)) {
-      this.taxFormGroup.controls.includeTaxId.setValue(false);
-      this.clearTaxInformationFields();
-    }
+  changeCountry(): void {
+    this.taxService
+      .isCountrySupported(this.taxFormGroup.controls.country.value)
+      .then((isSupported) => {
+        this.isTaxSupported = isSupported;
+      })
+      .catch(() => {
+        this.isTaxSupported = false;
+      })
+      .finally(() => {
+        if (!this.isTaxSupported) {
+          this.taxFormGroup.controls.includeTaxId.setValue(false);
+          this.clearTaxInformationFields();
+        }
 
-    this.onCountryChanged.emit();
+        this.onCountryChanged.emit();
+      });
   }
 
   private clearTaxInformationFields(): void {
@@ -242,9 +256,5 @@ export class TaxInfoComponent implements OnInit, OnDestroy {
     this.taxFormGroup.controls.line2.setValue(null);
     this.taxFormGroup.controls.city.setValue(null);
     this.taxFormGroup.controls.state.setValue(null);
-  }
-
-  countrySupportsTax(countryCode: string) {
-    return this.taxSupportedCountryCodes.includes(countryCode);
   }
 }

@@ -5,10 +5,7 @@ import { PreviewInvoiceResponse } from "@bitwarden/common/billing/models/respons
 export abstract class TaxServiceAbstraction {
   getCountries: () => CountryListItem[];
 
-  /**
-   * Whether the country supports tax.
-   */
-  getSupportedCountries: () => string[];
+  isCountrySupported: (country: string) => Promise<boolean>;
 
   previewIndividualInvoice: (
     request: PreviewIndividualInvoiceRequest,
