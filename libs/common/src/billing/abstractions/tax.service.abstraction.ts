@@ -1,13 +1,16 @@
 import { CountryListItem } from "@bitwarden/common/billing/models/domain";
-import { TaxIdTypesResponse } from "@bitwarden/common/billing/models/response/tax-id-types.response";
+import { PreviewIndividualInvoiceRequest } from "@bitwarden/common/billing/models/request/preview-individual-invoice.request";
+import { PreviewInvoiceResponse } from "@bitwarden/common/billing/models/response/preview-invoice.response";
 
 export abstract class TaxServiceAbstraction {
-  getTaxIdTypes: () => Promise<TaxIdTypesResponse>;
-
   getCountries: () => CountryListItem[];
 
   /**
    * Whether the country supports tax.
    */
   getSupportedCountries: () => string[];
+
+  previewIndividualInvoice: (
+    request: PreviewIndividualInvoiceRequest,
+  ) => Promise<PreviewInvoiceResponse>;
 }

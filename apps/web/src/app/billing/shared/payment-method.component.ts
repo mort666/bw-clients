@@ -197,12 +197,22 @@ export class PaymentMethodComponent implements OnInit, OnDestroy {
   };
 
   submitTaxInfo = async () => {
-    await this.taxInfo.submitTaxInfo();
-    this.toastService.showToast({
-      variant: "success",
-      title: null,
-      message: this.i18nService.t("taxInfoUpdated"),
-    });
+    await this.taxInfo
+      .submitTaxInfo()
+      .then(() => {
+        this.toastService.showToast({
+          variant: "success",
+          title: null,
+          message: this.i18nService.t("taxInfoUpdated"),
+        });
+      })
+      .catch((error) => {
+        this.toastService.showToast({
+          variant: "error",
+          title: null,
+          message: this.i18nService.t(error.message),
+        });
+      });
   };
 
   determineOrgsWithUpcomingPaymentIssues() {

@@ -1,7 +1,8 @@
-import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from "@angular/core";
 import { FormControl, FormGroup, Validators } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
 import { Subject, takeUntil } from "rxjs";
+import { debounceTime } from "rxjs/operators";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
@@ -9,12 +10,12 @@ import { TaxServiceAbstraction } from "@bitwarden/common/billing/abstractions/ta
 import { CountryListItem } from "@bitwarden/common/billing/models/domain";
 import { ExpandedTaxInfoUpdateRequest } from "@bitwarden/common/billing/models/request/expanded-tax-info-update.request";
 import { TaxInfoUpdateRequest } from "@bitwarden/common/billing/models/request/tax-info-update.request";
-import { TaxIdTypeResponse } from "@bitwarden/common/billing/models/response/tax-id-types.response";
 import { TaxInfoResponse } from "@bitwarden/common/billing/models/response/tax-info.response";
 import { TaxRateResponse } from "@bitwarden/common/billing/models/response/tax-rate.response";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 
 import { SharedModule } from "../../shared";
+
 
 type TaxInfoView = Omit<TaxInfoResponse, "taxIdType"> & {
   includeTaxId: boolean;
@@ -28,17 +29,18 @@ type TaxInfoView = Omit<TaxInfoResponse, "taxIdType"> & {
   imports: [SharedModule],
 })
 // eslint-disable-next-line rxjs-angular/prefer-takeuntil
-export class TaxInfoComponent implements OnInit {
+export class TaxInfoComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+
   @Input() trialFlow = false;
   @Output() onCountryChanged = new EventEmitter();
-  private destroy$ = new Subject<void>();
+  @Output() onTaxInformationChanged: EventEmitter<void> = new EventEmitter<void>();
 
   taxFormGroup = new FormGroup({
     country: new FormControl(null, [Validators.required]),
     postalCode: new FormControl(null),
     includeTaxId: new FormControl(null),
     taxId: new FormControl(null),
-    taxIdType: new FormControl(null),
     line1: new FormControl(null),
     line2: new FormControl(null),
     city: new FormControl(null),
@@ -60,7 +62,7 @@ export class TaxInfoComponent implements OnInit {
   };
   countryList: CountryListItem[] = this.taxService.getCountries();
   taxRates: TaxRateResponse[];
-  taxIdTypes: TaxIdTypeResponse[];
+  private taxSupportedCountryCodes: string[] = this.taxService.getSupportedCountries();
 
   constructor(
     private apiService: ApiService,
@@ -71,67 +73,35 @@ export class TaxInfoComponent implements OnInit {
   ) {}
 
   get country(): string {
-    return this.taxFormGroup.get("country").value;
-  }
-
-  set country(country: string) {
-    this.taxFormGroup.get("country").setValue(country);
+    return this.taxFormGroup.controls.country.value;
   }
 
   get postalCode(): string {
-    return this.taxFormGroup.get("postalCode").value;
-  }
-
-  set postalCode(postalCode: string) {
-    this.taxFormGroup.get("postalCode").setValue(postalCode);
-  }
-
-  get includeTaxId(): boolean {
-    return this.taxFormGroup.get("includeTaxId").value;
-  }
-
-  set includeTaxId(includeTaxId: boolean) {
-    this.taxFormGroup.get("includeTaxId").setValue(includeTaxId);
+    return this.taxFormGroup.controls.postalCode.value;
   }
 
   get taxId(): string {
-    return this.taxFormGroup.get("taxId").value;
-  }
-
-  set taxId(taxId: string) {
-    this.taxFormGroup.get("taxId").setValue(taxId);
+    return this.taxFormGroup.controls.taxId.value;
   }
 
   get line1(): string {
-    return this.taxFormGroup.get("line1").value;
-  }
-
-  set line1(line1: string) {
-    this.taxFormGroup.get("line1").setValue(line1);
+    return this.taxFormGroup.controls.line1.value;
   }
 
   get line2(): string {
-    return this.taxFormGroup.get("line2").value;
-  }
-
-  set line2(line2: string) {
-    this.taxFormGroup.get("line2").setValue(line2);
+    return this.taxFormGroup.controls.line2.value;
   }
 
   get city(): string {
-    return this.taxFormGroup.get("city").value;
-  }
-
-  set city(city: string) {
-    this.taxFormGroup.get("city").setValue(city);
+    return this.taxFormGroup.controls.city.value;
   }
 
   get state(): string {
-    return this.taxFormGroup.get("state").value;
+    return this.taxFormGroup.controls.state.value;
   }
 
-  set state(state: string) {
-    this.taxFormGroup.get("state").setValue(state);
+  protected get includeTaxId(): boolean {
+    return this.taxFormGroup.controls.includeTaxId.value;
   }
 
   async ngOnInit() {
@@ -148,21 +118,21 @@ export class TaxInfoComponent implements OnInit {
         try {
           const taxInfo = await this.organizationApiService.getTaxInfo(this.organizationId);
           if (taxInfo) {
-            this.taxId = taxInfo.taxId;
-            this.state = taxInfo.state;
-            this.line1 = taxInfo.line1;
-            this.line2 = taxInfo.line2;
-            this.city = taxInfo.city;
-            this.state = taxInfo.state;
-            this.postalCode = taxInfo.postalCode;
-            this.country = taxInfo.country || "US";
-            this.includeTaxId =
+            this.taxFormGroup.controls.taxId.setValue(taxInfo.taxId);
+            this.taxFormGroup.controls.state.setValue(taxInfo.state);
+            this.taxFormGroup.controls.line1.setValue(taxInfo.line1);
+            this.taxFormGroup.controls.line2.setValue(taxInfo.line2);
+            this.taxFormGroup.controls.city.setValue(taxInfo.city);
+            this.taxFormGroup.controls.postalCode.setValue(taxInfo.postalCode);
+            this.taxFormGroup.controls.country.setValue(taxInfo.country || "US");
+            this.taxFormGroup.controls.includeTaxId.setValue(
               this.countrySupportsTax(this.country) &&
-              (!!taxInfo.taxId ||
-                !!taxInfo.line1 ||
-                !!taxInfo.line2 ||
-                !!taxInfo.city ||
-                !!taxInfo.state);
+                (!!taxInfo.taxId ||
+                  !!taxInfo.line1 ||
+                  !!taxInfo.line2 ||
+                  !!taxInfo.city ||
+                  !!taxInfo.state),
+            );
             this.setTaxInfoObject();
           }
         } catch (e) {
@@ -172,8 +142,8 @@ export class TaxInfoComponent implements OnInit {
         try {
           const taxInfo = await this.apiService.getTaxInfo();
           if (taxInfo) {
-            this.postalCode = taxInfo.postalCode;
-            this.country = taxInfo.country || "US";
+            this.taxFormGroup.controls.postalCode.setValue(taxInfo.postalCode);
+            this.taxFormGroup.controls.country.setValue(taxInfo.country || "US");
           }
           this.setTaxInfoObject();
         } catch (e) {
@@ -182,8 +152,8 @@ export class TaxInfoComponent implements OnInit {
       }
 
       if (this.country === "US") {
-        this.taxFormGroup.get("postalCode").setValidators([Validators.required]);
-        this.taxFormGroup.get("postalCode").updateValueAndValidity();
+        this.taxFormGroup.controls.postalCode.setValidators([Validators.required]);
+        this.taxFormGroup.controls.postalCode.updateValueAndValidity();
       }
 
       if (this.country !== "US") {
@@ -191,9 +161,8 @@ export class TaxInfoComponent implements OnInit {
       }
     });
 
-    this.taxFormGroup
-      .get("country")
-      .valueChanges.pipe(takeUntil(this.destroy$))
+    this.taxFormGroup.controls.country.valueChanges
+      .pipe(debounceTime(1000), takeUntil(this.destroy$))
       .subscribe((value) => {
         if (value === "US") {
           this.taxFormGroup.get("postalCode").setValidators([Validators.required]);
@@ -203,6 +172,25 @@ export class TaxInfoComponent implements OnInit {
         this.taxFormGroup.get("postalCode").updateValueAndValidity();
         this.setTaxInfoObject();
         this.changeCountry();
+        this.onTaxInformationChanged.emit();
+      });
+
+    this.taxFormGroup.controls.postalCode.valueChanges
+      .pipe(debounceTime(1000), takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.onTaxInformationChanged.emit();
+      });
+
+    this.taxFormGroup.controls.taxId.valueChanges
+      .pipe(debounceTime(1000), takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.onTaxInformationChanged.emit();
+      });
+
+    this.taxFormGroup.controls.includeTaxId.valueChanges
+      .pipe(debounceTime(1000), takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.clearTaxInformationFields();
       });
 
     try {
@@ -210,15 +198,16 @@ export class TaxInfoComponent implements OnInit {
       if (taxRates) {
         this.taxRates = taxRates.data;
       }
-      const taxIdTypes = await this.taxService.getTaxIdTypes();
-      if (taxIdTypes) {
-        this.taxIdTypes = taxIdTypes.taxIdTypes;
-      }
     } catch (e) {
       this.logService.error(e);
     } finally {
       this.loading = false;
     }
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   get taxRate() {
@@ -241,48 +230,20 @@ export class TaxInfoComponent implements OnInit {
     this.taxInfo.state = this.state;
   }
 
-  get showTaxIdCheckbox() {
-    return (
-      (this.organizationId || this.providerId) &&
-      this.country !== "US" &&
-      this.countrySupportsTax(this.taxInfo.country)
-    );
-  }
-
-  get showTaxIdFields() {
-    return (
-      (this.organizationId || this.providerId) &&
-      this.includeTaxId &&
-      this.countrySupportsTax(this.country)
-    );
+  get showTaxIdFields(): boolean {
+    return this.includeTaxId && this.countrySupportsTax(this.country);
   }
 
   getTaxInfoRequest(): TaxInfoUpdateRequest {
-    if (this.organizationId || this.providerId) {
-      const request = new ExpandedTaxInfoUpdateRequest();
-      request.country = this.country;
-      request.postalCode = this.postalCode;
-
-      if (this.includeTaxId) {
-        request.taxId = this.taxId;
-        request.line1 = this.line1;
-        request.line2 = this.line2;
-        request.city = this.city;
-        request.state = this.state;
-      } else {
-        request.taxId = null;
-        request.line1 = null;
-        request.line2 = null;
-        request.city = null;
-        request.state = null;
-      }
-      return request;
-    } else {
-      const request = new TaxInfoUpdateRequest();
-      request.postalCode = this.postalCode;
-      request.country = this.country;
-      return request;
-    }
+    const request = new ExpandedTaxInfoUpdateRequest();
+    request.country = this.country;
+    request.postalCode = this.postalCode;
+    request.taxId = this.taxId;
+    request.line1 = this.line1;
+    request.line2 = this.line2;
+    request.city = this.city;
+    request.state = this.state;
+    return request;
   }
 
   submitTaxInfo(): Promise<any> {
@@ -299,30 +260,23 @@ export class TaxInfoComponent implements OnInit {
 
   changeCountry() {
     if (!this.countrySupportsTax(this.country)) {
-      this.includeTaxId = false;
-      this.taxId = null;
-      this.line1 = null;
-      this.line2 = null;
-      this.city = null;
-      this.state = null;
+      this.taxFormGroup.controls.includeTaxId.setValue(false);
+      this.clearTaxInformationFields();
       this.setTaxInfoObject();
     }
-    // reorder tax id types based on country
-    this.taxIdTypes = this.taxIdTypes.sort((a, b) => {
-      if (a.country === this.country && b.country !== this.country) {
-        return -1;
-      } else if (a.country !== this.country && b.country === this.country) {
-        return 1;
-      } else {
-        return a.description.localeCompare(b.description);
-      }
-    });
+
     this.onCountryChanged.emit();
+  }
+
+  private clearTaxInformationFields(): void {
+    this.taxFormGroup.controls.taxId.setValue(null);
+    this.taxFormGroup.controls.line1.setValue(null);
+    this.taxFormGroup.controls.line2.setValue(null);
+    this.taxFormGroup.controls.city.setValue(null);
+    this.taxFormGroup.controls.state.setValue(null);
   }
 
   countrySupportsTax(countryCode: string) {
     return this.taxSupportedCountryCodes.includes(countryCode);
   }
-
-  private taxSupportedCountryCodes: string[] = this.taxService.getSupportedCountries();
 }

@@ -1,15 +1,11 @@
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { TaxServiceAbstraction } from "@bitwarden/common/billing/abstractions/tax.service.abstraction";
 import { CountryListItem } from "@bitwarden/common/billing/models/domain";
-import { TaxIdTypesResponse } from "@bitwarden/common/billing/models/response/tax-id-types.response";
+import { PreviewIndividualInvoiceRequest } from "@bitwarden/common/billing/models/request/preview-individual-invoice.request";
+import { PreviewInvoiceResponse } from "@bitwarden/common/billing/models/response/preview-invoice.response";
 
 export class TaxService implements TaxServiceAbstraction {
   constructor(private apiService: ApiService) {}
-
-  async getTaxIdTypes(): Promise<TaxIdTypesResponse> {
-    const response = await this.apiService.send("GET", "/tax/id-types", null, true, true);
-    return new TaxIdTypesResponse(response);
-  }
 
   getCountries(): CountryListItem[] {
     return [
@@ -343,5 +339,18 @@ export class TaxService implements TaxServiceAbstraction {
       "VE",
       "VN",
     ];
+  }
+
+  async previewIndividualInvoice(
+    request: PreviewIndividualInvoiceRequest,
+  ): Promise<PreviewInvoiceResponse> {
+    const response = await this.apiService.send(
+      "POST",
+      "/accounts/billing/preview-invoice",
+      request,
+      true,
+      true,
+    );
+    return new PreviewInvoiceResponse(response);
   }
 }
