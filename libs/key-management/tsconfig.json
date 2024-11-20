@@ -10,5 +10,8 @@
         "excludePattern": ["**/*.spec.ts"]
       }
     ]
+  },
+  "paths": {
+    "@bitwarden/common/*": ["../common/src/*"]
   }
 }

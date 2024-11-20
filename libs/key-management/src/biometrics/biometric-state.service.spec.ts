@@ -1,13 +1,15 @@
 import { firstValueFrom } from "rxjs";
 
 import { EncryptedString } from "@bitwarden/common/platform/models/domain/enc-string";
-import { makeEncString, trackEmissions } from "@bitwarden/common/spec";
 import {
+  makeEncString,
+  trackEmissions,
   FakeAccountService,
   mockAccountServiceWith,
-} from "@bitwarden/common/spec/fake-account-service";
-import { FakeGlobalState, FakeSingleUserState } from "@bitwarden/common/spec/fake-state";
-import { FakeStateProvider } from "@bitwarden/common/spec/fake-state-provider";
+  FakeStateProvider,
+  FakeGlobalState,
+  FakeSingleUserState,
+} from "@bitwarden/common/spec";
 import { UserId } from "@bitwarden/common/types/guid";
 
 import { BiometricStateService, DefaultBiometricStateService } from "./biometric-state.service";
