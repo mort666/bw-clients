@@ -59,7 +59,7 @@ export class CommunicationTunnel {
         this.supportedTunnelVersions.includes(TunnelVersion.CLEAR_TEXT)
       ) {
         response = new InitTunnelResponse({
-          CommunicationVersion: TunnelVersion.CLEAR_TEXT,
+          TunnelVersion: TunnelVersion.CLEAR_TEXT,
         });
       } else {
         throw e;
@@ -116,7 +116,7 @@ export class CommunicationTunnel {
   }
 
   private async initWithVersion(response: InitTunnelResponse): Promise<TunnelVersion> {
-    this._tunnelVersion = response.communicationVersion;
+    this._tunnelVersion = response.tunnelVersion;
 
     if (!this.supportedTunnelVersions.includes(this.tunnelVersion)) {
       throw new Error("Unsupported communication version");

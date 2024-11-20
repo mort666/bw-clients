@@ -52,7 +52,11 @@ import { SsoTokenRequest } from "../auth/models/request/identity-token/sso-token
 import { TokenTwoFactorRequest } from "../auth/models/request/identity-token/token-two-factor.request";
 import { UserApiTokenRequest } from "../auth/models/request/identity-token/user-api-token.request";
 import { WebAuthnLoginTokenRequest } from "../auth/models/request/identity-token/webauthn-login-token.request";
-import { KeyConnectorUserKeyRequest } from "../auth/models/request/key-connector-user-key.request";
+import { InitTunnelRequest } from "../auth/models/request/init-tunnel.request";
+import {
+  KeyConnectorGetUserKeyRequest,
+  KeyConnectorSetUserKeyRequest,
+} from "../auth/models/request/key-connector-user-key.request";
 import { PasswordHintRequest } from "../auth/models/request/password-hint.request";
 import { PasswordRequest } from "../auth/models/request/password.request";
 import { PasswordlessAuthRequest } from "../auth/models/request/passwordless-auth.request";
@@ -77,7 +81,8 @@ import { DeviceVerificationResponse } from "../auth/models/response/device-verif
 import { IdentityCaptchaResponse } from "../auth/models/response/identity-captcha.response";
 import { IdentityTokenResponse } from "../auth/models/response/identity-token.response";
 import { IdentityTwoFactorResponse } from "../auth/models/response/identity-two-factor.response";
-import { KeyConnectorUserKeyResponse } from "../auth/models/response/key-connector-user-key.response";
+import { InitTunnelResponse } from "../auth/models/response/init-tunnel.response";
+import { KeyConnectorGetUserKeyResponse } from "../auth/models/response/key-connector-user-key.response";
 import { PreloginResponse } from "../auth/models/response/prelogin.response";
 import { RegisterResponse } from "../auth/models/response/register.response";
 import { SsoPreValidateResponse } from "../auth/models/response/sso-pre-validate.response";
@@ -1494,31 +1499,49 @@ export class ApiService implements ApiServiceAbstraction {
 
   async getMasterKeyFromKeyConnector(
     keyConnectorUrl: string,
-  ): Promise<KeyConnectorUserKeyResponse> {
+    request: KeyConnectorGetUserKeyRequest,
+  ): Promise<KeyConnectorGetUserKeyResponse> {
     const authHeader = await this.getActiveBearerToken();
 
-    const response = await this.fetch(
-      new Request(keyConnectorUrl + "/user-keys", {
-        cache: "no-store",
-        method: "GET",
-        headers: new Headers({
-          Accept: "application/json",
-          Authorization: "Bearer " + authHeader,
+    // If shared key is null, we use the old GET endpoint to support older key connectors
+    let response: Response;
+    if (request.sharedKey == null) {
+      response = await this.fetch(
+        new Request(keyConnectorUrl + "/user-keys", {
+          cache: "no-store",
+          method: "GET",
+          headers: new Headers({
+            Accept: "application/json",
+            Authorization: "Bearer " + authHeader,
+          }),
         }),
-      }),
-    );
+      );
+    } else {
+      response = await this.fetch(
+        new Request(keyConnectorUrl + "/user-keys", {
+          cache: "no-store",
+          method: "POST",
+          headers: new Headers({
+            Accept: "application/json",
+            Authorization: "Bearer " + authHeader,
+            "Content-Type": "application/json; charset=utf-8",
+          }),
+          body: JSON.stringify(request),
+        }),
+      );
+    }
 
     if (response.status !== 200) {
       const error = await this.handleError(response, false, true);
       return Promise.reject(error);
     }
 
-    return new KeyConnectorUserKeyResponse(await response.json());
+    return new KeyConnectorGetUserKeyResponse(await response.json());
   }
 
   async postUserKeyToKeyConnector(
     keyConnectorUrl: string,
-    request: KeyConnectorUserKeyRequest,
+    request: KeyConnectorSetUserKeyRequest,
   ): Promise<void> {
     const authHeader = await this.getActiveBearerToken();
 

@@ -26,7 +26,7 @@ describe("communicationTunnel", () => {
     apiService.initCommunicationTunnel.mockResolvedValue(
       new InitTunnelResponse({
         EncapsulationKey: encapsulationKey,
-        CommunicationVersion: TunnelVersion.RSA_ENCAPSULATED_AES_256_GCM,
+        TunnelVersion: TunnelVersion.RSA_ENCAPSULATED_AES_256_GCM,
       }),
     );
     keyGenerationService.createKey.mockResolvedValue(sharedKey);
@@ -82,7 +82,7 @@ describe("communicationTunnel", () => {
         apiService.initCommunicationTunnel.mockResolvedValue(
           new InitTunnelResponse({
             EncapsulationKey: [1, 2, 3],
-            CommunicationVersion: TunnelVersion[tunnelVersion],
+            TunnelVersion: TunnelVersion[tunnelVersion],
           }),
         );
 
@@ -100,7 +100,7 @@ describe("communicationTunnel", () => {
       apiService.initCommunicationTunnel.mockResolvedValue(
         new InitTunnelResponse({
           EncapsulationKey: [1, 2, 3],
-          CommunicationVersion: TunnelVersion.CLEAR_TEXT,
+          TunnelVersion: TunnelVersion.CLEAR_TEXT,
         }),
       );
 
@@ -135,7 +135,7 @@ describe("communicationTunnel", () => {
         ]);
         apiService.initCommunicationTunnel.mockResolvedValue(
           new InitTunnelResponse({
-            CommunicationVersion: TunnelVersion.CLEAR_TEXT,
+            TunnelVersion: TunnelVersion.CLEAR_TEXT,
           }),
         );
         await sut.negotiateTunnel(url);
@@ -163,7 +163,7 @@ describe("communicationTunnel", () => {
           apiService.initCommunicationTunnel.mockResolvedValue(
             new InitTunnelResponse({
               EncapsulationKey: encapsulationKey,
-              CommunicationVersion: TunnelVersion.RSA_ENCAPSULATED_AES_256_GCM,
+              TunnelVersion: TunnelVersion.RSA_ENCAPSULATED_AES_256_GCM,
             }),
           );
           await sut.negotiateTunnel(url);

@@ -10,6 +10,8 @@ import { Organization } from "../../admin-console/models/domain/organization";
 import { KeysRequest } from "../../models/request/keys.request";
 import { KeyGenerationService } from "../../platform/abstractions/key-generation.service";
 import { LogService } from "../../platform/abstractions/log.service";
+import { TunnelVersion } from "../../platform/communication-tunnel/communication-tunnel";
+import { CommunicationTunnelService } from "../../platform/communication-tunnel/communication-tunnel.service";
 import { KdfType } from "../../platform/enums/kdf-type.enum";
 import { Utils } from "../../platform/misc/utils";
 import { SymmetricCryptoKey } from "../../platform/models/domain/symmetric-crypto-key";
@@ -26,9 +28,17 @@ import { KeyConnectorService as KeyConnectorServiceAbstraction } from "../abstra
 import { InternalMasterPasswordServiceAbstraction } from "../abstractions/master-password.service.abstraction";
 import { TokenService } from "../abstractions/token.service";
 import { Argon2KdfConfig, KdfConfig, PBKDF2KdfConfig } from "../models/domain/kdf-config";
-import { KeyConnectorUserKeyRequest } from "../models/request/key-connector-user-key.request";
+import {
+  KeyConnectorGetUserKeyRequest,
+  KeyConnectorSetUserKeyRequest,
+} from "../models/request/key-connector-user-key.request";
 import { SetKeyConnectorKeyRequest } from "../models/request/set-key-connector-key.request";
 import { IdentityTokenResponse } from "../models/response/identity-token.response";
+
+const SUPPORTED_COMMUNICATION_VERSIONS = [
+  TunnelVersion.CLEAR_TEXT,
+  TunnelVersion.RSA_ENCAPSULATED_AES_256_GCM,
+];
 
 export const USES_KEY_CONNECTOR = new UserKeyDefinition<boolean | null>(
   KEY_CONNECTOR_DISK,
@@ -60,6 +70,7 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
     private logService: LogService,
     private organizationService: OrganizationService,
     private keyGenerationService: KeyGenerationService,
+    private communicationTunnelService: CommunicationTunnelService,
     private logoutCallback: (logoutReason: LogoutReason, userId?: string) => Promise<void>,
     private stateProvider: StateProvider,
   ) {
@@ -89,12 +100,16 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
     userId ??= (await firstValueFrom(this.accountService.activeAccount$))?.id;
     const organization = await this.getManagingOrganization(userId);
     const masterKey = await firstValueFrom(this.masterPasswordService.masterKey$(userId));
-    const keyConnectorRequest = new KeyConnectorUserKeyRequest(masterKey.encKeyB64);
 
     try {
+      const tunnel = await this.communicationTunnelService.createTunnel(
+        organization.keyConnectorUrl,
+        SUPPORTED_COMMUNICATION_VERSIONS,
+      );
+
       await this.apiService.postUserKeyToKeyConnector(
         organization.keyConnectorUrl,
-        keyConnectorRequest,
+        await KeyConnectorSetUserKeyRequest.BuildForTunnel(tunnel, masterKey),
       );
     } catch (e) {
       this.handleKeyConnectorError(e);
@@ -106,9 +121,21 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
   // TODO: UserKey should be renamed to MasterKey and typed accordingly
   async setMasterKeyFromUrl(url: string, userId: UserId) {
     try {
-      const masterKeyResponse = await this.apiService.getMasterKeyFromKeyConnector(url);
-      const keyArr = Utils.fromB64ToArray(masterKeyResponse.key);
-      const masterKey = new SymmetricCryptoKey(keyArr) as MasterKey;
+      const tunnel = await this.communicationTunnelService.createTunnel(
+        url,
+        SUPPORTED_COMMUNICATION_VERSIONS,
+      );
+
+      const response = await this.apiService.getMasterKeyFromKeyConnector(
+        url,
+        KeyConnectorGetUserKeyRequest.BuildForTunnel(tunnel),
+      );
+
+      // Decrypt the response with the shared key
+      const masterKeyArray =
+        Utils.fromB64ToArray(response.key) ?? (await tunnel.unprotect(response.encryptedKey));
+
+      const masterKey = new SymmetricCryptoKey(masterKeyArray) as MasterKey;
       await this.masterPasswordService.setMasterKey(masterKey, userId);
     } catch (e) {
       this.handleKeyConnectorError(e);
@@ -140,6 +167,9 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
       keyConnectorUrl: legacyKeyConnectorUrl,
       userDecryptionOptions,
     } = tokenResponse;
+    const keyConnectorUrl =
+      legacyKeyConnectorUrl ?? userDecryptionOptions?.keyConnectorOption?.keyConnectorUrl;
+
     const password = await this.keyGenerationService.createKey(512);
     const kdfConfig: KdfConfig =
       kdf === KdfType.PBKDF2_SHA256
@@ -151,7 +181,19 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
       await this.tokenService.getEmail(),
       kdfConfig,
     );
-    const keyConnectorRequest = new KeyConnectorUserKeyRequest(masterKey.encKeyB64);
+
+    let keyConnectorRequest: KeyConnectorSetUserKeyRequest;
+    try {
+      const tunnel = await this.communicationTunnelService.createTunnel(
+        keyConnectorUrl,
+        SUPPORTED_COMMUNICATION_VERSIONS,
+      );
+
+      keyConnectorRequest = await KeyConnectorSetUserKeyRequest.BuildForTunnel(tunnel, masterKey);
+    } catch (e) {
+      this.handleKeyConnectorError(e);
+    }
+
     await this.masterPasswordService.setMasterKey(masterKey, userId);
 
     const userKey = await this.keyService.makeUserKey(masterKey);
@@ -161,8 +203,6 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
     const [pubKey, privKey] = await this.keyService.makeKeyPair(userKey[0]);
 
     try {
-      const keyConnectorUrl =
-        legacyKeyConnectorUrl ?? userDecryptionOptions?.keyConnectorOption?.keyConnectorUrl;
       await this.apiService.postUserKeyToKeyConnector(keyConnectorUrl, keyConnectorRequest);
     } catch (e) {
       this.handleKeyConnectorError(e);
