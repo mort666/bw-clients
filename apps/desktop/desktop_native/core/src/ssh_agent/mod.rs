@@ -10,9 +10,12 @@ use bitwarden_russh::ssh_agent::{self, Key};
 #[cfg_attr(target_os = "linux", path = "unix.rs")]
 mod platform_ssh_agent;
 
+#[cfg(target_os="linux")]
+#[cfg(target_os="macos")]
+mod peercred_unix_listener_stream;
+
 pub mod generator;
 pub mod importer;
-mod peercred_unix_listener_stream;
 pub mod peerinfo;
 #[derive(Clone)]
 pub struct BitwardenDesktopAgent {
@@ -32,8 +35,9 @@ impl BitwardenDesktopAgent {
 }
 
 impl ssh_agent::Agent<peerinfo::models::PeerInfo> for BitwardenDesktopAgent {
-    async fn confirm(&self, ssh_key: Key, _info: &peerinfo::models::PeerInfo) -> bool {
+    async fn confirm(&self, ssh_key: Key, info: &peerinfo::models::PeerInfo) -> bool {
         let request_id = self.get_request_id().await;
+        println!("[SSH Agent] Confirming request from application: {}", info.process_name());
 
         let mut rx_channel = self.get_ui_response_rx.lock().await.resubscribe();
         self.show_ui_request_tx

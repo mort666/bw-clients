@@ -3,16 +3,16 @@ use std::{
     pin::Pin,
     task::{Context, Poll},
 };
-
+use std::os::windows::prelude::AsRawHandle as _;
 use futures::Stream;
 use tokio::{
     net::windows::named_pipe::{NamedPipeServer, ServerOptions},
     select,
 };
 use tokio_util::sync::CancellationToken;
+use windows::Win32::{Foundation::HANDLE, System::Pipes::GetNamedPipeClientProcessId};
 
-use super::peerinfo;
-use super::peerinfo::models::PeerInfo;
+use crate::ssh_agent::peerinfo::{self, models::PeerInfo};
 
 const PIPE_NAME: &str = r"\\.\pipe\openssh-ssh-agent";
 
@@ -40,7 +40,29 @@ impl NamedPipeServerStream {
                     }
                     _ = listener.connect() => {
                         println!("[SSH Agent Native Module] Incoming connection");
-                        tx.send(listener).await.unwrap();
+                        
+                        let handle = HANDLE(listener.as_raw_handle() as isize);
+                        let mut pid = 0;
+                        unsafe {
+                            match GetNamedPipeClientProcessId(handle, &mut pid) {
+                                Err(e) => {
+                                    println!("Error getting named pipe client process id {}", e);
+                                    continue
+                                },
+                                Ok(_) => {}
+                            }
+                        };
+
+                        let peer_info = peerinfo::gather::get_peer_info(pid as u32);
+                        let peer_info = match peer_info {
+                            Err(err) => {
+                                println!("Failed getting process info for pid {} {}", pid, err);
+                                continue
+                            },
+                            Ok(info) => info,
+                        };
+
+                        tx.send((listener, peer_info)).await.unwrap();
                         listener = ServerOptions::new().create(PIPE_NAME).unwrap();
                     }
                 }
