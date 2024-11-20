@@ -166,7 +166,7 @@ import {
 import { flagEnabled } from "../platform/flags";
 import { CliPlatformUtilsService } from "../platform/services/cli-platform-utils.service";
 import { ConsoleLogService } from "../platform/services/console-log.service";
-import { I18nService } from "../platform/services/i18n.service";
+import { CliI18nService } from "../platform/services/i18n.service";
 import { LowdbStorageService } from "../platform/services/lowdb-storage.service";
 import { NodeApiService } from "../platform/services/node-api.service";
 import { NodeEnvSecureStorageService } from "../platform/services/node-env-secure-storage.service";
@@ -189,7 +189,7 @@ export class ServiceContainer {
   secureStorageService: NodeEnvSecureStorageService;
   memoryStorageService: MemoryStorageService;
   memoryStorageForStateProviders: MemoryStorageServiceForStateProviders;
-  i18nService: I18nService;
+  i18nService: CliI18nService;
   platformUtilsService: CliPlatformUtilsService;
   keyService: KeyService;
   tokenService: TokenService;
@@ -331,7 +331,7 @@ export class ServiceContainer {
       storageServiceProvider,
     );
 
-    this.i18nService = new I18nService("en", "./locales", this.globalStateProvider);
+    this.i18nService = new CliI18nService("en", "./locales", this.globalStateProvider);
 
     this.singleUserStateProvider = new DefaultSingleUserStateProvider(
       storageServiceProvider,

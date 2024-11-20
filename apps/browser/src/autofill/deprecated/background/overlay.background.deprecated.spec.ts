@@ -19,7 +19,7 @@ import {
 import { ThemeType } from "@bitwarden/common/platform/enums";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { CloudEnvironment } from "@bitwarden/common/platform/services/default-environment.service";
-import { I18nService } from "@bitwarden/common/platform/services/i18n.service";
+import { BaseI18nService } from "@bitwarden/common/platform/services/i18n.service";
 import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
 import {
   FakeStateProvider,
@@ -73,7 +73,7 @@ describe("OverlayBackground", () => {
     }),
   );
   const autofillSettingsService = mock<AutofillSettingsService>();
-  const i18nService = mock<I18nService>();
+  const i18nService = mock<BaseI18nService<["browser"]>>();
   const platformUtilsService = mock<BrowserPlatformUtilsService>();
   const themeStateService = mock<ThemeStateService>();
   const initOverlayElementPorts = async (options = { initList: true, initButton: true }) => {
@@ -429,7 +429,9 @@ describe("OverlayBackground", () => {
     it("will query the overlay page translations if they have not been queried", () => {
       overlayBackground["overlayPageTranslations"] = undefined;
       jest.spyOn(overlayBackground as any, "getTranslations");
-      jest.spyOn(overlayBackground["i18nService"], "translate").mockImplementation((key) => key);
+      jest
+        .spyOn(overlayBackground["i18nService"], "translate")
+        .mockImplementation((key: any) => key);
       jest.spyOn(BrowserApi, "getUILanguage").mockReturnValue("en");
 
       const translations = overlayBackground["getTranslations"]();

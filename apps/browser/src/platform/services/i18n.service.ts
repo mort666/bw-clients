@@ -1,7 +1,8 @@
-import { I18nService as BaseI18nService } from "@bitwarden/common/platform/services/i18n.service";
+import { I18nKeys } from "@bitwarden/common/platform/abstractions/translation.service";
+import { BaseI18nService } from "@bitwarden/common/platform/services/i18n.service";
 import { GlobalStateProvider } from "@bitwarden/common/platform/state";
 
-export default class I18nService extends BaseI18nService {
+export default class BrowserI18nService extends BaseI18nService<["browser"]> {
   constructor(systemLanguage: string, globalStateProvider: GlobalStateProvider) {
     super(
       systemLanguage,
@@ -80,11 +81,11 @@ export default class I18nService extends BaseI18nService {
     ];
   }
 
-  t(id: string, p1?: string, p2?: string, p3?: string): string {
+  t(id: I18nKeys<["browser"]>, p1?: string, p2?: string, p3?: string): string {
     return this.translate(id, p1, p2, p3);
   }
 
-  translate(id: string, p1?: string, p2?: string, p3?: string): string {
+  translate(id: I18nKeys<["browser"]>, p1?: string, p2?: string, p3?: string): string {
     if (this.localesDirectory == null) {
       const placeholders: string[] = [];
       if (p1 != null) {
@@ -104,6 +105,6 @@ export default class I18nService extends BaseI18nService {
       }
     }
 
-    return super.translate(id, p1, p2, p3);
+    return super.translate(id as any, p1, p2, p3);
   }
 }

@@ -1,6 +1,12 @@
-import { TranslationService as TranslationServiceAbstraction } from "../abstractions/translation.service";
+import {
+  ClientTuple,
+  I18nKeys,
+  TranslationService as TranslationServiceAbstraction,
+} from "../abstractions/translation.service";
 
-export abstract class TranslationService implements TranslationServiceAbstraction {
+export abstract class TranslationService<T extends ClientTuple>
+  implements TranslationServiceAbstraction<T>
+{
   // First locale is the default (English)
   supportedTranslationLocales: string[] = ["en"];
   defaultLocale = "en";
@@ -121,11 +127,16 @@ export abstract class TranslationService implements TranslationServiceAbstractio
     }
   }
 
-  t(id: string, p1?: string, p2?: string, p3?: string): string {
+  t(id: I18nKeys<ClientTuple>, p1?: string, p2?: string, p3?: string): string {
     return this.translate(id, p1, p2, p3);
   }
 
-  translate(id: string, p1?: string | number, p2?: string | number, p3?: string | number): string {
+  translate(
+    id: I18nKeys<ClientTuple>,
+    p1?: string | number,
+    p2?: string | number,
+    p3?: string | number,
+  ): string {
     let result: string;
     // eslint-disable-next-line
     if (this.localeMessages.hasOwnProperty(id) && this.localeMessages[id]) {

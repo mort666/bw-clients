@@ -94,7 +94,7 @@ import {
 } from "../auth";
 import { AcceptOrganizationInviteService } from "../auth/organization-invite/accept-organization.service";
 import { HtmlStorageService } from "../core/html-storage.service";
-import { I18nService } from "../core/i18n.service";
+import { WebI18nService } from "../core/i18n.service";
 import { WebBiometricsService } from "../key-management/web-biometric.service";
 import { WebEnvironmentService } from "../platform/web-environment.service";
 import { WebMigrationRunner } from "../platform/web-migration-runner";
@@ -133,7 +133,7 @@ const safeProviders: SafeProvider[] = [
   }),
   safeProvider({
     provide: I18nServiceAbstraction,
-    useClass: I18nService,
+    useClass: WebI18nService,
     deps: [SYSTEM_LANGUAGE, LOCALES_DIRECTORY, GlobalStateProvider],
   }),
   safeProvider({ provide: AbstractStorageService, useClass: HtmlStorageService, deps: [] }),

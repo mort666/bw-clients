@@ -11,6 +11,7 @@
     "allowJs": true,
     "sourceMap": true,
     "baseUrl": ".",
+    "resolveJsonModule": true,
     "paths": {
       "@bitwarden/common/spec": ["../../libs/common/spec"],
       "@bitwarden/admin-console/common": ["../../libs/admin-console/src/common"],

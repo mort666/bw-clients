@@ -17,7 +17,7 @@ import { FakeGlobalState } from "@bitwarden/common/spec/fake-state";
 import { OrgKey } from "@bitwarden/common/types/key";
 import { KeyService } from "@bitwarden/key-management";
 
-import { I18nService } from "../../core/i18n.service";
+import { WebI18nService } from "../../core/i18n.service";
 
 import {
   AcceptOrganizationInviteService,
@@ -36,7 +36,7 @@ describe("AcceptOrganizationInviteService", () => {
   let logService: MockProxy<LogService>;
   let organizationApiService: MockProxy<OrganizationApiServiceAbstraction>;
   let organizationUserApiService: MockProxy<OrganizationUserApiService>;
-  let i18nService: MockProxy<I18nService>;
+  let i18nService: MockProxy<WebI18nService>;
   let globalStateProvider: FakeGlobalStateProvider;
   let globalState: FakeGlobalState<OrganizationInvite>;
 

@@ -131,7 +131,7 @@ import { BrowserEnvironmentService } from "../../platform/services/browser-envir
 import BrowserLocalStorageService from "../../platform/services/browser-local-storage.service";
 import BrowserMemoryStorageService from "../../platform/services/browser-memory-storage.service";
 import { BrowserScriptInjectorService } from "../../platform/services/browser-script-injector.service";
-import I18nService from "../../platform/services/i18n.service";
+import BrowserI18nService from "../../platform/services/i18n.service";
 import { ForegroundPlatformUtilsService } from "../../platform/services/platform-utils/foreground-platform-utils.service";
 import { BrowserSdkClientFactory } from "../../platform/services/sdk/browser-sdk-client-factory";
 import { ForegroundTaskSchedulerService } from "../../platform/services/task-scheduler/foreground-task-scheduler.service";
@@ -205,7 +205,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: I18nServiceAbstraction,
     useFactory: (globalStateProvider: GlobalStateProvider) => {
-      return new I18nService(BrowserApi.getUILanguage(), globalStateProvider);
+      return new BrowserI18nService(BrowserApi.getUILanguage(), globalStateProvider);
     },
     deps: [GlobalStateProvider],
   }),

@@ -3,10 +3,14 @@ import * as path from "path";
 
 import { app, ipcMain } from "electron";
 
-import { I18nService as BaseI18nService } from "@bitwarden/common/platform/services/i18n.service";
+import { BaseI18nService } from "@bitwarden/common/platform/services/i18n.service";
 import { GlobalStateProvider } from "@bitwarden/common/platform/state";
 
-export class I18nMainService extends BaseI18nService {
+import type DesktopMessages from "../../locales/en/messages.json";
+
+type DesktopMessages = typeof DesktopMessages;
+
+export class I18nMainService extends BaseI18nService<DesktopMessages> {
   constructor(
     systemLanguage: string,
     localesDirectory: string,

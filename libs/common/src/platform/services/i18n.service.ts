@@ -1,6 +1,7 @@
 import { Observable, firstValueFrom, map } from "rxjs";
 
 import { I18nService as I18nServiceAbstraction } from "../abstractions/i18n.service";
+import { ClientTuple } from "../abstractions/translation.service";
 import { GlobalState, GlobalStateProvider, KeyDefinition, TRANSLATION_DISK } from "../state";
 
 import { TranslationService } from "./translation.service";
@@ -9,7 +10,10 @@ const LOCALE_KEY = new KeyDefinition<string>(TRANSLATION_DISK, "locale", {
   deserializer: (value) => value,
 });
 
-export class I18nService extends TranslationService implements I18nServiceAbstraction {
+export abstract class BaseI18nService<T extends ClientTuple>
+  extends TranslationService<T>
+  implements I18nServiceAbstraction<T>
+{
   translationLocale: string;
   protected translationLocaleState: GlobalState<string>;
   userSetLocale$: Observable<string | undefined>;

@@ -11,6 +11,7 @@
     "sourceMap": true,
     "baseUrl": ".",
     "lib": ["ES2021.String"],
+    "resolveJsonModule": true,
     "paths": {
       "@bitwarden/admin-console/common": ["../../libs/admin-console/src/common"],
       "@bitwarden/angular/*": ["../../libs/angular/src/*"],

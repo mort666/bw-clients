@@ -1,7 +1,7 @@
-import { I18nService as BaseI18nService } from "@bitwarden/common/platform/services/i18n.service";
+import { BaseI18nService } from "@bitwarden/common/platform/services/i18n.service";
 import { GlobalStateProvider } from "@bitwarden/common/platform/state";
 
-export class I18nRendererService extends BaseI18nService {
+export class I18nRendererService extends BaseI18nService<["desktop"]> {
   constructor(
     systemLanguage: string,
     localesDirectory: string,

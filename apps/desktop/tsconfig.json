@@ -9,6 +9,7 @@
     "sourceMap": true,
     "types": [],
     "baseUrl": ".",
+    "resolveJsonModule": true,
     "paths": {
       "@bitwarden/admin-console/common": ["../../libs/admin-console/src/common"],
       "@bitwarden/angular/*": ["../../libs/angular/src/*"],

@@ -250,7 +250,7 @@ import { BrowserEnvironmentService } from "../platform/services/browser-environm
 import BrowserLocalStorageService from "../platform/services/browser-local-storage.service";
 import BrowserMemoryStorageService from "../platform/services/browser-memory-storage.service";
 import { BrowserScriptInjectorService } from "../platform/services/browser-script-injector.service";
-import I18nService from "../platform/services/i18n.service";
+import BrowserI18nService from "../platform/services/i18n.service";
 import { LocalBackedSessionStorageService } from "../platform/services/local-backed-session-storage.service";
 import { BackgroundPlatformUtilsService } from "../platform/services/platform-utils/background-platform-utils.service";
 import { BrowserPlatformUtilsService } from "../platform/services/platform-utils/browser-platform-utils.service";
@@ -624,7 +624,7 @@ export default class MainBackground {
       this.logService,
     );
 
-    this.i18nService = new I18nService(BrowserApi.getUILanguage(), this.globalStateProvider);
+    this.i18nService = new BrowserI18nService(BrowserApi.getUILanguage(), this.globalStateProvider);
 
     this.biometricsService = new BackgroundBrowserBiometricsService(
       runtimeNativeMessagingBackground,
@@ -1275,7 +1275,7 @@ export default class MainBackground {
     }
     await Promise.all(setUserKeyInMemoryPromises);
 
-    await (this.i18nService as I18nService).init();
+    await (this.i18nService as BrowserI18nService).init();
     (this.eventUploadService as EventUploadService).init(true);
 
     this.popupViewCacheBackgroundService.startObservingTabChanges();
