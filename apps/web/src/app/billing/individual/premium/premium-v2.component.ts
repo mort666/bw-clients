@@ -203,7 +203,12 @@ export class PremiumV2Component {
       .then((invoice) => {
         this.estimatedTax = invoice.taxAmount;
       })
-      .catch(() => {
+      .catch((error) => {
+        this.toastService.showToast({
+          title: "",
+          variant: "error",
+          message: this.i18nService.t(error.message),
+        });
         this.estimatedTax = 0;
       });
   }
