@@ -14,14 +14,12 @@ export enum FeatureFlag {
   UseTreeWalkerApiForPageDetailsCollection = "use-tree-walker-api-for-page-details-collection",
   EmailVerification = "email-verification",
   InlineMenuFieldQualification = "inline-menu-field-qualification",
-  MemberAccessReport = "ac-2059-member-access-report",
   TwoFactorComponentRefactor = "two-factor-component-refactor",
   InlineMenuPositioningImprovements = "inline-menu-positioning-improvements",
   ProviderClientVaultPrivacyBanner = "ac-2833-provider-client-vault-privacy-banner",
   VaultBulkManagementAction = "vault-bulk-management-action",
   IdpAutoSubmitLogin = "idp-auto-submit-login",
   UnauthenticatedExtensionUIRefresh = "unauth-ui-refresh",
-  EnableUpgradePasswordManagerSub = "AC-2708-upgrade-password-manager-sub",
   GenerateIdentityFillScriptRefactor = "generate-identity-fill-script-refactor",
   EnableNewCardCombinedExpiryAutofill = "enable-new-card-combined-expiry-autofill",
   DelayFido2PageScriptInitWithinMv2 = "delay-fido2-page-script-init-within-mv2",
@@ -41,6 +39,7 @@ export enum FeatureFlag {
   SecurityTasks = "security-tasks",
   NewDeviceVerificationTemporaryDismiss = "new-device-temporary-dismiss",
   NewDeviceVerificationPermanentDismiss = "new-device-permanent-dismiss",
+  DisableFreeFamiliesSponsorship = "PM-12274-disable-free-families-sponsorship",
 }
 
 export type AllowedFeatureFlagTypes = boolean | number | string;
@@ -65,14 +64,12 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.UseTreeWalkerApiForPageDetailsCollection]: FALSE,
   [FeatureFlag.EmailVerification]: FALSE,
   [FeatureFlag.InlineMenuFieldQualification]: FALSE,
-  [FeatureFlag.MemberAccessReport]: FALSE,
   [FeatureFlag.TwoFactorComponentRefactor]: FALSE,
   [FeatureFlag.InlineMenuPositioningImprovements]: FALSE,
   [FeatureFlag.ProviderClientVaultPrivacyBanner]: FALSE,
   [FeatureFlag.VaultBulkManagementAction]: FALSE,
   [FeatureFlag.IdpAutoSubmitLogin]: FALSE,
   [FeatureFlag.UnauthenticatedExtensionUIRefresh]: FALSE,
-  [FeatureFlag.EnableUpgradePasswordManagerSub]: FALSE,
   [FeatureFlag.GenerateIdentityFillScriptRefactor]: FALSE,
   [FeatureFlag.EnableNewCardCombinedExpiryAutofill]: FALSE,
   [FeatureFlag.DelayFido2PageScriptInitWithinMv2]: FALSE,
@@ -92,6 +89,7 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.SecurityTasks]: FALSE,
   [FeatureFlag.NewDeviceVerificationTemporaryDismiss]: FALSE,
   [FeatureFlag.NewDeviceVerificationPermanentDismiss]: FALSE,
+  [FeatureFlag.DisableFreeFamiliesSponsorship]: FALSE,
 } satisfies Record<FeatureFlag, AllowedFeatureFlagTypes>;
 
 export type DefaultFeatureFlagValueType = typeof DefaultFeatureFlagValue;
