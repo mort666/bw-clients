@@ -32,11 +32,21 @@ import { HeaderModule } from "../../layouts/header/header.module";
 import { SharedModule } from "../../shared";
 import { PipesModule } from "../../vault/individual-vault/pipes/pipes.module";
 
+import { ApplicationsLoadingComponent } from "./applications-loading.component";
+
 @Component({
   standalone: true,
   selector: "tools-all-applications",
   templateUrl: "./all-applications.component.html",
-  imports: [HeaderModule, CardComponent, SearchModule, PipesModule, NoItemsModule, SharedModule],
+  imports: [
+    ApplicationsLoadingComponent,
+    HeaderModule,
+    CardComponent,
+    SearchModule,
+    PipesModule,
+    NoItemsModule,
+    SharedModule,
+  ],
   providers: [MemberCipherDetailsApiService],
 })
 export class AllApplicationsComponent implements OnInit {
