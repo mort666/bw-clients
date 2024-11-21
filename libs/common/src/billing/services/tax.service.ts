@@ -2,6 +2,7 @@ import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { TaxServiceAbstraction } from "@bitwarden/common/billing/abstractions/tax.service.abstraction";
 import { CountryListItem } from "@bitwarden/common/billing/models/domain";
 import { PreviewIndividualInvoiceRequest } from "@bitwarden/common/billing/models/request/preview-individual-invoice.request";
+import { PreviewOrganizationInvoiceRequest } from "@bitwarden/common/billing/models/request/preview-organization-invoice.request";
 import { PreviewInvoiceResponse } from "@bitwarden/common/billing/models/response/preview-invoice.response";
 
 export class TaxService implements TaxServiceAbstraction {
@@ -280,6 +281,19 @@ export class TaxService implements TaxServiceAbstraction {
     const response = await this.apiService.send(
       "POST",
       "/accounts/billing/preview-invoice",
+      request,
+      true,
+      true,
+    );
+    return new PreviewInvoiceResponse(response);
+  }
+
+  async previewOrganizationInvoice(
+    request: PreviewOrganizationInvoiceRequest,
+  ): Promise<PreviewInvoiceResponse> {
+    const response = await this.apiService.send(
+      "POST",
+      `/invoices/preview-organization`,
       request,
       true,
       true,

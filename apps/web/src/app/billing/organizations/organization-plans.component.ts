@@ -10,6 +10,7 @@ import {
 import { FormBuilder, Validators } from "@angular/forms";
 import { Router } from "@angular/router";
 import { Subject, takeUntil } from "rxjs";
+import { debounceTime } from "rxjs/operators";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
@@ -24,9 +25,11 @@ import { OrganizationUpgradeRequest } from "@bitwarden/common/admin-console/mode
 import { ProviderOrganizationCreateRequest } from "@bitwarden/common/admin-console/models/request/provider/provider-organization-create.request";
 import { ProviderResponse } from "@bitwarden/common/admin-console/models/response/provider/provider.response";
 import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions";
+import { TaxServiceAbstraction } from "@bitwarden/common/billing/abstractions/tax.service.abstraction";
 import { PaymentMethodType, PlanType, ProductTierType } from "@bitwarden/common/billing/enums";
 import { ExpandedTaxInfoUpdateRequest } from "@bitwarden/common/billing/models/request/expanded-tax-info-update.request";
 import { PaymentRequest } from "@bitwarden/common/billing/models/request/payment.request";
+import { PreviewOrganizationInvoiceRequest } from "@bitwarden/common/billing/models/request/preview-organization-invoice.request";
 import { UpdatePaymentMethodRequest } from "@bitwarden/common/billing/models/request/update-payment-method.request";
 import { BillingResponse } from "@bitwarden/common/billing/models/response/billing.response";
 import { OrganizationSubscriptionResponse } from "@bitwarden/common/billing/models/response/organization-subscription.response";
@@ -72,11 +75,12 @@ export class OrganizationPlansComponent implements OnInit, OnDestroy {
   @ViewChild(PaymentV2Component) paymentV2Component: PaymentV2Component;
   @ViewChild(TaxInfoComponent) taxComponent: TaxInfoComponent;
 
-  @Input() organizationId: string;
+  @Input() organizationId?: string;
   @Input() showFree = true;
   @Input() showCancel = false;
   @Input() acceptingSponsorship = false;
   @Input() currentPlan: PlanResponse;
+
   selectedFile: File;
 
   @Input()
@@ -147,7 +151,10 @@ export class OrganizationPlansComponent implements OnInit, OnDestroy {
   billing: BillingResponse;
   provider: ProviderResponse;
 
-  private destroy$ = new Subject<void>();
+  protected estimatedTax: number;
+  protected total: number;
+
+  private destroy$: Subject<void> = new Subject<void>();
 
   constructor(
     private apiService: ApiService,
@@ -166,6 +173,7 @@ export class OrganizationPlansComponent implements OnInit, OnDestroy {
     private toastService: ToastService,
     private configService: ConfigService,
     private billingApiService: BillingApiServiceAbstraction,
+    private taxService: TaxServiceAbstraction,
   ) {
     this.selfHosted = this.platformUtilsService.isSelfHost();
   }
@@ -239,6 +247,16 @@ export class OrganizationPlansComponent implements OnInit, OnDestroy {
     }
 
     this.loading = false;
+
+    this.formGroup.valueChanges.pipe(debounceTime(1000), takeUntil(this.destroy$)).subscribe(() => {
+      this.refreshSalesTax();
+    });
+
+    this.secretsManagerForm.valueChanges
+      .pipe(debounceTime(1000), takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.refreshSalesTax();
+      });
   }
 
   ngOnDestroy() {
@@ -436,17 +454,6 @@ export class OrganizationPlansComponent implements OnInit, OnDestroy {
     return this.selectedPlan.trialPeriodDays != null;
   }
 
-  get taxCharges() {
-    return this.taxComponent != null && this.taxComponent.taxRate != null
-      ? (this.taxComponent.taxRate / 100) *
-          (this.passwordManagerSubtotal + this.secretsManagerSubtotal)
-      : 0;
-  }
-
-  get total() {
-    return this.passwordManagerSubtotal + this.secretsManagerSubtotal + this.taxCharges || 0;
-  }
-
   get paymentDesc() {
     if (this.acceptingSponsorship) {
       return this.i18nService.t("paymentSponsored");
@@ -552,7 +559,7 @@ export class OrganizationPlansComponent implements OnInit, OnDestroy {
     this.changedProduct();
   }
 
-  changedCountry() {
+  protected changedCountry(): void {
     if (this.deprecateStripeSourcesAPI) {
       this.paymentV2Component.showBankAccount = this.taxComponent.country === "US";
       if (
@@ -573,11 +580,15 @@ export class OrganizationPlansComponent implements OnInit, OnDestroy {
     }
   }
 
-  cancel() {
+  protected onTaxInformationChanged(): void {
+    this.refreshSalesTax();
+  }
+
+  protected cancel(): void {
     this.onCanceled.emit();
   }
 
-  setSelectedFile(event: Event) {
+  protected setSelectedFile(event: Event): void {
     const fileInputEl = <HTMLInputElement>event.target;
     this.selectedFile = fileInputEl.files.length > 0 ? fileInputEl.files[0] : null;
   }
@@ -594,7 +605,7 @@ export class OrganizationPlansComponent implements OnInit, OnDestroy {
       return;
     }
     const doSubmit = async (): Promise<string> => {
-      let orgId: string = null;
+      let orgId: string;
       if (this.createOrganization) {
         const orgKey = await this.keyService.makeOrgKey<OrgKey>();
         const key = orgKey[0].encryptedString;
@@ -605,11 +616,9 @@ export class OrganizationPlansComponent implements OnInit, OnDestroy {
         const collectionCt = collection.encryptedString;
         const orgKeys = await this.keyService.makeKeyPair(orgKey[1]);
 
-        if (this.selfHosted) {
-          orgId = await this.createSelfHosted(key, collectionCt, orgKeys);
-        } else {
-          orgId = await this.createCloudHosted(key, collectionCt, orgKeys, orgKey[1]);
-        }
+        orgId = this.selfHosted
+          ? await this.createSelfHosted(key, collectionCt, orgKeys)
+          : await this.createCloudHosted(key, collectionCt, orgKeys, orgKey[1]);
 
         this.toastService.showToast({
           variant: "success",
@@ -617,7 +626,7 @@ export class OrganizationPlansComponent implements OnInit, OnDestroy {
           message: this.i18nService.t("organizationReadyToGo"),
         });
       } else {
-        orgId = await this.updateOrganization(orgId);
+        orgId = await this.updateOrganization();
         this.toastService.showToast({
           variant: "success",
           title: null,
@@ -651,7 +660,47 @@ export class OrganizationPlansComponent implements OnInit, OnDestroy {
     this.messagingService.send("organizationCreated", { organizationId });
   };
 
-  private async updateOrganization(orgId: string) {
+  private refreshSalesTax(): void {
+    if (!this.taxComponent.country || !this.taxComponent.postalCode) {
+      return;
+    }
+    const request: PreviewOrganizationInvoiceRequest = {
+      organizationId: this.organizationId,
+      passwordManager: {
+        additionalStorage: this.formGroup.controls.additionalStorage.value,
+        plan: this.formGroup.controls.plan.value,
+        seats: this.formGroup.controls.additionalSeats.value,
+      },
+      taxInformation: {
+        postalCode: this.taxComponent.postalCode,
+        country: this.taxComponent.country,
+        taxId: this.taxComponent.taxId,
+      },
+    };
+
+    if (this.secretsManagerForm.controls.enabled.value === true) {
+      request.secretsManager = {
+        seats: this.secretsManagerForm.controls.userSeats.value,
+        additionalMachineAccounts: this.secretsManagerForm.controls.additionalServiceAccounts.value,
+      };
+    }
+
+    this.taxService
+      .previewOrganizationInvoice(request)
+      .then((invoice) => {
+        this.estimatedTax = invoice.taxAmount;
+        this.total = invoice.totalAmount;
+      })
+      .catch((error) => {
+        this.toastService.showToast({
+          title: "",
+          variant: "error",
+          message: this.i18nService.t(error.message),
+        });
+      });
+  }
+
+  private async updateOrganization() {
     const request = new OrganizationUpgradeRequest();
     request.additionalSeats = this.formGroup.controls.additionalSeats.value;
     request.additionalStorageGb = this.formGroup.controls.additionalStorage.value;
@@ -707,7 +756,7 @@ export class OrganizationPlansComponent implements OnInit, OnDestroy {
     collectionCt: string,
     orgKeys: [string, EncString],
     orgKey: SymmetricCryptoKey,
-  ) {
+  ): Promise<string> {
     const request = new OrganizationCreateRequest();
     request.key = key;
     request.collectionName = collectionCt;
