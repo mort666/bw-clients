@@ -1,25 +1,27 @@
 import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
-import { Subject } from "rxjs";
-import { debounceTime, takeUntil } from "rxjs/operators";
+import { Subject, firstValueFrom, from, Subscription } from "rxjs";
+import { debounceTime, switchMap, takeUntil } from "rxjs/operators";
 
 import { SearchService } from "@bitwarden/common/abstractions/search.service";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
+import { AutofillOverlayVisibility } from "@bitwarden/common/autofill/constants";
+import { AutofillSettingsServiceAbstraction } from "@bitwarden/common/autofill/services/autofill-settings.service";
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { SyncService } from "@bitwarden/common/platform/sync";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
-import { PasswordRepromptService } from "@bitwarden/common/vault/abstractions/password-reprompt.service";
-import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
+import { VaultSettingsService } from "@bitwarden/common/vault/abstractions/vault-settings/vault-settings.service";
+import { CipherType } from "@bitwarden/common/vault/enums";
 import { CipherRepromptType } from "@bitwarden/common/vault/enums/cipher-reprompt-type";
-import { CipherType } from "@bitwarden/common/vault/enums/cipher-type";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
+import { PasswordRepromptService } from "@bitwarden/vault";
 
 import { AutofillService } from "../../../../autofill/services/abstractions/autofill.service";
 import { BrowserApi } from "../../../../platform/browser/browser-api";
-import { PopupUtilsService } from "../../../../popup/services/popup-utils.service";
+import BrowserPopupUtils from "../../../../platform/popup/browser-popup-utils";
 import { VaultFilterService } from "../../../services/vault-filter.service";
 
 const BroadcasterSubscriptionId = "CurrentTabComponent";
@@ -46,6 +48,7 @@ export class CurrentTabComponent implements OnInit, OnDestroy {
   autofillCalloutText: string;
   protected search$ = new Subject<void>();
   private destroy$ = new Subject<void>();
+  private collectPageDetailsSubscription: Subscription;
 
   private totpCode: string;
   private totpTimeout: number;
@@ -55,7 +58,6 @@ export class CurrentTabComponent implements OnInit, OnDestroy {
   constructor(
     private platformUtilsService: PlatformUtilsService,
     private cipherService: CipherService,
-    private popupUtilsService: PopupUtilsService,
     private autofillService: AutofillService,
     private i18nService: I18nService,
     private router: Router,
@@ -64,33 +66,29 @@ export class CurrentTabComponent implements OnInit, OnDestroy {
     private changeDetectorRef: ChangeDetectorRef,
     private syncService: SyncService,
     private searchService: SearchService,
-    private stateService: StateService,
+    private autofillSettingsService: AutofillSettingsServiceAbstraction,
     private passwordRepromptService: PasswordRepromptService,
     private organizationService: OrganizationService,
-    private vaultFilterService: VaultFilterService
+    private vaultFilterService: VaultFilterService,
+    private vaultSettingsService: VaultSettingsService,
   ) {}
 
   async ngOnInit() {
     this.searchTypeSearch = !this.platformUtilsService.isSafari();
-    this.inSidebar = this.popupUtilsService.inSidebar(window);
+    this.inSidebar = BrowserPopupUtils.inSidebar(window);
 
     this.broadcasterService.subscribe(BroadcasterSubscriptionId, (message: any) => {
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       this.ngZone.run(async () => {
         switch (message.command) {
           case "syncCompleted":
             if (this.isLoading) {
               window.setTimeout(() => {
+                // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+                // eslint-disable-next-line @typescript-eslint/no-floating-promises
                 this.load();
               }, 500);
-            }
-            break;
-          case "collectPageDetailsResponse":
-            if (message.sender === BroadcasterSubscriptionId) {
-              this.pageDetails.push({
-                frameId: message.webExtSender.frameId,
-                tab: message.tab,
-                details: message.details,
-              });
             }
             break;
           default:
@@ -114,18 +112,41 @@ export class CurrentTabComponent implements OnInit, OnDestroy {
     }
 
     this.search$
-      .pipe(debounceTime(500), takeUntil(this.destroy$))
-      .subscribe(() => this.searchVault());
+      .pipe(
+        debounceTime(500),
+        switchMap(() => {
+          return from(this.searchVault());
+        }),
+        takeUntil(this.destroy$),
+      )
+      .subscribe();
 
-    // activate autofill on page load if policy is set
-    if (await this.stateService.getActivateAutoFillOnPageLoadFromPolicy()) {
-      await this.stateService.setEnableAutoFillOnPageLoad(true);
-      await this.stateService.setActivateAutoFillOnPageLoadFromPolicy(false);
-      this.platformUtilsService.showToast(
-        "info",
-        null,
-        this.i18nService.t("autofillPageLoadPolicyActivated")
-      );
+    const autofillOnPageLoadOrgPolicy = await firstValueFrom(
+      this.autofillSettingsService.activateAutofillOnPageLoadFromPolicy$,
+    );
+    const autofillOnPageLoadPolicyToastHasDisplayed = await firstValueFrom(
+      this.autofillSettingsService.autofillOnPageLoadPolicyToastHasDisplayed$,
+    );
+
+    // If the org "autofill on page load" policy is set, set the user setting to match it
+    // @TODO override user setting instead of overwriting
+    if (autofillOnPageLoadOrgPolicy === true) {
+      await this.autofillSettingsService.setAutofillOnPageLoad(true);
+
+      if (!autofillOnPageLoadPolicyToastHasDisplayed) {
+        this.platformUtilsService.showToast(
+          "info",
+          null,
+          this.i18nService.t("autofillPageLoadPolicyActivated"),
+        );
+
+        await this.autofillSettingsService.setAutofillOnPageLoadPolicyToastHasDisplayed(true);
+      }
+    }
+
+    // If the org policy is ever disabled after being enabled, reset the toast notification
+    if (!autofillOnPageLoadOrgPolicy && autofillOnPageLoadPolicyToastHasDisplayed) {
+      await this.autofillSettingsService.setAutofillOnPageLoadPolicyToastHasDisplayed(false);
     }
   }
 
@@ -142,6 +163,8 @@ export class CurrentTabComponent implements OnInit, OnDestroy {
   }
 
   addCipher() {
+    // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.router.navigate(["/add-cipher"], {
       queryParams: {
         name: this.hostname,
@@ -152,6 +175,8 @@ export class CurrentTabComponent implements OnInit, OnDestroy {
   }
 
   viewCipher(cipher: CipherView) {
+    // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.router.navigate(["/view-cipher"], { queryParams: { cipherId: cipher.id } });
   }
 
@@ -185,7 +210,7 @@ export class CurrentTabComponent implements OnInit, OnDestroy {
       if (this.totpCode != null) {
         this.platformUtilsService.copyToClipboard(this.totpCode, { window: window });
       }
-      if (this.popupUtilsService.inPopup(window)) {
+      if (BrowserPopupUtils.inPopup(window)) {
         if (!closePopupDelay) {
           if (this.platformUtilsService.isFirefox() || this.platformUtilsService.isSafari()) {
             BrowserApi.closePopup(window);
@@ -205,12 +230,12 @@ export class CurrentTabComponent implements OnInit, OnDestroy {
     }
   }
 
-  searchVault() {
-    if (!this.searchService.isSearchable(this.searchText)) {
+  async searchVault() {
+    if (!(await this.searchService.isSearchable(this.searchText))) {
       return;
     }
 
-    this.router.navigate(["/tabs/vault"], { queryParams: { searchText: this.searchText } });
+    await this.router.navigate(["/tabs/vault"], { queryParams: { searchText: this.searchText } });
   }
 
   closeOnEsc(e: KeyboardEvent) {
@@ -223,6 +248,7 @@ export class CurrentTabComponent implements OnInit, OnDestroy {
   protected async load() {
     this.isLoading = false;
     this.tab = await BrowserApi.getTabFromCurrentWindow();
+
     if (this.tab != null) {
       this.url = this.tab.url;
     } else {
@@ -231,18 +257,20 @@ export class CurrentTabComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.hostname = Utils.getHostname(this.url);
     this.pageDetails = [];
-    BrowserApi.tabSendMessage(this.tab, {
-      command: "collectPageDetails",
-      tab: this.tab,
-      sender: BroadcasterSubscriptionId,
-    });
+    this.collectPageDetailsSubscription?.unsubscribe();
+    this.collectPageDetailsSubscription = this.autofillService
+      .collectPageDetailsFromTab$(this.tab)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((pageDetails) => (this.pageDetails = pageDetails));
 
+    this.hostname = Utils.getHostname(this.url);
     const otherTypes: CipherType[] = [];
-    const dontShowCards = await this.stateService.getDontShowCardsCurrentTab();
-    const dontShowIdentities = await this.stateService.getDontShowIdentitiesCurrentTab();
-    this.showOrganizations = this.organizationService.hasOrganizations();
+    const dontShowCards = !(await firstValueFrom(this.vaultSettingsService.showCardsCurrentTab$));
+    const dontShowIdentities = !(await firstValueFrom(
+      this.vaultSettingsService.showIdentitiesCurrentTab$,
+    ));
+    this.showOrganizations = await this.organizationService.hasOrganizations();
     if (!dontShowCards) {
       otherTypes.push(CipherType.Card);
     }
@@ -252,7 +280,7 @@ export class CurrentTabComponent implements OnInit, OnDestroy {
 
     const ciphers = await this.cipherService.getAllDecryptedForUrl(
       this.url,
-      otherTypes.length > 0 ? otherTypes : null
+      otherTypes.length > 0 ? otherTypes : null,
     );
 
     this.loginCiphers = [];
@@ -277,26 +305,36 @@ export class CurrentTabComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.loginCiphers = this.loginCiphers.sort((a, b) =>
-      this.cipherService.sortCiphersByLastUsedThenName(a, b)
-    );
+    if (this.loginCiphers.length) {
+      this.loginCiphers = this.loginCiphers.sort((a, b) =>
+        this.cipherService.sortCiphersByLastUsedThenName(a, b),
+      );
+    }
+
     this.isLoading = this.loaded = true;
   }
 
   async goToSettings() {
+    // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.router.navigate(["autofill"]);
   }
 
   async dismissCallout() {
-    await this.stateService.setDismissedAutofillCallout(true);
+    await this.autofillSettingsService.setAutofillOnPageLoadCalloutIsDismissed(true);
     this.showHowToAutofill = false;
   }
 
   private async setCallout() {
+    const inlineMenuVisibilityIsOff =
+      (await firstValueFrom(this.autofillSettingsService.inlineMenuVisibility$)) ===
+      AutofillOverlayVisibility.Off;
+
     this.showHowToAutofill =
       this.loginCiphers.length > 0 &&
-      !(await this.stateService.getEnableAutoFillOnPageLoad()) &&
-      !(await this.stateService.getDismissedAutofillCallout());
+      inlineMenuVisibilityIsOff &&
+      !(await firstValueFrom(this.autofillSettingsService.autofillOnPageLoad$)) &&
+      !(await firstValueFrom(this.autofillSettingsService.autofillOnPageLoadCalloutIsDismissed$));
 
     if (this.showHowToAutofill) {
       const autofillCommand = await this.platformUtilsService.getAutofillKeyboardShortcut();

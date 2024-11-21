@@ -1,11 +1,10 @@
-import * as program from "commander";
+import { OptionValues } from "commander";
 import * as inquirer from "inquirer";
+import { firstValueFrom } from "rxjs";
 
-import { ApiService } from "@bitwarden/common/abstractions/api.service";
-import { NodeUtils } from "@bitwarden/common/misc/nodeUtils";
 import { ErrorResponse } from "@bitwarden/common/models/response/error.response";
 import { CryptoFunctionService } from "@bitwarden/common/platform/abstractions/crypto-function.service";
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
+import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
@@ -15,6 +14,8 @@ import { SendAccess } from "@bitwarden/common/tools/send/models/domain/send-acce
 import { SendAccessRequest } from "@bitwarden/common/tools/send/models/request/send-access.request";
 import { SendAccessView } from "@bitwarden/common/tools/send/models/view/send-access.view";
 import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.service.abstraction";
+import { KeyService } from "@bitwarden/key-management";
+import { NodeUtils } from "@bitwarden/node/node-utils";
 
 import { DownloadCommand } from "../../../commands/download.command";
 import { Response } from "../../../models/response";
@@ -26,17 +27,17 @@ export class SendReceiveCommand extends DownloadCommand {
   private sendAccessRequest: SendAccessRequest;
 
   constructor(
-    private apiService: ApiService,
-    cryptoService: CryptoService,
+    private keyService: KeyService,
+    encryptService: EncryptService,
     private cryptoFunctionService: CryptoFunctionService,
     private platformUtilsService: PlatformUtilsService,
     private environmentService: EnvironmentService,
-    private sendApiService: SendApiService
+    private sendApiService: SendApiService,
   ) {
-    super(cryptoService);
+    super(encryptService);
   }
 
-  async run(url: string, options: program.OptionValues): Promise<Response> {
+  async run(url: string, options: OptionValues): Promise<Response> {
     this.canInteract = process.env.BW_NOINTERACTION !== "true";
 
     let urlObject: URL;
@@ -46,7 +47,7 @@ export class SendReceiveCommand extends DownloadCommand {
       return Response.badRequest("Failed to parse the provided Send url");
     }
 
-    const apiUrl = this.getApiUrl(urlObject);
+    const apiUrl = await this.getApiUrl(urlObject);
     const [id, key] = this.getIdAndKey(urlObject);
 
     if (Utils.isNullOrWhitespace(id) || Utils.isNullOrWhitespace(key)) {
@@ -89,13 +90,13 @@ export class SendReceiveCommand extends DownloadCommand {
         const downloadData = await this.sendApiService.getSendFileDownloadData(
           response,
           this.sendAccessRequest,
-          apiUrl
+          apiUrl,
         );
         return await this.saveAttachmentToFile(
           downloadData.url,
           this.decKey,
           response?.file?.fileName,
-          options.output
+          options.output,
         );
       }
       default:
@@ -108,8 +109,9 @@ export class SendReceiveCommand extends DownloadCommand {
     return [result[0], result[1]];
   }
 
-  private getApiUrl(url: URL) {
-    const urls = this.environmentService.getUrls();
+  private async getApiUrl(url: URL) {
+    const env = await firstValueFrom(this.environmentService.environment$);
+    const urls = env.getUrls();
     if (url.origin === "https://send.bitwarden.com") {
       return "https://api.bitwarden.com";
     } else if (url.origin === urls.api) {
@@ -126,7 +128,7 @@ export class SendReceiveCommand extends DownloadCommand {
       password,
       keyArray,
       "sha256",
-      100000
+      100000,
     );
     return Utils.fromBufferToB64(passwordHash);
   }
@@ -134,17 +136,17 @@ export class SendReceiveCommand extends DownloadCommand {
   private async sendRequest(
     url: string,
     id: string,
-    key: Uint8Array
+    key: Uint8Array,
   ): Promise<Response | SendAccessView> {
     try {
       const sendResponse = await this.sendApiService.postSendAccess(
         id,
         this.sendAccessRequest,
-        url
+        url,
       );
 
       const sendAccess = new SendAccess(sendResponse);
-      this.decKey = await this.cryptoService.makeSendKey(key);
+      this.decKey = await this.keyService.makeSendKey(key);
       return await sendAccess.decrypt(this.decKey);
     } catch (e) {
       if (e instanceof ErrorResponse) {

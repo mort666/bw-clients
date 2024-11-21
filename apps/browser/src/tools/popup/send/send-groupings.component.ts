@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, NgZone } from "@angular/core";
+import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 
 import { SendComponent as BaseSendComponent } from "@bitwarden/angular/tools/send/send.component";
@@ -14,11 +14,11 @@ import { SendView } from "@bitwarden/common/tools/send/models/view/send.view";
 import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.service.abstraction";
 import { SendService } from "@bitwarden/common/tools/send/services/send.service.abstraction";
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
-import { DialogService } from "@bitwarden/components";
+import { DialogService, ToastService } from "@bitwarden/components";
 
 import { BrowserSendComponentState } from "../../../models/browserSendComponentState";
-import { BrowserStateService } from "../../../platform/services/abstractions/browser-state.service";
-import { PopupUtilsService } from "../../../popup/services/popup-utils.service";
+import BrowserPopupUtils from "../../../platform/popup/browser-popup-utils";
+import { BrowserSendStateService } from "../services/browser-send-state.service";
 
 const ComponentId = "SendComponent";
 
@@ -26,11 +26,9 @@ const ComponentId = "SendComponent";
   selector: "app-send-groupings",
   templateUrl: "send-groupings.component.html",
 })
-export class SendGroupingsComponent extends BaseSendComponent {
+export class SendGroupingsComponent extends BaseSendComponent implements OnInit, OnDestroy {
   // Header
   showLeftHeader = true;
-  // Send Type Calculations
-  typeCounts = new Map<SendType, number>();
   // State Handling
   state: BrowserSendComponentState;
   private loadedTimeout: number;
@@ -43,15 +41,15 @@ export class SendGroupingsComponent extends BaseSendComponent {
     ngZone: NgZone,
     policyService: PolicyService,
     searchService: SearchService,
-    private popupUtils: PopupUtilsService,
-    private stateService: BrowserStateService,
+    private stateService: BrowserSendStateService,
     private router: Router,
     private syncService: SyncService,
     private changeDetectorRef: ChangeDetectorRef,
     private broadcasterService: BroadcasterService,
     logService: LogService,
     sendApiService: SendApiService,
-    dialogService: DialogService
+    dialogService: DialogService,
+    toastService: ToastService,
   ) {
     super(
       sendService,
@@ -63,10 +61,10 @@ export class SendGroupingsComponent extends BaseSendComponent {
       policyService,
       logService,
       sendApiService,
-      dialogService
+      dialogService,
+      toastService,
     );
-    super.onSuccessfulLoad = async () => {
-      this.calculateTypeCounts();
+    this.onSuccessfulLoad = async () => {
       this.selectAll();
     };
   }
@@ -74,7 +72,7 @@ export class SendGroupingsComponent extends BaseSendComponent {
   async ngOnInit() {
     // Determine Header details
     this.showLeftHeader = !(
-      this.popupUtils.inSidebar(window) && this.platformUtilsService.isFirefox()
+      BrowserPopupUtils.inSidebar(window) && this.platformUtilsService.isFirefox()
     );
     // Clear state of Send Type Component
     await this.stateService.setBrowserSendTypeComponentState(null);
@@ -87,25 +85,35 @@ export class SendGroupingsComponent extends BaseSendComponent {
     }
 
     if (!this.syncService.syncInProgress) {
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       this.load();
     } else {
       this.loadedTimeout = window.setTimeout(() => {
         if (!this.loaded) {
+          // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+          // eslint-disable-next-line @typescript-eslint/no-floating-promises
           this.load();
         }
       }, 5000);
     }
 
     if (!this.syncService.syncInProgress || restoredScopeState) {
-      window.setTimeout(() => this.popupUtils.setContentScrollY(window, this.state?.scrollY), 0);
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      BrowserPopupUtils.setContentScrollY(window, this.state?.scrollY);
     }
 
     // Load all sends if sync completed in background
     this.broadcasterService.subscribe(ComponentId, (message: any) => {
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       this.ngZone.run(async () => {
         switch (message.command) {
           case "syncCompleted":
             window.setTimeout(() => {
+              // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+              // eslint-disable-next-line @typescript-eslint/no-floating-promises
               this.load();
             }, 500);
             break;
@@ -124,16 +132,22 @@ export class SendGroupingsComponent extends BaseSendComponent {
       window.clearTimeout(this.loadedTimeout);
     }
     // Save state
+    // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.saveState();
     // Unsubscribe
     this.broadcasterService.unsubscribe(ComponentId);
   }
 
   async selectType(type: SendType) {
+    // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.router.navigate(["/send-type"], { queryParams: { type: type } });
   }
 
   async selectSend(s: SendView) {
+    // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.router.navigate(["/edit-send"], { queryParams: { sendId: s.id } });
   }
 
@@ -141,6 +155,8 @@ export class SendGroupingsComponent extends BaseSendComponent {
     if (this.disableSend) {
       return;
     }
+    // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.router.navigate(["/add-send"]);
   }
 
@@ -148,34 +164,24 @@ export class SendGroupingsComponent extends BaseSendComponent {
     if (this.disableSend) {
       return;
     }
+    // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     super.removePassword(s);
   }
 
   showSearching() {
-    return (
-      this.hasSearched || (!this.searchPending && this.searchService.isSearchable(this.searchText))
-    );
+    return this.hasSearched || (!this.searchPending && this.isSearchable);
   }
 
-  private calculateTypeCounts() {
-    // Create type counts
-    const typeCounts = new Map<SendType, number>();
-    this.sends.forEach((s) => {
-      if (typeCounts.has(s.type)) {
-        typeCounts.set(s.type, typeCounts.get(s.type) + 1);
-      } else {
-        typeCounts.set(s.type, 1);
-      }
-    });
-    this.typeCounts = typeCounts;
+  getSendCount(sends: SendView[], type: SendType): number {
+    return sends.filter((s) => s.type === type).length;
   }
 
   private async saveState() {
     this.state = Object.assign(new BrowserSendComponentState(), {
-      scrollY: this.popupUtils.getContentScrollY(window),
+      scrollY: BrowserPopupUtils.getContentScrollY(window),
       searchText: this.searchText,
       sends: this.sends,
-      typeCounts: this.typeCounts,
     });
     await this.stateService.setBrowserSendComponentState(this.state);
   }
@@ -188,9 +194,6 @@ export class SendGroupingsComponent extends BaseSendComponent {
 
     if (this.state.sends != null) {
       this.sends = this.state.sends;
-    }
-    if (this.state.typeCounts != null) {
-      this.typeCounts = this.state.typeCounts;
     }
 
     return true;

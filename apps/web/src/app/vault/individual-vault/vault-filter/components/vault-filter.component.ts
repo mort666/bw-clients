@@ -1,12 +1,16 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from "@angular/core";
+import { Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output } from "@angular/core";
+import { Router } from "@angular/router";
 import { firstValueFrom, Subject } from "rxjs";
 
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
-import { TreeNode } from "@bitwarden/common/models/domain/tree-node";
+import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
+import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions/billing-api.service.abstraction";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { CipherType } from "@bitwarden/common/vault/enums/cipher-type";
+import { CipherType } from "@bitwarden/common/vault/enums";
+import { TreeNode } from "@bitwarden/common/vault/models/domain/tree-node";
+import { DialogService } from "@bitwarden/components";
 
 import { VaultFilterService } from "../services/abstractions/vault-filter.service";
 import {
@@ -40,7 +44,7 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
   isLoaded = false;
 
   protected destroy$: Subject<void> = new Subject<void>();
-
+  private router = inject(Router);
   get filtersList() {
     return this.filters ? Object.values(this.filters) : [];
   }
@@ -64,6 +68,9 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
     if (this.activeFilter.cipherType === CipherType.SecureNote) {
       return "searchSecureNote";
     }
+    if (this.activeFilter.cipherType === CipherType.SshKey) {
+      return "searchSshKey";
+    }
     if (this.activeFilter.selectedFolderNode?.node) {
       return "searchFolder";
     }
@@ -84,7 +91,9 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
     protected vaultFilterService: VaultFilterService,
     protected policyService: PolicyService,
     protected i18nService: I18nService,
-    protected platformUtilsService: PlatformUtilsService
+    protected platformUtilsService: PlatformUtilsService,
+    protected billingApiService: BillingApiServiceAbstraction,
+    protected dialogService: DialogService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -109,8 +118,15 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
       this.platformUtilsService.showToast(
         "error",
         null,
-        this.i18nService.t("disabledOrganizationFilterError")
+        this.i18nService.t("disabledOrganizationFilterError"),
       );
+      const metadata = await this.billingApiService.getOrganizationBillingMetadata(orgNode.node.id);
+      if (metadata.isSubscriptionUnpaid) {
+        const confirmed = await this.promptForPaymentNavigation(orgNode.node);
+        if (confirmed) {
+          await this.navigateToPaymentMethod(orgNode.node.id);
+        }
+      }
       return;
     }
     const filter = this.activeFilter;
@@ -122,6 +138,32 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
     this.vaultFilterService.setOrganizationFilter(orgNode.node);
     await this.vaultFilterService.expandOrgFilter();
   };
+
+  private async promptForPaymentNavigation(org: Organization): Promise<boolean> {
+    if (!org?.isOwner) {
+      await this.dialogService.openSimpleDialog({
+        title: this.i18nService.t("suspendedOrganizationTitle", org?.name),
+        content: { key: "suspendedUserOrgMessage" },
+        type: "danger",
+        acceptButtonText: this.i18nService.t("close"),
+        cancelButtonText: null,
+      });
+      return false;
+    }
+    return await this.dialogService.openSimpleDialog({
+      title: this.i18nService.t("suspendedOrganizationTitle", org?.name),
+      content: { key: "suspendedOwnerOrgMessage" },
+      type: "danger",
+      acceptButtonText: this.i18nService.t("continue"),
+      cancelButtonText: this.i18nService.t("close"),
+    });
+  }
+
+  private async navigateToPaymentMethod(orgId: string) {
+    await this.router.navigate(["organizations", `${orgId}`, "billing", "payment-method"], {
+      state: { launchPaymentModalAutomatically: true },
+    });
+  }
 
   applyTypeFilter = async (filterNode: TreeNode<CipherTypeFilter>): Promise<void> => {
     const filter = this.activeFilter;
@@ -162,7 +204,7 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
   protected async addOrganizationFilter(): Promise<VaultFilterSection> {
     const singleOrgPolicy = await this.policyService.policyAppliesToUser(PolicyType.SingleOrg);
     const personalVaultPolicy = await this.policyService.policyAppliesToUser(
-      PolicyType.PersonalOwnership
+      PolicyType.PersonalOwnership,
     );
 
     const addAction = !singleOrgPolicy
@@ -216,12 +258,18 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
         type: CipherType.SecureNote,
         icon: "bwi-sticky-note",
       },
+      {
+        id: "sshKey",
+        name: this.i18nService.t("typeSshKey"),
+        type: CipherType.SshKey,
+        icon: "bwi-key",
+      },
     ];
 
     const typeFilterSection: VaultFilterSection = {
       data$: this.vaultFilterService.buildTypeTree(
         { id: "AllItems", name: "allItems", type: "all", icon: "" },
-        allTypeFilters.filter((f) => !excludeTypes.includes(f.type))
+        allTypeFilters.filter((f) => !excludeTypes.includes(f.type)),
       ),
       header: {
         showHeader: true,
@@ -276,7 +324,7 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
             type: "trash",
             icon: "bwi-trash",
           },
-        ]
+        ],
       ),
       header: {
         showHeader: false,

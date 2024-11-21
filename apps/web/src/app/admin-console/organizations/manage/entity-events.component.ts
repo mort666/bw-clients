@@ -2,9 +2,9 @@ import { DIALOG_DATA, DialogConfig } from "@angular/cdk/dialog";
 import { Component, Inject, OnInit } from "@angular/core";
 import { FormBuilder } from "@angular/forms";
 
+import { OrganizationUserApiService } from "@bitwarden/admin-console/common";
 import { UserNamePipe } from "@bitwarden/angular/pipes/user-name.pipe";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
-import { OrganizationUserService } from "@bitwarden/common/abstractions/organization-user/organization-user.service";
 import { EventResponse } from "@bitwarden/common/models/response/event.response";
 import { ListResponse } from "@bitwarden/common/models/response/list.response";
 import { EventView } from "@bitwarden/common/models/view/event.view";
@@ -12,7 +12,7 @@ import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.servic
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { ValidationService } from "@bitwarden/common/platform/abstractions/validation.service";
-import { DialogService, TableDataSource } from "@bitwarden/components";
+import { DialogService, TableDataSource, ToastService } from "@bitwarden/components";
 
 import { EventService } from "../../../core";
 import { SharedModule } from "../../../shared";
@@ -60,9 +60,10 @@ export class EntityEventsComponent implements OnInit {
     private platformUtilsService: PlatformUtilsService,
     private userNamePipe: UserNamePipe,
     private logService: LogService,
-    private organizationUserService: OrganizationUserService,
+    private organizationUserApiService: OrganizationUserApiService,
     private formBuilder: FormBuilder,
-    private validationService: ValidationService
+    private validationService: ValidationService,
+    private toastService: ToastService,
   ) {}
 
   async ngOnInit() {
@@ -77,7 +78,9 @@ export class EntityEventsComponent implements OnInit {
   async load() {
     try {
       if (this.showUser) {
-        const response = await this.organizationUserService.getAllUsers(this.params.organizationId);
+        const response = await this.organizationUserApiService.getAllMiniUserDetails(
+          this.params.organizationId,
+        );
         response.data.forEach((u) => {
           const name = this.userNamePipe.transform(u);
           this.orgUsersIdMap.set(u.id, { name: name, email: u.email });
@@ -106,14 +109,14 @@ export class EntityEventsComponent implements OnInit {
     try {
       dates = this.eventService.formatDateFilters(
         this.filterFormGroup.value.start,
-        this.filterFormGroup.value.end
+        this.filterFormGroup.value.end,
       );
     } catch (e) {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("invalidDateRange")
-      );
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("errorOccurred"),
+        message: this.i18nService.t("invalidDateRange"),
+      });
       return;
     }
 
@@ -124,7 +127,7 @@ export class EntityEventsComponent implements OnInit {
         this.params.entityId,
         dates[0],
         dates[1],
-        clearExisting ? null : this.continuationToken
+        clearExisting ? null : this.continuationToken,
       );
     } else if (this.params.entity === "user") {
       response = await this.apiService.getEventsOrganizationUser(
@@ -132,14 +135,14 @@ export class EntityEventsComponent implements OnInit {
         this.params.entityId,
         dates[0],
         dates[1],
-        clearExisting ? null : this.continuationToken
+        clearExisting ? null : this.continuationToken,
       );
     } else {
       response = await this.apiService.getEventsCipher(
         this.params.entityId,
         dates[0],
         dates[1],
-        clearExisting ? null : this.continuationToken
+        clearExisting ? null : this.continuationToken,
       );
     }
 
@@ -168,7 +171,7 @@ export class EntityEventsComponent implements OnInit {
           systemUser: r.systemUser,
           serviceAccountId: r.serviceAccountId,
         });
-      })
+      }),
     );
 
     if (!clearExisting && this.dataSource.data != null && this.dataSource.data.length > 0) {
@@ -186,7 +189,7 @@ export class EntityEventsComponent implements OnInit {
  */
 export const openEntityEventsDialog = (
   dialogService: DialogService,
-  config: DialogConfig<EntityEventsDialogParams>
+  config: DialogConfig<EntityEventsDialogParams>,
 ) => {
   return dialogService.open<void, EntityEventsDialogParams>(EntityEventsComponent, config);
 };

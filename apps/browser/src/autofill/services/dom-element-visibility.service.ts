@@ -1,17 +1,19 @@
+import { AutofillInlineMenuContentService } from "../overlay/inline-menu/abstractions/autofill-inline-menu-content.service";
 import { FillableFormFieldElement, FormFieldElement } from "../types";
 
-import { DomElementVisibilityService as domElementVisibilityServiceInterface } from "./abstractions/dom-element-visibility.service";
+import { DomElementVisibilityService as DomElementVisibilityServiceInterface } from "./abstractions/dom-element-visibility.service";
 
-class DomElementVisibilityService implements domElementVisibilityServiceInterface {
+class DomElementVisibilityService implements DomElementVisibilityServiceInterface {
   private cachedComputedStyle: CSSStyleDeclaration | null = null;
 
+  constructor(private inlineMenuContentService?: AutofillInlineMenuContentService) {}
+
   /**
-   * Checks if a form field is viewable. This is done by checking if the element is within the
+   * Checks if an element is viewable. This is done by checking if the element is within the
    * viewport bounds, not hidden by CSS, and not hidden behind another element.
-   * @param {FormFieldElement} element
-   * @returns {Promise<boolean>}
+   * @param element
    */
-  async isFormFieldViewable(element: FormFieldElement): Promise<boolean> {
+  async isElementViewable(element: HTMLElement): Promise<boolean> {
     const elementBoundingClientRect = element.getBoundingClientRect();
     if (
       this.isElementOutsideViewportBounds(element, elementBoundingClientRect) ||
@@ -66,8 +68,8 @@ class DomElementVisibilityService implements domElementVisibilityServiceInterfac
    */
   private getElementStyle(element: HTMLElement, styleProperty: string): string {
     if (!this.cachedComputedStyle) {
-      this.cachedComputedStyle = (element.ownerDocument.defaultView || window).getComputedStyle(
-        element
+      this.cachedComputedStyle = (element.ownerDocument.defaultView || globalThis).getComputedStyle(
+        element,
       );
     }
 
@@ -132,7 +134,7 @@ class DomElementVisibilityService implements domElementVisibilityServiceInterfac
    */
   private isElementOutsideViewportBounds(
     targetElement: HTMLElement,
-    targetElementBoundingClientRect: DOMRectReadOnly | null = null
+    targetElementBoundingClientRect: DOMRectReadOnly | null = null,
   ): boolean {
     const documentElement = targetElement.ownerDocument.documentElement;
     const documentElementWidth = documentElement.scrollWidth;
@@ -171,7 +173,7 @@ class DomElementVisibilityService implements domElementVisibilityServiceInterfac
    */
   private formFieldIsNotHiddenBehindAnotherElement(
     targetElement: FormFieldElement,
-    targetElementBoundingClientRect: DOMRectReadOnly | null = null
+    targetElementBoundingClientRect: DOMRectReadOnly | null = null,
   ): boolean {
     const elementBoundingClientRect =
       targetElementBoundingClientRect || targetElement.getBoundingClientRect();
@@ -180,10 +182,14 @@ class DomElementVisibilityService implements domElementVisibilityServiceInterfac
       elementRootNode instanceof ShadowRoot ? elementRootNode : targetElement.ownerDocument;
     const elementAtCenterPoint = rootElement.elementFromPoint(
       elementBoundingClientRect.left + elementBoundingClientRect.width / 2,
-      elementBoundingClientRect.top + elementBoundingClientRect.height / 2
+      elementBoundingClientRect.top + elementBoundingClientRect.height / 2,
     );
 
     if (elementAtCenterPoint === targetElement) {
+      return true;
+    }
+
+    if (this.inlineMenuContentService?.isElementInlineMenu(elementAtCenterPoint as HTMLElement)) {
       return true;
     }
 

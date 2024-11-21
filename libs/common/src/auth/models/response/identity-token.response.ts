@@ -1,4 +1,5 @@
-import { KdfType } from "../../../enums";
+import { KdfType } from "@bitwarden/key-management";
+
 import { BaseResponse } from "../../../models/response/base.response";
 
 import { MasterPasswordPolicyResponse } from "./master-password-policy.response";
@@ -44,12 +45,12 @@ export class IdentityTokenResponse extends BaseResponse {
     this.apiUseKeyConnector = this.getResponseProperty("ApiUseKeyConnector");
     this.keyConnectorUrl = this.getResponseProperty("KeyConnectorUrl");
     this.masterPasswordPolicy = new MasterPasswordPolicyResponse(
-      this.getResponseProperty("MasterPasswordPolicy")
+      this.getResponseProperty("MasterPasswordPolicy"),
     );
 
     if (response.UserDecryptionOptions) {
       this.userDecryptionOptions = new UserDecryptionOptionsResponse(
-        this.getResponseProperty("UserDecryptionOptions")
+        this.getResponseProperty("UserDecryptionOptions"),
       );
     }
   }

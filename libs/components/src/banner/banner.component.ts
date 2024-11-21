@@ -17,6 +17,7 @@ export class BannerComponent implements OnInit {
   @Input("bannerType") bannerType: BannerTypes = "info";
   @Input() icon: string;
   @Input() useAlertRole = true;
+  @Input() showClose = true;
 
   @Output() onClose = new EventEmitter<void>();
 
@@ -27,13 +28,13 @@ export class BannerComponent implements OnInit {
   get bannerClass() {
     switch (this.bannerType) {
       case "danger":
-        return "tw-bg-danger-500";
+        return "tw-bg-danger-100 tw-border-b-danger-700";
       case "info":
-        return "tw-bg-info-500";
+        return "tw-bg-info-100 tw-border-b-info-700";
       case "premium":
-        return "tw-bg-success-500";
+        return "tw-bg-success-100 tw-border-b-success-700";
       case "warning":
-        return "tw-bg-warning-500";
+        return "tw-bg-warning-100 tw-border-b-warning-700";
     }
   }
 }

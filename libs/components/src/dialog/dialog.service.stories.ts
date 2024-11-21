@@ -35,8 +35,7 @@ class StoryDialogComponent {
 
 @Component({
   template: `
-    <bit-dialog dialogSize="large">
-      <span bitDialogTitle>Dialog Title</span>
+    <bit-dialog title="Dialog Title" dialogSize="large">
       <span bitDialogContent>
         Dialog body text goes here.
         <br />
@@ -50,7 +49,10 @@ class StoryDialogComponent {
   `,
 })
 class StoryDialogContentComponent {
-  constructor(public dialogRef: DialogRef, @Inject(DIALOG_DATA) private data: Animal) {}
+  constructor(
+    public dialogRef: DialogRef,
+    @Inject(DIALOG_DATA) private data: Animal,
+  ) {}
 
   get animal() {
     return this.data?.animal;
@@ -76,6 +78,7 @@ export default {
           useFactory: () => {
             return new I18nMockService({
               close: "Close",
+              loading: "Loading",
             });
           },
         },

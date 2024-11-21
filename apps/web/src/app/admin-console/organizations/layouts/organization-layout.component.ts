@@ -1,32 +1,75 @@
+import { CommonModule } from "@angular/common";
 import { Component, OnDestroy, OnInit } from "@angular/core";
-import { ActivatedRoute } from "@angular/router";
-import { map, mergeMap, Observable, Subject, takeUntil } from "rxjs";
+import { ActivatedRoute, RouterModule } from "@angular/router";
+import { combineLatest, map, mergeMap, Observable, Subject, switchMap, takeUntil } from "rxjs";
 
+import { JslibModule } from "@bitwarden/angular/jslib.module";
 import {
   canAccessBillingTab,
   canAccessGroupsTab,
   canAccessMembersTab,
+  canAccessOrgAdmin,
   canAccessReportingTab,
   canAccessSettingsTab,
   canAccessVaultTab,
   getOrganizationById,
   OrganizationService,
 } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
+import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
+import { ProviderService } from "@bitwarden/common/admin-console/abstractions/provider.service";
+import { PolicyType, ProviderStatusType } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { BannerModule, IconModule } from "@bitwarden/components";
+
+import { OrgSwitcherComponent } from "../../../layouts/org-switcher/org-switcher.component";
+import { WebLayoutModule } from "../../../layouts/web-layout.module";
+import { AdminConsoleLogo } from "../../icons/admin-console-logo";
 
 @Component({
   selector: "app-organization-layout",
   templateUrl: "organization-layout.component.html",
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    JslibModule,
+    WebLayoutModule,
+    IconModule,
+    OrgSwitcherComponent,
+    BannerModule,
+  ],
 })
 export class OrganizationLayoutComponent implements OnInit, OnDestroy {
+  protected readonly logo = AdminConsoleLogo;
+
+  protected orgFilter = (org: Organization) => canAccessOrgAdmin(org);
+
   organization$: Observable<Organization>;
+  showPaymentAndHistory$: Observable<boolean>;
+  hideNewOrgButton$: Observable<boolean>;
+  organizationIsUnmanaged$: Observable<boolean>;
+  isAccessIntelligenceFeatureEnabled = false;
 
   private _destroy = new Subject<void>();
 
-  constructor(private route: ActivatedRoute, private organizationService: OrganizationService) {}
+  constructor(
+    private route: ActivatedRoute,
+    private organizationService: OrganizationService,
+    private platformUtilsService: PlatformUtilsService,
+    private configService: ConfigService,
+    private policyService: PolicyService,
+    private providerService: ProviderService,
+  ) {}
 
-  ngOnInit() {
+  async ngOnInit() {
     document.body.classList.remove("layout_frontend");
+
+    this.isAccessIntelligenceFeatureEnabled = await this.configService.getFeatureFlag(
+      FeatureFlag.AccessIntelligence,
+    );
 
     this.organization$ = this.route.params
       .pipe(takeUntil(this._destroy))
@@ -36,8 +79,32 @@ export class OrganizationLayoutComponent implements OnInit, OnDestroy {
           return this.organizationService.organizations$
             .pipe(takeUntil(this._destroy))
             .pipe(getOrganizationById(id));
-        })
+        }),
       );
+
+    this.showPaymentAndHistory$ = this.organization$.pipe(
+      map(
+        (org) =>
+          !this.platformUtilsService.isSelfHost() &&
+          org?.canViewBillingHistory &&
+          org?.canEditPaymentMethods,
+      ),
+    );
+
+    this.hideNewOrgButton$ = this.policyService.policyAppliesToActiveUser$(PolicyType.SingleOrg);
+
+    const provider$ = this.organization$.pipe(
+      switchMap((organization) => this.providerService.get$(organization.providerId)),
+    );
+
+    this.organizationIsUnmanaged$ = combineLatest([this.organization$, provider$]).pipe(
+      map(
+        ([organization, provider]) =>
+          !organization.hasProvider ||
+          !provider ||
+          provider.providerStatus !== ProviderStatusType.Billable,
+      ),
+    );
   }
 
   ngOnDestroy() {

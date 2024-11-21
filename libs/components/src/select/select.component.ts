@@ -7,6 +7,8 @@ import {
   QueryList,
   Self,
   ViewChild,
+  Output,
+  EventEmitter,
 } from "@angular/core";
 import { ControlValueAccessor, NgControl, Validators } from "@angular/forms";
 import { NgSelectComponent } from "@ng-select/ng-select";
@@ -31,6 +33,7 @@ export class SelectComponent<T> implements BitFormFieldControl, ControlValueAcce
   /** Optional: Options can be provided using an array input or using `bit-option` */
   @Input() items: Option<T>[] = [];
   @Input() placeholder = this.i18nService.t("selectPlaceholder");
+  @Output() closed = new EventEmitter();
 
   protected selectedValue: T;
   protected selectedOption: Option<T>;
@@ -39,7 +42,10 @@ export class SelectComponent<T> implements BitFormFieldControl, ControlValueAcce
   private notifyOnChange?: (value: T) => void;
   private notifyOnTouched?: () => void;
 
-  constructor(private i18nService: I18nService, @Optional() @Self() private ngControl?: NgControl) {
+  constructor(
+    private i18nService: I18nService,
+    @Optional() @Self() private ngControl?: NgControl,
+  ) {
     if (ngControl != null) {
       ngControl.valueAccessor = this;
     }
@@ -47,13 +53,20 @@ export class SelectComponent<T> implements BitFormFieldControl, ControlValueAcce
 
   @ContentChildren(OptionComponent)
   protected set options(value: QueryList<OptionComponent<T>>) {
+    if (value == null || value.length == 0) {
+      return;
+    }
     this.items = value.toArray();
     this.selectedOption = this.findSelectedOption(this.items, this.selectedValue);
   }
 
-  @HostBinding("class") protected classes = ["tw-block", "tw-w-full"];
+  @HostBinding("class") protected classes = ["tw-block", "tw-w-full", "tw-h-full"];
 
-  @HostBinding()
+  // Usings a separate getter for the HostBinding to get around an unexplained angular error
+  @HostBinding("attr.disabled")
+  get disabledAttr() {
+    return this.disabled || null;
+  }
   @Input()
   get disabled() {
     return this._disabled ?? this.ngControl?.disabled ?? false;
@@ -145,5 +158,10 @@ export class SelectComponent<T> implements BitFormFieldControl, ControlValueAcce
 
   private findSelectedOption(items: Option<T>[], value: T): Option<T> | undefined {
     return items.find((item) => item.value === value);
+  }
+
+  /**Emits the closed event. */
+  protected onClose() {
+    this.closed.emit();
   }
 }

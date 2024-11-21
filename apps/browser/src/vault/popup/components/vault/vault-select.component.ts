@@ -5,17 +5,28 @@ import {
   Component,
   ElementRef,
   EventEmitter,
+  HostListener,
+  OnDestroy,
   OnInit,
   Output,
   TemplateRef,
   ViewChild,
   ViewContainerRef,
-  HostListener,
-  OnDestroy,
 } from "@angular/core";
-import { BehaviorSubject, concatMap, map, merge, Observable, Subject, takeUntil } from "rxjs";
+import {
+  BehaviorSubject,
+  combineLatest,
+  concatMap,
+  map,
+  merge,
+  Observable,
+  Subject,
+  takeUntil,
+} from "rxjs";
 
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
+import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
+import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
@@ -32,7 +43,7 @@ import { VaultFilterService } from "../../../services/vault-filter.service";
         "void",
         style({
           opacity: 0,
-        })
+        }),
       ),
       transition(
         "void => open",
@@ -40,8 +51,8 @@ import { VaultFilterService } from "../../../services/vault-filter.service";
           "100ms linear",
           style({
             opacity: 1,
-          })
-        )
+          }),
+        ),
       ),
       transition("* => void", animate("100ms linear", style({ opacity: 0 }))),
     ]),
@@ -87,7 +98,8 @@ export class VaultSelectComponent implements OnInit, OnDestroy {
     private overlay: Overlay,
     private viewContainerRef: ViewContainerRef,
     private platformUtilsService: PlatformUtilsService,
-    private organizationService: OrganizationService
+    private organizationService: OrganizationService,
+    private policyService: PolicyService,
   ) {}
 
   @HostListener("document:keydown.escape", ["$event"])
@@ -103,11 +115,13 @@ export class VaultSelectComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this._destroy))
       .pipe(map((orgs) => orgs.sort(Utils.getSortFunction(this.i18nService, "name"))));
 
-    this.organizations$
+    combineLatest([
+      this.organizations$,
+      this.policyService.policyAppliesToActiveUser$(PolicyType.PersonalOwnership),
+    ])
       .pipe(
-        concatMap(async (organizations) => {
-          this.enforcePersonalOwnership =
-            await this.vaultFilterService.checkForPersonalOwnershipPolicy();
+        concatMap(async ([organizations, enforcePersonalOwnership]) => {
+          this.enforcePersonalOwnership = enforcePersonalOwnership;
 
           if (this.shouldShow(organizations)) {
             if (this.enforcePersonalOwnership && !this.vaultFilterService.vaultFilter.myVaultOnly) {
@@ -118,14 +132,14 @@ export class VaultSelectComponent implements OnInit, OnDestroy {
               this._selectedVault.next(this.i18nService.t(this.vaultFilterService.myVault));
             } else if (this.vaultFilterService.vaultFilter.selectedOrganizationId != null) {
               const selectedOrganization = organizations.find(
-                (o) => o.id === this.vaultFilterService.vaultFilter.selectedOrganizationId
+                (o) => o.id === this.vaultFilterService.vaultFilter.selectedOrganizationId,
               );
               this._selectedVault.next(selectedOrganization.name);
             } else {
               this._selectedVault.next(this.i18nService.t(this.vaultFilterService.allVaults));
             }
           }
-        })
+        }),
       )
       .pipe(takeUntil(this._destroy))
       .subscribe();
@@ -167,7 +181,7 @@ export class VaultSelectComponent implements OnInit, OnDestroy {
     merge(
       this.overlayRef.outsidePointerEvents(),
       this.overlayRef.backdropClick(),
-      this.overlayRef.detachments()
+      this.overlayRef.detachments(),
       // eslint-disable-next-line rxjs-angular/prefer-takeuntil
     ).subscribe(() => {
       this.close();
@@ -187,7 +201,7 @@ export class VaultSelectComponent implements OnInit, OnDestroy {
       this.platformUtilsService.showToast(
         "error",
         null,
-        this.i18nService.t("disabledOrganizationFilterError")
+        this.i18nService.t("disabledOrganizationFilterError"),
       );
     } else {
       this._selectedVault.next(organization.name);

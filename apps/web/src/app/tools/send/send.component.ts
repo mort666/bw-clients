@@ -1,7 +1,6 @@
-import { Component, NgZone, ViewChild, ViewContainerRef } from "@angular/core";
+import { Component, NgZone, ViewChild, OnInit, OnDestroy, ViewContainerRef } from "@angular/core";
 import { lastValueFrom } from "rxjs";
 
-import { ModalService } from "@bitwarden/angular/services/modal.service";
 import { SendComponent as BaseSendComponent } from "@bitwarden/angular/tools/send/send.component";
 import { SearchService } from "@bitwarden/common/abstractions/search.service";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
@@ -13,25 +12,32 @@ import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/pl
 import { SendView } from "@bitwarden/common/tools/send/models/view/send.view";
 import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.service.abstraction";
 import { SendService } from "@bitwarden/common/tools/send/services/send.service.abstraction";
-import { DialogService, NoItemsModule, SearchModule, TableDataSource } from "@bitwarden/components";
+import {
+  DialogService,
+  NoItemsModule,
+  SearchModule,
+  TableDataSource,
+  ToastService,
+} from "@bitwarden/components";
+import { NoSendsIcon } from "@bitwarden/send-ui";
 
+import { HeaderModule } from "../../layouts/header/header.module";
 import { SharedModule } from "../../shared";
 
 import { AddEditComponent } from "./add-edit.component";
-import { NoSend } from "./icons/no-send.icon";
 
 const BroadcasterSubscriptionId = "SendComponent";
 
 @Component({
   selector: "app-send",
   standalone: true,
-  imports: [SharedModule, SearchModule, NoItemsModule],
+  imports: [SharedModule, SearchModule, NoItemsModule, HeaderModule],
   templateUrl: "send.component.html",
 })
-export class SendComponent extends BaseSendComponent {
+export class SendComponent extends BaseSendComponent implements OnInit, OnDestroy {
   @ViewChild("sendAddEdit", { read: ViewContainerRef, static: true })
   sendAddEditModalRef: ViewContainerRef;
-  noItemIcon = NoSend;
+  noItemIcon = NoSendsIcon;
 
   override set filteredSends(filteredSends: SendView[]) {
     super.filteredSends = filteredSends;
@@ -52,11 +58,11 @@ export class SendComponent extends BaseSendComponent {
     ngZone: NgZone,
     searchService: SearchService,
     policyService: PolicyService,
-    private modalService: ModalService,
     private broadcasterService: BroadcasterService,
     logService: LogService,
     sendApiService: SendApiService,
-    dialogService: DialogService
+    dialogService: DialogService,
+    toastService: ToastService,
   ) {
     super(
       sendService,
@@ -68,7 +74,8 @@ export class SendComponent extends BaseSendComponent {
       policyService,
       logService,
       sendApiService,
-      dialogService
+      dialogService,
+      toastService,
     );
   }
 
@@ -78,6 +85,8 @@ export class SendComponent extends BaseSendComponent {
 
     // Broadcaster subscription - load if sync completes in the background
     this.broadcasterService.subscribe(BroadcasterSubscriptionId, (message: any) => {
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       this.ngZone.run(async () => {
         switch (message.command) {
           case "syncCompleted":
@@ -91,6 +100,7 @@ export class SendComponent extends BaseSendComponent {
   }
 
   ngOnDestroy() {
+    this.dialogService.closeAll();
     this.broadcasterService.unsubscribe(BroadcasterSubscriptionId);
   }
 

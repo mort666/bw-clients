@@ -1,22 +1,34 @@
-import { Directive, ElementRef, Input, Renderer2 } from "@angular/core";
+import { Directive, ElementRef, Input, OnInit, Renderer2 } from "@angular/core";
 
 @Directive({
   selector: "[appA11yTitle]",
 })
-export class A11yTitleDirective {
+export class A11yTitleDirective implements OnInit {
   @Input() set appA11yTitle(title: string) {
     this.title = title;
+    this.setAttributes();
   }
 
   private title: string;
+  private originalTitle: string | null;
+  private originalAriaLabel: string | null;
 
-  constructor(private el: ElementRef, private renderer: Renderer2) {}
+  constructor(
+    private el: ElementRef,
+    private renderer: Renderer2,
+  ) {}
 
   ngOnInit() {
-    if (!this.el.nativeElement.hasAttribute("title")) {
+    this.originalTitle = this.el.nativeElement.getAttribute("title");
+    this.originalAriaLabel = this.el.nativeElement.getAttribute("aria-label");
+    this.setAttributes();
+  }
+
+  private setAttributes() {
+    if (this.originalTitle === null) {
       this.renderer.setAttribute(this.el.nativeElement, "title", this.title);
     }
-    if (!this.el.nativeElement.hasAttribute("aria-label")) {
+    if (this.originalAriaLabel === null) {
       this.renderer.setAttribute(this.el.nativeElement, "aria-label", this.title);
     }
   }

@@ -1,6 +1,7 @@
 import { ListResponse } from "../../../models/response/list.response";
 import { PolicyType } from "../../enums";
 import { MasterPasswordPolicyOptions } from "../../models/domain/master-password-policy-options";
+import { Policy } from "../../models/domain/policy";
 import { PolicyRequest } from "../../models/request/policy.request";
 import { PolicyResponse } from "../../models/response/policy.response";
 
@@ -12,12 +13,11 @@ export class PolicyApiServiceAbstraction {
     organizationId: string,
     token: string,
     email: string,
-    organizationUserId: string
-  ) => Promise<ListResponse<PolicyResponse>>;
-  getPoliciesByInvitedUser: (
-    organizationId: string,
-    userId: string
-  ) => Promise<ListResponse<PolicyResponse>>;
-  getMasterPasswordPoliciesForInvitedUsers: (orgId: string) => Promise<MasterPasswordPolicyOptions>;
+    organizationUserId: string,
+  ) => Promise<Policy[] | undefined>;
+
+  getMasterPasswordPolicyOptsForOrgUser: (
+    orgId: string,
+  ) => Promise<MasterPasswordPolicyOptions | null>;
   putPolicy: (organizationId: string, type: PolicyType, request: PolicyRequest) => Promise<any>;
 }

@@ -1,10 +1,11 @@
-// eslint-disable-next-line no-restricted-imports
-import { Substitute, Arg, SubstituteOf } from "@fluffy-spoon/substitute";
+import { mock } from "jest-mock-extended";
 
+import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
+import { UserKey } from "@bitwarden/common/types/key";
+
+import { KeyService } from "../../../../../../key-management/src/abstractions/key.service";
 import { makeStaticByteArray, mockEnc } from "../../../../../spec";
-import { CryptoService } from "../../../../platform/abstractions/crypto.service";
 import { EncryptService } from "../../../../platform/abstractions/encrypt.service";
-import { EncString } from "../../../../platform/models/domain/enc-string";
 import { ContainerService } from "../../../../platform/services/container.service";
 import { SendType } from "../../enums/send-type";
 import { SendData } from "../data/send.data";
@@ -89,8 +90,9 @@ describe("Send", () => {
   });
 
   it("Decrypt", async () => {
-    const text = Substitute.for<SendText>();
-    text.decrypt(Arg.any()).resolves("textView" as any);
+    const text = mock<SendText>();
+    text.decrypt.mockResolvedValue("textView" as any);
+    const userKey = new SymmetricCryptoKey(new Uint8Array(32)) as UserKey;
 
     const send = new Send();
     send.id = "id";
@@ -108,18 +110,20 @@ describe("Send", () => {
     send.disabled = false;
     send.hideEmail = true;
 
-    const cryptoService = Substitute.for<CryptoService>();
-    cryptoService.decryptToBytes(send.key, null).resolves(makeStaticByteArray(32));
-    cryptoService.makeSendKey(Arg.any()).resolves("cryptoKey" as any);
+    const encryptService = mock<EncryptService>();
+    const keyService = mock<KeyService>();
+    encryptService.decryptToBytes
+      .calledWith(send.key, userKey)
+      .mockResolvedValue(makeStaticByteArray(32));
+    keyService.makeSendKey.mockResolvedValue("cryptoKey" as any);
+    keyService.getUserKey.mockResolvedValue(userKey);
 
-    const encryptService = Substitute.for<EncryptService>();
-
-    (window as any).bitwardenContainerService = new ContainerService(cryptoService, encryptService);
+    (window as any).bitwardenContainerService = new ContainerService(keyService, encryptService);
 
     const view = await send.decrypt();
 
-    text.received(1).decrypt("cryptoKey" as any);
-    (send.name as SubstituteOf<EncString>).received(1).decrypt(null, "cryptoKey" as any);
+    expect(text.decrypt).toHaveBeenNthCalledWith(1, "cryptoKey");
+    expect(send.name.decrypt).toHaveBeenNthCalledWith(1, null, "cryptoKey");
 
     expect(view).toMatchObject({
       id: "id",

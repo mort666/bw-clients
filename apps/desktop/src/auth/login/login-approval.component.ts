@@ -1,25 +1,38 @@
-import { Component, OnInit, OnDestroy } from "@angular/core";
-import { ipcRenderer } from "electron";
-import { Subject } from "rxjs";
+import { DIALOG_DATA, DialogRef } from "@angular/cdk/dialog";
+import { CommonModule } from "@angular/common";
+import { Component, OnInit, OnDestroy, Inject } from "@angular/core";
+import { Subject, firstValueFrom, map } from "rxjs";
 
-import { ModalRef } from "@bitwarden/angular/components/modal/modal.ref";
-import { ModalConfig } from "@bitwarden/angular/services/modal.service";
+import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { AuthRequestServiceAbstraction } from "@bitwarden/auth/common";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
-import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthRequestResponse } from "@bitwarden/common/auth/models/response/auth-request.response";
 import { AppIdService } from "@bitwarden/common/platform/abstractions/app-id.service";
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
+import {
+  AsyncActionsModule,
+  ButtonModule,
+  DialogModule,
+  DialogService,
+  ToastService,
+} from "@bitwarden/components";
+import { KeyService } from "@bitwarden/key-management";
 
 const RequestTimeOut = 60000 * 15; //15 Minutes
 const RequestTimeUpdate = 60000 * 5; //5 Minutes
 
+export interface LoginApprovalDialogParams {
+  notificationId: string;
+}
+
 @Component({
   selector: "login-approval",
   templateUrl: "login-approval.component.html",
+  standalone: true,
+  imports: [CommonModule, AsyncActionsModule, ButtonModule, DialogModule, JslibModule],
 })
 export class LoginApprovalComponent implements OnInit, OnDestroy {
   notificationId: string;
@@ -29,35 +42,32 @@ export class LoginApprovalComponent implements OnInit, OnDestroy {
   email: string;
   fingerprintPhrase: string;
   authRequestResponse: AuthRequestResponse;
-  interval: NodeJS.Timer;
+  interval: NodeJS.Timeout;
   requestTimeText: string;
-  dismissModal: boolean;
 
   constructor(
-    protected stateService: StateService,
+    @Inject(DIALOG_DATA) private params: LoginApprovalDialogParams,
+    protected authRequestService: AuthRequestServiceAbstraction,
+    protected accountService: AccountService,
     protected platformUtilsService: PlatformUtilsService,
     protected i18nService: I18nService,
     protected apiService: ApiService,
-    protected authService: AuthService,
     protected appIdService: AppIdService,
-    protected cryptoService: CryptoService,
-    private modalRef: ModalRef,
-    config: ModalConfig
+    protected keyService: KeyService,
+    private dialogRef: DialogRef,
+    private toastService: ToastService,
   ) {
-    this.notificationId = config.data.notificationId;
-
-    this.dismissModal = true;
-    this.modalRef.onClosed
-      // eslint-disable-next-line rxjs-angular/prefer-takeuntil
-      .subscribe(() => {
-        if (this.dismissModal) {
-          this.approveLogin(false, false);
-        }
-      });
+    this.notificationId = params.notificationId;
   }
 
-  ngOnDestroy(): void {
+  async ngOnDestroy(): Promise<void> {
     clearInterval(this.interval);
+    const closedWithButton = await firstValueFrom(this.dialogRef.closed);
+    if (!closedWithButton) {
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      this.retrieveAuthRequestAndRespond(false);
+    }
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -66,47 +76,59 @@ export class LoginApprovalComponent implements OnInit, OnDestroy {
     if (this.notificationId != null) {
       this.authRequestResponse = await this.apiService.getAuthRequest(this.notificationId);
       const publicKey = Utils.fromB64ToArray(this.authRequestResponse.publicKey);
-      this.email = await this.stateService.getEmail();
-      this.fingerprintPhrase = (
-        await this.cryptoService.getFingerprint(this.email, publicKey)
-      ).join("-");
+      this.email = await await firstValueFrom(
+        this.accountService.activeAccount$.pipe(map((a) => a?.email)),
+      );
+      this.fingerprintPhrase = await this.authRequestService.getFingerprintPhrase(
+        this.email,
+        publicKey,
+      );
       this.updateTimeText();
 
       this.interval = setInterval(() => {
         this.updateTimeText();
       }, RequestTimeUpdate);
 
-      const isVisible = await ipcRenderer.invoke("windowVisible");
+      const isVisible = await ipc.platform.isWindowVisible();
       if (!isVisible) {
-        await ipcRenderer.invoke("loginRequest", {
-          alertTitle: this.i18nService.t("logInRequested"),
-          alertBody: this.i18nService.t("confirmLoginAtemptForMail", this.email),
-          buttonText: this.i18nService.t("close"),
-        });
+        await ipc.auth.loginRequest(
+          this.i18nService.t("logInRequested"),
+          this.i18nService.t("confirmLoginAtemptForMail", this.email),
+          this.i18nService.t("close"),
+        );
       }
     }
   }
 
-  async approveLogin(approveLogin: boolean, approveDenyButtonClicked: boolean) {
-    clearInterval(this.interval);
+  /**
+   * Strongly-typed helper to open a LoginApprovalDialog
+   * @param dialogService Instance of the dialog service that will be used to open the dialog
+   * @param data Configuration for the dialog
+   */
+  static open(dialogService: DialogService, data: LoginApprovalDialogParams) {
+    return dialogService.open(LoginApprovalComponent, { data });
+  }
 
-    this.dismissModal = !approveDenyButtonClicked;
-    if (approveDenyButtonClicked) {
-      this.modalRef.close();
-    }
+  denyLogin = async () => {
+    await this.retrieveAuthRequestAndRespond(false);
+  };
 
+  approveLogin = async () => {
+    await this.retrieveAuthRequestAndRespond(true);
+  };
+
+  private async retrieveAuthRequestAndRespond(approve: boolean) {
     this.authRequestResponse = await this.apiService.getAuthRequest(this.notificationId);
     if (this.authRequestResponse.requestApproved || this.authRequestResponse.responseDate != null) {
-      this.platformUtilsService.showToast(
-        "info",
-        null,
-        this.i18nService.t("thisRequestIsNoLongerValid")
-      );
+      this.toastService.showToast({
+        variant: "info",
+        title: null,
+        message: this.i18nService.t("thisRequestIsNoLongerValid"),
+      });
     } else {
-      const loginResponse = await this.authService.passwordlessLogin(
-        this.authRequestResponse.id,
-        this.authRequestResponse.publicKey,
-        approveLogin
+      const loginResponse = await this.authRequestService.approveOrDenyAuthRequest(
+        approve,
+        this.authRequestResponse,
       );
       this.showResultToast(loginResponse);
     }
@@ -114,21 +136,21 @@ export class LoginApprovalComponent implements OnInit, OnDestroy {
 
   showResultToast(loginResponse: AuthRequestResponse) {
     if (loginResponse.requestApproved) {
-      this.platformUtilsService.showToast(
-        "success",
-        null,
-        this.i18nService.t(
+      this.toastService.showToast({
+        variant: "success",
+        title: null,
+        message: this.i18nService.t(
           "logInConfirmedForEmailOnDevice",
           this.email,
-          loginResponse.requestDeviceType
-        )
-      );
+          loginResponse.requestDeviceType,
+        ),
+      });
     } else {
-      this.platformUtilsService.showToast(
-        "info",
-        null,
-        this.i18nService.t("youDeniedALogInAttemptFromAnotherDevice")
-      );
+      this.toastService.showToast({
+        variant: "info",
+        title: null,
+        message: this.i18nService.t("youDeniedALogInAttemptFromAnotherDevice"),
+      });
     }
   }
 
@@ -141,7 +163,7 @@ export class LoginApprovalComponent implements OnInit, OnDestroy {
       requestDate.getUTCHours(),
       requestDate.getUTCMinutes(),
       requestDate.getUTCSeconds(),
-      requestDate.getUTCMilliseconds()
+      requestDate.getUTCMilliseconds(),
     );
 
     const dateNow = new Date(Date.now());
@@ -152,7 +174,7 @@ export class LoginApprovalComponent implements OnInit, OnDestroy {
       dateNow.getUTCHours(),
       dateNow.getUTCMinutes(),
       dateNow.getUTCSeconds(),
-      dateNow.getUTCMilliseconds()
+      dateNow.getUTCMilliseconds(),
     );
 
     const diffInMinutes = dateNowUTC - requestDateUTC;
@@ -162,16 +184,16 @@ export class LoginApprovalComponent implements OnInit, OnDestroy {
     } else if (diffInMinutes < RequestTimeOut) {
       this.requestTimeText = this.i18nService.t(
         "requestedXMinutesAgo",
-        (diffInMinutes / 60000).toFixed()
+        (diffInMinutes / 60000).toFixed(),
       );
     } else {
       clearInterval(this.interval);
-      this.modalRef.close();
-      this.platformUtilsService.showToast(
-        "info",
-        null,
-        this.i18nService.t("loginRequestHasAlreadyExpired")
-      );
+      this.dialogRef.close();
+      this.toastService.showToast({
+        variant: "info",
+        title: null,
+        message: this.i18nService.t("loginRequestHasAlreadyExpired"),
+      });
     }
   }
 }

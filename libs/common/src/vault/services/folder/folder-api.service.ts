@@ -7,7 +7,10 @@ import { FolderRequest } from "../../../vault/models/request/folder.request";
 import { FolderResponse } from "../../../vault/models/response/folder.response";
 
 export class FolderApiService implements FolderApiServiceAbstraction {
-  constructor(private folderService: InternalFolderService, private apiService: ApiService) {}
+  constructor(
+    private folderService: InternalFolderService,
+    private apiService: ApiService,
+  ) {}
 
   async save(folder: Folder): Promise<any> {
     const request = new FolderRequest(folder);
@@ -27,6 +30,11 @@ export class FolderApiService implements FolderApiServiceAbstraction {
   async delete(id: string): Promise<any> {
     await this.deleteFolder(id);
     await this.folderService.delete(id);
+  }
+
+  async deleteAll(): Promise<void> {
+    await this.apiService.send("DELETE", "/folders/all", null, true, false);
+    await this.folderService.clear();
   }
 
   async get(id: string): Promise<FolderResponse> {

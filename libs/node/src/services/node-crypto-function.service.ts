@@ -14,7 +14,7 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
     password: string | Uint8Array,
     salt: string | Uint8Array,
     algorithm: "sha256" | "sha512",
-    iterations: number
+    iterations: number,
   ): Promise<Uint8Array> {
     const len = algorithm === "sha256" ? 32 : 64;
     const nodePassword = this.toNodeValue(password);
@@ -35,7 +35,7 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
     salt: string | Uint8Array,
     iterations: number,
     memory: number,
-    parallelism: number
+    parallelism: number,
   ): Promise<Uint8Array> {
     const nodePassword = this.toNodeValue(password);
     const nodeSalt = this.toNodeBuffer(this.toUint8Buffer(salt));
@@ -58,7 +58,7 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
     salt: string | Uint8Array,
     info: string | Uint8Array,
     outputByteSize: number,
-    algorithm: "sha256" | "sha512"
+    algorithm: "sha256" | "sha512",
   ): Promise<Uint8Array> {
     const saltBuf = this.toUint8Buffer(salt);
     const prk = await this.hmac(ikm, saltBuf, algorithm);
@@ -70,7 +70,7 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
     prk: Uint8Array,
     info: string | Uint8Array,
     outputByteSize: number,
-    algorithm: "sha256" | "sha512"
+    algorithm: "sha256" | "sha512",
   ): Promise<Uint8Array> {
     const hashLen = algorithm === "sha256" ? 32 : 64;
     if (outputByteSize > 255 * hashLen) {
@@ -103,7 +103,7 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
 
   hash(
     value: string | Uint8Array,
-    algorithm: "sha1" | "sha256" | "sha512" | "md5"
+    algorithm: "sha1" | "sha256" | "sha512" | "md5",
   ): Promise<Uint8Array> {
     const nodeValue = this.toNodeValue(value);
     const hash = crypto.createHash(algorithm);
@@ -114,7 +114,7 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
   hmac(
     value: Uint8Array,
     key: Uint8Array,
-    algorithm: "sha1" | "sha256" | "sha512"
+    algorithm: "sha1" | "sha256" | "sha512",
   ): Promise<Uint8Array> {
     const nodeValue = this.toNodeBuffer(value);
     const nodeKey = this.toNodeBuffer(key);
@@ -145,7 +145,7 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
   hmacFast(
     value: Uint8Array,
     key: Uint8Array,
-    algorithm: "sha1" | "sha256" | "sha512"
+    algorithm: "sha1" | "sha256" | "sha512",
   ): Promise<Uint8Array> {
     return this.hmac(value, key, algorithm);
   }
@@ -167,7 +167,7 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
     data: string,
     iv: string,
     mac: string,
-    key: SymmetricCryptoKey
+    key: SymmetricCryptoKey,
   ): DecryptParameters<Uint8Array> {
     const p = new DecryptParameters<Uint8Array>();
     p.encKey = key.encKey;
@@ -189,16 +189,24 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
     return p;
   }
 
-  async aesDecryptFast(parameters: DecryptParameters<Uint8Array>): Promise<string> {
-    const decBuf = await this.aesDecrypt(parameters.data, parameters.iv, parameters.encKey);
+  async aesDecryptFast(
+    parameters: DecryptParameters<Uint8Array>,
+    mode: "cbc" | "ecb",
+  ): Promise<string> {
+    const decBuf = await this.aesDecrypt(parameters.data, parameters.iv, parameters.encKey, mode);
     return Utils.fromBufferToUtf8(decBuf);
   }
 
-  aesDecrypt(data: Uint8Array, iv: Uint8Array, key: Uint8Array): Promise<Uint8Array> {
+  aesDecrypt(
+    data: Uint8Array,
+    iv: Uint8Array,
+    key: Uint8Array,
+    mode: "cbc" | "ecb",
+  ): Promise<Uint8Array> {
     const nodeData = this.toNodeBuffer(data);
-    const nodeIv = this.toNodeBuffer(iv);
+    const nodeIv = mode === "ecb" ? null : this.toNodeBuffer(iv);
     const nodeKey = this.toNodeBuffer(key);
-    const decipher = crypto.createDecipheriv("aes-256-cbc", nodeKey, nodeIv);
+    const decipher = crypto.createDecipheriv(this.toNodeCryptoAesMode(mode), nodeKey, nodeIv);
     const decBuf = Buffer.concat([decipher.update(nodeData), decipher.final()]);
     return Promise.resolve(this.toUint8Buffer(decBuf));
   }
@@ -206,7 +214,7 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
   rsaEncrypt(
     data: Uint8Array,
     publicKey: Uint8Array,
-    algorithm: "sha1" | "sha256"
+    algorithm: "sha1" | "sha256",
   ): Promise<Uint8Array> {
     if (algorithm === "sha256") {
       throw new Error("Node crypto does not support RSA-OAEP SHA-256");
@@ -220,7 +228,7 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
   rsaDecrypt(
     data: Uint8Array,
     privateKey: Uint8Array,
-    algorithm: "sha1" | "sha256"
+    algorithm: "sha1" | "sha256",
   ): Promise<Uint8Array> {
     if (algorithm === "sha256") {
       throw new Error("Node crypto does not support RSA-OAEP SHA-256");
@@ -266,7 +274,7 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
           const privateKey = Utils.fromByteStringToArray(privateKeyByteString);
 
           resolve([publicKey, privateKey]);
-        }
+        },
       );
     });
   }
@@ -325,5 +333,9 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
     const asn1 = forge.asn1.fromDer(byteString);
     const publicKey = forge.pki.publicKeyFromAsn1(asn1);
     return forge.pki.publicKeyToPem(publicKey);
+  }
+
+  private toNodeCryptoAesMode(mode: "cbc" | "ecb"): string {
+    return mode === "cbc" ? "aes-256-cbc" : "aes-256-ecb";
   }
 }

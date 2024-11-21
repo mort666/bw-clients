@@ -33,20 +33,20 @@ export class BitFormButtonDirective implements OnDestroy {
   constructor(
     buttonComponent: ButtonLikeAbstraction,
     @Optional() submitDirective?: BitSubmitDirective,
-    @Optional() actionDirective?: BitActionDirective
+    @Optional() actionDirective?: BitActionDirective,
   ) {
     if (submitDirective && buttonComponent) {
       submitDirective.loading$.pipe(takeUntil(this.destroy$)).subscribe((loading) => {
         if (this.type === "submit") {
           buttonComponent.loading = loading;
         } else {
-          buttonComponent.disabled = loading;
+          buttonComponent.disabled = this.disabled || loading;
         }
       });
 
       submitDirective.disabled$.pipe(takeUntil(this.destroy$)).subscribe((disabled) => {
         if (this.disabled !== false) {
-          buttonComponent.disabled = disabled;
+          buttonComponent.disabled = this.disabled || disabled;
         }
       });
     }

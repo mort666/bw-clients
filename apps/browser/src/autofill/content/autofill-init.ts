@@ -1,8 +1,14 @@
+import { EVENTS } from "@bitwarden/common/autofill/constants";
+
 import AutofillPageDetails from "../models/autofill-page-details";
-import AutofillScript from "../models/autofill-script";
-import CollectAutofillContentService from "../services/collect-autofill-content.service";
-import DomElementVisibilityService from "../services/dom-element-visibility.service";
+import { AutofillInlineMenuContentService } from "../overlay/inline-menu/abstractions/autofill-inline-menu-content.service";
+import { OverlayNotificationsContentService } from "../overlay/notifications/abstractions/overlay-notifications-content.service";
+import { AutofillOverlayContentService } from "../services/abstractions/autofill-overlay-content.service";
+import { DomElementVisibilityService } from "../services/abstractions/dom-element-visibility.service";
+import { DomQueryService } from "../services/abstractions/dom-query.service";
+import { CollectAutofillContentService } from "../services/collect-autofill-content.service";
 import InsertAutofillContentService from "../services/insert-autofill-content.service";
+import { sendExtensionMessage } from "../utils";
 
 import {
   AutofillExtensionMessage,
@@ -11,27 +17,41 @@ import {
 } from "./abstractions/autofill-init";
 
 class AutofillInit implements AutofillInitInterface {
-  private readonly domElementVisibilityService: DomElementVisibilityService;
+  private readonly sendExtensionMessage = sendExtensionMessage;
   private readonly collectAutofillContentService: CollectAutofillContentService;
   private readonly insertAutofillContentService: InsertAutofillContentService;
+  private collectPageDetailsOnLoadTimeout: number | NodeJS.Timeout | undefined;
   private readonly extensionMessageHandlers: AutofillExtensionMessageHandlers = {
     collectPageDetails: ({ message }) => this.collectPageDetails(message),
     collectPageDetailsImmediately: ({ message }) => this.collectPageDetails(message, true),
-    fillForm: ({ message }) => this.fillForm(message.fillScript),
+    fillForm: ({ message }) => this.fillForm(message),
   };
 
   /**
    * AutofillInit constructor. Initializes the DomElementVisibilityService,
    * CollectAutofillContentService and InsertAutofillContentService classes.
+   *
+   * @param domQueryService - Service used to handle DOM queries.
+   * @param domElementVisibilityService - Used to check if an element is viewable.
+   * @param autofillOverlayContentService - The autofill overlay content service, potentially undefined.
+   * @param autofillInlineMenuContentService - The inline menu content service, potentially undefined.
+   * @param overlayNotificationsContentService - The overlay notifications content service, potentially undefined.
    */
-  constructor() {
-    this.domElementVisibilityService = new DomElementVisibilityService();
+  constructor(
+    domQueryService: DomQueryService,
+    domElementVisibilityService: DomElementVisibilityService,
+    private autofillOverlayContentService?: AutofillOverlayContentService,
+    private autofillInlineMenuContentService?: AutofillInlineMenuContentService,
+    private overlayNotificationsContentService?: OverlayNotificationsContentService,
+  ) {
     this.collectAutofillContentService = new CollectAutofillContentService(
-      this.domElementVisibilityService
+      domElementVisibilityService,
+      domQueryService,
+      this.autofillOverlayContentService,
     );
     this.insertAutofillContentService = new InsertAutofillContentService(
-      this.domElementVisibilityService,
-      this.collectAutofillContentService
+      domElementVisibilityService,
+      this.collectAutofillContentService,
     );
   }
 
@@ -39,10 +59,32 @@ class AutofillInit implements AutofillInitInterface {
    * Initializes the autofill content script, setting up
    * the extension message listeners. This method should
    * be called once when the content script is loaded.
-   * @public
    */
   init() {
     this.setupExtensionMessageListeners();
+    this.autofillOverlayContentService?.init();
+    this.collectPageDetailsOnLoad();
+  }
+
+  /**
+   * Triggers a collection of the page details from the
+   * background script, ensuring that autofill is ready
+   * to act on the page.
+   */
+  private collectPageDetailsOnLoad() {
+    const sendCollectDetailsMessage = () => {
+      this.clearCollectPageDetailsOnLoadTimeout();
+      this.collectPageDetailsOnLoadTimeout = setTimeout(
+        () => this.sendExtensionMessage("bgCollectPageDetails", { sender: "autofillInit" }),
+        750,
+      );
+    };
+
+    if (globalThis.document.readyState === "complete") {
+      sendCollectDetailsMessage();
+    }
+
+    globalThis.addEventListener(EVENTS.LOAD, sendCollectDetailsMessage);
   }
 
   /**
@@ -51,14 +93,13 @@ class AutofillInit implements AutofillInitInterface {
    * parameter is set to true, the page details will be
    * returned to facilitate sending the details in the
    * response to the extension message.
-   * @param {AutofillExtensionMessage} message
-   * @param {boolean} sendDetailsInResponse
-   * @returns {AutofillPageDetails | void}
-   * @private
+   *
+   * @param message - The extension message.
+   * @param sendDetailsInResponse - Determines whether to send the details in the response.
    */
   private async collectPageDetails(
     message: AutofillExtensionMessage,
-    sendDetailsInResponse = false
+    sendDetailsInResponse = false,
   ): Promise<AutofillPageDetails | void> {
     const pageDetails: AutofillPageDetails =
       await this.collectAutofillContentService.getPageDetails();
@@ -66,8 +107,7 @@ class AutofillInit implements AutofillInitInterface {
       return pageDetails;
     }
 
-    chrome.runtime.sendMessage({
-      command: "collectPageDetailsResponse",
+    void this.sendExtensionMessage("collectPageDetailsResponse", {
       tab: message.tab,
       details: pageDetails,
       sender: message.sender,
@@ -76,55 +116,114 @@ class AutofillInit implements AutofillInitInterface {
 
   /**
    * Fills the form with the given fill script.
-   * @param {AutofillScript} fillScript
-   * @private
+   *
+   * @param {AutofillExtensionMessage} message
    */
-  private fillForm(fillScript: AutofillScript) {
-    this.insertAutofillContentService.fillForm(fillScript);
+  private async fillForm({ fillScript, pageDetailsUrl }: AutofillExtensionMessage) {
+    if ((document.defaultView || window).location.href !== pageDetailsUrl) {
+      return;
+    }
+
+    this.blurFocusedFieldAndCloseInlineMenu();
+    await this.sendExtensionMessage("updateIsFieldCurrentlyFilling", {
+      isFieldCurrentlyFilling: true,
+    });
+    await this.insertAutofillContentService.fillForm(fillScript);
+
+    setTimeout(
+      () =>
+        this.sendExtensionMessage("updateIsFieldCurrentlyFilling", {
+          isFieldCurrentlyFilling: false,
+        }),
+      250,
+    );
   }
 
   /**
-   * Sets up the extension message listeners
-   * for the content script.
-   * @private
+   * Blurs the most recently focused field and removes the inline menu. Used
+   * in cases where the background unlock or vault item reprompt popout
+   * is opened.
+   */
+  private blurFocusedFieldAndCloseInlineMenu() {
+    this.autofillOverlayContentService?.blurMostRecentlyFocusedField(true);
+  }
+
+  /**
+   * Clears the send collect details message timeout.
+   */
+  private clearCollectPageDetailsOnLoadTimeout() {
+    if (this.collectPageDetailsOnLoadTimeout) {
+      clearTimeout(this.collectPageDetailsOnLoadTimeout);
+    }
+  }
+
+  /**
+   * Sets up the extension message listeners for the content script.
    */
   private setupExtensionMessageListeners() {
     chrome.runtime.onMessage.addListener(this.handleExtensionMessage);
   }
 
   /**
-   * Handles the extension messages
-   * sent to the content script.
-   * @param {AutofillExtensionMessage} message
-   * @param {chrome.runtime.MessageSender} sender
-   * @param {(response?: any) => void} sendResponse
-   * @returns {boolean}
-   * @private
+   * Handles the extension messages sent to the content script.
+   *
+   * @param message - The extension message.
+   * @param sender - The message sender.
+   * @param sendResponse - The send response callback.
    */
   private handleExtensionMessage = (
     message: AutofillExtensionMessage,
     sender: chrome.runtime.MessageSender,
-    sendResponse: (response?: any) => void
+    sendResponse: (response?: any) => void,
   ): boolean => {
     const command: string = message.command;
-    const handler: CallableFunction | undefined = this.extensionMessageHandlers[command];
+    const handler: CallableFunction | undefined = this.getExtensionMessageHandler(command);
     if (!handler) {
-      return false;
+      return null;
     }
 
     const messageResponse = handler({ message, sender });
-    if (!messageResponse) {
-      return false;
+    if (typeof messageResponse === "undefined") {
+      return null;
     }
 
-    Promise.resolve(messageResponse).then((response) => sendResponse(response));
+    void Promise.resolve(messageResponse).then((response) => sendResponse(response));
     return true;
   };
+
+  /**
+   * Gets the extension message handler for the given command.
+   *
+   * @param command - The extension message command.
+   */
+  private getExtensionMessageHandler(command: string): CallableFunction | undefined {
+    if (this.autofillOverlayContentService?.messageHandlers?.[command]) {
+      return this.autofillOverlayContentService.messageHandlers[command];
+    }
+
+    if (this.autofillInlineMenuContentService?.messageHandlers?.[command]) {
+      return this.autofillInlineMenuContentService.messageHandlers[command];
+    }
+
+    if (this.overlayNotificationsContentService?.messageHandlers?.[command]) {
+      return this.overlayNotificationsContentService.messageHandlers[command];
+    }
+
+    return this.extensionMessageHandlers[command];
+  }
+
+  /**
+   * Handles destroying the autofill init content script. Removes all
+   * listeners, timeouts, and object instances to prevent memory leaks.
+   */
+  destroy() {
+    this.clearCollectPageDetailsOnLoadTimeout();
+    chrome.runtime.onMessage.removeListener(this.handleExtensionMessage);
+    this.collectAutofillContentService.destroy();
+    this.autofillOverlayContentService?.destroy();
+    this.autofillInlineMenuContentService?.destroy();
+    this.overlayNotificationsContentService?.destroy();
+  }
 }
 
-(function () {
-  if (!window.bitwardenAutofillInit) {
-    window.bitwardenAutofillInit = new AutofillInit();
-    window.bitwardenAutofillInit.init();
-  }
-})();
+export default AutofillInit;

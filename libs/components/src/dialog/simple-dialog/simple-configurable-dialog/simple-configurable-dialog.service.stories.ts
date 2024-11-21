@@ -1,4 +1,5 @@
 import { Component } from "@angular/core";
+import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { Meta, StoryObj, applicationConfig, moduleMetadata } from "@storybook/angular";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -122,7 +123,10 @@ class StoryDialogComponent {
   calloutType = "info";
   dialogCloseResult: boolean;
 
-  constructor(public dialogService: DialogService, private i18nService: I18nService) {}
+  constructor(
+    public dialogService: DialogService,
+    private i18nService: I18nService,
+  ) {}
 
   async openSimpleConfigurableDialog(opts: SimpleDialogOptions) {
     this.dialogCloseResult = await this.dialogService.openSimpleDialog(opts);
@@ -141,7 +145,7 @@ export default {
   component: StoryDialogComponent,
   decorators: [
     moduleMetadata({
-      imports: [ButtonModule, DialogModule, CalloutModule],
+      imports: [ButtonModule, BrowserAnimationsModule, DialogModule, CalloutModule],
     }),
     applicationConfig({
       providers: [

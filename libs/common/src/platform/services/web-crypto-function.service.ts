@@ -12,10 +12,10 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
   private subtle: SubtleCrypto;
   private wasmSupported: boolean;
 
-  constructor(win: Window | typeof global) {
-    this.crypto = typeof win.crypto !== "undefined" ? win.crypto : null;
+  constructor(globalContext: Window | typeof global) {
+    this.crypto = typeof globalContext.crypto !== "undefined" ? globalContext.crypto : null;
     this.subtle =
-      !!this.crypto && typeof win.crypto.subtle !== "undefined" ? win.crypto.subtle : null;
+      !!this.crypto && typeof this.crypto.subtle !== "undefined" ? this.crypto.subtle : null;
     this.wasmSupported = this.checkIfWasmSupported();
   }
 
@@ -23,7 +23,7 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
     password: string | Uint8Array,
     salt: string | Uint8Array,
     algorithm: "sha256" | "sha512",
-    iterations: number
+    iterations: number,
   ): Promise<Uint8Array> {
     const wcLen = algorithm === "sha256" ? 256 : 512;
     const passwordBuf = this.toBuf(password);
@@ -41,7 +41,7 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
       passwordBuf,
       { name: "PBKDF2" } as any,
       false,
-      ["deriveBits"]
+      ["deriveBits"],
     );
     const buffer = await this.subtle.deriveBits(pbkdf2Params as any, impKey, wcLen);
     return new Uint8Array(buffer);
@@ -52,7 +52,7 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
     salt: string | Uint8Array,
     iterations: number,
     memory: number,
-    parallelism: number
+    parallelism: number,
   ): Promise<Uint8Array> {
     if (!this.wasmSupported) {
       throw "Webassembly support is required for the Argon2 KDF feature.";
@@ -79,7 +79,7 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
     salt: string | Uint8Array,
     info: string | Uint8Array,
     outputByteSize: number,
-    algorithm: "sha256" | "sha512"
+    algorithm: "sha256" | "sha512",
   ): Promise<Uint8Array> {
     const saltBuf = this.toBuf(salt);
     const infoBuf = this.toBuf(info);
@@ -103,7 +103,7 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
     prk: Uint8Array,
     info: string | Uint8Array,
     outputByteSize: number,
-    algorithm: "sha256" | "sha512"
+    algorithm: "sha256" | "sha512",
   ): Promise<Uint8Array> {
     const hashLen = algorithm === "sha256" ? 32 : 64;
     if (outputByteSize > 255 * hashLen) {
@@ -136,10 +136,10 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
 
   async hash(
     value: string | Uint8Array,
-    algorithm: "sha1" | "sha256" | "sha512" | "md5"
+    algorithm: "sha1" | "sha256" | "sha512" | "md5",
   ): Promise<Uint8Array> {
     if (algorithm === "md5") {
-      const md = algorithm === "md5" ? forge.md.md5.create() : forge.md.sha1.create();
+      const md = forge.md.md5.create();
       const valueBytes = this.toByteString(value);
       md.update(valueBytes, "raw");
       return Utils.fromByteStringToArray(md.digest().data);
@@ -148,7 +148,7 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
     const valueBuf = this.toBuf(value);
     const buffer = await this.subtle.digest(
       { name: this.toWebCryptoAlgorithm(algorithm) },
-      valueBuf
+      valueBuf,
     );
     return new Uint8Array(buffer);
   }
@@ -156,7 +156,7 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
   async hmac(
     value: Uint8Array,
     key: Uint8Array,
-    algorithm: "sha1" | "sha256" | "sha512"
+    algorithm: "sha1" | "sha256" | "sha512",
   ): Promise<Uint8Array> {
     const signingAlgorithm = {
       name: "HMAC",
@@ -238,7 +238,7 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
     data: string,
     iv: string,
     mac: string,
-    key: SymmetricCryptoKey
+    key: SymmetricCryptoKey,
   ): DecryptParameters<string> {
     const p = new DecryptParameters<string>();
     if (key.meta != null) {
@@ -273,17 +273,37 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
     return p;
   }
 
-  aesDecryptFast(parameters: DecryptParameters<string>): Promise<string> {
-    const dataBuffer = forge.util.createBuffer(parameters.data);
-    const decipher = forge.cipher.createDecipher("AES-CBC", parameters.encKey);
-    decipher.start({ iv: parameters.iv });
+  aesDecryptFast(parameters: DecryptParameters<string>, mode: "cbc" | "ecb"): Promise<string> {
+    const decipher = (forge as any).cipher.createDecipher(
+      this.toWebCryptoAesMode(mode),
+      parameters.encKey,
+    );
+    const options = {} as any;
+    if (mode === "cbc") {
+      options.iv = parameters.iv;
+    }
+    const dataBuffer = (forge as any).util.createBuffer(parameters.data);
+    decipher.start(options);
     decipher.update(dataBuffer);
     decipher.finish();
     const val = decipher.output.toString();
     return Promise.resolve(val);
   }
 
-  async aesDecrypt(data: Uint8Array, iv: Uint8Array, key: Uint8Array): Promise<Uint8Array> {
+  async aesDecrypt(
+    data: Uint8Array,
+    iv: Uint8Array,
+    key: Uint8Array,
+    mode: "cbc" | "ecb",
+  ): Promise<Uint8Array> {
+    if (mode === "ecb") {
+      // Web crypto does not support AES-ECB mode, so we need to do this in forge.
+      const params = new DecryptParameters<string>();
+      params.data = this.toByteString(data);
+      params.encKey = this.toByteString(key);
+      const result = await this.aesDecryptFast(params, "ecb");
+      return Utils.fromByteStringToArray(result);
+    }
     const impKey = await this.subtle.importKey("raw", key, { name: "AES-CBC" } as any, false, [
       "decrypt",
     ]);
@@ -294,7 +314,7 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
   async rsaEncrypt(
     data: Uint8Array,
     publicKey: Uint8Array,
-    algorithm: "sha1" | "sha256"
+    algorithm: "sha1" | "sha256",
   ): Promise<Uint8Array> {
     // Note: Edge browser requires that we specify name and hash for both key import and decrypt.
     // We cannot use the proper types here.
@@ -310,7 +330,7 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
   async rsaDecrypt(
     data: Uint8Array,
     privateKey: Uint8Array,
-    algorithm: "sha1" | "sha256"
+    algorithm: "sha1" | "sha256",
   ): Promise<Uint8Array> {
     // Note: Edge browser requires that we specify name and hash for both key import and decrypt.
     // We cannot use the proper types here.
@@ -411,12 +431,16 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
     return algorithm === "sha1" ? "SHA-1" : algorithm === "sha256" ? "SHA-256" : "SHA-512";
   }
 
+  private toWebCryptoAesMode(mode: "cbc" | "ecb"): string {
+    return mode === "cbc" ? "AES-CBC" : "AES-ECB";
+  }
+
   // ref: https://stackoverflow.com/a/47880734/1090359
   private checkIfWasmSupported(): boolean {
     try {
       if (typeof WebAssembly === "object" && typeof WebAssembly.instantiate === "function") {
         const module = new WebAssembly.Module(
-          Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00)
+          Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00),
         );
         if (module instanceof WebAssembly.Module) {
           return new WebAssembly.Instance(module) instanceof WebAssembly.Instance;

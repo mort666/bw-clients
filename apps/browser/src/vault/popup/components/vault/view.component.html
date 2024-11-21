@@ -142,6 +142,22 @@
             </button>
           </div>
         </div>
+
+        <!--Passkey-->
+        <div
+          class="box"
+          *ngIf="cipher.login.hasFido2Credentials"
+          tabindex="0"
+          attr.aria-label="{{ 'typePasskey' | i18n }} {{ fido2CredentialCreationDateValue }}"
+        >
+          <div class="box-content">
+            <div class="box-content-row text-muted">
+              <span class="row-label">{{ "typePasskey" | i18n }}</span>
+              {{ fido2CredentialCreationDateValue }}
+            </div>
+          </div>
+        </div>
+
         <div
           class="box-content-row box-content-row-flex totp"
           [ngClass]="{ low: totpLow }"
@@ -190,7 +206,6 @@
             </button>
           </div>
         </div>
-
         <div class="box-content-row box-content-row-flex totp" *ngIf="showPremiumRequiredTotp">
           <div class="row-main">
             <span class="row-label">{{ "verificationCodeTotp" | i18n }}</span>
@@ -222,10 +237,10 @@
               >{{ "number" | i18n }}</span
             >
             <span [hidden]="showCardNumber" class="monospaced">{{
-              cipher.card.maskedNumber | creditCardNumber : cipher.card.brand
+              cipher.card.maskedNumber | creditCardNumber: cipher.card.brand
             }}</span>
             <span [hidden]="!showCardNumber" class="monospaced">{{
-              cipher.card.number | creditCardNumber : cipher.card.brand
+              cipher.card.number | creditCardNumber: cipher.card.brand
             }}</span>
           </div>
           <div class="action-buttons">
@@ -414,6 +429,39 @@
           <div *ngIf="cipher.identity.country">{{ cipher.identity.country }}</div>
         </div>
       </div>
+      <!-- SshKey -->
+      <div *ngIf="cipher.sshKey">
+        <div class="box-content-row" *ngIf="cipher.sshKey.privateKey" style="overflow: hidden">
+          <span
+            class="row-label draggable"
+            draggable="true"
+            (dragstart)="setTextDataOnDrag($event, cipher.sshKey.privateKey)"
+          >
+            {{ "sshPrivateKey" | i18n }}
+          </span>
+          <div [innerText]="cipher.sshKey.maskedPrivateKey" class="monospaced"></div>
+        </div>
+        <div class="box-content-row" *ngIf="cipher.sshKey.publicKey" style="overflow: hidden">
+          <span
+            class="row-label draggable"
+            draggable="true"
+            (dragstart)="setTextDataOnDrag($event, cipher.sshKey.publicKey)"
+          >
+            {{ "sshPublicKey" | i18n }}</span
+          >
+          {{ cipher.sshKey.publicKey }}
+        </div>
+        <div class="box-content-row" *ngIf="cipher.sshKey.keyFingerprint" style="overflow: hidden">
+          <span
+            class="row-label draggable"
+            draggable="true"
+            (dragstart)="setTextDataOnDrag($event, cipher.sshKey.keyFingerprint)"
+          >
+            {{ "sshFingerprint" | i18n }}</span
+          >
+          {{ cipher.sshKey.keyFingerprint }}
+        </div>
+      </div>
     </div>
   </div>
   <div class="box" *ngIf="cipher.login && cipher.login.hasUris">
@@ -457,7 +505,7 @@
             attr.aria-label="{{ 'launch' | i18n }} {{ u.uri }}"
             appA11yTitle="{{ 'launch' | i18n }}"
             *ngIf="u.canLaunch"
-            (click)="launch(u)"
+            (click)="launch(u, cipher.id)"
           >
             <i class="bwi bwi-lg bwi-share-square" aria-hidden="true"></i>
           </button>
@@ -629,7 +677,7 @@
         class="box-content-row"
         appStopClick
         (click)="delete()"
-        *ngIf="cipher.edit"
+        *ngIf="canDeleteCipher$ | async"
       >
         <div class="row-main text-danger">
           <div class="icon text-danger" aria-hidden="true">
@@ -644,15 +692,15 @@
     <div class="box-footer">
       <div>
         <b class="font-weight-semibold">{{ "dateUpdated" | i18n }}:</b>
-        {{ cipher.revisionDate | date : "medium" }}
+        {{ cipher.revisionDate | date: "medium" }}
       </div>
       <div *ngIf="cipher.creationDate">
         <b class="font-weight-semibold">{{ "dateCreated" | i18n }}:</b>
-        {{ cipher.creationDate | date : "medium" }}
+        {{ cipher.creationDate | date: "medium" }}
       </div>
       <div *ngIf="cipher.passwordRevisionDisplayDate">
         <b class="font-weight-semibold">{{ "datePasswordUpdated" | i18n }}:</b>
-        {{ cipher.passwordRevisionDisplayDate | date : "medium" }}
+        {{ cipher.passwordRevisionDisplayDate | date: "medium" }}
       </div>
       <div *ngIf="cipher.hasPasswordHistory">
         <b class="font-weight-semibold">{{ "passwordHistory" | i18n }}:</b>

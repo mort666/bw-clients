@@ -6,17 +6,17 @@ import { EnvironmentSelectorComponent } from "@bitwarden/angular/auth/components
 import { SharedModule } from "../../app/shared/shared.module";
 
 import { LoginDecryptionOptionsComponent } from "./login-decryption-options/login-decryption-options.component";
-import { LoginWithDeviceComponent } from "./login-with-device.component";
-import { LoginComponent } from "./login.component";
+import { LoginComponentV1 } from "./login-v1.component";
+import { LoginViaAuthRequestComponentV1 } from "./login-via-auth-request-v1.component";
 
 @NgModule({
   imports: [SharedModule, RouterModule],
   declarations: [
-    LoginComponent,
-    LoginWithDeviceComponent,
+    LoginComponentV1,
+    LoginViaAuthRequestComponentV1,
     EnvironmentSelectorComponent,
     LoginDecryptionOptionsComponent,
   ],
-  exports: [LoginComponent, LoginWithDeviceComponent],
+  exports: [LoginComponentV1, LoginViaAuthRequestComponentV1],
 })
 export class LoginModule {}

@@ -12,6 +12,9 @@ import { getClassInitializer } from "./get-class-initializer";
 // TTL (time to live) is not strictly required but avoids tying up memory resources if inactive
 const workerTTL = 3 * 60000; // 3 minutes
 
+/**
+ * @deprecated Replaced by BulkEncryptionService (PM-4154)
+ */
 export class MultithreadEncryptServiceImplementation extends EncryptServiceImplementation {
   private worker: Worker;
   private timeout: any;
@@ -24,7 +27,7 @@ export class MultithreadEncryptServiceImplementation extends EncryptServiceImple
    */
   async decryptItems<T extends InitializerMetadata>(
     items: Decryptable<T>[],
-    key: SymmetricCryptoKey
+    key: SymmetricCryptoKey,
   ): Promise<T[]> {
     if (items == null || items.length < 1) {
       return [];
@@ -36,8 +39,8 @@ export class MultithreadEncryptServiceImplementation extends EncryptServiceImple
       new URL(
         /* webpackChunkName: 'encrypt-worker' */
         "@bitwarden/common/platform/services/cryptography/encrypt.worker.ts",
-        import.meta.url
-      )
+        import.meta.url,
+      ),
     );
 
     this.restartTimeout();
@@ -58,11 +61,11 @@ export class MultithreadEncryptServiceImplementation extends EncryptServiceImple
           items.map((jsonItem: Jsonify<T>) => {
             const initializer = getClassInitializer<T>(jsonItem.initializerKey);
             return initializer(jsonItem);
-          })
+          }),
         ),
         takeUntil(this.clear$),
-        defaultIfEmpty([])
-      )
+        defaultIfEmpty([]),
+      ),
     );
   }
 

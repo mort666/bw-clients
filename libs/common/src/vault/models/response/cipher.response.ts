@@ -1,10 +1,11 @@
-import { CardApi } from "../../../models/api/card.api";
-import { FieldApi } from "../../../models/api/field.api";
-import { IdentityApi } from "../../../models/api/identity.api";
-import { LoginApi } from "../../../models/api/login.api";
-import { SecureNoteApi } from "../../../models/api/secure-note.api";
 import { BaseResponse } from "../../../models/response/base.response";
 import { CipherRepromptType } from "../../enums/cipher-reprompt-type";
+import { CardApi } from "../api/card.api";
+import { FieldApi } from "../api/field.api";
+import { IdentityApi } from "../api/identity.api";
+import { LoginApi } from "../api/login.api";
+import { SecureNoteApi } from "../api/secure-note.api";
+import { SshKeyApi } from "../api/ssh-key.api";
 
 import { AttachmentResponse } from "./attachment.response";
 import { PasswordHistoryResponse } from "./password-history.response";
@@ -21,6 +22,7 @@ export class CipherResponse extends BaseResponse {
   card: CardApi;
   identity: IdentityApi;
   secureNote: SecureNoteApi;
+  sshKey: SshKeyApi;
   favorite: boolean;
   edit: boolean;
   viewPassword: boolean;
@@ -32,6 +34,7 @@ export class CipherResponse extends BaseResponse {
   creationDate: string;
   deletedDate: string;
   reprompt: CipherRepromptType;
+  key: string;
 
   constructor(response: any) {
     super(response);
@@ -74,6 +77,11 @@ export class CipherResponse extends BaseResponse {
       this.secureNote = new SecureNoteApi(secureNote);
     }
 
+    const sshKey = this.getResponseProperty("sshKey");
+    if (sshKey != null) {
+      this.sshKey = new SshKeyApi(sshKey);
+    }
+
     const fields = this.getResponseProperty("Fields");
     if (fields != null) {
       this.fields = fields.map((f: any) => new FieldApi(f));
@@ -90,5 +98,6 @@ export class CipherResponse extends BaseResponse {
     }
 
     this.reprompt = this.getResponseProperty("Reprompt") || CipherRepromptType.None;
+    this.key = this.getResponseProperty("Key") || null;
   }
 }

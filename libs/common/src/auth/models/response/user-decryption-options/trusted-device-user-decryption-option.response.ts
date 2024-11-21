@@ -5,6 +5,7 @@ export interface ITrustedDeviceUserDecryptionOptionServerResponse {
   HasAdminApproval: boolean;
   HasLoginApprovingDevice: boolean;
   HasManageResetPasswordPermission: boolean;
+  IsTdeOffboarding: boolean;
   EncryptedPrivateKey?: string;
   EncryptedUserKey?: string;
 }
@@ -13,6 +14,7 @@ export class TrustedDeviceUserDecryptionOptionResponse extends BaseResponse {
   hasAdminApproval: boolean;
   hasLoginApprovingDevice: boolean;
   hasManageResetPasswordPermission: boolean;
+  isTdeOffboarding: boolean;
   encryptedPrivateKey: EncString;
   encryptedUserKey: EncString;
 
@@ -22,8 +24,10 @@ export class TrustedDeviceUserDecryptionOptionResponse extends BaseResponse {
 
     this.hasLoginApprovingDevice = this.getResponseProperty("HasLoginApprovingDevice");
     this.hasManageResetPasswordPermission = this.getResponseProperty(
-      "HasManageResetPasswordPermission"
+      "HasManageResetPasswordPermission",
     );
+
+    this.isTdeOffboarding = this.getResponseProperty("IsTdeOffboarding");
 
     if (response.EncryptedPrivateKey) {
       this.encryptedPrivateKey = new EncString(this.getResponseProperty("EncryptedPrivateKey"));

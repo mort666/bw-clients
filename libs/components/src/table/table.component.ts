@@ -30,7 +30,7 @@ export class TableComponent implements OnDestroy, AfterContentChecked {
 
   @ContentChild(TableBodyDirective) templateVariable: TableBodyDirective;
 
-  protected rows: Observable<readonly any[]>;
+  protected rows$: Observable<any[]>;
 
   private _initialized = false;
 
@@ -39,6 +39,8 @@ export class TableComponent implements OnDestroy, AfterContentChecked {
       "tw-w-full",
       "tw-leading-normal",
       "tw-text-main",
+      "tw-border-collapse",
+      "tw-text-start",
       this.layout === "auto" ? "tw-table-auto" : "tw-table-fixed",
     ];
   }
@@ -48,7 +50,7 @@ export class TableComponent implements OnDestroy, AfterContentChecked {
       this._initialized = true;
 
       const dataStream = this.dataSource.connect();
-      this.rows = dataStream;
+      this.rows$ = dataStream;
     }
   }
 

@@ -1,23 +1,28 @@
-import { Component, NgZone, OnChanges, OnDestroy, ViewChild } from "@angular/core";
+import { DatePipe } from "@angular/common";
+import { Component, NgZone, OnChanges, OnDestroy, OnInit, ViewChild } from "@angular/core";
 import { NgForm } from "@angular/forms";
+import { sshagent as sshAgent } from "desktop_native/napi";
 
+import { CollectionService } from "@bitwarden/admin-console/common";
 import { AddEditComponent as BaseAddEditComponent } from "@bitwarden/angular/vault/components/add-edit.component";
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
 import { EventCollectionService } from "@bitwarden/common/abstractions/event/event-collection.service";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.service.abstraction";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
-import { CollectionService } from "@bitwarden/common/vault/abstractions/collection.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
-import { PasswordRepromptService } from "@bitwarden/common/vault/abstractions/password-reprompt.service";
-import { DialogService } from "@bitwarden/components";
+import { CipherType } from "@bitwarden/common/vault/enums";
+import { CipherAuthorizationService } from "@bitwarden/common/vault/services/cipher-authorization.service";
+import { DialogService, ToastService } from "@bitwarden/components";
+import { PasswordRepromptService } from "@bitwarden/vault";
 
 const BroadcasterSubscriptionId = "AddEditComponent";
 
@@ -25,16 +30,17 @@ const BroadcasterSubscriptionId = "AddEditComponent";
   selector: "app-vault-add-edit",
   templateUrl: "add-edit.component.html",
 })
-export class AddEditComponent extends BaseAddEditComponent implements OnChanges, OnDestroy {
+export class AddEditComponent extends BaseAddEditComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild("form")
   private form: NgForm;
+
   constructor(
     cipherService: CipherService,
     folderService: FolderService,
     i18nService: I18nService,
     platformUtilsService: PlatformUtilsService,
     auditService: AuditService,
-    stateService: StateService,
+    accountService: AccountService,
     collectionService: CollectionService,
     messagingService: MessagingService,
     eventCollectionService: EventCollectionService,
@@ -45,7 +51,11 @@ export class AddEditComponent extends BaseAddEditComponent implements OnChanges,
     logService: LogService,
     organizationService: OrganizationService,
     sendApiService: SendApiService,
-    dialogService: DialogService
+    dialogService: DialogService,
+    datePipe: DatePipe,
+    configService: ConfigService,
+    private toastService: ToastService,
+    cipherAuthorizationService: CipherAuthorizationService,
   ) {
     super(
       cipherService,
@@ -53,7 +63,7 @@ export class AddEditComponent extends BaseAddEditComponent implements OnChanges,
       i18nService,
       platformUtilsService,
       auditService,
-      stateService,
+      accountService,
       collectionService,
       messagingService,
       eventCollectionService,
@@ -62,12 +72,17 @@ export class AddEditComponent extends BaseAddEditComponent implements OnChanges,
       passwordRepromptService,
       organizationService,
       sendApiService,
-      dialogService
+      dialogService,
+      window,
+      datePipe,
+      configService,
+      cipherAuthorizationService,
     );
   }
 
   async ngOnInit() {
     await super.ngOnInit();
+    await this.load();
     this.broadcasterService.subscribe(BroadcasterSubscriptionId, async (message: any) => {
       this.ngZone.run(() => {
         switch (message.command) {
@@ -96,7 +111,19 @@ export class AddEditComponent extends BaseAddEditComponent implements OnChanges,
     ) {
       this.cipher = null;
     }
-    super.load();
+
+    await super.load();
+
+    if (!this.editMode || this.cloneMode) {
+      // Creating an ssh key directly while filtering to the ssh key category
+      // must force a key to be set. SSH keys must never be created with an empty private key field
+      if (
+        this.cipher.type === CipherType.SshKey &&
+        (this.cipher.sshKey.privateKey == null || this.cipher.sshKey.privateKey === "")
+      ) {
+        await this.generateSshKey(false);
+      }
+    }
   }
 
   onWindowHidden() {
@@ -124,7 +151,74 @@ export class AddEditComponent extends BaseAddEditComponent implements OnChanges,
 
   openHelpReprompt() {
     this.platformUtilsService.launchUri(
-      "https://bitwarden.com/help/managing-items/#protect-individual-items"
+      "https://bitwarden.com/help/managing-items/#protect-individual-items",
     );
+  }
+
+  async generateSshKey(showNotification: boolean = true) {
+    const sshKey = await ipc.platform.sshAgent.generateKey("ed25519");
+    this.cipher.sshKey.privateKey = sshKey.privateKey;
+    this.cipher.sshKey.publicKey = sshKey.publicKey;
+    this.cipher.sshKey.keyFingerprint = sshKey.keyFingerprint;
+
+    if (showNotification) {
+      this.toastService.showToast({
+        variant: "success",
+        title: "",
+        message: this.i18nService.t("sshKeyGenerated"),
+      });
+    }
+  }
+
+  async importSshKeyFromClipboard() {
+    const key = await this.platformUtilsService.readFromClipboard();
+    const parsedKey = await ipc.platform.sshAgent.importKey(key, "");
+    if (parsedKey == null || parsedKey.status === sshAgent.SshKeyImportStatus.ParsingError) {
+      this.toastService.showToast({
+        variant: "error",
+        title: "",
+        message: this.i18nService.t("invalidSshKey"),
+      });
+      return;
+    } else if (parsedKey.status === sshAgent.SshKeyImportStatus.UnsupportedKeyType) {
+      this.toastService.showToast({
+        variant: "error",
+        title: "",
+        message: this.i18nService.t("sshKeyTypeUnsupported"),
+      });
+    } else if (
+      parsedKey.status === sshAgent.SshKeyImportStatus.PasswordRequired ||
+      parsedKey.status === sshAgent.SshKeyImportStatus.WrongPassword
+    ) {
+      this.toastService.showToast({
+        variant: "error",
+        title: "",
+        message: this.i18nService.t("sshKeyPasswordUnsupported"),
+      });
+      return;
+    } else {
+      this.cipher.sshKey.privateKey = parsedKey.sshKey.privateKey;
+      this.cipher.sshKey.publicKey = parsedKey.sshKey.publicKey;
+      this.cipher.sshKey.keyFingerprint = parsedKey.sshKey.keyFingerprint;
+      this.toastService.showToast({
+        variant: "success",
+        title: "",
+        message: this.i18nService.t("sshKeyPasted"),
+      });
+    }
+  }
+
+  async typeChange() {
+    if (this.cipher.type === CipherType.SshKey) {
+      await this.generateSshKey();
+    }
+  }
+
+  truncateString(value: string, length: number) {
+    return value.length > length ? value.substring(0, length) + "..." : value;
+  }
+
+  togglePrivateKey() {
+    this.showPrivateKey = !this.showPrivateKey;
   }
 }

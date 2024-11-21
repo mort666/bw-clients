@@ -1,34 +1,50 @@
-import { Component } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
 
+import { CollectionService } from "@bitwarden/admin-console/common";
 import { ModalService } from "@bitwarden/angular/services/modal.service";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
-import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
+import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
-import { PasswordRepromptService } from "@bitwarden/common/vault/abstractions/password-reprompt.service";
+import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
+import { PasswordRepromptService } from "@bitwarden/vault";
 
 // eslint-disable-next-line no-restricted-imports
-import { UnsecuredWebsitesReportComponent as BaseUnsecuredWebsitesReportComponent } from "../../../reports/pages/unsecured-websites-report.component";
+import { UnsecuredWebsitesReportComponent as BaseUnsecuredWebsitesReportComponent } from "../../../tools/reports/pages/unsecured-websites-report.component";
 
 @Component({
   selector: "app-unsecured-websites-report",
-  templateUrl: "../../../reports/pages/unsecured-websites-report.component.html",
+  templateUrl: "../../../tools/reports/pages/unsecured-websites-report.component.html",
 })
 // eslint-disable-next-line rxjs-angular/prefer-takeuntil
-export class UnsecuredWebsitesReportComponent extends BaseUnsecuredWebsitesReportComponent {
+export class UnsecuredWebsitesReportComponent
+  extends BaseUnsecuredWebsitesReportComponent
+  implements OnInit
+{
   constructor(
     cipherService: CipherService,
     modalService: ModalService,
-    messagingService: MessagingService,
     private route: ActivatedRoute,
-    private organizationService: OrganizationService,
-    passwordRepromptService: PasswordRepromptService
+    organizationService: OrganizationService,
+    passwordRepromptService: PasswordRepromptService,
+    i18nService: I18nService,
+    syncService: SyncService,
+    collectionService: CollectionService,
   ) {
-    super(cipherService, modalService, messagingService, passwordRepromptService);
+    super(
+      cipherService,
+      organizationService,
+      modalService,
+      passwordRepromptService,
+      i18nService,
+      syncService,
+      collectionService,
+    );
   }
 
   async ngOnInit() {
+    this.isAdminConsoleActive = true;
     // eslint-disable-next-line rxjs-angular/prefer-takeuntil, rxjs/no-async-subscribe
     this.route.parent.parent.params.subscribe(async (params) => {
       this.organization = await this.organizationService.get(params.organizationId);

@@ -20,25 +20,23 @@ export class FormControlComponent {
     this._inline = coerceBooleanProperty(value);
   }
 
+  private _disableMargin = false;
+  @Input() set disableMargin(value: boolean | "") {
+    this._disableMargin = coerceBooleanProperty(value);
+  }
+  get disableMargin() {
+    return this._disableMargin;
+  }
+
   @ContentChild(BitFormControlAbstraction) protected formControl: BitFormControlAbstraction;
 
   @HostBinding("class") get classes() {
-    return ["tw-mb-6"].concat(this.inline ? ["tw-inline-block", "tw-mr-4"] : ["tw-block"]);
+    return []
+      .concat(this.inline ? ["tw-inline-block", "tw-mr-4"] : ["tw-block"])
+      .concat(this.disableMargin ? [] : ["tw-mb-4"]);
   }
 
   constructor(private i18nService: I18nService) {}
-
-  protected get labelClasses() {
-    return ["tw-transition", "tw-select-none", "tw-mb-0"].concat(
-      this.formControl.disabled ? "tw-cursor-auto" : "tw-cursor-pointer"
-    );
-  }
-
-  protected get labelContentClasses() {
-    return ["tw-font-semibold"].concat(
-      this.formControl.disabled ? "tw-text-muted" : "tw-text-main"
-    );
-  }
 
   get required() {
     return this.formControl.required;
