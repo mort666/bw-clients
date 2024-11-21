@@ -1,3 +1,5 @@
+import type { JsonObject } from "type-fest";
+
 import {
   CollectionRequest,
   CollectionAccessDetailsResponse,
@@ -74,7 +76,6 @@ import { IdentityCaptchaResponse } from "../auth/models/response/identity-captch
 import { IdentityTokenResponse } from "../auth/models/response/identity-token.response";
 import { IdentityTwoFactorResponse } from "../auth/models/response/identity-two-factor.response";
 import { InitTunnelResponse } from "../auth/models/response/init-tunnel.response";
-import { KeyConnectorGetUserKeyResponse } from "../auth/models/response/key-connector-user-key.response";
 import { PreloginResponse } from "../auth/models/response/prelogin.response";
 import { RegisterResponse } from "../auth/models/response/register.response";
 import { SsoPreValidateResponse } from "../auth/models/response/sso-pre-validate.response";
@@ -115,6 +116,7 @@ import { EventResponse } from "../models/response/event.response";
 import { ListResponse } from "../models/response/list.response";
 import { ProfileResponse } from "../models/response/profile.response";
 import { UserKeyResponse } from "../models/response/user-key.response";
+import { TunneledRequest } from "../platform/communication-tunnel/tunneled.request";
 import { SyncResponse } from "../platform/sync";
 import { UserId } from "../types/guid";
 import { AttachmentRequest } from "../vault/models/request/attachment.request";
@@ -507,14 +509,15 @@ export abstract class ApiService {
    *
    * @param keyConnectorUrl The URL of the key connector.
    * @param request The request to send to the key connector. If the shared key is null, falls back to an older GET endpoint that will respond in cleartext.
+   * @returns The raw json body of the response. The response must be passed through a tunnel to be decrypted.
    */
   getMasterKeyFromKeyConnector: (
     keyConnectorUrl: string,
-    request: KeyConnectorGetUserKeyRequest,
-  ) => Promise<KeyConnectorGetUserKeyResponse>;
+    request: KeyConnectorGetUserKeyRequest | TunneledRequest<KeyConnectorGetUserKeyRequest>,
+  ) => Promise<JsonObject>;
   postUserKeyToKeyConnector: (
     keyConnectorUrl: string,
-    request: KeyConnectorSetUserKeyRequest,
+    request: KeyConnectorSetUserKeyRequest | TunneledRequest<KeyConnectorSetUserKeyRequest>,
   ) => Promise<void>;
   /**
    * Negotiate a tunneled communication protocol with the supplied url.

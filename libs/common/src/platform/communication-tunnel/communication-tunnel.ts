@@ -1,10 +1,16 @@
+import type { Includes, JsonObject } from "type-fest";
+
 import { ApiService } from "../../abstractions/api.service";
 import { InitTunnelRequest } from "../../auth/models/request/init-tunnel.request";
 import { InitTunnelResponse } from "../../auth/models/response/init-tunnel.response";
 import { ErrorResponse } from "../../models/response/error.response";
 import { EncryptService } from "../abstractions/encrypt.service";
 import { KeyGenerationService } from "../abstractions/key-generation.service";
+import { Utils } from "../misc/utils";
 import { EncString } from "../models/domain/enc-string";
+
+import { TunneledRequest } from "./tunneled.request";
+import { TunneledResponse } from "./tunneled.response";
 
 export enum TunnelVersion {
   CLEAR_TEXT = 0,
@@ -17,7 +23,12 @@ export enum TunnelVersion {
   RSA_ENCAPSULATED_AES_256_GCM = 1,
 }
 
-export class CommunicationTunnel {
+type SupportedRequestTypes<TRequest, SupportedTunnelVersions extends readonly TunnelVersion[]> =
+  Includes<SupportedTunnelVersions, TunnelVersion.CLEAR_TEXT> extends true
+    ? TunneledRequest<TRequest> | TRequest
+    : TunneledRequest<TRequest>;
+
+export class CommunicationTunnel<const TSupportedTunnelVersions extends readonly TunnelVersion[]> {
   private negotiationComplete: boolean = false;
   private sharedKey: Uint8Array;
   private _encapsulatedKey: EncString;
@@ -28,12 +39,16 @@ export class CommunicationTunnel {
   get tunnelVersion(): TunnelVersion {
     return this._tunnelVersion;
   }
+  private _tunnelIdentifier: string;
+  get tunnelIdentifier(): string {
+    return this._tunnelIdentifier;
+  }
 
   constructor(
     private readonly apiService: ApiService,
     private readonly keyGenerationService: KeyGenerationService,
     private readonly encryptService: EncryptService,
-    private readonly supportedTunnelVersions: TunnelVersion[],
+    private readonly supportedTunnelVersions: TSupportedTunnelVersions,
   ) {}
 
   /**
@@ -69,7 +84,49 @@ export class CommunicationTunnel {
     return await this.initWithVersion(response);
   }
 
-  async protect(clearText: Uint8Array): Promise<Uint8Array> {
+  async protect<TRequest>(
+    request: TRequest,
+  ): Promise<SupportedRequestTypes<TRequest, TSupportedTunnelVersions>> {
+    if (!this.negotiationComplete) {
+      throw new Error("Communication tunnel not initialized");
+    }
+
+    if (this.tunnelVersion === TunnelVersion.CLEAR_TEXT) {
+      // Should only be possible if the tunnel version is clear text
+      return request as SupportedRequestTypes<TRequest, TSupportedTunnelVersions>;
+    }
+
+    const requestBytes = Utils.fromUtf8ToArray(JSON.stringify(request));
+    const protectedText = await this.protectBytes(requestBytes);
+    return new TunneledRequest<TRequest>(
+      protectedText,
+      this.encapsulatedKey,
+      this.tunnelVersion,
+      this.tunnelIdentifier,
+    );
+  }
+
+  async unprotect<const TResponse>(
+    responseConstructor: new (response: any) => TResponse,
+    responseData: JsonObject,
+  ): Promise<TResponse> {
+    if (!this.negotiationComplete) {
+      throw new Error("Communication tunnel not initialized");
+    }
+
+    if (this.tunnelVersion === TunnelVersion.CLEAR_TEXT) {
+      return new responseConstructor(responseData);
+    }
+
+    const tunneledResponse = new TunneledResponse<TResponse>(responseData);
+    const clearBytes = await this.unprotectBytes(
+      Utils.fromB64ToArray(tunneledResponse.encryptedResponse),
+    );
+    const clearText = Utils.fromBufferToUtf8(clearBytes);
+    return new responseConstructor(JSON.parse(clearText));
+  }
+
+  async protectBytes(clearText: Uint8Array): Promise<Uint8Array> {
     if (!this.negotiationComplete) {
       throw new Error("Communication tunnel not initialized");
     }
@@ -92,7 +149,7 @@ export class CommunicationTunnel {
     return protectedText;
   }
 
-  async unprotect(protectedText: Uint8Array): Promise<Uint8Array> {
+  async unprotectBytes(protectedText: Uint8Array): Promise<Uint8Array> {
     if (!this.negotiationComplete) {
       throw new Error("Communication tunnel not initialized");
     }
@@ -126,6 +183,7 @@ export class CommunicationTunnel {
       case TunnelVersion.CLEAR_TEXT:
         break;
       case TunnelVersion.RSA_ENCAPSULATED_AES_256_GCM: {
+        this._tunnelIdentifier = response.tunnelIdentifier;
         const encapsulationKey = response.encapsulationKey;
 
         // use the encapsulation key to create an share a shared key

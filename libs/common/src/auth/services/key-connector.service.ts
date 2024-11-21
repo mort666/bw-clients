@@ -12,6 +12,7 @@ import { KeyGenerationService } from "../../platform/abstractions/key-generation
 import { LogService } from "../../platform/abstractions/log.service";
 import { TunnelVersion } from "../../platform/communication-tunnel/communication-tunnel";
 import { CommunicationTunnelService } from "../../platform/communication-tunnel/communication-tunnel.service";
+import { TunneledRequest } from "../../platform/communication-tunnel/tunneled.request";
 import { KdfType } from "../../platform/enums/kdf-type.enum";
 import { Utils } from "../../platform/misc/utils";
 import { SymmetricCryptoKey } from "../../platform/models/domain/symmetric-crypto-key";
@@ -34,6 +35,7 @@ import {
 } from "../models/request/key-connector-user-key.request";
 import { SetKeyConnectorKeyRequest } from "../models/request/set-key-connector-key.request";
 import { IdentityTokenResponse } from "../models/response/identity-token.response";
+import { KeyConnectorGetUserKeyResponse } from "../models/response/key-connector-get-user-key.response";
 
 const SUPPORTED_COMMUNICATION_VERSIONS = [
   TunnelVersion.CLEAR_TEXT,
@@ -109,7 +111,7 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
 
       await this.apiService.postUserKeyToKeyConnector(
         organization.keyConnectorUrl,
-        await KeyConnectorSetUserKeyRequest.BuildForTunnel(tunnel, masterKey),
+        await tunnel.protect(new KeyConnectorSetUserKeyRequest(masterKey.encKeyB64)),
       );
     } catch (e) {
       this.handleKeyConnectorError(e);
@@ -126,14 +128,14 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
         SUPPORTED_COMMUNICATION_VERSIONS,
       );
 
-      const response = await this.apiService.getMasterKeyFromKeyConnector(
+      const rawResponse = await this.apiService.getMasterKeyFromKeyConnector(
         url,
-        KeyConnectorGetUserKeyRequest.BuildForTunnel(tunnel),
+        await tunnel.protect(new KeyConnectorGetUserKeyRequest(userId)),
       );
-
       // Decrypt the response with the shared key
-      const masterKeyArray =
-        Utils.fromB64ToArray(response.key) ?? (await tunnel.unprotect(response.encryptedKey));
+      const response = await tunnel.unprotect(KeyConnectorGetUserKeyResponse, rawResponse);
+
+      const masterKeyArray = Utils.fromB64ToArray(response.key);
 
       const masterKey = new SymmetricCryptoKey(masterKeyArray) as MasterKey;
       await this.masterPasswordService.setMasterKey(masterKey, userId);
@@ -182,14 +184,16 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
       kdfConfig,
     );
 
-    let keyConnectorRequest: KeyConnectorSetUserKeyRequest;
+    let keyConnectorRequest: TunneledRequest<KeyConnectorSetUserKeyRequest>;
     try {
       const tunnel = await this.communicationTunnelService.createTunnel(
         keyConnectorUrl,
         SUPPORTED_COMMUNICATION_VERSIONS,
       );
 
-      keyConnectorRequest = await KeyConnectorSetUserKeyRequest.BuildForTunnel(tunnel, masterKey);
+      keyConnectorRequest = await tunnel.protect(
+        new KeyConnectorSetUserKeyRequest(masterKey.encKeyB64),
+      );
     } catch (e) {
       this.handleKeyConnectorError(e);
     }

@@ -5,7 +5,6 @@ import {
   FakeAccountService,
   FakeStateProvider,
   makeEncString,
-  makeStaticByteArray,
   makeSymmetricCryptoKey,
   mockAccountServiceWith,
 } from "../../../spec";
@@ -27,7 +26,7 @@ import { OrganizationId, UserId } from "../../types/guid";
 import { MasterKey, UserKey } from "../../types/key";
 import { KeyConnectorSetUserKeyRequest } from "../models/request/key-connector-user-key.request";
 import { IdentityTokenResponse } from "../models/response/identity-token.response";
-import { KeyConnectorGetUserKeyResponse } from "../models/response/key-connector-user-key.response";
+import { KeyConnectorGetUserKeyResponse } from "../models/response/key-connector-get-user-key.response";
 
 import {
   USES_KEY_CONNECTOR,
@@ -61,16 +60,16 @@ describe("KeyConnectorService", () => {
       "eO9nVlVl3I3sU6O+CyK0kEkpGtl/auT84Hig2WTXmZtDTqYtKpDvUPfjhgMOHf+KQzx++TVS2AOLYq856Caa7w==",
     ),
   ) as MasterKey;
-  let mockMasterKeyResponse: KeyConnectorGetUserKeyResponse;
+  let mockRawMasterKeyResponse: {
+    key: string;
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    mockMasterKeyResponse = new KeyConnectorGetUserKeyResponse({
+    mockRawMasterKeyResponse = {
       key: mockClearTextMasterKey.keyB64,
-      encryptedKey: makeStaticByteArray(32),
-      tunnelVersion: TunnelVersion.RSA_ENCAPSULATED_AES_256_GCM,
-    });
+    };
 
     masterPasswordService = new FakeMasterPasswordService();
     accountService = mockAccountServiceWith(mockUserId);
@@ -228,10 +227,13 @@ describe("KeyConnectorService", () => {
   });
 
   describe("setMasterKeyFromUrl", () => {
-    const tunnel = mock<CommunicationTunnel>();
+    const tunnel = mock<CommunicationTunnel<any>>();
     beforeEach(() => {
       communicationTunnelService.createTunnel.mockResolvedValue(tunnel);
-      apiService.getMasterKeyFromKeyConnector.mockResolvedValue(mockMasterKeyResponse);
+      apiService.getMasterKeyFromKeyConnector.mockResolvedValue(mockRawMasterKeyResponse);
+      tunnel.unprotect.mockResolvedValue(
+        new KeyConnectorGetUserKeyResponse(mockRawMasterKeyResponse),
+      );
     });
 
     afterEach(() => {
@@ -260,14 +262,16 @@ describe("KeyConnectorService", () => {
     it("should set unprotect and set the master key", async () => {
       // Arrange
       const url = "https://key-connector-url.com";
-      mockMasterKeyResponse.key = null;
-      tunnel.unprotect.mockResolvedValue(mockClearTextMasterKey.key);
+      mockRawMasterKeyResponse.key = null;
 
       // Act
       await keyConnectorService.setMasterKeyFromUrl(url, mockUserId);
 
       // Assert
-      expect(tunnel.unprotect).toHaveBeenCalledWith(mockMasterKeyResponse.encryptedKey);
+      expect(tunnel.unprotect).toHaveBeenCalledWith(
+        KeyConnectorGetUserKeyResponse,
+        mockRawMasterKeyResponse,
+      );
       expect(masterPasswordService.mock.setMasterKey).toHaveBeenCalledWith(
         mockClearTextMasterKey,
         mockUserId,
@@ -278,7 +282,7 @@ describe("KeyConnectorService", () => {
       // Arrange
       const url = "https://key-connector-url.com";
 
-      apiService.getMasterKeyFromKeyConnector.mockResolvedValue(mockMasterKeyResponse);
+      apiService.getMasterKeyFromKeyConnector.mockResolvedValue(mockRawMasterKeyResponse);
 
       // Act
       await keyConnectorService.setMasterKeyFromUrl(url, mockUserId);
@@ -307,10 +311,12 @@ describe("KeyConnectorService", () => {
   });
 
   describe("migrateUser()", () => {
-    const tunnel = mock<CommunicationTunnel>();
+    const tunnel = mock<CommunicationTunnel<[TunnelVersion.CLEAR_TEXT]>>();
+    const keyConnectorRequest = new KeyConnectorSetUserKeyRequest(mockClearTextMasterKey.keyB64);
     beforeEach(() => {
       communicationTunnelService.createTunnel.mockResolvedValue(tunnel);
-      apiService.getMasterKeyFromKeyConnector.mockResolvedValue(mockMasterKeyResponse);
+      apiService.getMasterKeyFromKeyConnector.mockResolvedValue(mockRawMasterKeyResponse);
+      tunnel.protect.mockResolvedValue(keyConnectorRequest);
     });
 
     afterEach(() => {
@@ -338,10 +344,6 @@ describe("KeyConnectorService", () => {
       const organization = organizationData(true, true, "https://key-connector-url.com", 2, false);
       const masterKey = getMockMasterKey();
       masterPasswordService.masterKeySubject.next(masterKey);
-      const keyConnectorRequest = await KeyConnectorSetUserKeyRequest.BuildForTunnel(
-        tunnel,
-        masterKey,
-      );
 
       jest.spyOn(keyConnectorService, "getManagingOrganization").mockResolvedValue(organization);
       jest.spyOn(apiService, "postUserKeyToKeyConnector").mockResolvedValue();
@@ -358,15 +360,11 @@ describe("KeyConnectorService", () => {
 
     it("should set protect and share the master key", async () => {
       // Arrange
-      mockMasterKeyResponse.key = null;
-      tunnel.unprotect.mockResolvedValue(mockClearTextMasterKey.key);
+      mockRawMasterKeyResponse.key = null;
+      tunnel.unprotectBytes.mockResolvedValue(mockClearTextMasterKey.key);
       const organization = organizationData(true, true, "https://key-connector-url.com", 2, false);
       const masterKey = mockClearTextMasterKey;
       masterPasswordService.masterKeySubject.next(masterKey);
-      const keyConnectorRequest = await KeyConnectorSetUserKeyRequest.BuildForTunnel(
-        tunnel,
-        masterKey,
-      );
 
       jest.spyOn(keyConnectorService, "getManagingOrganization").mockResolvedValue(organization);
       jest.spyOn(apiService, "postUserKeyToKeyConnector").mockResolvedValue();
@@ -386,10 +384,6 @@ describe("KeyConnectorService", () => {
       const organization = organizationData(true, true, "https://key-connector-url.com", 2, false);
       const masterKey = getMockMasterKey();
       masterPasswordService.masterKeySubject.next(masterKey);
-      const keyConnectorRequest = await KeyConnectorSetUserKeyRequest.BuildForTunnel(
-        tunnel,
-        masterKey,
-      );
 
       jest.spyOn(keyConnectorService, "getManagingOrganization").mockResolvedValue(organization);
       jest.spyOn(apiService, "postUserKeyToKeyConnector").mockResolvedValue();
@@ -410,10 +404,6 @@ describe("KeyConnectorService", () => {
       // Arrange
       const organization = organizationData(true, true, "https://key-connector-url.com", 2, false);
       const masterKey = getMockMasterKey();
-      const keyConnectorRequest = await KeyConnectorSetUserKeyRequest.BuildForTunnel(
-        tunnel,
-        masterKey,
-      );
       const error = new Error("Failed to post user key to key connector");
       organizationService.getAll.mockResolvedValue([organization]);
 
@@ -437,7 +427,7 @@ describe("KeyConnectorService", () => {
     });
 
     describe("convertNewSsoUserToKeyConnector()", () => {
-      const tunnel = mock<CommunicationTunnel>();
+      const tunnel = mock<CommunicationTunnel<[TunnelVersion.CLEAR_TEXT]>>();
       const mockUserKey = makeSymmetricCryptoKey(64) as UserKey;
       const mockEncryptedUserKey = makeEncString("encryptedUserKey");
       const pubKey = "pubKey";
@@ -454,7 +444,10 @@ describe("KeyConnectorService", () => {
 
       beforeEach(() => {
         communicationTunnelService.createTunnel.mockResolvedValue(tunnel);
-        apiService.getMasterKeyFromKeyConnector.mockResolvedValue(mockMasterKeyResponse);
+        apiService.getMasterKeyFromKeyConnector.mockResolvedValue(mockRawMasterKeyResponse);
+        tunnel.protect.mockResolvedValue(
+          new KeyConnectorSetUserKeyRequest(mockClearTextMasterKey.keyB64),
+        );
 
         keyGenerationService.createKey.mockResolvedValue(mockClearTextMasterKey);
         keyService.makeMasterKey.mockResolvedValue(mockClearTextMasterKey);
@@ -478,13 +471,7 @@ describe("KeyConnectorService", () => {
         expect(communicationTunnelService.createTunnel).toHaveBeenCalled();
       });
 
-      it("should post user key to key connector", async () => {
-        // Arrange
-        const keyConnectorRequest = await KeyConnectorSetUserKeyRequest.BuildForTunnel(
-          tunnel,
-          mockClearTextMasterKey,
-        );
-
+      it("should post user key to key connector through the tunnel", async () => {
         // Act
         await keyConnectorService.convertNewSsoUserToKeyConnector(
           tokenResponse,
@@ -493,6 +480,9 @@ describe("KeyConnectorService", () => {
         );
 
         // Assert
+        expect(tunnel.protect).toHaveBeenCalledWith(
+          new KeyConnectorSetUserKeyRequest(mockClearTextMasterKey.encKeyB64),
+        );
         expect(apiService.postUserKeyToKeyConnector).toHaveBeenCalledWith(
           tokenResponse.userDecryptionOptions.keyConnectorOption.keyConnectorUrl,
           keyConnectorRequest,
@@ -580,7 +570,7 @@ describe("KeyConnectorService", () => {
   }
 
   function getMockMasterKey(): MasterKey {
-    const keyArr = Utils.fromB64ToArray(mockMasterKeyResponse.key);
+    const keyArr = Utils.fromB64ToArray(mockRawMasterKeyResponse.key);
     const masterKey = new SymmetricCryptoKey(keyArr) as MasterKey;
     return masterKey;
   }

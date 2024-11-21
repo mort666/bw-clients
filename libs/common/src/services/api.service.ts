@@ -1,4 +1,5 @@
 import { firstValueFrom } from "rxjs";
+import type { JsonObject } from "type-fest";
 
 import {
   CollectionRequest,
@@ -82,7 +83,6 @@ import { IdentityCaptchaResponse } from "../auth/models/response/identity-captch
 import { IdentityTokenResponse } from "../auth/models/response/identity-token.response";
 import { IdentityTwoFactorResponse } from "../auth/models/response/identity-two-factor.response";
 import { InitTunnelResponse } from "../auth/models/response/init-tunnel.response";
-import { KeyConnectorGetUserKeyResponse } from "../auth/models/response/key-connector-user-key.response";
 import { PreloginResponse } from "../auth/models/response/prelogin.response";
 import { RegisterResponse } from "../auth/models/response/register.response";
 import { SsoPreValidateResponse } from "../auth/models/response/sso-pre-validate.response";
@@ -131,6 +131,10 @@ import { AppIdService } from "../platform/abstractions/app-id.service";
 import { EnvironmentService } from "../platform/abstractions/environment.service";
 import { LogService } from "../platform/abstractions/log.service";
 import { PlatformUtilsService } from "../platform/abstractions/platform-utils.service";
+import {
+  isTunneledRequest,
+  TunneledRequest,
+} from "../platform/communication-tunnel/tunneled.request";
 import { flagEnabled } from "../platform/misc/flags";
 import { Utils } from "../platform/misc/utils";
 import { SyncResponse } from "../platform/sync";
@@ -1499,26 +1503,15 @@ export class ApiService implements ApiServiceAbstraction {
 
   async getMasterKeyFromKeyConnector(
     keyConnectorUrl: string,
-    request: KeyConnectorGetUserKeyRequest,
-  ): Promise<KeyConnectorGetUserKeyResponse> {
+    request: KeyConnectorGetUserKeyRequest | TunneledRequest<KeyConnectorGetUserKeyRequest>,
+  ): Promise<JsonObject> {
     const authHeader = await this.getActiveBearerToken();
 
     // If shared key is null, we use the old GET endpoint to support older key connectors
     let response: Response;
-    if (request.sharedKey == null) {
+    if (isTunneledRequest(request)) {
       response = await this.fetch(
-        new Request(keyConnectorUrl + "/user-keys", {
-          cache: "no-store",
-          method: "GET",
-          headers: new Headers({
-            Accept: "application/json",
-            Authorization: "Bearer " + authHeader,
-          }),
-        }),
-      );
-    } else {
-      response = await this.fetch(
-        new Request(keyConnectorUrl + "/user-keys", {
+        new Request(keyConnectorUrl + "/user-keys/get-user-key", {
           cache: "no-store",
           method: "POST",
           headers: new Headers({
@@ -1529,6 +1522,17 @@ export class ApiService implements ApiServiceAbstraction {
           body: JSON.stringify(request),
         }),
       );
+    } else {
+      response = await this.fetch(
+        new Request(keyConnectorUrl + "/user-keys", {
+          cache: "no-store",
+          method: "GET",
+          headers: new Headers({
+            Accept: "application/json",
+            Authorization: "Bearer " + authHeader,
+          }),
+        }),
+      );
     }
 
     if (response.status !== 200) {
@@ -1536,7 +1540,7 @@ export class ApiService implements ApiServiceAbstraction {
       return Promise.reject(error);
     }
 
-    return new KeyConnectorGetUserKeyResponse(await response.json());
+    return await response.json();
   }
 
   async postUserKeyToKeyConnector(
