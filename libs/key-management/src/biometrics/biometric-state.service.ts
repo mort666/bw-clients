@@ -56,48 +56,65 @@ export abstract class BiometricStateService {
   abstract fingerprintValidated$: Observable<boolean>;
 
   /**
+   *
+   */
+  abstract startupBehavior$: Observable<"autoPromptBiometrics" | "requirePasswordOnStart">;
+
+  /**
    * Updates the require password on start state for the currently active user.
    *
    * If false, the encrypted client key half will be removed.
    * @param value whether or not a password is required on first unlock after opening the application
    */
   abstract setRequirePasswordOnStart(value: boolean): Promise<void>;
+
   /**
    * Updates the biometric unlock enabled state for the currently active user.
    * @param enabled whether or not to store a biometric key to unlock the vault
    */
   abstract setBiometricUnlockEnabled(enabled: boolean): Promise<void>;
+
   /**
    * Gets the biometric unlock enabled state for the given user.
    * @param userId user Id to check
    */
   abstract getBiometricUnlockEnabled(userId: UserId): Promise<boolean>;
+
   abstract setEncryptedClientKeyHalf(encryptedKeyHalf: EncString, userId?: UserId): Promise<void>;
+
   abstract getEncryptedClientKeyHalf(userId: UserId): Promise<EncString>;
+
   abstract getRequirePasswordOnStart(userId: UserId): Promise<boolean>;
+
   abstract removeEncryptedClientKeyHalf(userId: UserId): Promise<void>;
+
   /**
    * Updates the active user's state to reflect that they've been warned about requiring password on start.
    */
   abstract setDismissedRequirePasswordOnStartCallout(): Promise<void>;
+
   /**
    * Updates the active user's state to reflect that they've cancelled the biometric prompt.
    */
   abstract setUserPromptCancelled(): Promise<void>;
+
   /**
    * Resets the given user's state to reflect that they haven't cancelled the biometric prompt.
    * @param userId the user to reset the prompt cancelled state for. If not provided, the currently active user will be used.
    */
   abstract resetUserPromptCancelled(userId?: UserId): Promise<void>;
+
   /**
    * Resets all user's state to reflect that they haven't cancelled the biometric prompt.
    */
   abstract resetAllPromptCancelled(): Promise<void>;
+
   /**
    * Updates the currently active user's setting for auto prompting for biometrics on application start and lock
    * @param prompt Whether or not to prompt for biometrics on application start.
    */
   abstract setPromptAutomatically(prompt: boolean): Promise<void>;
+
   /**
    * Updates whether or not IPC has been validated by the user this session
    * @param validated the value to save
@@ -122,6 +139,7 @@ export class DefaultBiometricStateService implements BiometricStateService {
   promptCancelled$: Observable<boolean>;
   promptAutomatically$: Observable<boolean>;
   fingerprintValidated$: Observable<boolean>;
+  startupBehavior$: Observable<"autoPromptBiometrics" | "requirePasswordOnStart">;
 
   constructor(private stateProvider: StateProvider) {
     this.biometricUnlockEnabledState = this.stateProvider.getActive(BIOMETRIC_UNLOCK_ENABLED);

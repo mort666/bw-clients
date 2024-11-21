@@ -119,49 +119,38 @@
                   </label>
                 </div>
               </div>
-              <div class="form-group" *ngIf="supportsBiometric">
+              <div class="form-group" *ngIf="true">
                 <div class="checkbox">
                   <label for="biometric">
                     <input id="biometric" type="checkbox" formControlName="biometric" />
                     {{ biometricText | i18n }}
                   </label>
                 </div>
-                <small class="help-block" *ngIf="this.form.value.biometric && !this.isLinux">{{
+                <small class="help-block" *ngIf="true">{{
                   additionalBiometricSettingsText | i18n
                 }}</small>
               </div>
-              <div
-                class="form-group"
-                *ngIf="supportsBiometric && this.form.value.biometric && !this.isLinux"
-              >
-                <div class="checkbox form-group-child">
+
+              <!-- WORKING HERE -->
+              <div class="form-group">
+                <div class="radio form-group-child [&:not(:last-of-type)]:tw-mb-5" *ngIf="true">
                   <label for="autoPromptBiometrics">
                     <input
                       id="autoPromptBiometrics"
-                      type="checkbox"
-                      formControlName="autoPromptBiometrics"
-                      (change)="updateAutoPromptBiometrics()"
+                      type="radio"
+                      [value]="'autoPromptBiometrics'"
+                      formControlName="startupBehavior"
                     />
                     {{ autoPromptBiometricsText | i18n }}
                   </label>
                 </div>
-              </div>
-              <div
-                class="form-group"
-                *ngIf="
-                  supportsBiometric &&
-                  this.form.value.biometric &&
-                  (userHasMasterPassword || (this.form.value.pin && userHasPinSet)) &&
-                  !this.isLinux
-                "
-              >
-                <div class="checkbox form-group-child">
+                <div class="radio form-group-child [&:not(:last-of-type)]:tw-mb-5" *ngIf="true">
                   <label for="requirePasswordOnStart">
                     <input
                       id="requirePasswordOnStart"
-                      type="checkbox"
-                      formControlName="requirePasswordOnStart"
-                      (change)="updateRequirePasswordOnStart()"
+                      type="radio"
+                      [value]="'requirePasswordOnStart'"
+                      formControlName="startupBehavior"
                     />
                     {{ "requirePasswordOnStart" | i18n }}
                   </label>
@@ -170,6 +159,7 @@
                   "recommendedForSecurity" | i18n
                 }}</small>
               </div>
+              <!-- WORKING HERE -->
             </ng-container>
           </div>
         </div>

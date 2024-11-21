@@ -114,6 +114,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     enableDuckDuckGoBrowserIntegration: false,
     theme: [null as ThemeType | null],
     locale: [null as string | null],
+    startupBehavior: [null as "autoPromptBiometrics" | "requirePasswordOnStart" | null],
   });
 
   private refreshTimeoutSettings$ = new BehaviorSubject<void>(undefined);
@@ -143,7 +144,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     private nativeMessagingManifestService: NativeMessagingManifestService,
     private configService: ConfigService,
   ) {
-    const isMac = this.platformUtilsService.getDevice() === DeviceType.MacOsDesktop;
+    const isMac = false;
 
     // Workaround to avoid ghosting trays https://github.com/electron/electron/issues/17622
     this.requireEnableTray = this.platformUtilsService.getDevice() === DeviceType.LinuxDesktop;
@@ -209,7 +210,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.showSshAgentOption = await this.configService.getFeatureFlag(FeatureFlag.SSHAgent);
     this.userHasMasterPassword = await this.userVerificationService.hasMasterPassword();
 
-    this.isWindows = this.platformUtilsService.getDevice() === DeviceType.WindowsDesktop;
+    this.isWindows = true;
 
     this.currentUserEmail = activeAccount.email;
     this.currentUserId = activeAccount.id;
@@ -282,6 +283,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       enableSshAgent: await firstValueFrom(this.desktopSettingsService.sshAgentEnabled$),
       theme: await firstValueFrom(this.themeStateService.selectedTheme$),
       locale: await firstValueFrom(this.i18nService.userSetLocale$),
+      startupBehavior: await firstValueFrom(this.biometricStateService.startupBehavior$),
     };
     this.form.setValue(initialValues, { emitEvent: false });
 
@@ -355,6 +357,19 @@ export class SettingsComponent implements OnInit, OnDestroy {
           this.form.controls.enableBrowserIntegrationFingerprint.disable();
         }
       });
+
+    this.form.controls.startupBehavior.valueChanges
+      .pipe(
+        concatMap(async (value) => {
+          if (value === "autoPromptBiometrics") {
+            await this.updateAutoPromptBiometrics();
+          } else if (value === "requirePasswordOnStart") {
+            await this.updateRequirePasswordOnStart();
+          }
+        }),
+        takeUntil(this.destroy$),
+      )
+      .subscribe();
   }
 
   async saveVaultTimeout(newValue: VaultTimeout) {
@@ -769,6 +784,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   get biometricText() {
+    return "unlockWithWindowsHello";
     switch (this.platformUtilsService.getDevice()) {
       case DeviceType.MacOsDesktop:
         return "unlockWithTouchId";
@@ -782,6 +798,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   get autoPromptBiometricsText() {
+    return "autoPromptWindowsHello";
     switch (this.platformUtilsService.getDevice()) {
       case DeviceType.MacOsDesktop:
         return "autoPromptTouchId";
@@ -795,6 +812,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   get additionalBiometricSettingsText() {
+    return "additionalWindowsHelloSettings";
     switch (this.platformUtilsService.getDevice()) {
       case DeviceType.MacOsDesktop:
         return "additionalTouchIdSettings";
