@@ -1,9 +1,5 @@
 import { UserId } from "../../../types/guid";
 
-/**
- * @typedef { import("../response/key-connector-init-communication.response").KeyConnectorInitCommunicationResponse } KeyConnectorInitCommunicationResponse
- */
-
 export class KeyConnectorSetUserKeyRequest {
   /**
    *

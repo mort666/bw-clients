@@ -5,6 +5,9 @@ export class InitTunnelResponse extends BaseResponse {
   readonly encapsulationKey: Uint8Array;
   readonly tunnelVersion: TunnelVersion;
   readonly tunnelIdentifier: string;
+  /**
+   * Can be used to pro-actively re-up tunnels in the future.
+   */
   readonly tunnelDurationSeconds: number;
 
   constructor(response: any) {
