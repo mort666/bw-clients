@@ -59,6 +59,7 @@ type GroupDetailsRow = {
  * with members' names (who are assigned to the group) or collection names (which the group has access to).
  */
 const groupsFilter = (filter: string) => {
+  filter ??= "";
   const transformedFilter = filter.trim().toLowerCase();
   return (data: GroupDetailsRow) => {
     const group = data.details;
@@ -81,8 +82,8 @@ export class GroupsComponent {
   protected searchControl = new FormControl("");
 
   // Fixed sizes used for cdkVirtualScroll
-  protected rowHeight = 46;
-  protected rowHeightClass = `tw-h-[46px]`;
+  protected rowHeight = 52;
+  protected rowHeightClass = `tw-h-[52px]`;
 
   protected ModalTabType = GroupAddEditTabType;
   private refreshGroups$ = new BehaviorSubject<void>(null);
