@@ -183,7 +183,7 @@ export class PremiumV2Component {
     await this.postFinalizeUpgrade();
   }
 
-  protected refreshSalesTax(): void {
+  private refreshSalesTax(): void {
     if (!this.taxInfoComponent.country || !this.taxInfoComponent.postalCode) {
       return;
     }
