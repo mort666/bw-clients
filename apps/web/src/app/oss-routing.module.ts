@@ -33,6 +33,7 @@ import {
   RegistrationLockAltIcon,
   RegistrationExpiredLinkIcon,
   VaultIcon,
+  LoginDecryptionOptionsComponent,
 } from "@bitwarden/auth/angular";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 
@@ -46,7 +47,7 @@ import { CreateOrganizationComponent } from "./admin-console/settings/create-org
 import { deepLinkGuard } from "./auth/guards/deep-link.guard";
 import { HintComponent } from "./auth/hint.component";
 import { LockComponent } from "./auth/lock.component";
-import { LoginDecryptionOptionsComponent } from "./auth/login/login-decryption-options/login-decryption-options.component";
+import { LoginDecryptionOptionsComponentV1 } from "./auth/login/login-decryption-options/login-decryption-options-v1.component";
 import { LoginComponentV1 } from "./auth/login/login-v1.component";
 import { LoginViaAuthRequestComponentV1 } from "./auth/login/login-via-auth-request-v1.component";
 import { LoginViaWebAuthnComponent } from "./auth/login/login-via-webauthn/login-via-webauthn.component";
@@ -104,15 +105,10 @@ const routes: Routes = [
         data: { titleId: "logInWithPasskey" } satisfies RouteDataProperties,
       },
       {
-        path: "login-initiated",
-        component: LoginDecryptionOptionsComponent,
-        canActivate: [tdeDecryptionRequiredGuard()],
-      },
-      {
         path: "register",
         component: TrialInitiationComponent,
         canActivate: [
-          canAccessFeature(FeatureFlag.EmailVerification, false, "/signup"),
+          canAccessFeature(FeatureFlag.EmailVerification, false, "/signup", false),
           unauthGuardFn(),
         ],
         data: { titleId: "createAccount" } satisfies RouteDataProperties,
@@ -270,6 +266,22 @@ const routes: Routes = [
           outlet: "environment-selector",
         },
       ],
+    },
+  ),
+  ...unauthUiRefreshSwap(
+    LoginDecryptionOptionsComponentV1,
+    AnonLayoutWrapperComponent,
+    {
+      path: "login-initiated",
+      canActivate: [tdeDecryptionRequiredGuard()],
+    },
+    {
+      path: "login-initiated",
+      canActivate: [tdeDecryptionRequiredGuard()],
+      data: {
+        pageIcon: DevicesIcon,
+      },
+      children: [{ path: "", component: LoginDecryptionOptionsComponent }],
     },
   ),
   ...unauthUiRefreshSwap(
