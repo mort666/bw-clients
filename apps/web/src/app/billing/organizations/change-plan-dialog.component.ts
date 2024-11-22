@@ -22,6 +22,7 @@ import { Organization } from "@bitwarden/common/admin-console/models/domain/orga
 import { OrganizationKeysRequest } from "@bitwarden/common/admin-console/models/request/organization-keys.request";
 import { OrganizationUpgradeRequest } from "@bitwarden/common/admin-console/models/request/organization-upgrade.request";
 import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions";
+import { TaxServiceAbstraction } from "@bitwarden/common/billing/abstractions/tax.service.abstraction";
 import {
   PaymentMethodType,
   PlanInterval,
@@ -29,6 +30,7 @@ import {
   ProductTierType,
 } from "@bitwarden/common/billing/enums";
 import { PaymentRequest } from "@bitwarden/common/billing/models/request/payment.request";
+import { PreviewOrganizationInvoiceRequest } from "@bitwarden/common/billing/models/request/preview-organization-invoice.request";
 import { UpdatePaymentMethodRequest } from "@bitwarden/common/billing/models/request/update-payment-method.request";
 import { BillingResponse } from "@bitwarden/common/billing/models/response/billing.response";
 import { OrganizationSubscriptionResponse } from "@bitwarden/common/billing/models/response/organization-subscription.response";
@@ -93,7 +95,6 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
   @Input() organizationId: string;
   @Input() showFree = false;
   @Input() showCancel = false;
-  selectedFile: File;
 
   @Input()
   get productTier(): ProductTierType {
@@ -105,6 +106,7 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
     this.formGroup?.controls?.productTier?.setValue(product);
   }
 
+  protected estimatedTax: number = 0;
   private _productTier = ProductTierType.Free;
 
   @Input()
@@ -187,6 +189,7 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
     private organizationApiService: OrganizationApiServiceAbstraction,
     private configService: ConfigService,
     private billingApiService: BillingApiServiceAbstraction,
+    private taxService: TaxServiceAbstraction,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -401,6 +404,12 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
     }
     this.selectedPlan = plan;
     this.formGroup.patchValue({ productTier: plan.productTier });
+
+    try {
+      this.refreshSalesTax();
+    } catch {
+      this.estimatedTax = 0;
+    }
   }
 
   ngOnDestroy() {
@@ -566,12 +575,6 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
     );
   }
 
-  get taxCharges() {
-    return this.taxComponent != null && this.taxComponent.taxRate != null
-      ? (this.taxComponent.taxRate / 100) * this.passwordManagerSubtotal
-      : 0;
-  }
-
   get passwordManagerSeats() {
     if (this.selectedPlan.productTier === ProductTierType.Families) {
       return this.selectedPlan.PasswordManager.baseSeats;
@@ -583,15 +586,15 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
     if (this.organization.useSecretsManager) {
       return (
         this.passwordManagerSubtotal +
-          this.additionalStorageTotal(this.selectedPlan) +
-          this.secretsManagerSubtotal +
-          this.taxCharges || 0
+        this.additionalStorageTotal(this.selectedPlan) +
+        this.secretsManagerSubtotal +
+        this.estimatedTax
       );
     }
     return (
       this.passwordManagerSubtotal +
-        this.additionalStorageTotal(this.selectedPlan) +
-        this.taxCharges || 0
+      this.additionalStorageTotal(this.selectedPlan) +
+      this.estimatedTax
     );
   }
 
@@ -664,6 +667,10 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
         this.paymentComponent.changeMethod();
       }
     }
+  }
+
+  protected onTaxInformationChanged(): void {
+    this.refreshSalesTax();
   }
 
   submit = async () => {
@@ -942,5 +949,37 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
 
   manageSelectableProduct(index: number) {
     return index;
+  }
+
+  private refreshSalesTax(): void {
+    if (!this.taxComponent.country || !this.taxComponent.postalCode) {
+      return;
+    }
+    const request: PreviewOrganizationInvoiceRequest = {
+      organizationId: this.organizationId,
+      passwordManager: {
+        additionalStorage: 0,
+        plan: this.selectedPlan?.type,
+        seats: this.sub.seats,
+      },
+      taxInformation: {
+        postalCode: this.taxComponent.postalCode,
+        country: this.taxComponent.country,
+        taxId: this.taxComponent.taxId,
+      },
+    };
+
+    this.taxService
+      .previewOrganizationInvoice(request)
+      .then((invoice) => {
+        this.estimatedTax = invoice.taxAmount;
+      })
+      .catch((error) => {
+        this.toastService.showToast({
+          title: "",
+          variant: "error",
+          message: this.i18nService.t(error.message),
+        });
+      });
   }
 }
