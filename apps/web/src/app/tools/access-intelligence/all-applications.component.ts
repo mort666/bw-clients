@@ -58,6 +58,7 @@ export class AllApplicationsComponent implements OnInit {
     this.activatedRoute.paramMap
       .pipe(
         takeUntilDestroyed(this.destroyRef),
+
         map(async (params) => {
           const organizationId = params.get("organizationId");
           this.organization = await firstValueFrom(this.organizationService.get$(organizationId));
@@ -66,10 +67,15 @@ export class AllApplicationsComponent implements OnInit {
         }),
         switchMap(async (params) => {
           const organizationId = (await params).get("organizationId");
-          await this.criticalAppsService.getCriticalApps(organizationId);
+          return await this.criticalAppsService.getCriticalApps(organizationId);
         }),
       )
-      .subscribe();
+      .subscribe((dbCriticalAppRecords) => {
+        applicationTableMockData.forEach((data) => {
+          data.isMarkedAsCritical = dbCriticalAppRecords.some((app) => app.uri === data.name);
+        });
+        this.dataSource.data = applicationTableMockData;
+      });
 
     this.isCritialAppsFeatureEnabled = await this.configService.getFeatureFlag(
       FeatureFlag.CriticalApps,
@@ -87,7 +93,7 @@ export class AllApplicationsComponent implements OnInit {
     protected configService: ConfigService,
     protected criticalAppsService: CriticalAppsApiService,
   ) {
-    this.dataSource.data = applicationTableMockData;
+    // this.dataSource.data = applicationTableMockData;
     this.searchControl.valueChanges
       .pipe(debounceTime(200), takeUntilDestroyed())
       .subscribe((v) => (this.dataSource.filter = v));
@@ -132,4 +138,6 @@ export class AllApplicationsComponent implements OnInit {
       this.selectedUrls.delete(urlName);
     }
   }
+
+  getSelectedUrls = () => Array.from(this.selectedUrls);
 }
