@@ -37,8 +37,6 @@ const LAST_SYNC_DATE = new UserKeyDefinition<Date>(SYNC_DISK, "lastSync", {
 export abstract class CoreSyncService implements SyncService {
   syncInProgress = false;
 
-  private activeUserId$ = this.accountService.activeAccount$.pipe(map((a) => a?.id));
-
   constructor(
     protected readonly stateService: StateService,
     protected readonly folderService: InternalFolderService,
@@ -85,22 +83,25 @@ export abstract class CoreSyncService implements SyncService {
     await this.stateProvider.getUser(userId, LAST_SYNC_DATE).update(() => date);
   }
 
-  async syncUpsertFolder(notification: SyncFolderNotification, isEdit: boolean): Promise<boolean> {
+  async syncUpsertFolder(
+    notification: SyncFolderNotification,
+    isEdit: boolean,
+    userId: UserId,
+  ): Promise<boolean> {
     this.syncStarted();
 
-    const activeUserId = await firstValueFrom(this.activeUserId$);
-    const authStatus = await firstValueFrom(this.authService.authStatusFor$(activeUserId));
+    const authStatus = await firstValueFrom(this.authService.authStatusFor$(userId));
 
     if (authStatus >= AuthenticationStatus.Locked) {
       try {
-        const localFolder = await this.folderService.get(notification.id, activeUserId);
+        const localFolder = await this.folderService.get(notification.id, userId);
         if (
           (!isEdit && localFolder == null) ||
           (isEdit && localFolder != null && localFolder.revisionDate < notification.revisionDate)
         ) {
           const remoteFolder = await this.folderApiService.get(notification.id);
           if (remoteFolder != null) {
-            await this.folderService.upsert(new FolderData(remoteFolder), activeUserId);
+            await this.folderService.upsert(new FolderData(remoteFolder), userId);
             this.messageSender.send("syncedUpsertedFolder", { folderId: notification.id });
             return this.syncCompleted(true);
           }
@@ -112,14 +113,13 @@ export abstract class CoreSyncService implements SyncService {
     return this.syncCompleted(false);
   }
 
-  async syncDeleteFolder(notification: SyncFolderNotification): Promise<boolean> {
+  async syncDeleteFolder(notification: SyncFolderNotification, userId: UserId): Promise<boolean> {
     this.syncStarted();
 
-    const activeUserId = await firstValueFrom(this.activeUserId$);
-    const authStatus = await firstValueFrom(this.authService.authStatusFor$(activeUserId));
+    const authStatus = await firstValueFrom(this.authService.authStatusFor$(userId));
 
     if (authStatus >= AuthenticationStatus.Locked) {
-      await this.folderService.delete(notification.id, activeUserId);
+      await this.folderService.delete(notification.id, userId);
       this.messageSender.send("syncedDeletedFolder", { folderId: notification.id });
       this.syncCompleted(true);
       return true;
