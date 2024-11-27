@@ -17,6 +17,7 @@ import { CipherFormGeneratorComponent } from "@bitwarden/vault";
 export interface ApproveSshRequestParams {
   cipherName: string;
   applicationName: string;
+  applicationIcon: string;
 }
 
 @Component({
@@ -44,11 +45,17 @@ export class ApproveSshRequestComponent {
     private formBuilder: FormBuilder,
   ) {}
 
-  static open(dialogService: DialogService, cipherName: string, applicationName: string) {
+  static open(
+    dialogService: DialogService,
+    cipherName: string,
+    applicationName: string,
+    applicationIcon: string,
+  ) {
     return dialogService.open<boolean, ApproveSshRequestParams>(ApproveSshRequestComponent, {
       data: {
         cipherName,
         applicationName,
+        applicationIcon,
       },
     });
   }

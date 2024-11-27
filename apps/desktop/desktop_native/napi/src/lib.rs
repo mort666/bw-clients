@@ -247,7 +247,7 @@ pub mod sshagent {
 
     #[napi]
     pub async fn serve(
-        callback: ThreadsafeFunction<(String, String), CalleeHandled>,
+        callback: ThreadsafeFunction<(String, String, String, String, bool), CalleeHandled>,
     ) -> napi::Result<SshAgentState> {
         let (auth_request_tx, mut auth_request_rx) = tokio::sync::mpsc::channel::<desktop_core::ssh_agent::SshAgentUIRequest>(32);
         let (auth_response_tx, auth_response_rx) = tokio::sync::broadcast::channel::<(u32, bool)>(32);
@@ -261,8 +261,17 @@ pub mod sshagent {
                 tokio::spawn(async move {
                     let auth_response_tx_arc = cloned_response_tx_arc;
                     let callback = cloned_callback;
+
+                    let application_name = request.application_info.name;
+                    let application_icon = match request.application_info.icon {
+                        Some(icon) => icon,
+                        None => "".to_string(),
+                    };
+                    let is_installed_app = request.application_info.is_installed_app;
+
+
                     let promise_result: Result<Promise<bool>, napi::Error> =
-                        callback.call_async(Ok((request.cipher_id, request.process_name))).await;
+                        callback.call_async(Ok((request.cipher_id, request.process_name, application_name, application_icon, is_installed_app))).await;
                     match promise_result {
                         Ok(promise_result) => match promise_result.await {
                             Ok(result) => {

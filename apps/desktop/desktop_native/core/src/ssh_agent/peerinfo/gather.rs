@@ -1,6 +1,6 @@
 use sysinfo::{Pid, System};
 
-use super::models::PeerInfo;
+use super::{application_info, models::PeerInfo};
 
 pub fn get_peer_info(peer_pid: u32) -> Result<PeerInfo, String> {
     let s = System::new_all();
@@ -12,10 +12,13 @@ pub fn get_peer_info(peer_pid: u32) -> Result<PeerInfo, String> {
             }
         };
 
+        let application_info = application_info::get_info(peer_pid as usize).map_err(|e| e.to_string())?;
+
         return Ok(PeerInfo::new(
             peer_pid,
             process.pid().as_u32(),
             peer_process_name,
+            application_info,
         ));
     }
 

@@ -115,9 +115,12 @@ export class SshAgentService implements OnDestroy {
           concatMap(([message, decryptedCiphers]) => {
             const cipherId = message.cipherId as string;
             const requestId = message.requestId as number;
-            let application = message.processName as string;
+            let application = message.applicationName as string;
             if (application == "") {
-              application = this.i18nService.t("unknownApplication");
+              application = message.processName as string;
+              if (application == "") {
+                application = this.i18nService.t("unknownApplication");
+              }
             }
 
             if (decryptedCiphers === undefined) {
@@ -135,6 +138,7 @@ export class SshAgentService implements OnDestroy {
               this.dialogService,
               cipher.name,
               application,
+              message.icon as string,
             );
 
             return dialogRef.closed.pipe(

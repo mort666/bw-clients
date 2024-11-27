@@ -30,6 +30,7 @@ pub struct SshAgentUIRequest {
     pub request_id: u32,
     pub cipher_id: String,
     pub process_name: String,
+    pub application_info: crate::ssh_agent::peerinfo::application_info::ApplicationInfo,
 }
 
 impl ssh_agent::Agent<peerinfo::models::PeerInfo> for BitwardenDesktopAgent {
@@ -48,6 +49,7 @@ impl ssh_agent::Agent<peerinfo::models::PeerInfo> for BitwardenDesktopAgent {
                 request_id,
                 cipher_id: ssh_key.cipher_uuid.clone(),
                 process_name: info.process_name().to_string(),
+                application_info: info.application_info()
             })
             .await
             .expect("Should send request to ui");

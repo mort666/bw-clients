@@ -2,7 +2,11 @@
   <bit-dialog>
     <div class="tw-font-semibold" bitDialogTitle>{{ "sshkeyApprovalTitle" | i18n }}</div>
     <div bitDialogContent>
-      <b>{{params.applicationName}}</b> {{ "sshkeyApprovalMessageInfix" | i18n }}
+      <img [src]="params.applicationIcon" class="tw-w-12 tw-h-12 tw-mx-auto tw-mb-4" width="128" />
+      <br />
+      <b>{{params.applicationName}}</b>
+      <br />
+      {{ "sshkeyApprovalMessageInfix" | i18n }}
       <b>{{params.cipherName}}</b>.
     </div>
     <div bitDialogFooter>
