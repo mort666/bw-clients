@@ -20,10 +20,16 @@ pub mod peerinfo;
 pub struct BitwardenDesktopAgent {
     keystore: ssh_agent::KeyStore,
     cancellation_token: CancellationToken,
-    show_ui_request_tx: tokio::sync::mpsc::Sender<(u32, (String, String))>,
+    show_ui_request_tx: tokio::sync::mpsc::Sender<SshAgentUIRequest>,
     get_ui_response_rx: Arc<Mutex<tokio::sync::broadcast::Receiver<(u32, bool)>>>,
     request_id: Arc<Mutex<u32>>,
     is_running: Arc<tokio::sync::Mutex<bool>>,
+}
+
+pub struct SshAgentUIRequest {
+    pub request_id: u32,
+    pub cipher_id: String,
+    pub process_name: String,
 }
 
 impl ssh_agent::Agent<peerinfo::models::PeerInfo> for BitwardenDesktopAgent {
@@ -38,7 +44,11 @@ impl ssh_agent::Agent<peerinfo::models::PeerInfo> for BitwardenDesktopAgent {
 
         let mut rx_channel = self.get_ui_response_rx.lock().await.resubscribe();
         self.show_ui_request_tx
-            .send((request_id, (ssh_key.cipher_uuid.clone(), info.process_name().to_string())))
+            .send(SshAgentUIRequest {
+                request_id,
+                cipher_id: ssh_key.cipher_uuid.clone(),
+                process_name: info.process_name().to_string(),
+            })
             .await
             .expect("Should send request to ui");
         while let Ok((id, response)) = rx_channel.recv().await {
