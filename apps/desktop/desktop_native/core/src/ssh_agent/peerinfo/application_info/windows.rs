@@ -1,6 +1,7 @@
 use std::panic;
 
 use super::ApplicationInfo;
+use base64::{prelude::BASE64_STANDARD, Engine};
 use sysinfo::{Pid, System};
 use windows_icons::get_icon_base64_by_process_id;
 use windows::Win32::Foundation::{BOOL, HWND, LPARAM};
@@ -31,22 +32,60 @@ pub fn get_info(pid: usize) -> Result<ApplicationInfo, anyhow::Error> {
     })
 }
 
+fn parse_windows_uwp_app(path: &str) -> Result<String, anyhow::Error> {
+    let appxmanifest = path.to_string() + "\\AppxManifest.xml";
+    let file = std::fs::read_to_string(appxmanifest)?;
+    let logo = file.split("<Logo>").collect::<Vec<&str>>()[1].split("</Logo>").collect::<Vec<&str>>()[0];
+    println!("Logo: {}", logo);
+    let logo = path.to_string() + "\\" + logo;
+    println!("Logo path: {}", logo);
+    let logo_path = std::path::Path::new(&logo);
+    let logo_dir = logo_path.parent().unwrap().to_str().unwrap();
+    let logo_filename = logo_path.file_name().unwrap().to_str().unwrap();
+    let logo_filename_base = logo_filename.split(".").collect::<Vec<&str>>()[0];
+    let scales = vec!["200", "150"];
+    // attempt to find the logo
+    for scale in scales {
+        let logo = logo_dir.to_string() + "\\" + logo_filename_base + ".scale-" + scale + ".png";
+        println!("Checking logo: {}", logo);
+        if std::fs::metadata(&logo).is_ok() {
+            let logo = std::fs::read(logo)?;
+            println!("Logo read");
+            let logo = BASE64_STANDARD.encode(logo);
+            return Ok(logo);
+        }
+    }
+    println!("Logo not found");
+    return Err(anyhow::anyhow!("Logo not found"));
+}
+
 fn get_info_for(pid: usize) -> Result<ApplicationInfo, anyhow::Error> {
     let sys = System::new_all();
     let proc = sys.process(Pid::from_u32(pid as u32));
     let executable_path = proc.unwrap().exe().ok_or(anyhow::anyhow!("Executable path not found"))?.to_str().unwrap().to_string();
     let icon = panic::catch_unwind(|| {
+        println!("Getting icon for pid: {}", pid);
         get_icon_base64_by_process_id(pid as u32)
     });
+    println!("Icon: {:?}", icon);
     let icon = match icon {
         Ok(icon) => icon,
         Err(_) => {
-            return Ok(ApplicationInfo{
-                name: "Unknown application".to_string(),
-                path: None,
-                icon: None,
-                is_installed_app: false
-            })
+            println!("Error getting icon for pid: {}", pid);
+            // dir for exe
+            let dir = std::path::Path::new(&executable_path).parent().unwrap().to_str().unwrap();
+            // check if it's a UWP app
+            if dir.contains("WindowsApps") {
+                println!("UWP app detected");
+                parse_windows_uwp_app(dir)?
+            } else {
+                return Ok(ApplicationInfo {
+                    name: "Unknown application".to_string(),
+                    path: None,
+                    icon: None,
+                    is_installed_app: false
+                });
+            }
         }
     };
 
