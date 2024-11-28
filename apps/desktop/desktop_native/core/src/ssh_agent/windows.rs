@@ -8,7 +8,7 @@ use std::{
 use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
-use super::BitwardenDesktopAgent;
+use super::{BitwardenDesktopAgent, SshAgentUIRequest};
 
 impl BitwardenDesktopAgent {
     pub async fn start_server(
