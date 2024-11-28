@@ -1,5 +1,7 @@
+use apple_bundle::plist;
 use base64::prelude::BASE64_STANDARD;
 use icns::{IconFamily, IconType};
+use serde::{Deserialize, Serialize};
 use sysinfo::{Pid, System};
 use std::{fs::File, io::{BufReader, BufWriter}, process::Command};
 use base64::prelude::*;
@@ -21,30 +23,35 @@ pub fn get_info(pid: usize) -> Result<ApplicationInfo, anyhow::Error> {
         if proc.is_none() {
             break;
         }
-
-        println!("checking parent: {:?} {:?}", ppid, proc.unwrap().name());
-
         let parent_info = get_info_for_pid(ppid.as_u32() as usize)?;
         if parent_info.is_installed_app {
-            println!("Parent app installed, returning parent app");
             return Ok(parent_info);
         }
 
-        if let Ok(new_ppid) = get_parent_pid(ppid) {
-            println!("Found parent using sysinfo");
-            ppid = new_ppid;
-        } else {
-            if let Ok(new_ppid) = get_parent_fallback(ppid) {
-                println!("Found parent using fallback");
-                ppid = new_ppid;
-            } else {
-                break;
-            }
-        }
+        ppid = get_parent(ppid)?;
     }
 
     println!("No app found, returning initial app");
     Ok(app_info)
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Default)]
+pub struct InfoPlist {
+    #[serde(
+        rename = "CFBundleName",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub bundle_name: Option<String>,
+    #[serde(
+        rename = "CFBundleDisplayName",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub bundle_display_name: Option<String>,
+    #[serde(
+        rename = "CFBundleIconFile",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub bundle_icon_file: Option<String>,
 }
 
 fn get_info_for_pid(pid: usize) -> Result<ApplicationInfo, anyhow::Error> {
@@ -54,22 +61,30 @@ fn get_info_for_pid(pid: usize) -> Result<ApplicationInfo, anyhow::Error> {
     let executable_path = proc.unwrap().exe().ok_or(anyhow::anyhow!("Executable path not found"))?.to_str().unwrap().to_string();
     let process_name = proc.ok_or(anyhow::anyhow!("Process not found"))?.name();
 
-    println!("executable_path: {:?}", executable_path);
-
     // if path stars with /Applications/
     if executable_path.starts_with("/Applications/") {
         let application_name = executable_path.split("/").last().ok_or(anyhow::anyhow!("App name not found"))?;
         let package_name = executable_path.split("/").nth(2).ok_or(anyhow::anyhow!("Package name not found"))?;
-
+        let info_plist_path = format!("/Applications/{}/Contents/Info.plist", package_name);
+        let info_plist = std::fs::read(info_plist_path).map_err(|e| anyhow::anyhow!("Error reading Info.plist: {:?}", e))?;
+        let info_plist: InfoPlist = plist::from_bytes(&info_plist).map_err(|e| anyhow::anyhow!("Error parsing Info.plist: {:?}", e))?;
+        let application_name = info_plist.bundle_display_name.unwrap_or(application_name.to_string());
+        let icon_name = info_plist.bundle_icon_file.unwrap_or("AppIcon.icns".to_string());
+        let icon_name = if icon_name.ends_with(".icns") {
+            icon_name
+        } else {
+            format!("{}.icns", icon_name)
+        };
+        let icon = get_icon(package_name, &icon_name).ok();
         return Ok(ApplicationInfo {
-            name: application_name.to_string(),
+            name: application_name,
             path: Some(executable_path.clone()),
-            icon: get_icon(package_name).ok(),
+            icon,
             is_installed_app: true,
         });
     } else {
         return Ok(ApplicationInfo {
-            name: process_name.to_str().unwrap().to_string(),
+            name: process_name.to_str().unwrap_or_else(|| "unknown process").to_string(),
             path: None,
             icon: None,
             is_installed_app: false,
@@ -77,11 +92,11 @@ fn get_info_for_pid(pid: usize) -> Result<ApplicationInfo, anyhow::Error> {
     }
 }
 
-fn get_icon(package_name: &str) -> Result<String, anyhow::Error> {
-    let icon_path = format!("/Applications/{}/Contents/Resources/AppIcon.icns", package_name);
+fn get_icon(package_name: &str, icon_name: &str) -> Result<String, anyhow::Error> {
+    let icon_path = format!("/Applications/{}/Contents/Resources/{}", package_name, icon_name);
     let file = BufReader::new(File::open(icon_path)?);
     let icon_family = IconFamily::read(file)?;       
-    let image = icon_family.get_icon_with_type(IconType::RGBA32_128x128)?;
+    let image = icon_family.get_icon_with_type(IconType::RGBA32_128x128).unwrap();
     let mut buffer = Vec::new();
     let file = BufWriter::new(&mut buffer);
     image.write_png(file)?;
@@ -109,4 +124,8 @@ fn get_parent_fallback(pid: Pid) -> Result<Pid, anyhow::Error> {
     let parent_pid = output.lines().nth(1).ok_or(anyhow::anyhow!("Line not found"))?.split_whitespace().nth(0).ok_or(anyhow::anyhow!("Column not found"))?;
     let parent_pid = parent_pid.parse::<usize>()?;
     Ok(Pid::from(parent_pid))
+}
+
+fn get_parent(pid: Pid) -> Result<Pid, anyhow::Error> {
+    get_parent_pid(pid).or_else(|_| get_parent_fallback(pid))
 }
