@@ -123,3 +123,15 @@ export declare namespace ipc {
     send(message: string): number
   }
 }
+export declare namespace epheremal_values {
+  export class EpheremalValueStoreWrapper {
+    /** Create a new epheremal value store. */
+    constructor()
+    /** Set a value in the store. */
+    set(key: string, value: string): void
+    /** Get a value from the store. */
+    get(key: string): string | null
+    /** Remove a value from the store. */
+    remove(key: string): void
+  }
+}

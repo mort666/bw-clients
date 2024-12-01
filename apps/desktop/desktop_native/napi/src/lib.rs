@@ -522,3 +522,43 @@ pub mod ipc {
         }
     }
 }
+
+#[napi]
+pub mod epheremal_values {
+    use desktop_core::epheremal_values::EpheremalValueStore;
+    use std::collections::HashMap;
+
+    #[napi]
+    pub struct EpheremalValueStoreWrapper {
+        store: EpheremalValueStore,
+    }
+
+    #[napi]
+    impl EpheremalValueStoreWrapper {
+        /// Create a new epheremal value store.
+        #[napi(constructor)]
+        pub fn new() -> napi::Result<Self> {
+            Ok(EpheremalValueStoreWrapper {
+                store: EpheremalValueStore::new(),
+            })
+        }
+
+        /// Set a value in the store.
+        #[napi]
+        pub fn set(&mut self, key: String, value: String) {
+            self.store.set(key, value);
+        }
+
+        /// Get a value from the store.
+        #[napi]
+        pub fn get(&self, key: String) -> Option<String> {
+            self.store.get(&key).cloned()
+        }
+
+        /// Remove a value from the store.
+        #[napi]
+        pub fn remove(&mut self, key: String) {
+            self.store.remove(&key);
+        }
+    }
+}
