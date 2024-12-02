@@ -67,7 +67,7 @@ export function buildCipherIcon(iconsServerUrl: string, cipher: CipherView, show
     case CipherType.Identity:
       icon = "bwi-id-card";
       break;
-    case CipherType.SSHKey:
+    case CipherType.SshKey:
       icon = "bwi-key";
       break;
     default:

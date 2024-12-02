@@ -19,7 +19,7 @@ import { Identity } from "./identity";
 import { Login } from "./login";
 import { Password } from "./password";
 import { SecureNote } from "./secure-note";
-import { SSHKey } from "./ssh-key";
+import { SshKey } from "./ssh-key";
 
 export class Cipher extends Domain implements Decryptable<CipherView> {
   readonly initializerKey = InitializerKey.Cipher;
@@ -40,7 +40,7 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
   identity: Identity;
   card: Card;
   secureNote: SecureNote;
-  sshKey: SSHKey;
+  sshKey: SshKey;
   attachments: Attachment[];
   fields: Field[];
   passwordHistory: Password[];
@@ -99,8 +99,8 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
       case CipherType.Identity:
         this.identity = new Identity(obj.identity);
         break;
-      case CipherType.SSHKey:
-        this.sshKey = new SSHKey(obj.sshKey);
+      case CipherType.SshKey:
+        this.sshKey = new SshKey(obj.sshKey);
         break;
       default:
         break;
@@ -161,7 +161,7 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
       case CipherType.Identity:
         model.identity = await this.identity.decrypt(this.organizationId, encKey);
         break;
-      case CipherType.SSHKey:
+      case CipherType.SshKey:
         model.sshKey = await this.sshKey.decrypt(this.organizationId, encKey);
         break;
       default:
@@ -248,8 +248,8 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
       case CipherType.Identity:
         c.identity = this.identity.toIdentityData();
         break;
-      case CipherType.SSHKey:
-        c.sshKey = this.sshKey.toSSHKeyData();
+      case CipherType.SshKey:
+        c.sshKey = this.sshKey.toSshKeyData();
         break;
       default:
         break;
@@ -306,8 +306,8 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
       case CipherType.SecureNote:
         domain.secureNote = SecureNote.fromJSON(obj.secureNote);
         break;
-      case CipherType.SSHKey:
-        domain.sshKey = SSHKey.fromJSON(obj.sshKey);
+      case CipherType.SshKey:
+        domain.sshKey = SshKey.fromJSON(obj.sshKey);
         break;
       default:
         break;

@@ -2,7 +2,7 @@ import { CommonModule } from "@angular/common";
 import { Component, Input } from "@angular/core";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
-import { SSHKeyView } from "@bitwarden/common/vault/models/view/ssh-key.view";
+import { SshKeyView } from "@bitwarden/common/vault/models/view/ssh-key.view";
 import {
   CardComponent,
   SectionComponent,
@@ -30,6 +30,6 @@ import { OrgIconDirective } from "../../components/org-icon.directive";
     IconButtonModule,
   ],
 })
-export class SSHKeyViewComponent {
-  @Input() sshKey: SSHKeyView;
+export class SshKeyViewComponent {
+  @Input() sshKey: SshKeyView;
 }

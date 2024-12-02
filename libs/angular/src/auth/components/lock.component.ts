@@ -13,7 +13,6 @@ import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/mod
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { DeviceTrustServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust.service.abstraction";
-import { KdfConfigService } from "@bitwarden/common/auth/abstractions/kdf-config.service";
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/auth/abstractions/master-password.service.abstraction";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { VerificationType } from "@bitwarden/common/auth/enums/verification-type";
@@ -22,20 +21,25 @@ import {
   MasterPasswordVerification,
   MasterPasswordVerificationResponse,
 } from "@bitwarden/common/auth/types/verification";
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
+import { ClientType } from "@bitwarden/common/enums";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
-import { BiometricStateService } from "@bitwarden/common/platform/biometrics/biometric-state.service";
 import { KeySuffixOptions } from "@bitwarden/common/platform/enums";
 import { PasswordStrengthServiceAbstraction } from "@bitwarden/common/tools/password-strength";
 import { UserId } from "@bitwarden/common/types/guid";
 import { UserKey } from "@bitwarden/common/types/key";
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
-import { DialogService } from "@bitwarden/components";
+import { DialogService, ToastService } from "@bitwarden/components";
+import {
+  KdfConfigService,
+  KeyService,
+  BiometricStateService,
+  BiometricsService,
+} from "@bitwarden/key-management";
 
 @Directive()
 export class LockComponent implements OnInit, OnDestroy {
@@ -68,7 +72,7 @@ export class LockComponent implements OnInit, OnDestroy {
     protected i18nService: I18nService,
     protected platformUtilsService: PlatformUtilsService,
     protected messagingService: MessagingService,
-    protected cryptoService: CryptoService,
+    protected keyService: KeyService,
     protected vaultTimeoutService: VaultTimeoutService,
     protected vaultTimeoutSettingsService: VaultTimeoutSettingsService,
     protected environmentService: EnvironmentService,
@@ -84,10 +88,12 @@ export class LockComponent implements OnInit, OnDestroy {
     protected userVerificationService: UserVerificationService,
     protected pinService: PinServiceAbstraction,
     protected biometricStateService: BiometricStateService,
+    protected biometricsService: BiometricsService,
     protected accountService: AccountService,
     protected authService: AuthService,
     protected kdfConfigService: KdfConfigService,
     protected syncService: SyncService,
+    protected toastService: ToastService,
   ) {}
 
   async ngOnInit() {
@@ -134,7 +140,7 @@ export class LockComponent implements OnInit, OnDestroy {
     }
 
     await this.biometricStateService.setUserPromptCancelled();
-    const userKey = await this.cryptoService.getUserKeyFromStorage(
+    const userKey = await this.keyService.getUserKeyFromStorage(
       KeySuffixOptions.Biometric,
       this.activeUserId,
     );
@@ -144,6 +150,13 @@ export class LockComponent implements OnInit, OnDestroy {
     }
 
     return !!userKey;
+  }
+
+  async isBiometricUnlockAvailable(): Promise<boolean> {
+    if (!(await this.biometricsService.supportsBiometric())) {
+      return false;
+    }
+    return this.biometricsService.isBiometricUnlockAvailable();
   }
 
   togglePassword() {
@@ -158,11 +171,11 @@ export class LockComponent implements OnInit, OnDestroy {
 
   private async handlePinRequiredUnlock() {
     if (this.pin == null || this.pin === "") {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("pinRequired"),
-      );
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("errorOccurred"),
+        message: this.i18nService.t("pinRequired"),
+      });
       return;
     }
 
@@ -186,36 +199,36 @@ export class LockComponent implements OnInit, OnDestroy {
 
       // Log user out if they have entered an invalid PIN too many times
       if (this.invalidPinAttempts >= MAX_INVALID_PIN_ENTRY_ATTEMPTS) {
-        this.platformUtilsService.showToast(
-          "error",
-          null,
-          this.i18nService.t("tooManyInvalidPinEntryAttemptsLoggingOut"),
-        );
+        this.toastService.showToast({
+          variant: "error",
+          title: null,
+          message: this.i18nService.t("tooManyInvalidPinEntryAttemptsLoggingOut"),
+        });
         this.messagingService.send("logout");
         return;
       }
 
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("invalidPin"),
-      );
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("errorOccurred"),
+        message: this.i18nService.t("invalidPin"),
+      });
     } catch {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("unexpectedError"),
-      );
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("errorOccurred"),
+        message: this.i18nService.t("unexpectedError"),
+      });
     }
   }
 
   private async handleMasterPasswordRequiredUnlock() {
     if (this.masterPassword == null || this.masterPassword === "") {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("masterPasswordRequired"),
-      );
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("errorOccurred"),
+        message: this.i18nService.t("masterPasswordRequired"),
+      });
       return;
     }
     await this.doUnlockWithMasterPassword();
@@ -249,16 +262,17 @@ export class LockComponent implements OnInit, OnDestroy {
     }
 
     if (!passwordValid) {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("invalidMasterPassword"),
-      );
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("errorOccurred"),
+        message: this.i18nService.t("invalidMasterPassword"),
+      });
       return;
     }
 
     const userKey = await this.masterPasswordService.decryptUserKeyWithMasterKey(
       response.masterKey,
+      userId,
     );
     await this.setUserKeyAndContinue(userKey, userId, true);
   }
@@ -268,7 +282,7 @@ export class LockComponent implements OnInit, OnDestroy {
     userId: UserId,
     evaluatePasswordAfterUnlock = false,
   ) {
-    await this.cryptoService.setUserKey(key, userId);
+    await this.keyService.setUserKey(key, userId);
 
     // Now that we have a decrypted user key in memory, we can check if we
     // need to establish trust on the current device
@@ -309,7 +323,24 @@ export class LockComponent implements OnInit, OnDestroy {
     }
 
     // Vault can be de-synced since notifications get ignored while locked. Need to check whether sync is required using the sync service.
-    await this.syncService.fullSync(false);
+    const clientType = this.platformUtilsService.getClientType();
+    if (clientType === ClientType.Browser || clientType === ClientType.Desktop) {
+      // Desktop and Browser have better offline support and to facilitate this we don't make the user wait for what
+      // could be an HTTP Timeout because their server is unreachable.
+      await Promise.race([
+        this.syncService
+          .fullSync(false)
+          .catch((err) => this.logService.error("Error during unlock sync", err)),
+        new Promise<void>((resolve) =>
+          setTimeout(() => {
+            this.logService.warning("Skipping sync wait, continuing to unlock.");
+            resolve();
+          }, 5_000),
+        ),
+      ]);
+    } else {
+      await this.syncService.fullSync(false);
+    }
 
     if (this.onSuccessfulSubmit != null) {
       await this.onSuccessfulSubmit();
@@ -327,10 +358,10 @@ export class LockComponent implements OnInit, OnDestroy {
 
     this.masterPasswordEnabled = await this.userVerificationService.hasMasterPassword();
 
-    this.supportsBiometric = await this.platformUtilsService.supportsBiometric();
+    this.supportsBiometric = await this.biometricsService.supportsBiometric();
     this.biometricLock =
       (await this.vaultTimeoutSettingsService.isBiometricLockSet()) &&
-      ((await this.cryptoService.hasUserKeyStored(KeySuffixOptions.Biometric)) ||
+      ((await this.keyService.hasUserKeyStored(KeySuffixOptions.Biometric)) ||
         !this.platformUtilsService.supportsSecureStorage());
     this.email = await firstValueFrom(
       this.accountService.activeAccount$.pipe(map((a) => a?.email)),

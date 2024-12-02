@@ -1,14 +1,24 @@
 import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
 import { ActivatedRoute, Router } from "@angular/router";
-import { mock } from "jest-mock-extended";
+import { mock, MockProxy } from "jest-mock-extended";
 import { BehaviorSubject } from "rxjs";
 
+import { EventCollectionService } from "@bitwarden/common/abstractions/event/event-collection.service";
+import { EventType } from "@bitwarden/common/enums";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
+import { CipherType } from "@bitwarden/common/vault/enums";
 import { Cipher } from "@bitwarden/common/vault/models/domain/cipher";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
-import { CipherFormConfig, CipherFormConfigService, CipherFormMode } from "@bitwarden/vault";
+import { AddEditCipherInfo } from "@bitwarden/common/vault/types/add-edit-cipher-info";
+import {
+  CipherFormConfig,
+  CipherFormConfigService,
+  CipherFormMode,
+  OptionalInitialValues,
+} from "@bitwarden/vault";
 
 import { BrowserFido2UserInterfaceSession } from "../../../../../autofill/fido2/services/browser-fido2-user-interface.service";
 import BrowserPopupUtils from "../../../../../platform/popup/browser-popup-utils";
@@ -25,6 +35,8 @@ jest.mock("qrcode-parser", () => {});
 describe("AddEditV2Component", () => {
   let component: AddEditV2Component;
   let fixture: ComponentFixture<AddEditV2Component>;
+  let addEditCipherInfo$: BehaviorSubject<AddEditCipherInfo | null>;
+  let cipherServiceMock: MockProxy<CipherService>;
 
   const buildConfigResponse = { originalCipher: {} } as CipherFormConfig;
   const buildConfig = jest.fn((mode: CipherFormMode) =>
@@ -34,12 +46,18 @@ describe("AddEditV2Component", () => {
   const disable = jest.fn();
   const navigate = jest.fn();
   const back = jest.fn().mockResolvedValue(null);
+  const collect = jest.fn().mockResolvedValue(null);
 
   beforeEach(async () => {
     buildConfig.mockClear();
     disable.mockClear();
     navigate.mockClear();
     back.mockClear();
+    collect.mockClear();
+
+    addEditCipherInfo$ = new BehaviorSubject(null);
+    cipherServiceMock = mock<CipherService>();
+    cipherServiceMock.addEditCipherInfo$ = addEditCipherInfo$.asObservable();
 
     await TestBed.configureTestingModule({
       imports: [AddEditV2Component],
@@ -51,6 +69,8 @@ describe("AddEditV2Component", () => {
         { provide: Router, useValue: { navigate } },
         { provide: ActivatedRoute, useValue: { queryParams: queryParams$ } },
         { provide: I18nService, useValue: { t: (key: string) => key } },
+        { provide: CipherService, useValue: cipherServiceMock },
+        { provide: EventCollectionService, useValue: { collect } },
       ],
     })
       .overrideProvider(CipherFormConfigService, {
@@ -105,6 +125,123 @@ describe("AddEditV2Component", () => {
         expect(component.config.mode).toBe("partial-edit");
       }));
     });
+  });
+
+  describe("analytics", () => {
+    it("does not log viewed event when mode is add", fakeAsync(() => {
+      queryParams$.next({});
+
+      tick();
+
+      expect(collect).not.toHaveBeenCalled();
+    }));
+
+    it("does not log viewed event whe mode is clone", fakeAsync(() => {
+      queryParams$.next({ cipherId: "222-333-444-5555", clone: "true" });
+      buildConfigResponse.originalCipher = {} as Cipher;
+
+      tick();
+
+      expect(collect).not.toHaveBeenCalled();
+    }));
+
+    it("logs viewed event when mode is edit", fakeAsync(() => {
+      buildConfigResponse.originalCipher = {
+        edit: true,
+        id: "222-333-444-5555",
+        organizationId: "444-555-666",
+      } as Cipher;
+      queryParams$.next({ cipherId: "222-333-444-5555" });
+
+      tick();
+
+      expect(collect).toHaveBeenCalledWith(
+        EventType.Cipher_ClientViewed,
+        "222-333-444-5555",
+        false,
+        "444-555-666",
+      );
+    }));
+
+    it("logs viewed event whe mode is partial-edit", fakeAsync(() => {
+      buildConfigResponse.originalCipher = { edit: false } as Cipher;
+      queryParams$.next({ cipherId: "222-333-444-5555", orgId: "444-555-666" });
+
+      tick();
+
+      expect(collect).toHaveBeenCalledWith(
+        EventType.Cipher_ClientViewed,
+        "222-333-444-5555",
+        false,
+        "444-555-666",
+      );
+    }));
+  });
+
+  describe("addEditCipherInfo initialization", () => {
+    it("populates config.initialValues with `addEditCipherInfo` values", fakeAsync(() => {
+      const addEditCipherInfo = {
+        cipher: {
+          name: "test",
+          folderId: "folder1",
+          organizationId: "org1",
+          type: CipherType.Login,
+          login: {
+            password: "password",
+            username: "username",
+            uris: [{ uri: "https://example.com" }],
+          },
+        },
+        collectionIds: ["col1", "col2"],
+      } as AddEditCipherInfo;
+      addEditCipherInfo$.next(addEditCipherInfo);
+      queryParams$.next({});
+
+      tick();
+
+      expect(component.config.initialValues).toEqual({
+        name: "test",
+        folderId: "folder1",
+        organizationId: "org1",
+        password: "password",
+        username: "username",
+        loginUri: "https://example.com",
+        collectionIds: ["col1", "col2"],
+      } as OptionalInitialValues);
+    }));
+
+    it("populates config.initialValues.username when `addEditCipherInfo` is an Identity", fakeAsync(() => {
+      addEditCipherInfo$.next({
+        cipher: { type: CipherType.Identity, identity: { username: "identity-username" } },
+      } as AddEditCipherInfo);
+      queryParams$.next({});
+
+      tick();
+
+      expect(component.config.initialValues.username).toBe("identity-username");
+    }));
+
+    it("overrides query params with `addEditCipherInfo` values", fakeAsync(() => {
+      addEditCipherInfo$.next({
+        cipher: { name: "AddEditCipherName" },
+      } as AddEditCipherInfo);
+      queryParams$.next({
+        name: "QueryParamName",
+      });
+
+      tick();
+
+      expect(component.config.initialValues.name).toBe("AddEditCipherName");
+    }));
+
+    it("clears `addEditCipherInfo` after initialization", fakeAsync(() => {
+      addEditCipherInfo$.next({ cipher: { name: "test" } } as AddEditCipherInfo);
+      queryParams$.next({});
+
+      tick();
+
+      expect(cipherServiceMock.setAddEditCipherInfo).toHaveBeenCalledTimes(1);
+    }));
   });
 
   describe("onCipherSaved", () => {

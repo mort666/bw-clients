@@ -13,7 +13,13 @@
     <button type="button" bitMenuItem appCopyField="username" [cipher]="cipher">
       {{ "copyUsername" | i18n }}
     </button>
-    <button type="button" bitMenuItem appCopyField="password" [cipher]="cipher">
+    <button
+      *ngIf="cipher.viewPassword"
+      type="button"
+      bitMenuItem
+      appCopyField="password"
+      [cipher]="cipher"
+    >
       {{ "copyPassword" | i18n }}
     </button>
     <button type="button" bitMenuItem appCopyField="totp" [cipher]="cipher">
@@ -83,18 +89,18 @@
   ></button>
 </bit-item-action>
 
-<bit-item-action *ngIf="cipher.type === CipherType.SSHKey">
+<bit-item-action *ngIf="cipher.type === CipherType.SshKey">
   <button
     type="button"
     bitIconButton="bwi-clone"
     size="small"
     [appA11yTitle]="
-      hasIdentityValues ? ('copyInfoTitle' | i18n: cipher.name) : ('noValuesToCopy' | i18n)
+      hasSshKeyValues ? ('copyInfoTitle' | i18n: cipher.name) : ('noValuesToCopy' | i18n)
     "
-    [disabled]="!hasIdentityValues"
-    [bitMenuTriggerFor]="identityOptions"
+    [disabled]="!hasSshKeyValues"
+    [bitMenuTriggerFor]="sshKeyOptions"
   ></button>
-  <bit-menu #identityOptions>
+  <bit-menu #sshKeyOptions>
     <button type="button" bitMenuItem appCopyField="privateKey" [cipher]="cipher">
       {{ "copyPrivateKey" | i18n }}
     </button>

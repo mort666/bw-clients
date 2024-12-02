@@ -1,6 +1,6 @@
 import { BaseResponse } from "../../../models/response/base.response";
 
-export class SSHKeyApi extends BaseResponse {
+export class SshKeyApi extends BaseResponse {
   privateKey: string;
   publicKey: string;
   keyFingerprint: string;

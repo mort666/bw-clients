@@ -34,7 +34,7 @@ import { CipherFormContainer } from "../../cipher-form-container";
     CommonModule,
   ],
 })
-export class SSHKeySectionComponent implements OnInit {
+export class SshKeySectionComponent implements OnInit {
   /** The original cipher */
   @Input() originalCipherView: CipherView;
 

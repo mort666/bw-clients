@@ -1,9 +1,11 @@
 import { TestBed } from "@angular/core/testing";
+import { ActivatedRoute } from "@angular/router";
 import { mock } from "jest-mock-extended";
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject, of } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
@@ -18,6 +20,7 @@ import { LoginView } from "@bitwarden/common/vault/models/view/login.view";
 import { ToastService } from "@bitwarden/components";
 import { PasswordRepromptService } from "@bitwarden/vault";
 
+import { InlineMenuFieldQualificationService } from "../../../../../browser/src/autofill/services/inline-menu-field-qualification.service";
 import {
   AutoFillOptions,
   AutofillService,
@@ -33,6 +36,9 @@ describe("VaultPopupAutofillService", () => {
   let service: VaultPopupAutofillService;
 
   const mockCurrentTab = { url: "https://example.com" } as chrome.tabs.Tab;
+  const mockActivatedRoute = {
+    queryParams: of({}),
+  } as any;
 
   // Create mocks for VaultPopupAutofillService
   const mockAutofillService = mock<AutofillService>();
@@ -42,6 +48,8 @@ describe("VaultPopupAutofillService", () => {
   const mockPasswordRepromptService = mock<PasswordRepromptService>();
   const mockCipherService = mock<CipherService>();
   const mockMessagingService = mock<MessagingService>();
+  const mockInlineMenuFieldQualificationService = mock<InlineMenuFieldQualificationService>();
+  const mockLogService = mock<LogService>();
 
   const mockUserId = Utils.newGuid() as UserId;
   const accountService: FakeAccountService = mockAccountServiceWith(mockUserId);
@@ -49,6 +57,12 @@ describe("VaultPopupAutofillService", () => {
   beforeEach(() => {
     jest.spyOn(BrowserPopupUtils, "inPopout").mockReturnValue(false);
     jest.spyOn(BrowserApi, "getTabFromCurrentWindow").mockResolvedValue(mockCurrentTab);
+    jest
+      .spyOn(mockInlineMenuFieldQualificationService, "isFieldForCreditCardForm")
+      .mockReturnValue(true);
+    jest
+      .spyOn(mockInlineMenuFieldQualificationService, "isFieldForIdentityForm")
+      .mockReturnValue(true);
 
     mockAutofillService.collectPageDetailsFromTab$.mockReturnValue(new BehaviorSubject([]));
 
@@ -61,9 +75,18 @@ describe("VaultPopupAutofillService", () => {
         { provide: PasswordRepromptService, useValue: mockPasswordRepromptService },
         { provide: CipherService, useValue: mockCipherService },
         { provide: MessagingService, useValue: mockMessagingService },
+        { provide: ActivatedRoute, useValue: mockActivatedRoute },
         {
           provide: AccountService,
           useValue: accountService,
+        },
+        {
+          provide: InlineMenuFieldQualificationService,
+          useValue: mockInlineMenuFieldQualificationService,
+        },
+        {
+          provide: LogService,
+          useValue: mockLogService,
         },
       ],
     });
@@ -257,6 +280,17 @@ describe("VaultPopupAutofillService", () => {
           jest.advanceTimersByTime(50);
           expect(setTimeout).toHaveBeenCalledTimes(1);
           expect(BrowserApi.closePopup).toHaveBeenCalled();
+        });
+
+        it("should show a successful toast message if login form is populated", async () => {
+          jest.spyOn(BrowserPopupUtils, "inSingleActionPopout").mockReturnValue(true);
+          (service as any).currentAutofillTab$ = of({ id: 1234 });
+          await service.doAutofill(mockCipher);
+          expect(mockToastService.showToast).toHaveBeenCalledWith({
+            variant: "success",
+            title: null,
+            message: mockI18nService.t("autoFillSuccess"),
+          });
         });
       });
     });

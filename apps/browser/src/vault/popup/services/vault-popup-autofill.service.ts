@@ -1,5 +1,7 @@
 import { Injectable } from "@angular/core";
+import { ActivatedRoute } from "@angular/router";
 import {
+  combineLatest,
   firstValueFrom,
   map,
   Observable,
@@ -12,6 +14,7 @@ import {
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
@@ -21,26 +24,37 @@ import { LoginUriView } from "@bitwarden/common/vault/models/view/login-uri.view
 import { ToastService } from "@bitwarden/components";
 import { PasswordRepromptService } from "@bitwarden/vault";
 
+import { InlineMenuFieldQualificationService } from "../../../../../browser/src/autofill/services/inline-menu-field-qualification.service";
 import {
   AutofillService,
   PageDetail,
 } from "../../../autofill/services/abstractions/autofill.service";
 import { BrowserApi } from "../../../platform/browser/browser-api";
 import BrowserPopupUtils from "../../../platform/popup/browser-popup-utils";
+import { closeViewVaultItemPopout, VaultPopoutType } from "../utils/vault-popout-window";
 
 @Injectable({
   providedIn: "root",
 })
 export class VaultPopupAutofillService {
   private _refreshCurrentTab$ = new Subject<void>();
-
+  private senderTabId$: Observable<number | undefined> = this.route.queryParams.pipe(
+    map((params) => (params?.senderTabId ? parseInt(params.senderTabId, 10) : undefined)),
+  );
   /**
-   * Observable that contains the current tab to be considered for autofill. If there is no current tab
-   * or the popup is in a popout window, this will be null.
+   * Observable that contains the current tab to be considered for autofill.
+   * This can be the tab from the current window if opened in a Popup OR
+   * the sending tab when opened the single action Popout (specified by the senderTabId route query parameter)
    */
-  currentAutofillTab$: Observable<chrome.tabs.Tab | null> = this._refreshCurrentTab$.pipe(
-    startWith(null),
-    switchMap(async () => {
+  currentAutofillTab$: Observable<chrome.tabs.Tab | null> = combineLatest([
+    this.senderTabId$,
+    this._refreshCurrentTab$.pipe(startWith(null)),
+  ]).pipe(
+    switchMap(async ([senderTabId]) => {
+      if (senderTabId) {
+        return await BrowserApi.getTab(senderTabId);
+      }
+
       if (BrowserPopupUtils.inPopout(window)) {
         return null;
       }
@@ -65,6 +79,46 @@ export class VaultPopupAutofillService {
     shareReplay({ refCount: false, bufferSize: 1 }),
   );
 
+  nonLoginCipherTypesOnPage$: Observable<{
+    [CipherType.Card]: boolean;
+    [CipherType.Identity]: boolean;
+  }> = this._currentPageDetails$.pipe(
+    map((pageDetails) => {
+      let pageHasCardFields = false;
+      let pageHasIdentityFields = false;
+
+      try {
+        if (!pageDetails) {
+          throw Error("No page details were provided");
+        }
+
+        for (const details of pageDetails) {
+          for (const field of details.details.fields) {
+            if (!pageHasCardFields) {
+              pageHasCardFields = this.inlineMenuFieldQualificationService.isFieldForCreditCardForm(
+                field,
+                details.details,
+              );
+            }
+
+            if (!pageHasIdentityFields) {
+              pageHasIdentityFields =
+                this.inlineMenuFieldQualificationService.isFieldForIdentityForm(
+                  field,
+                  details.details,
+                );
+            }
+          }
+        }
+      } catch (error) {
+        // no-op on failure; do not show extra cipher types
+        this.logService.warning(error.message);
+      }
+
+      return { [CipherType.Card]: pageHasCardFields, [CipherType.Identity]: pageHasIdentityFields };
+    }),
+  );
+
   constructor(
     private autofillService: AutofillService,
     private i18nService: I18nService,
@@ -73,7 +127,10 @@ export class VaultPopupAutofillService {
     private passwordRepromptService: PasswordRepromptService,
     private cipherService: CipherService,
     private messagingService: MessagingService,
+    private route: ActivatedRoute,
     private accountService: AccountService,
+    private logService: LogService,
+    private inlineMenuFieldQualificationService: InlineMenuFieldQualificationService,
   ) {
     this._currentPageDetails$.subscribe();
   }
@@ -124,7 +181,21 @@ export class VaultPopupAutofillService {
     return true;
   }
 
-  private _closePopup() {
+  private async _closePopup(cipher: CipherView, tab: chrome.tabs.Tab | null) {
+    if (BrowserPopupUtils.inSingleActionPopout(window, VaultPopoutType.viewVaultItem) && tab.id) {
+      this.toastService.showToast({
+        variant: "success",
+        title: null,
+        message: this.i18nService.t("autoFillSuccess"),
+      });
+      setTimeout(async () => {
+        await BrowserApi.focusTab(tab.id);
+        await closeViewVaultItemPopout(`${VaultPopoutType.viewVaultItem}_${cipher.id}`);
+      }, 1000);
+
+      return;
+    }
+
     if (!BrowserPopupUtils.inPopup(window)) {
       return;
     }
@@ -158,7 +229,7 @@ export class VaultPopupAutofillService {
     const didAutofill = await this._internalDoAutofill(cipher, tab, pageDetails);
 
     if (didAutofill && closePopup) {
-      this._closePopup();
+      await this._closePopup(cipher, tab);
     }
 
     return didAutofill;
@@ -193,7 +264,7 @@ export class VaultPopupAutofillService {
     }
 
     if (closePopup) {
-      this._closePopup();
+      await this._closePopup(cipher, tab);
     } else {
       this.toastService.showToast({
         variant: "success",

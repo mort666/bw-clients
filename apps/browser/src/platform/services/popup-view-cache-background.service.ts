@@ -1,5 +1,6 @@
-import { switchMap, merge, delay, filter, map } from "rxjs";
+import { switchMap, merge, delay, filter, concatMap, map, first, of } from "rxjs";
 
+import { CommandDefinition, MessageListener } from "@bitwarden/common/platform/messaging";
 import {
   POPUP_VIEW_MEMORY,
   KeyDefinition,
@@ -11,6 +12,15 @@ import { fromChromeEvent } from "../browser/from-chrome-event";
 
 const popupClosedPortName = "new_popup";
 
+/** We cannot use `UserKeyDefinition` because we must be able to store state when there is no active user. */
+export const POPUP_VIEW_CACHE_KEY = KeyDefinition.record<string>(
+  POPUP_VIEW_MEMORY,
+  "popup-view-cache",
+  {
+    deserializer: (jsonValue) => jsonValue,
+  },
+);
+
 export const POPUP_ROUTE_HISTORY_KEY = new KeyDefinition<string[]>(
   POPUP_VIEW_MEMORY,
   "popup-route-history",
@@ -19,16 +29,50 @@ export const POPUP_ROUTE_HISTORY_KEY = new KeyDefinition<string[]>(
   },
 );
 
+export const SAVE_VIEW_CACHE_COMMAND = new CommandDefinition<{
+  key: string;
+  value: string;
+}>("save-view-cache");
+
+export const ClEAR_VIEW_CACHE_COMMAND = new CommandDefinition("clear-view-cache");
+
 export class PopupViewCacheBackgroundService {
+  private popupViewCacheState = this.globalStateProvider.get(POPUP_VIEW_CACHE_KEY);
   private popupRouteHistoryState = this.globalStateProvider.get(POPUP_ROUTE_HISTORY_KEY);
 
-  constructor(private globalStateProvider: GlobalStateProvider) {}
+  constructor(
+    private messageListener: MessageListener,
+    private globalStateProvider: GlobalStateProvider,
+  ) {}
 
   startObservingTabChanges() {
+    this.messageListener
+      .messages$(SAVE_VIEW_CACHE_COMMAND)
+      .pipe(
+        concatMap(async ({ key, value }) =>
+          this.popupViewCacheState.update((state) => ({
+            ...state,
+            [key]: value,
+          })),
+        ),
+      )
+      .subscribe();
+
     merge(
       // on tab changed, excluding extension tabs
       fromChromeEvent(chrome.tabs.onActivated).pipe(
-        switchMap(([tabInfo]) => BrowserApi.getTab(tabInfo.tabId)),
+        switchMap((tabs) => BrowserApi.getTab(tabs[0].tabId)),
+        switchMap((tab) => {
+          // FireFox sets the `url` to "about:blank" and won't populate the `url` until the `onUpdated` event
+          if (tab.url !== "about:blank") {
+            return of(tab);
+          }
+
+          return fromChromeEvent(chrome.tabs.onUpdated).pipe(
+            first(),
+            switchMap(([tabId]) => BrowserApi.getTab(tabId)),
+          );
+        }),
         map((tab) => tab.url || tab.pendingUrl),
         filter((url) => !url.startsWith(chrome.runtime.getURL(""))),
       ),
@@ -45,6 +89,7 @@ export class PopupViewCacheBackgroundService {
 
   async clearState() {
     return Promise.all([
+      this.popupViewCacheState.update(() => ({}), { shouldUpdate: this.objNotEmpty }),
       this.popupRouteHistoryState.update(() => [], { shouldUpdate: this.objNotEmpty }),
     ]);
   }

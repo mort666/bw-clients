@@ -5,6 +5,7 @@ import { BehaviorSubject } from "rxjs";
 
 import { BadgeSettingsServiceAbstraction } from "@bitwarden/common/autofill/services/badge-settings.service";
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
+import { AnimationControlService } from "@bitwarden/common/platform/abstractions/animation-control.service";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
@@ -12,8 +13,10 @@ import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/pl
 import { ThemeType } from "@bitwarden/common/platform/enums";
 import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
 
+import { PopupCompactModeService } from "../../../platform/popup/layout/popup-compact-mode.service";
 import { PopupHeaderComponent } from "../../../platform/popup/layout/popup-header.component";
 import { PopupPageComponent } from "../../../platform/popup/layout/popup-page.component";
+import { PopupWidthService } from "../../../platform/popup/layout/popup-width.service";
 
 import { AppearanceV2Component } from "./appearance-v2.component";
 
@@ -41,14 +44,24 @@ describe("AppearanceV2Component", () => {
   const showFavicons$ = new BehaviorSubject<boolean>(true);
   const enableBadgeCounter$ = new BehaviorSubject<boolean>(true);
   const selectedTheme$ = new BehaviorSubject<ThemeType>(ThemeType.Nord);
+  const enableRoutingAnimation$ = new BehaviorSubject<boolean>(true);
+  const enableCompactMode$ = new BehaviorSubject<boolean>(false);
   const setSelectedTheme = jest.fn().mockResolvedValue(undefined);
   const setShowFavicons = jest.fn().mockResolvedValue(undefined);
   const setEnableBadgeCounter = jest.fn().mockResolvedValue(undefined);
+  const setEnableRoutingAnimation = jest.fn().mockResolvedValue(undefined);
+  const setEnableCompactMode = jest.fn().mockResolvedValue(undefined);
+
+  const mockWidthService: Partial<PopupWidthService> = {
+    width$: new BehaviorSubject("default"),
+    setWidth: jest.fn().mockResolvedValue(undefined),
+  };
 
   beforeEach(async () => {
     setSelectedTheme.mockClear();
     setShowFavicons.mockClear();
     setEnableBadgeCounter.mockClear();
+    setEnableRoutingAnimation.mockClear();
 
     await TestBed.configureTestingModule({
       imports: [AppearanceV2Component],
@@ -58,11 +71,23 @@ describe("AppearanceV2Component", () => {
         { provide: MessagingService, useValue: mock<MessagingService>() },
         { provide: I18nService, useValue: { t: (key: string) => key } },
         { provide: DomainSettingsService, useValue: { showFavicons$, setShowFavicons } },
+        { provide: ThemeStateService, useValue: { selectedTheme$, setSelectedTheme } },
+        {
+          provide: AnimationControlService,
+          useValue: { enableRoutingAnimation$, setEnableRoutingAnimation },
+        },
         {
           provide: BadgeSettingsServiceAbstraction,
           useValue: { enableBadgeCounter$, setEnableBadgeCounter },
         },
-        { provide: ThemeStateService, useValue: { selectedTheme$, setSelectedTheme } },
+        {
+          provide: PopupCompactModeService,
+          useValue: { enabled$: enableCompactMode$, setEnabled: setEnableCompactMode },
+        },
+        {
+          provide: PopupWidthService,
+          useValue: mockWidthService,
+        },
       ],
     })
       .overrideComponent(AppearanceV2Component, {
@@ -82,9 +107,12 @@ describe("AppearanceV2Component", () => {
 
   it("populates the form with the user's current settings", () => {
     expect(component.appearanceForm.value).toEqual({
+      enableAnimations: true,
       enableFavicon: true,
       enableBadgeCounter: true,
       theme: ThemeType.Nord,
+      enableCompactMode: false,
+      width: "default",
     });
   });
 
@@ -105,6 +133,12 @@ describe("AppearanceV2Component", () => {
       component.appearanceForm.controls.enableBadgeCounter.setValue(false);
 
       expect(setEnableBadgeCounter).toHaveBeenCalledWith(false);
+    });
+
+    it("updates the animation setting", () => {
+      component.appearanceForm.controls.enableAnimations.setValue(false);
+
+      expect(setEnableRoutingAnimation).toHaveBeenCalledWith(false);
     });
   });
 });

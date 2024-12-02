@@ -23,7 +23,7 @@
     ></vault-card-details-section>
 
     <vault-sshkey-section
-      *ngIf="config.cipherType === CipherType.SSHKey"
+      *ngIf="config.cipherType === CipherType.SshKey"
       [disabled]="config.mode === 'partial-edit'"
       [originalCipherView]="originalCipherView"
     ></vault-sshkey-section>

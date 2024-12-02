@@ -2,6 +2,13 @@ import { Injectable, NgModule } from "@angular/core";
 import { ActivatedRouteSnapshot, RouteReuseStrategy, RouterModule, Routes } from "@angular/router";
 
 import {
+  EnvironmentSelectorComponent,
+  EnvironmentSelectorRouteData,
+  ExtensionDefaultOverlayPosition,
+} from "@bitwarden/angular/auth/components/environment-selector.component";
+import { unauthUiRefreshRedirect } from "@bitwarden/angular/auth/functions/unauth-ui-refresh-redirect";
+import { unauthUiRefreshSwap } from "@bitwarden/angular/auth/functions/unauth-ui-refresh-route-swap";
+import {
   authGuard,
   lockGuard,
   redirectGuard,
@@ -9,15 +16,28 @@ import {
   unauthGuardFn,
 } from "@bitwarden/angular/auth/guards";
 import { canAccessFeature } from "@bitwarden/angular/platform/guard/feature-flag.guard";
+import { extensionRefreshRedirect } from "@bitwarden/angular/utils/extension-refresh-redirect";
 import { extensionRefreshSwap } from "@bitwarden/angular/utils/extension-refresh-swap";
 import {
   AnonLayoutWrapperComponent,
   AnonLayoutWrapperData,
+  LoginComponent,
+  LoginSecondaryContentComponent,
+  LockIcon,
+  LockV2Component,
+  LoginViaAuthRequestComponent,
+  PasswordHintComponent,
   RegistrationFinishComponent,
+  RegistrationLockAltIcon,
   RegistrationStartComponent,
   RegistrationStartSecondaryComponent,
   RegistrationStartSecondaryComponentData,
+  RegistrationUserAddIcon,
   SetPasswordJitComponent,
+  UserLockIcon,
+  VaultIcon,
+  LoginDecryptionOptionsComponent,
+  DevicesIcon,
 } from "@bitwarden/auth/angular";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 
@@ -25,21 +45,27 @@ import { twofactorRefactorSwap } from "../../../../libs/angular/src/utils/two-fa
 import { fido2AuthGuard } from "../auth/guards/fido2-auth.guard";
 import { AccountSwitcherComponent } from "../auth/popup/account-switching/account-switcher.component";
 import { EnvironmentComponent } from "../auth/popup/environment.component";
+import {
+  ExtensionAnonLayoutWrapperComponent,
+  ExtensionAnonLayoutWrapperData,
+} from "../auth/popup/extension-anon-layout-wrapper/extension-anon-layout-wrapper.component";
 import { HintComponent } from "../auth/popup/hint.component";
 import { HomeComponent } from "../auth/popup/home.component";
 import { LockComponent } from "../auth/popup/lock.component";
-import { LoginDecryptionOptionsComponent } from "../auth/popup/login-decryption-options/login-decryption-options.component";
-import { LoginViaAuthRequestComponent } from "../auth/popup/login-via-auth-request.component";
-import { LoginComponent } from "../auth/popup/login.component";
+import { LoginDecryptionOptionsComponentV1 } from "../auth/popup/login-decryption-options/login-decryption-options-v1.component";
+import { LoginComponentV1 } from "../auth/popup/login-v1.component";
+import { LoginViaAuthRequestComponentV1 } from "../auth/popup/login-via-auth-request-v1.component";
 import { RegisterComponent } from "../auth/popup/register.component";
 import { RemovePasswordComponent } from "../auth/popup/remove-password.component";
 import { SetPasswordComponent } from "../auth/popup/set-password.component";
+import { AccountSecurityComponent as AccountSecurityV1Component } from "../auth/popup/settings/account-security-v1.component";
 import { AccountSecurityComponent } from "../auth/popup/settings/account-security.component";
 import { SsoComponent } from "../auth/popup/sso.component";
 import { TwoFactorAuthComponent } from "../auth/popup/two-factor-auth.component";
 import { TwoFactorOptionsComponent } from "../auth/popup/two-factor-options.component";
 import { TwoFactorComponent } from "../auth/popup/two-factor.component";
 import { UpdateTempPasswordComponent } from "../auth/popup/update-temp-password.component";
+import { Fido2V1Component } from "../autofill/popup/fido2/fido2-v1.component";
 import { Fido2Component } from "../autofill/popup/fido2/fido2.component";
 import { AutofillV1Component } from "../autofill/popup/settings/autofill-v1.component";
 import { AutofillComponent } from "../autofill/popup/settings/autofill.component";
@@ -51,11 +77,14 @@ import { PremiumV2Component } from "../billing/popup/settings/premium-v2.compone
 import { PremiumComponent } from "../billing/popup/settings/premium.component";
 import BrowserPopupUtils from "../platform/popup/browser-popup-utils";
 import { popupRouterCacheGuard } from "../platform/popup/view-cache/popup-router-cache.service";
+import { CredentialGeneratorHistoryComponent } from "../tools/popup/generator/credential-generator-history.component";
+import { CredentialGeneratorComponent } from "../tools/popup/generator/credential-generator.component";
 import { GeneratorComponent } from "../tools/popup/generator/generator.component";
 import { PasswordGeneratorHistoryComponent } from "../tools/popup/generator/password-generator-history.component";
 import { SendAddEditComponent } from "../tools/popup/send/send-add-edit.component";
 import { SendGroupingsComponent } from "../tools/popup/send/send-groupings.component";
 import { SendTypeComponent } from "../tools/popup/send/send-type.component";
+import { SendAddEditComponent as SendAddEditV2Component } from "../tools/popup/send-v2/add-edit/send-add-edit.component";
 import { SendCreatedComponent } from "../tools/popup/send-v2/send-created/send-created.component";
 import { SendV2Component } from "../tools/popup/send-v2/send-v2.component";
 import { AboutPageV2Component } from "../tools/popup/settings/about-page/about-page-v2.component";
@@ -82,6 +111,7 @@ import { ViewComponent } from "../vault/popup/components/vault/view.component";
 import { AddEditV2Component } from "../vault/popup/components/vault-v2/add-edit/add-edit-v2.component";
 import { AssignCollections } from "../vault/popup/components/vault-v2/assign-collections/assign-collections.component";
 import { AttachmentsV2Component } from "../vault/popup/components/vault-v2/attachments/attachments-v2.component";
+import { PasswordHistoryV2Component } from "../vault/popup/components/vault-v2/vault-password-history-v2/vault-password-history-v2.component";
 import { ViewV2Component } from "../vault/popup/components/vault-v2/view-v2/view-v2.component";
 import { AppearanceV2Component } from "../vault/popup/settings/appearance-v2.component";
 import { AppearanceComponent } from "../vault/popup/settings/appearance.component";
@@ -89,13 +119,26 @@ import { FolderAddEditComponent } from "../vault/popup/settings/folder-add-edit.
 import { FoldersV2Component } from "../vault/popup/settings/folders-v2.component";
 import { FoldersComponent } from "../vault/popup/settings/folders.component";
 import { SyncComponent } from "../vault/popup/settings/sync.component";
+import { TrashComponent } from "../vault/popup/settings/trash.component";
 import { VaultSettingsV2Component } from "../vault/popup/settings/vault-settings-v2.component";
 import { VaultSettingsComponent } from "../vault/popup/settings/vault-settings.component";
 
-import { extensionRefreshRedirect } from "./extension-refresh-route-utils";
+import { RouteElevation } from "./app-routing.animations";
 import { debounceNavigationGuard } from "./services/debounce-navigation.service";
 import { TabsV2Component } from "./tabs-v2.component";
 import { TabsComponent } from "./tabs.component";
+
+/**
+ * Data properties acceptable for use in extension route objects
+ */
+export interface RouteDataProperties {
+  elevation: RouteElevation;
+
+  /**
+   * A boolean to indicate that the URL should not be saved in memory in the BrowserRouterService.
+   */
+  doNotSaveUrl?: boolean;
+}
 
 const unauthRouteOverrides = {
   homepage: () => {
@@ -121,38 +164,20 @@ const routes: Routes = [
   {
     path: "home",
     component: HomeComponent,
-    canActivate: [unauthGuardFn(unauthRouteOverrides)],
-    data: { state: "home" },
+    canActivate: [unauthGuardFn(unauthRouteOverrides), unauthUiRefreshRedirect("/login")],
+    data: { elevation: 1 } satisfies RouteDataProperties,
   },
-  {
+  ...extensionRefreshSwap(Fido2V1Component, Fido2Component, {
     path: "fido2",
-    component: Fido2Component,
     canActivate: [fido2AuthGuard],
-    data: { state: "fido2" },
-  },
-  {
-    path: "login",
-    component: LoginComponent,
-    canActivate: [unauthGuardFn(unauthRouteOverrides)],
-    data: { state: "login" },
-  },
-  {
-    path: "login-with-device",
-    component: LoginViaAuthRequestComponent,
-    canActivate: [],
-    data: { state: "login-with-device" },
-  },
-  {
-    path: "admin-approval-requested",
-    component: LoginViaAuthRequestComponent,
-    canActivate: [],
-    data: { state: "login-with-device" },
-  },
+    data: { elevation: 1 } satisfies RouteDataProperties,
+  }),
   {
     path: "lock",
     component: LockComponent,
     canActivate: [lockGuard()],
-    data: { state: "lock", doNotSaveUrl: true },
+    canMatch: [extensionRefreshRedirect("/lockV2")],
+    data: { elevation: 1, doNotSaveUrl: true } satisfies RouteDataProperties,
   },
   ...twofactorRefactorSwap(
     TwoFactorComponent,
@@ -160,12 +185,12 @@ const routes: Routes = [
     {
       path: "2fa",
       canActivate: [unauthGuardFn(unauthRouteOverrides)],
-      data: { state: "2fa" },
+      data: { elevation: 1 } satisfies RouteDataProperties,
     },
     {
       path: "2fa",
       canActivate: [unauthGuardFn(unauthRouteOverrides)],
-      data: { state: "2fa" },
+      data: { elevation: 1 } satisfies RouteDataProperties,
       children: [
         {
           path: "",
@@ -178,221 +203,368 @@ const routes: Routes = [
     path: "2fa-options",
     component: TwoFactorOptionsComponent,
     canActivate: [unauthGuardFn(unauthRouteOverrides)],
-    data: { state: "2fa-options" },
-  },
-  {
-    path: "login-initiated",
-    component: LoginDecryptionOptionsComponent,
-    canActivate: [tdeDecryptionRequiredGuard()],
+    data: { elevation: 1 } satisfies RouteDataProperties,
   },
   {
     path: "sso",
     component: SsoComponent,
     canActivate: [unauthGuardFn(unauthRouteOverrides)],
-    data: { state: "sso" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   },
   {
     path: "set-password",
     component: SetPasswordComponent,
-    data: { state: "set-password" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   },
   {
     path: "remove-password",
     component: RemovePasswordComponent,
     canActivate: [authGuard],
-    data: { state: "remove-password" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   },
   {
     path: "register",
     component: RegisterComponent,
     canActivate: [unauthGuardFn(unauthRouteOverrides)],
-    data: { state: "register" },
-  },
-  {
-    path: "hint",
-    component: HintComponent,
-    canActivate: [unauthGuardFn(unauthRouteOverrides)],
-    data: { state: "hint" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   },
   {
     path: "environment",
     component: EnvironmentComponent,
     canActivate: [unauthGuardFn(unauthRouteOverrides)],
-    data: { state: "environment" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   },
   {
     path: "ciphers",
     component: VaultItemsComponent,
     canActivate: [authGuard],
-    data: { state: "ciphers" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   },
   ...extensionRefreshSwap(ViewComponent, ViewV2Component, {
     path: "view-cipher",
     canActivate: [authGuard],
-    data: { state: "view-cipher" },
+    data: {
+      // Above "trash"
+      elevation: 3,
+    } satisfies RouteDataProperties,
   }),
-  {
+  ...extensionRefreshSwap(PasswordHistoryComponent, PasswordHistoryV2Component, {
     path: "cipher-password-history",
-    component: PasswordHistoryComponent,
     canActivate: [authGuard],
-    data: { state: "cipher-password-history" },
-  },
+    data: { elevation: 1 } satisfies RouteDataProperties,
+  }),
   ...extensionRefreshSwap(AddEditComponent, AddEditV2Component, {
     path: "add-cipher",
     canActivate: [authGuard, debounceNavigationGuard()],
-    data: { state: "add-cipher" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
     runGuardsAndResolvers: "always",
   }),
   ...extensionRefreshSwap(AddEditComponent, AddEditV2Component, {
     path: "edit-cipher",
     canActivate: [authGuard, debounceNavigationGuard()],
-    data: { state: "edit-cipher" },
+    data: {
+      // Above "trash"
+      elevation: 3,
+    } satisfies RouteDataProperties,
     runGuardsAndResolvers: "always",
   }),
   {
     path: "share-cipher",
     component: ShareComponent,
     canActivate: [authGuard],
-    data: { state: "share-cipher" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   },
   {
     path: "collections",
     component: CollectionsComponent,
     canActivate: [authGuard],
-    data: { state: "collections" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   },
   ...extensionRefreshSwap(AttachmentsComponent, AttachmentsV2Component, {
     path: "attachments",
     canActivate: [authGuard],
-    data: { state: "attachments" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   }),
   {
     path: "generator",
     component: GeneratorComponent,
     canActivate: [authGuard],
-    data: { state: "generator" },
+    data: { elevation: 0 } satisfies RouteDataProperties,
   },
-  {
+  ...extensionRefreshSwap(PasswordGeneratorHistoryComponent, CredentialGeneratorHistoryComponent, {
     path: "generator-history",
-    component: PasswordGeneratorHistoryComponent,
     canActivate: [authGuard],
-    data: { state: "generator-history" },
-  },
+    data: { elevation: 1 } satisfies RouteDataProperties,
+  }),
   ...extensionRefreshSwap(ImportBrowserComponent, ImportBrowserV2Component, {
     path: "import",
     canActivate: [authGuard],
-    data: { state: "import" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   }),
   ...extensionRefreshSwap(ExportBrowserComponent, ExportBrowserV2Component, {
     path: "export",
     canActivate: [authGuard],
-    data: { state: "export" },
+    data: { elevation: 2 } satisfies RouteDataProperties,
   }),
   ...extensionRefreshSwap(AutofillV1Component, AutofillComponent, {
     path: "autofill",
     canActivate: [authGuard],
-    data: { state: "autofill" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   }),
-  {
+  ...extensionRefreshSwap(AccountSecurityV1Component, AccountSecurityComponent, {
     path: "account-security",
-    component: AccountSecurityComponent,
     canActivate: [authGuard],
-    data: { state: "account-security" },
-  },
+    data: { elevation: 1 } satisfies RouteDataProperties,
+  }),
   ...extensionRefreshSwap(NotificationsSettingsV1Component, NotificationsSettingsComponent, {
     path: "notifications",
-    component: NotificationsSettingsV1Component,
     canActivate: [authGuard],
-    data: { state: "notifications" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   }),
   ...extensionRefreshSwap(VaultSettingsComponent, VaultSettingsV2Component, {
     path: "vault-settings",
     canActivate: [authGuard],
-    data: { state: "vault-settings" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   }),
   ...extensionRefreshSwap(FoldersComponent, FoldersV2Component, {
     path: "folders",
     canActivate: [authGuard],
-    data: { state: "folders" },
+    data: { elevation: 2 } satisfies RouteDataProperties,
   }),
   {
     path: "add-folder",
     component: FolderAddEditComponent,
     canActivate: [authGuard],
-    data: { state: "add-folder" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   },
   {
     path: "edit-folder",
     component: FolderAddEditComponent,
     canActivate: [authGuard],
-    data: { state: "edit-folder" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   },
   {
     path: "sync",
     component: SyncComponent,
     canActivate: [authGuard],
-    data: { state: "sync" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   },
   ...extensionRefreshSwap(ExcludedDomainsV1Component, ExcludedDomainsComponent, {
     path: "excluded-domains",
-    component: ExcludedDomainsV1Component,
     canActivate: [authGuard],
-    data: { state: "excluded-domains" },
+    data: { elevation: 2 } satisfies RouteDataProperties,
   }),
   ...extensionRefreshSwap(PremiumComponent, PremiumV2Component, {
     path: "premium",
     component: PremiumComponent,
     canActivate: [authGuard],
-    data: { state: "premium" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   }),
   ...extensionRefreshSwap(AppearanceComponent, AppearanceV2Component, {
     path: "appearance",
     canActivate: [authGuard],
-    data: { state: "appearance" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   }),
   ...extensionRefreshSwap(AddEditComponent, AddEditV2Component, {
     path: "clone-cipher",
     canActivate: [authGuard],
-    data: { state: "clone-cipher" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   }),
   {
     path: "send-type",
     component: SendTypeComponent,
     canActivate: [authGuard],
-    data: { state: "send-type" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   },
-  {
+  ...extensionRefreshSwap(SendAddEditComponent, SendAddEditV2Component, {
     path: "add-send",
-    component: SendAddEditComponent,
     canActivate: [authGuard],
-    data: { state: "add-send" },
-  },
-  {
+    data: { elevation: 1 } satisfies RouteDataProperties,
+  }),
+  ...extensionRefreshSwap(SendAddEditComponent, SendAddEditV2Component, {
     path: "edit-send",
-    component: SendAddEditComponent,
     canActivate: [authGuard],
-    data: { state: "edit-send" },
-  },
+    data: { elevation: 1 } satisfies RouteDataProperties,
+  }),
   {
     path: "send-created",
     component: SendCreatedComponent,
     canActivate: [authGuard],
-    data: { state: "send" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   },
   {
     path: "update-temp-password",
     component: UpdateTempPasswordComponent,
     canActivate: [authGuard],
-    data: { state: "update-temp-password" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   },
+  ...unauthUiRefreshSwap(
+    LoginViaAuthRequestComponentV1,
+    ExtensionAnonLayoutWrapperComponent,
+    {
+      path: "login-with-device",
+      data: { elevation: 1 } satisfies RouteDataProperties,
+    },
+    {
+      path: "login-with-device",
+      data: {
+        pageIcon: DevicesIcon,
+        pageTitle: {
+          key: "loginInitiated",
+        },
+        pageSubtitle: {
+          key: "aNotificationWasSentToYourDevice",
+        },
+        showLogo: false,
+        showBackButton: true,
+        elevation: 1,
+      } satisfies RouteDataProperties & ExtensionAnonLayoutWrapperData,
+      children: [
+        { path: "", component: LoginViaAuthRequestComponent },
+        {
+          path: "",
+          component: EnvironmentSelectorComponent,
+          outlet: "environment-selector",
+        },
+      ],
+    },
+  ),
+  ...unauthUiRefreshSwap(
+    LoginViaAuthRequestComponentV1,
+    ExtensionAnonLayoutWrapperComponent,
+    {
+      path: "admin-approval-requested",
+      data: { elevation: 1 } satisfies RouteDataProperties,
+    },
+    {
+      path: "admin-approval-requested",
+      data: {
+        pageIcon: DevicesIcon,
+        pageTitle: {
+          key: "adminApprovalRequested",
+        },
+        pageSubtitle: {
+          key: "adminApprovalRequestSentToAdmins",
+        },
+        showLogo: false,
+        showBackButton: true,
+        elevation: 1,
+      } satisfies RouteDataProperties & ExtensionAnonLayoutWrapperData,
+      children: [{ path: "", component: LoginViaAuthRequestComponent }],
+    },
+  ),
+  ...unauthUiRefreshSwap(
+    HintComponent,
+    ExtensionAnonLayoutWrapperComponent,
+    {
+      path: "hint",
+      canActivate: [unauthGuardFn(unauthRouteOverrides)],
+      data: {
+        elevation: 1,
+      } satisfies RouteDataProperties,
+    },
+    {
+      path: "",
+      children: [
+        {
+          path: "hint",
+          canActivate: [unauthGuardFn(unauthRouteOverrides)],
+          data: {
+            pageTitle: {
+              key: "requestPasswordHint",
+            },
+            pageSubtitle: {
+              key: "enterYourAccountEmailAddressAndYourPasswordHintWillBeSentToYou",
+            },
+            pageIcon: UserLockIcon,
+            showBackButton: true,
+            elevation: 1,
+          } satisfies RouteDataProperties & ExtensionAnonLayoutWrapperData,
+          children: [
+            { path: "", component: PasswordHintComponent },
+            {
+              path: "",
+              component: EnvironmentSelectorComponent,
+              outlet: "environment-selector",
+              data: {
+                overlayPosition: ExtensionDefaultOverlayPosition,
+              } satisfies EnvironmentSelectorRouteData,
+            },
+          ],
+        },
+      ],
+    },
+  ),
+  ...unauthUiRefreshSwap(
+    LoginComponentV1,
+    ExtensionAnonLayoutWrapperComponent,
+    {
+      path: "login",
+      canActivate: [unauthGuardFn(unauthRouteOverrides)],
+      data: { elevation: 1 },
+    },
+    {
+      path: "",
+      children: [
+        {
+          path: "login",
+          canActivate: [unauthGuardFn(unauthRouteOverrides)],
+          data: {
+            pageIcon: VaultIcon,
+            pageTitle: {
+              key: "logInToBitwarden",
+            },
+            elevation: 1,
+            showAcctSwitcher: true,
+          } satisfies RouteDataProperties & ExtensionAnonLayoutWrapperData,
+          children: [
+            { path: "", component: LoginComponent },
+            { path: "", component: LoginSecondaryContentComponent, outlet: "secondary" },
+            {
+              path: "",
+              component: EnvironmentSelectorComponent,
+              outlet: "environment-selector",
+              data: {
+                overlayPosition: ExtensionDefaultOverlayPosition,
+              } satisfies EnvironmentSelectorRouteData,
+            },
+          ],
+        },
+      ],
+    },
+  ),
+  ...unauthUiRefreshSwap(
+    LoginDecryptionOptionsComponentV1,
+    ExtensionAnonLayoutWrapperComponent,
+    {
+      path: "login-initiated",
+      canActivate: [tdeDecryptionRequiredGuard()],
+      data: { elevation: 1 } satisfies RouteDataProperties,
+    },
+    {
+      path: "login-initiated",
+      canActivate: [tdeDecryptionRequiredGuard()],
+      data: {
+        pageIcon: DevicesIcon,
+      },
+      children: [{ path: "", component: LoginDecryptionOptionsComponent }],
+    },
+  ),
   {
     path: "",
-    component: AnonLayoutWrapperComponent,
+    component: ExtensionAnonLayoutWrapperComponent,
     children: [
       {
         path: "signup",
         canActivate: [canAccessFeature(FeatureFlag.EmailVerification), unauthGuardFn()],
-        data: { pageTitle: "createAccount" } satisfies AnonLayoutWrapperData,
+        data: {
+          elevation: 1,
+          pageIcon: RegistrationUserAddIcon,
+          pageTitle: {
+            key: "createAccount",
+          },
+          showBackButton: true,
+        } satisfies RouteDataProperties & ExtensionAnonLayoutWrapperData,
         children: [
           {
             path: "",
@@ -412,9 +584,10 @@ const routes: Routes = [
         path: "finish-signup",
         canActivate: [canAccessFeature(FeatureFlag.EmailVerification), unauthGuardFn()],
         data: {
-          pageTitle: "setAStrongPassword",
-          pageSubtitle: "finishCreatingYourAccountBySettingAPassword",
-        } satisfies AnonLayoutWrapperData,
+          pageIcon: RegistrationLockAltIcon,
+          elevation: 1,
+          showBackButton: true,
+        } satisfies RouteDataProperties & ExtensionAnonLayoutWrapperData,
         children: [
           {
             path: "",
@@ -423,13 +596,42 @@ const routes: Routes = [
         ],
       },
       {
+        path: "lockV2",
+        canActivate: [canAccessFeature(FeatureFlag.ExtensionRefresh), lockGuard()],
+        data: {
+          pageIcon: LockIcon,
+          pageTitle: {
+            key: "yourVaultIsLockedV2",
+          },
+          showReadonlyHostname: true,
+          showAcctSwitcher: true,
+        } satisfies ExtensionAnonLayoutWrapperData,
+        children: [
+          {
+            path: "",
+            component: LockV2Component,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    path: "",
+    component: AnonLayoutWrapperComponent,
+    children: [
+      {
         path: "set-password-jit",
         canActivate: [canAccessFeature(FeatureFlag.EmailVerification)],
         component: SetPasswordJitComponent,
         data: {
-          pageTitle: "joinOrganization",
-          pageSubtitle: "finishJoiningThisOrganizationBySettingAMasterPassword",
-        } satisfies AnonLayoutWrapperData,
+          pageTitle: {
+            key: "joinOrganization",
+          },
+          pageSubtitle: {
+            key: "finishJoiningThisOrganizationBySettingAMasterPassword",
+          },
+          elevation: 1,
+        } satisfies RouteDataProperties & AnonLayoutWrapperData,
       },
     ],
   },
@@ -437,21 +639,21 @@ const routes: Routes = [
     path: "assign-collections",
     component: AssignCollections,
     canActivate: [canAccessFeature(FeatureFlag.ExtensionRefresh, true, "/")],
-    data: { state: "assign-collections" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   },
   ...extensionRefreshSwap(AboutPageComponent, AboutPageV2Component, {
     path: "about",
     canActivate: [authGuard],
-    data: { state: "about" },
+    data: { elevation: 1 } satisfies RouteDataProperties,
   }),
   ...extensionRefreshSwap(MoreFromBitwardenPageComponent, MoreFromBitwardenPageV2Component, {
     path: "more-from-bitwarden",
     canActivate: [authGuard],
-    data: { state: "moreFromBitwarden" },
+    data: { elevation: 2 } satisfies RouteDataProperties,
   }),
   ...extensionRefreshSwap(TabsComponent, TabsV2Component, {
     path: "tabs",
-    data: { state: "tabs" },
+    data: { elevation: 0 } satisfies RouteDataProperties,
     children: [
       {
         path: "",
@@ -463,37 +665,42 @@ const routes: Routes = [
         component: CurrentTabComponent,
         canActivate: [authGuard],
         canMatch: [extensionRefreshRedirect("/tabs/vault")],
-        data: { state: "tabs_current" },
+        data: { elevation: 0 } satisfies RouteDataProperties,
         runGuardsAndResolvers: "always",
       },
       ...extensionRefreshSwap(VaultFilterComponent, VaultV2Component, {
         path: "vault",
         canActivate: [authGuard],
         canDeactivate: [clearVaultStateGuard],
-        data: { state: "tabs_vault" },
+        data: { elevation: 0 } satisfies RouteDataProperties,
       }),
-      {
+      ...extensionRefreshSwap(GeneratorComponent, CredentialGeneratorComponent, {
         path: "generator",
-        component: GeneratorComponent,
         canActivate: [authGuard],
-        data: { state: "tabs_generator" },
-      },
+        data: { elevation: 0 } satisfies RouteDataProperties,
+      }),
       ...extensionRefreshSwap(SettingsComponent, SettingsV2Component, {
         path: "settings",
         canActivate: [authGuard],
-        data: { state: "tabs_settings" },
+        data: { elevation: 0 } satisfies RouteDataProperties,
       }),
       ...extensionRefreshSwap(SendGroupingsComponent, SendV2Component, {
         path: "send",
         canActivate: [authGuard],
-        data: { state: "tabs_send" },
+        data: { elevation: 0 } satisfies RouteDataProperties,
       }),
     ],
   }),
   {
     path: "account-switcher",
     component: AccountSwitcherComponent,
-    data: { state: "account-switcher", doNotSaveUrl: true },
+    data: { elevation: 4, doNotSaveUrl: true } satisfies RouteDataProperties,
+  },
+  {
+    path: "trash",
+    component: TrashComponent,
+    canActivate: [authGuard],
+    data: { elevation: 2 } satisfies RouteDataProperties,
   },
 ];
 

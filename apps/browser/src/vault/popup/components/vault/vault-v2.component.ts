@@ -1,3 +1,4 @@
+import { ScrollingModule } from "@angular/cdk/scrolling";
 import { CommonModule } from "@angular/common";
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
@@ -11,7 +12,6 @@ import { ButtonModule, Icons, NoItemsModule } from "@bitwarden/components";
 import { VaultIcons } from "@bitwarden/vault";
 
 import { CurrentAccountComponent } from "../../../../auth/popup/account-switching/current-account.component";
-import { BrowserApi } from "../../../../platform/browser/browser-api";
 import { PopOutComponent } from "../../../../platform/popup/components/pop-out.component";
 import { PopupHeaderComponent } from "../../../../platform/popup/layout/popup-header.component";
 import { PopupPageComponent } from "../../../../platform/popup/layout/popup-page.component";
@@ -23,8 +23,7 @@ import {
   NewItemDropdownV2Component,
   NewItemInitialValues,
 } from "../vault-v2/new-item-dropdown/new-item-dropdown-v2.component";
-import { VaultListFiltersComponent } from "../vault-v2/vault-list-filters/vault-list-filters.component";
-import { VaultV2SearchComponent } from "../vault-v2/vault-search/vault-v2-search.component";
+import { VaultHeaderV2Component } from "../vault-v2/vault-header/vault-header-v2.component";
 
 enum VaultState {
   Empty,
@@ -46,11 +45,11 @@ enum VaultState {
     CommonModule,
     AutofillVaultListItemsComponent,
     VaultListItemsContainerComponent,
-    VaultListFiltersComponent,
     ButtonModule,
     RouterLink,
-    VaultV2SearchComponent,
     NewItemDropdownV2Component,
+    ScrollingModule,
+    VaultHeaderV2Component,
   ],
   providers: [VaultUiOnboardingService],
 })
@@ -70,7 +69,6 @@ export class VaultV2Component implements OnInit, OnDestroy {
               filter.collection?.organizationId) as OrganizationId,
             collectionId: filter.collection?.id as CollectionId,
             folderId: filter.folder?.id,
-            uri: (await BrowserApi.getTabFromCurrentWindow())?.url,
           }) as NewItemInitialValues,
       ),
       shareReplay({ refCount: true, bufferSize: 1 }),

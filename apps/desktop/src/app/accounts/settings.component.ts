@@ -12,14 +12,14 @@ import { UserVerificationService as UserVerificationServiceAbstraction } from "@
 import { AutofillSettingsServiceAbstraction } from "@bitwarden/common/autofill/services/autofill-settings.service";
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { DeviceType } from "@bitwarden/common/enums";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { VaultTimeoutAction } from "@bitwarden/common/enums/vault-timeout-action.enum";
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
-import { BiometricStateService } from "@bitwarden/common/platform/biometrics/biometric-state.service";
 import { KeySuffixOptions, ThemeType } from "@bitwarden/common/platform/enums";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
@@ -30,6 +30,7 @@ import {
   VaultTimeoutStringType,
 } from "@bitwarden/common/types/vault-timeout.type";
 import { DialogService } from "@bitwarden/components";
+import { KeyService, BiometricsService, BiometricStateService } from "@bitwarden/key-management";
 
 import { SetPinComponent } from "../../auth/components/set-pin.component";
 import { DesktopAutofillSettingsService } from "../../autofill/services/desktop-autofill-settings.service";
@@ -54,6 +55,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   showAlwaysShowDock = false;
   requireEnableTray = false;
   showDuckDuckGoIntegrationOption = false;
+  showSshAgentOption = false;
   isWindows: boolean;
   isLinux: boolean;
 
@@ -108,6 +110,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       disabled: true,
     }),
     enableHardwareAcceleration: true,
+    enableSshAgent: false,
     enableDuckDuckGoBrowserIntegration: false,
     theme: [null as ThemeType | null],
     locale: [null as string | null],
@@ -126,17 +129,19 @@ export class SettingsComponent implements OnInit, OnDestroy {
     private stateService: StateService,
     private autofillSettingsService: AutofillSettingsServiceAbstraction,
     private messagingService: MessagingService,
-    private cryptoService: CryptoService,
+    private keyService: KeyService,
     private themeStateService: ThemeStateService,
     private domainSettingsService: DomainSettingsService,
     private dialogService: DialogService,
     private userVerificationService: UserVerificationServiceAbstraction,
     private desktopSettingsService: DesktopSettingsService,
     private biometricStateService: BiometricStateService,
+    private biometricsService: BiometricsService,
     private desktopAutofillSettingsService: DesktopAutofillSettingsService,
     private pinService: PinServiceAbstraction,
     private logService: LogService,
     private nativeMessagingManifestService: NativeMessagingManifestService,
+    private configService: ConfigService,
   ) {
     const isMac = this.platformUtilsService.getDevice() === DeviceType.MacOsDesktop;
 
@@ -194,22 +199,25 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   async ngOnInit() {
     this.vaultTimeoutOptions = await this.generateVaultTimeoutOptions();
-
-    this.userHasMasterPassword = await this.userVerificationService.hasMasterPassword();
-
-    this.isWindows = (await this.platformUtilsService.getDevice()) === DeviceType.WindowsDesktop;
+    const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
     this.isLinux = (await this.platformUtilsService.getDevice()) === DeviceType.LinuxDesktop;
 
-    if ((await this.stateService.getUserId()) == null) {
+    if (activeAccount == null || activeAccount.id == null) {
       return;
     }
-    this.currentUserEmail = await firstValueFrom(
-      this.accountService.activeAccount$.pipe(map((a) => a?.email)),
-    );
-    this.currentUserId = (await this.stateService.getUserId()) as UserId;
+
+    this.showSshAgentOption = await this.configService.getFeatureFlag(FeatureFlag.SSHAgent);
+    this.userHasMasterPassword = await this.userVerificationService.hasMasterPassword();
+
+    this.isWindows = this.platformUtilsService.getDevice() === DeviceType.WindowsDesktop;
+
+    this.currentUserEmail = activeAccount.email;
+    this.currentUserId = activeAccount.id;
 
     this.availableVaultTimeoutActions$ = this.refreshTimeoutSettings$.pipe(
-      switchMap(() => this.vaultTimeoutSettingsService.availableVaultTimeoutActions$()),
+      switchMap(() =>
+        this.vaultTimeoutSettingsService.availableVaultTimeoutActions$(activeAccount.id),
+      ),
     );
 
     // Load timeout policy
@@ -234,12 +242,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
       }),
     );
 
-    const userId = (await firstValueFrom(this.accountService.activeAccount$))?.id;
-
     // Load initial values
-    this.userHasPinSet = await this.pinService.isPinSet(userId);
-
-    const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
+    this.userHasPinSet = await this.pinService.isPinSet(activeAccount.id);
 
     const initialValues = {
       vaultTimeout: await firstValueFrom(
@@ -275,6 +279,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       enableHardwareAcceleration: await firstValueFrom(
         this.desktopSettingsService.hardwareAcceleration$,
       ),
+      enableSshAgent: await firstValueFrom(this.desktopSettingsService.sshAgentEnabled$),
       theme: await firstValueFrom(this.themeStateService.selectedTheme$),
       locale: await firstValueFrom(this.i18nService.userSetLocale$),
     };
@@ -287,7 +292,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     // Non-form values
     this.showMinToTray = this.platformUtilsService.getDevice() !== DeviceType.LinuxDesktop;
     this.showAlwaysShowDock = this.platformUtilsService.getDevice() === DeviceType.MacOsDesktop;
-    this.supportsBiometric = await this.platformUtilsService.supportsBiometric();
+    this.supportsBiometric = await this.biometricsService.supportsBiometric();
     this.previousVaultTimeout = this.form.value.vaultTimeout;
 
     this.refreshTimeoutSettings$
@@ -462,17 +467,16 @@ export class SettingsComponent implements OnInit, OnDestroy {
       if (!enabled || !this.supportsBiometric) {
         this.form.controls.biometric.setValue(false, { emitEvent: false });
         await this.biometricStateService.setBiometricUnlockEnabled(false);
-        await this.cryptoService.refreshAdditionalKeys();
+        await this.keyService.refreshAdditionalKeys();
         return;
       }
 
-      const needsSetup = await this.platformUtilsService.biometricsNeedsSetup();
-      const supportsBiometricAutoSetup =
-        await this.platformUtilsService.biometricsSupportsAutoSetup();
+      const needsSetup = await this.biometricsService.biometricsNeedsSetup();
+      const supportsBiometricAutoSetup = await this.biometricsService.biometricsSupportsAutoSetup();
 
       if (needsSetup) {
         if (supportsBiometricAutoSetup) {
-          await this.platformUtilsService.biometricsSetup();
+          await this.biometricsService.biometricsSetup();
         } else {
           const confirmed = await this.dialogService.openSimpleDialog({
             title: { key: "biometricsManualSetupTitle" },
@@ -502,10 +506,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
         await this.biometricStateService.setRequirePasswordOnStart(true);
         await this.biometricStateService.setDismissedRequirePasswordOnStartCallout();
       }
-      await this.cryptoService.refreshAdditionalKeys();
+      await this.keyService.refreshAdditionalKeys();
 
       // Validate the key is stored in case biometrics fail.
-      const biometricSet = await this.cryptoService.hasUserKeyStored(KeySuffixOptions.Biometric);
+      const biometricSet = await this.keyService.hasUserKeyStored(KeySuffixOptions.Biometric);
       this.form.controls.biometric.setValue(biometricSet, { emitEvent: false });
       if (!biometricSet) {
         await this.biometricStateService.setBiometricUnlockEnabled(false);
@@ -537,7 +541,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       await this.biometricStateService.setRequirePasswordOnStart(false);
     }
     await this.biometricStateService.setDismissedRequirePasswordOnStartCallout();
-    await this.cryptoService.refreshAdditionalKeys();
+    await this.keyService.refreshAdditionalKeys();
   }
 
   async saveFavicons() {
@@ -630,7 +634,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
   async saveBrowserIntegration() {
     if (
       ipc.platform.deviceType === DeviceType.MacOsDesktop &&
-      !this.platformUtilsService.isMacAppStore()
+      !this.platformUtilsService.isMacAppStore() &&
+      !ipc.platform.isDev
     ) {
       await this.dialogService.openSimpleDialog({
         title: { key: "browserIntegrationUnsupportedTitle" },
@@ -724,6 +729,11 @@ export class SettingsComponent implements OnInit, OnDestroy {
     await this.desktopSettingsService.setHardwareAcceleration(
       this.form.value.enableHardwareAcceleration,
     );
+  }
+
+  async saveSshAgent() {
+    this.logService.debug("Saving Ssh Agent settings", this.form.value.enableSshAgent);
+    await this.desktopSettingsService.setSshAgentEnabled(this.form.value.enableSshAgent);
   }
 
   private async generateVaultTimeoutOptions(): Promise<VaultTimeoutOption[]> {

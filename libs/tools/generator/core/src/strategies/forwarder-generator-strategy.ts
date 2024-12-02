@@ -2,10 +2,10 @@ import { filter, map } from "rxjs";
 import { Jsonify } from "type-fest";
 
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { SingleUserState, StateProvider } from "@bitwarden/common/platform/state";
+import { UserKeyEncryptor } from "@bitwarden/common/tools/cryptography/user-key-encryptor";
 import {
   ApiSettings,
   IntegrationRequest,
@@ -15,8 +15,8 @@ import { BufferedState } from "@bitwarden/common/tools/state/buffered-state";
 import { PaddedDataPacker } from "@bitwarden/common/tools/state/padded-data-packer";
 import { SecretKeyDefinition } from "@bitwarden/common/tools/state/secret-key-definition";
 import { SecretState } from "@bitwarden/common/tools/state/secret-state";
-import { UserKeyEncryptor } from "@bitwarden/common/tools/state/user-key-encryptor";
 import { UserId } from "@bitwarden/common/types/guid";
+import { KeyService } from "@bitwarden/key-management";
 
 import { GeneratorStrategy } from "../abstractions";
 import { ForwarderConfiguration, AccountRequest, ForwarderContext } from "../engine";
@@ -45,7 +45,7 @@ export class ForwarderGeneratorStrategy<
     private client: RestClient,
     private i18nService: I18nService,
     private readonly encryptService: EncryptService,
-    private readonly keyService: CryptoService,
+    private readonly keyService: KeyService,
     private stateProvider: StateProvider,
   ) {
     super();

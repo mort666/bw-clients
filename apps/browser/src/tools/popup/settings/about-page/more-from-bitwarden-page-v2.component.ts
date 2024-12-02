@@ -4,6 +4,7 @@ import { RouterModule } from "@angular/router";
 import { Observable, firstValueFrom } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { DialogService, ItemModule } from "@bitwarden/components";
@@ -12,6 +13,7 @@ import { BrowserApi } from "../../../../platform/browser/browser-api";
 import { PopOutComponent } from "../../../../platform/popup/components/pop-out.component";
 import { PopupHeaderComponent } from "../../../../platform/popup/layout/popup-header.component";
 import { PopupPageComponent } from "../../../../platform/popup/layout/popup-page.component";
+import { FamiliesPolicyService } from "../../../../services/families-policy.service";
 
 @Component({
   templateUrl: "more-from-bitwarden-page-v2.component.html",
@@ -28,13 +30,21 @@ import { PopupPageComponent } from "../../../../platform/popup/layout/popup-page
 })
 export class MoreFromBitwardenPageV2Component {
   canAccessPremium$: Observable<boolean>;
+  protected familySponsorshipAvailable$: Observable<boolean>;
+  protected isFreeFamilyPolicyEnabled$: Observable<boolean>;
+  protected hasSingleEnterpriseOrg$: Observable<boolean>;
 
   constructor(
     private dialogService: DialogService,
     billingAccountProfileStateService: BillingAccountProfileStateService,
     private environmentService: EnvironmentService,
+    private organizationService: OrganizationService,
+    private familiesPolicyService: FamiliesPolicyService,
   ) {
     this.canAccessPremium$ = billingAccountProfileStateService.hasPremiumFromAnySource$;
+    this.familySponsorshipAvailable$ = this.organizationService.familySponsorshipAvailable$;
+    this.hasSingleEnterpriseOrg$ = this.familiesPolicyService.hasSingleEnterpriseOrg$();
+    this.isFreeFamilyPolicyEnabled$ = this.familiesPolicyService.isFreeFamilyPolicyEnabled$();
   }
 
   async openFreeBitwardenFamiliesPage() {

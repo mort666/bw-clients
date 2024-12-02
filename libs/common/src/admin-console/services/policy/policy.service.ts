@@ -219,8 +219,8 @@ export class PolicyService implements InternalPolicyServiceAbstraction {
     });
   }
 
-  async replace(policies: { [id: string]: PolicyData }): Promise<void> {
-    await this.activeUserPolicyState.update(() => policies);
+  async replace(policies: { [id: string]: PolicyData }, userId: UserId): Promise<void> {
+    await this.stateProvider.setUserState(POLICIES, policies, userId);
   }
 
   /**
@@ -238,6 +238,9 @@ export class PolicyService implements InternalPolicyServiceAbstraction {
       case PolicyType.PersonalOwnership:
         // individual vault policy applies to everyone except admins and owners
         return organization.isAdmin;
+      case PolicyType.FreeFamiliesSponsorshipPolicy:
+        // free Bitwarden families policy applies to everyone
+        return false;
       default:
         return organization.canManagePolicies;
     }

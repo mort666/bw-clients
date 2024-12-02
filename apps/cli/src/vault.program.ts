@@ -108,7 +108,7 @@ export class VaultProgram extends BaseProgram {
           this.serviceContainer.collectionService,
           this.serviceContainer.organizationService,
           this.serviceContainer.searchService,
-          this.serviceContainer.organizationUserService,
+          this.serviceContainer.organizationUserApiService,
           this.serviceContainer.apiService,
           this.serviceContainer.eventCollectionService,
         );
@@ -177,7 +177,8 @@ export class VaultProgram extends BaseProgram {
           this.serviceContainer.collectionService,
           this.serviceContainer.totpService,
           this.serviceContainer.auditService,
-          this.serviceContainer.cryptoService,
+          this.serviceContainer.keyService,
+          this.serviceContainer.encryptService,
           this.serviceContainer.stateService,
           this.serviceContainer.searchService,
           this.serviceContainer.apiService,
@@ -223,7 +224,8 @@ export class VaultProgram extends BaseProgram {
         const command = new CreateCommand(
           this.serviceContainer.cipherService,
           this.serviceContainer.folderService,
-          this.serviceContainer.cryptoService,
+          this.serviceContainer.keyService,
+          this.serviceContainer.encryptService,
           this.serviceContainer.apiService,
           this.serviceContainer.folderApiService,
           this.serviceContainer.billingAccountProfileStateService,
@@ -271,7 +273,8 @@ export class VaultProgram extends BaseProgram {
         const command = new EditCommand(
           this.serviceContainer.cipherService,
           this.serviceContainer.folderService,
-          this.serviceContainer.cryptoService,
+          this.serviceContainer.keyService,
+          this.serviceContainer.encryptService,
           this.serviceContainer.apiService,
           this.serviceContainer.folderApiService,
           this.serviceContainer.accountService,
@@ -316,6 +319,7 @@ export class VaultProgram extends BaseProgram {
           this.serviceContainer.apiService,
           this.serviceContainer.folderApiService,
           this.serviceContainer.billingAccountProfileStateService,
+          this.serviceContainer.cipherAuthorizationService,
         );
         const response = await command.run(object, id, cmd);
         this.processResponse(response);
@@ -411,8 +415,9 @@ export class VaultProgram extends BaseProgram {
         await this.exitIfLocked();
         const command = new ConfirmCommand(
           this.serviceContainer.apiService,
-          this.serviceContainer.cryptoService,
-          this.serviceContainer.organizationUserService,
+          this.serviceContainer.keyService,
+          this.serviceContainer.encryptService,
+          this.serviceContainer.organizationUserApiService,
         );
         const response = await command.run(object, id, cmd);
         this.processResponse(response);

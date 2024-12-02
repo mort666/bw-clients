@@ -48,7 +48,7 @@ export class ItemCopyActionsComponent {
     return !!this.cipher.notes;
   }
 
-  get hasSSHKeyValues() {
+  get hasSshKeyValues() {
     return (
       !!this.cipher.sshKey.privateKey ||
       !!this.cipher.sshKey.publicKey ||

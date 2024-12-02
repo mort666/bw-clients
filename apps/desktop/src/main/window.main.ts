@@ -7,20 +7,12 @@ import { firstValueFrom } from "rxjs";
 
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { AbstractStorageService } from "@bitwarden/common/platform/abstractions/storage.service";
-import { BiometricStateService } from "@bitwarden/common/platform/biometrics/biometric-state.service";
 import { processisolations } from "@bitwarden/desktop-napi";
+import { BiometricStateService } from "@bitwarden/key-management";
 
 import { WindowState } from "../platform/models/domain/window-state";
 import { DesktopSettingsService } from "../platform/services/desktop-settings.service";
-import {
-  cleanUserAgent,
-  isDev,
-  isLinux,
-  isMac,
-  isMacAppStore,
-  isSnapStore,
-  isWindows,
-} from "../utils";
+import { cleanUserAgent, isDev, isLinux, isMac, isMacAppStore, isWindows } from "../utils";
 
 const mainWindowSizeKey = "mainWindowSize";
 const WindowEventHandlingDelay = 100;
@@ -51,6 +43,7 @@ export class WindowMain {
     // Perform a hard reload of the render process by crashing it. This is suboptimal but ensures that all memory gets
     // cleared, as the process itself will be completely garbage collected.
     ipcMain.on("reload-process", async () => {
+      this.logService.info("Reloading render process");
       // User might have changed theme, ensure the window is updated.
       this.win.setBackgroundColor(await this.getBackgroundColor());
 
@@ -65,11 +58,25 @@ export class WindowMain {
       // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       this.session.clearCache();
+      this.logService.info("Render process reloaded");
+    });
+
+    ipcMain.on("window-focus", () => {
+      if (this.win != null) {
+        this.win.show();
+        this.win.focus();
+      }
+    });
+
+    ipcMain.on("window-hide", () => {
+      if (this.win != null) {
+        this.win.hide();
+      }
     });
 
     return new Promise<void>((resolve, reject) => {
       try {
-        if (!isMacAppStore() && !isSnapStore()) {
+        if (!isMacAppStore()) {
           const gotTheLock = app.requestSingleInstanceLock();
           if (!gotTheLock) {
             app.quit();
@@ -306,7 +313,7 @@ export class WindowMain {
   }
 
   private async updateWindowState(configKey: string, win: BrowserWindow) {
-    if (win == null) {
+    if (win == null || win.isDestroyed()) {
       return;
     }
 

@@ -49,8 +49,10 @@ export class ProfileOrganizationResponse extends BaseResponse {
   familySponsorshipValidUntil?: Date;
   familySponsorshipToDelete?: boolean;
   accessSecretsManager: boolean;
-  limitCollectionCreationDeletion: boolean;
+  limitCollectionCreation: boolean;
+  limitCollectionDeletion: boolean;
   allowAdminAccessToAllCollectionItems: boolean;
+  userIsManagedByOrganization: boolean;
 
   constructor(response: any) {
     super(response);
@@ -109,11 +111,11 @@ export class ProfileOrganizationResponse extends BaseResponse {
     }
     this.familySponsorshipToDelete = this.getResponseProperty("FamilySponsorshipToDelete");
     this.accessSecretsManager = this.getResponseProperty("AccessSecretsManager");
-    this.limitCollectionCreationDeletion = this.getResponseProperty(
-      "LimitCollectionCreationDeletion",
-    );
+    this.limitCollectionCreation = this.getResponseProperty("LimitCollectionCreation");
+    this.limitCollectionDeletion = this.getResponseProperty("LimitCollectionDeletion");
     this.allowAdminAccessToAllCollectionItems = this.getResponseProperty(
       "AllowAdminAccessToAllCollectionItems",
     );
+    this.userIsManagedByOrganization = this.getResponseProperty("UserIsManagedByOrganization");
   }
 }

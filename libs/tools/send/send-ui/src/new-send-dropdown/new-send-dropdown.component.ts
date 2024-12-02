@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, OnInit } from "@angular/core";
+import { Component, Input, OnInit } from "@angular/core";
 import { Router, RouterLink } from "@angular/router";
 import { firstValueFrom } from "rxjs";
 
@@ -15,6 +15,8 @@ import { BadgeModule, ButtonModule, MenuModule } from "@bitwarden/components";
   imports: [JslibModule, CommonModule, ButtonModule, RouterLink, MenuModule, BadgeModule],
 })
 export class NewSendDropdownComponent implements OnInit {
+  @Input() hideIcon: boolean = false;
+
   sendType = SendType;
 
   hasNoPremium = false;
@@ -30,10 +32,18 @@ export class NewSendDropdownComponent implements OnInit {
     ));
   }
 
-  newItemNavigate(type: SendType) {
+  buildRouterLink(type: SendType) {
     if (this.hasNoPremium && type === SendType.File) {
-      return this.router.navigate(["/premium"]);
+      return "/premium";
+    } else {
+      return "/add-send";
     }
-    void this.router.navigate(["/add-send"], { queryParams: { type: type, isNew: true } });
+  }
+
+  buildQueryParams(type: SendType) {
+    if (this.hasNoPremium && type === SendType.File) {
+      return null;
+    }
+    return { type: type, isNew: true };
   }
 }

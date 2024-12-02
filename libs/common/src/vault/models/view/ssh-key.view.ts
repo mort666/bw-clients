@@ -1,26 +1,45 @@
 import { Jsonify } from "type-fest";
 
-import { SSHKey } from "../domain/ssh-key";
+import { SshKey } from "../domain/ssh-key";
 
 import { ItemView } from "./item.view";
 
-export class SSHKeyView extends ItemView {
+export class SshKeyView extends ItemView {
   privateKey: string = null;
   publicKey: string = null;
   keyFingerprint: string = null;
 
-  constructor(n?: SSHKey) {
+  constructor(n?: SshKey) {
     super();
     if (!n) {
       return;
     }
   }
 
-  get subTitle(): string {
-    return null;
+  get maskedPrivateKey(): string {
+    if (!this.privateKey || this.privateKey.length === 0) {
+      return "";
+    }
+
+    let lines = this.privateKey.split("\n").filter((l) => l.trim() !== "");
+    lines = lines.map((l, i) => {
+      if (i === 0 || i === lines.length - 1) {
+        return l;
+      }
+      return this.maskLine(l);
+    });
+    return lines.join("\n");
   }
 
-  static fromJSON(obj: Partial<Jsonify<SSHKeyView>>): SSHKeyView {
-    return Object.assign(new SSHKeyView(), obj);
+  private maskLine(line: string): string {
+    return "•".repeat(32);
+  }
+
+  get subTitle(): string {
+    return this.keyFingerprint;
+  }
+
+  static fromJSON(obj: Partial<Jsonify<SshKeyView>>): SshKeyView {
+    return Object.assign(new SshKeyView(), obj);
   }
 }

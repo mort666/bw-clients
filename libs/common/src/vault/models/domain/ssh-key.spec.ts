@@ -1,15 +1,15 @@
 import { mockEnc } from "../../../../spec";
-import { SSHKeyApi } from "../api/ssh-key.api";
-import { SSHKeyData } from "../data/ssh-key.data";
+import { SshKeyApi } from "../api/ssh-key.api";
+import { SshKeyData } from "../data/ssh-key.data";
 
-import { SSHKey } from "./ssh-key";
+import { SshKey } from "./ssh-key";
 
-describe("SSHkey", () => {
-  let data: SSHKeyData;
+describe("Sshkey", () => {
+  let data: SshKeyData;
 
   beforeEach(() => {
-    data = new SSHKeyData(
-      new SSHKeyApi({
+    data = new SshKeyData(
+      new SshKeyApi({
         PrivateKey: "privateKey",
         PublicKey: "publicKey",
         KeyFingerprint: "keyFingerprint",
@@ -18,7 +18,7 @@ describe("SSHkey", () => {
   });
 
   it("Convert", () => {
-    const sshKey = new SSHKey(data);
+    const sshKey = new SshKey(data);
 
     expect(sshKey).toEqual({
       privateKey: { encryptedString: "privateKey", encryptionType: 0 },
@@ -28,8 +28,8 @@ describe("SSHkey", () => {
   });
 
   it("Convert from empty", () => {
-    const data = new SSHKeyData();
-    const sshKey = new SSHKey(data);
+    const data = new SshKeyData();
+    const sshKey = new SshKey(data);
 
     expect(sshKey).toEqual({
       privateKey: null,
@@ -38,13 +38,13 @@ describe("SSHkey", () => {
     });
   });
 
-  it("toSSHKeyData", () => {
-    const sshKey = new SSHKey(data);
-    expect(sshKey.toSSHKeyData()).toEqual(data);
+  it("toSshKeyData", () => {
+    const sshKey = new SshKey(data);
+    expect(sshKey.toSshKeyData()).toEqual(data);
   });
 
   it("Decrypt", async () => {
-    const sshKey = Object.assign(new SSHKey(), {
+    const sshKey = Object.assign(new SshKey(), {
       privateKey: mockEnc("privateKey"),
       publicKey: mockEnc("publicKey"),
       keyFingerprint: mockEnc("keyFingerprint"),
@@ -61,7 +61,7 @@ describe("SSHkey", () => {
 
   describe("fromJSON", () => {
     it("returns null if object is null", () => {
-      expect(SSHKey.fromJSON(null)).toBeNull();
+      expect(SshKey.fromJSON(null)).toBeNull();
     });
   });
 });

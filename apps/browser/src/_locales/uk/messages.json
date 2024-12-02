@@ -19,14 +19,23 @@
   "createAccount": {
     "message": "Створити обліковий запис"
   },
+  "newToBitwarden": {
+    "message": "Вперше у Bitwarden?"
+  },
+  "logInWithPasskey": {
+    "message": "Увійти з ключем доступу"
+  },
+  "useSingleSignOn": {
+    "message": "Використати єдиний вхід"
+  },
+  "welcomeBack": {
+    "message": "З поверненням"
+  },
   "setAStrongPassword": {
     "message": "Встановіть надійний пароль"
   },
   "finishCreatingYourAccountBySettingAPassword": {
     "message": "Завершіть створення облікового запису, встановивши пароль"
-  },
-  "login": {
-    "message": "Увійти"
   },
   "enterpriseSingleSignOn": {
     "message": "Єдиний корпоративний вхід (SSO)"
@@ -74,6 +83,15 @@
   "joinOrganization": {
     "message": "Приєднатися до організації"
   },
+  "joinOrganizationName": {
+    "message": "Приєднатися до $ORGANIZATIONNAME$",
+    "placeholders": {
+      "organizationName": {
+        "content": "$1",
+        "example": "My Org Name"
+      }
+    }
+  },
   "finishJoiningThisOrganizationBySettingAMasterPassword": {
     "message": "Завершіть приєднання до цієї організації, встановивши головний пароль."
   },
@@ -100,6 +118,9 @@
   },
   "copyPassword": {
     "message": "Копіювати пароль"
+  },
+  "copyPassphrase": {
+    "message": "Копіювати парольну фразу"
   },
   "copyNote": {
     "message": "Копіювати нотатку"
@@ -130,6 +151,34 @@
   },
   "copyLicenseNumber": {
     "message": "Копіювати номер ліцензії"
+  },
+  "copyPrivateKey": {
+    "message": "Копіювати закритий ключ"
+  },
+  "copyPublicKey": {
+    "message": "Копіювати відкритий ключ"
+  },
+  "copyFingerprint": {
+    "message": "Копіювати відбиток"
+  },
+  "copyCustomField": {
+    "message": "Копіювати $FIELD$",
+    "placeholders": {
+      "field": {
+        "content": "$1",
+        "example": "Custom field label"
+      }
+    }
+  },
+  "copyWebsite": {
+    "message": "Копіювати вебсайт"
+  },
+  "copyNotes": {
+    "message": "Копіювати нотатки"
+  },
+  "fill": {
+    "message": "Заповнити",
+    "description": "This string is used on the vault page to indicate autofilling. Horizontal space is limited in the interface here so try and keep translations as concise as possible."
   },
   "autoFill": {
     "message": "Автозаповнення"
@@ -181,6 +230,18 @@
   },
   "addItem": {
     "message": "Додати запис"
+  },
+  "accountEmail": {
+    "message": "Е-пошта облікового запису"
+  },
+  "requestHint": {
+    "message": "Підказка для запиту"
+  },
+  "requestPasswordHint": {
+    "message": "Підказка для запиту пароля"
+  },
+  "enterYourAccountEmailAddressAndYourPasswordHintWillBeSentToYou": {
+    "message": "Введіть адресу е-пошти свого облікового запису і вам буде надіслано підказку для пароля"
   },
   "passwordHint": {
     "message": "Підказка для пароля"
@@ -357,7 +418,7 @@
   },
   "generator": {
     "message": "Генератор",
-    "description": "Short for 'Password Generator'."
+    "description": "Short for 'credential generator'."
   },
   "passGenInfo": {
     "message": "Автоматичне генерування стійких, унікальних паролів."
@@ -374,6 +435,9 @@
   "generatePassword": {
     "message": "Генерувати пароль"
   },
+  "generatePassphrase": {
+    "message": "Генерувати парольну фразу"
+  },
   "regeneratePassword": {
     "message": "Генерувати новий"
   },
@@ -387,16 +451,56 @@
     "message": "Мінімальна довжина пароля"
   },
   "uppercase": {
-    "message": "Верхній регістр (A-Z)"
+    "message": "Верхній регістр (A-Z)",
+    "description": "deprecated. Use uppercaseLabel instead."
   },
   "lowercase": {
-    "message": "Нижній регістр (a-z)"
+    "message": "Нижній регістр (a-z)",
+    "description": "deprecated. Use lowercaseLabel instead."
   },
   "numbers": {
-    "message": "Числа (0-9)"
+    "message": "Числа (0-9)",
+    "description": "deprecated. Use numbersLabel instead."
   },
   "specialCharacters": {
-    "message": "Спеціальні символи (!@#$%^&*)"
+    "message": "Спеціальні символи (!@#$%^&*)",
+    "description": "deprecated. Use specialCharactersLabel instead."
+  },
+  "include": {
+    "message": "Включити",
+    "description": "Card header for password generator include block"
+  },
+  "uppercaseDescription": {
+    "message": "Символи верхнього регістру",
+    "description": "Tooltip for the password generator uppercase character checkbox"
+  },
+  "uppercaseLabel": {
+    "message": "A-Z",
+    "description": "Label for the password generator uppercase character checkbox"
+  },
+  "lowercaseDescription": {
+    "message": "Символи нижнього регістру",
+    "description": "Full description for the password generator lowercase character checkbox"
+  },
+  "lowercaseLabel": {
+    "message": "a-z",
+    "description": "Label for the password generator lowercase character checkbox"
+  },
+  "numbersDescription": {
+    "message": "Цифри",
+    "description": "Full description for the password generator numbers checkbox"
+  },
+  "numbersLabel": {
+    "message": "0-9",
+    "description": "Label for the password generator numbers checkbox"
+  },
+  "specialCharactersDescription": {
+    "message": "Спеціальні символи",
+    "description": "Full description for the password generator special characters checkbox"
+  },
+  "specialCharactersLabel": {
+    "message": "!@#$%^&*",
+    "description": "Label for the password generator special characters checkbox"
   },
   "numWords": {
     "message": "Кількість слів"
@@ -418,7 +522,16 @@
     "message": "Мінімум спеціальних символів"
   },
   "avoidAmbChar": {
-    "message": "Уникати неоднозначних символів"
+    "message": "Уникати неоднозначних символів",
+    "description": "deprecated. Use avoidAmbiguous instead."
+  },
+  "avoidAmbiguous": {
+    "message": "Уникати неоднозначних символів",
+    "description": "Label for the avoid ambiguous characters checkbox."
+  },
+  "generatorPolicyInEffect": {
+    "message": "До налаштувань генератора застосовано вимоги політики компанії.",
+    "description": "Indicates that a policy limits the credential generator screen."
   },
   "searchVault": {
     "message": "Пошук"
@@ -462,6 +575,9 @@
   "notes": {
     "message": "Нотатки"
   },
+  "privateNote": {
+    "message": "Приватна нотатка"
+  },
   "note": {
     "message": "Нотатка"
   },
@@ -482,6 +598,15 @@
   },
   "launchWebsite": {
     "message": "Відкрити вебсайт"
+  },
+  "launchWebsiteName": {
+    "message": "Відкрити вебсайт $ITEMNAME$",
+    "placeholders": {
+      "itemname": {
+        "content": "$1",
+        "example": "Secret item"
+      }
+    }
   },
   "website": {
     "message": "Вебсайт"
@@ -507,6 +632,9 @@
   "sessionTimeoutHeader": {
     "message": "Час очікування сеансу"
   },
+  "vaultTimeoutHeader": {
+    "message": "Час очікування сховища"
+  },
   "otherOptions": {
     "message": "Інші налаштування"
   },
@@ -524,6 +652,15 @@
   },
   "yourVaultIsLocked": {
     "message": "Ваше сховище заблоковане. Для продовження виконайте перевірку."
+  },
+  "yourVaultIsLockedV2": {
+    "message": "Ваше сховище заблоковано"
+  },
+  "yourAccountIsLocked": {
+    "message": "Ваш обліковий запис заблоковано"
+  },
+  "or": {
+    "message": "або"
   },
   "unlock": {
     "message": "Розблокувати"
@@ -546,6 +683,9 @@
   },
   "vaultTimeout": {
     "message": "Час очікування сховища"
+  },
+  "vaultTimeout1": {
+    "message": "Час очікування"
   },
   "lockNow": {
     "message": "Блокувати зараз"
@@ -641,6 +781,12 @@
   "newAccountCreated": {
     "message": "Ваш обліковий запис створений! Тепер ви можете увійти."
   },
+  "newAccountCreated2": {
+    "message": "Ваш обліковий запис створено!"
+  },
+  "youHaveBeenLoggedIn": {
+    "message": "Ви увійшли!"
+  },
   "youSuccessfullyLoggedIn": {
     "message": "Ви успішно увійшли в систему"
   },
@@ -708,6 +854,9 @@
   "logIn": {
     "message": "Увійти"
   },
+  "logInToBitwarden": {
+    "message": "Увійти в Bitwarden"
+  },
   "restartRegistration": {
     "message": "Перезапустити реєстрацію"
   },
@@ -740,6 +889,12 @@
   },
   "twoStepLoginConfirmation": {
     "message": "Двоетапна перевірка дає змогу надійніше захистити ваш обліковий запис, вимагаючи підтвердження входу з використанням іншого пристрою, наприклад, за допомогою ключа безпеки, програми автентифікації, SMS, телефонного виклику, або е-пошти. Ви можете налаштувати двоетапну перевірку в сховищі на bitwarden.com. Хочете перейти на вебсайт зараз?"
+  },
+  "twoStepLoginConfirmationContent": {
+    "message": "Додайте вищий рівень захисту облікового запису, налаштувавши двоетапну перевірку у вебпрограмі Bitwarden."
+  },
+  "twoStepLoginConfirmationTitle": {
+    "message": "Продовжити у вебпрограмі?"
   },
   "editedFolder": {
     "message": "Теку збережено"
@@ -844,7 +999,7 @@
     "message": "Показувати список карток на сторінці вкладки для легкого автозаповнення."
   },
   "showIdentitiesInVaultView": {
-    "message": "Показувати особисті дані як пропозиції автозаповнення в режимі перегляду сховища"
+    "message": "Показувати посвідчення як пропозиції автозаповнення в режимі перегляду сховища"
   },
   "showIdentitiesCurrentTab": {
     "message": "Показувати посвідчення на вкладці"
@@ -970,6 +1125,10 @@
     "message": "ПОПЕРЕДЖЕННЯ",
     "description": "WARNING (should stay in capitalized letters if the language permits)"
   },
+  "warningCapitalized": {
+    "message": "Warning",
+    "description": "Warning (should maintain locale-relevant capitalization)"
+  },
   "confirmVaultExport": {
     "message": "Підтвердити експорт сховища"
   },
@@ -1049,6 +1208,9 @@
   "file": {
     "message": "Файл"
   },
+  "fileToShare": {
+    "message": "Файл для поширення"
+  },
   "selectFile": {
     "message": "Оберіть файл"
   },
@@ -1083,7 +1245,7 @@
     "message": "1 ГБ зашифрованого сховища для файлів."
   },
   "premiumSignUpEmergency": {
-    "message": "Екстрений доступ"
+    "message": "Екстрений доступ."
   },
   "premiumSignUpTwoStepOptions": {
     "message": "Додаткові можливості двоетапної авторизації, як-от YubiKey та Duo."
@@ -1115,8 +1277,20 @@
   "premiumCurrentMemberThanks": {
     "message": "Дякуємо за підтримку Bitwarden."
   },
+  "premiumFeatures": {
+    "message": "Передплатіть преміум та отримайте:"
+  },
   "premiumPrice": {
     "message": "Всього лише $PRICE$ / за рік!",
+    "placeholders": {
+      "price": {
+        "content": "$1",
+        "example": "$10"
+      }
+    }
+  },
+  "premiumPriceV2": {
+    "message": "Усе лише за $PRICE$ на рік!",
     "placeholders": {
       "price": {
         "content": "$1",
@@ -1223,7 +1397,7 @@
     "description": "'Duo Security' and 'Duo Mobile' are product names and should not be translated."
   },
   "duoOrganizationDesc": {
-    "message": "Авторизуйтесь за допомогою Duo Security для вашої організації з використанням мобільного додатку Duo Mobile, SMS, телефонного виклику, або ключа безпеки U2F.",
+    "message": "Авторизуйтесь за допомогою Duo Security для вашої організації з використанням програми Duo Mobile, SMS, телефонного виклику, або ключа безпеки U2F.",
     "description": "'Duo Security' and 'Duo Mobile' are product names and should not be translated."
   },
   "webAuthnTitle": {
@@ -1262,6 +1436,10 @@
   "baseUrl": {
     "message": "URL-адреса сервера"
   },
+  "selfHostBaseUrl": {
+    "message": "URL-адреса власного сервера",
+    "description": "Label for field requesting a self-hosted integration service URL"
+  },
   "apiUrl": {
     "message": "URL-адреса сервера API"
   },
@@ -1289,6 +1467,12 @@
   },
   "showInlineMenuLabel": {
     "message": "Пропозиції автозаповнення на полях форм"
+  },
+  "showInlineMenuIdentitiesLabel": {
+    "message": "Показувати посвідчення як пропозиції"
+  },
+  "showInlineMenuCardsLabel": {
+    "message": "Показувати картки як пропозиції"
   },
   "showInlineMenuOnIconSelectionLabel": {
     "message": "Показувати пропозиції, якщо вибрано піктограму"
@@ -1322,19 +1506,6 @@
   },
   "enableAutoFillOnPageLoadDesc": {
     "message": "Якщо виявлено форму входу, автоматично заповнювати її під час завантаження вебсторінки."
-  },
-  "autofillOnPageLoadWarning": {
-    "message": "$OPENTAG$Обережно!$CLOSETAG$ Скомпрометовані або ненадійні вебсайти можуть використати функцію автозаповнення під час завантаження сторінки для завдання шкоди.",
-    "placeholders": {
-      "openTag": {
-        "content": "$1",
-        "example": "<b>"
-      },
-      "closeTag": {
-        "content": "$2",
-        "example": "</b>"
-      }
-    }
   },
   "experimentalFeature": {
     "message": "Скомпрометовані або ненадійні вебсайти можуть використати функцію автозаповнення під час завантаження сторінки для завдання шкоди."
@@ -1593,6 +1764,9 @@
   "typeIdentity": {
     "message": "Посвідчення"
   },
+  "typeSshKey": {
+    "message": "Ключ SSH"
+  },
   "newItemHeader": {
     "message": "Новий $TYPE$",
     "placeholders": {
@@ -1622,6 +1796,15 @@
   },
   "passwordHistory": {
     "message": "Історія паролів"
+  },
+  "generatorHistory": {
+    "message": "Історія генератора"
+  },
+  "clearGeneratorHistoryTitle": {
+    "message": "Очистити історію генератора"
+  },
+  "cleargGeneratorHistoryDescription": {
+    "message": "Якщо ви продовжите, усі записи будуть остаточно видалені з історії генератора. Справді продовжити?"
   },
   "back": {
     "message": "Назад"
@@ -1658,6 +1841,9 @@
   },
   "secureNotes": {
     "message": "Захищені нотатки"
+  },
+  "sshKeys": {
+    "message": "SSH Keys"
   },
   "clear": {
     "message": "Стерти",
@@ -1736,6 +1922,15 @@
   "noPasswordsInList": {
     "message": "Немає паролів."
   },
+  "clearHistory": {
+    "message": "Очистити історію"
+  },
+  "nothingToShow": {
+    "message": "Немає даних для показу"
+  },
+  "nothingGeneratedRecently": {
+    "message": "Ви нічого не генерували останнім часом"
+  },
   "remove": {
     "message": "Вилучити"
   },
@@ -1794,8 +1989,17 @@
   "unlockWithPin": {
     "message": "Розблокування з PIN-кодом"
   },
+  "setYourPinTitle": {
+    "message": "Встановлення PIN-коду"
+  },
+  "setYourPinButton": {
+    "message": "Встановити PIN-код"
+  },
   "setYourPinCode": {
     "message": "Встановіть PIN-код для розблокування Bitwarden. Налаштування PIN-коду будуть скинуті, якщо ви коли-небудь повністю вийдете з програми."
+  },
+  "setYourPinCode1": {
+    "message": "PIN-код буде використовуватися для розблокування Bitwarden замість головного пароля. У разі повного виходу з Bitwarden, ваш PIN-код буде скинуто."
   },
   "pinRequired": {
     "message": "Необхідний PIN-код."
@@ -1809,6 +2013,9 @@
   "unlockWithBiometrics": {
     "message": "Розблокувати з біометрією"
   },
+  "unlockWithMasterPassword": {
+    "message": "Розблокувати з головним паролем"
+  },
   "awaitDesktop": {
     "message": "Очікується підтвердження з комп'ютера"
   },
@@ -1817,6 +2024,9 @@
   },
   "lockWithMasterPassOnRestart": {
     "message": "Блокувати головним паролем при перезапуску браузера"
+  },
+  "lockWithMasterPassOnRestart1": {
+    "message": "Вимагати головний пароль після перезапуску браузера"
   },
   "selectOneCollection": {
     "message": "Необхідно вибрати принаймні одну збірку."
@@ -1856,9 +2066,12 @@
   "vaultTimeoutAction": {
     "message": "Дія після часу очікування сховища"
   },
+  "vaultTimeoutAction1": {
+    "message": "Дія після часу очікування"
+  },
   "lock": {
     "message": "Блокувати",
-    "description": "Verb form: to make secure or inaccesible by"
+    "description": "Verb form: to make secure or inaccessible by"
   },
   "trash": {
     "message": "Смітник",
@@ -2050,11 +2263,11 @@
   "nativeMessagingWrongUserTitle": {
     "message": "Невідповідність облікових записів"
   },
-  "nativeMessagingWrongUserKeyDesc": {
-    "message": "Збій біометричного розблокування. Біометричний секретний ключ не зміг розблокувати сховище. Спробуйте налаштувати біометрію знову."
-  },
   "nativeMessagingWrongUserKeyTitle": {
     "message": "Біометричний ключ відрізняється"
+  },
+  "nativeMessagingWrongUserKeyDesc": {
+    "message": "Збій біометричного розблокування. Біометричний секретний ключ не зміг розблокувати сховище. Спробуйте налаштувати біометрію знову."
   },
   "biometricsNotEnabledTitle": {
     "message": "Біометрію не налаштовано"
@@ -2073,6 +2286,12 @@
   },
   "biometricsNotUnlockedDesc": {
     "message": "Розблокуйте цього користувача в програмі для комп'ютера і повторіть спробу."
+  },
+  "biometricsNotAvailableTitle": {
+    "message": "Біометричне розблокування недоступне"
+  },
+  "biometricsNotAvailableDesc": {
+    "message": "Біометричне розблокування наразі недоступне. Повторіть спробу пізніше."
   },
   "biometricsFailedTitle": {
     "message": "Збій біометрії"
@@ -2135,8 +2354,29 @@
   "excludedDomainsSavedSuccess": {
     "message": "Виняток для домену збережено"
   },
+  "limitSendViews": {
+    "message": "Ліміт переглядів"
+  },
+  "limitSendViewsHint": {
+    "message": "Ніхто не може переглянути це відправлення після досягнення ліміту.",
+    "description": "Displayed under the limit views field on Send"
+  },
+  "limitSendViewsCount": {
+    "message": "Залишок переглядів: $ACCESSCOUNT$",
+    "description": "Displayed under the limit views field on Send",
+    "placeholders": {
+      "accessCount": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
   "send": {
     "message": "Відправлення",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendDetails": {
+    "message": "Надіслати подробиці",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
   "searchSends": {
@@ -2150,12 +2390,18 @@
   "sendTypeText": {
     "message": "Текст"
   },
+  "sendTypeTextToShare": {
+    "message": "Текст для поширення"
+  },
   "sendTypeFile": {
     "message": "Файл"
   },
   "allSends": {
     "message": "Усі відправлення",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "hideTextByDefault": {
+    "message": "Типово приховувати текст"
   },
   "maxAccessCountReached": {
     "message": "Досягнуто максимальної кількості доступів",
@@ -2208,6 +2454,10 @@
     "message": "Ви дійсно хочете видалити це відправлення?",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "deleteSendPermanentConfirmation": {
+    "message": "Ви дійсно хочете остаточно видалити це відправлення?",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "editSend": {
     "message": "Редагування",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
@@ -2228,6 +2478,10 @@
   },
   "deletionDateDesc": {
     "message": "Відправлення буде остаточно видалено у вказаний час.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "deletionDateDescV2": {
+    "message": "Відправлення буде остаточно видалено у вказану дату.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
   "expirationDate": {
@@ -2261,6 +2515,10 @@
   },
   "sendPasswordDesc": {
     "message": "Ви можете встановити пароль для доступу до цього відправлення.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendPasswordDescV3": {
+    "message": "За бажання додайте пароль для отримувачів цього відправлення.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
   "sendNotesDesc": {
@@ -2308,7 +2566,25 @@
     "message": "Відправлення успішно створено!",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
-  "sendAvailability": {
+  "sendExpiresInHoursSingle": {
+    "message": "Це відправлення буде доступним будь-кому за посиланням протягом 1 години.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInHours": {
+    "message": "Це відправлення буде доступним будь-кому за посиланням протягом $HOURS$ годин.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "sendExpiresInDaysSingle": {
+    "message": "Це відправлення буде доступним будь-кому за посиланням протягом 1 дня.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendExpiresInDays": {
     "message": "Це відправлення буде доступним будь-кому за посиланням протягом $DAYS$ днів.",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
     "placeholders": {
@@ -2326,6 +2602,14 @@
     "message": "Відправлення збережено",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "sendFilePopoutDialogText": {
+    "message": "Відкріпити розширення?",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendFilePopoutDialogDesc": {
+    "message": "Щоб створити відправлення файлу, необхідно відкріпити розширення в окреме вікно.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "sendLinuxChromiumFileWarning": {
     "message": "Щоб вибрати файл, відкрийте розширення в бічній панелі (якщо можливо) або в новому вікні, натиснувши цей банер."
   },
@@ -2334,6 +2618,9 @@
   },
   "sendSafariFileWarning": {
     "message": "Щоб вибрати файл з використанням Safari, відкрийте розширення в новому вікні, натиснувши на цей банер."
+  },
+  "popOut": {
+    "message": "Відкріпити"
   },
   "sendFileCalloutHeader": {
     "message": "Перед початком"
@@ -2367,6 +2654,9 @@
   },
   "hideEmail": {
     "message": "Приховувати мою адресу електронної пошти від отримувачів."
+  },
+  "hideYourEmail": {
+    "message": "Приховати адресу е-пошти від отримувачів."
   },
   "sendOptionsPolicyInEffect": {
     "message": "На параметри відправлень впливають одна чи декілька політик організації."
@@ -2425,6 +2715,15 @@
     "message": "Ваша організація вимагає, щоб ви встановили головний пароль.",
     "description": "Used as a card title description on the set password page to explain why the user is there"
   },
+  "cardMetrics": {
+    "message": "з $TOTAL$",
+    "placeholders": {
+      "total": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
   "verificationRequired": {
     "message": "Потрібне підтвердження",
     "description": "Default title for the user verification dialog."
@@ -2435,8 +2734,37 @@
   "minutes": {
     "message": "Хвилин"
   },
+  "vaultTimeoutPolicyAffectingOptions": {
+    "message": "До налаштувань часу очікування застосовано вимоги політики компанії"
+  },
   "vaultTimeoutPolicyInEffect": {
     "message": "Політикою вашої організації встановлено максимальний дозволений час очікування сховища $HOURS$ годин, $MINUTES$ хвилин.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      },
+      "minutes": {
+        "content": "$2",
+        "example": "5"
+      }
+    }
+  },
+  "vaultTimeoutPolicyInEffect1": {
+    "message": "$HOURS$ год і $MINUTES$ хв максимум.",
+    "placeholders": {
+      "hours": {
+        "content": "$1",
+        "example": "5"
+      },
+      "minutes": {
+        "content": "$2",
+        "example": "5"
+      }
+    }
+  },
+  "vaultTimeoutPolicyMaximumError": {
+    "message": "Час очікування перевищує обмеження, встановлене вашою організацією: $HOURS$ год і $MINUTES$ хв максимум",
     "placeholders": {
       "hours": {
         "content": "$1",
@@ -2552,6 +2880,43 @@
   "generateUsername": {
     "message": "Генерувати ім'я користувача"
   },
+  "generateEmail": {
+    "message": "Генерувати е-пошту"
+  },
+  "spinboxBoundariesHint": {
+    "message": "Значення має бути між $MIN$ та $MAX$.",
+    "description": "Explains spin box minimum and maximum values to the user",
+    "placeholders": {
+      "min": {
+        "content": "$1",
+        "example": "8"
+      },
+      "max": {
+        "content": "$2",
+        "example": "128"
+      }
+    }
+  },
+  "passwordLengthRecommendationHint": {
+    "message": " Використовуйте $RECOMMENDED$ або більше символів, щоб згенерувати надійний пароль.",
+    "description": "Appended to `spinboxBoundariesHint` to recommend a length to the user. This must include any language-specific 'sentence' separator characters (e.g. a space in english).",
+    "placeholders": {
+      "recommended": {
+        "content": "$1",
+        "example": "14"
+      }
+    }
+  },
+  "passphraseNumWordsRecommendationHint": {
+    "message": " Використовуйте $RECOMMENDED$ або більше слів, щоб згенерувати надійну парольну фразу.",
+    "description": "Appended to `spinboxBoundariesHint` to recommend a number of words to the user. This must include any language-specific 'sentence' separator characters (e.g. a space in english).",
+    "placeholders": {
+      "recommended": {
+        "content": "$1",
+        "example": "6"
+      }
+    }
+  },
   "usernameType": {
     "message": "Тип імені користувача"
   },
@@ -2591,6 +2956,14 @@
   },
   "forwardedEmailDesc": {
     "message": "Згенеруйте псевдонім е-пошти зі стороннім сервісом пересилання."
+  },
+  "forwarderDomainName": {
+    "message": "Домен електронної пошти",
+    "description": "Labels the domain name email forwarder service option"
+  },
+  "forwarderDomainNameHint": {
+    "message": "Виберіть домен, який підтримується вибраною службою",
+    "description": "Guidance provided for email forwarding services that support multiple email domains."
   },
   "forwarderError": {
     "message": "Помилка $SERVICENAME$: $ERRORMESSAGE$",
@@ -2791,11 +3164,26 @@
   "resendNotification": {
     "message": "Надіслати сповіщення ще раз"
   },
+  "viewAllLogInOptions": {
+    "message": "Переглянути всі варіанти входу"
+  },
   "viewAllLoginOptions": {
     "message": "Переглянути всі варіанти входу"
   },
   "notificationSentDevice": {
     "message": "Сповіщення було надіслано на ваш пристрій."
+  },
+  "aNotificationWasSentToYourDevice": {
+    "message": "Сповіщення надіслано на ваш пристрій"
+  },
+  "makeSureYourAccountIsUnlockedAndTheFingerprintEtc": {
+    "message": "Переконайтеся, що ваш обліковий запис розблоковано і фраза відбитка на іншому пристрої збігається"
+  },
+  "youWillBeNotifiedOnceTheRequestIsApproved": {
+    "message": "Після схвалення запиту ви отримаєте сповіщення"
+  },
+  "needAnotherOptionV1": {
+    "message": "Потрібен інший варіант?"
   },
   "loginInitiated": {
     "message": "Ініційовано вхід"
@@ -2887,14 +3275,20 @@
       }
     }
   },
-  "loggingInOn": {
-    "message": "Увійти на"
-  },
   "opensInANewWindow": {
     "message": "Відкривається у новому вікні"
   },
+  "rememberThisDeviceToMakeFutureLoginsSeamless": {
+    "message": "Remember this device to make future logins seamless"
+  },
   "deviceApprovalRequired": {
     "message": "Необхідне підтвердження пристрою. Виберіть варіант підтвердження нижче:"
+  },
+  "deviceApprovalRequiredV2": {
+    "message": "Device approval required"
+  },
+  "selectAnApprovalOptionBelow": {
+    "message": "Select an approval option below"
   },
   "rememberThisDevice": {
     "message": "Запам'ятати цей пристрій"
@@ -2968,6 +3362,9 @@
   },
   "userEmailMissing": {
     "message": "Немає адреси електронної пошти"
+  },
+  "activeUserEmailNotFoundLoggingYouOut": {
+    "message": "Active user email not found. Logging you out."
   },
   "deviceTrusted": {
     "message": "Довірений пристрій"
@@ -3402,6 +3799,12 @@
   "typePasskey": {
     "message": "Ключ доступу"
   },
+  "accessing": {
+    "message": "Доступ"
+  },
+  "loggedInExclamation": {
+    "message": "Logged in!"
+  },
   "passkeyNotCopied": {
     "message": "Ключ доступу не буде скопійовано"
   },
@@ -3411,7 +3814,7 @@
   "passkeyFeatureIsNotImplementedForAccountsWithoutMasterPassword": {
     "message": "Сайт ініціює обов'язкову верифікацію. Ця функція ще не реалізована для облікових записів без головного пароля."
   },
-  "logInWithPasskey": {
+  "logInWithPasskeyQuestion": {
     "message": "Увійти з ключем доступу?"
   },
   "passkeyAlreadyExists": {
@@ -3423,6 +3826,12 @@
   "noMatchingPasskeyLogin": {
     "message": "У вас немає відповідних записів для цього сайту."
   },
+  "noMatchingLoginsForSite": {
+    "message": "Немає відповідних записів для цього сайту"
+  },
+  "searchSavePasskeyNewLogin": {
+    "message": "Шукати або зберегти ключ доступу як новий запис"
+  },
   "confirm": {
     "message": "Підтвердити"
   },
@@ -3432,8 +3841,11 @@
   "savePasskeyNewLogin": {
     "message": "Зберегти ключ доступу як новий запис"
   },
-  "choosePasskey": {
+  "chooseCipherForPasskeySave": {
     "message": "Виберіть запис для збереження цього ключа доступу"
+  },
+  "chooseCipherForPasskeyAuth": {
+    "message": "Виберіть ключ доступу для входу"
   },
   "passkeyItem": {
     "message": "Ключ доступу"
@@ -3630,8 +4042,16 @@
     "message": "Облікові дані успішно збережено!",
     "description": "Notification message for when saving credentials has succeeded."
   },
+  "passwordSaved": {
+    "message": "Пароль збережено!",
+    "description": "Notification message for when saving credentials has succeeded."
+  },
   "updateCipherAttemptSuccess": {
     "message": "Облікові дані успішно оновлено!",
+    "description": "Notification message for when updating credentials has succeeded."
+  },
+  "passwordUpdated": {
+    "message": "Пароль оновлено!",
     "description": "Notification message for when updating credentials has succeeded."
   },
   "saveCipherAttemptFailed": {
@@ -3876,6 +4296,21 @@
   "filters": {
     "message": "Фільтри"
   },
+  "filterVault": {
+    "message": "Фільтр сховища"
+  },
+  "filterApplied": {
+    "message": "Застосовано один фільтр"
+  },
+  "filterAppliedPlural": {
+    "message": "Застосовані фільтри: $COUNT$",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
   "personalDetails": {
     "message": "Особисті дані"
   },
@@ -3960,6 +4395,12 @@
   "autoFillOnPageLoad": {
     "message": "Автоматично заповнювати під час завантаження сторінки?"
   },
+  "cardExpiredTitle": {
+    "message": "Протермінована картка"
+  },
+  "cardExpiredMessage": {
+    "message": "Якщо ви її поновили, оновіть інформацію"
+  },
   "cardDetails": {
     "message": "Подробиці картки"
   },
@@ -3971,6 +4412,12 @@
         "example": "Visa"
       }
     }
+  },
+  "enableAnimations": {
+    "message": "Увімкнути анімацію"
+  },
+  "showAnimations": {
+    "message": "Показати анімації"
   },
   "addAccount": {
     "message": "Додати обліковий запис"
@@ -4187,8 +4634,14 @@
   "itemLocation": {
     "message": "Розташування запису"
   },
+  "fileSend": {
+    "message": "Відправлення файлу"
+  },
   "fileSends": {
     "message": "Відправлення файлів"
+  },
+  "textSend": {
+    "message": "Відправлення тексту"
   },
   "textSends": {
     "message": "Відправлення тексту"
@@ -4210,5 +4663,239 @@
   },
   "enterprisePolicyRequirementsApplied": {
     "message": "До цього налаштування застосовано вимоги політики компанії"
+  },
+  "sshPrivateKey": {
+    "message": "Закритий ключ"
+  },
+  "sshPublicKey": {
+    "message": "Відкритий ключ"
+  },
+  "sshFingerprint": {
+    "message": "Цифровий відбиток"
+  },
+  "sshKeyAlgorithm": {
+    "message": "Тип ключа"
+  },
+  "sshKeyAlgorithmED25519": {
+    "message": "ED25519"
+  },
+  "sshKeyAlgorithmRSA2048": {
+    "message": "RSA 2048-Bit"
+  },
+  "sshKeyAlgorithmRSA3072": {
+    "message": "RSA 3072-Bit"
+  },
+  "sshKeyAlgorithmRSA4096": {
+    "message": "RSA 4096-Bit"
+  },
+  "retry": {
+    "message": "Повторити спробу"
+  },
+  "vaultCustomTimeoutMinimum": {
+    "message": "Мінімальний власний час очікування – 1 хвилина."
+  },
+  "additionalContentAvailable": {
+    "message": "Доступний додатковий вміст"
+  },
+  "fileSavedToDevice": {
+    "message": "Файл збережено на пристрої. Ви можете його знайти у теці завантажень."
+  },
+  "showCharacterCount": {
+    "message": "Показати кількість символів"
+  },
+  "hideCharacterCount": {
+    "message": "Приховати кількість символів"
+  },
+  "itemsInTrash": {
+    "message": "Записи в смітнику"
+  },
+  "noItemsInTrash": {
+    "message": "Немає записів у смітнику"
+  },
+  "noItemsInTrashDesc": {
+    "message": "Видалені записи з'являтимуться тут і будуть остаточно видалені через 30 днів"
+  },
+  "trashWarning": {
+    "message": "Записи, що знаходяться в смітнику понад 30 днів, автоматично видалятимуться"
+  },
+  "restore": {
+    "message": "Відновити"
+  },
+  "deleteForever": {
+    "message": "Видалити остаточно"
+  },
+  "noEditPermissions": {
+    "message": "Вам не дозволено редагувати цей запис"
+  },
+  "authenticating": {
+    "message": "Аутентифікація"
+  },
+  "fillGeneratedPassword": {
+    "message": "Заповнити згенерований пароль",
+    "description": "Heading for the password generator within the inline menu"
+  },
+  "passwordRegenerated": {
+    "message": "Пароль згенеровано повторно",
+    "description": "Notification message for when a password has been regenerated"
+  },
+  "saveLoginToBitwarden": {
+    "message": "Зберегти запис у Bitwarden?",
+    "description": "Confirmation message for saving a login to Bitwarden"
+  },
+  "spaceCharacterDescriptor": {
+    "message": "Пробіл",
+    "description": "Represents the space key in screen reader content as a readable word"
+  },
+  "tildeCharacterDescriptor": {
+    "message": "Тильда",
+    "description": "Represents the ~ key in screen reader content as a readable word"
+  },
+  "backtickCharacterDescriptor": {
+    "message": "Зворотний апостроф",
+    "description": "Represents the ` key in screen reader content as a readable word"
+  },
+  "exclamationCharacterDescriptor": {
+    "message": "Знак оклику",
+    "description": "Represents the ! key in screen reader content as a readable word"
+  },
+  "atSignCharacterDescriptor": {
+    "message": "Знак @ (At)",
+    "description": "Represents the @ key in screen reader content as a readable word"
+  },
+  "hashSignCharacterDescriptor": {
+    "message": "Знак решітки",
+    "description": "Represents the # key in screen reader content as a readable word"
+  },
+  "dollarSignCharacterDescriptor": {
+    "message": "Знак долара",
+    "description": "Represents the $ key in screen reader content as a readable word"
+  },
+  "percentSignCharacterDescriptor": {
+    "message": "Знак відсотка",
+    "description": "Represents the % key in screen reader content as a readable word"
+  },
+  "caretCharacterDescriptor": {
+    "message": "Карет",
+    "description": "Represents the ^ key in screen reader content as a readable word"
+  },
+  "ampersandCharacterDescriptor": {
+    "message": "Амперсанд",
+    "description": "Represents the & key in screen reader content as a readable word"
+  },
+  "asteriskCharacterDescriptor": {
+    "message": "Зірочка",
+    "description": "Represents the * key in screen reader content as a readable word"
+  },
+  "parenLeftCharacterDescriptor": {
+    "message": "Ліва дужка",
+    "description": "Represents the ( key in screen reader content as a readable word"
+  },
+  "parenRightCharacterDescriptor": {
+    "message": "Права дужка",
+    "description": "Represents the ) key in screen reader content as a readable word"
+  },
+  "hyphenCharacterDescriptor": {
+    "message": "Знак підкреслення",
+    "description": "Represents the _ key in screen reader content as a readable word"
+  },
+  "underscoreCharacterDescriptor": {
+    "message": "Дефіс",
+    "description": "Represents the - key in screen reader content as a readable word"
+  },
+  "plusCharacterDescriptor": {
+    "message": "Плюс",
+    "description": "Represents the + key in screen reader content as a readable word"
+  },
+  "equalsCharacterDescriptor": {
+    "message": "Дорівнює",
+    "description": "Represents the = key in screen reader content as a readable word"
+  },
+  "braceLeftCharacterDescriptor": {
+    "message": "Ліва фігурна дужка",
+    "description": "Represents the { key in screen reader content as a readable word"
+  },
+  "braceRightCharacterDescriptor": {
+    "message": "Права фігурна дужка",
+    "description": "Represents the } key in screen reader content as a readable word"
+  },
+  "bracketLeftCharacterDescriptor": {
+    "message": "Ліва квадратна дужка",
+    "description": "Represents the [ key in screen reader content as a readable word"
+  },
+  "bracketRightCharacterDescriptor": {
+    "message": "Права квадратна дужка",
+    "description": "Represents the ] key in screen reader content as a readable word"
+  },
+  "pipeCharacterDescriptor": {
+    "message": "Вертикальна риска",
+    "description": "Represents the | key in screen reader content as a readable word"
+  },
+  "backSlashCharacterDescriptor": {
+    "message": "Обернена скісна риска",
+    "description": "Represents the back slash key in screen reader content as a readable word"
+  },
+  "colonCharacterDescriptor": {
+    "message": "Двокрапка",
+    "description": "Represents the : key in screen reader content as a readable word"
+  },
+  "semicolonCharacterDescriptor": {
+    "message": "Крапка з комою",
+    "description": "Represents the ; key in screen reader content as a readable word"
+  },
+  "doubleQuoteCharacterDescriptor": {
+    "message": "Подвійні лапки",
+    "description": "Represents the double quote key in screen reader content as a readable word"
+  },
+  "singleQuoteCharacterDescriptor": {
+    "message": "Одинарні лапки",
+    "description": "Represents the ' key in screen reader content as a readable word"
+  },
+  "lessThanCharacterDescriptor": {
+    "message": "Менше",
+    "description": "Represents the < key in screen reader content as a readable word"
+  },
+  "greaterThanCharacterDescriptor": {
+    "message": "Більше",
+    "description": "Represents the > key in screen reader content as a readable word"
+  },
+  "commaCharacterDescriptor": {
+    "message": "Кома",
+    "description": "Represents the , key in screen reader content as a readable word"
+  },
+  "periodCharacterDescriptor": {
+    "message": "Крапка",
+    "description": "Represents the . key in screen reader content as a readable word"
+  },
+  "questionCharacterDescriptor": {
+    "message": "Знак питання",
+    "description": "Represents the ? key in screen reader content as a readable word"
+  },
+  "forwardSlashCharacterDescriptor": {
+    "message": "Скісна риска",
+    "description": "Represents the / key in screen reader content as a readable word"
+  },
+  "lowercaseAriaLabel": {
+    "message": "Малі літери"
+  },
+  "uppercaseAriaLabel": {
+    "message": "Великі літери"
+  },
+  "generatedPassword": {
+    "message": "Згенерований пароль"
+  },
+  "compactMode": {
+    "message": "Компактний режим"
+  },
+  "beta": {
+    "message": "Бета"
+  },
+  "extensionWidth": {
+    "message": "Extension width"
+  },
+  "wide": {
+    "message": "Wide"
+  },
+  "extraWide": {
+    "message": "Extra wide"
   }
 }

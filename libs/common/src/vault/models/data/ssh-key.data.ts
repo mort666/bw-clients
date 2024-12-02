@@ -1,11 +1,11 @@
-import { SSHKeyApi } from "../api/ssh-key.api";
+import { SshKeyApi } from "../api/ssh-key.api";
 
-export class SSHKeyData {
+export class SshKeyData {
   privateKey: string;
   publicKey: string;
   keyFingerprint: string;
 
-  constructor(data?: SSHKeyApi) {
+  constructor(data?: SshKeyApi) {
     if (data == null) {
       return;
     }

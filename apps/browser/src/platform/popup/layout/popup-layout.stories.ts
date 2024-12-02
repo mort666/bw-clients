@@ -3,7 +3,9 @@ import { Component, importProvidersFrom } from "@angular/core";
 import { RouterModule } from "@angular/router";
 import { Meta, StoryObj, applicationConfig, moduleMetadata } from "@storybook/angular";
 
+import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { SendService } from "@bitwarden/common/tools/send/services/send.service.abstraction";
 import {
   AvatarModule,
   BadgeModule,
@@ -37,7 +39,7 @@ class ExtensionContainerComponent {}
 @Component({
   selector: "vault-placeholder",
   template: `
-    <bit-section disableMargin>
+    <bit-section>
       <bit-item-group aria-label="Mock Vault Items">
         <bit-item *ngFor="let item of data; index as i">
           <button bit-item-content>
@@ -115,11 +117,7 @@ class MockCurrentAccountComponent {}
 
 @Component({
   selector: "mock-search",
-  template: `
-    <div class="tw-p-4">
-      <bit-search placeholder="Search"> </bit-search>
-    </div>
-  `,
+  template: ` <bit-search placeholder="Search"> </bit-search> `,
   standalone: true,
   imports: [SearchModule],
 })
@@ -315,7 +313,35 @@ export default {
               back: "Back",
               loading: "Loading",
               search: "Search",
+              vault: "Vault",
+              generator: "Generator",
+              send: "Send",
+              settings: "Settings",
             });
+          },
+        },
+        {
+          provide: PolicyService,
+          useFactory: () => {
+            return {
+              policyAppliesToActiveUser$: () => {
+                return {
+                  pipe: () => ({
+                    subscribe: () => ({}),
+                  }),
+                };
+              },
+            };
+          },
+        },
+        {
+          provide: SendService,
+          useFactory: () => {
+            return {
+              sends$: () => {
+                return { pipe: () => ({}) };
+              },
+            };
           },
         },
       ],
@@ -384,6 +410,46 @@ export const PopupPageWithFooter: Story = {
   }),
 };
 
+export const CompactMode: Story = {
+  render: (args) => ({
+    props: args,
+    template: /* HTML */ `
+      <div class="tw-flex tw-gap-6 tw-text-main">
+        <div id="regular-example">
+          <p>Relaxed</p>
+          <p class="example-label"></p>
+          <extension-container>
+            <mock-vault-subpage></mock-vault-subpage>
+          </extension-container>
+        </div>
+
+        <div id="compact-example" class="tw-bit-compact">
+          <p>Compact</p>
+          <p class="example-label"></p>
+          <extension-container>
+            <mock-vault-subpage></mock-vault-subpage>
+          </extension-container>
+        </div>
+      </div>
+    `,
+  }),
+  play: async (context) => {
+    const canvasEl = context.canvasElement;
+    const updateLabel = (containerId: string) => {
+      const compact = canvasEl.querySelector(
+        `#${containerId} [data-testid=popup-layout-scroll-region]`,
+      );
+      const label = canvasEl.querySelector(`#${containerId} .example-label`);
+      const percentVisible =
+        100 -
+        Math.round((100 * (compact.scrollHeight - compact.clientHeight)) / compact.scrollHeight);
+      label.textContent = `${percentVisible}% above the fold`;
+    };
+    updateLabel("compact-example");
+    updateLabel("regular-example");
+  },
+};
+
 export const PoppedOut: Story = {
   render: (args) => ({
     props: args,
@@ -445,6 +511,28 @@ export const TransparentHeader: Story = {
           <vault-placeholder></vault-placeholder>
         </popup-page>
       </extension-container>
+    `,
+  }),
+};
+
+export const WidthOptions: Story = {
+  render: (args) => ({
+    props: args,
+    template: /* HTML */ `
+      <div class="tw-flex tw-flex-col tw-gap-4 tw-text-main">
+        <div>Default:</div>
+        <div class="tw-h-[640px] tw-w-[380px] tw-border tw-border-solid tw-border-secondary-300">
+          <mock-vault-page></mock-vault-page>
+        </div>
+        <div>Wide:</div>
+        <div class="tw-h-[640px] tw-w-[480px] tw-border tw-border-solid tw-border-secondary-300">
+          <mock-vault-page></mock-vault-page>
+        </div>
+        <div>Extra wide:</div>
+        <div class="tw-h-[640px] tw-w-[600px] tw-border tw-border-solid tw-border-secondary-300">
+          <mock-vault-page></mock-vault-page>
+        </div>
+      </div>
     `,
   }),
 };

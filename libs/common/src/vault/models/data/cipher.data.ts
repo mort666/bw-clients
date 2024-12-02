@@ -11,7 +11,7 @@ import { IdentityData } from "./identity.data";
 import { LoginData } from "./login.data";
 import { PasswordHistoryData } from "./password-history.data";
 import { SecureNoteData } from "./secure-note.data";
-import { SSHKeyData } from "./ssh-key.data";
+import { SshKeyData } from "./ssh-key.data";
 
 export class CipherData {
   id: string;
@@ -29,7 +29,7 @@ export class CipherData {
   secureNote?: SecureNoteData;
   card?: CardData;
   identity?: IdentityData;
-  sshKey?: SSHKeyData;
+  sshKey?: SshKeyData;
   fields?: FieldData[];
   attachments?: AttachmentData[];
   passwordHistory?: PasswordHistoryData[];
@@ -74,8 +74,8 @@ export class CipherData {
       case CipherType.Identity:
         this.identity = new IdentityData(response.identity);
         break;
-      case CipherType.SSHKey:
-        this.sshKey = new SSHKeyData(response.sshKey);
+      case CipherType.SshKey:
+        this.sshKey = new SshKeyData(response.sshKey);
         break;
       default:
         break;
