@@ -675,7 +675,7 @@ describe("1Password 1Pux Importer", () => {
     const result = await importer.parse(jsonString);
     expect(result != null).toBe(true);
     const cipher = result.ciphers.shift();
-    expect(cipher.type).toEqual(CipherType.SSHKey);
+    expect(cipher.type).toEqual(CipherType.SshKey);
     expect(cipher.name).toEqual("Some SSH Key");
     expect(cipher.notes).toEqual("SSH Key Note");
     expect(cipher.sshKey.privateKey).toEqual(
