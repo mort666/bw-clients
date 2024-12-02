@@ -234,6 +234,8 @@ const safeProviders: SafeProvider[] = [
       BiometricStateService,
       AccountServiceAbstraction,
       LogService,
+      PlatformUtilsServiceAbstraction,
+      PinServiceAbstraction,
     ],
   }),
   safeProvider({

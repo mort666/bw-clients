@@ -1,7 +1,10 @@
 import { firstValueFrom, map, timeout } from "rxjs";
 
+import { PinServiceAbstraction } from "@bitwarden/auth/common";
+import { ClientType } from "@bitwarden/common/enums";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { BiometricStateService } from "@bitwarden/key-management";
 
 import { VaultTimeoutSettingsService } from "../../abstractions/vault-timeout/vault-timeout-settings.service";
@@ -22,6 +25,8 @@ export class DefaultProcessReloadService implements ProcessReloadServiceAbstract
     private biometricStateService: BiometricStateService,
     private accountService: AccountService,
     private logService: LogService,
+    private platformUtilsService: PlatformUtilsService,
+    private pinService: PinServiceAbstraction,
   ) {}
 
   async startProcessReload(authService: AuthService): Promise<void> {
@@ -47,6 +52,20 @@ export class DefaultProcessReloadService implements ProcessReloadServiceAbstract
     if (this.reloadInterval != null) {
       this.logService.info(`[ProcessReloadService] Process reload already in progress`);
       return;
+    }
+
+    if (this.platformUtilsService.getClientType() !== ClientType.Desktop) {
+      // If there is an active user, check if they have a pinKeyEncryptedUserKeyEphemeral. If so, prevent process reload upon lock.
+      const userId = (await firstValueFrom(this.accountService.activeAccount$))?.id;
+      if (userId != null) {
+        const ephemeralPin = await this.pinService.getPinKeyEncryptedUserKeyEphemeral(userId);
+        if (ephemeralPin != null) {
+          this.logService.info(
+            `[ProcessReloadService] User ${userId} has ephemeral pin, skipping process reload`,
+          );
+          return;
+        }
+      }
     }
 
     this.cancelProcessReload();
