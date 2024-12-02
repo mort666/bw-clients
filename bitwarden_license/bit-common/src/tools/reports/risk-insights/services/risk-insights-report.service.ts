@@ -38,17 +38,17 @@ export type CipherHealthReportDetail = CipherView & {
   trimmedUris: string[];
 };
 
-export type WeakPasswordDetail = {
+type WeakPasswordDetail = {
   score: number;
   detailValue: WeakPasswordScore;
 };
 
-export type WeakPasswordScore = {
+type WeakPasswordScore = {
   label: string;
   badgeVariant: BadgeVariant;
 };
 
-export type ExposedPasswordDetail = {
+type ExposedPasswordDetail = {
   exposedXTimes: number;
 };
 
@@ -99,33 +99,35 @@ export class RiskInsightsReportService {
     return this.getApplicationHealthReport(cipherHealthUriReport);
   }
 
-  async getCipherDetails(
+  private async getCipherDetails(
     ciphers: CipherView[],
     memberDetails: MemberDetailsFlat[],
   ): Promise<CipherHealthReportDetail[]> {
     const cipherHealthReports: CipherHealthReportDetail[] = [];
 
     for (const cipher of ciphers) {
-      const weakPassword = this.findWeakPassword(cipher);
-      // Looping over all ciphers needs to happen first to determine reused passwords over all ciphers.
-      // Store in the set and evaluate later
-      this.findReusedPassword(cipher);
-      const exposedPassword = await this.findExposedPassword(cipher);
+      if (this.validateCipher(cipher)) {
+        const weakPassword = this.findWeakPassword(cipher);
+        // Looping over all ciphers needs to happen first to determine reused passwords over all ciphers.
+        // Store in the set and evaluate later
+        this.findReusedPassword(cipher);
+        const exposedPassword = await this.findExposedPassword(cipher);
 
-      // Get the cipher members
-      const cipherMembers = memberDetails.filter((x) => x.cipherId === cipher.id);
+        // Get the cipher members
+        const cipherMembers = memberDetails.filter((x) => x.cipherId === cipher.id);
 
-      // Trim uris to host name and create the cipher health report
-      const cipherTrimmedUris = this.getTrimmedCipherUris(cipher);
-      const cipherHealth = {
-        ...cipher,
-        weakPasswordDetail: weakPassword,
-        exposedPasswordDetail: exposedPassword,
-        cipherMembers: cipherMembers,
-        trimmedUris: cipherTrimmedUris,
-      } as CipherHealthReportDetail;
+        // Trim uris to host name and create the cipher health report
+        const cipherTrimmedUris = this.getTrimmedCipherUris(cipher);
+        const cipherHealth = {
+          ...cipher,
+          weakPasswordDetail: weakPassword,
+          exposedPasswordDetail: exposedPassword,
+          cipherMembers: cipherMembers,
+          trimmedUris: cipherTrimmedUris,
+        } as CipherHealthReportDetail;
 
-      cipherHealthReports.push(cipherHealth);
+        cipherHealthReports.push(cipherHealth);
+      }
     }
 
     // loop for reused passwords
@@ -138,7 +140,7 @@ export class RiskInsightsReportService {
   }
 
   // Flattens the cipher to trimmed uris. Used for the raw data + uri
-  getCipherUriDetails(
+  private getCipherUriDetails(
     cipherHealthReport: CipherHealthReportDetail[],
   ): CipherHealthReportUriDetail[] {
     return cipherHealthReport.flatMap((rpt) =>
@@ -148,7 +150,7 @@ export class RiskInsightsReportService {
 
   // Loop through the flattened cipher to uri data. If the item exists it's values need to be updated with the new item.
   // If the item is new, create and add the object with the flattened details
-  getApplicationHealthReport(
+  private getApplicationHealthReport(
     cipherHealthUriReport: CipherHealthReportUriDetail[],
   ): ApplicationHealthReportDetail[] {
     const appReports: ApplicationHealthReportDetail[] = [];
@@ -169,38 +171,19 @@ export class RiskInsightsReportService {
     return appReports;
   }
 
-  findReusedPassword(cipher: CipherView) {
-    const { type, login, isDeleted, viewPassword } = cipher;
-    if (
-      type !== CipherType.Login ||
-      login.password == null ||
-      login.password === "" ||
-      isDeleted ||
-      !viewPassword
-    ) {
-      return;
-    }
-
-    if (this.passwordUseMap.has(login.password)) {
-      this.passwordUseMap.set(login.password, (this.passwordUseMap.get(login.password) || 0) + 1);
+  private findReusedPassword(cipher: CipherView) {
+    if (this.passwordUseMap.has(cipher.login.password)) {
+      this.passwordUseMap.set(
+        cipher.login.password,
+        (this.passwordUseMap.get(cipher.login.password) || 0) + 1,
+      );
     } else {
-      this.passwordUseMap.set(login.password, 1);
+      this.passwordUseMap.set(cipher.login.password, 1);
     }
   }
 
-  async findExposedPassword(cipher: CipherView): Promise<ExposedPasswordDetail> {
-    const { type, login, isDeleted, viewPassword } = cipher;
-    if (
-      type !== CipherType.Login ||
-      login.password == null ||
-      login.password === "" ||
-      isDeleted ||
-      !viewPassword
-    ) {
-      return null;
-    }
-
-    const exposedCount = await this.auditService.passwordLeaked(login.password);
+  private async findExposedPassword(cipher: CipherView): Promise<ExposedPasswordDetail> {
+    const exposedCount = await this.auditService.passwordLeaked(cipher.login.password);
     if (exposedCount > 0) {
       const exposedDetail = { exposedXTimes: exposedCount } as ExposedPasswordDetail;
       return exposedDetail;
@@ -208,26 +191,15 @@ export class RiskInsightsReportService {
     return null;
   }
 
-  findWeakPassword(cipher: CipherView): WeakPasswordDetail {
-    const { type, login, isDeleted, viewPassword } = cipher;
-    if (
-      type !== CipherType.Login ||
-      login.password == null ||
-      login.password === "" ||
-      isDeleted ||
-      !viewPassword
-    ) {
-      return null;
-    }
-
+  private findWeakPassword(cipher: CipherView): WeakPasswordDetail {
     const hasUserName = this.isUserNameNotEmpty(cipher);
     let userInput: string[] = [];
     if (hasUserName) {
-      const atPosition = login.username.indexOf("@");
+      const atPosition = cipher.login.username.indexOf("@");
       if (atPosition > -1) {
         userInput = userInput
           .concat(
-            login.username
+            cipher.login.username
               .substring(0, atPosition)
               .trim()
               .toLowerCase()
@@ -235,7 +207,7 @@ export class RiskInsightsReportService {
           )
           .filter((i) => i.length >= 3);
       } else {
-        userInput = login.username
+        userInput = cipher.login.username
           .trim()
           .toLowerCase()
           .split(/[^A-Za-z0-9]/)
@@ -243,7 +215,7 @@ export class RiskInsightsReportService {
       }
     }
     const { score } = this.passwordStrengthService.getPasswordStrength(
-      login.password,
+      cipher.login.password,
       null,
       userInput.length > 0 ? userInput : null,
     );
@@ -346,7 +318,7 @@ export class RiskInsightsReportService {
   //   - Untrimmed Uris: https://gmail.com, gmail.com/login
   //   - Both would trim to gmail.com
   //   - The cipher trimmed uri list should only return on instance in the list
-  getTrimmedCipherUris(cipher: CipherView): string[] {
+  private getTrimmedCipherUris(cipher: CipherView): string[] {
     const cipherUris: string[] = [];
     const uris = cipher.login?.uris ?? [];
     uris.map((u: { uri: string }) => {
@@ -360,5 +332,24 @@ export class RiskInsightsReportService {
 
   private isUserNameNotEmpty(c: CipherView): boolean {
     return !Utils.isNullOrWhitespace(c.login.username);
+  }
+
+  /**
+   * Validates that the cipher is a login item, has a password
+   * is not deleted, and the user can view the password
+   * @param c the input cipher
+   */
+  private validateCipher(c: CipherView): boolean {
+    const { type, login, isDeleted, viewPassword } = c;
+    if (
+      type !== CipherType.Login ||
+      login.password == null ||
+      login.password === "" ||
+      isDeleted ||
+      !viewPassword
+    ) {
+      return false;
+    }
+    return true;
   }
 }
