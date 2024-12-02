@@ -68,9 +68,13 @@ export class RiskInsightsReportService {
     private memberCipherDetailsApiService: MemberCipherDetailsApiService,
   ) {}
 
-  // Report data from raw cipher health data.
-  // Can be used in the Raw Data diagnostic tab (just exclude the members in the view)
-  // and can be used in the raw data + members tab when including the members in the view
+  /**
+   * Report data from raw cipher health data.
+   * Can be used in the Raw Data diagnostic tab (just exclude the members in the view)
+   * and can be used in the raw data + members tab when including the members in the view
+   * @param organizationId
+   * @returns
+   */
   async generateRawDataReport(organizationId: string): Promise<CipherHealthReportDetail[]> {
     const allCiphers = await this.cipherService.getAllFromApiForOrganization(organizationId);
     const memberCipherDetails =
@@ -82,16 +86,24 @@ export class RiskInsightsReportService {
     return this.getCipherDetails(allCiphers, flattenedDetails);
   }
 
-  // Report data for raw cipher health broken out into the uris
-  // Can be used in the raw data + members + uri diagnostic report
+  /**
+   * Report data for raw cipher health broken out into the uris
+   * Can be used in the raw data + members + uri diagnostic report
+   * @param organizationId Id of the organization
+   * @returns Cipher health report data flattened to the uris
+   */
   async generateRawDataUriReport(organizationId: string): Promise<CipherHealthReportUriDetail[]> {
     const cipherHealthDetails = await this.generateRawDataReport(organizationId);
 
     return this.getCipherUriDetails(cipherHealthDetails);
   }
 
-  // Report data for the aggregation of uris to like uris and getting password/member counts,
-  // members, and at risk statuses.
+  /**
+   * Report data for the aggregation of uris to like uris and getting password/member counts,
+   * members, and at risk statuses.
+   * @param organizationId Id of the organization
+   * @returns The all applications health report data
+   */
   async generateApplicationsReport(
     organizationId: string,
   ): Promise<ApplicationHealthReportDetail[]> {
@@ -99,6 +111,13 @@ export class RiskInsightsReportService {
     return this.getApplicationHealthReport(cipherHealthUriReport);
   }
 
+  /**
+   * Associates the members with the ciphers they have access to. Calculates the password health.
+   * Finds the trimmed uris.
+   * @param ciphers Org ciphers
+   * @param memberDetails Org members
+   * @returns Cipher password health data with trimmed uris and associated members
+   */
   private async getCipherDetails(
     ciphers: CipherView[],
     memberDetails: MemberDetailsFlat[],
@@ -139,7 +158,11 @@ export class RiskInsightsReportService {
     return cipherHealthReports;
   }
 
-  // Flattens the cipher to trimmed uris. Used for the raw data + uri
+  /**
+   * Flattens the cipher to trimmed uris. Used for the raw data + uri
+   * @param cipherHealthReport Cipher health report with uris and members
+   * @returns Flattened cipher health details to uri
+   */
   private getCipherUriDetails(
     cipherHealthReport: CipherHealthReportDetail[],
   ): CipherHealthReportUriDetail[] {
@@ -148,8 +171,12 @@ export class RiskInsightsReportService {
     );
   }
 
-  // Loop through the flattened cipher to uri data. If the item exists it's values need to be updated with the new item.
-  // If the item is new, create and add the object with the flattened details
+  /**
+   * Loop through the flattened cipher to uri data. If the item exists it's values need to be updated with the new item.
+   * If the item is new, create and add the object with the flattened details
+   * @param cipherHealthUriReport Cipher and password health info broken out into their uris
+   * @returns Application health reports
+   */
   private getApplicationHealthReport(
     cipherHealthUriReport: CipherHealthReportUriDetail[],
   ): ApplicationHealthReportDetail[] {
@@ -241,8 +268,14 @@ export class RiskInsightsReportService {
     }
   }
 
-  // Create the new application health report detail object with the details from the cipher health report uri detail object
-  // update or create the at risk values if the item is at risk.
+  /**
+   * Create the new application health report detail object with the details from the cipher health report uri detail object
+   * update or create the at risk values if the item is at risk.
+   * @param newUriDetail New cipher uri detail
+   * @param isAtRisk If the cipher has a weak, exposed, or reused password it is at risk
+   * @param existingUriDetail The previously processed Uri item
+   * @returns The new or updated application health report detail
+   */
   private getApplicationReportDetail(
     newUriDetail: CipherHealthReportUriDetail,
     isAtRisk: boolean,
@@ -272,8 +305,12 @@ export class RiskInsightsReportService {
     return reportDetail;
   }
 
-  // Gets a distinct list of members given a list of members.
-  // Uses a set here to avoid using indexOf.
+  /**
+   * Get a distinct array of members from a combined list. Input list may contain
+   * duplicate members.
+   * @param orgMembers Input list of members
+   * @returns Distinct array of members
+   */
   private getUniqueMembers(orgMembers: MemberDetailsFlat[]): MemberDetailsFlat[] {
     const existingEmails = new Set<string>();
     const distinctUsers = orgMembers.filter((member) => {
@@ -312,12 +349,16 @@ export class RiskInsightsReportService {
     };
   }
 
-  // Trim the cipher uris down to get the password health application.
-  // The uri should only exist once after being trimmed. No duplication.
-  // Example:
-  //   - Untrimmed Uris: https://gmail.com, gmail.com/login
-  //   - Both would trim to gmail.com
-  //   - The cipher trimmed uri list should only return on instance in the list
+  /**
+   * Trim the cipher uris down to get the password health application.
+   * The uri should only exist once after being trimmed. No duplication.
+   * Example:
+   *   - Untrimmed Uris: https://gmail.com, gmail.com/login
+   *   - Both would trim to gmail.com
+   *   - The cipher trimmed uri list should only return on instance in the list
+   * @param cipher
+   * @returns distinct list of trimmed cipher uris
+   */
   private getTrimmedCipherUris(cipher: CipherView): string[] {
     const cipherUris: string[] = [];
     const uris = cipher.login?.uris ?? [];
