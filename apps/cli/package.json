@@ -42,6 +42,7 @@
     "package:bit:win": "pkg . --targets win-x64 --output ./dist/bit/windows/bw.exe",
     "package:bit:mac": "pkg . --targets macos-x64 --output ./dist/bit/macos/bw",
     "package:bit:lin": "pkg . --targets linux-x64 --output ./dist/bit/linux/bw",
+    "package:bit:lin-musl": "pkg . --targets alpine --output ./dist/bit/linux-musl/bw",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:watch:all": "jest --watchAll"
