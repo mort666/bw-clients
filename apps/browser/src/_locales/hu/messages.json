@@ -1125,6 +1125,10 @@
     "message": "FIGYELEM",
     "description": "WARNING (should stay in capitalized letters if the language permits)"
   },
+  "warningCapitalized": {
+    "message": "Figyelmeztetés",
+    "description": "Warning (should maintain locale-relevant capitalization)"
+  },
   "confirmVaultExport": {
     "message": "Széf exportálás megerősítése"
   },
@@ -1503,19 +1507,6 @@
   "enableAutoFillOnPageLoadDesc": {
     "message": "Ha egy bejelentkezési űrlap észlelésre került, az adatok automatikus kitöltése az oldal betöltésekor."
   },
-  "autofillOnPageLoadWarning": {
-    "message": "$OPENTAG$Warning:$CLOSETAG$ Compromised or untrusted websites can exploit autofill on page load.",
-    "placeholders": {
-      "openTag": {
-        "content": "$1",
-        "example": "<b>"
-      },
-      "closeTag": {
-        "content": "$2",
-        "example": "</b>"
-      }
-    }
-  },
   "experimentalFeature": {
     "message": "Az oldalbetöltésnél automatikus kitöltést a feltört vagy nem megbízhatató weboldalak kihasználhatják."
   },
@@ -1850,6 +1841,9 @@
   },
   "secureNotes": {
     "message": "Biztonságos jegyzetek"
+  },
+  "sshKeys": {
+    "message": "SSH kulcsok"
   },
   "clear": {
     "message": "Kiürítés",
@@ -2889,7 +2883,7 @@
   "generateEmail": {
     "message": "Email generálása"
   },
-  "generatorBoundariesHint": {
+  "spinboxBoundariesHint": {
     "message": "Az érték legyen $MIN$ és $MAX$ között.",
     "description": "Explains spin box minimum and maximum values to the user",
     "placeholders": {
@@ -2900,6 +2894,26 @@
       "max": {
         "content": "$2",
         "example": "128"
+      }
+    }
+  },
+  "passwordLengthRecommendationHint": {
+    "message": " Használjunk $RECOMMENDED$ vagy több karaktert egy erős jelszó előállításához.",
+    "description": "Appended to `spinboxBoundariesHint` to recommend a length to the user. This must include any language-specific 'sentence' separator characters (e.g. a space in english).",
+    "placeholders": {
+      "recommended": {
+        "content": "$1",
+        "example": "14"
+      }
+    }
+  },
+  "passphraseNumWordsRecommendationHint": {
+    "message": " $RECOMMENDED$ vagy több szó erős jelmondat generálásához.",
+    "description": "Appended to `spinboxBoundariesHint` to recommend a number of words to the user. This must include any language-specific 'sentence' separator characters (e.g. a space in english).",
+    "placeholders": {
+      "recommended": {
+        "content": "$1",
+        "example": "6"
       }
     }
   },
@@ -3150,11 +3164,26 @@
   "resendNotification": {
     "message": "Értesítés újraküldése"
   },
+  "viewAllLogInOptions": {
+    "message": "Összes bejelentkezési opció megtekintése"
+  },
   "viewAllLoginOptions": {
     "message": "Összes bejelentkezési opció megtekintése"
   },
   "notificationSentDevice": {
     "message": "Egy értesítés lett elküldve az eszközre."
+  },
+  "aNotificationWasSentToYourDevice": {
+    "message": "Egy értesítés lett elküldve az eszközre."
+  },
+  "makeSureYourAccountIsUnlockedAndTheFingerprintEtc": {
+    "message": "Ellenőrizzük, hogy a széf feloldásra került és az ujjlenyomat kifejezés egyezik a másik eszközön levővel."
+  },
+  "youWillBeNotifiedOnceTheRequestIsApproved": {
+    "message": "A kérelem jóváhagyása után értesítés érkezik."
+  },
+  "needAnotherOptionV1": {
+    "message": "Másik opció szükséges?"
   },
   "loginInitiated": {
     "message": "A bejelentkezés elindításra került."
@@ -3249,8 +3278,17 @@
   "opensInANewWindow": {
     "message": "Megnyitás új ablakban"
   },
+  "rememberThisDeviceToMakeFutureLoginsSeamless": {
+    "message": "Emlékezés az eszközre, hogy zökkenőmentes legyen a jövőbeni bejelentkezés"
+  },
   "deviceApprovalRequired": {
     "message": "Az eszköz jóváhagyása szükséges. Válasszunk egy jóváhagyási lehetőséget lentebb:"
+  },
+  "deviceApprovalRequiredV2": {
+    "message": "Eszköz jóváhagyás szükséges"
+  },
+  "selectAnApprovalOptionBelow": {
+    "message": "Válasszunk lentebb egy jóváhagyási lehetőséget."
   },
   "rememberThisDevice": {
     "message": "Eszköz megjegyzése"
@@ -3324,6 +3362,9 @@
   },
   "userEmailMissing": {
     "message": "A felhasználói email cím hiányzik."
+  },
+  "activeUserEmailNotFoundLoggingYouOut": {
+    "message": "Az aktív felhasználói email cím nem található. Jelentkezzünk ki."
   },
   "deviceTrusted": {
     "message": "Az eszköz megbízható."
@@ -3760,6 +3801,9 @@
   },
   "accessing": {
     "message": "Elérés"
+  },
+  "loggedInExclamation": {
+    "message": "Megtörtént a bejelentkezés."
   },
   "passkeyNotCopied": {
     "message": "A hozzáférési kulcs nem kerül másolásra."
@@ -4251,6 +4295,21 @@
   },
   "filters": {
     "message": "Szűrők"
+  },
+  "filterVault": {
+    "message": "Széf szűrése"
+  },
+  "filterApplied": {
+    "message": "Egy szűrő került alkalmazásra."
+  },
+  "filterAppliedPlural": {
+    "message": "$COUNT$ szűrő került alkalmazásra.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
   },
   "personalDetails": {
     "message": "Személyes adatok"
@@ -4823,5 +4882,20 @@
   },
   "generatedPassword": {
     "message": "Generált jelszó"
+  },
+  "compactMode": {
+    "message": "Kompakt mód"
+  },
+  "beta": {
+    "message": "Béta"
+  },
+  "extensionWidth": {
+    "message": "Kiterjesztés szélesség"
+  },
+  "wide": {
+    "message": "Széles"
+  },
+  "extraWide": {
+    "message": "Extra széles"
   }
 }
