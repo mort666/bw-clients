@@ -482,7 +482,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     // User attempting to invite new users in a free org with max users
     if (
       !user &&
-      this.dataSource.data.length === this.organization.seats &&
+      this.dataSource.activeUserCount === this.organization.seats &&
       (this.organization.productTierType === ProductTierType.Free ||
         this.organization.productTierType === ProductTierType.TeamsStarter ||
         this.organization.productTierType === ProductTierType.Families)
@@ -508,6 +508,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
         name: this.userNamePipe.transform(user),
         organizationId: this.organization.id,
         organizationUserId: user != null ? user.id : null,
+        activeUserCount: this.dataSource.activeUserCount,
         allOrganizationUserEmails: this.dataSource.data?.map((user) => user.email) ?? [],
         usesKeyConnector: user?.usesKeyConnector,
         isOnSecretsManagerStandalone: this.orgIsOnSecretsManagerStandalone,

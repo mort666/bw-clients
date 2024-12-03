@@ -8,12 +8,14 @@ import { ProductTierType } from "@bitwarden/common/billing/enums";
  * new users
  * @param organization An object representing the organization
  * @param allOrganizationUserEmails An array of strings with existing user email addresses
+ * @param activeUserCount The current count of active users occupying the organization's seats.
  * @param errorMessage A localized string to display if validation fails
  * @returns A function that validates an `AbstractControl` and returns `ValidationErrors` or `null`
  */
 export function orgSeatLimitReachedValidator(
   organization: Organization,
   allOrganizationUserEmails: string[],
+  activeUserCount: number,
   errorMessage: string,
 ): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -21,29 +23,40 @@ export function orgSeatLimitReachedValidator(
       return null;
     }
 
-    const newEmailsToAdd = Array.from(
-      new Set(
-        control.value
-          .split(",")
-          .filter(
-            (newEmailToAdd: string) =>
-              newEmailToAdd &&
-              newEmailToAdd.trim() !== "" &&
-              !allOrganizationUserEmails.some(
-                (existingEmail) => existingEmail === newEmailToAdd.trim(),
-              ),
-          ),
-      ),
-    );
-
     const productHasAdditionalSeatsOption =
       organization.productTierType !== ProductTierType.Free &&
       organization.productTierType !== ProductTierType.Families &&
       organization.productTierType !== ProductTierType.TeamsStarter;
 
-    return !productHasAdditionalSeatsOption &&
-      allOrganizationUserEmails.length + newEmailsToAdd.length > organization.seats
-      ? { seatLimitReached: { message: errorMessage } }
-      : null;
+    const newTotalCount =
+      activeUserCount + getUniqueNewEmailCount(allOrganizationUserEmails, control);
+
+    if (!productHasAdditionalSeatsOption && newTotalCount > organization.seats) {
+      return { seatLimitReached: { message: errorMessage } };
+    }
+
+    return null;
   };
+}
+
+function getUniqueNewEmailCount(
+  allOrganizationUserEmails: string[],
+  control: AbstractControl,
+): number {
+  const newEmailsToAdd = Array.from(
+    new Set(
+      control.value
+        .split(",")
+        .filter(
+          (newEmailToAdd: string) =>
+            newEmailToAdd &&
+            newEmailToAdd.trim() !== "" &&
+            !allOrganizationUserEmails.some(
+              (existingEmail) => existingEmail === newEmailToAdd.trim(),
+            ),
+        ),
+    ),
+  );
+
+  return newEmailsToAdd.length;
 }
