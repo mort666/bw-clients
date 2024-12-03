@@ -10,6 +10,13 @@ import { BadgeVariant } from "@bitwarden/components";
 
 import { MemberCipherDetailsApiService } from "./member-cipher-details-api.service";
 
+export type ApplicationHealthReportSummary = {
+  totalMemberCount: number;
+  totalAtRiskMemberCount: number;
+  totalPasswordCount: number;
+  totalAtRiskPasswordCount: number;
+};
+
 export type ApplicationHealthReportDetail = {
   applicationName: string;
   passwordCount: number;
@@ -109,6 +116,37 @@ export class RiskInsightsReportService {
   ): Promise<ApplicationHealthReportDetail[]> {
     const cipherHealthUriReport = await this.generateRawDataUriReport(organizationId);
     return this.getApplicationHealthReport(cipherHealthUriReport);
+  }
+
+  /**
+   * Gets the summary from the application health report. Returns total members and passwords as well
+   * as the total at risk members and at risk passwords
+   * @param reports The previously calculated application health report data
+   * @returns A summary object containing report totals
+   */
+  generateApplicationsSummary(
+    reports: ApplicationHealthReportDetail[],
+  ): ApplicationHealthReportSummary {
+    const totalMembers = reports.flatMap((x) => x.memberDetails);
+    const uniqueMembers = this.getUniqueMembers(totalMembers);
+
+    const atRiskMembers = reports.flatMap((x) => x.atRiskMemberDetails);
+    const uniqueAtRiskMembers = this.getUniqueMembers(atRiskMembers);
+
+    const totalPasswordCount = reports.reduce(
+      (total, current) => total + current.atRiskPasswordCount,
+      0,
+    );
+    const atRiskPasswordCount = reports
+      .filter((x) => x.atRiskPasswordCount > 0)
+      .reduce((total, current) => total + current.atRiskPasswordCount, 0);
+
+    return {
+      totalMemberCount: uniqueMembers.length,
+      totalAtRiskMemberCount: uniqueAtRiskMembers.length,
+      totalPasswordCount: totalPasswordCount,
+      totalAtRiskPasswordCount: atRiskPasswordCount,
+    };
   }
 
   /**
