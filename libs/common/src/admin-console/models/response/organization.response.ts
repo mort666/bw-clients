@@ -37,6 +37,7 @@ export class OrganizationResponse extends BaseResponse {
   // Deprecated: https://bitwarden.atlassian.net/browse/PM-10863
   limitCollectionCreationDeletion: boolean;
   allowAdminAccessToAllCollectionItems: boolean;
+  useRiskInsights: boolean;
 
   constructor(response: any) {
     super(response);
@@ -81,5 +82,6 @@ export class OrganizationResponse extends BaseResponse {
     this.allowAdminAccessToAllCollectionItems = this.getResponseProperty(
       "AllowAdminAccessToAllCollectionItems",
     );
+    this.useRiskInsights = this.getResponseProperty("UseRiskInsights");
   }
 }

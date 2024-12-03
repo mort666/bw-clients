@@ -19,7 +19,6 @@ import { PolicyService } from "@bitwarden/common/admin-console/abstractions/poli
 import { ProviderService } from "@bitwarden/common/admin-console/abstractions/provider.service";
 import { PolicyType, ProviderStatusType } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
-import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { BannerModule, IconModule } from "@bitwarden/components";
@@ -51,7 +50,6 @@ export class OrganizationLayoutComponent implements OnInit, OnDestroy {
   showPaymentAndHistory$: Observable<boolean>;
   hideNewOrgButton$: Observable<boolean>;
   organizationIsUnmanaged$: Observable<boolean>;
-  isAccessIntelligenceFeatureEnabled = false;
 
   private _destroy = new Subject<void>();
 
@@ -66,10 +64,6 @@ export class OrganizationLayoutComponent implements OnInit, OnDestroy {
 
   async ngOnInit() {
     document.body.classList.remove("layout_frontend");
-
-    this.isAccessIntelligenceFeatureEnabled = await this.configService.getFeatureFlag(
-      FeatureFlag.AccessIntelligence,
-    );
 
     this.organization$ = this.route.params
       .pipe(takeUntil(this._destroy))
@@ -138,5 +132,9 @@ export class OrganizationLayoutComponent implements OnInit, OnDestroy {
 
   getReportTabLabel(organization: Organization): string {
     return organization.useEvents ? "reporting" : "reports";
+  }
+
+  canShowAccessIntelligenceTab(organization: Organization): boolean {
+    return organization.useRiskInsights;
   }
 }

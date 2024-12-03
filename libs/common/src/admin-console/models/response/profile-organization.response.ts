@@ -55,6 +55,7 @@ export class ProfileOrganizationResponse extends BaseResponse {
   limitCollectionCreationDeletion: boolean;
   allowAdminAccessToAllCollectionItems: boolean;
   userIsManagedByOrganization: boolean;
+  useRiskInsights: boolean;
 
   constructor(response: any) {
     super(response);
@@ -123,5 +124,6 @@ export class ProfileOrganizationResponse extends BaseResponse {
       "AllowAdminAccessToAllCollectionItems",
     );
     this.userIsManagedByOrganization = this.getResponseProperty("UserIsManagedByOrganization");
+    this.useRiskInsights = this.getResponseProperty("UseRiskInsights");
   }
 }
