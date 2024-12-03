@@ -13,8 +13,8 @@ import { MemberCipherDetailsApiService } from "./member-cipher-details-api.servi
 export type ApplicationHealthReportSummary = {
   totalMemberCount: number;
   totalAtRiskMemberCount: number;
-  totalPasswordCount: number;
-  totalAtRiskPasswordCount: number;
+  totalApplicationCount: number;
+  totalAtRiskApplicationCount: number;
 };
 
 export type ApplicationHealthReportDetail = {
@@ -119,8 +119,8 @@ export class RiskInsightsReportService {
   }
 
   /**
-   * Gets the summary from the application health report. Returns total members and passwords as well
-   * as the total at risk members and at risk passwords
+   * Gets the summary from the application health report. Returns total members and applications as well
+   * as the total at risk members and at risk applications
    * @param reports The previously calculated application health report data
    * @returns A summary object containing report totals
    */
@@ -133,19 +133,11 @@ export class RiskInsightsReportService {
     const atRiskMembers = reports.flatMap((x) => x.atRiskMemberDetails);
     const uniqueAtRiskMembers = this.getUniqueMembers(atRiskMembers);
 
-    const totalPasswordCount = reports.reduce(
-      (total, current) => total + current.atRiskPasswordCount,
-      0,
-    );
-    const atRiskPasswordCount = reports
-      .filter((x) => x.atRiskPasswordCount > 0)
-      .reduce((total, current) => total + current.atRiskPasswordCount, 0);
-
     return {
       totalMemberCount: uniqueMembers.length,
       totalAtRiskMemberCount: uniqueAtRiskMembers.length,
-      totalPasswordCount: totalPasswordCount,
-      totalAtRiskPasswordCount: atRiskPasswordCount,
+      totalApplicationCount: reports.length,
+      totalAtRiskApplicationCount: reports.filter((app) => app.atRiskPasswordCount > 0).length,
     };
   }
 
