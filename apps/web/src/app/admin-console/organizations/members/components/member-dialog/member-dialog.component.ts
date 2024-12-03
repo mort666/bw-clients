@@ -62,7 +62,7 @@ export interface MemberDialogParams {
   name: string;
   organizationId: string;
   organizationUserId: string;
-  activeUserCount: number;
+  activeUserCount?: number;
   allOrganizationUserEmails: string[];
   usesKeyConnector: boolean;
   isOnSecretsManagerStandalone: boolean;
@@ -268,8 +268,8 @@ export class MemberDialogComponent implements OnDestroy {
       orgSeatLimitReachedValidator(
         organization,
         this.params.allOrganizationUserEmails,
-        this.params.activeUserCount,
         this.i18nService.t("subscriptionUpgrade", organization.seats),
+        this.params.activeUserCount,
       ),
     ];
 

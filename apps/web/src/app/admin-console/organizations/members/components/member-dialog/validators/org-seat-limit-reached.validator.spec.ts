@@ -102,10 +102,14 @@ describe("orgSeatLimitReachedValidator", () => {
       seats: 2,
     });
     const errorMessage = "You cannot invite more than 2 members without upgrading your plan.";
+
+    const activeUserCount = 1;
+
     validatorFn = orgSeatLimitReachedValidator(
       organization,
       allOrganizationUserEmails,
       "You cannot invite more than 2 members without upgrading your plan.",
+      activeUserCount,
     );
     const control = new FormControl("user2@example.com,user3@example.com");
 

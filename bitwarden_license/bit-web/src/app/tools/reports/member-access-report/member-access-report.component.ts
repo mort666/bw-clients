@@ -92,13 +92,12 @@ export class MemberAccessReportComponent implements OnInit {
   };
 
   edit = async (user: MemberAccessReportView | null): Promise<void> => {
+    console.log("Jimmy report ", { dataSource: this.dataSource });
     const dialog = openUserAddEditDialog(this.dialogService, {
       data: {
         name: this.userNamePipe.transform(user),
         organizationId: this.organizationId,
         organizationUserId: user != null ? user.userGuid : null,
-        // This is a temp solution. I will discuss this with the team before merging in the code.
-        activeUserCount: 0,
         allOrganizationUserEmails: this.dataSource.data?.map((user) => user.email) ?? [],
         usesKeyConnector: user?.usesKeyConnector,
         isOnSecretsManagerStandalone: this.orgIsOnSecretsManagerStandalone,
