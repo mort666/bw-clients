@@ -4,15 +4,23 @@ import { Component, DestroyRef, inject, OnInit } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
-import { debounceTime, firstValueFrom, map } from "rxjs";
+import { debounceTime, map, switchMap } from "rxjs";
 
+import {
+  MemberCipherDetailsApiService,
+  RiskInsightsDataService,
+  RiskInsightsReportService,
+} from "@bitwarden/bit-common/tools/reports/risk-insights";
+import {
+  ApplicationHealthReportDetail,
+  ApplicationHealthReportSummary,
+} from "@bitwarden/bit-common/tools/reports/risk-insights/models/password-health";
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { PasswordStrengthServiceAbstraction } from "@bitwarden/common/tools/password-strength";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
@@ -27,60 +35,70 @@ import { HeaderModule } from "@bitwarden/web-vault/app/layouts/header/header.mod
 import { SharedModule } from "@bitwarden/web-vault/app/shared";
 import { PipesModule } from "@bitwarden/web-vault/app/vault/individual-vault/pipes/pipes.module";
 
-import { applicationTableMockData } from "./application-table.mock";
+import { ApplicationsLoadingComponent } from "./risk-insights-loading.component";
 
 @Component({
   standalone: true,
   selector: "tools-all-applications",
   templateUrl: "./all-applications.component.html",
-  imports: [HeaderModule, CardComponent, SearchModule, PipesModule, NoItemsModule, SharedModule],
+  imports: [
+    ApplicationsLoadingComponent,
+    HeaderModule,
+    CardComponent,
+    SearchModule,
+    PipesModule,
+    NoItemsModule,
+    SharedModule,
+  ],
+  providers: [MemberCipherDetailsApiService, RiskInsightsReportService],
 })
 export class AllApplicationsComponent implements OnInit {
-  protected dataSource = new TableDataSource<any>();
+  protected dataSource = new TableDataSource<ApplicationHealthReportDetail>();
   protected selectedIds: Set<number> = new Set<number>();
   protected searchControl = new FormControl("", { nonNullable: true });
   private destroyRef = inject(DestroyRef);
-  protected loading = false;
+  protected loading = true;
   protected organization: Organization;
   noItemsIcon = Icons.Security;
   protected markingAsCritical = false;
-  isCritialAppsFeatureEnabled = false;
+  protected applicationSummary: ApplicationHealthReportSummary;
 
-  // MOCK DATA
-  protected mockData = applicationTableMockData;
-  protected mockAtRiskMembersCount = 0;
-  protected mockAtRiskAppsCount = 0;
-  protected mockTotalMembersCount = 0;
-  protected mockTotalAppsCount = 0;
+  isCriticalAppsFeatureEnabled = false;
 
   async ngOnInit() {
+    this.isCriticalAppsFeatureEnabled = await this.configService.getFeatureFlag(
+      FeatureFlag.CriticalApps,
+    );
+
     this.activatedRoute.paramMap
       .pipe(
         takeUntilDestroyed(this.destroyRef),
-        map(async (params) => {
-          const organizationId = params.get("organizationId");
-          this.organization = await firstValueFrom(this.organizationService.get$(organizationId));
-          // TODO: use organizationId to fetch data
+        map((params) => params.get("organizationId")),
+        switchMap((orgId) => {
+          return this.dataService.getApplicationsReport$(orgId);
         }),
       )
-      .subscribe();
-
-    this.isCritialAppsFeatureEnabled = await this.configService.getFeatureFlag(
-      FeatureFlag.CriticalApps,
-    );
+      .subscribe({
+        next: (applications: ApplicationHealthReportDetail[]) => {
+          if (applications) {
+            this.dataSource.data = applications;
+            this.loading = false;
+          }
+        },
+      });
   }
 
   constructor(
     protected cipherService: CipherService,
-    protected passwordStrengthService: PasswordStrengthServiceAbstraction,
+    protected riskInsightsReportService: RiskInsightsReportService,
     protected auditService: AuditService,
     protected i18nService: I18nService,
     protected activatedRoute: ActivatedRoute,
     protected toastService: ToastService,
     protected organizationService: OrganizationService,
     protected configService: ConfigService,
+    protected dataService: RiskInsightsDataService,
   ) {
-    this.dataSource.data = applicationTableMockData;
     this.searchControl.valueChanges
       .pipe(debounceTime(200), takeUntilDestroyed())
       .subscribe((v) => (this.dataSource.filter = v));
