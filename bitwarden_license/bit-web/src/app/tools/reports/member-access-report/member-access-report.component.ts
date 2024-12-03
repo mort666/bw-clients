@@ -92,7 +92,6 @@ export class MemberAccessReportComponent implements OnInit {
   };
 
   edit = async (user: MemberAccessReportView | null): Promise<void> => {
-    console.log("Jimmy report ", { dataSource: this.dataSource });
     const dialog = openUserAddEditDialog(this.dialogService, {
       data: {
         name: this.userNamePipe.transform(user),
