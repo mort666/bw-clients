@@ -492,7 +492,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     // User attempting to invite new users in a free org with max users
     if (
       !user &&
-      this.dataSource.activeUserCount === this.organization.seats &&
+      this.dataSource.occupiedSeatCount === this.organization.seats &&
       isFixedSeatPlan(this.organization.productTierType)
     ) {
       const reference = openChangePlanDialog(this.dialogService, {
