@@ -464,15 +464,6 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
   }
 
   async edit(user: OrganizationUserView, initialTab: MemberDialogTab = MemberDialogTab.Role) {
-    console.log("Jimmy showToast");
-    // Jimmy this is what they mean by toast.
-    // Jimmy It sounds like we need to display a different message depending on the if it's a reseller.
-    this.toastService.showToast({
-      variant: "error",
-      title: this.i18nService.t("seatLimitReached"),
-      message: this.i18nService.t("contactYourProvider"),
-    });
-
     if (
       !user &&
       this.organization.hasReseller &&
