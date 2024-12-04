@@ -6,64 +6,20 @@ import { PasswordStrengthServiceAbstraction } from "@bitwarden/common/tools/pass
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
-import { BadgeVariant } from "@bitwarden/components";
+
+import {
+  ApplicationHealthReportDetail,
+  ApplicationHealthReportSummary,
+  CipherHealthReportDetail,
+  CipherHealthReportUriDetail,
+  ExposedPasswordDetail,
+  MemberDetailsFlat,
+  WeakPasswordDetail,
+  WeakPasswordScore,
+} from "../models/password-health";
 
 import { MemberCipherDetailsApiService } from "./member-cipher-details-api.service";
 
-export type ApplicationHealthReportSummary = {
-  totalMemberCount: number;
-  totalAtRiskMemberCount: number;
-  totalApplicationCount: number;
-  totalAtRiskApplicationCount: number;
-};
-
-export type ApplicationHealthReportDetail = {
-  applicationName: string;
-  passwordCount: number;
-  atRiskPasswordCount: number;
-  memberCount: number;
-  atRiskMemberCount: number;
-
-  memberDetails: MemberDetailsFlat[];
-  atRiskMemberDetails: MemberDetailsFlat[];
-};
-
-export type CipherHealthReportUriDetail = {
-  cipherId: string;
-  reusedPasswordCount: number;
-  weakPasswordDetail: WeakPasswordDetail;
-  exposedPasswordDetail: ExposedPasswordDetail;
-  cipherMembers: MemberDetailsFlat[];
-  trimmedUri: string;
-};
-
-export type CipherHealthReportDetail = CipherView & {
-  reusedPasswordCount: number;
-  weakPasswordDetail: WeakPasswordDetail;
-  exposedPasswordDetail: ExposedPasswordDetail;
-  cipherMembers: MemberDetailsFlat[];
-  trimmedUris: string[];
-};
-
-type WeakPasswordDetail = {
-  score: number;
-  detailValue: WeakPasswordScore;
-};
-
-type WeakPasswordScore = {
-  label: string;
-  badgeVariant: BadgeVariant;
-};
-
-type ExposedPasswordDetail = {
-  exposedXTimes: number;
-};
-
-export type MemberDetailsFlat = {
-  userName: string;
-  email: string;
-  cipherId: string;
-};
 @Injectable()
 export class RiskInsightsReportService {
   passwordUseMap = new Map<string, number>();
@@ -80,7 +36,7 @@ export class RiskInsightsReportService {
    * Can be used in the Raw Data diagnostic tab (just exclude the members in the view)
    * and can be used in the raw data + members tab when including the members in the view
    * @param organizationId
-   * @returns
+   * @returns Cipher health report data with members and trimmed uris
    */
   async generateRawDataReport(organizationId: string): Promise<CipherHealthReportDetail[]> {
     const allCiphers = await this.cipherService.getAllFromApiForOrganization(organizationId);
@@ -181,9 +137,7 @@ export class RiskInsightsReportService {
 
     // loop for reused passwords
     cipherHealthReports.forEach((detail) => {
-      detail.reusedPasswordCount = this.passwordUseMap.has(detail.id)
-        ? this.passwordUseMap.get(detail.id)
-        : 0;
+      detail.reusedPasswordCount = this.passwordUseMap.get(detail.id) ?? 0;
     });
     return cipherHealthReports;
   }
