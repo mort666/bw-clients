@@ -1,6 +1,7 @@
 import { NgModule } from "@angular/core";
 import { Route, RouterModule, Routes } from "@angular/router";
 
+import { TwoFactorTimeoutComponent } from "@bitwarden/angular/auth/components/two-factor-auth/two-factor-auth-expired.component";
 import { unauthUiRefreshSwap } from "@bitwarden/angular/auth/functions/unauth-ui-refresh-route-swap";
 import {
   authGuard,
@@ -26,6 +27,7 @@ import {
   LoginSecondaryContentComponent,
   LockV2Component,
   LockIcon,
+  TwoFactorTimeoutIcon,
   UserLockIcon,
   LoginViaAuthRequestComponent,
   DevicesIcon,
@@ -33,6 +35,7 @@ import {
   RegistrationLockAltIcon,
   RegistrationExpiredLinkIcon,
   VaultIcon,
+  LoginDecryptionOptionsComponent,
 } from "@bitwarden/auth/angular";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 
@@ -46,7 +49,7 @@ import { CreateOrganizationComponent } from "./admin-console/settings/create-org
 import { deepLinkGuard } from "./auth/guards/deep-link.guard";
 import { HintComponent } from "./auth/hint.component";
 import { LockComponent } from "./auth/lock.component";
-import { LoginDecryptionOptionsComponent } from "./auth/login/login-decryption-options/login-decryption-options.component";
+import { LoginDecryptionOptionsComponentV1 } from "./auth/login/login-decryption-options/login-decryption-options-v1.component";
 import { LoginComponentV1 } from "./auth/login/login-v1.component";
 import { LoginViaAuthRequestComponentV1 } from "./auth/login/login-via-auth-request-v1.component";
 import { LoginViaWebAuthnComponent } from "./auth/login/login-via-webauthn/login-via-webauthn.component";
@@ -102,11 +105,6 @@ const routes: Routes = [
         path: "login-with-passkey",
         component: LoginViaWebAuthnComponent,
         data: { titleId: "logInWithPasskey" } satisfies RouteDataProperties,
-      },
-      {
-        path: "login-initiated",
-        component: LoginDecryptionOptionsComponent,
-        canActivate: [tdeDecryptionRequiredGuard()],
       },
       {
         path: "register",
@@ -270,6 +268,22 @@ const routes: Routes = [
           outlet: "environment-selector",
         },
       ],
+    },
+  ),
+  ...unauthUiRefreshSwap(
+    LoginDecryptionOptionsComponentV1,
+    AnonLayoutWrapperComponent,
+    {
+      path: "login-initiated",
+      canActivate: [tdeDecryptionRequiredGuard()],
+    },
+    {
+      path: "login-initiated",
+      canActivate: [tdeDecryptionRequiredGuard()],
+      data: {
+        pageIcon: DevicesIcon,
+      },
+      children: [{ path: "", component: LoginDecryptionOptionsComponent }],
     },
   ),
   ...unauthUiRefreshSwap(
@@ -495,7 +509,6 @@ const routes: Routes = [
           } satisfies AnonLayoutWrapperData,
         },
       ),
-
       {
         path: "2fa",
         canActivate: [unauthGuardFn()],
@@ -513,6 +526,28 @@ const routes: Routes = [
           pageTitle: {
             key: "verifyIdentity",
           },
+        } satisfies RouteDataProperties & AnonLayoutWrapperData,
+      },
+      {
+        path: "2fa-timeout",
+        canActivate: [unauthGuardFn()],
+        children: [
+          {
+            path: "",
+            component: TwoFactorTimeoutComponent,
+          },
+          {
+            path: "",
+            component: EnvironmentSelectorComponent,
+            outlet: "environment-selector",
+          },
+        ],
+        data: {
+          pageIcon: TwoFactorTimeoutIcon,
+          pageTitle: {
+            key: "authenticationTimeout",
+          },
+          titleId: "authenticationTimeout",
         } satisfies RouteDataProperties & AnonLayoutWrapperData,
       },
       {

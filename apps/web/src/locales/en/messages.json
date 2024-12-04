@@ -29,6 +29,33 @@
   "notifiedMembers": {
     "message": "Notified members"
   },
+  "revokeMembers": {
+    "message": "Revoke members"
+  },
+  "restoreMembers": {
+    "message": "Restore members"
+  },
+  "revokeMembersWarning":{
+    "message": "Members with claimed and unclaimed accounts will have different results when revoked:"
+  },
+  "claimedAccountRevoke": {
+    "message": "Claimed account: Revoke access to Bitwarden account"
+  },
+  "unclaimedAccountRevoke": {
+    "message": "Unclaimed account: Revoke access to organization data"
+  },
+  "claimedAccount": {
+    "message": "Claimed account"
+  },
+  "unclaimedAccount": {
+    "message": "Unclaimed account"
+  },
+  "restoreMembersInstructions": {
+    "message": "To restore a member's account, go to the Revoked tab. The process may take a few seconds to complete and cannot be interrupted or canceled."
+  },
+  "cannotRestoreAccessError":{
+    "message": "Cannot restore organization access"
+  },
   "allApplicationsWithCount": {
     "message": "All applications ($COUNT$)",
     "placeholders": {
@@ -1116,6 +1143,12 @@
   "logInToBitwarden": {
     "message": "Log in to Bitwarden"
   },
+  "authenticationTimeout": {
+    "message": "Authentication timeout"
+  },
+  "authenticationSessionTimedOut": {
+    "message": "The authentication session timed out. Please restart the login process."
+  },
   "verifyIdentity": {
     "message": "Verify your Identity"
   },
@@ -1648,8 +1681,26 @@
   "passwordHistory": {
     "message": "Password history"
   },
+  "generatorHistory": {
+    "message": "Generator history"
+  },
+  "clearGeneratorHistoryTitle": {
+    "message": "Clear generator history"
+  },
+  "cleargGeneratorHistoryDescription": {
+    "message": "If you continue, all entries will be permanently deleted from generator's history. Are you sure you want to continue?"
+  },
   "noPasswordsInList": {
     "message": "There are no passwords to list."
+  },
+  "clearHistory": {
+    "message": "Clear history"
+  },
+  "nothingToShow": {
+    "message": "Nothing to show"
+  },
+  "nothingGeneratedRecently": {
+    "message": "You haven't generated anything recently"
   },
   "clear": {
     "message": "Clear",
@@ -1773,8 +1824,8 @@
   "sessionsDeauthorized": {
     "message": "All sessions deauthorized"
   },
-  "accountIsManagedMessage": {
-    "message": "This account is managed by $ORGANIZATIONNAME$",
+  "accountIsOwnedMessage": {
+    "message": "This account is owned by $ORGANIZATIONNAME$",
     "placeholders": {
       "organizationName": {
         "content": "$1",
@@ -5598,6 +5649,12 @@
   "bulkFilteredMessage": {
     "message": "Excluded, not applicable for this action"
   },
+  "nonCompliantMembersTitle":{
+    "message": "Non-compliant members"
+  },
+  "nonCompliantMembersError":{
+    "message": "Members that are non-compliant with the Single organization or Two-step login policy cannot be restored until they adhere to the policy requirements"
+  },
   "fingerprint": {
     "message": "Fingerprint"
   },
@@ -8057,8 +8114,17 @@
   "loginInitiated": {
     "message": "Login initiated"
   },
+  "rememberThisDeviceToMakeFutureLoginsSeamless": {
+    "message": "Remember this device to make future logins seamless"
+  },
   "deviceApprovalRequired": {
     "message": "Device approval required. Select an approval option below:"
+  },
+  "deviceApprovalRequiredV2": {
+    "message": "Device approval required"
+  },
+  "selectAnApprovalOptionBelow": {
+    "message": "Select an approval option below"
   },
   "rememberThisDevice": {
     "message": "Remember this device"
@@ -8289,6 +8355,9 @@
   "userEmailMissing": {
     "message": "User email missing"
   },
+  "activeUserEmailNotFoundLoggingYouOut": {
+    "message": "Active user email not found. Logging you out."
+  },
   "deviceTrusted": {
     "message": "Device trusted"
   },
@@ -8383,9 +8452,6 @@
   },
   "collectionManagementDesc": {
     "message": "Manage the collection behavior for the organization"
-  },
-  "limitCollectionCreationDeletionDesc": {
-    "message": "Limit collection creation and deletion to owners and admins"
   },
   "limitCollectionCreationDesc": {
     "message": "Limit collection creation to owners and admins"
@@ -9694,9 +9760,19 @@
       "description": "Title for the delete organization user dialog"
     }
   },
-  "deleteOrganizationUserWarning": {
-    "message": "When a member is deleted, their Bitwarden account and individual vault data will be permanently deleted. Collection data will remain in the organization. To reinstate them they must create an account and be onboarded again.",
-    "description": "Warning for the delete organization user dialog"
+  "deleteOrganizationUserWarningDesc": {
+    "message": "This will permanently delete all items owned by $NAME$. Collection items are not impacted.",
+    "description": "Warning description for the delete organization user dialog",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "John Doe"
+      }
+    }
+  },
+  "deleteManyOrganizationUsersWarningDesc": {
+    "message": "This will permanently delete all items owned by the following members. Collection items are not impacted.",
+    "description": "Warning description for the bulk delete organization users dialog"
   },
   "organizationUserDeleted": {
     "message": "Deleted $NAME$",
@@ -9757,5 +9833,17 @@
   },
   "freeFamiliesSponsorshipPolicyDesc": {
     "message": "Do not allow members to redeem a Families plan through this organization."
+  },
+  "verifyBankAccountWithStatementDescriptorWarning": {
+    "message": "Payment with a bank account is only available to customers in the United States. You will be required to verify your bank account. We will make a micro-deposit within the next 1-2 business days. Enter the statement descriptor code from this deposit on the organization's billing page to verify the bank account. Failure to verify the bank account will result in a missed payment and your subscription being suspended."
+  },
+  "verifyBankAccountWithStatementDescriptorInstructions": {
+    "message": "We have made a micro-deposit to your bank account (this may take 1-2 business days). Enter the six-digit code starting with 'SM' found on the deposit description. Failure to verify the bank account will result in a missed payment and your subscription being suspended."
+  },
+  "descriptorCode": {
+    "message": "Descriptor code"
+  },
+  "removeMembers": {
+    "message": "Remove members"
   }
 }
