@@ -37,10 +37,6 @@ defaults:
     shell: bash
 
 jobs:
-  check-run:
-    name: Check PR run
-    uses: bitwarden/gh-actions/.github/workflows/check-run.yml@main
-
   electron-verify:
     name: Verify Electron Version
     runs-on: ubuntu-22.04
