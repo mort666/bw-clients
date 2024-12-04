@@ -144,12 +144,12 @@ jobs:
         if: ${{ env.LOWER_RUNNER_OS == 'linux' }}
         run: |
           # package MUSL build
-          mv ./dist/${{ matrix.license_type.build_prefix }}/${{ env.LOWER_RUNNER_OS }}/cli-alpine ./dist/${{ matrix.license_type.build_prefix }}/${{ env.LOWER_RUNNER_OS }}/bw
+          mv ./dist/${{ matrix.license_type.build_prefix }}/${{ env.LOWER_RUNNER_OS }}/cli-alpine bw
           zip ../../bw${{ matrix.license_type.artifact_prefix }}-${{ env.LOWER_RUNNER_OS }}-musl-${{ env._PACKAGE_VERSION }}.zip ./bw
           rm -f ./dist/${{ matrix.license_type.build_prefix }}/${{ env.LOWER_RUNNER_OS }}/bw
 
           # package glibc build
-          mv ./dist/${{ matrix.license_type.build_prefix }}/${{ env.LOWER_RUNNER_OS }}/cli-linux ./dist/${{ matrix.license_type.build_prefix }}/${{ env.LOWER_RUNNER_OS }}/bw
+          mv ./dist/${{ matrix.license_type.build_prefix }}/${{ env.LOWER_RUNNER_OS }}/cli-linux bw
           zip ../../bw${{ matrix.license_type.artifact_prefix }}-${{ env.LOWER_RUNNER_OS }}-${{ env._PACKAGE_VERSION }}.zip ./bw
 
       - name: Zip macOS
