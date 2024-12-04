@@ -72,7 +72,7 @@ export class AllApplicationsComponent implements OnInit {
           this.dataSource.data = applicationsReport;
           this.applicationSummary =
             this.riskInsightsReportService.generateApplicationsSummary(applicationsReport);
-            this.loading = false;
+          this.loading = false;
         }),
       )
       .subscribe();
