@@ -46,7 +46,7 @@ export class RiskInsightsReportService {
       dtl.cipherIds.map((c) => this.getMemberDetailsFlat(dtl.userName, dtl.email, c)),
     );
 
-    return this.getCipherDetails(allCiphers, flattenedDetails);
+    return await this.getCipherDetails(allCiphers, flattenedDetails);
   }
 
   /**
