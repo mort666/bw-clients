@@ -16,19 +16,14 @@ export function orgSeatLimitReachedValidator(
   organization: Organization,
   allOrganizationUserEmails: string[],
   errorMessage: string,
-  activeUserCount?: number,
+  activeUserCount: number,
 ): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     if (control.value === "" || !control.value) {
       return null;
     }
 
-    const productHasAdditionalSeatsOption =
-      organization.productTierType !== ProductTierType.Free &&
-      organization.productTierType !== ProductTierType.Families &&
-      organization.productTierType !== ProductTierType.TeamsStarter;
-
-    if (productHasAdditionalSeatsOption || !activeUserCount) {
+    if (isDynamicSeatPlan(organization.productTierType)) {
       return null;
     }
 
@@ -41,6 +36,26 @@ export function orgSeatLimitReachedValidator(
 
     return null;
   };
+}
+
+export function isDynamicSeatPlan(productTierType: ProductTierType): boolean {
+  switch (productTierType) {
+    case ProductTierType.Enterprise:
+      return true;
+    default:
+      return false;
+  }
+}
+
+export function isFixedSeatPlan(productTierType: ProductTierType): boolean {
+  switch (productTierType) {
+    case ProductTierType.Free:
+    case ProductTierType.Families:
+    case ProductTierType.TeamsStarter:
+      return true;
+    default:
+      return false;
+  }
 }
 
 function getUniqueNewEmailCount(

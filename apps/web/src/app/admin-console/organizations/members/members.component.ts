@@ -71,6 +71,7 @@ import {
   MemberDialogTab,
   openUserAddEditDialog,
 } from "./components/member-dialog";
+import { isFixedSeatPlan } from "./components/member-dialog/validators/org-seat-limit-reached.validator";
 import {
   ResetPasswordComponent,
   ResetPasswordDialogResult,
@@ -463,6 +464,15 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
   }
 
   async edit(user: OrganizationUserView, initialTab: MemberDialogTab = MemberDialogTab.Role) {
+    console.log("Jimmy showToast");
+    // Jimmy this is what they mean by toast.
+    // Jimmy It sounds like we need to display a different message depending on the if it's a reseller.
+    this.toastService.showToast({
+      variant: "error",
+      title: this.i18nService.t("seatLimitReached"),
+      message: this.i18nService.t("contactYourProvider"),
+    });
+
     if (
       !user &&
       this.organization.hasReseller &&
@@ -483,9 +493,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     if (
       !user &&
       this.dataSource.activeUserCount === this.organization.seats &&
-      (this.organization.productTierType === ProductTierType.Free ||
-        this.organization.productTierType === ProductTierType.TeamsStarter ||
-        this.organization.productTierType === ProductTierType.Families)
+      isFixedSeatPlan(this.organization.productTierType)
     ) {
       const reference = openChangePlanDialog(this.dialogService, {
         data: {
@@ -505,10 +513,11 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
 
     const dialog = openUserAddEditDialog(this.dialogService, {
       data: {
+        kind: "InviteMemberDialogParams",
         name: this.userNamePipe.transform(user),
         organizationId: this.organization.id,
         organizationUserId: user != null ? user.id : null,
-        activeUserCount: this.dataSource.activeUserCount,
+        occupiedSeatCount: this.dataSource.occupiedSeatCount,
         allOrganizationUserEmails: this.dataSource.data?.map((user) => user.email) ?? [],
         usesKeyConnector: user?.usesKeyConnector,
         isOnSecretsManagerStandalone: this.orgIsOnSecretsManagerStandalone,

@@ -58,11 +58,24 @@ export enum MemberDialogTab {
   Collections = 2,
 }
 
-export interface MemberDialogParams {
+export interface EditMemberDialogParams {
+  kind: "EditMemberDialogParams";
   name: string;
   organizationId: string;
   organizationUserId: string;
-  activeUserCount?: number;
+  usesKeyConnector: boolean;
+  isOnSecretsManagerStandalone: boolean;
+  initialTab?: MemberDialogTab;
+  numConfirmedMembers: number;
+  managedByOrganization?: boolean;
+}
+
+export interface InviteMemberDialogParams {
+  kind: "InviteMemberDialogParams";
+  name: string;
+  organizationId: string;
+  organizationUserId: string;
+  occupiedSeatCount: number;
   allOrganizationUserEmails: string[];
   usesKeyConnector: boolean;
   isOnSecretsManagerStandalone: boolean;
@@ -70,6 +83,8 @@ export interface MemberDialogParams {
   numConfirmedMembers: number;
   managedByOrganization?: boolean;
 }
+
+export type MemberDialogParams = InviteMemberDialogParams | EditMemberDialogParams;
 
 export enum MemberDialogResult {
   Saved = "saved",
@@ -262,20 +277,21 @@ export class MemberDialogComponent implements OnDestroy {
   }
 
   private setFormValidators(organization: Organization) {
-    const emailsControlValidators = [
-      Validators.required,
-      commaSeparatedEmails,
-      orgSeatLimitReachedValidator(
-        organization,
-        this.params.allOrganizationUserEmails,
-        this.i18nService.t("subscriptionUpgrade", organization.seats),
-        this.params.activeUserCount,
-      ),
-    ];
-
-    const emailsControl = this.formGroup.get("emails");
-    emailsControl.setValidators(emailsControlValidators);
-    emailsControl.updateValueAndValidity();
+    if (this.params.kind === "InviteMemberDialogParams") {
+      const emailsControlValidators = [
+        Validators.required,
+        commaSeparatedEmails,
+        orgSeatLimitReachedValidator(
+          organization,
+          this.params.allOrganizationUserEmails,
+          this.i18nService.t("subscriptionUpgrade", organization.seats),
+          this.params.occupiedSeatCount,
+        ),
+      ];
+      const emailsControl = this.formGroup.get("emails");
+      emailsControl.setValidators(emailsControlValidators);
+      emailsControl.updateValueAndValidity();
+    }
   }
 
   private loadOrganizationUser(
