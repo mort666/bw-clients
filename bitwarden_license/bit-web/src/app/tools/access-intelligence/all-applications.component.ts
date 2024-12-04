@@ -104,19 +104,21 @@ export class AllApplicationsComponent implements OnInit {
   markAppsAsCritical = async () => {
     this.markingAsCritical = true;
 
-    await this.criticalAppsService
-      .setCriticalApps(this.organization.id, Array.from(this.selectedUrls))
-      .then(() => {
-        this.toastService.showToast({
-          variant: "success",
-          title: null,
-          message: this.i18nService.t("appsMarkedAsCritical"),
-        });
-      })
-      .finally(() => {
-        this.selectedUrls.clear();
-        this.markingAsCritical = false;
+    try {
+      await this.criticalAppsService.setCriticalApps(
+        this.organization.id,
+        Array.from(this.selectedUrls),
+      );
+
+      this.toastService.showToast({
+        variant: "success",
+        title: null,
+        message: this.i18nService.t("appsMarkedAsCritical"),
       });
+    } finally {
+      this.selectedUrls.clear();
+      this.markingAsCritical = false;
+    }
   };
 
   trackByFunction(_: number, item: CipherView) {
