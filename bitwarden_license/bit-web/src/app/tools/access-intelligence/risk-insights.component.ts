@@ -5,7 +5,10 @@ import { ActivatedRoute, Router } from "@angular/router";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 // eslint-disable-next-line no-restricted-imports -- used for dependency injection
-import { CriticalAppsApiService } from "@bitwarden/bit-common/tools/reports/risk-insights";
+import {
+  CriticalAppsApiService,
+  PasswordHealthReportApplicationsResponse,
+} from "@bitwarden/bit-common/tools/reports/risk-insights";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { AsyncActionsModule, ButtonModule, TabsModule } from "@bitwarden/components";
@@ -18,6 +21,7 @@ import { NotifiedMembersTableComponent } from "./notified-members-table.componen
 import { PasswordHealthMembersURIComponent } from "./password-health-members-uri.component";
 import { PasswordHealthMembersComponent } from "./password-health-members.component";
 import { PasswordHealthComponent } from "./password-health.component";
+import { Observable } from "rxjs";
 
 export enum RiskInsightsTabType {
   AllApps = 0,
@@ -46,10 +50,10 @@ export enum RiskInsightsTabType {
 export class RiskInsightsComponent implements OnInit {
   tabIndex: RiskInsightsTabType;
   dataLastUpdated = new Date();
-  isCritialAppsFeatureEnabled = false;
+  isCriticalAppsFeatureEnabled = false;
 
   apps: any[] = applicationTableMockData;
-  criticalApps: any[] = [];
+  criticalApps$: Observable<PasswordHealthReportApplicationsResponse[]> = new Observable();
   notifiedMembers: any[] = [];
 
   async refreshData() {
@@ -71,7 +75,7 @@ export class RiskInsightsComponent implements OnInit {
   };
 
   async ngOnInit() {
-    this.isCritialAppsFeatureEnabled = await this.configService.getFeatureFlag(
+    this.isCriticalAppsFeatureEnabled = await this.configService.getFeatureFlag(
       FeatureFlag.CriticalApps,
     );
   }
@@ -85,9 +89,7 @@ export class RiskInsightsComponent implements OnInit {
     route.queryParams.pipe(takeUntilDestroyed()).subscribe(({ tabIndex }) => {
       this.tabIndex = !isNaN(tabIndex) ? tabIndex : RiskInsightsTabType.AllApps;
     });
-
-    this.criticalAppsApiService.criticalApps$.pipe(takeUntilDestroyed()).subscribe((apps) => {
-      this.criticalApps = apps;
-    });
+    const orgId = this.route.snapshot.paramMap.get("organizationId");
+    this.criticalApps$ = this.criticalAppsApiService.getAppsListForOrg(orgId);
   }
 }

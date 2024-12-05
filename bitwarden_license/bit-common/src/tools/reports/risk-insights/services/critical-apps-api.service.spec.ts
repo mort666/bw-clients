@@ -1,12 +1,12 @@
 import { randomUUID } from "crypto";
 
-import { TestBed } from "@angular/core/testing";
+import { fakeAsync, flush, TestBed } from "@angular/core/testing";
 import { mock } from "jest-mock-extended";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
-import { Guid } from "@bitwarden/common/types/guid";
+import { OrganizationId, PasswordHealthReportApplicationId } from "@bitwarden/common/types/guid";
 import { KeyService } from "@bitwarden/key-management";
 
 import {
@@ -75,9 +75,13 @@ describe("CriticalAppsApiService", () => {
   it("should exclude records that already exist", async () => {
     // arrange
     // one record already exists
-    service.criticalApps = [
-      { id: randomUUID() as Guid, organizationId: "org1" as Guid, uri: "https://example.com" },
-    ];
+    service.setAppsInListForOrg([
+      {
+        id: randomUUID() as PasswordHealthReportApplicationId,
+        organizationId: "org1" as OrganizationId,
+        uri: "https://example.com",
+      },
+    ]);
 
     // two records are selected - one already in the database
     const selectedUrls = ["https://example.com", "https://example.org"];
@@ -110,8 +114,8 @@ describe("CriticalAppsApiService", () => {
     );
   });
 
-  it("should get critical apps", async () => {
-    const orgId = "org1";
+  it("should get critical apps", fakeAsync(() => {
+    const orgId = "org1" as OrganizationId;
     const response = [
       { id: "id1", organizationId: "org1", uri: "https://example.com" },
       { id: "id2", organizationId: "org1", uri: "https://example.org" },
@@ -119,9 +123,13 @@ describe("CriticalAppsApiService", () => {
 
     encryptService.decryptToUtf8.mockResolvedValue("https://example.com");
     apiService.send.mockResolvedValue(response);
-    await service.getCriticalApps(orgId);
+    const spy = jest.spyOn(service, "retrieveCriticalApps");
 
-    expect(keyService.getOrgKey).toHaveBeenCalledWith(orgId);
+    service.setOrganizationId(orgId as OrganizationId);
+    flush();
+
+    expect(spy).toHaveBeenCalled();
+    expect(keyService.getOrgKey).toHaveBeenCalledWith(orgId.toString());
     expect(encryptService.decryptToUtf8).toHaveBeenCalledTimes(2);
     expect(apiService.send).toHaveBeenCalledWith(
       "GET",
@@ -130,5 +138,5 @@ describe("CriticalAppsApiService", () => {
       true,
       true,
     );
-  });
+  }));
 });

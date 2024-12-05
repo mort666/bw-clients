@@ -28,6 +28,7 @@ import { SharedModule } from "@bitwarden/web-vault/app/shared";
 import { PipesModule } from "@bitwarden/web-vault/app/vault/individual-vault/pipes/pipes.module";
 
 import { applicationTableMockData } from "./application-table.mock";
+import { OrganizationId } from "@bitwarden/common/types/guid";
 
 @Component({
   standalone: true,
@@ -63,12 +64,12 @@ export class AllApplicationsComponent implements OnInit {
           return params;
           // TODO: use organizationId to fetch data
         }),
-        switchMap(async (params) => {
-          const organizationId = (await params).get("organizationId");
-          await this.criticalAppsService.getCriticalApps(organizationId);
-        }),
+        switchMap(async (params) => await params),
       )
-      .subscribe();
+      .subscribe((params) => {
+        const orgId = params.get("organizationId");
+        this.criticalAppsService.setOrganizationId(orgId as OrganizationId);
+      });
 
     this.isCritialAppsFeatureEnabled = await this.configService.getFeatureFlag(
       FeatureFlag.CriticalApps,
