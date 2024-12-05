@@ -66,7 +66,6 @@ export interface EditMemberDialogParams {
   usesKeyConnector: boolean;
   isOnSecretsManagerStandalone: boolean;
   initialTab?: MemberDialogTab;
-  numConfirmedMembers: number;
   managedByOrganization?: boolean;
 }
 
@@ -80,7 +79,6 @@ export interface InviteMemberDialogParams {
   usesKeyConnector: boolean;
   isOnSecretsManagerStandalone: boolean;
   initialTab?: MemberDialogTab;
-  numConfirmedMembers: number;
   managedByOrganization?: boolean;
 }
 

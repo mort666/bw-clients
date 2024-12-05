@@ -513,7 +513,6 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
         usesKeyConnector: user?.usesKeyConnector,
         isOnSecretsManagerStandalone: this.orgIsOnSecretsManagerStandalone,
         initialTab: initialTab,
-        numConfirmedMembers: this.dataSource.confirmedUserCount,
         managedByOrganization: user?.managedByOrganization,
       },
     });

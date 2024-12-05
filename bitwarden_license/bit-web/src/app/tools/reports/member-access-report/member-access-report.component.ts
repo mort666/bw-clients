@@ -101,7 +101,6 @@ export class MemberAccessReportComponent implements OnInit {
         usesKeyConnector: user?.usesKeyConnector,
         isOnSecretsManagerStandalone: this.orgIsOnSecretsManagerStandalone,
         initialTab: MemberDialogTab.Role,
-        numConfirmedMembers: this.dataSource.data.length,
       },
     });
 
