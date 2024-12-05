@@ -467,7 +467,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     if (
       !user &&
       this.organization.hasReseller &&
-      this.organization.seats === this.dataSource.confirmedUserCount
+      this.organization.seats === this.dataSource.occupiedSeatCount
     ) {
       this.toastService.showToast({
         variant: "error",

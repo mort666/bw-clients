@@ -284,14 +284,25 @@ export class MemberDialogComponent implements OnDestroy {
         orgSeatLimitReachedValidator(
           organization,
           this.params.allOrganizationUserEmails,
-          this.i18nService.t("subscriptionUpgrade", organization.seats),
+          this.getSeatLimitErrorMessageForPlan(organization),
           this.params.occupiedSeatCount,
         ),
       ];
+
       const emailsControl = this.formGroup.get("emails");
       emailsControl.setValidators(emailsControlValidators);
       emailsControl.updateValueAndValidity();
     }
+  }
+
+  private getSeatLimitErrorMessageForPlan(organization: Organization): string {
+    const { seats, hasReseller } = organization;
+
+    if (hasReseller) {
+      return this.i18nService.t("seatLimitReachedContactYourProvider", seats);
+    }
+
+    return this.i18nService.t("subscriptionUpgrade", seats);
   }
 
   private loadOrganizationUser(
@@ -464,15 +475,6 @@ export class MemberDialogComponent implements OnDestroy {
       if (emails.length > maxEmailsCount) {
         this.formGroup.controls.emails.setErrors({
           tooManyEmails: { message: this.i18nService.t("tooManyEmails", maxEmailsCount) },
-        });
-        return;
-      }
-      if (
-        organization.hasReseller &&
-        this.params.numConfirmedMembers + emails.length > organization.seats
-      ) {
-        this.formGroup.controls.emails.setErrors({
-          tooManyEmails: { message: this.i18nService.t("seatLimitReachedContactYourProvider") },
         });
         return;
       }
