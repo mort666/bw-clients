@@ -2,6 +2,7 @@ import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ActivatedRoute, Router } from "@angular/router";
+import { Observable } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 // eslint-disable-next-line no-restricted-imports -- used for dependency injection
@@ -21,7 +22,6 @@ import { NotifiedMembersTableComponent } from "./notified-members-table.componen
 import { PasswordHealthMembersURIComponent } from "./password-health-members-uri.component";
 import { PasswordHealthMembersComponent } from "./password-health-members.component";
 import { PasswordHealthComponent } from "./password-health.component";
-import { Observable } from "rxjs";
 
 export enum RiskInsightsTabType {
   AllApps = 0,
