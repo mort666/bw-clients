@@ -8519,13 +8519,7 @@
     "message": "Contact your provider to purchase additional seats."
   },
   "seatLimitReachedContactYourProvider": {
-    "message": "Seat limit of $COUNT$ has been reached. Contact your provider to purchase additional seats.",
-    "placeholders": {
-      "count": {
-        "content": "$1",
-        "example": "2"
-      }
-    }
+    "message": "Seat limit has been reached. Contact your provider to purchase additional seats."
   },
   "collectionAccessRestricted": {
     "message": "Collection access is restricted"
