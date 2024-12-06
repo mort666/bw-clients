@@ -1,6 +1,5 @@
 import { Injectable, OnDestroy } from "@angular/core";
-import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { BehaviorSubject, firstValueFrom, map, Observable } from "rxjs";
+import { BehaviorSubject, firstValueFrom, map, Observable, Subject, takeUntil } from "rxjs";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
@@ -18,9 +17,10 @@ import { KeyService } from "@bitwarden/key-management";
 export class CriticalAppsApiService implements OnDestroy {
   private orgId = new BehaviorSubject<OrganizationId | null>(null);
   private criticalAppsList = new BehaviorSubject<PasswordHealthReportApplicationsResponse[]>([]);
+  private teardown = new Subject<void>();
 
   private fetchOrg$ = this.orgId
-    .pipe(takeUntilDestroyed())
+    .pipe(takeUntil(this.teardown))
     .subscribe((orgId) => this.retrieveCriticalApps(orgId));
 
   ngOnDestroy(): void {

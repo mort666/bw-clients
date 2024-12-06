@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 
-import { fakeAsync, flush, TestBed } from "@angular/core/testing";
+import { fakeAsync, flush } from "@angular/core/testing";
 import { mock } from "jest-mock-extended";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
@@ -22,15 +22,7 @@ describe("CriticalAppsApiService", () => {
   const encryptService = mock<EncryptService>();
 
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      providers: [
-        CriticalAppsApiService,
-        { provide: ApiService, useValue: apiService },
-        { provide: KeyService, useValue: keyService },
-        { provide: EncryptService, useValue: encryptService },
-      ],
-    });
-    service = TestBed.inject(CriticalAppsApiService);
+    service = new CriticalAppsApiService(apiService, keyService, encryptService);
 
     // reset mocks
     jest.resetAllMocks();
