@@ -272,6 +272,8 @@ jobs:
   build-safari:
     name: Build Safari
     runs-on: macos-13
+    # Skip if required secrets are not available
+    if: ${{ secrets.AZURE_KV_CI_SERVICE_PRINCIPAL != '' }}
     needs:
       - setup
       - locales-test
