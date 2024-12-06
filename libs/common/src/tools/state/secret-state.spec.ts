@@ -1,5 +1,5 @@
 import { mock } from "jest-mock-extended";
-import { firstValueFrom, from } from "rxjs";
+import { BehaviorSubject, firstValueFrom, from, Observable } from "rxjs";
 import { Jsonify } from "type-fest";
 
 import {
@@ -11,11 +11,11 @@ import {
 import { EncString } from "../../platform/models/domain/enc-string";
 import { GENERATOR_DISK } from "../../platform/state";
 import { UserId } from "../../types/guid";
+import { UserEncryptor } from "../cryptography/user-encryptor.abstraction";
 
 import { SecretClassifier } from "./secret-classifier";
 import { SecretKeyDefinition } from "./secret-key-definition";
 import { SecretState } from "./secret-state";
-import { UserEncryptor } from "./user-encryptor.abstraction";
 
 type FooBar = { foo: boolean; bar: boolean; date?: Date };
 const classifier = SecretClassifier.allSecret<FooBar>();
@@ -36,20 +36,20 @@ const FOOBAR_RECORD = SecretKeyDefinition.record(GENERATOR_DISK, "fooBar", class
 
 const SomeUser = "some user" as UserId;
 
-function mockEncryptor<T>(fooBar: T[] = []): UserEncryptor {
+function mockEncryptor<T>(fooBar: T[] = []): Observable<UserEncryptor> {
   // stores "encrypted values" so that they can be "decrypted" later
   // while allowing the operations to be interleaved.
   const encrypted = new Map<string, Jsonify<FooBar>>(
     fooBar.map((fb) => [toKey(fb as any).encryptedString, toValue(fb)] as const),
   );
 
-  const result = mock<UserEncryptor>({
-    encrypt<T>(value: Jsonify<T>, user: UserId) {
+  const result: UserEncryptor = mock<UserEncryptor>({
+    encrypt<T>(value: Jsonify<T>) {
       const encString = toKey(value as any);
       encrypted.set(encString.encryptedString, toValue(value));
       return Promise.resolve(encString);
     },
-    decrypt(secret: EncString, userId: UserId) {
+    decrypt(secret: EncString) {
       const decValue = encrypted.get(secret.encryptedString);
       return Promise.resolve(decValue as any);
     },
@@ -66,9 +66,9 @@ function mockEncryptor<T>(fooBar: T[] = []): UserEncryptor {
     return JSON.parse(JSON.stringify(value));
   }
 
-  // typescript pops a false positive about missing `encrypt` and `decrypt`
-  // functions, so assert the type manually.
-  return result as unknown as UserEncryptor;
+  // wrap in a behavior subject to ensure a value is always available
+  const encryptor$ = new BehaviorSubject(result).asObservable();
+  return encryptor$;
 }
 
 async function fakeStateProvider() {

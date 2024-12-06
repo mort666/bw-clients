@@ -2,7 +2,7 @@ import {
   OrganizationAuthRequestService,
   OrganizationAuthRequestApiService,
 } from "@bitwarden/bit-common/admin-console/auth-requests";
-import { ServiceContainer as OssServiceContainer } from "@bitwarden/cli/service-container";
+import { ServiceContainer as OssServiceContainer } from "@bitwarden/cli/service-container/service-container";
 
 /**
  * Instantiates services and makes them available for dependency injection.
@@ -17,8 +17,9 @@ export class ServiceContainer extends OssServiceContainer {
     this.organizationAuthRequestApiService = new OrganizationAuthRequestApiService(this.apiService);
     this.organizationAuthRequestService = new OrganizationAuthRequestService(
       this.organizationAuthRequestApiService,
-      this.cryptoService,
-      this.organizationUserService,
+      this.keyService,
+      this.encryptService,
+      this.organizationUserApiService,
     );
   }
 }

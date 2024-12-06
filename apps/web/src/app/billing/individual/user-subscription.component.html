@@ -42,7 +42,7 @@
       <dl>
         <dt>{{ "status" | i18n }}</dt>
         <dd>
-          <span class="tw-capitalize">{{ (subscription && subscription.status) || "-" }}</span>
+          <span class="tw-capitalize">{{ (subscription && subscriptionStatus) || "-" }}</span>
           <span bitBadge variant="warning" *ngIf="subscriptionMarkedForCancel">{{
             "pendingCancellation" | i18n
           }}</span>
@@ -51,7 +51,7 @@
         <dd>
           {{
             nextInvoice
-              ? (nextInvoice.date | date: "mediumDate") +
+              ? (sub.subscription.periodEndDate | date: "mediumDate") +
                 ", " +
                 (nextInvoice.amount | currency: "$")
               : "-"
@@ -65,7 +65,7 @@
         <ng-template body>
           <tr *ngFor="let i of subscription.items">
             <td bitCell>
-              {{ i.name }} {{ i.quantity > 1 ? "&times;" + i.quantity : "" }} @
+              {{ i.name }} {{ i.quantity > 1 ? "&times;" + i.quantity : "" }} &#64;
               {{ i.amount | currency: "$" }}
             </td>
             <td bitCell>{{ i.quantity * i.amount | currency: "$" }} /{{ i.interval | i18n }}</td>

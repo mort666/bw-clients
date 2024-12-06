@@ -1,13 +1,10 @@
-<app-payment-method-warnings
-  *ngIf="showPaymentMethodWarningBanners$ | async"
-></app-payment-method-warnings>
 <ng-container *ngIf="loading">
   <i
     class="bwi bwi-spinner bwi-spin text-muted"
     title="{{ 'loading' | i18n }}"
     aria-hidden="true"
   ></i>
-  <span class="sr-only">{{ "loading" | i18n }}</span>
+  <span class="tw-sr-only">{{ "loading" | i18n }}</span>
 </ng-container>
 <div class="container page-content" *ngIf="!loading">
   <div class="page-header">
@@ -27,13 +24,11 @@
         <bit-form-field>
           <bit-label>{{ "billingEmail" | i18n }}</bit-label>
           <input type="email" bitInput formControlName="billingEmail" />
-          <bit-hint *ngIf="enableConsolidatedBilling$ | async">{{
-            "providerBillingEmailHint" | i18n
-          }}</bit-hint>
+          <bit-hint>{{ "providerBillingEmailHint" | i18n }}</bit-hint>
         </bit-form-field>
       </div>
     </div>
-    <app-manage-tax-information *ngIf="enableConsolidatedBilling$ | async" />
+    <app-manage-tax-information />
     <button bitButton bitFormButton buttonType="primary" type="submit">
       {{ "submit" | i18n }}
     </button>

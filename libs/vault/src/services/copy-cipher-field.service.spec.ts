@@ -58,24 +58,21 @@ describe("CopyCipherFieldService", () => {
 
     it("should return early when valueToCopy is null", async () => {
       valueToCopy = null;
-      await service.copy(valueToCopy, actionType, cipher, skipReprompt);
-      expect(platformUtilsService.copyToClipboard).not.toHaveBeenCalled();
-    });
-
-    it("should return early when cipher.viewPassword is false", async () => {
-      cipher.viewPassword = false;
-      await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+      const result = await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+      expect(result).toBeFalsy();
       expect(platformUtilsService.copyToClipboard).not.toHaveBeenCalled();
     });
 
     it("should copy value to clipboard", async () => {
-      await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+      const result = await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+      expect(result).toBeTruthy();
       expect(platformUtilsService.copyToClipboard).toHaveBeenCalledWith(valueToCopy);
     });
 
     it("should show a success toast on copy", async () => {
       i18nService.t.mockReturnValueOnce("Username").mockReturnValueOnce("Username copied");
-      await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+      const result = await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+      expect(result).toBeTruthy();
       expect(toastService.showToast).toHaveBeenCalledWith({
         variant: "success",
         message: "Username copied",
@@ -93,26 +90,30 @@ describe("CopyCipherFieldService", () => {
 
       it("should show password prompt when actionType requires it", async () => {
         passwordRepromptService.showPasswordPrompt.mockResolvedValue(true);
-        await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+        const result = await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+        expect(result).toBeTruthy();
         expect(passwordRepromptService.showPasswordPrompt).toHaveBeenCalled();
       });
 
       it("should skip password prompt when cipher.reprompt is 'None'", async () => {
         cipher.reprompt = CipherRepromptType.None;
-        await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+        const result = await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+        expect(result).toBeTruthy();
         expect(passwordRepromptService.showPasswordPrompt).not.toHaveBeenCalled();
         expect(platformUtilsService.copyToClipboard).toHaveBeenCalled();
       });
 
       it("should skip password prompt when skipReprompt is true", async () => {
         skipReprompt = true;
-        await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+        const result = await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+        expect(result).toBeTruthy();
         expect(passwordRepromptService.showPasswordPrompt).not.toHaveBeenCalled();
       });
 
       it("should return early when password prompt is not confirmed", async () => {
         passwordRepromptService.showPasswordPrompt.mockResolvedValue(false);
-        await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+        const result = await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+        expect(result).toBeFalsy();
         expect(platformUtilsService.copyToClipboard).not.toHaveBeenCalled();
       });
     });
@@ -129,7 +130,8 @@ describe("CopyCipherFieldService", () => {
       it("should get TOTP code when allowed from premium", async () => {
         billingAccountProfileStateService.hasPremiumFromAnySource$ = of(true);
         totpService.getCode.mockResolvedValue("123456");
-        await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+        const result = await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+        expect(result).toBeTruthy();
         expect(totpService.getCode).toHaveBeenCalledWith(valueToCopy);
         expect(platformUtilsService.copyToClipboard).toHaveBeenCalledWith("123456");
       });
@@ -137,21 +139,24 @@ describe("CopyCipherFieldService", () => {
       it("should get TOTP code when allowed from organization", async () => {
         cipher.organizationUseTotp = true;
         totpService.getCode.mockResolvedValue("123456");
-        await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+        const result = await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+        expect(result).toBeTruthy();
         expect(totpService.getCode).toHaveBeenCalledWith(valueToCopy);
         expect(platformUtilsService.copyToClipboard).toHaveBeenCalledWith("123456");
       });
 
       it("should return early when the user is not allowed to use TOTP", async () => {
         billingAccountProfileStateService.hasPremiumFromAnySource$ = of(false);
-        await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+        const result = await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+        expect(result).toBeFalsy();
         expect(totpService.getCode).not.toHaveBeenCalled();
         expect(platformUtilsService.copyToClipboard).not.toHaveBeenCalled();
       });
 
       it("should return early when TOTP is not set", async () => {
         cipher.login.totp = null;
-        await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+        const result = await service.copy(valueToCopy, actionType, cipher, skipReprompt);
+        expect(result).toBeFalsy();
         expect(totpService.getCode).not.toHaveBeenCalled();
         expect(platformUtilsService.copyToClipboard).not.toHaveBeenCalled();
       });
@@ -164,6 +169,8 @@ describe("CopyCipherFieldService", () => {
       expect(eventCollectionService.collect).toHaveBeenCalledWith(
         EventType.Cipher_ClientCopiedPassword,
         cipher.id,
+        false,
+        cipher.organizationId,
       );
     });
   });

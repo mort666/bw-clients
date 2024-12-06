@@ -1,7 +1,7 @@
-<popup-page>
+<popup-page [loading]="loading$ | async" disablePadding>
   <popup-header slot="header" [pageTitle]="'vault' | i18n">
     <ng-container slot="end">
-      <app-new-item-dropdown></app-new-item-dropdown>
+      <app-new-item-dropdown [initialValues]="newItemItemValues$ | async"></app-new-item-dropdown>
 
       <app-pop-out></app-pop-out>
       <app-current-account></app-current-account>
@@ -15,14 +15,22 @@
     <bit-no-items [icon]="vaultIcon">
       <ng-container slot="title">{{ "yourVaultIsEmpty" | i18n }}</ng-container>
       <ng-container slot="description">{{ "autofillSuggestionsTip" | i18n }}</ng-container>
-      <app-new-item-dropdown slot="button"></app-new-item-dropdown>
+      <app-new-item-dropdown
+        slot="button"
+        [initialValues]="newItemItemValues$ | async"
+      ></app-new-item-dropdown>
     </bit-no-items>
   </div>
 
-  <ng-container *ngIf="vaultState !== VaultStateEnum.Empty">
-    <app-vault-v2-search> </app-vault-v2-search>
+  <!-- Show search & filters outside of the scroll area of the page -->
+  <ng-container
+    slot="above-scroll-area"
+    *ngIf="vaultState !== VaultStateEnum.Empty && !(loading$ | async)"
+  >
+    <app-vault-header-v2></app-vault-header-v2>
+  </ng-container>
 
-    <app-vault-list-filters></app-vault-list-filters>
+  <ng-container *ngIf="vaultState !== VaultStateEnum.Empty">
     <div
       *ngIf="vaultState === VaultStateEnum.NoResults"
       class="tw-flex tw-flex-col tw-justify-center tw-h-auto tw-pt-12"
@@ -48,7 +56,11 @@
       </div>
     </div>
 
-    <ng-container *ngIf="vaultState === null">
+    <div
+      *ngIf="vaultState === null"
+      cdkVirtualScrollingElement
+      class="tw-h-full tw-p-3 bit-compact:tw-p-2 tw-styled-scrollbar"
+    >
       <app-autofill-vault-list-items></app-autofill-vault-list-items>
       <app-vault-list-items-container
         [title]="'favorites' | i18n"
@@ -59,7 +71,8 @@
         [title]="'allItems' | i18n"
         [ciphers]="remainingCiphers$ | async"
         id="allItems"
+        disableSectionMargin
       ></app-vault-list-items-container>
-    </ng-container>
+    </div>
   </ng-container>
 </popup-page>

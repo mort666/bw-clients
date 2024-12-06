@@ -51,10 +51,12 @@ describe("ORGANIZATIONS state", () => {
         keyConnectorEnabled: false,
         keyConnectorUrl: "kcu",
         accessSecretsManager: false,
-        limitCollectionCreationDeletion: false,
+        limitCollectionCreation: false,
+        limitCollectionDeletion: false,
         allowAdminAccessToAllCollectionItems: false,
-        flexibleCollections: false,
         familySponsorshipLastSyncDate: new Date(),
+        userIsManagedByOrganization: false,
+        useRiskInsights: false,
       },
     };
     const result = sut.deserializer(JSON.parse(JSON.stringify(expectedResult)));

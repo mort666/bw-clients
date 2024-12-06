@@ -1,5 +1,5 @@
-<bit-layout>
-  <bit-side-nav>
+<app-layout>
+  <app-side-nav>
     <bit-nav-logo [openIcon]="logo" route="." [label]="'passwordManager' | i18n"></bit-nav-logo>
 
     <bit-nav-item icon="bwi-collection" [text]="'vaults' | i18n" route="vault"></bit-nav-item>
@@ -24,21 +24,9 @@
         [text]="'emergencyAccess' | i18n"
         route="settings/emergency-access"
       ></bit-nav-item>
-      <bit-nav-item
-        [text]="'sponsoredFamilies' | i18n"
-        route="settings/sponsored-families"
-        *ngIf="hasFamilySponsorshipAvailable$ | async"
-      ></bit-nav-item>
+      <billing-free-families-nav-item></billing-free-families-nav-item>
     </bit-nav-group>
+  </app-side-nav>
 
-    <ng-container slot="footer">
-      <navigation-product-switcher></navigation-product-switcher>
-      <app-toggle-width></app-toggle-width>
-    </ng-container>
-  </bit-side-nav>
-
-  <app-payment-method-warnings
-    *ngIf="showPaymentMethodWarningBanners$ | async"
-  ></app-payment-method-warnings>
   <router-outlet></router-outlet>
-</bit-layout>
+</app-layout>

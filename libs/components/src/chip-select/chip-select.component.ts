@@ -1,9 +1,25 @@
-import { Component, HostListener, Input, booleanAttribute, signal } from "@angular/core";
+import {
+  AfterViewInit,
+  Component,
+  DestroyRef,
+  ElementRef,
+  HostBinding,
+  HostListener,
+  Input,
+  QueryList,
+  ViewChild,
+  ViewChildren,
+  booleanAttribute,
+  inject,
+  signal,
+} from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from "@angular/forms";
 
+import { compareValues } from "../../../common/src/platform/misc/compare-values";
 import { ButtonModule } from "../button";
 import { IconButtonModule } from "../icon-button";
-import { MenuModule } from "../menu";
+import { MenuComponent, MenuItemDirective, MenuModule } from "../menu";
 import { Option } from "../select/option";
 import { SharedModule } from "../shared";
 import { TypographyModule } from "../typography";
@@ -27,7 +43,11 @@ export type ChipSelectOption<T> = Option<T> & {
     },
   ],
 })
-export class ChipSelectComponent<T = unknown> implements ControlValueAccessor {
+export class ChipSelectComponent<T = unknown> implements ControlValueAccessor, AfterViewInit {
+  @ViewChild(MenuComponent) menu: MenuComponent;
+  @ViewChildren(MenuItemDirective) menuItems: QueryList<MenuItemDirective>;
+  @ViewChild("chipSelectButton") chipSelectButton: ElementRef<HTMLButtonElement>;
+
   /** Text to show when there is no selected option */
   @Input({ required: true }) placeholderText: string;
 
@@ -48,6 +68,9 @@ export class ChipSelectComponent<T = unknown> implements ControlValueAccessor {
   /** Disables the entire chip */
   @Input({ transform: booleanAttribute }) disabled = false;
 
+  /** Chip will stretch to full width of its container */
+  @Input({ transform: booleanAttribute }) fullWidth?: boolean;
+
   /**
    * We have `:focus-within` and `:focus-visible` but no `:focus-visible-within`
    */
@@ -61,6 +84,13 @@ export class ChipSelectComponent<T = unknown> implements ControlValueAccessor {
     this.focusVisibleWithin.set(false);
   }
 
+  @HostBinding("class")
+  get classList() {
+    return ["tw-inline-block", this.fullWidth ? "tw-w-full" : "tw-max-w-52"];
+  }
+
+  private destroyRef = inject(DestroyRef);
+
   /** Tree constructed from `this.options` */
   private rootTree: ChipSelectOption<T>;
 
@@ -70,6 +100,12 @@ export class ChipSelectComponent<T = unknown> implements ControlValueAccessor {
   /** The option that is currently selected by the user */
   protected selectedOption: ChipSelectOption<T>;
 
+  /**
+   * The initial calculated width of the menu when it opens, which is used to
+   * keep the width consistent as the user navigates through submenus
+   */
+  protected menuWidth: number | null = null;
+
   /** The label to show in the chip button */
   protected get label(): string {
     return this.selectedOption?.label || this.placeholderText;
@@ -78,6 +114,24 @@ export class ChipSelectComponent<T = unknown> implements ControlValueAccessor {
   /** The icon to show in the chip button */
   protected get icon(): string {
     return this.selectedOption?.icon || this.placeholderIcon;
+  }
+
+  /**
+   * Set the rendered options based on whether or not an option is already selected, so that the correct
+   * submenu displays.
+   */
+  protected setOrResetRenderedOptions(): void {
+    this.renderedOptions = this.selectedOption
+      ? this.selectedOption.children?.length > 0
+        ? this.selectedOption
+        : this.getParent(this.selectedOption)
+      : this.rootTree;
+  }
+
+  protected handleMenuClosed(): void {
+    this.setOrResetRenderedOptions();
+    // reset menu width so that it can be recalculated upon open
+    this.menuWidth = null;
   }
 
   protected selectOption(option: ChipSelectOption<T>, _event: MouseEvent) {
@@ -108,7 +162,7 @@ export class ChipSelectComponent<T = unknown> implements ControlValueAccessor {
    */
   private findOption(tree: ChipSelectOption<T>, value: T): ChipSelectOption<T> | null {
     let result = null;
-    if (tree.value !== null && tree.value === value) {
+    if (tree.value !== null && compareValues(tree.value, value)) {
       return tree;
     }
 
@@ -147,6 +201,29 @@ export class ChipSelectComponent<T = unknown> implements ControlValueAccessor {
     this.renderedOptions = this.rootTree;
   }
 
+  ngAfterViewInit() {
+    /**
+     * menuItems will change when the user navigates into or out of a submenu. when that happens, we want to
+     * direct their focus to the first item in the new menu
+     */
+    this.menuItems.changes.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.menu.keyManager.setFirstItemActive();
+    });
+  }
+
+  /**
+   * Calculate the width of the menu based on whichever is larger, the chip select width or the width of
+   * the initially rendered options
+   */
+  protected setMenuWidth() {
+    const chipWidth = this.chipSelectButton.nativeElement.getBoundingClientRect().width;
+
+    const firstMenuItemWidth =
+      this.menu.menuItems.first.elementRef.nativeElement.getBoundingClientRect().width;
+
+    this.menuWidth = Math.max(chipWidth, firstMenuItemWidth);
+  }
+
   /** Control Value Accessor */
 
   private notifyOnChange?: (value: T) => void;
@@ -155,11 +232,7 @@ export class ChipSelectComponent<T = unknown> implements ControlValueAccessor {
   /** Implemented as part of NG_VALUE_ACCESSOR */
   writeValue(obj: T): void {
     this.selectedOption = this.findOption(this.rootTree, obj);
-
-    /** Update the rendered options for next time the menu is opened */
-    this.renderedOptions = this.selectedOption
-      ? this.getParent(this.selectedOption)
-      : this.rootTree;
+    this.setOrResetRenderedOptions();
   }
 
   /** Implemented as part of NG_VALUE_ACCESSOR */

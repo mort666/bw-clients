@@ -1,6 +1,6 @@
 import { Observable } from "rxjs";
 
-import { UserKeyRotationDataProvider } from "@bitwarden/auth/common";
+import { UserKeyRotationDataProvider } from "@bitwarden/key-management";
 
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
 import { UserId } from "../../../types/guid";
@@ -15,8 +15,9 @@ export abstract class FolderService implements UserKeyRotationDataProvider<Folde
   folderViews$: Observable<FolderView[]>;
 
   clearCache: () => Promise<void>;
-  encrypt: (model: FolderView, key?: SymmetricCryptoKey) => Promise<Folder>;
+  encrypt: (model: FolderView, key: SymmetricCryptoKey) => Promise<Folder>;
   get: (id: string) => Promise<Folder>;
+  getDecrypted$: (id: string) => Observable<FolderView | undefined>;
   getAllFromState: () => Promise<Folder[]>;
   /**
    * @deprecated Only use in CLI!
@@ -44,7 +45,7 @@ export abstract class FolderService implements UserKeyRotationDataProvider<Folde
 
 export abstract class InternalFolderService extends FolderService {
   upsert: (folder: FolderData | FolderData[]) => Promise<void>;
-  replace: (folders: { [id: string]: FolderData }) => Promise<void>;
-  clear: (userId: string) => Promise<any>;
+  replace: (folders: { [id: string]: FolderData }, userId: UserId) => Promise<void>;
+  clear: (userId?: string) => Promise<void>;
   delete: (id: string | string[]) => Promise<any>;
 }

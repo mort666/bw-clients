@@ -11,9 +11,19 @@ import {
   FormElementWithAttribute,
 } from "../types";
 
-import AutofillOverlayContentService from "./autofill-overlay-content.service";
-import CollectAutofillContentService from "./collect-autofill-content.service";
+import { InlineMenuFieldQualificationService } from "./abstractions/inline-menu-field-qualifications.service";
+import { AutofillOverlayContentService } from "./autofill-overlay-content.service";
+import { CollectAutofillContentService } from "./collect-autofill-content.service";
 import DomElementVisibilityService from "./dom-element-visibility.service";
+import { DomQueryService } from "./dom-query.service";
+
+jest.mock("../utils", () => {
+  const utils = jest.requireActual("../utils");
+  return {
+    ...utils,
+    debounce: jest.fn((fn) => fn),
+  };
+});
 
 const mockLoginForm = `
   <div id="root">
@@ -27,11 +37,17 @@ const mockLoginForm = `
 const waitForIdleCallback = () => new Promise((resolve) => globalThis.requestIdleCallback(resolve));
 
 describe("CollectAutofillContentService", () => {
+  const mockQuerySelectorAll = mockQuerySelectorAllDefinedCall();
   const domElementVisibilityService = new DomElementVisibilityService();
-  const autofillOverlayContentService = new AutofillOverlayContentService();
+  const inlineMenuFieldQualificationService = mock<InlineMenuFieldQualificationService>();
+  const domQueryService = new DomQueryService();
+  const autofillOverlayContentService = new AutofillOverlayContentService(
+    domQueryService,
+    domElementVisibilityService,
+    inlineMenuFieldQualificationService,
+  );
   let collectAutofillContentService: CollectAutofillContentService;
   const mockIntersectionObserver = mock<IntersectionObserver>();
-  const mockQuerySelectorAll = mockQuerySelectorAllDefinedCall();
 
   beforeEach(() => {
     globalThis.requestIdleCallback = jest.fn((cb, options) => setTimeout(cb, 100));
@@ -39,6 +55,7 @@ describe("CollectAutofillContentService", () => {
     document.body.innerHTML = mockLoginForm;
     collectAutofillContentService = new CollectAutofillContentService(
       domElementVisibilityService,
+      domQueryService,
       autofillOverlayContentService,
     );
     window.IntersectionObserver = jest.fn(() => mockIntersectionObserver);
@@ -47,6 +64,7 @@ describe("CollectAutofillContentService", () => {
   afterEach(() => {
     jest.clearAllMocks();
     jest.restoreAllMocks();
+    jest.clearAllTimers();
     document.body.innerHTML = "";
   });
 
@@ -151,7 +169,7 @@ describe("CollectAutofillContentService", () => {
         "data-stripe": null,
       };
       collectAutofillContentService["domRecentlyMutated"] = false;
-      collectAutofillContentService["autofillFormElements"] = new Map([
+      collectAutofillContentService["_autofillFormElements"] = new Map([
         [formElement, autofillForm],
       ]);
       collectAutofillContentService["autofillFieldElements"] = new Map([
@@ -239,24 +257,24 @@ describe("CollectAutofillContentService", () => {
         "data-stripe": null,
       };
       collectAutofillContentService["domRecentlyMutated"] = false;
-      collectAutofillContentService["autofillFormElements"] = new Map([
+      collectAutofillContentService["_autofillFormElements"] = new Map([
         [formElement, autofillForm],
       ]);
       collectAutofillContentService["autofillFieldElements"] = new Map([
         [fieldElement, autofillField],
       ]);
-      const isFormFieldViewableSpy = jest
-        .spyOn(collectAutofillContentService["domElementVisibilityService"], "isFormFieldViewable")
+      const isElementViewableSpy = jest
+        .spyOn(collectAutofillContentService["domElementVisibilityService"], "isElementViewable")
         .mockResolvedValue(true);
       const setupAutofillOverlayListenerOnFieldSpy = jest.spyOn(
         collectAutofillContentService["autofillOverlayContentService"],
-        "setupAutofillOverlayListenerOnField",
+        "setupOverlayListeners",
       );
 
       await collectAutofillContentService.getPageDetails();
 
       expect(autofillField.viewable).toBe(true);
-      expect(isFormFieldViewableSpy).toHaveBeenCalledWith(fieldElement);
+      expect(isElementViewableSpy).toHaveBeenCalledWith(fieldElement);
       expect(setupAutofillOverlayListenerOnFieldSpy).toHaveBeenCalled();
     });
 
@@ -284,7 +302,7 @@ describe("CollectAutofillContentService", () => {
       jest.spyOn(collectAutofillContentService as any, "buildAutofillFormsData");
       jest.spyOn(collectAutofillContentService as any, "buildAutofillFieldsData");
       jest
-        .spyOn(collectAutofillContentService["domElementVisibilityService"], "isFormFieldViewable")
+        .spyOn(collectAutofillContentService["domElementVisibilityService"], "isElementViewable")
         .mockResolvedValue(true);
 
       const pageDetails = await collectAutofillContentService.getPageDetails();
@@ -336,6 +354,7 @@ describe("CollectAutofillContentService", () => {
             "aria-disabled": false,
             "aria-haspopup": false,
             "data-stripe": null,
+            dataSetValues: "",
           },
           {
             opid: "__1",
@@ -368,6 +387,7 @@ describe("CollectAutofillContentService", () => {
             "aria-disabled": false,
             "aria-haspopup": false,
             "data-stripe": null,
+            dataSetValues: "",
           },
         ],
         collectedTimestamp: expect.any(Number),
@@ -453,51 +473,6 @@ describe("CollectAutofillContentService", () => {
     });
   });
 
-  describe("deepQueryElements", () => {
-    beforeEach(() => {
-      collectAutofillContentService["mutationObserver"] = mock<MutationObserver>();
-    });
-
-    it("queries form field elements that are nested within a ShadowDOM", () => {
-      const root = document.createElement("div");
-      const shadowRoot = root.attachShadow({ mode: "open" });
-      const form = document.createElement("form");
-      const input = document.createElement("input");
-      input.type = "text";
-      form.appendChild(input);
-      shadowRoot.appendChild(form);
-
-      const formFieldElements = collectAutofillContentService.deepQueryElements(
-        shadowRoot,
-        "input",
-        true,
-      );
-
-      expect(formFieldElements).toStrictEqual([input]);
-    });
-
-    it("queries form field elements that are nested within multiple ShadowDOM elements", () => {
-      const root = document.createElement("div");
-      const shadowRoot1 = root.attachShadow({ mode: "open" });
-      const root2 = document.createElement("div");
-      const shadowRoot2 = root2.attachShadow({ mode: "open" });
-      const form = document.createElement("form");
-      const input = document.createElement("input");
-      input.type = "text";
-      form.appendChild(input);
-      shadowRoot2.appendChild(form);
-      shadowRoot1.appendChild(root2);
-
-      const formFieldElements = collectAutofillContentService.deepQueryElements(
-        shadowRoot1,
-        "input",
-        true,
-      );
-
-      expect(formFieldElements).toStrictEqual([input]);
-    });
-  });
-
   describe("buildAutofillFormsData", () => {
     it("will not attempt to gather data from a cached form element", () => {
       const documentTitle = "Test Page";
@@ -523,7 +498,7 @@ describe("CollectAutofillContentService", () => {
         htmlID: formId,
         htmlMethod: formMethod,
       };
-      collectAutofillContentService["autofillFormElements"] = new Map([
+      collectAutofillContentService["_autofillFormElements"] = new Map([
         [formElement, existingAutofillForm],
       ]);
       const formElements = Array.from(document.querySelectorAll("form"));
@@ -589,7 +564,7 @@ describe("CollectAutofillContentService", () => {
       jest.spyOn(collectAutofillContentService as any, "getAutofillFieldElements");
       jest.spyOn(collectAutofillContentService as any, "buildAutofillFieldItem");
       jest
-        .spyOn(collectAutofillContentService["domElementVisibilityService"], "isFormFieldViewable")
+        .spyOn(collectAutofillContentService["domElementVisibilityService"], "isElementViewable")
         .mockResolvedValue(true);
 
       const { formFieldElements } =
@@ -637,6 +612,7 @@ describe("CollectAutofillContentService", () => {
           type: "text",
           value: "",
           viewable: true,
+          dataSetValues: "",
         },
         {
           "aria-disabled": false,
@@ -669,6 +645,7 @@ describe("CollectAutofillContentService", () => {
           type: "password",
           value: "",
           viewable: true,
+          dataSetValues: "",
         },
       ]);
     });
@@ -957,7 +934,7 @@ describe("CollectAutofillContentService", () => {
       collectAutofillContentService["autofillFieldElements"].set(usernameInput, existingFieldData);
       jest.spyOn(collectAutofillContentService as any, "getAutofillFieldMaxLength");
       jest
-        .spyOn(collectAutofillContentService["domElementVisibilityService"], "isFormFieldViewable")
+        .spyOn(collectAutofillContentService["domElementVisibilityService"], "isElementViewable")
         .mockResolvedValue(true);
       jest.spyOn(collectAutofillContentService as any, "getPropertyOrAttribute");
       jest.spyOn(collectAutofillContentService as any, "getElementValue");
@@ -969,7 +946,7 @@ describe("CollectAutofillContentService", () => {
 
       expect(collectAutofillContentService["getAutofillFieldMaxLength"]).not.toHaveBeenCalled();
       expect(
-        collectAutofillContentService["domElementVisibilityService"].isFormFieldViewable,
+        collectAutofillContentService["domElementVisibilityService"].isElementViewable,
       ).not.toHaveBeenCalled();
       expect(collectAutofillContentService["getPropertyOrAttribute"]).not.toHaveBeenCalled();
       expect(collectAutofillContentService["getElementValue"]).not.toHaveBeenCalled();
@@ -990,7 +967,7 @@ describe("CollectAutofillContentService", () => {
       ) as ElementWithOpId<FormFieldElement>;
       jest.spyOn(collectAutofillContentService as any, "getAutofillFieldMaxLength");
       jest
-        .spyOn(collectAutofillContentService["domElementVisibilityService"], "isFormFieldViewable")
+        .spyOn(collectAutofillContentService["domElementVisibilityService"], "isElementViewable")
         .mockResolvedValue(true);
       jest.spyOn(collectAutofillContentService as any, "getPropertyOrAttribute");
       jest.spyOn(collectAutofillContentService as any, "getElementValue");
@@ -1004,7 +981,7 @@ describe("CollectAutofillContentService", () => {
         spanElement,
       );
       expect(
-        collectAutofillContentService["domElementVisibilityService"].isFormFieldViewable,
+        collectAutofillContentService["domElementVisibilityService"].isElementViewable,
       ).toHaveBeenCalledWith(spanElement);
       expect(collectAutofillContentService["getPropertyOrAttribute"]).toHaveBeenNthCalledWith(
         1,
@@ -1048,6 +1025,7 @@ describe("CollectAutofillContentService", () => {
         tagName: spanElement.tagName.toLowerCase(),
         title: spanElementTitle,
         viewable: true,
+        dataSetValues: "",
       });
     });
 
@@ -1098,7 +1076,7 @@ describe("CollectAutofillContentService", () => {
       ) as ElementWithOpId<FillableFormFieldElement>;
       jest.spyOn(collectAutofillContentService as any, "getAutofillFieldMaxLength");
       jest
-        .spyOn(collectAutofillContentService["domElementVisibilityService"], "isFormFieldViewable")
+        .spyOn(collectAutofillContentService["domElementVisibilityService"], "isElementViewable")
         .mockResolvedValue(true);
       jest.spyOn(collectAutofillContentService as any, "getPropertyOrAttribute");
       jest.spyOn(collectAutofillContentService as any, "getElementValue");
@@ -1139,6 +1117,7 @@ describe("CollectAutofillContentService", () => {
         type: usernameField.type,
         value: usernameField.value,
         viewable: true,
+        dataSetValues: "label: username-data-label, stripe: data-stripe, ",
       });
     });
 
@@ -1183,7 +1162,7 @@ describe("CollectAutofillContentService", () => {
       ) as ElementWithOpId<FillableFormFieldElement>;
       jest.spyOn(collectAutofillContentService as any, "getAutofillFieldMaxLength");
       jest
-        .spyOn(collectAutofillContentService["domElementVisibilityService"], "isFormFieldViewable")
+        .spyOn(collectAutofillContentService["domElementVisibilityService"], "isElementViewable")
         .mockResolvedValue(true);
       jest.spyOn(collectAutofillContentService as any, "getPropertyOrAttribute");
       jest.spyOn(collectAutofillContentService as any, "getElementValue");
@@ -1217,6 +1196,7 @@ describe("CollectAutofillContentService", () => {
         type: hiddenField.type,
         value: hiddenField.value,
         viewable: true,
+        dataSetValues: "stripe: data-stripe, ",
       });
     });
   });
@@ -2038,41 +2018,6 @@ describe("CollectAutofillContentService", () => {
     });
   });
 
-  describe("getShadowRoot", () => {
-    beforeEach(() => {
-      // eslint-disable-next-line
-      // @ts-ignore
-      globalThis.chrome.dom = {
-        openOrClosedShadowRoot: jest.fn(),
-      };
-    });
-
-    it("returns null if the passed node is not an HTMLElement instance", () => {
-      const textNode = document.createTextNode("Hello, world!");
-      const shadowRoot = collectAutofillContentService["getShadowRoot"](textNode);
-
-      expect(shadowRoot).toEqual(null);
-    });
-
-    it("returns an open shadow root if the passed node has a shadowDOM element", () => {
-      const element = document.createElement("div");
-      element.attachShadow({ mode: "open" });
-
-      const shadowRoot = collectAutofillContentService["getShadowRoot"](element);
-
-      expect(shadowRoot).toBeInstanceOf(ShadowRoot);
-    });
-
-    it("returns a value provided by Chrome's openOrClosedShadowRoot API", () => {
-      const element = document.createElement("div");
-      collectAutofillContentService["getShadowRoot"](element);
-
-      // eslint-disable-next-line
-      // @ts-ignore
-      expect(chrome.dom.openOrClosedShadowRoot).toBeCalled();
-    });
-  });
-
   describe("setupMutationObserver", () => {
     it("sets up a mutation observer and observes the document element", () => {
       jest.spyOn(MutationObserver.prototype, "observe");
@@ -2085,6 +2030,12 @@ describe("CollectAutofillContentService", () => {
   });
 
   describe("handleMutationObserverMutation", () => {
+    const waitForAllMutationsToComplete = async () => {
+      await waitForIdleCallback();
+      await waitForIdleCallback();
+      await waitForIdleCallback();
+    };
+
     it("will set the domRecentlyMutated value to true and the noFieldsFound value to false if a form or field node has been added ", async () => {
       const form = document.createElement("form");
       document.body.appendChild(form);
@@ -2108,7 +2059,7 @@ describe("CollectAutofillContentService", () => {
       jest.spyOn(collectAutofillContentService as any, "isAutofillElementNodeMutated");
 
       collectAutofillContentService["handleMutationObserverMutation"]([mutationRecord]);
-      await waitForIdleCallback();
+      await waitForAllMutationsToComplete();
 
       expect(collectAutofillContentService["domRecentlyMutated"]).toEqual(true);
       expect(collectAutofillContentService["noFieldsFound"]).toEqual(false);
@@ -2131,7 +2082,7 @@ describe("CollectAutofillContentService", () => {
       const removedNodes = document.querySelectorAll("form");
       const autofillForm: AutofillForm = createAutofillFormMock({});
       const autofillField: AutofillField = createAutofillFieldMock({});
-      collectAutofillContentService["autofillFormElements"] = new Map([[form, autofillForm]]);
+      collectAutofillContentService["_autofillFormElements"] = new Map([[form, autofillForm]]);
       collectAutofillContentService["autofillFieldElements"] = new Map([
         [usernameInput, autofillField],
       ]);
@@ -2152,9 +2103,9 @@ describe("CollectAutofillContentService", () => {
           target: document.body,
         },
       ]);
-      await waitForIdleCallback();
+      await waitForAllMutationsToComplete();
 
-      expect(collectAutofillContentService["autofillFormElements"].size).toEqual(0);
+      expect(collectAutofillContentService["_autofillFormElements"].size).toEqual(0);
       expect(collectAutofillContentService["autofillFieldElements"].size).toEqual(0);
     });
 
@@ -2177,7 +2128,7 @@ describe("CollectAutofillContentService", () => {
       jest.spyOn(collectAutofillContentService as any, "handleAutofillElementAttributeMutation");
 
       collectAutofillContentService["handleMutationObserverMutation"]([mutationRecord]);
-      await waitForIdleCallback();
+      await waitForAllMutationsToComplete();
 
       expect(collectAutofillContentService["domRecentlyMutated"]).toEqual(false);
       expect(collectAutofillContentService["noFieldsFound"]).toEqual(true);
@@ -2276,13 +2227,13 @@ describe("CollectAutofillContentService", () => {
         htmlAction: "https://example.com",
         htmlMethod: "POST",
       };
-      collectAutofillContentService["autofillFormElements"] = new Map([
+      collectAutofillContentService["_autofillFormElements"] = new Map([
         [formElement, autofillForm],
       ]);
 
       collectAutofillContentService["deleteCachedAutofillElement"](formElement);
 
-      expect(collectAutofillContentService["autofillFormElements"].size).toEqual(0);
+      expect(collectAutofillContentService["_autofillFormElements"].size).toEqual(0);
     });
 
     it("removes the autofill field element form the map of elements", () => {
@@ -2328,7 +2279,7 @@ describe("CollectAutofillContentService", () => {
       expect(collectAutofillContentService["domRecentlyMutated"]).toEqual(true);
       expect(collectAutofillContentService["noFieldsFound"]).toEqual(false);
       expect(collectAutofillContentService["updateAutofillElementsAfterMutation"]).toBeCalled();
-      expect(collectAutofillContentService["autofillFormElements"].size).toEqual(0);
+      expect(collectAutofillContentService["_autofillFormElements"].size).toEqual(0);
       expect(collectAutofillContentService["autofillFieldElements"].size).toEqual(0);
     });
   });
@@ -2375,7 +2326,9 @@ describe("CollectAutofillContentService", () => {
         removedNodes: null,
         target: targetNode,
       };
-      collectAutofillContentService["autofillFormElements"] = new Map([[targetNode, autofillForm]]);
+      collectAutofillContentService["_autofillFormElements"] = new Map([
+        [targetNode, autofillForm],
+      ]);
       jest.spyOn(collectAutofillContentService as any, "updateAutofillFormElementData");
 
       collectAutofillContentService["handleAutofillElementAttributeMutation"](mutationRecord);
@@ -2447,14 +2400,14 @@ describe("CollectAutofillContentService", () => {
     const updatedAttributes = ["action", "name", "id", "method"];
 
     beforeEach(() => {
-      collectAutofillContentService["autofillFormElements"] = new Map([
+      collectAutofillContentService["_autofillFormElements"] = new Map([
         [formElement, autofillForm],
       ]);
     });
 
     updatedAttributes.forEach((attribute) => {
       it(`will update the ${attribute} value for the form element`, () => {
-        jest.spyOn(collectAutofillContentService["autofillFormElements"], "set");
+        jest.spyOn(collectAutofillContentService["_autofillFormElements"], "set");
 
         collectAutofillContentService["updateAutofillFormElementData"](
           attribute,
@@ -2462,7 +2415,7 @@ describe("CollectAutofillContentService", () => {
           autofillForm,
         );
 
-        expect(collectAutofillContentService["autofillFormElements"].set).toBeCalledWith(
+        expect(collectAutofillContentService["_autofillFormElements"].set).toBeCalledWith(
           formElement,
           autofillForm,
         );
@@ -2470,7 +2423,7 @@ describe("CollectAutofillContentService", () => {
     });
 
     it("will not update an attribute value if it is not present in the updateActions object", () => {
-      jest.spyOn(collectAutofillContentService["autofillFormElements"], "set");
+      jest.spyOn(collectAutofillContentService["_autofillFormElements"], "set");
 
       collectAutofillContentService["updateAutofillFormElementData"](
         "aria-label",
@@ -2478,7 +2431,7 @@ describe("CollectAutofillContentService", () => {
         autofillForm,
       );
 
-      expect(collectAutofillContentService["autofillFormElements"].set).not.toBeCalled();
+      expect(collectAutofillContentService["_autofillFormElements"].set).not.toBeCalled();
     });
   });
 
@@ -2554,17 +2507,17 @@ describe("CollectAutofillContentService", () => {
   });
 
   describe("handleFormElementIntersection", () => {
-    let isFormFieldViewableSpy: jest.SpyInstance;
+    let isElementViewableSpy: jest.SpyInstance;
     let setupAutofillOverlayListenerOnFieldSpy: jest.SpyInstance;
 
     beforeEach(() => {
-      isFormFieldViewableSpy = jest.spyOn(
+      isElementViewableSpy = jest.spyOn(
         collectAutofillContentService["domElementVisibilityService"],
-        "isFormFieldViewable",
+        "isElementViewable",
       );
       setupAutofillOverlayListenerOnFieldSpy = jest.spyOn(
         collectAutofillContentService["autofillOverlayContentService"],
-        "setupAutofillOverlayListenerOnField",
+        "setupOverlayListeners",
       );
     });
 
@@ -2579,40 +2532,69 @@ describe("CollectAutofillContentService", () => {
 
       await collectAutofillContentService["handleFormElementIntersection"](entries);
 
-      expect(isFormFieldViewableSpy).not.toHaveBeenCalled();
+      expect(isElementViewableSpy).not.toHaveBeenCalled();
       expect(setupAutofillOverlayListenerOnFieldSpy).not.toHaveBeenCalled();
     });
 
     it("skips setting up the overlay listeners on a field that is not viewable", async () => {
       const formFieldElement = document.createElement("input") as ElementWithOpId<FormFieldElement>;
+      const autofillField = mock<AutofillField>();
       const entries = [
         { target: formFieldElement, isIntersecting: true },
       ] as unknown as IntersectionObserverEntry[];
-      isFormFieldViewableSpy.mockReturnValueOnce(false);
+      collectAutofillContentService["autofillFieldElements"].set(formFieldElement, autofillField);
+      isElementViewableSpy.mockReturnValueOnce(false);
 
       await collectAutofillContentService["handleFormElementIntersection"](entries);
 
-      expect(isFormFieldViewableSpy).toHaveBeenCalledWith(formFieldElement);
+      expect(isElementViewableSpy).toHaveBeenCalledWith(formFieldElement);
       expect(setupAutofillOverlayListenerOnFieldSpy).not.toHaveBeenCalled();
     });
 
-    it("sets up the overlay listeners on a viewable field", async () => {
+    it("skips setting up the inline menu listeners if the observed form field is not present in the cache", async () => {
+      const formFieldElement = document.createElement("input") as ElementWithOpId<FormFieldElement>;
+      const entries = [
+        { target: formFieldElement, isIntersecting: true },
+      ] as unknown as IntersectionObserverEntry[];
+      isElementViewableSpy.mockReturnValueOnce(true);
+      collectAutofillContentService["intersectionObserver"] = mockIntersectionObserver;
+
+      await collectAutofillContentService["handleFormElementIntersection"](entries);
+
+      expect(isElementViewableSpy).not.toHaveBeenCalled();
+      expect(setupAutofillOverlayListenerOnFieldSpy).not.toHaveBeenCalled();
+    });
+
+    it("sets up the inline menu listeners on a viewable field", async () => {
       const formFieldElement = document.createElement("input") as ElementWithOpId<FormFieldElement>;
       const autofillField = mock<AutofillField>();
       const entries = [
         { target: formFieldElement, isIntersecting: true },
       ] as unknown as IntersectionObserverEntry[];
-      isFormFieldViewableSpy.mockReturnValueOnce(true);
+      isElementViewableSpy.mockReturnValueOnce(true);
       collectAutofillContentService["autofillFieldElements"].set(formFieldElement, autofillField);
       collectAutofillContentService["intersectionObserver"] = mockIntersectionObserver;
 
       await collectAutofillContentService["handleFormElementIntersection"](entries);
 
-      expect(isFormFieldViewableSpy).toHaveBeenCalledWith(formFieldElement);
+      expect(isElementViewableSpy).toHaveBeenCalledWith(formFieldElement);
       expect(setupAutofillOverlayListenerOnFieldSpy).toHaveBeenCalledWith(
         formFieldElement,
         autofillField,
         expect.anything(),
+      );
+    });
+  });
+
+  describe("destroy", () => {
+    it("clears the updateAfterMutationIdleCallback", () => {
+      jest.spyOn(window, "clearTimeout");
+      collectAutofillContentService["updateAfterMutationIdleCallback"] = setTimeout(jest.fn, 100);
+
+      collectAutofillContentService.destroy();
+
+      expect(clearTimeout).toHaveBeenCalledWith(
+        collectAutofillContentService["updateAfterMutationIdleCallback"],
       );
     });
   });

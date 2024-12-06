@@ -12,6 +12,8 @@ export type AccountInfo = {
   name: string | undefined;
 };
 
+export type Account = { id: UserId } & AccountInfo;
+
 export function accountInfoEqual(a: AccountInfo, b: AccountInfo) {
   if (a == null && b == null) {
     return true;
@@ -32,7 +34,8 @@ export function accountInfoEqual(a: AccountInfo, b: AccountInfo) {
 
 export abstract class AccountService {
   accounts$: Observable<Record<UserId, AccountInfo>>;
-  activeAccount$: Observable<{ id: UserId | undefined } & AccountInfo>;
+
+  activeAccount$: Observable<Account | null>;
 
   /**
    * Observable of the last activity time for each account.
@@ -41,7 +44,7 @@ export abstract class AccountService {
   /** Account list in order of descending recency */
   sortedUserIds$: Observable<UserId[]>;
   /** Next account that is not the current active account */
-  nextUpAccount$: Observable<{ id: UserId } & AccountInfo>;
+  nextUpAccount$: Observable<Account>;
   /**
    * Updates the `accounts$` observable with the new account data.
    *
@@ -72,7 +75,7 @@ export abstract class AccountService {
    * Updates the `activeAccount$` observable with the new active account.
    * @param userId
    */
-  abstract switchAccount(userId: UserId): Promise<void>;
+  abstract switchAccount(userId: UserId | null): Promise<void>;
   /**
    * Cleans personal information for the given account from the `accounts$` observable. Does not remove the userId from the observable.
    *

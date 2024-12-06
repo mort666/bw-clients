@@ -136,6 +136,7 @@ export class DefaultEnvironmentService implements EnvironmentService {
   constructor(
     private stateProvider: StateProvider,
     private accountService: AccountService,
+    private additionalRegionConfigs: RegionConfig[] = [],
   ) {
     this.globalState = this.stateProvider.getGlobal(GLOBAL_ENVIRONMENT_KEY);
     this.globalCloudRegionState = this.stateProvider.getGlobal(GLOBAL_CLOUD_REGION_KEY);
@@ -177,8 +178,7 @@ export class DefaultEnvironmentService implements EnvironmentService {
   }
 
   availableRegions(): RegionConfig[] {
-    const additionalRegions = (process.env.ADDITIONAL_REGIONS as unknown as RegionConfig[]) ?? [];
-    return PRODUCTION_REGIONS.concat(additionalRegions);
+    return PRODUCTION_REGIONS.concat(this.additionalRegionConfigs);
   }
 
   /**
@@ -269,7 +269,7 @@ export class DefaultEnvironmentService implements EnvironmentService {
     }
   }
 
-  async getEnvironment(userId?: UserId) {
+  async getEnvironment(userId?: UserId): Promise<Environment | undefined> {
     if (userId == null) {
       return await firstValueFrom(this.environment$);
     }

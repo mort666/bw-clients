@@ -18,6 +18,9 @@ import {
   LinkModule,
 } from "@bitwarden/components";
 
+import { LoginEmailService } from "../../../common";
+import { AnonLayoutWrapperDataService } from "../../anon-layout/anon-layout-wrapper-data.service";
+import { RegistrationUserAddIcon } from "../../icons";
 import { RegistrationCheckEmailIcon } from "../../icons/registration-check-email.icon";
 import { RegistrationEnvSelectorComponent } from "../registration-env-selector/registration-env-selector.component";
 
@@ -54,7 +57,6 @@ export class RegistrationStartComponent implements OnInit, OnDestroy {
 
   state: RegistrationStartState = RegistrationStartState.USER_DATA_ENTRY;
   RegistrationStartState = RegistrationStartState;
-  readonly Icons = { RegistrationCheckEmailIcon };
 
   isSelfHost = false;
 
@@ -88,6 +90,8 @@ export class RegistrationStartComponent implements OnInit, OnDestroy {
     private platformUtilsService: PlatformUtilsService,
     private accountApiService: AccountApiService,
     private router: Router,
+    private loginEmailService: LoginEmailService,
+    private anonLayoutWrapperDataService: AnonLayoutWrapperDataService,
   ) {
     this.isSelfHost = platformUtilsService.isSelfHost();
   }
@@ -97,6 +101,15 @@ export class RegistrationStartComponent implements OnInit, OnDestroy {
     this.registrationStartStateChange.emit(this.state);
 
     this.listenForQueryParamChanges();
+
+    /**
+     * If the user has a login email, set the email field to the login email.
+     */
+    this.loginEmailService.loginEmail$.pipe(takeUntil(this.destroy$)).subscribe((email) => {
+      if (email) {
+        this.formGroup.patchValue({ email });
+      }
+    });
   }
 
   private listenForQueryParamChanges() {
@@ -127,9 +140,12 @@ export class RegistrationStartComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // The app expects null for name and not empty string.
+    const sanitizedName = this.name.value === "" ? null : this.name.value;
+
     const request: RegisterSendVerificationEmailRequest = new RegisterSendVerificationEmailRequest(
       this.email.value,
-      this.name.value,
+      sanitizedName,
       this.receiveMarketingEmails.value,
     );
 
@@ -138,11 +154,19 @@ export class RegistrationStartComponent implements OnInit, OnDestroy {
     if (typeof result === "string") {
       // we received a token, so the env doesn't support email verification
       // send the user directly to the finish registration page with the token as a query param
-      await this.router.navigate(["/finish-signup"], { queryParams: { token: result } });
+      await this.router.navigate(["/finish-signup"], {
+        queryParams: { token: result, email: this.email.value },
+      });
     }
 
     // Result is null, so email verification is required
     this.state = RegistrationStartState.CHECK_EMAIL;
+    this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
+      pageTitle: {
+        key: "checkYourEmail",
+      },
+      pageIcon: RegistrationCheckEmailIcon,
+    });
     this.registrationStartStateChange.emit(this.state);
   };
 
@@ -166,6 +190,12 @@ export class RegistrationStartComponent implements OnInit, OnDestroy {
 
   goBack() {
     this.state = RegistrationStartState.USER_DATA_ENTRY;
+    this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
+      pageIcon: RegistrationUserAddIcon,
+      pageTitle: {
+        key: "createAccount",
+      },
+    });
     this.registrationStartStateChange.emit(this.state);
   }
 

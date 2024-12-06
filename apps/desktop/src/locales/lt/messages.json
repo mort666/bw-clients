@@ -26,6 +26,9 @@
   "typeSecureNote": {
     "message": "Saugus įrašas"
   },
+  "typeSshKey": {
+    "message": "SSH key"
+  },
   "folders": {
     "message": "Aplankai"
   },
@@ -59,6 +62,9 @@
         "example": "Company Name"
       }
     }
+  },
+  "welcomeBack": {
+    "message": "Welcome back"
   },
   "moveToOrgDesc": {
     "message": "Pasirinkite organizaciją, į kurią norite priskirti šį elementą. Priskiriant elementą organizacijai, visos elemento valdymo teisės bus perleistos tai organizacijai. Kai elementas bus perkeltas, nebebūsite tiesioginis šio elemento savininkas."
@@ -174,6 +180,63 @@
   "address": {
     "message": "Adresas"
   },
+  "sshPrivateKey": {
+    "message": "Private key"
+  },
+  "sshPublicKey": {
+    "message": "Public key"
+  },
+  "sshFingerprint": {
+    "message": "Fingerprint"
+  },
+  "sshKeyAlgorithm": {
+    "message": "Key type"
+  },
+  "sshKeyAlgorithmED25519": {
+    "message": "ED25519"
+  },
+  "sshKeyAlgorithmRSA2048": {
+    "message": "RSA 2048-Bit"
+  },
+  "sshKeyAlgorithmRSA3072": {
+    "message": "RSA 3072-Bit"
+  },
+  "sshKeyAlgorithmRSA4096": {
+    "message": "RSA 4096-Bit"
+  },
+  "sshKeyGenerated": {
+    "message": "A new SSH key was generated"
+  },
+  "sshKeyWrongPassword": {
+    "message": "The password you entered is incorrect."
+  },
+  "importSshKey": {
+    "message": "Import"
+  },
+  "confirmSshKeyPassword": {
+    "message": "Confirm password"
+  },
+  "enterSshKeyPasswordDesc": {
+    "message": "Enter the password for the SSH key."
+  },
+  "enterSshKeyPassword": {
+    "message": "Enter password"
+  },
+  "sshAgentUnlockRequired": {
+    "message": "Please unlock your vault to approve the SSH key request."
+  },
+  "sshAgentUnlockTimeout": {
+    "message": "SSH key request timed out."
+  },
+  "enableSshAgent": {
+    "message": "Enable SSH agent"
+  },
+  "enableSshAgentDesc": {
+    "message": "Enable the SSH agent to sign SSH requests right from your Bitwarden vault."
+  },
+  "enableSshAgentHelp": {
+    "message": "The SSH agent is a service targeted at developers that allows you to sign SSH requests directly from your Bitwarden vault."
+  },
   "premiumRequired": {
     "message": "Reikalinga Premium narystė"
   },
@@ -258,6 +321,9 @@
   },
   "generatePassword": {
     "message": "Sugeneruoti slaptažodį"
+  },
+  "generatePassphrase": {
+    "message": "Generate passphrase"
   },
   "type": {
     "message": "Tipas"
@@ -394,6 +460,16 @@
   "copyPassword": {
     "message": "Kopijuoti slaptažodį"
   },
+  "regenerateSshKey": {
+    "message": "Regenerate SSH key"
+  },
+  "copySshPrivateKey": {
+    "message": "Copy SSH private key"
+  },
+  "copyPassphrase": {
+    "message": "Copy passphrase",
+    "description": "Copy passphrase to clipboard"
+  },
   "copyUri": {
     "message": "Kopijuoti nuorodą"
   },
@@ -407,16 +483,55 @@
     "message": "Minimalus slaptažodžio ilgis"
   },
   "uppercase": {
-    "message": "Didžiosiomis (A-Z)"
+    "message": "Didžiosiomis (A-Z)",
+    "description": "deprecated. Use uppercaseLabel instead."
   },
   "lowercase": {
-    "message": "Mažosiomis (a-z)"
+    "message": "Mažosiomis (a-z)",
+    "description": "deprecated. Use lowercaseLabel instead."
   },
   "numbers": {
-    "message": "Skaitmenys (0-9)"
+    "message": "Skaitmenys (0-9)",
+    "description": "deprecated. Use numbersLabel instead."
   },
   "specialCharacters": {
     "message": "Specialieji simboliai (!@#$%^&*)"
+  },
+  "include": {
+    "message": "Include",
+    "description": "Card header for password generator include block"
+  },
+  "uppercaseDescription": {
+    "message": "Include uppercase characters",
+    "description": "Tooltip for the password generator uppercase character checkbox"
+  },
+  "uppercaseLabel": {
+    "message": "A-Z",
+    "description": "Label for the password generator uppercase character checkbox"
+  },
+  "lowercaseDescription": {
+    "message": "Include lowercase characters",
+    "description": "Full description for the password generator lowercase character checkbox"
+  },
+  "lowercaseLabel": {
+    "message": "a-z",
+    "description": "Label for the password generator lowercase character checkbox"
+  },
+  "numbersDescription": {
+    "message": "Include numbers",
+    "description": "Full description for the password generator numbers checkbox"
+  },
+  "numbersLabel": {
+    "message": "0-9",
+    "description": "Label for the password generator numbers checkbox"
+  },
+  "specialCharactersDescription": {
+    "message": "Include special characters",
+    "description": "Full description for the password generator special characters checkbox"
+  },
+  "specialCharactersLabel": {
+    "message": "!@#$%^&*",
+    "description": "Label for the password generator special characters checkbox"
   },
   "numWords": {
     "message": "Žodžių skaičius"
@@ -442,7 +557,16 @@
     "description": "Minimum Special Characters"
   },
   "ambiguous": {
-    "message": "Vengti dviprasmiškų simbolių"
+    "message": "Vengti dviprasmiškų simbolių",
+    "description": "deprecated. Use avoidAmbiguous instead."
+  },
+  "avoidAmbiguous": {
+    "message": "Avoid ambiguous characters",
+    "description": "Label for the avoid ambiguous characters checkbox."
+  },
+  "generatorPolicyInEffect": {
+    "message": "Enterprise policy requirements have been applied to your generator options.",
+    "description": "Indicates that a policy limits the credential generator screen."
   },
   "searchCollection": {
     "message": "Ieškoti rinkinyje"
@@ -499,6 +623,9 @@
   "createAccount": {
     "message": "Sukurti paskyrą"
   },
+  "newToBitwarden": {
+    "message": "New to Bitwarden?"
+  },
   "setAStrongPassword": {
     "message": "Set a strong password"
   },
@@ -507,6 +634,18 @@
   },
   "logIn": {
     "message": "Prisijungti"
+  },
+  "logInToBitwarden": {
+    "message": "Log in to Bitwarden"
+  },
+  "logInWithPasskey": {
+    "message": "Log in with passkey"
+  },
+  "loginWithDevice": {
+    "message": "Log in with device"
+  },
+  "useSingleSignOn": {
+    "message": "Use single sign-on"
   },
   "submit": {
     "message": "Išsaugoti"
@@ -539,8 +678,47 @@
       }
     }
   },
+  "masterPassword": {
+    "message": "Master password"
+  },
+  "masterPassImportant": {
+    "message": "Your master password cannot be recovered if you forget it!"
+  },
+  "confirmMasterPassword": {
+    "message": "Confirm master password"
+  },
+  "masterPassHintLabel": {
+    "message": "Master password hint"
+  },
+  "joinOrganization": {
+    "message": "Join organization"
+  },
+  "joinOrganizationName": {
+    "message": "Join $ORGANIZATIONNAME$",
+    "placeholders": {
+      "organizationName": {
+        "content": "$1",
+        "example": "My Org Name"
+      }
+    }
+  },
+  "finishJoiningThisOrganizationBySettingAMasterPassword": {
+    "message": "Finish joining this organization by setting a master password."
+  },
   "settings": {
     "message": "Nustatymai"
+  },
+  "accountEmail": {
+    "message": "Account email"
+  },
+  "requestHint": {
+    "message": "Request hint"
+  },
+  "requestPasswordHint": {
+    "message": "Request password hint"
+  },
+  "enterYourAccountEmailAddressAndYourPasswordHintWillBeSentToYou": {
+    "message": "Enter your account email address and your password hint will be sent to you"
   },
   "passwordHint": {
     "message": "Slaptažodžio užuomina"
@@ -573,17 +751,23 @@
       }
     }
   },
+  "youSuccessfullyLoggedIn": {
+    "message": "You successfully logged in"
+  },
+  "youMayCloseThisWindow": {
+    "message": "You may close this window"
+  },
   "masterPassDoesntMatch": {
     "message": "Pagrindinio slaptažodžio patvirtinimas nesutampa."
   },
   "newAccountCreated": {
     "message": "Jūsų paskyra sukurta! Galite prisijungti."
   },
-  "youSuccessfullyLoggedIn": {
-    "message": "You successfully logged in"
+  "newAccountCreated2": {
+    "message": "Your new account has been created!"
   },
-  "youMayCloseThisWindow": {
-    "message": "You may close this window"
+  "youHaveBeenLoggedIn": {
+    "message": "You have been logged in!"
   },
   "masterPassSent": {
     "message": "Išsiuntėme jums el. laišką su pagrindinio slaptažodžio užuomina."
@@ -614,6 +798,9 @@
   },
   "verificationCodeRequired": {
     "message": "Būtinas patvirtinimo kodas."
+  },
+  "webauthnCancelOrTimeout": {
+    "message": "The authentication was cancelled or took too long. Please try again."
   },
   "invalidVerificationCode": {
     "message": "Neteisingas patvirtinimo kodas"
@@ -666,18 +853,18 @@
   "authenticatorAppTitle": {
     "message": "Autentifikavimo programa"
   },
-  "authenticatorAppDesc": {
-    "message": "Naudokite autentifikatoriaus programėlę (pvz. Authy arba Google Authenticator), kad sugeneruotumėte laiko patikrinimo kodus.",
-    "description": "'Authy' and 'Google Authenticator' are product names and should not be translated."
+  "authenticatorAppDescV2": {
+    "message": "Enter a code generated by an authenticator app like Bitwarden Authenticator.",
+    "description": "'Bitwarden Authenticator' is a product name and should not be translated."
   },
-  "yubiKeyTitle": {
-    "message": "YubiKey OTP saugumo raktas"
+  "yubiKeyTitleV2": {
+    "message": "Yubico OTP security key"
   },
   "yubiKeyDesc": {
     "message": "Naudokite YubiKey, kad prisijungtumėte prie savo paskyros. Veikia su YubiKey 4, 4 Nano, 4C ir NEO įrenginiais."
   },
-  "duoDesc": {
-    "message": "Patvirtinkite su Duo Security naudodami Duo Mobile programą, SMS žinutę, telefono skambutį arba U2F saugumo raktą.",
+  "duoDescV2": {
+    "message": "Enter a code generated by Duo Security.",
     "description": "'Duo Security' and 'Duo Mobile' are product names and should not be translated."
   },
   "duoOrganizationDesc": {
@@ -693,8 +880,8 @@
   "emailTitle": {
     "message": "El. paštas"
   },
-  "emailDesc": {
-    "message": "Patvirtinimo kodai bus atsiųsti el. paštu."
+  "emailDescV2": {
+    "message": "Enter a code sent to your email."
   },
   "loginUnavailable": {
     "message": "Prisijungimas nepasiekiamas"
@@ -731,6 +918,10 @@
   },
   "baseUrl": {
     "message": "Serverio nuoroda"
+  },
+  "selfHostBaseUrl": {
+    "message": "Self-host server URL",
+    "description": "Label for field requesting a self-hosted integration service URL"
   },
   "apiUrl": {
     "message": "API serverio nuoroda"
@@ -776,6 +967,18 @@
   },
   "loginExpired": {
     "message": "Sesijos laikas baigėsi."
+  },
+  "restartRegistration": {
+    "message": "Restart registration"
+  },
+  "expiredLink": {
+    "message": "Expired link"
+  },
+  "pleaseRestartRegistrationOrTryLoggingIn": {
+    "message": "Please restart registration or try logging in."
+  },
+  "youMayAlreadyHaveAnAccount": {
+    "message": "You may already have an account"
   },
   "logOutConfirmation": {
     "message": "Ar tikrai norite atsijungti?"
@@ -863,6 +1066,18 @@
   "yourVaultIsLocked": {
     "message": "Jūsų saugykla užrakinta. Norėdami tęsti, patvirtinkite savo tapatybę."
   },
+  "yourAccountIsLocked": {
+    "message": "Your account is locked"
+  },
+  "or": {
+    "message": "or"
+  },
+  "unlockWithBiometrics": {
+    "message": "Unlock with biometrics"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Unlock with master password"
+  },
   "unlock": {
     "message": "Atrakinti"
   },
@@ -890,6 +1105,9 @@
   },
   "vaultTimeout": {
     "message": "Atsijungta nuo saugyklos"
+  },
+  "vaultTimeout1": {
+    "message": "Timeout"
   },
   "vaultTimeoutDesc": {
     "message": "Pasirinkite kada jūsų saugykla įvykdys laiko limito veiksmą."
@@ -1095,6 +1313,9 @@
     "message": "Kopijuoti numerį",
     "description": "Copy credit card number"
   },
+  "copyEmail": {
+    "message": "Copy email"
+  },
   "copySecurityCode": {
     "message": "Kopijuoti saugos kodą",
     "description": "Copy credit card security code (CVV)"
@@ -1141,6 +1362,9 @@
   "premiumPurchaseAlert": {
     "message": "Galite įsigyti Premium narystę bitwarden.com interneto saugykloje. Ar norite aplankyti svetainę dabar?"
   },
+  "premiumPurchaseAlertV2": {
+    "message": "You can purchase Premium from your account settings on the Bitwarden web app."
+  },
   "premiumCurrentMember": {
     "message": "Esate Premium narys!"
   },
@@ -1162,12 +1386,30 @@
   "passwordHistory": {
     "message": "Slaptažodžių istorija"
   },
+  "generatorHistory": {
+    "message": "Generator history"
+  },
+  "clearGeneratorHistoryTitle": {
+    "message": "Clear generator history"
+  },
+  "cleargGeneratorHistoryDescription": {
+    "message": "If you continue, all entries will be permanently deleted from generator's history. Are you sure you want to continue?"
+  },
   "clear": {
     "message": "Išvalyti",
     "description": "To clear something out. example: To clear browser history."
   },
   "noPasswordsInList": {
     "message": "Nėra rodytinų slaptažodžių."
+  },
+  "clearHistory": {
+    "message": "Clear history"
+  },
+  "nothingToShow": {
+    "message": "Nothing to show"
+  },
+  "nothingGeneratedRecently": {
+    "message": "You haven't generated anything recently"
   },
   "undo": {
     "message": "Anuliuoti"
@@ -1242,6 +1484,9 @@
         "example": "Password"
       }
     }
+  },
+  "copySuccessful": {
+    "message": "Kopijavimas sėkmingas"
   },
   "errorRefreshingAccessToken": {
     "message": "Access Token Refresh Error"
@@ -1477,8 +1722,14 @@
   "additionalWindowsHelloSettings": {
     "message": "Papildomi Windows Hello nustatymai"
   },
+  "unlockWithPolkit": {
+    "message": "Unlock with system authentication"
+  },
   "windowsHelloConsentMessage": {
     "message": "Patvirtinti Bitwarden."
+  },
+  "polkitConsentMessage": {
+    "message": "Authenticate to unlock Bitwarden."
   },
   "unlockWithTouchId": {
     "message": "Atrakinti naudojant Touch ID"
@@ -1492,6 +1743,9 @@
   "autoPromptWindowsHello": {
     "message": "Paprašyti Windows Hello paleidus programą"
   },
+  "autoPromptPolkit": {
+    "message": "Ask for system authentication on launch"
+  },
   "autoPromptTouchId": {
     "message": "Prašyti Touch ID paleidus programėlę"
   },
@@ -1501,8 +1755,8 @@
   "recommendedForSecurity": {
     "message": "Rekomenduojama dėl saugumo."
   },
-  "lockWithMasterPassOnRestart": {
-    "message": "Užrakinti su pagrindiniu slaptažodžiu perkrovus"
+  "lockWithMasterPassOnRestart1": {
+    "message": "Lock with master password on restart"
   },
   "deleteAccount": {
     "message": "Ištrinti paskyrą"
@@ -1512,6 +1766,12 @@
   },
   "deleteAccountWarning": {
     "message": "Paskyros ištrinimas yra amžinas. Jos nebus galima atkurti."
+  },
+  "cannotDeleteAccount": {
+    "message": "Cannot delete account"
+  },
+  "cannotDeleteAccountDesc": {
+    "message": "This action cannot be completed because your account is owned by an organization. Contact your organization administrator for additional details."
   },
   "accountDeleted": {
     "message": "Paskyra ištrinta"
@@ -1579,7 +1839,7 @@
   },
   "lock": {
     "message": "Užrakinti",
-    "description": "Verb form: to make secure or inaccesible by"
+    "description": "Verb form: to make secure or inaccessible by"
   },
   "trash": {
     "message": "Šiukšliadėžė",
@@ -1622,6 +1882,15 @@
   "orgRequiresYouToSetPassword": {
     "message": "Jūsų organizacija reikalauja nustatyti pagrindinį slaptažodį.",
     "description": "Used as a card title description on the set password page to explain why the user is there"
+  },
+  "cardMetrics": {
+    "message": "out of $TOTAL$",
+    "placeholders": {
+      "total": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
   },
   "verificationRequired": {
     "message": "Reikalingas patvirtinimas",
@@ -1678,8 +1947,8 @@
   "masterPasswordPolicyRequirementsNotMet": {
     "message": "Jūsų naujasis pagrindinis slaptažodis neatitinka politikos reikalavimų."
   },
-  "receiveMarketingEmails": {
-    "message": "Get emails from Bitwarden for announcements, advice, and research opportunities."
+  "receiveMarketingEmailsV2": {
+    "message": "Get advice, announcements, and research opportunities from Bitwarden in your inbox."
   },
   "unsubscribe": {
     "message": "Unsubscribe"
@@ -1702,8 +1971,8 @@
   "enableBrowserIntegration": {
     "message": "Leisti naršyklės integravimą"
   },
-  "enableBrowserIntegrationDesc": {
-    "message": "Naudojama biometrikai naršyklėje."
+  "enableBrowserIntegrationDesc1": {
+    "message": "Used to allow biometric unlock in browsers that are not Safari."
   },
   "enableDuckDuckGoBrowserIntegration": {
     "message": "Leisti DuckDuckGo naršyklės integravimą"
@@ -1770,6 +2039,12 @@
   },
   "biometricsNotEnabledDesc": {
     "message": "Pirma reikia nustatymuose nustatyti darbalaukio biometrinius duomenys, prieš juos naudojant naršyklėje."
+  },
+  "biometricsManualSetupTitle": {
+    "message": "Automatic setup not available"
+  },
+  "biometricsManualSetupDesc": {
+    "message": "Due to the installation method, biometrics support could not be automatically enabled. Would you like to open the documentation on how to do this manually?"
   },
   "personalOwnershipSubmitError": {
     "message": "Dėl įmonės politikos jums neleidžiama saugoti daiktų asmeninėje saugykloje. Pakeiskite nuosavybės parinktį į organizaciją ir pasirinkite iš galimų rinkinių."
@@ -1955,6 +2230,9 @@
   "emailVerificationRequired": {
     "message": "Reikalingas elektroninio pašto patvirtinimas"
   },
+  "emailVerifiedV2": {
+    "message": "Email verified"
+  },
   "emailVerificationRequiredDesc": {
     "message": "Privalote patvirtinti savo el. paštą norint naudotis šia funkcija."
   },
@@ -1978,6 +2256,9 @@
   },
   "updateWeakMasterPasswordWarning": {
     "message": "Jūsų pagrindinis slaptažodis neatitinka vieno ar kelių organizacijos slaptažodžiui keliamų reikalavimų. Norėdami prisijungti prie saugyklos, jūs turite atnaujinti savo pagrindinį slaptažodį. Jeigu nuspręsite tęsti, jūs būsite atjungti nuo dabartinės sesijos ir jums reikės vėl prisijungti. Visos aktyvios sesijos kituose įrenginiuose gali išlikti aktyvios iki vienos valandos."
+  },
+  "tdeDisabledMasterPasswordRequired": {
+    "message": "Your organization has disabled trusted device encryption. Please set a master password to access your vault."
   },
   "tryAgain": {
     "message": "Bandyti dar kartą"
@@ -2021,8 +2302,8 @@
   "minutes": {
     "message": "Minučių"
   },
-  "vaultTimeoutPolicyInEffect": {
-    "message": "Jūsų organizacijos politika pakeitė didžiausią leidžiamą saugyklos laiko limitą į $HOURS$ valandas(-ų) ir $MINUTES$ minutes(-čių).",
+  "vaultTimeoutPolicyInEffect1": {
+    "message": "$HOURS$ hour(s) and $MINUTES$ minute(s) maximum.",
     "placeholders": {
       "hours": {
         "content": "$1",
@@ -2062,6 +2343,9 @@
   },
   "vaultTimeoutTooLarge": {
     "message": "Jūsų saugyklos skirtasis laikas viršija jūsų organizacijos nustatytus apribojimus."
+  },
+  "inviteAccepted": {
+    "message": "Invitation accepted"
   },
   "resetPasswordPolicyAutoEnroll": {
     "message": "Automatinis įtraukimas"
@@ -2168,11 +2452,15 @@
   "locked": {
     "message": "Užrakinta"
   },
+  "yourVaultIsLockedV2": {
+    "message": "Your vault is locked"
+  },
   "unlocked": {
     "message": "Atrakinta"
   },
   "generator": {
-    "message": "Generatorius"
+    "message": "Generatorius",
+    "description": "Short for 'credential generator'."
   },
   "whatWouldYouLikeToGenerate": {
     "message": "Ką norėtumėte sugeneruoti?"
@@ -2185,6 +2473,43 @@
   },
   "generateUsername": {
     "message": "Sugeneruoti naują vartotojo vardą"
+  },
+  "generateEmail": {
+    "message": "Generate email"
+  },
+  "spinboxBoundariesHint": {
+    "message": "Value must be between $MIN$ and $MAX$.",
+    "description": "Explains spin box minimum and maximum values to the user",
+    "placeholders": {
+      "min": {
+        "content": "$1",
+        "example": "8"
+      },
+      "max": {
+        "content": "$2",
+        "example": "128"
+      }
+    }
+  },
+  "passwordLengthRecommendationHint": {
+    "message": " Use $RECOMMENDED$ characters or more to generate a strong password.",
+    "description": "Appended to `spinboxBoundariesHint` to recommend a length to the user. This must include any language-specific 'sentence' separator characters (e.g. a space in english).",
+    "placeholders": {
+      "recommended": {
+        "content": "$1",
+        "example": "14"
+      }
+    }
+  },
+  "passphraseNumWordsRecommendationHint": {
+    "message": " Use $RECOMMENDED$ words or more to generate a strong passphrase.",
+    "description": "Appended to `spinboxBoundariesHint` to recommend a number of words to the user. This must include any language-specific 'sentence' separator characters (e.g. a space in english).",
+    "placeholders": {
+      "recommended": {
+        "content": "$1",
+        "example": "6"
+      }
+    }
   },
   "usernameType": {
     "message": "Vartotojo vardo tipas"
@@ -2228,6 +2553,14 @@
   },
   "forwardedEmailDesc": {
     "message": "Sugeneruoti el. pašto slapyvardį su išorine persiuntimo paslauga."
+  },
+  "forwarderDomainName": {
+    "message": "Email domain",
+    "description": "Labels the domain name email forwarder service option"
+  },
+  "forwarderDomainNameHint": {
+    "message": "Choose a domain that is supported by the selected service",
+    "description": "Guidance provided for email forwarding services that support multiple email domains."
   },
   "forwarderError": {
     "message": "$SERVICENAME$ error: $ERRORMESSAGE$",
@@ -2389,14 +2722,29 @@
   "notificationSentDevice": {
     "message": "Į jūsų įrenginį išsiųstas pranešimas."
   },
+  "aNotificationWasSentToYourDevice": {
+    "message": "A notification was sent to your device"
+  },
+  "makeSureYourAccountIsUnlockedAndTheFingerprintEtc": {
+    "message": "Make sure your account is unlocked and the fingerprint phrase matches on the other device"
+  },
+  "needAnotherOptionV1": {
+    "message": "Need another option?"
+  },
   "fingerprintMatchInfo": {
     "message": "Prašome užtikrinti jog jūsų saugykla atrakinta ir piršto antspaudo frazė sutampa su kitu įrenginiu."
   },
   "fingerprintPhraseHeader": {
     "message": "Piršto antspaudo frazė"
   },
+  "youWillBeNotifiedOnceTheRequestIsApproved": {
+    "message": "You will be notified once the request is approved"
+  },
   "needAnotherOption": {
     "message": "Prisijungimas su įrenginiu turi būti nustatytas Bitwarden aplikacijos nustatymuose. Reikia kito pasirinkimo?"
+  },
+  "viewAllLogInOptions": {
+    "message": "View all log in options"
   },
   "viewAllLoginOptions": {
     "message": "Peržiūrėti visas prisijungimo parinktis"
@@ -2517,8 +2865,14 @@
   "checkForBreaches": {
     "message": "Patikrinti žinomus šio slaptažodžio duomenų pažeidimus"
   },
+  "loggedInExclamation": {
+    "message": "Logged in!"
+  },
   "important": {
     "message": "Svarbu:"
+  },
+  "accessing": {
+    "message": "Accessing"
   },
   "accessTokenUnableToBeDecrypted": {
     "message": "You have been logged out because your access token could not be decrypted. Please log in again to resolve this issue."
@@ -2544,8 +2898,17 @@
   "windowsBiometricUpdateWarningTitle": {
     "message": "Rekomenduojamas nustatymų atnaujinimas"
   },
+  "rememberThisDeviceToMakeFutureLoginsSeamless": {
+    "message": "Remember this device to make future logins seamless"
+  },
   "deviceApprovalRequired": {
     "message": "Įrenginio patvirtinimas reikalingas. Pasirinkite patvirtinimo būdą toliau:"
+  },
+  "deviceApprovalRequiredV2": {
+    "message": "Device approval required"
+  },
+  "selectAnApprovalOptionBelow": {
+    "message": "Select an approval option below"
   },
   "rememberThisDevice": {
     "message": "Prisiminti šį įrenginį"
@@ -2571,9 +2934,6 @@
   "eu": {
     "message": "ES",
     "description": "European Union"
-  },
-  "loggingInOn": {
-    "message": "Prisijungiama prie"
   },
   "selfHostedServer": {
     "message": "savarankiškai sukurtas"
@@ -2601,6 +2961,9 @@
   },
   "userEmailMissing": {
     "message": "Trūksta naudotojo el. pašto"
+  },
+  "activeUserEmailNotFoundLoggingYouOut": {
+    "message": "Active user email not found. Logging you out."
   },
   "deviceTrusted": {
     "message": "Patikimas įrenginys"
@@ -2763,6 +3126,9 @@
       }
     }
   },
+  "duoHealthCheckResultsInNullAuthUrlError": {
+    "message": "Error connecting with the Duo service. Use a different two-step login method or contact Duo for assistance."
+  },
   "launchDuoAndFollowStepsToFinishLoggingIn": {
     "message": "Launch Duo and follow the steps to finish logging in."
   },
@@ -2784,8 +3150,8 @@
   "invalidFilePassword": {
     "message": "Netinkamas failo slaptažodis, prašome naudoti tą slaptažodį, kurį įvedėte kurdami eksportuojamą failą."
   },
-  "importDestination": {
-    "message": "Importavimo vieta"
+  "destination": {
+    "message": "Destination"
   },
   "learnAboutImportOptions": {
     "message": "Sužinoti apie importavimo pasirinkimus"
@@ -2842,6 +3208,9 @@
   },
   "confirmFilePassword": {
     "message": "Patvirtinti failo slaptažodį"
+  },
+  "exportSuccess": {
+    "message": "Vault data exported"
   },
   "multifactorAuthenticationCancelled": {
     "message": "Kelių veiksnių autentifikacija atšaukta"
@@ -2977,5 +3346,50 @@
         "example": "Work"
       }
     }
+  },
+  "data": {
+    "message": "Data"
+  },
+  "fileSends": {
+    "message": "File Sends"
+  },
+  "textSends": {
+    "message": "Text Sends"
+  },
+  "ssoError": {
+    "message": "No free ports could be found for the sso login."
+  },
+  "authorize": {
+    "message": "Authorize"
+  },
+  "deny": {
+    "message": "Deny"
+  },
+  "sshkeyApprovalTitle": {
+    "message": "Confirm SSH key usage"
+  },
+  "sshkeyApprovalMessageInfix": {
+    "message": "is requesting access to"
+  },
+  "unknownApplication": {
+    "message": "An application"
+  },
+  "sshKeyPasswordUnsupported": {
+    "message": "Importing password protected SSH keys is not yet supported"
+  },
+  "invalidSshKey": {
+    "message": "The SSH key is invalid"
+  },
+  "sshKeyTypeUnsupported": {
+    "message": "The SSH key type is not supported"
+  },
+  "importSshKeyFromClipboard": {
+    "message": "Import key from clipboard"
+  },
+  "sshKeyPasted": {
+    "message": "SSH key imported successfully"
+  },
+  "fileSavedToDevice": {
+    "message": "File saved to device. Manage from your device downloads."
   }
 }

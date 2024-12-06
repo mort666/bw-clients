@@ -1,19 +1,20 @@
-import { map } from "rxjs";
+import { filter, map } from "rxjs";
 
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { SingleUserState, StateProvider } from "@bitwarden/common/platform/state";
+import { UserKeyEncryptor } from "@bitwarden/common/tools/cryptography/user-key-encryptor";
 import { BufferedState } from "@bitwarden/common/tools/state/buffered-state";
 import { PaddedDataPacker } from "@bitwarden/common/tools/state/padded-data-packer";
 import { SecretState } from "@bitwarden/common/tools/state/secret-state";
-import { UserKeyEncryptor } from "@bitwarden/common/tools/state/user-key-encryptor";
 import { UserId } from "@bitwarden/common/types/guid";
+import { CredentialAlgorithm } from "@bitwarden/generator-core";
+import { KeyService } from "@bitwarden/key-management";
 
 import { GeneratedCredential } from "./generated-credential";
 import { GeneratorHistoryService } from "./generator-history.abstraction";
 import { GENERATOR_HISTORY, GENERATOR_HISTORY_BUFFER } from "./key-definitions";
 import { LegacyPasswordHistoryDecryptor } from "./legacy-password-history-decryptor";
-import { GeneratorCategory, HistoryServiceOptions } from "./options";
+import { HistoryServiceOptions } from "./options";
 
 const OPTIONS_FRAME_SIZE = 2048;
 
@@ -23,9 +24,9 @@ const OPTIONS_FRAME_SIZE = 2048;
 export class LocalGeneratorHistoryService extends GeneratorHistoryService {
   constructor(
     private readonly encryptService: EncryptService,
-    private readonly keyService: CryptoService,
+    private readonly keyService: KeyService,
     private readonly stateProvider: StateProvider,
-    private readonly options: HistoryServiceOptions = { maxTotal: 100 },
+    private readonly options: HistoryServiceOptions = { maxTotal: 200 },
   ) {
     super();
   }
@@ -33,7 +34,12 @@ export class LocalGeneratorHistoryService extends GeneratorHistoryService {
   private _credentialStates = new Map<UserId, SingleUserState<GeneratedCredential[]>>();
 
   /** {@link GeneratorHistoryService.track} */
-  track = async (userId: UserId, credential: string, category: GeneratorCategory, date?: Date) => {
+  track = async (
+    userId: UserId,
+    credential: string,
+    category: CredentialAlgorithm,
+    date?: Date,
+  ) => {
     const state = this.getCredentialState(userId);
     let result: GeneratedCredential = null;
 
@@ -110,7 +116,10 @@ export class LocalGeneratorHistoryService extends GeneratorHistoryService {
   private createSecretState(userId: UserId): SingleUserState<GeneratedCredential[]> {
     // construct the encryptor
     const packer = new PaddedDataPacker(OPTIONS_FRAME_SIZE);
-    const encryptor = new UserKeyEncryptor(this.encryptService, this.keyService, packer);
+    const encryptor$ = this.keyService.userKey$(userId).pipe(
+      map((key) => (key ? new UserKeyEncryptor(userId, this.encryptService, key, packer) : null)),
+      filter((encryptor) => !!encryptor),
+    );
 
     // construct the durable state
     const state = SecretState.from<
@@ -119,7 +128,7 @@ export class LocalGeneratorHistoryService extends GeneratorHistoryService {
       GeneratedCredential,
       Record<keyof GeneratedCredential, never>,
       GeneratedCredential
-    >(userId, GENERATOR_HISTORY, this.stateProvider, encryptor);
+    >(userId, GENERATOR_HISTORY, this.stateProvider, encryptor$);
 
     // decryptor is just an algorithm, but it can't run until the key is available;
     // providing it via an observable makes running it early impossible
@@ -128,9 +137,7 @@ export class LocalGeneratorHistoryService extends GeneratorHistoryService {
       this.keyService,
       this.encryptService,
     );
-    const decryptor$ = this.keyService
-      .getInMemoryUserKeyFor$(userId)
-      .pipe(map((key) => key && decryptor));
+    const decryptor$ = this.keyService.userKey$(userId).pipe(map((key) => key && decryptor));
 
     // move data from the old password history once decryptor is available
     const buffer = new BufferedState(

@@ -1,4 +1,5 @@
-import { Directive, Inject, OnDestroy, OnInit } from "@angular/core";
+import { Directive, Inject, OnInit, OnDestroy } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ActivatedRoute, NavigationExtras, Router } from "@angular/router";
 import { firstValueFrom } from "rxjs";
 import { first } from "rxjs/operators";
@@ -32,6 +33,7 @@ import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.servic
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
+import { ToastService } from "@bitwarden/components";
 
 import { CaptchaProtectedComponent } from "./captcha-protected.component";
 
@@ -67,6 +69,7 @@ export class TwoFactorComponent extends CaptchaProtectedComponent implements OnI
   protected changePasswordRoute = "set-password";
   protected forcePasswordResetRoute = "update-temp-password";
   protected successRoute = "vault";
+  protected twoFactorTimeoutRoute = "2fa-timeout";
 
   get isDuoProvider(): boolean {
     return (
@@ -94,9 +97,35 @@ export class TwoFactorComponent extends CaptchaProtectedComponent implements OnI
     protected configService: ConfigService,
     protected masterPasswordService: InternalMasterPasswordServiceAbstraction,
     protected accountService: AccountService,
+    protected toastService: ToastService,
   ) {
-    super(environmentService, i18nService, platformUtilsService);
+    super(environmentService, i18nService, platformUtilsService, toastService);
     this.webAuthnSupported = this.platformUtilsService.supportsWebAuthn(win);
+
+    this.logService.info(
+      "Subscribing to timeout on LoginStrategyService with service id: " +
+        this.loginStrategyService.id,
+    );
+
+    // Add subscription to twoFactorTimeout$ and navigate to twoFactorTimeoutRoute if expired
+    this.loginStrategyService.twoFactorTimeout$
+      .pipe(takeUntilDestroyed())
+      .subscribe(async (expired) => {
+        this.logService.info(
+          "Received emission from  LoginStrategyService.twoFactorTimeout$ with service id: " +
+            this.loginStrategyService.id,
+        );
+
+        if (!expired) {
+          return;
+        }
+
+        try {
+          await this.router.navigate([this.twoFactorTimeoutRoute]);
+        } catch (err) {
+          this.logService.error(`Failed to navigate to ${this.twoFactorTimeoutRoute} route`, err);
+        }
+      });
   }
 
   async ngOnInit() {
@@ -133,7 +162,11 @@ export class TwoFactorComponent extends CaptchaProtectedComponent implements OnI
           this.submit();
         },
         (error: string) => {
-          this.platformUtilsService.showToast("error", this.i18nService.t("errorOccurred"), error);
+          this.toastService.showToast({
+            variant: "error",
+            title: this.i18nService.t("errorOccurred"),
+            message: error,
+          });
         },
         (info: string) => {
           if (info === "ready") {
@@ -199,11 +232,11 @@ export class TwoFactorComponent extends CaptchaProtectedComponent implements OnI
     await this.setupCaptcha();
 
     if (this.token == null || this.token === "") {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("verificationCodeRequired"),
-      );
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("errorOccurred"),
+        message: this.i18nService.t("verificationCodeRequired"),
+      });
       return;
     }
 
@@ -220,12 +253,9 @@ export class TwoFactorComponent extends CaptchaProtectedComponent implements OnI
       this.token = this.token.replace(" ", "").trim();
     }
 
-    try {
-      await this.doSubmit();
-    } catch {
-      if (this.selectedProviderType === TwoFactorProviderType.WebAuthn && this.webAuthn != null) {
-        this.webAuthn.start();
-      }
+    await this.doSubmit();
+    if (this.selectedProviderType === TwoFactorProviderType.WebAuthn && this.webAuthn != null) {
+      this.webAuthn.start();
     }
   }
 
@@ -244,11 +274,11 @@ export class TwoFactorComponent extends CaptchaProtectedComponent implements OnI
       return false;
     }
 
-    this.platformUtilsService.showToast(
-      "error",
-      this.i18nService.t("errorOccured"),
-      this.i18nService.t("encryptionKeyMigrationRequired"),
-    );
+    this.toastService.showToast({
+      variant: "error",
+      title: this.i18nService.t("errorOccured"),
+      message: this.i18nService.t("encryptionKeyMigrationRequired"),
+    });
     return true;
   }
 
@@ -415,11 +445,11 @@ export class TwoFactorComponent extends CaptchaProtectedComponent implements OnI
     }
 
     if ((await this.loginStrategyService.getEmail()) == null) {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("sessionTimeout"),
-      );
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("errorOccurred"),
+        message: this.i18nService.t("sessionTimeout"),
+      });
       return;
     }
 
@@ -435,11 +465,11 @@ export class TwoFactorComponent extends CaptchaProtectedComponent implements OnI
       this.emailPromise = this.apiService.postTwoFactorEmail(request);
       await this.emailPromise;
       if (doToast) {
-        this.platformUtilsService.showToast(
-          "success",
-          null,
-          this.i18nService.t("verificationCodeEmailSent", this.twoFactorEmail),
-        );
+        this.toastService.showToast({
+          variant: "success",
+          title: null,
+          message: this.i18nService.t("verificationCodeEmailSent", this.twoFactorEmail),
+        });
       }
     } catch (e) {
       this.logService.error(e);
@@ -477,6 +507,15 @@ export class TwoFactorComponent extends CaptchaProtectedComponent implements OnI
   }
 
   async launchDuoFrameless() {
+    if (this.duoFramelessUrl === null) {
+      this.toastService.showToast({
+        variant: "error",
+        title: null,
+        message: this.i18nService.t("duoHealthCheckResultsInNullAuthUrlError"),
+      });
+      return;
+    }
+
     this.platformUtilsService.launchUri(this.duoFramelessUrl);
   }
 }

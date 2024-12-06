@@ -25,7 +25,10 @@ export type CopyAction =
   | "phone"
   | "address"
   | "secureNote"
-  | "hiddenField";
+  | "hiddenField"
+  | "privateKey"
+  | "publicKey"
+  | "keyFingerprint";
 
 type CopyActionInfo = {
   /**
@@ -58,10 +61,13 @@ const CopyActions: Record<CopyAction, CopyActionInfo> = {
     protected: true,
     event: EventType.Cipher_ClientCopiedCardCode,
   },
-  email: { typeI18nKey: "email", protected: false },
-  phone: { typeI18nKey: "phone", protected: false },
-  address: { typeI18nKey: "address", protected: false },
-  secureNote: { typeI18nKey: "note", protected: false },
+  email: { typeI18nKey: "email", protected: true },
+  phone: { typeI18nKey: "phone", protected: true },
+  address: { typeI18nKey: "address", protected: true },
+  secureNote: { typeI18nKey: "note", protected: true },
+  privateKey: { typeI18nKey: "sshPrivateKey", protected: true },
+  publicKey: { typeI18nKey: "sshPublicKey", protected: true },
+  keyFingerprint: { typeI18nKey: "sshFingerprint", protected: true },
   hiddenField: {
     typeI18nKey: "value",
     protected: true,
@@ -89,13 +95,15 @@ export class CopyCipherFieldService {
    * @param actionType The type of field being copied.
    * @param cipher The cipher containing the field to copy.
    * @param skipReprompt Whether to skip password re-prompting.
+   *
+   * @returns Whether the field was copied successfully.
    */
   async copy(
     valueToCopy: string,
     actionType: CopyAction,
     cipher: CipherView,
     skipReprompt: boolean = false,
-  ) {
+  ): Promise<boolean> {
     const action = CopyActions[actionType];
     if (
       !skipReprompt &&
@@ -103,16 +111,16 @@ export class CopyCipherFieldService {
       action.protected &&
       !(await this.passwordRepromptService.showPasswordPrompt())
     ) {
-      return;
+      return false;
     }
 
-    if (valueToCopy == null || !cipher.viewPassword) {
-      return;
+    if (valueToCopy == null) {
+      return false;
     }
 
     if (actionType === "totp") {
       if (!(await this.totpAllowed(cipher))) {
-        return;
+        return false;
       }
       valueToCopy = await this.totpService.getCode(valueToCopy);
     }
@@ -125,8 +133,15 @@ export class CopyCipherFieldService {
     });
 
     if (action.event !== undefined) {
-      await this.eventCollectionService.collect(action.event, cipher.id);
+      await this.eventCollectionService.collect(
+        action.event,
+        cipher.id,
+        false,
+        cipher.organizationId,
+      );
     }
+
+    return true;
   }
 
   /**

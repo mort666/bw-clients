@@ -1,93 +1,125 @@
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { StateProvider } from "@bitwarden/common/platform/state";
-import { engine, services, strategies } from "@bitwarden/generator-core";
+import { RestClient } from "@bitwarden/common/tools/integration/rpc";
+import { engine, services, strategies, Integrations } from "@bitwarden/generator-core";
 import { DefaultGeneratorNavigationService } from "@bitwarden/generator-navigation";
+import { KeyService } from "@bitwarden/key-management";
 
 import { LegacyUsernameGenerationService } from "./legacy-username-generation.service";
 import { UsernameGenerationServiceAbstraction } from "./username-generation.service.abstraction";
 
+const { KeyServiceRandomizer, UsernameRandomizer, EmailRandomizer, EmailCalculator } = engine;
 const DefaultGeneratorService = services.DefaultGeneratorService;
-const CryptoServiceRandomizer = engine.CryptoServiceRandomizer;
-const CatchallGeneratorStrategy = strategies.CatchallGeneratorStrategy;
-const SubaddressGeneratorStrategy = strategies.SubaddressGeneratorStrategy;
-const EffUsernameGeneratorStrategy = strategies.EffUsernameGeneratorStrategy;
-const AddyIoForwarder = strategies.AddyIoForwarder;
-const DuckDuckGoForwarder = strategies.DuckDuckGoForwarder;
-const FastmailForwarder = strategies.FastmailForwarder;
-const FirefoxRelayForwarder = strategies.FirefoxRelayForwarder;
-const ForwardEmailForwarder = strategies.ForwardEmailForwarder;
-const SimpleLoginForwarder = strategies.SimpleLoginForwarder;
+const {
+  CatchallGeneratorStrategy,
+  SubaddressGeneratorStrategy,
+  EffUsernameGeneratorStrategy,
+  ForwarderGeneratorStrategy,
+} = strategies;
 
 export function legacyUsernameGenerationServiceFactory(
   apiService: ApiService,
   i18nService: I18nService,
-  cryptoService: CryptoService,
+  keyService: KeyService,
   encryptService: EncryptService,
   policyService: PolicyService,
   accountService: AccountService,
   stateProvider: StateProvider,
 ): UsernameGenerationServiceAbstraction {
-  const randomizer = new CryptoServiceRandomizer(cryptoService);
+  const randomizer = new KeyServiceRandomizer(keyService);
+  const restClient = new RestClient(apiService, i18nService);
+  const usernameRandomizer = new UsernameRandomizer(randomizer);
+  const emailRandomizer = new EmailRandomizer(randomizer);
+  const emailCalculator = new EmailCalculator();
 
   const effUsername = new DefaultGeneratorService(
-    new EffUsernameGeneratorStrategy(randomizer, stateProvider),
+    new EffUsernameGeneratorStrategy(usernameRandomizer, stateProvider),
     policyService,
   );
 
   const subaddress = new DefaultGeneratorService(
-    new SubaddressGeneratorStrategy(randomizer, stateProvider),
+    new SubaddressGeneratorStrategy(emailCalculator, emailRandomizer, stateProvider),
     policyService,
   );
 
   const catchall = new DefaultGeneratorService(
-    new CatchallGeneratorStrategy(randomizer, stateProvider),
+    new CatchallGeneratorStrategy(emailCalculator, emailRandomizer, stateProvider),
     policyService,
   );
 
   const addyIo = new DefaultGeneratorService(
-    new AddyIoForwarder(apiService, i18nService, encryptService, cryptoService, stateProvider),
+    new ForwarderGeneratorStrategy(
+      Integrations.AddyIo,
+      restClient,
+      i18nService,
+      encryptService,
+      keyService,
+      stateProvider,
+    ),
     policyService,
   );
 
   const duckDuckGo = new DefaultGeneratorService(
-    new DuckDuckGoForwarder(apiService, i18nService, encryptService, cryptoService, stateProvider),
+    new ForwarderGeneratorStrategy(
+      Integrations.DuckDuckGo,
+      restClient,
+      i18nService,
+      encryptService,
+      keyService,
+      stateProvider,
+    ),
     policyService,
   );
 
   const fastmail = new DefaultGeneratorService(
-    new FastmailForwarder(apiService, i18nService, encryptService, cryptoService, stateProvider),
+    new ForwarderGeneratorStrategy(
+      Integrations.Fastmail,
+      restClient,
+      i18nService,
+      encryptService,
+      keyService,
+      stateProvider,
+    ),
     policyService,
   );
 
   const firefoxRelay = new DefaultGeneratorService(
-    new FirefoxRelayForwarder(
-      apiService,
+    new ForwarderGeneratorStrategy(
+      Integrations.FirefoxRelay,
+      restClient,
       i18nService,
       encryptService,
-      cryptoService,
+      keyService,
       stateProvider,
     ),
     policyService,
   );
 
   const forwardEmail = new DefaultGeneratorService(
-    new ForwardEmailForwarder(
-      apiService,
+    new ForwarderGeneratorStrategy(
+      Integrations.ForwardEmail,
+      restClient,
       i18nService,
       encryptService,
-      cryptoService,
+      keyService,
       stateProvider,
     ),
     policyService,
   );
 
   const simpleLogin = new DefaultGeneratorService(
-    new SimpleLoginForwarder(apiService, i18nService, encryptService, cryptoService, stateProvider),
+    new ForwarderGeneratorStrategy(
+      Integrations.SimpleLogin,
+      restClient,
+      i18nService,
+      encryptService,
+      keyService,
+      stateProvider,
+    ),
     policyService,
   );
 

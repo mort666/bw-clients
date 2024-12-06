@@ -1,5 +1,6 @@
 import { CommonModule } from "@angular/common";
 import {
+  AfterViewInit,
   Component,
   EventEmitter,
   Input,
@@ -9,10 +10,11 @@ import {
   ViewChild,
 } from "@angular/core";
 import { ReactiveFormsModule, UntypedFormBuilder, Validators } from "@angular/forms";
-import { map, merge, Observable, startWith, Subject, takeUntil } from "rxjs";
+import { combineLatest, map, merge, Observable, startWith, Subject, takeUntil } from "rxjs";
 
+import { CollectionService } from "@bitwarden/admin-console/common";
 import { JslibModule } from "@bitwarden/angular/jslib.module";
-import { PasswordStrengthComponent } from "@bitwarden/angular/tools/password-strength/password-strength.component";
+import { PasswordStrengthV2Component } from "@bitwarden/angular/tools/password-strength/password-strength-v2.component";
 import { UserVerificationDialogComponent } from "@bitwarden/auth/angular";
 import { EventCollectionService } from "@bitwarden/common/abstractions/event/event-collection.service";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
@@ -23,8 +25,8 @@ import { EventType } from "@bitwarden/common/enums";
 import { FileDownloadService } from "@bitwarden/common/platform/abstractions/file-download/file-download.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
-import { EncryptedExportType } from "@bitwarden/common/tools/enums/encrypted-export-type.enum";
 import {
   AsyncActionsModule,
   BitSubmitDirective,
@@ -37,7 +39,10 @@ import {
   SelectModule,
   ToastService,
 } from "@bitwarden/components";
+import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
 import { VaultExportServiceAbstraction } from "@bitwarden/vault-export-core";
+
+import { EncryptedExportType } from "../enums/encrypted-export-type.enum";
 
 import { ExportScopeCalloutComponent } from "./export-scope-callout.component";
 
@@ -58,9 +63,10 @@ import { ExportScopeCalloutComponent } from "./export-scope-callout.component";
     RadioButtonModule,
     ExportScopeCalloutComponent,
     UserVerificationDialogComponent,
+    PasswordStrengthV2Component,
   ],
 })
-export class ExportComponent implements OnInit, OnDestroy {
+export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
   private _organizationId: string;
 
   get organizationId(): string {
@@ -110,12 +116,11 @@ export class ExportComponent implements OnInit, OnDestroy {
   @Output()
   onSuccessfulExport = new EventEmitter<string>();
 
-  @ViewChild(PasswordStrengthComponent) passwordStrengthComponent: PasswordStrengthComponent;
+  @ViewChild(PasswordStrengthV2Component) passwordStrengthComponent: PasswordStrengthV2Component;
 
   encryptedExportType = EncryptedExportType;
   protected showFilePassword: boolean;
 
-  filePasswordValue: string = null;
   private _disabledByPolicy = false;
 
   organizations$: Observable<Organization[]>;
@@ -153,12 +158,15 @@ export class ExportComponent implements OnInit, OnDestroy {
     protected toastService: ToastService,
     protected exportService: VaultExportServiceAbstraction,
     protected eventCollectionService: EventCollectionService,
+    protected passwordGenerationService: PasswordGenerationServiceAbstraction,
+    private platformUtilsService: PlatformUtilsService,
     private policyService: PolicyService,
     private logService: LogService,
     private formBuilder: UntypedFormBuilder,
     protected fileDownloadService: FileDownloadService,
     protected dialogService: DialogService,
     protected organizationService: OrganizationService,
+    private collectionService: CollectionService,
   ) {}
 
   async ngOnInit() {
@@ -195,8 +203,21 @@ export class ExportComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.organizations$ = this.organizationService.memberOrganizations$.pipe(
-      map((orgs) => orgs.sort(Utils.getSortFunction(this.i18nService, "name"))),
+    this.organizations$ = combineLatest({
+      collections: this.collectionService.decryptedCollections$,
+      memberOrganizations: this.organizationService.memberOrganizations$,
+    }).pipe(
+      map(({ collections, memberOrganizations }) => {
+        const managedCollectionsOrgIds = new Set(
+          collections.filter((c) => c.manage).map((c) => c.organizationId),
+        );
+        // Filter organizations that exist in managedCollectionsOrgIds
+        const filteredOrgs = memberOrganizations.filter((org) =>
+          managedCollectionsOrgIds.has(org.id),
+        );
+        // Sort the filtered organizations based on the name
+        return filteredOrgs.sort(Utils.getSortFunction(this.i18nService, "name"));
+      }),
     );
 
     this.exportForm.controls.vaultSelector.valueChanges
@@ -253,6 +274,13 @@ export class ExportComponent implements OnInit, OnDestroy {
       this.logService.error(e);
     }
   }
+
+  generatePassword = async () => {
+    const [options] = await this.passwordGenerationService.getOptions();
+    const generatedPassword = await this.passwordGenerationService.generatePassword(options);
+    this.exportForm.get("filePassword").setValue(generatedPassword);
+    this.exportForm.get("confirmFilePassword").setValue(generatedPassword);
+  };
 
   submit = async () => {
     if (this.isFileEncryptedExport && this.filePassword != this.confirmFilePassword) {

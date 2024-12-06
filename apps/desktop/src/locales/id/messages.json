@@ -26,6 +26,9 @@
   "typeSecureNote": {
     "message": "Catatan yang aman"
   },
+  "typeSshKey": {
+    "message": "SSH key"
+  },
   "folders": {
     "message": "Folder"
   },
@@ -59,6 +62,9 @@
         "example": "Company Name"
       }
     }
+  },
+  "welcomeBack": {
+    "message": "Welcome back"
   },
   "moveToOrgDesc": {
     "message": "Pilihlah sebuah organisasi yang Anda ingin memindahkan item ini. Memindahkan berarti memberikan kepemilikan kepada organisasi tersebut. Anda tidak akan lagi menjadi pemilik item ini."
@@ -174,6 +180,63 @@
   "address": {
     "message": "Alamat"
   },
+  "sshPrivateKey": {
+    "message": "Private key"
+  },
+  "sshPublicKey": {
+    "message": "Public key"
+  },
+  "sshFingerprint": {
+    "message": "Fingerprint"
+  },
+  "sshKeyAlgorithm": {
+    "message": "Key type"
+  },
+  "sshKeyAlgorithmED25519": {
+    "message": "ED25519"
+  },
+  "sshKeyAlgorithmRSA2048": {
+    "message": "RSA 2048-Bit"
+  },
+  "sshKeyAlgorithmRSA3072": {
+    "message": "RSA 3072-Bit"
+  },
+  "sshKeyAlgorithmRSA4096": {
+    "message": "RSA 4096-Bit"
+  },
+  "sshKeyGenerated": {
+    "message": "A new SSH key was generated"
+  },
+  "sshKeyWrongPassword": {
+    "message": "The password you entered is incorrect."
+  },
+  "importSshKey": {
+    "message": "Import"
+  },
+  "confirmSshKeyPassword": {
+    "message": "Confirm password"
+  },
+  "enterSshKeyPasswordDesc": {
+    "message": "Enter the password for the SSH key."
+  },
+  "enterSshKeyPassword": {
+    "message": "Enter password"
+  },
+  "sshAgentUnlockRequired": {
+    "message": "Please unlock your vault to approve the SSH key request."
+  },
+  "sshAgentUnlockTimeout": {
+    "message": "SSH key request timed out."
+  },
+  "enableSshAgent": {
+    "message": "Enable SSH agent"
+  },
+  "enableSshAgentDesc": {
+    "message": "Enable the SSH agent to sign SSH requests right from your Bitwarden vault."
+  },
+  "enableSshAgentHelp": {
+    "message": "The SSH agent is a service targeted at developers that allows you to sign SSH requests directly from your Bitwarden vault."
+  },
   "premiumRequired": {
     "message": "Memerlukan Keanggotaan Premium"
   },
@@ -258,6 +321,9 @@
   },
   "generatePassword": {
     "message": "Buat Kata Sandi"
+  },
+  "generatePassphrase": {
+    "message": "Generate passphrase"
   },
   "type": {
     "message": "Tipe"
@@ -394,6 +460,16 @@
   "copyPassword": {
     "message": "Salin Kata Sandi"
   },
+  "regenerateSshKey": {
+    "message": "Regenerate SSH key"
+  },
+  "copySshPrivateKey": {
+    "message": "Copy SSH private key"
+  },
+  "copyPassphrase": {
+    "message": "Copy passphrase",
+    "description": "Copy passphrase to clipboard"
+  },
   "copyUri": {
     "message": "Salin URI"
   },
@@ -407,16 +483,55 @@
     "message": "Panjang kata sandi minimum"
   },
   "uppercase": {
-    "message": "Huruf Kapital (A-Z)"
+    "message": "Huruf Kapital (A-Z)",
+    "description": "deprecated. Use uppercaseLabel instead."
   },
   "lowercase": {
-    "message": "Huruf Kecil (a-z)"
+    "message": "Huruf Kecil (a-z)",
+    "description": "deprecated. Use lowercaseLabel instead."
   },
   "numbers": {
-    "message": "Angka (0-9)"
+    "message": "Angka (0-9)",
+    "description": "deprecated. Use numbersLabel instead."
   },
   "specialCharacters": {
     "message": "Karakter khusus (!@#$%^&*)"
+  },
+  "include": {
+    "message": "Include",
+    "description": "Card header for password generator include block"
+  },
+  "uppercaseDescription": {
+    "message": "Include uppercase characters",
+    "description": "Tooltip for the password generator uppercase character checkbox"
+  },
+  "uppercaseLabel": {
+    "message": "A-Z",
+    "description": "Label for the password generator uppercase character checkbox"
+  },
+  "lowercaseDescription": {
+    "message": "Include lowercase characters",
+    "description": "Full description for the password generator lowercase character checkbox"
+  },
+  "lowercaseLabel": {
+    "message": "a-z",
+    "description": "Label for the password generator lowercase character checkbox"
+  },
+  "numbersDescription": {
+    "message": "Include numbers",
+    "description": "Full description for the password generator numbers checkbox"
+  },
+  "numbersLabel": {
+    "message": "0-9",
+    "description": "Label for the password generator numbers checkbox"
+  },
+  "specialCharactersDescription": {
+    "message": "Include special characters",
+    "description": "Full description for the password generator special characters checkbox"
+  },
+  "specialCharactersLabel": {
+    "message": "!@#$%^&*",
+    "description": "Label for the password generator special characters checkbox"
   },
   "numWords": {
     "message": "Jumlah kata"
@@ -442,7 +557,16 @@
     "description": "Minimum Special Characters"
   },
   "ambiguous": {
-    "message": "Hindari Karakter Ambigu"
+    "message": "Hindari Karakter Ambigu",
+    "description": "deprecated. Use avoidAmbiguous instead."
+  },
+  "avoidAmbiguous": {
+    "message": "Avoid ambiguous characters",
+    "description": "Label for the avoid ambiguous characters checkbox."
+  },
+  "generatorPolicyInEffect": {
+    "message": "Enterprise policy requirements have been applied to your generator options.",
+    "description": "Indicates that a policy limits the credential generator screen."
   },
   "searchCollection": {
     "message": "Cari koleksi"
@@ -499,6 +623,9 @@
   "createAccount": {
     "message": "Buat Akun"
   },
+  "newToBitwarden": {
+    "message": "New to Bitwarden?"
+  },
   "setAStrongPassword": {
     "message": "Set a strong password"
   },
@@ -507,6 +634,18 @@
   },
   "logIn": {
     "message": "Masuk"
+  },
+  "logInToBitwarden": {
+    "message": "Log in to Bitwarden"
+  },
+  "logInWithPasskey": {
+    "message": "Log in with passkey"
+  },
+  "loginWithDevice": {
+    "message": "Log in with device"
+  },
+  "useSingleSignOn": {
+    "message": "Use single sign-on"
   },
   "submit": {
     "message": "Kirim"
@@ -539,8 +678,47 @@
       }
     }
   },
+  "masterPassword": {
+    "message": "Master password"
+  },
+  "masterPassImportant": {
+    "message": "Your master password cannot be recovered if you forget it!"
+  },
+  "confirmMasterPassword": {
+    "message": "Confirm master password"
+  },
+  "masterPassHintLabel": {
+    "message": "Master password hint"
+  },
+  "joinOrganization": {
+    "message": "Join organization"
+  },
+  "joinOrganizationName": {
+    "message": "Join $ORGANIZATIONNAME$",
+    "placeholders": {
+      "organizationName": {
+        "content": "$1",
+        "example": "My Org Name"
+      }
+    }
+  },
+  "finishJoiningThisOrganizationBySettingAMasterPassword": {
+    "message": "Finish joining this organization by setting a master password."
+  },
   "settings": {
     "message": "Setelan"
+  },
+  "accountEmail": {
+    "message": "Account email"
+  },
+  "requestHint": {
+    "message": "Request hint"
+  },
+  "requestPasswordHint": {
+    "message": "Request password hint"
+  },
+  "enterYourAccountEmailAddressAndYourPasswordHintWillBeSentToYou": {
+    "message": "Enter your account email address and your password hint will be sent to you"
   },
   "passwordHint": {
     "message": "Petunjuk Sandi"
@@ -573,17 +751,23 @@
       }
     }
   },
+  "youSuccessfullyLoggedIn": {
+    "message": "Anda berhasil masuk"
+  },
+  "youMayCloseThisWindow": {
+    "message": "You may close this window"
+  },
   "masterPassDoesntMatch": {
     "message": "Konfirmasi sandi utama tidak cocok."
   },
   "newAccountCreated": {
     "message": "Akun baru Anda telah dibuat! Sekarang Anda bisa masuk."
   },
-  "youSuccessfullyLoggedIn": {
-    "message": "Anda berhasil masuk"
+  "newAccountCreated2": {
+    "message": "Your new account has been created!"
   },
-  "youMayCloseThisWindow": {
-    "message": "You may close this window"
+  "youHaveBeenLoggedIn": {
+    "message": "You have been logged in!"
   },
   "masterPassSent": {
     "message": "Kami telah mengirimi Anda email dengan petunjuk sandi utama Anda."
@@ -614,6 +798,9 @@
   },
   "verificationCodeRequired": {
     "message": "Kode verifikasi diperlukan."
+  },
+  "webauthnCancelOrTimeout": {
+    "message": "The authentication was cancelled or took too long. Please try again."
   },
   "invalidVerificationCode": {
     "message": "Kode verifikasi tidak valid"
@@ -666,18 +853,18 @@
   "authenticatorAppTitle": {
     "message": "Aplikasi Autentikasi"
   },
-  "authenticatorAppDesc": {
-    "message": "Gunakan aplikasi autentikasi (seperti Authy atau Google Authenticator) untuk menghasilkan kode verifikasi berbasis waktu.",
-    "description": "'Authy' and 'Google Authenticator' are product names and should not be translated."
+  "authenticatorAppDescV2": {
+    "message": "Enter a code generated by an authenticator app like Bitwarden Authenticator.",
+    "description": "'Bitwarden Authenticator' is a product name and should not be translated."
   },
-  "yubiKeyTitle": {
-    "message": "Kunci Keamanan OTP YubiKey"
+  "yubiKeyTitleV2": {
+    "message": "Yubico OTP security key"
   },
   "yubiKeyDesc": {
     "message": "Gunakan YubiKey untuk mengakses akun Anda. Bekerja dengan YubiKey 4, 4 Nano, 4C, dan peranti NEO."
   },
-  "duoDesc": {
-    "message": "Verifikasi dengan Duo Security menggunakan aplikasi Duo Mobile, SMS, panggilan telepon, atau kunci keamanan U2F.",
+  "duoDescV2": {
+    "message": "Enter a code generated by Duo Security.",
     "description": "'Duo Security' and 'Duo Mobile' are product names and should not be translated."
   },
   "duoOrganizationDesc": {
@@ -693,8 +880,8 @@
   "emailTitle": {
     "message": "Email"
   },
-  "emailDesc": {
-    "message": "Kode verifikasi akan dikirim via email kepada Anda."
+  "emailDescV2": {
+    "message": "Enter a code sent to your email."
   },
   "loginUnavailable": {
     "message": "Info Masuk Tidak Tersedia"
@@ -731,6 +918,10 @@
   },
   "baseUrl": {
     "message": "URL Server"
+  },
+  "selfHostBaseUrl": {
+    "message": "Self-host server URL",
+    "description": "Label for field requesting a self-hosted integration service URL"
   },
   "apiUrl": {
     "message": "URL Server API"
@@ -776,6 +967,18 @@
   },
   "loginExpired": {
     "message": "Sesi masuk Anda telah berakhir."
+  },
+  "restartRegistration": {
+    "message": "Restart registration"
+  },
+  "expiredLink": {
+    "message": "Expired link"
+  },
+  "pleaseRestartRegistrationOrTryLoggingIn": {
+    "message": "Please restart registration or try logging in."
+  },
+  "youMayAlreadyHaveAnAccount": {
+    "message": "You may already have an account"
   },
   "logOutConfirmation": {
     "message": "Anda yakin ingin keluar?"
@@ -863,6 +1066,18 @@
   "yourVaultIsLocked": {
     "message": "Brankas Anda terkunci. Verifikasi sandi utama Anda untuk melanjutkan."
   },
+  "yourAccountIsLocked": {
+    "message": "Your account is locked"
+  },
+  "or": {
+    "message": "or"
+  },
+  "unlockWithBiometrics": {
+    "message": "Unlock with biometrics"
+  },
+  "unlockWithMasterPassword": {
+    "message": "Unlock with master password"
+  },
   "unlock": {
     "message": "Buka"
   },
@@ -890,6 +1105,9 @@
   },
   "vaultTimeout": {
     "message": "Batas Waktu Brankas"
+  },
+  "vaultTimeout1": {
+    "message": "Timeout"
   },
   "vaultTimeoutDesc": {
     "message": "Pilih kapan brankas Anda akan timeout dan melakukan tindakan yang dipilih."
@@ -1095,6 +1313,9 @@
     "message": "Salin Nomor",
     "description": "Copy credit card number"
   },
+  "copyEmail": {
+    "message": "Copy email"
+  },
   "copySecurityCode": {
     "message": "Salin Kode Keamanan",
     "description": "Copy credit card security code (CVV)"
@@ -1141,6 +1362,9 @@
   "premiumPurchaseAlert": {
     "message": "Kamu bisa membeli keanggotaan Premium di Brankas Web bitwarden.com. Apakah kamu ingin mengunjungi situs web itu sekarang?"
   },
+  "premiumPurchaseAlertV2": {
+    "message": "You can purchase Premium from your account settings on the Bitwarden web app."
+  },
   "premiumCurrentMember": {
     "message": "Anda adalah anggota premium!"
   },
@@ -1162,12 +1386,30 @@
   "passwordHistory": {
     "message": "Riwayat Kata Sandi"
   },
+  "generatorHistory": {
+    "message": "Generator history"
+  },
+  "clearGeneratorHistoryTitle": {
+    "message": "Clear generator history"
+  },
+  "cleargGeneratorHistoryDescription": {
+    "message": "If you continue, all entries will be permanently deleted from generator's history. Are you sure you want to continue?"
+  },
   "clear": {
     "message": "Bersihkan",
     "description": "To clear something out. example: To clear browser history."
   },
   "noPasswordsInList": {
     "message": "Tidak ada sandi yang dapat dicantumkan."
+  },
+  "clearHistory": {
+    "message": "Clear history"
+  },
+  "nothingToShow": {
+    "message": "Nothing to show"
+  },
+  "nothingGeneratedRecently": {
+    "message": "You haven't generated anything recently"
   },
   "undo": {
     "message": "Urungkan"
@@ -1242,6 +1484,9 @@
         "example": "Password"
       }
     }
+  },
+  "copySuccessful": {
+    "message": "Copy Successful"
   },
   "errorRefreshingAccessToken": {
     "message": "Access Token Refresh Error"
@@ -1477,8 +1722,14 @@
   "additionalWindowsHelloSettings": {
     "message": "Additional Windows Hello settings"
   },
+  "unlockWithPolkit": {
+    "message": "Unlock with system authentication"
+  },
   "windowsHelloConsentMessage": {
     "message": "Verifikasi untuk Bitwarden."
+  },
+  "polkitConsentMessage": {
+    "message": "Authenticate to unlock Bitwarden."
   },
   "unlockWithTouchId": {
     "message": "Buka kunci dengan Touch ID"
@@ -1492,6 +1743,9 @@
   "autoPromptWindowsHello": {
     "message": "Minta Windows Hello saat diluncurkan"
   },
+  "autoPromptPolkit": {
+    "message": "Ask for system authentication on launch"
+  },
   "autoPromptTouchId": {
     "message": "Minta Touch ID saat diluncurkan"
   },
@@ -1501,8 +1755,8 @@
   "recommendedForSecurity": {
     "message": "Direkomendasikan untuk keamanan."
   },
-  "lockWithMasterPassOnRestart": {
-    "message": "Kunci dengan kata sandi utama saat komputer dihidupkan ulang"
+  "lockWithMasterPassOnRestart1": {
+    "message": "Lock with master password on restart"
   },
   "deleteAccount": {
     "message": "Hapus akun"
@@ -1512,6 +1766,12 @@
   },
   "deleteAccountWarning": {
     "message": "Menghapus akun Anda bersifat permanen. Tindakan ini tidak dapat dibatalkan."
+  },
+  "cannotDeleteAccount": {
+    "message": "Cannot delete account"
+  },
+  "cannotDeleteAccountDesc": {
+    "message": "This action cannot be completed because your account is owned by an organization. Contact your organization administrator for additional details."
   },
   "accountDeleted": {
     "message": "Akun Dihapus"
@@ -1579,7 +1839,7 @@
   },
   "lock": {
     "message": "Kunci",
-    "description": "Verb form: to make secure or inaccesible by"
+    "description": "Verb form: to make secure or inaccessible by"
   },
   "trash": {
     "message": "Sampah",
@@ -1622,6 +1882,15 @@
   "orgRequiresYouToSetPassword": {
     "message": "Your organization requires you to set a master password.",
     "description": "Used as a card title description on the set password page to explain why the user is there"
+  },
+  "cardMetrics": {
+    "message": "out of $TOTAL$",
+    "placeholders": {
+      "total": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
   },
   "verificationRequired": {
     "message": "Verification required",
@@ -1678,8 +1947,8 @@
   "masterPasswordPolicyRequirementsNotMet": {
     "message": "Kata sandi utama Anda yang baru tidak memenuhi persyaratan kebijakan."
   },
-  "receiveMarketingEmails": {
-    "message": "Get emails from Bitwarden for announcements, advice, and research opportunities."
+  "receiveMarketingEmailsV2": {
+    "message": "Get advice, announcements, and research opportunities from Bitwarden in your inbox."
   },
   "unsubscribe": {
     "message": "Unsubscribe"
@@ -1702,8 +1971,8 @@
   "enableBrowserIntegration": {
     "message": "Aktifkan integrasi browser"
   },
-  "enableBrowserIntegrationDesc": {
-    "message": "Integrasi browser digunakan untuk biometrik di browser."
+  "enableBrowserIntegrationDesc1": {
+    "message": "Used to allow biometric unlock in browsers that are not Safari."
   },
   "enableDuckDuckGoBrowserIntegration": {
     "message": "Izinkan integrasi browser DuckDuckGo"
@@ -1770,6 +2039,12 @@
   },
   "biometricsNotEnabledDesc": {
     "message": "Biometrik browser mengharuskan biometrik desktop diaktifkan di pengaturan terlebih dahulu."
+  },
+  "biometricsManualSetupTitle": {
+    "message": "Automatic setup not available"
+  },
+  "biometricsManualSetupDesc": {
+    "message": "Due to the installation method, biometrics support could not be automatically enabled. Would you like to open the documentation on how to do this manually?"
   },
   "personalOwnershipSubmitError": {
     "message": "Karena Kebijakan Perusahaan, Anda dilarang menyimpan item ke lemari besi pribadi Anda. Ubah opsi Kepemilikan ke organisasi dan pilih dari Koleksi yang tersedia."
@@ -1955,6 +2230,9 @@
   "emailVerificationRequired": {
     "message": "Verifikasi Email Diperlukan"
   },
+  "emailVerifiedV2": {
+    "message": "Email verified"
+  },
   "emailVerificationRequiredDesc": {
     "message": "Anda harus mengkonfirmasi email anda untuk menggunakan fitur ini."
   },
@@ -1978,6 +2256,9 @@
   },
   "updateWeakMasterPasswordWarning": {
     "message": "Your master password does not meet one or more of your organization policies. In order to access the vault, you must update your master password now. Proceeding will log you out of your current session, requiring you to log back in. Active sessions on other devices may continue to remain active for up to one hour."
+  },
+  "tdeDisabledMasterPasswordRequired": {
+    "message": "Your organization has disabled trusted device encryption. Please set a master password to access your vault."
   },
   "tryAgain": {
     "message": "Try again"
@@ -2021,8 +2302,8 @@
   "minutes": {
     "message": "Menit"
   },
-  "vaultTimeoutPolicyInEffect": {
-    "message": "Kebijakan organisasi Anda memengaruhi waktu tunggu brankas. Waktu tunggu brankas maksimum yang diizinkan adalah $HOURS$ jam dan $MINUTES$ menit",
+  "vaultTimeoutPolicyInEffect1": {
+    "message": "$HOURS$ hour(s) and $MINUTES$ minute(s) maximum.",
     "placeholders": {
       "hours": {
         "content": "$1",
@@ -2062,6 +2343,9 @@
   },
   "vaultTimeoutTooLarge": {
     "message": "Waktu tunggu brankas Anda melebihi batasan yang diatur organisasi Anda."
+  },
+  "inviteAccepted": {
+    "message": "Invitation accepted"
   },
   "resetPasswordPolicyAutoEnroll": {
     "message": "Pendaftaran otomatis"
@@ -2168,11 +2452,15 @@
   "locked": {
     "message": "Terkunci"
   },
+  "yourVaultIsLockedV2": {
+    "message": "Your vault is locked"
+  },
   "unlocked": {
     "message": "Tidak terkunci"
   },
   "generator": {
-    "message": "Pembuat Sandi"
+    "message": "Pembuat Sandi",
+    "description": "Short for 'credential generator'."
   },
   "whatWouldYouLikeToGenerate": {
     "message": "Apa yang ingin anda buat?"
@@ -2185,6 +2473,43 @@
   },
   "generateUsername": {
     "message": "Buat nama pengguna baru"
+  },
+  "generateEmail": {
+    "message": "Generate email"
+  },
+  "spinboxBoundariesHint": {
+    "message": "Value must be between $MIN$ and $MAX$.",
+    "description": "Explains spin box minimum and maximum values to the user",
+    "placeholders": {
+      "min": {
+        "content": "$1",
+        "example": "8"
+      },
+      "max": {
+        "content": "$2",
+        "example": "128"
+      }
+    }
+  },
+  "passwordLengthRecommendationHint": {
+    "message": " Use $RECOMMENDED$ characters or more to generate a strong password.",
+    "description": "Appended to `spinboxBoundariesHint` to recommend a length to the user. This must include any language-specific 'sentence' separator characters (e.g. a space in english).",
+    "placeholders": {
+      "recommended": {
+        "content": "$1",
+        "example": "14"
+      }
+    }
+  },
+  "passphraseNumWordsRecommendationHint": {
+    "message": " Use $RECOMMENDED$ words or more to generate a strong passphrase.",
+    "description": "Appended to `spinboxBoundariesHint` to recommend a number of words to the user. This must include any language-specific 'sentence' separator characters (e.g. a space in english).",
+    "placeholders": {
+      "recommended": {
+        "content": "$1",
+        "example": "6"
+      }
+    }
   },
   "usernameType": {
     "message": "Jenis nama pengguna"
@@ -2228,6 +2553,14 @@
   },
   "forwardedEmailDesc": {
     "message": "Generate an email alias with an external forwarding service."
+  },
+  "forwarderDomainName": {
+    "message": "Email domain",
+    "description": "Labels the domain name email forwarder service option"
+  },
+  "forwarderDomainNameHint": {
+    "message": "Choose a domain that is supported by the selected service",
+    "description": "Guidance provided for email forwarding services that support multiple email domains."
   },
   "forwarderError": {
     "message": "$SERVICENAME$ error: $ERRORMESSAGE$",
@@ -2389,14 +2722,29 @@
   "notificationSentDevice": {
     "message": "A notification has been sent to your device."
   },
+  "aNotificationWasSentToYourDevice": {
+    "message": "A notification was sent to your device"
+  },
+  "makeSureYourAccountIsUnlockedAndTheFingerprintEtc": {
+    "message": "Make sure your account is unlocked and the fingerprint phrase matches on the other device"
+  },
+  "needAnotherOptionV1": {
+    "message": "Need another option?"
+  },
   "fingerprintMatchInfo": {
     "message": "Please make sure your vault is unlocked and Fingerprint phrase matches the other device."
   },
   "fingerprintPhraseHeader": {
     "message": "Fingerprint phrase"
   },
+  "youWillBeNotifiedOnceTheRequestIsApproved": {
+    "message": "You will be notified once the request is approved"
+  },
   "needAnotherOption": {
     "message": "Log in with device must be set up in the settings of the Bitwarden app. Need another option?"
+  },
+  "viewAllLogInOptions": {
+    "message": "View all log in options"
   },
   "viewAllLoginOptions": {
     "message": "View all login options"
@@ -2517,8 +2865,14 @@
   "checkForBreaches": {
     "message": "Periksa pelanggaran data yang diketahui untuk kata sandi ini"
   },
+  "loggedInExclamation": {
+    "message": "Logged in!"
+  },
   "important": {
     "message": "Penting:"
+  },
+  "accessing": {
+    "message": "Accessing"
   },
   "accessTokenUnableToBeDecrypted": {
     "message": "You have been logged out because your access token could not be decrypted. Please log in again to resolve this issue."
@@ -2544,8 +2898,17 @@
   "windowsBiometricUpdateWarningTitle": {
     "message": "Recommended Settings Update"
   },
+  "rememberThisDeviceToMakeFutureLoginsSeamless": {
+    "message": "Remember this device to make future logins seamless"
+  },
   "deviceApprovalRequired": {
     "message": "Device approval required. Select an approval option below:"
+  },
+  "deviceApprovalRequiredV2": {
+    "message": "Device approval required"
+  },
+  "selectAnApprovalOptionBelow": {
+    "message": "Select an approval option below"
   },
   "rememberThisDevice": {
     "message": "Remember this device"
@@ -2571,9 +2934,6 @@
   "eu": {
     "message": "EU",
     "description": "European Union"
-  },
-  "loggingInOn": {
-    "message": "Logging in on"
   },
   "selfHostedServer": {
     "message": "self-hosted"
@@ -2601,6 +2961,9 @@
   },
   "userEmailMissing": {
     "message": "User email missing"
+  },
+  "activeUserEmailNotFoundLoggingYouOut": {
+    "message": "Active user email not found. Logging you out."
   },
   "deviceTrusted": {
     "message": "Device trusted"
@@ -2763,6 +3126,9 @@
       }
     }
   },
+  "duoHealthCheckResultsInNullAuthUrlError": {
+    "message": "Error connecting with the Duo service. Use a different two-step login method or contact Duo for assistance."
+  },
   "launchDuoAndFollowStepsToFinishLoggingIn": {
     "message": "Launch Duo and follow the steps to finish logging in."
   },
@@ -2784,8 +3150,8 @@
   "invalidFilePassword": {
     "message": "Invalid file password, please use the password you entered when you created the export file."
   },
-  "importDestination": {
-    "message": "Import destination"
+  "destination": {
+    "message": "Destination"
   },
   "learnAboutImportOptions": {
     "message": "Learn about your import options"
@@ -2842,6 +3208,9 @@
   },
   "confirmFilePassword": {
     "message": "Confirm file password"
+  },
+  "exportSuccess": {
+    "message": "Vault data exported"
   },
   "multifactorAuthenticationCancelled": {
     "message": "Multifactor authentication cancelled"
@@ -2977,5 +3346,50 @@
         "example": "Work"
       }
     }
+  },
+  "data": {
+    "message": "Data"
+  },
+  "fileSends": {
+    "message": "File Sends"
+  },
+  "textSends": {
+    "message": "Text Sends"
+  },
+  "ssoError": {
+    "message": "No free ports could be found for the sso login."
+  },
+  "authorize": {
+    "message": "Authorize"
+  },
+  "deny": {
+    "message": "Deny"
+  },
+  "sshkeyApprovalTitle": {
+    "message": "Confirm SSH key usage"
+  },
+  "sshkeyApprovalMessageInfix": {
+    "message": "is requesting access to"
+  },
+  "unknownApplication": {
+    "message": "An application"
+  },
+  "sshKeyPasswordUnsupported": {
+    "message": "Importing password protected SSH keys is not yet supported"
+  },
+  "invalidSshKey": {
+    "message": "The SSH key is invalid"
+  },
+  "sshKeyTypeUnsupported": {
+    "message": "The SSH key type is not supported"
+  },
+  "importSshKeyFromClipboard": {
+    "message": "Import key from clipboard"
+  },
+  "sshKeyPasted": {
+    "message": "SSH key imported successfully"
+  },
+  "fileSavedToDevice": {
+    "message": "File saved to device. Manage from your device downloads."
   }
 }

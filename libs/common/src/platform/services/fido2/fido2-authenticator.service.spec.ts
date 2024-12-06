@@ -1,7 +1,10 @@
 import { TextEncoder } from "util";
 
 import { mock, MockProxy } from "jest-mock-extended";
+import { BehaviorSubject, of } from "rxjs";
 
+import { Account, AccountService } from "../../../auth/abstractions/account.service";
+import { UserId } from "../../../types/guid";
 import { CipherService } from "../../../vault/abstractions/cipher.service";
 import { SyncService } from "../../../vault/abstractions/sync/sync.service.abstraction";
 import { CipherRepromptType } from "../../../vault/enums/cipher-reprompt-type";
@@ -23,17 +26,25 @@ import {
 import { Utils } from "../../misc/utils";
 
 import { CBOR } from "./cbor";
+import { parseCredentialId } from "./credential-id-utils";
 import { AAGUID, Fido2AuthenticatorService } from "./fido2-authenticator.service";
 import { Fido2Utils } from "./fido2-utils";
-import { guidToRawFormat } from "./guid-utils";
 
 const RpId = "bitwarden.com";
 
 describe("FidoAuthenticatorService", () => {
+  const activeAccountSubject = new BehaviorSubject<Account | null>({
+    id: "testId" as UserId,
+    email: "test@example.com",
+    emailVerified: true,
+    name: "Test User",
+  });
+
   let cipherService!: MockProxy<CipherService>;
   let userInterface!: MockProxy<Fido2UserInterfaceService>;
   let userInterfaceSession!: MockProxy<Fido2UserInterfaceSession>;
   let syncService!: MockProxy<SyncService>;
+  let accountService!: MockProxy<AccountService>;
   let authenticator!: Fido2AuthenticatorService;
   let tab!: chrome.tabs.Tab;
 
@@ -42,9 +53,18 @@ describe("FidoAuthenticatorService", () => {
     userInterface = mock<Fido2UserInterfaceService>();
     userInterfaceSession = mock<Fido2UserInterfaceSession>();
     userInterface.newSession.mockResolvedValue(userInterfaceSession);
-    syncService = mock<SyncService>();
-    authenticator = new Fido2AuthenticatorService(cipherService, userInterface, syncService);
+    syncService = mock<SyncService>({
+      activeUserLastSync$: () => of(new Date()),
+    });
+    accountService = mock<AccountService>();
+    authenticator = new Fido2AuthenticatorService(
+      cipherService,
+      userInterface,
+      syncService,
+      accountService,
+    );
     tab = { id: 123, windowId: 456 } as chrome.tabs.Tab;
+    accountService.activeAccount$ = activeAccountSubject;
   });
 
   describe("makeCredential", () => {
@@ -119,7 +139,7 @@ describe("FidoAuthenticatorService", () => {
         params = await createParams({
           excludeCredentialDescriptorList: [
             {
-              id: guidToRawFormat(excludedCipher.login.fido2Credentials[0].credentialId),
+              id: parseCredentialId(excludedCipher.login.fido2Credentials[0].credentialId),
               type: "public-key",
             },
           ],
@@ -214,7 +234,8 @@ describe("FidoAuthenticatorService", () => {
 
           expect(userInterfaceSession.confirmNewCredential).toHaveBeenCalledWith({
             credentialName: params.rpEntity.name,
-            userName: params.userEntity.displayName,
+            userName: params.userEntity.name,
+            userHandle: Fido2Utils.bufferToString(params.userEntity.id),
             userVerification,
             rpId: params.rpEntity.id,
           } as NewCredentialParams);
@@ -461,7 +482,7 @@ describe("FidoAuthenticatorService", () => {
         credentialId = Utils.newGuid();
         params = await createParams({
           allowCredentialDescriptorList: [
-            { id: guidToRawFormat(credentialId), type: "public-key" },
+            { id: parseCredentialId(credentialId), type: "public-key" },
           ],
           rpId: RpId,
         });
@@ -525,7 +546,7 @@ describe("FidoAuthenticatorService", () => {
       let params: Fido2AuthenticatorGetAssertionParams;
 
       beforeEach(async () => {
-        credentialIds = [Utils.newGuid(), Utils.newGuid()];
+        credentialIds = [Utils.newGuid(), "b64.Lb5SVTumSV6gYJpeWh3laA"];
         ciphers = [
           await createCipherView(
             { type: CipherType.Login },
@@ -538,7 +559,7 @@ describe("FidoAuthenticatorService", () => {
         ];
         params = await createParams({
           allowCredentialDescriptorList: credentialIds.map((credentialId) => ({
-            id: guidToRawFormat(credentialId),
+            id: parseCredentialId(credentialId),
             type: "public-key",
           })),
           rpId: RpId,
@@ -557,6 +578,7 @@ describe("FidoAuthenticatorService", () => {
         expect(userInterfaceSession.pickCredential).toHaveBeenCalledWith({
           cipherIds: ciphers.map((c) => c.id),
           userVerification: false,
+          masterPasswordRepromptRequired: false,
         });
       });
 
@@ -573,6 +595,7 @@ describe("FidoAuthenticatorService", () => {
         expect(userInterfaceSession.pickCredential).toHaveBeenCalledWith({
           cipherIds: [discoverableCiphers[0].id],
           userVerification: false,
+          masterPasswordRepromptRequired: false,
         });
       });
 
@@ -590,6 +613,7 @@ describe("FidoAuthenticatorService", () => {
           expect(userInterfaceSession.pickCredential).toHaveBeenCalledWith({
             cipherIds: ciphers.map((c) => c.id),
             userVerification,
+            masterPasswordRepromptRequired: false,
           });
         });
       }
@@ -643,7 +667,7 @@ describe("FidoAuthenticatorService", () => {
         selectedCredentialId = credentialIds[0];
         params = await createParams({
           allowCredentialDescriptorList: credentialIds.map((credentialId) => ({
-            id: guidToRawFormat(credentialId),
+            id: parseCredentialId(credentialId),
             type: "public-key",
           })),
           rpId: RpId,
@@ -676,6 +700,7 @@ describe("FidoAuthenticatorService", () => {
               ],
             }),
           }),
+          "testId",
         );
       });
 
@@ -698,7 +723,7 @@ describe("FidoAuthenticatorService", () => {
         const flags = encAuthData.slice(32, 33);
         const counter = encAuthData.slice(33, 37);
 
-        expect(result.selectedCredential.id).toEqual(guidToRawFormat(selectedCredentialId));
+        expect(result.selectedCredential.id).toEqual(parseCredentialId(selectedCredentialId));
         expect(result.selectedCredential.userHandle).toEqual(
           Fido2Utils.stringToBuffer(fido2Credentials[0].userHandle),
         );
@@ -752,6 +777,22 @@ describe("FidoAuthenticatorService", () => {
         const result = async () => await authenticator.getAssertion(params, tab);
 
         await expect(result).rejects.toThrowError(Fido2AuthenticatorErrorCode.Unknown);
+      });
+    });
+
+    describe("silentCredentialDiscovery", () => {
+      it("returns the fido2Credentials of a cipher found by its rpId", async () => {
+        const credentialId = Utils.newGuid();
+        const cipher = await createCipherView(
+          { type: CipherType.Login },
+          { credentialId, rpId: RpId, discoverable: true },
+        );
+        const ciphers = [cipher];
+        cipherService.getAllDecrypted.mockResolvedValue(ciphers);
+
+        const result = await authenticator.silentCredentialDiscovery(RpId);
+
+        expect(result).toEqual([cipher.login.fido2Credentials[0]]);
       });
     });
 

@@ -2,8 +2,8 @@ import { DIALOG_DATA, DialogConfig, DialogRef } from "@angular/cdk/dialog";
 import { Component, Inject, OnInit } from "@angular/core";
 import { FormControl, FormGroup, Validators } from "@angular/forms";
 
-import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions/billilng-api.service.abstraction";
-import { PlanType } from "@bitwarden/common/billing/enums";
+import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions/billing-api.service.abstraction";
+import { PlanType, ProductTierType } from "@bitwarden/common/billing/enums";
 import { PlanResponse } from "@bitwarden/common/billing/models/response/plan.response";
 import { ProviderPlanResponse } from "@bitwarden/common/billing/models/response/provider-subscription-response";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -103,30 +103,35 @@ export class CreateClientDialogComponent implements OnInit {
 
     this.providerPlans = response?.plans ?? [];
 
-    const teamsPlan = this.dialogParams.plans.find((plan) => plan.type === PlanType.TeamsMonthly);
-    const enterprisePlan = this.dialogParams.plans.find(
-      (plan) => plan.type === PlanType.EnterpriseMonthly,
-    );
-
     this.discountPercentage = response.discountPercentage;
     const discountFactor = this.discountPercentage ? (100 - this.discountPercentage) / 100 : 1;
 
-    this.planCards = [
-      {
-        name: this.i18nService.t("planNameTeams"),
-        cost: teamsPlan.PasswordManager.providerPortalSeatPrice * discountFactor,
-        type: teamsPlan.type,
-        plan: teamsPlan,
-        selected: true,
-      },
-      {
-        name: this.i18nService.t("planNameEnterprise"),
-        cost: enterprisePlan.PasswordManager.providerPortalSeatPrice * discountFactor,
-        type: enterprisePlan.type,
-        plan: enterprisePlan,
-        selected: false,
-      },
-    ];
+    this.planCards = [];
+
+    for (let i = 0; i < this.providerPlans.length; i++) {
+      const providerPlan = this.providerPlans[i];
+      const plan = this.dialogParams.plans.find((plan) => plan.type === providerPlan.type);
+
+      let planName: string;
+      switch (plan.productTier) {
+        case ProductTierType.Teams: {
+          planName = this.i18nService.t("planNameTeams");
+          break;
+        }
+        case ProductTierType.Enterprise: {
+          planName = this.i18nService.t("planNameEnterprise");
+          break;
+        }
+      }
+
+      this.planCards.push({
+        name: planName,
+        cost: plan.PasswordManager.providerPortalSeatPrice * discountFactor,
+        type: plan.type,
+        plan: plan,
+        selected: i === 0,
+      });
+    }
 
     this.loading = false;
   }
@@ -162,18 +167,16 @@ export class CreateClientDialogComponent implements OnInit {
     this.dialogRef.close(this.ResultType.Submitted);
   };
 
-  protected get openSeats(): number {
+  protected get unassignedSeats(): number {
     const selectedProviderPlan = this.getSelectedProviderPlan();
 
     if (selectedProviderPlan === null) {
       return 0;
     }
 
-    return selectedProviderPlan.seatMinimum - selectedProviderPlan.assignedSeats;
-  }
+    const openSeats = selectedProviderPlan.seatMinimum - selectedProviderPlan.assignedSeats;
 
-  protected get unassignedSeats(): number {
-    const unassignedSeats = this.openSeats - this.formGroup.value.seats;
+    const unassignedSeats = openSeats - this.formGroup.value.seats;
 
     return unassignedSeats > 0 ? unassignedSeats : 0;
   }
@@ -185,11 +188,16 @@ export class CreateClientDialogComponent implements OnInit {
       return 0;
     }
 
-    const selectedSeats = this.formGroup.value.seats ?? 0;
+    if (selectedProviderPlan.purchasedSeats > 0) {
+      return this.formGroup.value.seats;
+    }
 
-    const purchased = selectedSeats - this.openSeats;
+    const additionalSeatsPurchased =
+      this.formGroup.value.seats +
+      selectedProviderPlan.assignedSeats -
+      selectedProviderPlan.seatMinimum;
 
-    return purchased > 0 ? purchased : 0;
+    return additionalSeatsPurchased > 0 ? additionalSeatsPurchased : 0;
   }
 
   private getSelectedProviderPlan(): ProviderPlanResponse {

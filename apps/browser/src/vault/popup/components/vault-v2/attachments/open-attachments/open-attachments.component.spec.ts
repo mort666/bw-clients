@@ -5,16 +5,20 @@ import { BehaviorSubject } from "rxjs";
 
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions";
 import { ProductTierType } from "@bitwarden/common/billing/enums";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { CipherId } from "@bitwarden/common/types/guid";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { FakeAccountService, mockAccountServiceWith } from "@bitwarden/common/spec";
+import { CipherId, UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { ToastService } from "@bitwarden/components";
 
 import BrowserPopupUtils from "../../../../../../platform/popup/browser-popup-utils";
+import { FilePopoutUtilsService } from "../../../../../../tools/popup/services/file-popout-utils.service";
 
 import { OpenAttachmentsComponent } from "./open-attachments.component";
 
@@ -48,12 +52,17 @@ describe("OpenAttachmentsComponent", () => {
 
   const getCipher = jest.fn().mockResolvedValue(cipherDomain);
   const getOrganization = jest.fn().mockResolvedValue(org);
+  const showFilePopoutMessage = jest.fn().mockReturnValue(false);
+
+  const mockUserId = Utils.newGuid() as UserId;
+  const accountService: FakeAccountService = mockAccountServiceWith(mockUserId);
 
   beforeEach(async () => {
     openCurrentPagePopout.mockClear();
     getCipher.mockClear();
     showToast.mockClear();
     getOrganization.mockClear();
+    showFilePopoutMessage.mockClear();
 
     await TestBed.configureTestingModule({
       imports: [OpenAttachmentsComponent, RouterTestingModule],
@@ -75,6 +84,14 @@ describe("OpenAttachmentsComponent", () => {
           provide: OrganizationService,
           useValue: { get: getOrganization },
         },
+        {
+          provide: FilePopoutUtilsService,
+          useValue: { showFilePopoutMessage },
+        },
+        {
+          provide: AccountService,
+          useValue: accountService,
+        },
       ],
     }).compileComponents();
   });
@@ -89,19 +106,22 @@ describe("OpenAttachmentsComponent", () => {
   });
 
   it("opens attachments in new popout", async () => {
-    component.openAttachmentsInPopout = true;
+    showFilePopoutMessage.mockReturnValue(true);
+
+    await component.ngOnInit();
 
     await component.openAttachments();
 
-    expect(router.navigate).not.toHaveBeenCalled();
-    expect(openCurrentPagePopout).toHaveBeenCalledWith(
-      window,
-      "http:/localhost//attachments?cipherId=5555-444-3333",
-    );
+    expect(router.navigate).toHaveBeenCalledWith(["/attachments"], {
+      queryParams: { cipherId: "5555-444-3333" },
+    });
+    expect(openCurrentPagePopout).toHaveBeenCalledWith(window);
   });
 
   it("opens attachments in same window", async () => {
-    component.openAttachmentsInPopout = false;
+    showFilePopoutMessage.mockReturnValue(false);
+
+    await component.ngOnInit();
 
     await component.openAttachments();
 

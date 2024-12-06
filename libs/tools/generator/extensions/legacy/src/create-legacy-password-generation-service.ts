@@ -1,42 +1,43 @@
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { StateProvider } from "@bitwarden/common/platform/state";
 import { engine, services, strategies } from "@bitwarden/generator-core";
 import { LocalGeneratorHistoryService } from "@bitwarden/generator-history";
 import { DefaultGeneratorNavigationService } from "@bitwarden/generator-navigation";
+import { KeyService } from "@bitwarden/key-management";
 
 import { LegacyPasswordGenerationService } from "./legacy-password-generation.service";
 import { PasswordGenerationServiceAbstraction } from "./password-generation.service.abstraction";
 
-const PassphraseGeneratorStrategy = strategies.PassphraseGeneratorStrategy;
-const PasswordGeneratorStrategy = strategies.PasswordGeneratorStrategy;
-const CryptoServiceRandomizer = engine.CryptoServiceRandomizer;
+const { PassphraseGeneratorStrategy, PasswordGeneratorStrategy } = strategies;
+const { KeyServiceRandomizer, PasswordRandomizer } = engine;
+
 const DefaultGeneratorService = services.DefaultGeneratorService;
 
 export function legacyPasswordGenerationServiceFactory(
   encryptService: EncryptService,
-  cryptoService: CryptoService,
+  keyService: KeyService,
   policyService: PolicyService,
   accountService: AccountService,
   stateProvider: StateProvider,
 ): PasswordGenerationServiceAbstraction {
-  const randomizer = new CryptoServiceRandomizer(cryptoService);
+  const randomizer = new KeyServiceRandomizer(keyService);
+  const passwordRandomizer = new PasswordRandomizer(randomizer);
 
   const passwords = new DefaultGeneratorService(
-    new PasswordGeneratorStrategy(randomizer, stateProvider),
+    new PasswordGeneratorStrategy(passwordRandomizer, stateProvider),
     policyService,
   );
 
   const passphrases = new DefaultGeneratorService(
-    new PassphraseGeneratorStrategy(randomizer, stateProvider),
+    new PassphraseGeneratorStrategy(passwordRandomizer, stateProvider),
     policyService,
   );
 
   const navigation = new DefaultGeneratorNavigationService(stateProvider, policyService);
 
-  const history = new LocalGeneratorHistoryService(encryptService, cryptoService, stateProvider);
+  const history = new LocalGeneratorHistoryService(encryptService, keyService, stateProvider);
 
   return new LegacyPasswordGenerationService(
     accountService,

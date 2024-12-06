@@ -1,6 +1,9 @@
-import { combineLatest, filter, firstValueFrom, map, switchMap, timeout } from "rxjs";
+import { combineLatest, concatMap, filter, firstValueFrom, map, timeout } from "rxjs";
 
+import { CollectionService } from "@bitwarden/admin-console/common";
 import { LogoutReason } from "@bitwarden/auth/common";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
+import { TaskSchedulerService, ScheduledTaskNames } from "@bitwarden/common/platform/scheduling";
 
 import { SearchService } from "../../abstractions/search.service";
 import { VaultTimeoutSettingsService } from "../../abstractions/vault-timeout/vault-timeout-settings.service";
@@ -16,7 +19,6 @@ import { StateService } from "../../platform/abstractions/state.service";
 import { StateEventRunnerService } from "../../platform/state";
 import { UserId } from "../../types/guid";
 import { CipherService } from "../../vault/abstractions/cipher.service";
-import { CollectionService } from "../../vault/abstractions/collection.service";
 import { FolderService } from "../../vault/abstractions/folder/folder.service.abstraction";
 
 export class VaultTimeoutService implements VaultTimeoutServiceAbstraction {
@@ -35,12 +37,19 @@ export class VaultTimeoutService implements VaultTimeoutServiceAbstraction {
     private authService: AuthService,
     private vaultTimeoutSettingsService: VaultTimeoutSettingsService,
     private stateEventRunnerService: StateEventRunnerService,
+    private taskSchedulerService: TaskSchedulerService,
+    protected logService: LogService,
     private lockedCallback: (userId?: string) => Promise<void> = null,
     private loggedOutCallback: (
       logoutReason: LogoutReason,
       userId?: string,
     ) => Promise<void> = null,
-  ) {}
+  ) {
+    this.taskSchedulerService.registerTaskHandler(
+      ScheduledTaskNames.vaultTimeoutCheckInterval,
+      () => this.checkVaultTimeout(),
+    );
+  }
 
   async init(checkOnInterval: boolean) {
     if (this.inited) {
@@ -54,10 +63,11 @@ export class VaultTimeoutService implements VaultTimeoutServiceAbstraction {
   }
 
   startCheck() {
-    // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    this.checkVaultTimeout();
-    setInterval(() => this.checkVaultTimeout(), 10 * 1000); // check every 10 seconds
+    this.checkVaultTimeout().catch((error) => this.logService.error(error));
+    this.taskSchedulerService.setInterval(
+      ScheduledTaskNames.vaultTimeoutCheckInterval,
+      10 * 1000, // check every 10 seconds
+    );
   }
 
   async checkVaultTimeout(): Promise<void> {
@@ -69,7 +79,7 @@ export class VaultTimeoutService implements VaultTimeoutServiceAbstraction {
         this.accountService.activeAccount$,
         this.accountService.accountActivity$,
       ]).pipe(
-        switchMap(async ([activeAccount, accountActivity]) => {
+        concatMap(async ([activeAccount, accountActivity]) => {
           const activeUserId = activeAccount?.id;
           for (const userIdString in accountActivity) {
             const userId = userIdString as UserId;

@@ -1,5 +1,6 @@
 import { filter, firstValueFrom, of, timeout } from "rxjs";
 
+import { CollectionService } from "@bitwarden/admin-console/common";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
@@ -11,11 +12,11 @@ import {
   MessageSender,
 } from "@bitwarden/common/platform/messaging";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { StateProvider } from "@bitwarden/common/platform/state";
 import { CoreSyncService } from "@bitwarden/common/platform/sync/internal";
 import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.service.abstraction";
 import { InternalSendService } from "@bitwarden/common/tools/send/services/send.service.abstraction";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
-import { CollectionService } from "@bitwarden/common/vault/abstractions/collection.service";
 import { FolderApiServiceAbstraction } from "@bitwarden/common/vault/abstractions/folder/folder-api.service.abstraction";
 import { InternalFolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 
@@ -40,6 +41,7 @@ export class ForegroundSyncService extends CoreSyncService {
     sendService: InternalSendService,
     sendApiService: SendApiService,
     private readonly messageListener: MessageListener,
+    stateProvider: StateProvider,
   ) {
     super(
       stateService,
@@ -54,6 +56,7 @@ export class ForegroundSyncService extends CoreSyncService {
       authService,
       sendService,
       sendApiService,
+      stateProvider,
     );
   }
 

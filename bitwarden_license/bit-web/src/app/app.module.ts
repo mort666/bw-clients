@@ -14,10 +14,12 @@ import { WildcardRoutingModule } from "@bitwarden/web-vault/app/wildcard-routing
 
 import { OrganizationsModule } from "./admin-console/organizations/organizations.module";
 import { ActivateAutofillPolicyComponent } from "./admin-console/policies/activate-autofill.component";
+import { AutomaticAppLoginPolicyComponent } from "./admin-console/policies/automatic-app-login.component";
 import { DisablePersonalVaultExportPolicyComponent } from "./admin-console/policies/disable-personal-vault-export.component";
 import { MaximumVaultTimeoutPolicyComponent } from "./admin-console/policies/maximum-vault-timeout.component";
 import { AppRoutingModule } from "./app-routing.module";
 import { AppComponent } from "./app.component";
+import { FreeFamiliesSponsorshipPolicyComponent } from "./billing/policies/free-families-sponsorship.component";
 
 /**
  * This is the AppModule for the commercial version of Bitwarden.
@@ -47,6 +49,8 @@ import { AppComponent } from "./app.component";
     DisablePersonalVaultExportPolicyComponent,
     MaximumVaultTimeoutPolicyComponent,
     ActivateAutofillPolicyComponent,
+    AutomaticAppLoginPolicyComponent,
+    FreeFamiliesSponsorshipPolicyComponent,
   ],
   bootstrap: [AppComponent],
 })

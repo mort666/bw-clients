@@ -86,6 +86,9 @@ export class EventService {
       case EventType.User_RequestedDeviceApproval:
         msg = humanReadableMsg = this.i18nService.t("requestedDeviceApproval");
         break;
+      case EventType.User_TdeOffboardingPasswordSet:
+        msg = humanReadableMsg = this.i18nService.t("tdeOffboardingPasswordSet");
+        break;
       // Cipher
       case EventType.Cipher_Created:
         msg = this.i18nService.t("createdItemId", this.formatCipherId(ev, options));
@@ -324,6 +327,20 @@ export class EventService {
         msg = this.i18nService.t("rejectedAuthRequest", this.formatOrgUserId(ev));
         humanReadableMsg = this.i18nService.t(
           "rejectedAuthRequest",
+          this.getShortId(ev.organizationUserId),
+        );
+        break;
+      case EventType.OrganizationUser_Deleted:
+        msg = this.i18nService.t("deletedUserId", this.formatOrgUserId(ev));
+        humanReadableMsg = this.i18nService.t(
+          "deletedUserId",
+          this.getShortId(ev.organizationUserId),
+        );
+        break;
+      case EventType.OrganizationUser_Left:
+        msg = this.i18nService.t("userLeftOrganization", this.formatOrgUserId(ev));
+        humanReadableMsg = this.i18nService.t(
+          "userLeftOrganization",
           this.getShortId(ev.organizationUserId),
         );
         break;

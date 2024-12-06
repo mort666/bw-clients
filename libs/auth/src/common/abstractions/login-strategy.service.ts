@@ -14,6 +14,8 @@ import {
 } from "../models/domain/login-credentials";
 
 export abstract class LoginStrategyServiceAbstraction {
+  id: string;
+
   /**
    * The current strategy being used to authenticate.
    * Emits null if the session has timed out.
@@ -71,4 +73,8 @@ export abstract class LoginStrategyServiceAbstraction {
    * Creates a master key from the provided master password and email.
    */
   makePreloginKey: (masterPassword: string, email: string) => Promise<MasterKey>;
+  /**
+   * Emits true if the two factor session has expired.
+   */
+  twoFactorTimeout$: Observable<boolean>;
 }

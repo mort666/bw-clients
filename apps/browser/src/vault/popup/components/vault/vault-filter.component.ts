@@ -4,9 +4,12 @@ import { ActivatedRoute, Router } from "@angular/router";
 import { BehaviorSubject, Subject, firstValueFrom, from } from "rxjs";
 import { first, switchMap, takeUntil } from "rxjs/operators";
 
+import { CollectionView } from "@bitwarden/admin-console/common";
 import { VaultFilter } from "@bitwarden/angular/vault/vault-filter/models/vault-filter.model";
 import { SearchService } from "@bitwarden/common/abstractions/search.service";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { SyncService } from "@bitwarden/common/platform/sync";
@@ -14,7 +17,6 @@ import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.servi
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { TreeNode } from "@bitwarden/common/vault/models/domain/tree-node";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
-import { CollectionView } from "@bitwarden/common/vault/models/view/collection.view";
 import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
 
 import { BrowserGroupingsComponentState } from "../../../../models/browserGroupingsComponentState";
@@ -62,6 +64,8 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
   selectedOrganization: string = null;
   showCollections = true;
 
+  isSshKeysEnabled = false;
+
   private loadedTimeout: number;
   private selectedTimeout: number;
   private preventSelected = false;
@@ -95,6 +99,7 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
     private location: Location,
     private vaultFilterService: VaultFilterService,
     private vaultBrowserStateService: VaultBrowserStateService,
+    private configService: ConfigService,
   ) {
     this.noFolderListSize = 100;
   }
@@ -166,6 +171,8 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
       .subscribe((isSearchable) => {
         this.isSearchable = isSearchable;
       });
+
+    this.isSshKeysEnabled = await this.configService.getFeatureFlag(FeatureFlag.SSHKeyVaultItem);
   }
 
   ngOnDestroy() {

@@ -1,20 +1,20 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import { ActivatedRoute, RouterModule } from "@angular/router";
-import { switchMap, Observable, Subject, combineLatest, map } from "rxjs";
+import { combineLatest, map, Observable, Subject, switchMap } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { ProviderService } from "@bitwarden/common/admin-console/abstractions/provider.service";
+import { ProviderStatusType } from "@bitwarden/common/admin-console/enums";
 import { Provider } from "@bitwarden/common/admin-console/models/domain/provider";
-import { hasConsolidatedBilling } from "@bitwarden/common/billing/abstractions/provider-billing.service.abstraction";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
-import { IconModule, LayoutComponent, NavigationModule } from "@bitwarden/components";
+import { BannerModule, IconModule, LinkModule } from "@bitwarden/components";
 import { ProviderPortalLogo } from "@bitwarden/web-vault/app/admin-console/icons/provider-portal-logo";
-import { PaymentMethodWarningsModule } from "@bitwarden/web-vault/app/billing/shared";
-import { ProductSwitcherModule } from "@bitwarden/web-vault/app/layouts/product-switcher/product-switcher.module";
-import { ToggleWidthComponent } from "@bitwarden/web-vault/app/layouts/toggle-width.component";
+import { WebLayoutModule } from "@bitwarden/web-vault/app/layouts/web-layout.module";
+
+import { ProviderClientVaultPrivacyBannerService } from "./services/provider-client-vault-privacy-banner.service";
 
 @Component({
   selector: "providers-layout",
@@ -24,12 +24,10 @@ import { ToggleWidthComponent } from "@bitwarden/web-vault/app/layouts/toggle-wi
     CommonModule,
     RouterModule,
     JslibModule,
-    LayoutComponent,
+    WebLayoutModule,
     IconModule,
-    NavigationModule,
-    PaymentMethodWarningsModule,
-    ToggleWidthComponent,
-    ProductSwitcherModule,
+    LinkModule,
+    BannerModule,
   ],
 })
 export class ProvidersLayoutComponent implements OnInit, OnDestroy {
@@ -38,17 +36,18 @@ export class ProvidersLayoutComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   protected provider$: Observable<Provider>;
 
-  protected hasConsolidatedBilling$: Observable<boolean>;
+  protected isBillable: Observable<boolean>;
   protected canAccessBilling$: Observable<boolean>;
 
-  protected showPaymentMethodWarningBanners$ = this.configService.getFeatureFlag$(
-    FeatureFlag.ShowPaymentMethodWarningBanners,
+  protected showProviderClientVaultPrivacyWarningBanner$ = this.configService.getFeatureFlag$(
+    FeatureFlag.ProviderClientVaultPrivacyBanner,
   );
 
   constructor(
     private route: ActivatedRoute,
     private providerService: ProviderService,
     private configService: ConfigService,
+    protected providerClientVaultPrivacyBannerService: ProviderClientVaultPrivacyBannerService,
   ) {}
 
   ngOnInit() {
@@ -59,12 +58,12 @@ export class ProvidersLayoutComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$),
     );
 
-    this.hasConsolidatedBilling$ = this.provider$.pipe(
-      hasConsolidatedBilling(this.configService),
+    this.isBillable = this.provider$.pipe(
+      map((provider) => provider?.providerStatus === ProviderStatusType.Billable),
       takeUntil(this.destroy$),
     );
 
-    this.canAccessBilling$ = combineLatest([this.hasConsolidatedBilling$, this.provider$]).pipe(
+    this.canAccessBilling$ = combineLatest([this.isBillable, this.provider$]).pipe(
       map(
         ([hasConsolidatedBilling, provider]) => hasConsolidatedBilling && provider.isProviderAdmin,
       ),
