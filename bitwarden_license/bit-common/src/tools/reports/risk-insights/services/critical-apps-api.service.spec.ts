@@ -6,11 +6,12 @@ import { mock } from "jest-mock-extended";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
-import { OrganizationId, PasswordHealthReportApplicationId } from "@bitwarden/common/types/guid";
+import { OrganizationId } from "@bitwarden/common/types/guid";
 import { KeyService } from "@bitwarden/key-management";
 
 import {
   CriticalAppsApiService,
+  PasswordHealthReportApplicationId,
   PasswordHealthReportApplicationsRequest,
   PasswordHealthReportApplicationsResponse,
 } from "./critical-apps-api.service";
@@ -131,4 +132,20 @@ describe("CriticalAppsApiService", () => {
       true,
     );
   }));
+
+  it("should get by org id", () => {
+    const orgId = "org1" as OrganizationId;
+    const response = [
+      { id: "id1", organizationId: "org1", uri: "https://example.com" },
+      { id: "id2", organizationId: "org1", uri: "https://example.org" },
+      { id: "id3", organizationId: "org2", uri: "https://example.org" },
+      { id: "id4", organizationId: "org2", uri: "https://example.org" },
+    ] as PasswordHealthReportApplicationsResponse[];
+
+    service.setAppsInListForOrg(response);
+
+    service.getAppsListForOrg(orgId as OrganizationId).subscribe((res) => {
+      expect(res).toHaveLength(2);
+    });
+  });
 });

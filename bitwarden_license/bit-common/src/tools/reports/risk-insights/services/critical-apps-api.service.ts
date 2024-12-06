@@ -1,10 +1,11 @@
 import { Injectable, OnDestroy } from "@angular/core";
 import { BehaviorSubject, firstValueFrom, map, Observable, Subject, takeUntil } from "rxjs";
+import { Opaque } from "type-fest";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
-import { OrganizationId, PasswordHealthReportApplicationId } from "@bitwarden/common/types/guid";
+import { OrganizationId } from "@bitwarden/common/types/guid";
 import { OrgKey } from "@bitwarden/common/types/key";
 import { KeyService } from "@bitwarden/key-management";
 
@@ -164,3 +165,5 @@ export interface PasswordHealthReportApplicationsResponse {
   organizationId: OrganizationId;
   uri: string;
 }
+
+export type PasswordHealthReportApplicationId = Opaque<string, "PasswordHealthReportApplicationId">;
