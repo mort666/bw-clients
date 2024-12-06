@@ -783,6 +783,10 @@ export class VaultComponent implements OnInit, OnDestroy {
   }
 
   async addCipher(cipherType?: CipherType) {
+    if (cipherType === CipherType.SshKey) {
+      cipherType = CipherType.Login;
+    }
+
     if (this.extensionRefreshEnabled) {
       return this.addCipherV2(cipherType);
     }
