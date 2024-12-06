@@ -68,6 +68,14 @@ jobs:
           NODE_VERSION=${NODE_NVMRC/v/''}
           echo "node_version=$NODE_VERSION" >> $GITHUB_OUTPUT
 
+      - name: Check secrets
+        id: check-secrets
+        env:
+          AZURE_KV_CI_SERVICE_PRINCIPAL: ${{ secrets.AZURE_KV_CI_SERVICE_PRINCIPAL }}
+        run: |
+          has_secrets=${{ secrets.AZURE_KV_CI_SERVICE_PRINCIPAL != '' }}
+          echo "has_secrets=$has_secrets" >> $GITHUB_OUTPUT
+
 
   locales-test:
     name: Locales Test
@@ -272,11 +280,10 @@ jobs:
   build-safari:
     name: Build Safari
     runs-on: macos-13
-    # Skip if required secrets are not available
-    if: ${{ secrets.AZURE_KV_CI_SERVICE_PRINCIPAL != '' }}
     needs:
       - setup
       - locales-test
+    if: ${{ needs.setup.outputs.has_secrets == 'true' }}
     env:
       _BUILD_NUMBER: ${{ needs.setup.outputs.adj_build_number }}
       _NODE_VERSION: ${{ needs.setup.outputs.node_version }}
