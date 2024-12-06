@@ -733,6 +733,7 @@ jobs:
   browser-build:
     name: Browser Build
     needs: setup
+    if: ${{ needs.setup.outputs.has_secrets == 'true' }}
     uses: ./.github/workflows/build-browser.yml
     secrets: inherit
 
