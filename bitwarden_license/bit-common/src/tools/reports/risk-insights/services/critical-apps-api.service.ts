@@ -1,4 +1,3 @@
-import { Injectable } from "@angular/core";
 import {
   BehaviorSubject,
   first,
@@ -22,9 +21,6 @@ import { OrganizationId } from "@bitwarden/common/types/guid";
 import { OrgKey } from "@bitwarden/common/types/key";
 import { KeyService } from "@bitwarden/key-management";
 
-@Injectable({
-  providedIn: "root",
-})
 /* Retrieves and decrypts critical apps for a given organization
  *  Encrypts and saves data for a given organization
  */
@@ -176,3 +172,9 @@ export interface PasswordHealthReportApplicationsResponse {
 }
 
 export type PasswordHealthReportApplicationId = Opaque<string, "PasswordHealthReportApplicationId">;
+
+export const criticalServiceFactoryProvider = (
+  apiService: ApiService,
+  keyService: KeyService,
+  encryptService: EncryptService,
+) => new CriticalAppsApiService(apiService, keyService, encryptService);
