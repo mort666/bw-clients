@@ -1,5 +1,18 @@
-import { Injectable, OnDestroy } from "@angular/core";
-import { BehaviorSubject, firstValueFrom, map, Observable, of, Subject, takeUntil } from "rxjs";
+import { Injectable } from "@angular/core";
+import {
+  BehaviorSubject,
+  first,
+  firstValueFrom,
+  forkJoin,
+  from,
+  map,
+  Observable,
+  of,
+  Subject,
+  switchMap,
+  takeUntil,
+  zip,
+} from "rxjs";
 import { Opaque } from "type-fest";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
@@ -15,18 +28,17 @@ import { KeyService } from "@bitwarden/key-management";
 /* Retrieves and decrypts critical apps for a given organization
  *  Encrypts and saves data for a given organization
  */
-export class CriticalAppsApiService implements OnDestroy {
+export class CriticalAppsApiService {
   private orgId = new BehaviorSubject<OrganizationId | null>(null);
   private criticalAppsList = new BehaviorSubject<PasswordHealthReportApplicationsResponse[]>([]);
   private teardown = new Subject<void>();
 
   private fetchOrg$ = this.orgId
-    .pipe(takeUntil(this.teardown))
-    .subscribe((orgId) => this.retrieveCriticalApps(orgId));
-
-  ngOnDestroy(): void {
-    this.fetchOrg$.unsubscribe();
-  }
+    .pipe(
+      switchMap((orgId) => this.retrieveCriticalApps(orgId)),
+      takeUntil(this.teardown),
+    )
+    .subscribe((apps) => this.criticalAppsList.next(apps));
 
   constructor(
     private apiService: ApiService,
@@ -90,40 +102,40 @@ export class CriticalAppsApiService implements OnDestroy {
     this.orgId.next(orgId);
   }
 
-  private async retrieveCriticalApps(orgId: OrganizationId | null) {
+  private retrieveCriticalApps(
+    orgId: OrganizationId | null,
+  ): Observable<PasswordHealthReportApplicationsResponse[]> {
     if (orgId === null) {
       return of([]);
     }
 
-    const response = await this.apiService.send(
-      "GET",
-      `/reports/password-health-report-applications/${orgId.toString()}`,
-      null,
-      true,
-      true,
-    );
-
-    const key = await this.keyService.getOrgKey(orgId);
-    const updatedList: PasswordHealthReportApplicationsResponse[] = [];
-
-    await Promise.all(
-      response.map(
-        async (r: {
-          id: PasswordHealthReportApplicationId;
-          organizationId: OrganizationId;
-          uri: string;
-        }) => {
-          const decryptedUrl = await this.encryptService.decryptToUtf8(new EncString(r.uri), key);
-          updatedList.push({
-            id: r.id,
-            organizationId: r.organizationId,
-            uri: decryptedUrl,
-          } as PasswordHealthReportApplicationsResponse);
-        },
+    const result$ = zip(
+      from(
+        this.apiService.send(
+          "GET",
+          `/reports/password-health-report-applications/${orgId.toString()}`,
+          null,
+          true,
+          true,
+        ),
       ),
+      from(this.keyService.getOrgKey(orgId)),
+    ).pipe(
+      switchMap(([response, key]) => {
+        const results = response.map(async (r: PasswordHealthReportApplicationsResponse) => {
+          const encrypted = new EncString(r.uri);
+          const uri = await this.encryptService.decryptToUtf8(encrypted, key);
+          return { id: r.id, organizationId: r.organizationId, uri: uri };
+        });
+        return forkJoin(results);
+      }),
+      first(),
+      map((results: PasswordHealthReportApplicationsResponse[]) => {
+        return results;
+      }),
     );
 
-    this.criticalAppsList.next(updatedList);
+    return result$;
   }
 
   private async filterNewEntries(orgId: OrganizationId, selectedUrls: string[]): Promise<string[]> {
