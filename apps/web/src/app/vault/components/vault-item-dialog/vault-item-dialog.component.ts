@@ -242,11 +242,6 @@ export class VaultItemDialogComponent implements OnInit, OnDestroy {
   async ngOnInit() {
     this.cipher = await this.getDecryptedCipherView(this.formConfig);
 
-    // todo: remove after ssh keys can be generated in UI
-    if (this.formConfig.cipherType === CipherType.SshKey) {
-      this.formConfig.cipherType = CipherType.Login;
-    }
-
     if (this.cipher) {
       this.collections = this.formConfig.collections.filter((c) =>
         this.cipher.collectionIds?.includes(c.id),
