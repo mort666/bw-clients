@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from "@angular/core";
-import { BehaviorSubject, firstValueFrom, map, Observable, Subject, takeUntil } from "rxjs";
+import { BehaviorSubject, firstValueFrom, map, Observable, of, Subject, takeUntil } from "rxjs";
 import { Opaque } from "type-fest";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
@@ -90,11 +90,9 @@ export class CriticalAppsApiService implements OnDestroy {
     this.orgId.next(orgId);
   }
 
-  async retrieveCriticalApps(
-    orgId: OrganizationId | null,
-  ): Promise<PasswordHealthReportApplicationsResponse[]> {
+  private async retrieveCriticalApps(orgId: OrganizationId | null) {
     if (orgId === null) {
-      return [];
+      return of([]);
     }
 
     const response = await this.apiService.send(
@@ -126,7 +124,6 @@ export class CriticalAppsApiService implements OnDestroy {
     );
 
     this.criticalAppsList.next(updatedList);
-    return updatedList;
   }
 
   private async filterNewEntries(orgId: OrganizationId, selectedUrls: string[]): Promise<string[]> {

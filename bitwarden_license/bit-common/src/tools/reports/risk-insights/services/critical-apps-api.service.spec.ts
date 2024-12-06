@@ -116,12 +116,10 @@ describe("CriticalAppsApiService", () => {
 
     encryptService.decryptToUtf8.mockResolvedValue("https://example.com");
     apiService.send.mockResolvedValue(response);
-    const spy = jest.spyOn(service, "retrieveCriticalApps");
 
     service.setOrganizationId(orgId as OrganizationId);
     flush();
 
-    expect(spy).toHaveBeenCalled();
     expect(keyService.getOrgKey).toHaveBeenCalledWith(orgId.toString());
     expect(encryptService.decryptToUtf8).toHaveBeenCalledTimes(2);
     expect(apiService.send).toHaveBeenCalledWith(
