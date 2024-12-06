@@ -3,13 +3,15 @@ import { randomUUID } from "crypto";
 import { fakeAsync, flush } from "@angular/core/testing";
 import { mock } from "jest-mock-extended";
 
+
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
-import { OrganizationId } from "@bitwarden/common/types/guid";
-import { KeyService } from "@bitwarden/key-management";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
+import { CsprngArray } from "@bitwarden/common/types/csprng";
+import { OrganizationId } from "@bitwarden/common/types/guid";
 import { OrgKey } from "@bitwarden/common/types/key";
+import { KeyService } from "@bitwarden/key-management";
 
 import {
   CriticalAppsApiService,
@@ -17,7 +19,6 @@ import {
   PasswordHealthReportApplicationsRequest,
   PasswordHealthReportApplicationsResponse,
 } from "./critical-apps-api.service";
-import { CsprngArray } from "@bitwarden/common/types/csprng";
 
 describe("CriticalAppsApiService", () => {
   let service: CriticalAppsApiService;
