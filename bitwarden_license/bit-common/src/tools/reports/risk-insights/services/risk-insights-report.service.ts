@@ -51,7 +51,6 @@ export class RiskInsightsReportService {
         return [allCiphers, details] as const;
       }),
       concatMap(([ciphers, flattenedDetails]) => this.getCipherDetails(ciphers, flattenedDetails)),
-      // timeout(TIMEOUT_IN_MS),
       first(),
     );
 
@@ -88,8 +87,6 @@ export class RiskInsightsReportService {
     );
 
     return results$;
-    // const cipherHealthUriReport = await this.generateRawDataUriReport(organizationId);
-    // return this.getApplicationHealthReport(cipherHealthUriReport);
   }
 
   /**
