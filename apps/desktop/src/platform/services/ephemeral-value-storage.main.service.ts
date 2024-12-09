@@ -1,6 +1,6 @@
 import { ipcMain } from "electron";
 
-import { epheremal_values } from "@bitwarden/desktop-napi";
+import { ephemeral_values } from "@bitwarden/desktop-napi";
 
 /**
  * The ephemeral value store holds values that should be accessible to the renderer past a process reload.
@@ -8,7 +8,7 @@ import { epheremal_values } from "@bitwarden/desktop-napi";
  */
 export class EphemeralValueStorageService {
   constructor() {
-    const ephemeralValues = new epheremal_values.EpheremalValueStoreWrapper();
+    const ephemeralValues = new ephemeral_values.EphemeralValueStoreWrapper();
     ipcMain.handle("setEphemeralValue", async (event, { key, value }) => {
       ephemeralValues.set(key, value);
     });

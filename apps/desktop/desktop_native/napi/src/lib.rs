@@ -546,21 +546,21 @@ pub mod ipc {
 }
 
 #[napi]
-pub mod epheremal_values {
-    use desktop_core::epheremal_values::EpheremalValueStore;
+pub mod ephemeral_values {
+    use desktop_core::ephemeral_values::EphemeralValueStore as EphemeralValueStore;
 
     #[napi]
-    pub struct EpheremalValueStoreWrapper {
-        store: EpheremalValueStore,
+    pub struct EphemeralValueStoreWrapper {
+        store: EphemeralValueStore,
     }
 
     #[napi]
-    impl EpheremalValueStoreWrapper {
+    impl EphemeralValueStoreWrapper {
 
         #[napi(constructor)]
         pub fn new() -> napi::Result<Self> {
-            Ok(EpheremalValueStoreWrapper {
-                store: EpheremalValueStore::new(),
+            Ok(EphemeralValueStoreWrapper {
+                store: EphemeralValueStore::new(),
             })
         }
 

@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 
 #[derive(Clone)]
-pub struct EpheremalValueStore {
+pub struct EphemeralValueStore {
     values: HashMap<String, String>,
 }
 
-impl EpheremalValueStore {
+impl EphemeralValueStore {
     pub fn new() -> Self {
-        EpheremalValueStore {
+        EphemeralValueStore {
             values: HashMap::new(),
         }
     }

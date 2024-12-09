@@ -122,8 +122,8 @@ export declare namespace ipc {
     send(message: string): number
   }
 }
-export declare namespace epheremal_values {
-  export class EpheremalValueStoreWrapper {
+export declare namespace ephemeral_values {
+  export class EphemeralValueStoreWrapper {
     constructor()
     set(key: string, value: string): void
     get(key: string): string | null

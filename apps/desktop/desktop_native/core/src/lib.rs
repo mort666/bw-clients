@@ -15,7 +15,7 @@ pub mod process_isolation;
 #[cfg(feature = "sys")]
 pub mod ssh_agent;
 #[cfg(feature = "sys")]
-pub mod epheremal_values;
+pub mod ephemeral_values;
 
 pub use zeroizing_alloc::ZeroAlloc as ZeroizingAllocator;
 #[global_allocator]
