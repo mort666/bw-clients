@@ -519,7 +519,7 @@ export class PinService implements PinServiceAbstraction {
   /**
    * Throws a custom error message if user ID is not provided.
    */
-  private validateUserId(userId: UserId, errorMessage: string = "") {
+  protected validateUserId(userId: UserId, errorMessage: string = "") {
     if (!userId) {
       throw new Error(`User ID is required. ${errorMessage}`);
     }

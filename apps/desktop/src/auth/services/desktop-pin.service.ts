@@ -3,7 +3,12 @@ import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { UserId } from "@bitwarden/common/types/guid";
 
 export class DesktopPinService extends PinService {
-  async getPinKeyEncryptedUserKeyEphemeral(userId: UserId): Promise<EncString> {
+  override async getPinKeyEncryptedUserKeyEphemeral(userId: UserId): Promise<EncString> {
+    super.validateUserId(
+      userId,
+      "Cannot get pin key encrypted user key ephemeral without a user ID.",
+    );
+
     const ephemeralValue = await ipc.platform.ephemeralStore.getEphemeralValue(
       `pinKeyEncryptedUserKeyEphemeral-${userId}`,
     );
@@ -14,14 +19,27 @@ export class DesktopPinService extends PinService {
     }
   }
 
-  async setPinKeyEncryptedUserKeyEphemeral(value: EncString, userId: UserId): Promise<void> {
+  override async setPinKeyEncryptedUserKeyEphemeral(
+    value: EncString,
+    userId: UserId,
+  ): Promise<void> {
+    super.validateUserId(
+      userId,
+      "Cannot set pin key encrypted user key ephemeral without a user ID.",
+    );
+
     return await ipc.platform.ephemeralStore.setEphemeralValue(
       `pinKeyEncryptedUserKeyEphemeral-${userId}`,
       value.encryptedString,
     );
   }
 
-  async deletePinKeyEncryptedUserKeyEphemeral(userId: string): Promise<void> {
+  override async clearPinKeyEncryptedUserKeyEphemeral(userId: UserId): Promise<void> {
+    super.validateUserId(
+      userId,
+      "Cannot delete pin key encrypted user key ephemeral without a user ID.",
+    );
+
     return await ipc.platform.ephemeralStore.removeEphemeralValue(
       `pinKeyEncryptedUserKeyEphemeral-${userId}`,
     );
