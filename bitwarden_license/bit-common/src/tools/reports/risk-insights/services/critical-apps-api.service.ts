@@ -126,12 +126,9 @@ export class CriticalAppsApiService {
         return forkJoin(results);
       }),
       first(),
-      map((results: PasswordHealthReportApplicationsResponse[]) => {
-        return results;
-      }),
     );
 
-    return result$;
+    return result$ as Observable<PasswordHealthReportApplicationsResponse[]>;
   }
 
   private async filterNewEntries(orgId: OrganizationId, selectedUrls: string[]): Promise<string[]> {
@@ -172,9 +169,3 @@ export interface PasswordHealthReportApplicationsResponse {
 }
 
 export type PasswordHealthReportApplicationId = Opaque<string, "PasswordHealthReportApplicationId">;
-
-export const criticalServiceFactoryProvider = (
-  apiService: ApiService,
-  keyService: KeyService,
-  encryptService: EncryptService,
-) => new CriticalAppsApiService(apiService, keyService, encryptService);
