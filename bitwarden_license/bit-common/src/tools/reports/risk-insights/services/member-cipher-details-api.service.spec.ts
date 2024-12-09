@@ -97,7 +97,7 @@ describe("Member Cipher Details API Service", () => {
     const orgId = "1234";
     const result = await memberCipherDetailsApiService.getMemberCipherDetails(orgId);
     expect(result).not.toBeNull();
-    expect(result).toHaveLength(6);
+    expect(result).toHaveLength(7);
     expect(apiService.send).toHaveBeenCalledWith(
       "GET",
       "/reports/member-cipher-details/" + orgId,
