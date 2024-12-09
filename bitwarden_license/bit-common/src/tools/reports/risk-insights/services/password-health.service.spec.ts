@@ -9,7 +9,7 @@ import { MemberCipherDetailsApiService } from "./member-cipher-details-api.servi
 import { mockMemberCipherDetails } from "./member-cipher-details-api.service.spec";
 import { PasswordHealthService } from "./password-health.service";
 
-// TODO: Remove password-health report service after PR-15498 completion
+// FIXME: Remove password-health report service after PR-15498 completion
 describe("PasswordHealthService", () => {
   let service: PasswordHealthService;
   beforeEach(() => {
