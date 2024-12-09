@@ -4,13 +4,13 @@ import { UserId } from "@bitwarden/common/types/guid";
 
 export class DesktopPinService extends PinService {
   async getPinKeyEncryptedUserKeyEphemeral(userId: UserId): Promise<EncString> {
-    const epheremalValue = await ipc.platform.ephemeralStore.getEphemeralValue(
+    const ephemeralValue = await ipc.platform.ephemeralStore.getEphemeralValue(
       `pinKeyEncryptedUserKeyEphemeral-${userId}`,
     );
-    if (epheremalValue == null) {
+    if (ephemeralValue == null) {
       return null;
     } else {
-      return new EncString(epheremalValue);
+      return new EncString(ephemeralValue);
     }
   }
 
