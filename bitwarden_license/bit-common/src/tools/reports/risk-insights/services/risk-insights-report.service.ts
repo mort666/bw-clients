@@ -1,4 +1,5 @@
 import { Injectable } from "@angular/core";
+import { concatMap, first, from, map, Observable, zip } from "rxjs";
 
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
@@ -36,15 +37,25 @@ export class RiskInsightsReportService {
    * @param organizationId
    * @returns Cipher health report data with members and trimmed uris
    */
-  async generateRawDataReport(organizationId: string): Promise<CipherHealthReportDetail[]> {
-    const allCiphers = await this.cipherService.getAllFromApiForOrganization(organizationId);
-    const memberCipherDetails =
-      await this.memberCipherDetailsApiService.getMemberCipherDetails(organizationId);
-    const flattenedDetails: MemberDetailsFlat[] = memberCipherDetails.flatMap((dtl) =>
-      dtl.cipherIds.map((c) => this.getMemberDetailsFlat(dtl.userName, dtl.email, c)),
+  generateRawDataReport$(organizationId: string): Observable<CipherHealthReportDetail[]> {
+    const allCiphers$ = from(this.cipherService.getAllFromApiForOrganization(organizationId));
+    const memberCiphers$ = from(
+      this.memberCipherDetailsApiService.getMemberCipherDetails(organizationId),
     );
 
-    return await this.getCipherDetails(allCiphers, flattenedDetails);
+    const results$ = zip(allCiphers$, memberCiphers$).pipe(
+      map(([allCiphers, memberCiphers]) => {
+        const details: MemberDetailsFlat[] = memberCiphers.flatMap((dtl) =>
+          dtl.cipherIds.map((c) => this.getMemberDetailsFlat(dtl.userName, dtl.email, c)),
+        );
+        return [allCiphers, details] as const;
+      }),
+      concatMap(([ciphers, flattenedDetails]) => this.getCipherDetails(ciphers, flattenedDetails)),
+      // timeout(TIMEOUT_IN_MS),
+      first(),
+    );
+
+    return results$;
   }
 
   /**
@@ -53,10 +64,14 @@ export class RiskInsightsReportService {
    * @param organizationId Id of the organization
    * @returns Cipher health report data flattened to the uris
    */
-  async generateRawDataUriReport(organizationId: string): Promise<CipherHealthReportUriDetail[]> {
-    const cipherHealthDetails = await this.generateRawDataReport(organizationId);
+  generateRawDataUriReport$(organizationId: string): Observable<CipherHealthReportUriDetail[]> {
+    const cipherHealthDetails$ = this.generateRawDataReport$(organizationId);
+    const results$ = cipherHealthDetails$.pipe(
+      map((healthDetails) => this.getCipherUriDetails(healthDetails)),
+      first(),
+    );
 
-    return this.getCipherUriDetails(cipherHealthDetails);
+    return results$;
   }
 
   /**
@@ -65,11 +80,16 @@ export class RiskInsightsReportService {
    * @param organizationId Id of the organization
    * @returns The all applications health report data
    */
-  async generateApplicationsReport(
-    organizationId: string,
-  ): Promise<ApplicationHealthReportDetail[]> {
-    const cipherHealthUriReport = await this.generateRawDataUriReport(organizationId);
-    return this.getApplicationHealthReport(cipherHealthUriReport);
+  generateApplicationsReport$(organizationId: string): Observable<ApplicationHealthReportDetail[]> {
+    const cipherHealthUriReport$ = this.generateRawDataUriReport$(organizationId);
+    const results$ = cipherHealthUriReport$.pipe(
+      map((uriDetails) => this.getApplicationHealthReport(uriDetails)),
+      first(),
+    );
+
+    return results$;
+    // const cipherHealthUriReport = await this.generateRawDataUriReport(organizationId);
+    // return this.getApplicationHealthReport(cipherHealthUriReport);
   }
 
   /**

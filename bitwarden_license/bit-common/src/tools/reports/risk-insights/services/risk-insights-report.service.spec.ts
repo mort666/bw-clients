@@ -1,4 +1,5 @@
 import { TestBed } from "@angular/core/testing";
+import { firstValueFrom } from "rxjs";
 
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
 import { PasswordStrengthServiceAbstraction } from "@bitwarden/common/tools/password-strength";
@@ -50,11 +51,13 @@ describe("RiskInsightsReportService", () => {
   });
 
   it("should generate the raw data report correctly", async () => {
-    const result = await service.generateRawDataReport("orgId");
+    const result = await firstValueFrom(service.generateRawDataReport$("orgId"));
 
     expect(result).toHaveLength(6);
 
-    let testCase = result.filter((x) => x.id === "cbea34a8-bde4-46ad-9d19-b05001228ab1")[0];
+    let testCaseResults = result.filter((x) => x.id === "cbea34a8-bde4-46ad-9d19-b05001228ab1");
+    expect(testCaseResults).toHaveLength(1);
+    let testCase = testCaseResults[0];
     expect(testCase).toBeTruthy();
     expect(testCase.cipherMembers).toHaveLength(2);
     expect(testCase.trimmedUris).toHaveLength(3);
@@ -62,7 +65,9 @@ describe("RiskInsightsReportService", () => {
     expect(testCase.exposedPasswordDetail).toBeTruthy();
     expect(testCase.reusedPasswordCount).toEqual(2);
 
-    testCase = result.filter((x) => x.id === "cbea34a8-bde4-46ad-9d19-b05001227tt1")[0];
+    testCaseResults = result.filter((x) => x.id === "cbea34a8-bde4-46ad-9d19-b05001227tt1");
+    expect(testCaseResults).toHaveLength(1);
+    testCase = testCaseResults[0];
     expect(testCase).toBeTruthy();
     expect(testCase.cipherMembers).toHaveLength(1);
     expect(testCase.trimmedUris).toHaveLength(1);
@@ -72,7 +77,7 @@ describe("RiskInsightsReportService", () => {
   });
 
   it("should generate the raw data + uri report correctly", async () => {
-    const result = await service.generateRawDataUriReport("orgId");
+    const result = await firstValueFrom(service.generateRawDataUriReport$("orgId"));
 
     expect(result).toHaveLength(9);
 
@@ -91,7 +96,7 @@ describe("RiskInsightsReportService", () => {
   });
 
   it("should generate applications health report data correctly", async () => {
-    const result = await service.generateApplicationsReport("orgId");
+    const result = await firstValueFrom(service.generateApplicationsReport$("orgId"));
 
     expect(result).toHaveLength(6);
 
@@ -99,7 +104,9 @@ describe("RiskInsightsReportService", () => {
     // has 2 members and the second has 4. However, the 2 members in the first
     // cipher are also associated with the second. The total amount of members
     // should be 4 not 6
-    const googleTest = result.filter((x) => x.applicationName === "google.com")[0];
+    const googleTestResults = result.filter((x) => x.applicationName === "google.com");
+    expect(googleTestResults).toHaveLength(1);
+    const googleTest = googleTestResults[0];
     expect(googleTest.memberCount).toEqual(4);
 
     // Both ciphers have at risk passwords
@@ -110,25 +117,27 @@ describe("RiskInsightsReportService", () => {
     expect(googleTest.atRiskPasswordCount).toEqual(2);
 
     // There are 2 ciphers associated with 101domain.com
-    const doman101Test = result.filter((x) => x.applicationName === "101domain.com")[0];
-    expect(doman101Test.passwordCount).toEqual(2);
+    const domain101TestResults = result.filter((x) => x.applicationName === "101domain.com");
+    expect(domain101TestResults).toHaveLength(1);
+    const domain101Test = domain101TestResults[0];
+    expect(domain101Test.passwordCount).toEqual(2);
 
     // The first cipher is at risk. The second cipher is not at risk
-    expect(doman101Test.atRiskPasswordCount).toEqual(1);
+    expect(domain101Test.atRiskPasswordCount).toEqual(1);
 
     // The first cipher has 2 members. The second cipher the second
     // cipher has 4. One of the members in the first cipher is associated
     // with the second. So there should be 5 members total.
-    expect(doman101Test.memberCount).toEqual(5);
+    expect(domain101Test.memberCount).toEqual(5);
 
     // The first cipher is at risk. The total at risk members is 2 and
     // at risk password count is 1.
-    expect(doman101Test.atRiskMemberDetails).toHaveLength(2);
-    expect(doman101Test.atRiskPasswordCount).toEqual(1);
+    expect(domain101Test.atRiskMemberDetails).toHaveLength(2);
+    expect(domain101Test.atRiskPasswordCount).toEqual(1);
   });
 
   it("should generate applications summary data correctly", async () => {
-    const reportResult = await service.generateApplicationsReport("orgId");
+    const reportResult = await firstValueFrom(service.generateApplicationsReport$("orgId"));
     const reportSummary = service.generateApplicationsSummary(reportResult);
 
     expect(reportSummary.totalMemberCount).toEqual(7);
