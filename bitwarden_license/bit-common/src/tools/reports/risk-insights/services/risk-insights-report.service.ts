@@ -22,8 +22,6 @@ import { MemberCipherDetailsApiService } from "./member-cipher-details-api.servi
 
 @Injectable()
 export class RiskInsightsReportService {
-  passwordUseMap = new Map<string, number>();
-
   constructor(
     private passwordStrengthService: PasswordStrengthServiceAbstraction,
     private auditService: AuditService,
@@ -109,13 +107,18 @@ export class RiskInsightsReportService {
     memberDetails: MemberDetailsFlat[],
   ): Promise<CipherHealthReportDetail[]> {
     const cipherHealthReports: CipherHealthReportDetail[] = [];
-
+    const passwordUseMap = new Map<string, number>();
     for (const cipher of ciphers) {
       if (this.validateCipher(cipher)) {
         const weakPassword = this.findWeakPassword(cipher);
         // Looping over all ciphers needs to happen first to determine reused passwords over all ciphers.
         // Store in the set and evaluate later
-        this.findReusedPassword(cipher);
+        passwordUseMap.has(cipher.login.password)
+          ? passwordUseMap.set(
+              cipher.login.password,
+              (passwordUseMap.get(cipher.login.password) || 0) + 1,
+            )
+          : passwordUseMap.set(cipher.login.password, 1);
         const exposedPassword = await this.findExposedPassword(cipher);
 
         // Get the cipher members
@@ -137,7 +140,7 @@ export class RiskInsightsReportService {
 
     // loop for reused passwords
     cipherHealthReports.forEach((detail) => {
-      detail.reusedPasswordCount = this.passwordUseMap.get(detail.id) ?? 0;
+      detail.reusedPasswordCount = passwordUseMap.get(detail.login.password) ?? 0;
     });
     return cipherHealthReports;
   }
@@ -169,7 +172,7 @@ export class RiskInsightsReportService {
       const index = appReports.findIndex((item) => item.applicationName === uri.trimmedUri);
 
       let atRisk: boolean = false;
-      if (uri.exposedPasswordDetail || uri.weakPasswordDetail || uri.reusedPasswordCount > 0) {
+      if (uri.exposedPasswordDetail || uri.weakPasswordDetail || uri.reusedPasswordCount > 1) {
         atRisk = true;
       }
 
@@ -180,17 +183,6 @@ export class RiskInsightsReportService {
       }
     });
     return appReports;
-  }
-
-  private findReusedPassword(cipher: CipherView) {
-    if (this.passwordUseMap.has(cipher.login.password)) {
-      this.passwordUseMap.set(
-        cipher.login.password,
-        (this.passwordUseMap.get(cipher.login.password) || 0) + 1,
-      );
-    } else {
-      this.passwordUseMap.set(cipher.login.password, 1);
-    }
   }
 
   private async findExposedPassword(cipher: CipherView): Promise<ExposedPasswordDetail> {
