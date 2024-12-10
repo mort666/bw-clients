@@ -1,3 +1,6 @@
+// FIXME: Update this file to be type safe
+// @ts-strict-ignore
+
 import { Injectable } from "@angular/core";
 import { concatMap, first, from, map, Observable, zip } from "rxjs";
 
@@ -21,8 +24,6 @@ import {
 
 import { MemberCipherDetailsApiService } from "./member-cipher-details-api.service";
 
-// FIXME: Update this file to be type safe
-// @ts-strict-ignore
 @Injectable()
 export class RiskInsightsReportService {
   constructor(
