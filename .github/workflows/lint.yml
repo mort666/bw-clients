@@ -12,7 +12,7 @@ on:
     branches:
       - 'main'
       - 'rc'
-      - 'hotfix-rc-browser'
+      - 'hotfix-rc-*'
     paths-ignore:
       - '.github/workflows/**'
   workflow_dispatch:
