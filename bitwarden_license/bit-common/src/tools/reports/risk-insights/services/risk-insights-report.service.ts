@@ -130,12 +130,15 @@ export class RiskInsightsReportService {
         const weakPassword = this.findWeakPassword(cipher);
         // Looping over all ciphers needs to happen first to determine reused passwords over all ciphers.
         // Store in the set and evaluate later
-        passwordUseMap.has(cipher.login.password)
-          ? passwordUseMap.set(
-              cipher.login.password,
-              (passwordUseMap.get(cipher.login.password) || 0) + 1,
-            )
-          : passwordUseMap.set(cipher.login.password, 1);
+        if (passwordUseMap.has(cipher.login.password)) {
+          passwordUseMap.set(
+            cipher.login.password,
+            (passwordUseMap.get(cipher.login.password) || 0) + 1,
+          );
+        } else {
+          passwordUseMap.set(cipher.login.password, 1);
+        }
+
         const exposedPassword = await this.findExposedPassword(cipher);
 
         // Get the cipher members
