@@ -69,14 +69,14 @@ export type WeakPasswordDetail = {
 export type WeakPasswordScore = {
   label: string;
   badgeVariant: BadgeVariant;
-};
+} | null;
 
 /**
  * How many times a password has been exposed
  */
 export type ExposedPasswordDetail = {
   exposedXTimes: number;
-};
+} | null;
 
 /**
  * Flattened member details that associates an
