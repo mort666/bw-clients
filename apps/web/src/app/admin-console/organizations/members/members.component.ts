@@ -462,7 +462,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     firstValueFrom(simpleDialog.closed).then(this.handleDialogClose.bind(this));
   }
 
-  private async handleInviteDialog(initialTab: MemberDialogTab) {
+  private async handleInviteDialog() {
     const dialog = openUserAddEditDialog(this.dialogService, {
       data: {
         name: null,
@@ -471,7 +471,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
         allOrganizationUserEmails: this.dataSource.data?.map((user) => user.email) ?? [],
         usesKeyConnector: null,
         isOnSecretsManagerStandalone: this.orgIsOnSecretsManagerStandalone,
-        initialTab: initialTab,
+        initialTab: MemberDialogTab.Role,
         numConfirmedMembers: this.dataSource.confirmedUserCount,
         managedByOrganization: null,
       },
@@ -505,7 +505,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     }
   }
 
-  async invite(initialTab: MemberDialogTab = MemberDialogTab.Role) {
+  async invite() {
     if (
       this.organization.hasReseller &&
       this.organization.seats === this.dataSource.confirmedUserCount
@@ -515,16 +515,22 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
         title: this.i18nService.t("seatLimitReached"),
         message: this.i18nService.t("contactYourProvider"),
       });
-    } else if (
+
+      return;
+    }
+
+    if (
       this.dataSource.data.length === this.organization.seats &&
       (this.organization.productTierType === ProductTierType.Free ||
         this.organization.productTierType === ProductTierType.TeamsStarter ||
         this.organization.productTierType === ProductTierType.Families)
     ) {
       await this.handleSeatLimitForFixedTiers();
-    } else {
-      await this.handleInviteDialog(initialTab);
+
+      return;
     }
+
+    await this.handleInviteDialog();
   }
 
   async edit(user: OrganizationUserView, initialTab: MemberDialogTab = MemberDialogTab.Role) {
@@ -550,9 +556,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
       case MemberDialogResult.Saved:
       case MemberDialogResult.Revoked:
       case MemberDialogResult.Restored:
-        // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        this.load();
+        await this.load();
         break;
     }
   }

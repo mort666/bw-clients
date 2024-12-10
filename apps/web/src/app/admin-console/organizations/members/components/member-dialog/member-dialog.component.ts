@@ -50,7 +50,10 @@ import {
 } from "../../../shared/components/access-selector";
 
 import { commaSeparatedEmails } from "./validators/comma-separated-emails.validator";
-import { orgSeatLimitReachedValidator } from "./validators/org-seat-limit-reached.validator";
+import {
+  orgSeatLimitReachedValidator,
+  inputEmailLimitValidator,
+} from "./validators/org-seat-limit-reached.validator";
 
 export enum MemberDialogTab {
   Role = 0,
@@ -285,72 +288,6 @@ export class MemberDialogComponent implements OnDestroy {
     emailsControl.updateValueAndValidity();
   }
 
-  private async handleInviteUsers(userView: OrganizationUserAdminView, organization: Organization) {
-    const emails = [...new Set(this.formGroup.value.emails.trim().split(/\s*,\s*/))];
-
-    if (this.enforceEmailCountLimit(emails, organization)) {
-      return;
-    }
-
-    await this.userService.invite(emails, userView);
-
-    this.toastService.showToast({
-      variant: "success",
-      title: null,
-      message: this.i18nService.t("invitedUsers"),
-    });
-    this.close(MemberDialogResult.Saved);
-  }
-
-  private enforceEmailCountLimit(emails: string[], organization: Organization): boolean {
-    const maxEmailsCount = organization.productTierType === ProductTierType.TeamsStarter ? 10 : 20;
-
-    if (emails.length > maxEmailsCount) {
-      this.formGroup.controls.emails.setErrors({
-        tooManyEmails: { message: this.i18nService.t("tooManyEmails", maxEmailsCount) },
-      });
-      return true;
-    }
-
-    return false;
-  }
-
-  private async handleEditUser(userView: OrganizationUserAdminView) {
-    userView.id = this.params.organizationUserId;
-    await this.userService.save(userView);
-
-    this.toastService.showToast({
-      variant: "success",
-      title: null,
-      message: this.i18nService.t("editedUserId", this.params.name),
-    });
-
-    this.close(MemberDialogResult.Saved);
-  }
-
-  private async getUserView(): Promise<OrganizationUserAdminView> {
-    const userView = new OrganizationUserAdminView();
-    userView.organizationId = this.params.organizationId;
-    userView.type = this.formGroup.value.type;
-
-    userView.permissions = this.setRequestPermissions(
-      userView.permissions ?? new PermissionsApi(),
-      userView.type !== OrganizationUserType.Custom,
-    );
-
-    userView.collections = this.formGroup.value.access
-      .filter((v) => v.type === AccessItemType.Collection)
-      .map(convertToSelectionView);
-
-    userView.groups = (await firstValueFrom(this.restrictEditingSelf$))
-      ? null
-      : this.formGroup.value.groups.map((m) => m.id);
-
-    userView.accessSecretsManager = this.formGroup.value.accessSecretsManager;
-
-    return userView;
-  }
-
   private loadOrganizationUser(
     userDetails: OrganizationUserAdminView,
     groups: GroupDetailsView[],
@@ -501,6 +438,71 @@ export class MemberDialogComponent implements OnDestroy {
       await this.handleInviteUsers(userView, organization);
     }
   };
+
+  private async getUserView(): Promise<OrganizationUserAdminView> {
+    const userView = new OrganizationUserAdminView();
+    userView.organizationId = this.params.organizationId;
+    userView.type = this.formGroup.value.type;
+
+    userView.permissions = this.setRequestPermissions(
+      userView.permissions ?? new PermissionsApi(),
+      userView.type !== OrganizationUserType.Custom,
+    );
+
+    userView.collections = this.formGroup.value.access
+      .filter((v) => v.type === AccessItemType.Collection)
+      .map(convertToSelectionView);
+
+    userView.groups = (await firstValueFrom(this.restrictEditingSelf$))
+      ? null
+      : this.formGroup.value.groups.map((m) => m.id);
+
+    userView.accessSecretsManager = this.formGroup.value.accessSecretsManager;
+
+    return userView;
+  }
+
+  private async handleEditUser(userView: OrganizationUserAdminView) {
+    userView.id = this.params.organizationUserId;
+    await this.userService.save(userView);
+
+    this.toastService.showToast({
+      variant: "success",
+      title: null,
+      message: this.i18nService.t("editedUserId", this.params.name),
+    });
+
+    this.close(MemberDialogResult.Saved);
+  }
+
+  private async handleInviteUsers(userView: OrganizationUserAdminView, organization: Organization) {
+    const emails = [...new Set(this.formGroup.value.emails.trim().split(/\s*,\s*/))];
+
+    this.setInputEmailCountValidator(organization, emails.length);
+
+    await this.userService.invite(emails, userView);
+
+    this.toastService.showToast({
+      variant: "success",
+      title: null,
+      message: this.i18nService.t("invitedUsers"),
+    });
+    this.close(MemberDialogResult.Saved);
+  }
+
+  private setInputEmailCountValidator(organization: Organization, emailCount: number) {
+    const emailsControlValidators = [
+      Validators.required,
+      commaSeparatedEmails,
+      inputEmailLimitValidator(organization, (maxEmailsCount: number) =>
+        this.i18nService.t("tooManyEmails", maxEmailsCount),
+      ),
+    ];
+
+    const emailsControl = this.formGroup.get("emails");
+    emailsControl.setValidators(emailsControlValidators);
+    emailsControl.updateValueAndValidity();
+  }
 
   remove = async () => {
     if (!this.editMode) {
