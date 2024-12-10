@@ -142,7 +142,7 @@ describe("inputEmailLimitValidator", () => {
     let result = "";
 
     for (let i = 1; i <= numberOfEmails; i++) {
-      result += `test${i}@test.com,`;
+      result += `test${i}@test.com, `;
     }
 
     // Remove the last comma and space
