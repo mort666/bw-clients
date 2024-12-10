@@ -25,6 +25,8 @@ on:
       - '!*.md'
       - '!*.txt'
       - '.github/workflows/build-desktop.yml'
+  workflow_call:
+    inputs: {}
   workflow_dispatch:
     inputs:
       sdk_branch:

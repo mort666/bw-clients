@@ -27,6 +27,8 @@ on:
       - '.github/workflows/build-web.yml'
   release:
     types: [published]
+  workflow_call:
+    inputs: {}
   workflow_dispatch:
     inputs:
       custom_tag_extension:

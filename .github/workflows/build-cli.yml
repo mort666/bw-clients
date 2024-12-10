@@ -27,6 +27,8 @@ on:
       - '!*.txt'
       - '.github/workflows/build-cli.yml'
       - 'bitwarden_license/bit-cli/**'
+  workflow_call:
+    inputs: {}
   workflow_dispatch:
     inputs:
       sdk_branch:
