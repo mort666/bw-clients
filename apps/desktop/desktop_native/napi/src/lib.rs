@@ -580,6 +580,7 @@ pub mod ephemeral_values {
         }
     }
 }
+#[napi]
 pub mod autofill {
     #[napi]
     pub async fn run_command(value: String) -> napi::Result<String> {
