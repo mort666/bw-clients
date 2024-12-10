@@ -40,8 +40,8 @@ export class FolderService implements InternalFolderServiceAbstraction {
   }
 
   folderViews$(userId: UserId): Observable<FolderView[]> {
-    return this.encryptedFoldersState(userId).combinedState$.pipe(
-      switchMap(([userId, folderData]) => {
+    return this.encryptedFoldersState(userId).state$.pipe(
+      switchMap((folderData) => {
         return this.decryptFolders(userId, folderData);
       }),
     );
@@ -116,7 +116,7 @@ export class FolderService implements InternalFolderServiceAbstraction {
     if (!folders) {
       return;
     }
-
+    await this.clearDecryptedFolderState(userId);
     await this.stateProvider.getUser(userId, FOLDER_ENCRYPTED_FOLDERS).update(() => {
       const newFolders: Record<string, FolderData> = { ...folders };
       return newFolders;
@@ -137,6 +137,7 @@ export class FolderService implements InternalFolderServiceAbstraction {
   }
 
   async delete(id: string | string[], userId: UserId): Promise<any> {
+    await this.clearDecryptedFolderState(userId);
     await this.encryptedFoldersState(userId).update((folders) => {
       if (folders == null) {
         return;
