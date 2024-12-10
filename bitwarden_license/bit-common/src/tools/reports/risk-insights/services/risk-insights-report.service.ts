@@ -24,8 +24,6 @@ import {
 
 import { MemberCipherDetailsApiService } from "./member-cipher-details-api.service";
 
-// FIXME: Update this file to be type safe
-// @ts-strict-ignore
 @Injectable()
 export class RiskInsightsReportService {
   constructor(
