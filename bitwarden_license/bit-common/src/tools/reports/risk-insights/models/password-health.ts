@@ -60,7 +60,7 @@ export type CipherHealthReportDetail = CipherView & {
 export type WeakPasswordDetail = {
   score: number;
   detailValue: WeakPasswordScore;
-};
+} | null;
 
 /**
  * Weak password details containing the badge and
