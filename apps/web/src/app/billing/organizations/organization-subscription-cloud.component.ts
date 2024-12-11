@@ -2,7 +2,7 @@
 // @ts-strict-ignore
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
-import { concatMap, firstValueFrom, lastValueFrom, Observable, Subject, takeUntil } from "rxjs";
+import { firstValueFrom, lastValueFrom, Observable, Subject } from "rxjs";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
@@ -42,8 +42,8 @@ import { SecretsManagerSubscriptionOptions } from "./sm-adjust-subscription.comp
   templateUrl: "organization-subscription-cloud.component.html",
 })
 export class OrganizationSubscriptionCloudComponent implements OnInit, OnDestroy {
-  public static readonly QUERY_PARAM_UPGRADE: string = "upgrade";
-  public static readonly ROUTE_PARAM_ORGANIZATION_ID: string = "organizationId";
+  static readonly QUERY_PARAM_UPGRADE: string = "upgrade";
+  static readonly ROUTE_PARAM_ORGANIZATION_ID: string = "organizationId";
 
   sub: OrganizationSubscriptionResponse;
   lineItems: BillingSubscriptionItemResponse[] = [];
