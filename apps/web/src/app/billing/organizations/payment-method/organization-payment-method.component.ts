@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Location } from "@angular/common";
 import { Component, OnDestroy, ViewChild } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
@@ -9,6 +11,7 @@ import { OrganizationService } from "@bitwarden/common/admin-console/abstraction
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions";
 import { PaymentMethodType } from "@bitwarden/common/billing/enums";
+import { ExpandedTaxInfoUpdateRequest } from "@bitwarden/common/billing/models/request/expanded-tax-info-update.request";
 import { VerifyBankAccountRequest } from "@bitwarden/common/billing/models/request/verify-bank-account.request";
 import { OrganizationSubscriptionResponse } from "@bitwarden/common/billing/models/response/organization-subscription.response";
 import { PaymentSourceResponse } from "@bitwarden/common/billing/models/response/payment-source.response";
@@ -178,6 +181,32 @@ export class OrganizationPaymentMethodComponent implements OnDestroy {
       this.launchPaymentModalAutomatically = false;
       await this.load();
     }
+  };
+
+  protected updateTaxInformation = async (): Promise<void> => {
+    this.taxInfoComponent.taxFormGroup.updateValueAndValidity();
+    this.taxInfoComponent.taxFormGroup.markAllAsTouched();
+
+    if (this.taxInfoComponent.taxFormGroup.invalid) {
+      return;
+    }
+
+    const request = new ExpandedTaxInfoUpdateRequest();
+    request.country = this.taxInfoComponent.country;
+    request.postalCode = this.taxInfoComponent.postalCode;
+    request.taxId = this.taxInfoComponent.taxId;
+    request.line1 = this.taxInfoComponent.line1;
+    request.line2 = this.taxInfoComponent.line2;
+    request.city = this.taxInfoComponent.city;
+    request.state = this.taxInfoComponent.state;
+
+    await this.billingApiService.updateOrganizationTaxInformation(this.organizationId, request);
+
+    this.toastService.showToast({
+      variant: "success",
+      title: null,
+      message: this.i18nService.t("taxInfoUpdated"),
+    });
   };
 
   protected verifyBankAccount = async (request: VerifyBankAccountRequest): Promise<void> => {
