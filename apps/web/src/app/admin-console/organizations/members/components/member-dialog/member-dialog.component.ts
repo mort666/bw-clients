@@ -50,10 +50,8 @@ import {
 } from "../../../shared/components/access-selector";
 
 import { commaSeparatedEmails } from "./validators/comma-separated-emails.validator";
-import {
-  orgSeatLimitReachedValidator,
-  inputEmailLimitValidator,
-} from "./validators/org-seat-limit-reached.validator";
+import { inputEmailLimitValidator } from "./validators/input-email-limit.validator";
+import { orgSeatLimitReachedValidator } from "./validators/org-seat-limit-reached.validator";
 
 export enum MemberDialogTab {
   Role = 0,
@@ -273,7 +271,7 @@ export class MemberDialogComponent implements OnDestroy {
   }
 
   private setFormValidators(organization: Organization) {
-    const emailsControlValidators = [
+    const _orgSeatLimitReachedValidator = [
       Validators.required,
       commaSeparatedEmails,
       orgSeatLimitReachedValidator(
@@ -283,8 +281,17 @@ export class MemberDialogComponent implements OnDestroy {
       ),
     ];
 
+    const _inputEmailLimitValidator = [
+      Validators.required,
+      commaSeparatedEmails,
+      inputEmailLimitValidator(organization, (maxEmailsCount: number) =>
+        this.i18nService.t("tooManyEmails", maxEmailsCount),
+      ),
+    ];
+
     const emailsControl = this.formGroup.get("emails");
-    emailsControl.setValidators(emailsControlValidators);
+    emailsControl.setValidators(_orgSeatLimitReachedValidator);
+    emailsControl.setValidators(_inputEmailLimitValidator);
     emailsControl.updateValueAndValidity();
   }
 
@@ -478,8 +485,6 @@ export class MemberDialogComponent implements OnDestroy {
   private async handleInviteUsers(userView: OrganizationUserAdminView, organization: Organization) {
     const emails = [...new Set(this.formGroup.value.emails.trim().split(/\s*,\s*/))];
 
-    this.setInputEmailCountValidator(organization, emails.length);
-
     await this.userService.invite(emails, userView);
 
     this.toastService.showToast({
@@ -488,20 +493,6 @@ export class MemberDialogComponent implements OnDestroy {
       message: this.i18nService.t("invitedUsers"),
     });
     this.close(MemberDialogResult.Saved);
-  }
-
-  private setInputEmailCountValidator(organization: Organization, emailCount: number) {
-    const emailsControlValidators = [
-      Validators.required,
-      commaSeparatedEmails,
-      inputEmailLimitValidator(organization, (maxEmailsCount: number) =>
-        this.i18nService.t("tooManyEmails", maxEmailsCount),
-      ),
-    ];
-
-    const emailsControl = this.formGroup.get("emails");
-    emailsControl.setValidators(emailsControlValidators);
-    emailsControl.updateValueAndValidity();
   }
 
   remove = async () => {
