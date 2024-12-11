@@ -1,7 +1,9 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { InjectionToken } from "@angular/core";
 import { Observable, Subject } from "rxjs";
 
-import { Executor, LogoutReason } from "@bitwarden/auth/common";
+import { LogoutReason } from "@bitwarden/auth/common";
 import { ClientType } from "@bitwarden/common/enums";
 import { RegionConfig } from "@bitwarden/common/platform/abstractions/environment.service";
 import {
@@ -67,8 +69,4 @@ export const REFRESH_ACCESS_TOKEN_ERROR_CALLBACK = new SafeInjectionToken<() => 
  */
 export const ENV_ADDITIONAL_REGIONS = new SafeInjectionToken<RegionConfig[]>(
   "ENV_ADDITIONAL_REGIONS",
-);
-
-export const AUTHN_SESSION_TIMEOUT_EXECUTOR = new SafeInjectionToken<Executor>(
-  "AuthnSessionTimeoutExecutor",
 );
