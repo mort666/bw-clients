@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Component, OnInit, ViewChild, ViewContainerRef } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ActivatedRoute, Router } from "@angular/router";
@@ -463,9 +465,51 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     firstValueFrom(simpleDialog.closed).then(this.handleDialogClose.bind(this));
   }
 
-  async edit(user: OrganizationUserView, initialTab: MemberDialogTab = MemberDialogTab.Role) {
+  private async handleInviteDialog() {
+    const dialog = openUserAddEditDialog(this.dialogService, {
+      data: {
+        name: null,
+        organizationId: this.organization.id,
+        organizationUserId: null,
+        allOrganizationUserEmails: this.dataSource.data?.map((user) => user.email) ?? [],
+        usesKeyConnector: null,
+        isOnSecretsManagerStandalone: this.orgIsOnSecretsManagerStandalone,
+        initialTab: MemberDialogTab.Role,
+        numConfirmedMembers: this.dataSource.confirmedUserCount,
+        managedByOrganization: null,
+      },
+    });
+
+    const result = await lastValueFrom(dialog.closed);
+
+    if (result === MemberDialogResult.Saved) {
+      await this.load();
+    }
+  }
+
+  private async handleSeatLimitForFixedTiers() {
+    if (!this.organization.canEditSubscription) {
+      await this.showSeatLimitReachedDialog();
+      return;
+    }
+
+    const reference = openChangePlanDialog(this.dialogService, {
+      data: {
+        organizationId: this.organization.id,
+        subscription: null,
+        productTierType: this.organization.productTierType,
+      },
+    });
+
+    const result = await lastValueFrom(reference.closed);
+
+    if (result === ChangePlanDialogResultType.Submitted) {
+      await this.load();
+    }
+  }
+
+  async invite() {
     if (
-      !user &&
       this.organization.hasReseller &&
       this.organization.seats === this.dataSource.occupiedSeatCount
     ) {
@@ -474,46 +518,36 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
         title: this.i18nService.t("seatLimitReached"),
         message: this.i18nService.t("contactYourProvider"),
       });
+
       return;
     }
 
-    // Invite User: Add Flow
-    // Click on user email: Edit Flow
-
-    // User attempting to invite new users in a free org with max users
     if (
-      !user &&
       this.dataSource.occupiedSeatCount === this.organization.seats &&
       isFixedSeatPlan(this.organization.productTierType)
     ) {
-      const reference = openChangePlanDialog(this.dialogService, {
-        data: {
-          organizationId: this.organization.id,
-          subscription: null,
-          productTierType: this.organization.productTierType,
-        },
-      });
+      await this.handleSeatLimitForFixedTiers();
 
-      const result = await lastValueFrom(reference.closed);
-
-      if (result === ChangePlanDialogResultType.Submitted) {
-        await this.load();
-      }
       return;
     }
 
+    await this.handleInviteDialog();
+  }
+
+  async edit(user: OrganizationUserView, initialTab: MemberDialogTab = MemberDialogTab.Role) {
     const dialog = openUserAddEditDialog(this.dialogService, {
       data: {
         kind: "InviteMemberDialogParams",
         name: this.userNamePipe.transform(user),
         organizationId: this.organization.id,
-        organizationUserId: user != null ? user.id : null,
+        organizationUserId: user.id,
         occupiedSeatCount: this.dataSource.occupiedSeatCount,
         allOrganizationUserEmails: this.dataSource.data?.map((user) => user.email) ?? [],
-        usesKeyConnector: user?.usesKeyConnector,
+        usesKeyConnector: user.usesKeyConnector,
         isOnSecretsManagerStandalone: this.orgIsOnSecretsManagerStandalone,
         initialTab: initialTab,
-        managedByOrganization: user?.managedByOrganization,
+        numConfirmedMembers: this.dataSource.confirmedUserCount,
+        managedByOrganization: user.managedByOrganization,
       },
     });
 
@@ -525,9 +559,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
       case MemberDialogResult.Saved:
       case MemberDialogResult.Revoked:
       case MemberDialogResult.Restored:
-        // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        this.load();
+        await this.load();
         break;
     }
   }
@@ -742,7 +774,10 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
         key: "deleteOrganizationUser",
         placeholders: [this.userNamePipe.transform(user)],
       },
-      content: { key: "deleteOrganizationUserWarning" },
+      content: {
+        key: "deleteOrganizationUserWarningDesc",
+        placeholders: [this.userNamePipe.transform(user)],
+      },
       type: "warning",
       acceptButtonText: { key: "delete" },
       cancelButtonText: { key: "cancel" },

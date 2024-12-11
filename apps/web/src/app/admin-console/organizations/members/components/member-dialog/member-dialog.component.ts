@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { DIALOG_DATA, DialogConfig, DialogRef } from "@angular/cdk/dialog";
 import { Component, Inject, OnDestroy } from "@angular/core";
 import { FormBuilder, Validators } from "@angular/forms";
@@ -50,6 +52,7 @@ import {
 } from "../../../shared/components/access-selector";
 
 import { commaSeparatedEmails } from "./validators/comma-separated-emails.validator";
+import { inputEmailLimitValidator } from "./validators/input-email-limit.validator";
 import { orgSeatLimitReachedValidator } from "./validators/org-seat-limit-reached.validator";
 
 export enum MemberDialogTab {
@@ -172,8 +175,21 @@ export class MemberDialogComponent implements OnDestroy {
       .pipe(shareReplay({ refCount: true, bufferSize: 1 }));
 
     this.editMode = this.params.organizationUserId != null;
+
+    let userDetails$;
+    if (this.editMode) {
+      this.title = this.i18nService.t("editMember");
+      userDetails$ = this.userService.get(
+        this.params.organizationId,
+        this.params.organizationUserId,
+      );
+    } else {
+      this.title = this.i18nService.t("inviteMember");
+      userDetails$ = of(null);
+    }
+
     this.tabIndex = this.params.initialTab ?? MemberDialogTab.Role;
-    this.title = this.i18nService.t(this.editMode ? "editMember" : "inviteMember");
+
     this.isOnSecretsManagerStandalone = this.params.isOnSecretsManagerStandalone;
 
     if (this.isOnSecretsManagerStandalone) {
@@ -189,10 +205,6 @@ export class MemberDialogComponent implements OnDestroy {
           : of([] as GroupDetailsView[]),
       ),
     );
-
-    const userDetails$ = this.params.organizationUserId
-      ? this.userService.get(this.params.organizationId, this.params.organizationUserId)
-      : of(null);
 
     this.allowAdminAccessToAllCollectionItems$ = this.organization$.pipe(
       map((organization) => {
@@ -275,97 +287,28 @@ export class MemberDialogComponent implements OnDestroy {
   }
 
   private setFormValidators(organization: Organization) {
-    if (this.params.kind === "InviteMemberDialogParams") {
-      const emailsControlValidators = [
-        Validators.required,
-        commaSeparatedEmails,
-        orgSeatLimitReachedValidator(
-          organization,
-          this.params.allOrganizationUserEmails,
-          this.getSeatLimitErrorMessageForPlan(organization),
-          this.params.occupiedSeatCount,
-        ),
-      ];
+    const _orgSeatLimitReachedValidator = [
+      Validators.required,
+      commaSeparatedEmails,
+      orgSeatLimitReachedValidator(
+        organization,
+        this.params.allOrganizationUserEmails,
+        this.i18nService.t("subscriptionUpgrade", organization.seats),
+      ),
+    ];
 
-      const emailsControl = this.formGroup.get("emails");
-      emailsControl.setValidators(emailsControlValidators);
-      emailsControl.updateValueAndValidity();
-    }
-  }
+    const _inputEmailLimitValidator = [
+      Validators.required,
+      commaSeparatedEmails,
+      inputEmailLimitValidator(organization, (maxEmailsCount: number) =>
+        this.i18nService.t("tooManyEmails", maxEmailsCount),
+      ),
+    ];
 
-  private getSeatLimitErrorMessageForPlan(organization: Organization): string {
-    const { seats, hasReseller } = organization;
-
-    if (hasReseller) {
-      return this.i18nService.t("seatLimitReachedContactYourProvider", seats);
-    }
-
-    return this.i18nService.t("subscriptionUpgrade", seats);
-  }
-
-  private async handleInviteUsers(userView: OrganizationUserAdminView, organization: Organization) {
-    userView.id = this.params.organizationUserId;
-    const emails = [...new Set(this.formGroup.value.emails.trim().split(/\s*,\s*/))];
-
-    if (this.enforceEmailCountLimit(emails, organization)) {
-      return;
-    }
-
-    await this.userService.invite(emails, userView);
-
-    this.toastService.showToast({
-      variant: "success",
-      title: null,
-      message: this.i18nService.t("invitedUsers", this.params.name),
-    });
-    this.close(MemberDialogResult.Saved);
-  }
-
-  private enforceEmailCountLimit(emails: string[], organization: Organization): boolean {
-    const maxEmailsCount = organization.productTierType === ProductTierType.TeamsStarter ? 10 : 20;
-
-    if (emails.length > maxEmailsCount) {
-      this.formGroup.controls.emails.setErrors({
-        tooManyEmails: { message: this.i18nService.t("tooManyEmails", maxEmailsCount) },
-      });
-      return true;
-    }
-
-    return false;
-  }
-
-  private async handleEditUser(userView: OrganizationUserAdminView) {
-    await this.userService.save(userView);
-
-    this.toastService.showToast({
-      variant: "success",
-      title: null,
-      message: this.i18nService.t("editedUserId", this.params.name),
-    });
-
-    this.close(MemberDialogResult.Saved);
-  }
-
-  private async getUserView(): Promise<OrganizationUserAdminView> {
-    const userView = new OrganizationUserAdminView();
-    userView.id = this.params.organizationUserId;
-    userView.organizationId = this.params.organizationId;
-    userView.type = this.formGroup.value.type;
-    userView.permissions = this.setRequestPermissions(
-      userView.permissions ?? new PermissionsApi(),
-      userView.type !== OrganizationUserType.Custom,
-    );
-    userView.collections = this.formGroup.value.access
-      .filter((v) => v.type === AccessItemType.Collection)
-      .map(convertToSelectionView);
-
-    userView.groups = (await firstValueFrom(this.restrictEditingSelf$))
-      ? null
-      : this.formGroup.value.groups.map((m) => m.id);
-
-    userView.accessSecretsManager = this.formGroup.value.accessSecretsManager;
-
-    return userView;
+    const emailsControl = this.formGroup.get("emails");
+    emailsControl.setValidators(_orgSeatLimitReachedValidator);
+    emailsControl.setValidators(_inputEmailLimitValidator);
+    emailsControl.updateValueAndValidity();
   }
 
   private loadOrganizationUser(
@@ -519,6 +462,55 @@ export class MemberDialogComponent implements OnDestroy {
     }
   };
 
+  private async getUserView(): Promise<OrganizationUserAdminView> {
+    const userView = new OrganizationUserAdminView();
+    userView.organizationId = this.params.organizationId;
+    userView.type = this.formGroup.value.type;
+
+    userView.permissions = this.setRequestPermissions(
+      userView.permissions ?? new PermissionsApi(),
+      userView.type !== OrganizationUserType.Custom,
+    );
+
+    userView.collections = this.formGroup.value.access
+      .filter((v) => v.type === AccessItemType.Collection)
+      .map(convertToSelectionView);
+
+    userView.groups = (await firstValueFrom(this.restrictEditingSelf$))
+      ? null
+      : this.formGroup.value.groups.map((m) => m.id);
+
+    userView.accessSecretsManager = this.formGroup.value.accessSecretsManager;
+
+    return userView;
+  }
+
+  private async handleEditUser(userView: OrganizationUserAdminView) {
+    userView.id = this.params.organizationUserId;
+    await this.userService.save(userView);
+
+    this.toastService.showToast({
+      variant: "success",
+      title: null,
+      message: this.i18nService.t("editedUserId", this.params.name),
+    });
+
+    this.close(MemberDialogResult.Saved);
+  }
+
+  private async handleInviteUsers(userView: OrganizationUserAdminView, organization: Organization) {
+    const emails = [...new Set(this.formGroup.value.emails.trim().split(/\s*,\s*/))];
+
+    await this.userService.invite(emails, userView);
+
+    this.toastService.showToast({
+      variant: "success",
+      title: null,
+      message: this.i18nService.t("invitedUsers"),
+    });
+    this.close(MemberDialogResult.Saved);
+  }
+
   remove = async () => {
     if (!this.editMode) {
       return;
@@ -626,7 +618,10 @@ export class MemberDialogComponent implements OnDestroy {
         key: "deleteOrganizationUser",
         placeholders: [this.params.name],
       },
-      content: { key: "deleteOrganizationUserWarning" },
+      content: {
+        key: "deleteOrganizationUserWarningDesc",
+        placeholders: [this.params.name],
+      },
       type: "warning",
       acceptButtonText: { key: "delete" },
       cancelButtonText: { key: "cancel" },
