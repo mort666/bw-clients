@@ -10,14 +10,22 @@ export const FOLDER_ENCRYPTED_FOLDERS = UserKeyDefinition.record<FolderData>(
   {
     deserializer: (obj: Jsonify<FolderData>) => FolderData.fromJSON(obj),
     clearOn: ["logout"],
+    debug: {
+      enableUpdateLogging: true,
+      enableRetrievalLogging: true,
+    },
   },
 );
 
 export const FOLDER_DECRYPTED_FOLDERS = new UserKeyDefinition<FolderView[]>(
   FOLDER_MEMORY,
-  "folder",
+  "folderViews",
   {
     deserializer: (obj: Jsonify<FolderView[]>) => obj?.map((f) => FolderView.fromJSON(f)) ?? [],
     clearOn: ["logout", "lock"],
+    debug: {
+      enableUpdateLogging: true,
+      enableRetrievalLogging: true,
+    },
   },
 );

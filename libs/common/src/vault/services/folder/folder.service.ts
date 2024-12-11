@@ -1,4 +1,4 @@
-import { Observable, firstValueFrom, map, shareReplay, switchMap } from "rxjs";
+import { firstValueFrom, map, Observable, shareReplay, switchMap, tap, timer } from "rxjs";
 
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
@@ -17,6 +17,8 @@ import { FolderView } from "../../../vault/models/view/folder.view";
 import { Cipher } from "../../models/domain/cipher";
 import { FolderWithIdRequest } from "../../models/request/folder-with-id.request";
 import { FOLDER_DECRYPTED_FOLDERS, FOLDER_ENCRYPTED_FOLDERS } from "../key-state/folder.state";
+
+let folderViewCount = 0;
 
 export class FolderService implements InternalFolderServiceAbstraction {
   constructor(
@@ -40,9 +42,24 @@ export class FolderService implements InternalFolderServiceAbstraction {
   }
 
   folderViews$(userId: UserId): Observable<FolderView[]> {
+    const folderViewId = folderViewCount++;
+    console.log(`FolderView$ ${folderViewId} created`);
     return this.encryptedFoldersState(userId).state$.pipe(
       switchMap((folderData) => {
-        return this.decryptFolders(userId, folderData);
+        // RACE CONDITION HACK, DO NOT MERGE:
+        // Add artificial delay to let encryptedFoldersState finish updating, the switchMap will cancel the previous observable
+        // encryptedFoldersState has a shareReplay subject internally, so the old state is still available immediately after update.
+        // By adding the timer(0), we are effectively skipping the "stale" emission.
+
+        // A slightly better fix would be to cache these `folderView$` observables and return the same one for the same user.
+        // That way we can put a shareReplay on this observable which prevents future subscribers from starting a
+        // new subscription to encryptedFoldersState and getting stale value.
+        return timer(0).pipe(
+          tap(() => {
+            console.log(`FolderView$ ${folderViewId} emitting`);
+          }),
+          switchMap(() => this.decryptFolders(userId, folderData)),
+        );
       }),
     );
   }
@@ -94,7 +111,9 @@ export class FolderService implements InternalFolderServiceAbstraction {
 
   async upsert(folderData: FolderData | FolderData[], userId: UserId): Promise<void> {
     await this.clearDecryptedFolderState(userId);
+    console.log("starting encryptedFoldersState update");
     await this.encryptedFoldersState(userId).update((folders) => {
+      console.log("encryptedFoldersState update callback");
       if (folders == null) {
         folders = {};
       }
@@ -110,6 +129,7 @@ export class FolderService implements InternalFolderServiceAbstraction {
 
       return folders;
     });
+    console.log("ending encryptedFoldersState update");
   }
 
   async replace(folders: { [id: string]: FolderData }, userId: UserId): Promise<void> {

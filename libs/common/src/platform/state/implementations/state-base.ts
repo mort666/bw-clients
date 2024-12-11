@@ -1,10 +1,10 @@
 import {
-  Observable,
-  ReplaySubject,
   defer,
   filter,
   firstValueFrom,
   merge,
+  Observable,
+  ReplaySubject,
   share,
   switchMap,
   tap,
@@ -20,7 +20,7 @@ import {
   ObservableStorageService,
 } from "../../abstractions/storage.service";
 import { DebugOptions } from "../key-definition";
-import { StateUpdateOptions, populateOptionsWithDefault } from "../state-update-options";
+import { populateOptionsWithDefault, StateUpdateOptions } from "../state-update-options";
 
 import { getStoredValue } from "./util";
 
@@ -54,8 +54,20 @@ export abstract class StateBase<T, KeyDef extends KeyDefinitionRequirements<T>> 
     );
 
     let state$ = merge(
-      defer(() => getStoredValue(key, storageService, keyDefinition.deserializer)),
-      storageUpdate$,
+      defer(() => getStoredValue(key, storageService, keyDefinition.deserializer)).pipe(
+        tap(() => {
+          if (keyDefinition.debug.enableRetrievalLogging) {
+            this.logService.info(`Emission from defer for '${key}'`);
+          }
+        }),
+      ),
+      storageUpdate$.pipe(
+        tap(() => {
+          if (keyDefinition.debug.enableRetrievalLogging) {
+            this.logService.info(`Emission from update for '${key}'`);
+          }
+        }),
+      ),
     );
 
     if (keyDefinition.debug.enableRetrievalLogging) {
@@ -75,7 +87,21 @@ export abstract class StateBase<T, KeyDef extends KeyDefinitionRequirements<T>> 
       state$ = state$.pipe(
         share({
           connector: () => new ReplaySubject(1),
-          resetOnRefCountZero: () => timer(keyDefinition.cleanupDelayMs),
+          resetOnRefCountZero: () =>
+            timer(keyDefinition.cleanupDelayMs).pipe(
+              tap(() => {
+                if (keyDefinition.debug.enableRetrievalLogging) {
+                  this.logService.info(
+                    `Cleaning up '${key}' from memory cache after ${keyDefinition.cleanupDelayMs}ms`,
+                  );
+                }
+              }),
+            ),
+        }),
+        tap(() => {
+          if (keyDefinition.debug.enableRetrievalLogging) {
+            this.logService.info(`Retrieving '${key}' from state replay subject`);
+          }
         }),
       );
     }
