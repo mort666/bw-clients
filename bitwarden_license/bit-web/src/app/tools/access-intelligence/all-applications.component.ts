@@ -1,5 +1,3 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
 import { Component, DestroyRef, inject, OnInit } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl } from "@angular/forms";
@@ -15,14 +13,11 @@ import {
   ApplicationHealthReportDetail,
   ApplicationHealthReportSummary,
 } from "@bitwarden/bit-common/tools/reports/risk-insights/models/password-health";
-import { AuditService } from "@bitwarden/common/abstractions/audit.service";
-import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
-import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
   Icons,
   NoItemsModule,
@@ -82,6 +77,8 @@ export class AllApplicationsComponent implements OnInit {
         next: (applications: ApplicationHealthReportDetail[]) => {
           if (applications) {
             this.dataSource.data = applications;
+            const summary = this.reportService.generateApplicationsSummary(applications);
+            this.applicationSummary = summary;
             this.loading = false;
           }
         },
@@ -90,14 +87,12 @@ export class AllApplicationsComponent implements OnInit {
 
   constructor(
     protected cipherService: CipherService,
-    protected riskInsightsReportService: RiskInsightsReportService,
-    protected auditService: AuditService,
     protected i18nService: I18nService,
     protected activatedRoute: ActivatedRoute,
     protected toastService: ToastService,
-    protected organizationService: OrganizationService,
     protected configService: ConfigService,
     protected dataService: RiskInsightsDataService,
+    protected reportService: RiskInsightsReportService,
   ) {
     this.searchControl.valueChanges
       .pipe(debounceTime(200), takeUntilDestroyed())
@@ -130,8 +125,8 @@ export class AllApplicationsComponent implements OnInit {
     });
   };
 
-  trackByFunction(_: number, item: CipherView) {
-    return item.id;
+  trackByFunction(_: number, item: ApplicationHealthReportDetail) {
+    return item.applicationName;
   }
 
   onCheckboxChange(id: number, event: Event) {

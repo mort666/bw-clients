@@ -65,11 +65,11 @@
     <ng-container header>
       <tr>
         <th *ngIf="isCriticalAppsFeatureEnabled"></th>
-        <th bitSortable="name" bitCell>{{ "application" | i18n }}</th>
-        <th bitSortable="atRiskPasswords" bitCell>{{ "atRiskPasswords" | i18n }}</th>
-        <th bitSortable="totalPasswords" bitCell>{{ "totalPasswords" | i18n }}</th>
-        <th bitSortable="atRiskMembers" bitCell>{{ "atRiskMembers" | i18n }}</th>
-        <th bitSortable="totalMembers" bitCell>{{ "totalMembers" | i18n }}</th>
+        <th bitSortable="applicationName" bitCell>{{ "application" | i18n }}</th>
+        <th bitSortable="atRiskPasswordCount" bitCell>{{ "atRiskPasswords" | i18n }}</th>
+        <th bitSortable="passwordCount" bitCell>{{ "totalPasswords" | i18n }}</th>
+        <th bitSortable="atRiskMemberCount" bitCell>{{ "atRiskMembers" | i18n }}</th>
+        <th bitSortable="memberCount" bitCell>{{ "totalMembers" | i18n }}</th>
       </tr>
     </ng-container>
     <ng-template body let-rows$>
@@ -100,7 +100,6 @@
             {{ r.atRiskMemberCount }}
           </span>
         </td>
-        w
         <td bitCell data-testid="total-membership">
           {{ r.memberCount }}
         </td>
