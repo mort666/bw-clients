@@ -273,9 +273,12 @@ export class MemberDialogComponent implements OnDestroy {
   }
 
   private setFormValidators(organization: Organization) {
-    const _orgSeatLimitReachedValidator = [
+    const emailsControlValidators = [
       Validators.required,
       commaSeparatedEmails,
+      inputEmailLimitValidator(organization, (maxEmailsCount: number) =>
+        this.i18nService.t("tooManyEmails", maxEmailsCount),
+      ),
       orgSeatLimitReachedValidator(
         organization,
         this.params.allOrganizationUserEmails,
@@ -283,17 +286,8 @@ export class MemberDialogComponent implements OnDestroy {
       ),
     ];
 
-    const _inputEmailLimitValidator = [
-      Validators.required,
-      commaSeparatedEmails,
-      inputEmailLimitValidator(organization, (maxEmailsCount: number) =>
-        this.i18nService.t("tooManyEmails", maxEmailsCount),
-      ),
-    ];
-
     const emailsControl = this.formGroup.get("emails");
-    emailsControl.setValidators(_orgSeatLimitReachedValidator);
-    emailsControl.setValidators(_inputEmailLimitValidator);
+    emailsControl.setValidators(emailsControlValidators);
     emailsControl.updateValueAndValidity();
   }
 
