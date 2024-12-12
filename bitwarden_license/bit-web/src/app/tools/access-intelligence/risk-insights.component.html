@@ -1,12 +1,4 @@
-<div *ngIf="isLoading$ | async">
-  <i
-    class="bwi bwi-spinner bwi-spin tw-text-muted"
-    title="{{ 'loading' | i18n }}"
-    aria-hidden="true"
-  ></i>
-  <span class="tw-sr-only">{{ "loading" | i18n }}</span>
-</div>
-<ng-container *ngIf="!(isLoading$ | async)">
+<ng-container>
   <div class="tw-mb-1 text-primary" bitTypography="body1">{{ "accessIntelligence" | i18n }}</div>
   <h1 bitTypography="h1">{{ "riskInsights" | i18n }}</h1>
   <div class="tw-text-muted tw-max-w-4xl tw-mb-2">
