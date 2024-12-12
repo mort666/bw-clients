@@ -19,7 +19,7 @@ export function orgSeatLimitReachedValidator(
   occupiedSeatCount: number,
 ): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
-    if (control.value === "" || !control.value) {
+    if (!control.value?.trim()) {
       return null;
     }
 

@@ -468,15 +468,12 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
   private async handleInviteDialog() {
     const dialog = openUserAddEditDialog(this.dialogService, {
       data: {
-        name: null,
+        kind: "Add",
         organizationId: this.organization.id,
-        organizationUserId: null,
         allOrganizationUserEmails: this.dataSource.data?.map((user) => user.email) ?? [],
-        usesKeyConnector: null,
+        occupiedSeatCount: this.dataSource.occupiedSeatCount,
         isOnSecretsManagerStandalone: this.orgIsOnSecretsManagerStandalone,
         initialTab: MemberDialogTab.Role,
-        numConfirmedMembers: this.dataSource.confirmedUserCount,
-        managedByOrganization: null,
       },
     });
 
@@ -537,7 +534,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
   async edit(user: OrganizationUserView, initialTab: MemberDialogTab = MemberDialogTab.Role) {
     const dialog = openUserAddEditDialog(this.dialogService, {
       data: {
-        kind: "InviteMemberDialogParams",
+        kind: "Edit",
         name: this.userNamePipe.transform(user),
         organizationId: this.organization.id,
         organizationUserId: user.id,
@@ -546,7 +543,6 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
         usesKeyConnector: user.usesKeyConnector,
         isOnSecretsManagerStandalone: this.orgIsOnSecretsManagerStandalone,
         initialTab: initialTab,
-        numConfirmedMembers: this.dataSource.confirmedUserCount,
         managedByOrganization: user.managedByOrganization,
       },
     });

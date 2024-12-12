@@ -93,14 +93,17 @@ export class MemberAccessReportComponent implements OnInit {
     });
   };
 
-  edit = async (user: MemberAccessReportView | null): Promise<void> => {
+  edit = async (user: MemberAccessReportView): Promise<void> => {
     const dialog = openUserAddEditDialog(this.dialogService, {
       data: {
-        kind: "EditMemberDialogParams",
+        kind: "Edit",
         name: this.userNamePipe.transform(user),
         organizationId: this.organizationId,
-        organizationUserId: user != null ? user.userGuid : null,
-        usesKeyConnector: user?.usesKeyConnector,
+        // This occupiedSeatCount is not needed for path.
+        occupiedSeatCount: 0,
+        organizationUserId: user.userGuid,
+        allOrganizationUserEmails: this.dataSource.data?.map((user) => user.email) ?? [],
+        usesKeyConnector: user.usesKeyConnector,
         isOnSecretsManagerStandalone: this.orgIsOnSecretsManagerStandalone,
         initialTab: MemberDialogTab.Role,
       },
