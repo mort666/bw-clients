@@ -3167,8 +3167,8 @@
   "viewAllLogInOptions": {
     "message": "Вижте всички възможности за вписване"
   },
-  "viewAllLoginOptions": {
-    "message": "Вижте всички възможности за вписване"
+  "viewAllLoginOptionsV1": {
+    "message": "View all log in options"
   },
   "notificationSentDevice": {
     "message": "Към устройството Ви е изпратено известие."
