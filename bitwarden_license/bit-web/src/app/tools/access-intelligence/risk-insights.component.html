@@ -1,4 +1,4 @@
-<div *ngIf="loading">
+<div *ngIf="isLoading$ | async">
   <i
     class="bwi bwi-spinner bwi-spin tw-text-muted"
     title="{{ 'loading' | i18n }}"
@@ -6,7 +6,7 @@
   ></i>
   <span class="tw-sr-only">{{ "loading" | i18n }}</span>
 </div>
-<ng-container *ngIf="!loading">
+<ng-container *ngIf="!(isLoading$ | async)">
   <div class="tw-mb-1 text-primary" bitTypography="body1">{{ "accessIntelligence" | i18n }}</div>
   <h1 bitTypography="h1">{{ "riskInsights" | i18n }}</h1>
   <div class="tw-text-muted tw-max-w-4xl tw-mb-2">
@@ -21,11 +21,11 @@
       aria-hidden="true"
     ></i>
     <span class="tw-mx-4">{{
-      "dataLastUpdated" | i18n: (dataLastUpdated | date: "MMMM d, y 'at' h:mm a")
+      "dataLastUpdated" | i18n: (dataLastUpdated$ | async | date: "MMMM d, y 'at' h:mm a")
     }}</span>
     <span class="tw-flex tw-justify-center tw-w-16">
       <a
-        *ngIf="!refetching"
+        *ngIf="!(isRefreshing$ | async)"
         bitButton
         buttonType="unstyled"
         class="tw-border-none !tw-font-normal tw-cursor-pointer !tw-py-0"
@@ -35,7 +35,7 @@
       </a>
       <span>
         <i
-          *ngIf="refetching"
+          *ngIf="isRefreshing$ | async"
           class="bwi bwi-spinner bwi-spin tw-text-muted tw-text-[1.2rem]"
           aria-hidden="true"
         ></i>

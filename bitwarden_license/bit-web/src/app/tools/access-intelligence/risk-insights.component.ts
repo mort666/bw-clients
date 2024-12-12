@@ -2,6 +2,7 @@ import { CommonModule } from "@angular/common";
 import { Component, DestroyRef, OnInit, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ActivatedRoute, Router } from "@angular/router";
+import { Observable } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
@@ -61,7 +62,9 @@ export class RiskInsightsComponent implements OnInit {
 
   private organizationId: string;
   private destroyRef = inject(DestroyRef);
-  loading = true;
+  isLoading$: Observable<boolean>;
+  isRefreshing$: Observable<boolean>;
+  dataLastUpdated$: Observable<Date>;
   refetching = false;
 
   constructor(
@@ -85,29 +88,32 @@ export class RiskInsightsComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef),
         map((params) => params.get("organizationId")),
         switchMap((orgId) => {
-          this.organizationId = orgId;
-          return this.dataService.getApplicationsReport$(orgId);
+          if (orgId) {
+            this.organizationId = orgId;
+            this.dataService.fetchApplicationsReport(orgId);
+            this.isLoading$ = this.dataService.isLoading$;
+            this.isRefreshing$ = this.dataService.isRefreshing$;
+            this.dataLastUpdated$ = this.dataService.dataLastUpdated$;
+            return this.dataService.applications$;
+          }
         }),
       )
       .subscribe({
-        next: (applications: ApplicationHealthReportDetail[]) => {
+        next: (applications: ApplicationHealthReportDetail[] | null) => {
           if (applications) {
             this.appsCount = applications.length;
-            this.loading = false;
-            this.refetching = false;
-            this.dataLastUpdated = new Date();
           }
         },
       });
   }
 
-  async refreshData() {
+  /**
+   * Refreshes the data by re-fetching the applications report.
+   * This will automatically notify child components subscribed to the RiskInsightsDataService observables.
+   */
+  refreshData(): void {
     if (this.organizationId) {
-      this.refetching = true;
-      // Clear the cache to ensure fresh data is fetched
-      this.dataService.clearApplicationsReportCache(this.organizationId);
-      // Re-initialize to fetch data again
-      await this.ngOnInit();
+      this.dataService.refreshApplicationsReport(this.organizationId);
     }
   }
 

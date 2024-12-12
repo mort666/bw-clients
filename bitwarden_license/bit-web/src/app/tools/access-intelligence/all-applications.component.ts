@@ -1,11 +1,10 @@
-import { Component, DestroyRef, inject, OnInit } from "@angular/core";
+import { Component, DestroyRef, OnDestroy, OnInit, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
-import { debounceTime, map, switchMap } from "rxjs";
+import { debounceTime, map, Observable, Subscription } from "rxjs";
 
 import {
-  MemberCipherDetailsApiService,
   RiskInsightsDataService,
   RiskInsightsReportService,
 } from "@bitwarden/bit-common/tools/reports/risk-insights";
@@ -13,6 +12,7 @@ import {
   ApplicationHealthReportDetail,
   ApplicationHealthReportSummary,
 } from "@bitwarden/bit-common/tools/reports/risk-insights/models/password-health";
+import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
@@ -45,19 +45,21 @@ import { ApplicationsLoadingComponent } from "./risk-insights-loading.component"
     NoItemsModule,
     SharedModule,
   ],
-  providers: [MemberCipherDetailsApiService, RiskInsightsReportService],
+  providers: [RiskInsightsReportService],
 })
-export class AllApplicationsComponent implements OnInit {
+export class AllApplicationsComponent implements OnInit, OnDestroy {
   protected dataSource = new TableDataSource<ApplicationHealthReportDetail>();
   protected selectedIds: Set<number> = new Set<number>();
   protected searchControl = new FormControl("", { nonNullable: true });
-  private destroyRef = inject(DestroyRef);
   protected loading = true;
   protected organization: Organization;
   noItemsIcon = Icons.Security;
   protected markingAsCritical = false;
   protected applicationSummary: ApplicationHealthReportSummary;
+  private subscription: Subscription;
 
+  destroyRef = inject(DestroyRef);
+  isLoading$: Observable<boolean>;
   isCriticalAppsFeatureEnabled = false;
 
   async ngOnInit() {
@@ -65,24 +67,28 @@ export class AllApplicationsComponent implements OnInit {
       FeatureFlag.CriticalApps,
     );
 
-    this.activatedRoute.paramMap
-      .pipe(
-        takeUntilDestroyed(this.destroyRef),
-        map((params) => params.get("organizationId")),
-        switchMap((orgId) => {
-          return this.dataService.getApplicationsReport$(orgId);
-        }),
-      )
-      .subscribe({
-        next: (applications: ApplicationHealthReportDetail[]) => {
-          if (applications) {
-            this.dataSource.data = applications;
-            const summary = this.reportService.generateApplicationsSummary(applications);
-            this.applicationSummary = summary;
-            this.loading = false;
-          }
-        },
-      });
+    const organizationId = this.activatedRoute.snapshot.paramMap.get("organizationId");
+
+    if (organizationId) {
+      this.organization = await this.organizationService.get(organizationId);
+      this.subscription = this.dataService.applications$
+        .pipe(
+          map((applications) => {
+            if (applications) {
+              this.dataSource.data = applications;
+              this.applicationSummary =
+                this.reportService.generateApplicationsSummary(applications);
+            }
+          }),
+          takeUntilDestroyed(this.destroyRef),
+        )
+        .subscribe();
+      this.isLoading$ = this.dataService.isLoading$;
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.subscription?.unsubscribe();
   }
 
   constructor(
@@ -92,6 +98,7 @@ export class AllApplicationsComponent implements OnInit {
     protected toastService: ToastService,
     protected configService: ConfigService,
     protected dataService: RiskInsightsDataService,
+    protected organizationService: OrganizationService,
     protected reportService: RiskInsightsReportService,
   ) {
     this.searchControl.valueChanges
