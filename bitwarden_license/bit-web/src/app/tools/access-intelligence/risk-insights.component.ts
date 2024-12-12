@@ -1,11 +1,16 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
 import { CommonModule } from "@angular/common";
-import { Component, OnInit } from "@angular/core";
+import { Component, DestroyRef, OnInit, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ActivatedRoute, Router } from "@angular/router";
+import { map, switchMap } from "rxjs/operators";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
+import {
+  MemberCipherDetailsApiService,
+  RiskInsightsDataService,
+  RiskInsightsReportService,
+} from "@bitwarden/bit-common/tools/reports/risk-insights";
+import { ApplicationHealthReportDetail } from "@bitwarden/bit-common/tools/reports/risk-insights/models/password-health";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { AsyncActionsModule, ButtonModule, TabsModule } from "@bitwarden/components";
@@ -41,47 +46,76 @@ export enum RiskInsightsTabType {
     NotifiedMembersTableComponent,
     TabsModule,
   ],
+  providers: [RiskInsightsReportService, RiskInsightsDataService, MemberCipherDetailsApiService],
 })
 export class RiskInsightsComponent implements OnInit {
-  tabIndex: RiskInsightsTabType;
+  tabIndex: RiskInsightsTabType = RiskInsightsTabType.AllApps;
+
   dataLastUpdated = new Date();
-  isCritialAppsFeatureEnabled = false;
 
-  apps: any[] = [];
-  criticalApps: any[] = [];
-  notifiedMembers: any[] = [];
+  isCriticalAppsFeatureEnabled = false;
 
-  async refreshData() {
-    // TODO: Implement
-    return new Promise((resolve) =>
-      setTimeout(() => {
-        this.dataLastUpdated = new Date();
-        resolve(true);
-      }, 1000),
-    );
+  appsCount = 0;
+  criticalAppsCount = 0;
+  notifiedMembersCount = 0;
+
+  private organizationId: string;
+  private destroyRef = inject(DestroyRef);
+  loading = true;
+  refetching = false;
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private configService: ConfigService,
+    private dataService: RiskInsightsDataService,
+  ) {
+    this.route.queryParams.pipe(takeUntilDestroyed()).subscribe(({ tabIndex }) => {
+      this.tabIndex = !isNaN(Number(tabIndex)) ? Number(tabIndex) : RiskInsightsTabType.AllApps;
+    });
   }
 
-  onTabChange = async (newIndex: number) => {
+  async ngOnInit() {
+    this.isCriticalAppsFeatureEnabled = await this.configService.getFeatureFlag(
+      FeatureFlag.CriticalApps,
+    );
+
+    this.route.paramMap
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        map((params) => params.get("organizationId")),
+        switchMap((orgId) => {
+          this.organizationId = orgId;
+          return this.dataService.getApplicationsReport$(orgId);
+        }),
+      )
+      .subscribe({
+        next: (applications: ApplicationHealthReportDetail[]) => {
+          if (applications) {
+            this.appsCount = applications.length;
+            this.loading = false;
+            this.refetching = false;
+            this.dataLastUpdated = new Date();
+          }
+        },
+      });
+  }
+
+  async refreshData() {
+    if (this.organizationId) {
+      this.refetching = true;
+      // Clear the cache to ensure fresh data is fetched
+      this.dataService.clearApplicationsReportCache(this.organizationId);
+      // Re-initialize to fetch data again
+      await this.ngOnInit();
+    }
+  }
+
+  async onTabChange(newIndex: number): Promise<void> {
     await this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { tabIndex: newIndex },
       queryParamsHandling: "merge",
-    });
-  };
-
-  async ngOnInit() {
-    this.isCritialAppsFeatureEnabled = await this.configService.getFeatureFlag(
-      FeatureFlag.CriticalApps,
-    );
-  }
-
-  constructor(
-    protected route: ActivatedRoute,
-    private router: Router,
-    private configService: ConfigService,
-  ) {
-    route.queryParams.pipe(takeUntilDestroyed()).subscribe(({ tabIndex }) => {
-      this.tabIndex = !isNaN(tabIndex) ? tabIndex : RiskInsightsTabType.AllApps;
     });
   }
 }
