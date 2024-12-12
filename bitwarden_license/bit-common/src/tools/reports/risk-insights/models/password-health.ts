@@ -28,6 +28,7 @@ export type ApplicationHealthReportDetail = {
 
   memberDetails: MemberDetailsFlat[];
   atRiskMemberDetails: MemberDetailsFlat[];
+  atRiskMemberCount: number;
 };
 
 /**
