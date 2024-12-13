@@ -39,12 +39,11 @@ export function orgSeatLimitReachedValidator(
 }
 
 export function isDynamicSeatPlan(productTierType: ProductTierType): boolean {
-  switch (productTierType) {
-    case ProductTierType.Enterprise:
-      return true;
-    default:
-      return false;
+  if (!productTierType) {
+    return false;
   }
+
+  return !isFixedSeatPlan(productTierType);
 }
 
 export function isFixedSeatPlan(productTierType: ProductTierType): boolean {

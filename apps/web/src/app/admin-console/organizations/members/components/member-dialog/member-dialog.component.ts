@@ -61,26 +61,24 @@ export enum MemberDialogTab {
   Collections = 2,
 }
 
-export interface AddMemberDialogParams {
-  kind: "Add";
-  organizationId: string;
-  occupiedSeatCount: number;
-  allOrganizationUserEmails: string[];
+interface CommonMemberDialogParams {
   isOnSecretsManagerStandalone: boolean;
-  initialTab: MemberDialogTab;
+  organizationId: string;
 }
 
-export interface EditMemberDialogParams {
+export interface AddMemberDialogParams extends CommonMemberDialogParams {
+  kind: "Add";
+  occupiedSeatCount: number;
+  allOrganizationUserEmails: string[];
+}
+
+export interface EditMemberDialogParams extends CommonMemberDialogParams {
   kind: "Edit";
   name: string;
-  organizationId: string;
   organizationUserId: string;
-  allOrganizationUserEmails: string[];
   usesKeyConnector: boolean;
-  occupiedSeatCount: number;
-  isOnSecretsManagerStandalone: boolean;
-  initialTab: MemberDialogTab;
   managedByOrganization?: boolean;
+  initialTab: MemberDialogTab;
 }
 
 export type MemberDialogParams = EditMemberDialogParams | AddMemberDialogParams;
@@ -155,7 +153,7 @@ export class MemberDialogComponent implements OnDestroy {
   isEditDialogParams(
     params: EditMemberDialogParams | AddMemberDialogParams,
   ): params is EditMemberDialogParams {
-    return (params as EditMemberDialogParams).organizationUserId !== undefined;
+    return this.editMode;
   }
 
   constructor(
@@ -187,13 +185,13 @@ export class MemberDialogComponent implements OnDestroy {
         this.params.organizationId,
         this.params.organizationUserId,
       );
+      this.tabIndex = this.params.initialTab;
     } else {
       this.editMode = false;
       this.title = this.i18nService.t("inviteMember");
       userDetails$ = of(null);
+      this.tabIndex = MemberDialogTab.Role;
     }
-
-    this.tabIndex = this.params.initialTab ?? MemberDialogTab.Role;
 
     this.isOnSecretsManagerStandalone = this.params.isOnSecretsManagerStandalone;
 
@@ -292,6 +290,10 @@ export class MemberDialogComponent implements OnDestroy {
   }
 
   private setFormValidators(organization: Organization) {
+    if (this.isEditDialogParams(this.params)) {
+      return;
+    }
+
     const emailsControlValidators = [
       Validators.required,
       commaSeparatedEmails,

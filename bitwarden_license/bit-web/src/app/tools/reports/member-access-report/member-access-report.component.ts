@@ -99,10 +99,7 @@ export class MemberAccessReportComponent implements OnInit {
         kind: "Edit",
         name: this.userNamePipe.transform(user),
         organizationId: this.organizationId,
-        // This occupiedSeatCount is not needed for path.
-        occupiedSeatCount: 0,
         organizationUserId: user.userGuid,
-        allOrganizationUserEmails: this.dataSource.data?.map((user) => user.email) ?? [],
         usesKeyConnector: user.usesKeyConnector,
         isOnSecretsManagerStandalone: this.orgIsOnSecretsManagerStandalone,
         initialTab: MemberDialogTab.Role,

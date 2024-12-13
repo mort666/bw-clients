@@ -21,17 +21,35 @@ const orgFactory = (props: Partial<Organization> = {}) =>
     props,
   );
 
+const createUniqueEmailString = (numberOfEmails: number) =>
+  Array(numberOfEmails)
+    .fill(null)
+    .map((_, i) => `email${i}@example.com`)
+    .join(", ");
+
+const createIdenticalEmailString = (numberOfEmails: number) =>
+  Array(numberOfEmails)
+    .fill(null)
+    .map(() => `email@example.com`)
+    .join(", ");
+
 describe("orgSeatLimitReachedValidator", () => {
-  const allOrganizationUserEmails = ["user1@example.com"];
-  const dummyOrg: Organization = null;
-  const dummyOccupiedSeatCount = 1;
+  let organization: Organization;
+  let allOrganizationUserEmails: string[];
+  let occupiedSeatCount: number;
+
+  beforeEach(() => {
+    allOrganizationUserEmails = [createUniqueEmailString(1)];
+    occupiedSeatCount = 1;
+    organization = null;
+  });
 
   it("should return null when control value is empty", () => {
     const validatorFn = orgSeatLimitReachedValidator(
-      dummyOrg,
+      organization,
       allOrganizationUserEmails,
       "You cannot invite more than 2 members without upgrading your plan.",
-      dummyOccupiedSeatCount,
+      occupiedSeatCount,
     );
     const control = new FormControl("");
 
@@ -42,10 +60,10 @@ describe("orgSeatLimitReachedValidator", () => {
 
   it("should return null when control value is null", () => {
     const validatorFn = orgSeatLimitReachedValidator(
-      dummyOrg,
+      organization,
       allOrganizationUserEmails,
       "You cannot invite more than 2 members without upgrading your plan.",
-      dummyOccupiedSeatCount,
+      occupiedSeatCount,
     );
     const control = new FormControl(null);
 
@@ -54,83 +72,8 @@ describe("orgSeatLimitReachedValidator", () => {
     expect(result).toBeNull();
   });
 
-  it("should return null when max seats are not exceeded on free plan", () => {
-    const organization = orgFactory({
-      productTierType: ProductTierType.Free,
-      seats: 2,
-    });
-
-    const OccupiedSeatCount = 1;
-
-    const validatorFn = orgSeatLimitReachedValidator(
-      organization,
-      allOrganizationUserEmails,
-      "You cannot invite more than 2 members without upgrading your plan.",
-      OccupiedSeatCount,
-    );
-    const control = new FormControl("user2@example.com");
-
-    const result = validatorFn(control);
-
-    expect(result).toBeNull();
-  });
-
-  it("should return null when max seats are not exceeded on teams starter plan", () => {
-    const organization = orgFactory({
-      productTierType: ProductTierType.TeamsStarter,
-      seats: 10,
-    });
-
-    const occupiedSeatCount = 0;
-
-    const validatorFn = orgSeatLimitReachedValidator(
-      organization,
-      allOrganizationUserEmails,
-      "You cannot invite more than 10 members without upgrading your plan.",
-      occupiedSeatCount,
-    );
-
-    const control = new FormControl(
-      "user2@example.com," +
-        "user3@example.com," +
-        "user4@example.com," +
-        "user5@example.com," +
-        "user6@example.com," +
-        "user7@example.com," +
-        "user8@example.com," +
-        "user9@example.com," +
-        "user10@example.com",
-    );
-
-    const result = validatorFn(control);
-
-    expect(result).toBeNull();
-  });
-
-  it("should return validation error when max seats are exceeded on free plan", () => {
-    const organization = orgFactory({
-      productTierType: ProductTierType.Free,
-      seats: 2,
-    });
-    const errorMessage = "You cannot invite more than 2 members without upgrading your plan.";
-
-    const occupiedSeatCount = 1;
-
-    const validatorFn = orgSeatLimitReachedValidator(
-      organization,
-      allOrganizationUserEmails,
-      "You cannot invite more than 2 members without upgrading your plan.",
-      occupiedSeatCount,
-    );
-    const control = new FormControl("user2@example.com,user3@example.com");
-
-    const result = validatorFn(control);
-
-    expect(result).toStrictEqual({ seatLimitReached: { message: errorMessage } });
-  });
-
   it("should return null when on dynamic seat plan", () => {
-    const control = new FormControl("user2@example.com,user3@example.com");
+    const control = new FormControl(createUniqueEmailString(1));
     const organization = orgFactory({
       productTierType: ProductTierType.Enterprise,
       seats: 100,
@@ -140,7 +83,7 @@ describe("orgSeatLimitReachedValidator", () => {
       organization,
       allOrganizationUserEmails,
       "Enterprise plan dummy error.",
-      dummyOccupiedSeatCount,
+      occupiedSeatCount,
     );
 
     const result = validatorFn(control);
@@ -149,9 +92,9 @@ describe("orgSeatLimitReachedValidator", () => {
   });
 
   it("should only count unique input email addresses", () => {
-    const control = new FormControl(
-      "sameUser1@example.com,sameUser1@example.com,user2@example.com,user3@example.com",
-    );
+    const twoUniqueEmails = createUniqueEmailString(2);
+    const sixDuplicateEmails = createIdenticalEmailString(6);
+    const control = new FormControl(twoUniqueEmails + sixDuplicateEmails);
     const organization = orgFactory({
       productTierType: ProductTierType.Families,
       seats: 6,
@@ -168,6 +111,62 @@ describe("orgSeatLimitReachedValidator", () => {
     const result = validatorFn(control);
 
     expect(result).toBeNull();
+  });
+
+  describe("when total occupied seat count is below plan's max count", () => {
+    test.each([
+      [ProductTierType.Free, 2],
+      [ProductTierType.Families, 6],
+      [ProductTierType.TeamsStarter, 10],
+    ])(`should return null on plan %s`, (plan, planSeatCount) => {
+      const organization = orgFactory({
+        productTierType: plan,
+        seats: planSeatCount,
+      });
+
+      const occupiedSeatCount = 0;
+
+      const validatorFn = orgSeatLimitReachedValidator(
+        organization,
+        allOrganizationUserEmails,
+        "Generic error message",
+        occupiedSeatCount,
+      );
+
+      const control = new FormControl(createUniqueEmailString(1));
+
+      const result = validatorFn(control);
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("when total occupied seat count is at plan's max count", () => {
+    test.each([
+      [ProductTierType.Free, 2, 1],
+      [ProductTierType.Families, 6, 5],
+      [ProductTierType.TeamsStarter, 10, 9],
+    ])(`should return null on plan %s`, (plan, planSeatCount, newEmailCount) => {
+      const organization = orgFactory({
+        productTierType: plan,
+        seats: planSeatCount,
+      });
+
+      const occupiedSeatCount = 1;
+
+      const validatorFn = orgSeatLimitReachedValidator(
+        organization,
+        allOrganizationUserEmails,
+        "Generic error message",
+        occupiedSeatCount,
+      );
+
+      const control = new FormControl(createUniqueEmailString(newEmailCount));
+
+      const result = validatorFn(control);
+
+      expect(result).toBeNull();
+    });
   });
 });
 
@@ -187,6 +186,7 @@ describe("isFixedSeatPlan", () => {
 describe("isDynamicSeatPlan", () => {
   test.each([
     [ProductTierType.Enterprise, true],
+    [ProductTierType.Teams, true],
     [ProductTierType.Free, false],
     [ProductTierType.Families, false],
     [ProductTierType.TeamsStarter, false],

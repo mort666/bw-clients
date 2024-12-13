@@ -107,6 +107,10 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
   protected rowHeight = 69;
   protected rowHeightClass = `tw-h-[69px]`;
 
+  get occupiedSeatCount(): number {
+    return this.dataSource.acceptedUserCount;
+  }
+
   constructor(
     apiService: ApiService,
     i18nService: I18nService,
@@ -471,9 +475,8 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
         kind: "Add",
         organizationId: this.organization.id,
         allOrganizationUserEmails: this.dataSource.data?.map((user) => user.email) ?? [],
-        occupiedSeatCount: this.dataSource.occupiedSeatCount,
+        occupiedSeatCount: this.occupiedSeatCount,
         isOnSecretsManagerStandalone: this.orgIsOnSecretsManagerStandalone,
-        initialTab: MemberDialogTab.Role,
       },
     });
 
@@ -506,10 +509,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
   }
 
   async invite() {
-    if (
-      this.organization.hasReseller &&
-      this.organization.seats === this.dataSource.occupiedSeatCount
-    ) {
+    if (this.organization.hasReseller && this.organization.seats === this.occupiedSeatCount) {
       this.toastService.showToast({
         variant: "error",
         title: this.i18nService.t("seatLimitReached"),
@@ -520,7 +520,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     }
 
     if (
-      this.dataSource.occupiedSeatCount === this.organization.seats &&
+      this.occupiedSeatCount === this.organization.seats &&
       isFixedSeatPlan(this.organization.productTierType)
     ) {
       await this.handleSeatLimitForFixedTiers();
@@ -538,8 +538,6 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
         name: this.userNamePipe.transform(user),
         organizationId: this.organization.id,
         organizationUserId: user.id,
-        occupiedSeatCount: this.dataSource.occupiedSeatCount,
-        allOrganizationUserEmails: this.dataSource.data?.map((user) => user.email) ?? [],
         usesKeyConnector: user.usesKeyConnector,
         isOnSecretsManagerStandalone: this.orgIsOnSecretsManagerStandalone,
         initialTab: initialTab,
