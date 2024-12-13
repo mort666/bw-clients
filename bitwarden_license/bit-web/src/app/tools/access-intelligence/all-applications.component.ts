@@ -2,7 +2,7 @@ import { Component, DestroyRef, OnDestroy, OnInit, inject } from "@angular/core"
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
-import { debounceTime, map, Observable, Subscription } from "rxjs";
+import { debounceTime, map, Observable, of, Subscription } from "rxjs";
 
 import {
   RiskInsightsDataService,
@@ -52,14 +52,14 @@ export class AllApplicationsComponent implements OnInit, OnDestroy {
   protected selectedIds: Set<number> = new Set<number>();
   protected searchControl = new FormControl("", { nonNullable: true });
   protected loading = true;
-  protected organization: Organization;
+  protected organization = {} as Organization;
   noItemsIcon = Icons.Security;
   protected markingAsCritical = false;
-  protected applicationSummary: ApplicationHealthReportSummary;
-  private subscription: Subscription;
+  protected applicationSummary = {} as ApplicationHealthReportSummary;
+  private subscription = new Subscription();
 
   destroyRef = inject(DestroyRef);
-  isLoading$: Observable<boolean>;
+  isLoading$: Observable<boolean> = of(false);
   isCriticalAppsFeatureEnabled = false;
 
   async ngOnInit() {
@@ -110,7 +110,7 @@ export class AllApplicationsComponent implements OnInit, OnDestroy {
     // TODO: implement
     this.toastService.showToast({
       variant: "warning",
-      title: null,
+      title: "",
       message: "Not yet implemented",
     });
   };
@@ -123,7 +123,7 @@ export class AllApplicationsComponent implements OnInit, OnDestroy {
         this.selectedIds.clear();
         this.toastService.showToast({
           variant: "success",
-          title: null,
+          title: "",
           message: this.i18nService.t("appsMarkedAsCritical"),
         });
         resolve(true);

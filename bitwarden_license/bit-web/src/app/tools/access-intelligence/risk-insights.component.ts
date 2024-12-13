@@ -2,7 +2,7 @@ import { CommonModule } from "@angular/common";
 import { Component, DestroyRef, OnInit, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ActivatedRoute, Router } from "@angular/router";
-import { Observable } from "rxjs";
+import { Observable, EMPTY } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
@@ -47,25 +47,25 @@ export enum RiskInsightsTabType {
     NotifiedMembersTableComponent,
     TabsModule,
   ],
-  providers: [RiskInsightsReportService, RiskInsightsDataService, MemberCipherDetailsApiService],
+  providers: [RiskInsightsReportService, MemberCipherDetailsApiService],
 })
 export class RiskInsightsComponent implements OnInit {
   tabIndex: RiskInsightsTabType = RiskInsightsTabType.AllApps;
 
-  dataLastUpdated = new Date();
+  dataLastUpdated: Date = new Date();
 
-  isCriticalAppsFeatureEnabled = false;
+  isCriticalAppsFeatureEnabled: boolean = false;
 
-  appsCount = 0;
-  criticalAppsCount = 0;
-  notifiedMembersCount = 0;
+  appsCount: number = 0;
+  criticalAppsCount: number = 0;
+  notifiedMembersCount: number = 0;
 
-  private organizationId: string;
+  private organizationId: string | null = null;
   private destroyRef = inject(DestroyRef);
-  isLoading$: Observable<boolean>;
-  isRefreshing$: Observable<boolean>;
-  dataLastUpdated$: Observable<Date>;
-  refetching = false;
+  isLoading$: Observable<boolean> = new Observable<boolean>();
+  isRefreshing$: Observable<boolean> = new Observable<boolean>();
+  dataLastUpdated$: Observable<Date | null> = new Observable<Date | null>();
+  refetching: boolean = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -87,7 +87,7 @@ export class RiskInsightsComponent implements OnInit {
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         map((params) => params.get("organizationId")),
-        switchMap((orgId) => {
+        switchMap((orgId: string | null) => {
           if (orgId) {
             this.organizationId = orgId;
             this.dataService.fetchApplicationsReport(orgId);
@@ -95,6 +95,8 @@ export class RiskInsightsComponent implements OnInit {
             this.isRefreshing$ = this.dataService.isRefreshing$;
             this.dataLastUpdated$ = this.dataService.dataLastUpdated$;
             return this.dataService.applications$;
+          } else {
+            return EMPTY; // Ensures switchMap always returns an Observable
           }
         }),
       )
@@ -102,6 +104,7 @@ export class RiskInsightsComponent implements OnInit {
         next: (applications: ApplicationHealthReportDetail[] | null) => {
           if (applications) {
             this.appsCount = applications.length;
+            // Optionally, you can calculate other counts here or in child components
           }
         },
       });
