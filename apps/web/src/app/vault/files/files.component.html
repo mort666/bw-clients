@@ -1,0 +1,41 @@
+<app-header title="File vault">
+  <bit-search placeholder="Search files" class="tw-w-80"></bit-search>
+  <button type="button" bitButton buttonType="primary">
+    <i class="bwi bwi-plus-f tw-mr-2" aria-hidden="true"></i>
+    {{ "Upload" }}
+  </button>
+</app-header>
+
+<bit-section class="tw-block tw-p-4">
+  <bit-table-scroll [dataSource]="tableDataSource" [rowSize]="47">
+    <ng-container header>
+      <th></th>
+      <!-- FIXME: sort -->
+      <th bitCell bitSortable="attachment.fileName">Name</th>
+      <th bitCell bitSortable="attachment.sizeName">Size</th>
+    </ng-container>
+    <ng-template bitRowDef let-row>
+      <td bitCell>
+        <i class="bwi bwi-file"></i>
+      </td>
+      <td bitCell>
+        <button type="button" bitLink (click)="openFilePreview(row)">
+          {{ row.attachment.fileName }}
+        </button>
+      </td>
+      <td bitCell>{{ row.attachment.sizeName }}</td>
+    </ng-template>
+  </bit-table-scroll>
+
+  <div *ngIf="fileService.sub$ | async as sub" class="tw-flex tw-gap-4 tw-min-w-full tw-mt-4">
+    <span bitTypography="helper" class="tw-min-w-max">{{
+      sub.storageName + " / " + sub.maxStorageGb + " GB"
+    }}</span>
+    <bit-progress
+      class="tw-w-full"
+      [barWidth]="fileService.storagePercentage$ | async"
+      bgColor="success"
+      size="default"
+    ></bit-progress>
+  </div>
+</bit-section>

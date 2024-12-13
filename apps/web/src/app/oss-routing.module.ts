@@ -87,6 +87,8 @@ import { ReportsModule } from "./tools/reports";
 import { AccessComponent } from "./tools/send/access.component";
 import { SendAccessExplainerComponent } from "./tools/send/send-access-explainer.component";
 import { SendComponent } from "./tools/send/send.component";
+import { FilesLayoutComponent } from "./vault/files/files-layout.component";
+import { FilesComponent } from "./vault/files/files.component";
 import { VaultModule } from "./vault/individual-vault/vault.module";
 
 const routes: Routes = [
@@ -660,6 +662,17 @@ const routes: Routes = [
         data: {
           maxWidth: "3xl",
         } satisfies AnonLayoutWrapperData,
+      },
+    ],
+  },
+  {
+    path: "files",
+    component: FilesLayoutComponent,
+    children: [
+      {
+        path: "",
+        component: FilesComponent,
+        data: { titleId: "files" } satisfies RouteDataProperties,
       },
     ],
   },

@@ -265,6 +265,8 @@ const devServer =
                   https://www.paypalobjects.com
                   https://q.stripe.com
                   https://haveibeenpwned.com
+                  https://localhost:8080
+                  blob:
                 ;child-src
                   'self'
                   https://js.stripe.com

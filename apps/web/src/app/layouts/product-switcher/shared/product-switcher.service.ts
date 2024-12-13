@@ -149,9 +149,20 @@ export class ProductSwitcherService {
             external: true,
           },
           isActive:
+            !this.router.url.includes("/files") &&
             !this.router.url.includes("/sm/") &&
             !this.router.url.includes("/organizations/") &&
             !this.router.url.includes("/providers/"),
+        },
+        files: {
+          name: "File Manager",
+          icon: "bwi-file",
+          appRoute: "/files",
+          marketingRoute: {
+            route: "https://bitwarden.com/products/personal/",
+            external: true,
+          },
+          isActive: this.router.url.includes("/files"),
         },
         sm: {
           name: "Secrets Manager",
@@ -196,7 +207,7 @@ export class ProductSwitcherService {
         },
       } satisfies Record<string, ProductSwitcherItem>;
 
-      const bento: ProductSwitcherItem[] = [products.pm];
+      const bento: ProductSwitcherItem[] = [products.pm, products.files];
       const other: ProductSwitcherItem[] = [];
 
       if (smOrg) {

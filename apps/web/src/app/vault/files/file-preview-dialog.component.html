@@ -1,0 +1,21 @@
+<bit-dialog [title]="data.file.attachment.fileName" size="large" background="alt">
+  <ng-container bitDialogContent>
+    <ng-container *ngIf="fileType === 'image'">
+      <img *ngIf="srcUrl" [src]="srcUrl" class="tw-w-full tw-h-full" />
+      <i *ngIf="!srcUrl" class="bwi bwi-spinner bwi-spin"></i>
+    </ng-container>
+
+    <!-- FIXME: doesn't work -->
+    <ng-container *ngIf="fileType === 'text' && blob">
+      <pre>
+                {{ blob.text() | async }}
+            </pre
+      >
+    </ng-container>
+  </ng-container>
+  <ng-container bitDialogFooter>
+    <button type="button" bitIconButton="bwi-download"></button>
+    <button type="button" bitIconButton="bwi-star"></button>
+    <button class="tw-ml-auto" type="button" bitIconButton="bwi-trash" buttonType="danger"></button>
+  </ng-container>
+</bit-dialog>

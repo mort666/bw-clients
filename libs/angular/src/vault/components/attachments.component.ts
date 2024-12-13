@@ -158,6 +158,7 @@ export class AttachmentsComponent implements OnInit {
         this.emergencyAccessId,
       );
       url = attachmentDownloadResponse.url;
+      alert(url);
     } catch (e) {
       if (e instanceof ErrorResponse && (e as ErrorResponse).statusCode === 404) {
         url = attachment.url;
@@ -239,6 +240,7 @@ export class AttachmentsComponent implements OnInit {
       this.reuploadPromises[attachment.id] = Promise.resolve().then(async () => {
         // 1. Download
         a.downloading = true;
+        alert(attachment.url);
         const response = await fetch(new Request(attachment.url, { cache: "no-store" }));
         if (response.status !== 200) {
           this.platformUtilsService.showToast("error", null, this.i18nService.t("errorOccurred"));
