@@ -47,7 +47,7 @@ export enum RiskInsightsTabType {
     NotifiedMembersTableComponent,
     TabsModule,
   ],
-  providers: [RiskInsightsReportService, MemberCipherDetailsApiService],
+  providers: [RiskInsightsReportService, MemberCipherDetailsApiService, RiskInsightsDataService],
 })
 export class RiskInsightsComponent implements OnInit {
   tabIndex: RiskInsightsTabType = RiskInsightsTabType.AllApps;
@@ -96,7 +96,7 @@ export class RiskInsightsComponent implements OnInit {
             this.dataLastUpdated$ = this.dataService.dataLastUpdated$;
             return this.dataService.applications$;
           } else {
-            return EMPTY; // Ensures switchMap always returns an Observable
+            return EMPTY;
           }
         }),
       )
@@ -104,7 +104,6 @@ export class RiskInsightsComponent implements OnInit {
         next: (applications: ApplicationHealthReportDetail[] | null) => {
           if (applications) {
             this.appsCount = applications.length;
-            // Optionally, you can calculate other counts here or in child components
           }
         },
       });
