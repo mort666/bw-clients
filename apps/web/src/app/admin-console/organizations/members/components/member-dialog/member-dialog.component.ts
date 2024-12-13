@@ -153,7 +153,7 @@ export class MemberDialogComponent implements OnDestroy {
   isEditDialogParams(
     params: EditMemberDialogParams | AddMemberDialogParams,
   ): params is EditMemberDialogParams {
-    return this.editMode;
+    return params.kind === "Edit";
   }
 
   constructor(
@@ -177,8 +177,9 @@ export class MemberDialogComponent implements OnDestroy {
       .pipe(shareReplay({ refCount: true, bufferSize: 1 }));
 
     let userDetails$;
-
+    console.log("jimmy 1");
     if (this.isEditDialogParams(this.params)) {
+      console.log("jimmy 2");
       this.editMode = true;
       this.title = this.i18nService.t("editMember");
       userDetails$ = this.userService.get(
@@ -187,6 +188,7 @@ export class MemberDialogComponent implements OnDestroy {
       );
       this.tabIndex = this.params.initialTab;
     } else {
+      console.log("jimmy 3");
       this.editMode = false;
       this.title = this.i18nService.t("inviteMember");
       userDetails$ = of(null);
@@ -195,6 +197,7 @@ export class MemberDialogComponent implements OnDestroy {
 
     this.isOnSecretsManagerStandalone = this.params.isOnSecretsManagerStandalone;
 
+    console.log("jimmy 4");
     if (this.isOnSecretsManagerStandalone) {
       this.formGroup.patchValue({
         accessSecretsManager: true,
