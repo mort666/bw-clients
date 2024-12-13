@@ -108,7 +108,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
   protected rowHeightClass = `tw-h-[69px]`;
 
   get occupiedSeatCount(): number {
-    return this.dataSource.acceptedUserCount;
+    return this.dataSource.activeUserCount;
   }
 
   constructor(
