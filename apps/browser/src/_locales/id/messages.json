@@ -3173,8 +3173,8 @@
   "viewAllLogInOptions": {
     "message": "Lihat semua pilihan masuk"
   },
-  "viewAllLoginOptionsV1": {
-    "message": "View all log in options"
+  "viewAllLoginOptions": {
+    "message": "Lihat semua pilihan masuk"
   },
   "notificationSentDevice": {
     "message": "Sebuah pemberitahuan dikirim ke perangkat Anda."

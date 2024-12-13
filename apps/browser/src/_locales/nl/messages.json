@@ -3173,8 +3173,8 @@
   "viewAllLogInOptions": {
     "message": "Alle inlogopties bekijken"
   },
-  "viewAllLoginOptionsV1": {
-    "message": "View all log in options"
+  "viewAllLoginOptions": {
+    "message": "Alle loginopties bekijken"
   },
   "notificationSentDevice": {
     "message": "Er is een melding naar je apparaat verzonden."

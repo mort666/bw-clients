@@ -3173,8 +3173,8 @@
   "viewAllLogInOptions": {
     "message": "Погледајте сав извештај у опције"
   },
-  "viewAllLoginOptionsV1": {
-    "message": "View all log in options"
+  "viewAllLoginOptions": {
+    "message": "Погледајте сав извештај у опције"
   },
   "notificationSentDevice": {
     "message": "Обавештење је послато на ваш уређај."
