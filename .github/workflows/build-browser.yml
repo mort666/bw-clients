@@ -65,7 +65,7 @@ jobs:
     name: Setup
     runs-on: ubuntu-22.04
     needs:
-      - check-secrets
+      - check-run
     outputs:
       repo_url: ${{ steps.gen_vars.outputs.repo_url }}
       adj_build_number: ${{ steps.gen_vars.outputs.adj_build_number }}

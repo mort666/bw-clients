@@ -69,6 +69,8 @@ jobs:
   setup:
     name: Setup
     runs-on: ubuntu-22.04
+    needs:
+      - check-run
     outputs:
       version: ${{ steps.version.outputs.value }}
       node_version: ${{ steps.retrieve-node-version.outputs.node_version }}
