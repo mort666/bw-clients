@@ -4,32 +4,29 @@ import { PublicClassifier } from "@bitwarden/common/tools/public-classifier";
 import { ObjectKey } from "@bitwarden/common/tools/state/object-key";
 
 import { PasswordRandomizer } from "../../engine";
-import {
-  PassphraseGeneratorOptionsEvaluator,
-  passphraseLeastPrivilege,
-  PassphrasePolicyConstraints,
-} from "../../policies";
+import { passphraseLeastPrivilege, PassphrasePolicyConstraints } from "../../policies";
 import {
   CredentialGenerator,
-  CredentialGeneratorConfiguration,
   GeneratorDependencyProvider,
   PassphraseGenerationOptions,
   PassphraseGeneratorPolicy,
 } from "../../types";
-import { Algorithm, Category } from "../data";
+import { Algorithm, Purpose, Type } from "../data";
+import { GeneratorMetadata } from "../generator-metadata";
 
-const passphrase: CredentialGeneratorConfiguration<
-  PassphraseGenerationOptions,
-  PassphraseGeneratorPolicy
-> = {
+const passphrase: GeneratorMetadata<PassphraseGenerationOptions, PassphraseGeneratorPolicy> = {
   id: Algorithm.passphrase,
-  category: Category.password,
-  nameKey: "passphrase",
-  generateKey: "generatePassphrase",
-  generatedValueKey: "passphrase",
-  copyKey: "copyPassphrase",
-  onlyOnRequest: false,
-  request: [],
+  category: Type.password,
+  i18nKeys: {
+    name: "passphrase",
+    generateCredential: "generatePassphrase",
+    credentialGenerated: "passphrase",
+    copyCredential: "copyPassphrase",
+  },
+  capabilities: {
+    autogenerate: false,
+    fields: [],
+  },
   engine: {
     create(
       dependencies: GeneratorDependencyProvider,
@@ -37,13 +34,7 @@ const passphrase: CredentialGeneratorConfiguration<
       return new PasswordRandomizer(dependencies.randomizer);
     },
   },
-  settings: {
-    initial: {
-      numWords: 6,
-      wordSeparator: "-",
-      capitalize: false,
-      includeNumber: false,
-    },
+  options: {
     constraints: {
       numWords: {
         min: 3,
@@ -52,44 +43,45 @@ const passphrase: CredentialGeneratorConfiguration<
       },
       wordSeparator: { maxLength: 1 },
     },
-    account: {
-      key: "passphraseGeneratorSettings",
-      target: "object",
-      format: "plain",
-      classifier: new PublicClassifier<PassphraseGenerationOptions>([
-        "numWords",
-        "wordSeparator",
-        "capitalize",
-        "includeNumber",
-      ]),
-      state: GENERATOR_DISK,
-      initial: {
-        numWords: 6,
-        wordSeparator: "-",
-        capitalize: false,
-        includeNumber: false,
-      },
-      options: {
-        deserializer(value) {
-          return value;
+    [Purpose.account]: {
+      storage: {
+        key: "passphraseGeneratorSettings",
+        target: "object",
+        format: "plain",
+        classifier: new PublicClassifier<PassphraseGenerationOptions>([
+          "numWords",
+          "wordSeparator",
+          "capitalize",
+          "includeNumber",
+        ]),
+        state: GENERATOR_DISK,
+        initial: {
+          numWords: 6,
+          wordSeparator: "-",
+          capitalize: false,
+          includeNumber: false,
         },
-        clearOn: ["logout"],
+        options: {
+          deserializer(value) {
+            return value;
+          },
+          clearOn: ["logout"],
+        },
+      } satisfies ObjectKey<PassphraseGenerationOptions>,
+      policy: {
+        type: PolicyType.PasswordGenerator,
+        disabledValue: {
+          minNumberWords: 0,
+          capitalize: false,
+          includeNumber: false,
+        },
       },
-    } satisfies ObjectKey<PassphraseGenerationOptions>,
+    },
   },
   policy: {
-    type: PolicyType.PasswordGenerator,
-    disabledValue: {
-      minNumberWords: 0,
-      capitalize: false,
-      includeNumber: false,
-    },
     combine: passphraseLeastPrivilege,
-    createEvaluator(policy) {
-      return new PassphraseGeneratorOptionsEvaluator(policy);
-    },
     toConstraints(policy) {
-      return new PassphrasePolicyConstraints(policy, passphrase.settings.constraints);
+      return new PassphrasePolicyConstraints(policy, passphrase.options.constraints);
     },
   },
 };

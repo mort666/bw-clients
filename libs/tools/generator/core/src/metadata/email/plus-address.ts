@@ -2,27 +2,28 @@ import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { GENERATOR_DISK } from "@bitwarden/common/platform/state";
 import { PublicClassifier } from "@bitwarden/common/tools/public-classifier";
-import { IdentityConstraint } from "@bitwarden/common/tools/state/identity-state-constraint";
 
-import { UsernameRandomizer } from "../../engine";
+import { EmailRandomizer } from "../../engine";
+import { SubaddressConstraints } from "../../policies/subaddress-constraints";
 import {
   CredentialGenerator,
-  EffUsernameGenerationOptions,
   GeneratorDependencyProvider,
   NoPolicy,
+  SubaddressGenerationOptions,
 } from "../../types";
 import { deepFreeze } from "../../util";
 import { Algorithm, Purpose, Type } from "../data";
 import { GeneratorMetadata } from "../generator-metadata";
 
-const effWordList: GeneratorMetadata<EffUsernameGenerationOptions, NoPolicy> = deepFreeze({
-  id: Algorithm.username,
-  category: Type.username,
+const plusAddress: GeneratorMetadata<SubaddressGenerationOptions, NoPolicy> = deepFreeze({
+  id: Algorithm.plusAddress,
+  category: Type.email,
   i18nKeys: {
-    name: "randomWord",
-    generateCredential: "generateUsername",
-    credentialGenerated: "username",
-    copyCredential: "copyUsername",
+    name: "plusAddressedEmail",
+    description: "plusAddressedEmailDesc",
+    generateCredential: "generateEmail",
+    credentialGenerated: "email",
+    copyCredential: "copyEmail",
   },
   capabilities: {
     autogenerate: true,
@@ -31,29 +32,30 @@ const effWordList: GeneratorMetadata<EffUsernameGenerationOptions, NoPolicy> = d
   engine: {
     create(
       dependencies: GeneratorDependencyProvider,
-    ): CredentialGenerator<EffUsernameGenerationOptions> {
-      return new UsernameRandomizer(dependencies.randomizer);
+    ): CredentialGenerator<SubaddressGenerationOptions> {
+      return new EmailRandomizer(dependencies.randomizer);
     },
   },
   options: {
     constraints: {},
     [Purpose.account]: {
       storage: {
-        key: "effUsernameGeneratorSettings",
+        key: "subaddressGeneratorSettings",
         target: "object",
         format: "plain",
-        classifier: new PublicClassifier<EffUsernameGenerationOptions>([
-          "wordCapitalize",
-          "wordIncludeNumber",
+        classifier: new PublicClassifier<SubaddressGenerationOptions>([
+          "subaddressType",
+          "subaddressEmail",
         ]),
         state: GENERATOR_DISK,
         initial: {
-          wordCapitalize: false,
-          wordIncludeNumber: false,
-          website: null,
+          subaddressType: "random",
+          subaddressEmail: "",
         },
         options: {
-          deserializer: (value) => value,
+          deserializer(value) {
+            return value;
+          },
           clearOn: ["logout"],
         },
       },
@@ -63,14 +65,15 @@ const effWordList: GeneratorMetadata<EffUsernameGenerationOptions, NoPolicy> = d
       },
     },
   },
+
   policy: {
     combine(_acc: NoPolicy, _policy: Policy) {
       return {};
     },
-    toConstraints(_policy: NoPolicy) {
-      return new IdentityConstraint<EffUsernameGenerationOptions>();
+    toConstraints(_policy: NoPolicy, email: string) {
+      return new SubaddressConstraints(email);
     },
   },
 });
 
-export default effWordList;
+export default plusAddress;

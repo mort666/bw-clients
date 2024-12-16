@@ -2,27 +2,28 @@ import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { GENERATOR_DISK } from "@bitwarden/common/platform/state";
 import { PublicClassifier } from "@bitwarden/common/tools/public-classifier";
-import { IdentityConstraint } from "@bitwarden/common/tools/state/identity-state-constraint";
 
-import { UsernameRandomizer } from "../../engine";
+import { EmailRandomizer } from "../../engine";
+import { CatchallConstraints } from "../../policies/catchall-constraints";
 import {
+  CatchallGenerationOptions,
   CredentialGenerator,
-  EffUsernameGenerationOptions,
   GeneratorDependencyProvider,
   NoPolicy,
 } from "../../types";
 import { deepFreeze } from "../../util";
-import { Algorithm, Purpose, Type } from "../data";
+import { Algorithm, Type } from "../data";
 import { GeneratorMetadata } from "../generator-metadata";
 
-const effWordList: GeneratorMetadata<EffUsernameGenerationOptions, NoPolicy> = deepFreeze({
-  id: Algorithm.username,
-  category: Type.username,
+const catchall: GeneratorMetadata<CatchallGenerationOptions, NoPolicy> = deepFreeze({
+  id: Algorithm.catchall,
+  category: Type.email,
   i18nKeys: {
-    name: "randomWord",
-    generateCredential: "generateUsername",
-    credentialGenerated: "username",
-    copyCredential: "copyUsername",
+    name: "catchallEmail",
+    description: "catchallEmailDesc",
+    generateCredential: "generateEmail",
+    credentialGenerated: "email",
+    copyCredential: "copyEmail",
   },
   capabilities: {
     autogenerate: true,
@@ -31,26 +32,25 @@ const effWordList: GeneratorMetadata<EffUsernameGenerationOptions, NoPolicy> = d
   engine: {
     create(
       dependencies: GeneratorDependencyProvider,
-    ): CredentialGenerator<EffUsernameGenerationOptions> {
-      return new UsernameRandomizer(dependencies.randomizer);
+    ): CredentialGenerator<CatchallGenerationOptions> {
+      return new EmailRandomizer(dependencies.randomizer);
     },
   },
   options: {
-    constraints: {},
-    [Purpose.account]: {
+    constraints: { catchallDomain: { minLength: 1 } },
+    account: {
       storage: {
-        key: "effUsernameGeneratorSettings",
+        key: "catchallGeneratorSettings",
         target: "object",
         format: "plain",
-        classifier: new PublicClassifier<EffUsernameGenerationOptions>([
-          "wordCapitalize",
-          "wordIncludeNumber",
+        classifier: new PublicClassifier<CatchallGenerationOptions>([
+          "catchallType",
+          "catchallDomain",
         ]),
         state: GENERATOR_DISK,
         initial: {
-          wordCapitalize: false,
-          wordIncludeNumber: false,
-          website: null,
+          catchallType: "random",
+          catchallDomain: "",
         },
         options: {
           deserializer: (value) => value,
@@ -67,10 +67,10 @@ const effWordList: GeneratorMetadata<EffUsernameGenerationOptions, NoPolicy> = d
     combine(_acc: NoPolicy, _policy: Policy) {
       return {};
     },
-    toConstraints(_policy: NoPolicy) {
-      return new IdentityConstraint<EffUsernameGenerationOptions>();
+    toConstraints(_policy: NoPolicy, email: string) {
+      return new CatchallConstraints(email);
     },
   },
 });
 
-export default effWordList;
+export default catchall;

@@ -1,5 +1,6 @@
 import { deepFreeze } from "../util";
 
+/** algorithms for generating credentials */
 export const Algorithm = Object.freeze({
   /** A password composed of random characters */
   password: "password",
@@ -14,26 +15,37 @@ export const Algorithm = Object.freeze({
   catchall: "catchall",
 
   /** An email username composed of words from the EFF word list  */
-  plusAddress: "plus-address",
+  plusAddress: "subaddress",
 
   /** An integrated email forwarding service */
   forwarder: "forwarder",
 } as const);
 
-export const Category = Object.freeze({
+/** categorizes credentials according to their use-case outside of Bitwarden */
+export const Type = Object.freeze({
   password: "password",
   username: "username",
   email: "email",
 } as const);
 
-/** Credential generation algorithm identifiers grouped by category. */
-export const CategorizedAlgorithm = deepFreeze({
-  /** Lists algorithms in the "password" credential category */
-  [Category.password]: [Algorithm.password, Algorithm.passphrase] as const,
+/** categorizes settings according to their expected use-case within Bitwarden */
+export const Purpose = Object.freeze({
+  /** account-level generator options. This is the default.
+   *  @remarks these are the options displayed on the generator tab
+   */
+  account: "account",
 
-  /** Lists algorithms in the "username" credential category */
-  [Category.username]: [Algorithm.username] as const,
+  // FIXME: consider adding a purpose for bitwarden's master password
+});
 
-  /** Lists algorithms in the "email" credential category */
-  [Category.email]: [Algorithm.catchall, Algorithm.plusAddress, Algorithm.forwarder] as const,
+/** Credential generation algorithms grouped by purpose. */
+export const AlgorithmsByType = deepFreeze({
+  /** Algorithms that produce passwords */
+  [Type.password]: [Algorithm.password, Algorithm.passphrase] as const,
+
+  /** Algorithms that produce usernames */
+  [Type.username]: [Algorithm.username] as const,
+
+  /** Algorithms that produce email addresses */
+  [Type.email]: [Algorithm.catchall, Algorithm.plusAddress, Algorithm.forwarder] as const,
 } as const);
