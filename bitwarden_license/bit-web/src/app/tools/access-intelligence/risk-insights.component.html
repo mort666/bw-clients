@@ -5,6 +5,11 @@
     {{ "reviewAtRiskPasswords" | i18n }}
     &nbsp;<a class="text-primary" routerLink="/login">{{ "learnMore" | i18n }}</a>
   </div>
+  <div>
+    <button bitButton buttonType="primary" type="button" (click)="showAtRiskMembers()">
+      {{ "view" | i18n }}
+    </button>
+  </div>
   <div
     class="tw-bg-primary-100 tw-rounded-lg tw-w-full tw-px-8 tw-py-4 tw-my-4 tw-flex tw-items-center"
   >

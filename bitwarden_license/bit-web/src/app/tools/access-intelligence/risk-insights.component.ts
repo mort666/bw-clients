@@ -11,15 +11,19 @@ import {
   RiskInsightsDataService,
   RiskInsightsReportService,
 } from "@bitwarden/bit-common/tools/reports/risk-insights";
-import { ApplicationHealthReportDetail } from "@bitwarden/bit-common/tools/reports/risk-insights/models/password-health";
+import {
+  ApplicationHealthReportDetail,
+  AtRiskMemberDetail,
+} from "@bitwarden/bit-common/tools/reports/risk-insights/models/password-health";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
-import { AsyncActionsModule, ButtonModule, TabsModule } from "@bitwarden/components";
+import { AsyncActionsModule, ButtonModule, DialogService, TabsModule } from "@bitwarden/components";
 import { HeaderModule } from "@bitwarden/web-vault/app/layouts/header/header.module";
 
 import { AllApplicationsComponent } from "./all-applications.component";
 import { CriticalApplicationsComponent } from "./critical-applications.component";
 import { NotifiedMembersTableComponent } from "./notified-members-table.component";
+import { OrgAtRiskMembersDialogComponent } from "./org-at-risk-members-dialog.component";
 
 export enum RiskInsightsTabType {
   AllApps = 0,
@@ -60,12 +64,15 @@ export class RiskInsightsComponent implements OnInit {
   isRefreshing$: Observable<boolean> = new Observable<boolean>();
   dataLastUpdated$: Observable<Date | null> = new Observable<Date | null>();
   refetching: boolean = false;
+  private atRiskMembers: AtRiskMemberDetail[] = [];
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private configService: ConfigService,
     private dataService: RiskInsightsDataService,
+    private dialogService: DialogService,
+    private riskInsightsReportService: RiskInsightsReportService,
   ) {
     this.route.queryParams.pipe(takeUntilDestroyed()).subscribe(({ tabIndex }) => {
       this.tabIndex = !isNaN(Number(tabIndex)) ? Number(tabIndex) : RiskInsightsTabType.AllApps;
@@ -98,6 +105,8 @@ export class RiskInsightsComponent implements OnInit {
         next: (applications: ApplicationHealthReportDetail[] | null) => {
           if (applications) {
             this.appsCount = applications.length;
+            this.atRiskMembers =
+              this.riskInsightsReportService.generateAtRiskMemberList(applications);
           }
         },
       });
@@ -112,6 +121,10 @@ export class RiskInsightsComponent implements OnInit {
       this.dataService.refreshApplicationsReport(this.organizationId);
     }
   }
+
+  showAtRiskMembers = async () => {
+    this.dialogService.open(OrgAtRiskMembersDialogComponent, { data: this.atRiskMembers });
+  };
 
   async onTabChange(newIndex: number): Promise<void> {
     await this.router.navigate([], {
