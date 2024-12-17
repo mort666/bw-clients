@@ -39,10 +39,6 @@ export function orgSeatLimitReachedValidator(
 }
 
 export function isDynamicSeatPlan(productTierType: ProductTierType): boolean {
-  if (!productTierType) {
-    return false;
-  }
-
   return !isFixedSeatPlan(productTierType);
 }
 

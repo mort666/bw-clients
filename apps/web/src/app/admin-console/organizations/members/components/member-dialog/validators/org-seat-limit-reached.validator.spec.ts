@@ -172,27 +172,23 @@ describe("orgSeatLimitReachedValidator", () => {
 
 describe("isFixedSeatPlan", () => {
   test.each([
-    [ProductTierType.Free, true],
-    [ProductTierType.Families, true],
-    [ProductTierType.TeamsStarter, true],
-    [ProductTierType.Enterprise, false],
-    [null, false],
-    [undefined, false],
-  ])("should return %s for %s", (input, expected) => {
-    expect(isFixedSeatPlan(input as ProductTierType)).toBe(expected);
+    [true, ProductTierType.Free],
+    [true, ProductTierType.Families],
+    [true, ProductTierType.TeamsStarter],
+    [false, ProductTierType.Enterprise],
+  ])("should return %s for %s", (expected, input) => {
+    expect(isFixedSeatPlan(input)).toBe(expected);
   });
 });
 
 describe("isDynamicSeatPlan", () => {
   test.each([
-    [ProductTierType.Enterprise, true],
-    [ProductTierType.Teams, true],
-    [ProductTierType.Free, false],
-    [ProductTierType.Families, false],
-    [ProductTierType.TeamsStarter, false],
-    [null, false],
-    [undefined, false],
-  ])("should return %s for %s", (input, expected) => {
-    expect(isDynamicSeatPlan(input as ProductTierType)).toBe(expected);
+    [true, ProductTierType.Enterprise],
+    [true, ProductTierType.Teams],
+    [false, ProductTierType.Free],
+    [false, ProductTierType.Families],
+    [false, ProductTierType.TeamsStarter],
+  ])("should return %s for %s", (expected, input) => {
+    expect(isDynamicSeatPlan(input)).toBe(expected);
   });
 });
