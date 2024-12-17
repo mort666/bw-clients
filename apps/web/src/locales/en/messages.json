@@ -131,6 +131,18 @@
   "atRiskMembers": {
     "message": "At-risk members"
   },
+  "atRiskMembersWithCount": {
+    "message": "At-risk members ($COUNT$)",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "atRiskMembersDescription": {
+    "message": "These members are logging into Priority Access Intelligence with weak, exposed, or reused passwords."
+  },
   "totalMembers": {
     "message": "Total members"
   },

@@ -5,9 +5,9 @@
     {{ "reviewAtRiskPasswords" | i18n }}
     &nbsp;<a class="text-primary" routerLink="/login">{{ "learnMore" | i18n }}</a>
   </div>
-  <div>
+  <div *ngIf="isOrgAtRiskMembersFeatureEnabled">
     <button bitButton buttonType="primary" type="button" (click)="showAtRiskMembers()">
-      {{ "view" | i18n }}
+      View All At-Risk Members
     </button>
   </div>
   <div

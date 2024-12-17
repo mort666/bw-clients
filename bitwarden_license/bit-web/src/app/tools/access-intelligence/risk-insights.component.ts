@@ -64,6 +64,7 @@ export class RiskInsightsComponent implements OnInit {
   isRefreshing$: Observable<boolean> = new Observable<boolean>();
   dataLastUpdated$: Observable<Date | null> = new Observable<Date | null>();
   refetching: boolean = false;
+  isOrgAtRiskMembersFeatureEnabled: boolean = false;
   private atRiskMembers: AtRiskMemberDetail[] = [];
 
   constructor(
@@ -82,6 +83,10 @@ export class RiskInsightsComponent implements OnInit {
   async ngOnInit() {
     this.isCriticalAppsFeatureEnabled = await this.configService.getFeatureFlag(
       FeatureFlag.CriticalApps,
+    );
+
+    this.isOrgAtRiskMembersFeatureEnabled = await this.configService.getFeatureFlag(
+      FeatureFlag.OrgAtRiskMembers,
     );
 
     this.route.paramMap
