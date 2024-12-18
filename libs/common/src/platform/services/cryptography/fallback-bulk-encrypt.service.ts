@@ -22,11 +22,11 @@ export class FallbackBulkEncryptService implements BulkEncryptService {
     items: Decryptable<T>[],
     key: SymmetricCryptoKey,
   ): Promise<T[]> {
-    if (this.featureFlagEncryptService != null) {
-      return await this.featureFlagEncryptService.decryptItems(items, key);
-    } else {
-      return await this.encryptService.decryptItems(items, key);
-    }
+    return await this.encryptService.decryptItems(items, key);
+    // if (this.featureFlagEncryptService != null) {
+    //   return await this.featureFlagEncryptService.decryptItems(items, key);
+    // } else {
+    // }
   }
 
   async setFeatureFlagEncryptService(featureFlagEncryptService: BulkEncryptService) {

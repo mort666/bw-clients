@@ -92,6 +92,7 @@ import { I18nService as I18nServiceAbstraction } from "@bitwarden/common/platfor
 import { KeyGenerationService as KeyGenerationServiceAbstraction } from "@bitwarden/common/platform/abstractions/key-generation.service";
 import { LogService as LogServiceAbstraction } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService as PlatformUtilsServiceAbstraction } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { SdkPureClientFactory } from "@bitwarden/common/platform/abstractions/sdk/sdk-client-factory";
 import { SdkService } from "@bitwarden/common/platform/abstractions/sdk/sdk.service";
 import { StateService as StateServiceAbstraction } from "@bitwarden/common/platform/abstractions/state.service";
 import {
@@ -114,10 +115,10 @@ import { ConfigApiService } from "@bitwarden/common/platform/services/config/con
 import { DefaultConfigService } from "@bitwarden/common/platform/services/config/default-config.service";
 import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
 import { ContainerService } from "@bitwarden/common/platform/services/container.service";
-import { BulkEncryptServiceImplementation } from "@bitwarden/common/platform/services/cryptography/bulk-encrypt.service.implementation";
+// import { BulkEncryptServiceImplementation } from "@bitwarden/common/platform/services/cryptography/bulk-encrypt.service.implementation";
 import { EncryptServiceImplementation } from "@bitwarden/common/platform/services/cryptography/encrypt.service.implementation";
 import { FallbackBulkEncryptService } from "@bitwarden/common/platform/services/cryptography/fallback-bulk-encrypt.service";
-import { MultithreadEncryptServiceImplementation } from "@bitwarden/common/platform/services/cryptography/multithread-encrypt.service.implementation";
+// import { MultithreadEncryptServiceImplementation } from "@bitwarden/common/platform/services/cryptography/multithread-encrypt.service.implementation";
 import { Fido2ActiveRequestManager } from "@bitwarden/common/platform/services/fido2/fido2-active-request-manager";
 import { Fido2AuthenticatorService } from "@bitwarden/common/platform/services/fido2/fido2-authenticator.service";
 import { Fido2ClientService } from "@bitwarden/common/platform/services/fido2/fido2-client.service";
@@ -257,7 +258,10 @@ import { LocalBackedSessionStorageService } from "../platform/services/local-bac
 import { BackgroundPlatformUtilsService } from "../platform/services/platform-utils/background-platform-utils.service";
 import { BrowserPlatformUtilsService } from "../platform/services/platform-utils/browser-platform-utils.service";
 import { PopupViewCacheBackgroundService } from "../platform/services/popup-view-cache-background.service";
-import { BrowserSdkClientFactory } from "../platform/services/sdk/browser-sdk-client-factory";
+import {
+  BrowserSdkClientFactory,
+  BrowserSdkPureClientFactory,
+} from "../platform/services/sdk/browser-sdk-client-factory";
 import { BackgroundTaskSchedulerService } from "../platform/services/task-scheduler/background-task-scheduler.service";
 import { BackgroundMemoryStorageService } from "../platform/storage/background-memory-storage.service";
 import { BrowserStorageServiceProvider } from "../platform/storage/browser-storage-service.provider";
@@ -377,6 +381,7 @@ export default class MainBackground {
   themeStateService: DefaultThemeStateService;
   autoSubmitLoginBackground: AutoSubmitLoginBackground;
   sdkService: SdkService;
+  pureSdkClientFactory: SdkPureClientFactory;
   cipherAuthorizationService: CipherAuthorizationService;
   inlineMenuFieldQualificationService: InlineMenuFieldQualificationService;
 
@@ -494,13 +499,19 @@ export default class MainBackground {
         return derivedKey;
       });
 
+      this.pureSdkClientFactory = new BrowserSdkPureClientFactory(this.logService);
       this.largeObjectMemoryStorageForStateProviders = new LocalBackedSessionStorageService(
         sessionKey,
         this.storageService,
         // For local backed session storage, we expect that the encrypted data on disk will persist longer than the encryption key in memory
         // and failures to decrypt because of that are completely expected. For this reason, we pass in `false` to the `EncryptServiceImplementation`
         // so that MAC failures are not logged.
-        new EncryptServiceImplementation(this.cryptoFunctionService, this.logService, false),
+        new EncryptServiceImplementation(
+          this.pureSdkClientFactory,
+          this.cryptoFunctionService,
+          this.logService,
+          false,
+        ),
         this.platformUtilsService,
         this.logService,
       );
@@ -536,12 +547,18 @@ export default class MainBackground {
     );
 
     this.encryptService = BrowserApi.isManifestVersion(2)
-      ? new MultithreadEncryptServiceImplementation(
+      ? new EncryptServiceImplementation(
+          this.pureSdkClientFactory,
           this.cryptoFunctionService,
           this.logService,
           true,
         )
-      : new EncryptServiceImplementation(this.cryptoFunctionService, this.logService, true);
+      : new EncryptServiceImplementation(
+          this.pureSdkClientFactory,
+          this.cryptoFunctionService,
+          this.logService,
+          true,
+        );
 
     this.singleUserStateProvider = new DefaultSingleUserStateProvider(
       storageServiceProvider,
@@ -1287,14 +1304,14 @@ export default class MainBackground {
     this.syncServiceListener?.listener$().subscribe();
     await this.autoSubmitLoginBackground.init();
 
-    if (
-      BrowserApi.isManifestVersion(2) &&
-      (await this.configService.getFeatureFlag(FeatureFlag.PM4154_BulkEncryptionService))
-    ) {
-      await this.bulkEncryptService.setFeatureFlagEncryptService(
-        new BulkEncryptServiceImplementation(this.cryptoFunctionService, this.logService),
-      );
-    }
+    // if (
+    //   BrowserApi.isManifestVersion(2) &&
+    //   (await this.configService.getFeatureFlag(FeatureFlag.PM4154_BulkEncryptionService))
+    // ) {
+    //   await this.bulkEncryptService.setFeatureFlagEncryptService(
+    //     new BulkEncryptServiceImplementation(this.cryptoFunctionService, this.logService),
+    //   );
+    // }
 
     // If the user is logged out, switch to the next account
     const active = await firstValueFrom(this.accountService.activeAccount$);

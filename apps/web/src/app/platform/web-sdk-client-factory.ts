@@ -1,5 +1,18 @@
-import { SdkClientFactory } from "@bitwarden/common/platform/abstractions/sdk/sdk-client-factory";
+import {
+  SdkClientFactory,
+  SdkPureClientFactory,
+} from "@bitwarden/common/platform/abstractions/sdk/sdk-client-factory";
 import * as sdk from "@bitwarden/sdk-internal";
+
+export class WebSdkPureClientFactory implements SdkPureClientFactory {
+  async createPureSdkClient(): Promise<sdk.BitwardenPure> {
+    const module = await load();
+
+    (sdk as any).init(module);
+
+    return Promise.resolve(new sdk.BitwardenPure());
+  }
+}
 
 /**
  * SDK client factory with a js fallback for when WASM is not supported.

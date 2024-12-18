@@ -12,7 +12,7 @@ import { SymmetricCryptoKey } from "./symmetric-crypto-key";
 export const DECRYPT_ERROR = "[error: cannot decrypt]";
 
 export class EncString implements Encrypted {
-  encryptedString?: EncryptedString;
+  encryptedString: EncryptedString;
   encryptionType?: EncryptionType;
   decryptedValue?: string;
   data?: string;

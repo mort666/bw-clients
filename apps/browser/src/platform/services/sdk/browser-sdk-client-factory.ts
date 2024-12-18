@@ -1,9 +1,12 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
-import { SdkClientFactory } from "@bitwarden/common/platform/abstractions/sdk/sdk-client-factory";
+import {
+  SdkClientFactory,
+  SdkPureClientFactory,
+} from "@bitwarden/common/platform/abstractions/sdk/sdk-client-factory";
 import { RecoverableSDKError } from "@bitwarden/common/platform/services/sdk/default-sdk.service";
-import type { BitwardenClient } from "@bitwarden/sdk-internal";
+import type { BitwardenClient, BitwardenPure } from "@bitwarden/sdk-internal";
 
 import { BrowserApi } from "../../browser/browser-api";
 
@@ -57,6 +60,32 @@ async function load() {
     // eslint-disable-next-line no-console
     console.debug("WebAssembly is not supported in this environment");
     await import("./fallback");
+  }
+}
+
+export class BrowserSdkPureClientFactory implements SdkPureClientFactory {
+  constructor(private readonly logService: LogService) {}
+  async createPureSdkClient(): Promise<BitwardenPure> {
+    const startTime = performance.now();
+    try {
+      await loadWithTimeout();
+    } catch (error) {
+      throw new Error(`Failed to load: ${error.message}`);
+    }
+
+    const endTime = performance.now();
+    const elapsed = Math.round((endTime - startTime) / 1000);
+
+    const instance = (globalThis as any).init_pure();
+
+    this.logService.info("WASM pure SDK loaded in", Math.round(endTime - startTime), "ms");
+
+    // If it takes 3 seconds or more to load, we want to capture it.
+    if (elapsed >= 3) {
+      throw new RecoverableSDKError(instance, elapsed);
+    }
+
+    return instance;
   }
 }
 
