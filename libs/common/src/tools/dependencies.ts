@@ -5,6 +5,7 @@ import { OrganizationId, UserId } from "@bitwarden/common/types/guid";
 
 import { OrganizationEncryptor } from "./cryptography/organization-encryptor.abstraction";
 import { UserEncryptor } from "./cryptography/user-encryptor.abstraction";
+import { VendorId } from "./integration/metadata/type";
 
 /** error emitted when the `SingleUserDependency` changes Ids */
 export type UserChangedError = {
@@ -149,6 +150,10 @@ export type SingleUserDependency = {
    *  The stream should not emit null or undefined.
    */
   singleUserId$: Observable<UserId>;
+};
+
+export type SingleVendorDependency = {
+  singleVendorId$: Observable<VendorId>;
 };
 
 /** A pattern for types that emit values exclusively when the dependency
