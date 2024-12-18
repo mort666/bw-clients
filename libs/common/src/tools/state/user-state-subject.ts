@@ -75,7 +75,7 @@ const ALWAYS_UPDATE_KLUDGE = "$^$ALWAYS_UPDATE_KLUDGE_PROPERTY$^$";
 export class UserStateSubject<
     State extends object,
     Secret = State,
-    Disclosed = never,
+    Disclosed = Record<string, never>,
     Dependencies = null,
   >
   extends Observable<State>
