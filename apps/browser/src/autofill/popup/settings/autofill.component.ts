@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
@@ -219,7 +221,11 @@ export class AutofillComponent implements OnInit {
         : AutofillOverlayVisibility.Off;
 
     await this.autofillSettingsService.setInlineMenuVisibility(newInlineMenuVisibilityValue);
-    await this.requestPrivacyPermission();
+
+    // No need to initiate browser permission request if a feature is being turned off
+    if (newInlineMenuVisibilityValue !== AutofillOverlayVisibility.Off) {
+      await this.requestPrivacyPermission();
+    }
   }
 
   async updateAutofillOnPageLoad() {

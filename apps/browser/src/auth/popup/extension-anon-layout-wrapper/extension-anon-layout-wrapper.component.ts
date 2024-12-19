@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { CommonModule } from "@angular/common";
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import { ActivatedRoute, Data, NavigationEnd, Router, RouterModule } from "@angular/router";
@@ -15,6 +17,7 @@ import { PopOutComponent } from "../../../platform/popup/components/pop-out.comp
 import { PopupHeaderComponent } from "../../../platform/popup/layout/popup-header.component";
 import { PopupPageComponent } from "../../../platform/popup/layout/popup-page.component";
 import { CurrentAccountComponent } from "../account-switching/current-account.component";
+import { AccountSwitcherService } from "../account-switching/services/account-switcher.service";
 
 import { ExtensionBitwardenLogo } from "./extension-bitwarden-logo.icon";
 
@@ -50,6 +53,7 @@ export class ExtensionAnonLayoutWrapperComponent implements OnInit, OnDestroy {
   protected pageIcon: Icon;
   protected showReadonlyHostname: boolean;
   protected maxWidth: "md" | "3xl";
+  protected hasLoggedInAccount: boolean = false;
 
   protected theme: string;
   protected logo = ExtensionBitwardenLogo;
@@ -59,6 +63,7 @@ export class ExtensionAnonLayoutWrapperComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private i18nService: I18nService,
     private extensionAnonLayoutWrapperDataService: AnonLayoutWrapperDataService,
+    private accountSwitcherService: AccountSwitcherService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -68,6 +73,12 @@ export class ExtensionAnonLayoutWrapperComponent implements OnInit, OnDestroy {
     // Listen for page changes and update the page data appropriately
     this.listenForPageDataChanges();
     this.listenForServiceDataChanges();
+
+    this.accountSwitcherService.availableAccounts$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((accounts) => {
+        this.hasLoggedInAccount = accounts.some((account) => account.id !== "addAccount");
+      });
   }
 
   private listenForPageDataChanges() {

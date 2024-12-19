@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { firstValueFrom, map } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
@@ -274,7 +276,11 @@ export class NativeMessagingBackground {
     let message = rawMessage as ReceiveMessage;
     if (!this.platformUtilsService.isSafari()) {
       message = JSON.parse(
-        await this.encryptService.decryptToUtf8(rawMessage as EncString, this.sharedSecret),
+        await this.encryptService.decryptToUtf8(
+          rawMessage as EncString,
+          this.sharedSecret,
+          "ipc-desktop-ipc-channel-key",
+        ),
       );
     }
 

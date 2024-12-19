@@ -20,7 +20,7 @@
     "message": "Crear cuenta"
   },
   "newToBitwarden": {
-    "message": "New to Bitwarden?"
+    "message": "¿Nuevo en Bitwarden?"
   },
   "logInWithPasskey": {
     "message": "Log in with passkey"
@@ -29,7 +29,7 @@
     "message": "Use single sign-on"
   },
   "welcomeBack": {
-    "message": "Welcome back"
+    "message": "Bienvenido de nuevo"
   },
   "setAStrongPassword": {
     "message": "Establece una contraseña fuerte"
@@ -84,7 +84,7 @@
     "message": "Incorporarse a la organización"
   },
   "joinOrganizationName": {
-    "message": "Join $ORGANIZATIONNAME$",
+    "message": "Unirse a $ORGANIZATIONNAME$",
     "placeholders": {
       "organizationName": {
         "content": "$1",
@@ -152,8 +152,17 @@
   "copyLicenseNumber": {
     "message": "Copiar número de licencia"
   },
+  "copyPrivateKey": {
+    "message": "Copy private key"
+  },
+  "copyPublicKey": {
+    "message": "Copy public key"
+  },
+  "copyFingerprint": {
+    "message": "Copy fingerprint"
+  },
   "copyCustomField": {
-    "message": "Copy $FIELD$",
+    "message": "Copiar $FIELD$",
     "placeholders": {
       "field": {
         "content": "$1",
@@ -162,10 +171,10 @@
     }
   },
   "copyWebsite": {
-    "message": "Copy website"
+    "message": "Copiar sitio web"
   },
   "copyNotes": {
-    "message": "Copy notes"
+    "message": "Copiar notas"
   },
   "fill": {
     "message": "Fill",
@@ -182,6 +191,13 @@
   },
   "autoFillIdentity": {
     "message": "Autocompletar identidad"
+  },
+  "fillVerificationCode": {
+    "message": "Fill verification code"
+  },
+  "fillVerificationCodeAria": {
+    "message": "Fill Verification Code",
+    "description": "Aria label for the heading displayed the inline menu for totp code autofill"
   },
   "generatePasswordCopied": {
     "message": "Generar contraseña (copiada)"
@@ -223,13 +239,13 @@
     "message": "Añadir elemento"
   },
   "accountEmail": {
-    "message": "Account email"
+    "message": "Correo electrónico de la cuenta"
   },
   "requestHint": {
-    "message": "Request hint"
+    "message": "Solicitar pista"
   },
   "requestPasswordHint": {
-    "message": "Request password hint"
+    "message": "Solicitar pista de la contraseña"
   },
   "enterYourAccountEmailAddressAndYourPasswordHintWillBeSentToYou": {
     "message": "Enter your account email address and your password hint will be sent to you"
@@ -567,7 +583,7 @@
     "message": "Notas"
   },
   "privateNote": {
-    "message": "Private note"
+    "message": "Nota privada"
   },
   "note": {
     "message": "Nota"
@@ -624,7 +640,7 @@
     "message": "Tiempo de sesión agotado"
   },
   "vaultTimeoutHeader": {
-    "message": "Vault timeout"
+    "message": "Tiempo de espera de la caja fuerte"
   },
   "otherOptions": {
     "message": "Otras opciones"
@@ -645,13 +661,13 @@
     "message": "Tu caja fuerte está bloqueada. Verifica tu identidad para continuar."
   },
   "yourVaultIsLockedV2": {
-    "message": "Your vault is locked"
+    "message": "Tu caja fuerte está bloqueada"
   },
   "yourAccountIsLocked": {
-    "message": "Your account is locked"
+    "message": "Tu cuenta está bloqueada"
   },
   "or": {
-    "message": "or"
+    "message": "o"
   },
   "unlock": {
     "message": "Desbloquear"
@@ -676,7 +692,7 @@
     "message": "Tiempo de espera de la caja fuerte"
   },
   "vaultTimeout1": {
-    "message": "Timeout"
+    "message": "Tiempo de espera"
   },
   "lockNow": {
     "message": "Bloquear"
@@ -1116,6 +1132,10 @@
     "message": "ADVERTENCIA",
     "description": "WARNING (should stay in capitalized letters if the language permits)"
   },
+  "warningCapitalized": {
+    "message": "Advertencia",
+    "description": "Warning (should maintain locale-relevant capitalization)"
+  },
   "confirmVaultExport": {
     "message": "Confirma la exportación de la caja fuerte"
   },
@@ -1306,6 +1326,12 @@
   "enterVerificationCodeApp": {
     "message": "Introduce el código de verificación de 6 dígitos de tu aplicación autenticadora."
   },
+  "authenticationTimeout": {
+    "message": "Authentication timeout"
+  },
+  "authenticationSessionTimedOut": {
+    "message": "The authentication session timed out. Please restart the login process."
+  },
   "enterVerificationCodeEmail": {
     "message": "Introduce el código de verificación de 6 dígitos que te ha sido enviado por correo electrónico",
     "placeholders": {
@@ -1459,7 +1485,7 @@
     "message": "Display identities as suggestions"
   },
   "showInlineMenuCardsLabel": {
-    "message": "Display cards as suggestions"
+    "message": "Mostrar tarjetas como sugerencias"
   },
   "showInlineMenuOnIconSelectionLabel": {
     "message": "Display suggestions when icon is selected"
@@ -1494,24 +1520,11 @@
   "enableAutoFillOnPageLoadDesc": {
     "message": "Si se detecta un formulario, realizar automáticamente un autorellenado cuando la web cargue."
   },
-  "autofillOnPageLoadWarning": {
-    "message": "$OPENTAG$Warning:$CLOSETAG$ Compromised or untrusted websites can exploit autofill on page load.",
-    "placeholders": {
-      "openTag": {
-        "content": "$1",
-        "example": "<b>"
-      },
-      "closeTag": {
-        "content": "$2",
-        "example": "</b>"
-      }
-    }
-  },
   "experimentalFeature": {
     "message": "Los sitios web vulnerados o no confiables pueden explotar el autorelleno al cargar la página."
   },
   "learnMoreAboutAutofillOnPageLoadLinkText": {
-    "message": "Learn more about risks"
+    "message": "Más información sobre riesgos"
   },
   "learnMoreAboutAutofill": {
     "message": "Más información sobre el relleno automático"
@@ -1580,7 +1593,7 @@
     "message": "Booleano"
   },
   "cfTypeCheckbox": {
-    "message": "Checkbox"
+    "message": "Casilla de verificación"
   },
   "cfTypeLinked": {
     "message": "Vinculado",
@@ -1764,6 +1777,9 @@
   "typeIdentity": {
     "message": "Identidad"
   },
+  "typeSshKey": {
+    "message": "SSH key"
+  },
   "newItemHeader": {
     "message": "Nuevo $TYPE$",
     "placeholders": {
@@ -1838,6 +1854,9 @@
   },
   "secureNotes": {
     "message": "Notas seguras"
+  },
+  "sshKeys": {
+    "message": "SSH Keys"
   },
   "clear": {
     "message": "Limpiar",
@@ -2385,7 +2404,7 @@
     "message": "Texto"
   },
   "sendTypeTextToShare": {
-    "message": "Text to share"
+    "message": "Texto a compartir"
   },
   "sendTypeFile": {
     "message": "Archivo"
@@ -2877,6 +2896,40 @@
   "generateEmail": {
     "message": "Generate email"
   },
+  "spinboxBoundariesHint": {
+    "message": "Value must be between $MIN$ and $MAX$.",
+    "description": "Explains spin box minimum and maximum values to the user",
+    "placeholders": {
+      "min": {
+        "content": "$1",
+        "example": "8"
+      },
+      "max": {
+        "content": "$2",
+        "example": "128"
+      }
+    }
+  },
+  "passwordLengthRecommendationHint": {
+    "message": " Use $RECOMMENDED$ characters or more to generate a strong password.",
+    "description": "Appended to `spinboxBoundariesHint` to recommend a length to the user. This must include any language-specific 'sentence' separator characters (e.g. a space in english).",
+    "placeholders": {
+      "recommended": {
+        "content": "$1",
+        "example": "14"
+      }
+    }
+  },
+  "passphraseNumWordsRecommendationHint": {
+    "message": " Use $RECOMMENDED$ words or more to generate a strong passphrase.",
+    "description": "Appended to `spinboxBoundariesHint` to recommend a number of words to the user. This must include any language-specific 'sentence' separator characters (e.g. a space in english).",
+    "placeholders": {
+      "recommended": {
+        "content": "$1",
+        "example": "6"
+      }
+    }
+  },
   "usernameType": {
     "message": "Tipo de nombre de usuario"
   },
@@ -3124,11 +3177,26 @@
   "resendNotification": {
     "message": "Reenviar notificación"
   },
-  "viewAllLoginOptions": {
-    "message": "Ver todas las opciones de acceso"
+  "viewAllLogInOptions": {
+    "message": "View all log in options"
+  },
+  "viewAllLoginOptionsV1": {
+    "message": "View all log in options"
   },
   "notificationSentDevice": {
     "message": "Se ha enviado una notificación a tu dispositivo."
+  },
+  "aNotificationWasSentToYourDevice": {
+    "message": "A notification was sent to your device"
+  },
+  "makeSureYourAccountIsUnlockedAndTheFingerprintEtc": {
+    "message": "Make sure your account is unlocked and the fingerprint phrase matches on the other device"
+  },
+  "youWillBeNotifiedOnceTheRequestIsApproved": {
+    "message": "You will be notified once the request is approved"
+  },
+  "needAnotherOptionV1": {
+    "message": "Need another option?"
   },
   "loginInitiated": {
     "message": "Inicio de sesión en proceso"
@@ -3220,14 +3288,20 @@
       }
     }
   },
-  "loggingInOn": {
-    "message": "Iniciando sesión en"
-  },
   "opensInANewWindow": {
     "message": "Abre en una nueva ventana"
   },
+  "rememberThisDeviceToMakeFutureLoginsSeamless": {
+    "message": "Remember this device to make future logins seamless"
+  },
   "deviceApprovalRequired": {
     "message": "Se requiere aprobación del dispositivo. Seleccione una opción de aprobación a continuación:"
+  },
+  "deviceApprovalRequiredV2": {
+    "message": "Device approval required"
+  },
+  "selectAnApprovalOptionBelow": {
+    "message": "Select an approval option below"
   },
   "rememberThisDevice": {
     "message": "Recordar este dispositivo"
@@ -3301,6 +3375,9 @@
   },
   "userEmailMissing": {
     "message": "Falta el correo electrónico del usuario"
+  },
+  "activeUserEmailNotFoundLoggingYouOut": {
+    "message": "Active user email not found. Logging you out."
   },
   "deviceTrusted": {
     "message": "Dispositivo de confianza"
@@ -3509,6 +3586,14 @@
   "unlockAccountAria": {
     "message": "Unlock your account, opens in a new window",
     "description": "Screen reader text (aria-label) for unlock account button in overlay"
+  },
+  "totpCodeAria": {
+    "message": "Time-based One-Time Password Verification Code",
+    "description": "Aria label for the totp code displayed in the inline menu for autofill"
+  },
+  "totpSecondsSpanAria": {
+    "message": "Time remaining before current TOTP expires",
+    "description": "Aria label for the totp seconds displayed in the inline menu for autofill"
   },
   "fillCredentialsFor": {
     "message": "Rellenar credenciales para",
@@ -3737,6 +3822,9 @@
   },
   "accessing": {
     "message": "Accessing"
+  },
+  "loggedInExclamation": {
+    "message": "Logged in!"
   },
   "passkeyNotCopied": {
     "message": "La clave de acceso no se copiará"
@@ -4229,6 +4317,21 @@
   "filters": {
     "message": "Filtros"
   },
+  "filterVault": {
+    "message": "Filter vault"
+  },
+  "filterApplied": {
+    "message": "One filter applied"
+  },
+  "filterAppliedPlural": {
+    "message": "$COUNT$ filters applied",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
   "personalDetails": {
     "message": "Datos personales"
   },
@@ -4582,6 +4685,30 @@
   "enterprisePolicyRequirementsApplied": {
     "message": "Enterprise policy requirements have been applied to this setting"
   },
+  "sshPrivateKey": {
+    "message": "Private key"
+  },
+  "sshPublicKey": {
+    "message": "Public key"
+  },
+  "sshFingerprint": {
+    "message": "Fingerprint"
+  },
+  "sshKeyAlgorithm": {
+    "message": "Key type"
+  },
+  "sshKeyAlgorithmED25519": {
+    "message": "ED25519"
+  },
+  "sshKeyAlgorithmRSA2048": {
+    "message": "RSA 2048-Bit"
+  },
+  "sshKeyAlgorithmRSA3072": {
+    "message": "RSA 3072-Bit"
+  },
+  "sshKeyAlgorithmRSA4096": {
+    "message": "RSA 4096-Bit"
+  },
   "retry": {
     "message": "Retry"
   },
@@ -4776,5 +4903,20 @@
   },
   "generatedPassword": {
     "message": "Generated password"
+  },
+  "compactMode": {
+    "message": "Compact mode"
+  },
+  "beta": {
+    "message": "Beta"
+  },
+  "extensionWidth": {
+    "message": "Extension width"
+  },
+  "wide": {
+    "message": "Wide"
+  },
+  "extraWide": {
+    "message": "Extra wide"
   }
 }

@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from "@angular/core";
 import { FormBuilder, Validators } from "@angular/forms";
 import { Subject, takeUntil } from "rxjs";
@@ -46,7 +48,7 @@ export class ManageTaxInformationComponent implements OnInit, OnDestroy {
     if (this.formGroup.invalid) {
       return;
     }
-    await this.onSubmit(this.taxInformation);
+    await this.onSubmit?.(this.taxInformation);
     this.taxInformationUpdated.emit();
   };
 

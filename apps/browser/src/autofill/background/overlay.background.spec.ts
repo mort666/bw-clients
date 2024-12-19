@@ -32,6 +32,7 @@ import {
 } from "@bitwarden/common/spec";
 import { UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
+import { TotpService } from "@bitwarden/common/vault/abstractions/totp.service";
 import { VaultSettingsService } from "@bitwarden/common/vault/abstractions/vault-settings/vault-settings.service";
 import { CipherRepromptType, CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
@@ -106,6 +107,7 @@ describe("OverlayBackground", () => {
   let selectedThemeMock$: BehaviorSubject<ThemeType>;
   let inlineMenuFieldQualificationService: InlineMenuFieldQualificationService;
   let themeStateService: MockProxy<ThemeStateService>;
+  let totpService: MockProxy<TotpService>;
   let overlayBackground: OverlayBackground;
   let portKeyForTabSpy: Record<number, string>;
   let pageDetailsForTabSpy: PageDetailsForTab;
@@ -184,6 +186,7 @@ describe("OverlayBackground", () => {
     inlineMenuFieldQualificationService = new InlineMenuFieldQualificationService();
     themeStateService = mock<ThemeStateService>();
     themeStateService.selectedTheme$ = selectedThemeMock$;
+    totpService = mock<TotpService>();
     overlayBackground = new OverlayBackground(
       logService,
       cipherService,
@@ -198,6 +201,7 @@ describe("OverlayBackground", () => {
       fido2ActiveRequestManager,
       inlineMenuFieldQualificationService,
       themeStateService,
+      totpService,
       generatedPasswordCallbackMock,
       addPasswordCallbackMock,
     );
@@ -629,6 +633,7 @@ describe("OverlayBackground", () => {
 
           it("skips updating the inline menu list if the user has the inline menu set to open on button click", async () => {
             inlineMenuVisibilityMock$.next(AutofillOverlayVisibility.OnButtonClick);
+            overlayBackground["inlineMenuListPort"] = null;
             tabsSendMessageSpy.mockImplementation((_tab, message, _options) => {
               if (message.command === "checkFocusedFieldHasValue") {
                 return Promise.resolve(true);
@@ -923,6 +928,7 @@ describe("OverlayBackground", () => {
             login: {
               username: "username-1",
               passkey: null,
+              totpField: false,
             },
             name: "name-1",
             reprompt: loginCipher1.reprompt,
@@ -1060,6 +1066,7 @@ describe("OverlayBackground", () => {
               login: {
                 username: loginCipher1.login.username,
                 passkey: null,
+                totpField: false,
               },
               name: loginCipher1.name,
               reprompt: loginCipher1.reprompt,
@@ -1184,6 +1191,7 @@ describe("OverlayBackground", () => {
                 rpName: passkeyCipher.login.fido2Credentials[0].rpName,
                 userName: passkeyCipher.login.fido2Credentials[0].userName,
               },
+              totpField: false,
             },
           },
           {
@@ -1202,6 +1210,7 @@ describe("OverlayBackground", () => {
             login: {
               username: passkeyCipher.login.username,
               passkey: null,
+              totpField: false,
             },
           },
           {
@@ -1220,6 +1229,7 @@ describe("OverlayBackground", () => {
             login: {
               username: loginCipher1.login.username,
               passkey: null,
+              totpField: false,
             },
           },
         ],
@@ -1267,6 +1277,7 @@ describe("OverlayBackground", () => {
             login: {
               username: passkeyCipher.login.username,
               passkey: null,
+              totpField: false,
             },
           },
           {
@@ -1285,6 +1296,7 @@ describe("OverlayBackground", () => {
             login: {
               username: loginCipher1.login.username,
               passkey: null,
+              totpField: false,
             },
           },
         ],
@@ -1332,6 +1344,7 @@ describe("OverlayBackground", () => {
             login: {
               username: passkeyCipher.login.username,
               passkey: null,
+              totpField: false,
             },
           },
           {
@@ -1350,6 +1363,7 @@ describe("OverlayBackground", () => {
             login: {
               username: loginCipher1.login.username,
               passkey: null,
+              totpField: false,
             },
           },
         ],
@@ -1395,6 +1409,7 @@ describe("OverlayBackground", () => {
               login: {
                 username: loginCipher1.login.username,
                 passkey: null,
+                totpField: false,
               },
             },
             {
@@ -1413,6 +1428,7 @@ describe("OverlayBackground", () => {
               login: {
                 username: loginCipher2.login.username,
                 passkey: null,
+                totpField: false,
               },
             },
           ],
@@ -2264,7 +2280,7 @@ describe("OverlayBackground", () => {
         });
 
         it("closes the list if the user has the inline menu set to show on button click and the list is open", async () => {
-          overlayBackground["isInlineMenuListVisible"] = true;
+          overlayBackground["inlineMenuListPort"] = listPortSpy;
           inlineMenuVisibilityMock$.next(AutofillOverlayVisibility.OnButtonClick);
 
           sendMockExtensionMessage({ command: "openAutofillInlineMenu" }, sender);

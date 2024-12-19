@@ -11,7 +11,7 @@
     "description": "Extension description, MUST be less than 112 characters (Safari restriction)"
   },
   "loginOrCreateNewAccount": {
-    "message": "Accedi o crea un nuovo account per accedere alla tua cassaforte."
+    "message": "Entra o crea un nuovo account per accedere alla tua cassaforte."
   },
   "inviteAccepted": {
     "message": "Invito accettato"
@@ -84,7 +84,7 @@
     "message": "Unisciti all'organizzazione"
   },
   "joinOrganizationName": {
-    "message": "Join $ORGANIZATIONNAME$",
+    "message": "Unisciti a $ORGANIZATIONNAME$",
     "placeholders": {
       "organizationName": {
         "content": "$1",
@@ -152,8 +152,17 @@
   "copyLicenseNumber": {
     "message": "Copia numero licenza"
   },
+  "copyPrivateKey": {
+    "message": "Copy private key"
+  },
+  "copyPublicKey": {
+    "message": "Copy public key"
+  },
+  "copyFingerprint": {
+    "message": "Copy fingerprint"
+  },
   "copyCustomField": {
-    "message": "Copy $FIELD$",
+    "message": "Copia $FIELD$",
     "placeholders": {
       "field": {
         "content": "$1",
@@ -162,10 +171,10 @@
     }
   },
   "copyWebsite": {
-    "message": "Copy website"
+    "message": "Copia sito web"
   },
   "copyNotes": {
-    "message": "Copy notes"
+    "message": "Copia note"
   },
   "fill": {
     "message": "Fill",
@@ -182,6 +191,13 @@
   },
   "autoFillIdentity": {
     "message": "Riempi automaticamente identità"
+  },
+  "fillVerificationCode": {
+    "message": "Fill verification code"
+  },
+  "fillVerificationCodeAria": {
+    "message": "Fill Verification Code",
+    "description": "Aria label for the heading displayed the inline menu for totp code autofill"
   },
   "generatePasswordCopied": {
     "message": "Genera password e copiala"
@@ -226,13 +242,13 @@
     "message": "Account email"
   },
   "requestHint": {
-    "message": "Request hint"
+    "message": "Richiedi suggerimento"
   },
   "requestPasswordHint": {
-    "message": "Request password hint"
+    "message": "Richiedi il suggerimento per la password"
   },
   "enterYourAccountEmailAddressAndYourPasswordHintWillBeSentToYou": {
-    "message": "Enter your account email address and your password hint will be sent to you"
+    "message": "Inserisci l'indirizzo email dell'account e ti invieremo il tuo suggerimento per la password"
   },
   "passwordHint": {
     "message": "Suggerimento per la password"
@@ -1116,6 +1132,10 @@
     "message": "ATTENZIONE",
     "description": "WARNING (should stay in capitalized letters if the language permits)"
   },
+  "warningCapitalized": {
+    "message": "Warning",
+    "description": "Warning (should maintain locale-relevant capitalization)"
+  },
   "confirmVaultExport": {
     "message": "Conferma esportazione della cassaforte"
   },
@@ -1306,6 +1326,12 @@
   "enterVerificationCodeApp": {
     "message": "Inserisci il codice di verifica a 6 cifre dalla tua app di autenticazione."
   },
+  "authenticationTimeout": {
+    "message": "Authentication timeout"
+  },
+  "authenticationSessionTimedOut": {
+    "message": "The authentication session timed out. Please restart the login process."
+  },
   "enterVerificationCodeEmail": {
     "message": "Inserisci il codice di verifica a 6 cifre inviato a $EMAIL$.",
     "placeholders": {
@@ -1494,19 +1520,6 @@
   "enableAutoFillOnPageLoadDesc": {
     "message": "Se sono rilevati campi di login, riempili automaticamente quando la pagina si carica."
   },
-  "autofillOnPageLoadWarning": {
-    "message": "$OPENTAG$Attenzione:$CLOSETAG$ Siti Web compromessi o non attendibili possono sfruttare il riempimento automatico al caricamento della pagina.",
-    "placeholders": {
-      "openTag": {
-        "content": "$1",
-        "example": "<b>"
-      },
-      "closeTag": {
-        "content": "$2",
-        "example": "</b>"
-      }
-    }
-  },
   "experimentalFeature": {
     "message": "Siti compromessi potrebbero sfruttare il riempimento automatico al caricamento della pagina."
   },
@@ -1684,7 +1697,7 @@
     "message": "Sig.ra"
   },
   "dr": {
-    "message": "Dott"
+    "message": "Dr"
   },
   "mx": {
     "message": "Mx"
@@ -1764,6 +1777,9 @@
   "typeIdentity": {
     "message": "Identità"
   },
+  "typeSshKey": {
+    "message": "SSH key"
+  },
   "newItemHeader": {
     "message": "Nuovo $TYPE$",
     "placeholders": {
@@ -1838,6 +1854,9 @@
   },
   "secureNotes": {
     "message": "Note sicure"
+  },
+  "sshKeys": {
+    "message": "SSH Keys"
   },
   "clear": {
     "message": "Cancella",
@@ -2877,6 +2896,40 @@
   "generateEmail": {
     "message": "Generate email"
   },
+  "spinboxBoundariesHint": {
+    "message": "Value must be between $MIN$ and $MAX$.",
+    "description": "Explains spin box minimum and maximum values to the user",
+    "placeholders": {
+      "min": {
+        "content": "$1",
+        "example": "8"
+      },
+      "max": {
+        "content": "$2",
+        "example": "128"
+      }
+    }
+  },
+  "passwordLengthRecommendationHint": {
+    "message": " Use $RECOMMENDED$ characters or more to generate a strong password.",
+    "description": "Appended to `spinboxBoundariesHint` to recommend a length to the user. This must include any language-specific 'sentence' separator characters (e.g. a space in english).",
+    "placeholders": {
+      "recommended": {
+        "content": "$1",
+        "example": "14"
+      }
+    }
+  },
+  "passphraseNumWordsRecommendationHint": {
+    "message": " Use $RECOMMENDED$ words or more to generate a strong passphrase.",
+    "description": "Appended to `spinboxBoundariesHint` to recommend a number of words to the user. This must include any language-specific 'sentence' separator characters (e.g. a space in english).",
+    "placeholders": {
+      "recommended": {
+        "content": "$1",
+        "example": "6"
+      }
+    }
+  },
   "usernameType": {
     "message": "Tipo di nome utente"
   },
@@ -3124,11 +3177,26 @@
   "resendNotification": {
     "message": "Invia notifica di nuovo"
   },
-  "viewAllLoginOptions": {
-    "message": "Visualizza tutte le opzioni di accesso"
+  "viewAllLogInOptions": {
+    "message": "View all log in options"
+  },
+  "viewAllLoginOptionsV1": {
+    "message": "View all log in options"
   },
   "notificationSentDevice": {
     "message": "Una notifica è stata inviata al tuo dispositivo."
+  },
+  "aNotificationWasSentToYourDevice": {
+    "message": "A notification was sent to your device"
+  },
+  "makeSureYourAccountIsUnlockedAndTheFingerprintEtc": {
+    "message": "Make sure your account is unlocked and the fingerprint phrase matches on the other device"
+  },
+  "youWillBeNotifiedOnceTheRequestIsApproved": {
+    "message": "You will be notified once the request is approved"
+  },
+  "needAnotherOptionV1": {
+    "message": "Need another option?"
   },
   "loginInitiated": {
     "message": "Accesso avviato"
@@ -3220,14 +3288,20 @@
       }
     }
   },
-  "loggingInOn": {
-    "message": "Accedendo su"
-  },
   "opensInANewWindow": {
     "message": "Si apre in una nuova finestra"
   },
+  "rememberThisDeviceToMakeFutureLoginsSeamless": {
+    "message": "Remember this device to make future logins seamless"
+  },
   "deviceApprovalRequired": {
     "message": "Approvazione del dispositivo obbligatoria. Seleziona un'opzione di approvazione:"
+  },
+  "deviceApprovalRequiredV2": {
+    "message": "Device approval required"
+  },
+  "selectAnApprovalOptionBelow": {
+    "message": "Select an approval option below"
   },
   "rememberThisDevice": {
     "message": "Ricorda questo dispositivo"
@@ -3301,6 +3375,9 @@
   },
   "userEmailMissing": {
     "message": "Email utente mancante"
+  },
+  "activeUserEmailNotFoundLoggingYouOut": {
+    "message": "Active user email not found. Logging you out."
   },
   "deviceTrusted": {
     "message": "Dispositivo fidato"
@@ -3509,6 +3586,14 @@
   "unlockAccountAria": {
     "message": "Sblocca il tuo account, apri in una nuova finestra",
     "description": "Screen reader text (aria-label) for unlock account button in overlay"
+  },
+  "totpCodeAria": {
+    "message": "Time-based One-Time Password Verification Code",
+    "description": "Aria label for the totp code displayed in the inline menu for autofill"
+  },
+  "totpSecondsSpanAria": {
+    "message": "Time remaining before current TOTP expires",
+    "description": "Aria label for the totp seconds displayed in the inline menu for autofill"
   },
   "fillCredentialsFor": {
     "message": "Riempi le credenziali per",
@@ -3737,6 +3822,9 @@
   },
   "accessing": {
     "message": "Accessing"
+  },
+  "loggedInExclamation": {
+    "message": "Logged in!"
   },
   "passkeyNotCopied": {
     "message": "La passkey non sarà copiata"
@@ -4229,6 +4317,21 @@
   "filters": {
     "message": "Filtri"
   },
+  "filterVault": {
+    "message": "Filter vault"
+  },
+  "filterApplied": {
+    "message": "One filter applied"
+  },
+  "filterAppliedPlural": {
+    "message": "$COUNT$ filters applied",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
   "personalDetails": {
     "message": "Dati personali"
   },
@@ -4582,6 +4685,30 @@
   "enterprisePolicyRequirementsApplied": {
     "message": "I requisiti della policy aziendale sono stati applicati a questa impostazione"
   },
+  "sshPrivateKey": {
+    "message": "Private key"
+  },
+  "sshPublicKey": {
+    "message": "Public key"
+  },
+  "sshFingerprint": {
+    "message": "Fingerprint"
+  },
+  "sshKeyAlgorithm": {
+    "message": "Key type"
+  },
+  "sshKeyAlgorithmED25519": {
+    "message": "ED25519"
+  },
+  "sshKeyAlgorithmRSA2048": {
+    "message": "RSA 2048-Bit"
+  },
+  "sshKeyAlgorithmRSA3072": {
+    "message": "RSA 3072-Bit"
+  },
+  "sshKeyAlgorithmRSA4096": {
+    "message": "RSA 4096-Bit"
+  },
   "retry": {
     "message": "Retry"
   },
@@ -4776,5 +4903,20 @@
   },
   "generatedPassword": {
     "message": "Generated password"
+  },
+  "compactMode": {
+    "message": "Compact mode"
+  },
+  "beta": {
+    "message": "Beta"
+  },
+  "extensionWidth": {
+    "message": "Extension width"
+  },
+  "wide": {
+    "message": "Wide"
+  },
+  "extraWide": {
+    "message": "Extra wide"
   }
 }

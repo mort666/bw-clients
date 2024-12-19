@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
 import { concatMap, firstValueFrom, lastValueFrom, Observable, Subject, takeUntil } from "rxjs";
@@ -5,8 +7,7 @@ import { concatMap, firstValueFrom, lastValueFrom, Observable, Subject, takeUnti
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
-import { ProviderService } from "@bitwarden/common/admin-console/abstractions/provider.service";
-import { OrganizationApiKeyType, ProviderStatusType } from "@bitwarden/common/admin-console/enums";
+import { OrganizationApiKeyType } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions";
 import { PlanType, ProductTierType } from "@bitwarden/common/billing/enums";
@@ -53,26 +54,13 @@ export class OrganizationSubscriptionCloudComponent implements OnInit, OnDestroy
   loading = true;
   locale: string;
   showUpdatedSubscriptionStatusSection$: Observable<boolean>;
-  enableTimeThreshold: boolean;
   preSelectedProductTier: ProductTierType = ProductTierType.Free;
   showSubscription = true;
   showSelfHost = false;
-  providerIsOnConsolidatedBilling = false;
+  organizationIsManagedByConsolidatedBillingMSP = false;
 
   protected readonly subscriptionHiddenIcon = SubscriptionHiddenIcon;
   protected readonly teamsStarter = ProductTierType.TeamsStarter;
-
-  protected enableConsolidatedBilling$ = this.configService.getFeatureFlag$(
-    FeatureFlag.EnableConsolidatedBilling,
-  );
-
-  protected enableTimeThreshold$ = this.configService.getFeatureFlag$(
-    FeatureFlag.EnableTimeThreshold,
-  );
-
-  protected enableUpgradePasswordManagerSub$ = this.configService.getFeatureFlag$(
-    FeatureFlag.EnableUpgradePasswordManagerSub,
-  );
 
   protected deprecateStripeSourcesAPI$ = this.configService.getFeatureFlag$(
     FeatureFlag.AC2476_DeprecateStripeSourcesAPI,
@@ -91,7 +79,6 @@ export class OrganizationSubscriptionCloudComponent implements OnInit, OnDestroy
     private configService: ConfigService,
     private toastService: ToastService,
     private billingApiService: BillingApiServiceAbstraction,
-    private providerService: ProviderService,
   ) {}
 
   async ngOnInit() {
@@ -119,7 +106,6 @@ export class OrganizationSubscriptionCloudComponent implements OnInit, OnDestroy
     this.showUpdatedSubscriptionStatusSection$ = this.configService.getFeatureFlag$(
       FeatureFlag.AC1795_UpdatedSubscriptionStatusSection,
     );
-    this.enableTimeThreshold = await firstValueFrom(this.enableTimeThreshold$);
   }
 
   ngOnDestroy() {
@@ -132,24 +118,21 @@ export class OrganizationSubscriptionCloudComponent implements OnInit, OnDestroy
     this.locale = await firstValueFrom(this.i18nService.locale$);
     this.userOrg = await this.organizationService.get(this.organizationId);
 
-    const consolidatedBillingEnabled = await firstValueFrom(this.enableConsolidatedBilling$);
-
-    const provider = this.userOrg.hasProvider
-      ? await this.providerService.get(this.userOrg.providerId)
-      : null;
-
-    this.providerIsOnConsolidatedBilling =
-      consolidatedBillingEnabled && provider?.providerStatus === ProviderStatusType.Billable;
-
     const isIndependentOrganizationOwner = !this.userOrg.hasProvider && this.userOrg.isOwner;
-    const isProviderUser = this.userOrg.hasProvider && this.userOrg.isProviderUser;
-
-    this.showSubscription =
-      isIndependentOrganizationOwner || (isProviderUser && !this.providerIsOnConsolidatedBilling);
+    const isResoldOrganizationOwner = this.userOrg.hasReseller && this.userOrg.isOwner;
+    const isMSPUser = this.userOrg.hasProvider && this.userOrg.isProviderUser;
 
     const metadata = await this.billingApiService.getOrganizationBillingMetadata(
       this.organizationId,
     );
+
+    this.organizationIsManagedByConsolidatedBillingMSP =
+      this.userOrg.hasProvider && metadata.isManaged;
+
+    this.showSubscription =
+      isIndependentOrganizationOwner ||
+      isResoldOrganizationOwner ||
+      (isMSPUser && !this.organizationIsManagedByConsolidatedBillingMSP);
 
     this.showSelfHost = metadata.isEligibleForSelfHost;
 
@@ -301,9 +284,6 @@ export class OrganizationSubscriptionCloudComponent implements OnInit, OnDestroy
         return this.i18nService.t("subscriptionUpgrade", this.sub.seats.toString());
       }
     } else if (this.sub.maxAutoscaleSeats === this.sub.seats && this.sub.seats != null) {
-      if (!this.enableTimeThreshold) {
-        return this.i18nService.t("subscriptionMaxReached", this.sub.seats.toString());
-      }
       const seatAdjustmentMessage = this.sub.plan.isAnnual
         ? "annualSubscriptionUserSeatsMessage"
         : "monthlySubscriptionUserSeatsMessage";
@@ -314,21 +294,11 @@ export class OrganizationSubscriptionCloudComponent implements OnInit, OnDestroy
     } else if (this.userOrg.productTierType === ProductTierType.TeamsStarter) {
       return this.i18nService.t("subscriptionUserSeatsWithoutAdditionalSeatsOption", 10);
     } else if (this.sub.maxAutoscaleSeats == null) {
-      if (!this.enableTimeThreshold) {
-        return this.i18nService.t("subscriptionUserSeatsUnlimitedAutoscale");
-      }
-
       const seatAdjustmentMessage = this.sub.plan.isAnnual
         ? "annualSubscriptionUserSeatsMessage"
         : "monthlySubscriptionUserSeatsMessage";
       return this.i18nService.t(seatAdjustmentMessage);
     } else {
-      if (!this.enableTimeThreshold) {
-        return this.i18nService.t(
-          "subscriptionUserSeatsLimitedAutoscale",
-          this.sub.maxAutoscaleSeats.toString(),
-        );
-      }
       const seatAdjustmentMessage = this.sub.plan.isAnnual
         ? "annualSubscriptionUserSeatsMessage"
         : "monthlySubscriptionUserSeatsMessage";
@@ -388,27 +358,20 @@ export class OrganizationSubscriptionCloudComponent implements OnInit, OnDestroy
   };
 
   async changePlan() {
-    const EnableUpgradePasswordManagerSub = await firstValueFrom(
-      this.enableUpgradePasswordManagerSub$,
-    );
-    if (EnableUpgradePasswordManagerSub) {
-      const reference = openChangePlanDialog(this.dialogService, {
-        data: {
-          organizationId: this.organizationId,
-          subscription: this.sub,
-          productTierType: this.userOrg.productTierType,
-        },
-      });
+    const reference = openChangePlanDialog(this.dialogService, {
+      data: {
+        organizationId: this.organizationId,
+        subscription: this.sub,
+        productTierType: this.userOrg.productTierType,
+      },
+    });
 
-      const result = await lastValueFrom(reference.closed);
+    const result = await lastValueFrom(reference.closed);
 
-      if (result === ChangePlanDialogResultType.Closed) {
-        return;
-      }
-      await this.load();
-    } else {
-      this.showChangePlan = !this.showChangePlan;
+    if (result === ChangePlanDialogResultType.Closed) {
+      return;
     }
+    await this.load();
   }
 
   isSecretsManagerTrial(): boolean {
@@ -524,6 +487,10 @@ export class OrganizationSubscriptionCloudComponent implements OnInit, OnDestroy
 
   get showChangePlanButton() {
     return this.sub.plan.productTier !== ProductTierType.Enterprise && !this.showChangePlan;
+  }
+
+  get canUseBillingSync() {
+    return this.userOrg.productTierType === ProductTierType.Enterprise;
   }
 }
 

@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { BillingHistoryResponse } from "@bitwarden/common/billing/models/response/billing-history.response";
 
 import { OrganizationApiKeyRequest } from "../../../admin-console/models/request/organization-api-key.request";
@@ -6,6 +8,7 @@ import { SecretVerificationRequest } from "../../../auth/models/request/secret-v
 import { ApiKeyResponse } from "../../../auth/models/response/api-key.response";
 import { OrganizationSsoResponse } from "../../../auth/models/response/organization-sso.response";
 import { ExpandedTaxInfoUpdateRequest } from "../../../billing/models/request/expanded-tax-info-update.request";
+import { OrganizationNoPaymentMethodCreateRequest } from "../../../billing/models/request/organization-no-payment-method-create-request";
 import { OrganizationSmSubscriptionUpdateRequest } from "../../../billing/models/request/organization-sm-subscription-update.request";
 import { OrganizationSubscriptionUpdateRequest } from "../../../billing/models/request/organization-subscription-update.request";
 import { PaymentRequest } from "../../../billing/models/request/payment.request";
@@ -40,6 +43,9 @@ export class OrganizationApiServiceAbstraction {
   getLicense: (id: string, installationId: string) => Promise<unknown>;
   getAutoEnrollStatus: (identifier: string) => Promise<OrganizationAutoEnrollStatusResponse>;
   create: (request: OrganizationCreateRequest) => Promise<OrganizationResponse>;
+  createWithoutPayment: (
+    request: OrganizationNoPaymentMethodCreateRequest,
+  ) => Promise<OrganizationResponse>;
   createLicense: (data: FormData) => Promise<OrganizationResponse>;
   save: (id: string, request: OrganizationUpdateRequest) => Promise<OrganizationResponse>;
   updatePayment: (id: string, request: PaymentRequest) => Promise<void>;

@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { CommonModule } from "@angular/common";
 import { Component, Input, OnChanges, OnDestroy } from "@angular/core";
 import { firstValueFrom, Observable, Subject, takeUntil } from "rxjs";
@@ -21,6 +23,7 @@ import { CustomFieldV2Component } from "./custom-fields/custom-fields-v2.compone
 import { ItemDetailsV2Component } from "./item-details/item-details-v2.component";
 import { ItemHistoryV2Component } from "./item-history/item-history-v2.component";
 import { LoginCredentialsViewComponent } from "./login-credentials/login-credentials-view.component";
+import { SshKeyViewComponent } from "./sshkey-sections/sshkey-view.component";
 import { ViewIdentitySectionsComponent } from "./view-identity-sections/view-identity-sections.component";
 
 @Component({
@@ -38,6 +41,7 @@ import { ViewIdentitySectionsComponent } from "./view-identity-sections/view-ide
     ItemHistoryV2Component,
     CustomFieldV2Component,
     CardDetailsComponent,
+    SshKeyViewComponent,
     ViewIdentitySectionsComponent,
     LoginCredentialsViewComponent,
     AutofillOptionsViewComponent,
@@ -51,6 +55,10 @@ export class CipherViewComponent implements OnChanges, OnDestroy {
    * `CipherService` and the `collectionIds` property of the cipher.
    */
   @Input() collections: CollectionView[];
+
+  /** Should be set to true when the component is used within the Admin Console */
+  @Input() isAdminConsole?: boolean = false;
+
   organization$: Observable<Organization>;
   folder$: Observable<FolderView>;
   private destroyed$: Subject<void> = new Subject();
@@ -91,9 +99,14 @@ export class CipherViewComponent implements OnChanges, OnDestroy {
     return this.cipher.login?.uris.length > 0;
   }
 
+  get hasSshKey() {
+    return this.cipher.sshKey?.privateKey;
+  }
+
   async loadCipherData() {
     // Load collections if not provided and the cipher has collectionIds
     if (
+      this.cipher.collectionIds &&
       this.cipher.collectionIds.length > 0 &&
       (!this.collections || this.collections.length === 0)
     ) {

@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { importProvidersFrom } from "@angular/core";
 import { action } from "@storybook/addon-actions";
 import {
@@ -13,6 +15,7 @@ import { CollectionView } from "@bitwarden/admin-console/common";
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
 import { EventCollectionService } from "@bitwarden/common/abstractions/event/event-collection.service";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AutofillSettingsServiceAbstraction } from "@bitwarden/common/autofill/services/autofill-settings.service";
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { ClientType } from "@bitwarden/common/enums";
@@ -181,6 +184,12 @@ export default {
           provide: PlatformUtilsService,
           useValue: {
             getClientType: () => ClientType.Browser,
+          },
+        },
+        {
+          provide: AccountService,
+          useValue: {
+            activeAccount$: new BehaviorSubject({ email: "test@example.com" }),
           },
         },
       ],

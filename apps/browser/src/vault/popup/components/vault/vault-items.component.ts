@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Location } from "@angular/common";
 import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
@@ -105,6 +107,9 @@ export class VaultItemsComponent extends BaseVaultItemsComponent implements OnIn
             break;
           case CipherType.SecureNote:
             this.groupingTitle = this.i18nService.t("secureNotes");
+            break;
+          case CipherType.SshKey:
+            this.groupingTitle = this.i18nService.t("sshKeys");
             break;
           default:
             break;

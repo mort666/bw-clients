@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import {
   combineLatest,
   filter,
@@ -54,6 +56,7 @@ import { LoginUri } from "../models/domain/login-uri";
 import { Password } from "../models/domain/password";
 import { SecureNote } from "../models/domain/secure-note";
 import { SortedCiphersCache } from "../models/domain/sorted-ciphers-cache";
+import { SshKey } from "../models/domain/ssh-key";
 import { CipherBulkDeleteRequest } from "../models/request/cipher-bulk-delete.request";
 import { CipherBulkMoveRequest } from "../models/request/cipher-bulk-move.request";
 import { CipherBulkRestoreRequest } from "../models/request/cipher-bulk-restore.request";
@@ -708,13 +711,9 @@ export class CipherService implements CipherServiceAbstraction {
     return new Cipher(updated[cipher.id as CipherId]);
   }
 
-  async updateWithServer(
-    cipher: Cipher,
-    orgAdmin?: boolean,
-    isNotClone?: boolean,
-  ): Promise<Cipher> {
+  async updateWithServer(cipher: Cipher, orgAdmin?: boolean): Promise<Cipher> {
     let response: CipherResponse;
-    if (orgAdmin && isNotClone) {
+    if (orgAdmin) {
       const request = new CipherRequest(cipher);
       response = await this.apiService.putCipherAdmin(cipher.id, request);
       const data = new CipherData(response, cipher.collectionIds);
@@ -880,9 +879,11 @@ export class CipherService implements CipherServiceAbstraction {
     return new Cipher(updated[cipher.id as CipherId], cipher.localData);
   }
 
-  async saveCollectionsWithServerAdmin(cipher: Cipher): Promise<void> {
+  async saveCollectionsWithServerAdmin(cipher: Cipher): Promise<Cipher> {
     const request = new CipherCollectionsRequest(cipher.collectionIds);
-    await this.apiService.putCipherCollectionsAdmin(cipher.id, request);
+    const response = await this.apiService.putCipherCollectionsAdmin(cipher.id, request);
+    const data = new CipherData(response);
+    return new Cipher(data);
   }
 
   /**
@@ -1564,6 +1565,19 @@ export class CipherService implements CipherServiceAbstraction {
             username: null,
             passportNumber: null,
             licenseNumber: null,
+          },
+          key,
+        );
+        return;
+      case CipherType.SshKey:
+        cipher.sshKey = new SshKey();
+        await this.encryptObjProperty(
+          model.sshKey,
+          cipher.sshKey,
+          {
+            privateKey: null,
+            publicKey: null,
+            keyFingerprint: null,
           },
           key,
         );

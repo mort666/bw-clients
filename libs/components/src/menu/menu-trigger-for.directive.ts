@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Overlay, OverlayConfig, OverlayRef } from "@angular/cdk/overlay";
 import { TemplatePortal } from "@angular/cdk/portal";
 import {
@@ -17,6 +19,7 @@ import { MenuComponent } from "./menu.component";
 @Directive({
   selector: "[bitMenuTriggerFor]",
   exportAs: "menuTrigger",
+  standalone: true,
 })
 export class MenuTriggerForDirective implements OnDestroy {
   @HostBinding("attr.aria-expanded") isOpen = false;
@@ -106,6 +109,7 @@ export class MenuTriggerForDirective implements OnDestroy {
 
     this.isOpen = false;
     this.disposeAll();
+    this.menu.closed.emit();
   }
 
   private getClosedEvents(): Observable<any> {

@@ -147,10 +147,19 @@
     "message": "Kopiera personnummer"
   },
   "copyPassportNumber": {
-    "message": "Copy passport number"
+    "message": "Kopiera passnummer"
   },
   "copyLicenseNumber": {
-    "message": "Copy license number"
+    "message": "Kopiera licensnummer"
+  },
+  "copyPrivateKey": {
+    "message": "Kopiera privat nyckel"
+  },
+  "copyPublicKey": {
+    "message": "Kopiera offentlig nyckel"
+  },
+  "copyFingerprint": {
+    "message": "Kopiera fingeravtryck"
   },
   "copyCustomField": {
     "message": "Kopiera $FIELD$",
@@ -168,7 +177,7 @@
     "message": "Kopiera anteckningar"
   },
   "fill": {
-    "message": "Fill",
+    "message": "Fyll",
     "description": "This string is used on the vault page to indicate autofilling. Horizontal space is limited in the interface here so try and keep translations as concise as possible."
   },
   "autoFill": {
@@ -182,6 +191,13 @@
   },
   "autoFillIdentity": {
     "message": "Autofyll identitet"
+  },
+  "fillVerificationCode": {
+    "message": "Fill verification code"
+  },
+  "fillVerificationCodeAria": {
+    "message": "Fill Verification Code",
+    "description": "Aria label for the heading displayed the inline menu for totp code autofill"
   },
   "generatePasswordCopied": {
     "message": "Skapa lösenord (kopierad)"
@@ -366,7 +382,7 @@
     "message": "Nest a folder by adding the parent folder's name followed by a “/”. Example: Social/Forums"
   },
   "noFoldersAdded": {
-    "message": "No folders added"
+    "message": "Inga mappar tillagda"
   },
   "createFoldersToOrganize": {
     "message": "Skapa mappar för att organisera dina valvobjekt"
@@ -458,11 +474,11 @@
     "description": "deprecated. Use specialCharactersLabel instead."
   },
   "include": {
-    "message": "Include",
+    "message": "Inkludera",
     "description": "Card header for password generator include block"
   },
   "uppercaseDescription": {
-    "message": "Include uppercase characters",
+    "message": "Inkludera versaler",
     "description": "Tooltip for the password generator uppercase character checkbox"
   },
   "uppercaseLabel": {
@@ -470,7 +486,7 @@
     "description": "Label for the password generator uppercase character checkbox"
   },
   "lowercaseDescription": {
-    "message": "Include lowercase characters",
+    "message": "Inkludera gemener",
     "description": "Full description for the password generator lowercase character checkbox"
   },
   "lowercaseLabel": {
@@ -478,7 +494,7 @@
     "description": "Label for the password generator lowercase character checkbox"
   },
   "numbersDescription": {
-    "message": "Include numbers",
+    "message": "Inkludera siffror",
     "description": "Full description for the password generator numbers checkbox"
   },
   "numbersLabel": {
@@ -486,7 +502,7 @@
     "description": "Label for the password generator numbers checkbox"
   },
   "specialCharactersDescription": {
-    "message": "Include special characters",
+    "message": "Inkludera specialtecken",
     "description": "Full description for the password generator special characters checkbox"
   },
   "specialCharactersLabel": {
@@ -517,7 +533,7 @@
     "description": "deprecated. Use avoidAmbiguous instead."
   },
   "avoidAmbiguous": {
-    "message": "Avoid ambiguous characters",
+    "message": "Undvik tvetydiga tecken",
     "description": "Label for the avoid ambiguous characters checkbox."
   },
   "generatorPolicyInEffect": {
@@ -549,7 +565,7 @@
     "message": "Authenticator secret"
   },
   "passphrase": {
-    "message": "Lösenordsfras"
+    "message": "Lösenfras"
   },
   "favorite": {
     "message": "Favorit"
@@ -828,7 +844,7 @@
     "message": "Bitwarden can store and fill 2-step verification codes. Select the camera icon to take a screenshot of this website's authenticator QR code, or copy and paste the key into this field."
   },
   "learnMoreAboutAuthenticators": {
-    "message": "Learn more about authenticators"
+    "message": "Läs mer om autentiserare"
   },
   "copyTOTP": {
     "message": "Kopiera autentiseringsnyckel (TOTP)"
@@ -1116,6 +1132,10 @@
     "message": "VARNING",
     "description": "WARNING (should stay in capitalized letters if the language permits)"
   },
+  "warningCapitalized": {
+    "message": "Warning",
+    "description": "Warning (should maintain locale-relevant capitalization)"
+  },
   "confirmVaultExport": {
     "message": "Bekräfta export av valv"
   },
@@ -1306,6 +1326,12 @@
   "enterVerificationCodeApp": {
     "message": "Ange den 6-siffriga verifieringskoden från din autentiseringsapp."
   },
+  "authenticationTimeout": {
+    "message": "Authentication timeout"
+  },
+  "authenticationSessionTimedOut": {
+    "message": "The authentication session timed out. Please restart the login process."
+  },
   "enterVerificationCodeEmail": {
     "message": "Ange den 6-siffriga verifieringskoden som skickades till $EMAIL$.",
     "placeholders": {
@@ -1397,7 +1423,7 @@
     "message": "E-post"
   },
   "emailDescV2": {
-    "message": "Enter a code sent to your email."
+    "message": "Ange en kod som skickar per e-post."
   },
   "selfHostedEnvironment": {
     "message": "Egen-hostad miljö"
@@ -1494,27 +1520,14 @@
   "enableAutoFillOnPageLoadDesc": {
     "message": "Utför automatisk ifyllnad om ett inloggningsformulär upptäcks när webbsidan laddas."
   },
-  "autofillOnPageLoadWarning": {
-    "message": "$OPENTAG$Warning:$CLOSETAG$ Compromised or untrusted websites can exploit autofill on page load.",
-    "placeholders": {
-      "openTag": {
-        "content": "$1",
-        "example": "<b>"
-      },
-      "closeTag": {
-        "content": "$2",
-        "example": "</b>"
-      }
-    }
-  },
   "experimentalFeature": {
     "message": "Komprometterade eller ej betrodda webbplatser kan utnyttja automatisk ifyllnad vid sidladdning."
   },
   "learnMoreAboutAutofillOnPageLoadLinkText": {
-    "message": "Learn more about risks"
+    "message": "Läs mer om risker"
   },
   "learnMoreAboutAutofill": {
-    "message": "Läs mer om automatisk ifyllnad"
+    "message": "Läs mer om autofyll"
   },
   "defaultAutoFillOnPageLoad": {
     "message": "Standardinställning för autofyll för inloggningsobjekt"
@@ -1764,6 +1777,9 @@
   "typeIdentity": {
     "message": "Identitet"
   },
+  "typeSshKey": {
+    "message": "SSH-nyckel"
+  },
   "newItemHeader": {
     "message": "Ny $TYPE$",
     "placeholders": {
@@ -1838,6 +1854,9 @@
   },
   "secureNotes": {
     "message": "Säkra anteckningar"
+  },
+  "sshKeys": {
+    "message": "SSH Keys"
   },
   "clear": {
     "message": "Rensa",
@@ -2189,7 +2208,7 @@
     "message": "Unsubscribe"
   },
   "atAnyTime": {
-    "message": "at any time."
+    "message": "när som helst."
   },
   "byContinuingYouAgreeToThe": {
     "message": "By continuing, you agree to the"
@@ -2328,7 +2347,7 @@
     "message": "Bitwarden will not ask to save login details for these domains for all logged in accounts. You must refresh the page for changes to take effect."
   },
   "websiteItemLabel": {
-    "message": "Website $number$ (URI)",
+    "message": "Webbplats $number$ (URI)",
     "placeholders": {
       "number": {
         "content": "$1",
@@ -2411,7 +2430,7 @@
     "message": "Lösenordsskyddad"
   },
   "copyLink": {
-    "message": "Copy link"
+    "message": "Kopiera länk"
   },
   "copySendLink": {
     "message": "Kopiera Send-länk",
@@ -2877,6 +2896,40 @@
   "generateEmail": {
     "message": "Generate email"
   },
+  "spinboxBoundariesHint": {
+    "message": "Värde måste vara mellan $MIN$ och $MAX$.",
+    "description": "Explains spin box minimum and maximum values to the user",
+    "placeholders": {
+      "min": {
+        "content": "$1",
+        "example": "8"
+      },
+      "max": {
+        "content": "$2",
+        "example": "128"
+      }
+    }
+  },
+  "passwordLengthRecommendationHint": {
+    "message": " Använd minst $RECOMMENDED$ tecken för att generera ett starkt lösenord.",
+    "description": "Appended to `spinboxBoundariesHint` to recommend a length to the user. This must include any language-specific 'sentence' separator characters (e.g. a space in english).",
+    "placeholders": {
+      "recommended": {
+        "content": "$1",
+        "example": "14"
+      }
+    }
+  },
+  "passphraseNumWordsRecommendationHint": {
+    "message": " Använd minst $RECOMMENDED$ ord för att generera en stark lösenfras.",
+    "description": "Appended to `spinboxBoundariesHint` to recommend a number of words to the user. This must include any language-specific 'sentence' separator characters (e.g. a space in english).",
+    "placeholders": {
+      "recommended": {
+        "content": "$1",
+        "example": "6"
+      }
+    }
+  },
   "usernameType": {
     "message": "Typ av användarnamn"
   },
@@ -2906,7 +2959,7 @@
     "message": "Vad skulle du vilja generera?"
   },
   "passwordType": {
-    "message": "Typ av lösenord"
+    "message": "Lösenordstyp"
   },
   "service": {
     "message": "Tjänst"
@@ -2918,7 +2971,7 @@
     "message": "Skapa ett e-postalias med en extern vidarebefordranstjänst."
   },
   "forwarderDomainName": {
-    "message": "Email domain",
+    "message": "E-postdomän",
     "description": "Labels the domain name email forwarder service option"
   },
   "forwarderDomainNameHint": {
@@ -3124,11 +3177,26 @@
   "resendNotification": {
     "message": "Skicka avisering igen"
   },
-  "viewAllLoginOptions": {
+  "viewAllLogInOptions": {
     "message": "Visa alla inloggningsalternativ"
+  },
+  "viewAllLoginOptionsV1": {
+    "message": "View all log in options"
   },
   "notificationSentDevice": {
     "message": "En avisering har skickats till din enhet."
+  },
+  "aNotificationWasSentToYourDevice": {
+    "message": "A notification was sent to your device"
+  },
+  "makeSureYourAccountIsUnlockedAndTheFingerprintEtc": {
+    "message": "Make sure your account is unlocked and the fingerprint phrase matches on the other device"
+  },
+  "youWillBeNotifiedOnceTheRequestIsApproved": {
+    "message": "You will be notified once the request is approved"
+  },
+  "needAnotherOptionV1": {
+    "message": "Need another option?"
   },
   "loginInitiated": {
     "message": "Inloggning påbörjad"
@@ -3220,14 +3288,20 @@
       }
     }
   },
-  "loggingInOn": {
-    "message": "Logga in på"
-  },
   "opensInANewWindow": {
     "message": "Öppnas i ett nytt fönster"
   },
+  "rememberThisDeviceToMakeFutureLoginsSeamless": {
+    "message": "Remember this device to make future logins seamless"
+  },
   "deviceApprovalRequired": {
     "message": "Device approval required. Select an approval option below:"
+  },
+  "deviceApprovalRequiredV2": {
+    "message": "Device approval required"
+  },
+  "selectAnApprovalOptionBelow": {
+    "message": "Select an approval option below"
   },
   "rememberThisDevice": {
     "message": "Kom ihåg denna enhet"
@@ -3301,6 +3375,9 @@
   },
   "userEmailMissing": {
     "message": "Användarens e-postadress saknas"
+  },
+  "activeUserEmailNotFoundLoggingYouOut": {
+    "message": "Active user email not found. Logging you out."
   },
   "deviceTrusted": {
     "message": "Enhet betrodd"
@@ -3509,6 +3586,14 @@
   "unlockAccountAria": {
     "message": "Unlock your account, opens in a new window",
     "description": "Screen reader text (aria-label) for unlock account button in overlay"
+  },
+  "totpCodeAria": {
+    "message": "Time-based One-Time Password Verification Code",
+    "description": "Aria label for the totp code displayed in the inline menu for autofill"
+  },
+  "totpSecondsSpanAria": {
+    "message": "Time remaining before current TOTP expires",
+    "description": "Aria label for the totp seconds displayed in the inline menu for autofill"
   },
   "fillCredentialsFor": {
     "message": "Fyll i uppgifter för",
@@ -3738,6 +3823,9 @@
   "accessing": {
     "message": "Accessing"
   },
+  "loggedInExclamation": {
+    "message": "Logged in!"
+  },
   "passkeyNotCopied": {
     "message": "Lösennyckeln kommer inte kopieras"
   },
@@ -3835,7 +3923,7 @@
     "message": "Godkänn inloggningsbegäran i din autentiseringsapp eller ange en engångskod."
   },
   "passcode": {
-    "message": "Passcode"
+    "message": "Lösenkod"
   },
   "lastPassMasterPassword": {
     "message": "LastPass Huvudlösenord"
@@ -4026,7 +4114,7 @@
     }
   },
   "copyNoteTitle": {
-    "message": "Copy Note - $ITEMNAME$",
+    "message": "Kopiera anteckning - $ITEMNAME$",
     "description": "Title for a button copies a note to the clipboard.",
     "placeholders": {
       "itemname": {
@@ -4056,7 +4144,7 @@
     }
   },
   "viewItemTitle": {
-    "message": "View item - $ITEMNAME$",
+    "message": "Visa objekt - $ITEMNAME$",
     "description": "Title for a link that opens a view for an item.",
     "placeholders": {
       "itemname": {
@@ -4082,7 +4170,7 @@
     "message": "Assign to collections"
   },
   "copyEmail": {
-    "message": "Copy email"
+    "message": "Kopiera e-postadress"
   },
   "copyPhone": {
     "message": "Kopiera telefon"
@@ -4200,7 +4288,7 @@
     "message": "Maximal filstorlek är 500 MB"
   },
   "deleteAttachmentName": {
-    "message": "Delete attachment $NAME$",
+    "message": "Radera bilaga $NAME$",
     "placeholders": {
       "name": {
         "content": "$1",
@@ -4229,11 +4317,26 @@
   "filters": {
     "message": "Filters"
   },
+  "filterVault": {
+    "message": "Filtrera valv"
+  },
+  "filterApplied": {
+    "message": "One filter applied"
+  },
+  "filterAppliedPlural": {
+    "message": "$COUNT$ filters applied",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
   "personalDetails": {
     "message": "Personal details"
   },
   "identification": {
-    "message": "Identification"
+    "message": "Identifikation"
   },
   "contactInfo": {
     "message": "Contact info"
@@ -4582,6 +4685,30 @@
   "enterprisePolicyRequirementsApplied": {
     "message": "Enterprise policy requirements have been applied to this setting"
   },
+  "sshPrivateKey": {
+    "message": "Privat nyckel"
+  },
+  "sshPublicKey": {
+    "message": "Offentlig nyckel"
+  },
+  "sshFingerprint": {
+    "message": "Fingeravtryck"
+  },
+  "sshKeyAlgorithm": {
+    "message": "Nyckeltyp"
+  },
+  "sshKeyAlgorithmED25519": {
+    "message": "ED25519"
+  },
+  "sshKeyAlgorithmRSA2048": {
+    "message": "RSA 2048-Bit"
+  },
+  "sshKeyAlgorithmRSA3072": {
+    "message": "RSA 3072-Bit"
+  },
+  "sshKeyAlgorithmRSA4096": {
+    "message": "RSA 4096-Bit"
+  },
   "retry": {
     "message": "Försök igen"
   },
@@ -4613,7 +4740,7 @@
     "message": "Items that have been in trash more than 30 days will automatically be deleted"
   },
   "restore": {
-    "message": "Restore"
+    "message": "Återställ"
   },
   "deleteForever": {
     "message": "Delete forever"
@@ -4649,7 +4776,7 @@
     "description": "Represents the ` key in screen reader content as a readable word"
   },
   "exclamationCharacterDescriptor": {
-    "message": "Exclamation mark",
+    "message": "Utropstecken",
     "description": "Represents the ! key in screen reader content as a readable word"
   },
   "atSignCharacterDescriptor": {
@@ -4761,7 +4888,7 @@
     "description": "Represents the . key in screen reader content as a readable word"
   },
   "questionCharacterDescriptor": {
-    "message": "Question mark",
+    "message": "Frågetecken",
     "description": "Represents the ? key in screen reader content as a readable word"
   },
   "forwardSlashCharacterDescriptor": {
@@ -4769,12 +4896,27 @@
     "description": "Represents the / key in screen reader content as a readable word"
   },
   "lowercaseAriaLabel": {
-    "message": "Lowercase"
+    "message": "Gemen"
   },
   "uppercaseAriaLabel": {
-    "message": "Uppercase"
+    "message": "Versal"
   },
   "generatedPassword": {
     "message": "Generated password"
+  },
+  "compactMode": {
+    "message": "Compact mode"
+  },
+  "beta": {
+    "message": "Beta"
+  },
+  "extensionWidth": {
+    "message": "Extension width"
+  },
+  "wide": {
+    "message": "Wide"
+  },
+  "extraWide": {
+    "message": "Extra wide"
   }
 }

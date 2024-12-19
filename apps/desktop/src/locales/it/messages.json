@@ -26,6 +26,9 @@
   "typeSecureNote": {
     "message": "Nota sicura"
   },
+  "typeSshKey": {
+    "message": "SSH key"
+  },
   "folders": {
     "message": "Cartelle"
   },
@@ -177,6 +180,63 @@
   "address": {
     "message": "Indirizzo"
   },
+  "sshPrivateKey": {
+    "message": "Private key"
+  },
+  "sshPublicKey": {
+    "message": "Public key"
+  },
+  "sshFingerprint": {
+    "message": "Fingerprint"
+  },
+  "sshKeyAlgorithm": {
+    "message": "Key type"
+  },
+  "sshKeyAlgorithmED25519": {
+    "message": "ED25519"
+  },
+  "sshKeyAlgorithmRSA2048": {
+    "message": "RSA 2048-Bit"
+  },
+  "sshKeyAlgorithmRSA3072": {
+    "message": "RSA 3072-Bit"
+  },
+  "sshKeyAlgorithmRSA4096": {
+    "message": "RSA 4096-Bit"
+  },
+  "sshKeyGenerated": {
+    "message": "A new SSH key was generated"
+  },
+  "sshKeyWrongPassword": {
+    "message": "The password you entered is incorrect."
+  },
+  "importSshKey": {
+    "message": "Import"
+  },
+  "confirmSshKeyPassword": {
+    "message": "Confirm password"
+  },
+  "enterSshKeyPasswordDesc": {
+    "message": "Enter the password for the SSH key."
+  },
+  "enterSshKeyPassword": {
+    "message": "Enter password"
+  },
+  "sshAgentUnlockRequired": {
+    "message": "Please unlock your vault to approve the SSH key request."
+  },
+  "sshAgentUnlockTimeout": {
+    "message": "SSH key request timed out."
+  },
+  "enableSshAgent": {
+    "message": "Enable SSH agent"
+  },
+  "enableSshAgentDesc": {
+    "message": "Enable the SSH agent to sign SSH requests right from your Bitwarden vault."
+  },
+  "enableSshAgentHelp": {
+    "message": "The SSH agent is a service targeted at developers that allows you to sign SSH requests directly from your Bitwarden vault."
+  },
   "premiumRequired": {
     "message": "Premium necessario"
   },
@@ -245,7 +305,7 @@
     "message": "Mx"
   },
   "dr": {
-    "message": "Dott"
+    "message": "Dr"
   },
   "expirationMonth": {
     "message": "Mese di scadenza"
@@ -400,6 +460,12 @@
   "copyPassword": {
     "message": "Copia password"
   },
+  "regenerateSshKey": {
+    "message": "Regenerate SSH key"
+  },
+  "copySshPrivateKey": {
+    "message": "Copy SSH private key"
+  },
   "copyPassphrase": {
     "message": "Copia passphrase",
     "description": "Copy passphrase to clipboard"
@@ -499,7 +565,7 @@
     "description": "Label for the avoid ambiguous characters checkbox."
   },
   "generatorPolicyInEffect": {
-    "message": "I requisiti di politica aziendale sono stati applicati alle opzioni del generatore.",
+    "message": "I requisiti della politica aziendale sono stati applicati alle tue opzioni del generatore.",
     "description": "Indicates that a policy limits the credential generator screen."
   },
   "searchCollection": {
@@ -552,7 +618,7 @@
     "message": "Cartella eliminata"
   },
   "loginOrCreateNewAccount": {
-    "message": "Accedi o crea un nuovo account per aprire la tua cassaforte."
+    "message": "Entra o crea un nuovo account per accedere alla tua cassaforte."
   },
   "createAccount": {
     "message": "Crea account"
@@ -600,7 +666,7 @@
     "message": "Suggerimento per la password principale (facoltativo)"
   },
   "masterPassHintText": {
-    "message": "Se dimentichi la password, il suggerimento password può essere inviato alla tua email. $CURRENT$/$MAXIMUM$ massimo carattere.",
+    "message": "Se dimentichi la password, il suggerimento per la password ti può essere inviato via email. $CURRENT$/$MAXIMUM$ massimo carattere.",
     "placeholders": {
       "current": {
         "content": "$1",
@@ -643,16 +709,16 @@
     "message": "Impostazioni"
   },
   "accountEmail": {
-    "message": "E-mail dell’account"
+    "message": "Email dell’account"
   },
   "requestHint": {
-    "message": "Richiedi una dritta"
+    "message": "Richiedi suggerimento"
   },
   "requestPasswordHint": {
-    "message": "Richiedi una dritta per la password"
+    "message": "Richiedi suggerimento per la password"
   },
   "enterYourAccountEmailAddressAndYourPasswordHintWillBeSentToYou": {
-    "message": "Inserisci l'indirizzo e-mail dell'account e la dritta per la password ti sarà inviata"
+    "message": "Inserisci l'indirizzo email dell'account e ti invieremo il tuo suggerimento per la password"
   },
   "passwordHint": {
     "message": "Suggerimento per la password"
@@ -852,6 +918,12 @@
   },
   "baseUrl": {
     "message": "URL del server"
+  },
+  "authenticationTimeout": {
+    "message": "Authentication timeout"
+  },
+  "authenticationSessionTimedOut": {
+    "message": "The authentication session timed out. Please restart the login process."
   },
   "selfHostBaseUrl": {
     "message": "URL server autogestito",
@@ -1320,12 +1392,30 @@
   "passwordHistory": {
     "message": "Cronologia delle password"
   },
+  "generatorHistory": {
+    "message": "Generator history"
+  },
+  "clearGeneratorHistoryTitle": {
+    "message": "Clear generator history"
+  },
+  "cleargGeneratorHistoryDescription": {
+    "message": "If you continue, all entries will be permanently deleted from generator's history. Are you sure you want to continue?"
+  },
   "clear": {
     "message": "Cancella",
     "description": "To clear something out. example: To clear browser history."
   },
   "noPasswordsInList": {
     "message": "Non ci sono password da mostrare."
+  },
+  "clearHistory": {
+    "message": "Clear history"
+  },
+  "nothingToShow": {
+    "message": "Nothing to show"
+  },
+  "nothingGeneratedRecently": {
+    "message": "You haven't generated anything recently"
   },
   "undo": {
     "message": "Annulla"
@@ -1643,9 +1733,6 @@
   },
   "windowsHelloConsentMessage": {
     "message": "Verifica per Bitwarden."
-  },
-  "polkitConsentMessage": {
-    "message": "Autenticazione per sbloccare Bitwarden."
   },
   "unlockWithTouchId": {
     "message": "Sblocca con Touch ID"
@@ -2393,6 +2480,40 @@
   "generateEmail": {
     "message": "Genera e-mail"
   },
+  "spinboxBoundariesHint": {
+    "message": "Value must be between $MIN$ and $MAX$.",
+    "description": "Explains spin box minimum and maximum values to the user",
+    "placeholders": {
+      "min": {
+        "content": "$1",
+        "example": "8"
+      },
+      "max": {
+        "content": "$2",
+        "example": "128"
+      }
+    }
+  },
+  "passwordLengthRecommendationHint": {
+    "message": " Use $RECOMMENDED$ characters or more to generate a strong password.",
+    "description": "Appended to `spinboxBoundariesHint` to recommend a length to the user. This must include any language-specific 'sentence' separator characters (e.g. a space in english).",
+    "placeholders": {
+      "recommended": {
+        "content": "$1",
+        "example": "14"
+      }
+    }
+  },
+  "passphraseNumWordsRecommendationHint": {
+    "message": " Use $RECOMMENDED$ words or more to generate a strong passphrase.",
+    "description": "Appended to `spinboxBoundariesHint` to recommend a number of words to the user. This must include any language-specific 'sentence' separator characters (e.g. a space in english).",
+    "placeholders": {
+      "recommended": {
+        "content": "$1",
+        "example": "6"
+      }
+    }
+  },
   "usernameType": {
     "message": "Tipo di nome utente"
   },
@@ -2604,14 +2725,29 @@
   "notificationSentDevice": {
     "message": "Una notifica è stata inviata al tuo dispositivo."
   },
+  "aNotificationWasSentToYourDevice": {
+    "message": "A notification was sent to your device"
+  },
+  "makeSureYourAccountIsUnlockedAndTheFingerprintEtc": {
+    "message": "Make sure your account is unlocked and the fingerprint phrase matches on the other device"
+  },
+  "needAnotherOptionV1": {
+    "message": "Need another option?"
+  },
   "fingerprintMatchInfo": {
     "message": "Assicurati che la tua cassaforte sia sbloccata e che la frase impronta corrisponda sull'altro dispositivo."
   },
   "fingerprintPhraseHeader": {
     "message": "Frase impronta"
   },
+  "youWillBeNotifiedOnceTheRequestIsApproved": {
+    "message": "You will be notified once the request is approved"
+  },
   "needAnotherOption": {
     "message": "L'accesso con dispositivo deve essere abilitato nelle impostazioni dell'app Bitwarden. Ti serve un'altra opzione?"
+  },
+  "viewAllLogInOptions": {
+    "message": "View all log in options"
   },
   "viewAllLoginOptions": {
     "message": "Visualizza tutte le opzioni di accesso"
@@ -2732,6 +2868,9 @@
   "checkForBreaches": {
     "message": "Controlla se la tua password è presente in una violazione dei dati"
   },
+  "loggedInExclamation": {
+    "message": "Logged in!"
+  },
   "important": {
     "message": "Importante:"
   },
@@ -2762,8 +2901,17 @@
   "windowsBiometricUpdateWarningTitle": {
     "message": "Aggiornamento delle impostazioni consigliato"
   },
+  "rememberThisDeviceToMakeFutureLoginsSeamless": {
+    "message": "Remember this device to make future logins seamless"
+  },
   "deviceApprovalRequired": {
     "message": "Approvazione del dispositivo obbligatoria. Seleziona un'opzione di approvazione:"
+  },
+  "deviceApprovalRequiredV2": {
+    "message": "Device approval required"
+  },
+  "selectAnApprovalOptionBelow": {
+    "message": "Select an approval option below"
   },
   "rememberThisDevice": {
     "message": "Ricorda questo dispositivo"
@@ -2789,9 +2937,6 @@
   "eu": {
     "message": "EU",
     "description": "European Union"
-  },
-  "loggingInOn": {
-    "message": "Accedendo su"
   },
   "selfHostedServer": {
     "message": "self-hosted"
@@ -2819,6 +2964,9 @@
   },
   "userEmailMissing": {
     "message": "Email utente mancante"
+  },
+  "activeUserEmailNotFoundLoggingYouOut": {
+    "message": "Active user email not found. Logging you out."
   },
   "deviceTrusted": {
     "message": "Dispositivo fidato"
@@ -3213,6 +3361,36 @@
   },
   "ssoError": {
     "message": "Non è stato possibile trovare nessuna porta libera per il login Sso."
+  },
+  "authorize": {
+    "message": "Authorize"
+  },
+  "deny": {
+    "message": "Deny"
+  },
+  "sshkeyApprovalTitle": {
+    "message": "Confirm SSH key usage"
+  },
+  "sshkeyApprovalMessageInfix": {
+    "message": "is requesting access to"
+  },
+  "unknownApplication": {
+    "message": "An application"
+  },
+  "sshKeyPasswordUnsupported": {
+    "message": "Importing password protected SSH keys is not yet supported"
+  },
+  "invalidSshKey": {
+    "message": "The SSH key is invalid"
+  },
+  "sshKeyTypeUnsupported": {
+    "message": "The SSH key type is not supported"
+  },
+  "importSshKeyFromClipboard": {
+    "message": "Import key from clipboard"
+  },
+  "sshKeyPasted": {
+    "message": "SSH key imported successfully"
   },
   "fileSavedToDevice": {
     "message": "File salvato sul dispositivo. Gestisci dai download del dispositivo."

@@ -4,13 +4,13 @@ import { GENERATOR_DISK, UserKeyDefinition } from "@bitwarden/common/platform/st
 import { UserId } from "@bitwarden/common/types/guid";
 
 import { awaitAsync, FakeSingleUserState, ObservableTracker } from "../../../spec";
+import { UserEncryptor } from "../cryptography/user-encryptor.abstraction";
 import { UserBound } from "../dependencies";
 import { PrivateClassifier } from "../private-classifier";
 import { StateConstraints } from "../types";
 
 import { ClassifiedFormat } from "./classified-format";
 import { ObjectKey } from "./object-key";
-import { UserEncryptor } from "./user-encryptor.abstraction";
 import { UserStateSubject } from "./user-state-subject";
 
 const SomeUser = "some user" as UserId;
@@ -373,7 +373,11 @@ describe("UserStateSubject", () => {
       singleUserId$.next(SomeUser);
       await awaitAsync();
 
-      expect(state.nextMock).toHaveBeenCalledWith({ foo: "next" });
+      expect(state.nextMock).toHaveBeenCalledWith({
+        foo: "next",
+        // FIXME: don't leak this detail into the test
+        "$^$ALWAYS_UPDATE_KLUDGE_PROPERTY$^$": 0,
+      });
     });
 
     it("waits to evaluate `UserState.update` until singleUserEncryptor$ emits", async () => {
@@ -394,7 +398,13 @@ describe("UserStateSubject", () => {
       await awaitAsync();
 
       const encrypted = { foo: "encrypt(next)" };
-      expect(state.nextMock).toHaveBeenCalledWith({ id: null, secret: encrypted, disclosed: null });
+      expect(state.nextMock).toHaveBeenCalledWith({
+        id: null,
+        secret: encrypted,
+        disclosed: null,
+        // FIXME: don't leak this detail into the test
+        "$^$ALWAYS_UPDATE_KLUDGE_PROPERTY$^$": 0,
+      });
     });
 
     it("applies dynamic constraints", async () => {
@@ -724,6 +734,7 @@ describe("UserStateSubject", () => {
           error = e as any;
         },
       });
+      singleUserEncryptor$.next({ userId: SomeUser, encryptor: SomeEncryptor });
       singleUserEncryptor$.next({ userId: errorUserId, encryptor: SomeEncryptor });
       await awaitAsync();
 

@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { DialogRef } from "@angular/cdk/dialog";
 import {
   ChangeDetectorRef,
@@ -13,8 +15,10 @@ import {
   BehaviorSubject,
   combineLatest,
   firstValueFrom,
+  from,
   lastValueFrom,
   Observable,
+  of,
   Subject,
 } from "rxjs";
 import {
@@ -30,21 +34,24 @@ import {
 } from "rxjs/operators";
 
 import {
-  Unassigned,
-  CollectionService,
   CollectionData,
   CollectionDetailsResponse,
+  CollectionService,
   CollectionView,
+  Unassigned,
 } from "@bitwarden/admin-console/common";
 import { SearchPipe } from "@bitwarden/angular/pipes/search.pipe";
 import { ModalService } from "@bitwarden/angular/services/modal.service";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { EventCollectionService } from "@bitwarden/common/abstractions/event/event-collection.service";
 import { SearchService } from "@bitwarden/common/abstractions/search.service";
+import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { OrganizationBillingServiceAbstraction } from "@bitwarden/common/billing/abstractions";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
+import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions/billing-api.service.abstraction";
 import { EventType } from "@bitwarden/common/enums";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
@@ -72,6 +79,8 @@ import {
   PasswordRepromptService,
 } from "@bitwarden/vault";
 
+import { TrialFlowService } from "../../billing/services/trial-flow.service";
+import { FreeTrial } from "../../core/types/free-trial";
 import { SharedModule } from "../../shared/shared.module";
 import { AssignCollectionsWebComponent } from "../components/assign-collections";
 import {
@@ -178,8 +187,62 @@ export class VaultComponent implements OnInit, OnDestroy {
   private refresh$ = new BehaviorSubject<void>(null);
   private destroy$ = new Subject<void>();
   private extensionRefreshEnabled: boolean;
+  private hasSubscription$ = new BehaviorSubject<boolean>(false);
 
   private vaultItemDialogRef?: DialogRef<VaultItemDialogResult> | undefined;
+  private readonly unpaidSubscriptionDialog$ = this.organizationService.organizations$.pipe(
+    filter((organizations) => organizations.length === 1),
+    map(([organization]) => organization),
+    switchMap((organization) =>
+      from(this.billingApiService.getOrganizationBillingMetadata(organization.id)).pipe(
+        tap((organizationMetaData) => {
+          this.hasSubscription$.next(organizationMetaData.hasSubscription);
+        }),
+        switchMap((organizationMetaData) =>
+          from(
+            this.trialFlowService.handleUnpaidSubscriptionDialog(
+              organization,
+              organizationMetaData,
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  protected organizationsPaymentStatus$: Observable<FreeTrial[]> = combineLatest([
+    this.organizationService.organizations$.pipe(
+      map(
+        (organizations) =>
+          organizations?.filter((org) => org.isOwner && org.canViewBillingHistory) ?? [],
+      ),
+    ),
+    this.hasSubscription$,
+  ]).pipe(
+    switchMap(([ownerOrgs, hasSubscription]) => {
+      if (!ownerOrgs || ownerOrgs.length === 0 || !hasSubscription) {
+        return of([]);
+      }
+      return combineLatest(
+        ownerOrgs.map((org) =>
+          combineLatest([
+            this.organizationApiService.getSubscription(org.id),
+            this.organizationBillingService.getPaymentSource(org.id),
+          ]).pipe(
+            map(([subscription, paymentSource]) => {
+              return this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(
+                org,
+                subscription,
+                paymentSource,
+              );
+            }),
+          ),
+        ),
+      );
+    }),
+    map((results) => results.filter((result) => result.shownBanner)),
+    shareReplay({ refCount: false, bufferSize: 1 }),
+  );
 
   constructor(
     private syncService: SyncService,
@@ -211,6 +274,10 @@ export class VaultComponent implements OnInit, OnDestroy {
     private toastService: ToastService,
     private accountService: AccountService,
     private cipherFormConfigService: DefaultCipherFormConfigService,
+    private organizationApiService: OrganizationApiServiceAbstraction,
+    protected billingApiService: BillingApiServiceAbstraction,
+    private trialFlowService: TrialFlowService,
+    private organizationBillingService: OrganizationBillingServiceAbstraction,
   ) {}
 
   async ngOnInit() {
@@ -309,7 +376,6 @@ export class VaultComponent implements OnInit, OnDestroy {
         if (filter.collectionId === undefined || filter.collectionId === Unassigned) {
           return [];
         }
-
         let collectionsToReturn = [];
         if (filter.organizationId !== undefined && filter.collectionId === All) {
           collectionsToReturn = collections
@@ -362,7 +428,6 @@ export class VaultComponent implements OnInit, OnDestroy {
         filter(() => this.vaultItemDialogRef == undefined || !this.extensionRefreshEnabled),
         switchMap(async (params) => {
           const cipherId = getCipherIdFromParams(params);
-
           if (cipherId) {
             if (await this.cipherService.get(cipherId)) {
               let action = params.action;
@@ -392,6 +457,8 @@ export class VaultComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
       )
       .subscribe();
+
+    this.unpaidSubscriptionDialog$.pipe(takeUntil(this.destroy$)).subscribe();
 
     firstSetup$
       .pipe(
@@ -434,7 +501,6 @@ export class VaultComponent implements OnInit, OnDestroy {
 
           this.showBulkMove = filter.type !== "trash";
           this.isEmpty = collections?.length === 0 && ciphers?.length === 0;
-
           this.performingInitialLoad = false;
           this.refreshing = false;
         },

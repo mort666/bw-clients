@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Injectable } from "@angular/core";
 import {
   BehaviorSubject,
@@ -305,6 +307,12 @@ export class VaultFilterService implements VaultFilterServiceAbstraction {
         name: this.i18nService.t("typeSecureNote"),
         type: CipherType.SecureNote,
         icon: "bwi-sticky-note",
+      },
+      {
+        id: "sshKey",
+        name: this.i18nService.t("typeSshKey"),
+        type: CipherType.SshKey,
+        icon: "bwi-key",
       },
     ];
 

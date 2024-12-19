@@ -1,13 +1,16 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { CommonModule } from "@angular/common";
-import { Component, ElementRef, Input, NgZone, OnDestroy, OnInit, ViewChild } from "@angular/core";
+import { Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild } from "@angular/core";
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angular/forms";
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
-import { firstValueFrom, Subject, take, takeUntil } from "rxjs";
+import { firstValueFrom, Subject, take, takeUntil, tap } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import {
   LoginEmailServiceAbstraction,
   LoginStrategyServiceAbstraction,
+  LoginSuccessHandlerService,
   PasswordLoginCredentials,
   RegisterRouteService,
 } from "@bitwarden/auth/common";
@@ -15,19 +18,20 @@ import { InternalPolicyService } from "@bitwarden/common/admin-console/abstracti
 import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/models/domain/master-password-policy-options";
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { DevicesApiServiceAbstraction } from "@bitwarden/common/auth/abstractions/devices-api.service.abstraction";
-import { CaptchaIFrame } from "@bitwarden/common/auth/captcha-iframe";
 import { AuthResult } from "@bitwarden/common/auth/models/domain/auth-result";
 import { ForceSetPasswordReason } from "@bitwarden/common/auth/models/domain/force-set-password-reason";
-import { ClientType } from "@bitwarden/common/enums";
+import { ClientType, HttpStatusCode } from "@bitwarden/common/enums";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { ErrorResponse } from "@bitwarden/common/models/response/error.response";
 import { AppIdService } from "@bitwarden/common/platform/abstractions/app-id.service";
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
-import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { ValidationService } from "@bitwarden/common/platform/abstractions/validation.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
-import { SyncService } from "@bitwarden/common/platform/sync";
 import { PasswordStrengthServiceAbstraction } from "@bitwarden/common/tools/password-strength";
 import {
   AsyncActionsModule,
@@ -69,14 +73,11 @@ export enum LoginUiState {
 })
 export class LoginComponent implements OnInit, OnDestroy {
   @ViewChild("masterPasswordInputRef") masterPasswordInputRef: ElementRef;
-  @Input() captchaSiteKey: string = null;
 
   private destroy$ = new Subject<void>();
   private enforcedMasterPasswordOptions: MasterPasswordPolicyOptions = undefined;
   readonly Icons = { WaveIcon, VaultIcon };
 
-  captcha: CaptchaIFrame;
-  captchaToken: string = null;
   clientType: ClientType;
   ClientType = ClientType;
   LoginUiState = LoginUiState;
@@ -100,12 +101,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     return this.formGroup.controls.email;
   }
 
-  /**
-   * LoginViaAuthRequestSupported is a boolean that determines if we show the Login with device button.
-   * An AuthRequest is the mechanism that allows users to login to the client via a device that is already logged in.
-   */
-  loginViaAuthRequestSupported = false;
-
   // Web properties
   enforcedPasswordPolicyOptions: MasterPasswordPolicyOptions;
   policies: Policy[];
@@ -120,7 +115,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     private appIdService: AppIdService,
     private broadcasterService: BroadcasterService,
     private devicesApiService: DevicesApiServiceAbstraction,
-    private environmentService: EnvironmentService,
     private formBuilder: FormBuilder,
     private i18nService: I18nService,
     private loginEmailService: LoginEmailServiceAbstraction,
@@ -133,15 +127,22 @@ export class LoginComponent implements OnInit, OnDestroy {
     private policyService: InternalPolicyService,
     private registerRouteService: RegisterRouteService,
     private router: Router,
-    private syncService: SyncService,
     private toastService: ToastService,
     private logService: LogService,
+    private validationService: ValidationService,
+    private configService: ConfigService,
+    private loginSuccessHandlerService: LoginSuccessHandlerService,
   ) {
     this.clientType = this.platformUtilsService.getClientType();
-    this.loginViaAuthRequestSupported = this.loginComponentService.isLoginViaAuthRequestSupported();
   }
 
   async ngOnInit(): Promise<void> {
+    // Add popstate listener to listen for browser back button clicks
+    window.addEventListener("popstate", this.handlePopState);
+
+    // TODO: remove this when the UnauthenticatedExtensionUIRefresh feature flag is removed.
+    this.listenForUnauthUiRefreshFlagChanges();
+
     await this.defaultOnInit();
 
     if (this.clientType === ClientType.Desktop) {
@@ -150,6 +151,9 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // Remove popstate listener
+    window.removeEventListener("popstate", this.handlePopState);
+
     if (this.clientType === ClientType.Desktop) {
       // TODO: refactor to not use deprecated broadcaster service.
       this.broadcasterService.unsubscribe(BroadcasterSubscriptionId);
@@ -157,6 +161,29 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private listenForUnauthUiRefreshFlagChanges() {
+    this.configService
+      .getFeatureFlag$(FeatureFlag.UnauthenticatedExtensionUIRefresh)
+      .pipe(
+        tap(async (flag) => {
+          // If the flag is turned OFF, we must force a reload to ensure the correct UI is shown
+          if (!flag) {
+            const uniqueQueryParams = {
+              ...this.activatedRoute.queryParams,
+              // adding a unique timestamp to the query params to force a reload
+              t: new Date().getTime().toString(), // Adding a unique timestamp as a query parameter
+            };
+
+            await this.router.navigate(["/"], {
+              queryParams: uniqueQueryParams,
+            });
+          }
+        }),
+        takeUntil(this.destroy$),
+      )
+      .subscribe();
   }
 
   submit = async (): Promise<void> => {
@@ -168,8 +195,6 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     const { email, masterPassword } = this.formGroup.value;
 
-    await this.setupCaptcha();
-
     this.formGroup.markAllAsTouched();
     if (this.formGroup.invalid) {
       return;
@@ -178,22 +203,53 @@ export class LoginComponent implements OnInit, OnDestroy {
     const credentials = new PasswordLoginCredentials(
       email,
       masterPassword,
-      this.captchaToken,
+      null, // captcha no longer used in new login / registration scenarios
       null,
     );
 
-    const authResult = await this.loginStrategyService.logIn(credentials);
+    try {
+      const authResult = await this.loginStrategyService.logIn(credentials);
 
-    await this.saveEmailSettings();
-    await this.handleAuthResult(authResult);
-
-    if (this.clientType === ClientType.Desktop) {
-      if (this.captchaSiteKey) {
-        const content = document.getElementById("content") as HTMLDivElement;
-        content.setAttribute("style", "width:335px");
-      }
+      await this.saveEmailSettings();
+      await this.handleAuthResult(authResult);
+    } catch (error) {
+      this.logService.error(error);
+      this.handleSubmitError(error);
     }
   };
+
+  /**
+   * Handles the error from the submit function.
+   *
+   * @param error The error object.
+   */
+  private handleSubmitError(error: unknown) {
+    // Handle error responses
+    if (error instanceof ErrorResponse) {
+      switch (error.statusCode) {
+        case HttpStatusCode.BadRequest: {
+          if (error.message.toLowerCase().includes("username or password is incorrect")) {
+            this.formGroup.controls.masterPassword.setErrors({
+              error: {
+                message: this.i18nService.t("invalidMasterPassword"),
+              },
+            });
+          } else {
+            // Allow other 400 responses to be handled by toast
+            this.validationService.showError(error);
+          }
+          break;
+        }
+        default: {
+          // Allow all other error codes to be handled by toast
+          this.validationService.showError(error);
+        }
+      }
+    } else {
+      // Allow all other errors to be handled by toast
+      this.validationService.showError(error);
+    }
+  }
 
   /**
    * Handles the result of the authentication process.
@@ -204,12 +260,6 @@ export class LoginComponent implements OnInit, OnDestroy {
    *          to each if-condition block where necessary to stop code execution.
    */
   private async handleAuthResult(authResult: AuthResult): Promise<void> {
-    if (this.handleCaptchaRequired(authResult)) {
-      this.captchaSiteKey = authResult.captchaSiteKey;
-      this.captcha.init(authResult.captchaSiteKey);
-      return;
-    }
-
     if (authResult.requiresEncryptionKeyMigration) {
       /* Legacy accounts used the master key to encrypt data.
          Migration is required but only performed on Web. */
@@ -230,7 +280,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       return;
     }
 
-    await this.syncService.fullSync(true);
+    await this.loginSuccessHandlerService.run(authResult.userId);
 
     if (authResult.forcePasswordReset != ForceSetPasswordReason.None) {
       this.loginEmailService.clearValues();
@@ -299,10 +349,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     );
   }
 
-  protected showCaptcha(): boolean {
-    return !Utils.isNullOrWhitespace(this.captchaSiteKey);
-  }
-
   protected async startAuthRequestLogin(): Promise<void> {
     this.formGroup.get("masterPassword")?.clearValidators();
     this.formGroup.get("masterPassword")?.updateValueAndValidity();
@@ -335,10 +381,8 @@ export class LoginComponent implements OnInit, OnDestroy {
       // Reset master password only when going from validated to not validated so that autofill can work properly
       this.formGroup.controls.masterPassword.reset();
 
-      if (this.loginViaAuthRequestSupported) {
-        // Reset known device state when going back to email entry if it is supported
-        this.isKnownDevice = false;
-      }
+      // Reset known device state when going back to email entry if it is supported
+      this.isKnownDevice = false;
     } else if (this.loginUiState === LoginUiState.MASTER_PASSWORD_ENTRY) {
       this.loginComponentService.showBackButton(true);
       this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
@@ -359,9 +403,8 @@ export class LoginComponent implements OnInit, OnDestroy {
         });
       }
 
-      if (this.loginViaAuthRequestSupported) {
-        await this.getKnownDevice(this.emailFormControl.value);
-      }
+      // Check to see if the device is known so we can show the Login with Device option
+      await this.getKnownDevice(this.emailFormControl.value);
     }
   }
 
@@ -425,38 +468,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async setupCaptcha(): Promise<void> {
-    const env = await firstValueFrom(this.environmentService.environment$);
-    const webVaultUrl = env.getWebVaultUrl();
-
-    this.captcha = new CaptchaIFrame(
-      window,
-      webVaultUrl,
-      this.i18nService,
-      (token: string) => {
-        this.captchaToken = token;
-      },
-      (error: string) => {
-        this.toastService.showToast({
-          variant: "error",
-          title: this.i18nService.t("errorOccurred"),
-          message: error,
-        });
-      },
-      (info: string) => {
-        this.toastService.showToast({
-          variant: "info",
-          title: this.i18nService.t("info"),
-          message: info,
-        });
-      },
-    );
-  }
-
-  private handleCaptchaRequired(authResult: AuthResult): boolean {
-    return !Utils.isNullOrWhitespace(authResult.captchaSiteKey);
-  }
-
   private async loadEmailSettings(): Promise<void> {
     // Try to load the email from memory first
     const email = await firstValueFrom(this.loginEmailService.loginEmail$);
@@ -513,9 +524,8 @@ export class LoginComponent implements OnInit, OnDestroy {
       await this.loadEmailSettings();
     }
 
-    if (this.loginViaAuthRequestSupported) {
-      await this.getKnownDevice(this.emailFormControl.value);
-    }
+    // Check to see if the device is known so that we can show the Login with Device option
+    await this.getKnownDevice(this.emailFormControl.value);
 
     // Backup check to handle unknown case where activatedRoute is not available
     // This shouldn't happen under normal circumstances
@@ -558,4 +568,28 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.clientType !== ClientType.Browser
     );
   }
+
+  /**
+   * Handle the back button click to transition back to the email entry state.
+   */
+  protected async backButtonClicked() {
+    // Replace the history so the "forward" button doesn't show (which wouldn't do anything)
+    history.pushState(null, "", window.location.pathname);
+    await this.toggleLoginUiState(LoginUiState.EMAIL_ENTRY);
+  }
+
+  /**
+   * Handle the popstate event to transition back to the email entry state when the back button is clicked.
+   * @param event - The popstate event.
+   */
+  private handlePopState = (event: PopStateEvent) => {
+    if (this.loginUiState === LoginUiState.MASTER_PASSWORD_ENTRY) {
+      // Prevent default navigation
+      event.preventDefault();
+      // Replace the history so the "forward" button doesn't show (which wouldn't do anything)
+      history.pushState(null, "", window.location.pathname);
+      // Transition back to email entry state
+      void this.toggleLoginUiState(LoginUiState.EMAIL_ENTRY);
+    }
+  };
 }

@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Directive, HostBinding, HostListener, Input, OnChanges, Optional } from "@angular/core";
 
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
@@ -91,6 +93,12 @@ export class CopyCipherFieldDirective implements OnChanges {
         return this.cipher.identity?.fullAddressForCopy;
       case "secureNote":
         return this.cipher.notes;
+      case "privateKey":
+        return this.cipher.sshKey?.privateKey;
+      case "publicKey":
+        return this.cipher.sshKey?.publicKey;
+      case "keyFingerprint":
+        return this.cipher.sshKey?.keyFingerprint;
       default:
         return null;
     }

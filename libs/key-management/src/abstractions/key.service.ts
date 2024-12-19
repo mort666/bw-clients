@@ -1,11 +1,13 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Observable } from "rxjs";
 
 import { EncryptedOrganizationKeyData } from "@bitwarden/common/admin-console/models/data/encrypted-organization-key.data";
+import { KdfConfig } from "@bitwarden/key-management";
 
 import { ProfileOrganizationResponse } from "../../../common/src/admin-console/models/response/profile-organization.response";
 import { ProfileProviderOrganizationResponse } from "../../../common/src/admin-console/models/response/profile-provider-organization.response";
 import { ProfileProviderResponse } from "../../../common/src/admin-console/models/response/profile-provider.response";
-import { KdfConfig } from "../../../common/src/auth/models/domain/kdf-config";
 import { KeySuffixOptions, HashPurpose } from "../../../common/src/platform/enums";
 import { EncryptedString, EncString } from "../../../common/src/platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "../../../common/src/platform/models/domain/symmetric-crypto-key";
@@ -204,14 +206,18 @@ export abstract class KeyService {
     hashPurpose?: HashPurpose,
   ): Promise<string>;
   /**
-   * Compares the provided master password to the stored password hash and server password hash.
-   * Updates the stored hash if outdated.
+   * Compares the provided master password to the stored password hash.
    * @param masterPassword The user's master password
    * @param key The user's master key
+   * @param userId The id of the user to do the operation for.
    * @returns True if the provided master password matches either the stored
    * key hash or the server key hash
    */
-  abstract compareAndUpdateKeyHash(masterPassword: string, masterKey: MasterKey): Promise<boolean>;
+  abstract compareKeyHash(
+    masterPassword: string,
+    masterKey: MasterKey,
+    userId: UserId,
+  ): Promise<boolean>;
   /**
    * Stores the encrypted organization keys and clears any decrypted
    * organization keys currently in memory

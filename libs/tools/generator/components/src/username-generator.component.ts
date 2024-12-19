@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import { Component, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output } from "@angular/core";
 import { FormBuilder } from "@angular/forms";
@@ -322,7 +324,7 @@ export class UsernameGeneratorComponent implements OnInit, OnDestroy {
         if (!a || a.onlyOnRequest) {
           this.value$.next("-");
         } else {
-          this.generate("autogenerate");
+          this.generate("autogenerate").catch((e: unknown) => this.logService.error(e));
         }
       });
     });
@@ -414,7 +416,7 @@ export class UsernameGeneratorComponent implements OnInit, OnDestroy {
    * @param requestor a label used to trace generation request
    *  origin in the debugger.
    */
-  protected generate(requestor: string) {
+  protected async generate(requestor: string) {
     this.generate$.next(requestor);
   }
 
@@ -429,6 +431,7 @@ export class UsernameGeneratorComponent implements OnInit, OnDestroy {
 
   private readonly destroyed = new Subject<void>();
   ngOnDestroy() {
+    this.destroyed.next();
     this.destroyed.complete();
 
     // finalize subjects

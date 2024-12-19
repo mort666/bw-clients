@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { DatePipe } from "@angular/common";
 import {
   ChangeDetectorRef,
@@ -60,6 +62,7 @@ export class ViewComponent implements OnDestroy, OnInit {
   showPasswordCount: boolean;
   showCardNumber: boolean;
   showCardCode: boolean;
+  showPrivateKey: boolean;
   canAccessPremium: boolean;
   showPremiumRequiredTotp: boolean;
   totpCode: string;
@@ -323,6 +326,10 @@ export class ViewComponent implements OnDestroy, OnInit {
         this.cipherId,
       );
     }
+  }
+
+  togglePrivateKey() {
+    this.showPrivateKey = !this.showPrivateKey;
   }
 
   async checkPassword() {
