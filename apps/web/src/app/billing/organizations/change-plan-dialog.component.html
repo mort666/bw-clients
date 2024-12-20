@@ -1,7 +1,7 @@
 <form [formGroup]="formGroup" [bitSubmit]="submit">
   <bit-dialog dialogSize="large" [loading]="loading">
     <span bitDialogTitle class="tw-font-semibold">
-      {{ "upgradeFreeOrganization" | i18n: currentPlanName }}
+      {{ dialogHeaderName }}
     </span>
     <div bitDialogContent>
       <p>{{ "upgradePlans" | i18n }}</p>
@@ -330,9 +330,15 @@
         <br />
       </ng-container>
       <!-- Payment info -->
-      <ng-container *ngIf="formGroup.value.productTier !== productTypes.Free">
+      <ng-container
+        *ngIf="formGroup.value.productTier !== productTypes.Free || isSubscriptionCanceled"
+      >
         <h2 bitTypography="h4">{{ "paymentMethod" | i18n }}</h2>
-        <p *ngIf="!showPayment && (paymentSource || billing?.paymentSource)">
+        <p
+          *ngIf="
+            !showPayment && (paymentSource || billing?.paymentSource) && !isSubscriptionCanceled
+          "
+        >
           <i class="bwi bwi-fw" [ngClass]="paymentSourceClasses"></i>
           {{
             deprecateStripeSourcesAPI
@@ -344,23 +350,11 @@
           </span>
           <a></a>
         </p>
-        <app-payment
-          *ngIf="
-            (upgradeRequiresPaymentMethod || showPayment || isPaymentSourceEmpty()) &&
-            !deprecateStripeSourcesAPI
-          "
-          [hideCredit]="true"
-        ></app-payment>
-        <app-payment-v2
-          *ngIf="
-            (upgradeRequiresPaymentMethod || showPayment || isPaymentSourceEmpty()) &&
-            deprecateStripeSourcesAPI
-          "
-          [showAccountCredit]="false"
-        >
+        <app-payment *ngIf="shouldShowPaymentOptions()" [hideCredit]="true"></app-payment>
+        <app-payment-v2 *ngIf="shouldShowDeprecatedPaymentOptions()" [showAccountCredit]="false">
         </app-payment-v2>
         <app-tax-info
-          *ngIf="showPayment || upgradeRequiresPaymentMethod || isPaymentSourceEmpty()"
+          *ngIf="canShowPaymentDetails()"
           (onCountryChanged)="changedCountry()"
         ></app-tax-info>
         <div id="price" class="tw-mt-4">

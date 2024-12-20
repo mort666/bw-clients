@@ -3158,6 +3158,9 @@
   "organizationUpgraded": {
     "message": "Organization upgraded"
   },
+  "restartOrganizationSubscription": {
+    "message": "Organization subscription restarted"
+  },
   "leave": {
     "message": "Leave"
   },
@@ -9590,6 +9593,9 @@
       }
     }
   },
+  "restartSubscription": {
+    "message": "Restart your subscription"
+  },
   "includeSsoAuthenticationMessage": {
     "message": "SSO Authentication"
   },
@@ -9875,6 +9881,15 @@
   },
   "suspendedUserOrgMessage": {
     "message": "Contact your organization owner for assistance."
+  },
+  "suspendedManagedOrgMessage": {
+    "message": "Contact $PROVIDER$ for assistance.",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "Acme c"
+      }
+    }
   },
   "suspendedOwnerOrgMessage": {
     "message": "To regain access to your organization, add a payment method."
