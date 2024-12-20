@@ -170,6 +170,7 @@ jobs:
           node build.js release
       - name: Upload Native Module
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
           name: desktop_napi-linux-x86_64-unknown-linux-musl
           path: apps/desktop/desktop_native/napi/desktop_napi.linux-x64-musl.node
 
