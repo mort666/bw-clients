@@ -1,7 +1,8 @@
-import { Observable, Subject, filter, firstValueFrom, map } from "rxjs";
+import { EMPTY, Observable, Subject, concat, filter, firstValueFrom, map } from "rxjs";
 
 import {
   AbstractStorageService,
+  ObservableStorageService,
   StorageUpdate,
 } from "@bitwarden/common/platform/abstractions/storage.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
@@ -11,7 +12,10 @@ import { fromChromeEvent } from "../browser/from-chrome-event";
 import { MemoryStoragePortMessage } from "./port-messages";
 import { portName } from "./port-name";
 
-export class ForegroundMemoryStorageService extends AbstractStorageService {
+export class ForegroundMemoryStorageService
+  extends AbstractStorageService
+  implements ObservableStorageService
+{
   private _port: chrome.runtime.Port;
   private _backgroundResponses$: Observable<MemoryStoragePortMessage>;
   private updatesSubject = new Subject<StorageUpdate>();
@@ -19,12 +23,9 @@ export class ForegroundMemoryStorageService extends AbstractStorageService {
   get valuesRequireDeserialization(): boolean {
     return true;
   }
-  updates$;
 
   constructor(private partitionName?: string) {
     super();
-
-    this.updates$ = this.updatesSubject.asObservable();
 
     let name = portName(chrome.storage.session);
     if (this.partitionName) {
@@ -59,6 +60,23 @@ export class ForegroundMemoryStorageService extends AbstractStorageService {
   async get<T>(key: string): Promise<T> {
     return await this.delegateToBackground<T>("get", key);
   }
+
+  get$<T>(key: string) {
+    return concat(
+      new Observable<T>((subscriber) => {
+        this.delegateToBackground<T>("get", key)
+          .then((value) => {
+            subscriber.next(value);
+            subscriber.complete();
+          })
+          .catch((err) => {
+            subscriber.error(err);
+          });
+      }),
+      EMPTY, // TODO: Make a connection to background to hear about updates
+    );
+  }
+
   async has(key: string): Promise<boolean> {
     return await this.delegateToBackground<boolean>("has", key);
   }
@@ -104,7 +122,7 @@ export class ForegroundMemoryStorageService extends AbstractStorageService {
   private handleInitialize(data: string[]) {
     // TODO: this isn't a save, but we don't have a better indicator for this
     data.forEach((key) => {
-      this.updatesSubject.next({ key, updateType: "save" });
+      // this.updatesSubject.next({ key, updateType: "save" });
     });
   }
 

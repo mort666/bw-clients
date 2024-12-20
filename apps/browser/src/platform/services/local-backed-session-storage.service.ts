@@ -1,6 +1,6 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { Subject } from "rxjs";
+import { concat, EMPTY, firstValueFrom, Observable, Subject } from "rxjs";
 
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
@@ -11,7 +11,6 @@ import {
   StorageUpdate,
 } from "@bitwarden/common/platform/abstractions/storage.service";
 import { compareValues } from "@bitwarden/common/platform/misc/compare-values";
-import { Lazy } from "@bitwarden/common/platform/misc/lazy";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { StorageOptions } from "@bitwarden/common/platform/models/domain/storage-options";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
@@ -31,7 +30,7 @@ export class LocalBackedSessionStorageService
   updates$ = this.updatesSubject.asObservable();
 
   constructor(
-    private readonly sessionKey: Lazy<Promise<SymmetricCryptoKey>>,
+    private readonly sessionKey$: Observable<SymmetricCryptoKey>,
     private readonly localStorage: AbstractStorageService,
     private readonly encryptService: EncryptService,
     private readonly platformUtilsService: PlatformUtilsService,
@@ -71,10 +70,26 @@ export class LocalBackedSessionStorageService
       return this.cache[key] as T;
     }
 
-    const value = await this.getLocalSessionValue(await this.sessionKey.get(), key);
+    const value = await this.getLocalSessionValue(await firstValueFrom(this.sessionKey$), key);
 
     this.cache[key] = value;
     return value as T;
+  }
+
+  get$<T>(key: string) {
+    const initialValue$ = new Observable<T>((subscriber) => {
+      //
+      const cachedValue = this.cache[key] as T;
+      if (cachedValue !== undefined) {
+        subscriber.next(cachedValue);
+        subscriber.complete();
+      }
+
+      // Get value from session
+    });
+
+    // TODO: Connect something to get updates from elsewhere
+    return concat(initialValue$, EMPTY);
   }
 
   async has(key: string): Promise<boolean> {
@@ -104,13 +119,13 @@ export class LocalBackedSessionStorageService
 
     this.cache[key] = obj;
     await this.updateLocalSessionValue(key, obj);
-    this.updatesSubject.next({ key, updateType: "save" });
+    // this.updatesSubject.next({ key, updateType: "save" });
   }
 
   async remove(key: string): Promise<void> {
     this.cache[key] = null;
     await this.updateLocalSessionValue(key, null);
-    this.updatesSubject.next({ key, updateType: "remove" });
+    // this.updatesSubject.next({ key, updateType: "remove" });
   }
 
   private async getLocalSessionValue(encKey: SymmetricCryptoKey, key: string): Promise<unknown> {
@@ -140,7 +155,10 @@ export class LocalBackedSessionStorageService
     }
 
     const valueJson = JSON.stringify(value);
-    const encValue = await this.encryptService.encrypt(valueJson, await this.sessionKey.get());
+    const encValue = await this.encryptService.encrypt(
+      valueJson,
+      await firstValueFrom(this.sessionKey$),
+    );
     await this.localStorage.save(this.sessionStorageKey(key), encValue.encryptedString);
   }
 

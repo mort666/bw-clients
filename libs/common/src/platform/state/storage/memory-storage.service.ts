@@ -1,11 +1,11 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { Subject } from "rxjs";
+import { concat, filter, map, of, Subject } from "rxjs";
 
 import {
   AbstractStorageService,
   ObservableStorageService,
-  StorageUpdate,
+  StorageUpdateType,
 } from "../../abstractions/storage.service";
 
 export class MemoryStorageService
@@ -13,13 +13,10 @@ export class MemoryStorageService
   implements ObservableStorageService
 {
   protected store: Record<string, string> = {};
-  private updatesSubject = new Subject<StorageUpdate>();
+  private updatesSubject = new Subject<{ key: string; updateType: StorageUpdateType }>();
 
   get valuesRequireDeserialization(): boolean {
     return true;
-  }
-  get updates$() {
-    return this.updatesSubject.asObservable();
   }
 
   get<T>(key: string): Promise<T> {
@@ -29,6 +26,31 @@ export class MemoryStorageService
       return Promise.resolve(obj as T);
     }
     return Promise.resolve(null);
+  }
+
+  private getValue<T>(key: string): T | null {
+    const json = this.store[key];
+    if (json) {
+      return JSON.parse(json) as T;
+    }
+
+    return null;
+  }
+
+  get$<T>(key: string) {
+    return concat(
+      of(this.getValue<T>(key)),
+      this.updatesSubject.pipe(
+        filter((update) => update.key === key),
+        map((update) => {
+          if (update.updateType === "remove") {
+            return null;
+          }
+
+          return this.getValue<T>(key);
+        }),
+      ),
+    );
   }
 
   async has(key: string): Promise<boolean> {

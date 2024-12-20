@@ -1,6 +1,6 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { Subject, filter, firstValueFrom, map, merge, timeout } from "rxjs";
+import { Subject, defer, filter, firstValueFrom, map, merge, shareReplay, timeout } from "rxjs";
 
 import { CollectionService, DefaultCollectionService } from "@bitwarden/admin-console/common";
 import {
@@ -103,7 +103,6 @@ import { StateFactory } from "@bitwarden/common/platform/factories/state-factory
 import { Message, MessageListener, MessageSender } from "@bitwarden/common/platform/messaging";
 // eslint-disable-next-line no-restricted-imports -- Used for dependency creation
 import { SubjectMessageSender } from "@bitwarden/common/platform/messaging/internal";
-import { Lazy } from "@bitwarden/common/platform/misc/lazy";
 import { clearCaches } from "@bitwarden/common/platform/misc/sequentialize";
 import { Account } from "@bitwarden/common/platform/models/domain/account";
 import { GlobalState } from "@bitwarden/common/platform/models/domain/global-state";
@@ -262,7 +261,6 @@ import { BrowserPlatformUtilsService } from "../platform/services/platform-utils
 import { PopupViewCacheBackgroundService } from "../platform/services/popup-view-cache-background.service";
 import { BrowserSdkClientFactory } from "../platform/services/sdk/browser-sdk-client-factory";
 import { BackgroundTaskSchedulerService } from "../platform/services/task-scheduler/background-task-scheduler.service";
-import { BackgroundMemoryStorageService } from "../platform/storage/background-memory-storage.service";
 import { BrowserStorageServiceProvider } from "../platform/storage/browser-storage-service.provider";
 import { OffscreenStorageService } from "../platform/storage/offscreen-storage.service";
 import { SyncServiceListener } from "../platform/sync/sync-service.listener";
@@ -463,20 +461,9 @@ export default class MainBackground {
       this.offscreenDocumentService,
     );
 
-    this.secureStorageService = this.storageService; // secure storage is not supported in browsers, so we use local storage and warn users when it is used
-
-    if (BrowserApi.isManifestVersion(3)) {
-      // manifest v3 can reuse the same storage. They are split for v2 due to lacking a good sync mechanism, which isn't true for v3
-      this.memoryStorageForStateProviders = new BrowserMemoryStorageService(); // mv3 stores to storage.session
-      this.memoryStorageService = this.memoryStorageForStateProviders;
-    } else {
-      this.memoryStorageForStateProviders = new BackgroundMemoryStorageService(); // mv2 stores to memory
-      this.memoryStorageService = this.memoryStorageForStateProviders;
-    }
-
     if (BrowserApi.isManifestVersion(3)) {
       // Creates a session key for mv3 storage of large memory items
-      const sessionKey = new Lazy(async () => {
+      const sessionKey = defer(async () => {
         // Key already in session storage
         const sessionStorage = new BrowserMemoryStorageService();
         const existingKey = await sessionStorage.get<SymmetricCryptoKey>("session-key");
@@ -495,7 +482,7 @@ export default class MainBackground {
         );
         await sessionStorage.save("session-key", derivedKey);
         return derivedKey;
-      });
+      }).pipe(shareReplay({ bufferSize: 1, refCount: false }));
 
       this.largeObjectMemoryStorageForStateProviders = new LocalBackedSessionStorageService(
         sessionKey,

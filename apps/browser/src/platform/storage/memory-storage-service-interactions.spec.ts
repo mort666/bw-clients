@@ -3,8 +3,6 @@
  * @jest-environment ../../libs/shared/test.environment.ts
  */
 
-import { trackEmissions } from "@bitwarden/common/../spec/utils";
-
 import { mockPorts } from "../../../spec/mock-port.spec-util";
 
 import { BackgroundMemoryStorageService } from "./background-memory-storage.service";
@@ -54,15 +52,15 @@ describe("foreground background memory storage interaction", () => {
     expect(actionSpy).toHaveBeenCalledWith(key);
   });
 
-  test("background updates push to foreground", async () => {
-    const key = "key";
-    const value = "value";
-    const updateType = "save";
-    const emissions = trackEmissions(foreground.updates$);
-    await background.save(key, value);
+  // test("background updates push to foreground", async () => {
+  //   const key = "key";
+  //   const value = "value";
+  //   const updateType = "save";
+  //   const emissions = trackEmissions(foreground.updates$);
+  //   await background.save(key, value);
 
-    expect(emissions).toEqual([{ key, updateType }]);
-  });
+  //   expect(emissions).toEqual([{ key, updateType }]);
+  // });
 
   test("background should message only the requesting foreground", async () => {
     const secondForeground = new ForegroundMemoryStorageService();

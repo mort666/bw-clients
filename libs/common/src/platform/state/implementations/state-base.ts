@@ -1,18 +1,6 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import {
-  Observable,
-  ReplaySubject,
-  defer,
-  filter,
-  firstValueFrom,
-  merge,
-  share,
-  switchMap,
-  tap,
-  timeout,
-  timer,
-} from "rxjs";
+import { Observable, ReplaySubject, firstValueFrom, map, share, tap, timeout, timer } from "rxjs";
 import { Jsonify } from "type-fest";
 
 import { StorageKey } from "../../../types/state";
@@ -44,20 +32,14 @@ export abstract class StateBase<T, KeyDef extends KeyDefinitionRequirements<T>> 
     protected readonly keyDefinition: KeyDef,
     protected readonly logService: LogService,
   ) {
-    const storageUpdate$ = storageService.updates$.pipe(
-      filter((storageUpdate) => storageUpdate.key === key),
-      switchMap(async (storageUpdate) => {
-        if (storageUpdate.updateType === "remove") {
-          return null;
+    let state$ = this.storageService.get$<T>(key).pipe(
+      map((value) => {
+        if (this.storageService.valuesRequireDeserialization) {
+          return this.keyDefinition.deserializer(value as Jsonify<T>);
         }
 
-        return await getStoredValue(key, storageService, keyDefinition.deserializer);
+        return value;
       }),
-    );
-
-    let state$ = merge(
-      defer(() => getStoredValue(key, storageService, keyDefinition.deserializer)),
-      storageUpdate$,
     );
 
     if (keyDefinition.debug.enableRetrievalLogging) {

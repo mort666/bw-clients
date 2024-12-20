@@ -1,5 +1,5 @@
 import { MockProxy, mock } from "jest-mock-extended";
-import { Subject } from "rxjs";
+import { concat, filter, map, Observable, of, Subject } from "rxjs";
 
 import {
   AbstractStorageService,
@@ -20,11 +20,11 @@ export class FakeStorageService implements AbstractStorageService, ObservableSto
    * amount of calls. It is not recommended to use this to mock implementations as
    * they are not respected.
    */
-  mock: MockProxy<AbstractStorageService>;
+  mock: MockProxy<AbstractStorageService & ObservableStorageService>;
 
   constructor(initial?: Record<string, unknown>) {
     this.store = initial ?? {};
-    this.mock = mock<AbstractStorageService>();
+    this.mock = mock<AbstractStorageService & ObservableStorageService>();
   }
 
   /**
@@ -48,8 +48,15 @@ export class FakeStorageService implements AbstractStorageService, ObservableSto
     return this._valuesRequireDeserialization;
   }
 
-  get updates$() {
-    return this.updatesSubject.asObservable();
+  get$<T>(key: string): Observable<T> {
+    this.mock.get$(key);
+    return concat(
+      of((this.store[key] as T) ?? null),
+      this.updatesSubject.pipe(
+        filter((update) => update.key == key),
+        map((update) => (this.store[key] as T) ?? null),
+      ),
+    );
   }
 
   get<T>(key: string, options?: StorageOptions): Promise<T> {

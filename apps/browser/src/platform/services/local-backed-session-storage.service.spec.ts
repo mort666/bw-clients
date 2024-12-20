@@ -1,9 +1,9 @@
 import { mock, MockProxy } from "jest-mock-extended";
+import { of } from "rxjs";
 
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { Lazy } from "@bitwarden/common/platform/misc/lazy";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { FakeStorageService, makeEncString } from "@bitwarden/common/spec";
@@ -28,7 +28,7 @@ describe("LocalBackedSessionStorage", () => {
     logService = mock<LogService>();
 
     sut = new LocalBackedSessionStorageService(
-      new Lazy(async () => sessionKey),
+      of(sessionKey),
       localStorage,
       encryptService,
       platformUtilsService,

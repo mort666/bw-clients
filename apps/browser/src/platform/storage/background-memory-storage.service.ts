@@ -33,12 +33,6 @@ export class BackgroundMemoryStorageService extends MemoryStorageService {
         data: Array.from(Object.keys(this.store)),
       });
     });
-    this.updates$.subscribe((update) => {
-      this.broadcastMessage({
-        action: "subject_update",
-        data: update,
-      });
-    });
   }
 
   private async onMessageFromForeground(

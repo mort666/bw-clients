@@ -1,6 +1,6 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { filter, mergeMap } from "rxjs";
+import { concat, filter, map, mergeMap, Observable, share } from "rxjs";
 
 import {
   AbstractStorageService,
@@ -41,9 +41,14 @@ export const objToStore = (obj: any) => {
 export default abstract class AbstractChromeStorageService
   implements AbstractStorageService, ObservableStorageService
 {
+  onChanged$: Observable<{ [key: string]: chrome.storage.StorageChange }>;
   updates$;
 
   constructor(protected chromeStorageApi: chrome.storage.StorageArea) {
+    this.onChanged$ = fromChromeEvent(this.chromeStorageApi.onChanged).pipe(
+      map(([change]) => change),
+      share(),
+    );
     this.updates$ = fromChromeEvent(this.chromeStorageApi.onChanged).pipe(
       filter(([changes]) => {
         // Our storage services support changing only one key at a time. If more are changed, it's due to
@@ -73,6 +78,32 @@ export default abstract class AbstractChromeStorageService
 
   get valuesRequireDeserialization(): boolean {
     return true;
+  }
+
+  get$<T>(key: string): Observable<T | null> {
+    const initialValue$ = new Observable<T>((subscriber) => {
+      this.chromeStorageApi.get(key, (obj) => {
+        if (chrome.runtime.lastError) {
+          subscriber.error(chrome.runtime.lastError);
+          return;
+        }
+
+        if (obj != null && obj[key] != null) {
+          subscriber.next(this.processGetObject<T>(obj[key]));
+        } else {
+          subscriber.next(null);
+        }
+
+        subscriber.complete();
+      });
+    });
+
+    const keyUpdates$: Observable<T> = this.onChanged$.pipe(
+      filter((change) => change[key] != null),
+      map((change) => change[key].newValue ?? null),
+    );
+
+    return concat(initialValue$, keyUpdates$);
   }
 
   async get<T>(key: string): Promise<T> {

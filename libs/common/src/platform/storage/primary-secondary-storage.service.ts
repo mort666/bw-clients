@@ -5,7 +5,6 @@ export class PrimarySecondaryStorageService
   implements AbstractStorageService, ObservableStorageService
 {
   // Only follow the primary storage service as updates should all be done to both
-  updates$ = this.primaryStorageService.updates$;
 
   constructor(
     private readonly primaryStorageService: AbstractStorageService & ObservableStorageService,
@@ -23,6 +22,11 @@ export class PrimarySecondaryStorageService
   }
   get valuesRequireDeserialization(): boolean {
     return this.primaryStorageService.valuesRequireDeserialization;
+  }
+
+  get$<T>(key: string) {
+    // TODO: What is best here?
+    return this.primaryStorageService.get$<T>(key);
   }
 
   async get<T>(key: string, options?: StorageOptions): Promise<T> {
