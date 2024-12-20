@@ -63,7 +63,6 @@ import { SendListComponent } from "../tools/popup/send/components/send-list.comp
 import { SendAddEditComponent } from "../tools/popup/send/send-add-edit.component";
 import { SendGroupingsComponent } from "../tools/popup/send/send-groupings.component";
 import { SendTypeComponent } from "../tools/popup/send/send-type.component";
-import { SettingsComponent } from "../tools/popup/settings/settings.component";
 import { ActionButtonsComponent } from "../vault/popup/components/action-buttons.component";
 import { CipherRowComponent } from "../vault/popup/components/cipher-row.component";
 import { AddEditCustomFieldsComponent } from "../vault/popup/components/vault/add-edit-custom-fields.component";
@@ -89,7 +88,6 @@ import { AppComponent } from "./app.component";
 import { UserVerificationComponent } from "./components/user-verification.component";
 import { ServicesModule } from "./services/services.module";
 import { TabsV2Component } from "./tabs-v2.component";
-import { TabsComponent } from "./tabs.component";
 
 // Register the locales for the application
 import "../platform/popup/locales";
@@ -174,12 +172,10 @@ import "../platform/popup/locales";
     SendListComponent,
     SendTypeComponent,
     SetPasswordComponent,
-    SettingsComponent,
     VaultSettingsComponent,
     ShareComponent,
     SsoComponentV1,
     SyncComponent,
-    TabsComponent,
     TabsV2Component,
     TwoFactorComponent,
     TwoFactorOptionsComponent,
