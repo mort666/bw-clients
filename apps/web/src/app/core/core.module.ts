@@ -70,6 +70,7 @@ import {
   SdkClientFactory,
   SdkPureClientFactory,
 } from "@bitwarden/common/platform/abstractions/sdk/sdk-client-factory";
+import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
 import { AbstractStorageService } from "@bitwarden/common/platform/abstractions/storage.service";
 import { ThemeType } from "@bitwarden/common/platform/enums";
 import { AppIdService as DefaultAppIdService } from "@bitwarden/common/platform/services/app-id.service";
@@ -81,6 +82,7 @@ import {
   NoopSdkClientFactory,
   NoopSdkPureClientFactory,
 } from "@bitwarden/common/platform/services/sdk/noop-sdk-client-factory";
+import { NoopSdkLoadService } from "@bitwarden/common/platform/services/sdk/noop-sdk-load.service";
 import { StorageServiceProvider } from "@bitwarden/common/platform/services/storage-service.provider";
 /* eslint-disable import/no-restricted-paths -- Implementation for memory storage */
 import { GlobalStateProvider, StateProvider } from "@bitwarden/common/platform/state";
@@ -117,6 +119,7 @@ import { WebBiometricsService } from "../key-management/web-biometric.service";
 import { WebEnvironmentService } from "../platform/web-environment.service";
 import { WebMigrationRunner } from "../platform/web-migration-runner";
 import { WebSdkClientFactory, WebSdkPureClientFactory } from "../platform/web-sdk-client-factory";
+import { WebSdkLoadService } from "../platform/web-sdk-load.service";
 import { WebStorageServiceProvider } from "../platform/web-storage-service.provider";
 
 import { EventService } from "./event.service";
@@ -293,6 +296,11 @@ const safeProviders: SafeProvider[] = [
     provide: CollectionAdminService,
     useClass: DefaultCollectionAdminService,
     deps: [ApiService, KeyServiceAbstraction, EncryptService, CollectionService],
+  }),
+  safeProvider({
+    provide: SdkLoadService,
+    useClass: flagEnabled("sdk") ? WebSdkLoadService : NoopSdkLoadService,
+    deps: [],
   }),
   safeProvider({
     provide: SdkClientFactory,

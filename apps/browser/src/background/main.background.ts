@@ -93,6 +93,7 @@ import { KeyGenerationService as KeyGenerationServiceAbstraction } from "@bitwar
 import { LogService as LogServiceAbstraction } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService as PlatformUtilsServiceAbstraction } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { SdkPureClientFactory } from "@bitwarden/common/platform/abstractions/sdk/sdk-client-factory";
+import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
 import { SdkService } from "@bitwarden/common/platform/abstractions/sdk/sdk.service";
 import { StateService as StateServiceAbstraction } from "@bitwarden/common/platform/abstractions/state.service";
 import {
@@ -262,6 +263,7 @@ import {
   BrowserSdkClientFactory,
   BrowserSdkPureClientFactory,
 } from "../platform/services/sdk/browser-sdk-client-factory";
+import { BrowserSdkLoadService } from "../platform/services/sdk/browser-sdk-load.service";
 import { BackgroundTaskSchedulerService } from "../platform/services/task-scheduler/background-task-scheduler.service";
 import { BackgroundMemoryStorageService } from "../platform/storage/background-memory-storage.service";
 import { BrowserStorageServiceProvider } from "../platform/storage/browser-storage-service.provider";
@@ -381,6 +383,7 @@ export default class MainBackground {
   themeStateService: DefaultThemeStateService;
   autoSubmitLoginBackground: AutoSubmitLoginBackground;
   sdkService: SdkService;
+  sdkLoadService: SdkLoadService;
   pureSdkClientFactory: SdkPureClientFactory;
   cipherAuthorizationService: CipherAuthorizationService;
   inlineMenuFieldQualificationService: InlineMenuFieldQualificationService;
@@ -499,7 +502,7 @@ export default class MainBackground {
         return derivedKey;
       });
 
-      this.pureSdkClientFactory = new BrowserSdkPureClientFactory(this.logService);
+      this.pureSdkClientFactory = new BrowserSdkPureClientFactory();
       this.largeObjectMemoryStorageForStateProviders = new LocalBackedSessionStorageService(
         sessionKey,
         this.storageService,
@@ -744,8 +747,14 @@ export default class MainBackground {
     );
 
     const sdkClientFactory = flagEnabled("sdk")
-      ? new BrowserSdkClientFactory(this.logService)
+      ? new BrowserSdkClientFactory()
       : new NoopSdkClientFactory();
+    this.sdkLoadService = new BrowserSdkLoadService(
+      this.platformUtilsService,
+      this.apiService,
+      this.environmentService,
+      this.logService,
+    );
     this.sdkService = new DefaultSdkService(
       sdkClientFactory,
       this.environmentService,
@@ -1268,6 +1277,7 @@ export default class MainBackground {
   async bootstrap() {
     this.containerService.attachToGlobal(self);
 
+    await this.sdkLoadService.load();
     // Only the "true" background should run migrations
     await this.stateService.init({ runMigrations: true });
 
