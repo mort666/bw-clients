@@ -6,7 +6,11 @@
     <div bitDialogContent>
       <p>{{ "upgradePlans" | i18n }}</p>
       <div class="tw-mb-3 tw-flex tw-justify-between">
-        <span class="tw-text-lg tw-pr-1 tw-font-bold">{{ "selectAPlan" | i18n }}</span>
+        <span
+          [style.visibility]="isSubscriptionCanceled ? 'hidden' : 'visible'"
+          class="tw-text-lg tw-pr-1 tw-font-bold"
+          >{{ "selectAPlan" | i18n }}</span
+        >
         <!-- Discount Badge -->
         <div class="tw-flex tw-items-center tw-gap-2">
           <span
@@ -69,7 +73,10 @@
           >
             <div class="tw-relative">
               <div
-                *ngIf="selectableProduct.productTier === productTypes.Enterprise"
+                *ngIf="
+                  selectableProduct.productTier === productTypes.Enterprise &&
+                  !isSubscriptionCanceled
+                "
                 class="tw-bg-secondary-100 tw-text-center !tw-border-0 tw-text-sm tw-font-bold tw-py-1"
                 [ngClass]="{
                   'tw-bg-primary-700 !tw-text-contrast': selectableProduct === selectedPlan,
