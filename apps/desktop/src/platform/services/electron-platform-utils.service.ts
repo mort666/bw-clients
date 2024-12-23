@@ -10,8 +10,6 @@ import {
 
 import { ClipboardWriteMessage } from "../types/clipboard";
 
-export const ELECTRON_SUPPORTS_SECURE_STORAGE = true;
-
 export class ElectronPlatformUtilsService implements PlatformUtilsService {
   constructor(
     protected i18nService: I18nService,
@@ -134,7 +132,7 @@ export class ElectronPlatformUtilsService implements PlatformUtilsService {
   }
 
   supportsSecureStorage(): boolean {
-    return ELECTRON_SUPPORTS_SECURE_STORAGE;
+    return true;
   }
 
   getAutofillKeyboardShortcut(): Promise<string> {
