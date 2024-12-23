@@ -679,7 +679,7 @@ describe("1Password 1Pux Importer", () => {
     expect(cipher.name).toEqual("Some SSH Key");
     expect(cipher.notes).toEqual("SSH Key Note");
     expect(cipher.sshKey.privateKey).toEqual(
-      "-----BEGIN PRIVATE KEY-----\nMFECAQEwBQYDK2VwBCIEIDn1BgTbZ/5UUeGLIfVV+qLBOvEsS3XMK6Twzw2Dkukq\ngSEAlrKdxRVVQrBndt4bHEZAz3xsymfM9Vf2QfZ823QxUbM=\n-----END PRIVATE KEY-----\n",
+      "-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW\nQyNTUxOQAAACCWsp3FFVVCsGd23hscRkDPfGzKZ8z1V/ZB9nzbdDFRswAAAIjrC5Lz6wuS\n8wAAAAtzc2gtZWQyNTUxOQAAACCWsp3FFVVCsGd23hscRkDPfGzKZ8z1V/ZB9nzbdDFRsw\nAAAEA59QYE22f+VFHhiyH1VfqiwTrxLEt1zCuk8M8Ng5LpKpayncUVVUKwZ3beGxxGQM98\nbMpnzPVX9kH2fNt0MVGzAAAAAAECAwQF\n-----END OPENSSH PRIVATE KEY-----\n",
     );
     expect(cipher.sshKey.publicKey).toEqual(
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJayncUVVUKwZ3beGxxGQM98bMpnzPVX9kH2fNt0MVGz",
