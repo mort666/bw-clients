@@ -92,7 +92,6 @@ import { I18nService as I18nServiceAbstraction } from "@bitwarden/common/platfor
 import { KeyGenerationService as KeyGenerationServiceAbstraction } from "@bitwarden/common/platform/abstractions/key-generation.service";
 import { LogService as LogServiceAbstraction } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService as PlatformUtilsServiceAbstraction } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { SdkPureClientFactory } from "@bitwarden/common/platform/abstractions/sdk/sdk-client-factory";
 import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
 import { SdkService } from "@bitwarden/common/platform/abstractions/sdk/sdk.service";
 import { StateService as StateServiceAbstraction } from "@bitwarden/common/platform/abstractions/state.service";
@@ -259,10 +258,7 @@ import { LocalBackedSessionStorageService } from "../platform/services/local-bac
 import { BackgroundPlatformUtilsService } from "../platform/services/platform-utils/background-platform-utils.service";
 import { BrowserPlatformUtilsService } from "../platform/services/platform-utils/browser-platform-utils.service";
 import { PopupViewCacheBackgroundService } from "../platform/services/popup-view-cache-background.service";
-import {
-  BrowserSdkClientFactory,
-  BrowserSdkPureClientFactory,
-} from "../platform/services/sdk/browser-sdk-client-factory";
+import { BrowserSdkClientFactory } from "../platform/services/sdk/browser-sdk-client-factory";
 import { BrowserSdkLoadService } from "../platform/services/sdk/browser-sdk-load.service";
 import { BackgroundTaskSchedulerService } from "../platform/services/task-scheduler/background-task-scheduler.service";
 import { BackgroundMemoryStorageService } from "../platform/storage/background-memory-storage.service";
@@ -384,7 +380,6 @@ export default class MainBackground {
   autoSubmitLoginBackground: AutoSubmitLoginBackground;
   sdkService: SdkService;
   sdkLoadService: SdkLoadService;
-  pureSdkClientFactory: SdkPureClientFactory;
   cipherAuthorizationService: CipherAuthorizationService;
   inlineMenuFieldQualificationService: InlineMenuFieldQualificationService;
 
@@ -502,19 +497,13 @@ export default class MainBackground {
         return derivedKey;
       });
 
-      this.pureSdkClientFactory = new BrowserSdkPureClientFactory();
       this.largeObjectMemoryStorageForStateProviders = new LocalBackedSessionStorageService(
         sessionKey,
         this.storageService,
         // For local backed session storage, we expect that the encrypted data on disk will persist longer than the encryption key in memory
         // and failures to decrypt because of that are completely expected. For this reason, we pass in `false` to the `EncryptServiceImplementation`
         // so that MAC failures are not logged.
-        new EncryptServiceImplementation(
-          this.pureSdkClientFactory,
-          this.cryptoFunctionService,
-          this.logService,
-          false,
-        ),
+        new EncryptServiceImplementation(this.cryptoFunctionService, this.logService, false),
         this.platformUtilsService,
         this.logService,
       );
@@ -550,18 +539,8 @@ export default class MainBackground {
     );
 
     this.encryptService = BrowserApi.isManifestVersion(2)
-      ? new EncryptServiceImplementation(
-          this.pureSdkClientFactory,
-          this.cryptoFunctionService,
-          this.logService,
-          true,
-        )
-      : new EncryptServiceImplementation(
-          this.pureSdkClientFactory,
-          this.cryptoFunctionService,
-          this.logService,
-          true,
-        );
+      ? new EncryptServiceImplementation(this.cryptoFunctionService, this.logService, true)
+      : new EncryptServiceImplementation(this.cryptoFunctionService, this.logService, true);
 
     this.singleUserStateProvider = new DefaultSingleUserStateProvider(
       storageServiceProvider,

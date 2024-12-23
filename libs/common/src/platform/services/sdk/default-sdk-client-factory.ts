@@ -1,15 +1,7 @@
 import * as sdk from "@bitwarden/sdk-internal";
 import * as module from "@bitwarden/sdk-internal/bitwarden_wasm_internal_bg.wasm";
 
-import { SdkClientFactory, SdkPureClientFactory } from "../../abstractions/sdk/sdk-client-factory";
-
-export class DefaultSdkPureClientFactory implements SdkPureClientFactory {
-  async createPureSdkClient(): Promise<sdk.BitwardenPure> {
-    (sdk as any).init(module);
-
-    return Promise.resolve(new sdk.BitwardenPure());
-  }
-}
+import { SdkClientFactory } from "../../abstractions/sdk/sdk-client-factory";
 
 /**
  * Directly imports the Bitwarden SDK and initializes it.

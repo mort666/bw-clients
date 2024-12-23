@@ -1,8 +1,7 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
 
-// eslint-disable-next-line no-restricted-imports -- TODO MDG: fix this
-import { SdkPureClientFactory } from "@bitwarden/common/platform/abstractions/sdk/sdk-client-factory";
+import { BitwardenPure } from "@bitwarden/sdk-internal";
 
 import { Utils } from "../../../platform/misc/utils";
 import { CryptoFunctionService } from "../../abstractions/crypto-function.service";
@@ -19,7 +18,6 @@ import { SymmetricCryptoKey } from "../../models/domain/symmetric-crypto-key";
 
 export class EncryptServiceImplementation implements EncryptService {
   constructor(
-    protected readonly sdkPureClientFactory: SdkPureClientFactory,
     protected cryptoFunctionService: CryptoFunctionService,
     protected logService: LogService,
     protected logMacFailures: boolean,
@@ -81,8 +79,7 @@ export class EncryptServiceImplementation implements EncryptService {
 
     key = this.resolveLegacyKey(key, encString);
 
-    const pure = await this.sdkPureClientFactory.createPureSdkClient();
-    const decrypted = pure.crypto().symmetric_decrypt(encString.encryptedString, key.keyB64);
+    const decrypted = BitwardenPure.symmetric_decrypt(encString.encryptedString, key.keyB64);
 
     return decrypted;
   }
@@ -98,16 +95,16 @@ export class EncryptServiceImplementation implements EncryptService {
 
     key = this.resolveLegacyKey(key, encThing);
 
-    const pure = await this.sdkPureClientFactory.createPureSdkClient();
     const encString = new EncString(
       encThing.encryptionType,
       Utils.fromBufferToB64(encThing.dataBytes),
       Utils.fromBufferToB64(encThing.ivBytes),
       Utils.fromBufferToB64(encThing.macBytes),
     );
-    const decrypted = pure
-      .crypto()
-      .symmetric_decrypt_to_bytes(encString.encryptedString, key.keyB64);
+    const decrypted = BitwardenPure.symmetric_decrypt_to_bytes(
+      encString.encryptedString,
+      key.keyB64,
+    );
 
     return decrypted ?? null;
   }
@@ -175,9 +172,8 @@ export class EncryptServiceImplementation implements EncryptService {
   }
 
   private async aesEncrypt(data: Uint8Array, key: SymmetricCryptoKey): Promise<EncryptedObject> {
-    const pure = await this.sdkPureClientFactory.createPureSdkClient();
     const encString = new EncString(
-      pure.crypto().symmetric_encrypt(Utils.fromBufferToUtf8(data), key.keyB64),
+      BitwardenPure.symmetric_encrypt(Utils.fromBufferToUtf8(data), key.keyB64),
     );
     const obj = new EncryptedObject();
     obj.key = key;

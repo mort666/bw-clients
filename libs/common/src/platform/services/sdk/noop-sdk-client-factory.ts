@@ -1,12 +1,6 @@
 import type { BitwardenClient } from "@bitwarden/sdk-internal";
 
-import { SdkClientFactory, SdkPureClientFactory } from "../../abstractions/sdk/sdk-client-factory";
-
-export class NoopSdkPureClientFactory implements SdkPureClientFactory {
-  createPureSdkClient(): Promise<never> {
-    return Promise.reject(new Error("SDK not available"));
-  }
-}
+import { SdkClientFactory } from "../../abstractions/sdk/sdk-client-factory";
 
 /**
  * Noop SDK client factory.

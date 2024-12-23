@@ -2,9 +2,6 @@
 // @ts-strict-ignore
 import { Jsonify } from "type-fest";
 
-// eslint-disable-next-line no-restricted-imports -- TODO MDG: this is a bug in the restricted import rule
-import { DefaultSdkPureClientFactory } from "@bitwarden/common/platform/services/sdk/default-sdk-client-factory";
-
 import { Decryptable } from "../../interfaces/decryptable.interface";
 import { SymmetricCryptoKey } from "../../models/domain/symmetric-crypto-key";
 import { ConsoleLogService } from "../console-log.service";
@@ -25,13 +22,7 @@ let encryptService: EncryptServiceImplementation;
 export function init() {
   const cryptoFunctionService = new WebCryptoFunctionService(self);
   const logService = new ConsoleLogService(false);
-  const pureSdkFactory = new DefaultSdkPureClientFactory();
-  encryptService = new EncryptServiceImplementation(
-    pureSdkFactory,
-    cryptoFunctionService,
-    logService,
-    true,
-  );
+  encryptService = new EncryptServiceImplementation(cryptoFunctionService, logService, true);
 
   const bitwardenContainerService = new ContainerService(null, encryptService);
   bitwardenContainerService.attachToGlobal(self);

@@ -160,10 +160,7 @@ import { KeyGenerationService as KeyGenerationServiceAbstraction } from "@bitwar
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService as MessagingServiceAbstraction } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService as PlatformUtilsServiceAbstraction } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import {
-  SdkClientFactory,
-  SdkPureClientFactory,
-} from "@bitwarden/common/platform/abstractions/sdk/sdk-client-factory";
+import { SdkClientFactory } from "@bitwarden/common/platform/abstractions/sdk/sdk-client-factory";
 import { SdkService } from "@bitwarden/common/platform/abstractions/sdk/sdk.service";
 import { StateService as StateServiceAbstraction } from "@bitwarden/common/platform/abstractions/state.service";
 import { AbstractStorageService } from "@bitwarden/common/platform/abstractions/storage.service";
@@ -890,7 +887,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: EncryptService,
     useClass: EncryptServiceImplementation,
-    deps: [SdkPureClientFactory, CryptoFunctionServiceAbstraction, LogService, LOG_MAC_FAILURES],
+    deps: [CryptoFunctionServiceAbstraction, LogService, LOG_MAC_FAILURES],
   }),
   safeProvider({
     provide: BulkEncryptService,
