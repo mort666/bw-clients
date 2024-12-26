@@ -132,7 +132,10 @@ export class ElectronPlatformUtilsService implements PlatformUtilsService {
   }
 
   supportsSecureStorage(): boolean {
-    return true;
+    // When using windows portable it's expected that all data is stored in the local `data.json` file
+    // if things instead get saved into Windows Credential Manager and then the user tries to move
+    // their Bitwarden executable to another computer they would be unable to unlock.
+    return !ipc.platform.isWindowsPortable;
   }
 
   getAutofillKeyboardShortcut(): Promise<string> {
