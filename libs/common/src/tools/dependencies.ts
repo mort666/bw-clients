@@ -5,7 +5,7 @@ import { OrganizationId, UserId } from "@bitwarden/common/types/guid";
 
 import { OrganizationEncryptor } from "./cryptography/organization-encryptor.abstraction";
 import { UserEncryptor } from "./cryptography/user-encryptor.abstraction";
-import { VendorId } from "./integration/metadata/type";
+import { VendorId } from "./extension/metadata/type";
 
 /** error emitted when the `SingleUserDependency` changes Ids */
 export type UserChangedError = {

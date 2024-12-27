@@ -1,6 +1,6 @@
-import { Field, Vendor } from "../data";
-import { Extension } from "../extension";
-import { IntegrationMetadata } from "../type";
+import { Field, Vendor } from "../metadata/data";
+import { Extension } from "../metadata/extension";
+import { ExtensionMetadata } from "../metadata/type";
 
 export const Fastmail = {
   id: Vendor.fastmail,
@@ -8,13 +8,14 @@ export const Fastmail = {
 };
 
 // integration-wide configuration
-export const FastmailIntegrations: IntegrationMetadata[] = [
+export const FastmailIntegrations: ExtensionMetadata[] = [
   {
-    extension: Extension.forwarder,
+    site: Extension.forwarder,
     product: {
       vendor: Fastmail,
     },
     host: {
+      authorization: "bearer",
       selfHost: "maybe",
       baseUrl: "https://api.fastmail.com",
     },

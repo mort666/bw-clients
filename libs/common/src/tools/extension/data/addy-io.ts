@@ -1,19 +1,20 @@
-import { Field, Vendor } from "../data";
-import { Extension } from "../extension";
-import { IntegrationMetadata } from "../type";
+import { Field, Vendor } from "../metadata/data";
+import { Extension } from "../metadata/extension";
+import { ExtensionMetadata } from "../metadata/type";
 
 export const AddyIo = {
   id: Vendor.anonaddy,
   name: "Addy.io",
 };
 
-export const AddyIoIntegrations: IntegrationMetadata[] = [
+export const AddyIoIntegrations: ExtensionMetadata[] = [
   {
-    extension: Extension.forwarder,
+    site: Extension.forwarder,
     product: {
       vendor: AddyIo,
     },
     host: {
+      authorization: "bearer",
       selfHost: "maybe",
       baseUrl: "https://app.addy.io",
     },

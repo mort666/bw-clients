@@ -1,19 +1,20 @@
-import { Field, Vendor } from "../data";
-import { Extension } from "../extension";
-import { IntegrationMetadata } from "../type";
+import { Field, Vendor } from "../metadata/data";
+import { Extension } from "../metadata/extension";
+import { ExtensionMetadata } from "../metadata/type";
 
 export const ForwardEmail = {
   id: Vendor.forwardemail,
   name: "Forward Email",
 };
 
-export const ForwardEmailIntegrations: IntegrationMetadata[] = [
+export const ForwardEmailIntegrations: ExtensionMetadata[] = [
   {
-    extension: Extension.forwarder,
+    site: Extension.forwarder,
     product: {
       vendor: ForwardEmail,
     },
     host: {
+      authorization: "basic-username",
       selfHost: "never",
       baseUrl: "https://api.forwardemail.net",
     },

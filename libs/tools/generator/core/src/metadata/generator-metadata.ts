@@ -47,6 +47,7 @@ export type GeneratorMetadata<Options, Policy> = AlgorithmMetadata & {
     };
   };
 
+  /** Defines parameters for policy transformations */
   policy: {
     /** Combines multiple policies set by the administrative console into
      *  a single policy.

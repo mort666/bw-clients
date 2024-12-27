@@ -1,19 +1,20 @@
-import { Field, Vendor } from "../data";
-import { Extension } from "../extension";
-import { IntegrationMetadata, VendorMetadata } from "../type";
+import { Field, Vendor } from "../metadata/data";
+import { Extension } from "../metadata/extension";
+import { ExtensionMetadata, VendorMetadata } from "../metadata/type";
 
 export const SimpleLogin: VendorMetadata = {
   id: Vendor.simplelogin,
   name: "SimpleLogin",
 };
 
-export const SimpleLoginIntegrations: IntegrationMetadata[] = [
+export const SimpleLoginIntegrations: ExtensionMetadata[] = [
   {
-    extension: Extension.forwarder,
+    site: Extension.forwarder,
     product: {
       vendor: SimpleLogin,
     },
     host: {
+      authentication: true,
       selfHost: "maybe",
       baseUrl: "https://app.simplelogin.io",
     },
