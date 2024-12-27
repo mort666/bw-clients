@@ -1,8 +1,11 @@
-import { Field, Vendor } from "../metadata/data";
-import { Extension } from "../metadata/extension";
-import { ExtensionMetadata } from "../metadata/type";
+import { Field } from "../data";
+import { Extension } from "../metadata";
+import { ExtensionMetadata } from "../type";
 
-export const AddyIo = {
+import { Vendor } from "./data";
+import { VendorMetadata } from "./type";
+
+export const AddyIo: VendorMetadata = {
   id: Vendor.anonaddy,
   name: "Addy.io",
 };

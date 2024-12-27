@@ -1,6 +1,8 @@
-import { Field, Vendor } from "../metadata/data";
-import { Extension } from "../metadata/extension";
-import { ExtensionMetadata } from "../metadata/type";
+import { Field } from "../data";
+import { Extension } from "../metadata";
+import { ExtensionMetadata } from "../type";
+
+import { Vendor } from "./data";
 
 export const Mozilla = {
   id: Vendor.mozilla,

@@ -1,13 +1,7 @@
 import { ExtensionPermission, ExtensionRegistry } from "./extension-registry.abstraction";
 import { ExtensionSite } from "./extension-site";
-import {
-  SiteMetadata,
-  SiteId,
-  ExtensionMetadata,
-  ExtensionSet,
-  VendorId,
-  VendorMetadata,
-} from "./metadata/type";
+import { SiteMetadata, SiteId, ExtensionMetadata, ExtensionSet } from "./type";
+import { VendorId, VendorMetadata } from "./vendor/type";
 
 /** Tracks extension sites and the vendors that extend them. */
 export class DefaultExtensionRegistry implements ExtensionRegistry {

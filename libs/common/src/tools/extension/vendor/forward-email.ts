@@ -1,8 +1,11 @@
-import { Field, Vendor } from "../metadata/data";
-import { Extension } from "../metadata/extension";
-import { ExtensionMetadata } from "../metadata/type";
+import { Field } from "../data";
+import { Extension } from "../metadata";
+import { ExtensionMetadata } from "../type";
 
-export const ForwardEmail = {
+import { Vendor } from "./data";
+import { VendorMetadata } from "./type";
+
+export const ForwardEmail: VendorMetadata = {
   id: Vendor.forwardemail,
   name: "Forward Email",
 };

@@ -1,5 +1,15 @@
-import { Vendor } from "../metadata/data";
-import { VendorMetadata } from "../metadata/type";
+import { Site } from "../data";
+
+import { VendorMetadata } from "./type";
+
+export const Vendor = Object.freeze({
+  anonaddy: "anonaddy",
+  duckduckgo: "duckduckgo",
+  fastmail: "fastmail",
+  mozilla: "mozilla",
+  forwardemail: "forwardemail",
+  simplelogin: "simplelogin",
+} as const);
 
 export const VendorInfo: Record<string, VendorMetadata> = {
   [Vendor.anonaddy]: {
@@ -27,3 +37,14 @@ export const VendorInfo: Record<string, VendorMetadata> = {
     name: "SimpleLogin",
   },
 };
+
+export const VendorsByExtension = {
+  [Site.forwarder]: [
+    Vendor.anonaddy,
+    Vendor.duckduckgo,
+    Vendor.fastmail,
+    Vendor.mozilla,
+    Vendor.forwardemail,
+    Vendor.simplelogin,
+  ] as const,
+} as const;

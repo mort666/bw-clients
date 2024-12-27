@@ -1,13 +1,12 @@
-import { FieldsBySite, Site, VendorsByExtension } from "./data";
+import { Site } from "./data";
+import { FieldsBySite } from "./metadata";
+import { VendorId, VendorMetadata } from "./vendor/type";
 
 /** well-known name for a feature extensible through an extension. */
 export type SiteId = keyof typeof Site;
 
 /** well-known name for a field surfaced from an extension site to a vendor. */
 export type DisclosedField = (typeof FieldsBySite)[SiteId][number];
-
-/** Identifies a vendor extending bitwarden */
-export type VendorId = (typeof VendorsByExtension)[SiteId][number];
 
 /** The capabilities and descriptive content for an extension */
 export type SiteMetadata = {
@@ -45,15 +44,6 @@ export type ApiHost = TokenHeader &
     | { selfHost: "maybe"; baseUrl: string }
     | { selfHost: "always" }
   );
-
-/** The capabilities and descriptive content for an extension */
-export type VendorMetadata = {
-  /** Uniquely identifies the vendor. */
-  id: VendorId;
-
-  /** Brand name of the service providing the extension. */
-  name: string;
-};
 
 /** Describes an extension provided by a vendor */
 export type ExtensionMetadata = {

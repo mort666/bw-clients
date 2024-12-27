@@ -1,6 +1,9 @@
-import { Field, Vendor } from "../metadata/data";
-import { Extension } from "../metadata/extension";
-import { ExtensionMetadata, VendorMetadata } from "../metadata/type";
+import { Field } from "../data";
+import { Extension } from "../metadata";
+import { ExtensionMetadata } from "../type";
+
+import { Vendor } from "./data";
+import { VendorMetadata } from "./type";
 
 export const SimpleLogin: VendorMetadata = {
   id: Vendor.simplelogin,

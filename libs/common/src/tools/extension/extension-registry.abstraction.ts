@@ -1,11 +1,6 @@
 import { ExtensionSite } from "./extension-site";
-import {
-  SiteMetadata,
-  ExtensionMetadata,
-  ExtensionSet,
-  VendorMetadata,
-  SiteId,
-} from "./metadata/type";
+import { SiteMetadata, ExtensionMetadata, ExtensionSet, SiteId } from "./type";
+import { VendorMetadata } from "./vendor/type";
 
 /** Permission levels for metadata.
  *  * default - unless a rule denies access, allow it. This is the

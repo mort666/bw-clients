@@ -1,12 +1,13 @@
-import { AddyIo, AddyIoExtensions } from "./data/addy-io";
-import { DuckDuckGo, DuckDuckGoExtensions } from "./data/duck-duck-go";
-import { Fastmail, FastmailExtensions } from "./data/fastmail";
-import { ForwardEmail, ForwardEmailExtensions } from "./data/forward-email";
-import { Mozilla, MozillaExtensions } from "./data/mozilla";
-import { SimpleLogin, SimpleLoginExtensions } from "./data/simple-login";
 import { DefaultExtensionRegistry } from "./default-extension-registry";
-import { Extension } from "./metadata/extension";
-import { ExtensionMetadata, VendorMetadata } from "./metadata/type";
+import { Extension } from "./metadata";
+import { ExtensionMetadata } from "./type";
+import { AddyIo, AddyIoExtensions } from "./vendor/addy-io";
+import { DuckDuckGo, DuckDuckGoExtensions } from "./vendor/duck-duck-go";
+import { Fastmail, FastmailExtensions } from "./vendor/fastmail";
+import { ForwardEmail, ForwardEmailExtensions } from "./vendor/forward-email";
+import { Mozilla, MozillaExtensions } from "./vendor/mozilla";
+import { SimpleLogin, SimpleLoginExtensions } from "./vendor/simple-login";
+import { VendorMetadata } from "./vendor/type";
 
 // FIXME: find a better way to build the registry than a hard-coded factory function
 
