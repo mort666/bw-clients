@@ -6,7 +6,7 @@ import { Vendor } from "./data";
 import { VendorMetadata } from "./type";
 
 export const AddyIo: VendorMetadata = {
-  id: Vendor.anonaddy,
+  id: Vendor.addyio,
   name: "Addy.io",
 };
 

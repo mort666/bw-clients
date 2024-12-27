@@ -1,5 +1,5 @@
 export const Vendor = Object.freeze({
-  anonaddy: "anonaddy",
+  addyio: "addyio",
   duckduckgo: "duckduckgo",
   fastmail: "fastmail",
   mozilla: "mozilla",
