@@ -1,17 +1,17 @@
 import { FieldsBySite, Site, VendorsByExtension } from "./data";
 
-/** well-known name for a feature extensible through an integration. */
+/** well-known name for a feature extensible through an extension. */
 export type SiteId = keyof typeof Site;
 
 /** well-known name for a field surfaced from an extension site to a vendor. */
 export type DisclosedField = (typeof FieldsBySite)[SiteId][number];
 
-/** Identifies a vendor integrated into bitwarden */
+/** Identifies a vendor extending bitwarden */
 export type VendorId = (typeof VendorsByExtension)[SiteId][number];
 
-/** The capabilities and descriptive content for an integration */
+/** The capabilities and descriptive content for an extension */
 export type SiteMetadata = {
-  /** Uniquely identifies the integrator. */
+  /** Uniquely identifies the extension site. */
   id: SiteId;
 
   /** Lists the fields disclosed by the extension to the vendor */
@@ -33,7 +33,7 @@ type TokenHeader =
       authorization: "bearer" | "token" | "basic-username";
     };
 
-/** Catalogues an integration's hosting status.
+/** Catalogues an extension's hosting status.
  *  selfHost: "never" always uses the service's base URL
  *  selfHost: "maybe" allows the user to override the service's
  *    base URL with their own.
@@ -46,16 +46,16 @@ export type ApiHost = TokenHeader &
     | { selfHost: "always" }
   );
 
-/** The capabilities and descriptive content for an integration */
+/** The capabilities and descriptive content for an extension */
 export type VendorMetadata = {
-  /** Uniquely identifies the integrator. */
+  /** Uniquely identifies the vendor. */
   id: VendorId;
 
-  /** Brand name of the integrator. */
+  /** Brand name of the service providing the extension. */
   name: string;
 };
 
-/** Describes an integration provided by a vendor */
+/** Describes an extension provided by a vendor */
 export type ExtensionMetadata = {
   /** The part of Bitwarden extended by the vendor's services */
   site: SiteMetadata;
@@ -69,7 +69,7 @@ export type ExtensionMetadata = {
     name?: string;
   };
 
-  /** Hosting provider capabilities required by the integration  */
+  /** Hosting provider capabilities required by the extension  */
   host: ApiHost;
 
   /** Lists the fields disclosed by the extension to the vendor.
@@ -79,20 +79,20 @@ export type ExtensionMetadata = {
   requestedFields: DisclosedField[];
 };
 
-/** Identifies a collection of integrations.
+/** Identifies a collection of extensions.
  */
 export type ExtensionSet =
   | {
-      /** A set of integrations sharing an extension point */
+      /** A set of extensions sharing an extension point */
       site: SiteId;
     }
   | {
-      /** A set of integrations sharing a vendor */
+      /** A set of extensions sharing a vendor */
       vendor: VendorId;
     }
   | {
-      /** The total set of integrations. This is used to set a categorical
-       *  rule affecting all integrations.
+      /** The total set of extensions. This is used to set a categorical
+       *  rule affecting all extensions.
        */
       all: true;
     };

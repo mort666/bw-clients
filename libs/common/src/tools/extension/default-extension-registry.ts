@@ -1,6 +1,5 @@
-import { ExtensionSite } from "../extension-site";
-
 import { ExtensionPermission, ExtensionRegistry } from "./extension-registry.abstraction";
+import { ExtensionSite } from "./extension-site";
 import {
   SiteMetadata,
   SiteId,
@@ -8,21 +7,20 @@ import {
   ExtensionSet,
   VendorId,
   VendorMetadata,
-} from "./type";
+} from "./metadata/type";
 
-/** Tracks extension points and the integrations that extend them. */
-export class DefaultIntegrationRegistry implements ExtensionRegistry {
+/** Tracks extension sites and the vendors that extend them. */
+export class DefaultExtensionRegistry implements ExtensionRegistry {
   private allRule: ExtensionPermission = "default";
 
   private siteRegistrations = new Map<SiteId, SiteMetadata>();
-  private siteRules = new Map<SiteId, ExtensionPermission>();
+  private sitePermissions = new Map<SiteId, ExtensionPermission>();
 
   private vendorRegistrations = new Map<VendorId, VendorMetadata>();
-  private vendorRules = new Map<VendorId, ExtensionPermission>();
+  private vendorPermissions = new Map<VendorId, ExtensionPermission>();
 
-  private integrations = new Array<ExtensionMetadata>();
-  private siteIntegrationsByVendor = new Map<VendorId, Map<SiteId, number>>();
-  private vendorIntegrationsBySite = new Map<SiteId, Map<VendorId, number>>();
+  private extensions = new Array<ExtensionMetadata>();
+  private vendorExtensionsBySite = new Map<SiteId, Map<VendorId, number>>();
 
   registerSite(meta: SiteMetadata): this {
     if (!this.siteRegistrations.has(meta.id)) {
@@ -37,7 +35,7 @@ export class DefaultIntegrationRegistry implements ExtensionRegistry {
 
     for (const [k, site] of this.siteRegistrations.entries()) {
       const s: (typeof sites)[number] = { site };
-      const permission = this.siteRules.get(k);
+      const permission = this.sitePermissions.get(k);
       if (permission) {
         s.permission = permission;
       }
@@ -61,7 +59,7 @@ export class DefaultIntegrationRegistry implements ExtensionRegistry {
 
     for (const [k, vendor] of this.vendorRegistrations.entries()) {
       const s: (typeof vendors)[number] = { vendor };
-      const permission = this.vendorRules.get(k);
+      const permission = this.vendorPermissions.get(k);
       if (permission) {
         s.permission = permission;
       }
@@ -76,11 +74,11 @@ export class DefaultIntegrationRegistry implements ExtensionRegistry {
     if ("all" in set && set.all) {
       this.allRule = permission;
     } else if ("vendor" in set) {
-      this.vendorRules.set(set.vendor, permission);
+      this.vendorPermissions.set(set.vendor, permission);
     } else if ("site" in set) {
-      this.siteRules.set(set.site, permission);
+      this.sitePermissions.set(set.site, permission);
     } else {
-      throw new Error(`Unrecognized integration set received: ${JSON.stringify(set)}.`);
+      throw new Error(`Unrecognized extension set received: ${JSON.stringify(set)}.`);
     }
 
     return this;
@@ -90,9 +88,9 @@ export class DefaultIntegrationRegistry implements ExtensionRegistry {
     if ("all" in set && set.all) {
       return this.allRule;
     } else if ("vendor" in set) {
-      return this.vendorRules.get(set.vendor);
+      return this.vendorPermissions.get(set.vendor);
     } else if ("site" in set) {
-      return this.siteRules.get(set.site);
+      return this.sitePermissions.get(set.site);
     } else {
       return undefined;
     }
@@ -102,11 +100,11 @@ export class DefaultIntegrationRegistry implements ExtensionRegistry {
     const rules: { set: ExtensionSet; permission: ExtensionPermission }[] = [];
     rules.push({ set: { all: true }, permission: this.allRule });
 
-    for (const [site, permission] of this.siteRules.entries()) {
+    for (const [site, permission] of this.sitePermissions.entries()) {
       rules.push({ set: { site }, permission });
     }
 
-    for (const [vendor, permission] of this.vendorRules.entries()) {
+    for (const [vendor, permission] of this.vendorPermissions.entries()) {
       rules.push({ set: { vendor }, permission });
     }
 
@@ -120,19 +118,15 @@ export class DefaultIntegrationRegistry implements ExtensionRegistry {
       throw new Error(`Unrecognized vendor: ${meta.product.vendor.id}`);
     }
 
-    // is the integration registered?
-    const vendorMap =
-      this.vendorIntegrationsBySite.get(meta.site.id) ?? new Map<VendorId, number>();
+    // is the extension registered?
+    const vendorMap = this.vendorExtensionsBySite.get(meta.site.id) ?? new Map<VendorId, number>();
     if (vendorMap.has(meta.product.vendor.id)) {
       return;
     }
 
     // if not, register it
-    const siteMap =
-      this.siteIntegrationsByVendor.get(meta.product.vendor.id) ?? new Map<SiteId, number>();
-    const index = this.integrations.push(meta) - 1;
+    const index = this.extensions.push(meta) - 1;
     vendorMap.set(meta.product.vendor.id, index);
-    siteMap.set(meta.site.id, index);
 
     return this;
   }
@@ -148,22 +142,22 @@ export class DefaultIntegrationRegistry implements ExtensionRegistry {
     }
 
     const extensions = new Map<VendorId, ExtensionMetadata>();
-    const entries = this.vendorIntegrationsBySite.get(id)?.entries() ?? ([] as const);
+    const entries = this.vendorExtensionsBySite.get(id)?.entries() ?? ([] as const);
     for (const [vendor, maybeIndex] of entries) {
       // prepare rules
-      const vendorRule = this.vendorRules.get(vendor) ?? this.allRule;
-      const siteRule = this.siteRules.get(id) ?? this.allRule;
+      const vendorRule = this.vendorPermissions.get(vendor) ?? this.allRule;
+      const siteRule = this.sitePermissions.get(id) ?? this.allRule;
       const rules = [vendorRule, siteRule, this.allRule];
 
       // evaluate rules
       const extension = rules.includes("deny")
         ? undefined
         : rules.includes("allow")
-          ? this.integrations[maybeIndex]
+          ? this.extensions[maybeIndex]
           : rules.includes("none")
             ? undefined
             : rules.includes("default")
-              ? this.integrations[maybeIndex]
+              ? this.extensions[maybeIndex]
               : undefined;
 
       // the presence of an extension indicates it's accessible

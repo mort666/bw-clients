@@ -7,7 +7,7 @@ export const Mozilla = {
   name: "Mozilla",
 };
 
-export const MozillaIntegrations: ExtensionMetadata[] = [
+export const MozillaExtensions: ExtensionMetadata[] = [
   {
     site: Extension.forwarder,
     product: {

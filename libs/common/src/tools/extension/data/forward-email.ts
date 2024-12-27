@@ -7,7 +7,7 @@ export const ForwardEmail = {
   name: "Forward Email",
 };
 
-export const ForwardEmailIntegrations: ExtensionMetadata[] = [
+export const ForwardEmailExtensions: ExtensionMetadata[] = [
   {
     site: Extension.forwarder,
     product: {

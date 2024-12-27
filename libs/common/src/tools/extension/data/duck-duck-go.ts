@@ -7,7 +7,7 @@ export const DuckDuckGo = {
   name: "DuckDuckGo",
 };
 
-export const DuckDuckGoIntegrations: ExtensionMetadata[] = [
+export const DuckDuckGoExtensions: ExtensionMetadata[] = [
   {
     site: Extension.forwarder,
     product: {

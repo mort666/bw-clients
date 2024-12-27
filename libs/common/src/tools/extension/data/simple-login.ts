@@ -7,7 +7,7 @@ export const SimpleLogin: VendorMetadata = {
   name: "SimpleLogin",
 };
 
-export const SimpleLoginIntegrations: ExtensionMetadata[] = [
+export const SimpleLoginExtensions: ExtensionMetadata[] = [
   {
     site: Extension.forwarder,
     product: {

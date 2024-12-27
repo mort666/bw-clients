@@ -7,7 +7,7 @@ export const AddyIo = {
   name: "Addy.io",
 };
 
-export const AddyIoIntegrations: ExtensionMetadata[] = [
+export const AddyIoExtensions: ExtensionMetadata[] = [
   {
     site: Extension.forwarder,
     product: {

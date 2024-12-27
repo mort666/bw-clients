@@ -7,8 +7,7 @@ export const Fastmail = {
   name: "Fastmail",
 };
 
-// integration-wide configuration
-export const FastmailIntegrations: ExtensionMetadata[] = [
+export const FastmailExtensions: ExtensionMetadata[] = [
   {
     site: Extension.forwarder,
     product: {
