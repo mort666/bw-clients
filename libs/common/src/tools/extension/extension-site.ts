@@ -1,6 +1,7 @@
 import { deepFreeze } from "../util";
 
-import { ExtensionMetadata, SiteMetadata, VendorId } from "./type";
+import { ExtensionMetadata, SiteMetadata } from "./type";
+import { VendorId } from "./vendor/type";
 
 /** Describes the capabilities of an extension site.
  *  This type is immutable.

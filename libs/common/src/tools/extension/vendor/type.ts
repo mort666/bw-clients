@@ -1,9 +1,7 @@
-import { SiteId } from "../type";
-
-import { VendorsByExtension } from "./data";
+import { Vendor } from "./data";
 
 /** Identifies a vendor extending bitwarden */
-export type VendorId = (typeof VendorsByExtension)[SiteId][number];
+export type VendorId = keyof typeof Vendor;
 
 /** The capabilities and descriptive content for an extension */
 export type VendorMetadata = {
