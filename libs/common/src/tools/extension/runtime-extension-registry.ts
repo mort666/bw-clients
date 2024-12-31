@@ -40,7 +40,7 @@ export class RuntimeExtensionRegistry implements ExtensionRegistry {
   private vendorPermissions = new Map<VendorId, ExtensionPermission>();
 
   private extensionRegistrations = new Array<ExtensionMetadata>();
-  private vendorExtensionsBySite = new Map<SiteId, Map<VendorId, number>>();
+  private extensionsBySiteByVendor = new Map<SiteId, Map<VendorId, number>>();
 
   registerSite(site: SiteMetadata): this {
     if (!this.allowedSites.includes(site.id)) {
@@ -167,8 +167,9 @@ export class RuntimeExtensionRegistry implements ExtensionRegistry {
     }
 
     // exit early if the extension is already registered
-    const vendorMap = this.vendorExtensionsBySite.get(meta.site.id) ?? new Map<VendorId, number>();
-    if (vendorMap.has(meta.product.vendor.id)) {
+    const extensionsByVendor =
+      this.extensionsBySiteByVendor.get(meta.site.id) ?? new Map<VendorId, number>();
+    if (extensionsByVendor.has(meta.product.vendor.id)) {
       return this;
     }
 
@@ -188,14 +189,14 @@ export class RuntimeExtensionRegistry implements ExtensionRegistry {
 
     // register it
     const index = this.extensionRegistrations.push(extension) - 1;
-    vendorMap.set(vendor.id, index);
-    this.vendorExtensionsBySite.set(site.id, vendorMap);
+    extensionsByVendor.set(vendor.id, index);
+    this.extensionsBySiteByVendor.set(site.id, extensionsByVendor);
 
     return this;
   }
 
   extension(site: SiteId, vendor: VendorId): ExtensionMetadata | undefined {
-    const index = this.vendorExtensionsBySite.get(site)?.get(vendor) ?? -1;
+    const index = this.extensionsBySiteByVendor.get(site)?.get(vendor) ?? -1;
     if (index < 0) {
       return undefined;
     } else {
@@ -232,7 +233,7 @@ export class RuntimeExtensionRegistry implements ExtensionRegistry {
     }
 
     const extensions = new Map<VendorId, ExtensionMetadata>();
-    const entries = this.vendorExtensionsBySite.get(id)?.entries() ?? ([] as const);
+    const entries = this.extensionsBySiteByVendor.get(id)?.entries() ?? ([] as const);
     for (const [vendor, index] of entries) {
       const permissions = [
         this.vendorPermissions.get(vendor),

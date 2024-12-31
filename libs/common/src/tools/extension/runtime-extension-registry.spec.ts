@@ -20,7 +20,7 @@ const SomeVendor = Bitwarden;
 const SomeVendorId = SomeVendor.id;
 const SomeExtension: ExtensionMetadata = deepFreeze({
   site: SomeSite,
-  product: { vendor: SomeVendor },
+  product: { vendor: SomeVendor, name: "Some Product" },
   host: { authorization: "bearer", selfHost: "maybe", baseUrl: "https://vault.bitwarden.com" },
   requestedFields: [],
 });
@@ -467,6 +467,23 @@ describe("RuntimeExtensionRegistry", () => {
       const result = registry.registerExtension(SomeExtension).extension(SomeSiteId, SomeVendorId);
 
       expect(result).toBeUndefined();
+    });
+
+    it("ignores repeated extensions with nonregistered vendors", () => {
+      const registry = new RuntimeExtensionRegistry(DefaultSites, []);
+      registry.registerSite(SomeSite).registerVendor(SomeVendor).registerExtension(SomeExtension);
+
+      // precondition: the vendor is already registered
+      expect(registry.extension(SomeSiteId, SomeVendorId)).toBeDefined();
+
+      const result = registry
+        .registerExtension({
+          ...SomeExtension,
+          requestedFields: [Field.domain],
+        })
+        .extension(SomeSiteId, SomeVendorId);
+
+      expect(result).toEqual(SomeExtension);
     });
 
     it("interns site metadata", () => {
