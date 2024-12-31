@@ -1,12 +1,14 @@
-import { Site } from "./data";
-import { FieldsBySite } from "./metadata";
+import { Site, Field, Permission } from "./data";
 import { VendorId, VendorMetadata } from "./vendor/type";
 
 /** well-known name for a feature extensible through an extension. */
 export type SiteId = keyof typeof Site;
 
 /** well-known name for a field surfaced from an extension site to a vendor. */
-export type DisclosedField = (typeof FieldsBySite)[SiteId][number];
+export type FieldId = keyof typeof Field;
+
+/** Permission levels for metadata. */
+export type ExtensionPermission = keyof typeof Permission;
 
 /** The capabilities and descriptive content for an extension */
 export type SiteMetadata = {
@@ -14,7 +16,7 @@ export type SiteMetadata = {
   id: SiteId;
 
   /** Lists the fields disclosed by the extension to the vendor */
-  availableFields: DisclosedField[];
+  availableFields: FieldId[];
 };
 
 type TokenHeader =
@@ -45,28 +47,31 @@ export type ApiHost = TokenHeader &
     | { selfHost: "always" }
   );
 
+/** Describes a branded product */
+export type ProductMetadata = {
+  /** The vendor providing the extension */
+  vendor: VendorMetadata;
+
+  /** The branded name of the product, if it varies from the Vendor name */
+  name?: string;
+};
+
 /** Describes an extension provided by a vendor */
 export type ExtensionMetadata = {
   /** The part of Bitwarden extended by the vendor's services */
-  site: SiteMetadata;
+  readonly site: Readonly<SiteMetadata>;
 
   /** Product description */
-  product: {
-    /** The vendor providing the extension */
-    vendor: VendorMetadata;
-
-    /** The branded name of the product, if it varies from the Vendor name */
-    name?: string;
-  };
+  readonly product: Readonly<ProductMetadata>;
 
   /** Hosting provider capabilities required by the extension  */
-  host: ApiHost;
+  readonly host: Readonly<ApiHost>;
 
   /** Lists the fields disclosed by the extension to the vendor.
    *  This should be a subset of the `availableFields` listed in
    *  the extension.
    */
-  requestedFields: DisclosedField[];
+  readonly requestedFields: ReadonlyArray<Readonly<FieldId>>;
 };
 
 /** Identifies a collection of extensions.

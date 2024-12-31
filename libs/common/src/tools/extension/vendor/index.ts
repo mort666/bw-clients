@@ -1,14 +1,16 @@
 import { deepFreeze } from "../../util";
 
-import { AddyIo, AddyIoExtensions } from "./addy-io";
-import { DuckDuckGo, DuckDuckGoExtensions } from "./duck-duck-go";
+import { AddyIo, AddyIoExtensions } from "./addyio";
+import { Bitwarden } from "./bitwarden";
+import { DuckDuckGo, DuckDuckGoExtensions } from "./duckduckgo";
 import { Fastmail, FastmailExtensions } from "./fastmail";
-import { ForwardEmail, ForwardEmailExtensions } from "./forward-email";
+import { ForwardEmail, ForwardEmailExtensions } from "./forwardemail";
 import { Mozilla, MozillaExtensions } from "./mozilla";
-import { SimpleLogin, SimpleLoginExtensions } from "./simple-login";
+import { SimpleLogin, SimpleLoginExtensions } from "./simplelogin";
 
 export const Vendors = deepFreeze([
   AddyIo,
+  Bitwarden,
   DuckDuckGo,
   Fastmail,
   ForwardEmail,

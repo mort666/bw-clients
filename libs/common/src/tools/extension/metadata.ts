@@ -1,5 +1,9 @@
-import { Field, Site } from "./data";
-import { SiteMetadata } from "./type";
+import { Field, Site, Permission } from "./data";
+import { FieldId, SiteId, SiteMetadata } from "./type";
+
+export const DefaultSites: SiteId[] = Object.freeze(Object.keys(Site) as any);
+
+export const DefaultFields: FieldId[] = Object.freeze(Object.keys(Field) as any);
 
 export const Extension: Record<string, SiteMetadata> = {
   [Site.forwarder]: {
@@ -8,6 +12,6 @@ export const Extension: Record<string, SiteMetadata> = {
   },
 };
 
-export const FieldsBySite = {
-  [Site.forwarder]: [Field.token, Field.baseUrl, Field.domain, Field.prefix],
-} as const;
+export const AllowedPermissions: ReadonlyArray<keyof typeof Permission> = Object.freeze(
+  Object.values(Permission),
+);
