@@ -14,7 +14,7 @@ import { EncryptedObject } from "../../models/domain/encrypted-object";
 import { SymmetricCryptoKey } from "../../models/domain/symmetric-crypto-key";
 
 export class EncryptServiceImplementation implements EncryptService {
-  private legacyCiphersEnabled: boolean = false;
+  protected legacyCiphersEnabled: boolean = false;
 
   constructor(
     protected cryptoFunctionService: CryptoFunctionService,
