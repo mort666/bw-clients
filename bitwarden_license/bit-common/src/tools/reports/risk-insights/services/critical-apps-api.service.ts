@@ -149,7 +149,7 @@ export class CriticalAppsApiService {
       const encryptedUrlName = await this.encryptService.encrypt(url, key);
       return {
         organizationId: orgId,
-        url: encryptedUrlName.encryptedString.toString(),
+        url: encryptedUrlName?.encryptedString?.toString() ?? "",
       } as PasswordHealthReportApplicationsRequest;
     });
 

@@ -70,7 +70,9 @@ export class AllApplicationsComponent implements OnInit, OnDestroy {
         takeUntilDestroyed(this.destroyRef),
         map(async (params) => {
           const organizationId = params.get("organizationId");
-          this.organization = await firstValueFrom(this.organizationService.get$(organizationId));
+          this.organization = (await firstValueFrom(
+            this.organizationService.get$(organizationId),
+          )) as Organization;
           return params;
           // TODO: use organizationId to fetch data
         }),
@@ -145,7 +147,7 @@ export class AllApplicationsComponent implements OnInit, OnDestroy {
 
       this.toastService.showToast({
         variant: "success",
-        title: null,
+        title: "",
         message: this.i18nService.t("appsMarkedAsCritical"),
       });
     } finally {
