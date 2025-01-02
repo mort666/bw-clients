@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import * as path from "path";
 
 import { app, ipcMain } from "electron";
@@ -259,7 +261,7 @@ export class Main {
     new EphemeralValueStorageService();
     new SSOLocalhostCallbackService(this.environmentService, this.messagingService);
 
-    this.nativeAutofillMain = new NativeAutofillMain(this.logService);
+    this.nativeAutofillMain = new NativeAutofillMain(this.logService, this.windowMain);
     void this.nativeAutofillMain.init();
   }
 

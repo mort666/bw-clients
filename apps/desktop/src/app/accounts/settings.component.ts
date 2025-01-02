@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import { FormBuilder } from "@angular/forms";
 import { BehaviorSubject, Observable, Subject, firstValueFrom } from "rxjs";
@@ -56,6 +58,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   requireEnableTray = false;
   showDuckDuckGoIntegrationOption = false;
   showSshAgentOption = false;
+  showOpenAtLoginOption = false;
   isWindows: boolean;
   isLinux: boolean;
 
@@ -163,6 +166,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
     const startToTrayKey = isMac ? "startToMenuBar" : "startToTray";
     this.startToTrayText = this.i18nService.t(startToTrayKey);
     this.startToTrayDescText = this.i18nService.t(startToTrayKey + "Desc");
+
+    this.showOpenAtLoginOption = !ipc.platform.isWindowsStore;
 
     // DuckDuckGo browser is only for macos initially
     this.showDuckDuckGoIntegrationOption = isMac;

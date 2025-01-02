@@ -1,21 +1,26 @@
-import { Component, DestroyRef, inject, OnInit } from "@angular/core";
+import { Component, DestroyRef, OnDestroy, OnInit, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
-import { debounceTime, firstValueFrom, map, switchMap } from "rxjs";
+import { debounceTime, firstValueFrom, map, Observable, of, Subscription, switchMap } from "rxjs";
 
 // eslint-disable-next-line no-restricted-imports  -- used for dependency injection
 import { CriticalAppsApiService } from "@bitwarden/bit-common/tools/reports/risk-insights";
-import { AuditService } from "@bitwarden/common/abstractions/audit.service";
+import {
+  RiskInsightsDataService,
+  RiskInsightsReportService,
+} from "@bitwarden/bit-common/tools/reports/risk-insights";
+import {
+  ApplicationHealthReportDetail,
+  ApplicationHealthReportSummary,
+} from "@bitwarden/bit-common/tools/reports/risk-insights/models/password-health";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { PasswordStrengthServiceAbstraction } from "@bitwarden/common/tools/password-strength";
 import { OrganizationId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
-import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
   Icons,
   NoItemsModule,
@@ -28,31 +33,36 @@ import { HeaderModule } from "@bitwarden/web-vault/app/layouts/header/header.mod
 import { SharedModule } from "@bitwarden/web-vault/app/shared";
 import { PipesModule } from "@bitwarden/web-vault/app/vault/individual-vault/pipes/pipes.module";
 
-import { applicationTableMockData } from "./application-table.mock";
+import { ApplicationsLoadingComponent } from "./risk-insights-loading.component";
 
 @Component({
   standalone: true,
   selector: "tools-all-applications",
   templateUrl: "./all-applications.component.html",
-  imports: [HeaderModule, CardComponent, SearchModule, PipesModule, NoItemsModule, SharedModule],
+  imports: [
+    ApplicationsLoadingComponent,
+    HeaderModule,
+    CardComponent,
+    SearchModule,
+    PipesModule,
+    NoItemsModule,
+    SharedModule,
+  ],
 })
-export class AllApplicationsComponent implements OnInit {
-  protected dataSource = new TableDataSource<any>();
+export class AllApplicationsComponent implements OnInit, OnDestroy {
+  protected dataSource = new TableDataSource<ApplicationHealthReportDetail>();
   protected selectedUrls: Set<string> = new Set<string>();
   protected searchControl = new FormControl("", { nonNullable: true });
-  private destroyRef = inject(DestroyRef);
-  protected loading = false;
-  protected organization: Organization;
+  protected loading = true;
+  protected organization = {} as Organization;
   noItemsIcon = Icons.Security;
   protected markingAsCritical = false;
-  isCritialAppsFeatureEnabled = false;
+  protected applicationSummary = {} as ApplicationHealthReportSummary;
+  private subscription = new Subscription();
 
-  // MOCK DATA
-  protected mockData = applicationTableMockData;
-  protected mockAtRiskMembersCount = 0;
-  protected mockAtRiskAppsCount = 0;
-  protected mockTotalMembersCount = 0;
-  protected mockTotalAppsCount = 0;
+  destroyRef = inject(DestroyRef);
+  isLoading$: Observable<boolean> = of(false);
+  isCriticalAppsFeatureEnabled = false;
 
   async ngOnInit() {
     this.activatedRoute.paramMap
@@ -71,23 +81,45 @@ export class AllApplicationsComponent implements OnInit {
         this.criticalAppsService.setOrganizationId(orgId as OrganizationId);
       });
 
-    this.isCritialAppsFeatureEnabled = await this.configService.getFeatureFlag(
+    this.isCriticalAppsFeatureEnabled = await this.configService.getFeatureFlag(
       FeatureFlag.CriticalApps,
     );
+
+    const organizationId = this.activatedRoute.snapshot.paramMap.get("organizationId");
+
+    if (organizationId) {
+      this.organization = await this.organizationService.get(organizationId);
+      this.subscription = this.dataService.applications$
+        .pipe(
+          map((applications) => {
+            if (applications) {
+              this.dataSource.data = applications;
+              this.applicationSummary =
+                this.reportService.generateApplicationsSummary(applications);
+            }
+          }),
+          takeUntilDestroyed(this.destroyRef),
+        )
+        .subscribe();
+      this.isLoading$ = this.dataService.isLoading$;
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.subscription?.unsubscribe();
   }
 
   constructor(
     protected cipherService: CipherService,
-    protected passwordStrengthService: PasswordStrengthServiceAbstraction,
-    protected auditService: AuditService,
     protected i18nService: I18nService,
     protected activatedRoute: ActivatedRoute,
     protected toastService: ToastService,
-    protected organizationService: OrganizationService,
     protected configService: ConfigService,
+    protected dataService: RiskInsightsDataService,
+    protected organizationService: OrganizationService,
+    protected reportService: RiskInsightsReportService,
     protected criticalAppsService: CriticalAppsApiService,
   ) {
-    this.dataSource.data = applicationTableMockData;
     this.searchControl.valueChanges
       .pipe(debounceTime(200), takeUntilDestroyed())
       .subscribe((v) => (this.dataSource.filter = v));
@@ -97,7 +129,7 @@ export class AllApplicationsComponent implements OnInit {
     // TODO: implement
     this.toastService.showToast({
       variant: "warning",
-      title: null,
+      title: "",
       message: "Not yet implemented",
     });
   };
@@ -122,16 +154,16 @@ export class AllApplicationsComponent implements OnInit {
     }
   };
 
-  trackByFunction(_: number, item: CipherView) {
-    return item.id;
+  trackByFunction(_: number, item: ApplicationHealthReportDetail) {
+    return item.applicationName;
   }
 
-  onCheckboxChange(urlName: string, event: Event) {
+  onCheckboxChange(applicationName: string, event: Event) {
     const isChecked = (event.target as HTMLInputElement).checked;
     if (isChecked) {
-      this.selectedUrls.add(urlName);
+      this.selectedUrls.add(applicationName);
     } else {
-      this.selectedUrls.delete(urlName);
+      this.selectedUrls.delete(applicationName);
     }
   }
 }

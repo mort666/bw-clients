@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { filter, firstValueFrom, merge, Observable, ReplaySubject, scan, startWith } from "rxjs";
 import { pairwise } from "rxjs/operators";
 
@@ -1512,7 +1514,7 @@ export default class AutofillService implements AutofillServiceInterface {
       );
 
       return CreditCardAutoFillConstants.CardAttributesExtended.find((attributeName) => {
-        const fieldAttributeValue = field[attributeName];
+        const fieldAttributeValue = field[attributeName]?.toLocaleLowerCase();
 
         const fieldAttributeMatch = fieldAttributeValue?.match(dateFormatPattern);
         // break find as soon as a match is found

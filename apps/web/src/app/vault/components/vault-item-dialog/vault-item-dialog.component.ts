@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { DIALOG_DATA, DialogRef } from "@angular/cdk/dialog";
 import { CommonModule } from "@angular/common";
 import { Component, ElementRef, Inject, OnDestroy, OnInit, ViewChild } from "@angular/core";
@@ -417,19 +419,19 @@ export class VaultItemDialogComponent implements OnInit, OnDestroy {
 
     switch (type) {
       case CipherType.Login:
-        this.title = this.i18nService.t(partOne, this.i18nService.t("typeLogin").toLowerCase());
+        this.title = this.i18nService.t(partOne, this.i18nService.t("typeLogin"));
         break;
       case CipherType.Card:
-        this.title = this.i18nService.t(partOne, this.i18nService.t("typeCard").toLowerCase());
+        this.title = this.i18nService.t(partOne, this.i18nService.t("typeCard"));
         break;
       case CipherType.Identity:
-        this.title = this.i18nService.t(partOne, this.i18nService.t("typeIdentity").toLowerCase());
+        this.title = this.i18nService.t(partOne, this.i18nService.t("typeIdentity"));
         break;
       case CipherType.SecureNote:
-        this.title = this.i18nService.t(partOne, this.i18nService.t("note").toLowerCase());
+        this.title = this.i18nService.t(partOne, this.i18nService.t("note"));
         break;
       case CipherType.SshKey:
-        this.title = this.i18nService.t(partOne, this.i18nService.t("typeSshKey").toLowerCase());
+        this.title = this.i18nService.t(partOne, this.i18nService.t("typeSshKey"));
         break;
     }
   }

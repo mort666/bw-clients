@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Jsonify } from "type-fest";
 
 import { ProductTierType } from "../../../billing/enums";
@@ -357,5 +359,16 @@ export class Organization {
       familySponsorshipLastSyncDate: new Date(json.familySponsorshipLastSyncDate),
       familySponsorshipValidUntil: new Date(json.familySponsorshipValidUntil),
     });
+  }
+
+  get canAccessIntegrations() {
+    return (
+      (this.productTierType === ProductTierType.Teams ||
+        this.productTierType === ProductTierType.Enterprise) &&
+      (this.isAdmin ||
+        this.permissions.manageUsers ||
+        this.permissions.manageGroups ||
+        this.permissions.accessEventLogs)
+    );
   }
 }
