@@ -10,12 +10,16 @@ import { RiskInsightsDataService } from "@bitwarden/bit-common/tools/reports/ris
 import { ApplicationHealthReportDetail } from "@bitwarden/bit-common/tools/reports/risk-insights/models/password-health";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
+import { devFlagEnabled } from "@bitwarden/common/platform/misc/flags";
 import { AsyncActionsModule, ButtonModule, TabsModule } from "@bitwarden/components";
 import { HeaderModule } from "@bitwarden/web-vault/app/layouts/header/header.module";
 
 import { AllApplicationsComponent } from "./all-applications.component";
 import { CriticalApplicationsComponent } from "./critical-applications.component";
 import { NotifiedMembersTableComponent } from "./notified-members-table.component";
+import { PasswordHealthMembersURIComponent } from "./password-health-members-uri.component";
+import { PasswordHealthMembersComponent } from "./password-health-members.component";
+import { PasswordHealthComponent } from "./password-health.component";
 
 export enum RiskInsightsTabType {
   AllApps = 0,
@@ -34,6 +38,9 @@ export enum RiskInsightsTabType {
     CriticalApplicationsComponent,
     JslibModule,
     HeaderModule,
+    PasswordHealthComponent,
+    PasswordHealthMembersComponent,
+    PasswordHealthMembersURIComponent,
     NotifiedMembersTableComponent,
     TabsModule,
   ],
@@ -44,6 +51,7 @@ export class RiskInsightsComponent implements OnInit {
   dataLastUpdated: Date = new Date();
 
   isCriticalAppsFeatureEnabled: boolean = false;
+  showDebugTabs: boolean = false;
 
   appsCount: number = 0;
   criticalAppsCount: number = 0;
@@ -71,6 +79,8 @@ export class RiskInsightsComponent implements OnInit {
     this.isCriticalAppsFeatureEnabled = await this.configService.getFeatureFlag(
       FeatureFlag.CriticalApps,
     );
+
+    this.showDebugTabs = devFlagEnabled("showRiskInsightsDebug");
 
     this.route.paramMap
       .pipe(
