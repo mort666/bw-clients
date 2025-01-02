@@ -69,7 +69,7 @@ export class AllApplicationsComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         map(async (params) => {
-          const organizationId = params.get("organizationId");
+          const organizationId = params.get("organizationId") ?? "";
           this.organization = (await firstValueFrom(
             this.organizationService.get$(organizationId),
           )) as Organization;
