@@ -142,7 +142,7 @@ export class LoginComponentV1 extends BaseLoginComponent implements OnInit {
     if (this.enforcedPasswordPolicyOptions != null) {
       const strengthResult = this.passwordStrengthService.getPasswordStrength(
         masterPassword,
-        this.formGroup.controls.email.value,
+        this.formGroup.value.email,
       );
       const masterPasswordScore = strengthResult == null ? null : strengthResult.score;
 
