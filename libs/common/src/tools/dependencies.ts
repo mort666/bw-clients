@@ -3,6 +3,8 @@ import { Observable } from "rxjs";
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { OrganizationId, UserId } from "@bitwarden/common/types/guid";
 
+import { Account } from "../auth/abstractions/account.service";
+
 import { OrganizationEncryptor } from "./cryptography/organization-encryptor.abstraction";
 import { UserEncryptor } from "./cryptography/user-encryptor.abstraction";
 
@@ -149,6 +151,25 @@ export type SingleUserDependency = {
    *  The stream should not emit null or undefined.
    */
   singleUserId$: Observable<UserId>;
+};
+
+/** A pattern for types that depend upon a fixed account and return
+ *  an observable.
+ *
+ *  Consumers of this dependency should emit a `UserChangedError` if
+ *  the value of `singleAccount$` changes. If `singleAccount$` completes,
+ *  the consumer should also complete. If `singleAccount$` errors, the
+ *  consumer should also emit the error.
+ *
+ *  @remarks Check the consumer's documentation to determine how it
+ *  responds to repeat emissions.
+ */
+export type SingleAccountDependency = {
+  /** A stream that emits an account when subscribed and the user's account
+   *  is unlocked, and completes when the account is locked or logged out.
+   *  The stream should not emit null or undefined.
+   */
+  singleAccount$: Observable<Account>;
 };
 
 /** A pattern for types that emit values exclusively when the dependency

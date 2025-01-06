@@ -7,7 +7,7 @@ import { ForwarderConfiguration } from "../../engine";
 import { Forwarder } from "../../engine/forwarder";
 import { GeneratorDependencyProvider, NoPolicy } from "../../types";
 import { deepFreeze } from "../../util";
-import { Purpose, Type } from "../data";
+import { Profile, Type } from "../data";
 import { GeneratorMetadata } from "../generator-metadata";
 import { toForwarderIntegration } from "../util";
 
@@ -37,7 +37,7 @@ export function toGeneratorMetadata<Settings extends ApiSettings = ApiSettings>(
     },
     options: {
       constraints: configuration.forwarder.settingsConstraints,
-      [Purpose.account]: {
+      [Profile.account]: {
         storage: configuration.forwarder.local.settings,
         policy: {
           type: PolicyType.PasswordGenerator,

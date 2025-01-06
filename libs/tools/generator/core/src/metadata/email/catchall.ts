@@ -1,5 +1,3 @@
-import { PolicyType } from "@bitwarden/common/admin-console/enums";
-import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { GENERATOR_DISK } from "@bitwarden/common/platform/state";
 import { PublicClassifier } from "@bitwarden/common/tools/public-classifier";
 
@@ -9,13 +7,12 @@ import {
   CatchallGenerationOptions,
   CredentialGenerator,
   GeneratorDependencyProvider,
-  NoPolicy,
 } from "../../types";
 import { deepFreeze } from "../../util";
-import { Algorithm, Type } from "../data";
+import { Algorithm, Type, Profile } from "../data";
 import { GeneratorMetadata } from "../generator-metadata";
 
-const catchall: GeneratorMetadata<CatchallGenerationOptions, NoPolicy> = deepFreeze({
+const catchall: GeneratorMetadata<CatchallGenerationOptions> = deepFreeze({
   id: Algorithm.catchall,
   category: Type.email,
   i18nKeys: {
@@ -36,9 +33,9 @@ const catchall: GeneratorMetadata<CatchallGenerationOptions, NoPolicy> = deepFre
       return new EmailRandomizer(dependencies.randomizer);
     },
   },
-  options: {
-    constraints: { catchallDomain: { minLength: 1 } },
-    account: {
+  profiles: {
+    [Profile.account]: {
+      type: "core",
       storage: {
         key: "catchallGeneratorSettings",
         target: "object",
@@ -57,18 +54,12 @@ const catchall: GeneratorMetadata<CatchallGenerationOptions, NoPolicy> = deepFre
           clearOn: ["logout"],
         },
       },
-      policy: {
-        type: PolicyType.PasswordGenerator,
-        disabledValue: {},
+      constraints: {
+        default: { catchallDomain: { minLength: 1 } },
+        create(_policies, context) {
+          return new CatchallConstraints(context.email);
+        },
       },
-    },
-  },
-  policy: {
-    combine(_acc: NoPolicy, _policy: Policy) {
-      return {};
-    },
-    toConstraints(_policy: NoPolicy, email: string) {
-      return new CatchallConstraints(email);
     },
   },
 });

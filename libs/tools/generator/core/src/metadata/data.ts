@@ -29,13 +29,13 @@ export const Type = Object.freeze({
 } as const);
 
 /** categorizes settings according to their expected use-case within Bitwarden */
-export const Purpose = Object.freeze({
+export const Profile = Object.freeze({
   /** account-level generator options. This is the default.
    *  @remarks these are the options displayed on the generator tab
    */
   account: "account",
 
-  // FIXME: consider adding a purpose for bitwarden's master password
+  // FIXME: consider adding a profile for bitwarden's master password
 });
 
 /** Credential generation algorithms grouped by purpose. */

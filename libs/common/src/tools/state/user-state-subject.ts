@@ -96,6 +96,7 @@ export class UserStateSubject<
    */
   constructor(
     private key: UserKeyDefinition<State> | ObjectKey<State, Secret, Disclosed>,
+    // FIXME: `getState` should initialize using a state provider
     getState: (key: UserKeyDefinition<unknown>) => SingleUserState<unknown>,
     private context: UserStateSubjectDependencies<State, Dependencies>,
   ) {
@@ -222,7 +223,7 @@ export class UserStateSubject<
         // `init$` becomes the accumulator for `scan`
         init$.pipe(
           first(),
-          map((init) => [init, null] as const),
+          map((init) => [init, null] as [State, Dependencies]),
         ),
         input$.pipe(
           map((constrained) => constrained.state),
@@ -235,7 +236,7 @@ export class UserStateSubject<
           if (shouldUpdate) {
             // actual update
             const next = this.context.nextValue?.(prev, pending, dependencies) ?? pending;
-            return [next, dependencies];
+            return [next, dependencies] as const;
           } else {
             // false update
             return [prev, null];

@@ -9,12 +9,11 @@ import {
   CredentialGenerator,
   GeneratorDependencyProvider,
   PassphraseGenerationOptions,
-  PassphraseGeneratorPolicy,
 } from "../../types";
-import { Algorithm, Purpose, Type } from "../data";
+import { Algorithm, Profile, Type } from "../data";
 import { GeneratorMetadata } from "../generator-metadata";
 
-const passphrase: GeneratorMetadata<PassphraseGenerationOptions, PassphraseGeneratorPolicy> = {
+const passphrase: GeneratorMetadata<PassphraseGenerationOptions> = {
   id: Algorithm.passphrase,
   category: Type.password,
   i18nKeys: {
@@ -34,16 +33,9 @@ const passphrase: GeneratorMetadata<PassphraseGenerationOptions, PassphraseGener
       return new PasswordRandomizer(dependencies.randomizer);
     },
   },
-  options: {
-    constraints: {
-      numWords: {
-        min: 3,
-        max: 20,
-        recommendation: 6,
-      },
-      wordSeparator: { maxLength: 1 },
-    },
-    [Purpose.account]: {
+  profiles: {
+    [Profile.account]: {
+      type: "core",
       storage: {
         key: "passphraseGeneratorSettings",
         target: "object",
@@ -68,20 +60,27 @@ const passphrase: GeneratorMetadata<PassphraseGenerationOptions, PassphraseGener
           clearOn: ["logout"],
         },
       } satisfies ObjectKey<PassphraseGenerationOptions>,
-      policy: {
+      constraints: {
         type: PolicyType.PasswordGenerator,
-        disabledValue: {
-          minNumberWords: 0,
-          capitalize: false,
-          includeNumber: false,
+        default: {
+          wordSeparator: { maxLength: 1 },
+          numWords: {
+            min: 3,
+            max: 20,
+            recommendation: 6,
+          },
+        },
+        create(policies, context) {
+          const initial = {
+            minNumberWords: 0,
+            capitalize: false,
+            includeNumber: false,
+          };
+          const policy = policies.reduce(passphraseLeastPrivilege, initial);
+          const constraints = new PassphrasePolicyConstraints(policy, context.defaultConstraints);
+          return constraints;
         },
       },
-    },
-  },
-  policy: {
-    combine: passphraseLeastPrivilege,
-    toConstraints(policy) {
-      return new PassphrasePolicyConstraints(policy, passphrase.options.constraints);
     },
   },
 };

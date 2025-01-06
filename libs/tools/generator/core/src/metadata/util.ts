@@ -5,6 +5,7 @@ import {
 } from "@bitwarden/common/tools/integration";
 
 import { AlgorithmsByType } from "./data";
+import { CoreProfileMetadata, ExtensionProfileMetadata, ProfileMetadata } from "./profile-metadata";
 import {
   CredentialAlgorithm,
   EmailAlgorithm,
@@ -39,6 +40,7 @@ export function isEmailAlgorithm(algorithm: CredentialAlgorithm): algorithm is E
   return AlgorithmsByType.email.includes(algorithm as any) || isForwarderIntegration(algorithm);
 }
 
+/** Returns true when the algorithms are the same. */
 export function isSameAlgorithm(lhs: CredentialAlgorithm, rhs: CredentialAlgorithm) {
   if (lhs === rhs) {
     return true;
@@ -49,6 +51,7 @@ export function isSameAlgorithm(lhs: CredentialAlgorithm, rhs: CredentialAlgorit
   }
 }
 
+/** @deprecated this shouldn't be used; if you see this remove it immediately */
 export function toForwarderIntegration(value: IntegrationMetadata): ForwarderIntegration;
 export function toForwarderIntegration(value: IntegrationId): ForwarderIntegration;
 export function toForwarderIntegration(
@@ -72,4 +75,18 @@ export function toForwarderIntegration(
   } else {
     throw new Error("Invalid `value` received.");
   }
+}
+
+/** Returns true when the input describes a core profile. */
+export function isCoreProfile<Options>(
+  value: ProfileMetadata<Options>,
+): value is CoreProfileMetadata<Options> {
+  return value.type === "core";
+}
+
+/** Returns true when the input describes a forwarder extension profile. */
+export function isForwarderProfile<Options>(
+  value: ProfileMetadata<Options>,
+): value is ExtensionProfileMetadata<Options, "forwarder"> {
+  return value.type === "extension";
 }

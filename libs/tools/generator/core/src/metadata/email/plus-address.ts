@@ -1,5 +1,3 @@
-import { PolicyType } from "@bitwarden/common/admin-console/enums";
-import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { GENERATOR_DISK } from "@bitwarden/common/platform/state";
 import { PublicClassifier } from "@bitwarden/common/tools/public-classifier";
 
@@ -8,14 +6,13 @@ import { SubaddressConstraints } from "../../policies/subaddress-constraints";
 import {
   CredentialGenerator,
   GeneratorDependencyProvider,
-  NoPolicy,
   SubaddressGenerationOptions,
 } from "../../types";
 import { deepFreeze } from "../../util";
-import { Algorithm, Purpose, Type } from "../data";
+import { Algorithm, Profile, Type } from "../data";
 import { GeneratorMetadata } from "../generator-metadata";
 
-const plusAddress: GeneratorMetadata<SubaddressGenerationOptions, NoPolicy> = deepFreeze({
+const plusAddress: GeneratorMetadata<SubaddressGenerationOptions> = deepFreeze({
   id: Algorithm.plusAddress,
   category: Type.email,
   i18nKeys: {
@@ -36,9 +33,9 @@ const plusAddress: GeneratorMetadata<SubaddressGenerationOptions, NoPolicy> = de
       return new EmailRandomizer(dependencies.randomizer);
     },
   },
-  options: {
-    constraints: {},
-    [Purpose.account]: {
+  profiles: {
+    [Profile.account]: {
+      type: "core",
       storage: {
         key: "subaddressGeneratorSettings",
         target: "object",
@@ -59,19 +56,12 @@ const plusAddress: GeneratorMetadata<SubaddressGenerationOptions, NoPolicy> = de
           clearOn: ["logout"],
         },
       },
-      policy: {
-        type: PolicyType.PasswordGenerator,
-        disabledValue: {},
+      constraints: {
+        default: {},
+        create(_policy, context) {
+          return new SubaddressConstraints(context.email);
+        },
       },
-    },
-  },
-
-  policy: {
-    combine(_acc: NoPolicy, _policy: Policy) {
-      return {};
-    },
-    toConstraints(_policy: NoPolicy, email: string) {
-      return new SubaddressConstraints(email);
     },
   },
 });
