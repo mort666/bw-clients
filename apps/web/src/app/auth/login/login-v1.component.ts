@@ -46,13 +46,6 @@ export class LoginComponentV1 extends BaseLoginComponent implements OnInit {
   enforcedPasswordPolicyOptions: MasterPasswordPolicyOptions;
   policies: Policy[];
 
-  /**
-   * Used in template.
-   */
-  get loggedEmail(): string {
-    return this.formGroup.controls.email.value;
-  }
-
   constructor(
     private acceptOrganizationInviteService: AcceptOrganizationInviteService,
     devicesApiService: DevicesApiServiceAbstraction,
