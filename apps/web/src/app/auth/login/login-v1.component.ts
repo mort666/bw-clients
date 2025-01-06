@@ -19,7 +19,6 @@ import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/mod
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { DevicesApiServiceAbstraction } from "@bitwarden/common/auth/abstractions/devices-api.service.abstraction";
 import { SsoLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/sso-login.service.abstraction";
-import { WebAuthnLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/webauthn/webauthn-login.service.abstraction";
 import { AuthResult } from "@bitwarden/common/auth/models/domain/auth-result";
 import { AppIdService } from "@bitwarden/common/platform/abstractions/app-id.service";
 import { CryptoFunctionService } from "@bitwarden/common/platform/abstractions/crypto-function.service";
@@ -47,6 +46,13 @@ export class LoginComponentV1 extends BaseLoginComponent implements OnInit {
   enforcedPasswordPolicyOptions: MasterPasswordPolicyOptions;
   policies: Policy[];
 
+  /**
+   * Used in template.
+   */
+  get loggedEmail(): string {
+    return this.formGroup.controls.email.value;
+  }
+
   constructor(
     private acceptOrganizationInviteService: AcceptOrganizationInviteService,
     devicesApiService: DevicesApiServiceAbstraction,
@@ -70,7 +76,6 @@ export class LoginComponentV1 extends BaseLoginComponent implements OnInit {
     formValidationErrorService: FormValidationErrorsService,
     loginEmailService: LoginEmailServiceAbstraction,
     ssoLoginService: SsoLoginServiceAbstraction,
-    webAuthnLoginService: WebAuthnLoginServiceAbstraction,
     toastService: ToastService,
   ) {
     super(
@@ -91,7 +96,6 @@ export class LoginComponentV1 extends BaseLoginComponent implements OnInit {
       route,
       loginEmailService,
       ssoLoginService,
-      webAuthnLoginService,
       toastService,
     );
     this.onSuccessfulLoginNavigate = this.goAfterLogIn;
@@ -108,7 +112,7 @@ export class LoginComponentV1 extends BaseLoginComponent implements OnInit {
   async ngOnInit() {
     // eslint-disable-next-line rxjs-angular/prefer-takeuntil, rxjs/no-async-subscribe
     this.route.queryParams.pipe(first()).subscribe(async (qParams) => {
-      // If there is an query parameter called 'org', set previousUrl to `/create-organization?org=paramValue`
+      // If there is a query parameter called 'org', set previousUrl to `/create-organization?org=paramValue`
       if (qParams.org != null) {
         const route = this.router.createUrlTree(["create-organization"], {
           queryParams: { plan: qParams.org },
@@ -139,13 +143,13 @@ export class LoginComponentV1 extends BaseLoginComponent implements OnInit {
   }
 
   async goAfterLogIn(userId: UserId) {
-    const masterPassword = this.formGroup.value.masterPassword;
+    const masterPassword = this.formGroup.controls.masterPassword.value;
 
     // Check master password against policy
     if (this.enforcedPasswordPolicyOptions != null) {
       const strengthResult = this.passwordStrengthService.getPasswordStrength(
         masterPassword,
-        this.formGroup.value.email,
+        this.formGroup.controls.email.value,
       );
       const masterPasswordScore = strengthResult == null ? null : strengthResult.score;
 

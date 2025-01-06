@@ -6,8 +6,8 @@ import { ProviderUserAcceptRequest } from "@bitwarden/common/admin-console/model
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { BaseAcceptComponent } from "@bitwarden/web-vault/app/common/base.accept.component";
 import { ToastService } from "@bitwarden/components";
+import { BaseAcceptComponent } from "@bitwarden/web-vault/app/common/base.accept.component";
 
 @Component({
   selector: "app-accept-provider",
@@ -29,10 +29,10 @@ export class AcceptProviderComponent extends BaseAcceptComponent {
     route: ActivatedRoute,
     authService: AuthService,
     private apiService: ApiService,
-    private toastService: ToastService,
+    toastService: ToastService,
     platformUtilService: PlatformUtilsService,
   ) {
-    super(router, platformUtilService, i18nService, route, authService);
+    super(router, platformUtilService, i18nService, route, authService, toastService);
   }
 
   async authedHandler(qParams: Params) {

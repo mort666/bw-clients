@@ -14,7 +14,6 @@ import {
 } from "@bitwarden/auth/common";
 import { DevicesApiServiceAbstraction } from "@bitwarden/common/auth/abstractions/devices-api.service.abstraction";
 import { SsoLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/sso-login.service.abstraction";
-import { WebAuthnLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/webauthn/webauthn-login.service.abstraction";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { AppIdService } from "@bitwarden/common/platform/abstractions/app-id.service";
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
@@ -51,7 +50,7 @@ export class LoginComponentV1 extends BaseLoginComponent implements OnInit, OnDe
   private deferFocus: boolean = null;
 
   get loggedEmail() {
-    return this.formGroup.value.email;
+    return this.formGroup.controls.email.value;
   }
 
   constructor(
@@ -76,7 +75,6 @@ export class LoginComponentV1 extends BaseLoginComponent implements OnInit, OnDe
     route: ActivatedRoute,
     loginEmailService: LoginEmailServiceAbstraction,
     ssoLoginService: SsoLoginServiceAbstraction,
-    webAuthnLoginService: WebAuthnLoginServiceAbstraction,
     toastService: ToastService,
     private configService: ConfigService,
   ) {
@@ -98,7 +96,6 @@ export class LoginComponentV1 extends BaseLoginComponent implements OnInit, OnDe
       route,
       loginEmailService,
       ssoLoginService,
-      webAuthnLoginService,
       toastService,
     );
     this.onSuccessfulLogin = () => {
