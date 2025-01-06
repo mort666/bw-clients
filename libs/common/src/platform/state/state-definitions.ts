@@ -151,6 +151,9 @@ export const COLLECTION_DATA = new StateDefinition("collection", "disk", {
   web: "memory",
 });
 export const FOLDER_DISK = new StateDefinition("folder", "disk", { web: "memory" });
+export const FOLDER_MEMORY = new StateDefinition("decryptedFolders", "memory", {
+  browser: "memory-large-object",
+});
 export const VAULT_FILTER_DISK = new StateDefinition("vaultFilter", "disk", {
   web: "disk-local",
 });
