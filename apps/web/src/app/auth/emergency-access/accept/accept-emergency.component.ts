@@ -3,7 +3,6 @@ import { ActivatedRoute, Params, Router } from "@angular/router";
 
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { ToastService } from "@bitwarden/components";
 
 import { BaseAcceptComponent } from "../../../common/base.accept.component";
@@ -27,25 +26,23 @@ export class AcceptEmergencyComponent extends BaseAcceptComponent {
 
   constructor(
     router: Router,
-    platformUtilsService: PlatformUtilsService,
     i18nService: I18nService,
     route: ActivatedRoute,
     authService: AuthService,
     toastService: ToastService,
     private emergencyAccessService: EmergencyAccessService,
   ) {
-    super(router, platformUtilsService, i18nService, route, authService, toastService);
+    super(router, i18nService, route, authService, toastService);
   }
 
   async authedHandler(qParams: Params): Promise<void> {
     this.actionPromise = this.emergencyAccessService.accept(qParams.id, qParams.token);
     await this.actionPromise;
-    this.platformUtilService.showToast(
-      "success",
-      this.i18nService.t("inviteAccepted"),
-      this.i18nService.t("emergencyInviteAcceptedDesc"),
-      { timeout: 10000 },
-    );
+    this.toastService.showToast({
+      variant: "success",
+      title: this.i18nService.t("inviteAccepted"),
+      message: this.i18nService.t("emergencyInviteAcceptedDesc"),
+    });
     // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.router.navigate(["/vault"]);
