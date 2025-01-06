@@ -222,7 +222,7 @@ export class LoginComponentV1 extends BaseLoginComponent implements OnInit, OnDe
     }
 
     // Save off email for SSO
-    await this.ssoLoginService.setSsoEmail(this.loggedEmail);
+    await this.ssoLoginService.setSsoEmail(this.formGroup.controls.email.value);
 
     // Generate necessary sso params
     const passwordOptions: any = {
@@ -241,6 +241,7 @@ export class LoginComponentV1 extends BaseLoginComponent implements OnInit, OnDe
     // Save sso params
     await this.ssoLoginService.setSsoState(state);
     await this.ssoLoginService.setCodeVerifier(ssoCodeVerifier);
+
     try {
       await ipc.platform.localhostCallbackService.openSsoPrompt(codeChallenge, state);
     } catch (err) {
