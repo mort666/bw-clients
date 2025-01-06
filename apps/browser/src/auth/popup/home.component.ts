@@ -8,10 +8,11 @@ import { LoginEmailServiceAbstraction } from "@bitwarden/auth/common";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { ToastService } from "@bitwarden/components";
+
 import { AccountSwitcherService } from "./account-switching/services/account-switcher.service";
-import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 
 @Component({
   selector: "app-home",
@@ -23,7 +24,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   private destroyed$: Subject<void> = new Subject();
 
   loginInitiated = false;
-  formGroup = this.formBuilder.group({
+  formGroup = this.formBuilder.nonNullable.group({
     email: ["", [Validators.required, Validators.email]],
     rememberEmail: [false],
   });
@@ -106,29 +107,22 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (this.formGroup.invalid) {
       this.toastService.showToast({
         variant: "error",
-        title: this.i18nService.t("errorOccured"),
+        title: this.i18nService.t("errorOccurred"),
         message: this.i18nService.t("invalidEmail"),
       });
       return;
     }
 
     await this.setLoginEmailValues();
-    await this.router.navigate(["login"], { queryParams: { email: this.formGroup.value.email } });
+    await this.router.navigate(["login"], {
+      queryParams: { email: this.formGroup.controls.email.value },
+    });
   }
 
   async setLoginEmailValues() {
-    if (!this.formGroup.value.rememberEmail || !this.formGroup.value.email) {
-      this.logService.warning(
-        `Failed to setLoginEmailValues due to null value for either:
-        \n\tformGroup.value.rememberEmail: ${this.formGroup.value.rememberEmail}
-        \n\tformGroup.value.email: ${this.formGroup.value.email}`,
-      );
-      return;
-    }
-
     // Note: Browser saves email settings here instead of the login component
-    this.loginEmailService.setRememberEmail(this.formGroup.value.rememberEmail);
-    await this.loginEmailService.setLoginEmail(this.formGroup.value.email);
+    this.loginEmailService.setRememberEmail(this.formGroup.controls.rememberEmail.value);
+    await this.loginEmailService.setLoginEmail(this.formGroup.controls.email.value);
     await this.loginEmailService.saveEmailSettings();
   }
 }
