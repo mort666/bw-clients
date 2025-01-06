@@ -19,14 +19,7 @@ export class OrganizationInvite {
     return Object.assign(new OrganizationInvite(), json);
   }
 
-  static fromParams(params: Params | null): OrganizationInvite | null {
-    // Conversation topic:
-    // What if the query parameters we passed in are null? How do we outwardly communicate
-    // that this happened?
-    if (params == null) {
-      return null;
-    }
-
+  static fromParams(params: Params): OrganizationInvite {
     return Object.assign(new OrganizationInvite(), {
       email: params.email,
       initOrganization: params.initOrganization?.toLocaleLowerCase() === "true",

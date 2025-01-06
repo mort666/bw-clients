@@ -6,7 +6,6 @@ import { first, switchMap, takeUntil } from "rxjs/operators";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { ToastService } from "@bitwarden/components";
 
 @Directive()
@@ -24,7 +23,6 @@ export abstract class BaseAcceptComponent implements OnInit {
 
   constructor(
     protected router: Router,
-    protected platformUtilService: PlatformUtilsService,
     protected i18nService: I18nService,
     protected route: ActivatedRoute,
     protected authService: AuthService,

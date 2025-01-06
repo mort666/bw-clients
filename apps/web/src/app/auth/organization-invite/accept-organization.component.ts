@@ -3,7 +3,7 @@ import { ActivatedRoute, Params, Router } from "@angular/router";
 
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { ToastService } from "@bitwarden/components";
 
 import { BaseAcceptComponent } from "../../common/base.accept.component";
@@ -20,14 +20,14 @@ export class AcceptOrganizationComponent extends BaseAcceptComponent {
 
   constructor(
     router: Router,
-    platformUtilsService: PlatformUtilsService,
     i18nService: I18nService,
     route: ActivatedRoute,
     authService: AuthService,
     toastService: ToastService,
     private acceptOrganizationInviteService: AcceptOrganizationInviteService,
+    private logService: LogService,
   ) {
-    super(router, platformUtilsService, i18nService, route, authService, toastService);
+    super(router, i18nService, route, authService, toastService);
   }
 
   async authedHandler(qParams: Params): Promise<void> {
