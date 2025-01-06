@@ -285,20 +285,12 @@ export class LoginComponentV1 extends CaptchaProtectedComponent implements OnIni
   }
 
   async validateEmail() {
-    const email = this.formGroup.get("email");
-    if (!email) {
-      this.logService.warning(
-        `No email in form group when attempting to ${this.validateEmail.name}`,
-      );
-      return;
-    }
-
     this.formGroup.controls.email.markAsTouched();
-    const emailValid = email.valid;
+    const emailValid = this.formGroup.controls.email.valid;
 
     if (emailValid) {
       this.toggleValidateEmail(true);
-      await this.getLoginWithDevice(this.formGroup.controls["email"].value);
+      await this.getLoginWithDevice(this.formGroup.controls.email.value);
     }
   }
 
