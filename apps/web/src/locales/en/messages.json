@@ -143,6 +143,15 @@
   "atRiskMembersDescription": {
     "message": "These members are logging into Priority Access Intelligence with weak, exposed, or reused passwords."
   },
+  "atRiskMembersDescriptionWithApp": {
+    "message": "These members are logging into $APPNAME$ with weak, exposed, or reused passwords.",
+    "placeholders": {
+      "appname": {
+        "content": "$1",
+        "example": "Salesforce"
+      }
+    }
+  },
   "totalMembers": {
     "message": "Total members"
   },

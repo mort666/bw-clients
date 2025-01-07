@@ -82,7 +82,7 @@
             (change)="onCheckboxChange(r.id, $event)"
           />
         </td>
-        <td bitCell>
+        <td class="tw-cursor-pointer" (click)="showAppAtRiskMembers(r.applicationName)" bitCell>
           <span>{{ r.applicationName }}</span>
         </td>
         <td bitCell>
