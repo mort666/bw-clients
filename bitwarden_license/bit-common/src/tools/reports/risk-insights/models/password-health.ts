@@ -90,3 +90,11 @@ export type MemberDetailsFlat = {
   email: string;
   cipherId: string;
 };
+
+/**
+ * Member email with the number of at risk passwords
+ */
+export type AtRiskMemberDetail = {
+  email: string;
+  atRiskPasswordCount: number;
+};
