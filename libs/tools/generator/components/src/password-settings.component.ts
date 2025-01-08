@@ -155,7 +155,7 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
         this.minNumberMin = constraints.minNumber.min;
         this.minNumberMax = constraints.minNumber.max;
         this.minSpecialMin = constraints.minSpecial.min;
-        this.minSpecialMax - constraints.minSpecial.max;
+        this.minSpecialMax = constraints.minSpecial.max;
 
         const toggles = [
           [Controls.length, constraints.length.min < constraints.length.max],
