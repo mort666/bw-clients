@@ -80,7 +80,7 @@ export class BackgroundBrowserBiometricsService extends BiometricsService {
     }
   }
 
-  async unlockWithBiometricsForUser(userId: UserId): Promise<UserKey | null | undefined> {
+  async unlockWithBiometricsForUser(userId: UserId): Promise<UserKey | null> {
     try {
       await this.ensureConnected();
 
@@ -96,7 +96,7 @@ export class BackgroundBrowserBiometricsService extends BiometricsService {
             await this.biometricStateService.setBiometricUnlockEnabled(true);
             await this.biometricStateService.setFingerprintValidated(true);
             this.keyService.setUserKey(userKey, userId);
-            return response.userKeyB64;
+            return userKey;
           }
         } else {
           return null;
@@ -107,13 +107,14 @@ export class BackgroundBrowserBiometricsService extends BiometricsService {
           userId: userId,
         });
         if (response.response) {
+          // In case the requesting foreground context dies (popup), the userkey should still be set, so the user is unlocked / the setting should be enabled
           const decodedUserkey = Utils.fromB64ToArray(response.userKeyB64);
           const userKey = new SymmetricCryptoKey(decodedUserkey) as UserKey;
           if (await this.keyService.validateUserKey(userKey, userId)) {
             await this.biometricStateService.setBiometricUnlockEnabled(true);
             await this.biometricStateService.setFingerprintValidated(true);
             this.keyService.setUserKey(userKey, userId);
-            return response.userKeyB64;
+            return userKey;
           }
         } else {
           return null;
@@ -123,6 +124,8 @@ export class BackgroundBrowserBiometricsService extends BiometricsService {
       this.logService.info("Biometric unlock for user failed", e);
       throw new Error("Biometric unlock failed");
     }
+
+    return null;
   }
 
   async getBiometricsStatusForUser(id: UserId): Promise<BiometricsStatus> {
