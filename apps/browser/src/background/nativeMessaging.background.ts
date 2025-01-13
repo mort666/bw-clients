@@ -281,7 +281,6 @@ export class NativeMessagingBackground {
     });
     message.messageId = messageId;
     try {
-      this.logService.info("DEBUG: Sending message of type " + message.command);
       await this.send(message);
     } catch (e) {
       this.logService.info(
@@ -375,8 +374,6 @@ export class NativeMessagingBackground {
       return;
     }
 
-    this.logService.info("DEBUG:recv message", message);
-
     const messageId = message.messageId;
 
     if (
@@ -394,7 +391,6 @@ export class NativeMessagingBackground {
     }
 
     if (this.callbacks.has(messageId)) {
-      this.logService.info("[Native Messaging IPC] Received message with a callback", message);
       this.callbacks.get(messageId).resolver(message);
     } else {
       this.logService.info("[Native Messaging IPC] Received message without a callback", message);
