@@ -95,6 +95,7 @@ export class BackgroundBrowserBiometricsService extends BiometricsService {
             await this.biometricStateService.setBiometricUnlockEnabled(true);
             await this.biometricStateService.setFingerprintValidated(true);
             this.keyService.setUserKey(userKey, userId);
+            await BrowserApi.sendMessage("updateBadge");
             return response.userKeyB64;
           }
         } else {
@@ -112,6 +113,7 @@ export class BackgroundBrowserBiometricsService extends BiometricsService {
             await this.biometricStateService.setBiometricUnlockEnabled(true);
             await this.biometricStateService.setFingerprintValidated(true);
             this.keyService.setUserKey(userKey, userId);
+            await BrowserApi.sendMessage("updateBadge");
             return response.userKeyB64;
           }
         } else {
