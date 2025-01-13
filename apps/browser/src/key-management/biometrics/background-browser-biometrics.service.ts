@@ -85,40 +85,34 @@ export class BackgroundBrowserBiometricsService extends BiometricsService {
       await this.ensureConnected();
 
       if (this.nativeMessagingBackground().isConnectedToOutdatedDesktopClient) {
-        this.logService.info("Biometric unlock for user outdated", userId);
         const response = await this.nativeMessagingBackground().callCommand({
           command: BiometricsCommands.Unlock,
         });
-        this.logService.info("Biometric unlock for user", response);
         if (response.response == "unlocked") {
           const decodedUserkey = Utils.fromB64ToArray(response.userKeyB64);
           const userKey = new SymmetricCryptoKey(decodedUserkey) as UserKey;
           if (this.keyService.validateUserKey(userKey, userId)) {
-            this.logService.info("validated setting enabled");
             await this.biometricStateService.setBiometricUnlockEnabled(true);
             await this.biometricStateService.setFingerprintValidated(true);
             this.keyService.setUserKey(userKey, userId);
-            return userKey;
+            return response.userKeyB64;
           }
         } else {
           return null;
         }
       } else {
-        this.logService.info("Unlock for new user", userId);
         const response = await this.nativeMessagingBackground().callCommand({
           command: BiometricsCommands.UnlockWithBiometricsForUser,
           userId: userId,
         });
-        this.logService.info("Biometric unlock for user1", response);
         if (response.response) {
           const decodedUserkey = Utils.fromB64ToArray(response.userKeyB64);
           const userKey = new SymmetricCryptoKey(decodedUserkey) as UserKey;
           if (this.keyService.validateUserKey(userKey, userId)) {
-            this.logService.info("validated setting enabled");
             await this.biometricStateService.setBiometricUnlockEnabled(true);
             await this.biometricStateService.setFingerprintValidated(true);
             this.keyService.setUserKey(userKey, userId);
-            return userKey;
+            return response.userKeyB64;
           }
         } else {
           return null;
