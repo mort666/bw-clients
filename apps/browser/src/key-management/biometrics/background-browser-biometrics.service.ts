@@ -84,6 +84,7 @@ export class BackgroundBrowserBiometricsService extends BiometricsService {
     try {
       await this.ensureConnected();
 
+      // todo remove after 2025.3
       if (this.nativeMessagingBackground().isConnectedToOutdatedDesktopClient) {
         const response = await this.nativeMessagingBackground().callCommand({
           command: BiometricsCommands.Unlock,
@@ -95,7 +96,6 @@ export class BackgroundBrowserBiometricsService extends BiometricsService {
             await this.biometricStateService.setBiometricUnlockEnabled(true);
             await this.biometricStateService.setFingerprintValidated(true);
             this.keyService.setUserKey(userKey, userId);
-            await BrowserApi.sendMessage("updateBadge");
             return response.userKeyB64;
           }
         } else {
@@ -113,7 +113,6 @@ export class BackgroundBrowserBiometricsService extends BiometricsService {
             await this.biometricStateService.setBiometricUnlockEnabled(true);
             await this.biometricStateService.setFingerprintValidated(true);
             this.keyService.setUserKey(userKey, userId);
-            await BrowserApi.sendMessage("updateBadge");
             return response.userKeyB64;
           }
         } else {
