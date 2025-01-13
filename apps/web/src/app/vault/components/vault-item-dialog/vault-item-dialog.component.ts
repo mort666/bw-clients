@@ -234,13 +234,13 @@ export class VaultItemDialogComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Whether the user can restore the given cipher from the trash
+   * Whether the user can restore a given cipher from the trash
    * Rules for when a cipher can be restored:
    * - the cipher is deleted
-   * - AND
+   * - AND one or more of the following:
    * - the cipher is a personal item (doesn't belong to an organization)
    * - the cipher belongs to a collection that the user can manage
-   * - the user is an admin of the organization
+   * - the user is an admin of the organization to which the cipher belongs
    */
   protected get canRestoreCipher() {
     if (!this.cipher || !this.cipher.isDeleted) {
