@@ -195,8 +195,7 @@ export default class RuntimeBackground {
         return await this.main.biometricsService.getBiometricsStatus();
       }
       case BiometricsCommands.UnlockWithBiometricsForUser: {
-        const userKey = await this.main.biometricsService.unlockWithBiometricsForUser(msg.userId);
-        return userKey.keyB64;
+        return await this.main.biometricsService.unlockWithBiometricsForUser(msg.userId);
       }
       case BiometricsCommands.GetBiometricsStatusForUser: {
         return await this.main.biometricsService.getBiometricsStatusForUser(msg.userId);
