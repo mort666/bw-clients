@@ -80,7 +80,7 @@ export class BackgroundBrowserBiometricsService extends BiometricsService {
     }
   }
 
-  async unlockWithBiometricsForUser(userId: UserId): Promise<UserKey | null> {
+  async unlockWithBiometricsForUser(userId: UserId): Promise<UserKey | null | undefined> {
     try {
       await this.ensureConnected();
 
@@ -92,7 +92,7 @@ export class BackgroundBrowserBiometricsService extends BiometricsService {
         if (response.response == "unlocked") {
           const decodedUserkey = Utils.fromB64ToArray(response.userKeyB64);
           const userKey = new SymmetricCryptoKey(decodedUserkey) as UserKey;
-          if (this.keyService.validateUserKey(userKey, userId)) {
+          if (await this.keyService.validateUserKey(userKey, userId)) {
             await this.biometricStateService.setBiometricUnlockEnabled(true);
             await this.biometricStateService.setFingerprintValidated(true);
             this.keyService.setUserKey(userKey, userId);
@@ -109,7 +109,7 @@ export class BackgroundBrowserBiometricsService extends BiometricsService {
         if (response.response) {
           const decodedUserkey = Utils.fromB64ToArray(response.userKeyB64);
           const userKey = new SymmetricCryptoKey(decodedUserkey) as UserKey;
-          if (this.keyService.validateUserKey(userKey, userId)) {
+          if (await this.keyService.validateUserKey(userKey, userId)) {
             await this.biometricStateService.setBiometricUnlockEnabled(true);
             await this.biometricStateService.setFingerprintValidated(true);
             this.keyService.setUserKey(userKey, userId);
