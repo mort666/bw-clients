@@ -251,7 +251,13 @@
         }
       }
     ],
-    "stagePackages": ["default"]
+    "stagePackages": ["default"],
+    "extraFiles": [
+      {
+        "from": "resources/com.bitwarden.desktop.policy",
+        "to": "meta/polkit/polkit.com.bitwarden.desktop.policy"
+      }
+    ]
   },
   "protocols": [
     {
