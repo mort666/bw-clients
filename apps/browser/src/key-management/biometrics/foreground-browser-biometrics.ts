@@ -1,3 +1,5 @@
+import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { UserId } from "@bitwarden/common/types/guid";
 import { UserKey } from "@bitwarden/common/types/key";
 import { BiometricsCommands, BiometricsService, BiometricsStatus } from "@bitwarden/key-management";
@@ -34,7 +36,7 @@ export class ForegroundBrowserBiometricsService extends BiometricsService {
     if (!response.result) {
       return null;
     }
-    return response.result;
+    return new SymmetricCryptoKey(Utils.fromB64ToArray(response.result.keyB64)) as UserKey;
   }
 
   async getBiometricsStatusForUser(id: UserId): Promise<BiometricsStatus> {
