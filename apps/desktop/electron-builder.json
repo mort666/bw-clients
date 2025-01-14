@@ -99,6 +99,10 @@
       {
         "from": "desktop_native/dist/desktop_proxy.${platform}-${arch}",
         "to": "desktop_proxy"
+      },
+      {
+        "from": "resources/com.bitwarden.desktop.policy",
+        "to": "meta/polkit/polkit.com.bitwarden.desktop.policy"
       }
     ],
     "target": ["deb", "freebsd", "rpm", "AppImage", "snap"],
@@ -251,13 +255,7 @@
         }
       }
     ],
-    "stagePackages": ["default"],
-    "extraFiles": [
-      {
-        "from": "resources/com.bitwarden.desktop.policy",
-        "to": "meta/polkit/polkit.com.bitwarden.desktop.policy"
-      }
-    ]
+    "stagePackages": ["default"]
   },
   "protocols": [
     {
