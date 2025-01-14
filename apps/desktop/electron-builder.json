@@ -11,6 +11,7 @@
     "output": "dist",
     "app": "build"
   },
+  "beforePack": "scripts/before-pack.js",
   "afterSign": "scripts/after-sign.js",
   "afterPack": "scripts/after-pack.js",
   "asarUnpack": ["**/*.node"],
@@ -99,10 +100,6 @@
       {
         "from": "desktop_native/dist/desktop_proxy.${platform}-${arch}",
         "to": "desktop_proxy"
-      },
-      {
-        "from": "resources/com.bitwarden.desktop.policy",
-        "to": "meta/polkit/polkit.com.bitwarden.desktop.policy"
       }
     ],
     "target": ["deb", "freebsd", "rpm", "AppImage", "snap"],
