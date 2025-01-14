@@ -36,7 +36,7 @@ export class ForegroundBrowserBiometricsService extends BiometricsService {
     if (!response.result) {
       return null;
     }
-    return new SymmetricCryptoKey(Utils.fromB64ToArray(response.result.keyB64)) as UserKey;
+    return new SymmetricCryptoKey.fromString(response.result.keyB64) as UserKey;
   }
 
   async getBiometricsStatusForUser(id: UserId): Promise<BiometricsStatus> {
