@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-require-imports, no-console */
 
-const { Platform } = require("electron-builder");
-
 const path = require("path");
 
+const { Platform } = require("electron-builder");
 const fse = require("fs-extra");
 
 exports.default = run;
@@ -12,7 +11,7 @@ async function run(context) {
   console.log("## Before pack");
 
   const platform = context.packager.platform;
-  const targets = context.packager.targetNames;
+  const targets = context.packager.targets;
 
   console.log("### Platform: " + platform);
   console.log("### Targets: " + targets);
