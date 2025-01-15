@@ -8,9 +8,6 @@ const fse = require("fs-extra");
 
 exports.default = run;
 
-/**
- * @param {import("electron-builder").} context
- */
 async function run(context) {
   console.log("## Before pack");
 
