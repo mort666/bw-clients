@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports, no-console */
 
+const { Platform } = require("electron-builder");
+
 const path = require("path");
 
 const fse = require("fs-extra");
@@ -11,7 +13,11 @@ async function run(context) {
 
   const platform = context.packager.platform;
   const targets = context.packager.targetNames;
-  const isSnap = platform === "linux" && targets.includes("snap");
+
+  console.log("### Platform: " + platform);
+  console.log("### Targets: " + targets);
+
+  const isSnap = platform === Platform.LINUX && targets.includes("snap");
 
   if (isSnap) {
     console.log("### Copying polkit policy file");
