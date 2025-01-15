@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports, no-console */
-const fs = require("fs");
+const fse = require("fs-extra");
 const path = require("path");
 
 exports.default = run;
@@ -13,7 +13,7 @@ async function run(context) {
     console.log("### Copying polkit policy file");
     const policyPath = path.join(__dirname, "../resources/com.bitwarden.desktop.policy");
     const targetDir = path.join(context.appOutDir, "/meta/polkit");
-    if (fs.existsSync(policyPath)) {
+    if (fse.existsSync(policyPath)) {
       if (!fse.existsSync(targetDir)) {
         console.log("### Creating polkit directory " + targetDir);
         fse.mkdirSync(targetDir);
