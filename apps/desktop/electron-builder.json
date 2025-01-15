@@ -11,6 +11,7 @@
     "output": "dist",
     "app": "build"
   },
+  "beforePack": "scripts/before-pack.js",
   "afterSign": "scripts/after-sign.js",
   "afterPack": "scripts/after-pack.js",
   "asarUnpack": ["**/*.node"],
@@ -251,8 +252,7 @@
         }
       }
     ],
-    "stagePackages": ["default"],
-    "beforePack": "scripts/before-pack.js"
+    "stagePackages": ["default"]
   },
   "protocols": [
     {
