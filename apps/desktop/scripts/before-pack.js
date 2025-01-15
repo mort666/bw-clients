@@ -1,7 +1,4 @@
 /* eslint-disable @typescript-eslint/no-require-imports, no-console */
-require("dotenv").config();
-const path = require("path");
-
 const fs = require("fs");
 const path = require("path");
 
