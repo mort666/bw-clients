@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports, no-console */
 
 const path = require("path");
-const { inspect } = require("util");
 
 const { Platform } = require("electron-builder");
 const fse = require("fs-extra");
