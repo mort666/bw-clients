@@ -12,7 +12,7 @@ async function run(context) {
   console.log("## Before pack");
 
   const platform = context.packager.platform;
-  const targets = context.packager.targets;
+  const targets = context.packager.targetNames;
 
   console.log("### Platform: " + platform);
   console.log("### Targets: " + targets);
