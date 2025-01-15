@@ -1,10 +1,14 @@
 /* eslint-disable @typescript-eslint/no-require-imports, no-console */
-const fse = require("fs-extra");
+
 const path = require("path");
+
+const fse = require("fs-extra");
 
 exports.default = run;
 
 async function run(context) {
+  console.log("## Before pack");
+
   const platform = context.packager.platform;
   const targets = context.packager.targetNames;
   const isSnap = platform === "linux" && targets.includes("snap");
@@ -23,5 +27,7 @@ async function run(context) {
     } else {
       console.log("### Policy file not found - skipping");
     }
+  } else {
+    console.log("### Skipping polkit policy file copy because not a snap build");
   }
 }
