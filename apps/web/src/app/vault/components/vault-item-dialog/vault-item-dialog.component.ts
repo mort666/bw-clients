@@ -282,7 +282,6 @@ export class VaultItemDialogComponent implements OnInit, OnDestroy {
 
   async ngOnInit() {
     this.cipher = await this.getDecryptedCipherView(this.formConfig);
-    this.showRestore = await this.canUserRestore();
 
     if (this.cipher) {
       if (this.cipher.decryptionFailure) {
@@ -316,6 +315,7 @@ export class VaultItemDialogComponent implements OnInit, OnDestroy {
 
     this.filter = await firstValueFrom(this.routedVaultFilterService.filter$);
 
+    this.showRestore = await this.canUserRestore();
     this.performingInitialLoad = false;
   }
 
