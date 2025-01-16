@@ -204,13 +204,19 @@ export class VaultItemDialogComponent implements OnInit, OnDestroy {
     ),
   );
 
-  protected async showRestore() {
+  /**
+   * Determines if the user may restore the item.
+   * A user may restore items if they have delete permissions and the item is in the trash.
+   */
+  protected async canUserRestore() {
     return (
       this.filter?.type === "trash" &&
       this.cipher?.isDeleted &&
       (await firstValueFrom(this.canDeleteCipher$))
     );
   }
+
+  protected showRestore: boolean;
 
   protected get loadingForm() {
     return this.loadForm && !this.formReady;
@@ -276,6 +282,7 @@ export class VaultItemDialogComponent implements OnInit, OnDestroy {
 
   async ngOnInit() {
     this.cipher = await this.getDecryptedCipherView(this.formConfig);
+    this.showRestore = await this.canUserRestore();
 
     if (this.cipher) {
       if (this.cipher.decryptionFailure) {
