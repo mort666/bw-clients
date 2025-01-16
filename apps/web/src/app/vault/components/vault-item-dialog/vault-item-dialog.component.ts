@@ -204,6 +204,14 @@ export class VaultItemDialogComponent implements OnInit, OnDestroy {
     ),
   );
 
+  protected async showRestore() {
+    return (
+      this.filter?.type === "trash" &&
+      this.cipher?.isDeleted &&
+      (await firstValueFrom(this.canDeleteCipher$))
+    );
+  }
+
   protected get loadingForm() {
     return this.loadForm && !this.formReady;
   }
@@ -227,40 +235,6 @@ export class VaultItemDialogComponent implements OnInit, OnDestroy {
 
   protected get showCipherView() {
     return this.cipher != undefined && (this.params.mode === "view" || this.loadingForm);
-  }
-
-  protected get showRestore() {
-    return this.filter?.type === "trash" && this.canRestoreCipher && !!this.params.restore;
-  }
-
-  /**
-   * Whether the user can restore a given cipher from the trash
-   * Rules for when a cipher can be restored:
-   * - the cipher is deleted
-   * - AND one or more of the following:
-   * - the cipher is a personal item (doesn't belong to an organization)
-   * - the cipher belongs to a collection that the user can manage
-   * - the user is an admin of the organization to which the cipher belongs
-   */
-  protected get canRestoreCipher() {
-    if (!this.cipher || !this.cipher.isDeleted) {
-      return false;
-    }
-
-    if (this.cipher.organizationId == null) {
-      return true;
-    }
-
-    const collection = this.collections.find((c) => this.cipher.collectionIds.includes(c.id));
-    if (collection?.manage) {
-      return true;
-    }
-
-    if (this.organization?.isAdmin) {
-      return true;
-    }
-
-    return false;
   }
 
   /**
