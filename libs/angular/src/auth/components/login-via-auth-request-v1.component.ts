@@ -15,6 +15,7 @@ import { AccountService } from "@bitwarden/common/auth/abstractions/account.serv
 import { AnonymousHubService } from "@bitwarden/common/auth/abstractions/anonymous-hub.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { DeviceTrustServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust.service.abstraction";
+import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/auth/abstractions/master-password.service.abstraction";
 import { AuthRequestType } from "@bitwarden/common/auth/enums/auth-request-type";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
 import { AdminAuthRequestStorable } from "@bitwarden/common/auth/models/domain/admin-auth-req-storable";
@@ -92,6 +93,7 @@ export class LoginViaAuthRequestComponentV1
     private authRequestService: AuthRequestServiceAbstraction,
     private loginStrategyService: LoginStrategyServiceAbstraction,
     protected toastService: ToastService,
+    private masterPasswordService: InternalMasterPasswordServiceAbstraction,
   ) {
     super(environmentService, i18nService, platformUtilsService, toastService);
 
@@ -511,6 +513,17 @@ export class LoginViaAuthRequestComponentV1
     if (this.state === State.StandardAuthRequest) {
       // Only need to set remembered email on standard login with auth req flow
       await this.loginEmailService.saveEmailSettings();
+    }
+
+    if (
+      (await firstValueFrom(
+        this.masterPasswordService.forceSetPasswordReason$(
+          (await firstValueFrom(this.accountService.activeAccount$)).id,
+        ),
+      )) !== ForceSetPasswordReason.None
+    ) {
+      await this.router.navigate([this.forcePasswordResetRoute]);
+      return;
     }
 
     if (this.onSuccessfulLogin != null) {

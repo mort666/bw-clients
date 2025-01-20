@@ -18,6 +18,7 @@ import { AccountService } from "@bitwarden/common/auth/abstractions/account.serv
 import { AnonymousHubService } from "@bitwarden/common/auth/abstractions/anonymous-hub.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { DeviceTrustServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust.service.abstraction";
+import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/auth/abstractions/master-password.service.abstraction";
 import { AuthRequestType } from "@bitwarden/common/auth/enums/auth-request-type";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
 import { AdminAuthRequestStorable } from "@bitwarden/common/auth/models/domain/admin-auth-req-storable";
@@ -71,6 +72,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
   protected showResendNotification = false;
   protected Flow = Flow;
   protected flow = Flow.StandardAuthRequest;
+  private forceResetPasswordRoute = "/update-temp-password";
 
   constructor(
     private accountService: AccountService,
@@ -91,6 +93,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     private toastService: ToastService,
     private validationService: ValidationService,
     private loginSuccessHandlerService: LoginSuccessHandlerService,
+    private masterPasswordService: InternalMasterPasswordServiceAbstraction,
   ) {
     this.clientType = this.platformUtilsService.getClientType();
 
@@ -485,6 +488,14 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
     await this.deviceTrustService.trustDeviceIfRequired(activeAccount.id);
 
+    if (
+      (await firstValueFrom(
+        this.masterPasswordService.forceSetPasswordReason$(activeAccount.id),
+      )) !== ForceSetPasswordReason.None
+    ) {
+      await this.router.navigate([this.forceResetPasswordRoute]);
+    }
+
     await this.handleSuccessfulLoginNavigation(userId);
   }
 
@@ -553,7 +564,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     if (loginResponse.requiresTwoFactor) {
       await this.router.navigate(["2fa"]);
     } else if (loginResponse.forcePasswordReset != ForceSetPasswordReason.None) {
-      await this.router.navigate(["update-temp-password"]);
+      await this.router.navigate([this.forceResetPasswordRoute]);
     } else {
       await this.handleSuccessfulLoginNavigation(loginResponse.userId);
     }
