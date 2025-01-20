@@ -16,6 +16,7 @@ import { AccountService } from "@bitwarden/common/auth/abstractions/account.serv
 import { AnonymousHubService } from "@bitwarden/common/auth/abstractions/anonymous-hub.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { DeviceTrustServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust.service.abstraction";
+import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/auth/abstractions/master-password.service.abstraction";
 import { AppIdService } from "@bitwarden/common/platform/abstractions/app-id.service";
 import { CryptoFunctionService } from "@bitwarden/common/platform/abstractions/crypto-function.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
@@ -62,6 +63,7 @@ export class LoginViaAuthRequestComponentV1 extends BaseLoginViaAuthRequestCompo
     accountService: AccountService,
     private location: Location,
     toastService: ToastService,
+    masterPasswordService: InternalMasterPasswordServiceAbstraction,
   ) {
     super(
       router,
@@ -83,6 +85,7 @@ export class LoginViaAuthRequestComponentV1 extends BaseLoginViaAuthRequestCompo
       authRequestService,
       loginStrategyService,
       toastService,
+      masterPasswordService,
     );
 
     this.onSuccessfulLogin = () => {
