@@ -494,6 +494,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
       )) !== ForceSetPasswordReason.None
     ) {
       await this.router.navigate([this.forceResetPasswordRoute]);
+      return;
     }
 
     await this.handleSuccessfulLoginNavigation(userId);
