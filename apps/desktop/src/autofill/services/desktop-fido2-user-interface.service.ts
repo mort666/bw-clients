@@ -1,4 +1,4 @@
-import { firstValueFrom, map } from "rxjs";
+import { firstValueFrom, lastValueFrom, map, Subject } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
@@ -13,6 +13,7 @@ import { LogService } from "@bitwarden/common/platform/abstractions/log.service"
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherRepromptType, CipherType, SecureNoteType } from "@bitwarden/common/vault/enums";
+import { Cipher } from "@bitwarden/common/vault/models/domain/cipher";
 import { CardView } from "@bitwarden/common/vault/models/view/card.view";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { IdentityView } from "@bitwarden/common/vault/models/view/identity.view";
@@ -56,15 +57,30 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     private messagingService: MessagingService,
   ) {}
 
-  async pickCredential({
-    cipherIds,
-    userVerification,
-  }: PickCredentialParams): Promise<{ cipherId: string; userVerified: boolean }> {
-    this.logService.warning("pickCredential", cipherIds, userVerification);
+  private operationSubject = new Subject<void>();
+  private createdCipher: Cipher;
 
-    return { cipherId: cipherIds[0], userVerified: userVerification };
+  /**
+   * Notifies the Fido2UserInterfaceSession that the UI operations has completed and it can return to the OS.
+   */
+  notifyOperationCompleted() {
+    this.operationSubject.next();
+    this.operationSubject.complete();
   }
 
+  /**
+   * Returns once the UI has confirmed and completed the operation
+   * @returns
+   */
+  private async waitForUICompletion(): Promise<void> {
+    return lastValueFrom(this.operationSubject);
+  }
+
+  /**
+   * This is called by the OS. It loads the UI and waits for the user to confirm the new credential. Once the UI has confirmed, it returns to the the OS.
+   * @param param0
+   * @returns
+   */
   async confirmNewCredential({
     credentialName,
     userName,
@@ -79,8 +95,21 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
       rpId,
     );
 
-    await this.messagingService.send("loadurl", { url: "/passkeys", modal: true });
+    // Load the UI (to be refactored)
+    this.messagingService.send("loadurl", { url: "/passkeys", modal: true });
 
+    // Wait for the UI to wrap up
+    await this.waitForUICompletion();
+
+    // Return the new cipher (this.createdCipher)
+    return { cipherId: this.createdCipher.id, userVerified: userVerification };
+  }
+
+  /**
+   * Can be called by the UI to create a new credential with user input etc.
+   * @param param0
+   */
+  async createCredential({ credentialName, userName, rpId }: NewCredentialParams): Promise<void> {
     // Store the passkey on a new cipher to avoid replacing something important
     const cipher = new CipherView();
     cipher.name = credentialName;
@@ -103,7 +132,16 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     const encCipher = await this.cipherService.encrypt(cipher, activeUserId);
     const createdCipher = await this.cipherService.createWithServer(encCipher);
 
-    return { cipherId: createdCipher.id, userVerified: userVerification };
+    this.createdCipher = createdCipher;
+  }
+
+  async pickCredential({
+    cipherIds,
+    userVerification,
+  }: PickCredentialParams): Promise<{ cipherId: string; userVerified: boolean }> {
+    this.logService.warning("pickCredential", cipherIds, userVerification);
+
+    return { cipherId: cipherIds[0], userVerified: userVerification };
   }
 
   async informExcludedCredential(existingCipherIds: string[]): Promise<void> {
