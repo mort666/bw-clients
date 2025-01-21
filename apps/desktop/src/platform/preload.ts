@@ -59,9 +59,6 @@ const sshAgent = {
   signRequestResponse: async (requestId: number, accepted: boolean) => {
     await ipcRenderer.invoke("sshagent.signrequestresponse", { requestId, accepted });
   },
-  generateKey: async (keyAlgorithm: string): Promise<ssh.SshKey> => {
-    return await ipcRenderer.invoke("sshagent.generatekey", { keyAlgorithm });
-  },
   lock: async () => {
     return await ipcRenderer.invoke("sshagent.lock");
   },
@@ -74,6 +71,9 @@ const sshAgent = {
       password: password,
     });
     return res;
+  },
+  isLoaded(): Promise<boolean> {
+    return ipcRenderer.invoke("sshagent.isloaded");
   },
 };
 
@@ -88,6 +88,7 @@ const nativeMessaging = {
   },
   sendMessage: (message: {
     appId: string;
+    messageId?: number;
     command?: string;
     sharedSecret?: string;
     message?: EncString;
@@ -123,6 +124,7 @@ const ephemeralStore = {
   getEphemeralValue: (key: string): Promise<string> => ipcRenderer.invoke("getEphemeralValue", key),
   removeEphemeralValue: (key: string): Promise<void> =>
     ipcRenderer.invoke("deleteEphemeralValue", key),
+  listEphemeralValueKeys: (): Promise<string[]> => ipcRenderer.invoke("listEphemeralValueKeys"),
 };
 
 const localhostCallbackService = {
