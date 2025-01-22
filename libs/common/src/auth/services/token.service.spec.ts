@@ -1,5 +1,5 @@
 import { MockProxy, mock } from "jest-mock-extended";
-import { firstValueFrom } from "rxjs";
+import { firstValueFrom, of } from "rxjs";
 
 import { LogoutReason } from "@bitwarden/auth/common";
 
@@ -8,11 +8,11 @@ import { VaultTimeoutAction } from "../../enums/vault-timeout-action.enum";
 import { EncryptService } from "../../platform/abstractions/encrypt.service";
 import { KeyGenerationService } from "../../platform/abstractions/key-generation.service";
 import { LogService } from "../../platform/abstractions/log.service";
-import { PlatformUtilsService } from "../../platform/abstractions/platform-utils.service";
 import { AbstractStorageService } from "../../platform/abstractions/storage.service";
 import { StorageLocation } from "../../platform/enums";
 import { StorageOptions } from "../../platform/models/domain/storage-options";
 import { SymmetricCryptoKey } from "../../platform/models/domain/symmetric-crypto-key";
+import { SecureStorageService, SupportStatus } from "../../platform/storage/secure-storage.service";
 import { CsprngArray } from "../../types/csprng";
 import { UserId } from "../../types/guid";
 import { VaultTimeout, VaultTimeoutStringType } from "../../types/vault-timeout.type";
@@ -622,7 +622,7 @@ describe("TokenService", () => {
       it("throws an error when no user id is provided and there is no active user in global state", async () => {
         // Act
         // note: don't await here because we want to test the error
-        const result = tokenService.clearAccessToken();
+        const result = tokenService.clearAccessToken(null);
         // Assert
         await expect(result).rejects.toThrow("User id not found. Cannot clear access token.");
       });
@@ -2854,10 +2854,11 @@ describe("TokenService", () => {
       const vaultTimeoutAction: VaultTimeoutAction = VaultTimeoutAction.Lock;
       const vaultTimeout: VaultTimeout = null;
       // Act
-      const result = (tokenService as any).determineStorageLocation(
+      const result = tokenService.determineStorageLocation(
         vaultTimeoutAction,
         vaultTimeout,
         false,
+        true,
       );
       // Assert
       await expect(result).rejects.toThrow(
@@ -2870,10 +2871,11 @@ describe("TokenService", () => {
       const vaultTimeoutAction: VaultTimeoutAction = null;
       const vaultTimeout: VaultTimeout = 0;
       // Act
-      const result = (tokenService as any).determineStorageLocation(
+      const result = tokenService.determineStorageLocation(
         vaultTimeoutAction,
         vaultTimeout,
         false,
+        true,
       );
       // Assert
       await expect(result).rejects.toThrow(
@@ -2904,13 +2906,15 @@ describe("TokenService", () => {
           const vaultTimeoutAction = VaultTimeoutAction.LogOut;
           const useSecureStorage = false;
           // Act
-          const result = await (tokenService as any).determineStorageLocation(
+          const [result, service] = await tokenService.determineStorageLocation(
             vaultTimeoutAction,
             vaultTimeout,
             useSecureStorage,
+            true,
           );
           // Assert
           expect(result).toEqual(TokenStorageLocation.Memory);
+          expect(service).toBe(null);
         },
       );
 
@@ -2920,13 +2924,15 @@ describe("TokenService", () => {
         const vaultTimeout: VaultTimeout = VaultTimeoutStringType.Never;
         const useSecureStorage = false;
         // Act
-        const result = await (tokenService as any).determineStorageLocation(
+        const [result, service] = await tokenService.determineStorageLocation(
           vaultTimeoutAction,
           vaultTimeout,
           useSecureStorage,
+          true,
         );
         // Assert
         expect(result).toEqual(TokenStorageLocation.Disk);
+        expect(service).toBe(null);
       });
 
       it("returns disk when the vault timeout action is lock and the vault timeout is never", async () => {
@@ -2935,13 +2941,15 @@ describe("TokenService", () => {
         const vaultTimeout: VaultTimeout = VaultTimeoutStringType.Never;
         const useSecureStorage = false;
         // Act
-        const result = await (tokenService as any).determineStorageLocation(
+        const [result, service] = await tokenService.determineStorageLocation(
           vaultTimeoutAction,
           vaultTimeout,
           useSecureStorage,
+          true,
         );
         // Assert
         expect(result).toEqual(TokenStorageLocation.Disk);
+        expect(service).toBe(null);
       });
     });
 
@@ -2968,10 +2976,11 @@ describe("TokenService", () => {
           const vaultTimeoutAction = VaultTimeoutAction.LogOut;
           const useSecureStorage = true;
           // Act
-          const result = await (tokenService as any).determineStorageLocation(
+          const [result] = await tokenService.determineStorageLocation(
             vaultTimeoutAction,
             vaultTimeout,
             useSecureStorage,
+            true,
           );
           // Assert
           expect(result).toEqual(TokenStorageLocation.Memory);
@@ -2984,10 +2993,11 @@ describe("TokenService", () => {
         const vaultTimeout: VaultTimeout = VaultTimeoutStringType.Never;
         const useSecureStorage = true;
         // Act
-        const result = await (tokenService as any).determineStorageLocation(
+        const [result] = await tokenService.determineStorageLocation(
           vaultTimeoutAction,
           vaultTimeout,
           useSecureStorage,
+          true,
         );
         // Assert
         expect(result).toEqual(TokenStorageLocation.SecureStorage);
@@ -2999,27 +3009,74 @@ describe("TokenService", () => {
         const vaultTimeout: VaultTimeout = VaultTimeoutStringType.Never;
         const useSecureStorage = true;
         // Act
-        const result = await (tokenService as any).determineStorageLocation(
+        const [result] = await tokenService.determineStorageLocation(
           vaultTimeoutAction,
           vaultTimeout,
           useSecureStorage,
+          true,
         );
         // Assert
         expect(result).toEqual(TokenStorageLocation.SecureStorage);
       });
     });
+
+    describe("Secure storage usage is not-preferred", () => {
+      beforeEach(() => {
+        tokenService = createTokenService({
+          type: "not-preferred",
+          service: secureStorageService,
+          reason: "test",
+        });
+      });
+
+      it("does use secure storage when used only for reading and clearing", async () => {
+        const [result, service] = await tokenService.determineStorageLocation(
+          VaultTimeoutAction.Lock,
+          VaultTimeoutStringType.OnRestart,
+          true,
+          true,
+        );
+        expect(result).toEqual(TokenStorageLocation.SecureStorage);
+        expect(service).not.toBeNull();
+      });
+
+      it("does use secure storage when used only for reading and clearing", async () => {
+        const [result, service] = await tokenService.determineStorageLocation(
+          VaultTimeoutAction.Lock,
+          VaultTimeoutStringType.OnRestart,
+          true,
+          false,
+        );
+        expect(result).toEqual(TokenStorageLocation.Disk);
+        expect(service).toBeNull();
+      });
+    });
   });
 
   // Helpers
-  function createTokenService(supportsSecureStorage: boolean) {
-    const platformUtilsService = mock<PlatformUtilsService>();
-    platformUtilsService.supportsSecureStorage.mockReturnValue(supportsSecureStorage);
+  function createTokenService(supportsSecureStorage: boolean | SupportStatus) {
+    const secureStorage = mock<SecureStorageService>();
+
+    if (typeof supportsSecureStorage === "boolean") {
+      if (supportsSecureStorage) {
+        secureStorage.support$ = of({
+          type: "supported",
+          service: secureStorageService,
+        } satisfies SupportStatus);
+      } else {
+        secureStorage.support$ = of({
+          type: "not-supported",
+          reason: "test",
+        } satisfies SupportStatus);
+      }
+    } else {
+      secureStorage.support$ = of(supportsSecureStorage);
+    }
 
     return new TokenService(
       singleUserStateProvider,
       globalStateProvider,
-      platformUtilsService,
-      secureStorageService,
+      secureStorage,
       keyGenerationService,
       encryptService,
       logService,

@@ -9,7 +9,6 @@ import { VaultTimeoutAction } from "../../enums/vault-timeout-action.enum";
 import { EncryptService } from "../../platform/abstractions/encrypt.service";
 import { KeyGenerationService } from "../../platform/abstractions/key-generation.service";
 import { LogService } from "../../platform/abstractions/log.service";
-import { PlatformUtilsService } from "../../platform/abstractions/platform-utils.service";
 import { AbstractStorageService } from "../../platform/abstractions/storage.service";
 import { StorageLocation } from "../../platform/enums";
 import { Utils } from "../../platform/misc/utils";
@@ -40,6 +39,7 @@ import {
   REFRESH_TOKEN_MEMORY,
   SECURITY_STAMP_MEMORY,
 } from "./token.state";
+import { SecureStorageService } from "../../platform/storage/secure-storage.service";
 
 export enum TokenStorageLocation {
   Disk = "disk",
@@ -132,8 +132,7 @@ export class TokenService implements TokenServiceAbstraction {
     // this service into the AccountService, we will make a circular dependency
     private singleUserStateProvider: SingleUserStateProvider,
     private globalStateProvider: GlobalStateProvider,
-    private readonly platforUtilsService: PlatformUtilsService,
-    private secureStorageService: AbstractStorageService,
+    private readonly secureStorageService: SecureStorageService,
     private keyGenerationService: KeyGenerationService,
     private encryptService: EncryptService,
     private logService: LogService,
@@ -222,8 +221,11 @@ export class TokenService implements TokenServiceAbstraction {
     return newTokens;
   }
 
-  private async getAccessTokenKey(userId: UserId): Promise<AccessTokenKey | null> {
-    const accessTokenKeyB64 = await this.secureStorageService.get<
+  private async getAccessTokenKey(
+    userId: UserId,
+    secureStorageService: AbstractStorageService,
+  ): Promise<AccessTokenKey | null> {
+    const accessTokenKeyB64 = await secureStorageService.get<
       ReturnType<SymmetricCryptoKey["toJSON"]>
     >(`${userId}${this.accessTokenKeySecureStorageKey}`, this.getSecureStorageOptions(userId));
 
@@ -235,10 +237,13 @@ export class TokenService implements TokenServiceAbstraction {
     return accessTokenKey;
   }
 
-  private async createAndSaveAccessTokenKey(userId: UserId): Promise<AccessTokenKey> {
+  private async createAndSaveAccessTokenKey(
+    userId: UserId,
+    secureStorageService: AbstractStorageService,
+  ): Promise<AccessTokenKey> {
     const newAccessTokenKey = (await this.keyGenerationService.createKey(512)) as AccessTokenKey;
 
-    await this.secureStorageService.save<AccessTokenKey>(
+    await secureStorageService.save<AccessTokenKey>(
       `${userId}${this.accessTokenKeySecureStorageKey}`,
       newAccessTokenKey,
       this.getSecureStorageOptions(userId),
@@ -246,7 +251,7 @@ export class TokenService implements TokenServiceAbstraction {
 
     // We are having intermittent issues with access token keys not saving into secure storage on windows 10/11.
     // So, let's add a check to ensure we can read the value after writing it.
-    const accessTokenKey = await this.getAccessTokenKey(userId);
+    const accessTokenKey = await this.getAccessTokenKey(userId, secureStorageService);
 
     if (!accessTokenKey) {
       throw new Error("New Access token key unable to be retrieved from secure storage.");
@@ -255,15 +260,21 @@ export class TokenService implements TokenServiceAbstraction {
     return newAccessTokenKey;
   }
 
-  private async clearAccessTokenKey(userId: UserId): Promise<void> {
-    await this.secureStorageService.remove(
+  private async clearAccessTokenKey(
+    userId: UserId,
+    secureStorageService: AbstractStorageService,
+  ): Promise<void> {
+    await secureStorageService.remove(
       `${userId}${this.accessTokenKeySecureStorageKey}`,
       this.getSecureStorageOptions(userId),
     );
   }
 
-  private async getOrCreateAccessTokenKey(userId: UserId): Promise<AccessTokenKey> {
-    if (!this.platforUtilsService.supportsSecureStorage()) {
+  private async getOrCreateAccessTokenKey(
+    userId: UserId,
+    secureStorageService: AbstractStorageService,
+  ): Promise<AccessTokenKey> {
+    if (secureStorageService == null) {
       throw new Error("Platform does not support secure storage. Cannot obtain access token key.");
     }
 
@@ -274,18 +285,22 @@ export class TokenService implements TokenServiceAbstraction {
     // First see if we have an accessTokenKey in secure storage and return it if we do
     // Note: retrieving/saving data from/to secure storage on linux will throw if the
     // distro doesn't have a secure storage provider
-    let accessTokenKey: AccessTokenKey = await this.getAccessTokenKey(userId);
+    let accessTokenKey: AccessTokenKey = await this.getAccessTokenKey(userId, secureStorageService);
 
     if (!accessTokenKey) {
       // Otherwise, create a new one and save it to secure storage, then return it
-      accessTokenKey = await this.createAndSaveAccessTokenKey(userId);
+      accessTokenKey = await this.createAndSaveAccessTokenKey(userId, secureStorageService);
     }
 
     return accessTokenKey;
   }
 
-  private async encryptAccessToken(accessToken: string, userId: UserId): Promise<EncString> {
-    const accessTokenKey = await this.getOrCreateAccessTokenKey(userId);
+  private async encryptAccessToken(
+    accessToken: string,
+    userId: UserId,
+    secureStorageService: AbstractStorageService,
+  ): Promise<EncString> {
+    const accessTokenKey = await this.getOrCreateAccessTokenKey(userId, secureStorageService);
 
     return await this.encryptService.encrypt(accessToken, accessTokenKey);
   }
@@ -319,10 +334,11 @@ export class TokenService implements TokenServiceAbstraction {
     vaultTimeout: VaultTimeout,
     userId: UserId,
   ): Promise<string> {
-    const storageLocation = await this.determineStorageLocation(
+    const [storageLocation, secureStorageService] = await this.determineStorageLocation(
       vaultTimeoutAction,
       vaultTimeout,
       true,
+      accessToken == null, // if the access token we are about to set is null then we are using this for clearing
     );
 
     switch (storageLocation) {
@@ -337,6 +353,7 @@ export class TokenService implements TokenServiceAbstraction {
           const encryptedAccessToken: EncString = await this.encryptAccessToken(
             accessToken,
             userId,
+            secureStorageService,
           );
 
           // Save the encrypted access token to disk
@@ -406,9 +423,7 @@ export class TokenService implements TokenServiceAbstraction {
     return await this._setAccessToken(accessToken, vaultTimeoutAction, vaultTimeout, userId);
   }
 
-  async clearAccessToken(userId?: UserId): Promise<void> {
-    userId ??= await firstValueFrom(this.activeUserIdGlobalState.state$);
-
+  async clearAccessToken(userId: UserId): Promise<void> {
     // If we don't have a user id, we can't clear the value
     if (!userId) {
       throw new Error("User id not found. Cannot clear access token.");
@@ -418,10 +433,14 @@ export class TokenService implements TokenServiceAbstraction {
     // we can't determine storage location w/out vaultTimeoutAction and vaultTimeout
     // but we can simply clear all locations to avoid the need to require those parameters.
 
-    if (this.platforUtilsService.supportsSecureStorage()) {
+    const secureStorageSupport = await firstValueFrom(this.secureStorageService.support$);
+    if (
+      secureStorageSupport.type === "supported" ||
+      secureStorageSupport.type === "not-preferred"
+    ) {
       // Always clear the access token key when clearing the access token
       // The next set of the access token will create a new access token key
-      await this.clearAccessTokenKey(userId);
+      await this.clearAccessTokenKey(userId, secureStorageSupport.service);
     }
 
     // Platform doesn't support secure storage, so use state provider implementation
@@ -451,10 +470,15 @@ export class TokenService implements TokenServiceAbstraction {
       return null;
     }
 
-    if (this.platforUtilsService.supportsSecureStorage()) {
+    const secureStorageSupport = await firstValueFrom(this.secureStorageService.support$);
+
+    if (
+      secureStorageSupport.type === "supported" ||
+      secureStorageSupport.type === "not-preferred"
+    ) {
       let accessTokenKey: AccessTokenKey;
       try {
-        accessTokenKey = await this.getAccessTokenKey(userId);
+        accessTokenKey = await this.getAccessTokenKey(userId, secureStorageSupport.service);
       } catch (error) {
         if (EncString.isSerializedEncString(accessTokenDisk)) {
           this.logService.error(
@@ -534,10 +558,11 @@ export class TokenService implements TokenServiceAbstraction {
       throw new Error("Vault Timeout Action is required.");
     }
 
-    const storageLocation = await this.determineStorageLocation(
+    const [storageLocation, secureStorageService] = await this.determineStorageLocation(
       vaultTimeoutAction,
       vaultTimeout,
       true,
+      false, // used to set a real value, not only for reading or clearing
     );
 
     switch (storageLocation) {
@@ -549,6 +574,7 @@ export class TokenService implements TokenServiceAbstraction {
             userId,
             this.refreshTokenSecureStorageKey,
             refreshToken,
+            secureStorageService,
           );
 
           // Check if the refresh token was able to be saved to secure storage by reading it
@@ -556,6 +582,7 @@ export class TokenService implements TokenServiceAbstraction {
           const refreshTokenSecureStorage = await this.getStringFromSecureStorage(
             userId,
             this.refreshTokenSecureStorageKey,
+            secureStorageService,
           );
 
           // Only throw if the refresh token was not saved to secure storage
@@ -628,11 +655,17 @@ export class TokenService implements TokenServiceAbstraction {
       return refreshTokenDisk;
     }
 
-    if (this.platforUtilsService.supportsSecureStorage()) {
+    const secureStorageSupport = await firstValueFrom(this.secureStorageService.support$);
+    // We can use not-preferred for reading
+    if (
+      secureStorageSupport.type === "supported" ||
+      secureStorageSupport.type === "not-preferred"
+    ) {
       try {
         const refreshTokenSecureStorage = await this.getStringFromSecureStorage(
           userId,
           this.refreshTokenSecureStorageKey,
+          secureStorageSupport.service,
         );
 
         if (refreshTokenSecureStorage != null) {
@@ -664,8 +697,12 @@ export class TokenService implements TokenServiceAbstraction {
     // we can't determine storage location w/out vaultTimeoutAction and vaultTimeout
     // but we can simply clear all locations to avoid the need to require those parameters
 
-    if (this.platforUtilsService.supportsSecureStorage()) {
-      await this.secureStorageService.remove(
+    const secureStorageSupport = await firstValueFrom(this.secureStorageService.support$);
+    if (
+      secureStorageSupport.type === "supported" ||
+      secureStorageSupport.type === "not-preferred"
+    ) {
+      await secureStorageSupport.service.remove(
         `${userId}${this.refreshTokenSecureStorageKey}`,
         this.getSecureStorageOptions(userId),
       );
@@ -698,10 +735,11 @@ export class TokenService implements TokenServiceAbstraction {
       throw new Error("Vault Timeout Action is required.");
     }
 
-    const storageLocation = await this.determineStorageLocation(
+    const [storageLocation, _] = await this.determineStorageLocation(
       vaultTimeoutAction,
       vaultTimeout,
       false, // don't use secure storage for client id
+      false, // value doesn't matter since useSecureStorage is false
     );
 
     if (storageLocation === TokenStorageLocation.Disk) {
@@ -774,10 +812,11 @@ export class TokenService implements TokenServiceAbstraction {
       throw new Error("Vault Timeout Action is required.");
     }
 
-    const storageLocation = await this.determineStorageLocation(
+    const [storageLocation, secureStorageService] = await this.determineStorageLocation(
       vaultTimeoutAction,
       vaultTimeout,
       false, // don't use secure storage for client secret
+      false, // Value doesn't matter since useSecureStorage is false
     );
 
     if (storageLocation === TokenStorageLocation.Disk) {
@@ -1064,11 +1103,18 @@ export class TokenService implements TokenServiceAbstraction {
     return await firstValueFrom(this.singleUserStateProvider.get(userId, storageLocation).state$);
   }
 
-  private async determineStorageLocation(
+  // This method is not marked as private so that it can easily be tested
+  // but it is intentionally left off the service contract since it should not
+  // be used directly.
+  async determineStorageLocation(
     vaultTimeoutAction: VaultTimeoutAction,
     vaultTimeout: VaultTimeout,
     useSecureStorage: boolean,
-  ): Promise<TokenStorageLocation> {
+    forReadingOrClearing: boolean,
+  ): Promise<
+    | [TokenStorageLocation.SecureStorage, AbstractStorageService]
+    | [TokenStorageLocation.Disk | TokenStorageLocation.Memory, null]
+  > {
     if (vaultTimeoutAction == null) {
       throw new Error(
         "TokenService - determineStorageLocation: We expect the vault timeout action to always exist at this point.",
@@ -1085,13 +1131,29 @@ export class TokenService implements TokenServiceAbstraction {
       vaultTimeoutAction === VaultTimeoutAction.LogOut &&
       vaultTimeout !== VaultTimeoutStringType.Never
     ) {
-      return TokenStorageLocation.Memory;
+      return [TokenStorageLocation.Memory, null];
     } else {
-      if (useSecureStorage && this.platforUtilsService.supportsSecureStorage()) {
-        return TokenStorageLocation.SecureStorage;
+      if (useSecureStorage) {
+        // Check support status
+        const secureStorageSupport = await firstValueFrom(this.secureStorageService.support$);
+
+        // If we only need secure storage for reading or clearing, then we are allowed to
+        // make use of secure storage even when it isn't preferred
+        if (forReadingOrClearing) {
+          return secureStorageSupport.type === "supported" ||
+            secureStorageSupport.type === "not-preferred"
+            ? [TokenStorageLocation.SecureStorage, secureStorageSupport.service]
+            : [TokenStorageLocation.Disk, null];
+        }
+
+        // They are attempting to write real data to secure storage, ensure
+        // it is full supported
+        return secureStorageSupport.type === "supported"
+          ? [TokenStorageLocation.SecureStorage, secureStorageSupport.service]
+          : [TokenStorageLocation.Disk, null];
       }
 
-      return TokenStorageLocation.Disk;
+      return [TokenStorageLocation.Disk, null];
     }
   }
 
@@ -1099,8 +1161,9 @@ export class TokenService implements TokenServiceAbstraction {
     userId: UserId,
     storageKey: string,
     value: string,
+    secureStorageService: AbstractStorageService,
   ): Promise<void> {
-    await this.secureStorageService.save<string>(
+    await secureStorageService.save<string>(
       `${userId}${storageKey}`,
       value,
       this.getSecureStorageOptions(userId),
@@ -1110,9 +1173,10 @@ export class TokenService implements TokenServiceAbstraction {
   private async getStringFromSecureStorage(
     userId: UserId,
     storageKey: string,
+    secureStorageService: AbstractStorageService,
   ): Promise<string | null> {
     // If we have a user ID, read from secure storage.
-    return await this.secureStorageService.get<string>(
+    return await secureStorageService.get<string>(
       `${userId}${storageKey}`,
       this.getSecureStorageOptions(userId),
     );
