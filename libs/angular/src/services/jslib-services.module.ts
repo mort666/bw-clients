@@ -335,6 +335,7 @@ import {
   ENV_ADDITIONAL_REGIONS,
 } from "./injection-tokens";
 import { ModalService } from "./modal.service";
+import { SecureStorageService } from "@bitwarden/common/platform/storage/secure-storage.service";
 
 /**
  * Provider definitions used in the ngModule.
@@ -593,8 +594,7 @@ const safeProviders: SafeProvider[] = [
     deps: [
       SingleUserStateProvider,
       GlobalStateProvider,
-      PlatformUtilsServiceAbstraction,
-      SECURE_STORAGE,
+      SecureStorageService,
       KeyGenerationServiceAbstraction,
       EncryptService,
       LogService,

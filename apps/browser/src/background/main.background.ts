@@ -274,6 +274,7 @@ import CommandsBackground from "./commands.background";
 import IdleBackground from "./idle.background";
 import { NativeMessagingBackground } from "./nativeMessaging.background";
 import RuntimeBackground from "./runtime.background";
+import { UnsupportedSecureStorageService } from "@bitwarden/common/platform/storage/secure-storage.service";
 
 export default class MainBackground {
   messagingService: MessageSender;
@@ -585,11 +586,12 @@ export default class MainBackground {
 
     this.userNotificationSettingsService = new UserNotificationSettingsService(this.stateProvider);
 
+    const secureStorage = new UnsupportedSecureStorageService("no-browser-api");
+
     this.tokenService = new TokenService(
       this.singleUserStateProvider,
       this.globalStateProvider,
-      this.platformUtilsService,
-      this.secureStorageService,
+      secureStorage,
       this.keyGenerationService,
       this.encryptService,
       this.logService,

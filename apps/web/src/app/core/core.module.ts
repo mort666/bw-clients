@@ -120,6 +120,10 @@ import { ModalService } from "./modal.service";
 import { RouterService } from "./router.service";
 import { WebFileDownloadService } from "./web-file-download.service";
 import { WebPlatformUtilsService } from "./web-platform-utils.service";
+import {
+  SecureStorageService,
+  UnsupportedSecureStorageService,
+} from "@bitwarden/common/platform/storage/secure-storage.service";
 
 /**
  * Provider definitions used in the ngModule.
@@ -312,6 +316,11 @@ const safeProviders: SafeProvider[] = [
     provide: LoginDecryptionOptionsService,
     useClass: WebLoginDecryptionOptionsService,
     deps: [MessagingService, RouterService, AcceptOrganizationInviteService],
+  }),
+  safeProvider({
+    provide: SecureStorageService,
+    useFactory: () => new UnsupportedSecureStorageService("no-web-api"),
+    deps: [],
   }),
 ];
 

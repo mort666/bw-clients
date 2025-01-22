@@ -159,6 +159,10 @@ import { VaultFilterService } from "../../vault/services/vault-filter.service";
 import { DebounceNavigationService } from "./debounce-navigation.service";
 import { InitService } from "./init.service";
 import { PopupCloseWarningService } from "./popup-close-warning.service";
+import {
+  SecureStorageService,
+  UnsupportedSecureStorageService,
+} from "@bitwarden/common/platform/storage/secure-storage.service";
 
 const OBSERVABLE_LARGE_OBJECT_MEMORY_STORAGE = new SafeInjectionToken<
   AbstractStorageService & ObservableStorageService
@@ -595,6 +599,11 @@ const safeProviders: SafeProvider[] = [
     provide: LoginDecryptionOptionsService,
     useClass: ExtensionLoginDecryptionOptionsService,
     deps: [MessagingServiceAbstraction, Router],
+  }),
+  safeProvider({
+    provide: SecureStorageService,
+    useFactory: () => new UnsupportedSecureStorageService("no-browser-api"),
+    deps: [],
   }),
 ];
 

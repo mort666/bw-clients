@@ -127,6 +127,11 @@ import { DesktopThemeStateService } from "./desktop-theme.service";
 import { InitService } from "./init.service";
 import { NativeMessagingManifestService } from "./native-messaging-manifest.service";
 import { RendererCryptoFunctionService } from "./renderer-crypto-function.service";
+import {
+  SecureStorageService,
+  SupportedSecureStorageService,
+} from "@bitwarden/common/platform/storage/secure-storage.service";
+import { PortableSecureStorageService } from "../../platform/services/portable-secure-storage.service";
 
 const RELOAD_CALLBACK = new SafeInjectionToken<() => any>("RELOAD_CALLBACK");
 
@@ -396,6 +401,17 @@ const safeProviders: SafeProvider[] = [
     provide: LoginApprovalComponentServiceAbstraction,
     useClass: DesktopLoginApprovalComponentService,
     deps: [I18nServiceAbstraction],
+  }),
+  safeProvider({
+    provide: SecureStorageService,
+    useFactory: (secureStorage: AbstractStorageService) => {
+      if (ipc.platform.isWindowsPortable) {
+        return new PortableSecureStorageService(secureStorage);
+      }
+
+      return new SupportedSecureStorageService(secureStorage);
+    },
+    deps: [SECURE_STORAGE],
   }),
 ];
 

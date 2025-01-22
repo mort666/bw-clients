@@ -173,6 +173,7 @@ import { I18nService } from "../platform/services/i18n.service";
 import { LowdbStorageService } from "../platform/services/lowdb-storage.service";
 import { NodeApiService } from "../platform/services/node-api.service";
 import { NodeEnvSecureStorageService } from "../platform/services/node-env-secure-storage.service";
+import { UnsupportedSecureStorageService } from "@bitwarden/common/platform/storage/secure-storage.service";
 
 // Polyfills
 global.DOMParser = new jsdom.JSDOM().window.DOMParser;
@@ -372,11 +373,14 @@ export class ServiceContainer {
 
     this.keyGenerationService = new KeyGenerationService(this.cryptoFunctionService);
 
+    // TODO: CLI _DOES_ have a secure storage implementation but we report it as not supported
+    // in PlatformUtilsService.supportsSecureStorage
+    const secureStorage = new UnsupportedSecureStorageService("i-dont-know");
+
     this.tokenService = new TokenService(
       this.singleUserStateProvider,
       this.globalStateProvider,
-      this.platformUtilsService,
-      this.secureStorageService,
+      secureStorage,
       this.keyGenerationService,
       this.encryptService,
       this.logService,
