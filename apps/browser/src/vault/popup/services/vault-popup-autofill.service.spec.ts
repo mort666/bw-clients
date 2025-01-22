@@ -1,11 +1,17 @@
 import { TestBed } from "@angular/core/testing";
+import { ActivatedRoute } from "@angular/router";
 import { mock } from "jest-mock-extended";
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject, of } from "rxjs";
 
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { subscribeTo } from "@bitwarden/common/spec";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { FakeAccountService, mockAccountServiceWith, subscribeTo } from "@bitwarden/common/spec";
+import { UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherRepromptType, CipherType } from "@bitwarden/common/vault/enums";
 import { Cipher } from "@bitwarden/common/vault/models/domain/cipher";
@@ -15,6 +21,9 @@ import { LoginView } from "@bitwarden/common/vault/models/view/login.view";
 import { ToastService } from "@bitwarden/components";
 import { PasswordRepromptService } from "@bitwarden/vault";
 
+// FIXME: remove `src` and fix import
+// eslint-disable-next-line no-restricted-imports
+import { InlineMenuFieldQualificationService } from "../../../../../browser/src/autofill/services/inline-menu-field-qualification.service";
 import {
   AutoFillOptions,
   AutofillService,
@@ -30,31 +39,60 @@ describe("VaultPopupAutofillService", () => {
   let service: VaultPopupAutofillService;
 
   const mockCurrentTab = { url: "https://example.com" } as chrome.tabs.Tab;
+  const mockActivatedRoute = {
+    queryParams: of({}),
+  } as any;
 
   // Create mocks for VaultPopupAutofillService
   const mockAutofillService = mock<AutofillService>();
+  const mockDomainSettingsService = mock<DomainSettingsService>();
   const mockI18nService = mock<I18nService>();
   const mockToastService = mock<ToastService>();
   const mockPlatformUtilsService = mock<PlatformUtilsService>();
   const mockPasswordRepromptService = mock<PasswordRepromptService>();
   const mockCipherService = mock<CipherService>();
   const mockMessagingService = mock<MessagingService>();
+  const mockInlineMenuFieldQualificationService = mock<InlineMenuFieldQualificationService>();
+  const mockLogService = mock<LogService>();
+
+  const mockUserId = Utils.newGuid() as UserId;
+  const accountService: FakeAccountService = mockAccountServiceWith(mockUserId);
 
   beforeEach(() => {
     jest.spyOn(BrowserPopupUtils, "inPopout").mockReturnValue(false);
     jest.spyOn(BrowserApi, "getTabFromCurrentWindow").mockResolvedValue(mockCurrentTab);
+    jest
+      .spyOn(mockInlineMenuFieldQualificationService, "isFieldForCreditCardForm")
+      .mockReturnValue(true);
+    jest
+      .spyOn(mockInlineMenuFieldQualificationService, "isFieldForIdentityForm")
+      .mockReturnValue(true);
 
     mockAutofillService.collectPageDetailsFromTab$.mockReturnValue(new BehaviorSubject([]));
 
     testBed = TestBed.configureTestingModule({
       providers: [
         { provide: AutofillService, useValue: mockAutofillService },
+        { provide: DomainSettingsService, useValue: mockDomainSettingsService },
         { provide: I18nService, useValue: mockI18nService },
         { provide: ToastService, useValue: mockToastService },
         { provide: PlatformUtilsService, useValue: mockPlatformUtilsService },
         { provide: PasswordRepromptService, useValue: mockPasswordRepromptService },
         { provide: CipherService, useValue: mockCipherService },
         { provide: MessagingService, useValue: mockMessagingService },
+        { provide: ActivatedRoute, useValue: mockActivatedRoute },
+        {
+          provide: AccountService,
+          useValue: accountService,
+        },
+        {
+          provide: InlineMenuFieldQualificationService,
+          useValue: mockInlineMenuFieldQualificationService,
+        },
+        {
+          provide: LogService,
+          useValue: mockLogService,
+        },
       ],
     });
 
@@ -248,6 +286,17 @@ describe("VaultPopupAutofillService", () => {
           expect(setTimeout).toHaveBeenCalledTimes(1);
           expect(BrowserApi.closePopup).toHaveBeenCalled();
         });
+
+        it("should show a successful toast message if login form is populated", async () => {
+          jest.spyOn(BrowserPopupUtils, "inSingleActionPopout").mockReturnValue(true);
+          (service as any).currentAutofillTab$ = of({ id: 1234 });
+          await service.doAutofill(mockCipher);
+          expect(mockToastService.showToast).toHaveBeenCalledWith({
+            variant: "success",
+            title: null,
+            message: mockI18nService.t("autoFillSuccess"),
+          });
+        });
       });
     });
 
@@ -311,7 +360,7 @@ describe("VaultPopupAutofillService", () => {
         expect(result).toBe(true);
         expect(mockCipher.login.uris).toHaveLength(1);
         expect(mockCipher.login.uris[0].uri).toBe(mockCurrentTab.url);
-        expect(mockCipherService.encrypt).toHaveBeenCalledWith(mockCipher);
+        expect(mockCipherService.encrypt).toHaveBeenCalledWith(mockCipher, mockUserId);
         expect(mockCipherService.updateWithServer).toHaveBeenCalledWith(mockEncryptedCipher);
       });
 

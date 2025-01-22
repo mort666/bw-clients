@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Directive } from "@angular/core";
 import { FormControl, FormGroup } from "@angular/forms";
 
@@ -8,6 +10,7 @@ import { FileDownloadService } from "@bitwarden/common/platform/abstractions/fil
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { ToastService } from "@bitwarden/components";
 
 import { EventService } from "../../core";
 import { EventExportService } from "../../tools/event-export";
@@ -34,6 +37,7 @@ export abstract class BaseEventsComponent {
     protected platformUtilsService: PlatformUtilsService,
     protected logService: LogService,
     protected fileDownloadService: FileDownloadService,
+    private toastService: ToastService,
   ) {
     const defaultDates = this.eventService.getDefaultDateFilters();
     this.start = defaultDates[0];
@@ -163,12 +167,14 @@ export abstract class BaseEventsComponent {
     let dates: string[] = null;
     try {
       dates = this.eventService.formatDateFilters(this.start, this.end);
+      // FIXME: Remove when updating file. Eslint update
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("invalidDateRange"),
-      );
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("errorOccurred"),
+        message: this.i18nService.t("invalidDateRange"),
+      });
       return null;
     }
     return dates;

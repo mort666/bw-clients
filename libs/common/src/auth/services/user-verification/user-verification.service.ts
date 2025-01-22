@@ -1,19 +1,22 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { firstValueFrom, map } from "rxjs";
 
 import { UserDecryptionOptionsServiceAbstraction } from "@bitwarden/auth/common";
+import {
+  BiometricsService,
+  BiometricsStatus,
+  KdfConfigService,
+  KeyService,
+} from "@bitwarden/key-management";
 
+// FIXME: remove `src` and fix import
+// eslint-disable-next-line no-restricted-imports
 import { PinServiceAbstraction } from "../../../../../auth/src/common/abstractions/pin.service.abstraction";
-import { VaultTimeoutSettingsService as VaultTimeoutSettingsServiceAbstraction } from "../../../abstractions/vault-timeout/vault-timeout-settings.service";
-import { CryptoService } from "../../../platform/abstractions/crypto.service";
 import { I18nService } from "../../../platform/abstractions/i18n.service";
-import { LogService } from "../../../platform/abstractions/log.service";
-import { PlatformUtilsService } from "../../../platform/abstractions/platform-utils.service";
 import { HashPurpose } from "../../../platform/enums";
-import { KeySuffixOptions } from "../../../platform/enums/key-suffix-options.enum";
 import { UserId } from "../../../types/guid";
-import { UserKey } from "../../../types/key";
 import { AccountService } from "../../abstractions/account.service";
-import { KdfConfigService } from "../../abstractions/kdf-config.service";
 import { InternalMasterPasswordServiceAbstraction } from "../../abstractions/master-password.service.abstraction";
 import { UserVerificationApiServiceAbstraction } from "../../abstractions/user-verification/user-verification-api.service.abstraction";
 import { UserVerificationService as UserVerificationServiceAbstraction } from "../../abstractions/user-verification/user-verification.service.abstraction";
@@ -39,17 +42,15 @@ import {
  */
 export class UserVerificationService implements UserVerificationServiceAbstraction {
   constructor(
-    private cryptoService: CryptoService,
+    private keyService: KeyService,
     private accountService: AccountService,
     private masterPasswordService: InternalMasterPasswordServiceAbstraction,
     private i18nService: I18nService,
     private userVerificationApiService: UserVerificationApiServiceAbstraction,
     private userDecryptionOptionsService: UserDecryptionOptionsServiceAbstraction,
     private pinService: PinServiceAbstraction,
-    private logService: LogService,
-    private vaultTimeoutSettingsService: VaultTimeoutSettingsServiceAbstraction,
-    private platformUtilsService: PlatformUtilsService,
     private kdfConfigService: KdfConfigService,
+    private biometricsService: BiometricsService,
   ) {}
 
   async getAvailableVerificationOptions(
@@ -57,13 +58,13 @@ export class UserVerificationService implements UserVerificationServiceAbstracti
   ): Promise<UserVerificationOptions> {
     const userId = (await firstValueFrom(this.accountService.activeAccount$))?.id;
     if (verificationType === "client") {
-      const [userHasMasterPassword, pinLockType, biometricsLockSet, biometricsUserKeyStored] =
-        await Promise.all([
+      const [userHasMasterPassword, isPinDecryptionAvailable, biometricsStatus] = await Promise.all(
+        [
           this.hasMasterPasswordAndMasterKeyHash(userId),
-          this.pinService.getPinLockType(userId),
-          this.vaultTimeoutSettingsService.isBiometricLockSet(userId),
-          this.cryptoService.hasUserKeyStored(KeySuffixOptions.Biometric, userId),
-        ]);
+          this.pinService.isPinDecryptionAvailable(userId),
+          this.biometricsService.getBiometricsStatus(),
+        ],
+      );
 
       // note: we do not need to check this.platformUtilsService.supportsBiometric() because
       // we can just use the logic below which works for both desktop & the browser extension.
@@ -71,10 +72,8 @@ export class UserVerificationService implements UserVerificationServiceAbstracti
       return {
         client: {
           masterPassword: userHasMasterPassword,
-          pin: pinLockType !== "DISABLED",
-          biometrics:
-            biometricsLockSet &&
-            (biometricsUserKeyStored || !this.platformUtilsService.supportsSecureStorage()),
+          pin: isPinDecryptionAvailable,
+          biometrics: biometricsStatus === BiometricsStatus.Available,
         },
         server: {
           masterPassword: false,
@@ -115,7 +114,7 @@ export class UserVerificationService implements UserVerificationServiceAbstracti
       );
       let masterKey = await firstValueFrom(this.masterPasswordService.masterKey$(userId));
       if (!masterKey && !alreadyHashed) {
-        masterKey = await this.cryptoService.makeMasterKey(
+        masterKey = await this.keyService.makeMasterKey(
           verification.secret,
           email,
           await this.kdfConfigService.getKdfConfig(),
@@ -123,7 +122,7 @@ export class UserVerificationService implements UserVerificationServiceAbstracti
       }
       request.masterPasswordHash = alreadyHashed
         ? verification.secret
-        : await this.cryptoService.hashMasterKey(verification.secret, masterKey);
+        : await this.keyService.hashMasterKey(verification.secret, masterKey);
     }
 
     return request;
@@ -164,6 +163,8 @@ export class UserVerificationService implements UserVerificationServiceAbstracti
     const request = new VerifyOTPRequest(verification.secret);
     try {
       await this.userVerificationApiService.postAccountVerifyOTP(request);
+      // FIXME: Remove when updating file. Eslint update
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       throw new Error(this.i18nService.t("invalidVerificationCode"));
     }
@@ -192,7 +193,7 @@ export class UserVerificationService implements UserVerificationServiceAbstracti
 
     let masterKey = await firstValueFrom(this.masterPasswordService.masterKey$(userId));
     if (!masterKey) {
-      masterKey = await this.cryptoService.makeMasterKey(verification.secret, email, kdfConfig);
+      masterKey = await this.keyService.makeMasterKey(verification.secret, email, kdfConfig);
     }
 
     if (!masterKey) {
@@ -202,9 +203,10 @@ export class UserVerificationService implements UserVerificationServiceAbstracti
     let policyOptions: MasterPasswordPolicyResponse | null;
     // Client-side verification
     if (await this.hasMasterPasswordAndMasterKeyHash(userId)) {
-      const passwordValid = await this.cryptoService.compareAndUpdateKeyHash(
+      const passwordValid = await this.keyService.compareKeyHash(
         verification.secret,
         masterKey,
+        userId,
       );
       if (!passwordValid) {
         throw new Error(this.i18nService.t("invalidMasterPassword"));
@@ -213,7 +215,7 @@ export class UserVerificationService implements UserVerificationServiceAbstracti
     } else {
       // Server-side verification
       const request = new SecretVerificationRequest();
-      const serverKeyHash = await this.cryptoService.hashMasterKey(
+      const serverKeyHash = await this.keyService.hashMasterKey(
         verification.secret,
         masterKey,
         HashPurpose.ServerAuthorization,
@@ -221,12 +223,14 @@ export class UserVerificationService implements UserVerificationServiceAbstracti
       request.masterPasswordHash = serverKeyHash;
       try {
         policyOptions = await this.userVerificationApiService.postAccountVerifyPassword(request);
+        // FIXME: Remove when updating file. Eslint update
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         throw new Error(this.i18nService.t("invalidMasterPassword"));
       }
     }
 
-    const localKeyHash = await this.cryptoService.hashMasterKey(
+    const localKeyHash = await this.keyService.hashMasterKey(
       verification.secret,
       masterKey,
       HashPurpose.LocalAuthorization,
@@ -247,17 +251,7 @@ export class UserVerificationService implements UserVerificationServiceAbstracti
   }
 
   private async verifyUserByBiometrics(): Promise<boolean> {
-    let userKey: UserKey;
-    // Biometrics crashes and doesn't return a value if the user cancels the prompt
-    try {
-      userKey = await this.cryptoService.getUserKeyFromStorage(KeySuffixOptions.Biometric);
-    } catch (e) {
-      this.logService.error(`Biometrics User Verification failed: ${e.message}`);
-      // So, any failures should be treated as a failed verification
-      return false;
-    }
-
-    return userKey != null;
+    return this.biometricsService.authenticateWithBiometrics();
   }
 
   async requestOTP() {

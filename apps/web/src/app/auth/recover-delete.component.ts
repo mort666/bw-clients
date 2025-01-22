@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Component } from "@angular/core";
 import { FormControl, FormGroup, Validators } from "@angular/forms";
 import { Router } from "@angular/router";
@@ -6,6 +8,7 @@ import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { DeleteRecoverRequest } from "@bitwarden/common/models/request/delete-recover.request";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { ToastService } from "@bitwarden/components";
 
 @Component({
   selector: "app-recover-delete",
@@ -25,6 +28,7 @@ export class RecoverDeleteComponent {
     private apiService: ApiService,
     private platformUtilsService: PlatformUtilsService,
     private i18nService: I18nService,
+    private toastService: ToastService,
   ) {}
 
   submit = async () => {
@@ -35,11 +39,11 @@ export class RecoverDeleteComponent {
     const request = new DeleteRecoverRequest();
     request.email = this.email.value.trim().toLowerCase();
     await this.apiService.postAccountRecoverDelete(request);
-    this.platformUtilsService.showToast(
-      "success",
-      null,
-      this.i18nService.t("deleteRecoverEmailSent"),
-    );
+    this.toastService.showToast({
+      variant: "success",
+      title: null,
+      message: this.i18nService.t("deleteRecoverEmailSent"),
+    });
 
     await this.router.navigate(["/"]);
   };

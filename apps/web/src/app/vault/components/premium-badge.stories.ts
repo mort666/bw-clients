@@ -1,7 +1,8 @@
-import { Meta, moduleMetadata, Story } from "@storybook/angular";
+import { Meta, moduleMetadata, StoryObj } from "@storybook/angular";
 import { of } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { MessageSender } from "@bitwarden/common/platform/messaging";
@@ -23,6 +24,14 @@ export default {
       imports: [JslibModule, BadgeModule],
       providers: [
         {
+          provide: AccountService,
+          useValue: {
+            activeAccount$: of({
+              id: "123",
+            }),
+          },
+        },
+        {
           provide: I18nService,
           useFactory: () => {
             return new I18nMockService({
@@ -39,7 +48,7 @@ export default {
         {
           provide: BillingAccountProfileStateService,
           useValue: {
-            hasPremiumFromAnySource$: of(false),
+            hasPremiumFromAnySource$: () => of(false),
           },
         },
       ],
@@ -47,9 +56,6 @@ export default {
   ],
 } as Meta;
 
-const Template: Story<PremiumBadgeComponent> = (args: PremiumBadgeComponent) => ({
-  props: args,
-});
+type Story = StoryObj<PremiumBadgeComponent>;
 
-export const Primary = Template.bind({});
-Primary.args = {};
+export const Primary: Story = {};

@@ -1,5 +1,8 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { CommonModule } from "@angular/common";
 import {
+  AfterViewInit,
   Component,
   EventEmitter,
   Inject,
@@ -13,43 +16,46 @@ import {
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import * as JSZip from "jszip";
 import { concat, Observable, Subject, lastValueFrom, combineLatest, firstValueFrom } from "rxjs";
-import { filter, map, takeUntil } from "rxjs/operators";
+import { filter, map, switchMap, takeUntil } from "rxjs/operators";
 
+import { CollectionService, CollectionView } from "@bitwarden/admin-console/common";
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { safeProvider, SafeProvider } from "@bitwarden/angular/platform/utils/safe-provider";
 import { PinServiceAbstraction } from "@bitwarden/auth/common";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
-import {
-  canAccessImport,
-  OrganizationService,
-} from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
+import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { ClientType } from "@bitwarden/common/enums";
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
+import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
-import { CollectionService } from "@bitwarden/common/vault/abstractions/collection.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
-import { CollectionView } from "@bitwarden/common/vault/models/view/collection.view";
 import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
 import {
   AsyncActionsModule,
   BitSubmitDirective,
   ButtonModule,
   CalloutModule,
+  CardComponent,
+  ContainerComponent,
   DialogService,
   FormFieldModule,
   IconButtonModule,
   RadioButtonModule,
+  SectionComponent,
+  SectionHeaderComponent,
   SelectModule,
   ToastService,
+  LinkModule,
 } from "@bitwarden/components";
+import { KeyService } from "@bitwarden/key-management";
 
 import { ImportOption, ImportResult, ImportType } from "../models";
 import {
@@ -82,8 +88,10 @@ const safeProviders: SafeProvider[] = [
       ImportApiServiceAbstraction,
       I18nService,
       CollectionService,
-      CryptoService,
+      KeyService,
+      EncryptService,
       PinServiceAbstraction,
+      AccountService,
     ],
   }),
 ];
@@ -104,10 +112,15 @@ const safeProviders: SafeProvider[] = [
     ReactiveFormsModule,
     ImportLastPassComponent,
     RadioButtonModule,
+    CardComponent,
+    ContainerComponent,
+    SectionHeaderComponent,
+    SectionComponent,
+    LinkModule,
   ],
   providers: safeProviders,
 })
-export class ImportComponent implements OnInit, OnDestroy {
+export class ImportComponent implements OnInit, OnDestroy, AfterViewInit {
   featuredImportOptions: ImportOption[];
   importOptions: ImportOption[];
   format: ImportType = null;
@@ -139,6 +152,8 @@ export class ImportComponent implements OnInit, OnDestroy {
 
   private _importBlockedByPolicy = false;
   protected isFromAC = false;
+
+  private activeUserId$ = this.accountService.activeAccount$.pipe(map((a) => a?.id));
 
   formGroup = this.formBuilder.group({
     vaultSelector: [
@@ -193,6 +208,7 @@ export class ImportComponent implements OnInit, OnDestroy {
     @Optional()
     protected importCollectionService: ImportCollectionServiceAbstraction,
     protected toastService: ToastService,
+    protected accountService: AccountService,
   ) {}
 
   protected get importBlockedByPolicy(): boolean {
@@ -214,7 +230,7 @@ export class ImportComponent implements OnInit, OnDestroy {
     this.setImportOptions();
 
     await this.initializeOrganizations();
-    if (this.organizationId && (await this.canAccessImportExport(this.organizationId))) {
+    if (this.organizationId && (await this.canAccessImport(this.organizationId))) {
       this.handleOrganizationImportInit();
     } else {
       this.handleImportInit();
@@ -244,7 +260,10 @@ export class ImportComponent implements OnInit, OnDestroy {
 
   private handleImportInit() {
     // Filter out the no folder-item from folderViews$
-    this.folders$ = this.folderService.folderViews$.pipe(
+    this.folders$ = this.activeUserId$.pipe(
+      switchMap((userId) => {
+        return this.folderService.folderViews$(userId);
+      }),
       map((folders) => folders.filter((f) => f.id != null)),
     );
 
@@ -277,7 +296,9 @@ export class ImportComponent implements OnInit, OnDestroy {
   private async initializeOrganizations() {
     this.organizations$ = concat(
       this.organizationService.memberOrganizations$.pipe(
-        canAccessImport(this.i18nService),
+        // Import is an alternative way to create collections during onboarding, so import from Password Manager
+        // is available to any user who can create collections in the organization.
+        map((orgs) => orgs.filter((org) => org.canAccessImport || org.canCreateNewCollections)),
         map((orgs) => orgs.sort(Utils.getSortFunction(this.i18nService, "name"))),
       ),
     );
@@ -363,7 +384,7 @@ export class ImportComponent implements OnInit, OnDestroy {
         importContents,
         this.organizationId,
         this.formGroup.controls.targetSelector.value,
-        (await this.canAccessImportExport(this.organizationId)) && this.isFromAC,
+        (await this.canAccessImport(this.organizationId)) && this.isFromAC,
       );
 
       //No errors, display success message
@@ -383,11 +404,11 @@ export class ImportComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async canAccessImportExport(organizationId?: string): Promise<boolean> {
+  private async canAccessImport(organizationId?: string): Promise<boolean> {
     if (!organizationId) {
       return false;
     }
-    return (await this.organizationService.get(this.organizationId))?.canAccessImportExport;
+    return (await this.organizationService.get(this.organizationId))?.canAccessImport;
   }
 
   getFormatInstructionTitle() {

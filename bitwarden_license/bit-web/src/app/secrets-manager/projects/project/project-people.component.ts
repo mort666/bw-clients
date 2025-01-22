@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from "@angular/core";
 import { FormControl, FormGroup } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
@@ -7,7 +9,7 @@ import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.servic
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { ValidationService } from "@bitwarden/common/platform/abstractions/validation.service";
-import { DialogService } from "@bitwarden/components";
+import { DialogService, ToastService } from "@bitwarden/components";
 
 import { AccessPolicySelectorService } from "../../shared/access-policies/access-policy-selector/access-policy-selector.service";
 import {
@@ -73,6 +75,7 @@ export class ProjectPeopleComponent implements OnInit, OnDestroy {
     private i18nService: I18nService,
     private accessPolicySelectorService: AccessPolicySelectorService,
     private logService: LogService,
+    private toastService: ToastService,
   ) {}
 
   ngOnInit(): void {
@@ -129,11 +132,11 @@ export class ProjectPeopleComponent implements OnInit, OnDestroy {
       if (showAccessRemovalWarning) {
         await this.router.navigate(["sm", this.organizationId, "projects"]);
       }
-      this.platformUtilsService.showToast(
-        "success",
-        null,
-        this.i18nService.t("projectAccessUpdated"),
-      );
+      this.toastService.showToast({
+        variant: "success",
+        title: null,
+        message: this.i18nService.t("projectAccessUpdated"),
+      });
     } catch (e) {
       this.validationService.showError(e);
       this.setSelected(this.currentAccessPolicies);

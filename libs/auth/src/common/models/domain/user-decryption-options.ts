@@ -1,7 +1,11 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Jsonify } from "type-fest";
 
 import { KeyConnectorUserDecryptionOptionResponse } from "@bitwarden/common/auth/models/response/user-decryption-options/key-connector-user-decryption-option.response";
 import { TrustedDeviceUserDecryptionOptionResponse } from "@bitwarden/common/auth/models/response/user-decryption-options/trusted-device-user-decryption-option.response";
+// FIXME: remove `src` and fix import
+// eslint-disable-next-line no-restricted-imports
 import { IdentityTokenResponse } from "@bitwarden/common/src/auth/models/response/identity-token.response";
 
 /**
@@ -54,6 +58,8 @@ export class TrustedDeviceUserDecryptionOption {
   hasLoginApprovingDevice: boolean;
   /** True if the user has manage reset password permission, as these users must be forced to have a master password. */
   hasManageResetPasswordPermission: boolean;
+  /** True if tde is disabled but user has not set a master password yet. */
+  isTdeOffboarding: boolean;
 
   /**
    * Initializes a new instance of the TrustedDeviceUserDecryptionOption from a response object.
@@ -70,6 +76,7 @@ export class TrustedDeviceUserDecryptionOption {
     options.hasAdminApproval = response?.hasAdminApproval ?? false;
     options.hasLoginApprovingDevice = response?.hasLoginApprovingDevice ?? false;
     options.hasManageResetPasswordPermission = response?.hasManageResetPasswordPermission ?? false;
+    options.isTdeOffboarding = response?.isTdeOffboarding ?? false;
     return options;
   }
 

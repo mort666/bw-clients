@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { DialogRef } from "@angular/cdk/dialog";
 import { Component } from "@angular/core";
 import { FormBuilder } from "@angular/forms";
@@ -7,7 +9,7 @@ import { Verification } from "@bitwarden/common/auth/types/verification";
 import { ErrorResponse } from "@bitwarden/common/models/response/error.response";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { DialogService } from "@bitwarden/components";
+import { DialogService, ToastService } from "@bitwarden/components";
 
 @Component({
   templateUrl: "delete-account-dialog.component.html",
@@ -24,6 +26,7 @@ export class DeleteAccountDialogComponent {
     private formBuilder: FormBuilder,
     private accountApiService: AccountApiService,
     private dialogRef: DialogRef,
+    private toastService: ToastService,
   ) {}
 
   submit = async () => {
@@ -31,11 +34,11 @@ export class DeleteAccountDialogComponent {
       const verification = this.deleteForm.get("verification").value;
       await this.accountApiService.deleteAccount(verification);
       this.dialogRef.close();
-      this.platformUtilsService.showToast(
-        "success",
-        this.i18nService.t("accountDeleted"),
-        this.i18nService.t("accountDeletedDesc"),
-      );
+      this.toastService.showToast({
+        variant: "success",
+        title: this.i18nService.t("accountDeleted"),
+        message: this.i18nService.t("accountDeletedDesc"),
+      });
     } catch (e) {
       if (e instanceof ErrorResponse && e.statusCode === 400) {
         this.invalidSecret = true;

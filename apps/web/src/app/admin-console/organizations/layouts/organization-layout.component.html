@@ -1,8 +1,17 @@
-<bit-layout>
-  <bit-side-nav variant="secondary" *ngIf="organization$ | async as organization">
+<app-layout>
+  <app-side-nav variant="secondary" *ngIf="organization$ | async as organization">
     <bit-nav-logo [openIcon]="logo" route="." [label]="'adminConsole' | i18n"></bit-nav-logo>
     <org-switcher [filter]="orgFilter" [hideNewButton]="hideNewOrgButton$ | async"></org-switcher>
-
+    <bit-nav-group
+      icon="bwi-filter"
+      *ngIf="organization.useRiskInsights"
+      [text]="'accessIntelligence' | i18n"
+    >
+      <bit-nav-item
+        [text]="'riskInsights' | i18n"
+        route="access-intelligence/risk-insights"
+      ></bit-nav-item>
+    </bit-nav-group>
     <bit-nav-item
       icon="bwi-collection"
       [text]="'collections' | i18n"
@@ -51,6 +60,12 @@
         <bit-nav-item [text]="'billingHistory' | i18n" route="billing/history"></bit-nav-item>
       </ng-container>
     </bit-nav-group>
+    <bit-nav-item
+      icon="bwi-providers"
+      [text]="'integrations' | i18n"
+      route="integrations"
+      *ngIf="integrationPageEnabled$ | async"
+    ></bit-nav-item>
     <bit-nav-group
       icon="bwi-cog"
       [text]="'settings' | i18n"
@@ -75,15 +90,15 @@
       <bit-nav-item
         [text]="'importData' | i18n"
         route="settings/tools/import"
-        *ngIf="organization.canAccessImportExport"
+        *ngIf="organization.canAccessImport"
       ></bit-nav-item>
       <bit-nav-item
         [text]="'exportVault' | i18n"
         route="settings/tools/export"
-        *ngIf="organization.canAccessImportExport"
+        *ngIf="canAccessExport$ | async"
       ></bit-nav-item>
       <bit-nav-item
-        [text]="'domainVerification' | i18n"
+        [text]="domainVerificationNavigationTextKey | i18n"
         route="settings/domain-verification"
         *ngIf="organization?.canManageDomainVerification"
       ></bit-nav-item>
@@ -103,12 +118,7 @@
         *ngIf="organization.canManageScim"
       ></bit-nav-item>
     </bit-nav-group>
-
-    <ng-container slot="footer">
-      <navigation-product-switcher></navigation-product-switcher>
-      <app-toggle-width></app-toggle-width>
-    </ng-container>
-  </bit-side-nav>
+  </app-side-nav>
 
   <ng-container *ngIf="organization$ | async as organization">
     <bit-banner
@@ -118,10 +128,7 @@
     >
       {{ "accessingUsingProvider" | i18n: organization.providerName }}
     </bit-banner>
-    <app-payment-method-warnings
-      *ngIf="showPaymentMethodWarningBanners$ | async"
-    ></app-payment-method-warnings>
   </ng-container>
 
   <router-outlet></router-outlet>
-</bit-layout>
+</app-layout>

@@ -1,12 +1,16 @@
-import { Component } from "@angular/core";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { DialogRef } from "@angular/cdk/dialog";
+import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
 import { concatMap, takeUntil, map, lastValueFrom } from "rxjs";
-import { tap } from "rxjs/operators";
+import { first, tap } from "rxjs/operators";
 
 import { ModalService } from "@bitwarden/angular/services/modal.service";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
 import { TwoFactorDuoResponse } from "@bitwarden/common/auth/models/response/two-factor-duo.response";
 import { AuthResponse } from "@bitwarden/common/auth/types/auth-response";
@@ -14,16 +18,16 @@ import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abs
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { DialogService } from "@bitwarden/components";
 
-import { TwoFactorDuoComponent } from "../../../auth/settings/two-factor-duo.component";
-import { TwoFactorSetupComponent as BaseTwoFactorSetupComponent } from "../../../auth/settings/two-factor-setup.component";
-import { TwoFactorVerifyComponent } from "../../../auth/settings/two-factor-verify.component";
+import { TwoFactorSetupDuoComponent } from "../../../auth/settings/two-factor/two-factor-setup-duo.component";
+import { TwoFactorSetupComponent as BaseTwoFactorSetupComponent } from "../../../auth/settings/two-factor/two-factor-setup.component";
+import { TwoFactorVerifyComponent } from "../../../auth/settings/two-factor/two-factor-verify.component";
 
 @Component({
   selector: "app-two-factor-setup",
-  templateUrl: "../../../auth/settings/two-factor-setup.component.html",
+  templateUrl: "../../../auth/settings/two-factor/two-factor-setup.component.html",
 })
 // eslint-disable-next-line rxjs-angular/prefer-takeuntil
-export class TwoFactorSetupComponent extends BaseTwoFactorSetupComponent {
+export class TwoFactorSetupComponent extends BaseTwoFactorSetupComponent implements OnInit {
   tabbedHeader = false;
   constructor(
     dialogService: DialogService,
@@ -34,6 +38,7 @@ export class TwoFactorSetupComponent extends BaseTwoFactorSetupComponent {
     private route: ActivatedRoute,
     private organizationService: OrganizationService,
     billingAccountProfileStateService: BillingAccountProfileStateService,
+    accountService: AccountService,
   ) {
     super(
       dialogService,
@@ -42,6 +47,7 @@ export class TwoFactorSetupComponent extends BaseTwoFactorSetupComponent {
       messagingService,
       policyService,
       billingAccountProfileStateService,
+      accountService,
     );
   }
 
@@ -64,6 +70,9 @@ export class TwoFactorSetupComponent extends BaseTwoFactorSetupComponent {
   }
 
   async manage(type: TwoFactorProviderType) {
+    // clear any existing subscriptions before creating a new one
+    this.twoFactorSetupSubscription?.unsubscribe();
+
     switch (type) {
       case TwoFactorProviderType.OrganizationDuo: {
         const twoFactorVerifyDialogRef = TwoFactorVerifyComponent.open(this.dialogService, {
@@ -75,9 +84,21 @@ export class TwoFactorSetupComponent extends BaseTwoFactorSetupComponent {
         if (!result) {
           return;
         }
-        const duoComp = TwoFactorDuoComponent.open(this.dialogService, { data: result });
-        const enabled: boolean = await lastValueFrom(duoComp.closed);
-        this.updateStatus(enabled, TwoFactorProviderType.Duo);
+        const duoComp: DialogRef<boolean, any> = TwoFactorSetupDuoComponent.open(
+          this.dialogService,
+          {
+            data: {
+              authResponse: result,
+              organizationId: this.organizationId,
+            },
+          },
+        );
+        this.twoFactorSetupSubscription = duoComp.componentInstance.onChangeStatus
+          .pipe(first(), takeUntil(this.destroy$))
+          .subscribe((enabled: boolean) => {
+            duoComp.close();
+            this.updateStatus(enabled, TwoFactorProviderType.OrganizationDuo);
+          });
 
         break;
       }

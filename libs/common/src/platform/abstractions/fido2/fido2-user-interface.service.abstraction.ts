@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 /**
  * Parameters used to ask the user to confirm the creation of a new credential.
  */
@@ -11,6 +13,11 @@ export interface NewCredentialParams {
    * The name of the user.
    */
   userName: string;
+
+  /**
+   * The userhandle (userid) of the user.
+   */
+  userHandle: string;
 
   /**
    * Whether or not the user must be verified before completing the operation.
@@ -35,6 +42,16 @@ export interface PickCredentialParams {
    * Whether or not the user must be verified before completing the operation.
    */
   userVerification: boolean;
+
+  /**
+   * Bypass the UI and assume that the user has already interacted with the authenticator.
+   */
+  assumeUserPresence?: boolean;
+
+  /**
+   * Identifies whether a cipher requires a master password reprompt when getting a credential.
+   */
+  masterPasswordRepromptRequired?: boolean;
 }
 
 /**
@@ -44,7 +61,7 @@ export interface PickCredentialParams {
  * The service is session based and is intended to be used by the FIDO2 authenticator to open a window,
  * and then use this window to ask the user for input and/or display messages to the user.
  */
-export abstract class Fido2UserInterfaceService {
+export abstract class Fido2UserInterfaceService<ParentWindowReference> {
   /**
    * Creates a new session.
    * Note: This will not necessarily open a window until it is needed to request something from the user.
@@ -54,7 +71,7 @@ export abstract class Fido2UserInterfaceService {
    */
   newSession: (
     fallbackSupported: boolean,
-    tab: chrome.tabs.Tab,
+    window: ParentWindowReference,
     abortController?: AbortController,
   ) => Promise<Fido2UserInterfaceSession>;
 }

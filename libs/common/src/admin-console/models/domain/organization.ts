@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Jsonify } from "type-fest";
 
 import { ProductTierType } from "../../../billing/enums";
@@ -68,16 +70,20 @@ export class Organization {
   /**
    * Refers to the ability for an organization to limit collection creation and deletion to owners and admins only
    */
-  limitCollectionCreationDeletion: boolean;
+  limitCollectionCreation: boolean;
+  limitCollectionDeletion: boolean;
+
   /**
    * Refers to the ability for an owner/admin to access all collection items, regardless of assigned collections
    */
   allowAdminAccessToAllCollectionItems: boolean;
   /**
-   * Returns true if this organization has enabled Flexible Collections (MVP) and their data has been migrated.
-   * Generally, you should use this as the feature flag to gate Flexible Collections features.
+   * Indicates if this organization manages the user.
+   * A user is considered managed by an organization if their email domain
+   * matches one of the verified domains of that organization, and the user is a member of it.
    */
-  flexibleCollections: boolean;
+  userIsManagedByOrganization: boolean;
+  useRiskInsights: boolean;
 
   constructor(obj?: OrganizationData) {
     if (obj == null) {
@@ -130,9 +136,11 @@ export class Organization {
     this.familySponsorshipValidUntil = obj.familySponsorshipValidUntil;
     this.familySponsorshipToDelete = obj.familySponsorshipToDelete;
     this.accessSecretsManager = obj.accessSecretsManager;
-    this.limitCollectionCreationDeletion = obj.limitCollectionCreationDeletion;
+    this.limitCollectionCreation = obj.limitCollectionCreation;
+    this.limitCollectionDeletion = obj.limitCollectionDeletion;
     this.allowAdminAccessToAllCollectionItems = obj.allowAdminAccessToAllCollectionItems;
-    this.flexibleCollections = obj.flexibleCollections;
+    this.userIsManagedByOrganization = obj.userIsManagedByOrganization;
+    this.useRiskInsights = obj.useRiskInsights;
   }
 
   get canAccess() {
@@ -160,8 +168,27 @@ export class Organization {
     return (this.isAdmin || this.permissions.accessEventLogs) && this.useEvents;
   }
 
-  get canAccessImportExport() {
-    return this.isAdmin || this.permissions.accessImportExport;
+  /**
+   * Returns true if the user can access the Import page in the Admin Console.
+   * Note: this does not affect user access to the Import page in Password Manager, which can also be used to import
+   * into organization collections.
+   */
+  get canAccessImport() {
+    return (
+      this.isProviderUser ||
+      this.type === OrganizationUserType.Owner ||
+      this.type === OrganizationUserType.Admin ||
+      this.permissions.accessImportExport
+    );
+  }
+
+  get canAccessExport() {
+    return (
+      this.isMember &&
+      (this.type === OrganizationUserType.Owner ||
+        this.type === OrganizationUserType.Admin ||
+        this.permissions.accessImportExport)
+    );
   }
 
   get canAccessReports() {
@@ -169,18 +196,11 @@ export class Organization {
   }
 
   get canCreateNewCollections() {
-    return (
-      !this.limitCollectionCreationDeletion || this.isAdmin || this.permissions.createNewCollections
-    );
+    return !this.limitCollectionCreation || this.isAdmin || this.permissions.createNewCollections;
   }
 
-  canEditAnyCollection(flexibleCollectionsV1Enabled: boolean) {
-    if (!flexibleCollectionsV1Enabled) {
-      // Pre-Flexible Collections v1 logic
-      return this.isAdmin || this.permissions.editAnyCollection;
-    }
-
-    // Post Flexible Collections V1, the allowAdminAccessToAllCollectionItems flag can restrict admins
+  get canEditAnyCollection() {
+    // The allowAdminAccessToAllCollectionItems flag can restrict admins
     // Providers and custom users with canEditAnyCollection are not affected by allowAdminAccessToAllCollectionItems flag
     return (
       this.isProviderUser ||
@@ -189,19 +209,12 @@ export class Organization {
     );
   }
 
-  canEditUnmanagedCollections() {
+  get canEditUnmanagedCollections() {
     // Any admin or custom user with editAnyCollection permission can edit unmanaged collections
     return this.isAdmin || this.permissions.editAnyCollection;
   }
 
-  canEditUnassignedCiphers(restrictProviderAccessFlagEnabled: boolean) {
-    // Providers can access items until the restrictProviderAccess flag is enabled
-    // After the flag is enabled and removed, this block will be deleted
-    // so that they permanently lose access to items
-    if (this.isProviderUser && !restrictProviderAccessFlagEnabled) {
-      return true;
-    }
-
+  get canEditUnassignedCiphers() {
     return (
       this.type === OrganizationUserType.Admin ||
       this.type === OrganizationUserType.Owner ||
@@ -209,23 +222,8 @@ export class Organization {
     );
   }
 
-  canEditAllCiphers(
-    flexibleCollectionsV1Enabled: boolean,
-    restrictProviderAccessFlagEnabled: boolean,
-  ) {
-    // Before Flexible Collections V1, any admin or anyone with editAnyCollection permission could edit all ciphers
-    if (!flexibleCollectionsV1Enabled) {
-      return this.isAdmin || this.permissions.editAnyCollection;
-    }
-
-    // Providers can access items until the restrictProviderAccess flag is enabled
-    // After the flag is enabled and removed, this block will be deleted
-    // so that they permanently lose access to items
-    if (this.isProviderUser && !restrictProviderAccessFlagEnabled) {
-      return true;
-    }
-
-    // Post Flexible Collections V1, the allowAdminAccessToAllCollectionItems flag can restrict admins
+  get canEditAllCiphers() {
+    // The allowAdminAccessToAllCollectionItems flag can restrict admins
     // Custom users with canEditAnyCollection are not affected by allowAdminAccessToAllCollectionItems flag
     return (
       (this.type === OrganizationUserType.Custom && this.permissions.editAnyCollection) ||
@@ -235,18 +233,17 @@ export class Organization {
   }
 
   /**
-   * @param flexibleCollectionsV1Enabled - Whether or not the V1 Flexible Collection feature flag is enabled
    * @returns True if the user can delete any collection
    */
-  canDeleteAnyCollection(flexibleCollectionsV1Enabled: boolean) {
+  get canDeleteAnyCollection() {
     // Providers and Users with DeleteAnyCollection permission can always delete collections
     if (this.isProviderUser || this.permissions.deleteAnyCollection) {
       return true;
     }
 
-    // If AllowAdminAccessToAllCollectionItems is true, Owners and Admins can delete any collection, regardless of LimitCollectionCreationDeletion setting
+    // If AllowAdminAccessToAllCollectionItems is true, Owners and Admins can delete any collection, regardless of LimitCollectionDeletion setting
     // Using explicit type checks because provider users are handled above and this mimics the server's permission checks closely
-    if (!flexibleCollectionsV1Enabled || this.allowAdminAccessToAllCollectionItems) {
+    if (this.allowAdminAccessToAllCollectionItems) {
       return this.type == OrganizationUserType.Owner || this.type == OrganizationUserType.Admin;
     }
 
@@ -305,9 +302,7 @@ export class Organization {
       return true;
     }
 
-    return this.hasProvider && this.providerType === ProviderType.Msp
-      ? this.isProviderUser
-      : this.isOwner;
+    return this.hasBillableProvider ? this.isProviderUser : this.isOwner;
   }
 
   get canEditSubscription() {
@@ -324,6 +319,14 @@ export class Organization {
 
   get hasProvider() {
     return this.providerId != null || this.providerName != null;
+  }
+
+  get hasBillableProvider() {
+    return (
+      this.hasProvider &&
+      (this.providerType === ProviderType.Msp ||
+        this.providerType === ProviderType.MultiOrganizationEnterprise)
+    );
   }
 
   get hasReseller() {
@@ -352,5 +355,16 @@ export class Organization {
       familySponsorshipLastSyncDate: new Date(json.familySponsorshipLastSyncDate),
       familySponsorshipValidUntil: new Date(json.familySponsorshipValidUntil),
     });
+  }
+
+  get canAccessIntegrations() {
+    return (
+      (this.productTierType === ProductTierType.Teams ||
+        this.productTierType === ProductTierType.Enterprise) &&
+      (this.isAdmin ||
+        this.permissions.manageUsers ||
+        this.permissions.manageGroups ||
+        this.permissions.accessEventLogs)
+    );
   }
 }

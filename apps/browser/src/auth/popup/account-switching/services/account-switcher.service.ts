@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Injectable } from "@angular/core";
 import {
   Observable,
@@ -80,7 +82,7 @@ export class AccountSwitcherService {
 
         if (!hasMaxAccounts) {
           options.push({
-            name: "Add account",
+            name: "addAccount",
             id: this.SPECIAL_ADD_ACCOUNT_ID,
             isActive: false,
           });

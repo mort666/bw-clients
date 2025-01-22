@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Component, OnInit } from "@angular/core";
 import { UntypedFormBuilder, FormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
@@ -17,7 +19,7 @@ import { OrganizationConnectionResponse } from "@bitwarden/common/admin-console/
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { DialogService } from "@bitwarden/components";
+import { DialogService, ToastService } from "@bitwarden/components";
 
 @Component({
   selector: "app-org-manage-scim",
@@ -46,6 +48,7 @@ export class ScimComponent implements OnInit {
     private environmentService: EnvironmentService,
     private organizationApiService: OrganizationApiServiceAbstraction,
     private dialogService: DialogService,
+    private toastService: ToastService,
   ) {}
 
   async ngOnInit() {
@@ -81,6 +84,11 @@ export class ScimComponent implements OnInit {
 
   copyScimUrl = async () => {
     this.platformUtilsService.copyToClipboard(await this.getScimEndpointUrl());
+    this.toastService.showToast({
+      message: this.i18nService.t("valueCopied", this.i18nService.t("scimUrl")),
+      variant: "success",
+      title: null,
+    });
   };
 
   rotateScimKey = async () => {
@@ -104,11 +112,20 @@ export class ScimComponent implements OnInit {
       endpointUrl: await this.getScimEndpointUrl(),
       clientSecret: response.apiKey,
     });
-    this.platformUtilsService.showToast("success", null, this.i18nService.t("scimApiKeyRotated"));
+    this.toastService.showToast({
+      variant: "success",
+      title: null,
+      message: this.i18nService.t("scimApiKeyRotated"),
+    });
   };
 
   copyScimKey = async () => {
     this.platformUtilsService.copyToClipboard(this.formData.get("clientSecret").value);
+    this.toastService.showToast({
+      message: this.i18nService.t("valueCopied", this.i18nService.t("scimApiKey")),
+      variant: "success",
+      title: null,
+    });
   };
 
   submit = async () => {
@@ -131,7 +148,11 @@ export class ScimComponent implements OnInit {
     }
 
     await this.setConnectionFormValues(response);
-    this.platformUtilsService.showToast("success", null, this.i18nService.t("scimSettingsSaved"));
+    this.toastService.showToast({
+      variant: "success",
+      title: null,
+      message: this.i18nService.t("scimSettingsSaved"),
+    });
   };
 
   async getScimEndpointUrl() {

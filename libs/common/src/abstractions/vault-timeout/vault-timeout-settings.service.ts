@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Observable } from "rxjs";
 
 import { VaultTimeoutAction } from "../../enums/vault-timeout-action.enum";
@@ -24,6 +26,12 @@ export abstract class VaultTimeoutSettingsService {
    * @param userId The user id to check. If not provided, the current user is used
    */
   availableVaultTimeoutActions$: (userId?: string) => Observable<VaultTimeoutAction[]>;
+
+  /**
+   * Evaluates the user's available vault timeout actions and returns a boolean representing
+   * if the user can lock or not
+   */
+  canLock: (userId: string) => Promise<boolean>;
 
   /**
    * Gets the vault timeout action for the given user id. The returned value is

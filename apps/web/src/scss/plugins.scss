@@ -12,7 +12,7 @@
 }
 
 #web-authn-frame {
-  height: 290px;
+  height: 315px;
   @include themify($themes) {
     background: themed("imgLoading") 0 0 no-repeat;
   }
@@ -106,6 +106,13 @@
 
 .braintree-sheet {
   border: none;
+}
+
+// hide duplicate paypal iframe
+.braintree-sheet__content--button
+  .braintree-sheet__button--paypal
+  iframe.zoid-prerender-frame.zoid-invisible {
+  display: none !important;
 }
 
 [data-braintree-id="upper-container"]::before {

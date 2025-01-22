@@ -12,7 +12,6 @@
         type="email"
         formControlName="email"
         [attr.readonly]="emailReadonly ? true : null"
-        appAutofocus
       />
     </bit-form-field>
 
@@ -29,15 +28,16 @@
         formControlName="receiveMarketingEmails"
       />
       <bit-label for="register-start-form-input-receive-marketing-emails">
-        {{ "receiveMarketingEmails" | i18n }}
+        {{ "receiveMarketingEmailsV2" | i18n }}
         <a
           bitLink
           linkType="primary"
           href="https://bitwarden.com/email-preferences"
           target="_blank"
           rel="noreferrer"
-          >{{ "unsubscribe" | i18n }}</a
         >
+          {{ "unsubscribe" | i18n }}
+        </a>
         {{ "atAnyTime" | i18n }}
       </bit-label>
     </bit-form-control>
@@ -79,19 +79,6 @@
 
 <ng-container *ngIf="state === RegistrationStartState.CHECK_EMAIL">
   <div class="tw-flex tw-flex-col tw-items-center tw-justify-center">
-    <bit-icon [icon]="Icons.RegistrationCheckEmailIcon" class="tw-mb-6"></bit-icon>
-
-    <h2
-      bitTypography="h2"
-      id="check_your_email_heading"
-      class="tw-font-bold tw-mb-3 tw-text-main"
-      tabindex="0"
-      appAutofocus
-      aria-describedby="follow_the_link_body"
-    >
-      {{ "checkYourEmail" | i18n }}
-    </h2>
-
     <p bitTypography="body1" class="tw-text-center tw-mb-3 tw-text-main" id="follow_the_link_body">
       {{ "followTheLinkInTheEmailSentTo" | i18n }}
       <span class="tw-font-bold">{{ email.value }}</span>

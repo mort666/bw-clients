@@ -1,5 +1,8 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { firstValueFrom } from "rxjs";
 
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import {
   AUTOFILL_CARD_ID,
   AUTOFILL_ID,
@@ -20,11 +23,10 @@ import { AutofillSettingsServiceAbstraction } from "@bitwarden/common/autofill/s
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
+import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
-
-import { BrowserStateService } from "../../platform/services/abstractions/browser-state.service";
 
 import { InitContextMenuItems } from "./abstractions/main-context-menu-handler";
 
@@ -143,11 +145,12 @@ export class MainContextMenuHandler {
   ];
 
   constructor(
-    private stateService: BrowserStateService,
+    private stateService: StateService,
     private autofillSettingsService: AutofillSettingsServiceAbstraction,
     private i18nService: I18nService,
     private logService: LogService,
     private billingAccountProfileStateService: BillingAccountProfileStateService,
+    private accountService: AccountService,
   ) {}
 
   /**
@@ -167,11 +170,13 @@ export class MainContextMenuHandler {
     this.initRunning = true;
 
     try {
+      const account = await firstValueFrom(this.accountService.activeAccount$);
+      const hasPremium = await firstValueFrom(
+        this.billingAccountProfileStateService.hasPremiumFromAnySource$(account.id),
+      );
+
       for (const options of this.initContextMenuItems) {
-        if (
-          options.checkPremiumAccess &&
-          !(await firstValueFrom(this.billingAccountProfileStateService.hasPremiumFromAnySource$))
-        ) {
+        if (options.checkPremiumAccess && !hasPremium) {
           continue;
         }
 
@@ -266,8 +271,9 @@ export class MainContextMenuHandler {
         await createChildItem(COPY_USERNAME_ID);
       }
 
+      const account = await firstValueFrom(this.accountService.activeAccount$);
       const canAccessPremium = await firstValueFrom(
-        this.billingAccountProfileStateService.hasPremiumFromAnySource$,
+        this.billingAccountProfileStateService.hasPremiumFromAnySource$(account.id),
       );
       if (canAccessPremium && (!cipher || !Utils.isNullOrEmpty(cipher.login?.totp))) {
         await createChildItem(COPY_VERIFICATION_CODE_ID);

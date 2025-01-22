@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { KeyDefinitionLike, MigrationHelper, StateDefinitionLike } from "../migration-helper";
 import { Migrator } from "../migrator";
 
@@ -46,7 +48,7 @@ export class MoveFinalDesktopSettingsMigrator extends Migrator<65, 66> {
       updatedGlobal = true;
     }
 
-    if (enableBrowserIntegrationValue != null) {
+    if (enableBrowserIntegrationFingerprintValue != null) {
       await helper.setToGlobal(
         BROWSER_INTEGRATION_FINGERPRINT_ENABLED,
         enableBrowserIntegrationFingerprintValue,

@@ -1,4 +1,6 @@
-import { Component, OnInit } from "@angular/core";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { Component, OnDestroy, OnInit } from "@angular/core";
 import { FormBuilder } from "@angular/forms";
 import { concatMap, filter, firstValueFrom, map, Observable, Subject, takeUntil, tap } from "rxjs";
 
@@ -24,7 +26,7 @@ import { DialogService } from "@bitwarden/components";
   selector: "app-preferences",
   templateUrl: "preferences.component.html",
 })
-export class PreferencesComponent implements OnInit {
+export class PreferencesComponent implements OnInit, OnDestroy {
   // For use in template
   protected readonly VaultTimeoutAction = VaultTimeoutAction;
 
@@ -167,7 +169,10 @@ export class PreferencesComponent implements OnInit {
       );
       return;
     }
-    const values = this.form.value;
+
+    // must get raw value b/c the vault timeout action is disabled when a policy is applied
+    // which removes the timeout action property and value from the normal form.value.
+    const values = this.form.getRawValue();
 
     const activeAcct = await firstValueFrom(this.accountService.activeAccount$);
 

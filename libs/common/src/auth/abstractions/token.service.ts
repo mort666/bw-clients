@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Observable } from "rxjs";
 
 import { VaultTimeoutAction } from "../../enums/vault-timeout-action.enum";
@@ -148,10 +150,11 @@ export abstract class TokenService {
 
   /**
    * Decodes the access token.
-   * @param token The access token to decode.
+   * @param tokenOrUserId The access token to decode or the user id to retrieve the access token for, and then decode.
+   * If null, the currently active user's token is used.
    * @returns A promise that resolves with the decoded access token.
    */
-  decodeAccessToken: (token?: string) => Promise<DecodedAccessToken>;
+  decodeAccessToken: (tokenOrUserId?: string | UserId) => Promise<DecodedAccessToken>;
 
   /**
    * Gets the expiration date for the access token. Returns if token can't be decoded or has no expiration
@@ -212,9 +215,10 @@ export abstract class TokenService {
 
   /**
    * Gets whether or not the user authenticated via an external mechanism.
+   * @param userId The optional user id to check for external authN status; if not provided, the active user is used.
    * @returns A promise that resolves with a boolean representing the user's external authN status.
    */
-  getIsExternal: () => Promise<boolean>;
+  getIsExternal: (userId: UserId) => Promise<boolean>;
 
   /** Gets the active or passed in user's security stamp */
   getSecurityStamp: (userId?: UserId) => Promise<string | null>;

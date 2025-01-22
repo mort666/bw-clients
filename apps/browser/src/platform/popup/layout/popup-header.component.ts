@@ -1,6 +1,8 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { BooleanInput, coerceBooleanProperty } from "@angular/cdk/coercion";
-import { CommonModule, Location } from "@angular/common";
-import { Component, Input } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { Component, Input, Signal, inject } from "@angular/core";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import {
@@ -10,6 +12,10 @@ import {
   TypographyModule,
 } from "@bitwarden/components";
 
+import { PopupRouterCacheService } from "../view-cache/popup-router-cache.service";
+
+import { PopupPageComponent } from "./popup-page.component";
+
 @Component({
   selector: "popup-header",
   templateUrl: "popup-header.component.html",
@@ -17,6 +23,13 @@ import {
   imports: [TypographyModule, CommonModule, IconButtonModule, JslibModule, AsyncActionsModule],
 })
 export class PopupHeaderComponent {
+  private popupRouterCacheService = inject(PopupRouterCacheService);
+  protected pageContentScrolled: Signal<boolean> = inject(PopupPageComponent).isScrolled;
+
+  /** Background color */
+  @Input()
+  background: "default" | "alt" = "default";
+
   /** Display the back button, which uses Location.back() to go back one page in history */
   @Input()
   get showBackButton() {
@@ -38,8 +51,6 @@ export class PopupHeaderComponent {
    **/
   @Input()
   backAction: FunctionReturningAwaitable = async () => {
-    this.location.back();
+    return this.popupRouterCacheService.back();
   };
-
-  constructor(private location: Location) {}
 }

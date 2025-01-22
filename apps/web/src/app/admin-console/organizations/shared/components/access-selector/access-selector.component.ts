@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Component, forwardRef, Input, OnDestroy, OnInit } from "@angular/core";
 import {
   ControlValueAccessor,
@@ -59,7 +61,7 @@ export class AccessSelectorComponent implements ControlValueAccessor, OnInit, On
   /**
    * Updates the enabled/disabled state of provided row form group based on the item's readonly state.
    * If a row is enabled, it also updates the enabled/disabled state of the permission control
-   * based on the item's accessAllItems state and the current value of `permissionMode`.
+   * based on the current value of `permissionMode`.
    * @param controlRow - The form group for the row to update
    * @param item - The access item that is represented by the row
    */
@@ -74,7 +76,7 @@ export class AccessSelectorComponent implements ControlValueAccessor, OnInit, On
       controlRow.enable();
 
       // The enable() above also enables the permission control, so we need to disable it again
-      // Disable permission control if accessAllItems is enabled or not in Edit mode
+      // Disable permission control if not in Edit mode
       if (this.permissionMode != PermissionMode.Edit) {
         controlRow.controls.permission.disable();
       }

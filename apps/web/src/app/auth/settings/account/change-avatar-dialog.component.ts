@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { DIALOG_DATA, DialogConfig, DialogRef } from "@angular/cdk/dialog";
 import {
   Component,
@@ -15,7 +17,7 @@ import { ProfileResponse } from "@bitwarden/common/models/response/profile.respo
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
-import { DialogService } from "@bitwarden/components";
+import { DialogService, ToastService } from "@bitwarden/components";
 
 type ChangeAvatarDialogData = {
   profile: ProfileResponse;
@@ -55,6 +57,7 @@ export class ChangeAvatarDialogComponent implements OnInit, OnDestroy {
     private platformUtilsService: PlatformUtilsService,
     private avatarService: AvatarService,
     private dialogRef: DialogRef,
+    private toastService: ToastService,
   ) {
     this.profile = data.profile;
   }
@@ -93,9 +96,17 @@ export class ChangeAvatarDialogComponent implements OnInit, OnDestroy {
     if (Utils.validateHexColor(this.currentSelection) || this.currentSelection == null) {
       await this.avatarService.setAvatarColor(this.currentSelection);
       this.dialogRef.close();
-      this.platformUtilsService.showToast("success", null, this.i18nService.t("avatarUpdated"));
+      this.toastService.showToast({
+        variant: "success",
+        title: null,
+        message: this.i18nService.t("avatarUpdated"),
+      });
     } else {
-      this.platformUtilsService.showToast("error", null, this.i18nService.t("errorOccurred"));
+      this.toastService.showToast({
+        variant: "error",
+        title: null,
+        message: this.i18nService.t("errorOccurred"),
+      });
     }
   };
 

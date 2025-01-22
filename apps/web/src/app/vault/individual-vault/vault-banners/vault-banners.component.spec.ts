@@ -1,17 +1,22 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
+import { RouterTestingModule } from "@angular/router/testing";
 import { mock } from "jest-mock-extended";
-import { BehaviorSubject } from "rxjs";
+import { BehaviorSubject, Observable } from "rxjs";
 
 import { I18nPipe } from "@bitwarden/angular/platform/pipes/i18n.pipe";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { FakeAccountService, mockAccountServiceWith } from "@bitwarden/common/spec";
+import { UserId } from "@bitwarden/common/types/guid";
 import { BannerComponent, BannerModule } from "@bitwarden/components";
 
 import { VerifyEmailComponent } from "../../../auth/settings/verify-email.component";
-import { LooseComponentsModule } from "../../../shared";
+import { SharedModule } from "../../../shared";
 
 import { VaultBannersService, VisibleVaultBanner } from "./services/vault-banners.service";
 import { VaultBannersComponent } from "./vault-banners.component";
@@ -20,29 +25,35 @@ describe("VaultBannersComponent", () => {
   let component: VaultBannersComponent;
   let fixture: ComponentFixture<VaultBannersComponent>;
   const premiumBanner$ = new BehaviorSubject<boolean>(false);
+  const mockUserId = Utils.newGuid() as UserId;
 
   const bannerService = mock<VaultBannersService>({
-    shouldShowPremiumBanner$: premiumBanner$,
+    shouldShowPremiumBanner$: jest.fn((userId$: Observable<UserId>) => premiumBanner$),
     shouldShowUpdateBrowserBanner: jest.fn(),
     shouldShowVerifyEmailBanner: jest.fn(),
     shouldShowLowKDFBanner: jest.fn(),
     dismissBanner: jest.fn(),
   });
 
+  const accountService: FakeAccountService = mockAccountServiceWith(mockUserId);
+
   beforeEach(async () => {
-    bannerService.shouldShowPremiumBanner$ = premiumBanner$;
     bannerService.shouldShowUpdateBrowserBanner.mockResolvedValue(false);
     bannerService.shouldShowVerifyEmailBanner.mockResolvedValue(false);
     bannerService.shouldShowLowKDFBanner.mockResolvedValue(false);
 
+    premiumBanner$.next(false);
+
     await TestBed.configureTestingModule({
-      imports: [BannerModule, LooseComponentsModule, VerifyEmailComponent],
-      declarations: [VaultBannersComponent, I18nPipe],
+      imports: [
+        BannerModule,
+        SharedModule,
+        VerifyEmailComponent,
+        VaultBannersComponent,
+        RouterTestingModule,
+      ],
+      declarations: [I18nPipe],
       providers: [
-        {
-          provide: VaultBannersService,
-          useValue: bannerService,
-        },
         {
           provide: I18nService,
           useValue: mock<I18nService>({ t: (key) => key }),
@@ -59,8 +70,14 @@ describe("VaultBannersComponent", () => {
           provide: TokenService,
           useValue: mock<TokenService>(),
         },
+        {
+          provide: AccountService,
+          useValue: accountService,
+        },
       ],
-    }).compileComponents();
+    })
+      .overrideProvider(VaultBannersService, { useValue: bannerService })
+      .compileComponents();
   });
 
   beforeEach(() => {
@@ -130,7 +147,7 @@ describe("VaultBannersComponent", () => {
 
           dismissButton.dispatchEvent(new Event("click"));
 
-          expect(bannerService.dismissBanner).toHaveBeenCalledWith(banner);
+          expect(bannerService.dismissBanner).toHaveBeenCalledWith(mockUserId, banner);
 
           expect(component.visibleBanners).toEqual([]);
         });

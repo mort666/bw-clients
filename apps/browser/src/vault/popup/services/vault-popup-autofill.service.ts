@@ -1,5 +1,9 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Injectable } from "@angular/core";
+import { ActivatedRoute } from "@angular/router";
 import {
+  combineLatest,
   firstValueFrom,
   map,
   Observable,
@@ -10,7 +14,10 @@ import {
   switchMap,
 } from "rxjs";
 
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
@@ -20,26 +27,39 @@ import { LoginUriView } from "@bitwarden/common/vault/models/view/login-uri.view
 import { ToastService } from "@bitwarden/components";
 import { PasswordRepromptService } from "@bitwarden/vault";
 
+// FIXME: remove `src` and fix import
+// eslint-disable-next-line no-restricted-imports
+import { InlineMenuFieldQualificationService } from "../../../../../browser/src/autofill/services/inline-menu-field-qualification.service";
 import {
   AutofillService,
   PageDetail,
 } from "../../../autofill/services/abstractions/autofill.service";
 import { BrowserApi } from "../../../platform/browser/browser-api";
 import BrowserPopupUtils from "../../../platform/popup/browser-popup-utils";
+import { closeViewVaultItemPopout, VaultPopoutType } from "../utils/vault-popout-window";
 
 @Injectable({
   providedIn: "root",
 })
 export class VaultPopupAutofillService {
   private _refreshCurrentTab$ = new Subject<void>();
-
+  private senderTabId$: Observable<number | undefined> = this.route.queryParams.pipe(
+    map((params) => (params?.senderTabId ? parseInt(params.senderTabId, 10) : undefined)),
+  );
   /**
-   * Observable that contains the current tab to be considered for autofill. If there is no current tab
-   * or the popup is in a popout window, this will be null.
+   * Observable that contains the current tab to be considered for autofill.
+   * This can be the tab from the current window if opened in a Popup OR
+   * the sending tab when opened the single action Popout (specified by the senderTabId route query parameter)
    */
-  currentAutofillTab$: Observable<chrome.tabs.Tab | null> = this._refreshCurrentTab$.pipe(
-    startWith(null),
-    switchMap(async () => {
+  currentAutofillTab$: Observable<chrome.tabs.Tab | null> = combineLatest([
+    this.senderTabId$,
+    this._refreshCurrentTab$.pipe(startWith(null)),
+  ]).pipe(
+    switchMap(async ([senderTabId]) => {
+      if (senderTabId) {
+        return await BrowserApi.getTab(senderTabId);
+      }
+
       if (BrowserPopupUtils.inPopout(window)) {
         return null;
       }
@@ -47,6 +67,74 @@ export class VaultPopupAutofillService {
     }),
     shareReplay({ refCount: false, bufferSize: 1 }),
   );
+
+  currentTabIsOnBlocklist$: Observable<boolean> = combineLatest([
+    this.domainSettingsService.blockedInteractionsUris$,
+    this.currentAutofillTab$,
+  ]).pipe(
+    map(([blockedInteractionsUris, currentTab]) => {
+      if (blockedInteractionsUris && currentTab?.url?.length) {
+        const tabURL = new URL(currentTab.url);
+        const tabIsBlocked = Object.keys(blockedInteractionsUris).includes(tabURL.hostname);
+
+        if (tabIsBlocked) {
+          return true;
+        }
+      }
+
+      return false;
+    }),
+    shareReplay({ refCount: false, bufferSize: 1 }),
+  );
+
+  showCurrentTabIsBlockedBanner$: Observable<boolean> = combineLatest([
+    this.domainSettingsService.blockedInteractionsUris$,
+    this.currentAutofillTab$,
+  ]).pipe(
+    map(([blockedInteractionsUris, currentTab]) => {
+      if (blockedInteractionsUris && currentTab?.url?.length) {
+        const tabURL = new URL(currentTab.url);
+        const tabIsBlocked = Object.keys(blockedInteractionsUris).includes(tabURL.hostname);
+
+        const showScriptInjectionIsBlockedBanner =
+          tabIsBlocked && !blockedInteractionsUris[tabURL.hostname]?.bannerIsDismissed;
+
+        return showScriptInjectionIsBlockedBanner;
+      }
+
+      return false;
+    }),
+    shareReplay({ refCount: false, bufferSize: 1 }),
+  );
+
+  async dismissCurrentTabIsBlockedBanner() {
+    try {
+      const currentTab = await firstValueFrom(this.currentAutofillTab$);
+      const currentTabURL = currentTab?.url.length && new URL(currentTab.url);
+
+      const currentTabHostname = currentTabURL && currentTabURL.hostname;
+
+      if (!currentTabHostname) {
+        return;
+      }
+
+      const blockedURIs = await firstValueFrom(this.domainSettingsService.blockedInteractionsUris$);
+      const tabIsBlocked = Object.keys(blockedURIs).includes(currentTabHostname);
+
+      if (tabIsBlocked) {
+        void this.domainSettingsService.setBlockedInteractionsUris({
+          ...blockedURIs,
+          [currentTabHostname as string]: { bannerIsDismissed: true },
+        });
+      }
+      // FIXME: Remove when updating file. Eslint update
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (e) {
+      throw new Error(
+        "There was a problem dismissing the blocked interaction URI notification banner",
+      );
+    }
+  }
 
   /**
    * Observable that indicates whether autofill is allowed in the current context.
@@ -64,14 +152,59 @@ export class VaultPopupAutofillService {
     shareReplay({ refCount: false, bufferSize: 1 }),
   );
 
+  nonLoginCipherTypesOnPage$: Observable<{
+    [CipherType.Card]: boolean;
+    [CipherType.Identity]: boolean;
+  }> = this._currentPageDetails$.pipe(
+    map((pageDetails) => {
+      let pageHasCardFields = false;
+      let pageHasIdentityFields = false;
+
+      try {
+        if (!pageDetails) {
+          throw Error("No page details were provided");
+        }
+
+        for (const details of pageDetails) {
+          for (const field of details.details.fields) {
+            if (!pageHasCardFields) {
+              pageHasCardFields = this.inlineMenuFieldQualificationService.isFieldForCreditCardForm(
+                field,
+                details.details,
+              );
+            }
+
+            if (!pageHasIdentityFields) {
+              pageHasIdentityFields =
+                this.inlineMenuFieldQualificationService.isFieldForIdentityForm(
+                  field,
+                  details.details,
+                );
+            }
+          }
+        }
+      } catch (error) {
+        // no-op on failure; do not show extra cipher types
+        this.logService.warning(error.message);
+      }
+
+      return { [CipherType.Card]: pageHasCardFields, [CipherType.Identity]: pageHasIdentityFields };
+    }),
+  );
+
   constructor(
     private autofillService: AutofillService,
+    private domainSettingsService: DomainSettingsService,
     private i18nService: I18nService,
     private toastService: ToastService,
     private platformUtilService: PlatformUtilsService,
     private passwordRepromptService: PasswordRepromptService,
     private cipherService: CipherService,
     private messagingService: MessagingService,
+    private route: ActivatedRoute,
+    private accountService: AccountService,
+    private logService: LogService,
+    private inlineMenuFieldQualificationService: InlineMenuFieldQualificationService,
   ) {
     this._currentPageDetails$.subscribe();
   }
@@ -122,7 +255,21 @@ export class VaultPopupAutofillService {
     return true;
   }
 
-  private _closePopup() {
+  private async _closePopup(cipher: CipherView, tab: chrome.tabs.Tab | null) {
+    if (BrowserPopupUtils.inSingleActionPopout(window, VaultPopoutType.viewVaultItem) && tab.id) {
+      this.toastService.showToast({
+        variant: "success",
+        title: null,
+        message: this.i18nService.t("autoFillSuccess"),
+      });
+      setTimeout(async () => {
+        await BrowserApi.focusTab(tab.id);
+        await closeViewVaultItemPopout(`${VaultPopoutType.viewVaultItem}_${cipher.id}`);
+      }, 1000);
+
+      return;
+    }
+
     if (!BrowserPopupUtils.inPopup(window)) {
       return;
     }
@@ -156,7 +303,7 @@ export class VaultPopupAutofillService {
     const didAutofill = await this._internalDoAutofill(cipher, tab, pageDetails);
 
     if (didAutofill && closePopup) {
-      this._closePopup();
+      await this._closePopup(cipher, tab);
     }
 
     return didAutofill;
@@ -191,7 +338,7 @@ export class VaultPopupAutofillService {
     }
 
     if (closePopup) {
-      this._closePopup();
+      await this._closePopup(cipher, tab);
     } else {
       this.toastService.showToast({
         variant: "success",
@@ -221,7 +368,10 @@ export class VaultPopupAutofillService {
     cipher.login.uris.push(loginUri);
 
     try {
-      const encCipher = await this.cipherService.encrypt(cipher);
+      const activeUserId = await firstValueFrom(
+        this.accountService.activeAccount$.pipe(map((a) => a?.id)),
+      );
+      const encCipher = await this.cipherService.encrypt(cipher, activeUserId);
       await this.cipherService.updateWithServer(encCipher);
       this.messagingService.send("editedCipher");
       return true;

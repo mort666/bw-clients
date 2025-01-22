@@ -19,9 +19,8 @@
       }
     }
   ],
-  "flags": {
-    "showPasswordless": true,
-    "enableCipherKeyEncryption": true
-  },
-  "devFlags": {}
+  "flags": {},
+  "devFlags": {
+    "showRiskInsightsDebug": false
+  }
 }

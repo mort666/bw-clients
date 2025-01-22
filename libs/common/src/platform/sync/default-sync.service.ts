@@ -1,7 +1,22 @@
-import { firstValueFrom } from "rxjs";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { firstValueFrom, map } from "rxjs";
 
+import {
+  CollectionService,
+  CollectionData,
+  CollectionDetailsResponse,
+} from "@bitwarden/admin-console/common";
+
+// FIXME: remove `src` and fix import
+// eslint-disable-next-line no-restricted-imports
 import { UserDecryptionOptionsServiceAbstraction } from "../../../../auth/src/common/abstractions";
+// FIXME: remove `src` and fix import
+// eslint-disable-next-line no-restricted-imports
 import { LogoutReason } from "../../../../auth/src/common/types";
+// FIXME: remove `src` and fix import
+// eslint-disable-next-line no-restricted-imports
+import { KeyService } from "../../../../key-management/src/abstractions/key.service";
 import { ApiService } from "../../abstractions/api.service";
 import { InternalOrganizationServiceAbstraction } from "../../admin-console/abstractions/organization/organization.service.abstraction";
 import { InternalPolicyService } from "../../admin-console/abstractions/policy/policy.service.abstraction";
@@ -17,6 +32,7 @@ import { AvatarService } from "../../auth/abstractions/avatar.service";
 import { KeyConnectorService } from "../../auth/abstractions/key-connector.service";
 import { InternalMasterPasswordServiceAbstraction } from "../../auth/abstractions/master-password.service.abstraction";
 import { TokenService } from "../../auth/abstractions/token.service";
+import { AuthenticationStatus } from "../../auth/enums/authentication-status";
 import { ForceSetPasswordReason } from "../../auth/models/domain/force-set-password-reason";
 import { DomainSettingsService } from "../../autofill/services/domain-settings.service";
 import { BillingAccountProfileStateService } from "../../billing/abstractions";
@@ -28,20 +44,17 @@ import { SendApiService } from "../../tools/send/services/send-api.service.abstr
 import { InternalSendService } from "../../tools/send/services/send.service.abstraction";
 import { UserId } from "../../types/guid";
 import { CipherService } from "../../vault/abstractions/cipher.service";
-import { CollectionService } from "../../vault/abstractions/collection.service";
 import { FolderApiServiceAbstraction } from "../../vault/abstractions/folder/folder-api.service.abstraction";
 import { InternalFolderService } from "../../vault/abstractions/folder/folder.service.abstraction";
 import { CipherData } from "../../vault/models/data/cipher.data";
-import { CollectionData } from "../../vault/models/data/collection.data";
 import { FolderData } from "../../vault/models/data/folder.data";
 import { CipherResponse } from "../../vault/models/response/cipher.response";
-import { CollectionDetailsResponse } from "../../vault/models/response/collection.response";
 import { FolderResponse } from "../../vault/models/response/folder.response";
-import { CryptoService } from "../abstractions/crypto.service";
 import { LogService } from "../abstractions/log.service";
 import { StateService } from "../abstractions/state.service";
 import { MessageSender } from "../messaging";
 import { sequentialize } from "../misc/sequentialize";
+import { StateProvider } from "../state";
 
 import { CoreSyncService } from "./core-sync.service";
 
@@ -55,7 +68,7 @@ export class DefaultSyncService extends CoreSyncService {
     private domainSettingsService: DomainSettingsService,
     folderService: InternalFolderService,
     cipherService: CipherService,
-    private cryptoService: CryptoService,
+    private keyService: KeyService,
     collectionService: CollectionService,
     messageSender: MessageSender,
     private policyService: InternalPolicyService,
@@ -73,6 +86,7 @@ export class DefaultSyncService extends CoreSyncService {
     private billingAccountProfileStateService: BillingAccountProfileStateService,
     private tokenService: TokenService,
     authService: AuthService,
+    stateProvider: StateProvider,
   ) {
     super(
       stateService,
@@ -87,14 +101,16 @@ export class DefaultSyncService extends CoreSyncService {
       authService,
       sendService,
       sendApiService,
+      stateProvider,
     );
   }
 
   @sequentialize(() => "fullSync")
   override async fullSync(forceSync: boolean, allowThrowOnError = false): Promise<boolean> {
+    const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(map((a) => a?.id)));
     this.syncStarted();
-    const isAuthenticated = await this.stateService.getIsAuthenticated();
-    if (!isAuthenticated) {
+    const authStatus = await firstValueFrom(this.authService.authStatusFor$(userId));
+    if (authStatus === AuthenticationStatus.LoggedOut) {
       return this.syncCompleted(false);
     }
 
@@ -110,7 +126,7 @@ export class DefaultSyncService extends CoreSyncService {
     }
 
     if (!needsSync) {
-      await this.setLastSync(now);
+      await this.setLastSync(now, userId);
       return this.syncCompleted(false);
     }
 
@@ -119,14 +135,14 @@ export class DefaultSyncService extends CoreSyncService {
       const response = await this.apiService.getSync();
 
       await this.syncProfile(response.profile);
-      await this.syncFolders(response.folders);
-      await this.syncCollections(response.collections);
-      await this.syncCiphers(response.ciphers);
-      await this.syncSends(response.sends);
-      await this.syncSettings(response.domains);
-      await this.syncPolicies(response.policies);
+      await this.syncFolders(response.folders, response.profile.id);
+      await this.syncCollections(response.collections, response.profile.id);
+      await this.syncCiphers(response.ciphers, response.profile.id);
+      await this.syncSends(response.sends, response.profile.id);
+      await this.syncSettings(response.domains, response.profile.id);
+      await this.syncPolicies(response.policies, response.profile.id);
 
-      await this.setLastSync(now);
+      await this.setLastSync(now, userId);
       return this.syncCompleted(true);
     } catch (e) {
       if (allowThrowOnError) {
@@ -170,10 +186,10 @@ export class DefaultSyncService extends CoreSyncService {
       throw new Error("Stamp has changed");
     }
 
-    await this.cryptoService.setMasterKeyEncryptedUserKey(response.key);
-    await this.cryptoService.setPrivateKey(response.privateKey, response.id);
-    await this.cryptoService.setProviderKeys(response.providers, response.id);
-    await this.cryptoService.setOrgKeys(
+    await this.keyService.setMasterKeyEncryptedUserKey(response.key, response.id);
+    await this.keyService.setPrivateKey(response.privateKey, response.id);
+    await this.keyService.setProviderKeys(response.providers, response.id);
+    await this.keyService.setOrgKeys(
       response.organizations,
       response.providerOrganizations,
       response.id,
@@ -185,8 +201,9 @@ export class DefaultSyncService extends CoreSyncService {
     await this.billingAccountProfileStateService.setHasPremium(
       response.premiumPersonally,
       response.premiumFromOrganization,
+      response.id,
     );
-    await this.keyConnectorService.setUsesKeyConnector(response.usesKeyConnector);
+    await this.keyConnectorService.setUsesKeyConnector(response.usesKeyConnector, response.id);
 
     await this.setForceSetPasswordReasonIfNeeded(response);
 
@@ -195,17 +212,17 @@ export class DefaultSyncService extends CoreSyncService {
       providers[p.id] = new ProviderData(p);
     });
 
-    await this.providerService.save(providers);
+    await this.providerService.save(providers, response.id);
 
-    await this.syncProfileOrganizations(response);
+    await this.syncProfileOrganizations(response, response.id);
 
-    if (await this.keyConnectorService.userNeedsMigration()) {
-      await this.keyConnectorService.setConvertAccountRequired(true);
+    if (await this.keyConnectorService.userNeedsMigration(response.id)) {
+      await this.keyConnectorService.setConvertAccountRequired(true, response.id);
       this.messageSender.send("convertAccountToKeyConnector");
     } else {
       // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.keyConnectorService.removeConvertAccountRequired();
+      this.keyConnectorService.removeConvertAccountRequired(response.id);
     }
   }
 
@@ -256,7 +273,7 @@ export class DefaultSyncService extends CoreSyncService {
     }
   }
 
-  private async syncProfileOrganizations(response: ProfileResponse) {
+  private async syncProfileOrganizations(response: ProfileResponse, userId: UserId) {
     const organizations: { [id: string]: OrganizationData } = {};
     response.organizations.forEach((o) => {
       organizations[o.id] = new OrganizationData(o, {
@@ -276,42 +293,42 @@ export class DefaultSyncService extends CoreSyncService {
       }
     });
 
-    await this.organizationService.replace(organizations);
+    await this.organizationService.replace(organizations, userId);
   }
 
-  private async syncFolders(response: FolderResponse[]) {
+  private async syncFolders(response: FolderResponse[], userId: UserId) {
     const folders: { [id: string]: FolderData } = {};
     response.forEach((f) => {
       folders[f.id] = new FolderData(f);
     });
-    return await this.folderService.replace(folders);
+    return await this.folderService.replace(folders, userId);
   }
 
-  private async syncCollections(response: CollectionDetailsResponse[]) {
+  private async syncCollections(response: CollectionDetailsResponse[], userId: UserId) {
     const collections: { [id: string]: CollectionData } = {};
     response.forEach((c) => {
       collections[c.id] = new CollectionData(c);
     });
-    return await this.collectionService.replace(collections);
+    return await this.collectionService.replace(collections, userId);
   }
 
-  private async syncCiphers(response: CipherResponse[]) {
+  private async syncCiphers(response: CipherResponse[], userId: UserId) {
     const ciphers: { [id: string]: CipherData } = {};
     response.forEach((c) => {
       ciphers[c.id] = new CipherData(c);
     });
-    return await this.cipherService.replace(ciphers);
+    return await this.cipherService.replace(ciphers, userId);
   }
 
-  private async syncSends(response: SendResponse[]) {
+  private async syncSends(response: SendResponse[], userId: UserId) {
     const sends: { [id: string]: SendData } = {};
     response.forEach((s) => {
       sends[s.id] = new SendData(s);
     });
-    return await this.sendService.replace(sends);
+    return await this.sendService.replace(sends, userId);
   }
 
-  private async syncSettings(response: DomainsResponse) {
+  private async syncSettings(response: DomainsResponse, userId: UserId) {
     let eqDomains: string[][] = [];
     if (response != null && response.equivalentDomains != null) {
       eqDomains = eqDomains.concat(response.equivalentDomains);
@@ -325,16 +342,16 @@ export class DefaultSyncService extends CoreSyncService {
       });
     }
 
-    return this.domainSettingsService.setEquivalentDomains(eqDomains);
+    return this.domainSettingsService.setEquivalentDomains(eqDomains, userId);
   }
 
-  private async syncPolicies(response: PolicyResponse[]) {
+  private async syncPolicies(response: PolicyResponse[], userId: UserId) {
     const policies: { [id: string]: PolicyData } = {};
     if (response != null) {
       response.forEach((p) => {
         policies[p.id] = new PolicyData(p);
       });
     }
-    return await this.policyService.replace(policies);
+    return await this.policyService.replace(policies, userId);
   }
 }

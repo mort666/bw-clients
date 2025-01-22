@@ -1,10 +1,10 @@
 import { firstValueFrom } from "rxjs";
 
+import { OrganizationAuthRequestService } from "@bitwarden/bit-common/admin-console/auth-requests";
 import { Response } from "@bitwarden/cli/models/response";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 
-import { OrganizationAuthRequestService } from "../../../../bit-common/src/admin-console/auth-requests";
 import { ServiceContainer } from "../../service-container";
 
 export class DenyCommand {
@@ -38,16 +38,18 @@ export class DenyCommand {
     }
 
     try {
-      await this.organizationAuthRequestService.denyPendingRequest(organizationId, id);
-      return Response.success();
-    } catch (error) {
-      if (error?.statusCode === 404) {
-        return Response.error(
-          "The request id is invalid or you do not have permission to update it.",
-        );
+      const pendingRequests =
+        await this.organizationAuthRequestService.listPendingRequests(organizationId);
+
+      const request = pendingRequests.find((r) => r.id == id);
+      if (request == null) {
+        return Response.error("The request id is invalid.");
       }
 
-      return Response.error(error);
+      await this.organizationAuthRequestService.denyPendingRequest(organizationId, id);
+      return Response.success();
+    } catch (e) {
+      return Response.error(e);
     }
   }
 

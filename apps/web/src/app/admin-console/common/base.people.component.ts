@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Directive, ViewChild, ViewContainerRef } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { firstValueFrom, concatMap, map, lastValueFrom, startWith, debounceTime } from "rxjs";
@@ -16,13 +18,13 @@ import {
 } from "@bitwarden/common/admin-console/enums";
 import { ProviderUserUserDetailsResponse } from "@bitwarden/common/admin-console/models/response/provider/provider-user.response";
 import { ListResponse } from "@bitwarden/common/models/response/list.response";
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { ValidationService } from "@bitwarden/common/platform/abstractions/validation.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
-import { DialogService } from "@bitwarden/components";
+import { DialogService, ToastService } from "@bitwarden/components";
+import { KeyService } from "@bitwarden/key-management";
 
 import { OrganizationUserView } from "../organizations/core/views/organization-user.view";
 import { UserConfirmComponent } from "../organizations/manage/user-confirm.component";
@@ -119,7 +121,7 @@ export abstract class BasePeopleComponent<
     private searchService: SearchService,
     protected i18nService: I18nService,
     protected platformUtilsService: PlatformUtilsService,
-    protected cryptoService: CryptoService,
+    protected keyService: KeyService,
     protected validationService: ValidationService,
     protected modalService: ModalService,
     private logService: LogService,
@@ -127,6 +129,7 @@ export abstract class BasePeopleComponent<
     protected userNamePipe: UserNamePipe,
     protected dialogService: DialogService,
     protected organizationManagementPreferencesService: OrganizationManagementPreferencesService,
+    protected toastService: ToastService,
   ) {}
 
   abstract edit(user: UserType): void;
@@ -251,11 +254,11 @@ export abstract class BasePeopleComponent<
     this.actionPromise = this.deleteUser(user.id);
     try {
       await this.actionPromise;
-      this.platformUtilsService.showToast(
-        "success",
-        null,
-        this.i18nService.t("removedUserId", this.userNamePipe.transform(user)),
-      );
+      this.toastService.showToast({
+        variant: "success",
+        title: null,
+        message: this.i18nService.t("removedUserId", this.userNamePipe.transform(user)),
+      });
       this.removeUser(user);
     } catch (e) {
       this.validationService.showError(e);
@@ -282,11 +285,11 @@ export abstract class BasePeopleComponent<
     this.actionPromise = this.revokeUser(user.id);
     try {
       await this.actionPromise;
-      this.platformUtilsService.showToast(
-        "success",
-        null,
-        this.i18nService.t("revokedUserId", this.userNamePipe.transform(user)),
-      );
+      this.toastService.showToast({
+        variant: "success",
+        title: null,
+        message: this.i18nService.t("revokedUserId", this.userNamePipe.transform(user)),
+      });
       await this.load();
     } catch (e) {
       this.validationService.showError(e);
@@ -298,11 +301,11 @@ export abstract class BasePeopleComponent<
     this.actionPromise = this.restoreUser(user.id);
     try {
       await this.actionPromise;
-      this.platformUtilsService.showToast(
-        "success",
-        null,
-        this.i18nService.t("restoredUserId", this.userNamePipe.transform(user)),
-      );
+      this.toastService.showToast({
+        variant: "success",
+        title: null,
+        message: this.i18nService.t("restoredUserId", this.userNamePipe.transform(user)),
+      });
       await this.load();
     } catch (e) {
       this.validationService.showError(e);
@@ -318,11 +321,11 @@ export abstract class BasePeopleComponent<
     this.actionPromise = this.reinviteUser(user.id);
     try {
       await this.actionPromise;
-      this.platformUtilsService.showToast(
-        "success",
-        null,
-        this.i18nService.t("hasBeenReinvited", this.userNamePipe.transform(user)),
-      );
+      this.toastService.showToast({
+        variant: "success",
+        title: null,
+        message: this.i18nService.t("hasBeenReinvited", this.userNamePipe.transform(user)),
+      });
     } catch (e) {
       this.validationService.showError(e);
     }
@@ -344,11 +347,11 @@ export abstract class BasePeopleComponent<
         this.actionPromise = this.confirmUser(user, publicKey);
         await this.actionPromise;
         updateUser(this);
-        this.platformUtilsService.showToast(
-          "success",
-          null,
-          this.i18nService.t("hasBeenConfirmed", this.userNamePipe.transform(user)),
-        );
+        this.toastService.showToast({
+          variant: "success",
+          title: null,
+          message: this.i18nService.t("hasBeenConfirmed", this.userNamePipe.transform(user)),
+        });
       } catch (e) {
         this.validationService.showError(e);
         throw e;
@@ -383,7 +386,7 @@ export abstract class BasePeopleComponent<
       }
 
       try {
-        const fingerprint = await this.cryptoService.getFingerprint(user.userId, publicKey);
+        const fingerprint = await this.keyService.getFingerprint(user.userId, publicKey);
         this.logService.info(`User's fingerprint: ${fingerprint.join("-")}`);
       } catch (e) {
         this.logService.error(e);

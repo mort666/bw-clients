@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import {
   concatMap,
   zip,
@@ -248,7 +250,7 @@ export class LegacyPasswordGenerationService implements PasswordGenerationServic
           ...options,
           ...navigationEvaluator.sanitize(navigationApplied),
         };
-        if (options.type === "password") {
+        if (navigationSanitized.type === "password") {
           const applied = passwordEvaluator.applyPolicy(navigationSanitized);
           const sanitized = passwordEvaluator.sanitize(applied);
           return [sanitized, policy];

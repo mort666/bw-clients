@@ -1,5 +1,6 @@
 import { NgModule } from "@angular/core";
 
+import { BannerModule } from "../../../../../../libs/components/src/banner/banner.module";
 import { UserVerificationModule } from "../../auth/shared/components/user-verification";
 import { LooseComponentsModule } from "../../shared";
 import { BillingSharedModule } from "../shared";
@@ -14,6 +15,7 @@ import { OrganizationBillingRoutingModule } from "./organization-billing-routing
 import { OrganizationPlansComponent } from "./organization-plans.component";
 import { OrganizationSubscriptionCloudComponent } from "./organization-subscription-cloud.component";
 import { OrganizationSubscriptionSelfhostComponent } from "./organization-subscription-selfhost.component";
+import { OrganizationPaymentMethodComponent } from "./payment-method/organization-payment-method.component";
 import { SecretsManagerAdjustSubscriptionComponent } from "./sm-adjust-subscription.component";
 import { SecretsManagerSubscribeStandaloneComponent } from "./sm-subscribe-standalone.component";
 import { SubscriptionHiddenComponent } from "./subscription-hidden.component";
@@ -26,6 +28,7 @@ import { SubscriptionStatusComponent } from "./subscription-status.component";
     BillingSharedModule,
     OrganizationPlansComponent,
     LooseComponentsModule,
+    BannerModule,
   ],
   declarations: [
     AdjustSubscription,
@@ -40,6 +43,7 @@ import { SubscriptionStatusComponent } from "./subscription-status.component";
     SecretsManagerSubscribeStandaloneComponent,
     SubscriptionHiddenComponent,
     SubscriptionStatusComponent,
+    OrganizationPaymentMethodComponent,
   ],
 })
 export class OrganizationBillingModule {}

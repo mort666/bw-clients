@@ -1,4 +1,8 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Jsonify } from "type-fest";
+
+import { Classifier } from "./classifier";
 
 /** Classifies an object's JSON-serializable data by property into
  *  3 categories:
@@ -10,7 +14,9 @@ import { Jsonify } from "type-fest";
  *  Data that cannot be serialized by JSON.stringify() should
  *  be excluded.
  */
-export class SecretClassifier<Plaintext extends object, Disclosed, Secret> {
+export class SecretClassifier<Plaintext extends object, Disclosed, Secret>
+  implements Classifier<Plaintext, Disclosed, Secret>
+{
   private constructor(
     disclosed: readonly (keyof Jsonify<Disclosed> & keyof Jsonify<Plaintext>)[],
     excluded: readonly (keyof Plaintext)[],

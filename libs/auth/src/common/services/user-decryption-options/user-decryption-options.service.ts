@@ -1,4 +1,6 @@
-import { map } from "rxjs";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { Observable, map } from "rxjs";
 
 import {
   ActiveUserState,
@@ -6,6 +8,8 @@ import {
   USER_DECRYPTION_OPTIONS_DISK,
   UserKeyDefinition,
 } from "@bitwarden/common/platform/state";
+// FIXME: remove `src` and fix import
+// eslint-disable-next-line no-restricted-imports
 import { UserId } from "@bitwarden/common/src/types/guid";
 
 import { InternalUserDecryptionOptionsServiceAbstraction } from "../../abstractions/user-decryption-options.service.abstraction";
@@ -25,8 +29,8 @@ export class UserDecryptionOptionsService
 {
   private userDecryptionOptionsState: ActiveUserState<UserDecryptionOptions>;
 
-  userDecryptionOptions$;
-  hasMasterPassword$;
+  userDecryptionOptions$: Observable<UserDecryptionOptions>;
+  hasMasterPassword$: Observable<boolean>;
 
   constructor(private stateProvider: StateProvider) {
     this.userDecryptionOptionsState = this.stateProvider.getActive(USER_DECRYPTION_OPTIONS);
@@ -37,7 +41,7 @@ export class UserDecryptionOptionsService
     );
   }
 
-  userDecryptionOptionsById$(userId: UserId) {
+  userDecryptionOptionsById$(userId: UserId): Observable<UserDecryptionOptions> {
     return this.stateProvider.getUser(userId, USER_DECRYPTION_OPTIONS).state$;
   }
 

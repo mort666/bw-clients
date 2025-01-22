@@ -18,7 +18,7 @@
         *ngFor="let d of custom; let i = index; trackBy: indexTrackBy"
       >
         <bit-form-field class="tw-flex-1 !tw-mb-0" formGroupName="{{ i }}">
-          <bit-label class="tw-sr-only">{{ "customDomainX" | i18n: i + 1 }} </bit-label>
+          <bit-label>{{ "customDomainX" | i18n: i + 1 }} </bit-label>
           <textarea
             rows="2"
             bitInput
@@ -54,7 +54,7 @@
     </p>
     <bit-table *ngIf="!loading && global.length > 0">
       <ng-template body>
-        <tr bitRow *ngFor="let d of global" class="tw-group">
+        <tr bitRow *ngFor="let d of global">
           <td bitCell [ngClass]="{ 'table-list-strike': d.excluded }">{{ d.domains }}</td>
           <td bitCell>
             <button

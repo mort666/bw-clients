@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Jsonify } from "type-fest";
 
 import { ProductTierType } from "../../../billing/enums";
@@ -52,9 +54,11 @@ export class OrganizationData {
   familySponsorshipValidUntil?: Date;
   familySponsorshipToDelete?: boolean;
   accessSecretsManager: boolean;
-  limitCollectionCreationDeletion: boolean;
+  limitCollectionCreation: boolean;
+  limitCollectionDeletion: boolean;
   allowAdminAccessToAllCollectionItems: boolean;
-  flexibleCollections: boolean;
+  userIsManagedByOrganization: boolean;
+  useRiskInsights: boolean;
 
   constructor(
     response?: ProfileOrganizationResponse,
@@ -111,9 +115,11 @@ export class OrganizationData {
     this.familySponsorshipValidUntil = response.familySponsorshipValidUntil;
     this.familySponsorshipToDelete = response.familySponsorshipToDelete;
     this.accessSecretsManager = response.accessSecretsManager;
-    this.limitCollectionCreationDeletion = response.limitCollectionCreationDeletion;
+    this.limitCollectionCreation = response.limitCollectionCreation;
+    this.limitCollectionDeletion = response.limitCollectionDeletion;
     this.allowAdminAccessToAllCollectionItems = response.allowAdminAccessToAllCollectionItems;
-    this.flexibleCollections = response.flexibleCollections;
+    this.userIsManagedByOrganization = response.userIsManagedByOrganization;
+    this.useRiskInsights = response.useRiskInsights;
 
     this.isMember = options.isMember;
     this.isProviderUser = options.isProviderUser;

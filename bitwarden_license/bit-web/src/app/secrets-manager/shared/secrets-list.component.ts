@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { SelectionModel } from "@angular/cdk/collections";
 import { Component, EventEmitter, Input, OnDestroy, Output } from "@angular/core";
 import { Subject, takeUntil } from "rxjs";
@@ -5,7 +7,7 @@ import { Subject, takeUntil } from "rxjs";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { TableDataSource } from "@bitwarden/components";
+import { TableDataSource, ToastService } from "@bitwarden/components";
 
 import { SecretListView } from "../models/view/secret-list.view";
 import { SecretService } from "../secrets/secret.service";
@@ -53,6 +55,7 @@ export class SecretsListComponent implements OnDestroy {
   constructor(
     private i18nService: I18nService,
     private platformUtilsService: PlatformUtilsService,
+    private toastService: ToastService,
   ) {
     this.selection.changed
       .pipe(takeUntil(this.destroy$))
@@ -87,11 +90,11 @@ export class SecretsListComponent implements OnDestroy {
         this.secrets.filter((secret) => this.selection.isSelected(secret.id)),
       );
     } else {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("nothingSelected"),
-      );
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("errorOccurred"),
+        message: this.i18nService.t("nothingSelected"),
+      });
     }
   }
 
@@ -99,11 +102,11 @@ export class SecretsListComponent implements OnDestroy {
     if (this.selection.selected.length >= 1) {
       this.restoreSecretsEvent.emit(this.selection.selected);
     } else {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("nothingSelected"),
-      );
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("errorOccurred"),
+        message: this.i18nService.t("nothingSelected"),
+      });
     }
   }
 

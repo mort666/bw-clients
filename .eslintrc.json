@@ -16,11 +16,12 @@
       },
       "extends": [
         "eslint:recommended",
+        "plugin:@angular-eslint/recommended",
         "plugin:@typescript-eslint/recommended",
         "plugin:import/recommended",
         "plugin:import/typescript",
-        "prettier",
         "plugin:rxjs/recommended",
+        "prettier",
         "plugin:storybook/recommended"
       ],
       "settings": {
@@ -34,6 +35,19 @@
         }
       },
       "rules": {
+        "@angular-eslint/component-class-suffix": 0,
+        "@angular-eslint/contextual-lifecycle": 0,
+        "@angular-eslint/directive-class-suffix": 0,
+        "@angular-eslint/no-empty-lifecycle-method": 0,
+        "@angular-eslint/no-host-metadata-property": 0,
+        "@angular-eslint/no-input-rename": 0,
+        "@angular-eslint/no-inputs-metadata-property": 0,
+        "@angular-eslint/no-output-native": 0,
+        "@angular-eslint/no-output-on-prefix": 0,
+        "@angular-eslint/no-output-rename": 0,
+        "@angular-eslint/no-outputs-metadata-property": 0,
+        "@angular-eslint/use-lifecycle-interface": "error",
+        "@angular-eslint/use-pipe-transform-interface": 0,
         "@typescript-eslint/explicit-member-accessibility": [
           "error",
           { "accessibility": "no-public" }
@@ -42,6 +56,7 @@
         "@typescript-eslint/no-floating-promises": "error",
         "@typescript-eslint/no-misused-promises": ["error", { "checksVoidReturn": false }],
         "@typescript-eslint/no-this-alias": ["error", { "allowedNames": ["self"] }],
+        "@typescript-eslint/no-unused-expressions": ["error", { "allowTernary": true }],
         "@typescript-eslint/no-unused-vars": ["error", { "args": "none" }],
         "no-console": "error",
         "import/no-unresolved": "off", // TODO: Look into turning off once each package is an actual package.
@@ -87,6 +102,11 @@
           {
             "zones": [
               {
+                "target": ["libs/**/*"],
+                "from": ["apps/**/*"],
+                "message": "Libs should not import app-specific code."
+              },
+              {
                 // avoid specific frameworks or large dependencies in common
                 "target": "./libs/common/**/*",
                 "from": [
@@ -122,8 +142,7 @@
               }
             ]
           }
-        ],
-        "no-restricted-imports": ["error", { "patterns": ["src/**/*"] }]
+        ]
       }
     },
     {
@@ -143,141 +162,6 @@
         "tailwindcss/enforces-negative-arbitrary-values": "error",
         "tailwindcss/enforces-shorthand": "error",
         "tailwindcss/no-contradicting-classname": "error"
-      }
-    },
-    {
-      "files": ["libs/admin-console/src/**/*.ts"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          { "patterns": ["@bitwarden/admin-console/*", "src/**/*"] }
-        ]
-      }
-    },
-    {
-      "files": ["libs/angular/src/**/*.ts"],
-      "rules": {
-        "no-restricted-imports": ["error", { "patterns": ["@bitwarden/angular/*", "src/**/*"] }]
-      }
-    },
-    {
-      "files": ["libs/auth/src/**/*.ts"],
-      "rules": {
-        "no-restricted-imports": ["error", { "patterns": ["@bitwarden/auth/*", "src/**/*"] }]
-      }
-    },
-    {
-      "files": ["libs/billing/src/**/*.ts"],
-      "rules": {
-        "no-restricted-imports": ["error", { "patterns": ["@bitwarden/billing/*", "src/**/*"] }]
-      }
-    },
-    {
-      "files": ["libs/common/src/**/*.ts"],
-      "rules": {
-        "no-restricted-imports": ["error", { "patterns": ["@bitwarden/common/*", "src/**/*"] }]
-      }
-    },
-    {
-      "files": ["libs/components/src/**/*.ts"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          { "patterns": ["@bitwarden/components/*", "src/**/*", "@bitwarden/angular/*"] }
-        ]
-      }
-    },
-    {
-      "files": ["libs/tools/generator/components/src/**/*.ts"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          { "patterns": ["@bitwarden/generator-components/*", "src/**/*"] }
-        ]
-      }
-    },
-    {
-      "files": ["libs/tools/generator/core/src/**/*.ts"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          { "patterns": ["@bitwarden/generator-core/*", "src/**/*"] }
-        ]
-      }
-    },
-    {
-      "files": ["libs/tools/generator/extensions/history/src/**/*.ts"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          { "patterns": ["@bitwarden/generator-history/*", "src/**/*"] }
-        ]
-      }
-    },
-    {
-      "files": ["libs/tools/generator/extensions/legacy/src/**/*.ts"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          { "patterns": ["@bitwarden/generator-legacy/*", "src/**/*"] }
-        ]
-      }
-    },
-    {
-      "files": ["libs/tools/generator/extensions/navigation/src/**/*.ts"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          { "patterns": ["@bitwarden/generator-navigation/*", "src/**/*"] }
-        ]
-      }
-    },
-    {
-      "files": ["libs/tools/export/vault-export/vault-export-core/src/**/*.ts"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          { "patterns": ["@bitwarden/vault-export-core/*", "src/**/*"] }
-        ]
-      }
-    },
-    {
-      "files": ["libs/tools/export/vault-export/vault-export-ui/src/**/*.ts"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          { "patterns": ["@bitwarden/vault-export-ui/*", "src/**/*"] }
-        ]
-      }
-    },
-    {
-      "files": ["libs/importer/src/**/*.ts"],
-      "rules": {
-        "no-restricted-imports": ["error", { "patterns": ["@bitwarden/importer/*", "src/**/*"] }]
-      }
-    },
-    {
-      "files": ["libs/node/src/**/*.ts"],
-      "rules": {
-        "no-restricted-imports": ["error", { "patterns": ["@bitwarden/node/*", "src/**/*"] }]
-      }
-    },
-    {
-      "files": ["libs/platform/src/**/*.ts"],
-      "rules": {
-        "no-restricted-imports": ["error", { "patterns": ["@bitwarden/platform/*", "src/**/*"] }]
-      }
-    },
-    {
-      "files": ["libs/tools/send/send-ui/src/**/*.ts"],
-      "rules": {
-        "no-restricted-imports": ["error", { "patterns": ["@bitwarden/send-ui/*", "src/**/*"] }]
-      }
-    },
-    {
-      "files": ["libs/vault/src/**/*.ts"],
-      "rules": {
-        "no-restricted-imports": ["error", { "patterns": ["@bitwarden/vault/*", "src/**/*"] }]
       }
     },
     {
@@ -320,9 +204,29 @@
       }
     },
     {
+      "files": ["**/src/**/*.ts"],
+      "excludedFiles": ["**/platform/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              "**/platform/**/internal", // General internal pattern
+              // All features that have been converted to barrel files
+              "**/platform/messaging/**",
+              "**/src/**/*" // Prevent relative imports across libs.
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["bitwarden_license/bit-common/src/**/*.ts"],
       "rules": {
-        "no-restricted-imports": ["error", { "patterns": ["@bitwarden/bit-common/*", "src/**/*"] }]
+        "no-restricted-imports": [
+          "error",
+          { "patterns": ["@bitwarden/bit-common/*", "**/src/**/*"] }
+        ]
       }
     },
     {
@@ -332,7 +236,12 @@
         "no-restricted-imports": [
           "error",
           {
-            "patterns": ["biwarden_license/**", "@bitwarden/bit-common/*", "@bitwarden/bit-web/*"]
+            "patterns": [
+              "biwarden_license/**",
+              "@bitwarden/bit-common/*",
+              "@bitwarden/bit-web/*",
+              "**/src/**/*"
+            ]
           }
         ],
         // Catches dynamic imports, e.g. in routing modules where modules are lazy-loaded

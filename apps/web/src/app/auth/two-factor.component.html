@@ -36,15 +36,8 @@
         <img src="../../images/yubikey.jpg" class="tw-rounded img-fluid tw-mb-3" alt="" />
       </picture>
       <bit-form-field>
-        <bit-label class="tw-sr-only">{{ "verificationCode" | i18n }}</bit-label>
-        <input
-          type="password"
-          bitInput
-          formControlName="token"
-          appAutofocus
-          appInputVerbatim
-          autocomplete="new-password"
-        />
+        <bit-label>{{ "verificationCode" | i18n }}</bit-label>
+        <input type="password" bitInput formControlName="token" appAutofocus appInputVerbatim />
       </bit-form-field>
     </ng-container>
     <ng-container *ngIf="selectedProviderType === providerType.WebAuthn">

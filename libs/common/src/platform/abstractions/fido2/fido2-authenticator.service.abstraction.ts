@@ -1,10 +1,14 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { Fido2CredentialView } from "../../../vault/models/view/fido2-credential.view";
+
 /**
  * This class represents an abstraction of the WebAuthn Authenticator model as described by W3C:
  * https://www.w3.org/TR/webauthn-3/#sctn-authenticator-model
  *
  * The authenticator provides key management and cryptographic signatures.
  */
-export abstract class Fido2AuthenticatorService {
+export abstract class Fido2AuthenticatorService<ParentWindowReference> {
   /**
    * Create and save a new credential as described in:
    * https://www.w3.org/TR/webauthn-3/#sctn-op-make-cred
@@ -15,7 +19,7 @@ export abstract class Fido2AuthenticatorService {
    **/
   makeCredential: (
     params: Fido2AuthenticatorMakeCredentialsParams,
-    tab: chrome.tabs.Tab,
+    window: ParentWindowReference,
     abortController?: AbortController,
   ) => Promise<Fido2AuthenticatorMakeCredentialResult>;
 
@@ -29,9 +33,17 @@ export abstract class Fido2AuthenticatorService {
    */
   getAssertion: (
     params: Fido2AuthenticatorGetAssertionParams,
-    tab: chrome.tabs.Tab,
+    window: ParentWindowReference,
     abortController?: AbortController,
   ) => Promise<Fido2AuthenticatorGetAssertionResult>;
+
+  /**
+   * Discover credentials for a given Relying Party
+   *
+   * @param rpId The Relying Party's ID
+   * @returns A promise that resolves with an array of discoverable credentials
+   */
+  silentCredentialDiscovery: (rpId: string) => Promise<Fido2CredentialView[]>;
 }
 
 export enum Fido2AlgorithmIdentifier {
@@ -54,7 +66,7 @@ export class Fido2AuthenticatorError extends Error {
 }
 
 export interface PublicKeyCredentialDescriptor {
-  id: BufferSource;
+  id: Uint8Array;
   transports?: ("ble" | "hybrid" | "internal" | "nfc" | "usb")[];
   type: "public-key";
 }
@@ -132,6 +144,9 @@ export interface Fido2AuthenticatorGetAssertionParams {
   extensions: unknown;
   /** Forwarded to user interface */
   fallbackSupported: boolean;
+
+  // Bypass the UI and assume that the user has already interacted with the authenticator
+  assumeUserPresence?: boolean;
 }
 
 export interface Fido2AuthenticatorGetAssertionResult {

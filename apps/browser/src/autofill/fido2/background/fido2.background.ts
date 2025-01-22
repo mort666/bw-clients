@@ -1,6 +1,13 @@
-import { firstValueFrom, startWith } from "rxjs";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { firstValueFrom, startWith, Subscription } from "rxjs";
 import { pairwise } from "rxjs/operators";
 
+import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
+import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
+import { Fido2ActiveRequestManager } from "@bitwarden/common/platform/abstractions/fido2/fido2-active-request-manager.abstraction";
 import {
   AssertCredentialParams,
   AssertCredentialResult,
@@ -16,16 +23,18 @@ import { ScriptInjectorService } from "../../../platform/services/abstractions/s
 import { AbortManager } from "../../../vault/background/abort-manager";
 import { Fido2ContentScript, Fido2ContentScriptId } from "../enums/fido2-content-script.enum";
 import { Fido2PortName } from "../enums/fido2-port-name.enum";
+import { BrowserFido2ParentWindowReference } from "../services/browser-fido2-user-interface.service";
 
 import {
-  Fido2Background as Fido2BackgroundInterface,
   Fido2BackgroundExtensionMessageHandlers,
+  Fido2Background as Fido2BackgroundInterface,
   Fido2ExtensionMessage,
   SharedFido2ScriptInjectionDetails,
   SharedFido2ScriptRegistrationOptions,
 } from "./abstractions/fido2.background";
 
 export class Fido2Background implements Fido2BackgroundInterface {
+  private currentAuthStatus$: Subscription;
   private abortManager = new AbortManager();
   private fido2ContentScriptPortsSet = new Set<chrome.runtime.Port>();
   private registeredContentScripts: browser.contentScripts.RegisteredContentScript;
@@ -47,9 +56,12 @@ export class Fido2Background implements Fido2BackgroundInterface {
 
   constructor(
     private logService: LogService,
-    private fido2ClientService: Fido2ClientService,
+    private fido2ActiveRequestManager: Fido2ActiveRequestManager,
+    private fido2ClientService: Fido2ClientService<BrowserFido2ParentWindowReference>,
     private vaultSettingsService: VaultSettingsService,
     private scriptInjectorService: ScriptInjectorService,
+    private configService: ConfigService,
+    private authService: AuthService,
   ) {}
 
   /**
@@ -63,12 +75,32 @@ export class Fido2Background implements Fido2BackgroundInterface {
     this.vaultSettingsService.enablePasskeys$
       .pipe(startWith(undefined), pairwise())
       .subscribe(([previous, current]) => this.handleEnablePasskeysUpdate(previous, current));
+    this.currentAuthStatus$ = this.authService.activeAccountStatus$
+      .pipe(startWith(undefined), pairwise())
+      .subscribe(([_previous, current]) => this.handleAuthStatusUpdate(current));
+  }
+
+  /**
+   * Handles initializing the FIDO2 content scripts based on the current
+   * authentication status. We only want to inject the FIDO2 content scripts
+   * if the user is logged in.
+   *
+   * @param authStatus - The current authentication status.
+   */
+  private async handleAuthStatusUpdate(authStatus: AuthenticationStatus) {
+    if (authStatus === AuthenticationStatus.LoggedOut) {
+      return;
+    }
+
+    const enablePasskeys = await this.isPasskeySettingEnabled();
+    await this.handleEnablePasskeysUpdate(enablePasskeys, enablePasskeys);
+    this.currentAuthStatus$.unsubscribe();
   }
 
   /**
    * Injects the FIDO2 content and page script into all existing browser tabs.
    */
-  async injectFido2ContentScriptsInAllTabs() {
+  private async injectFido2ContentScriptsInAllTabs() {
     const tabs = await BrowserApi.tabsQuery({});
 
     for (let index = 0; index < tabs.length; index++) {
@@ -78,6 +110,13 @@ export class Fido2Background implements Fido2BackgroundInterface {
         void this.injectFido2ContentScripts(tab);
       }
     }
+  }
+
+  /**
+   * Gets the user's authentication status from the auth service.
+   */
+  private async getAuthStatus() {
+    return await firstValueFrom(this.authService.activeAccountStatus$);
   }
 
   /**
@@ -93,11 +132,16 @@ export class Fido2Background implements Fido2BackgroundInterface {
     previousEnablePasskeysSetting: boolean,
     enablePasskeys: boolean,
   ) {
-    await this.updateContentScriptRegistration();
+    if ((await this.getAuthStatus()) === AuthenticationStatus.LoggedOut) {
+      return;
+    }
 
     if (previousEnablePasskeysSetting === undefined) {
       return;
     }
+
+    this.fido2ActiveRequestManager.removeAllActiveRequests();
+    await this.updateContentScriptRegistration();
 
     this.destroyLoadedFido2ContentScripts();
     if (enablePasskeys) {
@@ -132,7 +176,7 @@ export class Fido2Background implements Fido2BackgroundInterface {
 
     this.registeredContentScripts = await BrowserApi.registerContentScriptsMv2({
       js: [
-        { file: Fido2ContentScript.PageScriptAppend },
+        { file: await this.getFido2PageScriptAppendFileName() },
         { file: Fido2ContentScript.ContentScript },
       ],
       ...this.sharedRegistrationOptions,
@@ -176,7 +220,7 @@ export class Fido2Background implements Fido2BackgroundInterface {
     void this.scriptInjectorService.inject({
       tabId: tab.id,
       injectDetails: { frame: "all_frames", ...this.sharedInjectionDetails },
-      mv2Details: { file: Fido2ContentScript.PageScriptAppend },
+      mv2Details: { file: await this.getFido2PageScriptAppendFileName() },
       mv3Details: { file: Fido2ContentScript.PageScript, world: "MAIN" },
     });
 
@@ -295,12 +339,12 @@ export class Fido2Background implements Fido2BackgroundInterface {
   ) => {
     const handler: CallableFunction | undefined = this.extensionMessageHandlers[message?.command];
     if (!handler) {
-      return;
+      return null;
     }
 
     const messageResponse = handler({ message, sender });
-    if (!messageResponse) {
-      return;
+    if (typeof messageResponse === "undefined") {
+      return null;
     }
 
     Promise.resolve(messageResponse)
@@ -353,4 +397,20 @@ export class Fido2Background implements Fido2BackgroundInterface {
 
     this.fido2ContentScriptPortsSet.delete(port);
   };
+
+  /**
+   * Gets the file name of the page-script used within mv2. Will return the
+   * delayed append script if the associated feature flag is enabled.
+   */
+  private async getFido2PageScriptAppendFileName() {
+    const shouldDelayInit = await this.configService.getFeatureFlag(
+      FeatureFlag.DelayFido2PageScriptInitWithinMv2,
+    );
+
+    if (shouldDelayInit) {
+      return Fido2ContentScript.PageScriptDelayAppend;
+    }
+
+    return Fido2ContentScript.PageScriptAppend;
+  }
 }

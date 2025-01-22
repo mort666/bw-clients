@@ -1,4 +1,6 @@
-import { Component, NgZone, ViewChild, ViewContainerRef } from "@angular/core";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { Component, NgZone, ViewChild, OnInit, OnDestroy, ViewContainerRef } from "@angular/core";
 import { lastValueFrom } from "rxjs";
 
 import { SendComponent as BaseSendComponent } from "@bitwarden/angular/tools/send/send.component";
@@ -34,7 +36,7 @@ const BroadcasterSubscriptionId = "SendComponent";
   imports: [SharedModule, SearchModule, NoItemsModule, HeaderModule],
   templateUrl: "send.component.html",
 })
-export class SendComponent extends BaseSendComponent {
+export class SendComponent extends BaseSendComponent implements OnInit, OnDestroy {
   @ViewChild("sendAddEdit", { read: ViewContainerRef, static: true })
   sendAddEditModalRef: ViewContainerRef;
   noItemIcon = NoSendsIcon;

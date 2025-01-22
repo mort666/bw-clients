@@ -1,16 +1,18 @@
-import { Component, OnInit } from "@angular/core";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { Component, OnDestroy, OnInit } from "@angular/core";
 import { FormBuilder, FormControl, ValidatorFn, Validators } from "@angular/forms";
 import { Subject, takeUntil } from "rxjs";
 
-import { KdfConfigService } from "@bitwarden/common/auth/abstractions/kdf-config.service";
+import { DialogService } from "@bitwarden/components";
 import {
+  KdfConfigService,
   Argon2KdfConfig,
   DEFAULT_KDF_CONFIG,
   KdfConfig,
   PBKDF2KdfConfig,
-} from "@bitwarden/common/auth/models/domain/kdf-config";
-import { KdfType } from "@bitwarden/common/platform/enums";
-import { DialogService } from "@bitwarden/components";
+  KdfType,
+} from "@bitwarden/key-management";
 
 import { ChangeKdfConfirmationComponent } from "./change-kdf-confirmation.component";
 
@@ -18,7 +20,7 @@ import { ChangeKdfConfirmationComponent } from "./change-kdf-confirmation.compon
   selector: "app-change-kdf",
   templateUrl: "change-kdf.component.html",
 })
-export class ChangeKdfComponent implements OnInit {
+export class ChangeKdfComponent implements OnInit, OnDestroy {
   kdfConfig: KdfConfig = DEFAULT_KDF_CONFIG;
   kdfOptions: any[] = [];
   private destroy$ = new Subject<void>();
@@ -26,30 +28,9 @@ export class ChangeKdfComponent implements OnInit {
   protected formGroup = this.formBuilder.group({
     kdf: new FormControl(KdfType.PBKDF2_SHA256, [Validators.required]),
     kdfConfig: this.formBuilder.group({
-      iterations: [
-        this.kdfConfig.iterations,
-        [
-          Validators.required,
-          Validators.min(PBKDF2KdfConfig.ITERATIONS.min),
-          Validators.max(PBKDF2KdfConfig.ITERATIONS.max),
-        ],
-      ],
-      memory: [
-        null as number,
-        [
-          Validators.required,
-          Validators.min(Argon2KdfConfig.MEMORY.min),
-          Validators.max(Argon2KdfConfig.MEMORY.max),
-        ],
-      ],
-      parallelism: [
-        null as number,
-        [
-          Validators.required,
-          Validators.min(Argon2KdfConfig.PARALLELISM.min),
-          Validators.max(Argon2KdfConfig.PARALLELISM.max),
-        ],
-      ],
+      iterations: [this.kdfConfig.iterations],
+      memory: [null as number],
+      parallelism: [null as number],
     }),
   });
 
@@ -72,7 +53,7 @@ export class ChangeKdfComponent implements OnInit {
 
   async ngOnInit() {
     this.kdfConfig = await this.kdfConfigService.getKdfConfig();
-    this.formGroup.get("kdf").setValue(this.kdfConfig.kdfType, { emitEvent: false });
+    this.formGroup.get("kdf").setValue(this.kdfConfig.kdfType);
     this.setFormControlValues(this.kdfConfig);
 
     this.formGroup

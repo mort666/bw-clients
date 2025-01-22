@@ -22,6 +22,12 @@ export default {
     }),
     componentWrapperDecorator((story) => `<div class="tw-text-main">${story}</div>`),
   ],
+  parameters: {
+    design: {
+      type: "figma",
+      url: "https://www.figma.com/design/Zt3YSeb6E6lebAffrNLa0h/Tailwind-Component-Library?node-id=21666-19363&t=k6OTDDPZOTtypRqo-11",
+    },
+  },
 } as Meta;
 
 type Story = StoryObj<SectionComponent>;
@@ -38,6 +44,12 @@ export const Default: Story = {
         <bit-section>
           <bit-section-header>
             <h2 bitTypography="h2">Bar</h2>
+          </bit-section-header>
+          <p bitTypography="body1">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras vitae congue risus. Interdum et malesuada fames ac ante ipsum primis in faucibus. Nunc elementum odio nibh, eget pellentesque sem ornare vitae. Etiam vel ante et velit fringilla egestas a sed sem. Fusce molestie nisl et nisi accumsan dapibus. Interdum et malesuada fames ac ante ipsum primis in faucibus. Sed eu risus ex. </p>
+        </bit-section>
+        <bit-section disableMargin>
+          <bit-section-header>
+            <h2 bitTypography="h2">Baz</h2>
           </bit-section-header>
           <p bitTypography="body1">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras vitae congue risus. Interdum et malesuada fames ac ante ipsum primis in faucibus. Nunc elementum odio nibh, eget pellentesque sem ornare vitae. Etiam vel ante et velit fringilla egestas a sed sem. Fusce molestie nisl et nisi accumsan dapibus. Interdum et malesuada fames ac ante ipsum primis in faucibus. Sed eu risus ex. </p>
         </bit-section>
