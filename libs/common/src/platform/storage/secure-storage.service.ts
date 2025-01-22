@@ -38,7 +38,7 @@ export abstract class SecureStorageService {
    * Depending on the feature, then you may need to not allow a feature to be used or you
    * will need to fallback to using insecure, disk based storage.
    */
-  support$: Observable<SupportStatus>;
+  abstract support$: Observable<SupportStatus>;
 }
 
 export class UnsupportedSecureStorageService implements SecureStorageService {
