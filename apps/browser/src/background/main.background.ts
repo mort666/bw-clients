@@ -148,6 +148,7 @@ import { InlineDerivedStateProvider } from "@bitwarden/common/platform/state/imp
 import { StateEventRegistrarService } from "@bitwarden/common/platform/state/state-event-registrar.service";
 /* eslint-enable import/no-restricted-paths */
 import { PrimarySecondaryStorageService } from "@bitwarden/common/platform/storage/primary-secondary-storage.service";
+import { UnsupportedSecureStorageService } from "@bitwarden/common/platform/storage/secure-storage.service";
 import { WindowStorageService } from "@bitwarden/common/platform/storage/window-storage.service";
 import { SyncService } from "@bitwarden/common/platform/sync";
 // eslint-disable-next-line no-restricted-imports -- Needed for service creation
@@ -274,7 +275,6 @@ import CommandsBackground from "./commands.background";
 import IdleBackground from "./idle.background";
 import { NativeMessagingBackground } from "./nativeMessaging.background";
 import RuntimeBackground from "./runtime.background";
-import { UnsupportedSecureStorageService } from "@bitwarden/common/platform/storage/secure-storage.service";
 
 export default class MainBackground {
   messagingService: MessageSender;

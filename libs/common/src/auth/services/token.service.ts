@@ -21,6 +21,7 @@ import {
   SingleUserStateProvider,
   UserKeyDefinition,
 } from "../../platform/state";
+import { SecureStorageService } from "../../platform/storage/secure-storage.service";
 import { UserId } from "../../types/guid";
 import { VaultTimeout, VaultTimeoutStringType } from "../../types/vault-timeout.type";
 import { TokenService as TokenServiceAbstraction } from "../abstractions/token.service";
@@ -39,7 +40,6 @@ import {
   REFRESH_TOKEN_MEMORY,
   SECURITY_STAMP_MEMORY,
 } from "./token.state";
-import { SecureStorageService } from "../../platform/storage/secure-storage.service";
 
 export enum TokenStorageLocation {
   Disk = "disk",
@@ -735,7 +735,7 @@ export class TokenService implements TokenServiceAbstraction {
       throw new Error("Vault Timeout Action is required.");
     }
 
-    const [storageLocation, _] = await this.determineStorageLocation(
+    const [storageLocation] = await this.determineStorageLocation(
       vaultTimeoutAction,
       vaultTimeout,
       false, // don't use secure storage for client id
@@ -812,7 +812,7 @@ export class TokenService implements TokenServiceAbstraction {
       throw new Error("Vault Timeout Action is required.");
     }
 
-    const [storageLocation, secureStorageService] = await this.determineStorageLocation(
+    const [storageLocation] = await this.determineStorageLocation(
       vaultTimeoutAction,
       vaultTimeout,
       false, // don't use secure storage for client secret

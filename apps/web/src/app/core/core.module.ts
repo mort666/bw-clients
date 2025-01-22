@@ -79,6 +79,10 @@ import { StorageServiceProvider } from "@bitwarden/common/platform/services/stor
 import { GlobalStateProvider, StateProvider } from "@bitwarden/common/platform/state";
 import { MemoryStorageService as MemoryStorageServiceForStateProviders } from "@bitwarden/common/platform/state/storage/memory-storage.service";
 /* eslint-enable import/no-restricted-paths -- Implementation for memory storage */
+import {
+  SecureStorageService,
+  UnsupportedSecureStorageService,
+} from "@bitwarden/common/platform/storage/secure-storage.service";
 import { WindowStorageService } from "@bitwarden/common/platform/storage/window-storage.service";
 import {
   DefaultThemeStateService,
@@ -120,10 +124,6 @@ import { ModalService } from "./modal.service";
 import { RouterService } from "./router.service";
 import { WebFileDownloadService } from "./web-file-download.service";
 import { WebPlatformUtilsService } from "./web-platform-utils.service";
-import {
-  SecureStorageService,
-  UnsupportedSecureStorageService,
-} from "@bitwarden/common/platform/storage/secure-storage.service";
 
 /**
  * Provider definitions used in the ngModule.

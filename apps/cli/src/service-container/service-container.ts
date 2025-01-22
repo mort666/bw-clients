@@ -110,6 +110,7 @@ import { DefaultStateProvider } from "@bitwarden/common/platform/state/implement
 import { StateEventRegistrarService } from "@bitwarden/common/platform/state/state-event-registrar.service";
 import { MemoryStorageService as MemoryStorageServiceForStateProviders } from "@bitwarden/common/platform/state/storage/memory-storage.service";
 /* eslint-enable import/no-restricted-paths */
+import { UnsupportedSecureStorageService } from "@bitwarden/common/platform/storage/secure-storage.service";
 import { SyncService } from "@bitwarden/common/platform/sync";
 // eslint-disable-next-line no-restricted-imports -- Needed for service construction
 import { DefaultSyncService } from "@bitwarden/common/platform/sync/internal";
@@ -173,7 +174,6 @@ import { I18nService } from "../platform/services/i18n.service";
 import { LowdbStorageService } from "../platform/services/lowdb-storage.service";
 import { NodeApiService } from "../platform/services/node-api.service";
 import { NodeEnvSecureStorageService } from "../platform/services/node-env-secure-storage.service";
-import { UnsupportedSecureStorageService } from "@bitwarden/common/platform/storage/secure-storage.service";
 
 // Polyfills
 global.DOMParser = new jsdom.JSDOM().window.DOMParser;

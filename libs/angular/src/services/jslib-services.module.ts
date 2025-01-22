@@ -215,6 +215,7 @@ import { DefaultStateProvider } from "@bitwarden/common/platform/state/implement
 import { StateEventRegistrarService } from "@bitwarden/common/platform/state/state-event-registrar.service";
 import { StateEventRunnerService } from "@bitwarden/common/platform/state/state-event-runner.service";
 /* eslint-enable import/no-restricted-paths */
+import { SecureStorageService } from "@bitwarden/common/platform/storage/secure-storage.service";
 import { SyncService } from "@bitwarden/common/platform/sync";
 // eslint-disable-next-line no-restricted-imports -- Needed for DI
 import { DefaultSyncService } from "@bitwarden/common/platform/sync/internal";
@@ -335,7 +336,6 @@ import {
   ENV_ADDITIONAL_REGIONS,
 } from "./injection-tokens";
 import { ModalService } from "./modal.service";
-import { SecureStorageService } from "@bitwarden/common/platform/storage/secure-storage.service";
 
 /**
  * Provider definitions used in the ngModule.

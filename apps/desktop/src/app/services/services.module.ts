@@ -81,6 +81,10 @@ import { SystemService } from "@bitwarden/common/platform/services/system.servic
 import { GlobalStateProvider, StateProvider } from "@bitwarden/common/platform/state";
 // eslint-disable-next-line import/no-restricted-paths -- Implementation for memory storage
 import { MemoryStorageService as MemoryStorageServiceForStateProviders } from "@bitwarden/common/platform/state/storage/memory-storage.service";
+import {
+  SecureStorageService,
+  SupportedSecureStorageService,
+} from "@bitwarden/common/platform/storage/secure-storage.service";
 import { SyncService } from "@bitwarden/common/platform/sync";
 import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
 import { VaultTimeoutStringType } from "@bitwarden/common/types/vault-timeout.type";
@@ -113,6 +117,7 @@ import { ElectronRendererMessageSender } from "../../platform/services/electron-
 import { ElectronRendererSecureStorageService } from "../../platform/services/electron-renderer-secure-storage.service";
 import { ElectronRendererStorageService } from "../../platform/services/electron-renderer-storage.service";
 import { I18nRendererService } from "../../platform/services/i18n.renderer.service";
+import { PortableSecureStorageService } from "../../platform/services/portable-secure-storage.service";
 import { fromIpcMessaging } from "../../platform/utils/from-ipc-messaging";
 import { fromIpcSystemTheme } from "../../platform/utils/from-ipc-system-theme";
 import { BiometricMessageHandlerService } from "../../services/biometric-message-handler.service";
@@ -127,11 +132,6 @@ import { DesktopThemeStateService } from "./desktop-theme.service";
 import { InitService } from "./init.service";
 import { NativeMessagingManifestService } from "./native-messaging-manifest.service";
 import { RendererCryptoFunctionService } from "./renderer-crypto-function.service";
-import {
-  SecureStorageService,
-  SupportedSecureStorageService,
-} from "@bitwarden/common/platform/storage/secure-storage.service";
-import { PortableSecureStorageService } from "../../platform/services/portable-secure-storage.service";
 
 const RELOAD_CALLBACK = new SafeInjectionToken<() => any>("RELOAD_CALLBACK");
 
