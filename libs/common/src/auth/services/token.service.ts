@@ -472,6 +472,7 @@ export class TokenService implements TokenServiceAbstraction {
 
     const secureStorageSupport = await firstValueFrom(this.secureStorageService.support$);
 
+    // Since we are just reading the access token, we can use secure storage even if it's not preferred
     if (
       secureStorageSupport.type === "supported" ||
       secureStorageSupport.type === "not-preferred"
@@ -562,7 +563,7 @@ export class TokenService implements TokenServiceAbstraction {
       vaultTimeoutAction,
       vaultTimeout,
       true,
-      false, // used to set a real value, not only for reading or clearing
+      refreshToken == null, // if the refresh token we are about to set is null then we are using this for clearing
     );
 
     switch (storageLocation) {
@@ -698,6 +699,9 @@ export class TokenService implements TokenServiceAbstraction {
     // but we can simply clear all locations to avoid the need to require those parameters
 
     const secureStorageSupport = await firstValueFrom(this.secureStorageService.support$);
+    // We can use a not-preferred secure storage service to clear the token
+    // it's important though that we still clear it from the other locations
+    // when it's not-preferred though, which we are doing.
     if (
       secureStorageSupport.type === "supported" ||
       secureStorageSupport.type === "not-preferred"
