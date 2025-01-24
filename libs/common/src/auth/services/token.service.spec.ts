@@ -2855,12 +2855,7 @@ describe("TokenService", () => {
       const vaultTimeoutAction: VaultTimeoutAction = VaultTimeoutAction.Lock;
       const vaultTimeout: VaultTimeout = null;
       // Act
-      const result = tokenService.determineStorageLocation(
-        vaultTimeoutAction,
-        vaultTimeout,
-        false,
-        true,
-      );
+      const result = tokenService.determineStorageLocation(vaultTimeoutAction, vaultTimeout, false);
       // Assert
       await expect(result).rejects.toThrow(
         "TokenService - determineStorageLocation: We expect the vault timeout to always exist at this point.",
@@ -2872,12 +2867,7 @@ describe("TokenService", () => {
       const vaultTimeoutAction: VaultTimeoutAction = null;
       const vaultTimeout: VaultTimeout = 0;
       // Act
-      const result = tokenService.determineStorageLocation(
-        vaultTimeoutAction,
-        vaultTimeout,
-        false,
-        true,
-      );
+      const result = tokenService.determineStorageLocation(vaultTimeoutAction, vaultTimeout, false);
       // Assert
       await expect(result).rejects.toThrow(
         "TokenService - determineStorageLocation: We expect the vault timeout action to always exist at this point.",
@@ -2911,7 +2901,6 @@ describe("TokenService", () => {
             vaultTimeoutAction,
             vaultTimeout,
             useSecureStorage,
-            true,
           );
           // Assert
           expect(result).toEqual(TokenStorageLocation.Memory);
@@ -2929,7 +2918,6 @@ describe("TokenService", () => {
           vaultTimeoutAction,
           vaultTimeout,
           useSecureStorage,
-          true,
         );
         // Assert
         expect(result).toEqual(TokenStorageLocation.Disk);
@@ -2946,7 +2934,6 @@ describe("TokenService", () => {
           vaultTimeoutAction,
           vaultTimeout,
           useSecureStorage,
-          true,
         );
         // Assert
         expect(result).toEqual(TokenStorageLocation.Disk);
@@ -2981,7 +2968,6 @@ describe("TokenService", () => {
             vaultTimeoutAction,
             vaultTimeout,
             useSecureStorage,
-            true,
           );
           // Assert
           expect(result).toEqual(TokenStorageLocation.Memory);
@@ -2998,7 +2984,6 @@ describe("TokenService", () => {
           vaultTimeoutAction,
           vaultTimeout,
           useSecureStorage,
-          true,
         );
         // Assert
         expect(result).toEqual(TokenStorageLocation.SecureStorage);
@@ -3014,42 +2999,9 @@ describe("TokenService", () => {
           vaultTimeoutAction,
           vaultTimeout,
           useSecureStorage,
-          true,
         );
         // Assert
         expect(result).toEqual(TokenStorageLocation.SecureStorage);
-      });
-    });
-
-    describe("Secure storage usage is not-preferred", () => {
-      beforeEach(() => {
-        tokenService = createTokenService({
-          type: "not-preferred",
-          service: secureStorageService,
-          reason: "test",
-        });
-      });
-
-      it("does use secure storage when used only for reading and clearing", async () => {
-        const [result, service] = await tokenService.determineStorageLocation(
-          VaultTimeoutAction.Lock,
-          VaultTimeoutStringType.OnRestart,
-          true,
-          true,
-        );
-        expect(result).toEqual(TokenStorageLocation.SecureStorage);
-        expect(service).not.toBeNull();
-      });
-
-      it("does use secure storage when used only for reading and clearing", async () => {
-        const [result, service] = await tokenService.determineStorageLocation(
-          VaultTimeoutAction.Lock,
-          VaultTimeoutStringType.OnRestart,
-          true,
-          false,
-        );
-        expect(result).toEqual(TokenStorageLocation.Disk);
-        expect(service).toBeNull();
       });
     });
   });

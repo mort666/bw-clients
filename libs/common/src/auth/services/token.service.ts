@@ -338,7 +338,6 @@ export class TokenService implements TokenServiceAbstraction {
       vaultTimeoutAction,
       vaultTimeout,
       true,
-      accessToken == null, // if the access token we are about to set is null then we are using this for clearing
     );
 
     switch (storageLocation) {
@@ -563,7 +562,6 @@ export class TokenService implements TokenServiceAbstraction {
       vaultTimeoutAction,
       vaultTimeout,
       true,
-      refreshToken == null, // if the refresh token we are about to set is null then we are using this for clearing
     );
 
     switch (storageLocation) {
@@ -743,7 +741,6 @@ export class TokenService implements TokenServiceAbstraction {
       vaultTimeoutAction,
       vaultTimeout,
       false, // don't use secure storage for client id
-      false, // value doesn't matter since useSecureStorage is false
     );
 
     if (storageLocation === TokenStorageLocation.Disk) {
@@ -820,7 +817,6 @@ export class TokenService implements TokenServiceAbstraction {
       vaultTimeoutAction,
       vaultTimeout,
       false, // don't use secure storage for client secret
-      false, // Value doesn't matter since useSecureStorage is false
     );
 
     if (storageLocation === TokenStorageLocation.Disk) {
@@ -1114,7 +1110,6 @@ export class TokenService implements TokenServiceAbstraction {
     vaultTimeoutAction: VaultTimeoutAction,
     vaultTimeout: VaultTimeout,
     useSecureStorage: boolean,
-    forReadingOrClearing: boolean,
   ): Promise<
     | [TokenStorageLocation.SecureStorage, AbstractStorageService]
     | [TokenStorageLocation.Disk | TokenStorageLocation.Memory, null]
@@ -1140,15 +1135,6 @@ export class TokenService implements TokenServiceAbstraction {
       if (useSecureStorage) {
         // Check support status
         const secureStorageSupport = await firstValueFrom(this.secureStorageService.support$);
-
-        // If we only need secure storage for reading or clearing, then we are allowed to
-        // make use of secure storage even when it isn't preferred
-        if (forReadingOrClearing) {
-          return secureStorageSupport.type === "supported" ||
-            secureStorageSupport.type === "not-preferred"
-            ? [TokenStorageLocation.SecureStorage, secureStorageSupport.service]
-            : [TokenStorageLocation.Disk, null];
-        }
 
         // They are attempting to write real data to secure storage, ensure
         // it is full supported
