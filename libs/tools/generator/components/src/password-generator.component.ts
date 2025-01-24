@@ -15,7 +15,7 @@ import {
   withLatestFrom,
 } from "rxjs";
 
-import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { UserId } from "@bitwarden/common/types/guid";
@@ -43,9 +43,10 @@ export class PasswordGeneratorComponent implements OnInit, OnDestroy {
     private toastService: ToastService,
     private logService: LogService,
     private i18nService: I18nService,
-    private accountService: AccountService,
     private zone: NgZone,
   ) {}
+
+  @Input() account: Account | null = null;
 
   /** Binds the component to a specific user's settings.
    *  When this input is not provided, the form binds to the active
@@ -101,13 +102,9 @@ export class PasswordGeneratorComponent implements OnInit, OnDestroy {
     if (this.userId) {
       this.userId$.next(this.userId);
     } else {
-      this.accountService.activeAccount$
-        .pipe(
-          map((acct) => acct.id),
-          distinctUntilChanged(),
-          takeUntil(this.destroyed),
-        )
-        .subscribe(this.userId$);
+      if (this.account) {
+        this.userId$.next(this.account.id);
+      }
     }
 
     this.generatorService

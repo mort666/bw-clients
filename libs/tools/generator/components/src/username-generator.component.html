@@ -61,21 +61,25 @@
       <tools-catchall-settings
         *ngIf="(algorithm$ | async)?.id === 'catchall'"
         [userId]="this.userId$ | async"
+        [account]="account"
         (onUpdated)="generate('catchall settings')"
       />
       <tools-forwarder-settings
         *ngIf="!!(forwarderId$ | async)"
         [forwarder]="forwarderId$ | async"
         [userId]="this.userId$ | async"
+        [account]="account"
       />
       <tools-subaddress-settings
         *ngIf="(algorithm$ | async)?.id === 'subaddress'"
         [userId]="this.userId$ | async"
+        [account]="account"
         (onUpdated)="generate('subaddress settings')"
       />
       <tools-username-settings
         *ngIf="(algorithm$ | async)?.id === 'username'"
         [userId]="this.userId$ | async"
+        [account]="account"
         (onUpdated)="generate('username settings')"
       />
     </bit-card>

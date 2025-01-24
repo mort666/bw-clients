@@ -4,15 +4,13 @@ import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from "@angu
 import { FormBuilder } from "@angular/forms";
 import { BehaviorSubject, map, skip, Subject, takeUntil, withLatestFrom } from "rxjs";
 
-import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { UserId } from "@bitwarden/common/types/guid";
 import {
   CatchallGenerationOptions,
   CredentialGeneratorService,
   Generators,
 } from "@bitwarden/generator-core";
-
-import { completeOnAccountSwitch } from "./util";
 
 /** Options group for catchall emails */
 @Component({
@@ -21,15 +19,15 @@ import { completeOnAccountSwitch } from "./util";
 })
 export class CatchallSettingsComponent implements OnInit, OnDestroy {
   /** Instantiates the component
-   *  @param accountService queries user availability
    *  @param generatorService settings and policy logic
    *  @param formBuilder reactive form controls
    */
   constructor(
     private formBuilder: FormBuilder,
     private generatorService: CredentialGeneratorService,
-    private accountService: AccountService,
   ) {}
+
+  @Input() account: Account | null = null;
 
   /** Binds the component to a specific user's settings.
    *  When this input is not provided, the form binds to the active
@@ -84,10 +82,11 @@ export class CatchallSettingsComponent implements OnInit, OnDestroy {
       return new BehaviorSubject(this.userId as UserId).asObservable();
     }
 
-    return this.accountService.activeAccount$.pipe(
-      completeOnAccountSwitch(),
-      takeUntil(this.destroyed$),
-    );
+    if (this.account) {
+      return new BehaviorSubject(this.account.id as UserId).asObservable();
+    }
+
+    return new BehaviorSubject<UserId | null>(null).asObservable();
   }
 
   private readonly destroyed$ = new Subject<void>();

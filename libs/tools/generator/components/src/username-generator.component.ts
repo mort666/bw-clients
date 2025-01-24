@@ -18,7 +18,7 @@ import {
   withLatestFrom,
 } from "rxjs";
 
-import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { IntegrationId } from "@bitwarden/common/tools/integration";
@@ -53,7 +53,6 @@ export class UsernameGeneratorComponent implements OnInit, OnDestroy {
   /** Instantiates the username generator
    *  @param generatorService generates credentials; stores preferences
    *  @param i18nService localizes generator algorithm descriptions
-   *  @param accountService discovers the active user when one is not provided
    *  @param zone detects generator settings updates originating from the generator services
    *  @param formBuilder binds reactive form
    */
@@ -63,10 +62,11 @@ export class UsernameGeneratorComponent implements OnInit, OnDestroy {
     private toastService: ToastService,
     private logService: LogService,
     private i18nService: I18nService,
-    private accountService: AccountService,
     private zone: NgZone,
     private formBuilder: FormBuilder,
   ) {}
+
+  @Input() account: Account | null = null;
 
   /** Binds the component to a specific user's settings. When this input is not provided,
    * the form binds to the active user
@@ -98,13 +98,9 @@ export class UsernameGeneratorComponent implements OnInit, OnDestroy {
     if (this.userId) {
       this.userId$.next(this.userId);
     } else {
-      this.accountService.activeAccount$
-        .pipe(
-          map((acct) => acct.id),
-          distinctUntilChanged(),
-          takeUntil(this.destroyed),
-        )
-        .subscribe(this.userId$);
+      if (this.account) {
+        this.userId$.next(this.account.id);
+      }
     }
 
     this.generatorService

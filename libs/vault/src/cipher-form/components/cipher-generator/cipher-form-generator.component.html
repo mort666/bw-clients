@@ -1,12 +1,14 @@
 <tools-password-generator
   *ngIf="type === 'password'"
   [disableMargin]="disableMargin"
+  [account]="account"
   (onGenerated)="onCredentialGenerated($event)"
   (onAlgorithm)="algorithm($event)"
 ></tools-password-generator>
 <tools-username-generator
   *ngIf="type === 'username'"
   [disableMargin]="disableMargin"
+  [account]="account"
   (onGenerated)="onCredentialGenerated($event)"
   (onAlgorithm)="algorithm($event)"
 ></tools-username-generator>

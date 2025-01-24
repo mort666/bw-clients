@@ -4,7 +4,9 @@ import { DIALOG_DATA, DialogConfig, DialogRef } from "@angular/cdk/dialog";
 import { Overlay } from "@angular/cdk/overlay";
 import { CommonModule } from "@angular/common";
 import { Component, Inject } from "@angular/core";
+import { Subject, takeUntil } from "rxjs";
 
+import { AccountService, Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { ButtonModule, DialogService } from "@bitwarden/components";
 import { CipherFormGeneratorComponent } from "@bitwarden/vault";
@@ -60,11 +62,26 @@ export class VaultGeneratorDialogComponent {
    */
   protected generatedValue: string = "";
 
+  /**
+   * The currently active account.
+   */
+  protected account: Account | null = null;
+
+  /**
+   * Emits when the component is destroyed to clean up subscriptions.
+   */
+  private readonly destroyed$ = new Subject<void>();
+
   constructor(
     @Inject(DIALOG_DATA) protected params: GeneratorDialogParams,
     private dialogRef: DialogRef<GeneratorDialogResult>,
     private i18nService: I18nService,
-  ) {}
+    private accountService: AccountService,
+  ) {
+    this.accountService.activeAccount$.pipe(takeUntil(this.destroyed$)).subscribe((account) => {
+      this.account = account;
+    });
+  }
 
   /**
    * Close the dialog without selecting a value.

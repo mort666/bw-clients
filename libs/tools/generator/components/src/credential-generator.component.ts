@@ -17,7 +17,7 @@ import {
   withLatestFrom,
 } from "rxjs";
 
-import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { IntegrationId } from "@bitwarden/common/tools/integration";
@@ -57,7 +57,6 @@ export class CredentialGeneratorComponent implements OnInit, OnDestroy {
     private toastService: ToastService,
     private logService: LogService,
     private i18nService: I18nService,
-    private accountService: AccountService,
     private zone: NgZone,
     private formBuilder: FormBuilder,
   ) {}
@@ -67,6 +66,9 @@ export class CredentialGeneratorComponent implements OnInit, OnDestroy {
    */
   @Input()
   userId: UserId | null;
+
+  @Input()
+  account: Account | null = null;
 
   /** Emits credentials created from a generation request. */
   @Output()
@@ -97,13 +99,9 @@ export class CredentialGeneratorComponent implements OnInit, OnDestroy {
     if (this.userId) {
       this.userId$.next(this.userId);
     } else {
-      this.accountService.activeAccount$
-        .pipe(
-          map((acct) => acct.id),
-          distinctUntilChanged(),
-          takeUntil(this.destroyed),
-        )
-        .subscribe(this.userId$);
+      if (this.account) {
+        this.userId$.next(this.account.id);
+      }
     }
 
     this.generatorService

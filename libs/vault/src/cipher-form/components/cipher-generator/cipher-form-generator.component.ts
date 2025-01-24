@@ -4,6 +4,7 @@ import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import { CommonModule } from "@angular/common";
 import { Component, EventEmitter, Input, Output } from "@angular/core";
 
+import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { GeneratorModule } from "@bitwarden/generator-components";
 import { AlgorithmInfo, GeneratedCredential } from "@bitwarden/generator-core";
 
@@ -20,6 +21,11 @@ import { AlgorithmInfo, GeneratedCredential } from "@bitwarden/generator-core";
 export class CipherFormGeneratorComponent {
   @Input()
   algorithm: (selected: AlgorithmInfo) => void;
+
+  /**
+   * The account object passed from the parent component.
+   */
+  @Input() account: Account | null = null;
 
   /**
    * The type of generator form to show.

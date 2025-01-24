@@ -13,7 +13,7 @@ import {
   ReplaySubject,
 } from "rxjs";
 
-import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { UserId } from "@bitwarden/common/types/guid";
 import {
@@ -21,8 +21,6 @@ import {
   CredentialGeneratorService,
   PassphraseGenerationOptions,
 } from "@bitwarden/generator-core";
-
-import { completeOnAccountSwitch } from "./util";
 
 const Controls = Object.freeze({
   numWords: "numWords",
@@ -38,7 +36,6 @@ const Controls = Object.freeze({
 })
 export class PassphraseSettingsComponent implements OnInit, OnDestroy {
   /** Instantiates the component
-   *  @param accountService queries user availability
    *  @param generatorService settings and policy logic
    *  @param i18nService localize hints
    *  @param formBuilder reactive form controls
@@ -47,7 +44,6 @@ export class PassphraseSettingsComponent implements OnInit, OnDestroy {
     private formBuilder: FormBuilder,
     private generatorService: CredentialGeneratorService,
     private i18nService: I18nService,
-    private accountService: AccountService,
   ) {}
 
   /** Binds the component to a specific user's settings.
@@ -56,6 +52,9 @@ export class PassphraseSettingsComponent implements OnInit, OnDestroy {
    */
   @Input()
   userId: UserId | null;
+
+  @Input()
+  account: Account | null = null;
 
   /** When `true`, an options header is displayed by the component. Otherwise, the header is hidden. */
   @Input()
@@ -159,10 +158,11 @@ export class PassphraseSettingsComponent implements OnInit, OnDestroy {
       return new BehaviorSubject(this.userId as UserId).asObservable();
     }
 
-    return this.accountService.activeAccount$.pipe(
-      completeOnAccountSwitch(),
-      takeUntil(this.destroyed$),
-    );
+    if (this.account) {
+      return new BehaviorSubject(this.account.id as UserId).asObservable();
+    }
+
+    return new BehaviorSubject<UserId | null>(null).asObservable();
   }
 
   private readonly destroyed$ = new Subject<void>();

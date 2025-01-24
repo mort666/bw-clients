@@ -2,12 +2,12 @@
 // @ts-strict-ignore
 import { DialogRef } from "@angular/cdk/dialog";
 import { CommonModule } from "@angular/common";
-import { Component } from "@angular/core";
+import { Component, Input } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { BehaviorSubject, distinctUntilChanged, firstValueFrom, map, switchMap } from "rxjs";
+import { BehaviorSubject, firstValueFrom, map, switchMap } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
-import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { UserId } from "@bitwarden/common/types/guid";
 import { ButtonModule, DialogModule, DialogService } from "@bitwarden/components";
 import { GeneratorHistoryService } from "@bitwarden/generator-history";
@@ -28,22 +28,18 @@ import { EmptyCredentialHistoryComponent } from "./empty-credential-history.comp
   ],
 })
 export class CredentialGeneratorHistoryDialogComponent {
+  @Input() account: Account | null = null;
   protected readonly hasHistory$ = new BehaviorSubject<boolean>(false);
   protected readonly userId$ = new BehaviorSubject<UserId>(null);
 
   constructor(
-    private accountService: AccountService,
     private history: GeneratorHistoryService,
     private dialogService: DialogService,
     private dialogRef: DialogRef,
   ) {
-    this.accountService.activeAccount$
-      .pipe(
-        takeUntilDestroyed(),
-        map(({ id }) => id),
-        distinctUntilChanged(),
-      )
-      .subscribe(this.userId$);
+    if (this.account) {
+      this.userId$.next(this.account.id);
+    }
 
     this.userId$
       .pipe(

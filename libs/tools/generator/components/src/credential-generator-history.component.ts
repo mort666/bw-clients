@@ -1,13 +1,13 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
 import { CommonModule } from "@angular/common";
-import { Component } from "@angular/core";
+import { Component, Input } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { RouterLink } from "@angular/router";
-import { BehaviorSubject, distinctUntilChanged, map, switchMap } from "rxjs";
+import { BehaviorSubject, map, switchMap } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
-import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { UserId } from "@bitwarden/common/types/guid";
 import {
   ColorPasswordModule,
@@ -40,21 +40,17 @@ import { GeneratorModule } from "./generator.module";
   ],
 })
 export class CredentialGeneratorHistoryComponent {
+  @Input() account: Account | null = null;
   protected readonly userId$ = new BehaviorSubject<UserId>(null);
   protected readonly credentials$ = new BehaviorSubject<GeneratedCredential[]>([]);
 
   constructor(
-    private accountService: AccountService,
     private generatorService: CredentialGeneratorService,
     private history: GeneratorHistoryService,
   ) {
-    this.accountService.activeAccount$
-      .pipe(
-        takeUntilDestroyed(),
-        map(({ id }) => id),
-        distinctUntilChanged(),
-      )
-      .subscribe(this.userId$);
+    if (this.account) {
+      this.userId$.next(this.account.id);
+    }
 
     this.userId$
       .pipe(

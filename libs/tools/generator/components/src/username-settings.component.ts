@@ -4,15 +4,13 @@ import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from "@angu
 import { FormBuilder } from "@angular/forms";
 import { BehaviorSubject, map, skip, Subject, takeUntil, withLatestFrom } from "rxjs";
 
-import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { UserId } from "@bitwarden/common/types/guid";
 import {
   CredentialGeneratorService,
   EffUsernameGenerationOptions,
   Generators,
 } from "@bitwarden/generator-core";
-
-import { completeOnAccountSwitch } from "./util";
 
 /** Options group for usernames */
 @Component({
@@ -21,14 +19,12 @@ import { completeOnAccountSwitch } from "./util";
 })
 export class UsernameSettingsComponent implements OnInit, OnDestroy {
   /** Instantiates the component
-   *  @param accountService queries user availability
    *  @param generatorService settings and policy logic
    *  @param formBuilder reactive form controls
    */
   constructor(
     private formBuilder: FormBuilder,
     private generatorService: CredentialGeneratorService,
-    private accountService: AccountService,
   ) {}
 
   /** Binds the component to a specific user's settings.
@@ -37,6 +33,9 @@ export class UsernameSettingsComponent implements OnInit, OnDestroy {
    */
   @Input()
   userId: UserId | null;
+
+  @Input()
+  account: Account | null = null;
 
   /** Emits settings updates and completes if the settings become unavailable.
    * @remarks this does not emit the initial settings. If you would like
@@ -84,10 +83,11 @@ export class UsernameSettingsComponent implements OnInit, OnDestroy {
       return new BehaviorSubject(this.userId as UserId).asObservable();
     }
 
-    return this.accountService.activeAccount$.pipe(
-      completeOnAccountSwitch(),
-      takeUntil(this.destroyed$),
-    );
+    if (this.account) {
+      return new BehaviorSubject(this.account.id as UserId).asObservable();
+    }
+
+    return new BehaviorSubject<UserId | null>(null).asObservable();
   }
 
   private readonly destroyed$ = new Subject<void>();

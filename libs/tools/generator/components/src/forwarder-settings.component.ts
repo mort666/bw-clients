@@ -23,7 +23,7 @@ import {
   withLatestFrom,
 } from "rxjs";
 
-import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { IntegrationId } from "@bitwarden/common/tools/integration";
 import { UserId } from "@bitwarden/common/types/guid";
 import {
@@ -33,8 +33,6 @@ import {
   NoPolicy,
   toCredentialGeneratorConfiguration,
 } from "@bitwarden/generator-core";
-
-import { completeOnAccountSwitch } from "./util";
 
 const Controls = Object.freeze({
   domain: "domain",
@@ -49,14 +47,12 @@ const Controls = Object.freeze({
 })
 export class ForwarderSettingsComponent implements OnInit, OnChanges, OnDestroy {
   /** Instantiates the component
-   *  @param accountService queries user availability
    *  @param generatorService settings and policy logic
    *  @param formBuilder reactive form controls
    */
   constructor(
     private formBuilder: FormBuilder,
     private generatorService: CredentialGeneratorService,
-    private accountService: AccountService,
   ) {}
 
   /** Binds the component to a specific user's settings.
@@ -65,6 +61,9 @@ export class ForwarderSettingsComponent implements OnInit, OnChanges, OnDestroy 
    */
   @Input()
   userId: UserId | null;
+
+  @Input()
+  account: Account | null = null;
 
   @Input({ required: true })
   forwarder: IntegrationId;
@@ -170,10 +169,11 @@ export class ForwarderSettingsComponent implements OnInit, OnChanges, OnDestroy 
       return new BehaviorSubject(this.userId as UserId).asObservable();
     }
 
-    return this.accountService.activeAccount$.pipe(
-      completeOnAccountSwitch(),
-      takeUntil(this.destroyed$),
-    );
+    if (this.account) {
+      return new BehaviorSubject(this.account.id as UserId).asObservable();
+    }
+
+    return new BehaviorSubject<UserId | null>(null).asObservable();
   }
 
   private readonly refresh$ = new Subject<void>();
