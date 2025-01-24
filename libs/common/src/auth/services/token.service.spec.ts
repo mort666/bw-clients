@@ -10,6 +10,7 @@ import { KeyGenerationService } from "../../platform/abstractions/key-generation
 import { LogService } from "../../platform/abstractions/log.service";
 import { AbstractStorageService } from "../../platform/abstractions/storage.service";
 import { StorageLocation } from "../../platform/enums";
+import { EncString } from "../../platform/models/domain/enc-string";
 import { StorageOptions } from "../../platform/models/domain/storage-options";
 import { SymmetricCryptoKey } from "../../platform/models/domain/symmetric-crypto-key";
 import { SecureStorageService, SupportStatus } from "../../platform/storage/secure-storage.service";
@@ -291,7 +292,7 @@ describe("TokenService", () => {
 
           encryptService.encrypt.mockResolvedValue({
             encryptedString: mockEncryptedAccessToken,
-          } as any);
+          } as EncString);
 
           // First call resolves to null to simulate no key in secure storage
           // then resolves to the key to simulate the key being set in secure storage
@@ -959,7 +960,7 @@ describe("TokenService", () => {
 
           // Act
           // note: don't await here because we want to test the error
-          const result = (tokenService as any).getUserIdFromAccessToken(accessTokenJwt);
+          const result = tokenService["getUserIdFromAccessToken"](accessTokenJwt);
           // Assert
           await expect(result).rejects.toThrow("Failed to decode access token: Mock error");
         });
@@ -970,7 +971,7 @@ describe("TokenService", () => {
 
           // Act
           // note: don't await here because we want to test the error
-          const result = (tokenService as any).getUserIdFromAccessToken(accessTokenJwt);
+          const result = tokenService["getUserIdFromAccessToken"](accessTokenJwt);
           // Assert
           await expect(result).rejects.toThrow("No user id found");
         });
@@ -984,7 +985,7 @@ describe("TokenService", () => {
 
           // Act
           // note: don't await here because we want to test the error
-          const result = (tokenService as any).getUserIdFromAccessToken(accessTokenJwt);
+          const result = tokenService["getUserIdFromAccessToken"](accessTokenJwt);
           // Assert
           await expect(result).rejects.toThrow("No user id found");
         });
@@ -994,7 +995,7 @@ describe("TokenService", () => {
           tokenService.decodeAccessToken = jest.fn().mockResolvedValue(accessTokenDecoded);
 
           // Act
-          const result = await (tokenService as any).getUserIdFromAccessToken(accessTokenJwt);
+          const result = await tokenService["getUserIdFromAccessToken"](accessTokenJwt);
 
           // Assert
           expect(result).toEqual(userIdFromAccessToken);
@@ -1269,7 +1270,7 @@ describe("TokenService", () => {
       it("throws an error when no user id is provided", async () => {
         // Act
         // note: don't await here because we want to test the error
-        const result = (tokenService as any).setRefreshToken(
+        const result = tokenService["setRefreshToken"](
           refreshToken,
           VaultTimeoutAction.Lock,
           null,
@@ -1281,7 +1282,7 @@ describe("TokenService", () => {
 
       it("should throw an error if the vault timeout is missing", async () => {
         // Act
-        const result = (tokenService as any).setRefreshToken(
+        const result = tokenService["setRefreshToken"](
           refreshToken,
           VaultTimeoutAction.Lock,
           null,
@@ -1294,7 +1295,7 @@ describe("TokenService", () => {
 
       it("should throw an error if the vault timeout action is missing", async () => {
         // Act
-        const result = (tokenService as any).setRefreshToken(
+        const result = tokenService["setRefreshToken"](
           refreshToken,
           null,
           VaultTimeoutStringType.Never,
@@ -1308,7 +1309,7 @@ describe("TokenService", () => {
       describe("Memory storage tests", () => {
         it("sets the refresh token in memory when given a user id", async () => {
           // Act
-          await (tokenService as any).setRefreshToken(
+          await tokenService["setRefreshToken"](
             refreshToken,
             memoryVaultTimeoutAction,
             memoryVaultTimeout,
@@ -1325,7 +1326,7 @@ describe("TokenService", () => {
       describe("Disk storage tests (secure storage not supported on platform)", () => {
         it("sets the refresh token in disk when given a user id", async () => {
           // Act
-          await (tokenService as any).setRefreshToken(
+          await tokenService["setRefreshToken"](
             refreshToken,
             diskVaultTimeoutAction,
             diskVaultTimeout,
@@ -1360,7 +1361,7 @@ describe("TokenService", () => {
           secureStorageService.get.mockResolvedValue(refreshToken);
 
           // Act
-          await (tokenService as any).setRefreshToken(
+          await tokenService["setRefreshToken"](
             refreshToken,
             diskVaultTimeoutAction,
             diskVaultTimeout,
@@ -1392,7 +1393,7 @@ describe("TokenService", () => {
           secureStorageService.get.mockResolvedValue(null);
 
           // Act
-          await (tokenService as any).setRefreshToken(
+          await tokenService["setRefreshToken"](
             refreshToken,
             diskVaultTimeoutAction,
             diskVaultTimeout,
@@ -1420,7 +1421,7 @@ describe("TokenService", () => {
           secureStorageService.save.mockRejectedValue(new Error("Secure storage not supported"));
 
           // Act
-          await (tokenService as any).setRefreshToken(
+          await tokenService["setRefreshToken"](
             refreshToken,
             diskVaultTimeoutAction,
             diskVaultTimeout,
@@ -1475,7 +1476,7 @@ describe("TokenService", () => {
           secureStorageService.get.mockResolvedValue(null);
 
           // Act
-          await (tokenService as any).setRefreshToken(
+          await tokenService["setRefreshToken"](
             null,
             diskVaultTimeoutAction,
             diskVaultTimeout,
@@ -1537,7 +1538,7 @@ describe("TokenService", () => {
     describe("getRefreshToken", () => {
       it("returns null when no user id is provided and there is no active user in global state", async () => {
         // Act
-        const result = await (tokenService as any).getRefreshToken();
+        const result = await tokenService.getRefreshToken();
         // Assert
         expect(result).toBeNull();
       });
@@ -1547,7 +1548,7 @@ describe("TokenService", () => {
         globalStateProvider.getFake(ACCOUNT_ACTIVE_ACCOUNT_ID).nextState(userIdFromAccessToken);
 
         // Act
-        const result = await (tokenService as any).getRefreshToken();
+        const result = await tokenService.getRefreshToken();
         // Assert
         expect(result).toBeNull();
       });
@@ -1791,7 +1792,7 @@ describe("TokenService", () => {
       it("throws an error when no user id is provided", async () => {
         // Act
         // note: don't await here because we want to test the error
-        const result = (tokenService as any).clearRefreshToken();
+        const result = tokenService["clearRefreshToken"](null);
         // Assert
         await expect(result).rejects.toThrow("User id not found. Cannot clear refresh token.");
       });
@@ -1813,7 +1814,7 @@ describe("TokenService", () => {
             .nextState(refreshToken);
 
           // Act
-          await (tokenService as any).clearRefreshToken(userIdFromAccessToken);
+          await tokenService["clearRefreshToken"](userIdFromAccessToken);
 
           // Assert
           expect(
@@ -2031,7 +2032,7 @@ describe("TokenService", () => {
       it("throws an error when no user id is provided and there is no active user in global state", async () => {
         // Act
         // note: don't await here because we want to test the error
-        const result = (tokenService as any).clearClientId();
+        const result = tokenService["clearClientId"]();
         // Assert
         await expect(result).rejects.toThrow("User id not found. Cannot clear client id.");
       });
@@ -2047,7 +2048,7 @@ describe("TokenService", () => {
           .nextState(clientId);
 
         // Act
-        await (tokenService as any).clearClientId(userIdFromAccessToken);
+        await tokenService["clearClientId"](userIdFromAccessToken);
 
         // Assert
         expect(
@@ -2072,7 +2073,7 @@ describe("TokenService", () => {
         globalStateProvider.getFake(ACCOUNT_ACTIVE_ACCOUNT_ID).nextState(userIdFromAccessToken);
 
         // Act
-        await (tokenService as any).clearClientId();
+        await tokenService["clearClientId"]();
 
         // Assert
         expect(
@@ -2302,7 +2303,7 @@ describe("TokenService", () => {
       it("throws an error when no user id is provided and there is no active user in global state", async () => {
         // Act
         // note: don't await here because we want to test the error
-        const result = (tokenService as any).clearClientSecret();
+        const result = tokenService["clearClientSecret"]();
         // Assert
         await expect(result).rejects.toThrow("User id not found. Cannot clear client secret.");
       });
@@ -2318,7 +2319,7 @@ describe("TokenService", () => {
           .nextState(clientSecret);
 
         // Act
-        await (tokenService as any).clearClientSecret(userIdFromAccessToken);
+        await tokenService["clearClientSecret"](userIdFromAccessToken);
 
         // Assert
         expect(
@@ -2345,7 +2346,7 @@ describe("TokenService", () => {
         globalStateProvider.getFake(ACCOUNT_ACTIVE_ACCOUNT_ID).nextState(userIdFromAccessToken);
 
         // Act
-        await (tokenService as any).clearClientSecret();
+        await tokenService["clearClientSecret"]();
 
         // Assert
         expect(
@@ -2371,8 +2372,8 @@ describe("TokenService", () => {
       const clientSecret = "clientSecret";
 
       // any hack allows for mocking private method.
-      (tokenService as any)._setAccessToken = jest.fn().mockReturnValue(accessTokenJwt);
-      (tokenService as any).setRefreshToken = jest.fn().mockReturnValue(refreshToken);
+      tokenService["_setAccessToken"] = jest.fn().mockReturnValue(accessTokenJwt);
+      tokenService["setRefreshToken"] = jest.fn().mockReturnValue(refreshToken);
       tokenService.setClientId = jest.fn().mockReturnValue(clientId);
       tokenService.setClientSecret = jest.fn().mockReturnValue(clientSecret);
 
@@ -2387,7 +2388,7 @@ describe("TokenService", () => {
       );
 
       // Assert
-      expect((tokenService as any)._setAccessToken).toHaveBeenCalledWith(
+      expect(tokenService["_setAccessToken"]).toHaveBeenCalledWith(
         accessTokenJwt,
         vaultTimeoutAction,
         vaultTimeout,
@@ -2395,7 +2396,7 @@ describe("TokenService", () => {
       );
 
       // any hack allows for testing private methods
-      expect((tokenService as any).setRefreshToken).toHaveBeenCalledWith(
+      expect(tokenService["setRefreshToken"]).toHaveBeenCalledWith(
         refreshToken,
         vaultTimeoutAction,
         vaultTimeout,
@@ -2425,8 +2426,8 @@ describe("TokenService", () => {
       const vaultTimeoutAction = VaultTimeoutAction.Lock;
       const vaultTimeout = 30;
 
-      (tokenService as any)._setAccessToken = jest.fn().mockReturnValue(accessTokenJwt);
-      (tokenService as any).setRefreshToken = jest.fn();
+      tokenService["_setAccessToken"] = jest.fn().mockReturnValue(accessTokenJwt);
+      tokenService["setRefreshToken"] = jest.fn();
       tokenService.setClientId = jest.fn();
       tokenService.setClientSecret = jest.fn();
 
@@ -2439,7 +2440,7 @@ describe("TokenService", () => {
       );
 
       // Assert
-      expect((tokenService as any)._setAccessToken).toHaveBeenCalledWith(
+      expect(tokenService["_setAccessToken"]).toHaveBeenCalledWith(
         accessTokenJwt,
         vaultTimeoutAction,
         vaultTimeout,
@@ -2447,7 +2448,7 @@ describe("TokenService", () => {
       );
 
       // any hack allows for testing private methods
-      expect((tokenService as any).setRefreshToken).not.toHaveBeenCalled();
+      expect(tokenService["setRefreshToken"]).not.toHaveBeenCalled();
       expect(tokenService.setClientId).not.toHaveBeenCalled();
       expect(tokenService.setClientSecret).not.toHaveBeenCalled();
 
@@ -2460,8 +2461,8 @@ describe("TokenService", () => {
       const vaultTimeoutAction = VaultTimeoutAction.Lock;
       const vaultTimeout = 30;
 
-      (tokenService as any)._setAccessToken = jest.fn().mockReturnValue(accessTokenJwt);
-      (tokenService as any).setRefreshToken = jest.fn().mockReturnValue(refreshToken);
+      tokenService["_setAccessToken"] = jest.fn().mockReturnValue(accessTokenJwt);
+      tokenService["setRefreshToken"] = jest.fn().mockReturnValue(refreshToken);
       tokenService.setClientId = jest.fn();
       tokenService.setClientSecret = jest.fn();
 
@@ -2474,7 +2475,7 @@ describe("TokenService", () => {
       );
 
       // Assert
-      expect((tokenService as any)._setAccessToken).toHaveBeenCalledWith(
+      expect(tokenService["_setAccessToken"]).toHaveBeenCalledWith(
         accessTokenJwt,
         vaultTimeoutAction,
         vaultTimeout,
@@ -2482,7 +2483,7 @@ describe("TokenService", () => {
       );
 
       // any hack allows for testing private methods
-      expect((tokenService as any).setRefreshToken).toHaveBeenCalledWith(
+      expect(tokenService["setRefreshToken"]).toHaveBeenCalledWith(
         refreshToken,
         vaultTimeoutAction,
         vaultTimeout,
@@ -2574,7 +2575,7 @@ describe("TokenService", () => {
       const refreshToken: string = null;
       const vaultTimeoutAction = VaultTimeoutAction.Lock;
       const vaultTimeout = 30;
-      (tokenService as any).setRefreshToken = jest.fn();
+      tokenService["setRefreshToken"] = jest.fn();
 
       // Act
       const result = await tokenService.setTokens(
@@ -2585,7 +2586,7 @@ describe("TokenService", () => {
       );
 
       // Assert
-      expect((tokenService as any).setRefreshToken).not.toHaveBeenCalled();
+      expect(tokenService["setRefreshToken"]).not.toHaveBeenCalled();
       expect(result).toStrictEqual(new SetTokensResult(accessTokenJwt));
     });
   });
@@ -2596,9 +2597,9 @@ describe("TokenService", () => {
       const userId = "userId" as UserId;
 
       tokenService.clearAccessToken = jest.fn();
-      (tokenService as any).clearRefreshToken = jest.fn();
-      (tokenService as any).clearClientId = jest.fn();
-      (tokenService as any).clearClientSecret = jest.fn();
+      tokenService["clearRefreshToken"] = jest.fn();
+      tokenService["clearClientId"] = jest.fn();
+      tokenService["clearClientSecret"] = jest.fn();
 
       // Act
 
@@ -2607,9 +2608,9 @@ describe("TokenService", () => {
       // Assert
 
       expect(tokenService.clearAccessToken).toHaveBeenCalledWith(userId);
-      expect((tokenService as any).clearRefreshToken).toHaveBeenCalledWith(userId);
-      expect((tokenService as any).clearClientId).toHaveBeenCalledWith(userId);
-      expect((tokenService as any).clearClientSecret).toHaveBeenCalledWith(userId);
+      expect(tokenService["clearRefreshToken"]).toHaveBeenCalledWith(userId);
+      expect(tokenService["clearClientId"]).toHaveBeenCalledWith(userId);
+      expect(tokenService["clearClientSecret"]).toHaveBeenCalledWith(userId);
     });
 
     it("calls to clear all tokens when there is an active user", async () => {
@@ -2619,9 +2620,9 @@ describe("TokenService", () => {
       globalStateProvider.getFake(ACCOUNT_ACTIVE_ACCOUNT_ID).nextState(userId);
 
       tokenService.clearAccessToken = jest.fn();
-      (tokenService as any).clearRefreshToken = jest.fn();
-      (tokenService as any).clearClientId = jest.fn();
-      (tokenService as any).clearClientSecret = jest.fn();
+      tokenService["clearRefreshToken"] = jest.fn();
+      tokenService["clearClientId"] = jest.fn();
+      tokenService["clearClientSecret"] = jest.fn();
 
       // Act
 
@@ -2630,17 +2631,17 @@ describe("TokenService", () => {
       // Assert
 
       expect(tokenService.clearAccessToken).toHaveBeenCalledWith(userId);
-      expect((tokenService as any).clearRefreshToken).toHaveBeenCalledWith(userId);
-      expect((tokenService as any).clearClientId).toHaveBeenCalledWith(userId);
-      expect((tokenService as any).clearClientSecret).toHaveBeenCalledWith(userId);
+      expect(tokenService["clearRefreshToken"]).toHaveBeenCalledWith(userId);
+      expect(tokenService["clearClientId"]).toHaveBeenCalledWith(userId);
+      expect(tokenService["clearClientSecret"]).toHaveBeenCalledWith(userId);
     });
 
     it("does not call to clear all tokens when no user id is provided and there is no active user in global state", async () => {
       // Arrange
       tokenService.clearAccessToken = jest.fn();
-      (tokenService as any).clearRefreshToken = jest.fn();
-      (tokenService as any).clearClientId = jest.fn();
-      (tokenService as any).clearClientSecret = jest.fn();
+      tokenService["clearRefreshToken"] = jest.fn();
+      tokenService["clearClientId"] = jest.fn();
+      tokenService["clearClientSecret"] = jest.fn();
 
       // Act
 
