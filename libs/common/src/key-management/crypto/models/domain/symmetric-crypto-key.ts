@@ -2,8 +2,8 @@
 // @ts-strict-ignore
 import { Jsonify } from "type-fest";
 
-import { Utils } from "../../../platform/misc/utils";
-import { EncryptionType } from "../../enums";
+import { EncryptionType } from "../../../../platform/enums";
+import { Utils } from "../../../../platform/misc/utils";
 
 export class SymmetricCryptoKey {
   key: Uint8Array;

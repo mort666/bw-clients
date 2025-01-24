@@ -1,5 +1,5 @@
+import { EncArrayBuffer } from "../../../key-management/crypto/models/domain/enc-array-buffer";
 import { Utils } from "../../misc/utils";
-import { EncArrayBuffer } from "../../models/domain/enc-array-buffer";
 
 export class BitwardenFileUploadService {
   async upload(

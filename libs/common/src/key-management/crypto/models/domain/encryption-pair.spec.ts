@@ -1,6 +1,5 @@
-import { Utils } from "../../misc/utils";
-
-import { EncryptionPair } from "./account";
+import { Utils } from "../../../../platform/misc/utils";
+import { EncryptionPair } from "../../../../platform/models/domain/account";
 
 describe("EncryptionPair", () => {
   describe("toJSON", () => {

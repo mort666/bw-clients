@@ -1,11 +1,11 @@
 import { ApiService } from "../../../abstractions/api.service";
+import { EncArrayBuffer } from "../../../key-management/crypto/models/domain/enc-array-buffer";
 import { ErrorResponse } from "../../../models/response/error.response";
 import { ListResponse } from "../../../models/response/list.response";
 import {
   FileUploadApiMethods,
   FileUploadService,
 } from "../../../platform/abstractions/file-upload/file-upload.service";
-import { EncArrayBuffer } from "../../../platform/models/domain/enc-array-buffer";
 import { SendType } from "../enums/send-type";
 import { SendData } from "../models/data/send.data";
 import { Send } from "../models/domain/send";

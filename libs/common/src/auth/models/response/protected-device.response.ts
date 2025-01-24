@@ -3,8 +3,8 @@
 import { Jsonify } from "type-fest";
 
 import { DeviceType } from "../../../enums";
+import { EncString } from "../../../key-management/crypto/models/domain/enc-string";
 import { BaseResponse } from "../../../models/response/base.response";
-import { EncString } from "../../../platform/models/domain/enc-string";
 
 export class ProtectedDeviceResponse extends BaseResponse {
   constructor(response: Jsonify<ProtectedDeviceResponse>) {

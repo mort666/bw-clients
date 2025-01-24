@@ -5,13 +5,13 @@ import { KdfConfigService, KeyService, PBKDF2KdfConfig } from "@bitwarden/key-ma
 import { BitwardenClient } from "@bitwarden/sdk-internal";
 
 import { AccountInfo, AccountService } from "../../../auth/abstractions/account.service";
+import { EncryptedString } from "../../../key-management/crypto/models/domain/enc-string";
+import { SymmetricCryptoKey } from "../../../key-management/crypto/models/domain/symmetric-crypto-key";
 import { UserId } from "../../../types/guid";
 import { UserKey } from "../../../types/key";
 import { Environment, EnvironmentService } from "../../abstractions/environment.service";
 import { PlatformUtilsService } from "../../abstractions/platform-utils.service";
 import { SdkClientFactory } from "../../abstractions/sdk/sdk-client-factory";
-import { EncryptedString } from "../../models/domain/enc-string";
-import { SymmetricCryptoKey } from "../../models/domain/symmetric-crypto-key";
 
 import { DefaultSdkService } from "./default-sdk.service";
 

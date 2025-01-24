@@ -2,14 +2,14 @@
 // @ts-strict-ignore
 import { Jsonify } from "type-fest";
 
-import { Decryptable } from "../../interfaces/decryptable.interface";
-import { SymmetricCryptoKey } from "../../models/domain/symmetric-crypto-key";
-import { ConsoleLogService } from "../console-log.service";
-import { ContainerService } from "../container.service";
-import { WebCryptoFunctionService } from "../web-crypto-function.service";
+import { ConsoleLogService } from "../../../platform/services/console-log.service";
+import { ContainerService } from "../../../platform/services/container.service";
+import { Decryptable } from "../interfaces/decryptable.interface";
+import { SymmetricCryptoKey } from "../models/domain/symmetric-crypto-key";
 
+import { getClassInitializer } from "./../enums/get-class-initializer";
 import { EncryptServiceImplementation } from "./encrypt.service.implementation";
-import { getClassInitializer } from "./get-class-initializer";
+import { WebCryptoFunctionService } from "./web-crypto-function.service";
 
 const workerApi: Worker = self as any;
 

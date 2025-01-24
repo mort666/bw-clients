@@ -5,11 +5,11 @@ import { Jsonify } from "type-fest";
 // eslint-disable-next-line no-restricted-imports
 import { KeyService } from "../../../../../key-management/src/abstractions/key.service";
 import { makeStaticByteArray, mockEnc, mockFromJson } from "../../../../spec/utils";
+import { EncryptService } from "../../../key-management/crypto/abstractions/encrypt.service";
+import { InitializerKey } from "../../../key-management/crypto/enums/initializer-key";
+import { EncString } from "../../../key-management/crypto/models/domain/enc-string";
 import { UriMatchStrategy } from "../../../models/domain/domain-service";
-import { EncryptService } from "../../../platform/abstractions/encrypt.service";
-import { EncString } from "../../../platform/models/domain/enc-string";
 import { ContainerService } from "../../../platform/services/container.service";
-import { InitializerKey } from "../../../platform/services/cryptography/initializer-key";
 import { UserId } from "../../../types/guid";
 import { CipherService } from "../../abstractions/cipher.service";
 import { FieldType, SecureNoteType } from "../../enums";

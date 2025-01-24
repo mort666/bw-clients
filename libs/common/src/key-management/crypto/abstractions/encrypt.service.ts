@@ -1,6 +1,6 @@
+import { InitializerMetadata } from "../../../platform/interfaces/initializer-metadata.interface";
 import { Decryptable } from "../interfaces/decryptable.interface";
 import { Encrypted } from "../interfaces/encrypted";
-import { InitializerMetadata } from "../interfaces/initializer-metadata.interface";
 import { EncArrayBuffer } from "../models/domain/enc-array-buffer";
 import { EncString } from "../models/domain/enc-string";
 import { SymmetricCryptoKey } from "../models/domain/symmetric-crypto-key";
