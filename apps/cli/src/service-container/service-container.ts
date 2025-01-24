@@ -62,6 +62,7 @@ import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abs
 import { DefaultBillingAccountProfileStateService } from "@bitwarden/common/billing/services/account/billing-account-profile-state.service";
 import { ClientType } from "@bitwarden/common/enums";
 import { KeyGenerationService as KeyGenerationServiceAbstraction } from "@bitwarden/common/key-management/crypto/abstractions/key-generation.service";
+import { KeySuffixOptions } from "@bitwarden/common/key-management/crypto/enums";
 import { EncryptServiceImplementation } from "@bitwarden/common/key-management/crypto/services/encrypt.service.implementation";
 import { FallbackBulkEncryptService } from "@bitwarden/common/key-management/crypto/services/fallback-bulk-encrypt.service";
 import { KeyGenerationService } from "@bitwarden/common/key-management/crypto/services/key-generation.service";
@@ -73,7 +74,7 @@ import {
 } from "@bitwarden/common/platform/abstractions/environment.service";
 import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
 import { SdkService } from "@bitwarden/common/platform/abstractions/sdk/sdk.service";
-import { KeySuffixOptions, LogLevelType } from "@bitwarden/common/platform/enums";
+import { LogLevelType } from "@bitwarden/common/platform/enums";
 import { StateFactory } from "@bitwarden/common/platform/factories/state-factory";
 import { MessageSender } from "@bitwarden/common/platform/messaging";
 import { Account } from "@bitwarden/common/platform/models/domain/account";
