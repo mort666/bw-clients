@@ -4,10 +4,10 @@ import {
   EncryptionType,
   encryptionTypeToString as encryptionTypeName,
 } from "@bitwarden/common/key-management/crypto/enums";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
+import { InitializerMetadata } from "@bitwarden/common/platform/interfaces/initializer-metadata.interface";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
 
-import { LogService } from "../../../platform/abstractions/log.service";
-import { InitializerMetadata } from "../../../platform/interfaces/initializer-metadata.interface";
-import { Utils } from "../../../platform/misc/utils";
 import { CryptoFunctionService } from "../abstractions/crypto-function.service";
 import { EncryptService } from "../abstractions/encrypt.service";
 import { Decryptable } from "../interfaces/decryptable.interface";

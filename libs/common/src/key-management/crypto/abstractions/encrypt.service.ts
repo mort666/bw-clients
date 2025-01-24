@@ -1,4 +1,5 @@
-import { InitializerMetadata } from "../../../platform/interfaces/initializer-metadata.interface";
+import { InitializerMetadata } from "@bitwarden/common/platform/interfaces/initializer-metadata.interface";
+
 import { Decryptable } from "../interfaces/decryptable.interface";
 import { Encrypted } from "../interfaces/encrypted";
 import { EncArrayBuffer } from "../models/domain/enc-array-buffer";

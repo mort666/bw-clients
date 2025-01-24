@@ -3,9 +3,10 @@
 import { firstValueFrom, fromEvent, filter, map, takeUntil, defaultIfEmpty, Subject } from "rxjs";
 import { Jsonify } from "type-fest";
 
-import { LogService } from "../../../platform/abstractions/log.service";
-import { InitializerMetadata } from "../../../platform/interfaces/initializer-metadata.interface";
-import { Utils } from "../../../platform/misc/utils";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
+import { InitializerMetadata } from "@bitwarden/common/platform/interfaces/initializer-metadata.interface";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
+
 import { BulkEncryptService } from "../abstractions/bulk-encrypt.service";
 import { CryptoFunctionService } from "../abstractions/crypto-function.service";
 import { getClassInitializer } from "../enums/get-class-initializer";

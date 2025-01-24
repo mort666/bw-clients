@@ -1,9 +1,10 @@
 import { mockReset, mock } from "jest-mock-extended";
 
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { CsprngArray } from "@bitwarden/common/types/csprng";
+
 import { makeStaticByteArray } from "../../../../spec";
-import { LogService } from "../../../platform/abstractions/log.service";
-import { Utils } from "../../../platform/misc/utils";
-import { CsprngArray } from "../../../types/csprng";
 import { CryptoFunctionService } from "../abstractions/crypto-function.service";
 import { EncryptionType } from "../enums";
 import { EncArrayBuffer } from "../models/domain/enc-array-buffer";

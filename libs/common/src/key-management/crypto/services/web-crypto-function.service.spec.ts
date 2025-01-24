@@ -1,7 +1,8 @@
 import { mock } from "jest-mock-extended";
 
-import { PlatformUtilsService } from "../../../platform/abstractions/platform-utils.service";
-import { Utils } from "../../../platform/misc/utils";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
+
 import { EcbDecryptParameters } from "../models/domain/decrypt-parameters";
 import { SymmetricCryptoKey } from "../models/domain/symmetric-crypto-key";
 

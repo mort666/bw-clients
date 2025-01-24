@@ -1,5 +1,5 @@
-import { Utils } from "../../../../platform/misc/utils";
-import { EncryptionPair } from "../../../../platform/models/domain/account";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { EncryptionPair } from "@bitwarden/common/platform/models/domain/account";
 
 describe("EncryptionPair", () => {
   describe("toJSON", () => {

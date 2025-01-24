@@ -3,8 +3,9 @@
 import { defaultIfEmpty, filter, firstValueFrom, fromEvent, map, Subject, takeUntil } from "rxjs";
 import { Jsonify } from "type-fest";
 
-import { InitializerMetadata } from "../../../platform/interfaces/initializer-metadata.interface";
-import { Utils } from "../../../platform/misc/utils";
+import { InitializerMetadata } from "@bitwarden/common/platform/interfaces/initializer-metadata.interface";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
+
 import { getClassInitializer } from "../enums/get-class-initializer";
 import { Decryptable } from "../interfaces/decryptable.interface";
 import { SymmetricCryptoKey } from "../models/domain/symmetric-crypto-key";

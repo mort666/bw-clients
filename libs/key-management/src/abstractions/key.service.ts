@@ -3,6 +3,7 @@
 import { Observable } from "rxjs";
 
 import { EncryptedOrganizationKeyData } from "@bitwarden/common/admin-console/models/data/encrypted-organization-key.data";
+import { HashPurpose, KeySuffixOptions } from "@bitwarden/common/key-management/crypto/enums";
 import {
   EncryptedString,
   EncString,
@@ -19,9 +20,6 @@ import { ProfileProviderOrganizationResponse } from "../../../common/src/admin-c
 // FIXME: remove `src` and fix import
 // eslint-disable-next-line no-restricted-imports
 import { ProfileProviderResponse } from "../../../common/src/admin-console/models/response/profile-provider.response";
-// FIXME: remove `src` and fix import
-// eslint-disable-next-line no-restricted-imports
-import { KeySuffixOptions, HashPurpose } from "../../../common/src/key-management/crypto/enums";
 // FIXME: remove `src` and fix import
 // eslint-disable-next-line no-restricted-imports
 import { OrganizationId, UserId } from "../../../common/src/types/guid";

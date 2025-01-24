@@ -2,12 +2,13 @@
 // @ts-strict-ignore
 import { Jsonify } from "type-fest";
 
-import { ConsoleLogService } from "../../../platform/services/console-log.service";
-import { ContainerService } from "../../../platform/services/container.service";
+import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
+import { ContainerService } from "@bitwarden/common/platform/services/container.service";
+
+import { getClassInitializer } from "../enums/get-class-initializer";
 import { Decryptable } from "../interfaces/decryptable.interface";
 import { SymmetricCryptoKey } from "../models/domain/symmetric-crypto-key";
 
-import { getClassInitializer } from "./../enums/get-class-initializer";
 import { EncryptServiceImplementation } from "./encrypt.service.implementation";
 import { WebCryptoFunctionService } from "./web-crypto-function.service";
 
