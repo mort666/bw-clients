@@ -2,8 +2,9 @@
 // @ts-strict-ignore
 import { Jsonify } from "type-fest";
 
-import { EncString } from "../../../key-management/crypto/models/domain/enc-string";
-import { SymmetricCryptoKey } from "../../../key-management/crypto/models/domain/symmetric-crypto-key";
+import { EncString } from "@bitwarden/common/key-management/crypto/models/domain/enc-string";
+import { SymmetricCryptoKey } from "@bitwarden/common/key-management/crypto/models/domain/symmetric-crypto-key";
+
 import Domain from "../../../platform/models/domain/domain-base";
 import { SshKeyData } from "../data/ssh-key.data";
 import { SshKeyView } from "../view/ssh-key.view";

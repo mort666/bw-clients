@@ -1,16 +1,15 @@
 import { mock, MockProxy } from "jest-mock-extended";
 import { BehaviorSubject, firstValueFrom } from "rxjs";
 
-// FIXME: remove `src` and fix import
-// eslint-disable-next-line no-restricted-imports
-import { KeyService } from "../../../../../key-management/src/abstractions/key.service";
+import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
+import { EncString } from "@bitwarden/common/key-management/crypto/models/domain/enc-string";
+import { SymmetricCryptoKey } from "@bitwarden/common/key-management/crypto/models/domain/symmetric-crypto-key";
+import { KeyService } from "@bitwarden/key-management";
+
 import { makeEncString } from "../../../../spec";
 import { FakeAccountService, mockAccountServiceWith } from "../../../../spec/fake-account-service";
 import { FakeSingleUserState } from "../../../../spec/fake-state";
 import { FakeStateProvider } from "../../../../spec/fake-state-provider";
-import { EncryptService } from "../../../key-management/crypto/abstractions/encrypt.service";
-import { EncString } from "../../../key-management/crypto/models/domain/enc-string";
-import { SymmetricCryptoKey } from "../../../key-management/crypto/models/domain/symmetric-crypto-key";
 import { I18nService } from "../../../platform/abstractions/i18n.service";
 import { Utils } from "../../../platform/misc/utils";
 import { UserId } from "../../../types/guid";

@@ -1,13 +1,12 @@
 import { mock } from "jest-mock-extended";
 import { Jsonify } from "type-fest";
 
-// FIXME: remove `src` and fix import
-// eslint-disable-next-line no-restricted-imports
-import { KeyService } from "../../../../../key-management/src/abstractions/key.service";
+import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
+import { InitializerKey } from "@bitwarden/common/key-management/crypto/enums/initializer-key";
+import { EncString } from "@bitwarden/common/key-management/crypto/models/domain/enc-string";
+import { KeyService } from "@bitwarden/key-management";
+
 import { makeStaticByteArray, mockEnc, mockFromJson } from "../../../../spec/utils";
-import { EncryptService } from "../../../key-management/crypto/abstractions/encrypt.service";
-import { InitializerKey } from "../../../key-management/crypto/enums/initializer-key";
-import { EncString } from "../../../key-management/crypto/models/domain/enc-string";
 import { UriMatchStrategy } from "../../../models/domain/domain-service";
 import { ContainerService } from "../../../platform/services/container.service";
 import { UserId } from "../../../types/guid";

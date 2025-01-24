@@ -1,8 +1,9 @@
-import { mockEnc, mockFromJson } from "../../../../spec";
 import {
   EncryptedString,
   EncString,
-} from "../../../key-management/crypto/models/domain/enc-string";
+} from "@bitwarden/common/key-management/crypto/models/domain/enc-string";
+
+import { mockEnc, mockFromJson } from "../../../../spec";
 import { FieldType } from "../../enums";
 import { FieldData } from "../../models/data/field.data";
 import { Field } from "../../models/domain/field";

@@ -1,6 +1,10 @@
 import { mock } from "jest-mock-extended";
 import { firstValueFrom, of } from "rxjs";
 
+import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
+import { KeyGenerationService } from "@bitwarden/common/key-management/crypto/abstractions/key-generation.service";
+import { EncString } from "@bitwarden/common/key-management/crypto/models/domain/enc-string";
+import { SymmetricCryptoKey } from "@bitwarden/common/key-management/crypto/models/domain/symmetric-crypto-key";
 import { KeyService } from "@bitwarden/key-management";
 
 import {
@@ -10,10 +14,6 @@ import {
   awaitAsync,
   mockAccountServiceWith,
 } from "../../../../spec";
-import { EncryptService } from "../../../key-management/crypto/abstractions/encrypt.service";
-import { KeyGenerationService } from "../../../key-management/crypto/abstractions/key-generation.service";
-import { EncString } from "../../../key-management/crypto/models/domain/enc-string";
-import { SymmetricCryptoKey } from "../../../key-management/crypto/models/domain/symmetric-crypto-key";
 import { EnvironmentService } from "../../../platform/abstractions/environment.service";
 import { I18nService } from "../../../platform/abstractions/i18n.service";
 import { Utils } from "../../../platform/misc/utils";

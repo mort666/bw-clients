@@ -2,16 +2,17 @@
 // @ts-strict-ignore
 import { firstValueFrom, map, Observable } from "rxjs";
 
-import { EncryptService } from "../../../key-management/crypto/abstractions/encrypt.service";
-import { KeyGenerationService } from "../../../key-management/crypto/abstractions/key-generation.service";
+import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
+import { KeyGenerationService } from "@bitwarden/common/key-management/crypto/abstractions/key-generation.service";
+import { EncryptionType } from "@bitwarden/common/key-management/crypto/enums";
 import {
   EncryptedString,
   EncString,
-} from "../../../key-management/crypto/models/domain/enc-string";
-import { SymmetricCryptoKey } from "../../../key-management/crypto/models/domain/symmetric-crypto-key";
+} from "@bitwarden/common/key-management/crypto/models/domain/enc-string";
+import { SymmetricCryptoKey } from "@bitwarden/common/key-management/crypto/models/domain/symmetric-crypto-key";
+
 import { LogService } from "../../../platform/abstractions/log.service";
 import { StateService } from "../../../platform/abstractions/state.service";
-import { EncryptionType } from "../../../platform/enums";
 import {
   MASTER_PASSWORD_DISK,
   MASTER_PASSWORD_MEMORY,

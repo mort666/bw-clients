@@ -1,12 +1,12 @@
 import { mock, MockProxy } from "jest-mock-extended";
 import { BehaviorSubject, firstValueFrom, of } from "rxjs";
 
+import { EncryptedString } from "@bitwarden/common/key-management/crypto/models/domain/enc-string";
+import { SymmetricCryptoKey } from "@bitwarden/common/key-management/crypto/models/domain/symmetric-crypto-key";
 import { KdfConfigService, KeyService, PBKDF2KdfConfig } from "@bitwarden/key-management";
 import { BitwardenClient } from "@bitwarden/sdk-internal";
 
 import { AccountInfo, AccountService } from "../../../auth/abstractions/account.service";
-import { EncryptedString } from "../../../key-management/crypto/models/domain/enc-string";
-import { SymmetricCryptoKey } from "../../../key-management/crypto/models/domain/symmetric-crypto-key";
 import { UserId } from "../../../types/guid";
 import { UserKey } from "../../../types/key";
 import { Environment, EnvironmentService } from "../../abstractions/environment.service";

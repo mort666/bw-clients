@@ -1,6 +1,7 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { EncryptionType } from "../../../../platform/enums";
+import { EncryptionType } from "@bitwarden/common/key-management/crypto/enums";
+
 import { Utils } from "../../../../platform/misc/utils";
 import { Encrypted } from "../../interfaces/encrypted";
 

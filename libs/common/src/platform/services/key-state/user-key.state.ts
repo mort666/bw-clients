@@ -1,5 +1,6 @@
-import { EncryptedString } from "../../../key-management/crypto/models/domain/enc-string";
-import { SymmetricCryptoKey } from "../../../key-management/crypto/models/domain/symmetric-crypto-key";
+import { EncryptedString } from "@bitwarden/common/key-management/crypto/models/domain/enc-string";
+import { SymmetricCryptoKey } from "@bitwarden/common/key-management/crypto/models/domain/symmetric-crypto-key";
+
 import { UserKey } from "../../../types/key";
 import { CRYPTO_DISK, CRYPTO_MEMORY, UserKeyDefinition } from "../../state";
 

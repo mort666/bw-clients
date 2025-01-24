@@ -1,8 +1,9 @@
-import { mockEnc, mockFromJson } from "../../../../spec";
 import {
   EncryptedString,
   EncString,
-} from "../../../key-management/crypto/models/domain/enc-string";
+} from "@bitwarden/common/key-management/crypto/models/domain/enc-string";
+
+import { mockEnc, mockFromJson } from "../../../../spec";
 import { PasswordHistoryData } from "../../models/data/password-history.data";
 import { Password } from "../../models/domain/password";
 

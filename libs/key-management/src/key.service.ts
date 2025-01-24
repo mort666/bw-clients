@@ -15,6 +15,7 @@ import {
 import { CryptoFunctionService } from "@bitwarden/common/key-management/crypto/abstractions/crypto-function.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { KeyGenerationService } from "@bitwarden/common/key-management/crypto/abstractions/key-generation.service";
+import { HashPurpose, KeySuffixOptions } from "@bitwarden/common/key-management/crypto/enums";
 import {
   EncString,
   EncryptedString,
@@ -54,9 +55,6 @@ import { PlatformUtilsService } from "../../common/src/platform/abstractions/pla
 // FIXME: remove `src` and fix import
 // eslint-disable-next-line no-restricted-imports
 import { StateService } from "../../common/src/platform/abstractions/state.service";
-// FIXME: remove `src` and fix import
-// eslint-disable-next-line no-restricted-imports
-import { KeySuffixOptions, HashPurpose } from "../../common/src/platform/enums";
 // FIXME: remove `src` and fix import
 // eslint-disable-next-line no-restricted-imports
 import { convertValues } from "../../common/src/platform/misc/convert-values";

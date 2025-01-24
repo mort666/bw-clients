@@ -2,8 +2,9 @@
 // @ts-strict-ignore
 import { Jsonify } from "type-fest";
 
+import { EncString } from "@bitwarden/common/key-management/crypto/models/domain/enc-string";
+
 import { DeviceType } from "../../../enums";
-import { EncString } from "../../../key-management/crypto/models/domain/enc-string";
 import { BaseResponse } from "../../../models/response/base.response";
 
 export class ProtectedDeviceResponse extends BaseResponse {

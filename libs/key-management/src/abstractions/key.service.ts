@@ -21,7 +21,7 @@ import { ProfileProviderOrganizationResponse } from "../../../common/src/admin-c
 import { ProfileProviderResponse } from "../../../common/src/admin-console/models/response/profile-provider.response";
 // FIXME: remove `src` and fix import
 // eslint-disable-next-line no-restricted-imports
-import { KeySuffixOptions, HashPurpose } from "../../../common/src/platform/enums";
+import { KeySuffixOptions, HashPurpose } from "../../../common/src/key-management/crypto/enums";
 // FIXME: remove `src` and fix import
 // eslint-disable-next-line no-restricted-imports
 import { OrganizationId, UserId } from "../../../common/src/types/guid";

@@ -1,10 +1,9 @@
 import { mock, MockProxy } from "jest-mock-extended";
 
-// FIXME: remove `src` and fix import
-// eslint-disable-next-line no-restricted-imports
-import { KeyService } from "../../../../../../key-management/src/abstractions/key.service";
+import { EncryptionType } from "@bitwarden/common/key-management/crypto/enums";
+import { KeyService } from "@bitwarden/key-management";
+
 import { makeEncString, makeStaticByteArray } from "../../../../../spec";
-import { EncryptionType } from "../../../../platform/enums";
 import { Utils } from "../../../../platform/misc/utils";
 import { ContainerService } from "../../../../platform/services/container.service";
 import { UserKey, OrgKey } from "../../../../types/key";

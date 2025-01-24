@@ -2,13 +2,13 @@
 // @ts-strict-ignore
 import { Observable, concatMap, distinctUntilChanged, firstValueFrom, map } from "rxjs";
 
+import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
+import { KeyGenerationService } from "@bitwarden/common/key-management/crypto/abstractions/key-generation.service";
+import { EncArrayBuffer } from "@bitwarden/common/key-management/crypto/models/domain/enc-array-buffer";
+import { EncString } from "@bitwarden/common/key-management/crypto/models/domain/enc-string";
+import { SymmetricCryptoKey } from "@bitwarden/common/key-management/crypto/models/domain/symmetric-crypto-key";
 import { PBKDF2KdfConfig, KeyService } from "@bitwarden/key-management";
 
-import { EncryptService } from "../../../key-management/crypto/abstractions/encrypt.service";
-import { KeyGenerationService } from "../../../key-management/crypto/abstractions/key-generation.service";
-import { EncArrayBuffer } from "../../../key-management/crypto/models/domain/enc-array-buffer";
-import { EncString } from "../../../key-management/crypto/models/domain/enc-string";
-import { SymmetricCryptoKey } from "../../../key-management/crypto/models/domain/symmetric-crypto-key";
 import { I18nService } from "../../../platform/abstractions/i18n.service";
 import { Utils } from "../../../platform/misc/utils";
 import { UserId } from "../../../types/guid";

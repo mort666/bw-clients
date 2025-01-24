@@ -3,10 +3,10 @@
 import { mock, MockProxy } from "jest-mock-extended";
 import { Observable } from "rxjs";
 
+import { EncryptionType } from "@bitwarden/common/key-management/crypto/enums";
 import { EncString } from "@bitwarden/common/key-management/crypto/models/domain/enc-string";
 
 import { SymmetricCryptoKey } from "../src/key-management/crypto/models/domain/symmetric-crypto-key";
-import { EncryptionType } from "../src/platform/enums";
 import { Utils } from "../src/platform/misc/utils";
 
 function newGuid() {

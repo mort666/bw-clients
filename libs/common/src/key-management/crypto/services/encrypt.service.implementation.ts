@@ -1,10 +1,11 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { LogService } from "../../../platform/abstractions/log.service";
 import {
   EncryptionType,
   encryptionTypeToString as encryptionTypeName,
-} from "../../../platform/enums";
+} from "@bitwarden/common/key-management/crypto/enums";
+
+import { LogService } from "../../../platform/abstractions/log.service";
 import { InitializerMetadata } from "../../../platform/interfaces/initializer-metadata.interface";
 import { Utils } from "../../../platform/misc/utils";
 import { CryptoFunctionService } from "../abstractions/crypto-function.service";

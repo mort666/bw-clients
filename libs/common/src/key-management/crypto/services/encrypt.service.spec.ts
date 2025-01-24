@@ -2,10 +2,10 @@ import { mockReset, mock } from "jest-mock-extended";
 
 import { makeStaticByteArray } from "../../../../spec";
 import { LogService } from "../../../platform/abstractions/log.service";
-import { EncryptionType } from "../../../platform/enums";
 import { Utils } from "../../../platform/misc/utils";
 import { CsprngArray } from "../../../types/csprng";
 import { CryptoFunctionService } from "../abstractions/crypto-function.service";
+import { EncryptionType } from "../enums";
 import { EncArrayBuffer } from "../models/domain/enc-array-buffer";
 import { EncString } from "../models/domain/enc-string";
 import { SymmetricCryptoKey } from "../models/domain/symmetric-crypto-key";

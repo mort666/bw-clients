@@ -1,6 +1,7 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { InitializerKey } from "../../../key-management/crypto/enums/initializer-key";
+import { InitializerKey } from "@bitwarden/common/key-management/crypto/enums/initializer-key";
+
 import { View } from "../../../models/view/view";
 import { InitializerMetadata } from "../../../platform/interfaces/initializer-metadata.interface";
 import { DeepJsonify } from "../../../types/deep-jsonify";

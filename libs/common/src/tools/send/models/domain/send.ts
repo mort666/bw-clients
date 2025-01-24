@@ -2,7 +2,8 @@
 // @ts-strict-ignore
 import { Jsonify } from "type-fest";
 
-import { EncString } from "../../../../key-management/crypto/models/domain/enc-string";
+import { EncString } from "@bitwarden/common/key-management/crypto/models/domain/enc-string";
+
 import { Utils } from "../../../../platform/misc/utils";
 import Domain from "../../../../platform/models/domain/domain-base";
 import { SendType } from "../../enums/send-type";

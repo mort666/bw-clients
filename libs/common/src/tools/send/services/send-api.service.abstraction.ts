@@ -1,6 +1,7 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { EncArrayBuffer } from "../../../key-management/crypto/models/domain/enc-array-buffer";
+import { EncArrayBuffer } from "@bitwarden/common/key-management/crypto/models/domain/enc-array-buffer";
+
 import { ListResponse } from "../../../models/response/list.response";
 import { Send } from "../models/domain/send";
 import { SendAccessRequest } from "../models/request/send-access.request";

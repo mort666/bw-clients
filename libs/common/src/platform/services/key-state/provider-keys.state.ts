@@ -1,4 +1,5 @@
-import { EncryptedString } from "../../../key-management/crypto/models/domain/enc-string";
+import { EncryptedString } from "@bitwarden/common/key-management/crypto/models/domain/enc-string";
+
 import { ProviderId } from "../../../types/guid";
 import { CRYPTO_DISK, UserKeyDefinition } from "../../state";
 

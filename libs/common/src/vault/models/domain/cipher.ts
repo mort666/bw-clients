@@ -2,10 +2,11 @@
 // @ts-strict-ignore
 import { Jsonify } from "type-fest";
 
-import { InitializerKey } from "../../../key-management/crypto/enums/initializer-key";
-import { Decryptable } from "../../../key-management/crypto/interfaces/decryptable.interface";
-import { EncString } from "../../../key-management/crypto/models/domain/enc-string";
-import { SymmetricCryptoKey } from "../../../key-management/crypto/models/domain/symmetric-crypto-key";
+import { InitializerKey } from "@bitwarden/common/key-management/crypto/enums/initializer-key";
+import { Decryptable } from "@bitwarden/common/key-management/crypto/interfaces/decryptable.interface";
+import { EncString } from "@bitwarden/common/key-management/crypto/models/domain/enc-string";
+import { SymmetricCryptoKey } from "@bitwarden/common/key-management/crypto/models/domain/symmetric-crypto-key";
+
 import { Utils } from "../../../platform/misc/utils";
 import Domain from "../../../platform/models/domain/domain-base";
 import { CipherRepromptType } from "../../enums/cipher-reprompt-type";

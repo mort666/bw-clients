@@ -1,5 +1,6 @@
+import { EncryptionType } from "@bitwarden/common/key-management/crypto/enums";
+
 import { makeStaticByteArray } from "../../../../../spec";
-import { EncryptionType } from "../../../../platform/enums";
 
 import { EncArrayBuffer } from "./enc-array-buffer";
 

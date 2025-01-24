@@ -1,5 +1,6 @@
+import { EncArrayBuffer } from "@bitwarden/common/key-management/crypto/models/domain/enc-array-buffer";
+
 import { ApiService } from "../../../abstractions/api.service";
-import { EncArrayBuffer } from "../../../key-management/crypto/models/domain/enc-array-buffer";
 import { ErrorResponse } from "../../../models/response/error.response";
 import { ListResponse } from "../../../models/response/list.response";
 import {
