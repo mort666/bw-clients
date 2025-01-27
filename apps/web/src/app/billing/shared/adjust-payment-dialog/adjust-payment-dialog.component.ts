@@ -84,21 +84,20 @@ export class AdjustPaymentDialogComponent implements OnInit {
     }
 
     const request = new PaymentRequest();
+    const taxInformation = this.taxInfoComponent.getTaxInformation();
     const response = this.paymentComponent.createPaymentToken().then((result) => {
       request.paymentToken = result[0];
       request.paymentMethodType = result[1];
-      request.postalCode = this.taxInformation?.postalCode;
-      request.country = this.taxInformation?.country;
-      request.taxId = this.taxInformation?.taxId;
+      request.postalCode = taxInformation?.postalCode;
+      request.country = taxInformation?.country;
+      request.state = taxInformation?.state;
+      request.line1 = taxInformation?.line1;
+      request.line2 = taxInformation?.line2;
+      request.city = taxInformation?.city;
       if (this.organizationId == null) {
         return this.apiService.postAccountPayment(request);
       } else {
-        request.taxId = this.taxInformation?.taxId;
-        request.state = this.taxInformation?.state;
-        request.line1 = this.taxInformation?.line1;
-        request.line2 = this.taxInformation?.line2;
-        request.city = this.taxInformation?.city;
-        request.state = this.taxInformation?.state;
+        request.taxId = taxInformation?.taxId;
         return this.organizationApiService.updatePayment(this.organizationId, request);
       }
     });
