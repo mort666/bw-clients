@@ -80,27 +80,7 @@ export class NotificationsService implements NotificationsServiceAbstraction {
       this.signalrConnection = null;
     }
 
-    this.signalrConnection = new signalR.HubConnectionBuilder()
-      .withUrl(this.url + "/hub", {
-        accessTokenFactory: () => this.apiService.getActiveBearerToken(),
-        skipNegotiation: true,
-        transport: signalR.HttpTransportType.WebSockets,
-      })
-      .withHubProtocol(new signalRMsgPack.MessagePackHubProtocol() as signalR.IHubProtocol)
-      // .configureLogging(signalR.LogLevel.Trace)
-      .build();
-
-    this.signalrConnection.on("ReceiveMessage", (data: any) =>
-      this.processNotification(new NotificationResponse(data)),
-    );
-    // eslint-disable-next-line
-    this.signalrConnection.on("Heartbeat", (data: any) => {
-      /*console.log('Heartbeat!');*/
-    });
-    this.signalrConnection.onclose(async () => {
-      this.connected = false;
-      await this.reconnect(true);
-    });
+    this.signalrConnection = this.setupConnection();
     this.inited = true;
     if (await this.isAuthedAndUnlocked()) {
       await this.reconnect(false);
@@ -275,5 +255,29 @@ export class NotificationsService implements NotificationsServiceAbstraction {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  private setupConnection(): signalR.HubConnection {
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(this.url + "/hub", {
+        accessTokenFactory: () => this.apiService.getActiveBearerToken(),
+        skipNegotiation: true,
+        transport: signalR.HttpTransportType.WebSockets,
+      })
+      .withHubProtocol(new signalRMsgPack.MessagePackHubProtocol() as signalR.IHubProtocol)
+      .build();
+
+    connection.on("ReceiveMessage", (data: any) =>
+      this.processNotification(new NotificationResponse(data)),
+    );
+    connection.on("Heartbeat", (data: any) => {
+      /*console.log('Heartbeat!');*/
+    });
+    connection.onclose(async () => {
+      this.connected = false;
+      await this.reconnect(true);
+    });
+
+    return connection;
   }
 }
