@@ -228,6 +228,7 @@ export class NotificationsService implements NotificationsServiceAbstraction {
     }
 
     try {
+      this.signalrConnection = this.setupConnection();
       await this.signalrConnection.start();
       this.connected = true;
       if (sync) {
