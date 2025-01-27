@@ -193,7 +193,7 @@
         "webpack"
       ],
       "description": "Webpack related build dependencies",
-      "groupSlug": "webpack-minor-patch",
+      "groupName": "webpack minor-patch",
       "matchUpdateTypes": ["minor", "patch"]
     },
     {
