@@ -97,11 +97,9 @@ export class NotificationsService implements NotificationsServiceAbstraction {
     this.signalrConnection.on("Heartbeat", (data: any) => {
       /*console.log('Heartbeat!');*/
     });
-    this.signalrConnection.onclose(() => {
+    this.signalrConnection.onclose(async () => {
       this.connected = false;
-      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.reconnect(true);
+      await this.reconnect(true);
     });
     this.inited = true;
     if (await this.isAuthedAndUnlocked()) {
