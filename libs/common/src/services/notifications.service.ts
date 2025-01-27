@@ -25,6 +25,8 @@ import { StateService } from "../platform/abstractions/state.service";
 import { ScheduledTaskNames } from "../platform/scheduling/scheduled-task-name.enum";
 import { TaskSchedulerService } from "../platform/scheduling/task-scheduler.service";
 import { SyncService } from "../vault/abstractions/sync/sync.service.abstraction";
+import { ConfigService } from "../platform/abstractions/config/config.service";
+import { FeatureFlag } from "../enums/feature-flag.enum";
 
 export class NotificationsService implements NotificationsServiceAbstraction {
   private signalrConnection: signalR.HubConnection;
@@ -46,6 +48,7 @@ export class NotificationsService implements NotificationsServiceAbstraction {
     private authService: AuthService,
     private messagingService: MessagingService,
     private taskSchedulerService: TaskSchedulerService,
+    private configService: ConfigService,
   ) {
     this.taskSchedulerService.registerTaskHandler(
       ScheduledTaskNames.notificationsReconnectTimeout,
@@ -170,7 +173,9 @@ export class NotificationsService implements NotificationsServiceAbstraction {
         break;
       case NotificationType.SyncOrgKeys:
         if (isAuthenticated) {
-          await this.apiService.refreshIdentityToken();
+          if (this.configService.getFeatureFlag(FeatureFlag.PushSyncOrgKeysOnRevokeRestore)) {
+            await this.apiService.refreshIdentityToken();
+          }
           await this.syncService.fullSync(true);
           // Stop so a reconnect can be made
           await this.signalrConnection.stop();
@@ -228,7 +233,10 @@ export class NotificationsService implements NotificationsServiceAbstraction {
     }
 
     try {
-      this.signalrConnection = this.setupConnection();
+      if (this.configService.getFeatureFlag(FeatureFlag.PushSyncOrgKeysOnRevokeRestore)) {
+        this.signalrConnection = this.setupConnection();
+      }
+
       await this.signalrConnection.start();
       this.connected = true;
       if (sync) {
