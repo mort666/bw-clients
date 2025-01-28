@@ -892,6 +892,7 @@ const safeProviders: SafeProvider[] = [
       AuthServiceAbstraction,
       MessagingServiceAbstraction,
       TaskSchedulerService,
+      ConfigService,
     ],
   }),
   safeProvider({
