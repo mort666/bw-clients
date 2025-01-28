@@ -11,6 +11,7 @@ import { NotificationsService as NotificationsServiceAbstraction } from "../abst
 import { AuthService } from "../auth/abstractions/auth.service";
 import { AuthenticationStatus } from "../auth/enums/authentication-status";
 import { NotificationType } from "../enums";
+import { FeatureFlag } from "../enums/feature-flag.enum";
 import {
   NotificationResponse,
   SyncCipherNotification,
@@ -18,6 +19,7 @@ import {
   SyncSendNotification,
 } from "../models/response/notification.response";
 import { AppIdService } from "../platform/abstractions/app-id.service";
+import { ConfigService } from "../platform/abstractions/config/config.service";
 import { EnvironmentService } from "../platform/abstractions/environment.service";
 import { LogService } from "../platform/abstractions/log.service";
 import { MessagingService } from "../platform/abstractions/messaging.service";
@@ -25,8 +27,6 @@ import { StateService } from "../platform/abstractions/state.service";
 import { ScheduledTaskNames } from "../platform/scheduling/scheduled-task-name.enum";
 import { TaskSchedulerService } from "../platform/scheduling/task-scheduler.service";
 import { SyncService } from "../vault/abstractions/sync/sync.service.abstraction";
-import { ConfigService } from "../platform/abstractions/config/config.service";
-import { FeatureFlag } from "../enums/feature-flag.enum";
 
 export class NotificationsService implements NotificationsServiceAbstraction {
   private signalrConnection: signalR.HubConnection;
@@ -173,7 +173,7 @@ export class NotificationsService implements NotificationsServiceAbstraction {
         break;
       case NotificationType.SyncOrgKeys:
         if (isAuthenticated) {
-          if (this.configService.getFeatureFlag(FeatureFlag.PushSyncOrgKeysOnRevokeRestore)) {
+          if (await this.configService.getFeatureFlag(FeatureFlag.PushSyncOrgKeysOnRevokeRestore)) {
             await this.apiService.refreshIdentityToken();
           }
           await this.syncService.fullSync(true);
@@ -233,7 +233,7 @@ export class NotificationsService implements NotificationsServiceAbstraction {
     }
 
     try {
-      if (this.configService.getFeatureFlag(FeatureFlag.PushSyncOrgKeysOnRevokeRestore)) {
+      if (await this.configService.getFeatureFlag(FeatureFlag.PushSyncOrgKeysOnRevokeRestore)) {
         this.signalrConnection = this.setupConnection();
       }
 
