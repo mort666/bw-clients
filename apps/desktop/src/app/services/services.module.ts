@@ -324,7 +324,7 @@ const safeProviders: SafeProvider[] = [
     ],
   }),
   safeProvider({
-    provide: Fido2UserInterfaceServiceAbstraction,
+    provide: DesktopFido2UserInterfaceService,
     useClass: DesktopFido2UserInterfaceService,
     deps: [
       AuthServiceAbstraction,
@@ -335,6 +335,10 @@ const safeProviders: SafeProvider[] = [
       Router,
       DesktopSettingsService,
     ],
+  }),
+  safeProvider({
+    provide: Fido2UserInterfaceServiceAbstraction, // We utilize desktop specific methods when wiring OS API's
+    useExisting: DesktopFido2UserInterfaceService,
   }),
   safeProvider({
     provide: Fido2AuthenticatorServiceAbstraction,
