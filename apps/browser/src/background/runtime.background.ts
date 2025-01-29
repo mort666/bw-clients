@@ -16,6 +16,7 @@ import { MessagingService } from "@bitwarden/common/platform/abstractions/messag
 import { MessageListener, isExternalMessage } from "@bitwarden/common/platform/messaging";
 import { devFlagEnabled } from "@bitwarden/common/platform/misc/flags";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { BiometricsCommands } from "@bitwarden/key-management";
 
@@ -53,6 +54,7 @@ export default class RuntimeBackground {
     private accountService: AccountService,
     private readonly lockService: LockService,
     private billingAccountProfileStateService: BillingAccountProfileStateService,
+    private cipherService: CipherService,
   ) {
     // onInstalled listener must be wired up before anything else, so we do it in the ctor
     chrome.runtime.onInstalled.addListener((details: any) => {
@@ -199,6 +201,9 @@ export default class RuntimeBackground {
       }
       case BiometricsCommands.GetBiometricsStatusForUser: {
         return await this.main.biometricsService.getBiometricsStatusForUser(msg.userId);
+      }
+      case "updateLastUsedDate": {
+        return await this.cipherService.updateLastUsedDate(msg.cipherId);
       }
       case "getUseTreeWalkerApiForPageDetailsCollectionFeatureFlag": {
         return await this.configService.getFeatureFlag(

@@ -1118,6 +1118,7 @@ export default class MainBackground {
       this.accountService,
       lockService,
       this.billingAccountProfileStateService,
+      this.cipherService,
     );
     this.nativeMessagingBackground = new NativeMessagingBackground(
       this.keyService,
