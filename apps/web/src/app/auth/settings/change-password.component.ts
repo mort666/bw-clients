@@ -176,6 +176,7 @@ export class ChangePasswordComponent
             this.currentMasterPassword,
             this.masterPassword,
             user,
+            this.masterPasswordHint,
           );
         } else {
           await this.keyRotationService.rotateUserKeyAndEncryptedDataLegacy(

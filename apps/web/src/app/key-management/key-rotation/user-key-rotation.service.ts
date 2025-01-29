@@ -72,6 +72,7 @@ export class UserKeyRotationService {
     oldMasterPassword: string,
     newMasterPassword: string,
     user: Account,
+    newMasterPasswordHint?: string,
   ): Promise<void> {
     this.logService.info("[Userkey rotation] Starting user key rotation...");
     if (!newMasterPassword) {
@@ -119,6 +120,7 @@ export class UserKeyRotationService {
       email,
       newMasterKeyAuthenticationHash,
       newMasterKeyEncryptedUserKey.encryptedString,
+      newMasterPasswordHint,
     );
     const { privateKey, publicKey } = await firstValueFrom(
       this.keyService.userEncryptionKeyPair$(user.id),

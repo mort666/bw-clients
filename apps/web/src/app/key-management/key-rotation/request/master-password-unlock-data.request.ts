@@ -11,11 +11,14 @@ export class MasterPasswordUnlockDataRequest {
 
   masterKeyEncryptedUserKey: string;
 
+  masterPasswordHint?: string;
+
   constructor(
     kdfConfig: KdfConfig,
     email: string,
     masterKeyAuthenticationHash: string,
     masterKeyEncryptedUserKey: string,
+    masterPasswordHash?: string,
   ) {
     this.kdfType = kdfConfig.kdfType;
     this.kdfIterations = kdfConfig.iterations;
@@ -27,5 +30,6 @@ export class MasterPasswordUnlockDataRequest {
     this.email = email;
     this.masterKeyAuthenticationHash = masterKeyAuthenticationHash;
     this.masterKeyEncryptedUserKey = masterKeyEncryptedUserKey;
+    this.masterPasswordHint = masterPasswordHash;
   }
 }
