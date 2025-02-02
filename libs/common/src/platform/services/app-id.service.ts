@@ -13,7 +13,6 @@ export class AppIdService implements AppIdServiceAbstraction {
   ) {}
 
   async getAppId(): Promise<string> {
-    this.logService.info("Retrieving application id");
     return await this.getEnsuredValue(APP_ID_KEY);
   }
 
