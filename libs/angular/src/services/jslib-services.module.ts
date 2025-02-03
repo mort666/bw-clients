@@ -890,6 +890,8 @@ const safeProviders: SafeProvider[] = [
       SignalRConnectionService,
       AuthServiceAbstraction,
       WebPushConnectionService,
+      ApiServiceAbstraction,
+      ConfigService,
     ],
   }),
   safeProvider({
