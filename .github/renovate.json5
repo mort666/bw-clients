@@ -4,11 +4,34 @@
   enabledManagers: ["cargo", "github-actions", "npm"],
   packageRules: [
     {
+      // Ignore all patch updates for GitHub Actions
+      matchManagers: ["github-actions"],
+      updateTypes: ["patch"],
+      enabled: false,
+    },
+    {
       // Group all build/test/lint workflows for GitHub Actions together for Platform
       // Since they are code owners we don't need to assign a review team in Renovate
       groupName: "github-action minor",
       matchManagers: ["github-actions"],
-      matchFileNames: ["workflows/build/**", "workflows/test/**", "workflows/lint/**"],
+      matchFileNames: [
+        "./github/workflows/automatic-issue-responses.yml",
+        "./github/workflows/automatic-pull-request-responses.yml",
+        "./github/workflows/build-browser.yml",
+        "./github/workflows/build-cli.yml",
+        "./github/workflows/build-desktop.yml",
+        "./github/workflows/build-web.yml",
+        "./github/workflows/chromatic.yml",
+        "./github/workflows/crowdin-pull.yml",
+        "./github/workflows/enforce-labels.yml",
+        "./github/workflows/lint.yml",
+        "./github/workflows/locales-lint.yml",
+        "./github/workflows/repository-management.yml",
+        "./github/workflows/scan.yml",
+        "./github/workflows/stale-bot.yml",
+        "./github/workflows/test.yml",
+        "./github/workflows/version-auto-bump.yml",
+      ],
       matchUpdateTypes: ["minor"],
       commitMessagePrefix: "[deps] Platform:",
     },
@@ -17,15 +40,21 @@
       // Since they are code owners we don't need to assign a review team in Renovate
       groupName: "github-action minor",
       matchManagers: ["github-actions"],
-      matchFileNames: ["workflows/release/**"],
+      matchFileNames: [
+        "./github/workflows/brew-bump-desktop.yml",
+        "./github/workflows/deploy-web.yml",
+        "./github/workflows/publish-cli.yml",
+        "./github/workflows/publish-desktop.yml",
+        "./github/workflows/publish-web.yml",
+        "./github/workflows/retrieve-current-desktop-rollout.yml",
+        "./github/workflows/staged-rollout-desktop.yml",
+        "./github/workflows/release-cli.yml",
+        "./github/workflows/release-desktop-beta.yml",
+        "./github/workflows/release-desktop.yml",
+        "./github/workflows/release-web.yml",
+      ],
       matchUpdateTypes: ["minor"],
       commitMessagePrefix: "[deps] BRE:",
-    },
-    {
-      // Ignore all patch updates for GitHub Actions
-      matchManagers: ["github-actions"],
-      updateTypes: ["patch"],
-      enabled: false,
     },
     {
       // The desktop_native module is code-owned by Platform, so we're applying the Platform
