@@ -63,18 +63,20 @@
       commitMessagePrefix: "[deps] Platform:",
     },
     {
-      groupName: "napi",
-      matchPackageNames: ["napi", "napi-build", "napi-derive"],
-    },
-    {
+      // Disable major and minor updates for TypeScript and Zone.js because they are managed by Angular
       matchPackageNames: ["typescript", "zone.js"],
       matchUpdateTypes: ["major", "minor"],
       description: "Determined by Angular",
       enabled: false,
     },
     {
+      // Enable patch updates for TypeScript and Zone.js
       matchPackageNames: ["typescript", "zone.js"],
       matchUpdateTypes: "patch",
+    },
+    {
+      groupName: "napi",
+      matchPackageNames: ["napi", "napi-build", "napi-derive"],
     },
     {
       groupName: "jest",
