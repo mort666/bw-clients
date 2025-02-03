@@ -646,6 +646,10 @@ jobs:
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
 
+      - name: Show Certificates
+        run: |
+          /usr/bin/security find-identity -v -p codesigning
+
       - name: Increment version
         shell: pwsh
         env:
