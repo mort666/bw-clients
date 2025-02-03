@@ -4,10 +4,22 @@
   enabledManagers: ["cargo", "github-actions", "npm"],
   packageRules: [
     {
-      // Group all minor updates for GitHub Actions together
+      // Group all build/test/lint workflows for GitHub Actions together for Platform
+      // Since they are code owners we don't need to assign a review team in Renovate
       groupName: "github-action minor",
       matchManagers: ["github-actions"],
+      matchFileNames: ["workflows/build/**", "workflows/test/**", "workflows/lint/**"],
       matchUpdateTypes: ["minor"],
+      commitMessagePrefix: "[deps] Platform:",
+    },
+    {
+      // Group all release-related workflows for GitHub Actions together for BRE
+      // Since they are code owners we don't need to assign a review team in Renovate
+      groupName: "github-action minor",
+      matchManagers: ["github-actions"],
+      matchFileNames: ["workflows/release/**"],
+      matchUpdateTypes: ["minor"],
+      commitMessagePrefix: "[deps] BRE:",
     },
     {
       // Ignore all patch updates for GitHub Actions
