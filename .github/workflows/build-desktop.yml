@@ -648,7 +648,7 @@ jobs:
 
       - name: Show Certificates
         run: |
-          /usr/bin/security find-identity -v -p codesigning
+          security find-identity -v -p codesigning
 
       - name: Increment version
         shell: pwsh
