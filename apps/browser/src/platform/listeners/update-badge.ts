@@ -5,6 +5,7 @@ import { firstValueFrom } from "rxjs";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
 import { BadgeSettingsServiceAbstraction } from "@bitwarden/common/autofill/services/badge-settings.service";
+import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 
@@ -22,6 +23,7 @@ export class UpdateBadge {
   private authService: AuthService;
   private badgeSettingsService: BadgeSettingsServiceAbstraction;
   private cipherService: CipherService;
+  private environmentService: EnvironmentService;
   private badgeAction: typeof chrome.action | typeof chrome.browserAction;
   private sidebarAction: OperaSidebarAction | FirefoxSidebarAction;
   private win: Window & typeof globalThis;
@@ -31,6 +33,7 @@ export class UpdateBadge {
     this.sidebarAction = BrowserApi.getSidebarAction(self);
     this.win = win;
 
+    this.environmentService = services.environmentService;
     this.badgeSettingsService = services.badgeSettingsService;
     this.authService = services.authService;
     this.cipherService = services.cipherService;
@@ -38,9 +41,19 @@ export class UpdateBadge {
 
   async run(opts?: { tabId?: number; windowId?: number }): Promise<void> {
     const authStatus = await this.authService.getAuthStatus();
+    const environment = await firstValueFrom(this.environmentService.cloudWebVaultUrl$);
 
     await this.setBadgeBackgroundColor();
 
+    const tab = await this.getTab(opts?.tabId, opts?.windowId);
+    await this.setAuthStatusBadge(authStatus, tab);
+    if (tab?.url?.startsWith(environment)) {
+      await this.setValidWebVaultBadge(authStatus, tab);
+      return;
+    }
+  }
+
+  async setAuthStatusBadge(authStatus: AuthenticationStatus, tab: chrome.tabs.Tab) {
     switch (authStatus) {
       case AuthenticationStatus.LoggedOut: {
         await this.setLoggedOut();
@@ -51,10 +64,18 @@ export class UpdateBadge {
         break;
       }
       case AuthenticationStatus.Unlocked: {
-        const tab = await this.getTab(opts?.tabId, opts?.windowId);
         await this.setUnlocked({ tab, windowId: tab?.windowId });
         break;
       }
+    }
+  }
+
+  async setValidWebVaultBadge(authStatus: AuthenticationStatus, tab: chrome.tabs.Tab) {
+    if (authStatus === AuthenticationStatus.Unlocked) {
+      await this.setUnlocked({ tab, windowId: tab?.windowId });
+    } else {
+      await this.setBadgeIcon("_gray", tab.windowId);
+      await this.clearBadgeText();
     }
   }
 
