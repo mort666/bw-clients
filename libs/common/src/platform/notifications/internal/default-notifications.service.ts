@@ -188,6 +188,7 @@ export class DefaultNotificationsService implements NotificationsServiceAbstract
         break;
       case NotificationType.SyncOrgKeys:
         if (await this.configService.getFeatureFlag(FeatureFlag.PushSyncOrgKeysOnRevokeRestore)) {
+          // Refresh the identity token to ensure organization roles in JWT claims are up-to-date
           await this.apiService.refreshIdentityToken();
         }
         await this.syncService.fullSync(true);
