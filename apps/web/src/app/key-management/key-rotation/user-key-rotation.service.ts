@@ -146,6 +146,10 @@ export class UserKeyRotationService {
       newUnencryptedUserKey,
       user.id,
     );
+    if (rotatedCiphers == null || rotatedFolders == null || rotatedSends == null) {
+      this.logService.info("[Userkey rotation] ciphers, folders, or sends are null. Aborting!");
+      throw new Error("ciphers, folders, or sends are null");
+    }
     const accountDataRequest = new UserDataRequest(rotatedCiphers, rotatedFolders, rotatedSends);
 
     const emergencyAccessUnlockData = await this.emergencyAccessService.getRotatedData(
