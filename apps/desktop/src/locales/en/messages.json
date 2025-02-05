@@ -3430,5 +3430,8 @@
   },
   "changeAcctEmail": {
     "message": "Change account email"
+  },
+  "passkeyLogin":{
+    "message": "Log in with passkey?"
   }
 }

@@ -76,9 +76,12 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     private desktopSettingsService: DesktopSettingsService,
   ) {}
 
-  pickCredential: (
+  async pickCredential(
     params: PickCredentialParams,
-  ) => Promise<{ cipherId: string; userVerified: boolean }>;
+  ): Promise<{ cipherId: string; userVerified: boolean }> {
+    // Add your implementation here
+    return { cipherId: "", userVerified: false };
+  }
 
   private confirmCredentialSubject = new Subject<void>();
   private createdCipher: Cipher;
@@ -119,7 +122,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     );
 
     try {
-      await this.showUi();
+      await this.showUi(rpId);
 
       // Wait for the UI to wrap up
       await this.waitForUiCredentialConfirmation();
@@ -147,11 +150,14 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     }
   }
 
-  private async showUi() {
+  private async showUi(rpId?: string) {
     // Load the UI:
     // maybe toggling to modal mode shouldn't be done here?
     await this.desktopSettingsService.setInModalMode(true);
-    await this.router.navigate(["/passkeys"]);
+    //pass the rpid to the fido2placeholder component through routing parameter
+
+    // await this.router.navigate(["/passkeys"]);
+    await this.router.navigate(["/passkeys"], { state: { rpid: rpId } });
   }
 
   /**

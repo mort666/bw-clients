@@ -10,7 +10,7 @@ import {
   shareReplay,
   Subject,
   switchMap,
-  tap,
+  //tap,
 } from "rxjs";
 import { SemVer } from "semver";
 
@@ -142,7 +142,7 @@ export class CipherService implements CipherServiceAbstraction {
     this.cipherViews$ = combineLatest([this.encryptedCiphersState.state$, this.localData$]).pipe(
       filter(([ciphers]) => ciphers != null), // Skip if ciphers haven't been loaded yor synced yet
       switchMap(() => merge(this.forceCipherViews$, this.getAllDecrypted())),
-      tap((v) => console.log("---- cipherViews$", v)),
+      // tap((v) => console.log("---- cipherViews$", v)),
       shareReplay({ bufferSize: 1, refCount: true }),
     );
     this.addEditCipherInfo$ = this.addEditCipherInfoState.state$;
@@ -1630,6 +1630,15 @@ export class CipherService implements CipherServiceAbstraction {
     } else {
       return this.sortedCiphersCache.getNext(cacheKey);
     }
+  }
+
+  async getPasskeyCiphersForUrl(url: string): Promise<CipherView[]> {
+    let ciphers = await this.getAllDecryptedForUrl(url);
+    if (!ciphers) {
+      return null;
+    }
+    ciphers = ciphers.filter((cipher) => cipher.login.fido2Credentials?.length);
+    return ciphers;
   }
 
   private async clearEncryptedCiphersState(userId: UserId) {

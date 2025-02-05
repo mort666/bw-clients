@@ -62,9 +62,9 @@ import { SsoComponentV1 } from "../auth/sso-v1.component";
 import { TwoFactorAuthComponent } from "../auth/two-factor-auth.component";
 import { TwoFactorComponent } from "../auth/two-factor.component";
 import { UpdateTempPasswordComponent } from "../auth/update-temp-password.component";
+import { Fido2VaultComponent } from "../modal/passkeys/fido2-vault.component";
 import { VaultComponent } from "../vault/app/vault/vault.component";
 
-import { Fido2PlaceholderComponent } from "./components/fido2placeholder.component";
 import { SendComponent } from "./tools/send/send.component";
 
 /**
@@ -334,7 +334,11 @@ const routes: Routes = [
   ),
   {
     path: "passkeys",
-    component: Fido2PlaceholderComponent,
+    component: Fido2VaultComponent,
+  },
+  {
+    path: "create-passkey",
+    component: Fido2VaultComponent,
   },
   {
     path: "",
