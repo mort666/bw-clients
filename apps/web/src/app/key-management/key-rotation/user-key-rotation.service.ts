@@ -3,12 +3,9 @@
 import { Injectable } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 
-import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { VaultTimeoutService } from "@bitwarden/common/abstractions/vault-timeout/vault-timeout.service";
 import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { DeviceTrustServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust.service.abstraction";
-import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/auth/abstractions/master-password.service.abstraction";
-import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { VerificationType } from "@bitwarden/common/auth/enums/verification-type";
 import { MasterPasswordVerification } from "@bitwarden/common/auth/types/verification";
@@ -24,7 +21,7 @@ import { UserKey } from "@bitwarden/common/types/key";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
-import { DialogService, ToastService } from "@bitwarden/components";
+import { ToastService } from "@bitwarden/components";
 import { KeyService } from "@bitwarden/key-management";
 
 import { OrganizationUserResetPasswordService } from "../../admin-console/organizations/members/services/organization-user-reset-password/organization-user-reset-password.service";
@@ -56,12 +53,8 @@ export class UserKeyRotationService {
     private webauthnLoginAdminService: WebauthnLoginAdminService,
     private logService: LogService,
     private vaultTimeoutService: VaultTimeoutService,
-    private dialogService: DialogService,
-    private fullApiService: ApiService,
-    private tokenService: TokenService,
     private toastService: ToastService,
     private i18nService: I18nService,
-    private masterPasswordService: InternalMasterPasswordServiceAbstraction,
   ) {}
 
   /**
