@@ -205,6 +205,7 @@ export class UserKeyRotationService {
   /**
    * Creates a new user key and re-encrypts all required data with the it.
    * @param masterPassword current master password (used for validation)
+   * @deprecated
    */
   async rotateUserKeyAndEncryptedDataLegacy(masterPassword: string, user: Account): Promise<void> {
     this.logService.info("[Userkey rotation] Starting legacy user key rotation...");
