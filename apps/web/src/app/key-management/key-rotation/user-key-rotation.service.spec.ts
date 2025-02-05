@@ -8,8 +8,8 @@ import { VaultTimeoutService } from "@bitwarden/common/abstractions/vault-timeou
 import { DeviceTrustServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust.service.abstraction";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { WebauthnRotateCredentialRequest } from "@bitwarden/common/auth/models/request/webauthn-rotate-credential.request";
+import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
-import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
@@ -47,14 +47,17 @@ describe("KeyRotationService", () => {
   let mockResetPasswordService: MockProxy<OrganizationUserResetPasswordService>;
   let mockDeviceTrustService: MockProxy<DeviceTrustServiceAbstraction>;
   let mockKeyService: MockProxy<KeyService>;
-  let mockEncryptService: MockProxy<EncryptService>;
+  let mock
+  
+  : MockProxy<EncryptService>;
   let mockConfigService: MockProxy<ConfigService>;
   let mockSyncService: MockProxy<SyncService>;
   let mockWebauthnLoginAdminService: MockProxy<WebauthnLoginAdminService>;
   let mockLogService: MockProxy<LogService>;
   let mockVaultTimeoutService: MockProxy<VaultTimeoutService>;
   let mockToastService: MockProxy<ToastService>;
-  let mockI18nService: MockProxy<I18nService>;
+  let mock
+  Service: MockProxy<I18nService>;
 
   const mockUser = {
     id: "mockUserId" as UserId,
