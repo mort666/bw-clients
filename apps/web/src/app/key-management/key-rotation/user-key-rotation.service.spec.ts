@@ -47,17 +47,14 @@ describe("KeyRotationService", () => {
   let mockResetPasswordService: MockProxy<OrganizationUserResetPasswordService>;
   let mockDeviceTrustService: MockProxy<DeviceTrustServiceAbstraction>;
   let mockKeyService: MockProxy<KeyService>;
-  let mock
-  
-  : MockProxy<EncryptService>;
+  let mockEncryptService: MockProxy<EncryptService>;
   let mockConfigService: MockProxy<ConfigService>;
   let mockSyncService: MockProxy<SyncService>;
   let mockWebauthnLoginAdminService: MockProxy<WebauthnLoginAdminService>;
   let mockLogService: MockProxy<LogService>;
   let mockVaultTimeoutService: MockProxy<VaultTimeoutService>;
   let mockToastService: MockProxy<ToastService>;
-  let mock
-  Service: MockProxy<I18nService>;
+  let mockI18nService: MockProxy<I18nService>;
 
   const mockUser = {
     id: "mockUserId" as UserId,
