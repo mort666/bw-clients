@@ -651,13 +651,11 @@ jobs:
 
       - name: Set up provisioning profiles
         run: |
-          mkdir -p $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles
-
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
           
           cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
-            $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles/bitwarden_desktop_autofill_app_store_2024.provisionprofile
+            $GITHUB_WORKSPACE/apps/desktop/macos/bitwarden_desktop_autofill_app_store_2024.provisionprofile
 
       - name: Increment version
         shell: pwsh
@@ -849,13 +847,11 @@ jobs:
 
       - name: Set up provisioning profiles
         run: |
-          mkdir -p $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles
-          
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
           
           cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
-            $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles/bitwarden_desktop_autofill_app_store_2024.provisionprofile
+            $GITHUB_WORKSPACE/apps/desktop/macos/bitwarden_desktop_autofill_app_store_2024.provisionprofile
 
       - name: Increment version
         shell: pwsh
@@ -1106,14 +1102,12 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PASSWORD build.keychain
 
       - name: Set up provisioning profiles
-        run: |
-          mkdir -p $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles
-        
+        run: |        
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
           
           cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
-            $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles/bitwarden_desktop_autofill_app_store_2024.provisionprofile
+            $GITHUB_WORKSPACE/apps/desktop/macos/bitwarden_desktop_autofill_app_store_2024.provisionprofile
 
       - name: Increment version
         shell: pwsh
@@ -1373,13 +1367,11 @@ jobs:
 
       - name: Set up provisioning profiles
         run: |
-          mkdir -p $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles
-        
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
           
           cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
-            $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles/bitwarden_desktop_autofill_app_store_2024.provisionprofile
+            $GITHUB_WORKSPACE/apps/desktop/macos/bitwarden_desktop_autofill_app_store_2024.provisionprofile
 
       - name: Increment version
         shell: pwsh
