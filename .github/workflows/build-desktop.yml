@@ -591,6 +591,11 @@ jobs:
             --file $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             --output none
 
+          az storage blob download --account-name $ACCOUNT_NAME --container-name $CONTAINER_NAME \
+            --name bitwarden_desktop_autofill_app_store_2024.provisionprofile \
+            --file $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
+            --output none
+
       - name: Get certificates
         run: |
           mkdir -p $HOME/certificates
@@ -646,10 +651,13 @@ jobs:
 
       - name: Set up provisioning profiles
         run: |
+          mkdir -p $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles
+
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
-
-          ls $HOME/secrets
+          
+          cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
+            $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles/bitwarden_desktop_autofill_app_store_2024.provisionprofile
 
       - name: Increment version
         shell: pwsh
@@ -783,6 +791,11 @@ jobs:
             --file $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             --output none
 
+          az storage blob download --account-name $ACCOUNT_NAME --container-name $CONTAINER_NAME \
+            --name bitwarden_desktop_autofill_app_store_2024.provisionprofile \
+            --file $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
+            --output none
+
       - name: Get certificates
         run: |
           mkdir -p $HOME/certificates
@@ -836,8 +849,13 @@ jobs:
 
       - name: Set up provisioning profiles
         run: |
+          mkdir -p $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles
+          
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
+          
+          cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
+            $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles/bitwarden_desktop_autofill_app_store_2024.provisionprofile
 
       - name: Increment version
         shell: pwsh
@@ -1031,6 +1049,11 @@ jobs:
             --file $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             --output none
 
+          az storage blob download --account-name $ACCOUNT_NAME --container-name $CONTAINER_NAME \
+            --name bitwarden_desktop_autofill_app_store_2024.provisionprofile \
+            --file $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
+            --output none
+
       - name: Get certificates
         run: |
           mkdir -p $HOME/certificates
@@ -1084,8 +1107,13 @@ jobs:
 
       - name: Set up provisioning profiles
         run: |
+          mkdir -p $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles
+        
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
+          
+          cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
+            $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles/bitwarden_desktop_autofill_app_store_2024.provisionprofile
 
       - name: Increment version
         shell: pwsh
@@ -1287,6 +1315,11 @@ jobs:
             --file $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             --output none
 
+          az storage blob download --account-name $ACCOUNT_NAME --container-name $CONTAINER_NAME \
+            --name bitwarden_desktop_autofill_app_store_2024.provisionprofile \
+            --file $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
+            --output none
+
       - name: Get certificates
         run: |
           mkdir -p $HOME/certificates
@@ -1340,8 +1373,13 @@ jobs:
 
       - name: Set up provisioning profiles
         run: |
+          mkdir -p $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles
+        
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
+          
+          cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
+            $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles/bitwarden_desktop_autofill_app_store_2024.provisionprofile
 
       - name: Increment version
         shell: pwsh
