@@ -29,10 +29,10 @@ async function buildMacOs() {
     "-configuration",
     "Release",
     // Uncomment when signing is fixed
-    // "-xcconfig",
-    // paths.macOsConfig,
-    "PROVISIONING_PROFILE=$HOME/secrets/bitwarden_desktop_appstore.provisionprofile",
-    "CODE_SIGN_IDENTITY=4B9662CAB74E8E4F4ECBDD9EDEF2543659D95E3C",
+    "-xcconfig",
+    paths.macOsConfig,
+    // "PROVISIONING_PROFILE=$HOME/secrets/bitwarden_desktop_appstore.provisionprofile",
+    // "CODE_SIGN_IDENTITY=4B9662CAB74E8E4F4ECBDD9EDEF2543659D95E3C",
   ]);
   stdOutProc(proc);
   await new Promise((resolve, reject) =>
