@@ -649,6 +649,8 @@ jobs:
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
 
+          ls $HOME/secrets
+
       - name: Increment version
         shell: pwsh
         env:
