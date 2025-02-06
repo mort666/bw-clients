@@ -7,8 +7,10 @@
       <div class="tw-flex tw-items-center">
         <bit-icon [icon]="Icons.BitwardenShield" class="tw-w-10 tw-mt-2 tw-ml-2"></bit-icon>
 
-        <h2 bitTypography="h6">{{ "passkeyLogin" | i18n }}Log in with passkey?</h2>
+        <h2 bitTypography="h6">{{ "savePasskeyQuestion" | i18n }}</h2>
       </div>
+      <bit-search></bit-search>
+
       <button
         type="button"
         bitIconButton="bwi-close"

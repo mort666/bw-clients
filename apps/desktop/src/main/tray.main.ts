@@ -219,6 +219,6 @@ export class TrayMain {
   }
 
   private async fakePopupCreate() {
-    await this.messagingService.send("loadurl", { url: "/passkeys", modal: true });
+    await this.messagingService.send("loadurl", { url: "/create-passkey", modal: true });
   }
 }

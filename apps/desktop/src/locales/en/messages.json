@@ -3433,5 +3433,8 @@
   },
   "passkeyLogin":{
     "message": "Log in with passkey?"
+  },
+  "savePasskeyQuestion": {
+    "message": "Save passkey?"
   }
 }

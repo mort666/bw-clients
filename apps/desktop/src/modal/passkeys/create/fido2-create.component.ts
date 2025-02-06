@@ -4,6 +4,7 @@ import { RouterModule, Router } from "@angular/router";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
+import { CipherType } from "@bitwarden/common/vault/enums/cipher-type";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
   BadgeModule,
@@ -14,6 +15,7 @@ import {
   SectionComponent,
   TableModule,
 } from "@bitwarden/components";
+import { SearchComponent } from "@bitwarden/components/src/search/search.component";
 
 import { BitwardenShield } from "../../../../../../libs/auth/src/angular/icons";
 import { BitIconButtonComponent } from "../../../../../../libs/components/src/icon-button/icon-button.component";
@@ -40,10 +42,11 @@ import { DesktopSettingsService } from "../../../platform/services/desktop-setti
     SectionComponent,
     ItemModule,
     BadgeModule,
+    SearchComponent,
   ],
-  templateUrl: "fido2-vault.component.html",
+  templateUrl: "fido2-create.component.html",
 })
-export class Fido2VaultComponent implements OnInit {
+export class Fido2CreateComponent implements OnInit {
   ciphers: CipherView[];
   rpId: string;
   readonly Icons = { BitwardenShield };
@@ -59,11 +62,23 @@ export class Fido2VaultComponent implements OnInit {
   async ngOnInit() {
     this.rpId = history.state.rpid;
     this.session = this.fido2UserInterfaceService.getCurrentSession();
-    if (this.rpId !== null) {
-      this.ciphers = await this.cipherService.getPasskeyCiphersForUrl(this.rpId);
-    } else {
-      this.ciphers = await this.cipherService.getAllDecrypted();
+
+    if (!this.session) {
+      await this.fido2UserInterfaceService.newSession(false, null);
+      this.session = this.fido2UserInterfaceService.getCurrentSession();
     }
+    let allCiphers = [];
+
+    if (this.rpId) {
+      allCiphers = await this.cipherService.getAllDecryptedForUrl(this.rpId, [CipherType.Login]);
+    } else {
+      allCiphers = await this.cipherService.getAllDecrypted();
+    }
+
+    //filter all ciphers to only return login ciphers without fido2Credentials
+    this.ciphers = allCiphers.filter((cipher) => {
+      return cipher.type === CipherType.Login && cipher.login.fido2Credentials.length === 0;
+    });
   }
 
   async confirmPasskey() {

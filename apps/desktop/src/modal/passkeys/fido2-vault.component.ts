@@ -3,6 +3,7 @@ import { Component, OnInit } from "@angular/core";
 import { RouterModule, Router } from "@angular/router";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
@@ -53,13 +54,22 @@ export class Fido2VaultComponent implements OnInit {
     private readonly desktopSettingsService: DesktopSettingsService,
     private readonly fido2UserInterfaceService: DesktopFido2UserInterfaceService,
     private readonly cipherService: CipherService,
+    private readonly authService: AuthService,
     private readonly router: Router,
   ) {}
+
+  //function firings after init
 
   async ngOnInit() {
     this.rpId = history.state.rpid;
     this.session = this.fido2UserInterfaceService.getCurrentSession();
-    if (this.rpId !== null) {
+
+    if (!this.session) {
+      await this.fido2UserInterfaceService.newSession(false, null);
+      this.session = this.fido2UserInterfaceService.getCurrentSession();
+    }
+
+    if (this.rpId) {
       this.ciphers = await this.cipherService.getPasskeyCiphersForUrl(this.rpId);
     } else {
       this.ciphers = await this.cipherService.getAllDecrypted();
@@ -96,7 +106,7 @@ export class Fido2VaultComponent implements OnInit {
   }
 
   async closeModal() {
-    await this.router.navigate(["/"]);
-    await this.desktopSettingsService.setInModalMode(false);
+    // await this.router.navigate(["/"]);
+    // await this.desktopSettingsService.setInModalMode(false);
   }
 }
