@@ -26,6 +26,19 @@ describe("EncryptService", () => {
     encryptService = new EncryptServiceImplementation(cryptoFunctionService, logService, true);
   });
 
+  describe("encrypt", () => {
+    it("throws if no key is provided", () => {
+      return expect(encryptService.encrypt(null, null)).rejects.toThrow(
+        "No encryption key provided.",
+      );
+    });
+    it("returns null if no data is provided", async () => {
+      const key = mock<SymmetricCryptoKey>();
+      const actual = await encryptService.encrypt(null, key);
+      expect(actual).toBeNull();
+    });
+  });
+
   describe("encryptToBytes", () => {
     const plainValue = makeStaticByteArray(16, 1);
     const iv = makeStaticByteArray(16, 30);
@@ -142,6 +155,25 @@ describe("EncryptService", () => {
 
       expect(actual).toBeNull();
       expect(cryptoFunctionService.aesDecrypt).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("decryptToUtf8", () => {
+    it("throws if no key is provided", () => {
+      return expect(encryptService.decryptToUtf8(null, null)).rejects.toThrow(
+        "No key provided for decryption.",
+      );
+    });
+    it("returns null if key is mac key but encstring has no mac", async () => {
+      const key = new SymmetricCryptoKey(
+        makeStaticByteArray(64, 0),
+        EncryptionType.AesCbc256_HmacSha256_B64,
+      );
+      const encString = new EncString(EncryptionType.AesCbc256_B64, "data");
+
+      const actual = await encryptService.decryptToUtf8(encString, key);
+      expect(actual).toBeNull();
+      expect(logService.error).toHaveBeenCalled();
     });
   });
 
