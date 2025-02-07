@@ -851,7 +851,7 @@ describe("keyService", () => {
       return [fakeUserKey, fakeMasterKey];
     }
 
-    it("returns null private key is null", async () => {
+    it("returns null when private key is null", async () => {
       setupKeys({ makeMasterKey: false, makeUserKey: false });
 
       keyService.userPrivateKey$ = jest.fn().mockReturnValue(new BehaviorSubject(null));
