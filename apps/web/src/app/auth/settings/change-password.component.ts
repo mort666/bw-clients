@@ -156,7 +156,7 @@ export class ChangePasswordComponent
         title: this.i18nService.t("errorOccurred"),
         message: this.i18nService.t("masterPasswordRequired"),
       });
-      return false;
+      return;
     }
 
     this.loading = true;

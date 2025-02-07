@@ -59,7 +59,10 @@ export class UserKeyRotationService {
 
   /**
    * Creates a new user key and re-encrypts all required data with the it.
-   * @param masterPassword current master password (used for validation)
+   * @param oldMasterPassword: The current master password
+   * @param newMasterPassword: The new master password
+   * @param user: The user account
+   * @param newMasterPasswordHint: The hint for the new master password
    */
   async rotateUserKeyMasterPasswordAndEncryptedData(
     oldMasterPassword: string,
