@@ -143,7 +143,9 @@ export class ChangePasswordComponent
 
   async submit() {
     if (this.userkeyRotationV2) {
+      this.loading = true;
       await this.submitNew();
+      this.loading = false;
     } else {
       await this.submitOld();
     }
@@ -159,7 +161,6 @@ export class ChangePasswordComponent
       return;
     }
 
-    this.loading = true;
     if (
       this.masterPasswordHint != null &&
       this.masterPasswordHint.toLowerCase() === this.masterPassword.toLowerCase()
@@ -169,7 +170,6 @@ export class ChangePasswordComponent
         title: this.i18nService.t("errorOccurred"),
         message: this.i18nService.t("hintEqualsPassword"),
       });
-      this.loading = false;
       return;
     }
 
@@ -179,7 +179,6 @@ export class ChangePasswordComponent
     }
 
     if (!(await this.strongPassword())) {
-      this.loading = false;
       return;
     }
 
@@ -203,7 +202,6 @@ export class ChangePasswordComponent
         message: e.message,
       });
     }
-    this.loading = false;
   }
 
   // todo: move this to a service
