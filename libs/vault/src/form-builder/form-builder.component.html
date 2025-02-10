@@ -1,0 +1,17 @@
+<div [formGroup]="formGroup">
+  @for (section of config; track $index) {
+    <bit-section>
+      <bit-section-header>
+        <h2 bitTypography="h6">{{ section.label }}</h2>
+      </bit-section-header>
+      <bit-card>
+        @for (input of section.items; track $index) {
+          <vault-builder-field
+            [config]="input"
+            [control]="formGroup.get(input.property)"
+          ></vault-builder-field>
+        }
+      </bit-card>
+    </bit-section>
+  }
+</div>
