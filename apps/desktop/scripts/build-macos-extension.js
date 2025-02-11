@@ -30,10 +30,8 @@ async function buildMacOs() {
     "-configuration",
     "Release",
     // Uncomment when signing is fixed
-    // "-xcconfig",
-    // paths.macOsConfig,
-    "PROVISIONING_PROFILE=" + paths.macOsProvisioningProfile,
-    "CODE_SIGN_IDENTITY=4B9662CAB74E8E4F4ECBDD9EDEF2543659D95E3C",
+    "-xcconfig",
+    paths.macOsConfig,
   ]);
   stdOutProc(proc);
   await new Promise((resolve, reject) =>

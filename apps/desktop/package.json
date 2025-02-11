@@ -39,6 +39,7 @@
     "pack:mac": "npm run clean:dist && electron-builder --mac --universal -p never",
     "pack:mac:arm64": "npm run clean:dist && electron-builder --mac --arm64 -p never",
     "pack:mac:mas": "npm run clean:dist && electron-builder --mac mas --universal -p never",
+    "pack:mac:mas:with-extension": "npm run clean:dist && npm run build:macos-extension && electron-builder --mac mas --universal -p never",
     "pack:mac:masdev": "npm run clean:dist && electron-builder --mac mas-dev --universal -p never",
     "pack:mac:masdev:with-extension": "npm run clean:dist && npm run build:macos-extension && electron-builder --mac mas-dev --universal -p never",
     "pack:win": "npm run clean:dist && electron-builder --win --x64 --arm64 --ia32 -p never -c.win.certificateSubjectName=\"8bit Solutions LLC\"",

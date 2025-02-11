@@ -850,8 +850,9 @@ jobs:
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
           
+          export AUTOFILL_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
           cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
-            $GITHUB_WORKSPACE/apps/desktop/macos/bitwarden_desktop_autofill_app_store_2024.provisionprofile
+            $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles/${AUTOFILL_UUID}.provisionprofile
 
       - name: Increment version
         shell: pwsh
@@ -1106,8 +1107,10 @@ jobs:
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
           
+          mkdir -p $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles
+          export AUTOFILL_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
           cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
-            $GITHUB_WORKSPACE/apps/desktop/macos/bitwarden_desktop_autofill_app_store_2024.provisionprofile
+            $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles/$AUTOFILL_UUID.provisionprofile
 
       - name: Increment version
         shell: pwsh
@@ -1190,7 +1193,7 @@ jobs:
           APP_STORE_CONNECT_AUTH_KEY: 6TV9MKN3GP
           APP_STORE_CONNECT_AUTH_KEY_PATH: ~/private_keys/AuthKey_6TV9MKN3GP.p8
           CSC_FOR_PULL_REQUEST: true
-        run: npm run pack:mac:mas
+        run: npm run pack:mac:mas:with-extension
 
       - name: Upload .pkg artifact
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
