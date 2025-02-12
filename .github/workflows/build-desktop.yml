@@ -655,10 +655,13 @@ jobs:
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
           
           mkdir -p $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles
+          mkdir -p $HOME/Library/MobileDevice/Provisioning\ Profiles
           export AUTOFILL_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
           
           cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
             $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles/$AUTOFILL_UUID.provisionprofile
+          cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
+            $HOME/Library/MobileDevice/Provisioning\ Profiles/$AUTOFILL_UUID.provisionprofile
 
       - name: Increment version
         shell: pwsh
@@ -854,10 +857,13 @@ jobs:
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
           
           mkdir -p $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles
+          mkdir -p $HOME/Library/MobileDevice/Provisioning\ Profiles
           export AUTOFILL_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
           
           cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
             $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles/$AUTOFILL_UUID.provisionprofile
+          cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
+            $HOME/Library/MobileDevice/Provisioning\ Profiles/$AUTOFILL_UUID.provisionprofile
 
       - name: Increment version
         shell: pwsh
@@ -1113,10 +1119,13 @@ jobs:
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
           
           mkdir -p $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles
+          mkdir -p $HOME/Library/MobileDevice/Provisioning\ Profiles
           export AUTOFILL_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
           
           cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
             $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles/$AUTOFILL_UUID.provisionprofile
+          cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
+            $HOME/Library/MobileDevice/Provisioning\ Profiles/$AUTOFILL_UUID.provisionprofile
 
       - name: Increment version
         shell: pwsh
@@ -1380,10 +1389,13 @@ jobs:
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
           
           mkdir -p $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles
+          mkdir -p $HOME/Library/MobileDevice/Provisioning\ Profiles
           export AUTOFILL_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
           
           cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
             $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles/$AUTOFILL_UUID.provisionprofile
+          cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
+            $HOME/Library/MobileDevice/Provisioning\ Profiles/$AUTOFILL_UUID.provisionprofile
 
       - name: Increment version
         shell: pwsh
