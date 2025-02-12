@@ -85,7 +85,8 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
     
     override func provideCredentialWithoutUserInteraction(for credentialRequest: any ASCredentialRequest) {
       
-        
+        logger.log("[autofill-extension] provideCredentialWithoutUserInteraction2(credentialRequest) called \(request)")
+
         if let request = credentialRequest as? ASPasskeyCredentialRequest {
             if let passkeyIdentity = request.credentialIdentity as? ASPasskeyCredentialIdentity {
                 
@@ -248,6 +249,57 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
         for serviceIdentifier in serviceIdentifiers {
             logger.log("     service: \(serviceIdentifier.identifier)")
         }
+        
+        
+        class CallbackImpl: PreparePasskeyAssertionCallback {
+            let ctx: ASCredentialProviderExtensionContext
+            required init(_ ctx: ASCredentialProviderExtensionContext) {
+                self.ctx = ctx
+            }
+            
+            func onComplete(credential: PasskeyAssertionResponse) {
+                ctx.completeAssertionRequest(using: ASPasskeyAssertionCredential(
+                    userHandle: credential.userHandle,
+                    relyingParty: credential.rpId,
+                    signature: credential.signature,
+                    clientDataHash: credential.clientDataHash,
+                    authenticatorData: credential.authenticatorData,
+                    credentialID: credential.credentialId
+                ))
+            }
+            
+            func onError(error: BitwardenError) {
+                ctx.cancelRequest(withError: error)
+            }
+        }
+        
+        let userVerification = switch requestParameters.userVerificationPreference {
+        case .preferred:
+            UserVerification.preferred
+        case .required:
+            UserVerification.required
+        default:
+            UserVerification.discouraged
+        }
+        
+        // TODO: PasskeyAssertionRequest does not implement allowedCredentials, extensions and required credentialId, username, userhandle, recordIdentifier??
+        let req = PasskeyAssertionRequest(
+            rpId: requestParameters.relyingPartyIdentifier,
+
+            // TODO: remove once the PasskeyAssertionRequest type has been improved
+            credentialId: Data(),
+            userName: "",
+            userHandle: Data(),
+            recordIdentifier: "",
+            
+            //allowedCredentials: requestParameters.allowedCredentials,
+            //extensionInput: requestParameters.extensionInput,
+            clientDataHash: requestParameters.clientDataHash,
+            userVerification: userVerification
+        )
+        
+        CredentialProviderViewController.client.preparePasskeyAssertion(request: req, callback: CallbackImpl(self.extensionContext))
+        return
     }
 
     private func configureTimeoutUI() {

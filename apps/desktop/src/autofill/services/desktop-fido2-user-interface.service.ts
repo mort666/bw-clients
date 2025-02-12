@@ -76,12 +76,26 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     private desktopSettingsService: DesktopSettingsService,
   ) {}
 
-  pickCredential: (
-    params: PickCredentialParams,
-  ) => Promise<{ cipherId: string; userVerified: boolean }>;
-
   private confirmCredentialSubject = new Subject<boolean>();
   private createdCipher: Cipher;
+
+  // Method implementation
+  async pickCredential(
+    params: PickCredentialParams,
+  ): Promise<{ cipherId: string; userVerified: boolean }> {
+    this.logService.warning("pickCredential desktop function", params);
+
+    try {
+      await this.showUi();
+
+      await this.waitForUiCredentialConfirmation();
+
+      return { cipherId: params.cipherIds[0], userVerified: true };
+    } finally {
+      // Make sure to clean up so the app is never stuck in modal mode?
+      await this.desktopSettingsService.setInModalMode(false);
+    }
+  }
 
   /**
    * Notifies the Fido2UserInterfaceSession that the UI operations has completed and it can return to the OS.
