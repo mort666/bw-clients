@@ -85,7 +85,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
     
     override func provideCredentialWithoutUserInteraction(for credentialRequest: any ASCredentialRequest) {
       
-        logger.log("[autofill-extension] provideCredentialWithoutUserInteraction2(credentialRequest) called \(request)")
+        //logger.log("[autofill-extension] provideCredentialWithoutUserInteraction2(credentialRequest) called \(request)")
 
         if let request = credentialRequest as? ASPasskeyCredentialRequest {
             if let passkeyIdentity = request.credentialIdentity as? ASPasskeyCredentialIdentity {
