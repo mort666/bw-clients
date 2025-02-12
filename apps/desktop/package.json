@@ -48,6 +48,7 @@
     "dist:lin": "npm run build && npm run pack:lin",
     "dist:mac": "npm run build && npm run pack:mac",
     "dist:mac:mas": "npm run build && npm run pack:mac:mas",
+    "dist:mac:mas:with-extension": "npm run build && npm run pack:mac:mas:with-extension",
     "dist:mac:masdev": "npm run build && npm run pack:mac:masdev",
     "dist:mac:masdev:with-extension": "npm run build && npm run pack:mac:masdev:with-extension",
     "dist:win": "npm run build && npm run pack:win",
