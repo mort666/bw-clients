@@ -58,8 +58,8 @@ async function run(context) {
     if (context.electronPlatformName === "mas") {
       const masBuildOptions = deepAssign(
         {
-          identity: "Bitwarden Inc (LTZ2PFU5D6)",
-          provisioningProfile: "./bitwarden_desktop_appstore.provisionprofile",
+          // identity: "4B9662CAB74E8E4F4ECBDD9EDEF2543659D95E3C",
+          // provisioningProfile: "./bitwarden_desktop_appstore.provisionprofile",
         },
         context.packager.platformSpecificBuildOptions,
         context.packager.config.mas,
