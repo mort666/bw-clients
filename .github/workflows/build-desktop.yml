@@ -654,12 +654,12 @@ jobs:
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
           
-          mkdir -p $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles
           mkdir -p $HOME/Library/MobileDevice/Provisioning\ Profiles
+          export APP_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_appstore.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
           export AUTOFILL_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
           
-          cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
-            $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles/$AUTOFILL_UUID.provisionprofile
+          cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
+            $HOME/Library/MobileDevice/Provisioning\ Profiles/$APP_UUID.provisionprofile
           cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
             $HOME/Library/MobileDevice/Provisioning\ Profiles/$AUTOFILL_UUID.provisionprofile
 
@@ -856,12 +856,12 @@ jobs:
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
           
-          mkdir -p $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles
           mkdir -p $HOME/Library/MobileDevice/Provisioning\ Profiles
+          export APP_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_appstore.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
           export AUTOFILL_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
           
-          cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
-            $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles/$AUTOFILL_UUID.provisionprofile
+          cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
+            $HOME/Library/MobileDevice/Provisioning\ Profiles/$APP_UUID.provisionprofile
           cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
             $HOME/Library/MobileDevice/Provisioning\ Profiles/$AUTOFILL_UUID.provisionprofile
 
@@ -1114,16 +1114,16 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PASSWORD build.keychain
 
       - name: Set up provisioning profiles
-        run: |        
+        run: |
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
           
-          mkdir -p $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles
           mkdir -p $HOME/Library/MobileDevice/Provisioning\ Profiles
+          export APP_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_appstore.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
           export AUTOFILL_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
           
-          cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
-            $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles/$AUTOFILL_UUID.provisionprofile
+          cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
+            $HOME/Library/MobileDevice/Provisioning\ Profiles/$APP_UUID.provisionprofile
           cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
             $HOME/Library/MobileDevice/Provisioning\ Profiles/$AUTOFILL_UUID.provisionprofile
 
@@ -1388,12 +1388,12 @@ jobs:
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
           
-          mkdir -p $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles
           mkdir -p $HOME/Library/MobileDevice/Provisioning\ Profiles
+          export APP_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_appstore.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
           export AUTOFILL_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
           
-          cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
-            $HOME/Library/Developer/Xcode/UserData/Provisioning\ Profiles/$AUTOFILL_UUID.provisionprofile
+          cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
+            $HOME/Library/MobileDevice/Provisioning\ Profiles/$APP_UUID.provisionprofile
           cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
             $HOME/Library/MobileDevice/Provisioning\ Profiles/$AUTOFILL_UUID.provisionprofile
 

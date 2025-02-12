@@ -57,7 +57,10 @@ async function run(context) {
     // Resign to sign safari extension
     if (context.electronPlatformName === "mas") {
       const masBuildOptions = deepAssign(
-        {},
+        {
+          identity: "Bitwarden Inc (LTZ2PFU5D6)",
+          provisioningProfile: "./bitwarden_desktop_appstore.provisionprofile",
+        },
         context.packager.platformSpecificBuildOptions,
         context.packager.config.mas,
       );
