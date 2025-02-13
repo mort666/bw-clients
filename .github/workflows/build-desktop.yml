@@ -1244,6 +1244,11 @@ jobs:
           CSC_FOR_PULL_REQUEST: true
         run: npm run pack:mac:mas:with-extension
 
+      - name: Resign
+        run: |
+          cp $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile $GITHUB_WORKSPACE/apps/desktop/dist/mas-universal/Bitwarden.app/Contents/embedded.provisionprofile
+          codesign --verbose --force --sign 4B9662CAB74E8E4F4ECBDD9EDEF2543659D95E3C -o runtime --timestamp --entitlements $GITHUB_WORKSPACE/apps/desktop/resources/entitlements.mas.plist $GITHUB_WORKSPACE/apps/desktop/dist/mas-universal/Bitwarden.app
+
       - name: Upload .pkg artifact
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
