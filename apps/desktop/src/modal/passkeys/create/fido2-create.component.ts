@@ -15,7 +15,7 @@ import {
   SectionComponent,
   TableModule,
 } from "@bitwarden/components";
-import { SearchComponent } from "@bitwarden/components/src/search/search.component";
+// import { SearchComponent } from "@bitwarden/components/src/search/search.component";
 
 import { BitwardenShield } from "../../../../../../libs/auth/src/angular/icons";
 import { BitIconButtonComponent } from "../../../../../../libs/components/src/icon-button/icon-button.component";
@@ -42,7 +42,7 @@ import { DesktopSettingsService } from "../../../platform/services/desktop-setti
     SectionComponent,
     ItemModule,
     BadgeModule,
-    SearchComponent,
+    // SearchComponent,
   ],
   templateUrl: "fido2-create.component.html",
 })
@@ -98,7 +98,7 @@ export class Fido2CreateComponent implements OnInit {
       //   userVerification: true,
       // });
 
-      this.session.notifyConfirmCredential();
+      this.session.notifyConfirmCredential(true);
 
       // Not sure this clean up should happen here or in session.
       // The session currently toggles modal on and send us here
@@ -113,5 +113,6 @@ export class Fido2CreateComponent implements OnInit {
   async closeModal() {
     await this.router.navigate(["/"]);
     await this.desktopSettingsService.setInModalMode(false);
+    this.session.notifyConfirmCredential(false);
   }
 }

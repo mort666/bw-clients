@@ -58,8 +58,6 @@ export class Fido2VaultComponent implements OnInit {
     private readonly router: Router,
   ) {}
 
-  //function firings after init
-
   async ngOnInit() {
     this.rpId = history.state.rpid;
     this.session = this.fido2UserInterfaceService.getCurrentSession();
@@ -78,6 +76,12 @@ export class Fido2VaultComponent implements OnInit {
 
   async confirmPasskey() {
     try {
+      this.session = this.fido2UserInterfaceService.getCurrentSession();
+
+      // this.session.pickCredential({
+      //   cipherIds: [],
+      //   userVerification: false,
+      // });
       // Retrieve the current UI session to control the flow
       if (!this.session) {
         // todo: handle error
@@ -93,7 +97,7 @@ export class Fido2VaultComponent implements OnInit {
       //   userVerification: true,
       // });
 
-      this.session.notifyConfirmCredential();
+      this.session.notifyConfirmCredential(true);
 
       // Not sure this clean up should happen here or in session.
       // The session currently toggles modal on and send us here
@@ -106,7 +110,8 @@ export class Fido2VaultComponent implements OnInit {
   }
 
   async closeModal() {
-    // await this.router.navigate(["/"]);
-    // await this.desktopSettingsService.setInModalMode(false);
+    await this.router.navigate(["/"]);
+    await this.desktopSettingsService.setInModalMode(false);
+    this.session.notifyConfirmCredential(false);
   }
 }

@@ -48,6 +48,13 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
         let passwordCredential = ASPasswordCredential(user: "j_appleseed", password: "apple1234")
         self.extensionContext.completeRequest(withSelectedCredential: passwordCredential, completionHandler: nil)
     }
+
+    override func loadView() {
+        let view = NSView()
+        view.isHidden = true
+        //view.backgroundColor = .clear
+        self.view = view
+    }
     
     /*
      Implement this method if your extension supports showing credentials in the QuickType bar.
@@ -77,6 +84,9 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
     }
     
     override func provideCredentialWithoutUserInteraction(for credentialRequest: any ASCredentialRequest) {
+      
+        //logger.log("[autofill-extension] provideCredentialWithoutUserInteraction2(credentialRequest) called \(request)")
+
         if let request = credentialRequest as? ASPasskeyCredentialRequest {
             if let passkeyIdentity = request.credentialIdentity as? ASPasskeyCredentialIdentity {
                 
@@ -155,6 +165,13 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
     override func prepareInterface(forPasskeyRegistration registrationRequest: ASCredentialRequest) {
         logger.log("[autofill-extension] prepareInterface")
 
+          // Create a timer to show UI after 10 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
+            guard let self = self else { return }
+            // Configure and show UI elements for manual cancellation
+            self.configureTimeoutUI()
+        }
+
         if let request = registrationRequest as? ASPasskeyCredentialRequest {
             if let passkeyIdentity = registrationRequest.credentialIdentity as? ASPasskeyCredentialIdentity {
                 logger.log("[autofill-extension] prepareInterface(passkey) called \(request)")
@@ -232,6 +249,61 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
         for serviceIdentifier in serviceIdentifiers {
             logger.log("     service: \(serviceIdentifier.identifier)")
         }
+        
+        
+        class CallbackImpl: PreparePasskeyAssertionCallback {
+            let ctx: ASCredentialProviderExtensionContext
+            required init(_ ctx: ASCredentialProviderExtensionContext) {
+                self.ctx = ctx
+            }
+            
+            func onComplete(credential: PasskeyAssertionResponse) {
+                ctx.completeAssertionRequest(using: ASPasskeyAssertionCredential(
+                    userHandle: credential.userHandle,
+                    relyingParty: credential.rpId,
+                    signature: credential.signature,
+                    clientDataHash: credential.clientDataHash,
+                    authenticatorData: credential.authenticatorData,
+                    credentialID: credential.credentialId
+                ))
+            }
+            
+            func onError(error: BitwardenError) {
+                ctx.cancelRequest(withError: error)
+            }
+        }
+        
+        let userVerification = switch requestParameters.userVerificationPreference {
+        case .preferred:
+            UserVerification.preferred
+        case .required:
+            UserVerification.required
+        default:
+            UserVerification.discouraged
+        }
+        
+        // TODO: PasskeyAssertionRequest does not implement allowedCredentials, extensions and required credentialId, username, userhandle, recordIdentifier??
+        let req = PasskeyAssertionRequest(
+            rpId: requestParameters.relyingPartyIdentifier,
+
+            // TODO: remove once the PasskeyAssertionRequest type has been improved
+            credentialId: Data(),
+            userName: "",
+            userHandle: Data(),
+            recordIdentifier: "",
+            
+            //allowedCredentials: requestParameters.allowedCredentials,
+            //extensionInput: requestParameters.extensionInput,
+            clientDataHash: requestParameters.clientDataHash,
+            userVerification: userVerification
+        )
+        
+        CredentialProviderViewController.client.preparePasskeyAssertion(request: req, callback: CallbackImpl(self.extensionContext))
+        return
+    }
+
+    private func configureTimeoutUI() {
+        self.view.isHidden = false;
     }
 
 }

@@ -76,21 +76,32 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     private desktopSettingsService: DesktopSettingsService,
   ) {}
 
+  private confirmCredentialSubject = new Subject<boolean>();
+  private createdCipher: Cipher;
+
+  // Method implementation
   async pickCredential(
     params: PickCredentialParams,
   ): Promise<{ cipherId: string; userVerified: boolean }> {
-    // Add your implementation here
-    return { cipherId: "", userVerified: false };
-  }
+    this.logService.warning("pickCredential desktop function", params);
 
-  private confirmCredentialSubject = new Subject<void>();
-  private createdCipher: Cipher;
+    try {
+      await this.showUi();
+
+      await this.waitForUiCredentialConfirmation();
+
+      return { cipherId: params.cipherIds[0], userVerified: true };
+    } finally {
+      // Make sure to clean up so the app is never stuck in modal mode?
+      await this.desktopSettingsService.setInModalMode(false);
+    }
+  }
 
   /**
    * Notifies the Fido2UserInterfaceSession that the UI operations has completed and it can return to the OS.
    */
-  notifyConfirmCredential() {
-    this.confirmCredentialSubject.next();
+  notifyConfirmCredential(confirmed: boolean): void {
+    this.confirmCredentialSubject.next(confirmed);
     this.confirmCredentialSubject.complete();
   }
 
@@ -98,7 +109,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
    * Returns once the UI has confirmed and completed the operation
    * @returns
    */
-  private async waitForUiCredentialConfirmation(): Promise<void> {
+  private async waitForUiCredentialConfirmation(): Promise<boolean> {
     return lastValueFrom(this.confirmCredentialSubject);
   }
 
@@ -125,8 +136,10 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
       await this.showUi(rpId);
 
       // Wait for the UI to wrap up
-      await this.waitForUiCredentialConfirmation();
-
+      const confirmation = await this.waitForUiCredentialConfirmation();
+      if (!confirmation) {
+        throw new Error("User cancelled");
+      }
       // Create the credential
       await this.createCredential({
         credentialName,
