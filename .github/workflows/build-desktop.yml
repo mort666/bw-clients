@@ -1520,7 +1520,7 @@ jobs:
       - name: Resign
         run: |
           cp $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile $GITHUB_WORKSPACE/apps/desktop/dist/mas-dev-universal/Bitwarden.app/Contents/embedded.provisionprofile
-          codesign --verbose --force --sign 4B9662CAB74E8E4F4ECBDD9EDEF2543659D95E3C --entitlements $GITHUB_WORKSPACE/apps/desktop/resources/entitlements.mas.plist Bitwarden.app
+          codesign --verbose --force --sign 4B9662CAB74E8E4F4ECBDD9EDEF2543659D95E3C -o runtime --timestamp --entitlements $GITHUB_WORKSPACE/apps/desktop/resources/entitlements.mas.plist $GITHUB_WORKSPACE/apps/desktop/dist/mas-dev-universal/Bitwarden.app
 
       - name: Zip masdev asset
         run: |
