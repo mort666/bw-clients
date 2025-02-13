@@ -11,7 +11,6 @@ const paths = {
   extensionDist: "./macos/dist/autofill-extension.appex",
   macOsProject: "./macos/desktop.xcodeproj",
   macOsConfig: "./macos/production.xcconfig",
-  macOsProvisioningProfile: "./macos/bitwarden_desktop_autofill_app_store_2024.provisionprofile",
 };
 
 async function buildMacOs() {
