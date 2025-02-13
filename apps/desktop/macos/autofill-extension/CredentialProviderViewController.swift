@@ -94,8 +94,10 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                 
                 class CallbackImpl: PreparePasskeyAssertionCallback {
                     let ctx: ASCredentialProviderExtensionContext
-                    required init(_ ctx: ASCredentialProviderExtensionContext) {
+                    let logger: Logger
+                    required init(_ ctx: ASCredentialProviderExtensionContext,_ logger: Logger) {
                         self.ctx = ctx
+                        self.logger = logger
                     }
                     
                     func onComplete(credential: PasskeyAssertionResponse) {
@@ -110,6 +112,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                     }
                     
                     func onError(error: BitwardenError) {
+                        logger.log("[autofill-extension] ERROR HAPPENED in swift error \(error)")
                         ctx.cancelRequest(withError: error)
                     }
                 }
@@ -123,7 +126,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                     UserVerification.discouraged
                 }
                 
-                let req = PasskeyAssertionRequest(
+                let req = PasskeyAssertionWithoutUserInterfaceRequest(
                     rpId: passkeyIdentity.relyingPartyIdentifier,
                     credentialId: passkeyIdentity.credentialID,
                     userName: passkeyIdentity.userName,
@@ -133,7 +136,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                     userVerification: userVerification
                 )
                 
-                CredentialProviderViewController.client.preparePasskeyAssertion(request: req, callback: CallbackImpl(self.extensionContext))
+                CredentialProviderViewController.client.preparePasskeyAssertionWithoutUserInterface(request: req, callback: CallbackImpl(self.extensionContext, self.logger))
                 return
             }
         }
@@ -282,20 +285,12 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
             UserVerification.discouraged
         }
         
-        // TODO: PasskeyAssertionRequest does not implement allowedCredentials, extensions and required credentialId, username, userhandle, recordIdentifier??
         let req = PasskeyAssertionRequest(
             rpId: requestParameters.relyingPartyIdentifier,
-
-            // TODO: remove once the PasskeyAssertionRequest type has been improved
-            credentialId: Data(),
-            userName: "",
-            userHandle: Data(),
-            recordIdentifier: "",
-            
-            //allowedCredentials: requestParameters.allowedCredentials,
-            //extensionInput: requestParameters.extensionInput,
             clientDataHash: requestParameters.clientDataHash,
-            userVerification: userVerification
+            userVerification: userVerification,
+            allowedCredentials: requestParameters.allowedCredentials
+            //extensionInput: requestParameters.extensionInput,
         )
         
         CredentialProviderViewController.client.preparePasskeyAssertion(request: req, callback: CallbackImpl(self.extensionContext))
