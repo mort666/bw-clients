@@ -1149,7 +1149,7 @@ jobs:
 
       - name: Set up provisioning profiles
         run: |
-          cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
+          cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
           
           mkdir -p $HOME/Library/MobileDevice/Provisioning\ Profiles
@@ -1421,7 +1421,7 @@ jobs:
 
       - name: Set up provisioning profiles
         run: |
-          cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
+          cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
           
           mkdir -p $HOME/Library/MobileDevice/Provisioning\ Profiles
