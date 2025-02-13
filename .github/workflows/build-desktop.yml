@@ -1517,6 +1517,11 @@ jobs:
           APP_STORE_CONNECT_AUTH_KEY_PATH: ~/private_keys/AuthKey_6TV9MKN3GP.p8
         run: npm run pack:mac:masdev:with-extension
 
+      - name: Resign
+        run: |
+          cp $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile $GITHUB_WORKSPACE/apps/desktop/dist/mas-dev-universal/Bitwarden.app/Contents/embedded.provisionprofile
+          codesign --verbose --force --sign 4B9662CAB74E8E4F4ECBDD9EDEF2543659D95E3C --entitlements $GITHUB_WORKSPACE/apps/desktop/resources/entitlements.mas.plist Bitwarden.app
+
       - name: Zip masdev asset
         run: |
           cd dist/mas-dev-universal
