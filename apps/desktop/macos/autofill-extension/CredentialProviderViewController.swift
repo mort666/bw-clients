@@ -19,15 +19,15 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
     // I think we still might want a static regardless, to be able to reuse the connection if possible.
     static let client: MacOsProviderClient = {
         let instance = MacOsProviderClient.connect()
-         // setup code
-         return instance
-     }()
+        // setup code
+        return instance
+    }()
     
     init() {
         logger = Logger(subsystem: "com.bitwarden.desktop.autofill-extension", category: "credential-provider")
         
         logger.log("[autofill-extension] initializing extension")
-
+        
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -37,18 +37,19 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
     
     deinit {
         logger.log("[autofill-extension] deinitializing extension")
+        self.extensionContext.cancelRequest(withError: NSError(domain: ASExtensionErrorDomain, code: ASExtensionError.userCanceled.rawValue))
     }
     
     
     @IBAction func cancel(_ sender: AnyObject?) {
         self.extensionContext.cancelRequest(withError: NSError(domain: ASExtensionErrorDomain, code: ASExtensionError.userCanceled.rawValue))
     }
-
+    
     @IBAction func passwordSelected(_ sender: AnyObject?) {
         let passwordCredential = ASPasswordCredential(user: "j_appleseed", password: "apple1234")
         self.extensionContext.completeRequest(withSelectedCredential: passwordCredential, completionHandler: nil)
     }
-
+    
     override func loadView() {
         let view = NSView()
         view.isHidden = true
@@ -63,9 +64,9 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
      Provide the password by completing the extension request with the associated ASPasswordCredential.
      If using the credential would require showing custom UI for authenticating the user, cancel
      the request with error code ASExtensionError.userInteractionRequired.
-
+     
      */
-
+    
     // Deprecated
     override func provideCredentialWithoutUserInteraction(for credentialIdentity: ASPasswordCredentialIdentity) {
         logger.log("[autofill-extension] provideCredentialWithoutUserInteraction called \(credentialIdentity)")
@@ -74,19 +75,19 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
         logger.log("[autofill-extension]     sid \(credentialIdentity.serviceIdentifier.identifier)")
         logger.log("[autofill-extension]     sidt \(credentialIdentity.serviceIdentifier.type.rawValue)")
         
-//        let databaseIsUnlocked = true
-//        if (databaseIsUnlocked) {
+        //        let databaseIsUnlocked = true
+        //        if (databaseIsUnlocked) {
         let passwordCredential = ASPasswordCredential(user: credentialIdentity.user, password: "example1234")
-            self.extensionContext.completeRequest(withSelectedCredential: passwordCredential, completionHandler: nil)
-//        } else {
-//            self.extensionContext.cancelRequest(withError: NSError(domain: ASExtensionErrorDomain, code:ASExtensionError.userInteractionRequired.rawValue))
-//        }
+        self.extensionContext.completeRequest(withSelectedCredential: passwordCredential, completionHandler: nil)
+        //        } else {
+        //            self.extensionContext.cancelRequest(withError: NSError(domain: ASExtensionErrorDomain, code:ASExtensionError.userInteractionRequired.rawValue))
+        //        }
     }
     
     override func provideCredentialWithoutUserInteraction(for credentialRequest: any ASCredentialRequest) {
-      
+        
         //logger.log("[autofill-extension] provideCredentialWithoutUserInteraction2(credentialRequest) called \(request)")
-
+        
         if let request = credentialRequest as? ASPasskeyCredentialRequest {
             if let passkeyIdentity = request.credentialIdentity as? ASPasskeyCredentialIdentity {
                 
@@ -145,47 +146,60 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
             logger.log("[autofill-extension] provideCredentialWithoutUserInteraction2(password) called \(request)")
             return;
         }
-       
+        
         logger.log("[autofill-extension] provideCredentialWithoutUserInteraction2 called wrong")
         self.extensionContext.cancelRequest(withError: BitwardenError.Internal("Invalid authentication request"))
     }
-
+    
     /*
      Implement this method if provideCredentialWithoutUserInteraction(for:) can fail with
      ASExtensionError.userInteractionRequired. In this case, the system may present your extension's
      UI and call this method. Show appropriate UI for authenticating the user then provide the password
      by completing the extension request with the associated ASPasswordCredential.
-
-    override func prepareInterfaceToProvideCredential(for credentialIdentity: ASPasswordCredentialIdentity) {
-    }
-    */
-
-
+     
+     override func prepareInterfaceToProvideCredential(for credentialIdentity: ASPasswordCredentialIdentity) {
+     }
+     */
+    
+    
     override func prepareInterfaceForExtensionConfiguration() {
         logger.log("[autofill-extension] prepareInterfaceForExtensionConfiguration called")
     }
-
+    
     override func prepareInterface(forPasskeyRegistration registrationRequest: ASCredentialRequest) {
         logger.log("[autofill-extension] prepareInterface")
-
-          // Create a timer to show UI after 10 seconds
+        
+        // Create a timer for 20 second timeout
+        let timeoutTimer = DispatchWorkItem { [weak self] in
+            guard let self = self else { return }
+            logger.log("[autofill-extension] Registration timed out after 20 seconds")
+            self.extensionContext.cancelRequest(withError: BitwardenError.Internal("Registration timed out"))
+        }
+        
+        // Schedule the timeout
+        DispatchQueue.main.asyncAfter(deadline: .now() + 20, execute: timeoutTimer)
+        
+        // Create a timer to show UI after 10 seconds
         DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
             guard let self = self else { return }
             // Configure and show UI elements for manual cancellation
             self.configureTimeoutUI()
         }
-
+        
         if let request = registrationRequest as? ASPasskeyCredentialRequest {
             if let passkeyIdentity = registrationRequest.credentialIdentity as? ASPasskeyCredentialIdentity {
                 logger.log("[autofill-extension] prepareInterface(passkey) called \(request)")
                 
                 class CallbackImpl: PreparePasskeyRegistrationCallback {
                     let ctx: ASCredentialProviderExtensionContext
+                    
                     required init(_ ctx: ASCredentialProviderExtensionContext) {
                         self.ctx = ctx
                     }
-
+                    
                     func onComplete(credential: PasskeyRegistrationResponse) {
+                        
+                        
                         ctx.completeRegistrationRequest(using: ASPasskeyRegistrationCredential(
                             relyingParty: credential.rpId,
                             clientDataHash: credential.clientDataHash,
@@ -193,21 +207,21 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                             attestationObject: credential.attestationObject
                         ))
                     }
-
+                    
                     func onError(error: BitwardenError) {
                         ctx.cancelRequest(withError: error)
                     }
                 }
                 
                 let userVerification = switch request.userVerificationPreference {
-                    case .preferred:
-                        UserVerification.preferred
-                    case .required:
-                        UserVerification.required
-                    default:
-                        UserVerification.discouraged
+                case .preferred:
+                    UserVerification.preferred
+                case .required:
+                    UserVerification.required
+                default:
+                    UserVerification.discouraged
                 }
-
+                
                 let req = PasskeyRegistrationRequest(
                     rpId: passkeyIdentity.relyingPartyIdentifier,
                     userName: passkeyIdentity.userName,
@@ -220,31 +234,33 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                 // Log details of the request
                 logger.log("[autofill-extension]     rpId: \(req.rpId)")
                 logger.log("[autofill-extension]     rpId: \(req.userName)")
-
+                
+                
                 CredentialProviderViewController.client.preparePasskeyRegistration(request: req, callback: CallbackImpl(self.extensionContext))
                 return
             }
         }
-
+        
         logger.log("[autofill-extension] We didn't get a passkey")
-
+        
+        timeoutTimer.cancel()
         // If we didn't get a passkey, return an error
         self.extensionContext.cancelRequest(withError: BitwardenError.Internal("Invalid registration request"))
     }
-
+    
     /*
-      Prepare your UI to list available credentials for the user to choose from. The items in
-      'serviceIdentifiers' describe the service the user is logging in to, so your extension can
-      prioritize the most relevant credentials in the list.
+     Prepare your UI to list available credentials for the user to choose from. The items in
+     'serviceIdentifiers' describe the service the user is logging in to, so your extension can
+     prioritize the most relevant credentials in the list.
      */
     override func prepareCredentialList(for serviceIdentifiers: [ASCredentialServiceIdentifier]) {
         logger.log("[autofill-extension] prepareCredentialList for serviceIdentifiers: \(serviceIdentifiers.count)")
-
+        
         for serviceIdentifier in serviceIdentifiers {
             logger.log("     service: \(serviceIdentifier.identifier)")
         }
     }
-
+    
     override func prepareCredentialList(for serviceIdentifiers: [ASCredentialServiceIdentifier], requestParameters: ASPasskeyCredentialRequestParameters) {
         logger.log("[autofill-extension] prepareCredentialList(passkey) for serviceIdentifiers: \(serviceIdentifiers.count)")
         logger.log("request parameters: \(requestParameters.relyingPartyIdentifier)")
@@ -296,9 +312,9 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
         CredentialProviderViewController.client.preparePasskeyAssertion(request: req, callback: CallbackImpl(self.extensionContext))
         return
     }
-
+    
     private func configureTimeoutUI() {
         self.view.isHidden = false;
     }
-
+    
 }
