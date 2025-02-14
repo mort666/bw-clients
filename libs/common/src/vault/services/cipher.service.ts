@@ -485,6 +485,11 @@ export class CipherService implements CipherServiceAbstraction {
     return await this.filterCiphersForUrl(ciphers, url, includeOtherTypes, defaultMatch);
   }
 
+  async getAllDecryptedForIds(ids: string[]): Promise<CipherView[]> {
+    const ciphers = await this.getAllDecrypted();
+    return ciphers.filter((cipher) => ids.includes(cipher.id));
+  }
+
   async filterCiphersForUrl(
     ciphers: CipherView[],
     url: string,

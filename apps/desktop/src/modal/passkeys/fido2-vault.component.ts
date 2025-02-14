@@ -1,9 +1,9 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { RouterModule, Router } from "@angular/router";
+import { BehaviorSubject, Observable } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
-import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
@@ -24,7 +24,6 @@ import {
   DesktopFido2UserInterfaceSession,
 } from "../../autofill/services/desktop-fido2-user-interface.service";
 import { DesktopSettingsService } from "../../platform/services/desktop-settings.service";
-// import { AnchorLinkDirective } from "../../../../../libs/components/src/link/link.directive";
 
 @Component({
   standalone: true,
@@ -45,68 +44,38 @@ import { DesktopSettingsService } from "../../platform/services/desktop-settings
   templateUrl: "fido2-vault.component.html",
 })
 export class Fido2VaultComponent implements OnInit {
-  ciphers: CipherView[];
-  rpId: string;
+  session?: DesktopFido2UserInterfaceSession = null;
+  private ciphersSubject = new BehaviorSubject<CipherView[]>([]);
+  ciphers$: Observable<CipherView[]> = this.ciphersSubject.asObservable();
   readonly Icons = { BitwardenShield };
 
-  session?: DesktopFido2UserInterfaceSession = null;
   constructor(
     private readonly desktopSettingsService: DesktopSettingsService,
     private readonly fido2UserInterfaceService: DesktopFido2UserInterfaceService,
     private readonly cipherService: CipherService,
-    private readonly authService: AuthService,
     private readonly router: Router,
   ) {}
 
   async ngOnInit() {
-    this.rpId = history.state.rpid;
     this.session = this.fido2UserInterfaceService.getCurrentSession();
 
-    if (!this.session) {
-      await this.fido2UserInterfaceService.newSession(false, null);
-      this.session = this.fido2UserInterfaceService.getCurrentSession();
-    }
+    const cipherIds = await this.session?.getAvailableCipherIds();
 
-    if (this.rpId) {
-      this.ciphers = await this.cipherService.getPasskeyCiphersForUrl(this.rpId);
-    } else {
-      this.ciphers = await this.cipherService.getAllDecrypted();
-    }
+    this.cipherService
+      .getAllDecryptedForIds(cipherIds || [])
+      .then((ciphers) => {
+        this.ciphersSubject.next(ciphers);
+      })
+      .catch(() => {
+        // console.error(err);
+      });
   }
 
-  async confirmPasskey() {
-    try {
-      this.session = this.fido2UserInterfaceService.getCurrentSession();
+  async chooseCipher(cipherId: string) {
+    this.session?.confirmChosenCipher(cipherId);
 
-      // this.session.pickCredential({
-      //   cipherIds: [],
-      //   userVerification: false,
-      // });
-      // Retrieve the current UI session to control the flow
-      if (!this.session) {
-        // todo: handle error
-        throw new Error("No session found");
-      }
-
-      // If we want to we could submit information to the session in order to create the credential
-      // const cipher = await session.createCredential({
-      //   userHandle: "userHandle2",
-      //   userName: "username2",
-      //   credentialName: "zxsd2",
-      //   rpId: "webauthn.io",
-      //   userVerification: true,
-      // });
-
-      this.session.notifyConfirmCredential(true);
-
-      // Not sure this clean up should happen here or in session.
-      // The session currently toggles modal on and send us here
-      // But if this route is somehow opened outside of session we want to make sure we clean up?
-      await this.router.navigate(["/"]);
-      await this.desktopSettingsService.setInModalMode(false);
-    } catch (error) {
-      // TODO: Handle error appropriately
-    }
+    await this.router.navigate(["/"]);
+    await this.desktopSettingsService.setInModalMode(false);
   }
 
   async closeModal() {

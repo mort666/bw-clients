@@ -1,10 +1,11 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { RouterModule, Router } from "@angular/router";
+import { BehaviorSubject, firstValueFrom, Observable } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
-import { CipherType } from "@bitwarden/common/vault/enums/cipher-type";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
   BadgeModule,
@@ -47,38 +48,44 @@ import { DesktopSettingsService } from "../../../platform/services/desktop-setti
   templateUrl: "fido2-create.component.html",
 })
 export class Fido2CreateComponent implements OnInit {
-  ciphers: CipherView[];
-  rpId: string;
+  session?: DesktopFido2UserInterfaceSession = null;
+  private ciphersSubject = new BehaviorSubject<CipherView[]>([]);
+  ciphers$: Observable<CipherView[]> = this.ciphersSubject.asObservable();
   readonly Icons = { BitwardenShield };
 
-  session?: DesktopFido2UserInterfaceSession = null;
   constructor(
     private readonly desktopSettingsService: DesktopSettingsService,
     private readonly fido2UserInterfaceService: DesktopFido2UserInterfaceService,
     private readonly cipherService: CipherService,
+    private readonly domainSettingsService: DomainSettingsService,
     private readonly router: Router,
   ) {}
 
   async ngOnInit() {
-    this.rpId = history.state.rpid;
     this.session = this.fido2UserInterfaceService.getCurrentSession();
 
-    if (!this.session) {
-      await this.fido2UserInterfaceService.newSession(false, null);
-      this.session = this.fido2UserInterfaceService.getCurrentSession();
-    }
-    let allCiphers = [];
+    const rpid = await this.session.getRpId();
+    const equivalentDomains = await firstValueFrom(
+      this.domainSettingsService.getUrlEquivalentDomains(rpid),
+    );
 
-    if (this.rpId) {
-      allCiphers = await this.cipherService.getAllDecryptedForUrl(this.rpId, [CipherType.Login]);
-    } else {
-      allCiphers = await this.cipherService.getAllDecrypted();
-    }
+    this.cipherService
+      .getPasskeyCiphersForUrl(rpid)
+      .then((ciphers) => {
+        const relevantCiphers = ciphers.filter(
+          (cipher) =>
+            cipher.login.matchesUri(rpid, equivalentDomains) &&
+            (!cipher.login.fido2Credentials || cipher.login.fido2Credentials.length === 0),
+        );
+        this.ciphersSubject.next(relevantCiphers);
+      })
+      .catch(() => {
+        // console.error(err);
+      });
+  }
 
-    //filter all ciphers to only return login ciphers without fido2Credentials
-    this.ciphers = allCiphers.filter((cipher) => {
-      return cipher.type === CipherType.Login && cipher.login.fido2Credentials.length === 0;
-    });
+  async addPasskeyToCipher(cipher: CipherView) {
+    this.session.notifyConfirmCredential(true, cipher);
   }
 
   async confirmPasskey() {

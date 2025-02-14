@@ -338,7 +338,7 @@ const routes: Routes = [
     component: Fido2VaultComponent,
   },
   {
-    path: "create-passkey",
+    path: "passkey-create",
     component: Fido2CreateComponent,
   },
   {

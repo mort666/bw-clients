@@ -159,7 +159,12 @@ export class DesktopAutofillService implements OnDestroy {
 
     ipc.autofill.listenPasskeyAssertionWithoutUserInterface(
       async (clientId, sequenceNumber, request, callback) => {
-        this.logService.warning("listenPasskeyAssertion", clientId, sequenceNumber, request);
+        this.logService.warning(
+          "listenPasskeyAssertion without user interface",
+          clientId,
+          sequenceNumber,
+          request,
+        );
 
         // TODO: For some reason the credentialId is passed as an empty array in the request, so we need to
         // get it from the cipher. For that we use the recordIdentifier, which is the cipherId.
@@ -193,7 +198,7 @@ export class DesktopAutofillService implements OnDestroy {
 
         const controller = new AbortController();
         void this.fido2AuthenticatorService
-          .getAssertion(this.convertAssertionRequest(request), null, controller)
+          .getAssertion(this.convertAssertionRequest(request, true), null, controller)
           .then((response) => {
             callback(null, this.convertAssertionResponse(request, response));
           })
@@ -261,10 +266,17 @@ export class DesktopAutofillService implements OnDestroy {
     };
   }
 
+  /**
+   *
+   * @param request
+   * @param assumeUserPresence For WithoutUserInterface requests, we assume the user is present
+   * @returns
+   */
   private convertAssertionRequest(
     request:
       | autofill.PasskeyAssertionRequest
       | autofill.PasskeyAssertionWithoutUserInterfaceRequest,
+    assumeUserPresence: boolean = false,
   ): Fido2AuthenticatorGetAssertionParams {
     let allowedCredentials;
     if ("credentialId" in request) {
@@ -289,6 +301,7 @@ export class DesktopAutofillService implements OnDestroy {
       requireUserVerification:
         request.userVerification === "required" || request.userVerification === "preferred",
       fallbackSupported: false,
+      assumeUserPresence: assumeUserPresence,
     };
   }
 
