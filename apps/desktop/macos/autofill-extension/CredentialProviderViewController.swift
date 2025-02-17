@@ -177,10 +177,10 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
         }
         
         // Schedule the timeout
-        DispatchQueue.main.asyncAfter(deadline: .now() + 20, execute: timeoutTimer)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 90, execute: timeoutTimer)
         
         // Create a timer to show UI after 10 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 90) { [weak self] in
             guard let self = self else { return }
             // Configure and show UI elements for manual cancellation
             self.configureTimeoutUI()
