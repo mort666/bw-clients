@@ -10,7 +10,7 @@ const { identity } = require("rxjs");
 exports.default = run;
 
 async function run(context) {
-  console.log("## After sign");
+  console.log("## After sign", context);
   // console.log(context);
 
   const appName = context.packager.appInfo.productFilename;
