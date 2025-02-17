@@ -5,6 +5,7 @@ const path = require("path");
 const { notarize } = require("@electron/notarize");
 const { deepAssign } = require("builder-util");
 const fse = require("fs-extra");
+const { identity } = require("rxjs");
 
 exports.default = run;
 
@@ -64,6 +65,7 @@ async function run(context) {
       if (context.targets.some((e) => e.name === "mas-dev")) {
         deepAssign(masBuildOptions, {
           type: "development",
+          identity: "Bitwarden Inc (LTZ2PFU5D6)"
         });
       }
       if (context.packager.packagerOptions.prepackaged == null) {
