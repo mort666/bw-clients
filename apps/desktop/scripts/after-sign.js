@@ -65,7 +65,7 @@ async function run(context) {
       if (context.targets.some((e) => e.name === "mas-dev")) {
         deepAssign(masBuildOptions, {
           type: "development",
-          identity: "Bitwarden Inc (LTZ2PFU5D6)"
+          identity: "Developer ID"          
         });
       }
       if (context.packager.packagerOptions.prepackaged == null) {
@@ -76,7 +76,7 @@ async function run(context) {
     }
   }
 
-  if (macBuild) {
+  if (macBuild  || copyAutofillExtension) {
     console.log("### Notarizing " + appPath);
     if (process.env.APP_STORE_CONNECT_TEAM_ISSUER) {
       const appleApiIssuer = process.env.APP_STORE_CONNECT_TEAM_ISSUER;

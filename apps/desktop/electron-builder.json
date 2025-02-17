@@ -136,7 +136,7 @@
     "entitlementsLoginHelper": "resources/entitlements.mas.loginhelper.plist",
     "provisioningProfile": "bitwarden_desktop_appstore.provisionprofile",
     "hardenedRuntime": true,
-    "identity": "Bitwarden Inc (LTZ2PFU5D6)",
+    "identity": "Developer ID",
     "extendInfo": {
       "LSMinimumSystemVersion": "12",
       "ElectronTeamID": "LTZ2PFU5D6"
