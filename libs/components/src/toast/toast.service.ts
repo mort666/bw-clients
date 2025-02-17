@@ -23,7 +23,8 @@ export class ToastService {
   /**
    * This will present the toast to a user.
    *
-   * Note: The toast will be displayed for a minimum of 5 seconds if no timeout is provided in
+   * Note: The toast duration is calculated programmatically by length and will
+   * be displayed for a minimum of 5 seconds if no timeout is provided in
    * the options.
    *
    * @param options Options for toasts. If no timeout is specified an appropriate duration will be
