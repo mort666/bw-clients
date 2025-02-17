@@ -75,7 +75,7 @@
       matchUpdateTypes: "patch",
     },
     {
-      // We need to update all the Jest-related packages together, to reduce PR noise
+      // We want to update all the Jest-related packages together, to reduce PR noise
       groupName: "jest",
       matchPackageNames: ["@types/jest", "jest", "ts-jest", "jest-preset-angular"],
     },
