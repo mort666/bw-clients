@@ -5,7 +5,6 @@ const path = require("path");
 const { notarize } = require("@electron/notarize");
 const { deepAssign } = require("builder-util");
 const fse = require("fs-extra");
-const { identity } = require("rxjs");
 
 exports.default = run;
 
