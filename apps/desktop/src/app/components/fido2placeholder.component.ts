@@ -56,7 +56,7 @@ import { DesktopSettingsService } from "../../platform/services/desktop-settings
 export class Fido2PlaceholderComponent implements OnInit, OnDestroy {
   session?: DesktopFido2UserInterfaceSession = null;
   private cipherIdsSubject = new BehaviorSubject<string[]>([]);
-  cipherIds$: Observable<string[]> = this.cipherIdsSubject.asObservable();
+  cipherIds$: Observable<string[]>;
 
   constructor(
     private readonly desktopSettingsService: DesktopSettingsService,
@@ -64,14 +64,9 @@ export class Fido2PlaceholderComponent implements OnInit, OnDestroy {
     private readonly router: Router,
   ) {}
 
-  async ngOnInit(): Promise<void> {
+  ngOnInit() {
     this.session = this.fido2UserInterfaceService.getCurrentSession();
-
-    const cipherIds = await this.session?.getAvailableCipherIds();
-    this.cipherIdsSubject.next(cipherIds || []);
-
-    // eslint-disable-next-line no-console
-    console.log("Available cipher IDs", cipherIds);
+    this.cipherIds$ = this.session?.availableCipherIds$;
   }
 
   async chooseCipher(cipherId: string) {

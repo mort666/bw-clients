@@ -169,22 +169,22 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
     override func prepareInterface(forPasskeyRegistration registrationRequest: ASCredentialRequest) {
         logger.log("[autofill-extension] prepareInterface")
         
-        // Create a timer for 20 second timeout
+        // Create a timer for 90 second timeout
         let timeoutTimer = DispatchWorkItem { [weak self] in
             guard let self = self else { return }
-            logger.log("[autofill-extension] Registration timed out after 20 seconds")
+            logger.log("[autofill-extension] Registration timed out after 90 seconds")
             self.extensionContext.cancelRequest(withError: BitwardenError.Internal("Registration timed out"))
         }
         
         // Schedule the timeout
         DispatchQueue.main.asyncAfter(deadline: .now() + 90, execute: timeoutTimer)
         
-        // Create a timer to show UI after 10 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 90) { [weak self] in
-            guard let self = self else { return }
-            // Configure and show UI elements for manual cancellation
-            self.configureTimeoutUI()
-        }
+        // // Create a timer to show UI after 10 seconds
+        // DispatchQueue.main.asyncAfter(deadline: .now() + 90) { [weak self] in
+        //     guard let self = self else { return }
+        //     // Configure and show UI elements for manual cancellation
+        //     self.configureTimeoutUI()
+        // }
         
         if let request = registrationRequest as? ASPasskeyCredentialRequest {
             if let passkeyIdentity = registrationRequest.credentialIdentity as? ASPasskeyCredentialIdentity {

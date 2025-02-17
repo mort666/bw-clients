@@ -6,8 +6,8 @@ import {
   Subject,
   filter,
   take,
-  timeout,
   BehaviorSubject,
+  Observable,
 } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
@@ -64,7 +64,6 @@ export class DesktopFido2UserInterfaceService
       this.cipherService,
       this.accountService,
       this.logService,
-      this.messagingService,
       this.router,
       this.desktopSettingsService,
     );
@@ -80,7 +79,6 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     private cipherService: CipherService,
     private accountService: AccountService,
     private logService: LogService,
-    private messagingService: MessagingService,
     private router: Router,
     private desktopSettingsService: DesktopSettingsService,
   ) {}
@@ -88,7 +86,16 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
   private confirmCredentialSubject = new Subject<boolean>();
   private createdCipher: Cipher;
 
-  private availableCipherIds = new BehaviorSubject<string[]>(null);
+  private availableCipherIdsSubject = new BehaviorSubject<string[]>(null);
+  /**
+   * Observable that emits available cipher IDs once they're confirmed by the UI
+   */
+  get availableCipherIds$(): Observable<string[]> {
+    return this.availableCipherIdsSubject.pipe(
+      filter((ids) => ids != null),
+      take(1),
+    );
+  }
 
   private chosenCipherSubject = new Subject<string>();
 
@@ -121,7 +128,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
 
       // make the cipherIds available to the UI.
       // Not sure if the UI also need to know about masterPasswordRepromptRequired -- probably not, otherwise we can send all of the params.
-      this.availableCipherIds.next(cipherIds);
+      this.availableCipherIdsSubject.next(cipherIds);
 
       await this.showUi("/passkeys");
 
@@ -140,20 +147,6 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
       // Make sure to clean up so the app is never stuck in modal mode?
       await this.desktopSettingsService.setInModalMode(false);
     }
-  }
-
-  /**
-   * Returns once the UI has confirmed and completed the operation
-   * @returns
-   */
-  async getAvailableCipherIds(): Promise<string[]> {
-    return lastValueFrom(
-      this.availableCipherIds.pipe(
-        filter((ids) => ids != null),
-        take(1),
-        timeout(50000),
-      ),
-    );
   }
 
   confirmChosenCipher(cipherId: string): void {
