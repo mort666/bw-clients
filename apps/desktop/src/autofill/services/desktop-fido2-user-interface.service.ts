@@ -160,6 +160,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
   }
 
   async getRpId(): Promise<string> {
+    console.log("getRpId");
     return lastValueFrom(
       this.rpId.pipe(
         filter((id) => id != null),
@@ -215,6 +216,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
       userVerification,
       rpId,
     );
+    this.rpId.next(rpId);
 
     try {
       await this.showUi("/passkey-create");
@@ -262,7 +264,6 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
    */
   async createCipher({ credentialName, userName, rpId }: NewCredentialParams): Promise<Cipher> {
     // Store the passkey on a new cipher to avoid replacing something important
-    this.rpId.next(rpId);
 
     const cipher = new CipherView();
     cipher.name = credentialName;

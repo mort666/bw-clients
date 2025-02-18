@@ -1637,14 +1637,6 @@ export class CipherService implements CipherServiceAbstraction {
     }
   }
 
-  async getPasskeyCiphersForUrl(url: string): Promise<CipherView[]> {
-    let ciphers = await this.getAllDecryptedForUrl(url);
-    if (!ciphers) {
-      return null;
-    }
-    ciphers = ciphers.filter((cipher) => cipher.login.fido2Credentials?.length);
-    return ciphers;
-  }
   async getPasskeyCiphers(): Promise<CipherView[]> {
     let ciphers = await this.getAllDecrypted();
     if (!ciphers) {
