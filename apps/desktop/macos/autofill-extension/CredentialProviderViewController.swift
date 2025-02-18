@@ -17,10 +17,50 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
     //
     // If instead I make this a static, the deinit gets called correctly after each request.
     // I think we still might want a static regardless, to be able to reuse the connection if possible.
-    static let client: MacOsProviderClient = {
-        let instance = MacOsProviderClient.connect()
-        // setup code
-        return instance
+    let client: MacOsProviderClient = {
+        let logger = Logger(subsystem: "com.bitwarden.desktop.autofill-extension", category: "credential-provider")
+        
+        // Check if the Electron app is running
+        let workspace = NSWorkspace.shared
+        let isRunning = workspace.runningApplications.contains { app in
+            app.bundleIdentifier == "com.bitwarden.desktop"
+        }
+        
+        
+         if !isRunning {
+            logger.log("[autofill-extension] Bitwarden Desktop not running, attempting to launch")
+            
+            // Try to launch the app
+            if let appURL = workspace.urlForApplication(withBundleIdentifier: "com.bitwarden.desktop") {
+                let semaphore = DispatchSemaphore(value: 0)
+                
+                workspace.openApplication(at: appURL,
+                                       configuration: NSWorkspace.OpenConfiguration()) { app, error in
+                    if let error = error {
+                        logger.error("[autofill-extension] Failed to launch Bitwarden Desktop: \(error.localizedDescription)")
+                    } else if let app = app {
+                        logger.log("[autofill-extension] Successfully launched Bitwarden Desktop")
+                    } else {
+                        logger.error("[autofill-extension] Failed to launch Bitwarden Desktop: unknown error")
+                    }
+                    semaphore.signal()
+                }
+                
+                // Wait for launch completion with timeout
+                _ = semaphore.wait(timeout: .now() + 5.0)
+                
+                // Add a small delay to allow for initialization
+                Thread.sleep(forTimeInterval: 1.0)
+            } else {
+                logger.error("[autofill-extension] Could not find Bitwarden Desktop app")
+            }
+        } else {
+            logger.log("[autofill-extension] Bitwarden Desktop is running")    
+        }
+        
+        logger.log("[autofill-extension] Connecting to Bitwarden over IPC")    
+
+        return MacOsProviderClient.connect()
     }()
     
     init() {
@@ -137,7 +177,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                     userVerification: userVerification
                 )
                 
-                CredentialProviderViewController.client.preparePasskeyAssertionWithoutUserInterface(request: req, callback: CallbackImpl(self.extensionContext, self.logger))
+                self.client.preparePasskeyAssertionWithoutUserInterface(request: req, callback: CallbackImpl(self.extensionContext, self.logger))
                 return
             }
         }
@@ -236,7 +276,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                 logger.log("[autofill-extension]     rpId: \(req.userName)")
                 
                 
-                CredentialProviderViewController.client.preparePasskeyRegistration(request: req, callback: CallbackImpl(self.extensionContext))
+                self.client.preparePasskeyRegistration(request: req, callback: CallbackImpl(self.extensionContext))
                 return
             }
         }
@@ -309,7 +349,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
             //extensionInput: requestParameters.extensionInput,
         )
         
-        CredentialProviderViewController.client.preparePasskeyAssertion(request: req, callback: CallbackImpl(self.extensionContext))
+        self.client.preparePasskeyAssertion(request: req, callback: CallbackImpl(self.extensionContext))
         return
     }
     
