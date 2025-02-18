@@ -75,7 +75,7 @@ async function run(context) {
     }
   }
 
-  if (macBuild  || copyAutofillExtension) {
+  if (macBuild) {
     console.log("### Notarizing " + appPath);
     if (process.env.APP_STORE_CONNECT_TEAM_ISSUER) {
       const appleApiIssuer = process.env.APP_STORE_CONNECT_TEAM_ISSUER;
@@ -99,5 +99,7 @@ async function run(context) {
         appleIdPassword: appleIdPassword,
       });
     }
+  } else {
+    console.log("### Skipping notarization");
   }
 }
