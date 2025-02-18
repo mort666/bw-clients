@@ -54,6 +54,7 @@ async function run(context) {
   }
 
   if (shouldResign) {
+    console.log("### Resigning app");
     // Resign to sign safari extension
     if (context.electronPlatformName === "mas") {
       const masBuildOptions = deepAssign(
