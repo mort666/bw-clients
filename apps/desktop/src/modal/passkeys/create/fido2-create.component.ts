@@ -62,27 +62,22 @@ export class Fido2CreateComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
-    console.log("fido2 create component");
     this.session = this.fido2UserInterfaceService.getCurrentSession();
-    console.log(this.session, "session");
     const rpid = await this.session.getRpId();
     const equivalentDomains = await firstValueFrom(
       this.domainSettingsService.getUrlEquivalentDomains(rpid),
     );
 
-    console.log(rpid, "webdomain stuff");
-
     this.cipherService
       .getAllDecrypted()
       .then((ciphers) => {
-        console.log(ciphers, "ciphers from url");
         const relevantCiphers = ciphers.filter((cipher) => {
-          if (!cipher.login) {
+          if (!cipher.login || !cipher.login.hasUris) {
             return false;
           }
 
           return (
-            cipher.login.uri === rpid &&
+            cipher.login.matchesUri(rpid, equivalentDomains) &&
             (!cipher.login.fido2Credentials || cipher.login.fido2Credentials.length === 0)
           );
         });
