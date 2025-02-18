@@ -687,11 +687,11 @@ jobs:
         run: |
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
-          
+
           mkdir -p $HOME/Library/MobileDevice/Provisioning\ Profiles
           export APP_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_appstore.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
           export AUTOFILL_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
-          
+
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $HOME/Library/MobileDevice/Provisioning\ Profiles/$APP_UUID.provisionprofile
           cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
@@ -888,11 +888,11 @@ jobs:
         run: |
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
-          
+
           mkdir -p $HOME/Library/MobileDevice/Provisioning\ Profiles
           export APP_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_appstore.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
           export AUTOFILL_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
-          
+
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $HOME/Library/MobileDevice/Provisioning\ Profiles/$APP_UUID.provisionprofile
           cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
@@ -1151,11 +1151,11 @@ jobs:
         run: |
           cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
-          
+
           mkdir -p $HOME/Library/MobileDevice/Provisioning\ Profiles
           export APP_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_appstore.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
           export AUTOFILL_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
-          
+
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $HOME/Library/MobileDevice/Provisioning\ Profiles/$APP_UUID.provisionprofile
           cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
@@ -1254,9 +1254,9 @@ jobs:
 
       - name: Deploy to TestFlight
         id: testflight-deploy
-        if: |
-          github.event_name != 'pull_request_target'
-          && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/rc' || github.ref == 'refs/heads/hotfix-rc-desktop')
+        # if: |
+        #   github.event_name != 'pull_request_target'
+        #   && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/rc' || github.ref == 'refs/heads/hotfix-rc-desktop')
         env:
           APP_STORE_CONNECT_TEAM_ISSUER: ${{ secrets.APP_STORE_CONNECT_TEAM_ISSUER }}
           APP_STORE_CONNECT_AUTH_KEY: 6TV9MKN3GP
@@ -1423,11 +1423,11 @@ jobs:
         run: |
           cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
             $GITHUB_WORKSPACE/apps/desktop/bitwarden_desktop_appstore.provisionprofile
-          
+
           mkdir -p $HOME/Library/MobileDevice/Provisioning\ Profiles
           export APP_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_appstore.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
           export AUTOFILL_UUID=`grep UUID -A1 -a $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile | grep -io "[-A-Z0-9]\{36\}"`
-          
+
           cp $HOME/secrets/bitwarden_desktop_appstore.provisionprofile \
             $HOME/Library/MobileDevice/Provisioning\ Profiles/$APP_UUID.provisionprofile
           cp $HOME/secrets/bitwarden_desktop_autofill_app_store_2024.provisionprofile \
@@ -1477,7 +1477,7 @@ jobs:
           key: rust-${{ runner.os }}-${{ hashFiles('apps/desktop/desktop_native/**/*') }}
 
       - name: Build Native Module
-        working-directory: apps/desktop/desktop_native        
+        working-directory: apps/desktop/desktop_native
         run: |
           rustup target add aarch64-apple-darwin
           node build.js cross-platform
