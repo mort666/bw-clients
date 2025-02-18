@@ -64,8 +64,7 @@ async function run(context) {
       );
       if (context.targets.some((e) => e.name === "mas-dev")) {
         deepAssign(masBuildOptions, {
-          type: "development",
-          identity: "E2F4EAED32FD109DFB50C4191B0B9CB0AEE59E67",
+          identity: "Bitwarden Inc",
         });
       }
       if (context.packager.packagerOptions.prepackaged == null) {
