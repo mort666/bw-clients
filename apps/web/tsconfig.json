@@ -36,8 +36,7 @@
     }
   },
   "angularCompilerOptions": {
-    "strictTemplates": true,
-    "preserveWhitespaces": true
+    "strictTemplates": true
   },
   "files": ["src/polyfills.ts", "src/main.ts", "src/theme.ts"],
   "include": [
