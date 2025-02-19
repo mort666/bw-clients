@@ -81,14 +81,15 @@ export class WindowMain {
       .pipe(
         pairwise(),
         concatMap(async ([lastValue, newValue]) => {
-          if (lastValue && !newValue) {
+          if (lastValue.modalMode && !newValue.modalMode) {
             // Reset the window state to the main window state
             applyMainWindowStyles(this.win, this.windowStates[mainWindowSizeKey]);
             // Because modal is used in front of another app, UX wise it makes sense to hide the main window when leaving modal mode.
             this.win.hide();
-          } else if (!lastValue && newValue) {
+          } else if (!lastValue.modalMode && newValue.modalMode) {
             // Apply the popup modal styles
-            applyPopupModalStyles(this.win);
+            this.logService.info("Applying popup modal styles", newValue.modalPosition);
+            applyPopupModalStyles(this.win, newValue.modalPosition);
             this.win.show();
           }
         }),

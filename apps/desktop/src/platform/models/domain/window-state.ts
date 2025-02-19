@@ -11,3 +11,8 @@ export class WindowState {
   y?: number;
   zoomFactor?: number;
 }
+
+export class ModalModeState {
+  modalMode: boolean;
+  modalPosition?: [number, number];
+}

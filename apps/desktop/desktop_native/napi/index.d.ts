@@ -136,6 +136,7 @@ export declare namespace autofill {
     clientDataHash: Array<number>
     userVerification: UserVerification
     supportedAlgorithms: Array<number>
+    windowXy: Array<number>
   }
   export interface PasskeyRegistrationResponse {
     rpId: string
@@ -148,6 +149,7 @@ export declare namespace autofill {
     clientDataHash: Array<number>
     userVerification: UserVerification
     allowedCredentials: Array<Array<number>>
+    windowXy: Array<number>
   }
   export interface PasskeyAssertionWithoutUserInterfaceRequest {
     rpId: string
@@ -157,6 +159,7 @@ export declare namespace autofill {
     recordIdentifier?: string
     clientDataHash: Array<number>
     userVerification: UserVerification
+    windowXy: Array<number>
   }
   export interface PasskeyAssertionResponse {
     rpId: string

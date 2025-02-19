@@ -8,7 +8,7 @@ import {
 } from "@bitwarden/common/platform/state";
 import { UserId } from "@bitwarden/common/types/guid";
 
-import { WindowState } from "../models/domain/window-state";
+import { ModalModeState, WindowState } from "../models/domain/window-state";
 
 export const HARDWARE_ACCELERATION = new KeyDefinition<boolean>(
   DESKTOP_SETTINGS_DISK,
@@ -75,7 +75,7 @@ const MINIMIZE_ON_COPY = new UserKeyDefinition<boolean>(DESKTOP_SETTINGS_DISK, "
   clearOn: [], // User setting, no need to clear
 });
 
-const IN_MODAL_MODE = new KeyDefinition<boolean>(DESKTOP_SETTINGS_DISK, "inModalMode", {
+const IN_MODAL_MODE = new KeyDefinition<ModalModeState>(DESKTOP_SETTINGS_DISK, "inModalMode", {
   deserializer: (b) => b,
 });
 
@@ -161,7 +161,7 @@ export class DesktopSettingsService {
 
   private readonly inModalModeState = this.stateProvider.getGlobal(IN_MODAL_MODE);
 
-  inModalMode$ = this.inModalModeState.state$.pipe(map(Boolean));
+  inModalMode$ = this.inModalModeState.state$;
 
   constructor(private stateProvider: StateProvider) {
     this.window$ = this.windowState.state$.pipe(
@@ -176,7 +176,7 @@ export class DesktopSettingsService {
    * stuck in modal mode if the application is force-closed in modal mode.
    */
   async resetInModalMode() {
-    await this.inModalModeState.update(() => false);
+    await this.inModalModeState.update(() => ({ modalMode: false }));
   }
 
   async setHardwareAcceleration(enabled: boolean) {
@@ -291,7 +291,7 @@ export class DesktopSettingsService {
    * Sets the modal mode of the application. Setting this changes the windows-size and other properties.
    * @param value `true` if the application is in modal mode, `false` if it is not.
    */
-  async setInModalMode(value: boolean) {
-    await this.inModalModeState.update(() => value);
+  async setInModalMode(value: boolean, windowXy?: [number, number]) {
+    await this.inModalModeState.update(() => ({ modalMode: value, modalPosition: windowXy }));
   }
 }

@@ -90,6 +90,31 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
         self.extensionContext.completeRequest(withSelectedCredential: passwordCredential, completionHandler: nil)
     }
     
+    private func getWindowPosition() -> [Int32] {
+        let frame = self.view.window?.frame ?? .zero
+        let screenHeight = NSScreen.main?.frame.height ?? 0
+        
+        logger.log("[autofill-extension] Detailed window debug:")
+        logger.log("  Popup frame:")
+        logger.log("    origin.x: \(frame.origin.x)")
+        logger.log("    origin.y: \(frame.origin.y)")
+        logger.log("    width: \(frame.width)")
+        logger.log("    height: \(frame.height)")
+       
+        
+        // frame.width and frame.height is always 0. Estimating works OK for now.
+        let estimatedWidth:CGFloat = 400;
+        let estimatedHeight:CGFloat = 200;
+        let centerX = Int32(round(frame.origin.x + estimatedWidth/2))
+        let centerY = Int32(round(screenHeight - (frame.origin.y + estimatedHeight/2)))
+        
+        logger.log("  Calculated center:")
+        logger.log("    x: \(centerX)")
+        logger.log("    y: \(centerY)")
+        
+        return [centerX, centerY]
+    }
+    
     override func loadView() {
         let view = NSView()
         view.isHidden = true
@@ -174,7 +199,8 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                     userHandle: passkeyIdentity.userHandle,
                     recordIdentifier: passkeyIdentity.recordIdentifier,
                     clientDataHash: request.clientDataHash,
-                    userVerification: userVerification
+                    userVerification: userVerification,
+                    windowXy: self.getWindowPosition()
                 )
                 
                 self.client.preparePasskeyAssertionWithoutUserInterface(request: req, callback: CallbackImpl(self.extensionContext, self.logger))
@@ -268,7 +294,9 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                     userHandle: passkeyIdentity.userHandle,
                     clientDataHash: request.clientDataHash,
                     userVerification: userVerification,
-                    supportedAlgorithms: request.supportedAlgorithms.map{ Int32($0.rawValue) }
+                    supportedAlgorithms: request.supportedAlgorithms.map{ Int32($0.rawValue) },
+                    windowXy: self.getWindowPosition()
+                    
                 )
                 logger.log("[autofill-extension] prepareInterface(passkey) calling preparePasskeyRegistration")
                 // Log details of the request
@@ -345,7 +373,9 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
             rpId: requestParameters.relyingPartyIdentifier,
             clientDataHash: requestParameters.clientDataHash,
             userVerification: userVerification,
-            allowedCredentials: requestParameters.allowedCredentials
+            allowedCredentials: requestParameters.allowedCredentials,
+            windowXy: self.getWindowPosition()
+            
             //extensionInput: requestParameters.extensionInput,
         )
         

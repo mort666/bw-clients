@@ -592,6 +592,7 @@ pub mod autofill {
         pub client_data_hash: Vec<u8>,
         pub user_verification: UserVerification,
         pub supported_algorithms: Vec<i32>,
+        pub window_xy: Vec<i32>,
     }
 
     #[napi(object)]
@@ -612,6 +613,7 @@ pub mod autofill {
         pub client_data_hash: Vec<u8>,
         pub user_verification: UserVerification,
         pub allowed_credentials: Vec<Vec<u8>>,
+        pub window_xy: Vec<i32>,
         //extension_input: Vec<u8>, TODO: Implement support for extensions
     }
 
@@ -626,6 +628,7 @@ pub mod autofill {
         pub record_identifier: Option<String>,
         pub client_data_hash: Vec<u8>,
         pub user_verification: UserVerification,
+        pub window_xy: Vec<i32>,
     }
 
     #[napi(object)]

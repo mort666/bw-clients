@@ -33,10 +33,13 @@ import { SecureNoteView } from "@bitwarden/common/vault/models/view/secure-note.
 
 import { DesktopSettingsService } from "src/platform/services/desktop-settings.service";
 
-// import the angular router
+// This type is used to pass the window position from the native UI
+export type NativeWindowObject = {
+  windowXy?: [number, number];
+};
 
 export class DesktopFido2UserInterfaceService
-  implements Fido2UserInterfaceServiceAbstraction<void>
+  implements Fido2UserInterfaceServiceAbstraction<NativeWindowObject>
 {
   constructor(
     private authService: AuthService,
@@ -55,10 +58,10 @@ export class DesktopFido2UserInterfaceService
 
   async newSession(
     fallbackSupported: boolean,
-    _tab: void,
+    _tab: NativeWindowObject,
     abortController?: AbortController,
   ): Promise<DesktopFido2UserInterfaceSession> {
-    this.logService.warning("newSession", fallbackSupported, abortController);
+    this.logService.warning("newSession", fallbackSupported, abortController, _tab);
     const session = new DesktopFido2UserInterfaceSession(
       this.authService,
       this.cipherService,
@@ -66,6 +69,7 @@ export class DesktopFido2UserInterfaceService
       this.logService,
       this.router,
       this.desktopSettingsService,
+      _tab,
     );
 
     this.currentSession = session;
@@ -81,6 +85,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     private logService: LogService,
     private router: Router,
     private desktopSettingsService: DesktopSettingsService,
+    private windowObject: NativeWindowObject,
   ) {}
 
   private confirmCredentialSubject = new Subject<boolean>();
@@ -130,7 +135,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
       // Not sure if the UI also need to know about masterPasswordRepromptRequired -- probably not, otherwise we can send all of the params.
       this.availableCipherIdsSubject.next(cipherIds);
 
-      await this.showUi("/passkeys");
+      await this.showUi("/passkeys", this.windowObject.windowXy);
 
       const chosenCipherId = await this.waitForUiChosenCipher();
 
@@ -194,7 +199,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     );
 
     try {
-      await this.showUi("/passkeys");
+      await this.showUi("/passkeys", this.windowObject.windowXy);
 
       // Wait for the UI to wrap up
       const confirmation = await this.waitForUiNewCredentialConfirmation();
@@ -224,10 +229,10 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     }
   }
 
-  private async showUi(route: string) {
+  private async showUi(route: string, position?: [number, number]): Promise<void> {
     // Load the UI:
     // maybe toggling to modal mode shouldn't be done here?
-    await this.desktopSettingsService.setInModalMode(true);
+    await this.desktopSettingsService.setInModalMode(true, position);
     await this.router.navigate(["/passkeys"]);
   }
 
