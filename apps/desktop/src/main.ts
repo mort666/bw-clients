@@ -279,7 +279,7 @@ export class Main {
       async () => {
         await this.toggleHardwareAcceleration();
         // Reset modal mode to make sure main window is displayed correctly
-        await this.desktopSettingsService.resetInModalMode();
+        await this.desktopSettingsService.resetModalMode();
         await this.windowMain.init();
         await this.i18nService.init();
         await this.messagingMain.init();

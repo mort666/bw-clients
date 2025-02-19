@@ -77,16 +77,16 @@ export class WindowMain {
       }
     });
 
-    this.desktopSettingsService.inModalMode$
+    this.desktopSettingsService.modalMode$
       .pipe(
         pairwise(),
         concatMap(async ([lastValue, newValue]) => {
-          if (lastValue.modalMode && !newValue.modalMode) {
+          if (lastValue.isModalModeActive && !newValue.isModalModeActive) {
             // Reset the window state to the main window state
             applyMainWindowStyles(this.win, this.windowStates[mainWindowSizeKey]);
             // Because modal is used in front of another app, UX wise it makes sense to hide the main window when leaving modal mode.
             this.win.hide();
-          } else if (!lastValue.modalMode && newValue.modalMode) {
+          } else if (!lastValue.isModalModeActive && newValue.isModalModeActive) {
             // Apply the popup modal styles
             this.logService.info("Applying popup modal styles", newValue.modalPosition);
             applyPopupModalStyles(this.win, newValue.modalPosition);
@@ -209,7 +209,7 @@ export class WindowMain {
       return;
     }
 
-    await this.desktopSettingsService.setInModalMode(modal);
+    await this.desktopSettingsService.setModalMode(modal);
     await this.win.loadURL(
       url.format({
         protocol: "file:",
@@ -405,9 +405,9 @@ export class WindowMain {
       return;
     }
 
-    const inModalMode = await firstValueFrom(this.desktopSettingsService.inModalMode$);
+    const modalMode = await firstValueFrom(this.desktopSettingsService.modalMode$);
 
-    if (inModalMode) {
+    if (modalMode.isModalModeActive) {
       return;
     }
 

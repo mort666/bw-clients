@@ -73,7 +73,7 @@ export class Fido2PlaceholderComponent implements OnInit, OnDestroy {
     this.session?.confirmChosenCipher(cipherId);
 
     await this.router.navigate(["/"]);
-    await this.desktopSettingsService.setInModalMode(false);
+    await this.desktopSettingsService.setModalMode(false);
   }
 
   ngOnDestroy() {
@@ -103,7 +103,7 @@ export class Fido2PlaceholderComponent implements OnInit, OnDestroy {
       // The session currently toggles modal on and send us here
       // But if this route is somehow opened outside of session we want to make sure we clean up?
       await this.router.navigate(["/"]);
-      await this.desktopSettingsService.setInModalMode(false);
+      await this.desktopSettingsService.setModalMode(false);
     } catch (error) {
       // TODO: Handle error appropriately
     }
@@ -111,7 +111,7 @@ export class Fido2PlaceholderComponent implements OnInit, OnDestroy {
 
   async closeModal() {
     await this.router.navigate(["/"]);
-    await this.desktopSettingsService.setInModalMode(false);
+    await this.desktopSettingsService.setModalMode(false);
 
     this.session.notifyConfirmNewCredential(false);
     // little bit hacky:

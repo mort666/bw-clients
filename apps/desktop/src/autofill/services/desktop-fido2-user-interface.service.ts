@@ -150,7 +150,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
       return { cipherId: resultCipherId, userVerified: true };
     } finally {
       // Make sure to clean up so the app is never stuck in modal mode?
-      await this.desktopSettingsService.setInModalMode(false);
+      await this.desktopSettingsService.setModalMode(false);
     }
   }
 
@@ -225,14 +225,14 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
       return { cipherId: this.createdCipher.id, userVerified: userVerification };
     } finally {
       // Make sure to clean up so the app is never stuck in modal mode?
-      await this.desktopSettingsService.setInModalMode(false);
+      await this.desktopSettingsService.setModalMode(false);
     }
   }
 
   private async showUi(route: string, position?: [number, number]): Promise<void> {
     // Load the UI:
     // maybe toggling to modal mode shouldn't be done here?
-    await this.desktopSettingsService.setInModalMode(true, position);
+    await this.desktopSettingsService.setModalMode(true, position);
     await this.router.navigate(["/passkeys"]);
   }
 
