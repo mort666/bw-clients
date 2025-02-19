@@ -203,6 +203,8 @@ export class WindowMain {
     }
   }
 
+  // TODO: REMOVE ONCE WE CAN STOP USING FAKE POP UP BTN FROM TRAY
+  // Only used during initial UI development
   async loadUrl(targetPath: string, modal: boolean = false) {
     if (this.win == null || this.win.isDestroyed()) {
       await this.createWindow("modal-app");

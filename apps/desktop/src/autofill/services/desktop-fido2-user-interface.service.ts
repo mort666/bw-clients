@@ -33,8 +33,13 @@ import { SecureNoteView } from "@bitwarden/common/vault/models/view/secure-note.
 
 import { DesktopSettingsService } from "src/platform/services/desktop-settings.service";
 
-// This type is used to pass the window position from the native UI
+/**
+ * This type is used to pass the window position from the native UI
+ */
 export type NativeWindowObject = {
+  /**
+   * The position of the window, first entry is the x position, second is the y position
+   */
   windowXy?: [number, number];
 };
 
@@ -58,10 +63,10 @@ export class DesktopFido2UserInterfaceService
 
   async newSession(
     fallbackSupported: boolean,
-    _tab: NativeWindowObject,
+    nativeWindowObject: NativeWindowObject,
     abortController?: AbortController,
   ): Promise<DesktopFido2UserInterfaceSession> {
-    this.logService.warning("newSession", fallbackSupported, abortController, _tab);
+    this.logService.warning("newSession", fallbackSupported, abortController, nativeWindowObject);
     const session = new DesktopFido2UserInterfaceSession(
       this.authService,
       this.cipherService,
@@ -69,7 +74,7 @@ export class DesktopFido2UserInterfaceService
       this.logService,
       this.router,
       this.desktopSettingsService,
-      _tab,
+      nativeWindowObject,
     );
 
     this.currentSession = session;
