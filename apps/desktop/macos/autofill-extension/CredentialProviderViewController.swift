@@ -209,8 +209,8 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
         // Create a timer for 180 second timeout
         let timeoutTimer = DispatchWorkItem { [weak self] in
             guard let self = self else { return }
-            logger.log("[autofill-extension] Registration timed out after 180 seconds")
-            self.extensionContext.cancelRequest(withError: BitwardenError.Internal("Registration timed out"))
+            logger.log("[autofill-extension] The operation timed out after 180 seconds")
+            self.extensionContext.cancelRequest(withError: BitwardenError.Internal("The operation timed out"))
         }
         
         // Schedule the timeout
