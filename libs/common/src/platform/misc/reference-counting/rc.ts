@@ -1,5 +1,3 @@
-import { UsingRequired } from "../using-required";
-
 export type Freeable = { free: () => void };
 
 type UseReturnValue<T> = T extends (value: any) => Promise<unknown> ? Promise<void> : void;
@@ -52,33 +50,6 @@ export class Rc<T extends Freeable> {
   }
 
   /**
-   * Use this function when you want to use the underlying object.
-   * This will guarantee that you have a reference to the object
-   * and that it won't be freed until your reference goes out of scope.
-   *
-   * This function must be used with the `using` keyword.
-   *
-   * @example
-   * ```typescript
-   * function someFunction(rc: Rc<SomeValue>) {
-   *   using reference = rc.take();
-   *   reference.value.doSomething();
-   *   // reference is automatically disposed here
-   * }
-   * ```
-   *
-   * @returns The value.
-   */
-  take(): Ref<T> {
-    if (this.markedForDisposal) {
-      throw new Error("Cannot take a reference to a value marked for disposal");
-    }
-
-    this.refCount++;
-    return new Ref(() => this.release(), this.value);
-  }
-
-  /**
    * Mark this Rc for disposal. When the refCount reaches 0, the value
    * will be freed.
    */
@@ -96,16 +67,5 @@ export class Rc<T extends Freeable> {
     if (this.refCount === 0 && this.markedForDisposal) {
       this.value.free();
     }
-  }
-}
-
-export class Ref<T extends Freeable> implements UsingRequired {
-  constructor(
-    private readonly release: () => void,
-    readonly value: T,
-  ) {}
-
-  [Symbol.dispose]() {
-    this.release();
   }
 }
