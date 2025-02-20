@@ -1,4 +1,4 @@
-import { CommonModule } from "@angular/common"; // Add this
+import { CommonModule } from "@angular/common";
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 import { BehaviorSubject, Observable } from "rxjs";
@@ -11,8 +11,7 @@ import { DesktopSettingsService } from "../../platform/services/desktop-settings
 
 @Component({
   standalone: true,
-  imports: [CommonModule], // Add this
-
+  imports: [CommonModule],
   template: `
     <div
       style="background:white; display:flex; justify-content: center; align-items: center; flex-direction: column"
