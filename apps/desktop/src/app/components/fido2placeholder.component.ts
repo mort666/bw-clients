@@ -56,7 +56,7 @@ import { DesktopSettingsService } from "../../platform/services/desktop-settings
 export class Fido2PlaceholderComponent implements OnInit, OnDestroy {
   session?: DesktopFido2UserInterfaceSession = null;
   private cipherIdsSubject = new BehaviorSubject<string[]>([]);
-  cipherIds$: Observable<string[]> = this.cipherIdsSubject.asObservable();
+  cipherIds$: Observable<string[]>;
 
   constructor(
     private readonly desktopSettingsService: DesktopSettingsService,
@@ -64,21 +64,16 @@ export class Fido2PlaceholderComponent implements OnInit, OnDestroy {
     private readonly router: Router,
   ) {}
 
-  async ngOnInit(): Promise<void> {
+  ngOnInit() {
     this.session = this.fido2UserInterfaceService.getCurrentSession();
-
-    const cipherIds = await this.session?.getAvailableCipherIds();
-    this.cipherIdsSubject.next(cipherIds || []);
-
-    // eslint-disable-next-line no-console
-    console.log("Available cipher IDs", cipherIds);
+    this.cipherIds$ = this.session?.availableCipherIds$;
   }
 
   async chooseCipher(cipherId: string) {
     this.session?.confirmChosenCipher(cipherId);
 
     await this.router.navigate(["/"]);
-    await this.desktopSettingsService.setInModalMode(false);
+    await this.desktopSettingsService.setModalMode(false);
   }
 
   ngOnDestroy() {
@@ -108,7 +103,7 @@ export class Fido2PlaceholderComponent implements OnInit, OnDestroy {
       // The session currently toggles modal on and send us here
       // But if this route is somehow opened outside of session we want to make sure we clean up?
       await this.router.navigate(["/"]);
-      await this.desktopSettingsService.setInModalMode(false);
+      await this.desktopSettingsService.setModalMode(false);
     } catch (error) {
       // TODO: Handle error appropriately
     }
@@ -116,7 +111,7 @@ export class Fido2PlaceholderComponent implements OnInit, OnDestroy {
 
   async closeModal() {
     await this.router.navigate(["/"]);
-    await this.desktopSettingsService.setInModalMode(false);
+    await this.desktopSettingsService.setModalMode(false);
 
     this.session.notifyConfirmCredential(false);
     // little bit hacky:

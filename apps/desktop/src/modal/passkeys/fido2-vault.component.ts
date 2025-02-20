@@ -47,6 +47,8 @@ export class Fido2VaultComponent implements OnInit {
   session?: DesktopFido2UserInterfaceSession = null;
   private ciphersSubject = new BehaviorSubject<CipherView[]>([]);
   ciphers$: Observable<CipherView[]> = this.ciphersSubject.asObservable();
+  private cipherIdsSubject = new BehaviorSubject<string[]>([]);
+  cipherIds$: Observable<string[]>;
   readonly Icons = { BitwardenShield };
 
   constructor(
@@ -58,29 +60,36 @@ export class Fido2VaultComponent implements OnInit {
 
   async ngOnInit() {
     this.session = this.fido2UserInterfaceService.getCurrentSession();
+    this.cipherIds$ = this.session?.availableCipherIds$;
 
-    const cipherIds = await this.session?.getAvailableCipherIds();
+    this.cipherIds$.subscribe((cipherIds) => {
+      this.cipherService
+        .getAllDecryptedForIds(cipherIds || [])
+        .then((ciphers) => {
+          this.ciphersSubject.next(ciphers);
+        })
+        .catch(() => {
+          // console.error(err);
+        });
+    });
+  }
 
-    this.cipherService
-      .getAllDecryptedForIds(cipherIds || [])
-      .then((ciphers) => {
-        this.ciphersSubject.next(ciphers);
-      })
-      .catch(() => {
-        // console.error(err);
-      });
+  ngOnDestroy() {
+    this.cipherIdsSubject.complete(); // Clean up the BehaviorSubject
   }
 
   async chooseCipher(cipherId: string) {
     this.session?.confirmChosenCipher(cipherId);
 
     await this.router.navigate(["/"]);
-    await this.desktopSettingsService.setInModalMode(false);
+    await this.desktopSettingsService.setModalMode(false);
   }
 
   async closeModal() {
     await this.router.navigate(["/"]);
-    await this.desktopSettingsService.setInModalMode(false);
+    await this.desktopSettingsService.setModalMode(false);
+
     this.session.notifyConfirmCredential(false);
+    this.session.confirmChosenCipher(null);
   }
 }

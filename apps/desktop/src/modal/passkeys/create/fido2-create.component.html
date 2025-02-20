@@ -1,4 +1,4 @@
-<div class="tw-flex tw-flex-col">
+<div class="tw-flex tw-flex-col tw-h-full">
   <bit-section
     disableMargin
     class="tw-border-0 tw-border-b tw-border-solid tw-border-secondary-300"
@@ -7,7 +7,7 @@
       <div class="tw-flex tw-items-center">
         <bit-icon [icon]="Icons.BitwardenShield" class="tw-w-10 tw-mt-2 tw-ml-2"></bit-icon>
 
-        <h2 bitTypography="h6">{{ "savePasskeyQuestion" | i18n }}</h2>
+        <h2 bitTypography="h4" class="tw-font-semibold tw-text-lg">{{ "savePasskeyQuestion" | i18n }}</h2>
       </div>
 
       <button
@@ -22,7 +22,7 @@
     </bit-section-header>
   </bit-section>
 
-  <bit-section class="tw-bg-background-alt tw-p-4">
+  <bit-section class="tw-bg-background-alt tw-p-4 tw-flex tw-flex-col tw-grow">
     <bit-item *ngFor="let c of ciphers$ | async" class="">
       <button type="button" bit-item-content (click)="addPasskeyToCipher(c)">
         <app-vault-icon [cipher]="c" slot="start"></app-vault-icon>
@@ -33,14 +33,17 @@
         <span bitBadge slot="end">Save</span>
       </button>
     </bit-item>
-    <button
-      style="color: black; padding: 10px 20px; border: 1px solid black; margin: 10px"
-      bitButton
-      type="button"
-      buttonType="secondary"
-      (click)="confirmPasskey()"
-    >
-      Save as new login
-    </button>
+
+  </bit-section>
+  <bit-section class="tw-bg-background-alt tw-p-4 ">
+    <bit-item class="">
+      <button bitLink linkType="primary"type="button" bit-item-content (click)="confirmPasskey()">
+        <a bitLink linkType="primary" class="tw-font-medium tw-text-base">
+          {{ "saveNewPasskey" | i18n }}
+        </a>
+
+      </button>
+    </bit-item>
+
   </bit-section>
 </div>

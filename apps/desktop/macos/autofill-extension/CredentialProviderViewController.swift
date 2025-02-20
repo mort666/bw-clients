@@ -17,10 +17,50 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
     //
     // If instead I make this a static, the deinit gets called correctly after each request.
     // I think we still might want a static regardless, to be able to reuse the connection if possible.
-    static let client: MacOsProviderClient = {
-        let instance = MacOsProviderClient.connect()
-        // setup code
-        return instance
+    let client: MacOsProviderClient = {
+        let logger = Logger(subsystem: "com.bitwarden.desktop.autofill-extension", category: "credential-provider")
+        
+        // Check if the Electron app is running
+        let workspace = NSWorkspace.shared
+        let isRunning = workspace.runningApplications.contains { app in
+            app.bundleIdentifier == "com.bitwarden.desktop"
+        }
+        
+        
+         if !isRunning {
+            logger.log("[autofill-extension] Bitwarden Desktop not running, attempting to launch")
+            
+            // Try to launch the app
+            if let appURL = workspace.urlForApplication(withBundleIdentifier: "com.bitwarden.desktop") {
+                let semaphore = DispatchSemaphore(value: 0)
+                
+                workspace.openApplication(at: appURL,
+                                       configuration: NSWorkspace.OpenConfiguration()) { app, error in
+                    if let error = error {
+                        logger.error("[autofill-extension] Failed to launch Bitwarden Desktop: \(error.localizedDescription)")
+                    } else if let app = app {
+                        logger.log("[autofill-extension] Successfully launched Bitwarden Desktop")
+                    } else {
+                        logger.error("[autofill-extension] Failed to launch Bitwarden Desktop: unknown error")
+                    }
+                    semaphore.signal()
+                }
+                
+                // Wait for launch completion with timeout
+                _ = semaphore.wait(timeout: .now() + 5.0)
+                
+                // Add a small delay to allow for initialization
+                Thread.sleep(forTimeInterval: 1.0)
+            } else {
+                logger.error("[autofill-extension] Could not find Bitwarden Desktop app")
+            }
+        } else {
+            logger.log("[autofill-extension] Bitwarden Desktop is running")    
+        }
+        
+        logger.log("[autofill-extension] Connecting to Bitwarden over IPC")    
+
+        return MacOsProviderClient.connect()
     }()
     
     init() {
@@ -48,6 +88,31 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
     @IBAction func passwordSelected(_ sender: AnyObject?) {
         let passwordCredential = ASPasswordCredential(user: "j_appleseed", password: "apple1234")
         self.extensionContext.completeRequest(withSelectedCredential: passwordCredential, completionHandler: nil)
+    }
+    
+    private func getWindowPosition() -> [Int32] {
+        let frame = self.view.window?.frame ?? .zero
+        let screenHeight = NSScreen.main?.frame.height ?? 0
+        
+        logger.log("[autofill-extension] Detailed window debug:")
+        logger.log("  Popup frame:")
+        logger.log("    origin.x: \(frame.origin.x)")
+        logger.log("    origin.y: \(frame.origin.y)")
+        logger.log("    width: \(frame.width)")
+        logger.log("    height: \(frame.height)")
+       
+        
+        // frame.width and frame.height is always 0. Estimating works OK for now.
+        let estimatedWidth:CGFloat = 400;
+        let estimatedHeight:CGFloat = 200;
+        let centerX = Int32(round(frame.origin.x + estimatedWidth/2))
+        let centerY = Int32(round(screenHeight - (frame.origin.y + estimatedHeight/2)))
+        
+        logger.log("  Calculated center:")
+        logger.log("    x: \(centerX)")
+        logger.log("    y: \(centerY)")
+        
+        return [centerX, centerY]
     }
     
     override func loadView() {
@@ -134,10 +199,11 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                     userHandle: passkeyIdentity.userHandle,
                     recordIdentifier: passkeyIdentity.recordIdentifier,
                     clientDataHash: request.clientDataHash,
-                    userVerification: userVerification
+                    userVerification: userVerification,
+                    windowXy: self.getWindowPosition()
                 )
                 
-                CredentialProviderViewController.client.preparePasskeyAssertionWithoutUserInterface(request: req, callback: CallbackImpl(self.extensionContext, self.logger))
+                self.client.preparePasskeyAssertionWithoutUserInterface(request: req, callback: CallbackImpl(self.extensionContext, self.logger))
                 return
             }
         }
@@ -169,22 +235,22 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
     override func prepareInterface(forPasskeyRegistration registrationRequest: ASCredentialRequest) {
         logger.log("[autofill-extension] prepareInterface")
         
-        // Create a timer for 20 second timeout
+        // Create a timer for 90 second timeout
         let timeoutTimer = DispatchWorkItem { [weak self] in
             guard let self = self else { return }
-            logger.log("[autofill-extension] Registration timed out after 20 seconds")
+            logger.log("[autofill-extension] Registration timed out after 90 seconds")
             self.extensionContext.cancelRequest(withError: BitwardenError.Internal("Registration timed out"))
         }
         
         // Schedule the timeout
-        DispatchQueue.main.asyncAfter(deadline: .now() + 20, execute: timeoutTimer)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 90, execute: timeoutTimer)
         
-        // Create a timer to show UI after 10 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
-            guard let self = self else { return }
-            // Configure and show UI elements for manual cancellation
-            self.configureTimeoutUI()
-        }
+        // // Create a timer to show UI after 10 seconds
+        // DispatchQueue.main.asyncAfter(deadline: .now() + 90) { [weak self] in
+        //     guard let self = self else { return }
+        //     // Configure and show UI elements for manual cancellation
+        //     self.configureTimeoutUI()
+        // }
         
         if let request = registrationRequest as? ASPasskeyCredentialRequest {
             if let passkeyIdentity = registrationRequest.credentialIdentity as? ASPasskeyCredentialIdentity {
@@ -228,7 +294,9 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                     userHandle: passkeyIdentity.userHandle,
                     clientDataHash: request.clientDataHash,
                     userVerification: userVerification,
-                    supportedAlgorithms: request.supportedAlgorithms.map{ Int32($0.rawValue) }
+                    supportedAlgorithms: request.supportedAlgorithms.map{ Int32($0.rawValue) },
+                    windowXy: self.getWindowPosition()
+                    
                 )
                 logger.log("[autofill-extension] prepareInterface(passkey) calling preparePasskeyRegistration")
                 // Log details of the request
@@ -236,7 +304,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                 logger.log("[autofill-extension]     rpId: \(req.userName)")
                 
                 
-                CredentialProviderViewController.client.preparePasskeyRegistration(request: req, callback: CallbackImpl(self.extensionContext))
+                self.client.preparePasskeyRegistration(request: req, callback: CallbackImpl(self.extensionContext))
                 return
             }
         }
@@ -305,11 +373,13 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
             rpId: requestParameters.relyingPartyIdentifier,
             clientDataHash: requestParameters.clientDataHash,
             userVerification: userVerification,
-            allowedCredentials: requestParameters.allowedCredentials
+            allowedCredentials: requestParameters.allowedCredentials,
+            windowXy: self.getWindowPosition()
+            
             //extensionInput: requestParameters.extensionInput,
         )
         
-        CredentialProviderViewController.client.preparePasskeyAssertion(request: req, callback: CallbackImpl(self.extensionContext))
+        self.client.preparePasskeyAssertion(request: req, callback: CallbackImpl(self.extensionContext))
         return
     }
     

@@ -11,6 +11,7 @@ pub struct PasskeyAssertionRequest {
     client_data_hash: Vec<u8>,
     user_verification: UserVerification,
     allowed_credentials: Vec<Vec<u8>>,
+    window_xy: Vec<i32>,
     //extension_input: Vec<u8>, TODO: Implement support for extensions
 }
 
@@ -24,6 +25,7 @@ pub struct PasskeyAssertionWithoutUserInterfaceRequest {
     record_identifier: Option<String>,
     client_data_hash: Vec<u8>,
     user_verification: UserVerification,
+    window_xy: Vec<i32>,
 }
 
 #[derive(uniffi::Record, Serialize, Deserialize)]

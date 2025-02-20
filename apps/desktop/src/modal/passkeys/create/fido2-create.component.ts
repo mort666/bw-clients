@@ -115,7 +115,7 @@ export class Fido2CreateComponent implements OnInit {
       // The session currently toggles modal on and send us here
       // But if this route is somehow opened outside of session we want to make sure we clean up?
       await this.router.navigate(["/"]);
-      await this.desktopSettingsService.setInModalMode(false);
+      await this.desktopSettingsService.setModalMode(false);
     } catch (error) {
       // TODO: Handle error appropriately
     }
@@ -123,7 +123,8 @@ export class Fido2CreateComponent implements OnInit {
 
   async closeModal() {
     await this.router.navigate(["/"]);
-    await this.desktopSettingsService.setInModalMode(false);
+    await this.desktopSettingsService.setModalMode(false);
     this.session.notifyConfirmCredential(false);
+    this.session.confirmChosenCipher(null);
   }
 }

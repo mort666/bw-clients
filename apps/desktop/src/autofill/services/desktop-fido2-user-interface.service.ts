@@ -6,8 +6,9 @@ import {
   Subject,
   filter,
   take,
-  timeout,
   BehaviorSubject,
+  Observable,
+  timeout,
 } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
@@ -33,10 +34,18 @@ import { SecureNoteView } from "@bitwarden/common/vault/models/view/secure-note.
 
 import { DesktopSettingsService } from "src/platform/services/desktop-settings.service";
 
-// import the angular router
+/**
+ * This type is used to pass the window position from the native UI
+ */
+export type NativeWindowObject = {
+  /**
+   * The position of the window, first entry is the x position, second is the y position
+   */
+  windowXy?: [number, number];
+};
 
 export class DesktopFido2UserInterfaceService
-  implements Fido2UserInterfaceServiceAbstraction<void>
+  implements Fido2UserInterfaceServiceAbstraction<NativeWindowObject>
 {
   constructor(
     private authService: AuthService,
@@ -55,18 +64,18 @@ export class DesktopFido2UserInterfaceService
 
   async newSession(
     fallbackSupported: boolean,
-    _tab: void,
+    nativeWindowObject: NativeWindowObject,
     abortController?: AbortController,
   ): Promise<DesktopFido2UserInterfaceSession> {
-    this.logService.warning("newSession", fallbackSupported, abortController);
+    this.logService.warning("newSession", fallbackSupported, abortController, nativeWindowObject);
     const session = new DesktopFido2UserInterfaceSession(
       this.authService,
       this.cipherService,
       this.accountService,
       this.logService,
-      this.messagingService,
       this.router,
       this.desktopSettingsService,
+      nativeWindowObject,
     );
 
     this.currentSession = session;
@@ -80,9 +89,9 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     private cipherService: CipherService,
     private accountService: AccountService,
     private logService: LogService,
-    private messagingService: MessagingService,
     private router: Router,
     private desktopSettingsService: DesktopSettingsService,
+    private windowObject: NativeWindowObject,
   ) {}
 
   private confirmCredentialSubject = new Subject<boolean>();
@@ -90,8 +99,17 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
   private createdCipher: Cipher;
   private updatedCipher: CipherView;
 
-  private availableCipherIds = new BehaviorSubject<string[]>(null);
   private rpId = new BehaviorSubject<string>(null);
+  private availableCipherIdsSubject = new BehaviorSubject<string[]>(null);
+  /**
+   * Observable that emits available cipher IDs once they're confirmed by the UI
+   */
+  get availableCipherIds$(): Observable<string[]> {
+    return this.availableCipherIdsSubject.pipe(
+      filter((ids) => ids != null),
+      take(1),
+    );
+  }
 
   private chosenCipherSubject = new Subject<string>();
 
@@ -124,9 +142,9 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
 
       // make the cipherIds available to the UI.
       // Not sure if the UI also need to know about masterPasswordRepromptRequired -- probably not, otherwise we can send all of the params.
-      this.availableCipherIds.next(cipherIds);
+      this.availableCipherIdsSubject.next(cipherIds);
 
-      await this.showUi("/passkeys");
+      await this.showUi("/passkeys", this.windowObject.windowXy);
 
       const chosenCipherId = await this.waitForUiChosenCipher();
 
@@ -141,22 +159,8 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
       return { cipherId: resultCipherId, userVerified: true };
     } finally {
       // Make sure to clean up so the app is never stuck in modal mode?
-      await this.desktopSettingsService.setInModalMode(false);
+      await this.desktopSettingsService.setModalMode(false);
     }
-  }
-
-  /**
-   * Returns once the UI has confirmed and completed the operation
-   * @returns
-   */
-  async getAvailableCipherIds(): Promise<string[]> {
-    return lastValueFrom(
-      this.availableCipherIds.pipe(
-        filter((ids) => ids != null),
-        take(1),
-        timeout(50000),
-      ),
-    );
   }
 
   async getRpId(): Promise<string> {
@@ -165,7 +169,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
       this.rpId.pipe(
         filter((id) => id != null),
         take(1),
-        timeout(50000),
+        timeout(5000), // 5 seconds timeout
       ),
     );
   }
@@ -219,7 +223,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     this.rpId.next(rpId);
 
     try {
-      await this.showUi("/passkey-create");
+      await this.showUi("/create-passkey", this.windowObject.windowXy);
 
       // Wait for the UI to wrap up
       const confirmation = await this.waitForUiNewCredentialConfirmation();
@@ -244,17 +248,14 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
       }
     } finally {
       // Make sure to clean up so the app is never stuck in modal mode?
-      await this.desktopSettingsService.setInModalMode(false);
+      await this.desktopSettingsService.setModalMode(false);
     }
   }
 
-  private async showUi(route: string) {
+  private async showUi(route: string, position?: [number, number]): Promise<void> {
     // Load the UI:
     // maybe toggling to modal mode shouldn't be done here?
-    await this.desktopSettingsService.setInModalMode(true);
-    //pass the rpid to the fido2placeholder component through routing parameter
-
-    // await this.router.navigate(["/passkeys"]);
+    await this.desktopSettingsService.setModalMode(true, position);
     await this.router.navigate([route]);
   }
 

@@ -3436,5 +3436,8 @@
   },
   "savePasskeyQuestion": {
     "message": "Save passkey?"
+  },
+  "saveNewPasskey": {
+    "message": "Save as new login"
   }
 }

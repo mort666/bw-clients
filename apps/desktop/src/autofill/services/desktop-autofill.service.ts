@@ -37,6 +37,8 @@ import {
   NativeAutofillSyncCommand,
 } from "../../platform/main/autofill/sync.command";
 
+import type { NativeWindowObject } from "./desktop-fido2-user-interface.service";
+
 @Injectable()
 export class DesktopAutofillService implements OnDestroy {
   private destroy$ = new Subject<void>();
@@ -45,7 +47,7 @@ export class DesktopAutofillService implements OnDestroy {
     private logService: LogService,
     private cipherService: CipherService,
     private configService: ConfigService,
-    private fido2AuthenticatorService: Fido2AuthenticatorServiceAbstraction<void>,
+    private fido2AuthenticatorService: Fido2AuthenticatorServiceAbstraction<NativeWindowObject>,
     private accountService: AccountService,
   ) {}
 
@@ -147,7 +149,11 @@ export class DesktopAutofillService implements OnDestroy {
 
       const controller = new AbortController();
       void this.fido2AuthenticatorService
-        .makeCredential(this.convertRegistrationRequest(request), null, controller)
+        .makeCredential(
+          this.convertRegistrationRequest(request),
+          { windowXy: request.windowXy as [number, number] }, // TODO: Not sure if we want to change the type of windowXy to just number[] or if rust can generate [number,number]?
+          controller,
+        )
         .then((response) => {
           callback(null, this.convertRegistrationResponse(request, response));
         })
@@ -198,7 +204,11 @@ export class DesktopAutofillService implements OnDestroy {
 
         const controller = new AbortController();
         void this.fido2AuthenticatorService
-          .getAssertion(this.convertAssertionRequest(request, true), null, controller)
+          .getAssertion(
+            this.convertAssertionRequest(request, true),
+            { windowXy: request.windowXy as [number, number] },
+            controller,
+          )
           .then((response) => {
             callback(null, this.convertAssertionResponse(request, response));
           })
@@ -214,7 +224,11 @@ export class DesktopAutofillService implements OnDestroy {
 
       const controller = new AbortController();
       void this.fido2AuthenticatorService
-        .getAssertion(this.convertAssertionRequest(request), null, controller)
+        .getAssertion(
+          this.convertAssertionRequest(request),
+          { windowXy: request.windowXy as [number, number] },
+          controller,
+        )
         .then((response) => {
           callback(null, this.convertAssertionResponse(request, response));
         })
