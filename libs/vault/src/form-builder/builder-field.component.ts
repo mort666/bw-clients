@@ -1,6 +1,6 @@
 import { CommonModule } from "@angular/common";
 import { Component, Input } from "@angular/core";
-import { AbstractControl, ReactiveFormsModule } from "@angular/forms";
+import { AbstractControl, FormControl, ReactiveFormsModule } from "@angular/forms";
 
 import { FormFieldModule, IconButtonModule } from "@bitwarden/components";
 
@@ -19,7 +19,7 @@ import { FormConfig } from "./form-builder.component";
 })
 export class FieldTextComponent {
   @Input({ required: true }) config!: FormConfig;
-  @Input({ required: true }) control!: AbstractControl<any>;
+  @Input({ required: true }) control!: FormControl<any>;
 
   constructor() {}
 }
@@ -38,7 +38,7 @@ export class FieldTextComponent {
 })
 export class FieldPasswordComponent {
   @Input({ required: true }) config!: FormConfig;
-  @Input({ required: true }) control!: AbstractControl<any>;
+  @Input({ required: true }) control!: FormControl<any>;
 
   constructor() {}
 }

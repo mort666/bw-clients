@@ -35,9 +35,11 @@ import {
   TypographyModule,
 } from "@bitwarden/components";
 
+import { FormBuilderComponent, SectionConfig } from "../../form-builder/form-builder.component";
 import { CipherFormConfig } from "../abstractions/cipher-form-config.service";
 import { CipherFormService } from "../abstractions/cipher-form.service";
 import { CipherForm, CipherFormContainer } from "../cipher-form-container";
+import { CipherForms, cipherFormToFormGroup } from "../ciphers";
 import { CipherFormCacheService } from "../services/default-cipher-form-cache.service";
 
 import { AdditionalOptionsSectionComponent } from "./additional-options/additional-options-section.component";
@@ -76,6 +78,7 @@ import { SshKeySectionComponent } from "./sshkey-section/sshkey-section.componen
     NgIf,
     AdditionalOptionsSectionComponent,
     LoginDetailsSectionComponent,
+    FormBuilderComponent,
   ],
 })
 export class CipherFormComponent implements AfterViewInit, OnInit, OnChanges, CipherFormContainer {
@@ -83,6 +86,9 @@ export class CipherFormComponent implements AfterViewInit, OnInit, OnChanges, Ci
   private bitSubmit: BitSubmitDirective;
   private destroyRef = inject(DestroyRef);
   private _firstInitialized = false;
+
+  protected formConfig: SectionConfig[] = [];
+  protected formGroup?: FormGroup<any>;
 
   /**
    * The form ID to use for the form. Used to connect it to a submit button.
@@ -224,6 +230,9 @@ export class CipherFormComponent implements AfterViewInit, OnInit, OnChanges, Ci
     if (this.config == null) {
       return;
     }
+
+    this.formConfig = CipherForms[this.config.cipherType];
+    this.formGroup = cipherFormToFormGroup(this.formConfig);
 
     if (this.config.mode !== "add") {
       if (this.config.originalCipher == null) {
