@@ -2,6 +2,9 @@
 // @ts-strict-ignore
 import { firstValueFrom, map, Observable } from "rxjs";
 
+import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { CryptoClient } from "@bitwarden/sdk-internal";
+
 import { EncryptService } from "../../../key-management/crypto/abstractions/encrypt.service";
 import { KeyGenerationService } from "../../../platform/abstractions/key-generation.service";
 import { LogService } from "../../../platform/abstractions/log.service";
@@ -191,6 +194,16 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
         newKey,
         "Content: User Key; Encrypting Key: Stretched Master Key",
       );
+      if (decUserKey.length === 32 || decUserKey.length === 64) {
+        return new SymmetricCryptoKey(decUserKey) as UserKey;
+      } else {
+        this.logService.info("[MasterPasswordService] Userkey in new format; using sdk");
+        const decodedKey = CryptoClient.decode_userkey(decUserKey);
+        if (decodedKey.Aes256CbcHmac != null) {
+          const key = Utils.fromB64ToArray(decodedKey.Aes256CbcHmac);
+          return new SymmetricCryptoKey(key) as UserKey;
+        }
+      }
     } else {
       throw new Error("Unsupported encryption type.");
     }

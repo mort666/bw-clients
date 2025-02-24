@@ -251,7 +251,7 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
     }
 
     if (p.encKey == null) {
-      p.encKey = forge.util.decode64(key.encKeyB64);
+      p.encKey = forge.util.decode64(Utils.fromBufferToB64(key.getInnerKey().encryptionKey));
     }
     p.data = forge.util.decode64(data);
     p.iv = forge.util.decode64(iv);
