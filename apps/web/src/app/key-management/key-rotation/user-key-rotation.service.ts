@@ -13,7 +13,7 @@ import { EncryptService } from "@bitwarden/common/key-management/crypto/abstract
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { KeyGenerationService } from "@bitwarden/common/platform/abstractions/key-generation.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
-import { EncryptionType, HashPurpose } from "@bitwarden/common/platform/enums";
+import { HashPurpose } from "@bitwarden/common/platform/enums";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { EncryptedString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
@@ -105,21 +105,24 @@ export class UserKeyRotationService {
       await this.keyService.makeUserKey(newMasterKey);
 
     const userKey = CryptoClient.generate_user_key();
-    this.logService.info("[Userkey rotation] Encrypting user key in new format");
+    this.logService.info("[Userkey rotation] Encrypting user key in new format" + userKey);
     const userkeyEncodedBytes = Utils.fromB64ToArray(userKey);
     const stretchedMasterKey = await this.keyGenerationService.stretchKey(newMasterKey);
     const userkeyEncrypted = await this.encryptService.encrypt(
       userkeyEncodedBytes,
       stretchedMasterKey,
     );
-    const userkeyBytes = Utils.fromB64ToArray(CryptoClient.decode_userkey(userKey).Aes256CbcHmac);
-    newUnencryptedUserKey = new SymmetricCryptoKey(userkeyBytes, EncryptionType.AesCbc256_HmacSha256_B64) as UserKey;
-    newMasterKeyEncryptedUserKey = userkeyEncrypted;
+    this.logService.info("[Userkey rotation] User key encrypted in new format" + userkeyEncrypted.encryptedString);
+    newUnencryptedUserKey = new SymmetricCryptoKey(userkeyEncodedBytes) as UserKey;
+    newMasterKeyEncryptedUserKey
+     = userkeyEncrypted;
 
     if (!newUnencryptedUserKey || !newMasterKeyEncryptedUserKey) {
       this.logService.info("[Userkey rotation] User key could not be created. Aborting!");
       throw new Error("User key could not be created");
     }
+
+    this.logService.info("[Userkey rotation] User key created successfully");
 
     const newMasterKeyAuthenticationHash = await this.keyService.hashMasterKey(
       newMasterPassword,

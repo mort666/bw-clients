@@ -295,7 +295,7 @@ export class DeviceTrustService implements DeviceTrustServiceAbstraction {
         return;
       }
 
-      await this.stateProvider.setUserState(DEVICE_KEY, deviceKey?.toJSON(), userId);
+      //await this.stateProvider.setUserState(DEVICE_KEY, deviceKey?.toJSON(), userId);
     } catch (e) {
       this.logService.error("Failed to set device key", e);
     }
@@ -304,7 +304,6 @@ export class DeviceTrustService implements DeviceTrustServiceAbstraction {
   private async makeDeviceKey(): Promise<DeviceKey> {
     // Create 512-bit device key
     const deviceKey = (await this.keyGenerationService.createKey(512)) as DeviceKey;
-
     return deviceKey;
   }
 

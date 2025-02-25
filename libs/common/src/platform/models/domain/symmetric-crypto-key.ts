@@ -24,7 +24,7 @@ export class SymmetricCryptoKey {
 
   meta: any;
 
-  constructor(key: Uint8Array, new_format = false) {
+  constructor(key: Uint8Array) {
     if (key == null) {
       throw new Error("Must provide key");
     }
@@ -41,6 +41,7 @@ export class SymmetricCryptoKey {
         authenticationKey: key.slice(32),
       }
     } else if (key.byteLength > 64) {
+      this.newFormat = true;
       const decoded_key = CryptoClient.decode_userkey(key).Aes256CbcHmac;
       this.key = {
         type: EncryptionType.AesCbc256_HmacSha256_B64,
@@ -56,7 +57,6 @@ export class SymmetricCryptoKey {
     return this.key;
   }
 
-
   static fromString(s: string): SymmetricCryptoKey {
     if (s == null) {
       return null;
@@ -68,8 +68,15 @@ export class SymmetricCryptoKey {
 
   // For test only
   toJSON() {
+    const innerKey = this.getInnerKey();
     // The whole object is constructed from the initial key, so just store the B64 key
-    return { keyB64: Utils.fromBufferToB64(this) };
+    if (innerKey.type === EncryptionType.AesCbc256_B64) {
+      return { keyB64: Utils.fromBufferToB64(this.key.encryptionKey) };
+    } else if (innerKey.type === EncryptionType.AesCbc256_HmacSha256_B64) {
+      return { keyB64: Utils.fromBufferToB64(new Uint8Array([...innerKey.encryptionKey, ...innerKey.authenticationKey])) };
+    } else {
+      throw new Error("Unsupported encryption type.");
+    }
   }
 
   // For test only
