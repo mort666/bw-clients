@@ -176,6 +176,10 @@
   "copyNotes": {
     "message": "Kopírovat poznámky"
   },
+  "copy": {
+    "message": "Kopírovat",
+    "description": "Copy to clipboard"
+  },
   "fill": {
     "message": "Vyplnit",
     "description": "This string is used on the vault page to indicate autofilling. Horizontal space is limited in the interface here so try and keep translations as concise as possible."
@@ -445,6 +449,18 @@
   "generatePassphrase": {
     "message": "Vygenerovat heslovou frázi"
   },
+  "passwordGenerated": {
+    "message": "Heslo bylo vygenerováno"
+  },
+  "passphraseGenerated": {
+    "message": "Heslová fráze byla vygenerována"
+  },
+  "usernameGenerated": {
+    "message": "Uživatelské jméno bylo vygenerováno"
+  },
+  "emailGenerated": {
+    "message": "E-mail byl vygenerován"
+  },
   "regeneratePassword": {
     "message": "Vygenerovat jiné heslo"
   },
@@ -646,6 +662,12 @@
   },
   "verifyIdentity": {
     "message": "Ověřit identitu"
+  },
+  "weDontRecognizeThisDevice": {
+    "message": "Toto zařízení nepoznáváme. Zadejte kód zaslaný na Váš e-mail pro ověření Vaší totožnosti."
+  },
+  "continueLoggingIn": {
+    "message": "Pokračovat v přihlášení"
   },
   "yourVaultIsLocked": {
     "message": "Váš trezor je uzamčen. Pro pokračování musíte zadat hlavní heslo."
@@ -986,8 +1008,8 @@
   "addLoginNotificationDescAlt": {
     "message": "Požádá o přidání položky, pokud nebyla nalezena v trezoru. Platí pro všechny přihlášené účty."
   },
-  "showCardsInVaultView": {
-    "message": "Zobrazit karty jako návrhy automatického vyplňování v zobrazení trezoru"
+  "showCardsInVaultViewV2": {
+    "message": "Vždy zobrazit karty jako návrhy automatického vyplňování v zobrazení trezoru"
   },
   "showCardsCurrentTab": {
     "message": "Zobrazit platební karty na obrazovce Karta"
@@ -995,8 +1017,8 @@
   "showCardsCurrentTabDesc": {
     "message": "Pro snadné vyplnění zobrazí platební karty na obrazovce Karta."
   },
-  "showIdentitiesInVaultView": {
-    "message": "Zobrazit identity jako návrhy automatického vyplňování v zobrazení trezoru"
+  "showIdentitiesInVaultViewV2": {
+    "message": "Vždy zobrazit identity jako návrhy automatického vyplňování v zobrazení trezoru"
   },
   "showIdentitiesCurrentTab": {
     "message": "Zobrazit identity na obrazovce Karta"
@@ -1006,6 +1028,9 @@
   },
   "clickToAutofillOnVault": {
     "message": "Klepněte na položky pro automatické vyplnění v zobrazení trezoru"
+  },
+  "clickToAutofill": {
+    "message": "Klepněte na položky v návrhu automatického vyplňování pro vyplnění"
   },
   "clearClipboard": {
     "message": "Vymazat schránku",
@@ -1261,9 +1286,6 @@
   },
   "premiumPurchase": {
     "message": "Zakoupit členství Premium"
-  },
-  "premiumPurchaseAlert": {
-    "message": "Prémiové členství můžete zakoupit na webové stránce bitwarden.com. Chcete tuto stránku nyní otevřít?"
   },
   "premiumPurchaseAlertV2": {
     "message": "Premium si můžete zakoupit v nastavení účtu ve webové aplikaci Bitwarden."
@@ -2046,6 +2068,9 @@
   "usernameGenerator": {
     "message": "Generátor uživatelského jména"
   },
+  "useThisEmail": {
+    "message": "Použít tento e-mail"
+  },
   "useThisPassword": {
     "message": "Použít toto heslo"
   },
@@ -2062,6 +2087,9 @@
   "useGeneratorHelpTextPartTwo": {
     "message": "pro vytvoření silného jedinečného hesla",
     "description": "This will be used as part of a larger sentence, broken up to include the generator icon. The full sentence will read 'Use the generator [GENERATOR_ICON] to create a strong unique password'"
+  },
+  "vaultCustomization": {
+    "message": "Přizpůsobení trezoru"
   },
   "vaultTimeoutAction": {
     "message": "Akce při vypršení časového limitu"
@@ -2324,6 +2352,12 @@
     "message": "Domény",
     "description": "A category title describing the concept of web domains"
   },
+  "blockedDomains": {
+    "message": "Blokované domény"
+  },
+  "learnMoreAboutBlockedDomains": {
+    "message": "Zjistěte více o blokovaných doménách"
+  },
   "excludedDomains": {
     "message": "Vyloučené domény"
   },
@@ -2332,6 +2366,79 @@
   },
   "excludedDomainsDescAlt": {
     "message": "Bitwarden nebude žádat o uložení přihlašovacích údajů pro tyto domény pro všechny přihlášené účty. Aby se změny projevily, musíte stránku obnovit."
+  },
+  "blockedDomainsDesc": {
+    "message": "Automatické vyplňování a další související funkce nebudou pro tyto webové stránky nabízeny. Aby se změny projevily, musíte stránku aktualizovat."
+  },
+  "autofillBlockedNoticeV2": {
+    "message": "Automatické vyplňování je pro tuto stránku zablokováno."
+  },
+  "autofillBlockedNoticeGuidance": {
+    "message": "Změňte to v nastavení"
+  },
+  "change": {
+    "message": "Změnit"
+  },
+  "changeButtonTitle": {
+    "message": "Změnit heslo - $ITEMNAME$",
+    "placeholders": {
+      "itemname": {
+        "content": "$1",
+        "example": "Secret Item"
+      }
+    }
+  },
+  "atRiskPasswords": {
+    "message": "Ohrožená hesla"
+  },
+  "atRiskPasswordsDescSingleOrg": {
+    "message": "$ORGANIZATION$ Vás žádá o změnu $COUNT$ hesel, protože jsou v ohrožení.",
+    "placeholders": {
+      "organization": {
+        "content": "$1",
+        "example": "Acme Corp"
+      },
+      "count": {
+        "content": "$2",
+        "example": "2"
+      }
+    }
+  },
+  "atRiskPasswordsDescMultiOrg": {
+    "message": "Vaše organizace Vás žádají o změnu $COUNT$ hesel, protože jsou v ohrožení.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "reviewAndChangeAtRiskPassword": {
+    "message": "Zkontrolovat a změnit jedno ohrožené heslo"
+  },
+  "reviewAndChangeAtRiskPasswordsPlural": {
+    "message": "Zkontrolovat a změnit $COUNT$ ohrožených hesel",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "changeAtRiskPasswordsFaster": {
+    "message": "Změnit ohrožená hesla rychleji"
+  },
+  "changeAtRiskPasswordsFasterDesc": {
+    "message": "Aktualizujte svá nastavení, abyste mohli rychle automaticky vyplňovat hesla a generovat nová hesla."
+  },
+  "turnOnAutofill": {
+    "message": "Zapnout automatické vyplňování"
+  },
+  "turnedOnAutofill": {
+    "message": "Automatické vyplňování bylo zapnuto"
+  },
+  "dismiss": {
+    "message": "Zavřít"
   },
   "websiteItemLabel": {
     "message": "Webová stránka $number$ (URI)",
@@ -2350,6 +2457,9 @@
         "example": "duckduckgo.com"
       }
     }
+  },
+  "blockedDomainsSavedSuccess": {
+    "message": "Změny v zablokovaných doménách byly uloženy"
   },
   "excludedDomainsSavedSuccess": {
     "message": "Vyloučené změny domény byly uloženy"
@@ -2789,6 +2899,20 @@
   "error": {
     "message": "Chyba"
   },
+  "decryptionError": {
+    "message": "Chyba dešifrování"
+  },
+  "couldNotDecryptVaultItemsBelow": {
+    "message": "Bitwarden nemohl dešifrovat níže uvedené položky v trezoru."
+  },
+  "contactCSToAvoidDataLossPart1": {
+    "message": "Kontaktujte zákaznickou podporu,",
+    "description": "This is part of a larger sentence. The full sentence will read 'Contact customer success to avoid additional data loss.'"
+  },
+  "contactCSToAvoidDataLossPart2": {
+    "message": "abyste zabránili ztrátě dat.",
+    "description": "This is part of a larger sentence. The full sentence will read 'Contact customer success to avoid additional data loss.'"
+  },
   "generateUsername": {
     "message": "Vygenerovat uživatelské jméno"
   },
@@ -2909,6 +3033,30 @@
   "forwaderInvalidTokenWithMessage": {
     "message": "Neplatný token API $SERVICENAME$: $ERRORMESSAGE$",
     "description": "Displayed when the user's API token is rejected by the forwarding service with an error message.",
+    "placeholders": {
+      "servicename": {
+        "content": "$1",
+        "example": "SimpleLogin"
+      },
+      "errormessage": {
+        "content": "$2",
+        "example": "Please verify your email address to continue."
+      }
+    }
+  },
+  "forwaderInvalidOperation": {
+    "message": "$SERVICENAME$ odmítl Váš požadavek. Kontaktujte svého poskytovatele služeb o pomoc.",
+    "description": "Displayed when the user is forbidden from using the API by the forwarding service.",
+    "placeholders": {
+      "servicename": {
+        "content": "$1",
+        "example": "SimpleLogin"
+      }
+    }
+  },
+  "forwaderInvalidOperationWithMessage": {
+    "message": "$SERVICENAME$ odmítl Váš požadavek: $ERRORMESSAGE$",
+    "description": "Displayed when the user is forbidden from using the API by the forwarding service with an error message.",
     "placeholders": {
       "servicename": {
         "content": "$1",
@@ -3076,11 +3224,17 @@
   "notificationSentDevice": {
     "message": "Na Vaše zařízení bylo odesláno oznámení."
   },
+  "notificationSentDevicePart1": {
+    "message": "Odemknout Bitwarden na Vašem zařízení nebo na"
+  },
+  "notificationSentDeviceAnchor": {
+    "message": "webová aplikace"
+  },
+  "notificationSentDevicePart2": {
+    "message": "Před schválením se ujistěte, že fráze otisku prstu odpovídá frázi níže."
+  },
   "aNotificationWasSentToYourDevice": {
     "message": "Na Vaše zařízení bylo odesláno oznámení"
-  },
-  "makeSureYourAccountIsUnlockedAndTheFingerprintEtc": {
-    "message": "Ujistěte se, že je Váš trezor odemčen a fráze otisku prstu se shodují s druhým zařízením"
   },
   "youWillBeNotifiedOnceTheRequestIsApproved": {
     "message": "Budete upozorněni, jakmile bude žádost schválena"
@@ -3090,6 +3244,9 @@
   },
   "loginInitiated": {
     "message": "Bylo zahájeno přihlášení"
+  },
+  "logInRequestSent": {
+    "message": "Požadavek odeslán"
   },
   "exposedMasterPassword": {
     "message": "Odhalené hlavní heslo"
@@ -3395,38 +3552,6 @@
   "toggleCollapse": {
     "message": "Přepnout sbalení",
     "description": "Toggling an expand/collapse state."
-  },
-  "filelessImport": {
-    "message": "Importovat data do Bitwardenu?",
-    "description": "Default notification title for triggering a fileless import."
-  },
-  "lpFilelessImport": {
-    "message": "Chránit Vaše data LastPass a importovat do Bitwardenu?",
-    "description": "LastPass specific notification title for triggering a fileless import."
-  },
-  "lpCancelFilelessImport": {
-    "message": "Uložit jako nešifrovaný soubor",
-    "description": "LastPass specific notification button text for cancelling a fileless import."
-  },
-  "startFilelessImport": {
-    "message": "Importovat do Bitwardenu",
-    "description": "Notification button text for starting a fileless import."
-  },
-  "importing": {
-    "message": "Importování...",
-    "description": "Notification message for when an import is in progress."
-  },
-  "dataSuccessfullyImported": {
-    "message": "Data byla úspěšně importována!",
-    "description": "Notification message for when an import has completed successfully."
-  },
-  "dataImportFailed": {
-    "message": "Chyba při importu. Podrobnosti naleznete v konzoli.",
-    "description": "Notification message for when an import has failed."
-  },
-  "importNetworkError": {
-    "message": "Při importu došlo k chybě sítě.",
-    "description": "Notification message for when an import has failed due to a network error."
   },
   "aliasDomain": {
     "message": "Doména aliasu"
@@ -3981,6 +4106,9 @@
   "autofillSuggestions": {
     "message": "Návrhy automatického vyplňování"
   },
+  "itemSuggestions": {
+    "message": "Navrhované položky"
+  },
   "autofillSuggestionsTip": {
     "message": "Uložit přihlašovací údaje pro tuto stránku do automatického vyplňování"
   },
@@ -4127,15 +4255,6 @@
   },
   "itemName": {
     "message": "Název položky"
-  },
-  "cannotRemoveViewOnlyCollections": {
-    "message": "Nemůžete odebrat kolekce s oprávněními jen pro zobrazení: $COLLECTIONS$",
-    "placeholders": {
-      "collections": {
-        "content": "$1",
-        "example": "Work, Personal"
-      }
-    }
   },
   "organizationIsDeactivated": {
     "message": "Organizace je deaktivována"
@@ -4557,12 +4676,6 @@
   "textSends": {
     "message": "Sends s texty"
   },
-  "bitwardenNewLook": {
-    "message": "Bitwarden má nový vzhled!"
-  },
-  "bitwardenNewLookDesc": {
-    "message": "Je snazší a intuitivnější než kdy jindy automaticky vyplňovat a vyhledávat z karty trezor. Mrkněte se!"
-  },
   "accountActions": {
     "message": "Činnosti účtu"
   },
@@ -4640,6 +4753,33 @@
   },
   "noEditPermissions": {
     "message": "Nemáte oprávnění upravit tuto položku"
+  },
+  "biometricsStatusHelptextUnlockNeeded": {
+    "message": "Biometrické odemknutí je nedostupné, protože je potřeba nejprve odemknout pomocí PIN nebo hesla."
+  },
+  "biometricsStatusHelptextHardwareUnavailable": {
+    "message": "Biometrické odemknutí je momentálně nedostupné."
+  },
+  "biometricsStatusHelptextAutoSetupNeeded": {
+    "message": "Biometrické odemknutí není dostupné kvůli chybnému nastavení systémových souborů."
+  },
+  "biometricsStatusHelptextManualSetupNeeded": {
+    "message": "Biometrické odemknutí není dostupné kvůli chybnému nastavení systémových souborů."
+  },
+  "biometricsStatusHelptextDesktopDisconnected": {
+    "message": "Biometrické odemknutí není dostupné, protože je aplikace Bitwarden zavřena."
+  },
+  "biometricsStatusHelptextNotEnabledInDesktop": {
+    "message": "Biometrické odemknutí není dostupné, protože není povoleno pro $EMAIL$ v desktopové aplikaci Bitwarden.",
+    "placeholders": {
+      "email": {
+        "content": "$1",
+        "example": "mail@example.com"
+      }
+    }
+  },
+  "biometricsStatusHelptextUnavailableReasonUnknown": {
+    "message": "Biometrické odemknutí je momentálně z neznámého důvodu nedostupné."
   },
   "authenticating": {
     "message": "Ověřování"
@@ -4847,5 +4987,20 @@
   },
   "extraWide": {
     "message": "Extra široký"
+  },
+  "cannotRemoveViewOnlyCollections": {
+    "message": "Nemůžete odebrat kolekce s oprávněními jen pro zobrazení: $COLLECTIONS$",
+    "placeholders": {
+      "collections": {
+        "content": "$1",
+        "example": "Work, Personal"
+      }
+    }
+  },
+  "updateDesktopAppOrDisableFingerprintDialogTitle": {
+    "message": "Aktualizujte aplikaci pro stolní počítač"
+  },
+  "updateDesktopAppOrDisableFingerprintDialogMessage": {
+    "message": "Chcete-li použít biometrické odemknutí, aktualizujte aplikaci pro stolní počítač nebo v nastavení vypněte odemknutí otiskem prstů."
   }
 }

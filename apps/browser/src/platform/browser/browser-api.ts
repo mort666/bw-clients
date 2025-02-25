@@ -458,7 +458,7 @@ export class BrowserApi {
     // and that prompts us to show a new tab, this apparently doesn't happen on sideloaded
     // extensions and only shows itself production scenarios. See: https://bitwarden.atlassian.net/browse/PM-12298
     if (this.isSafariApi) {
-      self.location.reload();
+      return self.location.reload();
     }
     return chrome.runtime.reload();
   }
@@ -530,10 +530,15 @@ export class BrowserApi {
     win: Window & typeof globalThis,
   ): OperaSidebarAction | FirefoxSidebarAction | null {
     const deviceType = BrowserPlatformUtilsService.getDevice(win);
-    if (deviceType !== DeviceType.FirefoxExtension && deviceType !== DeviceType.OperaExtension) {
-      return null;
+    if (deviceType === DeviceType.FirefoxExtension) {
+      return browser.sidebarAction;
     }
-    return win.opr?.sidebarAction || browser.sidebarAction;
+
+    if (deviceType === DeviceType.OperaExtension) {
+      return win.opr?.sidebarAction;
+    }
+
+    return null;
   }
 
   static captureVisibleTab(): Promise<string> {
