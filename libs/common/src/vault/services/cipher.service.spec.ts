@@ -36,6 +36,7 @@ import { CipherCreateRequest } from "../models/request/cipher-create.request";
 import { CipherPartialRequest } from "../models/request/cipher-partial.request";
 import { CipherRequest } from "../models/request/cipher.request";
 import { CipherView } from "../models/view/cipher.view";
+import { Fido2CredentialView } from "../models/view/fido2-credential.view";
 import { LoginUriView } from "../models/view/login-uri.view";
 
 import { CipherService } from "./cipher.service";
@@ -412,6 +413,43 @@ describe("Cipher Service", () => {
       await expect(cipherService.getRotatedData(originalUserKey, null, mockUserId)).rejects.toThrow(
         "New user key is required to rotate ciphers",
       );
+    });
+  });
+
+  describe("getAllDecryptedForIds", () => {
+    it("returns ciphers for the given ids", async () => {
+      const startingCiphers = [{ ...cipherObj }, { ...cipherObj, id: "id2" }];
+      const expectedObj = [cipherObj];
+      jest.spyOn(cipherService as any, "getAllDecrypted").mockResolvedValue(startingCiphers);
+
+      const result = await cipherService.getAllDecryptedForIds(["id"]);
+
+      expect(result).toEqual(expectedObj);
+    });
+  });
+
+  describe("getPasskeyCiphers", () => {
+    it("returns the fido2 ciphers when they are available", async () => {
+      const passkeyDate = new Date();
+      const cipherWithFido2 = [
+        {
+          ...cipherObj,
+          login: { fido2Credentials: [{ creationDate: passkeyDate } as Fido2CredentialView] },
+        },
+      ];
+      jest.spyOn(cipherService as any, "getAllDecrypted").mockResolvedValue(cipherWithFido2);
+
+      const result = await cipherService.getAllDecrypted();
+
+      expect(result).toBe(cipherWithFido2);
+    });
+
+    it("returns null when there are no ciphers", async () => {
+      jest.spyOn(cipherService as any, "getAllDecrypted").mockResolvedValue(null);
+
+      const result = await cipherService.getPasskeyCiphers();
+
+      expect(result).toBe(null);
     });
   });
 });
