@@ -1210,11 +1210,15 @@ jobs:
 
       - name: Create secrets for Fastlane
         run: |
+          brew install gsed
+
+          KEY_WITHOUT_NEWLINES=$(gsed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' ~/private_keys/AuthKey_6TV9MKN3GP.p8)
+
           cat << EOF > ~/secrets/appstoreconnect-fastlane.json
           {
             "issuer_id": "${{ secrets.APP_STORE_CONNECT_TEAM_ISSUER }}",
             "key_id": "6TV9MKN3GP",
-            "key": "$(sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' ~/private_keys/AuthKey_6TV9MKN3GP.p8)"
+            "key": "$KEY_WITHOUT_NEWLINES"
           }
           EOF
 
