@@ -26,7 +26,7 @@
     "dist:firefox:mv2": "npm run build:prod:firefox:mv2 && mkdir -p dist && ./scripts/compress.ps1 dist-firefox.zip",
     "dist:opera": "npm run build:prod:opera && mkdir -p dist && ./scripts/compress.ps1 dist-opera.zip",
     "dist:safari": "npm run build:prod:safari && ./scripts/package-safari.ps1",
-    "dist:firefox:mv3": "cross-env MANIFEST_VERSION=3 npm run dist:firefox",
+    "dist:firefox:mv3": "npm run build:prod:firefox && mkdir -p dist && ./scripts/compress.ps1 dist-firefox.zip",
     "dist:opera:mv3": "cross-env MANIFEST_VERSION=3 npm run dist:opera",
     "dist:safari:mv3": "cross-env MANIFEST_VERSION=3 npm run dist:safari",
     "test": "jest",
