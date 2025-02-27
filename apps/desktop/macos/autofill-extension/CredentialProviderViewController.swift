@@ -140,7 +140,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                     }
                     
                     func onError(error: BitwardenError) {
-                        logger.log("[autofill-extension] OnError called, cancelling the request \(error)")
+                        logger.error("[autofill-extension] OnError called, cancelling the request \(error)")
                         self.timeoutTimer.cancel()
                         ctx.cancelRequest(withError: error)
                     }
@@ -237,7 +237,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                     }
                     
                     func onError(error: BitwardenError) {
-                        logger.log("[autofill-extension] OnError called, cancelling the request \(error)")
+                        logger.error("[autofill-extension] OnError called, cancelling the request \(error)")
                         self.timeoutTimer.cancel()
                         ctx.cancelRequest(withError: error)
                     }
@@ -302,7 +302,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
             }
             
             func onError(error: BitwardenError) {
-                logger.log("[autofill-extension] OnError called, cancelling the request \(error)")
+                logger.error("[autofill-extension] OnError called, cancelling the request \(error)")
                 self.timeoutTimer.cancel()
                 ctx.cancelRequest(withError: error)
             }
