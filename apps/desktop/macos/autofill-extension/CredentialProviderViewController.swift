@@ -173,11 +173,6 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
         
         timeoutTimer.cancel()
         
-        /*if let request = credentialRequest as? ASPasswordCredentialRequest {
-            logger.log("[autofill-extension] provideCredentialWithoutUserInteraction2(password) called \(request)")
-            return;
-        }*/
-        
         logger.log("[autofill-extension] provideCredentialWithoutUserInteraction2 called wrong")
         self.extensionContext.cancelRequest(withError: BitwardenError.Internal("Invalid authentication request"))
     }
