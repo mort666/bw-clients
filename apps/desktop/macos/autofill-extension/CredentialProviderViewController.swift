@@ -26,11 +26,10 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
             app.bundleIdentifier == "com.bitwarden.desktop"
         }
         
-        
-         if !isRunning {
-            logger.log("[autofill-extension] Bitwarden Desktop not running, attempting to launch")
+        if !isRunning {
+           logger.log("[autofill-extension] Bitwarden Desktop not running, attempting to launch")
             
-            // Try to launch the app
+           // Try to launch the app
             if let appURL = workspace.urlForApplication(withBundleIdentifier: "com.bitwarden.desktop") {
                 let semaphore = DispatchSemaphore(value: 0)
                 
