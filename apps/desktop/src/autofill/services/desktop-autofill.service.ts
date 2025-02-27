@@ -23,9 +23,9 @@ import {
 } from "@bitwarden/common/platform/abstractions/fido2/fido2-authenticator.service.abstraction";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { parseCredentialId } from "@bitwarden/common/platform/services/fido2/credential-id-utils";
 import { getCredentialsForAutofill } from "@bitwarden/common/platform/services/fido2/fido2-autofill-utils";
 import { Fido2Utils } from "@bitwarden/common/platform/services/fido2/fido2-utils";
-import { guidToRawFormat } from "@bitwarden/common/platform/services/fido2/guid-utils";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
@@ -198,7 +198,7 @@ export class DesktopAutofillService implements OnDestroy {
           }
 
           request.credentialId = Array.from(
-            guidToRawFormat(decrypted.login.fido2Credentials?.[0].credentialId),
+            parseCredentialId(decrypted.login.fido2Credentials?.[0].credentialId),
           );
         }
 
