@@ -91,25 +91,13 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
     
     private func getWindowPosition() -> [Int32] {
         let frame = self.view.window?.frame ?? .zero
-        let screenHeight = NSScreen.main?.frame.height ?? 0
-        
-        logger.log("[autofill-extension] Detailed window debug:")
-        logger.log("  Popup frame:")
-        logger.log("    origin.x: \(frame.origin.x)")
-        logger.log("    origin.y: \(frame.origin.y)")
-        logger.log("    width: \(frame.width)")
-        logger.log("    height: \(frame.height)")
-       
+        let screenHeight = NSScreen.main?.frame.height ?? 0      
         
         // frame.width and frame.height is always 0. Estimating works OK for now.
         let estimatedWidth:CGFloat = 400;
         let estimatedHeight:CGFloat = 200;
         let centerX = Int32(round(frame.origin.x + estimatedWidth/2))
         let centerY = Int32(round(screenHeight - (frame.origin.y + estimatedHeight/2)))
-        
-        logger.log("  Calculated center:")
-        logger.log("    x: \(centerX)")
-        logger.log("    y: \(centerY)")
         
         return [centerX, centerY]
     }
@@ -271,11 +259,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                     windowXy: self.getWindowPosition()
                     
                 )
-                logger.log("[autofill-extension] prepareInterface(passkey) calling preparePasskeyRegistration")
-                // Log details of the request
-                logger.log("[autofill-extension]     rpId: \(req.rpId)")
-                logger.log("[autofill-extension]     rpId: \(req.userName)")
-                
+                logger.log("[autofill-extension] prepareInterface(passkey) calling preparePasskeyRegistration")                
                 
                 self.client.preparePasskeyRegistration(request: req, callback: CallbackImpl(self.extensionContext, timeoutTimer))
                 return
@@ -291,11 +275,6 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
     
     override func prepareCredentialList(for serviceIdentifiers: [ASCredentialServiceIdentifier], requestParameters: ASPasskeyCredentialRequestParameters) {
         logger.log("[autofill-extension] prepareCredentialList(passkey) for serviceIdentifiers: \(serviceIdentifiers.count)")
-        logger.log("request parameters: \(requestParameters.relyingPartyIdentifier)")
-        
-        for serviceIdentifier in serviceIdentifiers {
-            logger.log("     service: \(serviceIdentifier.identifier)")
-        }
                                
         class CallbackImpl: PreparePasskeyAssertionCallback {
             let ctx: ASCredentialProviderExtensionContext
