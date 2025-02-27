@@ -205,7 +205,7 @@ jobs:
             archive_name: "dist-firefox.zip"
             artifact_name: "dist-firefox-MV3"
           - name: "firefox-mv2"
-            npm_command: "dist:firefox"
+            npm_command: "dist:firefox:mv2"
             archive_name: "dist-firefox.zip"
             artifact_name: "dist-firefox-MV2"
           - name: "opera-mv3"
