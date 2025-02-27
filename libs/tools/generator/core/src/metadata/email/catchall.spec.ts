@@ -19,13 +19,11 @@ describe("email - catchall generator metadata", () => {
   });
 
   describe("profiles[account]", () => {
-    let accountProfile: CoreProfileMetadata<CatchallGenerationOptions> = null!;
+    let accountProfile: CoreProfileMetadata<CatchallGenerationOptions> = null;
     beforeEach(() => {
       const profile = catchall.profiles[Profile.account];
-      if (isCoreProfile(profile!)) {
+      if (isCoreProfile(profile)) {
         accountProfile = profile;
-      } else {
-        throw new Error("this branch should never run");
       }
     });
 

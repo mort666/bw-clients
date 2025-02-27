@@ -22,21 +22,19 @@ describe("password - eff words generator metadata", () => {
   });
 
   describe("profiles[account]", () => {
-    let accountProfile: CoreProfileMetadata<PassphraseGenerationOptions> | null = null;
+    let accountProfile: CoreProfileMetadata<PassphraseGenerationOptions> = null;
     beforeEach(() => {
       const profile = effPassphrase.profiles[Profile.account];
-      if (isCoreProfile(profile!)) {
+      if (isCoreProfile(profile)) {
         accountProfile = profile;
-      } else {
-        accountProfile = null;
       }
     });
 
     describe("storage.options.deserializer", () => {
       it("returns its input", () => {
-        const value: PassphraseGenerationOptions = { ...accountProfile!.storage.initial };
+        const value: PassphraseGenerationOptions = { ...accountProfile.storage.initial };
 
-        const result = accountProfile!.storage.options.deserializer(value);
+        const result = accountProfile.storage.options.deserializer(value);
 
         expect(result).toBe(value);
       });
@@ -48,15 +46,15 @@ describe("password - eff words generator metadata", () => {
       // enclosed behaviors change.
 
       it("creates a passphrase policy constraints", () => {
-        const context = { defaultConstraints: accountProfile!.constraints.default };
+        const context = { defaultConstraints: accountProfile.constraints.default };
 
-        const constraints = accountProfile!.constraints.create([], context);
+        const constraints = accountProfile.constraints.create([], context);
 
         expect(constraints).toBeInstanceOf(PassphrasePolicyConstraints);
       });
 
       it("forwards the policy to the constraints", () => {
-        const context = { defaultConstraints: accountProfile!.constraints.default };
+        const context = { defaultConstraints: accountProfile.constraints.default };
         const policies = [
           {
             type: PolicyType.PasswordGenerator,
@@ -68,13 +66,13 @@ describe("password - eff words generator metadata", () => {
           },
         ] as Policy[];
 
-        const constraints = accountProfile!.constraints.create(policies, context);
+        const constraints = accountProfile.constraints.create(policies, context);
 
-        expect(constraints.constraints.numWords?.min).toEqual(6);
+        expect(constraints.constraints.numWords.min).toEqual(6);
       });
 
       it("combines multiple policies in the constraints", () => {
-        const context = { defaultConstraints: accountProfile!.constraints.default };
+        const context = { defaultConstraints: accountProfile.constraints.default };
         const policies = [
           {
             type: PolicyType.PasswordGenerator,
@@ -94,10 +92,10 @@ describe("password - eff words generator metadata", () => {
           },
         ] as Policy[];
 
-        const constraints = accountProfile!.constraints.create(policies, context);
+        const constraints = accountProfile.constraints.create(policies, context);
 
-        expect(constraints.constraints.numWords?.min).toEqual(6);
-        expect(constraints.constraints.capitalize?.requiredValue).toEqual(true);
+        expect(constraints.constraints.numWords.min).toEqual(6);
+        expect(constraints.constraints.capitalize.requiredValue).toEqual(true);
       });
     });
   });
