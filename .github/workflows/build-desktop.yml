@@ -1210,7 +1210,6 @@ jobs:
 
       - name: Create secrets for Fastlane
         run: |
-          mkdir ~/secrets
           cat << EOF > ~/secrets/appstoreconnect-fastlane.json
           {
             "issuer_id": "${{ secrets.APP_STORE_CONNECT_TEAM_ISSUER }}",
