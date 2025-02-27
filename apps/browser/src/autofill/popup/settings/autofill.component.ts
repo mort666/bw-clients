@@ -1,7 +1,7 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
 import { CommonModule } from "@angular/common";
-import { Component, DestroyRef, OnInit } from "@angular/core";
+import { Component, computed, DestroyRef, OnInit, Signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import {
   FormsModule,
@@ -102,6 +102,13 @@ export class AutofillComponent implements OnInit {
   protected autofillOnPageLoadFromPolicy$ =
     this.autofillSettingsService.activateAutofillOnPageLoadFromPolicy$;
 
+  protected autofillSuggestionsForm = new FormGroup({
+    inlineMenuVisibility: new FormControl(),
+    showInlineMenuIdentities: new FormControl(),
+    showInlineMenuCards: new FormControl(),
+    enableInlineMenuOnIconSelect: new FormControl(),
+  });
+
   protected autofillOnPageLoadForm = new FormGroup({
     autofillOnPageLoad: new FormControl(),
     defaultAutofill: new FormControl(),
@@ -115,7 +122,7 @@ export class AutofillComponent implements OnInit {
   });
 
   enableAutofillOnPageLoad: boolean = false;
-  enableInlineMenu: boolean = false;
+  enableInlineMenu: Signal<boolean>;
   enableInlineMenuOnIconSelect: boolean = false;
   showInlineMenuIdentities: boolean = true;
   showInlineMenuCards: boolean = true;
@@ -176,8 +183,17 @@ export class AutofillComponent implements OnInit {
     this.canOverrideBrowserAutofillSetting = !this.browserClientIsUnknown;
     this.defaultBrowserAutofillDisabled = await this.browserAutofillSettingCurrentlyOverridden();
 
+    /** Autofill suggestions form */
+
     this.inlineMenuVisibility = await firstValueFrom(
       this.autofillSettingsService.inlineMenuVisibility$,
+    );
+
+    this.autofillSuggestionsForm.controls.inlineMenuVisibility.patchValue(
+      this.inlineMenuVisibility,
+      {
+        emitEvent: false,
+      },
     );
 
     this.inlineMenuPositioningImprovementsEnabled = await this.configService.getFeatureFlag(
@@ -192,16 +208,62 @@ export class AutofillComponent implements OnInit {
       this.inlineMenuPositioningImprovementsEnabled &&
       (await firstValueFrom(this.autofillSettingsService.showInlineMenuIdentities$));
 
+    this.autofillSuggestionsForm.controls.showInlineMenuIdentities.patchValue(
+      this.showInlineMenuIdentities,
+      { emitEvent: false },
+    );
+
     this.showInlineMenuCards =
       this.inlineMenuPositioningImprovementsEnabled &&
       (await firstValueFrom(this.autofillSettingsService.showInlineMenuCards$));
 
+    this.autofillSuggestionsForm.controls.showInlineMenuCards.patchValue(this.showInlineMenuCards, {
+      emitEvent: false,
+    });
+
     this.enableInlineMenuOnIconSelect =
       this.inlineMenuVisibility === AutofillOverlayVisibility.OnButtonClick;
 
-    this.enableInlineMenu =
-      this.inlineMenuVisibility === AutofillOverlayVisibility.OnFieldFocus ||
-      this.enableInlineMenuOnIconSelect;
+    this.autofillSuggestionsForm.controls.enableInlineMenuOnIconSelect.patchValue(
+      this.enableInlineMenuOnIconSelect,
+      { emitEvent: false },
+    );
+
+    this.enableInlineMenu = computed(() => {
+      return (
+        this.autofillSuggestionsForm.controls.inlineMenuVisibility.value ===
+          AutofillOverlayVisibility.OnFieldFocus ||
+        this.autofillSuggestionsForm.controls.enableInlineMenuOnIconSelect.value
+      );
+    });
+
+    this.autofillSuggestionsForm.controls.inlineMenuVisibility.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        void this.autofillSettingsService.setInlineMenuVisibility(value);
+        void this.updateInlineMenuVisibility();
+      });
+
+    this.autofillSuggestionsForm.controls.showInlineMenuIdentities.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        void this.autofillSettingsService.setShowInlineMenuIdentities(value);
+      });
+
+    this.autofillSuggestionsForm.controls.showInlineMenuCards.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        void this.autofillSettingsService.setShowInlineMenuCards(value);
+      });
+
+    this.autofillSuggestionsForm.controls.enableInlineMenuOnIconSelect.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        void this.autofillSettingsService.set;
+        void this.updateInlineMenuVisibility();
+      });
+
+    /** Autofill on page load form */
 
     this.autofillSettingsService.activateAutofillOnPageLoadFromPolicy$
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -314,13 +376,16 @@ export class AutofillComponent implements OnInit {
   }
 
   async updateInlineMenuVisibility() {
-    if (!this.enableInlineMenu) {
+    if (!this.enableInlineMenu()) {
       this.enableInlineMenuOnIconSelect = false;
+      this.autofillSuggestionsForm.controls.enableInlineMenuOnIconSelect.patchValue(false, {
+        emitEvent: false,
+      });
     }
 
     const newInlineMenuVisibilityValue = this.enableInlineMenuOnIconSelect
       ? AutofillOverlayVisibility.OnButtonClick
-      : this.enableInlineMenu
+      : this.enableInlineMenu()
         ? AutofillOverlayVisibility.OnFieldFocus
         : AutofillOverlayVisibility.Off;
 
@@ -331,6 +396,7 @@ export class AutofillComponent implements OnInit {
       await this.requestPrivacyPermission();
     }
   }
+
   async getAutofillOnPageLoadFromPolicy() {
     await firstValueFrom(this.autofillOnPageLoadFromPolicy$);
   }
@@ -494,13 +560,5 @@ export class AutofillComponent implements OnInit {
 
   async updateShowIdentitiesCurrentTab() {
     await this.vaultSettingsService.setShowIdentitiesCurrentTab(this.showIdentitiesCurrentTab);
-  }
-
-  async updateShowInlineMenuCards() {
-    await this.autofillSettingsService.setShowInlineMenuCards(this.showInlineMenuCards);
-  }
-
-  async updateShowInlineMenuIdentities() {
-    await this.autofillSettingsService.setShowInlineMenuIdentities(this.showInlineMenuIdentities);
   }
 }

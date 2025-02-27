@@ -7,132 +7,148 @@
 
   <div class="tw-bg-background-alt">
     <bit-section>
-      <bit-section-header>
-        <h2 bitTypography="h6">{{ "autofillSuggestionsSectionTitle" | i18n }}</h2>
-      </bit-section-header>
-      <bit-card>
-        <bit-form-control [disableMargin]="!enableInlineMenu && !canOverrideBrowserAutofillSetting">
-          <input
-            bitCheckbox
-            id="show-inline-menu"
-            type="checkbox"
-            (change)="updateInlineMenuVisibility()"
-            [(ngModel)]="enableInlineMenu"
-          />
-          <bit-label for="show-inline-menu">{{ "showInlineMenuLabel" | i18n }}</bit-label>
-          <bit-hint
-            *ngIf="accountSwitcherEnabled && canOverrideBrowserAutofillSetting"
-            class="tw-text-sm"
+      <form [formGroup]="autofillSuggestionsForm">
+        <bit-section-header>
+          <h2 bitTypography="h6">{{ "autofillSuggestionsSectionTitle" | i18n }}</h2>
+        </bit-section-header>
+        <bit-card>
+          <bit-form-control
+            [disableMargin]="
+              !this.autofillSuggestionsForm.controls.inlineMenuVisibility.value &&
+              !canOverrideBrowserAutofillSetting
+            "
           >
-            {{ "showInlineMenuOnFormFieldsDescAlt" | i18n }}
-          </bit-hint>
-          <bit-hint
-            *ngIf="!canOverrideBrowserAutofillSetting"
-            [class]="!enableInlineMenu ? 'tw-text-sm tw-mb-6' : 'tw-text-sm'"
+            <input
+              bitCheckbox
+              id="show-inline-menu"
+              formControlName="inlineMenuVisibility"
+              type="checkbox"
+            />
+            <bit-label for="show-inline-menu">{{ "showInlineMenuLabel" | i18n }}</bit-label>
+            <bit-hint
+              *ngIf="accountSwitcherEnabled && canOverrideBrowserAutofillSetting"
+              class="tw-text-sm"
+            >
+              {{ "showInlineMenuOnFormFieldsDescAlt" | i18n }}
+            </bit-hint>
+            <bit-hint
+              *ngIf="!canOverrideBrowserAutofillSetting"
+              [class]="
+                !this.autofillSuggestionsForm.controls.enableInlineMenu.value
+                  ? 'tw-text-sm tw-mb-6'
+                  : 'tw-text-sm'
+              "
+            >
+              {{ "turnOffBrowserBuiltInPasswordManagerSettings" | i18n }}
+              <a
+                bitLink
+                class="tw-no-underline"
+                rel="noreferrer"
+                target="_blank"
+                (click)="openURI($event, disablePasswordManagerURI)"
+                [attr.href]="disablePasswordManagerURI"
+              >
+                {{ "turnOffBrowserBuiltInPasswordManagerSettingsLink" | i18n }}
+              </a>
+            </bit-hint>
+          </bit-form-control>
+          <bit-form-control
+            *ngIf="
+              inlineMenuPositioningImprovementsEnabled &&
+              this.autofillSuggestionsForm.controls.inlineMenuVisibility.value
+            "
+            class="tw-ml-5"
           >
-            {{ "turnOffBrowserBuiltInPasswordManagerSettings" | i18n }}
-            <a
-              bitLink
-              class="tw-no-underline"
-              rel="noreferrer"
-              target="_blank"
-              (click)="openURI($event, disablePasswordManagerURI)"
-              [attr.href]="disablePasswordManagerURI"
-            >
-              {{ "turnOffBrowserBuiltInPasswordManagerSettingsLink" | i18n }}
-            </a>
-          </bit-hint>
-        </bit-form-control>
-        <bit-form-control
-          *ngIf="inlineMenuPositioningImprovementsEnabled && enableInlineMenu"
-          class="tw-ml-5"
-        >
-          <input
-            bitCheckbox
-            id="show-inline-menu-identities"
-            type="checkbox"
-            (change)="updateShowInlineMenuIdentities()"
-            [(ngModel)]="showInlineMenuIdentities"
-          />
-          <bit-label for="show-inline-menu-identities">
-            {{ "showInlineMenuIdentitiesLabel" | i18n }}
-          </bit-label>
-        </bit-form-control>
-        <bit-form-control
-          *ngIf="inlineMenuPositioningImprovementsEnabled && enableInlineMenu"
-          class="tw-ml-5"
-        >
-          <input
-            bitCheckbox
-            id="show-inline-menu-cards"
-            type="checkbox"
-            (change)="updateShowInlineMenuCards()"
-            [(ngModel)]="showInlineMenuCards"
-          />
-          <bit-label for="show-inline-menu-cards">
-            {{ "showInlineMenuCardsLabel" | i18n }}
-          </bit-label>
-        </bit-form-control>
-        <bit-form-control *ngIf="enableInlineMenu" class="tw-ml-5">
-          <input
-            bitCheckbox
-            id="show-autofill-suggestions-on-icon"
-            type="checkbox"
-            (change)="updateInlineMenuVisibility()"
-            [(ngModel)]="enableInlineMenuOnIconSelect"
-          />
-          <bit-label for="show-autofill-suggestions-on-icon">
-            {{ "showInlineMenuOnIconSelectionLabel" | i18n }}
-          </bit-label>
-        </bit-form-control>
-        <bit-form-control *ngIf="canOverrideBrowserAutofillSetting">
-          <input
-            bitCheckbox
-            id="overrideBrowserAutofill"
-            type="checkbox"
-            (change)="updateDefaultBrowserAutofillDisabled()"
-            [(ngModel)]="defaultBrowserAutofillDisabled"
-          />
-          <bit-label for="overrideBrowserAutofill">{{
-            "overrideDefaultBrowserAutoFillSettings" | i18n
-          }}</bit-label>
-          <bit-hint class="tw-text-sm">
-            {{ "turnOffBrowserBuiltInPasswordManagerSettings" | i18n }}
-            <a
-              bitLink
-              class="tw-no-underline"
-              rel="noreferrer"
-              target="_blank"
-              (click)="openURI($event, disablePasswordManagerURI)"
-              [attr.href]="disablePasswordManagerURI"
-            >
-              {{ "turnOffBrowserBuiltInPasswordManagerSettingsLink" | i18n }}
-            </a>
-          </bit-hint>
-        </bit-form-control>
-        <bit-form-control>
-          <input
-            bitCheckbox
-            id="showCardsSuggestions"
-            type="checkbox"
-            (change)="updateShowCardsCurrentTab()"
-            [(ngModel)]="showCardsCurrentTab"
-          />
-          <bit-label for="showCardsSuggestions">{{ "showCardsInVaultViewV2" | i18n }}</bit-label>
-        </bit-form-control>
-        <bit-form-control disableMargin>
-          <input
-            bitCheckbox
-            id="showIdentitiesSuggestions"
-            type="checkbox"
-            (change)="updateShowIdentitiesCurrentTab()"
-            [(ngModel)]="showIdentitiesCurrentTab"
-          />
-          <bit-label for="showIdentitiesSuggestions" class="tw-whitespace-normal">
-            {{ "showIdentitiesInVaultViewV2" | i18n }}
-          </bit-label>
-        </bit-form-control>
-      </bit-card>
+            <input
+              formControlName="showInlineMenuIdentities"
+              bitCheckbox
+              id="show-inline-menu-identities"
+              type="checkbox"
+            />
+            <bit-label for="show-inline-menu-identities">
+              {{ "showInlineMenuIdentitiesLabel" | i18n }}
+            </bit-label>
+          </bit-form-control>
+          <bit-form-control
+            *ngIf="
+              inlineMenuPositioningImprovementsEnabled &&
+              this.autofillSuggestionsForm.controls.inlineMenuVisibility.value
+            "
+            class="tw-ml-5"
+          >
+            <input
+              formControlName="showInlineMenuCards"
+              bitCheckbox
+              id="show-inline-menu-cards"
+              type="checkbox"
+            />
+            <bit-label for="show-inline-menu-cards">
+              {{ "showInlineMenuCardsLabel" | i18n }}
+            </bit-label>
+          </bit-form-control>
+          <bit-form-control
+            *ngIf="this.autofillSuggestionsForm.controls.inlineMenuVisibility.value"
+            class="tw-ml-5"
+          >
+            <input
+              formControlName="enableInlineMenuOnIconSelect"
+              bitCheckbox
+              id="show-autofill-suggestions-on-icon"
+              type="checkbox"
+            />
+            <bit-label for="show-autofill-suggestions-on-icon">
+              {{ "showInlineMenuOnIconSelectionLabel" | i18n }}
+            </bit-label>
+          </bit-form-control>
+          <bit-form-control *ngIf="canOverrideBrowserAutofillSetting">
+            <input
+              bitCheckbox
+              id="overrideBrowserAutofill"
+              type="checkbox"
+              (change)="updateDefaultBrowserAutofillDisabled()"
+              [(ngModel)]="defaultBrowserAutofillDisabled"
+            />
+            <bit-label for="overrideBrowserAutofill">{{
+              "overrideDefaultBrowserAutoFillSettings" | i18n
+            }}</bit-label>
+            <bit-hint class="tw-text-sm">
+              {{ "turnOffBrowserBuiltInPasswordManagerSettings" | i18n }}
+              <a
+                bitLink
+                class="tw-no-underline"
+                rel="noreferrer"
+                target="_blank"
+                (click)="openURI($event, disablePasswordManagerURI)"
+                [attr.href]="disablePasswordManagerURI"
+              >
+                {{ "turnOffBrowserBuiltInPasswordManagerSettingsLink" | i18n }}
+              </a>
+            </bit-hint>
+          </bit-form-control>
+          <bit-form-control>
+            <input
+              bitCheckbox
+              id="showCardsSuggestions"
+              type="checkbox"
+              (change)="updateShowCardsCurrentTab()"
+              [(ngModel)]="showCardsCurrentTab"
+            />
+            <bit-label for="showCardsSuggestions">{{ "showCardsInVaultViewV2" | i18n }}</bit-label>
+          </bit-form-control>
+          <bit-form-control disableMargin>
+            <input
+              bitCheckbox
+              id="showIdentitiesSuggestions"
+              type="checkbox"
+              (change)="updateShowIdentitiesCurrentTab()"
+              [(ngModel)]="showIdentitiesCurrentTab"
+            />
+            <bit-label for="showIdentitiesSuggestions" class="tw-whitespace-normal">
+              {{ "showIdentitiesInVaultViewV2" | i18n }}
+            </bit-label>
+          </bit-form-control>
+        </bit-card>
+      </form>
     </bit-section>
     <bit-section>
       <bit-section-header>
