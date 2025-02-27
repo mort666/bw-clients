@@ -34,7 +34,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                 let semaphore = DispatchSemaphore(value: 0)
                 
                 workspace.openApplication(at: appURL,
-                                       configuration: NSWorkspace.OpenConfiguration()) { app, error in
+                                          configuration: NSWorkspace.OpenConfiguration()) { app, error in
                     if let error = error {
                         logger.error("[autofill-extension] Failed to launch Bitwarden Desktop: \(error.localizedDescription)")
                     } else if let app = app {
