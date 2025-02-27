@@ -31,6 +31,11 @@ export function isForwarderExtensionId(
   return algorithm && typeof algorithm === "object" && "forwarder" in algorithm;
 }
 
+/** Extract a `VendorId` from a `CredentialAlgorithm`.
+ *  @param algorithm the algorithm containing the vendor id
+ *  @returns the vendor id if the algorithm identifies a forwarder extension.
+ *   Otherwise, undefined.
+ */
 export function toVendorId(algorithm: CredentialAlgorithm): VendorId | undefined {
   if (isForwarderExtensionId(algorithm)) {
     return algorithm.forwarder as VendorId;

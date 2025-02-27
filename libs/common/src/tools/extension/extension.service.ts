@@ -1,4 +1,4 @@
-import { EMPTY, Observable, defer, of, shareReplay } from "rxjs";
+import { shareReplay } from "rxjs";
 
 import { Account } from "../../auth/abstractions/account.service";
 import { BoundDependency } from "../dependencies";
@@ -7,7 +7,6 @@ import { UserStateSubject } from "../state/user-state-subject";
 import { UserStateSubjectDependencyProvider } from "../state/user-state-subject-dependency-provider";
 
 import { ExtensionRegistry } from "./extension-registry.abstraction";
-import { ExtensionSite } from "./extension-site";
 import { ExtensionProfileMetadata, SiteId, VendorId } from "./type";
 import { toObjectKey } from "./util";
 
@@ -15,6 +14,10 @@ import { toObjectKey } from "./util";
  *  These extensions integrate 3rd party services into Bitwarden.
  */
 export class ExtensionService {
+  /** Instantiate the extension service.
+   *  @param registry provides runtime status for extension sites
+   *  @param providers provide persistent data
+   */
   constructor(
     private registry: ExtensionRegistry,
     private readonly providers: UserStateSubjectDependencyProvider,
@@ -26,6 +29,12 @@ export class ExtensionService {
 
   private log: SemanticLogger;
 
+  /** Get a subject bound to a user's extension settings
+   * @param profile the site's extension profile
+   * @param vendor the vendor integrated at the extension site
+   * @param dependencies.account$ the account to which the settings are bound
+   * @returns a subject bound to the requested user's generator settings
+   */
   settings<Settings extends object, Site extends SiteId>(
     profile: ExtensionProfileMetadata<Settings, Site>,
     vendor: VendorId,
@@ -38,25 +47,17 @@ export class ExtensionService {
 
     const key = toObjectKey(profile, metadata);
     const account$ = dependencies.account$.pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    // FIXME: load and apply constraints
     const subject = new UserStateSubject(key, this.providers, { account$ });
 
     return subject;
   }
 
+  /** Look up extension metadata for a site
+   *  @param site defines the site to retrieve.
+   *  @returns the extensions available at the site.
+   */
   site(site: SiteId) {
     return this.registry.build(site);
-  }
-
-  /** Look up extension metadata for a site.
-   *  @param site defines the site to retrieve.
-   *  @returns an observable that emits the extension sites available at the
-   *    moment of subscription and then completes. If the extension site is not
-   *    available, the observable completes without emitting.
-   */
-  site$(site: SiteId): Observable<ExtensionSite> {
-    return defer(() => {
-      const extensions = this.registry.build(site);
-      return extensions ? of(extensions) : EMPTY;
-    });
   }
 }

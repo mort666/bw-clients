@@ -5,7 +5,10 @@ import { ObjectKey } from "../state/object-key";
 
 import { ExtensionMetadata, ExtensionProfileMetadata, SiteId } from "./type";
 
-/** Binds an extension profile to an extension site */
+/** Create an object key from an extension instance and a site profile.
+ *  @param profile the extension profile to bind
+ *  @param extension the extension metadata to bind
+ */
 export function toObjectKey<Settings extends object, Site extends SiteId>(
   profile: ExtensionProfileMetadata<Settings, Site>,
   extension: ExtensionMetadata,

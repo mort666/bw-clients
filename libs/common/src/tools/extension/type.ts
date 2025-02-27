@@ -115,6 +115,10 @@ export type ExtensionSet =
       all: true;
     };
 
+/** A key for storing JavaScript objects (`{ an: "example" }`)
+ *  in the extension profile system.
+ *  @remarks The omitted keys are filled by the extension service.
+ */
 export type ExtensionStorageKey<Options> = Omit<
   ObjectKey<Options>,
   "target" | "state" | "format" | "classifier"
