@@ -1208,6 +1208,17 @@ jobs:
           path: apps/desktop/dist/mas-universal/Bitwarden-${{ env._PACKAGE_VERSION }}-universal.pkg
           if-no-files-found: error
 
+      - name: Create secrets for Fastlane
+        run: |
+          mkdir ~/secrets
+          cat << EOF > ~/secrets/appstoreconnect-fastlane.json
+          {
+            "issuer_id": "${{ secrets.APP_STORE_CONNECT_TEAM_ISSUER }}",
+            "key_id": "6TV9MKN3GP",
+            "key": "${{ secrets.APP_STORE_CONNECT_AUTH_KEY }}"
+          }
+          EOF
+
       - name: Deploy to TestFlight
         id: testflight-deploy
         # if: |
@@ -1218,8 +1229,6 @@ jobs:
           APP_STORE_CONNECT_AUTH_KEY: 6TV9MKN3GP
         run: |
           brew install fastlane
-
-          echo "{\"issuer_id\":\"$APP_STORE_CONNECT_TEAM_ISSUER\",\"key_id\":\"6TV9MKN3GP\",\"key\":\"$(cat $HOME/private_keys/AuthKey_6TV9MKN3GP.p8)\"}" >> $HOME/secrets/appstoreconnect-fastlane.json
 
           fastlane pilot upload --app_identifier "com.bitwarden.desktop" --changelog "test" --api_key_path $HOME/secrets/appstoreconnect-fastlane.json --pkg "$(find ./dist/mas-universal/Bitwarden*.pkg)"
 
