@@ -1210,19 +1210,25 @@ jobs:
 
       - name: Deploy to TestFlight
         id: testflight-deploy
-        if: |
-          github.event_name != 'pull_request_target'
-          && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/rc' || github.ref == 'refs/heads/hotfix-rc-desktop')
+        # if: |
+        #   github.event_name != 'pull_request_target'
+        #   && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/rc' || github.ref == 'refs/heads/hotfix-rc-desktop')
         env:
           APP_STORE_CONNECT_TEAM_ISSUER: ${{ secrets.APP_STORE_CONNECT_TEAM_ISSUER }}
           APP_STORE_CONNECT_AUTH_KEY: 6TV9MKN3GP
         run: |
-          xcrun altool \
-            --upload-app \
-            --type macos \
-            --file "$(find ./dist/mas-universal/Bitwarden*.pkg)" \
-            --apiKey $APP_STORE_CONNECT_AUTH_KEY \
-            --apiIssuer $APP_STORE_CONNECT_TEAM_ISSUER
+          brew install fastlane
+
+          echo "{\"issuer_id\":\"$APP_STORE_CONNECT_TEAM_ISSUER\",\"key_id\":\"6TV9MKN3GP\",\"key\":\"$(cat $HOME/private_keys/AuthKey_6TV9MKN3GP.p8)\"}" >> $HOME/secrets/appstoreconnect-fastlane.json
+
+          fastlane pilot upload --app_identifier "com.bitwarden.desktop" --changelog "test" --api_key_path $HOME/secrets/appstoreconnect-fastlane.json --pkg "$(find ./dist/mas-universal/Bitwarden*.pkg)"
+
+          # xcrun altool \
+          #   --upload-app \
+          #   --type macos \
+          #   --file "$(find ./dist/mas-universal/Bitwarden*.pkg)" \
+          #   --apiKey $APP_STORE_CONNECT_AUTH_KEY \
+          #   --apiIssuer $APP_STORE_CONNECT_TEAM_ISSUER
 
       - name: Post message to a Slack channel
         id: slack-message
