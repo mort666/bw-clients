@@ -140,7 +140,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                     }
                     
                     func onError(error: BitwardenError) {
-                        logger.log("[autofill-extension] ERROR HAPPENED in swift error \(error)")
+                        logger.log("[autofill-extension] OnError called, cancelling the request \(error)")
                         self.timeoutTimer.cancel()
                         ctx.cancelRequest(withError: error)
                     }
@@ -218,9 +218,11 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                 class CallbackImpl: PreparePasskeyRegistrationCallback {
                     let ctx: ASCredentialProviderExtensionContext
                     let timeoutTimer: DispatchWorkItem
+                    let logger: Logger
                     
-                    required init(_ ctx: ASCredentialProviderExtensionContext, _ timeoutTimer: DispatchWorkItem) {
+                    required init(_ ctx: ASCredentialProviderExtensionContext, _ logger: Logger,_ timeoutTimer: DispatchWorkItem) {
                         self.ctx = ctx
+                        self.logger = logger
                         self.timeoutTimer = timeoutTimer
                     }
                     
@@ -235,6 +237,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                     }
                     
                     func onError(error: BitwardenError) {
+                        logger.log("[autofill-extension] OnError called, cancelling the request \(error)")
                         self.timeoutTimer.cancel()
                         ctx.cancelRequest(withError: error)
                     }
@@ -261,7 +264,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                 )
                 logger.log("[autofill-extension] prepareInterface(passkey) calling preparePasskeyRegistration")                
                 
-                self.client.preparePasskeyRegistration(request: req, callback: CallbackImpl(self.extensionContext, timeoutTimer))
+                self.client.preparePasskeyRegistration(request: req, callback: CallbackImpl(self.extensionContext, self.logger, timeoutTimer))
                 return
             }
         }
@@ -279,8 +282,10 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
         class CallbackImpl: PreparePasskeyAssertionCallback {
             let ctx: ASCredentialProviderExtensionContext
             let timeoutTimer: DispatchWorkItem
-            required init(_ ctx: ASCredentialProviderExtensionContext, _ timeoutTimer: DispatchWorkItem) {
+            let logger: Logger
+            required init(_ ctx: ASCredentialProviderExtensionContext,_ logger: Logger, _ timeoutTimer: DispatchWorkItem) {
                 self.ctx = ctx
+                self.logger = logger
                 self.timeoutTimer = timeoutTimer
             }
             
@@ -297,6 +302,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
             }
             
             func onError(error: BitwardenError) {
+                logger.log("[autofill-extension] OnError called, cancelling the request \(error)")
                 self.timeoutTimer.cancel()
                 ctx.cancelRequest(withError: error)
             }
@@ -322,7 +328,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
         
         let timeoutTimer = createTimer()
         
-        self.client.preparePasskeyAssertion(request: req, callback: CallbackImpl(self.extensionContext, timeoutTimer))
+        self.client.preparePasskeyAssertion(request: req, callback: CallbackImpl(self.extensionContext, self.logger, timeoutTimer))
         return
     }    
 }
