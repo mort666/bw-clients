@@ -294,7 +294,7 @@ export class DesktopSettingsService {
   async setModalMode(value: boolean, modalPosition?: [number, number]) {
     await this.modalModeState.update(() => ({
       isModalModeActive: value,
-      modalPosition: modalPosition,
+      modalPosition,
     }));
   }
 }
