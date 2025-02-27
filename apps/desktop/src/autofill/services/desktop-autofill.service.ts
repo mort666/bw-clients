@@ -172,7 +172,7 @@ export class DesktopAutofillService implements OnDestroy {
           request,
         );
 
-        // TODO: For some reason the credentialId is passed as an empty array in the request, so we need to
+        // For some reason the credentialId is passed as an empty array in the request, so we need to
         // get it from the cipher. For that we use the recordIdentifier, which is the cipherId.
         if (request.recordIdentifier && request.credentialId.length === 0) {
           const cipher = await this.cipherService.get(request.recordIdentifier);
