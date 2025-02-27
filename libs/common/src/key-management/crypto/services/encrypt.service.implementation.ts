@@ -91,7 +91,7 @@ export class EncryptServiceImplementation implements EncryptService {
       if (encString.encryptionType !== EncryptionType.AesCbc256_HmacSha256_B64) {
         this.logDecryptError(
           "Key encryption type does not match payload encryption type",
-          key.encType,
+          key.inner().type,
           encString.encryptionType,
           decryptContext,
         );
@@ -114,7 +114,7 @@ export class EncryptServiceImplementation implements EncryptService {
       if (!macsEqual) {
         this.logMacFailed(
           "decryptToUtf8 MAC comparison failed. Key or payload has changed.",
-          key.encType,
+          key.inner().type,
           encString.encryptionType,
           decryptContext,
         );
@@ -128,7 +128,7 @@ export class EncryptServiceImplementation implements EncryptService {
       if (encString.encryptionType !== EncryptionType.AesCbc256_B64) {
         this.logDecryptError(
           "Key encryption type does not match payload encryption type",
-          key.encType,
+          key.inner().type,
           encString.encryptionType,
           decryptContext,
         );
@@ -171,7 +171,7 @@ export class EncryptServiceImplementation implements EncryptService {
       ) {
         this.logDecryptError(
           "Encryption key type mismatch",
-          key.encType,
+          inner.type,
           encThing.encryptionType,
           decryptContext,
         );
@@ -181,12 +181,16 @@ export class EncryptServiceImplementation implements EncryptService {
       const macData = new Uint8Array(encThing.ivBytes.byteLength + encThing.dataBytes.byteLength);
       macData.set(new Uint8Array(encThing.ivBytes), 0);
       macData.set(new Uint8Array(encThing.dataBytes), encThing.ivBytes.byteLength);
-      const computedMac = await this.cryptoFunctionService.hmac(macData, key.macKey, "sha256");
+      const computedMac = await this.cryptoFunctionService.hmac(
+        macData,
+        inner.authenticationKey,
+        "sha256",
+      );
       const macsMatch = await this.cryptoFunctionService.compare(encThing.macBytes, computedMac);
       if (!macsMatch) {
         this.logMacFailed(
           "MAC comparison failed. Key or payload has changed.",
-          key.encType,
+          inner.type,
           encThing.encryptionType,
           decryptContext,
         );
@@ -196,14 +200,14 @@ export class EncryptServiceImplementation implements EncryptService {
       return await this.cryptoFunctionService.aesDecrypt(
         encThing.dataBytes,
         encThing.ivBytes,
-        key.encKey,
+        inner.encryptionKey,
         "cbc",
       );
     } else if (inner.type === EncryptionType.AesCbc256_B64) {
       if (encThing.encryptionType !== EncryptionType.AesCbc256_B64) {
         this.logDecryptError(
           "Encryption key type mismatch",
-          key.encType,
+          inner.type,
           encThing.encryptionType,
           decryptContext,
         );
@@ -213,7 +217,7 @@ export class EncryptServiceImplementation implements EncryptService {
       return await this.cryptoFunctionService.aesDecrypt(
         encThing.dataBytes,
         encThing.ivBytes,
-        key.encKey,
+        inner.encryptionKey,
         "cbc",
       );
     }
