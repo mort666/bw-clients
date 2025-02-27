@@ -60,7 +60,7 @@ export class NativeAutofillMain {
           request,
         });
       },
-      // AssertionWihtoutUserInterfaceCallback
+      // AssertionWithoutUserInterfaceCallback
       (error, clientId, sequenceNumber, request) => {
         if (error) {
           this.logService.error("autofill.IpcServer.assertion", error);
