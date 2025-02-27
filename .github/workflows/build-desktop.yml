@@ -1214,7 +1214,7 @@ jobs:
           {
             "issuer_id": "${{ secrets.APP_STORE_CONNECT_TEAM_ISSUER }}",
             "key_id": "6TV9MKN3GP",
-            "key": "$(sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' <<< ${{ secrets.APP_STORE_CONNECT_AUTH_KEY }})"
+            "key": "$(sed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' <<< "${{ secrets.APP_STORE_CONNECT_AUTH_KEY }}")"
           }
           EOF
 
