@@ -315,7 +315,7 @@ export class DesktopAutofillService implements OnDestroy {
       requireUserVerification:
         request.userVerification === "required" || request.userVerification === "preferred",
       fallbackSupported: false,
-      assumeUserPresence: assumeUserPresence,
+      assumeUserPresence,
     };
   }
 
