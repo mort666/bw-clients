@@ -1,14 +1,5 @@
 import { Router } from "@angular/router";
-import {
-  lastValueFrom,
-  firstValueFrom,
-  map,
-  Subject,
-  filter,
-  take,
-  BehaviorSubject,
-  Observable,
-} from "rxjs";
+import { lastValueFrom, firstValueFrom, map, Subject, filter, take, BehaviorSubject } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
@@ -135,7 +126,6 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
       this.logService.debug("Could not shortcut, showing UI");
 
       // make the cipherIds available to the UI.
-      // Not sure if the UI also need to know about masterPasswordRepromptRequired -- probably not, otherwise we can send all of the params.
       this.availableCipherIdsSubject.next(cipherIds);
 
       await this.showUi("/passkeys", this.windowObject.windowXy);
