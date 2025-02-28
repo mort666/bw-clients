@@ -114,4 +114,21 @@ describe("SymmetricCryptoKey", () => {
 
     expect(actual).toEqual(keyB64);
   });
+
+  describe("fromString", () => {
+    it("null string returns null", () => {
+      const actual = SymmetricCryptoKey.fromString(null);
+
+      expect(actual).toBeNull();
+    });
+
+    it("base64 string creates object", () => {
+      const key = makeStaticByteArray(64);
+      const expected = new SymmetricCryptoKey(key);
+      const actual = SymmetricCryptoKey.fromString(expected.keyB64);
+
+      expect(actual).toEqual(expected);
+      expect(actual).toBeInstanceOf(SymmetricCryptoKey);
+    });
+  });
 });

@@ -37,13 +37,7 @@ describe("EncryptService", () => {
       const actual = await encryptService.encrypt(null, key);
       expect(actual).toBeNull();
     });
-    it("throws for AesCbc256_B64", async () => {
-      const key = new SymmetricCryptoKey(makeStaticByteArray(32));
-      await expect(encryptService.encrypt("data", key)).rejects.toThrow(
-        "Encrypt is not supported for keys of type 0",
-      );
-    });
-    it("creates an EncString for AesCbc256_HmacSha256_B64", async () => {
+    it("creates an EncString for Aes256Cbc_HmacSha256_B64", async () => {
       const key = new SymmetricCryptoKey(makeStaticByteArray(64));
       const plainValue = "data";
       cryptoFunctionService.hmac.mockResolvedValue(makeStaticByteArray(32));
@@ -67,16 +61,23 @@ describe("EncryptService", () => {
       );
     });
 
-    it("throws for an AesCbc256_B64 key", async () => {
-      const key = new SymmetricCryptoKey(makeStaticByteArray(32, 100));
-      key.encType = EncryptionType.AesCbc256_B64;
+    it("encrypts data with provided Aes256Cbc key and returns correct encbuffer", async () => {
+      const key = new SymmetricCryptoKey(makeStaticByteArray(32, 0));
+      const iv = makeStaticByteArray(16, 80);
+      const cipherText = makeStaticByteArray(20, 150);
+      cryptoFunctionService.randomBytes.mockResolvedValue(iv as CsprngArray);
+      cryptoFunctionService.aesEncrypt.mockResolvedValue(cipherText);
 
-      await expect(encryptService.encryptToBytes(plainValue, key)).rejects.toThrow(
-        "Encrypt is not supported for keys of type 0",
-      );
+      const actual = await encryptService.encryptToBytes(plainValue, key);
+      const expectedBytes = new Uint8Array(1 + iv.byteLength + cipherText.byteLength);
+      expectedBytes.set([EncryptionType.AesCbc256_B64]);
+      expectedBytes.set(iv, 1);
+      expectedBytes.set(cipherText, 1 + iv.byteLength);
+
+      expect(actual.buffer).toEqualBuffer(expectedBytes);
     });
 
-    it("encrypts data with provided key and returns correct encbuffer", async () => {
+    it("encrypts data with provided Aes256Cbc_HmacSha256 key and returns correct encbuffer", async () => {
       const key = new SymmetricCryptoKey(makeStaticByteArray(64, 0));
       const iv = makeStaticByteArray(16, 80);
       const mac = makeStaticByteArray(32, 100);
@@ -120,7 +121,7 @@ describe("EncryptService", () => {
       );
     });
 
-    it("decrypts data with provided key for AesCbc256Hmac", async () => {
+    it("decrypts data with provided key for Aes256CbcHmac", async () => {
       const decryptedBytes = makeStaticByteArray(10, 200);
 
       cryptoFunctionService.hmac.mockResolvedValue(makeStaticByteArray(1));
@@ -139,7 +140,7 @@ describe("EncryptService", () => {
       expect(actual).toEqualBuffer(decryptedBytes);
     });
 
-    it("decrypts data with provided key for AesCbc256", async () => {
+    it("decrypts data with provided key for Aes256Cbc", async () => {
       const key = new SymmetricCryptoKey(makeStaticByteArray(32, 0));
       const encBuffer = new EncArrayBuffer(makeStaticByteArray(60, EncryptionType.AesCbc256_B64));
       const decryptedBytes = makeStaticByteArray(10, 200);
@@ -190,7 +191,16 @@ describe("EncryptService", () => {
       expect(actual).toBeNull();
     });
 
-    it("returns null if key is AesCbc256 but encbuffer is AesCbc256_HMAC", async () => {
+    it("returns null if mac could not be calculated", async () => {
+      cryptoFunctionService.hmac.mockResolvedValue(null);
+
+      const actual = await encryptService.decryptToBytes(encBuffer, key);
+      expect(cryptoFunctionService.hmac).toHaveBeenCalled();
+      expect(cryptoFunctionService.aesDecrypt).not.toHaveBeenCalled();
+      expect(actual).toBeNull();
+    });
+
+    it("returns null if key is Aes256Cbc but encbuffer is Aes256Cbc_HmacSha256", async () => {
       const key = new SymmetricCryptoKey(makeStaticByteArray(32, 0));
       cryptoFunctionService.compare.mockResolvedValue(true);
 
@@ -200,7 +210,7 @@ describe("EncryptService", () => {
       expect(cryptoFunctionService.aesDecrypt).not.toHaveBeenCalled();
     });
 
-    it("returns null if key is AesCbc256_HMAC but encbuffer is AesCbc256", async () => {
+    it("returns null if key is Aes256Cbc_HmacSha256 but encbuffer is Aes256Cbc", async () => {
       const key = new SymmetricCryptoKey(makeStaticByteArray(64, 0));
       cryptoFunctionService.compare.mockResolvedValue(true);
       const buffer = new EncArrayBuffer(makeStaticByteArray(200, EncryptionType.AesCbc256_B64));
