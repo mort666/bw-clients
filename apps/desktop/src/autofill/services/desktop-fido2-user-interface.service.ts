@@ -100,12 +100,10 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
   /**
    * Observable that emits available cipher IDs once they're confirmed by the UI
    */
-  get availableCipherIds$(): Observable<string[]> {
-    return this.availableCipherIdsSubject.pipe(
-      filter((ids) => ids != null),
-      take(1),
-    );
-  }
+  availableCipherIds$ = this.availableCipherIdsSubject.pipe(
+    filter((ids) => ids != null),
+    take(1),
+  );
 
   private chosenCipherSubject = new Subject<string>();
 
