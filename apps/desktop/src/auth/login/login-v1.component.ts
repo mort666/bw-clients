@@ -3,7 +3,7 @@
 import { Component, NgZone, OnDestroy, OnInit, ViewChild, ViewContainerRef } from "@angular/core";
 import { FormBuilder } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
-import { Subject, takeUntil, tap } from "rxjs";
+import { firstValueFrom, Subject, takeUntil, tap } from "rxjs";
 
 import { LoginComponentV1 as BaseLoginComponent } from "@bitwarden/angular/auth/components/login-v1.component";
 import { FormValidationErrorsService } from "@bitwarden/angular/platform/abstractions/form-validation-errors.service";
@@ -46,6 +46,9 @@ export class LoginComponentV1 extends BaseLoginComponent implements OnInit, OnDe
   webVaultHostname = "";
 
   showingModal = false;
+
+  // HACK: Once we delete 'listenForUnauthUiRefreshFlagChanges' we can delete this.
+  private isLoggingIn = false;
 
   private deferFocus: boolean = null;
 
@@ -144,9 +147,10 @@ export class LoginComponentV1 extends BaseLoginComponent implements OnInit, OnDe
       .pipe(
         tap(async (flag) => {
           // If the flag is turned ON, we must force a reload to ensure the correct UI is shown
-          if (flag) {
+          if (flag && !this.isLoggingIn) {
+            const params = await firstValueFrom(this.route.queryParams);
             const uniqueQueryParams = {
-              ...this.route.queryParams,
+              ...params,
               // adding a unique timestamp to the query params to force a reload
               t: new Date().getTime().toString(),
             };
@@ -204,7 +208,13 @@ export class LoginComponentV1 extends BaseLoginComponent implements OnInit, OnDe
       return;
     }
 
-    await super.submit();
+    try {
+      this.isLoggingIn = true;
+      await super.submit();
+    } finally {
+      this.isLoggingIn = false;
+    }
+
     if (this.captchaSiteKey) {
       const content = document.getElementById("content") as HTMLDivElement;
       content.setAttribute("style", "width:335px");
