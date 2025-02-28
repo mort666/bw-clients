@@ -12,6 +12,7 @@ import {
   LoginEmailServiceAbstraction,
   UserDecryptionOptionsServiceAbstraction,
 } from "@bitwarden/auth/common";
+import { TwoFactorFormCacheServiceAbstraction } from "@bitwarden/auth/angular";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/auth/abstractions/master-password.service.abstraction";
@@ -67,6 +68,7 @@ export class TwoFactorComponentV1 extends BaseTwoFactorComponent implements OnIn
     toastService: ToastService,
     @Inject(WINDOW) protected win: Window,
     private browserMessagingApi: ZonedMessageListenerService,
+    private twoFactorFormCacheService: TwoFactorFormCacheServiceAbstraction,
   ) {
     super(
       loginStrategyService,
@@ -125,6 +127,20 @@ export class TwoFactorComponentV1 extends BaseTwoFactorComponent implements OnIn
       this.remember = this.route.snapshot.paramMap.get("remember") === "true";
       await this.doSubmit();
       return;
+    }
+
+    // Load form data from cache if available
+    const persistedData = await this.twoFactorFormCacheService.getFormData();
+    if (persistedData) {
+      if (persistedData.token) {
+        this.token = persistedData.token;
+      }
+      if (persistedData.remember !== undefined) {
+        this.remember = persistedData.remember;
+      }
+      if (persistedData.selectedProviderType !== undefined) {
+        this.selectedProviderType = persistedData.selectedProviderType;
+      }
     }
 
     await super.ngOnInit();
@@ -187,7 +203,15 @@ export class TwoFactorComponentV1 extends BaseTwoFactorComponent implements OnIn
     super.ngOnDestroy();
   }
 
-  anotherMethod() {
+  async anotherMethod() {
+    // Save form data to cache before navigating to another method
+    await this.twoFactorFormCacheService.saveFormData({
+      token: this.token,
+      remember: this.remember,
+      selectedProviderType: this.selectedProviderType,
+      emailSent: this.selectedProviderType === TwoFactorProviderType.Email,
+    });
+
     const sso = this.route.snapshot.queryParamMap.get("sso") === "true";
 
     if (sso) {
@@ -256,5 +280,26 @@ export class TwoFactorComponentV1 extends BaseTwoFactorComponent implements OnIn
       "&handOffMessage=" +
       encodeURIComponent(JSON.stringify(duoHandOffMessage));
     this.platformUtilsService.launchUri(launchUrl);
+  }
+
+  // Override the submit method to persist form data to cache before submitting
+  async submit() {
+    // Persist form data before submitting
+    await this.twoFactorFormCacheService.saveFormData({
+      token: this.token,
+      remember: this.remember,
+      selectedProviderType: this.selectedProviderType,
+      emailSent: this.selectedProviderType === TwoFactorProviderType.Email,
+    });
+
+    await super.submit();
+  }
+
+  // Override the doSubmit to clear cached data on successful login
+  async doSubmit() {
+    await super.doSubmit();
+
+    // Clear cached data on successful login
+    await this.twoFactorFormCacheService.clearFormData();
   }
 }

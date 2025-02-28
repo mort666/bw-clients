@@ -176,6 +176,8 @@ import { VaultFilterService } from "../../vault/services/vault-filter.service";
 import { DebounceNavigationService } from "./debounce-navigation.service";
 import { InitService } from "./init.service";
 import { PopupCloseWarningService } from "./popup-close-warning.service";
+import { TwoFactorFormCacheServiceAbstraction } from "@bitwarden/auth/angular";
+import { ExtensionTwoFactorFormCacheService } from "../../auth/services/extension-two-factor-form-cache.service";
 
 const OBSERVABLE_LARGE_OBJECT_MEMORY_STORAGE = new SafeInjectionToken<
   AbstractStorageService & ObservableStorageService
@@ -558,6 +560,11 @@ const safeProviders: SafeProvider[] = [
     deps: [PlatformUtilsService],
   }),
   safeProvider({
+    provide: TwoFactorFormCacheServiceAbstraction,
+    useClass: ExtensionTwoFactorFormCacheService,
+    deps: [AbstractStorageService, ConfigService],
+  }),
+  safeProvider({
     provide: TwoFactorAuthDuoComponentService,
     useClass: ExtensionTwoFactorAuthDuoComponentService,
     deps: [
@@ -649,6 +656,11 @@ const safeProviders: SafeProvider[] = [
     provide: LoginDecryptionOptionsService,
     useClass: ExtensionLoginDecryptionOptionsService,
     deps: [MessagingServiceAbstraction, Router],
+  }),
+  safeProvider({
+    provide: TwoFactorFormCacheServiceAbstraction,
+    useClass: ExtensionTwoFactorFormCacheService,
+    deps: [AbstractStorageService, ConfigService],
   }),
 ];
 
