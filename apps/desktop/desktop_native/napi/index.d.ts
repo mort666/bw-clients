@@ -129,6 +129,10 @@ export declare namespace autofill {
     Required = 'required',
     Discouraged = 'discouraged'
   }
+  export interface Position {
+    x: number
+    y: number
+  }
   export interface PasskeyRegistrationRequest {
     rpId: string
     userName: string
@@ -136,7 +140,7 @@ export declare namespace autofill {
     clientDataHash: Array<number>
     userVerification: UserVerification
     supportedAlgorithms: Array<number>
-    windowXy: Array<number>
+    windowXy: Position
   }
   export interface PasskeyRegistrationResponse {
     rpId: string
@@ -149,7 +153,7 @@ export declare namespace autofill {
     clientDataHash: Array<number>
     userVerification: UserVerification
     allowedCredentials: Array<Array<number>>
-    windowXy: Array<number>
+    windowXy: Position
   }
   export interface PasskeyAssertionWithoutUserInterfaceRequest {
     rpId: string
@@ -159,7 +163,7 @@ export declare namespace autofill {
     recordIdentifier?: string
     clientDataHash: Array<number>
     userVerification: UserVerification
-    windowXy: Array<number>
+    windowXy: Position
   }
   export interface PasskeyAssertionResponse {
     rpId: string

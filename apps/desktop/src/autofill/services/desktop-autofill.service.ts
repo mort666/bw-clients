@@ -151,7 +151,7 @@ export class DesktopAutofillService implements OnDestroy {
       void this.fido2AuthenticatorService
         .makeCredential(
           this.convertRegistrationRequest(request),
-          { windowXy: request.windowXy as [number, number] }, // TODO: Not sure if we want to change the type of windowXy to just number[] or if rust can generate [number,number]?
+          { windowXy: request.windowXy },
           controller,
         )
         .then((response) => {
@@ -206,7 +206,7 @@ export class DesktopAutofillService implements OnDestroy {
         void this.fido2AuthenticatorService
           .getAssertion(
             this.convertAssertionRequest(request, true),
-            { windowXy: request.windowXy as [number, number] },
+            { windowXy: request.windowXy },
             controller,
           )
           .then((response) => {
@@ -226,7 +226,7 @@ export class DesktopAutofillService implements OnDestroy {
       void this.fido2AuthenticatorService
         .getAssertion(
           this.convertAssertionRequest(request),
-          { windowXy: request.windowXy as [number, number] },
+          { windowXy: request.windowXy },
           controller,
         )
         .then((response) => {

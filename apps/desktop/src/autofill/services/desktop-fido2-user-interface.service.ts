@@ -40,7 +40,7 @@ export type NativeWindowObject = {
   /**
    * The position of the window, first entry is the x position, second is the y position
    */
-  windowXy?: [number, number];
+  windowXy?: { x: number; y: number };
 };
 
 export class DesktopFido2UserInterfaceService
@@ -234,7 +234,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     }
   }
 
-  private async showUi(route: string, position?: [number, number]): Promise<void> {
+  private async showUi(route: string, position?: { x: number; y: number }): Promise<void> {
     // Load the UI:
     // maybe toggling to modal mode shouldn't be done here?
     await this.desktopSettingsService.setModalMode(true, position);

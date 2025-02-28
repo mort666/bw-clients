@@ -29,6 +29,13 @@ pub enum UserVerification {
     Discouraged,
 }
 
+#[derive(uniffi::Record, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Position {
+    pub x: i32,
+    pub y: i32,
+}
+
 #[derive(Debug, uniffi::Error, Serialize, Deserialize)]
 pub enum BitwardenError {
     Internal(String),

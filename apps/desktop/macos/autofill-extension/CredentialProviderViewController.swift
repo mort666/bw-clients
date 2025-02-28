@@ -89,7 +89,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
         self.extensionContext.completeRequest(withSelectedCredential: passwordCredential, completionHandler: nil)
     }
     
-    private func getWindowPosition() -> [Int32] {
+    private func getWindowPosition() -> Position {
         let frame = self.view.window?.frame ?? .zero
         let screenHeight = NSScreen.main?.frame.height ?? 0      
         
@@ -99,7 +99,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
         let centerX = Int32(round(frame.origin.x + estimatedWidth/2))
         let centerY = Int32(round(screenHeight - (frame.origin.y + estimatedHeight/2)))
         
-        return [centerX, centerY]
+        return Position(x: centerX, y:centerY)
     }
     
     override func loadView() {
@@ -255,7 +255,6 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                     userVerification: userVerification,
                     supportedAlgorithms: request.supportedAlgorithms.map{ Int32($0.rawValue) },
                     windowXy: self.getWindowPosition()
-                    
                 )
                 logger.log("[autofill-extension] prepareInterface(passkey) calling preparePasskeyRegistration")                
                 

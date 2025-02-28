@@ -585,6 +585,14 @@ pub mod autofill {
     #[napi(object)]
     #[derive(Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
+    pub struct Position {
+        pub x: i32,
+        pub y: i32,
+    }
+
+    #[napi(object)]
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
     pub struct PasskeyRegistrationRequest {
         pub rp_id: String,
         pub user_name: String,
@@ -592,7 +600,7 @@ pub mod autofill {
         pub client_data_hash: Vec<u8>,
         pub user_verification: UserVerification,
         pub supported_algorithms: Vec<i32>,
-        pub window_xy: Vec<i32>,
+        pub window_xy: Position,
     }
 
     #[napi(object)]
@@ -613,7 +621,7 @@ pub mod autofill {
         pub client_data_hash: Vec<u8>,
         pub user_verification: UserVerification,
         pub allowed_credentials: Vec<Vec<u8>>,
-        pub window_xy: Vec<i32>,
+        pub window_xy: Position,
         //extension_input: Vec<u8>, TODO: Implement support for extensions
     }
 
@@ -628,7 +636,7 @@ pub mod autofill {
         pub record_identifier: Option<String>,
         pub client_data_hash: Vec<u8>,
         pub user_verification: UserVerification,
-        pub window_xy: Vec<i32>,
+        pub window_xy: Position,
     }
 
     #[napi(object)]

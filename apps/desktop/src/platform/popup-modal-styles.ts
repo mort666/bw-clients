@@ -6,7 +6,9 @@ import { WindowState } from "./models/domain/window-state";
 const popupWidth = 680;
 const popupHeight = 500;
 
-export function applyPopupModalStyles(window: BrowserWindow, position?: [number, number]) {
+type Position = { x: number; y: number };
+
+export function applyPopupModalStyles(window: BrowserWindow, position?: Position) {
   window.unmaximize();
   window.setSize(popupWidth, popupHeight);
   window.setWindowButtonVisibility?.(false);
@@ -27,10 +29,10 @@ export function applyPopupModalStyles(window: BrowserWindow, position?: [number,
   }
 }
 
-function positionWindow(window: BrowserWindow, position?: [number, number]) {
+function positionWindow(window: BrowserWindow, position?: Position) {
   if (position) {
-    const centeredX = position[0] - popupWidth / 2;
-    const centeredY = position[1] - popupHeight / 2;
+    const centeredX = position.x - popupWidth / 2;
+    const centeredY = position.y - popupHeight / 2;
     window.setPosition(centeredX, centeredY);
   } else {
     window.center();

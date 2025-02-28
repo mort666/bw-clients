@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{BitwardenError, Callback, UserVerification};
+use crate::{BitwardenError, Callback, Position, UserVerification};
 
 #[derive(uniffi::Record, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -11,7 +11,7 @@ pub struct PasskeyAssertionRequest {
     client_data_hash: Vec<u8>,
     user_verification: UserVerification,
     allowed_credentials: Vec<Vec<u8>>,
-    window_xy: Vec<i32>,
+    window_xy: Position,
     //extension_input: Vec<u8>, TODO: Implement support for extensions
 }
 
@@ -25,7 +25,7 @@ pub struct PasskeyAssertionWithoutUserInterfaceRequest {
     record_identifier: Option<String>,
     client_data_hash: Vec<u8>,
     user_verification: UserVerification,
-    window_xy: Vec<i32>,
+    window_xy: Position,
 }
 
 #[derive(uniffi::Record, Serialize, Deserialize)]
