@@ -14,7 +14,7 @@ import { Site } from "./data";
 import { ExtensionRegistry } from "./extension-registry.abstraction";
 import { ExtensionSite } from "./extension-site";
 import { ExtensionService } from "./extension.service";
-import { ExtensionMetadata, ExtensionProfileMetadata } from "./type";
+import { ExtensionMetadata, ExtensionProfileMetadata, ExtensionStorageKey } from "./type";
 import { Vendor } from "./vendor/data";
 import { SimpleLogin } from "./vendor/simplelogin";
 
@@ -84,7 +84,7 @@ const SomeProfileMetadata = {
       deserializer: (value) => value as TestType,
       clearOn: [],
     },
-  },
+  } as ExtensionStorageKey<TestType>,
 } satisfies ExtensionProfileMetadata<TestType, "forwarder">;
 
 describe("ExtensionService", () => {
