@@ -156,7 +156,7 @@ export class LoginComponentV1 extends BaseLoginComponent implements OnInit, OnDe
             });
           }
         }),
-        takeUntil(this.destroy$),
+        takeUntil(this.componentDestroyed$),
       )
       .subscribe();
   }
