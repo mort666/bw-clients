@@ -15,6 +15,7 @@ import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { EncryptedObject } from "@bitwarden/common/platform/models/domain/encrypted-object";
 import {
   Aes256CbcHmacKey,
+  Aes256CbcKey,
   SymmetricCryptoKey,
 } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 
@@ -72,8 +73,13 @@ export class EncryptServiceImplementation implements EncryptService {
       encBytes.set(new Uint8Array(encValue.mac), 1 + encValue.iv.byteLength);
       encBytes.set(new Uint8Array(encValue.data), 1 + encValue.iv.byteLength + macLen);
       return new EncArrayBuffer(encBytes);
-    } else {
-      throw new Error(`Encrypt is not supported for keys of type ${innerKey.type}`);
+    } else if (innerKey.type === EncryptionType.AesCbc256_B64) {
+      const encValue = await this.aesEncryptLegacy(plainValue, innerKey);
+      const encBytes = new Uint8Array(1 + encValue.iv.byteLength + encValue.data.byteLength);
+      encBytes.set([innerKey.type]);
+      encBytes.set(new Uint8Array(encValue.iv), 1);
+      encBytes.set(new Uint8Array(encValue.data), 1 + encValue.iv.byteLength);
+      return new EncArrayBuffer(encBytes);
     }
   }
 
@@ -295,6 +301,16 @@ export class EncryptServiceImplementation implements EncryptService {
     macData.set(new Uint8Array(obj.data), obj.iv.byteLength);
     obj.mac = await this.cryptoFunctionService.hmac(macData, key.authenticationKey, "sha256");
 
+    return obj;
+  }
+
+  /**
+   * @deprecated Removed once AesCbc256_B64 support is removed
+   */
+  private async aesEncryptLegacy(data: Uint8Array, key: Aes256CbcKey): Promise<EncryptedObject> {
+    const obj = new EncryptedObject();
+    obj.iv = await this.cryptoFunctionService.randomBytes(16);
+    obj.data = await this.cryptoFunctionService.aesEncrypt(data, obj.iv, key.encryptionKey);
     return obj;
   }
 
