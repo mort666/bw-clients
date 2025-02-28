@@ -53,7 +53,7 @@ describe("KeyGenerationService", () => {
 
         expect(salt).toEqual(inputSalt);
         expect(material).toEqual(inputMaterial);
-        expect(derivedKey.inner().type).toEqual(EncryptionType.AesCbc256_HmacSha256_B64);
+        expect(derivedKey.inner().type).toEqual(EncryptionType.Aes256Cbc_HmacSha256_B64);
       },
     );
   });
@@ -68,7 +68,7 @@ describe("KeyGenerationService", () => {
 
       const key = await sut.deriveKeyFromMaterial(material, salt, purpose);
 
-      expect(key.inner().type).toEqual(EncryptionType.AesCbc256_HmacSha256_B64);
+      expect(key.inner().type).toEqual(EncryptionType.Aes256Cbc_HmacSha256_B64);
     });
   });
 
@@ -82,7 +82,7 @@ describe("KeyGenerationService", () => {
 
       const key = await sut.deriveKeyFromPassword(password, salt, kdfConfig);
 
-      expect(key.inner().type).toEqual(EncryptionType.AesCbc256_B64);
+      expect(key.inner().type).toEqual(EncryptionType.Aes256Cbc_B64);
     });
 
     it("should derive a 32 byte key from a password using argon2id", async () => {
@@ -95,7 +95,7 @@ describe("KeyGenerationService", () => {
 
       const key = await sut.deriveKeyFromPassword(password, salt, kdfConfig);
 
-      expect(key.inner().type).toEqual(EncryptionType.AesCbc256_B64);
+      expect(key.inner().type).toEqual(EncryptionType.Aes256Cbc_B64);
     });
   });
 });

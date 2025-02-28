@@ -179,13 +179,13 @@ export class NodeCryptoFunctionService implements CryptoFunctionService {
 
     const innerKey = key.inner();
 
-    if (innerKey.type === EncryptionType.AesCbc256_B64) {
+    if (innerKey.type === EncryptionType.Aes256Cbc_B64) {
       return {
         iv: ivBytes,
         data: dataBytes,
         encKey: innerKey.encryptionKey,
       } as CbcDecryptParameters<Uint8Array>;
-    } else if (innerKey.type === EncryptionType.AesCbc256_HmacSha256_B64) {
+    } else if (innerKey.type === EncryptionType.Aes256Cbc_HmacSha256_B64) {
       const macData = new Uint8Array(ivBytes.length + dataBytes.length);
       macData.set(ivBytes, 0);
       macData.set(dataBytes, ivBytes.length);

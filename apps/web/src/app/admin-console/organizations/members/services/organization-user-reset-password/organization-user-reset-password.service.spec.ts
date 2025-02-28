@@ -139,7 +139,7 @@ describe("OrganizationUserResetPasswordService", () => {
       const mockUserKey = new SymmetricCryptoKey(mockRandomBytes) as UserKey;
       keyService.encryptUserKeyWithMasterKey.mockResolvedValue([
         mockUserKey,
-        new EncString(EncryptionType.AesCbc256_HmacSha256_B64, "test-encrypted-user-key"),
+        new EncString(EncryptionType.Aes256Cbc_HmacSha256_B64, "test-encrypted-user-key"),
       ]);
     });
 

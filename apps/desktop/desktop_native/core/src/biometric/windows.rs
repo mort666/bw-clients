@@ -234,7 +234,7 @@ mod tests {
             .unwrap();
 
         match secret {
-            CipherString::AesCbc256_B64 { iv, data: _ } => {
+            CipherString::Aes256Cbc_B64 { iv, data: _ } => {
                 assert_eq!(iv_b64, base64_engine.encode(iv));
             }
             _ => panic!("Invalid cipher string"),

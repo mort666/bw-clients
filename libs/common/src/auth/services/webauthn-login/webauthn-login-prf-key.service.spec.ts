@@ -23,7 +23,7 @@ describe("WebAuthnLoginPrfKeyService", () => {
 
       const result = await service.createSymmetricKeyFromPrf(randomBytes(32));
 
-      expect(result.inner().type).toBe(EncryptionType.AesCbc256_HmacSha256_B64);
+      expect(result.inner().type).toBe(EncryptionType.Aes256Cbc_HmacSha256_B64);
     });
   });
 });

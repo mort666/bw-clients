@@ -36,7 +36,7 @@ export abstract class MasterPasswordServiceAbstraction {
    *    * @param userId The desired user
    * @param userKey The user's encrypted symmetric key
    * @throws If either the MasterKey or UserKey are not resolved, or if the UserKey encryption type
-   *         is neither AesCbc256_B64 nor AesCbc256_HmacSha256_B64
+   *         is neither Aes256Cbc_B64 nor Aes256Cbc_HmacSha256_B64
    * @returns The user key
    */
   abstract decryptUserKeyWithMasterKey: (

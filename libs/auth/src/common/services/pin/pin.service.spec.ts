@@ -49,7 +49,7 @@ describe("PinService", () => {
   const mockPin = "1234";
   const mockUserKeyEncryptedPin = new EncString("userKeyEncryptedPin");
 
-  // Note: both pinKeyEncryptedUserKeys use encryptionType: 2 (AesCbc256_HmacSha256_B64)
+  // Note: both pinKeyEncryptedUserKeys use encryptionType: 2 (Aes256Cbc_HmacSha256_B64)
   const pinKeyEncryptedUserKeyEphemeral = new EncString(
     "2.gbauOANURUHqvhLTDnva1A==|nSW+fPumiuTaDB/s12+JO88uemV6rhwRSR+YR1ZzGr5j6Ei3/h+XEli2Unpz652NlZ9NTuRpHxeOqkYYJtp7J+lPMoclgteXuAzUu9kqlRc=|DeUFkhIwgkGdZA08bDnDqMMNmZk21D+H5g8IostPKAY=",
   );

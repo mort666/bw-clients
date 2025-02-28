@@ -31,7 +31,7 @@ pub fn encrypt_aes256(
     let data = cbc::Encryptor::<aes::Aes256>::new(&key, &iv.into())
         .encrypt_padded_vec_mut::<Pkcs7>(data_dec);
 
-    Ok(CipherString::AesCbc256_B64 { iv, data })
+    Ok(CipherString::Aes256Cbc_B64 { iv, data })
 }
 
 pub fn argon2(

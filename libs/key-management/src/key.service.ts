@@ -831,13 +831,13 @@ export class DefaultKeyService implements KeyServiceAbstraction {
   ): Promise<[T, EncString]> {
     let protectedSymKey: EncString;
     const protectingKeyInner = protectingKey.inner();
-    if (protectingKeyInner.type === EncryptionType.AesCbc256_B64) {
+    if (protectingKeyInner.type === EncryptionType.Aes256Cbc_B64) {
       const stretchedEncryptionKey = await this.keyGenerationService.stretchKey(protectingKeyInner);
       protectedSymKey = await this.encryptService.encrypt(
         protectedKey.toEncoded(),
         stretchedEncryptionKey,
       );
-    } else if (protectingKeyInner.type === EncryptionType.AesCbc256_HmacSha256_B64) {
+    } else if (protectingKeyInner.type === EncryptionType.Aes256Cbc_HmacSha256_B64) {
       protectedSymKey = await this.encryptService.encrypt(protectedKey.toEncoded(), protectingKey);
     } else {
       throw new Error("Unsupported key type");

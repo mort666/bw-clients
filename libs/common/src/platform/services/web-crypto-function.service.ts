@@ -246,13 +246,13 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
     key: SymmetricCryptoKey,
   ): CbcDecryptParameters<string> {
     const innerKey = key.inner();
-    if (innerKey.type === EncryptionType.AesCbc256_B64) {
+    if (innerKey.type === EncryptionType.Aes256Cbc_B64) {
       return {
         iv: forge.util.decode64(iv),
         data: forge.util.decode64(data),
         encKey: forge.util.createBuffer(innerKey.encryptionKey).getBytes(),
       } as CbcDecryptParameters<string>;
-    } else if (innerKey.type === EncryptionType.AesCbc256_HmacSha256_B64) {
+    } else if (innerKey.type === EncryptionType.Aes256Cbc_HmacSha256_B64) {
       const macData = forge.util.decode64(iv) + forge.util.decode64(data);
       return {
         iv: forge.util.decode64(iv),

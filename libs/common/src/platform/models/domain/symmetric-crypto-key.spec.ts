@@ -14,20 +14,20 @@ describe("SymmetricCryptoKey", () => {
   });
 
   describe("guesses encKey from key length", () => {
-    it("AesCbc256_B64", () => {
+    it("Aes256Cbc_B64", () => {
       const key = makeStaticByteArray(32);
       const cryptoKey = new SymmetricCryptoKey(key);
 
       expect(cryptoKey).toEqual({
         keyB64: "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
         innerKey: {
-          type: EncryptionType.AesCbc256_B64,
+          type: EncryptionType.Aes256Cbc_B64,
           encryptionKey: key,
         },
       });
     });
 
-    it("AesCbc256_HmacSha256_B64", () => {
+    it("Aes256Cbc_HmacSha256_B64", () => {
       const key = makeStaticByteArray(64);
       const cryptoKey = new SymmetricCryptoKey(key);
 
@@ -35,7 +35,7 @@ describe("SymmetricCryptoKey", () => {
         keyB64:
           "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+Pw==",
         innerKey: {
-          type: EncryptionType.AesCbc256_HmacSha256_B64,
+          type: EncryptionType.Aes256Cbc_HmacSha256_B64,
           encryptionKey: key.slice(0, 32),
           authenticationKey: key.slice(32),
         },
@@ -73,20 +73,20 @@ describe("SymmetricCryptoKey", () => {
     const actual = key.inner();
 
     expect(actual).toEqual({
-      type: EncryptionType.AesCbc256_HmacSha256_B64,
+      type: EncryptionType.Aes256Cbc_HmacSha256_B64,
       encryptionKey: key.inner().encryptionKey,
       authenticationKey: (key.inner() as Aes256CbcHmacKey).authenticationKey,
     });
   });
 
-  it("toEncoded returns encoded key for AesCbc256_B64", () => {
+  it("toEncoded returns encoded key for Aes256Cbc_B64", () => {
     const key = new SymmetricCryptoKey(makeStaticByteArray(32));
     const actual = key.toEncoded();
 
     expect(actual).toEqual(key.inner().encryptionKey);
   });
 
-  it("toEncoded returns encoded key for AesCbc256_HmacSha256_B64", () => {
+  it("toEncoded returns encoded key for Aes256Cbc_HmacSha256_B64", () => {
     const keyBytes = makeStaticByteArray(64);
     const key = new SymmetricCryptoKey(keyBytes);
     const actual = key.toEncoded();

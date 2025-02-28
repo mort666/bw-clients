@@ -37,7 +37,7 @@ export function mockEnc(s: string): MockProxy<EncString> {
 
 export function makeEncString(data?: string) {
   data ??= Utils.newGuid();
-  return new EncString(EncryptionType.AesCbc256_HmacSha256_B64, data, "test", "test");
+  return new EncString(EncryptionType.Aes256Cbc_HmacSha256_B64, data, "test", "test");
 }
 
 export function makeStaticByteArray(length: number, start = 0) {

@@ -6,7 +6,7 @@ import { USER_ENCRYPTED_PRIVATE_KEY, USER_EVER_HAD_USER_KEY } from "./user-key.s
 
 function makeEncString(data?: string) {
   data ??= Utils.newGuid();
-  return new EncString(EncryptionType.AesCbc256_HmacSha256_B64, data, "test", "test");
+  return new EncString(EncryptionType.Aes256Cbc_HmacSha256_B64, data, "test", "test");
 }
 
 describe("Ever had user key", () => {

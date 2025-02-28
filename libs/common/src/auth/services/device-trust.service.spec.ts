@@ -392,12 +392,12 @@ describe("deviceTrustService", () => {
         );
 
         mockUserKeyEncryptedDevicePublicKey = new EncString(
-          EncryptionType.AesCbc256_HmacSha256_B64,
+          EncryptionType.Aes256Cbc_HmacSha256_B64,
           "mockUserKeyEncryptedDevicePublicKey",
         );
 
         mockDeviceKeyEncryptedDevicePrivateKey = new EncString(
-          EncryptionType.AesCbc256_HmacSha256_B64,
+          EncryptionType.Aes256Cbc_HmacSha256_B64,
           "mockDeviceKeyEncryptedDevicePrivateKey",
         );
 
@@ -555,12 +555,12 @@ describe("deviceTrustService", () => {
         mockUserKey = new SymmetricCryptoKey(mockUserKeyRandomBytes) as UserKey;
 
         mockEncryptedDevicePrivateKey = new EncString(
-          EncryptionType.AesCbc256_HmacSha256_B64,
+          EncryptionType.Aes256Cbc_HmacSha256_B64,
           "mockEncryptedDevicePrivateKey",
         );
 
         mockEncryptedUserKey = new EncString(
-          EncryptionType.AesCbc256_HmacSha256_B64,
+          EncryptionType.Aes256Cbc_HmacSha256_B64,
           "mockEncryptedUserKey",
         );
 
@@ -731,7 +731,7 @@ describe("deviceTrustService", () => {
 
           // Mock the decryption of the public key with the old user key
           encryptService.decryptToBytes.mockImplementationOnce((_encValue, privateKeyValue) => {
-            expect(privateKeyValue.inner().type).toBe(EncryptionType.AesCbc256_HmacSha256_B64);
+            expect(privateKeyValue.inner().type).toBe(EncryptionType.Aes256Cbc_HmacSha256_B64);
             expect(new Uint8Array(privateKeyValue.toEncoded())[0]).toBe(FakeOldUserKeyMarker);
             const data = new Uint8Array(250);
             data.fill(FakeDecryptedPublicKeyMarker, 0, 1);

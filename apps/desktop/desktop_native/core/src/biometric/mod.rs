@@ -60,7 +60,7 @@ fn encrypt(secret: &str, key_material: &KeyMaterial, iv_b64: &str) -> Result<Str
 
 #[allow(unused)]
 fn decrypt(secret: &CipherString, key_material: &KeyMaterial) -> Result<String> {
-    if let CipherString::AesCbc256_B64 { iv, data } = secret {
+    if let CipherString::Aes256Cbc_B64 { iv, data } = secret {
         let decrypted = crypto::decrypt_aes256(iv, data, key_material.derive_key()?)?;
 
         Ok(String::from_utf8(decrypted)?)

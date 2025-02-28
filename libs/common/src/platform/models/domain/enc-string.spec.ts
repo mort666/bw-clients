@@ -59,9 +59,9 @@ describe("EncString", () => {
       });
 
       const cases = [
-        "aXY=|Y3Q=", // AesCbc256_B64 w/out header
-        "0.QmFzZTY0UGFydA==|QmFzZTY0UGFydA==", // AesCbc256_B64 with header
-        "2.QmFzZTY0UGFydA==|QmFzZTY0UGFydA==|QmFzZTY0UGFydA==", // AesCbc256_HmacSha256_B64
+        "aXY=|Y3Q=", // Aes256Cbc_B64 w/out header
+        "0.QmFzZTY0UGFydA==|QmFzZTY0UGFydA==", // Aes256Cbc_B64 with header
+        "2.QmFzZTY0UGFydA==|QmFzZTY0UGFydA==|QmFzZTY0UGFydA==", // Aes256Cbc_HmacSha256_B64
         "3.QmFzZTY0UGFydA==", // Rsa2048_OaepSha256_B64
         "4.QmFzZTY0UGFydA==", // Rsa2048_OaepSha1_B64
         "5.QmFzZTY0UGFydA==|QmFzZTY0UGFydA==", // Rsa2048_OaepSha256_HmacSha256_B64
@@ -181,9 +181,9 @@ describe("EncString", () => {
     });
   });
 
-  describe("AesCbc256_B64", () => {
+  describe("Aes256Cbc_B64", () => {
     it("constructor", () => {
-      const encString = new EncString(EncryptionType.AesCbc256_B64, "data", "iv");
+      const encString = new EncString(EncryptionType.Aes256Cbc_B64, "data", "iv");
 
       expect(encString).toEqual({
         data: "data",
@@ -226,9 +226,9 @@ describe("EncString", () => {
     });
   });
 
-  describe("AesCbc256_HmacSha256_B64", () => {
+  describe("Aes256Cbc_HmacSha256_B64", () => {
     it("constructor", () => {
-      const encString = new EncString(EncryptionType.AesCbc256_HmacSha256_B64, "data", "iv", "mac");
+      const encString = new EncString(EncryptionType.Aes256Cbc_HmacSha256_B64, "data", "iv", "mac");
 
       expect(encString).toEqual({
         data: "data",
@@ -386,7 +386,7 @@ describe("EncString", () => {
 
   describe("toJSON", () => {
     it("Should be represented by the encrypted string", () => {
-      const encString = new EncString(EncryptionType.AesCbc256_B64, "data", "iv");
+      const encString = new EncString(EncryptionType.Aes256Cbc_B64, "data", "iv");
 
       expect(encString.toJSON()).toBe(encString.encryptedString);
     });

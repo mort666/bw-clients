@@ -120,7 +120,7 @@ describe("EmergencyAccessService", () => {
         const publicKey = new Uint8Array(64);
 
         const mockUserPublicKeyEncryptedUserKey = new EncString(
-          EncryptionType.AesCbc256_HmacSha256_B64,
+          EncryptionType.Aes256Cbc_HmacSha256_B64,
           "mockUserPublicKeyEncryptedUserKey",
         );
 
@@ -168,7 +168,7 @@ describe("EmergencyAccessService", () => {
       // must mock [UserKey, EncString] return from keyService.encryptUserKeyWithMasterKey
       // where UserKey is the decrypted grantor user key
       const mockMasterKeyEncryptedUserKey = new EncString(
-        EncryptionType.AesCbc256_HmacSha256_B64,
+        EncryptionType.Aes256Cbc_HmacSha256_B64,
         "mockMasterKeyEncryptedUserKey",
       );
 

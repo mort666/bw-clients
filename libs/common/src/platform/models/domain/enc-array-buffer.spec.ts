@@ -5,7 +5,7 @@ import { EncArrayBuffer } from "./enc-array-buffer";
 
 describe("encArrayBuffer", () => {
   describe("parses the buffer", () => {
-    test.each([[EncryptionType.AesCbc256_HmacSha256_B64, "AesCbc256_HmacSha256_B64"]])(
+    test.each([[EncryptionType.Aes256Cbc_HmacSha256_B64, "Aes256Cbc_HmacSha256_B64"]])(
       "with %c%s",
       (encType: EncryptionType) => {
         const iv = makeStaticByteArray(16, 10);
@@ -28,8 +28,8 @@ describe("encArrayBuffer", () => {
       },
     );
 
-    it("with AesCbc256_B64", () => {
-      const encType = EncryptionType.AesCbc256_B64;
+    it("with Aes256Cbc_B64", () => {
+      const encType = EncryptionType.Aes256Cbc_B64;
       const iv = makeStaticByteArray(16, 10);
       // We use the minimum data length of 1 to test the boundary of valid lengths
       const data = makeStaticByteArray(1, 100);
@@ -50,8 +50,8 @@ describe("encArrayBuffer", () => {
 
   describe("throws if the buffer has an invalid length", () => {
     test.each([
-      [EncryptionType.AesCbc256_HmacSha256_B64, 50, "AesCbc256_HmacSha256_B64"],
-      [EncryptionType.AesCbc256_B64, 18, "AesCbc256_B64"],
+      [EncryptionType.Aes256Cbc_HmacSha256_B64, 50, "Aes256Cbc_HmacSha256_B64"],
+      [EncryptionType.Aes256Cbc_B64, 18, "Aes256Cbc_B64"],
     ])("with %c%c%s", (encType: EncryptionType, minLength: number) => {
       // Generate invalid byte array
       // Minus 1 to leave room for the encType, minus 1 to make it invalid

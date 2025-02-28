@@ -45,7 +45,7 @@ export class EncryptServiceImplementation implements EncryptService {
     }
 
     const innerKey = key.inner();
-    if (innerKey.type === EncryptionType.AesCbc256_HmacSha256_B64) {
+    if (innerKey.type === EncryptionType.Aes256Cbc_HmacSha256_B64) {
       const encObj = await this.aesEncrypt(plainBuf, innerKey);
       const iv = Utils.fromBufferToB64(encObj.iv);
       const data = Utils.fromBufferToB64(encObj.data);
@@ -62,7 +62,7 @@ export class EncryptServiceImplementation implements EncryptService {
     }
 
     const innerKey = key.inner();
-    if (innerKey.type === EncryptionType.AesCbc256_HmacSha256_B64) {
+    if (innerKey.type === EncryptionType.Aes256Cbc_HmacSha256_B64) {
       const encValue = await this.aesEncrypt(plainValue, innerKey);
       const macLen = encValue.mac.length;
       const encBytes = new Uint8Array(
@@ -73,7 +73,7 @@ export class EncryptServiceImplementation implements EncryptService {
       encBytes.set(new Uint8Array(encValue.mac), 1 + encValue.iv.byteLength);
       encBytes.set(new Uint8Array(encValue.data), 1 + encValue.iv.byteLength + macLen);
       return new EncArrayBuffer(encBytes);
-    } else if (innerKey.type === EncryptionType.AesCbc256_B64) {
+    } else if (innerKey.type === EncryptionType.Aes256Cbc_B64) {
       const encValue = await this.aesEncryptLegacy(plainValue, innerKey);
       const encBytes = new Uint8Array(1 + encValue.iv.byteLength + encValue.data.byteLength);
       encBytes.set([innerKey.type]);
@@ -93,8 +93,8 @@ export class EncryptServiceImplementation implements EncryptService {
     }
 
     const innerKey = key.inner();
-    if (innerKey.type === EncryptionType.AesCbc256_HmacSha256_B64) {
-      if (encString.encryptionType !== EncryptionType.AesCbc256_HmacSha256_B64) {
+    if (innerKey.type === EncryptionType.Aes256Cbc_HmacSha256_B64) {
+      if (encString.encryptionType !== EncryptionType.Aes256Cbc_HmacSha256_B64) {
         this.logDecryptError(
           "Key encryption type does not match payload encryption type",
           key.inner().type,
@@ -130,8 +130,8 @@ export class EncryptServiceImplementation implements EncryptService {
         mode: "cbc",
         parameters: fastParams,
       });
-    } else if (innerKey.type === EncryptionType.AesCbc256_B64) {
-      if (encString.encryptionType !== EncryptionType.AesCbc256_B64) {
+    } else if (innerKey.type === EncryptionType.Aes256Cbc_B64) {
+      if (encString.encryptionType !== EncryptionType.Aes256Cbc_B64) {
         this.logDecryptError(
           "Key encryption type does not match payload encryption type",
           key.inner().type,
@@ -170,9 +170,9 @@ export class EncryptServiceImplementation implements EncryptService {
     }
 
     const inner = key.inner();
-    if (inner.type === EncryptionType.AesCbc256_HmacSha256_B64) {
+    if (inner.type === EncryptionType.Aes256Cbc_HmacSha256_B64) {
       if (
-        encThing.encryptionType !== EncryptionType.AesCbc256_HmacSha256_B64 ||
+        encThing.encryptionType !== EncryptionType.Aes256Cbc_HmacSha256_B64 ||
         encThing.macBytes === null
       ) {
         this.logDecryptError(
@@ -209,8 +209,8 @@ export class EncryptServiceImplementation implements EncryptService {
         inner.encryptionKey,
         "cbc",
       );
-    } else if (inner.type === EncryptionType.AesCbc256_B64) {
-      if (encThing.encryptionType !== EncryptionType.AesCbc256_B64) {
+    } else if (inner.type === EncryptionType.Aes256Cbc_B64) {
+      if (encThing.encryptionType !== EncryptionType.Aes256Cbc_B64) {
         this.logDecryptError(
           "Encryption key type mismatch",
           inner.type,
@@ -305,7 +305,7 @@ export class EncryptServiceImplementation implements EncryptService {
   }
 
   /**
-   * @deprecated Removed once AesCbc256_B64 support is removed
+   * @deprecated Removed once Aes256Cbc_B64 support is removed
    */
   private async aesEncryptLegacy(data: Uint8Array, key: Aes256CbcKey): Promise<EncryptedObject> {
     const obj = new EncryptedObject();

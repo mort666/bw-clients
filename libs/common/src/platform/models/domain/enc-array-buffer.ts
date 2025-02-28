@@ -20,7 +20,7 @@ export class EncArrayBuffer implements Encrypted {
     const encType = encBytes[0];
 
     switch (encType) {
-      case EncryptionType.AesCbc256_HmacSha256_B64: {
+      case EncryptionType.Aes256Cbc_HmacSha256_B64: {
         const minimumLength = ENC_TYPE_LENGTH + IV_LENGTH + MAC_LENGTH + MIN_DATA_LENGTH;
         if (encBytes.length < minimumLength) {
           this.throwDecryptionError();
@@ -34,7 +34,7 @@ export class EncArrayBuffer implements Encrypted {
         this.dataBytes = encBytes.slice(ENC_TYPE_LENGTH + IV_LENGTH + MAC_LENGTH);
         break;
       }
-      case EncryptionType.AesCbc256_B64: {
+      case EncryptionType.Aes256Cbc_B64: {
         const minimumLength = ENC_TYPE_LENGTH + IV_LENGTH + MIN_DATA_LENGTH;
         if (encBytes.length < minimumLength) {
           this.throwDecryptionError();

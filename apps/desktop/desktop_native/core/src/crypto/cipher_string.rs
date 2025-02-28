@@ -7,18 +7,18 @@ use crate::error::{CSParseError, Error};
 #[allow(unused, non_camel_case_types)]
 pub enum CipherString {
     // 0
-    AesCbc256_B64 {
+    Aes256Cbc_B64 {
         iv: [u8; 16],
         data: Vec<u8>,
     },
     // 1
-    AesCbc128_HmacSha256_B64 {
+    Aes128Cbc_HmacSha256_B64 {
         iv: [u8; 16],
         mac: [u8; 32],
         data: Vec<u8>,
     },
     // 2
-    AesCbc256_HmacSha256_B64 {
+    Aes256Cbc_HmacSha256_B64 {
         iv: [u8; 16],
         mac: [u8; 32],
         data: Vec<u8>,
@@ -81,7 +81,7 @@ impl FromStr for CipherString {
                     .decode(data_str)
                     .map_err(CSParseError::InvalidBase64)?;
 
-                Ok(CipherString::AesCbc256_B64 { iv, data })
+                Ok(CipherString::Aes256Cbc_B64 { iv, data })
             }
 
             ("1" | "2", 3) => {
@@ -106,9 +106,9 @@ impl FromStr for CipherString {
                     .map_err(CSParseError::InvalidBase64)?;
 
                 if enc_type == "1" {
-                    Ok(CipherString::AesCbc128_HmacSha256_B64 { iv, mac, data })
+                    Ok(CipherString::Aes128Cbc_HmacSha256_B64 { iv, mac, data })
                 } else {
-                    Ok(CipherString::AesCbc256_HmacSha256_B64 { iv, mac, data })
+                    Ok(CipherString::Aes256Cbc_HmacSha256_B64 { iv, mac, data })
                 }
             }
 
@@ -142,16 +142,16 @@ impl Display for CipherString {
         let mut parts = Vec::<&[u8]>::new();
 
         match self {
-            CipherString::AesCbc256_B64 { iv, data } => {
+            CipherString::Aes256Cbc_B64 { iv, data } => {
                 parts.push(iv);
                 parts.push(data);
             }
-            CipherString::AesCbc128_HmacSha256_B64 { iv, mac, data } => {
+            CipherString::Aes128Cbc_HmacSha256_B64 { iv, mac, data } => {
                 parts.push(iv);
                 parts.push(data);
                 parts.push(mac);
             }
-            CipherString::AesCbc256_HmacSha256_B64 { iv, mac, data } => {
+            CipherString::Aes256Cbc_HmacSha256_B64 { iv, mac, data } => {
                 parts.push(iv);
                 parts.push(data);
                 parts.push(mac);
@@ -187,9 +187,9 @@ impl Display for CipherString {
 impl CipherString {
     fn enc_type(&self) -> u8 {
         match self {
-            CipherString::AesCbc256_B64 { .. } => 0,
-            CipherString::AesCbc128_HmacSha256_B64 { .. } => 1,
-            CipherString::AesCbc256_HmacSha256_B64 { .. } => 2,
+            CipherString::Aes256Cbc_B64 { .. } => 0,
+            CipherString::Aes128Cbc_HmacSha256_B64 { .. } => 1,
+            CipherString::Aes256Cbc_HmacSha256_B64 { .. } => 2,
             CipherString::Rsa2048_OaepSha256_B64 { .. } => 3,
             CipherString::Rsa2048_OaepSha1_B64 { .. } => 4,
             CipherString::Rsa2048_OaepSha256_HmacSha256_B64 { .. } => 5,
@@ -199,9 +199,9 @@ impl CipherString {
 
     fn enc_type_name(&self) -> &str {
         match self.enc_type() {
-            0 => "AesCbc256_B64",
-            1 => "AesCbc128_HmacSha256_B64",
-            2 => "AesCbc256_HmacSha256_B64",
+            0 => "Aes256Cbc_B64",
+            1 => "Aes128Cbc_HmacSha256_B64",
+            2 => "Aes256Cbc_HmacSha256_B64",
             3 => "Rsa2048_OaepSha256_B64",
             4 => "Rsa2048_OaepSha1_B64",
             5 => "Rsa2048_OaepSha256_HmacSha256_B64",

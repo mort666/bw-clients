@@ -6,13 +6,13 @@ import { Utils } from "../../../platform/misc/utils";
 import { EncryptionType } from "../../enums";
 
 export type Aes256CbcHmacKey = {
-  type: EncryptionType.AesCbc256_HmacSha256_B64;
+  type: EncryptionType.Aes256Cbc_HmacSha256_B64;
   encryptionKey: Uint8Array;
   authenticationKey: Uint8Array;
 };
 
 export type Aes256CbcKey = {
-  type: EncryptionType.AesCbc256_B64;
+  type: EncryptionType.Aes256Cbc_B64;
   encryptionKey: Uint8Array;
 };
 
@@ -36,13 +36,13 @@ export class SymmetricCryptoKey {
 
     if (key.byteLength === 32) {
       this.innerKey = {
-        type: EncryptionType.AesCbc256_B64,
+        type: EncryptionType.Aes256Cbc_B64,
         encryptionKey: key,
       };
       this.keyB64 = this.toBase64();
     } else if (key.byteLength === 64) {
       this.innerKey = {
-        type: EncryptionType.AesCbc256_HmacSha256_B64,
+        type: EncryptionType.Aes256Cbc_HmacSha256_B64,
         encryptionKey: key.slice(0, 32),
         authenticationKey: key.slice(32),
       };
@@ -74,15 +74,15 @@ export class SymmetricCryptoKey {
   /**
    * Serializes the key to a format that can be written to state or shared
    * The currently permitted format is:
-   * - AesCbc256_B64: 32 bytes (the raw key)
-   * - AesCbc256_HmacSha256_B64: 64 bytes (32 bytes encryption key, 32 bytes authentication key, concatenated)
+   * - Aes256Cbc_B64: 32 bytes (the raw key)
+   * - Aes256Cbc_HmacSha256_B64: 64 bytes (32 bytes encryption key, 32 bytes authentication key, concatenated)
    *
    * @returns The serialized key that can be written to state or encrypted and then written to state / shared
    */
   toEncoded(): Uint8Array {
-    if (this.innerKey.type === EncryptionType.AesCbc256_B64) {
+    if (this.innerKey.type === EncryptionType.Aes256Cbc_B64) {
       return this.innerKey.encryptionKey;
-    } else if (this.innerKey.type === EncryptionType.AesCbc256_HmacSha256_B64) {
+    } else if (this.innerKey.type === EncryptionType.Aes256Cbc_HmacSha256_B64) {
       const encodedKey = new Uint8Array(64);
       encodedKey.set(this.innerKey.encryptionKey, 0);
       encodedKey.set(this.innerKey.authenticationKey, 32);

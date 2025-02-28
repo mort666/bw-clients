@@ -181,13 +181,13 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
 
     let decUserKey: Uint8Array;
 
-    if (userKey.encryptionType === EncryptionType.AesCbc256_B64) {
+    if (userKey.encryptionType === EncryptionType.Aes256Cbc_B64) {
       decUserKey = await this.encryptService.decryptToBytes(
         userKey,
         masterKey,
         "Content: User Key; Encrypting Key: Master Key",
       );
-    } else if (userKey.encryptionType === EncryptionType.AesCbc256_HmacSha256_B64) {
+    } else if (userKey.encryptionType === EncryptionType.Aes256Cbc_HmacSha256_B64) {
       const newKey = await this.keyGenerationService.stretchKey(masterKey.inner() as Aes256CbcKey);
       decUserKey = await this.encryptService.decryptToBytes(
         userKey,

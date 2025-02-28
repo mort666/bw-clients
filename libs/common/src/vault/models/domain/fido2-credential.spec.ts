@@ -170,5 +170,5 @@ describe("Fido2Credential", () => {
 });
 
 function createEncryptedEncString(s: string): EncString {
-  return new EncString(`${EncryptionType.AesCbc256_HmacSha256_B64}.${s}`);
+  return new EncString(`${EncryptionType.Aes256Cbc_HmacSha256_B64}.${s}`);
 }

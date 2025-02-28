@@ -89,12 +89,12 @@ export class EncString implements Encrypted {
     }
 
     switch (encType) {
-      case EncryptionType.AesCbc256_HmacSha256_B64:
+      case EncryptionType.Aes256Cbc_HmacSha256_B64:
         this.iv = encPieces[0];
         this.data = encPieces[1];
         this.mac = encPieces[2];
         break;
-      case EncryptionType.AesCbc256_B64:
+      case EncryptionType.Aes256Cbc_B64:
         this.iv = encPieces[0];
         this.data = encPieces[1];
         break;
@@ -131,7 +131,7 @@ export class EncString implements Encrypted {
       }
     } else {
       encPieces = encryptedString.split("|");
-      encType = EncryptionType.AesCbc256_B64;
+      encType = EncryptionType.Aes256Cbc_B64;
     }
 
     return {
