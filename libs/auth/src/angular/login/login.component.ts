@@ -73,7 +73,7 @@ export enum LoginUiState {
 export class LoginComponent implements OnInit, OnDestroy {
   @ViewChild("masterPasswordInputRef") masterPasswordInputRef: ElementRef | undefined;
 
-  // HACK: Once we are done listening to unauth ui refresh flag we can get rid of this.
+  // HACK: Once we are done listening to unauth ui refresh flag we can get rid of this https://bitwarden.atlassian.net/browse/PM-9678
   private isLoggingIn = false;
   private destroy$ = new Subject<void>();
   readonly Icons = { WaveIcon, VaultIcon };
