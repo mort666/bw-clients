@@ -73,6 +73,8 @@ export enum LoginUiState {
 export class LoginComponent implements OnInit, OnDestroy {
   @ViewChild("masterPasswordInputRef") masterPasswordInputRef: ElementRef | undefined;
 
+  // HACK: Once we are done listening to unauth ui refresh flag we can get rid of this.
+  private isLoggingIn = false;
   private destroy$ = new Subject<void>();
   readonly Icons = { WaveIcon, VaultIcon };
 
@@ -160,9 +162,11 @@ export class LoginComponent implements OnInit, OnDestroy {
       .pipe(
         tap(async (flag) => {
           // If the flag is turned OFF, we must force a reload to ensure the correct UI is shown
-          if (!flag) {
+          // if the user is actively logging in then don't try and navigate them elsewhere, let the process finish
+          if (!flag && !this.isLoggingIn) {
+            const params = await firstValueFrom(this.activatedRoute.queryParams);
             const uniqueQueryParams = {
-              ...this.activatedRoute.queryParams,
+              ...params,
               // adding a unique timestamp to the query params to force a reload
               t: new Date().getTime().toString(), // Adding a unique timestamp as a query parameter
             };
@@ -199,6 +203,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     const credentials = new PasswordLoginCredentials(email, masterPassword);
 
     try {
+      this.isLoggingIn = true;
       const authResult = await this.loginStrategyService.logIn(credentials);
 
       await this.saveEmailSettings();
@@ -206,6 +211,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     } catch (error) {
       this.logService.error(error);
       this.handleSubmitError(error);
+    } finally {
+      this.isLoggingIn = false;
     }
   };
 
