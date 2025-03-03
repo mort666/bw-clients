@@ -905,7 +905,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
           return null;
         }
 
-        const publicKey = await this.derivePublicKey(privateKey);
+        const publicKey = (await this.derivePublicKey(privateKey))!;
         return { privateKey, publicKey };
       }),
     );

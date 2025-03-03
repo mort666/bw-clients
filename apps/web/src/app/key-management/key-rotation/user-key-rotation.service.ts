@@ -1,13 +1,13 @@
 import { Injectable } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 
-import { VaultTimeoutService } from "@bitwarden/common/abstractions/vault-timeout/vault-timeout.service";
 import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { DeviceTrustServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust.service.abstraction";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { VerificationType } from "@bitwarden/common/auth/enums/verification-type";
 import { MasterPasswordVerification } from "@bitwarden/common/auth/types/verification";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
+import { VaultTimeoutService } from "@bitwarden/common/key-management/vault-timeout";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { HashPurpose } from "@bitwarden/common/platform/enums";
@@ -113,18 +113,28 @@ export class UserKeyRotationService {
       kdfConfig,
       email,
       newMasterKeyAuthenticationHash,
-      newMasterKeyEncryptedUserKey.encryptedString,
+      newMasterKeyEncryptedUserKey.encryptedString!,
       newMasterPasswordHint,
     );
-    const { privateKey, publicKey } = await firstValueFrom(
-      this.keyService.userEncryptionKeyPair$(user.id),
-    );
+
+    const keyPair = await firstValueFrom(this.keyService.userEncryptionKeyPair$(user.id));
+    if (keyPair == null) {
+      this.logService.info("[Userkey rotation] Key pair is null. Aborting!");
+      throw new Error("Key pair is null");
+    }
+    const { privateKey, publicKey } = keyPair;
+
     const accountKeysRequest = new AccountKeysRequest(
-      (await this.encryptService.encrypt(privateKey, newUnencryptedUserKey)).encryptedString,
+      (await this.encryptService.encrypt(privateKey, newUnencryptedUserKey)).encryptedString!,
       Utils.fromBufferToB64(publicKey),
     );
 
     const originalUserKey = await firstValueFrom(this.keyService.userKey$(user.id));
+    if (originalUserKey == null) {
+      this.logService.info("[Userkey rotation] Userkey is null. Aborting!");
+      throw new Error("Userkey key is null");
+    }
+
     const rotatedCiphers = await this.cipherService.getRotatedData(
       originalUserKey,
       newUnencryptedUserKey,
@@ -158,6 +168,13 @@ export class UserKeyRotationService {
       newUnencryptedUserKey,
       user.id,
     );
+    if (organizationAccountRecoveryUnlockData == null) {
+      this.logService.info(
+        "[Userkey rotation] Organization account recovery data is null. Aborting!",
+      );
+      throw new Error("Organization account recovery data is null");
+    }
+
     const passkeyUnlockData = await this.webauthnLoginAdminService.getRotatedData(
       originalUserKey,
       newUnencryptedUserKey,
