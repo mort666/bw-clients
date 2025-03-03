@@ -37,13 +37,12 @@ async function buildMacOs(context) {
     } else if (appOutDir.includes("mac")) {
       configuration = "ReleaseDeveloper";
     } else {
-      console.log("########## UNABLE TO DETERMINE CONFIGURATION ##########");
-      console.log("########## Skipping Autofill Extension Build ##########");
+      console.log("### Unable to determine configuration, skipping Autofill Extension build");
       return;
     }
   } else {
-    console.log("### No context found, defaulting to the Debug configuration");
-    configuration = "Debug";
+    console.log("### No context found, skipping Autofill Extension build");
+    return;
   }
 
   const proc = child.spawn("xcodebuild", [
