@@ -41,17 +41,17 @@ type MetadataRequest = Partial<AlgorithmRequest & TypeRequest>;
 /** Surfaces contextual information to credential generators */
 export class GeneratorMetadataProvider {
   /** Instantiates the context provider
-   *  @param providers dependency injectors for user state subjects
-   *  @param policyService settings constraint lookups
+   *  @param system dependency providers for user state subjects
+   *  @param application dependency providers for system services
    */
   constructor(
-    private readonly providers: UserStateSubjectDependencyProvider,
-    private readonly system: SystemServiceProvider,
+    private readonly system: UserStateSubjectDependencyProvider,
+    private readonly application: SystemServiceProvider,
     algorithms: GeneratorMetadata<object>[],
   ) {
-    this.log = providers.log({ type: "GeneratorMetadataProvider" });
+    this.log = system.log({ type: "GeneratorMetadataProvider" });
 
-    const site = system.extension.site("forwarder");
+    const site = application.extension.site("forwarder");
     if (!site) {
       this.log.panic("forwarder extension site not found");
     }
@@ -98,7 +98,7 @@ export class GeneratorMetadataProvider {
 
     const available$ = account$.pipe(
       switchMap((account) => {
-        const policies$ = this.system.policy.getAll$(PolicyType.PasswordGenerator, account.id).pipe(
+        const policies$ = this.application.policy.getAll$(PolicyType.PasswordGenerator, account.id).pipe(
           map((p) => new Set(availableAlgorithms_vNext(p))),
           // complete policy emissions otherwise `switchMap` holds `algorithms$` open indefinitely
           takeUntil(anyComplete(account$)),
@@ -237,7 +237,7 @@ export class GeneratorMetadataProvider {
     dependencies: BoundDependency<"account", Account>,
   ): UserStateSubject<CredentialPreference> {
     // FIXME: enforce policy
-    const subject = new UserStateSubject(PREFERENCES, this.providers, dependencies);
+    const subject = new UserStateSubject(PREFERENCES, this.system, dependencies);
 
     return subject;
   }
