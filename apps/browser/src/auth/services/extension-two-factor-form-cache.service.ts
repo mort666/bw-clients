@@ -1,11 +1,20 @@
 import { Observable, from, of, switchMap } from "rxjs";
 
-import { TwoFactorFormCacheServiceAbstraction, TwoFactorFormData } from "@bitwarden/auth/angular";
+import { TwoFactorFormCacheServiceAbstraction } from "@bitwarden/auth/angular";
+import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { AbstractStorageService } from "@bitwarden/common/platform/abstractions/storage.service";
 
-
+/**
+ * Interface for two-factor form data
+ */
+interface TwoFactorFormData {
+  token?: string;
+  remember?: boolean;
+  selectedProviderType?: TwoFactorProviderType;
+  emailSent?: boolean;
+}
 
 const STORAGE_KEY = "twoFactorFormData";
 

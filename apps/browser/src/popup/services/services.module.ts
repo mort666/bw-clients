@@ -31,7 +31,7 @@ import {
   TwoFactorAuthDuoComponentService,
   TwoFactorAuthWebAuthnComponentService,
   SsoComponentService,
-} from "@bitwarden/auth/angular";
+ TwoFactorFormCacheServiceAbstraction } from "@bitwarden/auth/angular";
 import {
   LockService,
   LoginEmailService,
@@ -138,6 +138,7 @@ import { ExtensionTwoFactorAuthComponentService } from "../../auth/services/exte
 import { ExtensionTwoFactorAuthDuoComponentService } from "../../auth/services/extension-two-factor-auth-duo-component.service";
 import { ExtensionTwoFactorAuthEmailComponentService } from "../../auth/services/extension-two-factor-auth-email-component.service";
 import { ExtensionTwoFactorAuthWebAuthnComponentService } from "../../auth/services/extension-two-factor-auth-webauthn-component.service";
+import { ExtensionTwoFactorFormCacheService } from "../../auth/services/extension-two-factor-form-cache.service";
 import { AutofillService as AutofillServiceAbstraction } from "../../autofill/services/abstractions/autofill.service";
 import AutofillService from "../../autofill/services/autofill.service";
 import { InlineMenuFieldQualificationService } from "../../autofill/services/inline-menu-field-qualification.service";
@@ -176,8 +177,6 @@ import { VaultFilterService } from "../../vault/services/vault-filter.service";
 import { DebounceNavigationService } from "./debounce-navigation.service";
 import { InitService } from "./init.service";
 import { PopupCloseWarningService } from "./popup-close-warning.service";
-import { TwoFactorFormCacheServiceAbstraction } from "@bitwarden/auth/angular";
-import { ExtensionTwoFactorFormCacheService } from "../../auth/services/extension-two-factor-form-cache.service";
 
 const OBSERVABLE_LARGE_OBJECT_MEMORY_STORAGE = new SafeInjectionToken<
   AbstractStorageService & ObservableStorageService
