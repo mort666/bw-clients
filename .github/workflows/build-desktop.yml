@@ -1208,21 +1208,11 @@ jobs:
           path: apps/desktop/dist/mas-universal/Bitwarden-${{ env._PACKAGE_VERSION }}-universal.pkg
           if-no-files-found: error
 
-      - name: Set up TEST auth key
-        run: |
-          cat << EOF > ~/private_keys/TEST.p8
-          ---BEGIN---
-          test1
-          test2
-          test3
-          ---END---
-          EOF
-
       - name: Create secrets for Fastlane
         run: |
           brew install gsed
 
-          KEY_WITHOUT_NEWLINES=$(gsed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' ~/private_keys/TEST.p8)
+          KEY_WITHOUT_NEWLINES=$(gsed -E ':a;N;$!ba;s/\r{0,1}\n/\\n/g' ~/private_keys/AuthKey_6TV9MKN3GP.p8)
 
           cat << EOF > ~/secrets/appstoreconnect-fastlane.json
           {
