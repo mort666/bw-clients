@@ -40,6 +40,7 @@ export class NativeAutofillMain {
       (error, clientId, sequenceNumber, request) => {
         if (error) {
           this.logService.error("autofill.IpcServer.registration", error);
+          this.ipcServer.completeError(clientId, sequenceNumber, String(error));
           return;
         }
         this.windowMain.win.webContents.send("autofill.passkeyRegistration", {
@@ -52,6 +53,7 @@ export class NativeAutofillMain {
       (error, clientId, sequenceNumber, request) => {
         if (error) {
           this.logService.error("autofill.IpcServer.assertion", error);
+          this.ipcServer.completeError(clientId, sequenceNumber, String(error));
           return;
         }
         this.windowMain.win.webContents.send("autofill.passkeyAssertion", {
@@ -64,6 +66,7 @@ export class NativeAutofillMain {
       (error, clientId, sequenceNumber, request) => {
         if (error) {
           this.logService.error("autofill.IpcServer.assertion", error);
+          this.ipcServer.completeError(clientId, sequenceNumber, String(error));
           return;
         }
         this.windowMain.win.webContents.send("autofill.passkeyAssertionWithoutUserInterface", {
@@ -89,7 +92,7 @@ export class NativeAutofillMain {
     ipcMain.on("autofill.completeError", (event, data) => {
       this.logService.warning("autofill.completeError", data);
       const { clientId, sequenceNumber, error } = data;
-      this.ipcServer.completeError(clientId, sequenceNumber, error);
+      this.ipcServer.completeError(clientId, sequenceNumber, String(error));
     });
   }
 
