@@ -76,7 +76,6 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
     
     deinit {
         logger.log("[autofill-extension] deinitializing extension")
-        self.extensionContext.cancelRequest(withError: NSError(domain: ASExtensionErrorDomain, code: ASExtensionError.userCanceled.rawValue))
     }
     
     
