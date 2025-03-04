@@ -1,5 +1,3 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
 import { Utils } from "../../../platform/misc/utils";
 import { EncryptionType } from "../../enums";
 import { Encrypted } from "../../interfaces/encrypted";
@@ -10,16 +8,16 @@ const MAC_LENGTH = 32;
 const MIN_DATA_LENGTH = 1;
 
 export class EncArrayBuffer implements Encrypted {
-  readonly encryptionType: EncryptionType = null;
-  readonly dataBytes: Uint8Array = null;
-  readonly ivBytes: Uint8Array = null;
-  readonly macBytes: Uint8Array = null;
+  readonly encryptionType?: EncryptionType;
+  readonly dataBytes: Uint8Array | null = null;
+  readonly ivBytes: Uint8Array | null = null;
+  readonly macBytes: Uint8Array | undefined | null = null;
 
   constructor(readonly buffer: Uint8Array) {
     const encBytes = buffer;
-    const encType = encBytes[0];
+    this.encryptionType = encBytes[0];
 
-    switch (encType) {
+    switch (this.encryptionType) {
       case EncryptionType.AesCbc128_HmacSha256_B64:
       case EncryptionType.AesCbc256_HmacSha256_B64: {
         const minimumLength = ENC_TYPE_LENGTH + IV_LENGTH + MAC_LENGTH + MIN_DATA_LENGTH;
@@ -48,8 +46,6 @@ export class EncArrayBuffer implements Encrypted {
       default:
         this.throwDecryptionError();
     }
-
-    this.encryptionType = encType;
   }
 
   private throwDecryptionError() {
