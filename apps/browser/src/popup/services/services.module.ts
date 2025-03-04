@@ -31,7 +31,8 @@ import {
   TwoFactorAuthDuoComponentService,
   TwoFactorAuthWebAuthnComponentService,
   SsoComponentService,
- TwoFactorFormCacheServiceAbstraction } from "@bitwarden/auth/angular";
+  TwoFactorFormCacheService,
+} from "@bitwarden/auth/angular";
 import {
   LockService,
   LoginEmailService,
@@ -553,7 +554,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: TwoFactorAuthEmailComponentService,
     useClass: ExtensionTwoFactorAuthEmailComponentService,
-    deps: [DialogService, WINDOW],
+    deps: [DialogService, WINDOW, ConfigService],
   }),
   safeProvider({
     provide: TwoFactorAuthWebAuthnComponentService,
@@ -561,9 +562,9 @@ const safeProviders: SafeProvider[] = [
     deps: [PlatformUtilsService],
   }),
   safeProvider({
-    provide: TwoFactorFormCacheServiceAbstraction,
+    provide: TwoFactorFormCacheService,
     useClass: ExtensionTwoFactorFormCacheService,
-    deps: [AbstractStorageService, ConfigService],
+    deps: [PopupViewCacheService, ConfigService],
   }),
   safeProvider({
     provide: TwoFactorAuthDuoComponentService,
@@ -657,11 +658,6 @@ const safeProviders: SafeProvider[] = [
     provide: LoginDecryptionOptionsService,
     useClass: ExtensionLoginDecryptionOptionsService,
     deps: [MessagingServiceAbstraction, Router],
-  }),
-  safeProvider({
-    provide: TwoFactorFormCacheServiceAbstraction,
-    useClass: ExtensionTwoFactorFormCacheService,
-    deps: [AbstractStorageService, ConfigService],
   }),
 ];
 

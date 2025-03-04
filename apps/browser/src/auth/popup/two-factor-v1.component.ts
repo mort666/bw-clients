@@ -7,18 +7,19 @@ import { filter, first, takeUntil } from "rxjs/operators";
 
 import { TwoFactorComponentV1 as BaseTwoFactorComponent } from "@bitwarden/angular/auth/components/two-factor-v1.component";
 import { WINDOW } from "@bitwarden/angular/services/injection-tokens";
+import { TwoFactorFormCacheService } from "@bitwarden/auth/angular";
 import {
   LoginStrategyServiceAbstraction,
   LoginEmailServiceAbstraction,
   UserDecryptionOptionsServiceAbstraction,
 } from "@bitwarden/auth/common";
-import { TwoFactorFormCacheServiceAbstraction } from "@bitwarden/auth/angular";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/auth/abstractions/master-password.service.abstraction";
 import { SsoLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/sso-login.service.abstraction";
 import { TwoFactorService } from "@bitwarden/common/auth/abstractions/two-factor.service";
 import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { AppIdService } from "@bitwarden/common/platform/abstractions/app-id.service";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
@@ -68,7 +69,7 @@ export class TwoFactorComponentV1 extends BaseTwoFactorComponent implements OnIn
     toastService: ToastService,
     @Inject(WINDOW) protected win: Window,
     private browserMessagingApi: ZonedMessageListenerService,
-    private twoFactorFormCacheService: TwoFactorFormCacheServiceAbstraction,
+    private twoFactorFormCacheService: TwoFactorFormCacheService,
   ) {
     super(
       loginStrategyService,
@@ -156,7 +157,8 @@ export class TwoFactorComponentV1 extends BaseTwoFactorComponent implements OnIn
 
     if (
       this.selectedProviderType === TwoFactorProviderType.Email &&
-      BrowserPopupUtils.inPopup(window)
+      BrowserPopupUtils.inPopup(window) &&
+      !(await this.configService.getFeatureFlag(FeatureFlag.PM9115_TwoFactorFormPersistence))
     ) {
       const confirmed = await this.dialogService.openSimpleDialog({
         title: { key: "warning" },
@@ -301,5 +303,19 @@ export class TwoFactorComponentV1 extends BaseTwoFactorComponent implements OnIn
 
     // Clear cached data on successful login
     await this.twoFactorFormCacheService.clearFormData();
+  }
+
+  /**
+   * Save the current form state when inputs change
+   */
+  async saveFormData() {
+    if (this.twoFactorFormCacheService) {
+      await this.twoFactorFormCacheService.saveFormData({
+        token: this.token,
+        remember: this.remember,
+        selectedProviderType: this.selectedProviderType,
+        emailSent: this.selectedProviderType === TwoFactorProviderType.Email,
+      });
+    }
   }
 }

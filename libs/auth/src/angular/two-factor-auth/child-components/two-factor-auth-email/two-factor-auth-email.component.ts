@@ -22,7 +22,8 @@ import {
   ToastService,
 } from "@bitwarden/components";
 
-import { TwoFactorFormCacheServiceAbstraction } from "../../abstractions/two-factor-form-cache.service.abstraction";
+import { TwoFactorFormCacheService } from "../../abstractions/two-factor-form-cache.service.abstraction";
+
 import { TwoFactorAuthEmailComponentService } from "./two-factor-auth-email-component.service";
 
 @Component({
@@ -41,7 +42,6 @@ import { TwoFactorAuthEmailComponentService } from "./two-factor-auth-email-comp
     AsyncActionsModule,
     FormsModule,
   ],
-  providers: [],
 })
 export class TwoFactorAuthEmailComponent implements OnInit {
   @Input({ required: true }) tokenFormControl: FormControl | undefined = undefined;
@@ -60,7 +60,7 @@ export class TwoFactorAuthEmailComponent implements OnInit {
     protected appIdService: AppIdService,
     private toastService: ToastService,
     private twoFactorAuthEmailComponentService: TwoFactorAuthEmailComponentService,
-    private twoFactorFormCacheService: TwoFactorFormCacheServiceAbstraction,
+    private twoFactorFormCacheService: TwoFactorFormCacheService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -81,12 +81,17 @@ export class TwoFactorAuthEmailComponent implements OnInit {
     this.twoFactorEmail = email2faProviderData.Email;
 
     // Check if email has already been sent according to the cache
-    let cachedData;
+    let emailAlreadySent = false;
     if (this.twoFactorFormCacheService) {
-      cachedData = await this.twoFactorFormCacheService.getFormData();
+      try {
+        const cachedData = await this.twoFactorFormCacheService.getFormData();
+        emailAlreadySent = cachedData?.emailSent === true;
+      } catch (e) {
+        this.logService.error(e);
+      }
     }
 
-    if (providers.size > 1 && !cachedData?.emailSent) {
+    if (providers.size > 1 && !emailAlreadySent) {
       await this.sendEmail(false);
     }
   }
@@ -129,11 +134,15 @@ export class TwoFactorAuthEmailComponent implements OnInit {
 
       // Update cache to indicate email was sent
       if (this.twoFactorFormCacheService) {
-        const cachedData = (await this.twoFactorFormCacheService.getFormData()) || {};
-        await this.twoFactorFormCacheService.saveFormData({
-          ...cachedData,
-          emailSent: true,
-        });
+        try {
+          const cachedData = (await this.twoFactorFormCacheService.getFormData()) || {};
+          await this.twoFactorFormCacheService.saveFormData({
+            ...cachedData,
+            emailSent: true,
+          });
+        } catch (e) {
+          this.logService.error(e);
+        }
       }
 
       if (doToast) {

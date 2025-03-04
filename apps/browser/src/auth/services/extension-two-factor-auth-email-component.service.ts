@@ -2,6 +2,8 @@ import {
   DefaultTwoFactorAuthEmailComponentService,
   TwoFactorAuthEmailComponentService,
 } from "@bitwarden/auth/angular";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { DialogService } from "@bitwarden/components";
 
 import { openTwoFactorAuthEmailPopout } from "../../auth/popup/utils/auth-popout-window";
@@ -15,12 +17,16 @@ export class ExtensionTwoFactorAuthEmailComponentService
   constructor(
     private dialogService: DialogService,
     private window: Window,
+    private configService: ConfigService,
   ) {
     super();
   }
 
   async openPopoutIfApprovedForEmail2fa(): Promise<void> {
-    if (BrowserPopupUtils.inPopup(this.window)) {
+    const isTwoFactorFormPersistenceEnabled = await this.configService.getFeatureFlag(
+      FeatureFlag.PM9115_TwoFactorFormPersistence,
+    );
+    if (BrowserPopupUtils.inPopup(this.window) && isTwoFactorFormPersistenceEnabled) {
       const confirmed = await this.dialogService.openSimpleDialog({
         title: { key: "warning" },
         content: { key: "popup2faCloseMessage" },

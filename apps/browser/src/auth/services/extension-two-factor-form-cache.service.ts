@@ -1,28 +1,53 @@
+import { Injectable, WritableSignal } from "@angular/core";
 import { Observable, from, of, switchMap } from "rxjs";
 
-import { TwoFactorFormCacheServiceAbstraction } from "@bitwarden/auth/angular";
+import { ViewCacheService } from "@bitwarden/angular/platform/abstractions/view-cache.service";
+import { TwoFactorFormCacheService, TwoFactorFormData } from "@bitwarden/auth/angular";
 import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
-import { AbstractStorageService } from "@bitwarden/common/platform/abstractions/storage.service";
 
-/**
- * Interface for two-factor form data
- */
-interface TwoFactorFormData {
+const TWO_FACTOR_FORM_CACHE_KEY = "two-factor-form-cache";
+
+// Utilize function overloading to create a type-safe deserializer to match the exact expected signature
+function deserializeFormData(jsonValue: null): null;
+function deserializeFormData(jsonValue: {
   token?: string;
   remember?: boolean;
   selectedProviderType?: TwoFactorProviderType;
   emailSent?: boolean;
+}): TwoFactorFormData;
+function deserializeFormData(jsonValue: any): TwoFactorFormData | null {
+  if (!jsonValue) {
+    return null;
+  }
+
+  return {
+    token: jsonValue.token,
+    remember: jsonValue.remember,
+    selectedProviderType: jsonValue.selectedProviderType,
+    emailSent: jsonValue.emailSent,
+  };
 }
 
-const STORAGE_KEY = "twoFactorFormData";
+/**
+ * Service for caching two-factor form data
+ */
+@Injectable()
+export class ExtensionTwoFactorFormCacheService extends TwoFactorFormCacheService {
+  private formDataCache: WritableSignal<TwoFactorFormData | null>;
 
-export class ExtensionTwoFactorFormCacheService implements TwoFactorFormCacheServiceAbstraction {
   constructor(
-    private storageService: AbstractStorageService,
+    private viewCacheService: ViewCacheService,
     private configService: ConfigService,
-  ) {}
+  ) {
+    super();
+    this.formDataCache = this.viewCacheService.signal<TwoFactorFormData | null>({
+      key: TWO_FACTOR_FORM_CACHE_KEY,
+      initialValue: null,
+      deserializer: deserializeFormData,
+    });
+  }
 
   isEnabled$(): Observable<boolean> {
     return from(this.configService.getFeatureFlag(FeatureFlag.PM9115_TwoFactorFormPersistence));
@@ -38,28 +63,38 @@ export class ExtensionTwoFactorFormCacheService implements TwoFactorFormCacheSer
         if (!enabled) {
           return of(null);
         }
-        return from(this.storageService.get<TwoFactorFormData>(STORAGE_KEY));
+        return of(this.formDataCache());
       }),
     );
   }
 
+  /**
+   * Save form data to cache
+   */
   async saveFormData(data: TwoFactorFormData): Promise<void> {
     if (!(await this.isEnabled())) {
       return;
     }
 
-    await this.storageService.save(STORAGE_KEY, data);
+    // Set the new form data in the cache
+    this.formDataCache.set({ ...data });
   }
 
+  /**
+   * Retrieve form data from cache
+   */
   async getFormData(): Promise<TwoFactorFormData | null> {
     if (!(await this.isEnabled())) {
       return null;
     }
 
-    return await this.storageService.get<TwoFactorFormData>(STORAGE_KEY);
+    return this.formDataCache();
   }
 
+  /**
+   * Clear form data from cache
+   */
   async clearFormData(): Promise<void> {
-    await this.storageService.remove(STORAGE_KEY);
+    this.formDataCache.set(null);
   }
 }

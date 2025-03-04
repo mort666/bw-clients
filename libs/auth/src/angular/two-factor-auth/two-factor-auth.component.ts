@@ -54,8 +54,8 @@ import {
   TwoFactorAuthSecurityKeyIcon,
   TwoFactorAuthDuoIcon,
 } from "../icons/two-factor-auth";
-import { TwoFactorFormCacheServiceAbstraction } from "./abstractions/two-factor-form-cache.service.abstraction";
 
+import { TwoFactorFormCacheService } from "./abstractions";
 import { TwoFactorAuthAuthenticatorComponent } from "./child-components/two-factor-auth-authenticator.component";
 import { TwoFactorAuthDuoComponent } from "./child-components/two-factor-auth-duo/two-factor-auth-duo.component";
 import { TwoFactorAuthEmailComponent } from "./child-components/two-factor-auth-email/two-factor-auth-email.component";
@@ -171,7 +171,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
     private anonLayoutWrapperDataService: AnonLayoutWrapperDataService,
     private environmentService: EnvironmentService,
     private loginSuccessHandlerService: LoginSuccessHandlerService,
-    private twoFactorFormCacheService: TwoFactorFormCacheServiceAbstraction,
+    private twoFactorFormCacheService: TwoFactorFormCacheService,
   ) {}
 
   async ngOnInit() {
