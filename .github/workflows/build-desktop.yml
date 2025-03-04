@@ -1210,7 +1210,6 @@ jobs:
 
       - name: Set up TEST auth key
         run: |
-          mkdir ~/private_keys
           cat << EOF > ~/private_keys/TEST.p8
           ---BEGIN---
           test1
