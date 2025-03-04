@@ -69,7 +69,8 @@ export class Fido2PlaceholderComponent implements OnInit, OnDestroy {
   }
 
   async chooseCipher(cipherId: string) {
-    this.session?.confirmChosenCipher(cipherId);
+    // For now: Set UV to true
+    this.session?.confirmChosenCipher(cipherId, true);
 
     await this.router.navigate(["/"]);
     await this.desktopSettingsService.setModalMode(false);

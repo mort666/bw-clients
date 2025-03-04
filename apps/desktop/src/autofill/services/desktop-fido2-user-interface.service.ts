@@ -1,5 +1,14 @@
 import { Router } from "@angular/router";
-import { lastValueFrom, firstValueFrom, map, Subject, filter, take, BehaviorSubject } from "rxjs";
+import {
+  lastValueFrom,
+  firstValueFrom,
+  map,
+  Subject,
+  filter,
+  take,
+  BehaviorSubject,
+  timeout,
+} from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
@@ -96,7 +105,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     take(1),
   );
 
-  private chosenCipherSubject = new Subject<string>();
+  private chosenCipherSubject = new Subject<{ cipherId: string; userVerified: boolean }>();
 
   // Method implementation
   async pickCredential({
@@ -130,30 +139,37 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
 
       await this.showUi("/passkeys", this.windowObject.windowXy);
 
-      const chosenCipherId = await this.waitForUiChosenCipher();
+      const chosenCipherResponse = await this.waitForUiChosenCipher();
 
-      this.logService.debug("Received chosen cipher", chosenCipherId);
-      if (!chosenCipherId) {
-        throw new Error("User cancelled");
-      }
+      this.logService.debug("Received chosen cipher", chosenCipherResponse);
 
-      const resultCipherId = cipherIds.find((id) => id === chosenCipherId);
-
-      // TODO: perform userverification
-      return { cipherId: resultCipherId, userVerified: true };
+      return {
+        cipherId: chosenCipherResponse.cipherId,
+        userVerified: chosenCipherResponse.userVerified,
+      };
     } finally {
       // Make sure to clean up so the app is never stuck in modal mode?
       await this.desktopSettingsService.setModalMode(false);
     }
   }
 
-  confirmChosenCipher(cipherId: string): void {
-    this.chosenCipherSubject.next(cipherId);
+  confirmChosenCipher(cipherId: string, userVerified: boolean = false): void {
+    this.chosenCipherSubject.next({ cipherId, userVerified });
     this.chosenCipherSubject.complete();
   }
 
-  private async waitForUiChosenCipher(): Promise<string> {
-    return lastValueFrom(this.chosenCipherSubject);
+  private async waitForUiChosenCipher(
+    timeoutMs: number = 60000,
+  ): Promise<{ cipherId: string; userVerified: boolean } | undefined> {
+    try {
+      return await lastValueFrom(this.chosenCipherSubject.pipe(timeout(timeoutMs)));
+    } catch (error) {
+      // If we hit a timeout, return undefined instead of throwing
+      this.logService.warning("Timeout: User did not select a cipher within the allowed time", {
+        timeoutMs,
+      });
+      return { cipherId: undefined, userVerified: false };
+    }
   }
 
   /**
