@@ -115,7 +115,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     try {
       // Check if we can return the credential without user interaction
       // TODO: Assume user presence is undefined
-      if (cipherIds.length === 1 && !masterPasswordRepromptRequired) {
+      if (assumeUserPresence && cipherIds.length === 1 && !masterPasswordRepromptRequired) {
         this.logService.debug(
           "shortcut - Assuming user presence and returning cipherId",
           cipherIds[0],
