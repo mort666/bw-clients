@@ -139,6 +139,7 @@ export class TwoFactorAuthEmailComponent implements OnInit {
           await this.twoFactorFormCacheService.saveFormData({
             ...cachedData,
             emailSent: true,
+            token: undefined,
           });
         } catch (e) {
           this.logService.error(e);

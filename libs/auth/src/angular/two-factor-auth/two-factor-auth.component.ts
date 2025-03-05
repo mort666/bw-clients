@@ -359,11 +359,6 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
       const authResult: AuthResult = await this.formPromise;
       this.logService.info("Successfully submitted two factor token");
 
-      // Clear persisted data on successful login
-      if (this.twoFactorFormCacheService) {
-        await this.twoFactorFormCacheService.clearFormData();
-      }
-
       await this.handleAuthResult(authResult);
     } catch {
       this.logService.error("Error submitting two factor token");
@@ -379,8 +374,8 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
     // Persist current form data before navigating to another method
     if (this.twoFactorFormCacheService) {
       await this.twoFactorFormCacheService.saveFormData({
-        token: this.tokenFormControl.value || undefined,
-        remember: this.rememberFormControl.value ?? undefined,
+        token: undefined,
+        remember: undefined,
         selectedProviderType: this.selectedProviderType,
         emailSent: this.selectedProviderType === TwoFactorProviderType.Email,
       });
@@ -401,10 +396,9 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
 
       // Update the persisted provider type when a new one is chosen
       if (this.twoFactorFormCacheService) {
-        const persistedData = await this.twoFactorFormCacheService.getFormData();
         await this.twoFactorFormCacheService.saveFormData({
-          token: persistedData?.token || undefined,
-          remember: persistedData?.remember ?? undefined,
+          token: undefined,
+          remember: undefined,
           selectedProviderType: response.type,
           emailSent: false, // Reset email sent state when switching providers
         });
@@ -487,6 +481,11 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
   }
 
   private async handleAuthResult(authResult: AuthResult) {
+    // Clear form cache
+    if (this.twoFactorFormCacheService) {
+      await this.twoFactorFormCacheService.clearFormData();
+    }
+
     if (await this.handleMigrateEncryptionKey(authResult)) {
       return; // stop login process
     }
