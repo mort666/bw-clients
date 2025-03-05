@@ -1,5 +1,5 @@
 import { Injectable, WritableSignal } from "@angular/core";
-import { Observable, from, of, switchMap } from "rxjs";
+import { Observable, of, switchMap, from } from "rxjs";
 
 import { ViewCacheService } from "@bitwarden/angular/platform/abstractions/view-cache.service";
 import { TwoFactorFormCacheService, TwoFactorFormData } from "@bitwarden/auth/angular";
@@ -49,14 +49,16 @@ export class ExtensionTwoFactorFormCacheService extends TwoFactorFormCacheServic
     });
   }
 
+  /**
+   * Observable that emits the current enabled state
+   */
   isEnabled$(): Observable<boolean> {
     return from(this.configService.getFeatureFlag(FeatureFlag.PM9115_TwoFactorFormPersistence));
   }
 
-  async isEnabled(): Promise<boolean> {
-    return await this.configService.getFeatureFlag(FeatureFlag.PM9115_TwoFactorFormPersistence);
-  }
-
+  /**
+   * Observable that emits the current form data
+   */
   formData$(): Observable<TwoFactorFormData | null> {
     return this.isEnabled$().pipe(
       switchMap((enabled) => {
@@ -78,17 +80,6 @@ export class ExtensionTwoFactorFormCacheService extends TwoFactorFormCacheServic
 
     // Set the new form data in the cache
     this.formDataCache.set({ ...data });
-  }
-
-  /**
-   * Retrieve form data from cache
-   */
-  async getFormData(): Promise<TwoFactorFormData | null> {
-    if (!(await this.isEnabled())) {
-      return null;
-    }
-
-    return this.formDataCache();
   }
 
   /**

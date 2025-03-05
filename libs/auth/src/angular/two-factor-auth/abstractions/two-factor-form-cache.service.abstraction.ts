@@ -1,4 +1,4 @@
-import { Observable } from "rxjs";
+import { Observable, firstValueFrom } from "rxjs";
 
 import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
 
@@ -17,14 +17,17 @@ export interface TwoFactorFormData {
  */
 export abstract class TwoFactorFormCacheService {
   /**
-   * Check if the form persistence feature is enabled
-   */
-  abstract isEnabled(): Promise<boolean>;
-
-  /**
-   * Observable that emits the current enabled state
+   * Observable that emits the current enabled state of the feature flag
    */
   abstract isEnabled$(): Observable<boolean>;
+
+  /**
+   * Helper method that returns whether the feature is enabled
+   * @returns A promise that resolves to true if the feature is enabled
+   */
+  async isEnabled(): Promise<boolean> {
+    return firstValueFrom(this.isEnabled$());
+  }
 
   /**
    * Save form data to persistent storage
@@ -32,14 +35,17 @@ export abstract class TwoFactorFormCacheService {
   abstract saveFormData(data: TwoFactorFormData): Promise<void>;
 
   /**
-   * Retrieve form data from persistent storage
-   */
-  abstract getFormData(): Promise<TwoFactorFormData | null>;
-
-  /**
    * Observable that emits the current form data
    */
   abstract formData$(): Observable<TwoFactorFormData | null>;
+
+  /**
+   * Helper method to retrieve form data
+   * @returns A promise that resolves to the form data
+   */
+  async getFormData(): Promise<TwoFactorFormData | null> {
+    return firstValueFrom(this.formData$());
+  }
 
   /**
    * Clear form data from persistent storage
