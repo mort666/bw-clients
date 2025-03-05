@@ -132,7 +132,7 @@ export class TwoFactorComponentV1 extends BaseTwoFactorComponent implements OnIn
 
     // Load form data from cache if available
     const cachedData = await this.twoFactorFormCacheService.getFormData();
-    if (cachedData?.token) {
+    if (cachedData?.token !== undefined) {
       this.token = cachedData.token;
     }
     if (cachedData?.remember !== undefined) {
@@ -282,29 +282,14 @@ export class TwoFactorComponentV1 extends BaseTwoFactorComponent implements OnIn
     this.platformUtilsService.launchUri(launchUrl);
   }
 
-  // Override the submit method to cache form data before submitting
-  async submit() {
-    // Cache form data before submitting
-    await this.twoFactorFormCacheService.saveFormData({
-      token: this.token,
-      remember: this.remember,
-      selectedProviderType: this.selectedProviderType,
-      emailSent: this.selectedProviderType === TwoFactorProviderType.Email,
-    });
-
-    await super.submit();
-  }
-
   // Override the doSubmit to clear cached data on successful login
   async doSubmit() {
     await super.doSubmit();
-
-    // Clear cached data on successful login
     await this.twoFactorFormCacheService.clearFormData();
   }
 
   /**
-   * Save the current form state when inputs change
+   * Save the current form state to cache when inputs change
    */
   async saveFormData() {
     if (this.twoFactorFormCacheService) {
