@@ -91,7 +91,7 @@ export class TwoFactorAuthEmailComponent implements OnInit {
       }
     }
 
-    if (providers.size > 1 && !emailAlreadySent) {
+    if (!emailAlreadySent) {
       await this.sendEmail(false);
     }
   }
