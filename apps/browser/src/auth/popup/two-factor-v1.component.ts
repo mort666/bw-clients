@@ -69,7 +69,7 @@ export class TwoFactorComponentV1 extends BaseTwoFactorComponent implements OnIn
     toastService: ToastService,
     @Inject(WINDOW) protected win: Window,
     private browserMessagingApi: ZonedMessageListenerService,
-    private twoFactorFormCacheService: TwoFactorFormCacheService,
+    protected twoFactorFormCacheService: TwoFactorFormCacheService,
   ) {
     super(
       loginStrategyService,
@@ -91,6 +91,7 @@ export class TwoFactorComponentV1 extends BaseTwoFactorComponent implements OnIn
       masterPasswordService,
       accountService,
       toastService,
+      twoFactorFormCacheService,
     );
     this.onSuccessfulLogin = async () => {
       // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
