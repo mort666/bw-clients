@@ -26,7 +26,13 @@ export class ExtensionTwoFactorAuthEmailComponentService
     const isTwoFactorFormPersistenceEnabled = await this.configService.getFeatureFlag(
       FeatureFlag.PM9115_TwoFactorFormPersistence,
     );
-    if (BrowserPopupUtils.inPopup(this.window) && isTwoFactorFormPersistenceEnabled) {
+
+    if (isTwoFactorFormPersistenceEnabled) {
+      // If the feature flag is enabled, we don't need to prompt the user to open the popout
+      return;
+    }
+
+    if (BrowserPopupUtils.inPopup(this.window)) {
       const confirmed = await this.dialogService.openSimpleDialog({
         title: { key: "warning" },
         content: { key: "popup2faCloseMessage" },
