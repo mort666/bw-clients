@@ -131,17 +131,15 @@ export class TwoFactorComponentV1 extends BaseTwoFactorComponent implements OnIn
     }
 
     // Load form data from cache if available
-    const persistedData = await this.twoFactorFormCacheService.getFormData();
-    if (persistedData) {
-      if (persistedData.token) {
-        this.token = persistedData.token;
-      }
-      if (persistedData.remember !== undefined) {
-        this.remember = persistedData.remember;
-      }
-      if (persistedData.selectedProviderType !== undefined) {
-        this.selectedProviderType = persistedData.selectedProviderType;
-      }
+    const cachedData = await this.twoFactorFormCacheService.getFormData();
+    if (cachedData?.token) {
+      this.token = cachedData.token;
+    }
+    if (cachedData?.remember !== undefined) {
+      this.remember = cachedData.remember;
+    }
+    if (cachedData?.selectedProviderType !== undefined) {
+      this.selectedProviderType = cachedData.selectedProviderType;
     }
 
     await super.ngOnInit();
@@ -284,9 +282,9 @@ export class TwoFactorComponentV1 extends BaseTwoFactorComponent implements OnIn
     this.platformUtilsService.launchUri(launchUrl);
   }
 
-  // Override the submit method to persist form data to cache before submitting
+  // Override the submit method to cache form data before submitting
   async submit() {
-    // Persist form data before submitting
+    // Cache form data before submitting
     await this.twoFactorFormCacheService.saveFormData({
       token: this.token,
       remember: this.remember,

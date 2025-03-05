@@ -30,7 +30,7 @@ export abstract class TwoFactorFormCacheService {
   }
 
   /**
-   * Save form data to persistent storage
+   * Save form data to cache
    */
   abstract saveFormData(data: TwoFactorFormData): Promise<void>;
 
@@ -48,7 +48,7 @@ export abstract class TwoFactorFormCacheService {
   }
 
   /**
-   * Clear form data from persistent storage
+   * Clear form data from cache
    */
   abstract clearFormData(): Promise<void>;
 }
