@@ -21,7 +21,6 @@ import { SendResponse } from "../models/send.response";
 
 import { SendReceiveCommand } from "./receive.command";
 
-
 export class SendGetCommand extends DownloadCommand {
   constructor(
     private sendService: SendService,

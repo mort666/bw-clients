@@ -163,7 +163,7 @@ export class SendProgram extends BaseProgram {
     return new Command("get")
       .arguments("<id>")
       .description("Get Sends owned by you.")
-      .option("--file", "Specifies to return the file content of a Send")
+      .option("--file", "Specifies to return the file content of a Send", true)
       .option("--password <password>", "Password needed to access the Send.")
       .option("--passwordenv <passwordenv>", "Environment variable storing the Send's password")
       .option(
@@ -172,6 +172,7 @@ export class SendProgram extends BaseProgram {
       )
       .option("--obj", "Return the Send's json object rather than the Send's content")
       .option("--output <location>", "Specify a file path to save a File-type Send to")
+      .option("--raw", "Return the raw content of a Send", true)
       .option("--text", "Specifies to return the text content of a Send")
       .on("--help", () => {
         writeLn("");
