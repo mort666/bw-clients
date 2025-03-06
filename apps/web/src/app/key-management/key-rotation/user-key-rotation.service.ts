@@ -98,7 +98,7 @@ export class UserKeyRotationService {
 
     const newMasterKey = await this.keyService.makeMasterKey(newMasterPassword, email, kdfConfig);
 
-    const userkey = PureCrypto.generate_userkey(false);
+    const userkey = PureCrypto.generate_userkey(true);
     const newUnencryptedUserKey = new SymmetricCryptoKey(userkey) as UserKey;
     let kdf: Kdf = { pBKDF2: { iterations: 1 } };
     if (kdfConfig.kdfType === KdfType.PBKDF2_SHA256) {
