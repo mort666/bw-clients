@@ -212,7 +212,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
       // Wait for the UI to wrap up
       const confirmation = await this.waitForUiNewCredentialConfirmation();
       if (!confirmation) {
-        throw new Error("User cancelled");
+        return { cipherId: undefined, userVerified: false };
       }
       // Create the credential
       await this.createCredential({
