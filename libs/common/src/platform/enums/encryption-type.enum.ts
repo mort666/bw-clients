@@ -2,6 +2,8 @@ export enum EncryptionType {
   AesCbc256_B64 = 0,
   // Type 1 was the unused and removed AesCbc128_HmacSha256_B64
   AesCbc256_HmacSha256_B64 = 2,
+  XChaCha20Poly1305_B64 = 7,
+
   Rsa2048_OaepSha256_B64 = 3,
   Rsa2048_OaepSha1_B64 = 4,
   Rsa2048_OaepSha256_HmacSha256_B64 = 5,
@@ -10,8 +12,8 @@ export enum EncryptionType {
 
 export const SymmetricEncryptionTypes = [
   EncryptionType.AesCbc256_B64,
-  EncryptionType.AesCbc128_HmacSha256_B64,
   EncryptionType.AesCbc256_HmacSha256_B64,
+  EncryptionType.XChaCha20Poly1305_B64,
 ] as const;
 
 export const AsymmetricEncryptionTypes = [
@@ -45,6 +47,7 @@ export function encryptionTypeToString(encryptionType: EncryptionType): string {
 export const EXPECTED_NUM_PARTS_BY_ENCRYPTION_TYPE = {
   [EncryptionType.AesCbc256_B64]: 2,
   [EncryptionType.AesCbc256_HmacSha256_B64]: 3,
+  [EncryptionType.XChaCha20Poly1305_B64]: 1,
   [EncryptionType.Rsa2048_OaepSha256_B64]: 1,
   [EncryptionType.Rsa2048_OaepSha1_B64]: 1,
   [EncryptionType.Rsa2048_OaepSha256_HmacSha256_B64]: 2,

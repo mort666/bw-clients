@@ -16,13 +16,19 @@ export type Aes256CbcKey = {
   encryptionKey: Uint8Array;
 };
 
+export type XChaCha20Poly1305_B64 = {
+  type: EncryptionType.XChaCha20Poly1305_B64;
+  // todo inner key for no-parse
+  coseKey: Uint8Array;
+};
+
 /**
  *  A symmetric crypto key represents a symmetric key usable for symmetric encryption and decryption operations.
  *  The specific algorithm used is private to the key, and should only be exposed to encrypt service implementations.
  *  This can be done via `inner()`.
  */
 export class SymmetricCryptoKey {
-  private innerKey: Aes256CbcHmacKey | Aes256CbcKey;
+  private innerKey: Aes256CbcHmacKey | Aes256CbcKey | XChaCha20Poly1305_B64;
 
   key: Uint8Array;
   keyB64: string;
@@ -50,6 +56,13 @@ export class SymmetricCryptoKey {
       };
       this.key = key;
       this.keyB64 = this.toBase64();
+    } else if (key.byteLength > 64) {
+      this.innerKey = {
+        type: EncryptionType.XChaCha20Poly1305_B64,
+        coseKey: key,
+      };
+      this.key = key;
+      this.keyB64 = this.toBase64();
     } else {
       throw new Error(`Unsupported encType/key length ${key.byteLength}`);
     }
@@ -63,7 +76,7 @@ export class SymmetricCryptoKey {
   /**
    * @returns The inner key instance that can be directly used for encryption primitives
    */
-  inner(): Aes256CbcHmacKey | Aes256CbcKey {
+  inner(): Aes256CbcHmacKey | Aes256CbcKey | XChaCha20Poly1305_B64 {
     return this.innerKey;
   }
 
@@ -89,6 +102,9 @@ export class SymmetricCryptoKey {
       const encodedKey = new Uint8Array(64);
       encodedKey.set(this.innerKey.encryptionKey, 0);
       encodedKey.set(this.innerKey.authenticationKey, 32);
+      return encodedKey;
+    } else if (this.innerKey.type === EncryptionType.XChaCha20Poly1305_B64) {
+      const encodedKey = this.key;
       return encodedKey;
     } else {
       throw new Error("Unsupported encryption type.");

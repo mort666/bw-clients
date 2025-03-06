@@ -12,7 +12,8 @@ import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.servic
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { HashPurpose } from "@bitwarden/common/platform/enums";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
-import { EncryptedString } from "@bitwarden/common/platform/models/domain/enc-string";
+import { EncryptedString, EncString } from "@bitwarden/common/platform/models/domain/enc-string";
+import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { SendService } from "@bitwarden/common/tools/send/services/send.service.abstraction";
 import { UserId } from "@bitwarden/common/types/guid";
 import { UserKey } from "@bitwarden/common/types/key";
@@ -20,7 +21,8 @@ import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.servi
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
 import { ToastService } from "@bitwarden/components";
-import { KeyService } from "@bitwarden/key-management";
+import { Argon2KdfConfig, KdfType, KeyService } from "@bitwarden/key-management";
+import { Kdf, PureCrypto } from "@bitwarden/sdk-internal";
 
 import { OrganizationUserResetPasswordService } from "../../admin-console/organizations/members/services/organization-user-reset-password/organization-user-reset-password.service";
 import { WebauthnLoginAdminService } from "../../auth/core";
@@ -96,8 +98,29 @@ export class UserKeyRotationService {
 
     const newMasterKey = await this.keyService.makeMasterKey(newMasterPassword, email, kdfConfig);
 
-    const [newUnencryptedUserKey, newMasterKeyEncryptedUserKey] =
-      await this.keyService.makeUserKey(newMasterKey);
+    const userkey = PureCrypto.generate_userkey(false);
+    const newUnencryptedUserKey = new SymmetricCryptoKey(userkey) as UserKey;
+    let kdf: Kdf = { pBKDF2: { iterations: 1 } };
+    if (kdfConfig.kdfType === KdfType.PBKDF2_SHA256) {
+      kdf.pBKDF2.iterations = kdfConfig.iterations;
+    } else {
+      const argon2Config = kdfConfig as Argon2KdfConfig;
+      kdf = {
+        argon2id: {
+          iterations: argon2Config.iterations,
+          memory: argon2Config.memory,
+          parallelism: argon2Config.parallelism,
+        },
+      };
+    }
+    const encryptedUserkey = PureCrypto.encrypt_userkey_with_masterpassword(
+      userkey,
+      newMasterPassword,
+      user.email,
+      kdf,
+    );
+    const newMasterKeyEncryptedUserKey = new EncString(encryptedUserkey);
+    this.logService.info("[Userkey rotation] User key created", userkey, encryptedUserkey);
 
     if (!newUnencryptedUserKey || !newMasterKeyEncryptedUserKey) {
       this.logService.info("[Userkey rotation] User key could not be created. Aborting!");

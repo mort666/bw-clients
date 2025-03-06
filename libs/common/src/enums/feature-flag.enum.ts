@@ -86,7 +86,7 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.UseTreeWalkerApiForPageDetailsCollection]: FALSE,
 
   /* Key Management */
-  [FeatureFlag.UseSDKForDecryption]: FALSE,
+  [FeatureFlag.UseSDKForDecryption]: true,
 
   /* Tools */
   [FeatureFlag.ItemShare]: FALSE,
@@ -100,7 +100,7 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.UnauthenticatedExtensionUIRefresh]: FALSE,
   [FeatureFlag.SSHKeyVaultItem]: FALSE,
   [FeatureFlag.SSHAgent]: FALSE,
-  [FeatureFlag.UserKeyRotationV2]: FALSE,
+  [FeatureFlag.UserKeyRotationV2]: true,
   [FeatureFlag.CipherKeyEncryption]: FALSE,
   [FeatureFlag.TrialPaymentOptional]: FALSE,
   [FeatureFlag.SecurityTasks]: FALSE,

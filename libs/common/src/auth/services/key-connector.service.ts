@@ -20,7 +20,10 @@ import { KeysRequest } from "../../models/request/keys.request";
 import { KeyGenerationService } from "../../platform/abstractions/key-generation.service";
 import { LogService } from "../../platform/abstractions/log.service";
 import { Utils } from "../../platform/misc/utils";
-import { SymmetricCryptoKey } from "../../platform/models/domain/symmetric-crypto-key";
+import {
+  Aes256CbcKey,
+  SymmetricCryptoKey,
+} from "../../platform/models/domain/symmetric-crypto-key";
 import {
   ActiveUserState,
   KEY_CONNECTOR_DISK,
@@ -96,7 +99,7 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
     const organization = await this.getManagingOrganization(userId);
     const masterKey = await firstValueFrom(this.masterPasswordService.masterKey$(userId));
     const keyConnectorRequest = new KeyConnectorUserKeyRequest(
-      Utils.fromBufferToB64(masterKey.inner().encryptionKey),
+      Utils.fromBufferToB64((masterKey.inner() as Aes256CbcKey).encryptionKey),
     );
 
     try {
@@ -160,7 +163,7 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
       kdfConfig,
     );
     const keyConnectorRequest = new KeyConnectorUserKeyRequest(
-      Utils.fromBufferToB64(masterKey.inner().encryptionKey),
+      Utils.fromBufferToB64((masterKey.inner() as Aes256CbcKey).encryptionKey),
     );
     await this.masterPasswordService.setMasterKey(masterKey, userId);
 

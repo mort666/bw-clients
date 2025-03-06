@@ -64,7 +64,6 @@ export class EncArrayBuffer implements Encrypted {
 
     switch (encryptionType) {
       case EncryptionType.AesCbc256_B64:
-      case EncryptionType.AesCbc128_HmacSha256_B64:
       case EncryptionType.AesCbc256_HmacSha256_B64:
         EncArrayBuffer.validateIvLength(iv);
         EncArrayBuffer.validateMacLength(encryptionType, mac);
@@ -116,7 +115,6 @@ export class EncArrayBuffer implements Encrypted {
           throw new Error("mac must not be provided for AesCbc256_B64");
         }
         break;
-      case EncryptionType.AesCbc128_HmacSha256_B64:
       case EncryptionType.AesCbc256_HmacSha256_B64:
         if (mac == null || mac.length !== MAC_LENGTH) {
           throw new Error("Invalid MAC length");

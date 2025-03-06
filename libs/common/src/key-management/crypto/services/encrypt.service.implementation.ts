@@ -66,6 +66,12 @@ export class EncryptServiceImplementation implements EncryptService {
       const data = Utils.fromBufferToB64(encObj.data);
       const mac = Utils.fromBufferToB64(encObj.mac);
       return new EncString(innerKey.type, data, iv, mac);
+    } else if (innerKey.type === EncryptionType.XChaCha20Poly1305_B64) {
+      const encrypted = PureCrypto.symmetric_encrypt(
+        Utils.fromBufferToByteString(plainBuf),
+        Utils.fromBufferToB64(innerKey.coseKey),
+      );
+      return new EncString(encrypted);
     } else {
       throw new Error(`Encrypt is not supported for keys of type ${innerKey.type}`);
     }
@@ -95,6 +101,12 @@ export class EncryptServiceImplementation implements EncryptService {
       encBytes.set(new Uint8Array(encValue.iv), 1);
       encBytes.set(new Uint8Array(encValue.data), 1 + encValue.iv.byteLength);
       return new EncArrayBuffer(encBytes);
+    } else if (innerKey.type === EncryptionType.XChaCha20Poly1305_B64) {
+      const encrypted = PureCrypto.symmetric_decrypt_array_buffer(
+        plainValue,
+        Utils.fromBufferToB64(innerKey.coseKey),
+      );
+      return new EncArrayBuffer(encrypted);
     }
   }
 
@@ -108,7 +120,12 @@ export class EncryptServiceImplementation implements EncryptService {
       if (encString == null || encString.encryptedString == null) {
         throw new Error("encString is null or undefined");
       }
-      return PureCrypto.symmetric_decrypt(encString.encryptedString, key.keyB64);
+      try {
+        return PureCrypto.symmetric_decrypt(encString.encryptedString, key.keyB64);
+      } catch (e) {
+        this.logService.error("Error decrypting with SDK", e);
+        return null;
+      }
     }
     this.logService.debug("decrypting with javascript");
 
@@ -175,18 +192,27 @@ export class EncryptServiceImplementation implements EncryptService {
         mode: "cbc",
         parameters: fastParams,
       });
+    } else if (innerKey.type === EncryptionType.XChaCha20Poly1305_B64) {
+      return PureCrypto.symmetric_decrypt(encString.encryptedString, key.keyB64);
     } else {
       throw new Error(`Unsupported encryption type`);
     }
   }
 
   async decryptToBytes(
-    encThing: Encrypted,
+    encThing: Encrypted | EncString,
     key: SymmetricCryptoKey,
     decryptContext: string = "no context",
   ): Promise<Uint8Array | null> {
     if (this.useSDKForDecryption) {
       this.logService.debug("decrypting bytes with SDK");
+      if (encThing.encryptionType === EncryptionType.XChaCha20Poly1305_B64) {
+        const buffer = new Uint8Array(encThing.dataBytes.length + 1);
+        buffer[0] = encThing.encryptionType;
+        buffer.set(encThing.dataBytes, 1);
+        return PureCrypto.symmetric_decrypt_array_buffer(buffer, key.keyB64);
+      }
+
       if (
         encThing.encryptionType == null ||
         encThing.ivBytes == null ||
@@ -200,6 +226,7 @@ export class EncryptServiceImplementation implements EncryptService {
         encThing.dataBytes,
         encThing.macBytes,
       ).buffer;
+
       return PureCrypto.symmetric_decrypt_array_buffer(buffer, key.keyB64);
     }
     this.logService.debug("decrypting bytes with javascript");
@@ -269,6 +296,14 @@ export class EncryptServiceImplementation implements EncryptService {
         inner.encryptionKey,
         "cbc",
       );
+    } else if (inner.type === EncryptionType.XChaCha20Poly1305_B64) {
+      const buffer = EncArrayBuffer.fromParts(
+        encThing.encryptionType,
+        encThing.ivBytes,
+        encThing.dataBytes,
+        encThing.macBytes,
+      ).buffer;
+      return PureCrypto.symmetric_decrypt_array_buffer(buffer, key.keyB64);
     }
   }
 
