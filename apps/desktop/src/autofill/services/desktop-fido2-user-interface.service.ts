@@ -239,7 +239,6 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
 
   private async showUi(route: string, position?: { x: number; y: number }): Promise<void> {
     // Load the UI:
-    // maybe toggling to modal mode shouldn't be done here?
     await this.desktopSettingsService.setModalMode(true, position);
     await this.router.navigate(["/passkeys"]);
   }
