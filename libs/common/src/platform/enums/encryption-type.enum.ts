@@ -8,6 +8,19 @@ export enum EncryptionType {
   Rsa2048_OaepSha1_HmacSha256_B64 = 6,
 }
 
+export const SymmetricEncryptionTypes = [
+  EncryptionType.AesCbc256_B64,
+  EncryptionType.AesCbc128_HmacSha256_B64,
+  EncryptionType.AesCbc256_HmacSha256_B64,
+] as const;
+
+export const AsymmetricEncryptionTypes = [
+  EncryptionType.Rsa2048_OaepSha256_B64,
+  EncryptionType.Rsa2048_OaepSha1_B64,
+  EncryptionType.Rsa2048_OaepSha256_HmacSha256_B64,
+  EncryptionType.Rsa2048_OaepSha1_HmacSha256_B64,
+] as const;
+
 export function encryptionTypeToString(encryptionType: EncryptionType): string {
   if (encryptionType in EncryptionType) {
     return EncryptionType[encryptionType];
