@@ -1,13 +1,11 @@
 import {
   Observable,
+  combineLatestWith,
   distinctUntilChanged,
-  filter,
-  first,
   map,
   shareReplay,
   switchMap,
   takeUntil,
-  withLatestFrom,
 } from "rxjs";
 
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
@@ -28,6 +26,8 @@ import {
   isForwarderExtensionId,
   toForwarderMetadata,
   Type,
+  Algorithms,
+  Types,
 } from "../metadata";
 import { availableAlgorithms_vNext } from "../policies/available-algorithms-policy";
 import { CredentialPreference } from "../types";
@@ -57,18 +57,57 @@ export class GeneratorMetadataProvider {
     }
     this.site = site;
 
-    this.generators = new Map(algorithms.map((a) => [a.id, a] as const));
+    this._metadata = new Map(algorithms.map((a) => [a.id, a] as const));
   }
 
   private readonly site: ExtensionSite;
   private readonly log: SemanticLogger;
 
-  private generators: Map<CredentialAlgorithm, GeneratorMetadata<unknown & object>>;
+  private _metadata: Map<CredentialAlgorithm, GeneratorMetadata<unknown & object>>;
 
-  // looks up a set of algorithms; does not enforce policy
+  /** Retrieve an algorithm's generator metadata
+   *  @param algorithm identifies the algorithm
+   *  @returns the algorithm's generator metadata
+   *  @throws when the algorithm doesn't identify a known metadata entry
+  */
+  metadata(algorithm: CredentialAlgorithm) {
+    let result = null;
+    if (isForwarderExtensionId(algorithm)) {
+      const extension = this.site.extensions.get(algorithm.forwarder);
+      if (!extension) {
+        this.log.panic(algorithm, "extension not found");
+      }
+
+      result = toForwarderMetadata(extension);
+    } else {
+      result = this._metadata.get(algorithm);
+    }
+
+    if (!result) {
+      this.log.panic({ algorithm }, "metadata not found");
+    }
+
+    return result;
+  }
+
+  /** retrieve credential types */
+  types() : ReadonlyArray<CredentialType> {
+    return Types;
+  }
+
+  /** Retrieve the credential algorithm ids that match the request.
+   *  @param requested when this has a `category` property, the method
+   *   returns all algorithms in the category. When this has an `algorithm`
+   *   property, the method returns 0 or 1 matching algorithms.
+   *  @returns the matching algorithms. This method always returns an array;
+   *   the array is empty when no algorithms match the input criteria.
+   *  @throws when neither `requested.algorithm` nor `requested.category` contains
+   *    a value.
+   *  @remarks this method enforces technical requirements only.
+   *    If you want these algorithms with policy controls applied, use `algorithms$`.
+   */
   algorithms(requested: AlgorithmRequest): CredentialAlgorithm[];
   algorithms(requested: TypeRequest): CredentialAlgorithm[];
-  algorithms(requested: MetadataRequest): CredentialAlgorithm[];
   algorithms(requested: MetadataRequest): CredentialAlgorithm[] {
     let algorithms: CredentialAlgorithm[];
     if (requested.category) {
@@ -78,8 +117,10 @@ export class GeneratorMetadataProvider {
       }
 
       algorithms = AlgorithmsByType[requested.category].concat(forwarders);
+    } else if (requested.algorithm && isForwarderExtensionId(requested.algorithm)) {
+      algorithms = this.site.extensions.has(requested.algorithm.forwarder) ? [requested.algorithm] : [];
     } else if (requested.algorithm) {
-      algorithms = [requested.algorithm];
+      algorithms = Algorithms.includes(requested.algorithm) ? [requested.algorithm] : [];
     } else {
       this.log.panic(requested, "algorithm or category required");
     }
@@ -99,7 +140,8 @@ export class GeneratorMetadataProvider {
     const available$ = account$.pipe(
       switchMap((account) => {
         const policies$ = this.application.policy.getAll$(PolicyType.PasswordGenerator, account.id).pipe(
-          map((p) => new Set(availableAlgorithms_vNext(p))),
+          map((p) => availableAlgorithms_vNext(p).filter(a => this._metadata.has(a))),
+          map((p) => new Set()),
           // complete policy emissions otherwise `switchMap` holds `algorithms$` open indefinitely
           takeUntil(anyComplete(account$)),
         );
@@ -111,118 +153,74 @@ export class GeneratorMetadataProvider {
     return available$;
   }
 
-  // looks up a set of algorithms; enforces policy - emits empty list when there's no algorithm available
-  available$(
+  /** Retrieve credential algorithms filtered by the user's active policy.
+   *  @param requested when this has a `category` property, the method
+   *   returns all algorithms in the category. When this has an `algorithm`
+   *   property, the method returns 0 or 1 matching algorithms.
+   *  @param dependencies.account the account requesting algorithm access;
+   *    this parameter controls which policy, if any, is applied.
+   *  @returns an observable that emits matching algorithms. When no algorithms
+   *    match the request, an empty array is emitted.
+   *  @throws when neither `requested.algorithm` nor `requested.category` contains
+   *    a value.
+   *  @remarks this method applies policy controls. In particular, it excludes
+   *    algorithms prohibited by a policy control. If you want lists of algorithms
+   *    supported by the client, use `algorithms`.
+   */
+  algorithms$(
     requested: AlgorithmRequest,
     dependencies: BoundDependency<"account", Account>,
-  ): Observable<GeneratorMetadata<object>[]>;
-  available$(
+  ): Observable<CredentialAlgorithm[]>;
+  algorithms$(
     requested: TypeRequest,
     dependencies: BoundDependency<"account", Account>,
-  ): Observable<GeneratorMetadata<object>[]>;
-  available$(
+  ): Observable<CredentialAlgorithm[]>;
+  algorithms$(
     requested: MetadataRequest,
     dependencies: BoundDependency<"account", Account>,
-  ): Observable<GeneratorMetadata<object>[]> {
-    let available$: Observable<CredentialAlgorithm[]>;
+  ): Observable<CredentialAlgorithm[]> {
     if (requested.category) {
       const { category } = requested;
 
-      available$ = this.isAvailable$(dependencies).pipe(
+      return this.isAvailable$(dependencies).pipe(
         map((isAvailable) => AlgorithmsByType[category].filter(isAvailable)),
       );
     } else if (requested.algorithm) {
       const { algorithm } = requested;
-      available$ = this.isAvailable$(dependencies).pipe(
+      return this.isAvailable$(dependencies).pipe(
         map((isAvailable) => (isAvailable(algorithm) ? [algorithm] : [])),
       );
     } else {
       this.log.panic(requested, "algorithm or category required");
     }
-
-    const result$ = available$.pipe(
-      map((available) => available.map((algorithm) => this.getMetadata(algorithm))),
-    );
-
-    return result$;
   }
 
-  // looks up a specific algorithm; enforces policy - observable completes without emission when there's no algorithm available.
-  algorithm$(
-    requested: AlgorithmRequest,
-    dependencies: BoundDependency<"account", Account>,
-  ): Observable<GeneratorMetadata<object>>;
-  algorithm$(
-    requested: TypeRequest,
-    dependencies: BoundDependency<"account", Account>,
-  ): Observable<GeneratorMetadata<object>>;
-  algorithm$(
-    requested: MetadataRequest,
-    dependencies: BoundDependency<"account", Account>,
-  ): Observable<GeneratorMetadata<object>> {
+  preference$(credentialType: CredentialType, dependencies: BoundDependency<"account", Account>) {
     const account$ = dependencies.account$.pipe(shareReplay({ bufferSize: 1, refCount: true }));
 
-    let algorithm$: Observable<CredentialAlgorithm | undefined>;
-    if (requested.category) {
-      this.log.debug(requested, "retrieving algorithm metadata by category");
-
-      const { category } = requested;
-      algorithm$ = this.preferences({ account$ }).pipe(
-        withLatestFrom(this.isAvailable$({ account$ })),
-        map(([preferences, isAvailable]) => {
-          let algorithm: CredentialAlgorithm | undefined = preferences[category].algorithm;
-          if (isAvailable(algorithm)) {
-            return algorithm;
-          }
-
-          const algorithms = AlgorithmsByType[category];
-          algorithm = algorithms.find(isAvailable)!;
-          this.log.debug(
-            { algorithm, category },
-            "preference not available; defaulting the generator algorithm",
-          );
-
+    const algorithm$ = this.preferences({ account$ }).pipe(
+      combineLatestWith(this.isAvailable$({ account$ })),
+      map(([preferences, isAvailable]) => {
+        const algorithm: CredentialAlgorithm = preferences[credentialType].algorithm;
+        if (isAvailable(algorithm)) {
           return algorithm;
-        }),
-      );
-    } else if (requested.algorithm) {
-      this.log.debug(requested, "retrieving algorithm metadata by algorithm");
+        }
 
-      const { algorithm } = requested;
-      algorithm$ = this.isAvailable$({ account$ }).pipe(
-        map((isAvailable) => (isAvailable(algorithm) ? algorithm : undefined)),
-        first(),
-      );
-    } else {
-      this.log.panic(requested, "algorithm or category required");
-    }
+        const algorithms = AlgorithmsByType[credentialType];
+        // `?? null` because logging types must be `Jsonify<T>`
+        const defaultAlgorithm = algorithms.find(isAvailable) ?? null;
+        this.log.debug(
+          { algorithm, defaultAlgorithm, credentialType },
+          "preference not available; defaulting the generator algorithm",
+        );
 
-    const result$ = algorithm$.pipe(
-      filter((value) => !!value),
-      map((algorithm) => this.getMetadata(algorithm!)),
+        // `?? undefined` so that interface is ADR-14 compliant
+        return defaultAlgorithm ?? undefined;
+      }),
+      distinctUntilChanged()
     );
 
-    return result$;
-  }
-
-  private getMetadata(algorithm: CredentialAlgorithm) {
-    let result = null;
-    if (isForwarderExtensionId(algorithm)) {
-      const extension = this.site.extensions.get(algorithm.forwarder);
-      if (!extension) {
-        this.log.panic(algorithm, "extension not found");
-      }
-
-      result = toForwarderMetadata(extension);
-    } else {
-      result = this.generators.get(algorithm);
-    }
-
-    if (!result) {
-      this.log.panic({ algorithm }, "failed to load metadata");
-    }
-
-    return result;
+    return algorithm$;
   }
 
   /** Get a subject bound to credential generator preferences.
