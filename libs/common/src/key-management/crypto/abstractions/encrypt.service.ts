@@ -1,3 +1,5 @@
+import { OnServerConfigChange } from "@bitwarden/common/platform/abstractions/config/config.service";
+import { ServerConfig } from "@bitwarden/common/platform/abstractions/config/server-config";
 import { Decryptable } from "@bitwarden/common/platform/interfaces/decryptable.interface";
 import { Encrypted } from "@bitwarden/common/platform/interfaces/encrypted";
 import { InitializerMetadata } from "@bitwarden/common/platform/interfaces/initializer-metadata.interface";
@@ -5,7 +7,7 @@ import { EncArrayBuffer } from "@bitwarden/common/platform/models/domain/enc-arr
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 
-export abstract class EncryptService {
+export abstract class EncryptService implements OnServerConfigChange {
   abstract encrypt(plainValue: string | Uint8Array, key: SymmetricCryptoKey): Promise<EncString>;
   abstract encryptToBytes(plainValue: Uint8Array, key: SymmetricCryptoKey): Promise<EncArrayBuffer>;
   /**
@@ -55,4 +57,5 @@ export abstract class EncryptService {
     value: string | Uint8Array,
     algorithm: "sha1" | "sha256" | "sha512",
   ): Promise<string>;
+  abstract onServerConfigChange(newConfig: ServerConfig): void;
 }

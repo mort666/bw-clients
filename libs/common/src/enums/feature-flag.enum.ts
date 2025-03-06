@@ -24,6 +24,9 @@ export enum FeatureFlag {
   NotificationRefresh = "notification-refresh",
   UseTreeWalkerApiForPageDetailsCollection = "use-tree-walker-api-for-page-details-collection",
 
+  /* Key Management */
+  UseSDKForDecryption = "use-sdk-for-decryption",
+
   /* Tools */
   ItemShare = "item-share",
   CriticalApps = "pm-14466-risk-insights-critical-application",
@@ -80,6 +83,9 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.NotificationBarAddLoginImprovements]: FALSE,
   [FeatureFlag.NotificationRefresh]: FALSE,
   [FeatureFlag.UseTreeWalkerApiForPageDetailsCollection]: FALSE,
+
+  /* Key Management */
+  [FeatureFlag.UseSDKForDecryption]: FALSE,
 
   /* Tools */
   [FeatureFlag.ItemShare]: FALSE,
