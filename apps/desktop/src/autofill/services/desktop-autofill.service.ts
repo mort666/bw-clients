@@ -186,6 +186,11 @@ export class DesktopAutofillService implements OnDestroy {
           const activeUserId = await firstValueFrom(
             this.accountService.activeAccount$.pipe(map((a) => a?.id)),
           );
+          if (!activeUserId) {
+            this.logService.error("listenPasskeyAssertion error", "Active user not found");
+            callback(new Error("Active user not found"), null);
+            return;
+          }
 
           const decrypted = await cipher.decrypt(
             await this.cipherService.getKeyForCipherKeyDecryption(cipher, activeUserId),
