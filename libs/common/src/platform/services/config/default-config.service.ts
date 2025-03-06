@@ -10,6 +10,7 @@ import {
   of,
   shareReplay,
   Subject,
+  Subscription,
   switchMap,
   tap,
 } from "rxjs";
@@ -20,7 +21,11 @@ import { AuthenticationStatus } from "../../../auth/enums/authentication-status"
 import { FeatureFlag, getFeatureFlagValue } from "../../../enums/feature-flag.enum";
 import { UserId } from "../../../types/guid";
 import { ConfigApiServiceAbstraction } from "../../abstractions/config/config-api.service.abstraction";
-import { ConfigService } from "../../abstractions/config/config.service";
+import {
+  ConfigCallback,
+  ConfigService,
+  OnServerConfigChange,
+} from "../../abstractions/config/config.service";
 import { ServerConfig } from "../../abstractions/config/server-config";
 import { Environment, EnvironmentService, Region } from "../../abstractions/environment.service";
 import { LogService } from "../../abstractions/log.service";
@@ -53,6 +58,7 @@ export const GLOBAL_SERVER_CONFIGURATIONS = KeyDefinition.record<ServerConfig, A
 // FIXME: currently we are limited to api requests for active users. Update to accept a UserId and APIUrl once ApiService supports it.
 export class DefaultConfigService implements ConfigService {
   private failedFetchFallbackSubject = new Subject<ServerConfig>();
+  private callbacks: ConfigCallback[] = [];
 
   serverConfig$: Observable<ServerConfig>;
 
@@ -147,6 +153,12 @@ export class DefaultConfigService implements ConfigService {
   async ensureConfigFetched() {
     // Triggering a retrieval for the given user ensures that the config is less than RETRIEVAL_INTERVAL old
     await firstValueFrom(this.serverConfig$);
+  }
+
+  broadcastConfigChangesTo(...listeners: OnServerConfigChange[]): Subscription {
+    return this.serverConfig$.subscribe((config) =>
+      listeners.forEach((listener) => listener.onServerConfigChange(config)),
+    );
   }
 
   private olderThanRetrievalInterval(date: Date) {
