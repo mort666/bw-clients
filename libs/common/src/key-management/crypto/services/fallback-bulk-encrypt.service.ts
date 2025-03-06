@@ -1,10 +1,10 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { BulkEncryptService } from "@bitwarden/common/key-management/crypto/abstractions/bulk-encrypt.service";
-import { Decryptable } from "@bitwarden/common/platform/interfaces/decryptable.interface";
-import { InitializerMetadata } from "@bitwarden/common/platform/interfaces/initializer-metadata.interface";
-import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
-
+import { BulkEncryptService } from "../../../key-management/crypto/abstractions/bulk-encrypt.service";
+import { ServerConfig } from "../../../platform/abstractions/config/server-config";
+import { Decryptable } from "../../../platform/interfaces/decryptable.interface";
+import { InitializerMetadata } from "../../../platform/interfaces/initializer-metadata.interface";
+import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
 import { EncryptService } from "../abstractions/encrypt.service";
 
 /**
@@ -32,5 +32,9 @@ export class FallbackBulkEncryptService implements BulkEncryptService {
 
   async setFeatureFlagEncryptService(featureFlagEncryptService: BulkEncryptService) {
     this.featureFlagEncryptService = featureFlagEncryptService;
+  }
+
+  onServerConfigChange(newConfig: ServerConfig): void {
+    (this.featureFlagEncryptService ?? this.encryptService).onServerConfigChange(newConfig);
   }
 }

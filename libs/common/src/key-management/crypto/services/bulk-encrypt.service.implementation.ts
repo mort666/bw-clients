@@ -12,6 +12,10 @@ import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { getClassInitializer } from "@bitwarden/common/platform/services/cryptography/get-class-initializer";
 
+import { ServerConfig } from "../../../platform/abstractions/config/server-config";
+
+import { buildDecryptMessage, buildSetConfigMessage } from "./encrypt.worker";
+
 // TTL (time to live) is not strictly required but avoids tying up memory resources if inactive
 const workerTTL = 60000; // 1 minute
 const maxWorkers = 8;
@@ -55,6 +59,13 @@ export class BulkEncryptServiceImplementation implements BulkEncryptService {
 
     const decryptedItems = await this.getDecryptedItemsFromWorkers(items, key);
     return decryptedItems;
+  }
+
+  onServerConfigChange(newConfig: ServerConfig): void {
+    this.workers.forEach((worker) => {
+      const request = buildSetConfigMessage({ newConfig });
+      worker.postMessage(request);
+    });
   }
 
   /**
@@ -108,17 +119,18 @@ export class BulkEncryptServiceImplementation implements BulkEncryptService {
         itemsForWorker.push(...items.slice(end));
       }
 
-      const request = {
-        id: Utils.newGuid(),
+      const id = Utils.newGuid();
+      const request = buildDecryptMessage({
+        id,
         items: itemsForWorker,
         key: key,
-      };
+      });
 
-      worker.postMessage(JSON.stringify(request));
+      worker.postMessage(request);
       results.push(
         firstValueFrom(
           fromEvent(worker, "message").pipe(
-            filter((response: MessageEvent) => response.data?.id === request.id),
+            filter((response: MessageEvent) => response.data?.id === id),
             map((response) => JSON.parse(response.data.items)),
             map((items) =>
               items.map((jsonItem: Jsonify<T>) => {
