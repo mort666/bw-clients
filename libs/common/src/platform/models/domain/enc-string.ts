@@ -1,5 +1,3 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
 import { Jsonify, Opaque } from "type-fest";
 
 import { EncryptService } from "../../../key-management/crypto/abstractions/encrypt.service";
@@ -17,7 +15,7 @@ export class EncString implements Encrypted {
   decryptedValue?: string;
   data?: string;
   iv?: string;
-  mac?: string;
+  mac: string | undefined | null;
 
   constructor(
     encryptedStringOrType: string | EncryptionType,
@@ -32,15 +30,15 @@ export class EncString implements Encrypted {
     }
   }
 
-  get ivBytes(): Uint8Array {
+  get ivBytes(): Uint8Array | null {
     return this.iv == null ? null : Utils.fromB64ToArray(this.iv);
   }
 
-  get macBytes(): Uint8Array {
+  get macBytes(): Uint8Array | null {
     return this.mac == null ? null : Utils.fromB64ToArray(this.mac);
   }
 
-  get dataBytes(): Uint8Array {
+  get dataBytes(): Uint8Array | null {
     return this.data == null ? null : Utils.fromB64ToArray(this.data);
   }
 
@@ -48,7 +46,7 @@ export class EncString implements Encrypted {
     return this.encryptedString as string;
   }
 
-  static fromJSON(obj: Jsonify<EncString>): EncString {
+  static fromJSON(obj: Jsonify<EncString>): EncString | null {
     if (obj == null) {
       return null;
     }
@@ -56,7 +54,12 @@ export class EncString implements Encrypted {
     return new EncString(obj);
   }
 
-  private initFromData(encType: EncryptionType, data: string, iv: string, mac: string) {
+  private initFromData(
+    encType: EncryptionType,
+    data: string,
+    iv: string | undefined,
+    mac: string | undefined,
+  ) {
     if (iv != null) {
       this.encryptedString = (encType + "." + iv + "|" + data) as EncryptedString;
     } else {
@@ -119,15 +122,13 @@ export class EncString implements Encrypted {
   } {
     const headerPieces = encryptedString.split(".");
     let encType: EncryptionType;
-    let encPieces: string[] = null;
+    let encPieces: string[];
 
     if (headerPieces.length === 2) {
       try {
-        encType = parseInt(headerPieces[0], null);
+        encType = parseInt(headerPieces[0]);
         encPieces = headerPieces[1].split("|");
-        // FIXME: Remove when updating file. Eslint update
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (e) {
+      } catch {
         return { encType: NaN, encPieces: [] };
       }
     } else {
@@ -160,7 +161,7 @@ export class EncString implements Encrypted {
 
   async decrypt(
     orgId: string | null,
-    key: SymmetricCryptoKey = null,
+    key: SymmetricCryptoKey | null = null,
     context?: string,
   ): Promise<string> {
     if (this.decryptedValue != null) {
@@ -219,7 +220,7 @@ export class EncString implements Encrypted {
 
     return this.decryptedValue;
   }
-  private async getKeyForDecryption(orgId: string) {
+  private async getKeyForDecryption(orgId: string | null) {
     const keyService = Utils.getContainerService().getKeyService();
     return orgId != null
       ? await keyService.getOrgKey(orgId)

@@ -14,15 +14,30 @@ import { EncArrayBuffer } from "@bitwarden/common/platform/models/domain/enc-arr
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { EncryptedObject } from "@bitwarden/common/platform/models/domain/encrypted-object";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
+import { PureCrypto } from "@bitwarden/sdk-internal";
 
+import {
+  DefaultFeatureFlagValue,
+  FeatureFlag,
+  getFeatureFlagValue,
+} from "../../../enums/feature-flag.enum";
+import { ServerConfig } from "../../../platform/abstractions/config/server-config";
 import { EncryptService } from "../abstractions/encrypt.service";
 
 export class EncryptServiceImplementation implements EncryptService {
+  private useSDKForDecryption: boolean = DefaultFeatureFlagValue[FeatureFlag.UseSDKForDecryption];
+
   constructor(
     protected cryptoFunctionService: CryptoFunctionService,
     protected logService: LogService,
     protected logMacFailures: boolean,
   ) {}
+
+  onServerConfigChange(newConfig: ServerConfig): void {
+    const old = this.useSDKForDecryption;
+    this.useSDKForDecryption = getFeatureFlagValue(newConfig, FeatureFlag.UseSDKForDecryption);
+    this.logService.debug("updated sdk decryption flag", old, this.useSDKForDecryption);
+  }
 
   async encrypt(plainValue: string | Uint8Array, key: SymmetricCryptoKey): Promise<EncString> {
     if (key == null) {
@@ -53,20 +68,7 @@ export class EncryptServiceImplementation implements EncryptService {
     }
 
     const encValue = await this.aesEncrypt(plainValue, key);
-    let macLen = 0;
-    if (encValue.mac != null) {
-      macLen = encValue.mac.byteLength;
-    }
-
-    const encBytes = new Uint8Array(1 + encValue.iv.byteLength + macLen + encValue.data.byteLength);
-    encBytes.set([encValue.key.encType]);
-    encBytes.set(new Uint8Array(encValue.iv), 1);
-    if (encValue.mac != null) {
-      encBytes.set(new Uint8Array(encValue.mac), 1 + encValue.iv.byteLength);
-    }
-
-    encBytes.set(new Uint8Array(encValue.data), 1 + encValue.iv.byteLength + macLen);
-    return new EncArrayBuffer(encBytes);
+    return EncArrayBuffer.fromParts(encValue.key.encType, encValue.iv, encValue.data, encValue.mac);
   }
 
   async decryptToUtf8(
@@ -74,6 +76,15 @@ export class EncryptServiceImplementation implements EncryptService {
     key: SymmetricCryptoKey,
     decryptContext: string = "no context",
   ): Promise<string> {
+    if (this.useSDKForDecryption) {
+      this.logService.debug("decrypting with SDK");
+      if (encString == null || encString.encryptedString == null) {
+        throw new Error("encString is null or undefined");
+      }
+      return PureCrypto.symmetric_decrypt(encString.encryptedString, key.keyB64);
+    }
+    this.logService.debug("decrypting with javascript");
+
     if (key == null) {
       throw new Error("No key provided for decryption.");
     }
@@ -137,6 +148,25 @@ export class EncryptServiceImplementation implements EncryptService {
     key: SymmetricCryptoKey,
     decryptContext: string = "no context",
   ): Promise<Uint8Array | null> {
+    if (this.useSDKForDecryption) {
+      this.logService.debug("decrypting bytes with SDK");
+      if (
+        encThing.encryptionType == null ||
+        encThing.ivBytes == null ||
+        encThing.dataBytes == null
+      ) {
+        throw new Error("Cannot decrypt, missing type, IV, or data bytes.");
+      }
+      const buffer = EncArrayBuffer.fromParts(
+        encThing.encryptionType,
+        encThing.ivBytes,
+        encThing.dataBytes,
+        encThing.macBytes,
+      ).buffer;
+      return PureCrypto.symmetric_decrypt_array_buffer(buffer, key.keyB64);
+    }
+    this.logService.debug("decrypting bytes with javascript");
+
     if (key == null) {
       throw new Error("No encryption key provided.");
     }

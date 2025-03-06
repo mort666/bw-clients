@@ -9,7 +9,10 @@ import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { getClassInitializer } from "@bitwarden/common/platform/services/cryptography/get-class-initializer";
 
+import { ServerConfig } from "../../../platform/abstractions/config/server-config";
+
 import { EncryptServiceImplementation } from "./encrypt.service.implementation";
+import { buildDecryptMessage, buildSetConfigMessage } from "./encrypt.worker";
 
 // TTL (time to live) is not strictly required but avoids tying up memory resources if inactive
 const workerTTL = 3 * 60000; // 3 minutes
@@ -47,17 +50,18 @@ export class MultithreadEncryptServiceImplementation extends EncryptServiceImple
 
     this.restartTimeout();
 
-    const request = {
-      id: Utils.newGuid(),
+    const id = Utils.newGuid();
+    const request = buildDecryptMessage({
+      id,
       items: items,
       key: key,
-    };
+    });
 
-    this.worker.postMessage(JSON.stringify(request));
+    this.worker.postMessage(request);
 
     return await firstValueFrom(
       fromEvent(this.worker, "message").pipe(
-        filter((response: MessageEvent) => response.data?.id === request.id),
+        filter((response: MessageEvent) => response.data?.id === id),
         map((response) => JSON.parse(response.data.items)),
         map((items) =>
           items.map((jsonItem: Jsonify<T>) => {
@@ -69,6 +73,15 @@ export class MultithreadEncryptServiceImplementation extends EncryptServiceImple
         defaultIfEmpty([]),
       ),
     );
+  }
+
+  override onServerConfigChange(newConfig: ServerConfig): void {
+    super.onServerConfigChange(newConfig);
+
+    if (this.worker !== null) {
+      const request = buildSetConfigMessage({ newConfig });
+      this.worker.postMessage(request);
+    }
   }
 
   private clear() {

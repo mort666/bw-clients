@@ -10,6 +10,7 @@ import {
   of,
   shareReplay,
   Subject,
+  Subscription,
   switchMap,
   tap,
 } from "rxjs";
@@ -17,14 +18,14 @@ import { SemVer } from "semver";
 
 import { AuthService } from "../../../auth/abstractions/auth.service";
 import { AuthenticationStatus } from "../../../auth/enums/authentication-status";
-import {
-  DefaultFeatureFlagValue,
-  FeatureFlag,
-  FeatureFlagValueType,
-} from "../../../enums/feature-flag.enum";
+import { FeatureFlag, getFeatureFlagValue } from "../../../enums/feature-flag.enum";
 import { UserId } from "../../../types/guid";
 import { ConfigApiServiceAbstraction } from "../../abstractions/config/config-api.service.abstraction";
-import { ConfigService } from "../../abstractions/config/config.service";
+import {
+  ConfigCallback,
+  ConfigService,
+  OnServerConfigChange,
+} from "../../abstractions/config/config.service";
 import { ServerConfig } from "../../abstractions/config/server-config";
 import { Environment, EnvironmentService, Region } from "../../abstractions/environment.service";
 import { LogService } from "../../abstractions/log.service";
@@ -57,6 +58,7 @@ export const GLOBAL_SERVER_CONFIGURATIONS = KeyDefinition.record<ServerConfig, A
 // FIXME: currently we are limited to api requests for active users. Update to accept a UserId and APIUrl once ApiService supports it.
 export class DefaultConfigService implements ConfigService {
   private failedFetchFallbackSubject = new Subject<ServerConfig>();
+  private callbacks: ConfigCallback[] = [];
 
   serverConfig$: Observable<ServerConfig>;
 
@@ -123,26 +125,13 @@ export class DefaultConfigService implements ConfigService {
   }
 
   getFeatureFlag$<Flag extends FeatureFlag>(key: Flag) {
-    return this.serverConfig$.pipe(
-      map((serverConfig) => this.getFeatureFlagValue(serverConfig, key)),
-    );
-  }
-
-  private getFeatureFlagValue<Flag extends FeatureFlag>(
-    serverConfig: ServerConfig | null,
-    flag: Flag,
-  ) {
-    if (serverConfig?.featureStates == null || serverConfig.featureStates[flag] == null) {
-      return DefaultFeatureFlagValue[flag];
-    }
-
-    return serverConfig.featureStates[flag] as FeatureFlagValueType<Flag>;
+    return this.serverConfig$.pipe(map((serverConfig) => getFeatureFlagValue(serverConfig, key)));
   }
 
   userCachedFeatureFlag$<Flag extends FeatureFlag>(key: Flag, userId: UserId) {
     return this.stateProvider
       .getUser(userId, USER_SERVER_CONFIG)
-      .state$.pipe(map((config) => this.getFeatureFlagValue(config, key)));
+      .state$.pipe(map((config) => getFeatureFlagValue(config, key)));
   }
 
   async getFeatureFlag<Flag extends FeatureFlag>(key: Flag) {
@@ -164,6 +153,12 @@ export class DefaultConfigService implements ConfigService {
   async ensureConfigFetched() {
     // Triggering a retrieval for the given user ensures that the config is less than RETRIEVAL_INTERVAL old
     await firstValueFrom(this.serverConfig$);
+  }
+
+  broadcastConfigChangesTo(...listeners: OnServerConfigChange[]): Subscription {
+    return this.serverConfig$.subscribe((config) =>
+      listeners.forEach((listener) => listener.onServerConfigChange(config)),
+    );
   }
 
   private olderThanRetrievalInterval(date: Date) {
