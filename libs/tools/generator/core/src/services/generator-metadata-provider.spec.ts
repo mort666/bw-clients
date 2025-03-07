@@ -86,14 +86,14 @@ const SomeSite: SiteMetadata = Object.freeze({
 
 const SomePolicyService = mock<PolicyService>();
 
+const SomeExtensionService = mock<ExtensionService>();
+
 const ApplicationProvider = {
   /** Policy configured by the administrative console */
   policy: SomePolicyService,
 
   /** Client extension metadata and profile access */
-  extension: mock<ExtensionService>({
-    site: () => new ExtensionSite(SomeSite, new Map()),
-  }),
+  extension: SomeExtensionService,
 
   /** Event monitoring and diagnostic interfaces */
   log: disabledSemanticLoggerProvider,
@@ -102,6 +102,16 @@ const ApplicationProvider = {
 describe("GeneratorMetadataProvider", () => {
   beforeEach(() => {
     jest.resetAllMocks();
+    SomeExtensionService.site.mockImplementation(() => new ExtensionSite(SomeSite, new Map()));
+  });
+
+  describe("constructor", () => {
+    it("throws when the forwarder site isn't defined by the extension service", () => {
+      SomeExtensionService.site.mockReturnValue(undefined);
+      expect(() => new GeneratorMetadataProvider(SystemProvider, ApplicationProvider, [])).toThrow(
+        "forwarder extension site not found",
+      );
+    });
   });
 
   describe("metadata", () => {
@@ -353,6 +363,14 @@ describe("GeneratorMetadataProvider", () => {
 
       await expect(firstValueFrom(algorithmResult)).resolves.toEqual([]);
       await expect(firstValueFrom(categoryResult)).resolves.toEqual([password.id]);
+    });
+
+    it("panics when neither algorithm nor category are specified", () => {
+      const provider = new GeneratorMetadataProvider(SystemProvider, ApplicationProvider, []);
+
+      expect(() => provider.algorithms$({} as any, { account$: SomeAccount$ })).toThrow(
+        "algorithm or category required",
+      );
     });
   });
 

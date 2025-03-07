@@ -14,7 +14,7 @@ import { BoundDependency } from "@bitwarden/common/tools/dependencies";
 import { ExtensionSite } from "@bitwarden/common/tools/extension";
 import { SemanticLogger } from "@bitwarden/common/tools/log";
 import { SystemServiceProvider } from "@bitwarden/common/tools/providers";
-import { anyComplete } from "@bitwarden/common/tools/rx";
+import { anyComplete, pin } from "@bitwarden/common/tools/rx";
 import { UserStateSubject } from "@bitwarden/common/tools/state/user-state-subject";
 import { UserStateSubjectDependencyProvider } from "@bitwarden/common/tools/state/user-state-subject-dependency-provider";
 
@@ -134,24 +134,28 @@ export class GeneratorMetadataProvider {
   private isAvailable$(
     dependencies: BoundDependency<"account", Account>,
   ): Observable<(a: CredentialAlgorithm) => boolean> {
-    const account$ = dependencies.account$.pipe(
-      distinctUntilChanged((previous, current) => previous.id === current.id),
+    const id$ = dependencies.account$.pipe(
+      map((account) => account.id),
+      pin(),
       shareReplay({ bufferSize: 1, refCount: true }),
     );
 
-    const available$ = account$.pipe(
-      switchMap((account) => {
-        const policies$ = this.application.policy
-          .getAll$(PolicyType.PasswordGenerator, account.id)
-          .pipe(
-            map((p) => availableAlgorithms_vNext(p).filter((a) => this._metadata.has(a))),
-            map((p) => new Set(p)),
-            // complete policy emissions otherwise `switchMap` holds `available$` open indefinitely
-            takeUntil(anyComplete(account$)),
-          );
+    const available$ = id$.pipe(
+      switchMap((id) => {
+        const policies$ = this.application.policy.getAll$(PolicyType.PasswordGenerator, id).pipe(
+          map((p) => availableAlgorithms_vNext(p).filter((a) => this._metadata.has(a))),
+          map((p) => new Set(p)),
+          // complete policy emissions otherwise `switchMap` holds `available$` open indefinitely
+          takeUntil(anyComplete(id$)),
+        );
         return policies$;
       }),
-      map((available) => (a: CredentialAlgorithm) => isForwarderExtensionId(a) || available.has(a)),
+      map(
+        (available) =>
+          function (a: CredentialAlgorithm) {
+            return isForwarderExtensionId(a) || available.has(a);
+          },
+      ),
     );
 
     return available$;
