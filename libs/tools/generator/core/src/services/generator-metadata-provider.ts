@@ -35,7 +35,7 @@ import { CredentialPreference } from "../types";
 import { PREFERENCES } from "./credential-preferences";
 
 type AlgorithmRequest = { algorithm: CredentialAlgorithm };
-type TypeRequest = { category: CredentialType };
+type TypeRequest = { type: CredentialType };
 type MetadataRequest = Partial<AlgorithmRequest & TypeRequest>;
 
 /** Surfaces contextual information to credential generators */
@@ -69,7 +69,7 @@ export class GeneratorMetadataProvider {
    *  @param algorithm identifies the algorithm
    *  @returns the algorithm's generator metadata
    *  @throws when the algorithm doesn't identify a known metadata entry
-  */
+   */
   metadata(algorithm: CredentialAlgorithm) {
     let result = null;
     if (isForwarderExtensionId(algorithm)) {
@@ -91,7 +91,7 @@ export class GeneratorMetadataProvider {
   }
 
   /** retrieve credential types */
-  types() : ReadonlyArray<CredentialType> {
+  types(): ReadonlyArray<CredentialType> {
     return Types;
   }
 
@@ -110,15 +110,17 @@ export class GeneratorMetadataProvider {
   algorithms(requested: TypeRequest): CredentialAlgorithm[];
   algorithms(requested: MetadataRequest): CredentialAlgorithm[] {
     let algorithms: CredentialAlgorithm[];
-    if (requested.category) {
+    if (requested.type) {
       let forwarders: CredentialAlgorithm[] = [];
-      if (requested.category === Type.email) {
+      if (requested.type === Type.email) {
         forwarders = Array.from(this.site.extensions.keys()).map((forwarder) => ({ forwarder }));
       }
 
-      algorithms = AlgorithmsByType[requested.category].concat(forwarders);
+      algorithms = AlgorithmsByType[requested.type].concat(forwarders);
     } else if (requested.algorithm && isForwarderExtensionId(requested.algorithm)) {
-      algorithms = this.site.extensions.has(requested.algorithm.forwarder) ? [requested.algorithm] : [];
+      algorithms = this.site.extensions.has(requested.algorithm.forwarder)
+        ? [requested.algorithm]
+        : [];
     } else if (requested.algorithm) {
       algorithms = Algorithms.includes(requested.algorithm) ? [requested.algorithm] : [];
     } else {
@@ -139,12 +141,14 @@ export class GeneratorMetadataProvider {
 
     const available$ = account$.pipe(
       switchMap((account) => {
-        const policies$ = this.application.policy.getAll$(PolicyType.PasswordGenerator, account.id).pipe(
-          map((p) => availableAlgorithms_vNext(p).filter(a => this._metadata.has(a))),
-          map((p) => new Set()),
-          // complete policy emissions otherwise `switchMap` holds `algorithms$` open indefinitely
-          takeUntil(anyComplete(account$)),
-        );
+        const policies$ = this.application.policy
+          .getAll$(PolicyType.PasswordGenerator, account.id)
+          .pipe(
+            map((p) => availableAlgorithms_vNext(p).filter((a) => this._metadata.has(a))),
+            map((p) => new Set(p)),
+            // complete policy emissions otherwise `switchMap` holds `available$` open indefinitely
+            takeUntil(anyComplete(account$)),
+          );
         return policies$;
       }),
       map((available) => (a: CredentialAlgorithm) => isForwarderExtensionId(a) || available.has(a)),
@@ -179,11 +183,11 @@ export class GeneratorMetadataProvider {
     requested: MetadataRequest,
     dependencies: BoundDependency<"account", Account>,
   ): Observable<CredentialAlgorithm[]> {
-    if (requested.category) {
-      const { category } = requested;
+    if (requested.type) {
+      const { type: category } = requested;
 
       return this.isAvailable$(dependencies).pipe(
-        map((isAvailable) => AlgorithmsByType[category].filter(isAvailable)),
+        map((isAvailable) => this.algorithms({ type: category }).filter(isAvailable)),
       );
     } else if (requested.algorithm) {
       const { algorithm } = requested;
@@ -195,29 +199,29 @@ export class GeneratorMetadataProvider {
     }
   }
 
-  preference$(credentialType: CredentialType, dependencies: BoundDependency<"account", Account>) {
+  preference$(type: CredentialType, dependencies: BoundDependency<"account", Account>) {
     const account$ = dependencies.account$.pipe(shareReplay({ bufferSize: 1, refCount: true }));
 
     const algorithm$ = this.preferences({ account$ }).pipe(
       combineLatestWith(this.isAvailable$({ account$ })),
       map(([preferences, isAvailable]) => {
-        const algorithm: CredentialAlgorithm = preferences[credentialType].algorithm;
+        const algorithm: CredentialAlgorithm = preferences[type].algorithm;
         if (isAvailable(algorithm)) {
           return algorithm;
         }
 
-        const algorithms = AlgorithmsByType[credentialType];
+        const algorithms = this.algorithms({ type: type });
         // `?? null` because logging types must be `Jsonify<T>`
         const defaultAlgorithm = algorithms.find(isAvailable) ?? null;
         this.log.debug(
-          { algorithm, defaultAlgorithm, credentialType },
+          { algorithm, defaultAlgorithm, credentialType: type },
           "preference not available; defaulting the generator algorithm",
         );
 
         // `?? undefined` so that interface is ADR-14 compliant
         return defaultAlgorithm ?? undefined;
       }),
-      distinctUntilChanged()
+      distinctUntilChanged(),
     );
 
     return algorithm$;
