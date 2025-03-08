@@ -1,12 +1,18 @@
 <app-header></app-header>
 
 <bit-container>
-  <app-profile></app-profile>
+  <bit-section>
+    <app-profile></app-profile>
+  </bit-section>
 
-  <div *ngIf="showChangeEmail$ | async" class="tw-mt-16">
-    <h1 bitTypography="h1">{{ "changeEmail" | i18n }}</h1>
-    <app-change-email></app-change-email>
-  </div>
+  <bit-section *ngIf="showChangeEmail$ | async">
+    <bit-section-header>
+      <h2 bitTypography="h2">{{ "changeEmail" | i18n }}</h2>
+    </bit-section-header>
+    <bit-card>
+      <app-change-email></app-change-email>
+    </bit-card>
+  </bit-section>
 
   <app-danger-zone>
     <ng-container>

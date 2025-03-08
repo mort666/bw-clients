@@ -7,7 +7,12 @@ import { Observable } from "rxjs";
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
-import { TypographyModule } from "@bitwarden/components";
+import {
+  CardComponent,
+  SectionComponent,
+  SectionHeaderComponent,
+  TypographyModule,
+} from "@bitwarden/components";
 
 /**
  * Component for the Danger Zone section of the Account/Organization Settings page.
@@ -16,7 +21,14 @@ import { TypographyModule } from "@bitwarden/components";
   selector: "app-danger-zone",
   templateUrl: "danger-zone.component.html",
   standalone: true,
-  imports: [TypographyModule, JslibModule, CommonModule],
+  imports: [
+    TypographyModule,
+    JslibModule,
+    CommonModule,
+    CardComponent,
+    SectionComponent,
+    SectionHeaderComponent,
+  ],
 })
 export class DangerZoneComponent implements OnInit {
   constructor(private configService: ConfigService) {}
