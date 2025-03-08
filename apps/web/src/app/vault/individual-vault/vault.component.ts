@@ -64,7 +64,7 @@ import { CipherRepromptType } from "@bitwarden/common/vault/enums/cipher-repromp
 import { TreeNode } from "@bitwarden/common/vault/models/domain/tree-node";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { ServiceUtils } from "@bitwarden/common/vault/service-utils";
-import { DialogService, Icons, ToastService } from "@bitwarden/components";
+import { CardComponent, DialogService, Icons, ToastService } from "@bitwarden/components";
 import {
   AddEditFolderDialogComponent,
   AddEditFolderDialogResult,
@@ -137,7 +137,7 @@ const SearchTextDebounceInterval = 200;
     VaultFilterModule,
     VaultItemsModule,
     SharedModule,
-    DecryptionFailureDialogComponent,
+    CardComponent,
   ],
   providers: [
     RoutedVaultFilterService,
