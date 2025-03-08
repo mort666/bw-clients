@@ -1,6 +1,6 @@
 import { NgModule } from "@angular/core";
 
-import { SearchModule } from "@bitwarden/components";
+import { CardComponent, SearchModule } from "@bitwarden/components";
 
 import { VaultFilterSharedModule } from "../../individual-vault/vault-filter/shared/vault-filter-shared.module";
 
@@ -11,7 +11,7 @@ import { VaultFilterService as VaultFilterServiceAbstraction } from "./services/
 import { VaultFilterService } from "./services/vault-filter.service";
 
 @NgModule({
-  imports: [VaultFilterSharedModule, SearchModule],
+  imports: [VaultFilterSharedModule, SearchModule, CardComponent],
   declarations: [VaultFilterComponent, OrganizationOptionsComponent, LinkSsoDirective],
   exports: [VaultFilterComponent],
   providers: [
