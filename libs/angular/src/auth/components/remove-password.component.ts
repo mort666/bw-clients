@@ -1,33 +1,29 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
 import { Directive, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 import { firstValueFrom } from "rxjs";
 
 import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
-import { Account, AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { KeyConnectorService } from "@bitwarden/common/auth/abstractions/key-connector.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { UserId } from "@bitwarden/common/types/guid";
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
 import { DialogService, ToastService } from "@bitwarden/components";
 
 @Directive()
 export class RemovePasswordComponent implements OnInit {
-  actionPromise: Promise<void | boolean>;
   continuing = false;
   leaving = false;
 
   loading = true;
-  organization: Organization;
-  migratingUser: Account;
+  organization!: Organization;
+  private activeUserId!: UserId;
 
   constructor(
     private router: Router,
     private accountService: AccountService,
     private syncService: SyncService,
-    private platformUtilsService: PlatformUtilsService,
     private i18nService: I18nService,
     private keyConnectorService: KeyConnectorService,
     private organizationApiService: OrganizationApiServiceAbstraction,
@@ -36,35 +32,47 @@ export class RemovePasswordComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
-    this.migratingUser = await firstValueFrom(this.accountService.activeAccount$);
-    this.organization = await this.keyConnectorService.getManagingOrganization(
-      this.migratingUser.id,
-    );
+    const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
+    if (activeAccount == null) {
+      throw new Error("No active account found");
+    }
+    this.activeUserId = activeAccount.id;
+
+    this.organization = await this.keyConnectorService.getManagingOrganization(this.activeUserId);
+    if (this.organization == null) {
+      throw new Error("No organization found");
+    }
     await this.syncService.fullSync(false);
     this.loading = false;
   }
 
+  get action() {
+    return this.continuing || this.leaving;
+  }
+
   convert = async () => {
     this.continuing = true;
-    this.actionPromise = this.keyConnectorService.migrateUser(this.migratingUser.id);
 
     try {
-      await this.actionPromise;
+      await this.keyConnectorService.migrateUser(this.activeUserId);
+
       this.toastService.showToast({
         variant: "success",
-        title: null,
         message: this.i18nService.t("removedMasterPassword"),
       });
-      await this.keyConnectorService.removeConvertAccountRequired(this.migratingUser.id);
-      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.router.navigate([""]);
+      await this.keyConnectorService.removeConvertAccountRequired(this.activeUserId);
+
+      await this.router.navigate([""]);
     } catch (e) {
-      this.toastService.showToast({
-        variant: "error",
-        title: this.i18nService.t("errorOccurred"),
-        message: e.message,
-      });
+      this.continuing = false;
+
+      if (e instanceof Error) {
+        this.toastService.showToast({
+          variant: "error",
+          title: this.i18nService.t("errorOccurred"),
+          message: e.message,
+        });
+      }
     }
   };
 
@@ -79,25 +87,27 @@ export class RemovePasswordComponent implements OnInit {
       return false;
     }
 
+    this.leaving = true;
     try {
-      this.leaving = true;
-      this.actionPromise = this.organizationApiService.leave(this.organization.id);
-      await this.actionPromise;
+      await this.organizationApiService.leave(this.organization.id);
+
       this.toastService.showToast({
         variant: "success",
-        title: null,
         message: this.i18nService.t("leftOrganization"),
       });
-      await this.keyConnectorService.removeConvertAccountRequired(this.migratingUser.id);
-      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.router.navigate([""]);
+      await this.keyConnectorService.removeConvertAccountRequired(this.activeUserId);
+
+      await this.router.navigate([""]);
     } catch (e) {
-      this.toastService.showToast({
-        variant: "error",
-        title: this.i18nService.t("errorOccurred"),
-        message: e,
-      });
+      this.leaving = false;
+
+      if (e instanceof Error) {
+        this.toastService.showToast({
+          variant: "error",
+          title: this.i18nService.t("errorOccurred"),
+          message: e.message,
+        });
+      }
     }
   };
 }
