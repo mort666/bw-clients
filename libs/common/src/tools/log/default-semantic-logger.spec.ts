@@ -32,7 +32,7 @@ describe("DefaultSemanticLogger", () => {
 
       expect(logger.write).toHaveBeenCalledWith(LogLevelType.Debug, {
         "@timestamp": 0,
-        content: { example: "this is content" },
+        labels: { example: "this is content" },
         level: "debug",
       });
     });
@@ -44,7 +44,7 @@ describe("DefaultSemanticLogger", () => {
 
       expect(logger.write).toHaveBeenCalledWith(LogLevelType.Info, {
         "@timestamp": 0,
-        content: { example: "this is content" },
+        labels: { example: "this is content" },
         message: "this is a message",
         level: "information",
       });
@@ -71,7 +71,7 @@ describe("DefaultSemanticLogger", () => {
 
       expect(logger.write).toHaveBeenCalledWith(LogLevelType.Info, {
         "@timestamp": 0,
-        content: { example: "this is content" },
+        labels: { example: "this is content" },
         level: "information",
       });
     });
@@ -83,7 +83,7 @@ describe("DefaultSemanticLogger", () => {
 
       expect(logger.write).toHaveBeenCalledWith(LogLevelType.Info, {
         "@timestamp": 0,
-        content: { example: "this is content" },
+        labels: { example: "this is content" },
         message: "this is a message",
         level: "information",
       });
@@ -110,7 +110,7 @@ describe("DefaultSemanticLogger", () => {
 
       expect(logger.write).toHaveBeenCalledWith(LogLevelType.Warning, {
         "@timestamp": 0,
-        content: { example: "this is content" },
+        labels: { example: "this is content" },
         level: "warning",
       });
     });
@@ -122,7 +122,7 @@ describe("DefaultSemanticLogger", () => {
 
       expect(logger.write).toHaveBeenCalledWith(LogLevelType.Warning, {
         "@timestamp": 0,
-        content: { example: "this is content" },
+        labels: { example: "this is content" },
         message: "this is a message",
         level: "warning",
       });
@@ -149,7 +149,7 @@ describe("DefaultSemanticLogger", () => {
 
       expect(logger.write).toHaveBeenCalledWith(LogLevelType.Error, {
         "@timestamp": 0,
-        content: { example: "this is content" },
+        labels: { example: "this is content" },
         level: "error",
       });
     });
@@ -161,7 +161,7 @@ describe("DefaultSemanticLogger", () => {
 
       expect(logger.write).toHaveBeenCalledWith(LogLevelType.Error, {
         "@timestamp": 0,
-        content: { example: "this is content" },
+        labels: { example: "this is content" },
         message: "this is a message",
         level: "error",
       });
@@ -190,7 +190,7 @@ describe("DefaultSemanticLogger", () => {
 
       expect(logger.write).toHaveBeenCalledWith(LogLevelType.Error, {
         "@timestamp": 0,
-        content: { example: "this is content" },
+        labels: { example: "this is content" },
         message: "this is an error message",
         level: "error",
       });
@@ -205,7 +205,7 @@ describe("DefaultSemanticLogger", () => {
 
       expect(logger.write).toHaveBeenCalledWith(LogLevelType.Error, {
         "@timestamp": 0,
-        content: "this is content",
+        labels: "this is content",
         message: "this is an error message",
         level: "error",
       });

@@ -80,7 +80,7 @@ export class GeneratorProfileProvider {
             accountId: account.id,
             profileType: profile.type,
             policyType: profile.constraints.type ?? "N/A",
-            defaultConstraints: profile.constraints.default as object,
+            defaultConstraints: JSON.stringify(profile.constraints.default),
           },
           "initializing constraints$",
         );

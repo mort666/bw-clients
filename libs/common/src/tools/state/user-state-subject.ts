@@ -140,7 +140,7 @@ export class UserStateSubject<
     const encryptor$ = this.encryptor(account$);
     const constraints$ = (this.context.constraints$ ?? unconstrained$<State>()).pipe(
       catchError((e: unknown) => {
-        this.log.error(e as object, "constraints$ dependency failed; using last-known constraints");
+        this.log.error(e as any, "constraints$ dependency failed; using last-known constraints");
         return EMPTY;
       }),
       shareReplay({ refCount: true, bufferSize: 1 }),
@@ -516,7 +516,7 @@ export class UserStateSubject<
         return value;
       })
       .catch((e: any) => {
-        this.log.error(e as object, "updating failed");
+        this.log.error(e, "updating failed");
         this.onError(e);
       });
   }

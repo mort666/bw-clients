@@ -1,4 +1,4 @@
-import { Jsonify } from "type-fest";
+import { Jsonify, Primitive } from "type-fest";
 
 import { LogService } from "../../platform/abstractions/log.service";
 import { LogLevelType } from "../../platform/enums";
@@ -12,7 +12,7 @@ import { SemanticLogger } from "./semantic-logger.abstraction";
 export class DefaultSemanticLogger<Context extends object> implements SemanticLogger {
   /** Instantiates a console semantic logger
    *  @param context a static payload that is cloned when the logger
-   *   logs a message. The `messages`, `level`, and `content` fields
+   *   logs a message. The `messages`, `level`, and `labels` fields
    *   are reserved for use by loggers.
    */
   constructor(
@@ -25,41 +25,41 @@ export class DefaultSemanticLogger<Context extends object> implements SemanticLo
 
   readonly context: object;
 
-  debug<T>(content: Jsonify<T>, message?: string): void {
-    this.log(content, LogLevelType.Debug, message);
+  debug(labels: Record<string, Primitive> | string, message?: string): void {
+    this.log(labels, LogLevelType.Debug, message);
   }
 
-  info<T>(content: Jsonify<T>, message?: string): void {
-    this.log(content, LogLevelType.Info, message);
+  info(labels: Record<string, Primitive> | string, message?: string): void {
+    this.log(labels, LogLevelType.Info, message);
   }
 
-  warn<T>(content: Jsonify<T>, message?: string): void {
-    this.log(content, LogLevelType.Warning, message);
+  warn(labels: Record<string, Primitive> | string, message?: string): void {
+    this.log(labels, LogLevelType.Warning, message);
   }
 
-  error<T>(content: Jsonify<T>, message?: string): void {
-    this.log(content, LogLevelType.Error, message);
+  error(labels: Record<string, Primitive> | string, message?: string): void {
+    this.log(labels, LogLevelType.Error, message);
   }
 
-  panic<T>(content: Jsonify<T>, message?: string): never {
-    this.log(content, LogLevelType.Error, message);
+  panic(labels: Record<string, Primitive> | string, message?: string): never {
+    this.log(labels, LogLevelType.Error, message);
     const panicMessage =
-      message ?? (typeof content === "string" ? content : "a fatal error occurred");
+      message ?? (typeof labels === "string" ? labels : "a fatal error occurred");
     throw new Error(panicMessage);
   }
 
-  private log<T>(content: Jsonify<T>, level: LogLevelType, message?: string) {
+  private log(labels: Record<string, Primitive> | string, level: LogLevelType, message?: string) {
     const log = {
       ...this.context,
       message,
-      content: content ?? undefined,
+      labels: labels as unknown,
       level: stringifyLevel(level),
       "@timestamp": this.now(),
     };
 
-    if (typeof content === "string" && !message) {
-      log.message = content;
-      delete log.content;
+    if (typeof labels === "string" && !message) {
+      log.message = labels;
+      delete log.labels;
     }
 
     this.logger.write(level, log);
