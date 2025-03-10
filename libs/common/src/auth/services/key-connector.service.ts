@@ -4,7 +4,6 @@ import { firstValueFrom } from "rxjs";
 
 import { LogoutReason } from "@bitwarden/auth/common";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
-import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import {
   Argon2KdfConfig,
   KdfConfig,
@@ -57,8 +56,8 @@ export const CONVERT_ACCOUNT_TO_KEY_CONNECTOR = new UserKeyDefinition<boolean | 
 export class KeyConnectorService implements KeyConnectorServiceAbstraction {
   private usesKeyConnectorState: ActiveUserState<boolean>;
   private convertAccountToKeyConnectorState: ActiveUserState<boolean>;
+
   constructor(
-    private accountService: AccountService,
     private masterPasswordService: InternalMasterPasswordServiceAbstraction,
     private keyService: KeyService,
     private apiService: ApiService,
@@ -91,8 +90,7 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
     return loggedInUsingSso && requiredByOrganization && userIsNotUsingKeyConnector;
   }
 
-  async migrateUser(userId?: UserId) {
-    userId ??= (await firstValueFrom(this.accountService.activeAccount$))?.id;
+  async migrateUser(userId: UserId) {
     const organization = await this.getManagingOrganization(userId);
     const masterKey = await firstValueFrom(this.masterPasswordService.masterKey$(userId));
     const keyConnectorRequest = new KeyConnectorUserKeyRequest(masterKey.encKeyB64);
@@ -121,7 +119,7 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
     }
   }
 
-  async getManagingOrganization(userId?: UserId): Promise<Organization> {
+  async getManagingOrganization(userId: UserId): Promise<Organization> {
     const orgs = await firstValueFrom(this.organizationService.organizations$(userId));
     return orgs.find(
       (o) =>
@@ -184,7 +182,7 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
     await this.apiService.postSetKeyConnectorKey(setPasswordRequest);
   }
 
-  async setConvertAccountRequired(status: boolean, userId?: UserId) {
+  async setConvertAccountRequired(status: boolean | null, userId: UserId) {
     await this.stateProvider.setUserState(CONVERT_ACCOUNT_TO_KEY_CONNECTOR, status, userId);
   }
 
@@ -192,7 +190,7 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
     return firstValueFrom(this.convertAccountToKeyConnectorState.state$);
   }
 
-  async removeConvertAccountRequired(userId?: UserId) {
+  async removeConvertAccountRequired(userId: UserId) {
     await this.setConvertAccountRequired(null, userId);
   }
 

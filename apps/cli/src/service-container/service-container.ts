@@ -560,7 +560,6 @@ export class ServiceContainer {
     this.policyApiService = new PolicyApiService(this.policyService, this.apiService);
 
     this.keyConnectorService = new KeyConnectorService(
-      this.accountService,
       this.masterPasswordService,
       this.keyService,
       this.apiService,
