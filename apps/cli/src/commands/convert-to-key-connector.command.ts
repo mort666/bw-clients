@@ -65,7 +65,7 @@ export class ConvertToKeyConnectorCommand {
 
     if (answer.convert === "remove") {
       try {
-        await this.keyConnectorService.migrateUser();
+        await this.keyConnectorService.migrateUser(this.userId);
       } catch (e) {
         await this.logout();
         throw e;
