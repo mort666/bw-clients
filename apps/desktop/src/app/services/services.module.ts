@@ -36,7 +36,6 @@ import {
   SsoUrlService,
 } from "@bitwarden/auth/common";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
-import { VaultTimeoutSettingsService } from "@bitwarden/common/abstractions/vault-timeout/vault-timeout-settings.service";
 import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
 import { PolicyService as PolicyServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import {
@@ -54,6 +53,10 @@ import { ClientType } from "@bitwarden/common/enums";
 import { ProcessReloadServiceAbstraction } from "@bitwarden/common/key-management/abstractions/process-reload.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { DefaultProcessReloadService } from "@bitwarden/common/key-management/services/default-process-reload.service";
+import {
+  VaultTimeoutSettingsService,
+  VaultTimeoutStringType,
+} from "@bitwarden/common/key-management/vault-timeout";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { CryptoFunctionService as CryptoFunctionServiceAbstraction } from "@bitwarden/common/platform/abstractions/crypto-function.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
@@ -88,8 +91,6 @@ import { GlobalStateProvider, StateProvider } from "@bitwarden/common/platform/s
 // eslint-disable-next-line import/no-restricted-paths -- Implementation for memory storage
 import { MemoryStorageService as MemoryStorageServiceForStateProviders } from "@bitwarden/common/platform/state/storage/memory-storage.service";
 import { SyncService } from "@bitwarden/common/platform/sync";
-import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
-import { VaultTimeoutStringType } from "@bitwarden/common/types/vault-timeout.type";
 import { CipherService as CipherServiceAbstraction } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { DialogService, ToastService } from "@bitwarden/components";
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
@@ -133,7 +134,6 @@ import { SearchBarService } from "../layout/search/search-bar.service";
 
 import { DesktopFileDownloadService } from "./desktop-file-download.service";
 import { DesktopSetPasswordJitService } from "./desktop-set-password-jit.service";
-import { DesktopThemeStateService } from "./desktop-theme.service";
 import { InitService } from "./init.service";
 import { NativeMessagingManifestService } from "./native-messaging-manifest.service";
 import { RendererCryptoFunctionService } from "./renderer-crypto-function.service";
@@ -265,11 +265,6 @@ const safeProviders: SafeProvider[] = [
     provide: SYSTEM_THEME_OBSERVABLE,
     useFactory: () => fromIpcSystemTheme(),
     deps: [],
-  }),
-  safeProvider({
-    provide: ThemeStateService,
-    useClass: DesktopThemeStateService,
-    deps: [GlobalStateProvider],
   }),
   safeProvider({
     provide: EncryptedMessageHandlerService,
