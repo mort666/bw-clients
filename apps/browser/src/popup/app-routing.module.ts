@@ -165,7 +165,7 @@ const routes: Routes = [
       data: {
         elevation: 1,
         pageTitle: {
-          key: "verifyIdentity",
+          key: "verifyYourIdentity",
         },
         showBackButton: true,
       } satisfies RouteDataProperties & ExtensionAnonLayoutWrapperData,
@@ -242,7 +242,7 @@ const routes: Routes = [
     data: {
       pageIcon: DeviceVerificationIcon,
       pageTitle: {
-        key: "verifyIdentity",
+        key: "verifyYourIdentity",
       },
       pageSubtitle: {
         key: "weDontRecognizeThisDevice",
