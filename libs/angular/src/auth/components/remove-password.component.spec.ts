@@ -5,6 +5,7 @@ import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-conso
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { KeyConnectorService } from "@bitwarden/common/auth/abstractions/key-connector.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { SyncService } from "@bitwarden/common/platform/sync";
 import { mockAccountServiceWith } from "@bitwarden/common/spec";
 import { UserId } from "@bitwarden/common/types/guid";
@@ -37,6 +38,7 @@ describe("RemovePasswordComponent", () => {
     await accountService.switchAccount(userId);
 
     component = new RemovePasswordComponent(
+      mock<LogService>(),
       mockRouter,
       accountService,
       mockSyncService,
@@ -62,18 +64,22 @@ describe("RemovePasswordComponent", () => {
       expect(mockSyncService.fullSync).toHaveBeenCalledWith(false);
     });
 
-    it("should throw an error if no active account is found", async () => {
+    it("should redirect to login when no active account is found", async () => {
       await accountService.switchAccount(null as unknown as UserId);
 
-      await expect(component.ngOnInit()).rejects.toThrow(new Error("No active account found"));
+      await component.ngOnInit();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith([""]);
     });
 
-    it("should throw an error if no organization is found", async () => {
+    it("should redirect to login when no organization is found", async () => {
       mockKeyConnectorService.getManagingOrganization.mockResolvedValue(
         null as unknown as Organization,
       );
 
-      await expect(component.ngOnInit()).rejects.toThrow(new Error("No organization found"));
+      await component.ngOnInit();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith([""]);
     });
   });
 
@@ -183,7 +189,7 @@ describe("RemovePasswordComponent", () => {
       expect(mockRouter.navigate).not.toHaveBeenCalled();
     });
 
-    it("should not call leave if dialog is canceled", async () => {
+    it("should not call leave when dialog is canceled", async () => {
       mockDialogService.openSimpleDialog.mockResolvedValue(false);
 
       await component.leave();

@@ -7,6 +7,7 @@ import { Organization } from "@bitwarden/common/admin-console/models/domain/orga
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { KeyConnectorService } from "@bitwarden/common/auth/abstractions/key-connector.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { UserId } from "@bitwarden/common/types/guid";
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
 import { DialogService, ToastService } from "@bitwarden/components";
@@ -21,6 +22,7 @@ export class RemovePasswordComponent implements OnInit {
   private activeUserId!: UserId;
 
   constructor(
+    private logService: LogService,
     private router: Router,
     private accountService: AccountService,
     private syncService: SyncService,
@@ -34,13 +36,21 @@ export class RemovePasswordComponent implements OnInit {
   async ngOnInit() {
     const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
     if (activeAccount == null) {
-      throw new Error("No active account found");
+      this.logService.info(
+        "[Key Connector remove password] No active account found, redirecting to login.",
+      );
+      await this.router.navigate([""]);
+      return;
     }
     this.activeUserId = activeAccount.id;
 
     this.organization = await this.keyConnectorService.getManagingOrganization(this.activeUserId);
     if (this.organization == null) {
-      throw new Error("No organization found");
+      this.logService.info(
+        "[Key Connector remove password] No organization found, redirecting to login.",
+      );
+      await this.router.navigate([""]);
+      return;
     }
     await this.syncService.fullSync(false);
     this.loading = false;
