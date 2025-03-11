@@ -10,6 +10,12 @@ import {
 import { isEarnedEvent, isProgressEvent } from "./meta";
 import { AchievementEvent, AchievementValidator } from "./types";
 
+function mapProgressByName(status: AchievementEvent[]) {
+  return new Map(
+    status.filter(isProgressEvent).map((e) => [e.achievement.name, e.achievement.value] as const),
+  );
+}
+
 // OPTIMIZATION: compute the list of active monitors from trigger criteria
 function active(
   status$: Observable<AchievementEvent[]>,
@@ -18,9 +24,7 @@ function active(
     withLatestFrom(status$),
     map(([monitors, log]) => {
       // partition the log into progress and earned achievements
-      const progressByName = new Map(
-        log.filter(isProgressEvent).map((e) => [e.achievement.name, e.achievement.value]),
-      );
+      const progressByName = mapProgressByName(log);
       const earnedByName = new Set(
         log.filter((e) => isEarnedEvent(e)).map((e) => e.achievement.name),
       );
@@ -36,7 +40,7 @@ function active(
         }
 
         // monitor disabled if outside of threshold
-        const progress = progressByName.get(m.progress) ?? 0;
+        const progress = (m.metric && progressByName.get(m.metric)) || 0;
         if (progress > (m.trigger.high ?? Number.POSITIVE_INFINITY)) {
           return false;
         } else if (progress < (m.trigger.low ?? 0)) {
@@ -70,10 +74,17 @@ function validate(
 
       // process achievement monitors sequentially, accumulating result records
       for (const monitor of monitors) {
-        const statusEntry = status.find((s) => s.achievement.name === monitor.achievement);
-        const progress = isProgressEvent(statusEntry) ? statusEntry : undefined;
+        const progress = mapProgressByName(status);
 
-        results.push(...monitor.action(action, progress));
+        const measurements = monitor.measure(action, progress);
+        results.push(...measurements);
+
+        // modify copy produced by filter to avoid reallocation
+        for (const m of measurements) {
+          progress.set(m.achievement.name, m.achievement.value);
+        }
+
+        results.push(...monitor.earn(progress));
       }
 
       // deliver results as a stream containing individual records to maintain

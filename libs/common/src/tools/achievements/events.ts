@@ -1,16 +1,8 @@
 import { UserId } from "../../types/guid";
 
-import {
-  AchievementEarnedEvent,
-  AchievementId,
-  AchievementProgressEvent,
-  AchievementProgressId,
-} from "./types";
+import { AchievementEarnedEvent, AchievementId, AchievementProgressEvent, MetricId } from "./types";
 
-export function progressEvent(
-  name: AchievementProgressId,
-  value: number = 1,
-): AchievementProgressEvent {
+export function progressEvent(name: MetricId, value: number = 1): AchievementProgressEvent {
   return {
     "@timestamp": Date.now(),
     event: {

@@ -1,8 +1,8 @@
 import { Type } from "./data";
 import { earnedEvent, progressEvent } from "./events";
-import { AchievementId, AchievementProgressId, AchievementValidator } from "./types";
+import { AchievementId, MetricId, AchievementValidator } from "./types";
 
-const ItemCreatedProgress = "item-created-progress" as AchievementProgressId;
+const ItemCreatedProgress = "item-quantity" as MetricId;
 
 const ItemCreatedAchievement = "item-created" as AchievementId;
 const ThreeItemsCreatedAchievement = "three-vault-items-created" as AchievementId;
@@ -10,57 +10,56 @@ const FiveItemsCreatedAchievement = "five-vault-items-created" as AchievementId;
 
 const ItemCreatedValidator = {
   achievement: ItemCreatedAchievement,
-  progress: ItemCreatedProgress,
+  metric: ItemCreatedProgress,
   evaluator: Type.Threshold,
   trigger: "once",
   hidden: false,
   filter(item) {
     return item.action === "vault-item-added";
   },
-  action(item, progress) {
-    return [progressEvent(ItemCreatedProgress), earnedEvent(ItemCreatedAchievement)];
+  measure(item, progress) {
+    return [progressEvent(ItemCreatedProgress)];
+  },
+  earn(progress) {
+    return [earnedEvent(ItemCreatedAchievement)];
   },
 } satisfies AchievementValidator;
 
 const ThreeItemsCreatedValidator = {
   achievement: ThreeItemsCreatedAchievement,
-  progress: ItemCreatedProgress,
+  metric: ItemCreatedProgress,
   evaluator: Type.Threshold,
   trigger: { low: 2, high: 3 },
   hidden: false,
   filter(item) {
     return item.action === "vault-item-added";
   },
-  action(item, progress) {
-    if (!progress) {
-      return [progressEvent(ItemCreatedProgress)];
-    }
-
-    const value = progress.achievement.value + 1;
-    if (value >= 3) {
-      return [earnedEvent(ThreeItemsCreatedAchievement)];
-    }
-
+  measure(_item, progress) {
+    const value = 1 + (progress.get(ItemCreatedProgress) ?? 0);
     return [progressEvent(ItemCreatedProgress, value)];
+  },
+  earn(progress) {
+    const value = progress.get(ItemCreatedProgress) ?? 0;
+    return value >= 3 ? [earnedEvent(ItemCreatedAchievement)] : [];
   },
 } satisfies AchievementValidator;
 
 const FiveItemsCreatedValidator = {
   achievement: ThreeItemsCreatedAchievement,
-  progress: ItemCreatedProgress,
+  metric: ItemCreatedProgress,
   evaluator: Type.Threshold,
   trigger: { low: 4, high: 5 },
   hidden: false,
   filter(item) {
     return item.action === "vault-item-added";
   },
-  action(item, progress) {
-    const value = 1 + (progress?.achievement?.value ?? 0);
-    if (value >= 3) {
-      return [earnedEvent(FiveItemsCreatedAchievement)];
-    }
-
+  measure(_item, progress) {
+    const value = 1 + (progress.get(ItemCreatedProgress) ?? 0);
     return [progressEvent(ItemCreatedProgress, value)];
+  },
+  earn(progress) {
+    const value = progress.get(ItemCreatedProgress) ?? 0;
+    return value >= 5 ? [earnedEvent(ItemCreatedAchievement)] : [];
   },
 } satisfies AchievementValidator;
 
