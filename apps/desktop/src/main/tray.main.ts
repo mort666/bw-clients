@@ -7,7 +7,7 @@ import { firstValueFrom } from "rxjs";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
-import { BiometricStateService, BiometricsService } from "@bitwarden/key-management";
+import { BiometricsService } from "@bitwarden/key-management";
 
 import { DesktopSettingsService } from "../platform/services/desktop-settings.service";
 import { isDev } from "../utils";
@@ -27,7 +27,6 @@ export class TrayMain {
     private i18nService: I18nService,
     private desktopSettingsService: DesktopSettingsService,
     private messagingService: MessagingService,
-    private biometricsStateService: BiometricStateService,
     private biometricService: BiometricsService,
   ) {
     if (process.platform === "win32") {

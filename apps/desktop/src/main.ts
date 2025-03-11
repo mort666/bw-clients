@@ -214,6 +214,7 @@ export class Main {
       this.i18nService,
       this.desktopSettingsService,
       this.messagingService,
+      this.biometricsService,
     );
 
     messageSubject.asObservable().subscribe((message) => {
@@ -243,7 +244,7 @@ export class Main {
       this.windowMain,
       this.i18nService,
       this.desktopSettingsService,
-      biometricStateService,
+      this.messagingService,
       this.biometricsService,
     );
 
