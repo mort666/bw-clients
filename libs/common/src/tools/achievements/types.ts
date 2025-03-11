@@ -40,5 +40,8 @@ export type AchievementValidator = Achievement & {
   measure: (item: EventFormat, progress: Map<MetricId, number>) => AchievementProgressEvent[];
 
   // monitors achievement progress and emits earned achievements
-  earn: (progress: Map<MetricId, number>) => AchievementEarnedEvent[];
+  earn: (
+    measured: AchievementProgressEvent[],
+    progress: Map<MetricId, number>,
+  ) => AchievementEarnedEvent[];
 };
