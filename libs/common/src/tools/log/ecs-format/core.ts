@@ -3,7 +3,7 @@ import { Primitive } from "type-fest";
 /** Elastic Common Schema log format - core fields.
  */
 export interface EcsFormat {
-  "@timestamp": Date;
+  "@timestamp": number;
 
   /** custom key/value pairs */
   labels?: Record<string, Primitive>;

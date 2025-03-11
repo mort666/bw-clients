@@ -1,13 +1,13 @@
 import { RequireAtLeastOne } from "type-fest";
 import { Tagged } from "type-fest/source/opaque";
 
-import { EcsFormat, EventFormat } from "../log/ecs-format";
+import { EventFormat, ServiceFormat } from "../log/ecs-format";
 
 export type AchievementId = string & Tagged<"achievement">;
 
 type Progress = { type: "progress"; name: AchievementId; value: number };
 type Earned = { type: "earned"; name: AchievementId };
-export type AchievementFormat = EcsFormat & EventFormat & { achievement: Progress | Earned };
+export type AchievementFormat = EventFormat & ServiceFormat & { achievement: Progress | Earned };
 
 // consumed by validator and achievement list (should this include a "toast-alerter"?)
 export type Achievement = {
