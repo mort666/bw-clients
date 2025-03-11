@@ -31,7 +31,7 @@ import { LoginUriView } from "@bitwarden/common/vault/models/view/login-uri.view
 import { LoginView } from "@bitwarden/common/vault/models/view/login.view";
 import { SecureNoteView } from "@bitwarden/common/vault/models/view/secure-note.view";
 
-import { DesktopSettingsService } from "src/platform/services/desktop-settings.service";
+import { DesktopSettingsService } from "../../platform/services/desktop-settings.service";
 
 /**
  * This type is used to pass the window position from the native UI
@@ -162,7 +162,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
   ): Promise<{ cipherId: string; userVerified: boolean } | undefined> {
     try {
       return await lastValueFrom(this.chosenCipherSubject.pipe(timeout(timeoutMs)));
-    } catch (error) {
+    } catch {
       // If we hit a timeout, return undefined instead of throwing
       this.logService.warning("Timeout: User did not select a cipher within the allowed time", {
         timeoutMs,
