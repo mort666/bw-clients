@@ -11,10 +11,10 @@ const replicationIn$ = new Subject<AchievementFormat>();
 const userActionIn$ = new Subject<EventFormat>();
 
 // what to look for (consumed by validator)
-const achievementMonitors$ = new Subject<AchievementWatch>();
+const achievementMonitors$ = new Subject<AchievementWatch[]>();
 
 // data stored in local state  (consumed by validator and achievement list)
-const achievementsLocal$ = new Subject<AchievementFormat>();
+const achievementsLocal$ = new Subject<AchievementFormat[]>();
 
 // metadata (consumed by achievement list)
 const achievementMetadata$ = new Subject<Achievement>();
