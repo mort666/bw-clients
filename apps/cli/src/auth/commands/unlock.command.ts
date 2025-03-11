@@ -78,7 +78,6 @@ export class UnlockCommand {
         userId,
         this.keyConnectorService,
         this.environmentService,
-        this.syncService,
         this.organizationApiService,
         this.logout,
       );

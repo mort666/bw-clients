@@ -1,5 +1,3 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
 import * as inquirer from "inquirer";
 import { firstValueFrom } from "rxjs";
 
@@ -10,7 +8,6 @@ import {
   Region,
 } from "@bitwarden/common/platform/abstractions/environment.service";
 import { UserId } from "@bitwarden/common/types/guid";
-import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
 
 import { Response } from "../models/response";
 import { MessageResponse } from "../models/response/message.response";
@@ -20,7 +17,6 @@ export class ConvertToKeyConnectorCommand {
     private readonly userId: UserId,
     private keyConnectorService: KeyConnectorService,
     private environmentService: EnvironmentService,
-    private syncService: SyncService,
     private organizationApiService: OrganizationApiServiceAbstraction,
     private logout: () => Promise<void>,
   ) {}
