@@ -1,14 +1,31 @@
+import { KdfConfigService } from "../../../../key-management/src";
 import { UserKey } from "../../types/key";
 
+import { CipherConfiguration } from "./models/cipher-configuration";
+import { RegistrationFinishRequest } from "./models/registration-finish.request";
+import { RegistrationStartRequest } from "./models/registration-start.request";
 import { OpaqueApiService } from "./opaque-api.service";
 import { OpaqueService } from "./opaque.service";
 
 export class DefaultOpaqueService implements OpaqueService {
-  constructor(private opaqueApiService: OpaqueApiService) {}
+  constructor(
+    private opaqueApiService: OpaqueApiService,
+    private kdfConfigService: KdfConfigService,
+  ) {}
 
   async Register(masterPassword: string, userKey: UserKey) {
-    throw new Error("Not implemented");
-    await Promise.resolve();
+    const kdfConfig = await this.kdfConfigService.getKdfConfig(); // note: this doesn't take a UserId but probably should
+
+    const registrationStart = ""; // SDK call: kdfConfig => ClientRegistrationStartResult
+    const serverRegistrationStart = await this.opaqueApiService.RegistrationStart(
+      new RegistrationStartRequest(registrationStart, new CipherConfiguration(kdfConfig)),
+    );
+
+    const registrationFinish = ""; // SDK call: (serverRegistrationStart.serverRegistrationStartResult, userKey) => ClientRegistrationFinishResult
+    await this.opaqueApiService.RegistrationFinish(
+      serverRegistrationStart.credentialId,
+      new RegistrationFinishRequest(registrationFinish),
+    );
   }
 
   async Login(masterPassword: string) {
