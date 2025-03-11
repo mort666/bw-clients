@@ -21,7 +21,7 @@ export abstract class KeyConnectorService {
 
   abstract setUsesKeyConnector(enabled: boolean, userId: UserId): Promise<void>;
 
-  abstract setConvertAccountRequired(status: boolean, userId: UserId): Promise<void>;
+  abstract setConvertAccountRequired(status: boolean | null, userId: UserId): Promise<void>;
 
   abstract getConvertAccountRequired(): Promise<boolean>;
 
