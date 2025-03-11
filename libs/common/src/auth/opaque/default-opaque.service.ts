@@ -17,13 +17,13 @@ export class DefaultOpaqueService implements OpaqueService {
     const kdfConfig = await this.kdfConfigService.getKdfConfig(); // note: this doesn't take a UserId but probably should
 
     const registrationStart = ""; // SDK call: kdfConfig => ClientRegistrationStartResult
-    const serverRegistrationStart = await this.opaqueApiService.RegistrationStart(
+    const registrationStartResponse = await this.opaqueApiService.RegistrationStart(
       new RegistrationStartRequest(registrationStart, new CipherConfiguration(kdfConfig)),
     );
 
     const registrationFinish = ""; // SDK call: (serverRegistrationStart.serverRegistrationStartResult, userKey) => ClientRegistrationFinishResult
     await this.opaqueApiService.RegistrationFinish(
-      serverRegistrationStart.credentialId,
+      registrationStartResponse.credentialId,
       new RegistrationFinishRequest(registrationFinish),
     );
   }
