@@ -10,8 +10,9 @@ const FiveItemsCreatedAchievement = "five-vault-items-created" as AchievementId;
 
 const ItemCreatedValidator = {
   achievement: ItemCreatedAchievement,
+  name: "What an item!",
   metric: ItemCreatedProgress,
-  evaluator: Type.Threshold,
+  validator: Type.Threshold,
   trigger: "once",
   hidden: false,
   filter(item) {
@@ -27,8 +28,9 @@ const ItemCreatedValidator = {
 
 const ThreeItemsCreatedValidator = {
   achievement: ThreeItemsCreatedAchievement,
+  name: "Three times a charm",
   metric: ItemCreatedProgress,
-  evaluator: Type.Threshold,
+  validator: Type.Threshold,
   trigger: { low: 2, high: 3 },
   hidden: false,
   filter(item) {
@@ -45,9 +47,10 @@ const ThreeItemsCreatedValidator = {
 } satisfies AchievementValidator;
 
 const FiveItemsCreatedValidator = {
-  achievement: ThreeItemsCreatedAchievement,
+  achievement: FiveItemsCreatedAchievement,
+  name: "fiiivvve GoOoOoOolllllllD RIIIIIINGS!!!!!!",
   metric: ItemCreatedProgress,
-  evaluator: Type.Threshold,
+  validator: Type.Threshold,
   trigger: { low: 4, high: 5 },
   hidden: false,
   filter(item) {

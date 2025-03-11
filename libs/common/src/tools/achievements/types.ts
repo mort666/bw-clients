@@ -5,7 +5,7 @@ import { EventFormat, ServiceFormat, UserFormat } from "../log/ecs-format";
 
 import { Type } from "./data";
 
-export type EvaluatorType = keyof typeof Type;
+export type ValidatorId = keyof typeof Type;
 export type AchievementId = string & Tagged<"achievement">;
 export type MetricId = string & Tagged<"metric-id">;
 
@@ -19,15 +19,22 @@ export type AchievementEvent = AchievementProgressEvent | AchievementEarnedEvent
 
 // consumed by validator and achievement list (should this include a "toast-alerter"?)
 export type Achievement = {
+  // identifies the achievement being monitored
   achievement: AchievementId;
 
+  // human-readable name of the achievement
+  name: string;
+
+  // the metric observed by low/high triggers
   metric?: MetricId;
 
-  evaluator: EvaluatorType;
+  // identifies the validator containing filter/measure/earn methods
+  validator: ValidatorId;
 
   // pre-filter that disables the rule if it's met
   trigger: "once" | RequireAtLeastOne<{ low: number; high: number }>;
 
+  // whether or not the achievement is hidden until it is earned
   hidden: boolean;
 };
 
