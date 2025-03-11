@@ -60,23 +60,31 @@ function validate(
   monitors$: Observable<AchievementWatch[]>,
   status$: Observable<AchievementFormat[]>,
 ): OperatorFunction<EventFormat, AchievementFormat> {
-  // analyze the incoming event stream to identify achievements
-  const processor = pipe(
+  return pipe(
     withLatestFrom(monitors$),
     map(([action, monitors]) => {
-      // 🧩 TODO: transform list of monitors to the list of monitors triggered
-      //          by the incoming action
-      return [action, monitors];
+      // narrow the list of all live monitors to just those that may
+      //   change the log
+      const triggered = monitors.filter((m) => m.filter(action));
+      return [action, triggered] as const;
     }),
     withLatestFrom(status$),
     concatMap(([[action, monitors], status]) => {
-      // 🧩 TODO: execute each of the monitors feeding in its associated achievement
-      //          entry and the action that triggered the achievement.
-      return from([] as AchievementFormat[]);
+      const results: AchievementFormat[] = [];
+
+      // process achievement monitors sequentially, accumulating result records
+      for (const monitor of monitors) {
+        const statusEntry = status.find(
+          (s) => s.achievement.name === monitor.achievement && isProgress(s.achievement),
+        );
+        results.push(...monitor.action(action, statusEntry));
+      }
+
+      // deliver results as a stream containing individual records to maintain
+      // the map/reduce model of the validator
+      return from(results);
     }),
   );
-
-  return processor;
 }
 
 const liveMonitors$ = achievementMonitors$.pipe(active(achievementsLog$));
