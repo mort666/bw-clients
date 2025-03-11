@@ -38,7 +38,7 @@ const ThreeItemsCreatedValidator = {
     const value = 1 + (progress.get(ItemCreatedProgress) ?? 0);
     return [progressEvent(ItemCreatedProgress, value)];
   },
-  earn(progress) {
+  earn(_measured, progress) {
     const value = progress.get(ItemCreatedProgress) ?? 0;
     return value >= 3 ? [earnedEvent(ItemCreatedAchievement)] : [];
   },
@@ -57,7 +57,7 @@ const FiveItemsCreatedValidator = {
     const value = 1 + (progress.get(ItemCreatedProgress) ?? 0);
     return [progressEvent(ItemCreatedProgress, value)];
   },
-  earn(progress) {
+  earn(_measured, progress) {
     const value = progress.get(ItemCreatedProgress) ?? 0;
     return value >= 5 ? [earnedEvent(ItemCreatedAchievement)] : [];
   },

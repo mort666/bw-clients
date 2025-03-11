@@ -76,15 +76,15 @@ function validate(
       for (const monitor of monitors) {
         const progress = mapProgressByName(status);
 
-        const measurements = monitor.measure(action, progress);
-        results.push(...measurements);
+        const measured = monitor.measure(action, progress);
+        results.push(...measured);
 
         // modify copy produced by filter to avoid reallocation
-        for (const m of measurements) {
+        for (const m of measured) {
           progress.set(m.achievement.name, m.achievement.value);
         }
 
-        results.push(...monitor.earn(progress));
+        results.push(...monitor.earn(measured, progress));
       }
 
       // deliver results as a stream containing individual records to maintain
