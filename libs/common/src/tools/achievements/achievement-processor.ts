@@ -6,7 +6,14 @@ import {
   achievementsLocal$ as achievementsLog$,
   userActionIn$,
 } from "./inputs";
-import { AchievementEvent, AchievementValidator, UserActionEvent } from "./types";
+import {
+  AchievementEvent,
+  AchievementId,
+  AchievementProgressEvent,
+  AchievementValidator,
+  MetricId,
+  UserActionEvent,
+} from "./types";
 import { mapProgressByName } from "./util";
 
 // the formal event processor
@@ -25,16 +32,34 @@ function validate(
     concatMap(([[action, validators], captured]) => {
       const results: AchievementEvent[] = [];
       const progress = mapProgressByName(captured);
+      const measurements = new Map<AchievementId, AchievementProgressEvent[]>();
 
+      // collect measurements
       for (const validator of validators) {
         const measured = validator.measure(action, progress);
+        measurements.set(validator.achievement, measured);
         results.push(...measured);
+      }
 
-        // update progress with the latest measurements
-        for (const m of measured) {
-          progress.set(m.achievement.name, m.achievement.value);
+      // update processor's internal progress values
+      const distinct = new Map<MetricId, AchievementId>();
+      const entries = [...measurements.entries()].flatMap(([a, ms]) =>
+        ms.map((m) => [a, m] as const),
+      );
+      for (const [achievement, measured] of entries) {
+        const key = measured.achievement.name;
+        if (distinct.has(key)) {
+          const msg = `${achievement} failed to set set ${key} value already set by ${distinct.get(key)}`;
+          throw new Error(msg);
         }
 
+        distinct.set(key, achievement);
+        progress.set(measured.achievement.name, measured.achievement.value);
+      }
+
+      // detect earned achievements
+      for (const validator of validators) {
+        const measured = measurements.get(validator.achievement) ?? [];
         const earned = validator.earn(measured, progress);
         results.push(...earned);
       }
