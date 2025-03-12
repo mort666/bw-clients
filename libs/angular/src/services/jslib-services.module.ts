@@ -104,6 +104,10 @@ import { UserVerificationService as UserVerificationServiceAbstraction } from "@
 import { WebAuthnLoginApiServiceAbstraction } from "@bitwarden/common/auth/abstractions/webauthn/webauthn-login-api.service.abstraction";
 import { WebAuthnLoginPrfKeyServiceAbstraction } from "@bitwarden/common/auth/abstractions/webauthn/webauthn-login-prf-key.service.abstraction";
 import { WebAuthnLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/webauthn/webauthn-login.service.abstraction";
+import { DefaultOpaqueApiService } from "@bitwarden/common/auth/opaque/default-opaque-api.service";
+import { DefaultOpaqueService } from "@bitwarden/common/auth/opaque/default-opaque.service";
+import { OpaqueApiService } from "@bitwarden/common/auth/opaque/opaque-api.service";
+import { OpaqueService } from "@bitwarden/common/auth/opaque/opaque.service";
 import { AccountApiServiceImplementation } from "@bitwarden/common/auth/services/account-api.service";
 import { AccountServiceImplementation } from "@bitwarden/common/auth/services/account.service";
 import { AnonymousHubService } from "@bitwarden/common/auth/services/anonymous-hub.service";
@@ -1474,6 +1478,16 @@ const safeProviders: SafeProvider[] = [
       I18nServiceAbstraction,
       ToastService,
     ],
+  }),
+  safeProvider({
+    provide: OpaqueApiService,
+    useClass: DefaultOpaqueApiService,
+    deps: [ApiServiceAbstraction, EnvironmentService],
+  }),
+  safeProvider({
+    provide: OpaqueService,
+    useClass: DefaultOpaqueService,
+    deps: [OpaqueApiService, SdkService],
   }),
 ];
 

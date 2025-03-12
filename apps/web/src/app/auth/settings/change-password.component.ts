@@ -12,6 +12,7 @@ import { AccountService } from "@bitwarden/common/auth/abstractions/account.serv
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/auth/abstractions/master-password.service.abstraction";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { PasswordRequest } from "@bitwarden/common/auth/models/request/password.request";
+import { OpaqueService } from "@bitwarden/common/auth/opaque/opaque.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
@@ -59,6 +60,7 @@ export class ChangePasswordComponent
     masterPasswordService: InternalMasterPasswordServiceAbstraction,
     accountService: AccountService,
     toastService: ToastService,
+    private opaqueService: OpaqueService,
   ) {
     super(
       i18nService,
@@ -213,6 +215,7 @@ export class ChangePasswordComponent
 
     try {
       if (this.rotateUserKey) {
+        throw new Error("Userkey rotation not supported");
         this.formPromise = this.apiService.postPassword(request).then(async () => {
           // we need to save this for local masterkey verification during rotation
           await this.masterPasswordService.setMasterKeyHash(newLocalKeyHash, userId as UserId);
@@ -223,6 +226,7 @@ export class ChangePasswordComponent
         this.formPromise = this.apiService.postPassword(request);
       }
 
+      await this.opaqueService.Register(this.masterPassword, newUserKey[0]);
       await this.formPromise;
 
       this.toastService.showToast({
@@ -230,7 +234,7 @@ export class ChangePasswordComponent
         title: this.i18nService.t("masterPasswordChanged"),
         message: this.i18nService.t("logBackIn"),
       });
-      this.messagingService.send("logout");
+      //this.messagingService.send("logout");
     } catch {
       this.toastService.showToast({
         variant: "error",

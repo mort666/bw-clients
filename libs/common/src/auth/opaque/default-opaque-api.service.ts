@@ -21,9 +21,9 @@ export class DefaultOpaqueApiService implements OpaqueApiService {
     const env = await firstValueFrom(this.environmentService.environment$);
     const response = await this.apiService.send(
       "POST",
-      `/opaque/registration-start`,
+      `/opaque/start-registration`,
       request,
-      false,
+      true,
       true,
       env.getApiUrl(),
     );
@@ -37,9 +37,9 @@ export class DefaultOpaqueApiService implements OpaqueApiService {
     const env = await firstValueFrom(this.environmentService.environment$);
     const response = await this.apiService.send(
       "POST",
-      `/opaque/${credentialId}registration-start`,
+      `/opaque/finish-registration`,
       request,
-      false,
+      true,
       true,
       env.getApiUrl(),
     );

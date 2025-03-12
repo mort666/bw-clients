@@ -1,4 +1,4 @@
-import { OpaqueSessionId as OpaqueSessionId } from "../../types/guid";
+import { OpaqueSessionId } from "../../types/guid";
 
 import { RegistrationFinishRequest } from "./models/registration-finish.request";
 import { RegistrationFinishResponse } from "./models/registration-finish.response";
