@@ -9,6 +9,9 @@ export type ValidatorId = keyof typeof Type;
 export type AchievementId = string & Tagged<"achievement">;
 export type MetricId = string & Tagged<"metric-id">;
 
+// validators require all events to contain this baseline information
+export type UserActionEvent = EventFormat & UserFormat & ServiceFormat;
+
 export type AchievementProgressEvent = EventFormat &
   ServiceFormat &
   UserFormat & { achievement: { type: "progress"; name: MetricId; value: number } };

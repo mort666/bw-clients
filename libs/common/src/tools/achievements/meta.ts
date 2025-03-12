@@ -1,11 +1,11 @@
-import { AchievementEarnedEvent, AchievementProgressEvent } from "./types";
+import { AchievementEarnedEvent, AchievementEvent, AchievementProgressEvent } from "./types";
 
-function isProgressEvent(achievement: any): achievement is AchievementProgressEvent {
-  return achievement.type === "progress" && "value" in achievement;
+function isProgressEvent(event: AchievementEvent): event is AchievementProgressEvent {
+  return event.achievement.type === "progress" && "value" in event.achievement;
 }
 
-function isEarnedEvent(achievement: any): achievement is AchievementEarnedEvent {
-  return !isProgressEvent(achievement);
+function isEarnedEvent(event: AchievementEvent): event is AchievementEarnedEvent {
+  return event.achievement.type === "earned";
 }
 
 export { isProgressEvent, isEarnedEvent };

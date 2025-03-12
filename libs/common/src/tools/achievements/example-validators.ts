@@ -4,16 +4,62 @@ import { AchievementId, MetricId, AchievementValidator } from "./types";
 
 const ItemCreatedProgress = "item-quantity" as MetricId;
 
+const TotallyAttachedAchievement = "totally-attached" as AchievementId;
+const ItemCreatedMetric = "item-created-metric" as AchievementId;
 const ItemCreatedAchievement = "item-created" as AchievementId;
 const ThreeItemsCreatedAchievement = "three-vault-items-created" as AchievementId;
 const FiveItemsCreatedAchievement = "five-vault-items-created" as AchievementId;
+
+const TotallyAttachedValidator = {
+  achievement: TotallyAttachedAchievement,
+  name: "Totally attached <3",
+  metric: ItemCreatedProgress,
+  validator: Type.HasTag,
+  trigger: "once",
+  hidden: false,
+  filter(item) {
+    return item.tags?.includes("with-attachment") ?? false;
+  },
+  measure(item, progress) {
+    return [];
+  },
+  earn(progress) {
+    return [earnedEvent(TotallyAttachedAchievement)];
+  },
+} satisfies AchievementValidator;
+
+// 🧠 this validator added to test `measure` in isolation, but
+// the pattern of splitting trackers from validators is interesting.
+//
+// As-is, the design runs all measures before earnings so the logic
+// should remain consistent so long as the trackers and validators
+// don't emit conflicting logs. The processor's behavior in this
+// situation is undefined.
+const ItemCreatedTracker = {
+  achievement: ItemCreatedMetric,
+  name: `[TRACKER] ${ItemCreatedProgress}`,
+  metric: ItemCreatedProgress,
+  validator: Type.Threshold,
+  trigger: { high: 1 },
+  hidden: true,
+  filter(item) {
+    return item.action === "vault-item-added";
+  },
+  measure(item, progress) {
+    const value = 1 + (progress.get(ItemCreatedProgress) ?? 0);
+    return [progressEvent(ItemCreatedProgress, value)];
+  },
+  earn(progress) {
+    return [];
+  },
+} satisfies AchievementValidator;
 
 const ItemCreatedValidator = {
   achievement: ItemCreatedAchievement,
   name: "What an item!",
   metric: ItemCreatedProgress,
   validator: Type.Threshold,
-  trigger: "once",
+  trigger: { high: 1 },
   hidden: false,
   filter(item) {
     return item.action === "vault-item-added";
@@ -67,6 +113,10 @@ const FiveItemsCreatedValidator = {
 } satisfies AchievementValidator;
 
 export {
+  TotallyAttachedAchievement,
+  TotallyAttachedValidator,
+  ItemCreatedMetric,
+  ItemCreatedTracker,
   ItemCreatedProgress,
   ItemCreatedAchievement,
   ItemCreatedValidator,

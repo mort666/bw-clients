@@ -1,14 +1,12 @@
 import { Subject } from "rxjs";
 
-import { EventFormat } from "../log/ecs-format";
-
-import { Achievement, AchievementEvent, AchievementValidator } from "./types";
+import { Achievement, AchievementEvent, AchievementValidator, UserActionEvent } from "./types";
 
 // sync data from the server (consumed by event store)
 const replicationIn$ = new Subject<AchievementEvent>();
 
 // data incoming from the UI (consumed by validator)
-const userActionIn$ = new Subject<EventFormat>();
+const userActionIn$ = new Subject<UserActionEvent>();
 
 // what to look for (consumed by validator)
 const achievementMonitors$ = new Subject<AchievementValidator[]>();

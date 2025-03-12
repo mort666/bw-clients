@@ -1,21 +1,19 @@
 import { Observable, OperatorFunction, concatMap, from, map, pipe, withLatestFrom } from "rxjs";
 
-import { EventFormat } from "../log/ecs-format";
-
 import { active } from "./achievement-manager";
 import {
   achievementMonitors$,
   achievementsLocal$ as achievementsLog$,
   userActionIn$,
 } from "./inputs";
-import { AchievementEvent, AchievementValidator } from "./types";
+import { AchievementEvent, AchievementValidator, UserActionEvent } from "./types";
 import { mapProgressByName } from "./util";
 
 // the formal event processor
 function validate(
   validators$: Observable<AchievementValidator[]>,
   captured$: Observable<AchievementEvent[]>,
-): OperatorFunction<EventFormat, AchievementEvent> {
+): OperatorFunction<UserActionEvent, AchievementEvent> {
   return pipe(
     withLatestFrom(validators$),
     map(([action, monitors]) => {
