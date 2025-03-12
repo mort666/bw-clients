@@ -61,7 +61,7 @@ export class DefaultOpaqueService implements OpaqueService {
     );
 
     await this.opaqueApiService.RegistrationFinish(
-      registrationStartResponse.credentialId,
+      registrationStartResponse.sessionId,
       new RegistrationFinishRequest(
         Utils.fromBufferToB64(new Uint8Array(registrationFinish.registration_finish_message)),
         keyset,

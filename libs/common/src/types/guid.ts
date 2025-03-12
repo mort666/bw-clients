@@ -11,4 +11,4 @@ export type CipherId = Opaque<string, "CipherId">;
 export type SendId = Opaque<string, "SendId">;
 export type IndexedEntityId = Opaque<string, "IndexedEntityId">;
 export type SecurityTaskId = Opaque<string, "SecurityTaskId">;
-export type OpaqueCredentialId = Opaque<string, "OpaqueCredentialId">;
+export type OpaqueSessionId = Opaque<string, "OpaqueSessionId">;

@@ -1,14 +1,14 @@
 import { BaseResponse } from "../../../models/response/base.response";
-import { OpaqueCredentialId } from "../../../types/guid";
+import { OpaqueSessionId } from "../../../types/guid";
 
 export class RegistrationStartResponse extends BaseResponse {
-  credentialId: OpaqueCredentialId;
+  sessionId: OpaqueSessionId;
   serverRegistrationStartResult: string;
 
   constructor(response: any) {
     super(response);
 
-    this.credentialId = this.getResponseProperty("CredentialId");
+    this.sessionId = this.getResponseProperty("SessionId");
     this.serverRegistrationStartResult = this.getResponseProperty("ServerRegistrationStartResult");
   }
 }
