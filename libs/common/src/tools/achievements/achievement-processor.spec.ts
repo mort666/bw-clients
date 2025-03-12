@@ -1,8 +1,8 @@
 import { BehaviorSubject, ReplaySubject, bufferCount, concat, first, firstValueFrom } from "rxjs";
 
-import { validate } from "./event-processor";
-import { ItemCreatedProgressEvent } from "./example-achievements";
-import { itemAdded$, itemUpdated$ } from "./example-events";
+import { validate } from "./achievement-processor";
+import { ItemCreatedProgressEvent } from "./examples/example-achievements";
+import { itemAdded$, itemUpdated$ } from "./examples/example-events";
 import {
   ItemCreatedAchievement,
   ItemCreatedProgress,
@@ -10,7 +10,7 @@ import {
   ItemCreatedValidator,
   TotallyAttachedAchievement,
   TotallyAttachedValidator,
-} from "./example-validators";
+} from "./examples/example-validators";
 import { AchievementEvent } from "./types";
 
 describe("event-processor", () => {

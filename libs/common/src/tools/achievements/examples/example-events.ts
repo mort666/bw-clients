@@ -1,8 +1,7 @@
 import { Observable, of } from "rxjs";
 
-import { UserId } from "../../types/guid";
-
-import { UserActionEvent } from "./types";
+import { UserId } from "../../../types/guid";
+import { UserActionEvent } from "../types";
 
 const itemAdded$: Observable<UserActionEvent> = of({
   "@timestamp": Date.now(),

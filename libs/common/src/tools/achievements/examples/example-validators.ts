@@ -1,6 +1,6 @@
-import { Type } from "./data";
-import { earnedEvent, progressEvent } from "./events";
-import { AchievementId, MetricId, AchievementValidator } from "./types";
+import { earnedEvent, progressEvent } from "../achievement-events";
+import { Type } from "../data";
+import { AchievementId, MetricId, AchievementValidator } from "../types";
 
 const ItemCreatedProgress = "item-quantity" as MetricId;
 

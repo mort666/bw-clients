@@ -1,7 +1,7 @@
-import { UserId } from "../../types/guid";
+import { UserId } from "../../../types/guid";
+import { AchievementProgressEvent } from "../types";
 
 import { ItemCreatedProgress } from "./example-validators";
-import { AchievementProgressEvent } from "./types";
 
 const ItemCreatedProgressEvent: AchievementProgressEvent = {
   "@timestamp": Date.now(),

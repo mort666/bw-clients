@@ -1,5 +1,5 @@
-import { ItemCreatedProgressEvent } from "./example-achievements";
-import { ItemCreatedProgress } from "./example-validators";
+import { ItemCreatedProgressEvent } from "./examples/example-achievements";
+import { ItemCreatedProgress } from "./examples/example-validators";
 import { mapProgressByName } from "./util";
 
 describe("mapProgressByName", () => {
