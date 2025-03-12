@@ -47,11 +47,11 @@ export type AchievementValidator = Achievement & {
   filter: (item: EventFormat) => boolean;
 
   // observe data from the event stream and produces measurements
-  measure: (item: EventFormat, progress: Map<MetricId, number>) => AchievementProgressEvent[];
+  measure?: (item: EventFormat, metrics: Map<MetricId, number>) => AchievementProgressEvent[];
 
   // monitors achievement progress and emits earned achievements
-  earn: (
-    measured: AchievementProgressEvent[],
-    progress: Map<MetricId, number>,
+  award?: (
+    events: AchievementProgressEvent[],
+    metrics: Map<MetricId, number>,
   ) => AchievementEarnedEvent[];
 };

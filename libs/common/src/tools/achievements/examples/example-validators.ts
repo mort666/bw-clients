@@ -20,10 +20,7 @@ const TotallyAttachedValidator = {
   filter(item) {
     return item.tags?.includes("with-attachment") ?? false;
   },
-  measure(item, progress) {
-    return [];
-  },
-  earn(progress) {
+  award(progress) {
     return [earnedEvent(TotallyAttachedAchievement)];
   },
 } satisfies AchievementValidator;
@@ -49,9 +46,6 @@ const ItemCreatedTracker = {
     const value = 1 + (progress.get(ItemCreatedProgress) ?? 0);
     return [progressEvent(ItemCreatedProgress, value)];
   },
-  earn(progress) {
-    return [];
-  },
 } satisfies AchievementValidator;
 
 const ItemCreatedValidator = {
@@ -67,7 +61,7 @@ const ItemCreatedValidator = {
   measure(item, progress) {
     return [progressEvent(ItemCreatedProgress)];
   },
-  earn(progress) {
+  award(progress) {
     return [earnedEvent(ItemCreatedAchievement)];
   },
 } satisfies AchievementValidator;
@@ -86,7 +80,7 @@ const ThreeItemsCreatedValidator = {
     const value = 1 + (progress.get(ItemCreatedProgress) ?? 0);
     return [progressEvent(ItemCreatedProgress, value)];
   },
-  earn(_measured, progress) {
+  award(_measured, progress) {
     const value = progress.get(ItemCreatedProgress) ?? 0;
     return value >= 3 ? [earnedEvent(ItemCreatedAchievement)] : [];
   },
@@ -106,7 +100,7 @@ const FiveItemsCreatedValidator = {
     const value = 1 + (progress.get(ItemCreatedProgress) ?? 0);
     return [progressEvent(ItemCreatedProgress, value)];
   },
-  earn(_measured, progress) {
+  award(_measured, progress) {
     const value = progress.get(ItemCreatedProgress) ?? 0;
     return value >= 5 ? [earnedEvent(ItemCreatedAchievement)] : [];
   },
