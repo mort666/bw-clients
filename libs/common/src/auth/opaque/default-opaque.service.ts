@@ -4,9 +4,9 @@ import { RotateableKeySet } from "@bitwarden/auth/common";
 import { SdkService } from "@bitwarden/common/platform/abstractions/sdk/sdk.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
+import { Argon2KdfConfig } from "@bitwarden/key-management";
 import { Argon2Id, KeGroup, KeyExchange, OprfCS } from "@bitwarden/sdk-internal";
 
-import { KdfConfigService } from "../../../../key-management/src";
 import { UserKey } from "../../types/key";
 
 import { CipherConfiguration } from "./models/cipher-configuration";
@@ -15,27 +15,27 @@ import { RegistrationStartRequest } from "./models/registration-start.request";
 import { OpaqueApiService } from "./opaque-api.service";
 import { OpaqueService } from "./opaque.service";
 
+// static argon2 config for now
+const cipherConfiguration = {
+  oprf: "ristretto255" as OprfCS,
+  ke_group: "ristretto255" as KeGroup,
+  key_exchange: "triple-dh" as KeyExchange,
+  ksf: {
+    t_cost: 3,
+    m_cost: 256 * 1024,
+    p_cost: 4,
+  } as Argon2Id,
+};
+const kdfConfig = new Argon2KdfConfig(3, 256, 4);
+
 export class DefaultOpaqueService implements OpaqueService {
   constructor(
     private opaqueApiService: OpaqueApiService,
-    private kdfConfigService: KdfConfigService,
     private sdkService: SdkService,
   ) {}
 
   async Register(masterPassword: string, userKey: UserKey) {
-    const kdfConfig = await this.kdfConfigService.getKdfConfig(); // note: this doesn't take a UserId but probably should
     const cryptoClient = (await firstValueFrom(this.sdkService.client$)).crypto();
-
-    const cipherConfiguration = {
-      oprf: "ristretto255" as OprfCS,
-      ke_group: "ristretto255" as KeGroup,
-      key_exchange: "triple-dh" as KeyExchange,
-      ksf: {
-        t_cost: 3,
-        m_cost: 64 * 1024,
-        p_cost: 4,
-      } as Argon2Id,
-    };
 
     const registrationStart = cryptoClient.opaque_register_start(
       Utils.fromUtf8ToArray(masterPassword),
@@ -69,8 +69,7 @@ export class DefaultOpaqueService implements OpaqueService {
     );
   }
 
-  async Login(masterPassword: string) {
-    throw new Error("Not implemented");
-    return await Promise.resolve(null as unknown as UserKey);
+  async Login(masterPassword: string): Promise<UserKey> {
+    throw new Error("Method not implemented.");
   }
 }
