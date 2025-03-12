@@ -1,8 +1,8 @@
-import { BehaviorSubject, ReplaySubject, bufferCount, firstValueFrom } from "rxjs";
+import { BehaviorSubject, ReplaySubject, bufferCount, concat, first, firstValueFrom } from "rxjs";
 
 import { validate } from "./event-processor";
 import { ItemCreatedProgressEvent } from "./example-achievements";
-import { itemAdded$ } from "./example-events";
+import { itemAdded$, itemUpdated$ } from "./example-events";
 import {
   ItemCreatedAchievement,
   ItemCreatedProgress,
@@ -54,8 +54,8 @@ describe("event-processor", () => {
     it("tracks achievement progress and earns an achievement", async () => {
       const validators$ = new BehaviorSubject([ItemCreatedValidator]);
       const captured$ = new BehaviorSubject<AchievementEvent[]>([]);
-      const achievements$ = new ReplaySubject<AchievementEvent>(2);
-      const result = firstValueFrom(achievements$.pipe(bufferCount(2)));
+      const achievements$ = new ReplaySubject<AchievementEvent>(3);
+      const result = firstValueFrom(achievements$.pipe(bufferCount(3)));
 
       itemAdded$.pipe(validate(validators$, captured$)).subscribe(achievements$);
 
@@ -66,6 +66,36 @@ describe("event-processor", () => {
         { achievement: { type: "earned", name: ItemCreatedAchievement } },
       ];
       await expect(result).resolves.toMatchObject(expected);
+    });
+
+    it("skips records that fail the validator's filter criteria", async () => {
+      const validators$ = new BehaviorSubject([ItemCreatedTracker]);
+      const captured$ = new BehaviorSubject<AchievementEvent[]>([]);
+      const achievements$ = new ReplaySubject<AchievementEvent>(2);
+      const result = firstValueFrom(achievements$.pipe(bufferCount(2)));
+
+      // `ItemCreatedTracker` filters out update events
+      concat(itemUpdated$, itemAdded$)
+        .pipe(validate(validators$, captured$))
+        .subscribe(achievements$);
+
+      const expected = [{ achievement: { type: "progress", name: ItemCreatedProgress, value: 1 } }];
+      await expect(result).resolves.toMatchObject(expected);
+    });
+
+    it("only emits when its validators return events", async () => {
+      const validators$ = new BehaviorSubject([ItemCreatedTracker]);
+      const captured$ = new BehaviorSubject<AchievementEvent[]>([]);
+      const achievements$ = new BehaviorSubject<AchievementEvent | null | undefined>(undefined);
+
+      // `ItemCreatedTracker` filters `itemUpdated$` emissions. There are no others
+      // to process. When `itemUpdated$` completes, `first()` emits `null`, which
+      // replaces the `undefined` value in `achievements$`.
+      concat(itemUpdated$)
+        .pipe(validate(validators$, captured$), first(null, null))
+        .subscribe(achievements$);
+
+      await expect(achievements$.value).toBeNull();
     });
   });
 });
