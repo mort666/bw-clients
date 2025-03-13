@@ -61,7 +61,7 @@ export class RemovePasswordComponent implements OnInit {
     return this.continuing || this.leaving;
   }
 
-  convert = async () => {
+  async convert() {
     this.continuing = true;
 
     try {
@@ -77,17 +77,11 @@ export class RemovePasswordComponent implements OnInit {
     } catch (e) {
       this.continuing = false;
 
-      if (e instanceof ErrorResponse) {
-        this.toastService.showToast({
-          variant: "error",
-          title: this.i18nService.t("errorOccurred"),
-          message: e.message,
-        });
-      }
+      this.handleActionError(e);
     }
-  };
+  }
 
-  leave = async () => {
+  async leave() {
     const confirmed = await this.dialogService.openSimpleDialog({
       title: this.organization.name,
       content: { key: "leaveOrganizationConfirmation" },
@@ -112,13 +106,20 @@ export class RemovePasswordComponent implements OnInit {
     } catch (e) {
       this.leaving = false;
 
-      if (e instanceof ErrorResponse) {
-        this.toastService.showToast({
-          variant: "error",
-          title: this.i18nService.t("errorOccurred"),
-          message: e.message,
-        });
-      }
+      this.handleActionError(e);
     }
-  };
+  }
+
+  handleActionError(e: unknown) {
+    let message = "";
+    if (e instanceof ErrorResponse || e instanceof Error) {
+      message = e.message;
+    }
+
+    this.toastService.showToast({
+      variant: "error",
+      title: this.i18nService.t("errorOccurred"),
+      message: message,
+    });
+  }
 }

@@ -129,7 +129,25 @@ describe("RemovePasswordComponent", () => {
       expect(mockRouter.navigate).toHaveBeenCalledWith([""]);
     });
 
-    it("should handle response errors and show error toast", async () => {
+    it("should handle errors and show error toast", async () => {
+      const errorMessage = "Can't migrate user error";
+      mockKeyConnectorService.migrateUser.mockRejectedValue(new Error(errorMessage));
+      mockI18nService.t.mockReturnValue("error occurred");
+
+      await component.convert();
+
+      expect(component.continuing).toBe(false);
+      expect(mockKeyConnectorService.migrateUser).toHaveBeenCalledWith(userId);
+      expect(mockToastService.showToast).toHaveBeenCalledWith({
+        variant: "error",
+        title: "error occurred",
+        message: errorMessage,
+      });
+      expect(mockKeyConnectorService.removeConvertAccountRequired).not.toHaveBeenCalled();
+      expect(mockRouter.navigate).not.toHaveBeenCalled();
+    });
+
+    it("should handle error response and show error toast", async () => {
       const errorMessage = "Can't migrate user error";
       mockKeyConnectorService.migrateUser.mockRejectedValue(
         new ErrorResponse(
@@ -178,7 +196,26 @@ describe("RemovePasswordComponent", () => {
       expect(mockRouter.navigate).toHaveBeenCalledWith([""]);
     });
 
-    it("should handle response errors and show error toast", async () => {
+    it("should handle error response and show error toast", async () => {
+      const errorMessage = "Can't leave organization error";
+      mockDialogService.openSimpleDialog.mockResolvedValue(true);
+      mockOrganizationApiService.leave.mockRejectedValue(new Error(errorMessage));
+      mockI18nService.t.mockReturnValue("error occurred");
+
+      await component.leave();
+
+      expect(component.leaving).toBe(false);
+      expect(mockOrganizationApiService.leave).toHaveBeenCalledWith(organization.id);
+      expect(mockToastService.showToast).toHaveBeenCalledWith({
+        variant: "error",
+        title: "error occurred",
+        message: errorMessage,
+      });
+      expect(mockKeyConnectorService.removeConvertAccountRequired).not.toHaveBeenCalled();
+      expect(mockRouter.navigate).not.toHaveBeenCalled();
+    });
+
+    it("should handle error response and show error toast", async () => {
       const errorMessage = "Can't leave organization error";
       mockDialogService.openSimpleDialog.mockResolvedValue(true);
       mockOrganizationApiService.leave.mockRejectedValue(
