@@ -513,7 +513,7 @@ export class CipherService implements CipherServiceAbstraction {
 
   async getAllDecryptedForUrl(
     url: string,
-    userId: UserId,
+    userId?: UserId,
     includeOtherTypes?: CipherType[],
     defaultMatch: UriMatchStrategySetting = null,
   ): Promise<CipherView[]> {
@@ -521,9 +521,11 @@ export class CipherService implements CipherServiceAbstraction {
     return await this.filterCiphersForUrl(ciphers, url, includeOtherTypes, defaultMatch);
   }
 
-  async getAllDecryptedForIds(ids: string[]): Promise<CipherView[]> {
-    const ciphers = await this.getAllDecrypted();
-    return ciphers.filter((cipher) => ids.includes(cipher.id));
+  async getAllDecryptedForIds(userId: UserId, ids: string[]): Promise<CipherView[]> {
+    if (userId) {
+      const ciphers = await this.getAllDecrypted(userId);
+      return ciphers.filter((cipher) => ids.includes(cipher.id));
+    }
   }
 
   async filterCiphersForUrl(
@@ -1749,15 +1751,6 @@ export class CipherService implements CipherServiceAbstraction {
     } else {
       return this.sortedCiphersCache.getNext(cacheKey);
     }
-  }
-
-  async getPasskeyCiphers(): Promise<CipherView[]> {
-    let ciphers = await this.getAllDecrypted();
-    if (!ciphers) {
-      return null;
-    }
-    ciphers = ciphers.filter((cipher) => cipher.login.fido2Credentials?.length);
-    return ciphers;
   }
 
   private async clearEncryptedCiphersState(userId: UserId) {

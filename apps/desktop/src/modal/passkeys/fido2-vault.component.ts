@@ -1,9 +1,10 @@
 import { CommonModule } from "@angular/common";
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, OnDestroy } from "@angular/core";
 import { RouterModule, Router } from "@angular/router";
-import { BehaviorSubject, Observable } from "rxjs";
+import { firstValueFrom, map, BehaviorSubject, Observable } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
@@ -16,9 +17,6 @@ import {
   TableModule,
 } from "@bitwarden/components";
 
-import { BitwardenShield } from "../../../../../libs/auth/src/angular/icons";
-import { BitIconButtonComponent } from "../../../../../libs/components/src/icon-button/icon-button.component";
-import { SectionHeaderComponent } from "../../../../../libs/components/src/section/section-header.component";
 import {
   DesktopFido2UserInterfaceService,
   DesktopFido2UserInterfaceSession,
@@ -30,8 +28,6 @@ import { DesktopSettingsService } from "../../platform/services/desktop-settings
   imports: [
     CommonModule,
     RouterModule,
-    SectionHeaderComponent,
-    BitIconButtonComponent,
     TableModule,
     JslibModule,
     IconModule,
@@ -43,28 +39,33 @@ import { DesktopSettingsService } from "../../platform/services/desktop-settings
   ],
   templateUrl: "fido2-vault.component.html",
 })
-export class Fido2VaultComponent implements OnInit {
+export class Fido2VaultComponent implements OnInit, OnDestroy {
   session?: DesktopFido2UserInterfaceSession = null;
   private ciphersSubject = new BehaviorSubject<CipherView[]>([]);
   ciphers$: Observable<CipherView[]> = this.ciphersSubject.asObservable();
   private cipherIdsSubject = new BehaviorSubject<string[]>([]);
   cipherIds$: Observable<string[]>;
-  readonly Icons = { BitwardenShield };
 
   constructor(
     private readonly desktopSettingsService: DesktopSettingsService,
     private readonly fido2UserInterfaceService: DesktopFido2UserInterfaceService,
     private readonly cipherService: CipherService,
+    private readonly accountService: AccountService,
     private readonly router: Router,
   ) {}
 
   async ngOnInit() {
+    const activeUserId = await firstValueFrom(
+      this.accountService.activeAccount$.pipe(map((a) => a?.id)),
+    );
+
     this.session = this.fido2UserInterfaceService.getCurrentSession();
     this.cipherIds$ = this.session?.availableCipherIds$;
 
+    // eslint-disable-next-line rxjs-angular/prefer-takeuntil
     this.cipherIds$.subscribe((cipherIds) => {
       this.cipherService
-        .getAllDecryptedForIds(cipherIds || [])
+        .getAllDecryptedForIds(activeUserId, cipherIds || [])
         .then((ciphers) => {
           this.ciphersSubject.next(ciphers);
         })

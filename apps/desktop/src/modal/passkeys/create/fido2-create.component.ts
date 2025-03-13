@@ -1,9 +1,10 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { RouterModule, Router } from "@angular/router";
-import { BehaviorSubject, firstValueFrom, Observable } from "rxjs";
+import { BehaviorSubject, firstValueFrom, map, Observable } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
@@ -16,11 +17,8 @@ import {
   SectionComponent,
   TableModule,
 } from "@bitwarden/components";
-// import { SearchComponent } from "@bitwarden/components/src/search/search.component";
 
-import { BitwardenShield } from "../../../../../../libs/auth/src/angular/icons";
-import { BitIconButtonComponent } from "../../../../../../libs/components/src/icon-button/icon-button.component";
-import { SectionHeaderComponent } from "../../../../../../libs/components/src/section/section-header.component";
+// import { SearchComponent } from "@bitwarden/components/src/search/search.component";
 import {
   DesktopFido2UserInterfaceService,
   DesktopFido2UserInterfaceSession,
@@ -33,8 +31,6 @@ import { DesktopSettingsService } from "../../../platform/services/desktop-setti
   imports: [
     CommonModule,
     RouterModule,
-    SectionHeaderComponent,
-    BitIconButtonComponent,
     TableModule,
     JslibModule,
     IconModule,
@@ -51,11 +47,11 @@ export class Fido2CreateComponent implements OnInit {
   session?: DesktopFido2UserInterfaceSession = null;
   private ciphersSubject = new BehaviorSubject<CipherView[]>([]);
   ciphers$: Observable<CipherView[]> = this.ciphersSubject.asObservable();
-  readonly Icons = { BitwardenShield };
 
   constructor(
     private readonly desktopSettingsService: DesktopSettingsService,
     private readonly fido2UserInterfaceService: DesktopFido2UserInterfaceService,
+    private readonly accountService: AccountService,
     private readonly cipherService: CipherService,
     private readonly domainSettingsService: DomainSettingsService,
     private readonly router: Router,
@@ -67,9 +63,12 @@ export class Fido2CreateComponent implements OnInit {
     const equivalentDomains = await firstValueFrom(
       this.domainSettingsService.getUrlEquivalentDomains(rpid),
     );
+    const activeUserId = await firstValueFrom(
+      this.accountService.activeAccount$.pipe(map((a) => a?.id)),
+    );
 
     this.cipherService
-      .getAllDecrypted()
+      .getAllDecrypted(activeUserId)
       .then((ciphers) => {
         const relevantCiphers = ciphers.filter((cipher) => {
           if (!cipher.login || !cipher.login.hasUris) {
@@ -116,7 +115,7 @@ export class Fido2CreateComponent implements OnInit {
       // But if this route is somehow opened outside of session we want to make sure we clean up?
       await this.router.navigate(["/"]);
       await this.desktopSettingsService.setModalMode(false);
-    } catch (error) {
+    } catch {
       // TODO: Handle error appropriately
     }
   }

@@ -49,6 +49,7 @@ import {
   VaultIcons,
 } from "@bitwarden/vault";
 
+import { Fido2PlaceholderComponent } from "../app/components/fido2placeholder.component";
 import { AccessibilityCookieComponent } from "../auth/accessibility-cookie.component";
 import { maxAccountsGuardFn } from "../auth/guards/max-accounts.guard";
 import { RemovePasswordComponent } from "../auth/remove-password.component";
