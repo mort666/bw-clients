@@ -279,6 +279,8 @@ export class VaultPopupAutofillService {
       });
       setTimeout(async () => {
         await BrowserApi.focusTab(tab.id);
+        // eslint-disable-next-line no-console
+        console.log("Closing popout after delay.");
         await closeViewVaultItemPopout(`${VaultPopoutType.viewVaultItem}_${cipher.id}`);
       }, 1000);
 
@@ -290,11 +292,15 @@ export class VaultPopupAutofillService {
     }
 
     if (this.platformUtilService.isFirefox() || this.platformUtilService.isSafari()) {
+      // eslint-disable-next-line no-console
+      console.log(`Closing popup because firefox/safari ${window.location.href}.`);
       BrowserApi.closePopup(window);
       return;
     }
 
     // Slight delay to fix bug in Chromium browsers where popup closes without copying totp to clipboard
+    // eslint-disable-next-line no-console
+    console.log(`Closing poup after slight delay for Chromium ${window.location.href}.`);
     setTimeout(() => BrowserApi.closePopup(window), 50);
   }
 

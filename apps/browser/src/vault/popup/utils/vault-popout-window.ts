@@ -168,6 +168,8 @@ async function openFido2Popout(
  * @param sessionId - The session ID of the popout to close.
  */
 async function closeFido2Popout(sessionId: string): Promise<void> {
+  // eslint-disable-next-line no-console
+  console.log(`Closing Fido2 popout '${sessionId}'`);
   await BrowserPopupUtils.closeSingleActionPopout(`${VaultPopoutType.fido2Popout}_${sessionId}`);
 }
 

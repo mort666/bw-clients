@@ -320,6 +320,8 @@ export class VaultListItemsContainerComponent implements OnInit, AfterViewInit {
     await BrowserApi.createNewTab(cipher.login.launchUri);
 
     if (BrowserPopupUtils.inPopup(window)) {
+      // eslint-disable-next-line no-console
+      console.log("launchCipher", window.location.href);
       BrowserApi.closePopup(window);
     }
   }

@@ -430,6 +430,8 @@ export class BrowserApi {
   }
 
   static closePopup(win: Window) {
+    // eslint-disable-next-line no-console
+    console.log("closePopup", win.location.href);
     if (BrowserApi.isWebExtensionsApi && BrowserApi.isFirefoxOnAndroid) {
       // Reactivating the active tab dismisses the popup tab. The promise final
       // condition is only called if the popup wasn't already dismissed (future proofing).

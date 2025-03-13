@@ -237,6 +237,8 @@ export default class RuntimeBackground {
 
         if (this.lockedVaultPendingNotifications?.length > 0) {
           item = this.lockedVaultPendingNotifications.pop();
+          // eslint-disable-next-line no-console
+          console.log("closing unlock popout after logging in.");
           await closeUnlockPopout();
         }
 

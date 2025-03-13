@@ -173,6 +173,9 @@ class BrowserPopupUtils {
         continue;
       }
 
+      // eslint-disable-next-line no-console
+      console.log(`closeSingleActionPopout`, popoutKey, tab.url, tab.windowId);
+
       setTimeout(() => BrowserApi.removeWindow(tab.windowId), delayClose);
     }
   }
@@ -196,6 +199,8 @@ class BrowserPopupUtils {
     await BrowserPopupUtils.openPopout(`${parsedUrl.pathname}${hashRoute}`);
 
     if (BrowserPopupUtils.inPopup(win)) {
+      // eslint-disable-next-line no-console
+      console.log(`Closing popup since we are in a popup '${win.location.href}' '${href}'`);
       BrowserApi.closePopup(win);
     }
   }
@@ -238,7 +243,15 @@ class BrowserPopupUtils {
       });
     }
 
-    popoutTabs.forEach((tab) => BrowserApi.removeWindow(tab.windowId));
+    popoutTabs.forEach((tab) => {
+      // eslint-disable-next-line no-console
+      console.log(
+        "Closing popout tab while checking if isSingleActionPopoutOpen",
+        tab.url,
+        tab.windowId,
+      );
+      return BrowserApi.removeWindow(tab.windowId);
+    });
 
     return true;
   }
