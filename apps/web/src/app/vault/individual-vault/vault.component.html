@@ -28,6 +28,7 @@
       #vaultFilter
       [activeFilter]="activeFilter"
       [searchText]="currentSearchText$ | async"
+      [userId]="userId$ | async"
       (searchTextChanged)="filterSearchText($event)"
       (onEditFolder)="editFolder($event)"
     ></app-vault-filter>
