@@ -6,6 +6,7 @@ import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-conso
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { KeyConnectorService } from "@bitwarden/common/auth/abstractions/key-connector.service";
+import { ErrorResponse } from "@bitwarden/common/models/response/error.response";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { UserId } from "@bitwarden/common/types/guid";
@@ -76,7 +77,7 @@ export class RemovePasswordComponent implements OnInit {
     } catch (e) {
       this.continuing = false;
 
-      if (e instanceof Error) {
+      if (e instanceof ErrorResponse) {
         this.toastService.showToast({
           variant: "error",
           title: this.i18nService.t("errorOccurred"),
@@ -111,7 +112,7 @@ export class RemovePasswordComponent implements OnInit {
     } catch (e) {
       this.leaving = false;
 
-      if (e instanceof Error) {
+      if (e instanceof ErrorResponse) {
         this.toastService.showToast({
           variant: "error",
           title: this.i18nService.t("errorOccurred"),

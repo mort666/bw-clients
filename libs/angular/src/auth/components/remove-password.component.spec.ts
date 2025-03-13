@@ -4,6 +4,7 @@ import { mock } from "jest-mock-extended";
 import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { KeyConnectorService } from "@bitwarden/common/auth/abstractions/key-connector.service";
+import { ErrorResponse } from "@bitwarden/common/models/response/error.response";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { SyncService } from "@bitwarden/common/platform/sync";
@@ -128,9 +129,16 @@ describe("RemovePasswordComponent", () => {
       expect(mockRouter.navigate).toHaveBeenCalledWith([""]);
     });
 
-    it("should handle errors and show error toast", async () => {
+    it("should handle response errors and show error toast", async () => {
       const errorMessage = "Can't migrate user error";
-      mockKeyConnectorService.migrateUser.mockRejectedValue(new Error(errorMessage));
+      mockKeyConnectorService.migrateUser.mockRejectedValue(
+        new ErrorResponse(
+          {
+            message: errorMessage,
+          },
+          404,
+        ),
+      );
       mockI18nService.t.mockReturnValue("error occurred");
 
       await component.convert();
@@ -170,10 +178,17 @@ describe("RemovePasswordComponent", () => {
       expect(mockRouter.navigate).toHaveBeenCalledWith([""]);
     });
 
-    it("should handle errors and show error toast", async () => {
+    it("should handle response errors and show error toast", async () => {
       const errorMessage = "Can't leave organization error";
       mockDialogService.openSimpleDialog.mockResolvedValue(true);
-      mockOrganizationApiService.leave.mockRejectedValue(new Error(errorMessage));
+      mockOrganizationApiService.leave.mockRejectedValue(
+        new ErrorResponse(
+          {
+            message: errorMessage,
+          },
+          404,
+        ),
+      );
       mockI18nService.t.mockReturnValue("error occurred");
 
       await component.leave();
