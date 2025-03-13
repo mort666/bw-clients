@@ -3,12 +3,12 @@ import { OpaqueSessionId } from "../../../types/guid";
 
 export class RegistrationStartResponse extends BaseResponse {
   sessionId: OpaqueSessionId;
-  serverRegistrationStartResult: string;
+  registrationResponse: string;
 
   constructor(response: any) {
     super(response);
 
     this.sessionId = this.getResponseProperty("SessionId");
-    this.serverRegistrationStartResult = this.getResponseProperty("ServerRegistrationStartResult");
+    this.registrationResponse = this.getResponseProperty("RegistrationResponse");
   }
 }

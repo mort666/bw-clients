@@ -4,29 +4,14 @@ import { RotateableKeySet } from "@bitwarden/auth/common";
 import { SdkService } from "@bitwarden/common/platform/abstractions/sdk/sdk.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
-import { Argon2KdfConfig } from "@bitwarden/key-management";
-import { Argon2Id, KeGroup, KeyExchange, OprfCS } from "@bitwarden/sdk-internal";
 
 import { UserKey } from "../../types/key";
 
-import { CipherConfiguration } from "./models/cipher-configuration";
+import { CipherConfiguration, KsfConfig } from "./models/cipher-configuration";
 import { RegistrationFinishRequest } from "./models/registration-finish.request";
 import { RegistrationStartRequest } from "./models/registration-start.request";
 import { OpaqueApiService } from "./opaque-api.service";
 import { OpaqueService } from "./opaque.service";
-
-// static argon2 config for now
-const cipherConfiguration = {
-  oprf: "ristretto255" as OprfCS,
-  ke_group: "ristretto255" as KeGroup,
-  key_exchange: "triple-dh" as KeyExchange,
-  ksf: {
-    t_cost: 3,
-    m_cost: 256 * 1024,
-    p_cost: 4,
-  } as Argon2Id,
-};
-const kdfConfig = new Argon2KdfConfig(3, 256, 4);
 
 export class DefaultOpaqueService implements OpaqueService {
   constructor(
@@ -34,42 +19,48 @@ export class DefaultOpaqueService implements OpaqueService {
     private sdkService: SdkService,
   ) {}
 
-  async Register(masterPassword: string, userKey: UserKey) {
+  async register(masterPassword: string, userKey: UserKey, ksfConfig: KsfConfig): Promise<void> {
+    const config = new CipherConfiguration(ksfConfig);
     const cryptoClient = (await firstValueFrom(this.sdkService.client$)).crypto();
 
     const registrationStart = cryptoClient.opaque_register_start(
-      Utils.fromUtf8ToArray(masterPassword),
+      masterPassword,
+      config.toSdkConfig(),
     );
-    const registrationStartResponse = await this.opaqueApiService.RegistrationStart(
+    const registrationStartResponse = await this.opaqueApiService.registrationStart(
       new RegistrationStartRequest(
-        Utils.fromBufferToB64(new Uint8Array(registrationStart.registration_start_message)),
-        new CipherConfiguration(kdfConfig),
+        Utils.fromBufferToB64(registrationStart.registration_request),
+        config,
       ),
     );
 
     const registrationFinish = cryptoClient.opaque_register_finish(
-      new Uint8Array(registrationStart.registration_start_state),
-      Utils.fromB64ToArray(registrationStartResponse.serverRegistrationStartResult),
-      Utils.fromUtf8ToArray(masterPassword),
-      cipherConfiguration,
+      masterPassword,
+      config.toSdkConfig(),
+      registrationStart.state,
+      Utils.fromB64ToArray(registrationStartResponse.registrationResponse),
+    );
+
+    const sdkKeyset = cryptoClient.create_rotateablekeyset_from_exportkey(
+      registrationFinish.export_key,
       userKey.key,
     );
     const keyset = new RotateableKeySet(
-      new EncString(registrationFinish.keyset.encapsulated_key),
-      new EncString(registrationFinish.keyset.public_key),
-      new EncString(registrationFinish.keyset.private_key),
+      new EncString(sdkKeyset.encapsulated_key),
+      new EncString(sdkKeyset.public_key),
+      new EncString(sdkKeyset.private_key),
     );
 
-    await this.opaqueApiService.RegistrationFinish(
-      registrationStartResponse.sessionId,
+    await this.opaqueApiService.registrationFinish(
       new RegistrationFinishRequest(
-        Utils.fromBufferToB64(new Uint8Array(registrationFinish.registration_finish_message)),
+        registrationStartResponse.sessionId,
+        Utils.fromBufferToB64(registrationFinish.registration_upload),
         keyset,
       ),
     );
   }
 
-  async Login(masterPassword: string): Promise<UserKey> {
+  async login(masterPassword: string, ksfConfig: KsfConfig): Promise<Uint8Array> {
     throw new Error("Method not implemented.");
   }
 }

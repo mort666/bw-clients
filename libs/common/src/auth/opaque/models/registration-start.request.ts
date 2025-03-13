@@ -2,7 +2,7 @@ import { CipherConfiguration } from "./cipher-configuration";
 
 export class RegistrationStartRequest {
   constructor(
-    readonly clientRegistrationStartResult: string,
+    readonly registrationRequest: string,
     readonly cipherConfiguration: CipherConfiguration,
   ) {}
 }

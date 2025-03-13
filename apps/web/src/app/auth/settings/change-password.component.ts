@@ -226,7 +226,10 @@ export class ChangePasswordComponent
         this.formPromise = this.apiService.postPassword(request);
       }
 
-      await this.opaqueService.Register(this.masterPassword, newUserKey[0]);
+      await this.opaqueService.register(this.masterPassword, newUserKey[0], {
+        algorithm: "argon2id",
+        parameters: { memory: 256 * 1024, iterations: 3, parallelism: 4 },
+      });
       await this.formPromise;
 
       this.toastService.showToast({
