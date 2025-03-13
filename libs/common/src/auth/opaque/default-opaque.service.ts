@@ -37,8 +37,8 @@ export class DefaultOpaqueService implements OpaqueService {
     const registrationFinish = cryptoClient.opaque_register_finish(
       masterPassword,
       config.toSdkConfig(),
-      registrationStart.state,
       Utils.fromB64ToArray(registrationStartResponse.registrationResponse),
+      registrationStart.state,
     );
 
     const sdkKeyset = cryptoClient.create_rotateablekeyset_from_exportkey(
