@@ -1,6 +1,6 @@
-import { Organization } from "../../admin-console/models/domain/organization";
-import { UserId } from "../../types/guid";
-import { IdentityTokenResponse } from "../models/response/identity-token.response";
+import { Organization } from "../../../admin-console/models/domain/organization";
+import { IdentityTokenResponse } from "../../../auth/models/response/identity-token.response";
+import { UserId } from "../../../types/guid";
 
 export abstract class KeyConnectorService {
   abstract setMasterKeyFromUrl(url: string, userId: UserId): Promise<void>;
