@@ -7,7 +7,6 @@ import {
   filter,
   take,
   BehaviorSubject,
-  Observable,
   timeout,
 } from "rxjs";
 
@@ -32,7 +31,7 @@ import { LoginUriView } from "@bitwarden/common/vault/models/view/login-uri.view
 import { LoginView } from "@bitwarden/common/vault/models/view/login.view";
 import { SecureNoteView } from "@bitwarden/common/vault/models/view/secure-note.view";
 
-import { DesktopSettingsService } from "src/platform/services/desktop-settings.service";
+import { DesktopSettingsService } from "../../platform/services/desktop-settings.service";
 
 /**
  * This type is used to pass the window position from the native UI
@@ -41,7 +40,7 @@ export type NativeWindowObject = {
   /**
    * The position of the window, first entry is the x position, second is the y position
    */
-  windowXy?: [number, number];
+  windowXy?: { x: number; y: number };
 };
 
 export class DesktopFido2UserInterfaceService
@@ -104,14 +103,12 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
   /**
    * Observable that emits available cipher IDs once they're confirmed by the UI
    */
-  get availableCipherIds$(): Observable<string[]> {
-    return this.availableCipherIdsSubject.pipe(
-      filter((ids) => ids != null),
-      take(1),
-    );
-  }
+  availableCipherIds$ = this.availableCipherIdsSubject.pipe(
+    filter((ids) => ids != null),
+    take(1),
+  );
 
-  private chosenCipherSubject = new Subject<string>();
+  private chosenCipherSubject = new Subject<{ cipherId: string; userVerified: boolean }>();
 
   // Method implementation
   async pickCredential({
@@ -129,8 +126,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
 
     try {
       // Check if we can return the credential without user interaction
-      // TODO: Assume user presence is undefined
-      if (cipherIds.length === 1 && !masterPasswordRepromptRequired) {
+      if (assumeUserPresence && cipherIds.length === 1 && !masterPasswordRepromptRequired) {
         this.logService.debug(
           "shortcut - Assuming user presence and returning cipherId",
           cipherIds[0],
@@ -141,22 +137,18 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
       this.logService.debug("Could not shortcut, showing UI");
 
       // make the cipherIds available to the UI.
-      // Not sure if the UI also need to know about masterPasswordRepromptRequired -- probably not, otherwise we can send all of the params.
       this.availableCipherIdsSubject.next(cipherIds);
 
       await this.showUi("/passkeys", this.windowObject.windowXy);
 
-      const chosenCipherId = await this.waitForUiChosenCipher();
+      const chosenCipherResponse = await this.waitForUiChosenCipher();
 
-      this.logService.debug("Received chosen cipher", chosenCipherId);
-      if (!chosenCipherId) {
-        throw new Error("User cancelled");
-      }
+      this.logService.debug("Received chosen cipher", chosenCipherResponse);
 
-      const resultCipherId = cipherIds.find((id) => id === chosenCipherId);
-
-      // TODO: perform userverification
-      return { cipherId: resultCipherId, userVerified: true };
+      return {
+        cipherId: chosenCipherResponse.cipherId,
+        userVerified: chosenCipherResponse.userVerified,
+      };
     } finally {
       // Make sure to clean up so the app is never stuck in modal mode?
       await this.desktopSettingsService.setModalMode(false);
@@ -164,7 +156,6 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
   }
 
   async getRpId(): Promise<string> {
-    console.log("getRpId");
     return lastValueFrom(
       this.rpId.pipe(
         filter((id) => id != null),
@@ -174,13 +165,23 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     );
   }
 
-  confirmChosenCipher(cipherId: string): void {
-    this.chosenCipherSubject.next(cipherId);
+  confirmChosenCipher(cipherId: string, userVerified: boolean = false): void {
+    this.chosenCipherSubject.next({ cipherId, userVerified });
     this.chosenCipherSubject.complete();
   }
 
-  private async waitForUiChosenCipher(): Promise<string> {
-    return lastValueFrom(this.chosenCipherSubject);
+  private async waitForUiChosenCipher(
+    timeoutMs: number = 60000,
+  ): Promise<{ cipherId: string; userVerified: boolean } | undefined> {
+    try {
+      return await lastValueFrom(this.chosenCipherSubject.pipe(timeout(timeoutMs)));
+    } catch {
+      // If we hit a timeout, return undefined instead of throwing
+      this.logService.warning("Timeout: User did not select a cipher within the allowed time", {
+        timeoutMs,
+      });
+      return { cipherId: undefined, userVerified: false };
+    }
   }
 
   /**
@@ -229,7 +230,6 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
       const confirmation = await this.waitForUiNewCredentialConfirmation();
       if (!confirmation) {
         throw new Error("User cancelled");
-        //if existing credential is selected, update credential
       }
 
       if (this.updatedCipher) {
@@ -252,9 +252,8 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     }
   }
 
-  private async showUi(route: string, position?: [number, number]): Promise<void> {
+  private async showUi(route: string, position?: { x: number; y: number }): Promise<void> {
     // Load the UI:
-    // maybe toggling to modal mode shouldn't be done here?
     await this.desktopSettingsService.setModalMode(true, position);
     await this.router.navigate([route]);
   }

@@ -14,5 +14,5 @@ export class WindowState {
 
 export class ModalModeState {
   isModalModeActive: boolean;
-  modalPosition?: [number, number]; // Modal position is often passed from the native UI
+  modalPosition?: { x: number; y: number }; // Modal position is often passed from the native UI
 }

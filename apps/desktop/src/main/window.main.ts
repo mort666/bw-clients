@@ -9,6 +9,7 @@ import { concatMap, firstValueFrom, pairwise } from "rxjs";
 
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { AbstractStorageService } from "@bitwarden/common/platform/abstractions/storage.service";
+import { ThemeTypes, Theme } from "@bitwarden/common/platform/enums";
 import { processisolations } from "@bitwarden/desktop-napi";
 import { BiometricStateService } from "@bitwarden/key-management";
 
@@ -96,6 +97,13 @@ export class WindowMain {
       )
       .subscribe();
 
+    this.desktopSettingsService.preventScreenshots$.subscribe((prevent) => {
+      if (this.win == null) {
+        return;
+      }
+      this.win.setContentProtection(prevent);
+    });
+
     return new Promise<void>((resolve, reject) => {
       try {
         if (!isMacAppStore()) {
@@ -104,7 +112,6 @@ export class WindowMain {
             app.quit();
             return;
           } else {
-            // eslint-disable-next-line
             app.on("second-instance", (event, argv, workingDirectory) => {
               // Someone tried to run a second instance, we should focus our window.
               if (this.win != null) {
@@ -204,7 +211,7 @@ export class WindowMain {
   }
 
   // TODO: REMOVE ONCE WE CAN STOP USING FAKE POP UP BTN FROM TRAY
-  // Only used during initial UI development
+  // Only used for development
   async loadUrl(targetPath: string, modal: boolean = false) {
     if (this.win == null || this.win.isDestroyed()) {
       await this.createWindow("modal-app");
@@ -365,17 +372,29 @@ export class WindowMain {
       });
     });
 
+    firstValueFrom(this.desktopSettingsService.preventScreenshots$)
+      .then((preventScreenshots) => {
+        this.win.setContentProtection(preventScreenshots);
+      })
+      .catch((e) => {
+        this.logService.error(e);
+      });
+
     if (this.createWindowCallback) {
       this.createWindowCallback(this.win);
     }
   }
 
   // Retrieve the background color
-  // Resolves background color missmatch when starting the application.
+  // Resolves background color mismatch when starting the application.
   async getBackgroundColor(): Promise<string> {
     let theme = await this.storageService.get("global_theming_selection");
 
-    if (theme == null || theme === "system") {
+    if (
+      theme == null ||
+      !Object.values(ThemeTypes).includes(theme as Theme) ||
+      theme === "system"
+    ) {
       theme = nativeTheme.shouldUseDarkColors ? "dark" : "light";
     }
 
@@ -384,8 +403,6 @@ export class WindowMain {
         return "#ededed";
       case "dark":
         return "#15181e";
-      case "nord":
-        return "#3b4252";
     }
   }
 

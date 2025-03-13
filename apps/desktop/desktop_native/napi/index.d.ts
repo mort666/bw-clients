@@ -51,30 +51,19 @@ export declare namespace sshagent {
     publicKey: string
     keyFingerprint: string
   }
-  export const enum SshKeyImportStatus {
-    /** ssh key was parsed correctly and will be returned in the result */
-    Success = 0,
-    /** ssh key was parsed correctly but is encrypted and requires a password */
-    PasswordRequired = 1,
-    /** ssh key was parsed correctly, and a password was provided when calling the import, but it was incorrect */
-    WrongPassword = 2,
-    /** ssh key could not be parsed, either due to an incorrect / unsupported format (pkcs#8) or key type (ecdsa), or because the input is not an ssh key */
-    ParsingError = 3,
-    /** ssh key type is not supported (e.g. ecdsa) */
-    UnsupportedKeyType = 4
+  export interface SshUiRequest {
+    cipherId?: string
+    isList: boolean
+    processName: string
+    isForwarding: boolean
+    namespace?: string
   }
-  export interface SshKeyImportResult {
-    status: SshKeyImportStatus
-    sshKey?: SshKey
-  }
-  export function serve(callback: (err: Error | null, arg0: string | undefined | null, arg1: boolean, arg2: string) => any): Promise<SshAgentState>
+  export function serve(callback: (err: Error | null, arg: SshUiRequest) => any): Promise<SshAgentState>
   export function stop(agentState: SshAgentState): void
   export function isRunning(agentState: SshAgentState): boolean
   export function setKeys(agentState: SshAgentState, newKeys: Array<PrivateKey>): void
   export function lock(agentState: SshAgentState): void
-  export function importKey(encodedKey: string, password: string): SshKeyImportResult
   export function clearKeys(agentState: SshAgentState): void
-  export function generateKeypair(keyAlgorithm: string): Promise<SshKey>
   export class SshAgentState {   }
 }
 export declare namespace processisolations {
@@ -129,6 +118,10 @@ export declare namespace autofill {
     Required = 'required',
     Discouraged = 'discouraged'
   }
+  export interface Position {
+    x: number
+    y: number
+  }
   export interface PasskeyRegistrationRequest {
     rpId: string
     userName: string
@@ -136,7 +129,7 @@ export declare namespace autofill {
     clientDataHash: Array<number>
     userVerification: UserVerification
     supportedAlgorithms: Array<number>
-    windowXy: Array<number>
+    windowXy: Position
   }
   export interface PasskeyRegistrationResponse {
     rpId: string
@@ -149,7 +142,7 @@ export declare namespace autofill {
     clientDataHash: Array<number>
     userVerification: UserVerification
     allowedCredentials: Array<Array<number>>
-    windowXy: Array<number>
+    windowXy: Position
   }
   export interface PasskeyAssertionWithoutUserInterfaceRequest {
     rpId: string
@@ -159,7 +152,7 @@ export declare namespace autofill {
     recordIdentifier?: string
     clientDataHash: Array<number>
     userVerification: UserVerification
-    windowXy: Array<number>
+    windowXy: Position
   }
   export interface PasskeyAssertionResponse {
     rpId: string

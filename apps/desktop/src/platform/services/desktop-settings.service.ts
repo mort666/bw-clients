@@ -79,6 +79,14 @@ const MODAL_MODE = new KeyDefinition<ModalModeState>(DESKTOP_SETTINGS_DISK, "mod
   deserializer: (b) => b,
 });
 
+const PREVENT_SCREENSHOTS = new KeyDefinition<boolean>(
+  DESKTOP_SETTINGS_DISK,
+  "preventScreenshots",
+  {
+    deserializer: (b) => b,
+  },
+);
+
 /**
  * Various settings for controlling application behavior specific to the desktop client.
  */
@@ -150,6 +158,13 @@ export class DesktopSettingsService {
   private readonly sshAgentEnabledState = this.stateProvider.getGlobal(SSH_AGENT_ENABLED);
 
   sshAgentEnabled$ = this.sshAgentEnabledState.state$.pipe(map(Boolean));
+
+  private readonly preventScreenshotState = this.stateProvider.getGlobal(PREVENT_SCREENSHOTS);
+
+  /**
+   * The application setting for whether or not to allow screenshots of the app.
+   */
+  preventScreenshots$ = this.preventScreenshotState.state$.pipe(map(Boolean));
 
   private readonly minimizeOnCopyState = this.stateProvider.getActive(MINIMIZE_ON_COPY);
 
@@ -291,10 +306,18 @@ export class DesktopSettingsService {
    * Sets the modal mode of the application. Setting this changes the windows-size and other properties.
    * @param value `true` if the application is in modal mode, `false` if it is not.
    */
-  async setModalMode(value: boolean, modalPosition?: [number, number]) {
+  async setModalMode(value: boolean, modalPosition?: { x: number; y: number }) {
     await this.modalModeState.update(() => ({
       isModalModeActive: value,
-      modalPosition: modalPosition,
+      modalPosition,
     }));
+  }
+
+  /**
+   * Sets the setting for whether or not the screenshot protection is enabled.
+   * @param value `true` if the screenshot protection is enabled, `false` if it is not.
+   */
+  async setPreventScreenshots(value: boolean) {
+    await this.preventScreenshotState.update(() => value);
   }
 }

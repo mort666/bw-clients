@@ -1,4 +1,4 @@
-import { CommonModule } from "@angular/common"; // Add this
+import { CommonModule } from "@angular/common";
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 import { BehaviorSubject, Observable } from "rxjs";
@@ -11,8 +11,7 @@ import { DesktopSettingsService } from "../../platform/services/desktop-settings
 
 @Component({
   standalone: true,
-  imports: [CommonModule], // Add this
-
+  imports: [CommonModule],
   template: `
     <div
       style="background:white; display:flex; justify-content: center; align-items: center; flex-direction: column"
@@ -70,7 +69,8 @@ export class Fido2PlaceholderComponent implements OnInit, OnDestroy {
   }
 
   async chooseCipher(cipherId: string) {
-    this.session?.confirmChosenCipher(cipherId);
+    // For now: Set UV to true
+    this.session?.confirmChosenCipher(cipherId, true);
 
     await this.router.navigate(["/"]);
     await this.desktopSettingsService.setModalMode(false);
@@ -104,7 +104,7 @@ export class Fido2PlaceholderComponent implements OnInit, OnDestroy {
       // But if this route is somehow opened outside of session we want to make sure we clean up?
       await this.router.navigate(["/"]);
       await this.desktopSettingsService.setModalMode(false);
-    } catch (error) {
+    } catch {
       // TODO: Handle error appropriately
     }
   }

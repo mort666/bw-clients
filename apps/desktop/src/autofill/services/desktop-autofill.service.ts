@@ -3,14 +3,17 @@ import { autofill } from "desktop_native/napi";
 import {
   Subject,
   distinctUntilChanged,
+  filter,
   firstValueFrom,
   map,
   mergeMap,
   switchMap,
   takeUntil,
+  EMPTY,
 } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { getOptionalUserId } from "@bitwarden/common/auth/services/account.service";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { UriMatchStrategy } from "@bitwarden/common/models/domain/domain-service";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
@@ -23,9 +26,10 @@ import {
 } from "@bitwarden/common/platform/abstractions/fido2/fido2-authenticator.service.abstraction";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { parseCredentialId } from "@bitwarden/common/platform/services/fido2/credential-id-utils";
 import { getCredentialsForAutofill } from "@bitwarden/common/platform/services/fido2/fido2-autofill-utils";
 import { Fido2Utils } from "@bitwarden/common/platform/services/fido2/fido2-utils";
-import { guidToRawFormat } from "@bitwarden/common/platform/services/fido2/guid-utils";
+import { UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
@@ -57,11 +61,15 @@ export class DesktopAutofillService implements OnDestroy {
       .pipe(
         distinctUntilChanged(),
         switchMap((enabled) => {
-          /*if (!enabled) {
+          if (!enabled) {
             return EMPTY;
-          }*/
+          }
 
-          return this.cipherService.cipherViews$;
+          return this.accountService.activeAccount$.pipe(
+            map((account) => account?.id),
+            filter((userId): userId is UserId => userId != null),
+            switchMap((userId) => this.cipherService.cipherViews$(userId)),
+          );
         }),
         // TODO: This will unset all the autofill credentials on the OS
         // when the account locks. We should instead explicilty clear the credentials
@@ -151,7 +159,7 @@ export class DesktopAutofillService implements OnDestroy {
       void this.fido2AuthenticatorService
         .makeCredential(
           this.convertRegistrationRequest(request),
-          { windowXy: request.windowXy as [number, number] }, // TODO: Not sure if we want to change the type of windowXy to just number[] or if rust can generate [number,number]?
+          { windowXy: request.windowXy },
           controller,
         )
         .then((response) => {
@@ -172,19 +180,24 @@ export class DesktopAutofillService implements OnDestroy {
           request,
         );
 
-        // TODO: For some reason the credentialId is passed as an empty array in the request, so we need to
+        // For some reason the credentialId is passed as an empty array in the request, so we need to
         // get it from the cipher. For that we use the recordIdentifier, which is the cipherId.
         if (request.recordIdentifier && request.credentialId.length === 0) {
-          const cipher = await this.cipherService.get(request.recordIdentifier);
+          const activeUserId = await firstValueFrom(
+            this.accountService.activeAccount$.pipe(getOptionalUserId),
+          );
+          if (!activeUserId) {
+            this.logService.error("listenPasskeyAssertion error", "Active user not found");
+            callback(new Error("Active user not found"), null);
+            return;
+          }
+
+          const cipher = await this.cipherService.get(request.recordIdentifier, activeUserId);
           if (!cipher) {
             this.logService.error("listenPasskeyAssertion error", "Cipher not found");
             callback(new Error("Cipher not found"), null);
             return;
           }
-
-          const activeUserId = await firstValueFrom(
-            this.accountService.activeAccount$.pipe(map((a) => a?.id)),
-          );
 
           const decrypted = await cipher.decrypt(
             await this.cipherService.getKeyForCipherKeyDecryption(cipher, activeUserId),
@@ -198,15 +211,15 @@ export class DesktopAutofillService implements OnDestroy {
           }
 
           request.credentialId = Array.from(
-            guidToRawFormat(decrypted.login.fido2Credentials?.[0].credentialId),
+            parseCredentialId(decrypted.login.fido2Credentials?.[0].credentialId),
           );
         }
 
         const controller = new AbortController();
         void this.fido2AuthenticatorService
           .getAssertion(
-            this.convertAssertionRequest(request, true),
-            { windowXy: request.windowXy as [number, number] },
+            this.convertAssertionRequest(request),
+            { windowXy: request.windowXy },
             controller,
           )
           .then((response) => {
@@ -226,7 +239,7 @@ export class DesktopAutofillService implements OnDestroy {
       void this.fido2AuthenticatorService
         .getAssertion(
           this.convertAssertionRequest(request),
-          { windowXy: request.windowXy as [number, number] },
+          { windowXy: request.windowXy },
           controller,
         )
         .then((response) => {
@@ -290,7 +303,6 @@ export class DesktopAutofillService implements OnDestroy {
     request:
       | autofill.PasskeyAssertionRequest
       | autofill.PasskeyAssertionWithoutUserInterfaceRequest,
-    assumeUserPresence: boolean = false,
   ): Fido2AuthenticatorGetAssertionParams {
     let allowedCredentials;
     if ("credentialId" in request) {
@@ -315,7 +327,7 @@ export class DesktopAutofillService implements OnDestroy {
       requireUserVerification:
         request.userVerification === "required" || request.userVerification === "preferred",
       fallbackSupported: false,
-      assumeUserPresence: assumeUserPresence,
+      assumeUserPresence: true, // For desktop assertions, it's safe to assume UP has been checked by OS dialogues
     };
   }
 
