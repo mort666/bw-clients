@@ -4,6 +4,7 @@ import { RouterModule, Router } from "@angular/router";
 import { BehaviorSubject, firstValueFrom, map, Observable } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { BitwardenShield } from "@bitwarden/auth/angular";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
@@ -16,9 +17,10 @@ import {
   ItemModule,
   SectionComponent,
   TableModule,
-} from "@bitwarden/components";
-
+ SectionHeaderComponent } from "@bitwarden/components";
 // import { SearchComponent } from "@bitwarden/components/src/search/search.component";
+import { BitIconButtonComponent } from "@bitwarden/components";
+
 import {
   DesktopFido2UserInterfaceService,
   DesktopFido2UserInterfaceSession,
@@ -31,6 +33,8 @@ import { DesktopSettingsService } from "../../../platform/services/desktop-setti
   imports: [
     CommonModule,
     RouterModule,
+    SectionHeaderComponent,
+    BitIconButtonComponent,
     TableModule,
     JslibModule,
     IconModule,
@@ -47,6 +51,7 @@ export class Fido2CreateComponent implements OnInit {
   session?: DesktopFido2UserInterfaceSession = null;
   private ciphersSubject = new BehaviorSubject<CipherView[]>([]);
   ciphers$: Observable<CipherView[]> = this.ciphersSubject.asObservable();
+  readonly Icons = { BitwardenShield };
 
   constructor(
     private readonly desktopSettingsService: DesktopSettingsService,

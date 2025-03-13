@@ -4,6 +4,7 @@ import { RouterModule, Router } from "@angular/router";
 import { firstValueFrom, map, BehaviorSubject, Observable } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { BitwardenShield } from "@bitwarden/auth/angular";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
@@ -15,7 +16,8 @@ import {
   ItemModule,
   SectionComponent,
   TableModule,
-} from "@bitwarden/components";
+ BitIconButtonComponent, SectionHeaderComponent } from "@bitwarden/components";
+
 
 import {
   DesktopFido2UserInterfaceService,
@@ -28,6 +30,8 @@ import { DesktopSettingsService } from "../../platform/services/desktop-settings
   imports: [
     CommonModule,
     RouterModule,
+    SectionHeaderComponent,
+    BitIconButtonComponent,
     TableModule,
     JslibModule,
     IconModule,
@@ -45,6 +49,7 @@ export class Fido2VaultComponent implements OnInit, OnDestroy {
   ciphers$: Observable<CipherView[]> = this.ciphersSubject.asObservable();
   private cipherIdsSubject = new BehaviorSubject<string[]>([]);
   cipherIds$: Observable<string[]>;
+  readonly Icons = { BitwardenShield };
 
   constructor(
     private readonly desktopSettingsService: DesktopSettingsService,
