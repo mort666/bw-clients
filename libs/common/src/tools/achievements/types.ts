@@ -28,6 +28,9 @@ export type Achievement = {
   // human-readable name of the achievement
   name: string;
 
+  // human-readable description of the achievement
+  description?: string;
+
   // the metric observed by low/high triggers
   metric?: MetricId;
 

@@ -1,4 +1,4 @@
-import { ItemCreatedProgressEvent } from "./examples/example-achievements";
+import { ItemCreatedProgressEvent } from "./examples/achievement-events";
 import { ItemCreatedProgress } from "./examples/example-validators";
 import { mapProgressByName } from "./util";
 

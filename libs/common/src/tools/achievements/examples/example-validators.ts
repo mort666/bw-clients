@@ -13,6 +13,7 @@ const FiveItemsCreatedAchievement = "five-vault-items-created" as AchievementId;
 const TotallyAttachedValidator = {
   achievement: TotallyAttachedAchievement,
   name: "Totally attached <3",
+  description: "Attached a file to a send or item",
   metric: ItemCreatedProgress,
   validator: Type.HasTag,
   trigger: "once",
@@ -35,6 +36,7 @@ const TotallyAttachedValidator = {
 const ItemCreatedTracker = {
   achievement: ItemCreatedMetric,
   name: `[TRACKER] ${ItemCreatedProgress}`,
+  description: `Measures ${ItemCreatedProgress}`,
   metric: ItemCreatedProgress,
   validator: Type.Threshold,
   trigger: { high: 1 },
@@ -52,6 +54,7 @@ const ItemCreatedValidator = {
   achievement: ItemCreatedAchievement,
   name: "What an item!",
   metric: ItemCreatedProgress,
+  description: "Add an item to your vault",
   validator: Type.Threshold,
   trigger: { high: 1 },
   hidden: false,
@@ -69,6 +72,7 @@ const ItemCreatedValidator = {
 const ThreeItemsCreatedValidator = {
   achievement: ThreeItemsCreatedAchievement,
   name: "Three times a charm",
+  description: "Add three items to your vault",
   metric: ItemCreatedProgress,
   validator: Type.Threshold,
   trigger: { low: 2, high: 3 },
@@ -89,6 +93,7 @@ const ThreeItemsCreatedValidator = {
 const FiveItemsCreatedValidator = {
   achievement: FiveItemsCreatedAchievement,
   name: "fiiivvve GoOoOoOolllllllD RIIIIIINGS!!!!!!",
+  description: "Add five items to your vault",
   metric: ItemCreatedProgress,
   validator: Type.Threshold,
   trigger: { low: 4, high: 5 },
