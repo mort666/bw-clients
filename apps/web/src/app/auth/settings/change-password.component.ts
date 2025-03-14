@@ -215,7 +215,6 @@ export class ChangePasswordComponent
 
     try {
       if (this.rotateUserKey) {
-        throw new Error("Userkey rotation not supported");
         this.formPromise = this.apiService.postPassword(request).then(async () => {
           // we need to save this for local masterkey verification during rotation
           await this.masterPasswordService.setMasterKeyHash(newLocalKeyHash, userId as UserId);
@@ -223,18 +222,21 @@ export class ChangePasswordComponent
           return this.updateKey();
         });
       } else {
+        const sessionId = await this.opaqueService.register(this.masterPassword, newUserKey[0], {
+          memory: 256 * 1024,
+          iterations: 3,
+          parallelism: 4,
+        });
+        request.opaqueSessionId = sessionId;
         this.formPromise = this.apiService.postPassword(request);
       }
 
-      await this.opaqueService.register(this.masterPassword, newUserKey[0], {
-        algorithm: "argon2id",
-        parameters: { memory: 256 * 1024, iterations: 3, parallelism: 4 },
-      });
-      await this.opaqueService.login(this.email, this.masterPassword, {
-        algorithm: "argon2id",
-        parameters: { memory: 256 * 1024, iterations: 3, parallelism: 4 },
-      });
       await this.formPromise;
+      await this.opaqueService.login(this.email, this.masterPassword, {
+        memory: 256 * 1024,
+        iterations: 3,
+        parallelism: 4,
+      });
 
       this.toastService.showToast({
         variant: "success",

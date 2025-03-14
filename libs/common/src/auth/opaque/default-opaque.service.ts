@@ -4,10 +4,11 @@ import { RotateableKeySet } from "@bitwarden/auth/common";
 import { SdkService } from "@bitwarden/common/platform/abstractions/sdk/sdk.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
+import { OpaqueSessionId } from "@bitwarden/common/types/guid";
 
 import { UserKey } from "../../types/key";
 
-import { CipherConfiguration, KsfConfig } from "./models/cipher-configuration";
+import { Argon2IdParameters, CipherConfiguration } from "./models/cipher-configuration";
 import { LoginFinishRequest } from "./models/login-finish.request";
 import { LoginStartRequest } from "./models/login-start.request";
 import { RegistrationFinishRequest } from "./models/registration-finish.request";
@@ -21,8 +22,12 @@ export class DefaultOpaqueService implements OpaqueService {
     private sdkService: SdkService,
   ) {}
 
-  async register(masterPassword: string, userKey: UserKey, ksfConfig: KsfConfig): Promise<void> {
-    const config = new CipherConfiguration(ksfConfig);
+  async register(
+    masterPassword: string,
+    userKey: UserKey,
+    ksfParameters: Argon2IdParameters,
+  ): Promise<OpaqueSessionId> {
+    const config = new CipherConfiguration(ksfParameters);
     const cryptoClient = (await firstValueFrom(this.sdkService.client$)).crypto();
 
     const registrationStart = cryptoClient.opaque_register_start(
@@ -60,9 +65,15 @@ export class DefaultOpaqueService implements OpaqueService {
         keyset,
       ),
     );
+
+    return registrationStartResponse.sessionId;
   }
 
-  async login(email: string, masterPassword: string, ksfConfig: KsfConfig): Promise<Uint8Array> {
+  async login(
+    email: string,
+    masterPassword: string,
+    ksfConfig: Argon2IdParameters,
+  ): Promise<Uint8Array> {
     const config = new CipherConfiguration(ksfConfig);
     const cryptoClient = (await firstValueFrom(this.sdkService.client$)).crypto();
 
