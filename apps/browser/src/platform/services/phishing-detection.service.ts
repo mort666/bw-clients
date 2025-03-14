@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 
 import { BrowserApi } from "../browser/browser-api";
