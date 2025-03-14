@@ -13,5 +13,5 @@ export abstract class OpaqueService {
    * in combination with the rotateable keyset returned from the token endpoint.
    * @returns The ExportKey obtained during the Opaque login flow.
    */
-  abstract login(masterPassword: string, ksfConfig: KsfConfig): Promise<Uint8Array>;
+  abstract login(email: string, masterPassword: string, ksfConfig: KsfConfig): Promise<Uint8Array>;
 }

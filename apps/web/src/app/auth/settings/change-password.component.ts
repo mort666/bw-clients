@@ -230,6 +230,10 @@ export class ChangePasswordComponent
         algorithm: "argon2id",
         parameters: { memory: 256 * 1024, iterations: 3, parallelism: 4 },
       });
+      await this.opaqueService.login(this.email, this.masterPassword, {
+        algorithm: "argon2id",
+        parameters: { memory: 256 * 1024, iterations: 3, parallelism: 4 },
+      });
       await this.formPromise;
 
       this.toastService.showToast({
