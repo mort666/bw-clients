@@ -272,6 +272,8 @@ import BrowserMemoryStorageService from "../platform/services/browser-memory-sto
 import { BrowserScriptInjectorService } from "../platform/services/browser-script-injector.service";
 import I18nService from "../platform/services/i18n.service";
 import { LocalBackedSessionStorageService } from "../platform/services/local-backed-session-storage.service";
+import { PhishingApiService } from "../platform/services/phishing-api.service";
+import { PhishingDetectionService } from "../platform/services/phishing-detection.service";
 import { BackgroundPlatformUtilsService } from "../platform/services/platform-utils/background-platform-utils.service";
 import { BrowserPlatformUtilsService } from "../platform/services/platform-utils/browser-platform-utils.service";
 import { PopupViewCacheBackgroundService } from "../platform/services/popup-view-cache-background.service";
@@ -708,6 +710,15 @@ export default class MainBackground {
       this.logService,
       (logoutReason: LogoutReason, userId?: UserId) => this.logout(logoutReason, userId),
       this.vaultTimeoutSettingsService,
+    );
+
+    // Initialize phishing detection services
+    const phishingApiService = new PhishingApiService(this.apiService);
+    PhishingDetectionService.initialize(
+      phishingApiService,
+      this.logService,
+      this.storageService,
+      this.taskSchedulerService,
     );
 
     this.fileUploadService = new FileUploadService(this.logService, this.apiService);
@@ -1326,6 +1337,10 @@ export default class MainBackground {
     this.webRequestBackground?.startListening();
     this.syncServiceListener?.listener$().subscribe();
     await this.autoSubmitLoginBackground.init();
+
+    // Set up phishing detection tab event listeners
+    const phishingDetectionService = new PhishingDetectionService();
+    phishingDetectionService.setupTabEventListeners();
 
     if (
       BrowserApi.isManifestVersion(2) &&
