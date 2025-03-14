@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-console */
-// eslint-disable-next-line no-restricted-imports
-import { PhishingDetectionService } from "src/platform/services/phishing-detection.service";
+import { PhishingDetectionBrowserService } from "./content/phishing-detection-browser.service";
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", loadPhishingDetectionContent);
@@ -10,12 +8,11 @@ if (document.readyState === "loading") {
 }
 
 async function loadPhishingDetectionContent() {
-  // Found an issue with the internal PhishingDetectionService not being able to initialize properly.
-  // const activeUrl = await PhishingDetectionService.getActiveUrl();
-  // const isPhishingDomain = PhishingDetectionService.checkUrl(activeUrl);
-  // if (isPhishingDomain) {
-  //   PhishingDetectionService.notifyUser(activeUrl);
-  // }
+  const activeUrl = PhishingDetectionBrowserService.getActiveUrl();
+  const isPhishingDomain = PhishingDetectionBrowserService.checkUrl(activeUrl);
+  if (isPhishingDomain) {
+    PhishingDetectionBrowserService.notifyUser(activeUrl);
+  }
 }
 
 console.log("Phishing Detection Service loaded.");
