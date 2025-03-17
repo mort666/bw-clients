@@ -7,7 +7,6 @@ import { filter, first, takeUntil } from "rxjs/operators";
 
 import { TwoFactorComponentV1 as BaseTwoFactorComponent } from "@bitwarden/angular/auth/components/two-factor-v1.component";
 import { WINDOW } from "@bitwarden/angular/services/injection-tokens";
-import { TwoFactorFormCacheService } from "@bitwarden/auth/angular";
 import {
   LoginStrategyServiceAbstraction,
   LoginEmailServiceAbstraction,
@@ -68,7 +67,6 @@ export class TwoFactorComponentV1 extends BaseTwoFactorComponent implements OnIn
     toastService: ToastService,
     @Inject(WINDOW) protected win: Window,
     private browserMessagingApi: ZonedMessageListenerService,
-    protected twoFactorFormCacheService: TwoFactorFormCacheService,
   ) {
     super(
       loginStrategyService,
@@ -90,7 +88,6 @@ export class TwoFactorComponentV1 extends BaseTwoFactorComponent implements OnIn
       masterPasswordService,
       accountService,
       toastService,
-      twoFactorFormCacheService,
     );
     this.onSuccessfulLogin = async () => {
       // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
@@ -130,18 +127,6 @@ export class TwoFactorComponentV1 extends BaseTwoFactorComponent implements OnIn
       return;
     }
 
-    // Load form data from cache if available
-    const cachedData = await this.twoFactorFormCacheService.getFormData();
-    if (cachedData?.token !== undefined) {
-      this.token = cachedData.token;
-    }
-    if (cachedData?.remember !== undefined) {
-      this.remember = cachedData.remember;
-    }
-    if (cachedData?.selectedProviderType !== undefined) {
-      this.selectedProviderType = cachedData.selectedProviderType;
-    }
-
     await super.ngOnInit();
     if (this.selectedProviderType == null) {
       return;
@@ -155,8 +140,7 @@ export class TwoFactorComponentV1 extends BaseTwoFactorComponent implements OnIn
 
     if (
       this.selectedProviderType === TwoFactorProviderType.Email &&
-      BrowserPopupUtils.inPopup(window) &&
-      !(await this.configService.getFeatureFlag(FeatureFlag.PM9115_TwoFactorFormPersistence))
+      BrowserPopupUtils.inPopup(window)
     ) {
       const confirmed = await this.dialogService.openSimpleDialog({
         title: { key: "warning" },
@@ -203,15 +187,7 @@ export class TwoFactorComponentV1 extends BaseTwoFactorComponent implements OnIn
     super.ngOnDestroy();
   }
 
-  async anotherMethod() {
-    // Save form data to cache before navigating to another method
-    await this.twoFactorFormCacheService.saveFormData({
-      token: this.token,
-      remember: this.remember,
-      selectedProviderType: this.selectedProviderType,
-      emailSent: this.selectedProviderType === TwoFactorProviderType.Email,
-    });
-
+  anotherMethod() {
     const sso = this.route.snapshot.queryParamMap.get("sso") === "true";
 
     if (sso) {
@@ -280,25 +256,5 @@ export class TwoFactorComponentV1 extends BaseTwoFactorComponent implements OnIn
       "&handOffMessage=" +
       encodeURIComponent(JSON.stringify(duoHandOffMessage));
     this.platformUtilsService.launchUri(launchUrl);
-  }
-
-  // Override the doSubmit to clear cached data on successful login
-  async doSubmit() {
-    await super.doSubmit();
-    await this.twoFactorFormCacheService.clearFormData();
-  }
-
-  /**
-   * Save the current form state to cache when inputs change
-   */
-  async saveFormData() {
-    if (this.twoFactorFormCacheService) {
-      await this.twoFactorFormCacheService.saveFormData({
-        token: this.token,
-        remember: this.remember,
-        selectedProviderType: this.selectedProviderType,
-        emailSent: this.selectedProviderType === TwoFactorProviderType.Email,
-      });
-    }
   }
 }
