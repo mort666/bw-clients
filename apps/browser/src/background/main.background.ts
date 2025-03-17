@@ -432,8 +432,6 @@ export default class MainBackground {
       }
     };
 
-    PhishingDetectionService.setupCheckUrlListener();
-
     const logoutCallback = async (logoutReason: LogoutReason, userId?: UserId) =>
       await this.logout(logoutReason, userId);
 
@@ -453,6 +451,8 @@ export default class MainBackground {
     this.cryptoFunctionService = new WebCryptoFunctionService(self);
     this.keyGenerationService = new KeyGenerationService(this.cryptoFunctionService);
     this.storageService = new BrowserLocalStorageService(this.logService);
+
+    PhishingDetectionService.Initialize(this.logService);
 
     this.intraprocessMessagingSubject = new Subject<Message<Record<string, unknown>>>();
 

@@ -1,6 +1,4 @@
 export class PhishingDetectionBrowserService {
-  private static knownPhishingDomains = new Set();
-
   static notifyUser(url: string) {
     const phishingDivId = "phishing-notification-bar";
     const message = `${url} is a known phishing site`;

@@ -1,8 +1,11 @@
- 
 import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
 
 import { PhishingDetectionBrowserService } from "./content/phishing-detection-browser.service";
 import { PhishingDetectionCommands } from "./phishing-detection.enum";
+
+const isDev = process.env.ENV === "development";
+const logService = new ConsoleLogService(isDev);
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", loadPhishingDetectionContent);
@@ -25,4 +28,4 @@ async function loadPhishingDetectionContent() {
   }
 }
 
-console.log("Phishing Detection Service loaded.");
+logService.info("Phishing Detection Service loaded.");
