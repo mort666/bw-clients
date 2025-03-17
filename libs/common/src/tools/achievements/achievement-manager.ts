@@ -10,6 +10,8 @@ function active(
   status$: Observable<AchievementEvent[]>,
 ): OperatorFunction<AchievementValidator[], AchievementValidator[]> {
   return pipe(
+    // TODO: accept a configuration observable that completes without
+    //       emission when the user has opted out of achievements
     withLatestFrom(status$),
     map(([monitors, log]) => {
       // partition the log into progress and earned achievements
@@ -23,7 +25,7 @@ function active(
         // 🧠 the filters could be lifted into a function argument & delivered
         //    as a `Map<FilterType, (monitor) => bool>
 
-        if (m.trigger === "once") {
+        if (m.trigger === "until-earned") {
           // monitor disabled if already achieved
           return !earnedByName.has(m.achievement);
         }

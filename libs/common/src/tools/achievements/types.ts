@@ -38,7 +38,7 @@ export type Achievement = {
   validator: ValidatorId;
 
   // pre-filter that disables the rule if it's met
-  trigger: "once" | RequireAtLeastOne<{ low: number; high: number }>;
+  trigger: "until-earned" | RequireAtLeastOne<{ low: number; high: number }>;
 
   // whether or not the achievement is hidden until it is earned
   hidden: boolean;
@@ -47,10 +47,10 @@ export type Achievement = {
 // consumed by validator
 export type AchievementValidator = Achievement & {
   // when the watch triggers on incoming user events
-  filter: (item: EventFormat) => boolean;
+  filter: (item: UserActionEvent) => boolean;
 
   // observe data from the event stream and produces measurements
-  measure?: (item: EventFormat, metrics: Map<MetricId, number>) => AchievementProgressEvent[];
+  measure?: (item: UserActionEvent, metrics: Map<MetricId, number>) => AchievementProgressEvent[];
 
   // monitors achievement progress and emits earned achievements
   award?: (

@@ -16,7 +16,7 @@ const TotallyAttachedValidator = {
   description: "Attached a file to a send or item",
   metric: ItemCreatedProgress,
   validator: Type.HasTag,
-  trigger: "once",
+  trigger: "until-earned",
   hidden: false,
   filter(item) {
     return item.tags?.includes("with-attachment") ?? false;
