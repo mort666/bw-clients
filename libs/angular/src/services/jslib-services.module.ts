@@ -90,11 +90,7 @@ import { AvatarService as AvatarServiceAbstraction } from "@bitwarden/common/aut
 import { DeviceTrustServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust.service.abstraction";
 import { DevicesServiceAbstraction } from "@bitwarden/common/auth/abstractions/devices/devices.service.abstraction";
 import { DevicesApiServiceAbstraction } from "@bitwarden/common/auth/abstractions/devices-api.service.abstraction";
-import { KeyConnectorService as KeyConnectorServiceAbstraction } from "@bitwarden/common/auth/abstractions/key-connector.service";
-import {
-  InternalMasterPasswordServiceAbstraction,
-  MasterPasswordServiceAbstraction,
-} from "@bitwarden/common/auth/abstractions/master-password.service.abstraction";
+import { MasterPasswordApiService as MasterPasswordApiServiceAbstraction } from "@bitwarden/common/auth/abstractions/master-password-api.service.abstraction";
 import { PasswordResetEnrollmentServiceAbstraction } from "@bitwarden/common/auth/abstractions/password-reset-enrollment.service.abstraction";
 import { SsoLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/sso-login.service.abstraction";
 import { TokenService as TokenServiceAbstraction } from "@bitwarden/common/auth/abstractions/token.service";
@@ -115,8 +111,7 @@ import { AvatarService } from "@bitwarden/common/auth/services/avatar.service";
 import { DeviceTrustService } from "@bitwarden/common/auth/services/device-trust.service.implementation";
 import { DevicesServiceImplementation } from "@bitwarden/common/auth/services/devices/devices.service.implementation";
 import { DevicesApiServiceImplementation } from "@bitwarden/common/auth/services/devices-api.service.implementation";
-import { KeyConnectorService } from "@bitwarden/common/auth/services/key-connector.service";
-import { MasterPasswordService } from "@bitwarden/common/auth/services/master-password/master-password.service";
+import { MasterPasswordApiService } from "@bitwarden/common/auth/services/master-password/master-password-api.service.implementation";
 import { PasswordResetEnrollmentServiceImplementation } from "@bitwarden/common/auth/services/password-reset-enrollment.service.implementation";
 import { PrePasswordLoginApiService } from "@bitwarden/common/auth/services/pre-password-login-api.service";
 import { SsoLoginService } from "@bitwarden/common/auth/services/sso-login.service";
@@ -157,6 +152,13 @@ import { BulkEncryptService } from "@bitwarden/common/key-management/crypto/abst
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { BulkEncryptServiceImplementation } from "@bitwarden/common/key-management/crypto/services/bulk-encrypt.service.implementation";
 import { MultithreadEncryptServiceImplementation } from "@bitwarden/common/key-management/crypto/services/multithread-encrypt.service.implementation";
+import { KeyConnectorService as KeyConnectorServiceAbstraction } from "@bitwarden/common/key-management/key-connector/abstractions/key-connector.service";
+import { KeyConnectorService } from "@bitwarden/common/key-management/key-connector/services/key-connector.service";
+import {
+  InternalMasterPasswordServiceAbstraction,
+  MasterPasswordServiceAbstraction,
+} from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
+import { MasterPasswordService } from "@bitwarden/common/key-management/master-password/services/master-password.service";
 import {
   DefaultVaultTimeoutService,
   DefaultVaultTimeoutSettingsService,
@@ -308,6 +310,8 @@ import {
 import { SafeInjectionToken } from "@bitwarden/ui-common";
 import {
   DefaultTaskService,
+  DefaultEndUserNotificationService,
+  EndUserNotificationService,
   NewDeviceVerificationNoticeService,
   PasswordRepromptService,
   TaskService,
@@ -1289,7 +1293,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: BillingApiServiceAbstraction,
     useClass: BillingApiService,
-    deps: [ApiServiceAbstraction, LogService, ToastService],
+    deps: [ApiServiceAbstraction],
   }),
   safeProvider({
     provide: TaxServiceAbstraction,
@@ -1353,6 +1357,7 @@ const safeProviders: SafeProvider[] = [
     useClass: DefaultSetPasswordJitService,
     deps: [
       ApiServiceAbstraction,
+      MasterPasswordApiService,
       KeyService,
       EncryptService,
       I18nServiceAbstraction,
@@ -1424,7 +1429,12 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: CipherAuthorizationService,
     useClass: DefaultCipherAuthorizationService,
-    deps: [CollectionService, OrganizationServiceAbstraction, AccountServiceAbstraction],
+    deps: [
+      CollectionService,
+      OrganizationServiceAbstraction,
+      AccountServiceAbstraction,
+      ConfigService,
+    ],
   }),
   safeProvider({
     provide: AuthRequestApiService,
@@ -1471,6 +1481,11 @@ const safeProviders: SafeProvider[] = [
     deps: [StateProvider, ApiServiceAbstraction, OrganizationServiceAbstraction, ConfigService],
   }),
   safeProvider({
+    provide: EndUserNotificationService,
+    useClass: DefaultEndUserNotificationService,
+    deps: [StateProvider, ApiServiceAbstraction],
+  }),
+  safeProvider({
     provide: DeviceTrustToastServiceAbstraction,
     useClass: DeviceTrustToastService,
     deps: [
@@ -1492,6 +1507,11 @@ const safeProviders: SafeProvider[] = [
     provide: OpaqueService,
     useClass: DefaultOpaqueService,
     deps: [OpaqueApiService, SdkService],
+  }),
+  safeProvider({
+    provide: MasterPasswordApiServiceAbstraction,
+    useClass: MasterPasswordApiService,
+    deps: [ApiServiceAbstraction, LogService],
   }),
 ];
 
