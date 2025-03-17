@@ -78,7 +78,6 @@ import { ClientType } from "@bitwarden/common/enums";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ProcessReloadServiceAbstraction } from "@bitwarden/common/key-management/abstractions/process-reload.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
-import { BulkEncryptServiceImplementation } from "@bitwarden/common/key-management/crypto/services/bulk-encrypt.service.implementation";
 import { EncryptServiceImplementation } from "@bitwarden/common/key-management/crypto/services/encrypt.service.implementation";
 import { FallbackBulkEncryptService } from "@bitwarden/common/key-management/crypto/services/fallback-bulk-encrypt.service";
 import { MultithreadEncryptServiceImplementation } from "@bitwarden/common/key-management/crypto/services/multithread-encrypt.service.implementation";
@@ -712,7 +711,6 @@ export default class MainBackground {
       this.vaultTimeoutSettingsService,
     );
 
-    // Initialize phishing detection services
     const phishingApiService = new PhishingApiService(this.apiService);
     PhishingDetectionService.initialize(
       phishingApiService,
@@ -1334,22 +1332,9 @@ export default class MainBackground {
     this.commandsBackground.init();
     this.contextMenusBackground?.init();
     this.idleBackground.init();
-    this.webRequestBackground?.startListening();
+    await this.webRequestBackground?.startListening();
     this.syncServiceListener?.listener$().subscribe();
     await this.autoSubmitLoginBackground.init();
-
-    // Set up phishing detection tab event listeners
-    const phishingDetectionService = new PhishingDetectionService();
-    phishingDetectionService.setupTabEventListeners();
-
-    if (
-      BrowserApi.isManifestVersion(2) &&
-      (await this.configService.getFeatureFlag(FeatureFlag.PM4154_BulkEncryptionService))
-    ) {
-      await this.bulkEncryptService.setFeatureFlagEncryptService(
-        new BulkEncryptServiceImplementation(this.cryptoFunctionService, this.logService),
-      );
-    }
 
     // If the user is logged out, switch to the next account
     const active = await firstValueFrom(this.accountService.activeAccount$);
