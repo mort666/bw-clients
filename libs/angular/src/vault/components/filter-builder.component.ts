@@ -7,27 +7,29 @@ import {
   OnInit,
   Output,
 } from "@angular/core";
-import { FormBuilder, ReactiveFormsModule } from "@angular/forms";
-import { map, Observable, startWith } from "rxjs";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { BehaviorSubject, map, Observable, startWith } from "rxjs";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { VaultFilterMetadataService } from "@bitwarden/common/vault/filtering/vault-filter-metadata.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
-  SelectItemView,
   FormFieldModule,
   ButtonModule,
   LinkModule,
   CheckboxModule,
+  ChipMultiSelectComponent,
+  ChipSelectOption,
+  ChipSelectComponent,
 } from "@bitwarden/components";
 
 type Filter = {
-  vaults: SelectItemView[] | null;
-  folders: SelectItemView[] | null;
-  collections: SelectItemView[] | null;
-  types: SelectItemView[];
-  fields: SelectItemView[] | null;
+  vaults: ChipSelectOption<string>[] | null;
+  folders: ChipSelectOption<string>[] | null;
+  collections: ChipSelectOption<string>[] | null;
+  types: ChipSelectOption<string>[];
+  fields: ChipSelectOption<string>[] | null;
 };
 
 const setMap = <T, TResult>(
@@ -46,118 +48,133 @@ const setMap = <T, TResult>(
 @Component({
   selector: "app-filter-builder",
   template: `
-    <h4>Search within</h4>
-    <form [formGroup]="form" (ngSubmit)="submit()" *ngIf="filter$ | async as filter">
-      <bit-form-field>
-        <bit-label>Vaults</bit-label>
-        <bit-multi-select
-          class="tw-w-full"
-          formControlName="vaults"
-          placeholder="--Type to select--"
-          [loading]="filter.vaults == null"
-          [baseItems]="filter.vaults"
-        ></bit-multi-select>
-      </bit-form-field>
-      <bit-form-field>
-        <bit-label>Folders</bit-label>
-        <bit-multi-select
-          class="tw-w-full"
-          formControlName="folders"
-          placeholder="--Type to select--"
-          [loading]="filter.folders == null"
-          [baseItems]="filter.folders"
-        ></bit-multi-select>
-      </bit-form-field>
-      <bit-form-field>
-        <bit-label>Collections</bit-label>
-        <bit-multi-select
-          class="tw-w-full"
-          formControlName="collections"
-          placeholder="--Type to select--"
-          [loading]="filter.collections == null"
-          [baseItems]="filter.collections"
-        ></bit-multi-select>
-      </bit-form-field>
-      <bit-form-field>
-        <bit-label>Types</bit-label>
-        <bit-multi-select
-          class="tw-w-full"
-          formControlName="types"
-          placeholder="--Type to select--"
-          [baseItems]="filter.types"
-        ></bit-multi-select>
-      </bit-form-field>
-      <bit-form-field>
-        <bit-label>Field</bit-label>
-        <bit-multi-select
-          class="tw-w-full"
-          formControlName="fields"
-          placeholder="--Type to select--"
-          [loading]="filter.fields == null"
-          [baseItems]="filter.fields"
-        ></bit-multi-select>
-      </bit-form-field>
-      <h3>Item includes</h3>
-      <bit-form-field>
-        <bit-label>Words</bit-label>
-        <input bitInput formControlName="words" />
-      </bit-form-field>
-      <bit-form-control *ngIf="filter.anyHaveAttachment">
-        <input type="checkbox" bitCheckbox formControlName="hasAttachment" />
-        <bit-label>Attachment</bit-label>
-      </bit-form-control>
-      <div>
-        <!-- <button class="tw-flex tw-justify-start" type="button" bitLink linkType="secondary">
-          Give feedback
-        </button> -->
-        <div class="tw-flex tw-justify-end">
-          <button type="button" bitLink linkType="primary" class="tw-mr-2">Cancel</button>
-          <button type="submit" bitButton buttonType="primary">Search</button>
-        </div>
-      </div>
-    </form>
+    <ng-container *ngIf="filterData$ | async as filter">
+      <bit-chip-multi-select
+        placeholderText="Vault"
+        placeholderIcon="bwi-vault"
+        [options]="filter.vaults"
+      ></bit-chip-multi-select>
+      <bit-chip-multi-select
+        placeholderText="Folders"
+        placeholderIcon="bwi-folder"
+        [options]="filter.folders"
+        class="tw-pl-2"
+      ></bit-chip-multi-select>
+      <bit-chip-multi-select
+        placeholderText="Collections"
+        placeholderIcon="bwi-collection"
+        [options]="filter.collections"
+        class="tw-pl-2"
+      ></bit-chip-multi-select>
+      @for (selectedOtherOption of selectedOtherOptions$ | async; track selectedOtherOption) {
+        @switch (selectedOtherOption) {
+          @case ("types") {
+            <bit-chip-multi-select
+              placeholderText="Types"
+              placeholderIcon="bwi-sliders"
+              [options]="filter.types"
+              class="tw-pl-2"
+            ></bit-chip-multi-select>
+          }
+          @case ("fields") {
+            <bit-chip-multi-select
+              placeholderText="Fields"
+              placeholderIcon="bwi-filter"
+              [loading]="filter.fields == null"
+              [options]="filter.fields"
+              class="tw-pl-2"
+            ></bit-chip-multi-select>
+          }
+          @default {
+            <p>Invalid option {{ selectedOtherOption | json }}</p>
+          }
+        }
+      }
+      <ng-container *ngIf="otherOptions$ | async as otherOptions">
+        <bit-chip-select
+          *ngIf="otherOptions.length !== 0"
+          placeholderText="Other filters"
+          placeholderIcon="bwi-sliders"
+          [options]="otherOptions"
+          class="tw-pl-2"
+          [(ngModel)]="otherOption"
+        >
+        </bit-chip-select>
+      </ng-container>
+      <span class="tw-border-l tw-border-0 tw-border-solid tw-border-secondary-300 tw-mx-2"></span>
+      <button type="button" bitLink linkType="secondary" class="tw-text-sm">Reset</button>
+      <button type="button" bitLink class="tw-ml-2 tw-text-sm">Save filter</button>
+    </ng-container>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
     CommonModule,
     LinkModule,
+    ChipMultiSelectComponent,
     FormFieldModule,
     ButtonModule,
+    FormsModule,
     ReactiveFormsModule,
     CheckboxModule,
     AsyncPipe,
+    ChipSelectComponent,
   ],
 })
 export class FilterBuilderComponent implements OnInit {
-  form = this.formBuilder.group({
-    words: "",
-    hasAttachment: false,
-    types: this.formBuilder.control<SelectItemView[]>([]),
-    collections: this.formBuilder.control<SelectItemView[]>([]),
-    vaults: this.formBuilder.control<SelectItemView[]>([]),
-    folders: this.formBuilder.control<SelectItemView[]>([]),
-    fields: this.formBuilder.control<SelectItemView[]>([]),
-  });
-
   @Input({ required: true }) ciphers: Observable<CipherView[]> | undefined;
 
   @Output() searchFilter = new EventEmitter<
     Partial<{
       words: string;
-      types: SelectItemView[];
-      collections: SelectItemView[];
-      vaults: SelectItemView[];
-      folders: SelectItemView[];
-      fields: SelectItemView[];
+      types: ChipSelectOption<string>[];
+      collections: ChipSelectOption<string>[];
+      vaults: ChipSelectOption<string>[];
+      folders: ChipSelectOption<string>[];
+      fields: ChipSelectOption<string>[];
     }>
   >();
 
   private loadingFilter: Filter;
-  filter$: Observable<Filter>;
+
+  filterData$: Observable<Filter>;
+
+  // TODO: Set these dynamically based on metadata
+  private _otherOptions = new BehaviorSubject<ChipSelectOption<string>[]>([
+    { value: "types", label: "Types", icon: "bwi-sliders" },
+    { value: "fields", label: "Fields", icon: "bwi-filter" },
+  ]);
+
+  otherOptions$ = this._otherOptions.asObservable();
+
+  get otherOption(): string {
+    return null;
+  }
+
+  set otherOption(value: string) {
+    if (value == null) {
+      return;
+    }
+    const current = this._selectedOtherOptions.value;
+    this._selectedOtherOptions.next([...current, value]);
+    // TODO: Remove as option
+    const currentOptions = [...this._otherOptions.value];
+
+    const index = currentOptions.findIndex((o) => o.value === value);
+
+    if (index === -1) {
+      throw new Error("Should be impossible.");
+    }
+
+    currentOptions.splice(index, 1);
+    this._otherOptions.next(currentOptions);
+  }
+
+  private _selectedOtherOptions = new BehaviorSubject<string[]>([]);
+
+  selectedOtherOptions$ = this._selectedOtherOptions.asObservable();
 
   constructor(
-    private readonly formBuilder: FormBuilder,
     private readonly i18nService: I18nService,
     private readonly vaultFilterMetadataService: VaultFilterMetadataService,
   ) {
@@ -166,17 +183,17 @@ export class FilterBuilderComponent implements OnInit {
       folders: null,
       collections: null,
       types: [
-        { id: "login", listName: "Login", labelName: "Login", icon: "bwi-globe" },
-        { id: "card", listName: "Card", labelName: "Card", icon: "bwi-credit-card" },
-        { id: "identity", listName: "Identity", labelName: "Identity", icon: "bwi-id-card" },
-        { id: "note", listName: "Secure Note", labelName: "Secure Note", icon: "bwi-sticky-note" },
+        { value: "login", label: "Login", icon: "bwi-globe" },
+        { value: "card", label: "Card", icon: "bwi-credit-card" },
+        { value: "identity", label: "Identity", icon: "bwi-id-card" },
+        { value: "note", label: "Secure Note", icon: "bwi-sticky-note" },
       ],
       fields: null,
     };
   }
 
   ngOnInit(): void {
-    this.filter$ = this.ciphers.pipe(
+    this.filterData$ = this.ciphers.pipe(
       this.vaultFilterMetadataService.collectMetadata(),
       map((metadata) => {
         // TODO: Combine with other info
@@ -185,18 +202,14 @@ export class FilterBuilderComponent implements OnInit {
             if (v == null) {
               // Personal vault
               return {
-                id: "personal",
-                labelName: "My Vault",
-                listName: "My Vault",
-                icon: "bwi-vault",
+                value: "personal",
+                label: "My Vault",
               };
             } else {
               // Get organization info
               return {
-                id: v,
-                labelName: `Organization ${i}`,
-                listName: `Organization ${i}`,
-                icon: "bwi-business",
+                value: v,
+                label: `Organization ${i}`,
               };
             }
           }),
@@ -204,47 +217,44 @@ export class FilterBuilderComponent implements OnInit {
             metadata.folders,
             (f, i) =>
               ({
-                id: f,
-                labelName: `Folder ${i}`,
-                listName: `Folder ${i}`,
-                icon: "bwi-folder",
-              }) satisfies SelectItemView,
+                value: f,
+                label: `Folder ${i}`,
+              }) satisfies ChipSelectOption<string>,
           ),
           collections: setMap(
             metadata.collections,
             (c, i) =>
               ({
-                id: c,
-                labelName: `Collection ${i}`,
-                listName: `Collection ${i}`,
-                icon: "bwi-collection",
-              }) satisfies SelectItemView,
+                value: c,
+                label: `Collection ${i}`,
+              }) satisfies ChipSelectOption<string>,
           ),
           types: setMap(metadata.itemTypes, (t) => {
             switch (t) {
               case CipherType.Login:
-                return { id: "login", listName: "Login", labelName: "Login", icon: "bwi-globe" };
+                return { value: "login", label: "Login", icon: "bwi-globe" };
               case CipherType.Card:
-                return { id: "card", listName: "Card", labelName: "Card", icon: "bwi-credit-card" };
+                return {
+                  value: "card",
+                  label: "Card",
+                  icon: "bwi-credit-card",
+                };
               case CipherType.Identity:
                 return {
-                  id: "identity",
-                  listName: "Identity",
-                  labelName: "Identity",
+                  value: "identity",
+                  label: "Identity",
                   icon: "bwi-id-card",
                 };
               case CipherType.SecureNote:
                 return {
-                  id: "note",
-                  listName: "Secure Note",
-                  labelName: "Secure Note",
+                  value: "note",
+                  label: "Secure Note",
                   icon: "bwi-sticky-note",
                 };
               case CipherType.SshKey:
                 return {
-                  id: "sshkey",
-                  listName: "SSH Key",
-                  labelName: "SSH Key",
+                  value: "sshkey",
+                  label: "SSH Key",
                   icon: "bwi-key",
                 };
               default:
@@ -253,15 +263,12 @@ export class FilterBuilderComponent implements OnInit {
           }),
           fields: setMap(
             metadata.fieldNames,
-            (f, i) => ({ id: f, labelName: f, listName: f }) satisfies SelectItemView,
+            (f, i) => ({ value: f, label: f }) satisfies ChipSelectOption<string>,
           ),
-        } satisfies Filter;
+          anyHaveAttachment: metadata.anyHaveAttachment,
+        } satisfies Filter & { anyHaveAttachment: boolean };
       }),
       startWith(this.loadingFilter),
     );
-  }
-
-  submit() {
-    this.searchFilter.emit(this.form.value);
   }
 }

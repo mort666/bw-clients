@@ -13,6 +13,7 @@ import { BehaviorSubject, map } from "rxjs";
 import { isBrowserSafariApi } from "@bitwarden/platform";
 import { I18nPipe } from "@bitwarden/ui-common";
 
+import { IconButtonModule } from "../icon-button";
 import { InputModule } from "../input/input.module";
 import { FocusableElement } from "../shared/focusable-element";
 
@@ -33,7 +34,14 @@ let nextId = 0;
     },
   ],
   standalone: true,
-  imports: [InputModule, ReactiveFormsModule, FormsModule, I18nPipe, CommonModule],
+  imports: [
+    InputModule,
+    ReactiveFormsModule,
+    FormsModule,
+    I18nPipe,
+    CommonModule,
+    IconButtonModule,
+  ],
 })
 export class SearchComponent implements ControlValueAccessor, FocusableElement {
   private notifyOnChange: (v: string) => void;
@@ -61,6 +69,10 @@ export class SearchComponent implements ControlValueAccessor, FocusableElement {
     return this.textUpdated$.pipe(map((text) => this.history));
     // return this.textUpdated$.pipe(map((text) => this.history.filter((h) => h.startsWith(text))));
   }
+
+  private _selectedContent = new BehaviorSubject<string | null>(null);
+
+  selectedContent$ = this._selectedContent.asObservable();
 
   onFocus() {
     this.focused = true;
@@ -99,5 +111,13 @@ export class SearchComponent implements ControlValueAccessor, FocusableElement {
 
   setDisabledState(isDisabled: boolean) {
     this.disabled = isDisabled;
+  }
+
+  filterToggled() {
+    this._selectedContent.next(this._selectedContent.value !== "filter" ? "filter" : null);
+  }
+
+  filterShown() {
+    return this._selectedContent.value !== "filter";
   }
 }

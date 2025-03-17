@@ -9,23 +9,25 @@ import {
 } from "@bitwarden/common/vault/filtering/vault-filter-metadata.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { I18nMockService } from "@bitwarden/components";
+// eslint-disable-next-line no-restricted-imports
+import { SearchComponent } from "@bitwarden/components/src/search/search.component";
 
 import { FilterBuilderComponent } from "./filter-builder.component";
 
 export default {
-  title: "Filter/Filter Builder",
-  component: FilterBuilderComponent,
+  title: "Filter/In Search",
+  component: SearchComponent,
   decorators: [
     moduleMetadata({
-      imports: [],
+      imports: [FilterBuilderComponent],
       providers: [
         {
           provide: I18nService,
           useValue: new I18nMockService({
+            search: "Search",
             multiSelectLoading: "Loading",
             multiSelectNotFound: "Not Found",
             multiSelectClearAll: "Clear All",
-            removeItem: "Remove Item",
           }),
         },
         {
@@ -56,19 +58,20 @@ export default {
   ],
 } as Meta;
 
-type Story = StoryObj<FilterBuilderComponent>;
-
-export const Default: Story = {
+export const Default: StoryObj<SearchComponent & FilterBuilderComponent> = {
   render: (args) => ({
     props: args,
     template: /*html*/ `
-      <app-filter-builder [ciphers]="ciphers" (searchFilter)="searchFilter($event)"></app-filter-builder>
+      <bit-search [history]="history">
+        <div filter class="tw-absolute tw-w-full tw-z-[1000] tw-float-left tw-m-0 tw-p-5 tw-bg-background tw-rounded-xl tw-border tw-border-solid tw-border-secondary-300">
+          <app-filter-builder [ciphers]="ciphers"></app-filter-builder>
+        </div>
+      </bit-search>
+      <p>Other content below</p>
     `,
   }),
   args: {
     ciphers: of([]),
-    searchFilter: (d: unknown) => {
-      alert(JSON.stringify(d));
-    },
+    history: ["One", "Two"],
   },
 };

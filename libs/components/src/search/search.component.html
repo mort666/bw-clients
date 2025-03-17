@@ -22,6 +22,13 @@
       [disabled]="disabled"
       [attr.autocomplete]="autocomplete"
     />
+    <button
+      bitSuffix
+      type="button"
+      bitIconButton="bwi-sliders"
+      (click)="filterToggled()"
+      [buttonType]=""
+    ></button>
   </div>
   <ng-container *ngIf="showHistory">
     <div class="tw-size-full">
@@ -39,5 +46,8 @@
         </li>
       </ul>
     </div>
+  </ng-container>
+  <ng-container *ngIf="selectedContent$ | async as content">
+    <ng-content [select]="content"></ng-content>
   </ng-container>
 </div>
