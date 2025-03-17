@@ -9,6 +9,11 @@ export enum FeatureFlag {
   VerifiedSsoDomainEndpoint = "pm-12337-refactor-sso-details-endpoint",
   LimitItemDeletion = "pm-15493-restrict-item-deletion-to-can-manage-permission",
 
+  /* Auth  */
+  UnauthenticatedExtensionUIRefresh = "unauth-ui-refresh",
+  RecoveryCodeLogin = "pm-17128-recovery-code-login",
+  OpaqueKeyExchange = "opaque-key-exchange",
+
   /* Autofill */
   BlockBrowserInjectionsByDomain = "block-browser-injections-by-domain",
   DelayFido2PageScriptInitWithinMv2 = "delay-fido2-page-script-init-within-mv2",
@@ -34,9 +39,7 @@ export enum FeatureFlag {
   NewDeviceVerificationPermanentDismiss = "new-device-permanent-dismiss",
   VaultBulkManagementAction = "vault-bulk-management-action",
   SecurityTasks = "security-tasks",
-
   PM4154_BulkEncryptionService = "PM-4154-bulk-encryption-service",
-  UnauthenticatedExtensionUIRefresh = "unauth-ui-refresh",
   CipherKeyEncryption = "cipher-key-encryption",
   TrialPaymentOptional = "PM-8163-trial-payment",
   MacOsNativeCredentialSync = "macos-native-credential-sync",
@@ -44,7 +47,6 @@ export enum FeatureFlag {
   ResellerManagedOrgAlert = "PM-15814-alert-owners-of-reseller-managed-orgs",
   AccountDeprovisioningBanner = "pm-17120-account-deprovisioning-admin-console-banner",
   PM15179_AddExistingOrgsFromProviderPortal = "pm-15179-add-existing-orgs-from-provider-portal",
-  RecoveryCodeLogin = "pm-17128-recovery-code-login",
   PM12276_BreadcrumbEventLogs = "pm-12276-breadcrumbing-for-business-features",
   PM18794_ProviderPaymentMethod = "pm-18794-provider-payment-method",
 }
@@ -65,6 +67,11 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.AccountDeprovisioning]: FALSE,
   [FeatureFlag.VerifiedSsoDomainEndpoint]: FALSE,
   [FeatureFlag.LimitItemDeletion]: FALSE,
+
+  /* Auth */
+  [FeatureFlag.UnauthenticatedExtensionUIRefresh]: FALSE,
+  [FeatureFlag.RecoveryCodeLogin]: FALSE,
+  [FeatureFlag.OpaqueKeyExchange]: FALSE,
 
   /* Autofill */
   [FeatureFlag.BlockBrowserInjectionsByDomain]: FALSE,
@@ -93,7 +100,6 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.SecurityTasks]: FALSE,
 
   [FeatureFlag.PM4154_BulkEncryptionService]: FALSE,
-  [FeatureFlag.UnauthenticatedExtensionUIRefresh]: FALSE,
   [FeatureFlag.CipherKeyEncryption]: FALSE,
   [FeatureFlag.TrialPaymentOptional]: FALSE,
   [FeatureFlag.MacOsNativeCredentialSync]: FALSE,
@@ -101,7 +107,6 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.ResellerManagedOrgAlert]: FALSE,
   [FeatureFlag.AccountDeprovisioningBanner]: FALSE,
   [FeatureFlag.PM15179_AddExistingOrgsFromProviderPortal]: FALSE,
-  [FeatureFlag.RecoveryCodeLogin]: FALSE,
   [FeatureFlag.PM12276_BreadcrumbEventLogs]: FALSE,
   [FeatureFlag.PM18794_ProviderPaymentMethod]: FALSE,
 } satisfies Record<FeatureFlag, AllowedFeatureFlagTypes>;
