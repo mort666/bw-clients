@@ -16,7 +16,7 @@ import {
 
 const ACHIEVEMENT_INITIAL_DEBOUNCE_MS = 100;
 
-export class AchievementService {
+export class AchievementHub {
   constructor(
     validators$: Observable<AchievementValidator[]>,
     events$: Observable<UserActionEvent>,
