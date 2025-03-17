@@ -16,6 +16,8 @@ declare var func_in: any;
 declare var func_is: any;
 declare var func_type: any;
 declare var func_website: any;
+declare var func_order: any;
+declare var param_dir: any;
 declare var NOT: any;
 declare var WS: any;
 
@@ -36,6 +38,9 @@ let lexer = moo.compile({
   func_is: "is:",
   func_type: "type:",
   func_website: "website:",
+  // Ordering functions and parameters
+  func_order: "order:",
+  param_dir: /:(?:asc|desc)/,
   // function parameter separator
   access: ":",
   // string match, includes quoted strings with escaped quotes and backslashes
@@ -331,6 +336,47 @@ const grammar: Grammar = {
           d: d,
           website: d[1].value,
           matchType: d[3].value,
+          start,
+          end,
+          length: end - start + 1,
+        };
+      },
+    },
+    {
+      name: "TERM",
+      symbols: [
+        lexer.has("func_order") ? { type: "func_order" } : func_order,
+        lexer.has("param_dir") ? { type: "param_dir" } : param_dir,
+      ],
+      postprocess: function (d) {
+        const start = d[0].offset;
+        const end = d[1].offset + d[1].value.length;
+        return {
+          type: "orderBy",
+          d: d,
+          field: "name",
+          direction: d[1].value.substring(1, d[1].value.length).toLowerCase(),
+          start,
+          end,
+          length: end - start + 1,
+        };
+      },
+    },
+    {
+      name: "TERM",
+      symbols: [
+        lexer.has("func_order") ? { type: "func_order" } : func_order,
+        lexer.has("string") ? { type: "string" } : string,
+        lexer.has("param_dir") ? { type: "param_dir" } : param_dir,
+      ],
+      postprocess: function (d) {
+        const start = d[0].offset;
+        const end = d[2].offset + d[2].value.length;
+        return {
+          type: "orderBy",
+          d: d,
+          field: d[1].value,
+          direction: d[2].value.substring(1, d[2].value.length).toLowerCase(),
           start,
           end,
           length: end - start + 1,

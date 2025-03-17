@@ -17,6 +17,9 @@ let lexer = moo.compile({
   func_is:            'is:',
   func_type:          'type:',
   func_website:       'website:',
+  // Ordering functions and parameters
+  func_order:         'order:',
+  param_dir:          /:(?:asc|desc)/,
   // function parameter separator
   access:        ':',  
   // string match, includes quoted strings with escaped quotes and backslashes
@@ -40,36 +43,40 @@ OR -> OR _ %OR _ AND                  {% function(d) { return { type: 'or', left
 
 TERM -> 
       # naked string search term, search all fields
-      %string                                 {% function(d) { const start = d[0].offset; const end = d[0].offset + d[0].value.length; return { type: 'term', value: d[0].value, d: d[0], start, end, length: d[0].value.length } } %} 
+      %string                                  {% function(d) { const start = d[0].offset; const end = d[0].offset + d[0].value.length; return { type: 'term', value: d[0].value, d: d[0], start, end, length: d[0].value.length } } %} 
       # specified field search term
-      | %string %access %string               {% function(d) { const start = d[0].offset; const end = d[2].offset + d[2].value.length; return { type: 'field term', field: d[0].value, term: d[2].value, d: d, start, end, length: end - start + 1 } } %}
+      | %string %access %string                {% function(d) { const start = d[0].offset; const end = d[2].offset + d[2].value.length; return { type: 'field term', field: d[0].value, term: d[2].value, d: d, start, end, length: end - start + 1 } } %}
       # only items with attachments
-      | %func_has "attachment"                {% function(d) { const start = d[0].offset; const length = 14; return { type: 'hasAttachment', d: d, start, end: d[0].offset + length, length } } %}
+      | %func_has "attachment"                 {% function(d) { const start = d[0].offset; const length = 14; return { type: 'hasAttachment', d: d, start, end: d[0].offset + length, length } } %}
       # only items with URIs
-      | %func_has "uri"                       {% function(d) { const start = d[0].offset; const length = 7; return { type: 'hasUri', d: d, start, end: d[0].offset + length, length } } %}
+      | %func_has "uri"                        {% function(d) { const start = d[0].offset; const length = 7; return { type: 'hasUri', d: d, start, end: d[0].offset + length, length } } %}
       # only items assigned to a folder
-      | %func_has "folder"                    {% function(d) { const start = d[0].offset; const length = 10; return { type: 'hasFolder', d: d, start, end: d[0].offset + length, length } } %}
+      | %func_has "folder"                     {% function(d) { const start = d[0].offset; const length = 10; return { type: 'hasFolder', d: d, start, end: d[0].offset + length, length } } %}
       # only items assigned to a collection
-      | %func_has "collection"                {% function(d) { const start = d[0].offset; const length = 14; return { type: 'hasCollection', d: d, start, end: d[0].offset + length, length } } %}
+      | %func_has "collection"                 {% function(d) { const start = d[0].offset; const length = 14; return { type: 'hasCollection', d: d, start, end: d[0].offset + length, length } } %}
       # only items assigned to a specified folder
-      | %func_in "folder" %access %string     {% function(d) { const start = d[0].offset; const end = d[3].offset + d[3].value.length; return { type: 'inFolder', folder: d[3].value, d: d, start, end, length: end - start } } %}
+      | %func_in "folder" %access %string      {% function(d) { const start = d[0].offset; const end = d[3].offset + d[3].value.length; return { type: 'inFolder', folder: d[3].value, d: d, start, end, length: end - start } } %}
       # only items assigned to a specified collection
-      | %func_in "collection" %access %string {% function(d) { const start = d[0].offset; const end = d[3].offset + d[3].value.length; return { type: 'inCollection', collection: d[3].value, d: d, start, end, length: end - start + 1 } } %}
+      | %func_in "collection" %access %string  {% function(d) { const start = d[0].offset; const end = d[3].offset + d[3].value.length; return { type: 'inCollection', collection: d[3].value, d: d, start, end, length: end - start + 1 } } %}
       # only items assigned to a specified organization
-      | %func_in "org" %access %string        {% function(d) { const start = d[0].offset; const end = d[3].offset + d[3].value.length; return { type: 'inOrg', org: d[3].value, d: d, start, end, length: end - start + 1 } } %}
+      | %func_in "org" %access %string         {% function(d) { const start = d[0].offset; const end = d[3].offset + d[3].value.length; return { type: 'inOrg', org: d[3].value, d: d, start, end, length: end - start + 1 } } %}
       # only items in personal vault
-      | %func_in "my_vault"                   {% function(d) { const start = d[0].offset; const length = 11; return { type: 'inMyVault', d: d, start, end: start + length, length } } %}
+      | %func_in "my_vault"                    {% function(d) { const start = d[0].offset; const length = 11; return { type: 'inMyVault', d: d, start, end: start + length, length } } %}
       # only items in trash
-      | %func_in "trash"                      {% function(d) { const start = d[0].offset; const length = 8; return { type: 'inTrash', d: d, start, end: start + length, length } } %}
+      | %func_in "trash"                       {% function(d) { const start = d[0].offset; const length = 8; return { type: 'inTrash', d: d, start, end: start + length, length } } %}
       # only items marked as favorites
-      | %func_is "favorite"                   {% function(d) { const start = d[0].offset; const length = 11; return { type: 'isFavorite', d: d, start, end: start + length, length } } %}
+      | %func_is "favorite"                    {% function(d) { const start = d[0].offset; const length = 11; return { type: 'isFavorite', d: d, start, end: start + length, length } } %}
       # only items of given type type
-      | %func_type %string                    {% function(d) { const start = d[0].offset; const end = d[1].offset + d[1].value.length; return { type: 'type', d:d, cipherType: d[1].value, start, end, length: end - start + 1 } } %}
+      | %func_type %string                     {% function(d) { const start = d[0].offset; const end = d[1].offset + d[1].value.length; return { type: 'type', d:d, cipherType: d[1].value, start, end, length: end - start + 1 } } %}
       # only items with a specified website
-      | %func_website %string                 {% function(d) { const start = d[0].offset; const end = d[1].offset + d[1].value.length; return { type: 'website', d: d, website: d[1].value, start, end, length: end - start + 1 } } %}
+      | %func_website %string                  {% function(d) { const start = d[0].offset; const end = d[1].offset + d[1].value.length; return { type: 'website', d: d, website: d[1].value, start, end, length: end - start + 1 } } %}
       # only items with a specified website and a given match pattern
-      | %func_website %string %access %string {% function(d) { const start = d[0].offset; const end = d[3].offset + d[3].value.length; return { type: 'websiteMatch', d: d, website: d[1].value, matchType: d[3].value, start, end, length: end - start + 1 } } %}
+      | %func_website %string %access %string  {% function(d) { const start = d[0].offset; const end = d[3].offset + d[3].value.length; return { type: 'websiteMatch', d: d, website: d[1].value, matchType: d[3].value, start, end, length: end - start + 1 } } %}
+      # order by name
+      | %func_order %param_dir                 {% function(d) { const start = d[0].offset; const end = d[1].offset + d[1].value.length; return { type: 'orderBy', d: d, field: 'name', direction: d[1].value.substring(1,d[1].value.length).toLowerCase(), start, end, length: end - start + 1 } } %}
+      # order by a specified field
+      | %func_order %string %param_dir         {% function(d) { const start = d[0].offset; const end = d[2].offset + d[2].value.length; return { type: 'orderBy', d: d, field: d[1].value, direction: d[2].value.substring(1,d[2].value.length).toLowerCase(), start, end, length: end - start + 1 } } %}
       # Boolean NOT operator
-      | %NOT _ PARENTHESES                    {% function(d) { const start = d[0].offset; return { type: 'not', value: d[2], d: d, start, end: d[2].end, length: d[2].end - d[0].offset + 1 } } %}
+      | %NOT _ PARENTHESES                     {% function(d) { const start = d[0].offset; return { type: 'not', value: d[2], d: d, start, end: d[2].end, length: d[2].end - d[0].offset + 1 } } %}
 
 _ -> %WS:*     {% function(d) {return null } %}

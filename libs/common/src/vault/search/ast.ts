@@ -19,6 +19,7 @@ export const AstNodeTypeNames = [
   "type",
   "website",
   "websiteMatch",
+  "orderBy",
 ] as const;
 export type AstNodeType = (typeof AstNodeTypeNames)[number];
 export type AstNode =
@@ -41,7 +42,8 @@ export type AstNode =
   | IsFavorite
   | TypeFilter
   | WebsiteFilter
-  | WebsiteMatchFilter;
+  | WebsiteMatchFilter
+  | OrderBy;
 
 type AstNodeBase = {
   d: object[];
@@ -225,4 +227,19 @@ export type WebsiteMatchFilter = AstNodeBase & {
 
 export function isWebsiteMatchFilter(x: AstNode): x is WebsiteMatchFilter {
   return x.type === "websiteMatch";
+}
+
+export enum OrderDirection {
+  Asc = "asc",
+  Desc = "desc",
+}
+
+export type OrderBy = AstNodeBase & {
+  type: "orderBy";
+  field: string;
+  direction: OrderDirection;
+};
+
+export function isOrderBy(x: AstNode): x is OrderBy {
+  return x.type === "orderBy";
 }

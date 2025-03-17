@@ -2,11 +2,13 @@ import { Parser, Grammar } from "nearley";
 
 import { UriMatchStrategy, UriMatchStrategySetting } from "../../models/domain/domain-service";
 import { Utils } from "../../platform/misc/utils";
+import { CipherId } from "../../types/guid";
 import { CardLinkedId, CipherType, FieldType, LinkedIdType, LoginLinkedId } from "../enums";
 import { CipherView } from "../models/view/cipher.view";
 
 import {
   AstNode,
+  OrderDirection,
   isAnd,
   isFieldTerm,
   isHasAttachment,
@@ -20,6 +22,7 @@ import {
   isIsFavorite,
   isNot,
   isOr,
+  isOrderBy,
   isParentheses,
   isSearch,
   isTerm,
@@ -367,6 +370,55 @@ function handleNode(node: AstNode): ProcessInstructions {
         },
       ],
     };
+  } else if (isOrderBy(node)) {
+    // TODO: This logic is shaky at best, this operator needs to be rewritten
+    const fieldTest = fieldNameToRegexTest(node.field);
+    return {
+      filter: (context) => {
+        const idOrder = context.ciphers
+          .map((cipher) => fieldValues(cipher, /.*/i))
+          .sort((a, b) => {
+            const aValue = a.fields.find((v) =>
+              fieldTest.test(v.path.split(".").reverse()[0]),
+            )?.value;
+            const bValue = b.fields.find((v) =>
+              fieldTest.test(v.path.split(".").reverse()[0]),
+            )?.value;
+            if (aValue === bValue) {
+              return 0;
+            }
+            if (node.direction === OrderDirection.Asc) {
+              if (aValue === undefined) {
+                return 1;
+              }
+              if (bValue === undefined) {
+                return -1;
+              }
+              return aValue.localeCompare(bValue) ? -1 : 1;
+            } else {
+              if (aValue === undefined) {
+                return -1;
+              }
+              if (bValue === undefined) {
+                return 1;
+              }
+              return aValue.localeCompare(bValue) ? 1 : -1;
+            }
+          })
+          .map((fieldValues) => fieldValues.id);
+        return {
+          ...context,
+          ciphers: idOrder.map((id) => context.ciphers.find((cipher) => cipher.id === id)!),
+        };
+      },
+      sections: [
+        {
+          start: node.start,
+          end: node.end,
+          type: node.type,
+        },
+      ],
+    };
   } else {
     throw new Error("Invalid node\n" + JSON.stringify(node, null, 2));
   }
@@ -409,7 +461,7 @@ function matchEnum(
 function hasTerm(cipher: CipherView, termTest: RegExp, fieldTest: RegExp = /.*/i): boolean {
   const foundValues = fieldValues(cipher, fieldTest);
 
-  return foundValues.some((foundValue) => termTest.test(foundValue.value));
+  return foundValues.fields.some((foundValue) => termTest.test(foundValue.value));
 }
 
 function termToRegexTest(term: string) {
@@ -443,15 +495,18 @@ const ForbiddenLinkedIds: Readonly<LinkedIdType[]> = Object.freeze([
 ]);
 
 type FieldValues = { path: string; value: string }[];
-function fieldValues(cipher: CipherView, fieldTest: RegExp): FieldValues {
-  const result = recursiveValues(cipher, fieldTest, "");
+function fieldValues(cipher: CipherView, fieldTest: RegExp): { id: CipherId; fields: FieldValues } {
+  const result = {
+    id: cipher.id as CipherId,
+    fields: recursiveValues(cipher, fieldTest, ""),
+  };
 
   // append custom fields
   for (const field of cipher.fields ?? []) {
     switch (field.type) {
       case FieldType.Text:
         if (fieldTest.test(field.name)) {
-          result.push({
+          result.fields.push({
             path: `customField.${field.name}`,
             value: field.value,
           });
@@ -467,7 +522,7 @@ function fieldValues(cipher: CipherView, fieldTest: RegExp): FieldValues {
           break;
         }
         if (fieldTest.test(field.name) && value != null) {
-          result.push({
+          result.fields.push({
             path: `customField.${field.name}`,
             value: value,
           });
@@ -476,7 +531,7 @@ function fieldValues(cipher: CipherView, fieldTest: RegExp): FieldValues {
       }
       case FieldType.Boolean: {
         if (fieldTest.test(field.name)) {
-          result.push({
+          result.fields.push({
             path: `customField.${field.name}`,
             value: field.value,
           });
@@ -491,7 +546,7 @@ function fieldValues(cipher: CipherView, fieldTest: RegExp): FieldValues {
   // append attachments
   if (fieldTest.test("fileName")) {
     cipher.attachments?.forEach((a) => {
-      result.push({
+      result.fields.push({
         path: `attachment.fileName`,
         value: a.fileName,
       });
@@ -499,9 +554,10 @@ function fieldValues(cipher: CipherView, fieldTest: RegExp): FieldValues {
   }
 
   // Purge forbidden paths from results
-  return result.filter(({ path }) => {
+  result.fields = result.fields.filter(({ path }) => {
     return !ForbiddenFields.includes(path);
   });
+  return result;
 }
 
 function recursiveValues<T extends object>(obj: T, fieldTest: RegExp, crumb: string): FieldValues {
