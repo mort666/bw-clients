@@ -25,16 +25,16 @@ function active(
         // 🧠 the filters could be lifted into a function argument & delivered
         //    as a `Map<FilterType, (monitor) => bool>
 
-        if (m.trigger === "until-earned") {
+        if (m.active === "until-earned") {
           // monitor disabled if already achieved
           return !earnedByName.has(m.achievement);
         }
 
         // monitor disabled if outside of threshold
-        const progress = (m.metric && progressByName.get(m.metric)) || 0;
-        if (progress > (m.trigger.high ?? Number.POSITIVE_INFINITY)) {
+        const progress = (m.active.metric && progressByName.get(m.active.metric)) || 0;
+        if (progress > (m.active.high ?? Number.POSITIVE_INFINITY)) {
           return false;
-        } else if (progress < (m.trigger.low ?? 0)) {
+        } else if (progress < (m.active.low ?? 0)) {
           return false;
         }
 

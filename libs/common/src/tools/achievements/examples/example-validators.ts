@@ -14,9 +14,8 @@ const TotallyAttachedValidator = {
   achievement: TotallyAttachedAchievement,
   name: "Totally attached <3",
   description: "Attached a file to a send or item",
-  metric: ItemCreatedProgress,
   validator: Type.HasTag,
-  trigger: "until-earned",
+  active: "until-earned",
   hidden: false,
   filter(item) {
     return item.tags?.includes("with-attachment") ?? false;
@@ -37,9 +36,8 @@ const ItemCreatedTracker = {
   achievement: ItemCreatedMetric,
   name: `[TRACKER] ${ItemCreatedProgress}`,
   description: `Measures ${ItemCreatedProgress}`,
-  metric: ItemCreatedProgress,
   validator: Type.Threshold,
-  trigger: { high: 1 },
+  active: { metric: ItemCreatedProgress, high: 1 },
   hidden: true,
   filter(item) {
     return item.action === "vault-item-added";
@@ -53,10 +51,9 @@ const ItemCreatedTracker = {
 const ItemCreatedValidator = {
   achievement: ItemCreatedAchievement,
   name: "What an item!",
-  metric: ItemCreatedProgress,
   description: "Add an item to your vault",
   validator: Type.Threshold,
-  trigger: { high: 1 },
+  active: { metric: ItemCreatedProgress, high: 1 },
   hidden: false,
   filter(item) {
     return item.action === "vault-item-added";
@@ -73,9 +70,8 @@ const ThreeItemsCreatedValidator = {
   achievement: ThreeItemsCreatedAchievement,
   name: "Three times a charm",
   description: "Add three items to your vault",
-  metric: ItemCreatedProgress,
   validator: Type.Threshold,
-  trigger: { low: 2, high: 3 },
+  active: { metric: ItemCreatedProgress, low: 2, high: 3 },
   hidden: false,
   filter(item) {
     return item.action === "vault-item-added";
@@ -94,9 +90,8 @@ const FiveItemsCreatedValidator = {
   achievement: FiveItemsCreatedAchievement,
   name: "fiiivvve GoOoOoOolllllllD RIIIIIINGS!!!!!!",
   description: "Add five items to your vault",
-  metric: ItemCreatedProgress,
   validator: Type.Threshold,
-  trigger: { low: 4, high: 5 },
+  active: { metric: ItemCreatedProgress, low: 4, high: 5 },
   hidden: false,
   filter(item) {
     return item.action === "vault-item-added";

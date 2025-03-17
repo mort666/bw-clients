@@ -20,6 +20,17 @@ export type AchievementEarnedEvent = EventFormat &
   UserFormat & { achievement: { type: "earned"; name: AchievementId } };
 export type AchievementEvent = AchievementProgressEvent | AchievementEarnedEvent;
 
+type MetricCriteria = {
+  // the metric observed by low/high triggers
+  metric: MetricId;
+} & RequireAtLeastOne<{
+  // criteria fail when the metric is less than or equal to `low`
+  low: number;
+  // criteria fail when the metric is greater than `high`
+  high: number;
+}>;
+type ActiveCriteria = "until-earned" | MetricCriteria;
+
 // consumed by validator and achievement list (should this include a "toast-alerter"?)
 export type Achievement = {
   // identifies the achievement being monitored
@@ -31,14 +42,12 @@ export type Achievement = {
   // human-readable description of the achievement
   description?: string;
 
-  // the metric observed by low/high triggers
-  metric?: MetricId;
+  // conditions that determine when the achievement validator should be loaded
+  // by the processor
+  active: ActiveCriteria;
 
   // identifies the validator containing filter/measure/earn methods
   validator: ValidatorId;
-
-  // pre-filter that disables the rule if it's met
-  trigger: "until-earned" | RequireAtLeastOne<{ low: number; high: number }>;
 
   // whether or not the achievement is hidden until it is earned
   hidden: boolean;
