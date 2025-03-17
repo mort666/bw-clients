@@ -56,7 +56,7 @@ export type Achievement = {
 // consumed by validator
 export type AchievementValidator = Achievement & {
   // when the watch triggers on incoming user events
-  filter: (item: UserActionEvent) => boolean;
+  trigger: (item: UserActionEvent) => boolean;
 
   // observe data from the event stream and produces measurements
   measure?: (item: UserActionEvent, metrics: Map<MetricId, number>) => AchievementProgressEvent[];

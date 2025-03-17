@@ -17,7 +17,7 @@ const TotallyAttachedValidator = {
   validator: Type.HasTag,
   active: "until-earned",
   hidden: false,
-  filter(item) {
+  trigger(item) {
     return item.tags?.includes("with-attachment") ?? false;
   },
   award(progress) {
@@ -39,7 +39,7 @@ const ItemCreatedTracker = {
   validator: Type.Threshold,
   active: { metric: ItemCreatedProgress, high: 1 },
   hidden: true,
-  filter(item) {
+  trigger(item) {
     return item.action === "vault-item-added";
   },
   measure(item, progress) {
@@ -55,7 +55,7 @@ const ItemCreatedValidator = {
   validator: Type.Threshold,
   active: { metric: ItemCreatedProgress, high: 1 },
   hidden: false,
-  filter(item) {
+  trigger(item) {
     return item.action === "vault-item-added";
   },
   measure(item, progress) {
@@ -73,7 +73,7 @@ const ThreeItemsCreatedValidator = {
   validator: Type.Threshold,
   active: { metric: ItemCreatedProgress, low: 2, high: 3 },
   hidden: false,
-  filter(item) {
+  trigger(item) {
     return item.action === "vault-item-added";
   },
   measure(_item, progress) {
@@ -93,7 +93,7 @@ const FiveItemsCreatedValidator = {
   validator: Type.Threshold,
   active: { metric: ItemCreatedProgress, low: 4, high: 5 },
   hidden: false,
-  filter(item) {
+  trigger(item) {
     return item.action === "vault-item-added";
   },
   measure(_item, progress) {

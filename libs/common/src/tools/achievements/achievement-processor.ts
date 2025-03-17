@@ -22,7 +22,7 @@ function achievements(
     withLatestFrom(validators$),
     // narrow the list of all live monitors to just those that may produce new logs
     map(([action, monitors]) => {
-      const triggered = monitors.filter((m) => m.filter(action));
+      const triggered = monitors.filter((m) => m.trigger(action));
       return [action, triggered] as const;
     }),
     withLatestFrom(captured$),
