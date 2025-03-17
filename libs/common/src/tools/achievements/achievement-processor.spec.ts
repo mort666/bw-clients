@@ -1,7 +1,6 @@
 import { BehaviorSubject, ReplaySubject, bufferCount, concat, first, firstValueFrom } from "rxjs";
 
 import { validate } from "./achievement-processor";
-import { ItemCreatedProgressEvent } from "./examples/achievement-events";
 import {
   ItemCreatedAchievement,
   ItemCreatedProgress,
@@ -11,13 +10,13 @@ import {
   TotallyAttachedValidator,
 } from "./examples/example-validators";
 import { itemAdded$, itemUpdated$ } from "./examples/user-events";
-import { AchievementEvent } from "./types";
+import { AchievementEvent, MetricId } from "./types";
 
 describe("event-processor", () => {
   describe("validate", () => {
     it("earns an achievement", async () => {
       const validators$ = new BehaviorSubject([TotallyAttachedValidator]);
-      const captured$ = new BehaviorSubject<AchievementEvent[]>([]);
+      const captured$ = new BehaviorSubject(new Map<MetricId, number>());
       const achievements$ = new ReplaySubject<AchievementEvent>(2);
       const result = firstValueFrom(achievements$.pipe(bufferCount(2)));
 
@@ -29,7 +28,7 @@ describe("event-processor", () => {
 
     it("tracks achievement progress", async () => {
       const validators$ = new BehaviorSubject([ItemCreatedTracker]);
-      const captured$ = new BehaviorSubject<AchievementEvent[]>([]);
+      const captured$ = new BehaviorSubject(new Map<MetricId, number>());
       const achievements$ = new ReplaySubject<AchievementEvent>(2);
       const result = firstValueFrom(achievements$.pipe(bufferCount(2)));
 
@@ -41,7 +40,7 @@ describe("event-processor", () => {
 
     it("updates achievement progress", async () => {
       const validators$ = new BehaviorSubject([ItemCreatedTracker]);
-      const captured$ = new BehaviorSubject<AchievementEvent[]>([ItemCreatedProgressEvent]);
+      const captured$ = new BehaviorSubject(new Map([[ItemCreatedProgress, 1]]));
       const achievements$ = new ReplaySubject<AchievementEvent>(2);
       const result = firstValueFrom(achievements$.pipe(bufferCount(2)));
 
@@ -53,7 +52,7 @@ describe("event-processor", () => {
 
     it("tracks achievement progress and earns an achievement", async () => {
       const validators$ = new BehaviorSubject([ItemCreatedValidator]);
-      const captured$ = new BehaviorSubject<AchievementEvent[]>([]);
+      const captured$ = new BehaviorSubject(new Map<MetricId, number>());
       const achievements$ = new ReplaySubject<AchievementEvent>(3);
       const result = firstValueFrom(achievements$.pipe(bufferCount(3)));
 
@@ -70,7 +69,7 @@ describe("event-processor", () => {
 
     it("skips records that fail the validator's filter criteria", async () => {
       const validators$ = new BehaviorSubject([ItemCreatedTracker]);
-      const captured$ = new BehaviorSubject<AchievementEvent[]>([]);
+      const captured$ = new BehaviorSubject(new Map<MetricId, number>());
       const achievements$ = new ReplaySubject<AchievementEvent>(2);
       const result = firstValueFrom(achievements$.pipe(bufferCount(2)));
 
@@ -85,7 +84,7 @@ describe("event-processor", () => {
 
     it("only emits when its validators return events", async () => {
       const validators$ = new BehaviorSubject([ItemCreatedTracker]);
-      const captured$ = new BehaviorSubject<AchievementEvent[]>([]);
+      const captured$ = new BehaviorSubject(new Map<MetricId, number>());
       const achievements$ = new BehaviorSubject<AchievementEvent | null | undefined>(undefined);
 
       // `ItemCreatedTracker` filters `itemUpdated$` emissions. There are no others

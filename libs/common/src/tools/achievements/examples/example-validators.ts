@@ -3,6 +3,7 @@ import { Type } from "../data";
 import { AchievementId, MetricId, AchievementValidator } from "../types";
 
 const ItemCreatedProgress = "item-quantity" as MetricId;
+const CredentialGeneratedProgress = "credential-generated" as MetricId;
 
 const TotallyAttachedAchievement = "totally-attached" as AchievementId;
 const ItemCreatedMetric = "item-created-metric" as AchievementId;
@@ -118,4 +119,5 @@ export {
   ThreeItemsCreatedValidator,
   FiveItemsCreatedAchievement,
   FiveItemsCreatedValidator,
+  CredentialGeneratedProgress,
 };

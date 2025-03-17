@@ -8,15 +8,14 @@ import {
   MetricId,
   UserActionEvent,
 } from "./types";
-import { mapProgressByName as toMetricMap } from "./util";
 
 /** Monitors a user activity stream to recognize achievements
  *  @param validators$ validators track achievement progress and award achievements
- *  @param captured$ the set of previously emitted achievement events
+ *  @param metrics$ the set of previously emitted achievement events
  */
 function achievements(
   validators$: Observable<AchievementValidator[]>,
-  captured$: Observable<AchievementEvent[]>,
+  metrics$: Observable<Map<MetricId, number>>,
 ): OperatorFunction<UserActionEvent, AchievementEvent> {
   return pipe(
     withLatestFrom(validators$),
@@ -25,11 +24,10 @@ function achievements(
       const triggered = monitors.filter((m) => m.trigger(action));
       return [action, triggered] as const;
     }),
-    withLatestFrom(captured$),
+    withLatestFrom(metrics$),
     // monitor achievements
-    concatMap(([[action, validators], captured]) => {
+    concatMap(([[action, validators], metrics]) => {
       const achievements: AchievementEvent[] = [];
-      const metrics = toMetricMap(captured);
       const progress = new Map<AchievementId, AchievementProgressEvent[]>();
 
       // collect measurements
