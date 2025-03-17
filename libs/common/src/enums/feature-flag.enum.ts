@@ -17,7 +17,6 @@ export enum FeatureFlag {
   IdpAutoSubmitLogin = "idp-auto-submit-login",
   InlineMenuFieldQualification = "inline-menu-field-qualification",
   InlineMenuPositioningImprovements = "inline-menu-positioning-improvements",
-  InlineMenuTotp = "inline-menu-totp",
   NotificationBarAddLoginImprovements = "notification-bar-add-login-improvements",
   NotificationRefresh = "notification-refresh",
   UseTreeWalkerApiForPageDetailsCollection = "use-tree-walker-api-for-page-details-collection",
@@ -26,24 +25,26 @@ export enum FeatureFlag {
   ItemShare = "item-share",
   CriticalApps = "pm-14466-risk-insights-critical-application",
   EnableRiskInsightsNotifications = "enable-risk-insights-notifications",
+  DesktopSendUIRefresh = "desktop-send-ui-refresh",
+  ExportAttachments = "export-attachments",
 
-  ExtensionRefresh = "extension-refresh",
-  PM4154_BulkEncryptionService = "PM-4154-bulk-encryption-service",
+  /* Vault */
+  PM9111ExtensionPersistAddEditForm = "pm-9111-extension-persist-add-edit-form",
   VaultBulkManagementAction = "vault-bulk-management-action",
+  SecurityTasks = "security-tasks",
+
+  PM4154_BulkEncryptionService = "PM-4154-bulk-encryption-service",
   UnauthenticatedExtensionUIRefresh = "unauth-ui-refresh",
-  SSHKeyVaultItem = "ssh-key-vault-item",
-  SSHAgent = "ssh-agent",
   CipherKeyEncryption = "cipher-key-encryption",
   TrialPaymentOptional = "PM-8163-trial-payment",
-  SecurityTasks = "security-tasks",
   MacOsNativeCredentialSync = "macos-native-credential-sync",
-  PM9111ExtensionPersistAddEditForm = "pm-9111-extension-persist-add-edit-form",
   PrivateKeyRegeneration = "pm-12241-private-key-regeneration",
   ResellerManagedOrgAlert = "PM-15814-alert-owners-of-reseller-managed-orgs",
   AccountDeprovisioningBanner = "pm-17120-account-deprovisioning-admin-console-banner",
   PM15179_AddExistingOrgsFromProviderPortal = "pm-15179-add-existing-orgs-from-provider-portal",
   RecoveryCodeLogin = "pm-17128-recovery-code-login",
   PM12276_BreadcrumbEventLogs = "pm-12276-breadcrumbing-for-business-features",
+  PM18794_ProviderPaymentMethod = "pm-18794-provider-payment-method",
 }
 
 export type AllowedFeatureFlagTypes = boolean | number | string;
@@ -71,7 +72,6 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.IdpAutoSubmitLogin]: FALSE,
   [FeatureFlag.InlineMenuFieldQualification]: FALSE,
   [FeatureFlag.InlineMenuPositioningImprovements]: FALSE,
-  [FeatureFlag.InlineMenuTotp]: FALSE,
   [FeatureFlag.NotificationBarAddLoginImprovements]: FALSE,
   [FeatureFlag.NotificationRefresh]: FALSE,
   [FeatureFlag.UseTreeWalkerApiForPageDetailsCollection]: FALSE,
@@ -80,24 +80,26 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.ItemShare]: FALSE,
   [FeatureFlag.CriticalApps]: FALSE,
   [FeatureFlag.EnableRiskInsightsNotifications]: FALSE,
+  [FeatureFlag.DesktopSendUIRefresh]: FALSE,
+  [FeatureFlag.ExportAttachments]: FALSE,
 
-  [FeatureFlag.ExtensionRefresh]: FALSE,
-  [FeatureFlag.PM4154_BulkEncryptionService]: FALSE,
+  /* Vault */
+  [FeatureFlag.PM9111ExtensionPersistAddEditForm]: FALSE,
   [FeatureFlag.VaultBulkManagementAction]: FALSE,
+  [FeatureFlag.SecurityTasks]: FALSE,
+
+  [FeatureFlag.PM4154_BulkEncryptionService]: FALSE,
   [FeatureFlag.UnauthenticatedExtensionUIRefresh]: FALSE,
-  [FeatureFlag.SSHKeyVaultItem]: FALSE,
-  [FeatureFlag.SSHAgent]: FALSE,
   [FeatureFlag.CipherKeyEncryption]: FALSE,
   [FeatureFlag.TrialPaymentOptional]: FALSE,
-  [FeatureFlag.SecurityTasks]: FALSE,
   [FeatureFlag.MacOsNativeCredentialSync]: FALSE,
-  [FeatureFlag.PM9111ExtensionPersistAddEditForm]: FALSE,
   [FeatureFlag.PrivateKeyRegeneration]: FALSE,
   [FeatureFlag.ResellerManagedOrgAlert]: FALSE,
   [FeatureFlag.AccountDeprovisioningBanner]: FALSE,
   [FeatureFlag.PM15179_AddExistingOrgsFromProviderPortal]: FALSE,
   [FeatureFlag.RecoveryCodeLogin]: FALSE,
   [FeatureFlag.PM12276_BreadcrumbEventLogs]: FALSE,
+  [FeatureFlag.PM18794_ProviderPaymentMethod]: FALSE,
 } satisfies Record<FeatureFlag, AllowedFeatureFlagTypes>;
 
 export type DefaultFeatureFlagValueType = typeof DefaultFeatureFlagValue;
