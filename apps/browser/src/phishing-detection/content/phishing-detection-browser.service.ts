@@ -1,12 +1,5 @@
-import { Utils } from "@bitwarden/common/platform/misc/utils";
-
 export class PhishingDetectionBrowserService {
   private static knownPhishingDomains = new Set();
-
-  static checkUrl(url: string): boolean {
-    const domain = Utils.getDomain(url);
-    return PhishingDetectionBrowserService.knownPhishingDomains.has(domain);
-  }
 
   static notifyUser(url: string) {
     const phishingDivId = "phishing-notification-bar";
@@ -52,15 +45,4 @@ export class PhishingDetectionBrowserService {
   static getActiveUrl() {
     return window?.location?.href;
   }
-
-  // @TODO: This can be remove once we implement the real code.
-  static loadMockedData() {
-    PhishingDetectionBrowserService.knownPhishingDomains.add("google.com");
-    PhishingDetectionBrowserService.knownPhishingDomains.add("atlassian.net");
-    PhishingDetectionBrowserService.knownPhishingDomains.add("example.com");
-    PhishingDetectionBrowserService.knownPhishingDomains.add("w3schools.com");
-  }
 }
-
-// Initializing the data for local development
-PhishingDetectionBrowserService.loadMockedData();

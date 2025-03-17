@@ -1,5 +1,8 @@
-/* eslint-disable no-console */
+ 
+import { Utils } from "@bitwarden/common/platform/misc/utils";
+
 import { PhishingDetectionBrowserService } from "./content/phishing-detection-browser.service";
+import { PhishingDetectionCommands } from "./phishing-detection.enum";
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", loadPhishingDetectionContent);
@@ -9,9 +12,16 @@ if (document.readyState === "loading") {
 
 async function loadPhishingDetectionContent() {
   const activeUrl = PhishingDetectionBrowserService.getActiveUrl();
-  const isPhishingDomain = PhishingDetectionBrowserService.checkUrl(activeUrl);
+
+  const { isPhishingDomain } = await chrome.runtime.sendMessage({
+    command: PhishingDetectionCommands.CheckUrl,
+    activeUrl,
+  });
+
   if (isPhishingDomain) {
-    PhishingDetectionBrowserService.notifyUser(activeUrl);
+    const domain = Utils.getDomain(activeUrl);
+
+    PhishingDetectionBrowserService.notifyUser(domain);
   }
 }
 

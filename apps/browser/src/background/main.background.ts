@@ -272,6 +272,7 @@ import BrowserMemoryStorageService from "../platform/services/browser-memory-sto
 import { BrowserScriptInjectorService } from "../platform/services/browser-script-injector.service";
 import I18nService from "../platform/services/i18n.service";
 import { LocalBackedSessionStorageService } from "../platform/services/local-backed-session-storage.service";
+import { PhishingDetectionService } from "../platform/services/phishing-detection.service";
 import { BackgroundPlatformUtilsService } from "../platform/services/platform-utils/background-platform-utils.service";
 import { BrowserPlatformUtilsService } from "../platform/services/platform-utils/browser-platform-utils.service";
 import { PopupViewCacheBackgroundService } from "../platform/services/popup-view-cache-background.service";
@@ -430,6 +431,8 @@ export default class MainBackground {
         await this.processReloadService.startProcessReload(this.authService);
       }
     };
+
+    PhishingDetectionService.setupCheckUrlListener();
 
     const logoutCallback = async (logoutReason: LogoutReason, userId?: UserId) =>
       await this.logout(logoutReason, userId);

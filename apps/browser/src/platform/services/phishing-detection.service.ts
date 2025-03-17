@@ -1,6 +1,7 @@
-/* eslint-disable no-console */
+ 
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 
+import { PhishingDetectionCommands } from "../../phishing-detection/phishing-detection.enum";
 import { BrowserApi } from "../browser/browser-api";
 
 export class PhishingDetectionService {
@@ -19,35 +20,19 @@ export class PhishingDetectionService {
   static loadMockedData() {
     PhishingDetectionService.knownPhishingDomains.add("google.com");
     PhishingDetectionService.knownPhishingDomains.add("atlassian.net");
+    PhishingDetectionService.knownPhishingDomains.add("example.com");
+    PhishingDetectionService.knownPhishingDomains.add("w3schools.com");
   }
 
-  static async getActiveUrl(): Promise<string> {
-    const win = await BrowserApi.getCurrentWindow();
-    const currentWindow = await BrowserApi.tabsQuery({ windowId: win.id, active: true });
+  static setupCheckUrlListener(): void {
+    BrowserApi.addListener(chrome.runtime.onMessage, async (message, sender, sendResponse) => {
+      console.log("Jimmy addListener ", { message });
+      if (message.command === PhishingDetectionCommands.CheckUrl) {
+        const { activeUrl } = message;
 
-    // @TODO: Account for cases with no active windows.
-    return currentWindow[0].url;
-  }
-
-  // @TODO: WIP. We can have a pop-up or send a notification to other services.
-  static notifyUser(url: string) {}
-
-  /*
-    This listener will check the URL when the tab has finished loading.
-  */
-  setupTabEventListeners(): void {
-    BrowserApi.addListener(chrome.tabs.onUpdated, async (tabId, changeInfo, tab) => {
-      if (changeInfo.status === "complete") {
-        const activeUrl = await PhishingDetectionService.getActiveUrl();
-
-        // Debugging
-        console.log("Tab changed:", { tab, changeInfo, tabId });
-
-        const isPhishingDomain = PhishingDetectionService.checkUrl(activeUrl);
-
-        if (isPhishingDomain) {
-          PhishingDetectionService.notifyUser(activeUrl);
-        }
+        const result = { isPhishingDomain: PhishingDetectionService.checkUrl(activeUrl) };
+        console.log("Jimmy", result);
+        sendResponse(result);
       }
     });
   }
