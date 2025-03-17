@@ -6,7 +6,7 @@ import {
   ItemCreatedProgress2Event,
 } from "./examples/achievement-events";
 import { CredentialGeneratedProgress, ItemCreatedProgress } from "./examples/example-validators";
-import { latestMetrics } from "./latest-metrics";
+import { latestProgressMetrics } from "./latest-metrics";
 import { AchievementProgressEvent, MetricId } from "./types";
 
 describe("latestMetrics", () => {
@@ -14,7 +14,7 @@ describe("latestMetrics", () => {
     const subject = new Subject<AchievementProgressEvent>();
     const result = new BehaviorSubject(new Map<MetricId, number>());
 
-    subject.pipe(latestMetrics()).subscribe(result);
+    subject.pipe(latestProgressMetrics()).subscribe(result);
     subject.next(ItemCreatedProgressEvent);
 
     expect(result.value.get(ItemCreatedProgress)).toEqual(
@@ -26,7 +26,7 @@ describe("latestMetrics", () => {
     const subject = new Subject<AchievementProgressEvent>();
     const result = new BehaviorSubject(new Map<MetricId, number>());
 
-    subject.pipe(latestMetrics()).subscribe(result);
+    subject.pipe(latestProgressMetrics()).subscribe(result);
     subject.next(ItemCreatedProgressEvent);
     subject.next(CredentialGeneratedProgressEvent);
 
@@ -42,7 +42,7 @@ describe("latestMetrics", () => {
     const subject = new Subject<AchievementProgressEvent>();
     const result = new BehaviorSubject(new Map<MetricId, number>());
 
-    subject.pipe(latestMetrics()).subscribe(result);
+    subject.pipe(latestProgressMetrics()).subscribe(result);
     subject.next(ItemCreatedProgressEvent);
     subject.next(ItemCreatedProgress2Event);
 
@@ -55,7 +55,7 @@ describe("latestMetrics", () => {
     const subject = new Subject<AchievementProgressEvent>();
     const result = new BehaviorSubject(new Map<MetricId, number>());
 
-    subject.pipe(latestMetrics()).subscribe(result);
+    subject.pipe(latestProgressMetrics()).subscribe(result);
     subject.next(ItemCreatedProgress2Event);
     subject.next(ItemCreatedProgressEvent);
 

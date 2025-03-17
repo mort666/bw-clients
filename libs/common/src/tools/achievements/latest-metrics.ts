@@ -31,36 +31,36 @@ function latestProgressEvents(): OperatorFunction<
   );
 }
 
-function latestMetrics(): OperatorFunction<AchievementProgressEvent, Map<MetricId, number>> {
+function latestProgressMetrics(): OperatorFunction<
+  AchievementProgressEvent,
+  Map<MetricId, AchievementProgressEvent>
+> {
   return pipe(
     scan((metrics, captured) => {
-      const [timestamp] = metrics.get(captured.achievement.name) ?? [];
+      const metric = metrics.get(captured.achievement.name);
 
       // omit stale metrics
-      if (timestamp && timestamp > captured["@timestamp"]) {
+      if (metric && metric["@timestamp"] > captured["@timestamp"]) {
         return metrics;
       }
 
-      const latest = [captured["@timestamp"], captured.achievement.value] as const;
-      metrics.set(captured.achievement.name, latest);
+      metrics.set(captured.achievement.name, captured);
 
       return metrics;
-    }, new Map<MetricId, readonly [number, number]>()),
-
-    // omit timestamps from metrics
-    map(
-      (metrics) => new Map(Array.from(metrics.entries(), ([metric, [, value]]) => [metric, value])),
-    ),
+    }, new Map<MetricId, AchievementProgressEvent>()),
   );
 }
 
-function latestEarnedSet(): OperatorFunction<AchievementEarnedEvent, Set<AchievementId>> {
+function latestEarnedMetrics(): OperatorFunction<
+  AchievementEarnedEvent,
+  Map<AchievementId, AchievementEarnedEvent>
+> {
   return pipe(
     scan((earned, captured) => {
-      earned.add(captured.achievement.name);
+      earned.set(captured.achievement.name, captured);
       return earned;
-    }, new Set<AchievementId>()),
+    }, new Map<AchievementId, AchievementEarnedEvent>()),
   );
 }
 
-export { latestMetrics, latestProgressEvents, latestEarnedSet };
+export { latestProgressMetrics, latestProgressEvents, latestEarnedMetrics };

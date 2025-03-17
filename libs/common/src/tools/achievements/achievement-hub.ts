@@ -1,8 +1,17 @@
-import { Observable, ReplaySubject, Subject, debounceTime, filter, map, startWith } from "rxjs";
+import {
+  Observable,
+  ReplaySubject,
+  Subject,
+  debounceTime,
+  filter,
+  map,
+  share,
+  startWith,
+} from "rxjs";
 
 import { active } from "./achievement-manager";
 import { achievements } from "./achievement-processor";
-import { latestEarnedSet, latestMetrics } from "./latest-metrics";
+import { latestEarnedMetrics, latestProgressMetrics } from "./latest-metrics";
 import { isEarnedEvent, isProgressEvent } from "./meta";
 import {
   AchievementEarnedEvent,
@@ -26,30 +35,35 @@ export class AchievementHub {
     this.achievementLog = new ReplaySubject<AchievementEvent>(bufferSize);
     this.achievements.subscribe(this.achievementLog);
 
-    const active$ = validators$.pipe(active(this.metrics$(), this.earned$()));
+    const metrics$ = this.metrics$().pipe(
+      map((m) => new Map(Array.from(m.entries(), ([k, v]) => [k, v.achievement.value] as const))),
+      share(),
+    );
+    const earned$ = this.earned$().pipe(map((m) => new Set(m.keys())));
+    const active$ = validators$.pipe(active(metrics$, earned$));
 
-    events$.pipe(achievements(active$, this.metrics$())).subscribe(this.achievements);
+    events$.pipe(achievements(active$, metrics$)).subscribe(this.achievements);
   }
 
   private readonly achievements: Subject<AchievementEvent>;
   private readonly achievementLog: ReplaySubject<AchievementEvent>;
 
-  earned$(): Observable<Set<AchievementId>> {
+  earned$(): Observable<Map<AchievementId, AchievementEarnedEvent>> {
     return this.achievementLog.pipe(
       filter((e) => isEarnedEvent(e)),
       map((e) => e as AchievementEarnedEvent),
-      latestEarnedSet(),
-      startWith(new Set<AchievementId>()),
+      latestEarnedMetrics(),
+      startWith(new Map<AchievementId, AchievementEarnedEvent>()),
       debounceTime(ACHIEVEMENT_INITIAL_DEBOUNCE_MS),
     );
   }
 
-  metrics$(): Observable<Map<MetricId, number>> {
+  metrics$(): Observable<Map<MetricId, AchievementProgressEvent>> {
     return this.achievementLog.pipe(
       filter((e) => isProgressEvent(e)),
       map((e) => e as AchievementProgressEvent),
-      latestMetrics(),
-      startWith(new Map<MetricId, number>()),
+      latestProgressMetrics(),
+      startWith(new Map<MetricId, AchievementProgressEvent>()),
     );
   }
 
