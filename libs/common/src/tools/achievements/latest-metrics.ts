@@ -1,6 +1,6 @@
 import { OperatorFunction, map, filter, pipe, scan } from "rxjs";
 
-import { MetricId, AchievementProgressEvent } from "./types";
+import { MetricId, AchievementProgressEvent, AchievementId, AchievementEarnedEvent } from "./types";
 
 function latestProgressEvents(): OperatorFunction<
   AchievementProgressEvent,
@@ -54,4 +54,13 @@ function latestMetrics(): OperatorFunction<AchievementProgressEvent, Map<MetricI
   );
 }
 
-export { latestMetrics, latestProgressEvents };
+function latestEarnedSet(): OperatorFunction<AchievementEarnedEvent, Set<AchievementId>> {
+  return pipe(
+    scan((earned, captured) => {
+      earned.add(captured.achievement.name);
+      return earned;
+    }, new Set<AchievementId>()),
+  );
+}
+
+export { latestMetrics, latestProgressEvents, latestEarnedSet };

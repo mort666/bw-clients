@@ -69,4 +69,4 @@ function achievements(
   );
 }
 
-export { achievements as validate };
+export { achievements, achievements as validate };

@@ -1,25 +1,18 @@
 import { Observable, OperatorFunction, map, pipe, withLatestFrom } from "rxjs";
 
-import { isEarnedEvent } from "./meta";
-import { AchievementEvent, AchievementValidator } from "./types";
-import { mapProgressByName } from "./util";
+import { AchievementId, AchievementValidator, MetricId } from "./types";
 
 // computes the list of live achievements; those whose trigger conditions
 // aren't met are excluded from the active set
 function active(
-  status$: Observable<AchievementEvent[]>,
+  metrics$: Observable<ReadonlyMap<MetricId, number>>,
+  earned$: Observable<ReadonlySet<AchievementId>>,
 ): OperatorFunction<AchievementValidator[], AchievementValidator[]> {
   return pipe(
     // TODO: accept a configuration observable that completes without
     //       emission when the user has opted out of achievements
-    withLatestFrom(status$),
-    map(([monitors, log]) => {
-      // partition the log into progress and earned achievements
-      const progressByName = mapProgressByName(log);
-      const earnedByName = new Set(
-        log.filter((e) => isEarnedEvent(e)).map((e) => e.achievement.name),
-      );
-
+    withLatestFrom(metrics$, earned$),
+    map(([monitors, metrics, earned]) => {
       // compute list of active achievements
       const active = monitors.filter((m) => {
         // 🧠 the filters could be lifted into a function argument & delivered
@@ -27,11 +20,11 @@ function active(
 
         if (m.active === "until-earned") {
           // monitor disabled if already achieved
-          return !earnedByName.has(m.achievement);
+          return !earned.has(m.achievement);
         }
 
         // monitor disabled if outside of threshold
-        const progress = (m.active.metric && progressByName.get(m.active.metric)) || 0;
+        const progress = (m.active.metric && metrics.get(m.active.metric)) || 0;
         if (progress > (m.active.high ?? Number.POSITIVE_INFINITY)) {
           return false;
         } else if (progress < (m.active.low ?? 0)) {
