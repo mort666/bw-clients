@@ -153,6 +153,8 @@ export class SendProgram extends BaseProgram {
           this.serviceContainer.eventCollectionService,
           this.serviceContainer.billingAccountProfileStateService,
           this.serviceContainer.accountService,
+          this.serviceContainer.environmentService,
+          this.serviceContainer.platformUtilsService,
         );
         const response = await cmd.run("template", object, null);
         this.processResponse(response);
@@ -187,10 +189,10 @@ export class SendProgram extends BaseProgram {
         writeLn("");
         writeLn("    bw send get searchText");
         writeLn("    bw send get id");
-        writeLn("    bw send get searchText --text");
-        writeLn("    bw send get searchText --file");
-        writeLn("    bw send get searchText --file --output ../Photos/photo.jpg");
-        writeLn("    bw send get searchText --file --raw");
+        writeLn("    bw send get id --text");
+        writeLn("    bw send get id --file");
+        writeLn("    bw send get id --file --output ../Photos/photo.jpg");
+        writeLn("    bw send get id --file --raw");
         writeLn("", true);
       })
       .action(async (id: string, options: OptionValues) => {

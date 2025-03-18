@@ -66,6 +66,8 @@ export class OssServeConfigurator {
       this.serviceContainer.eventCollectionService,
       this.serviceContainer.billingAccountProfileStateService,
       this.serviceContainer.accountService,
+      this.serviceContainer.environmentService,
+      this.serviceContainer.platformUtilsService,
     );
     this.listCommand = new ListCommand(
       this.serviceContainer.cipherService,
