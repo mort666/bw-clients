@@ -9,7 +9,6 @@ import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/pl
 import { EncArrayBuffer } from "@bitwarden/common/platform/models/domain/enc-array-buffer";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 
-
 import { Response } from "../models/response";
 import { FileResponse } from "../models/response/file.response";
 import { CliUtils } from "../utils";
