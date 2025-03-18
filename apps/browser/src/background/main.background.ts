@@ -271,7 +271,6 @@ import BrowserMemoryStorageService from "../platform/services/browser-memory-sto
 import { BrowserScriptInjectorService } from "../platform/services/browser-script-injector.service";
 import I18nService from "../platform/services/i18n.service";
 import { LocalBackedSessionStorageService } from "../platform/services/local-backed-session-storage.service";
-import { PhishingApiService } from "../platform/services/phishing-api.service";
 import { PhishingDetectionService } from "../platform/services/phishing-detection.service";
 import { BackgroundPlatformUtilsService } from "../platform/services/platform-utils/background-platform-utils.service";
 import { BrowserPlatformUtilsService } from "../platform/services/platform-utils/browser-platform-utils.service";
@@ -711,9 +710,8 @@ export default class MainBackground {
       this.vaultTimeoutSettingsService,
     );
 
-    const phishingApiService = new PhishingApiService(this.apiService);
     PhishingDetectionService.initialize(
-      phishingApiService,
+      this.auditService,
       this.logService,
       this.storageService,
       this.taskSchedulerService,

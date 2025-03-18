@@ -48,6 +48,10 @@ export class ReportsHomeComponent implements OnInit {
         variant: reportRequiresPremium,
       },
       {
+        ...reports[ReportType.PhishingWebsitesReport],
+        variant: reportRequiresPremium,
+      },
+      {
         ...reports[ReportType.Inactive2fa],
         variant: reportRequiresPremium,
       },

@@ -1,6 +1,6 @@
 import { Subscription } from "rxjs";
 
-import { PhishingApiServiceAbstraction } from "@bitwarden/common/abstractions/phishing-api.service.abstraction";
+import { AuditService } from "@bitwarden/common/abstractions/audit.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { AbstractStorageService } from "@bitwarden/common/platform/abstractions/storage.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
@@ -16,7 +16,7 @@ export class PhishingDetectionService {
   private static readonly RETRY_INTERVAL = 5 * 60 * 1000; // 5 minutes
   private static readonly MAX_RETRIES = 3;
   private static readonly STORAGE_KEY = "phishing_domains_cache";
-  private static phishingApiService: PhishingApiServiceAbstraction;
+  private static auditService: AuditService;
   private static logService: LogService;
   private static storageService: AbstractStorageService;
   private static taskSchedulerService: TaskSchedulerService;
@@ -26,12 +26,12 @@ export class PhishingDetectionService {
   private static retryCount = 0;
 
   static initialize(
-    phishingApiService: PhishingApiServiceAbstraction,
+    auditService: AuditService,
     logService: LogService,
     storageService: AbstractStorageService,
     taskSchedulerService: TaskSchedulerService,
   ) {
-    PhishingDetectionService.phishingApiService = phishingApiService;
+    PhishingDetectionService.auditService = auditService;
     PhishingDetectionService.logService = logService;
     PhishingDetectionService.storageService = storageService;
     PhishingDetectionService.taskSchedulerService = taskSchedulerService;
@@ -145,7 +145,7 @@ export class PhishingDetectionService {
     this.isUpdating = true;
     try {
       this.logService.info("Starting phishing domains update...");
-      const domains = await PhishingDetectionService.phishingApiService.getKnownPhishingDomains();
+      const domains = await PhishingDetectionService.auditService.getKnownPhishingDomains();
       this.logService.info("Received phishing domains response");
 
       // Clear old domains to prevent memory leaks

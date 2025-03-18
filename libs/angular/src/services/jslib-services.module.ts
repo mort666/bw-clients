@@ -1,5 +1,4 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
+// FIXME: Update this file to be typ@bitwarden/common/src/services/phishing-api.serviceALE_ID, NgModule } from "@angular/core";
 import { ErrorHandler, LOCALE_ID, NgModule } from "@angular/core";
 import { Subject } from "rxjs";
 
