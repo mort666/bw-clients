@@ -92,15 +92,4 @@ export class DefaultAuthRequestApiService implements AuthRequestApiService {
     const r = await this.apiService.send("GET", path, null, true, true);
     return new ListResponse(r, AuthRequestResponse);
   }
-
-  async getLastAuthRequest(): Promise<AuthRequestResponse> {
-    const requests = await this.getAuthRequests();
-    const activeRequests = requests.data.filter(
-      (m: AuthRequestResponse) => !m.isAnswered && !m.isExpired,
-    );
-    const lastRequest = activeRequests.sort((a: AuthRequestResponse, b: AuthRequestResponse) =>
-      a.creationDate.localeCompare(b.creationDate),
-    )[activeRequests.length - 1];
-    return lastRequest;
-  }
 }

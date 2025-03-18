@@ -3,6 +3,7 @@ import { mock } from "jest-mock-extended";
 import { AuthRequestResponse } from "@bitwarden/common/auth/models/response/auth-request.response";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { FakeMasterPasswordService } from "@bitwarden/common/key-management/master-password/services/fake-master-password.service";
+import { ListResponse } from "@bitwarden/common/models/response/list.response";
 import { AuthRequestPushNotification } from "@bitwarden/common/models/response/notification.response";
 import { AppIdService } from "@bitwarden/common/platform/abstractions/app-id.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
@@ -279,6 +280,23 @@ describe("AuthRequestService", () => {
       const phrase = sut.getFingerprintPhrase(email, mockPublicKey);
       const phraseUpperCase = sut.getFingerprintPhrase(emailUpperCase, mockPublicKey);
       expect(phrase).toEqual(phraseUpperCase);
+    });
+  });
+
+  describe("getLastAuthRequest", () => {
+    it("should return the most recent unanswered and unexpired request", async () => {
+      const mockData = {
+        data: [
+          { creationDate: "2025-03-15", isAnswered: false, isExpired: false },
+          { creationDate: "2025-03-16", isAnswered: false, isExpired: false },
+        ],
+      } as ListResponse<AuthRequestResponse>;
+
+      apiService.getAuthRequests.mockResolvedValue(mockData);
+
+      const result = await sut.getLastAuthRequest();
+
+      expect(result.creationDate).toBe("2025-03-16");
     });
   });
 });

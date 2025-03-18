@@ -203,6 +203,17 @@ export class AuthRequestService implements AuthRequestServiceAbstraction {
     };
   }
 
+  async getLastAuthRequest(): Promise<AuthRequestResponse> {
+    const requests = await this.apiService.getAuthRequests();
+    const activeRequests = requests.data.filter(
+      (m: AuthRequestResponse) => !m.isAnswered && !m.isExpired,
+    );
+    const lastRequest = activeRequests.sort((a: AuthRequestResponse, b: AuthRequestResponse) =>
+      a.creationDate.localeCompare(b.creationDate),
+    )[activeRequests.length - 1];
+    return lastRequest;
+  }
+
   sendAuthRequestPushNotification(notification: AuthRequestPushNotification): void {
     if (notification.id != null) {
       this.authRequestPushNotificationSubject.next(notification.id);
