@@ -7,7 +7,7 @@ import { Organization } from "../../admin-console/models/domain/organization";
 import { CipherView } from "../models/view/cipher.view";
 import { FolderView } from "../models/view/folder.view";
 
-import { AstNodeType } from "./ast";
+import { Search } from "./ast";
 
 export type ParseResult =
   | {
@@ -33,7 +33,7 @@ export type FilterResult =
 
 export type ProcessInstructions = {
   filter: (context: SearchContext) => SearchContext;
-  sections: { start: number; end: number; type: AstNodeType }[];
+  ast: Search;
 };
 
 export type SearchContext = {

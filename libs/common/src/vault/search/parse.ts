@@ -1,6 +1,7 @@
 import { Parser, Grammar } from "nearley";
 
 import { UriMatchStrategy, UriMatchStrategySetting } from "../../models/domain/domain-service";
+import { LogService } from "../../platform/abstractions/log.service";
 import { Utils } from "../../platform/misc/utils";
 import { CipherId } from "../../types/guid";
 import { CardLinkedId, CipherType, FieldType, LinkedIdType, LoginLinkedId } from "../enums";
@@ -9,6 +10,7 @@ import { CipherView } from "../models/view/cipher.view";
 import {
   AstNode,
   OrderDirection,
+  Search,
   isAnd,
   isFieldTerm,
   isHasAttachment,
@@ -31,11 +33,11 @@ import {
   isWebsiteMatchFilter,
 } from "./ast";
 import grammar from "./bitwarden-query-grammar";
-import { ProcessInstructions } from "./query.types";
+import { ProcessInstructions, SearchContext } from "./query.types";
 
 export const PARSE_ERROR = new Error("Invalid search query");
 
-export function parseQuery(query: string): ProcessInstructions {
+export function parseQuery(query: string, logService: LogService): ProcessInstructions {
   const parser = new Parser(Grammar.fromCompiled(grammar));
   parser.feed(query);
   if (!parser.results) {
@@ -46,11 +48,12 @@ export function parseQuery(query: string): ProcessInstructions {
 
   const result = parser.results[0] as AstNode;
 
-  const parsed = handleNode(result);
+  const parsed = { ...handleNode(result), ast: result as Search };
+  logService.debug("Parsed query", parsed);
   return parsed;
 }
 
-function handleNode(node: AstNode): ProcessInstructions {
+function handleNode(node: AstNode): { filter: (context: SearchContext) => SearchContext } {
   if (isSearch(node)) {
     return handleNode(node.contents);
   } else if (isOr(node)) {
@@ -65,13 +68,6 @@ function handleNode(node: AstNode): ProcessInstructions {
           ciphers: leftFilteredContext.ciphers.concat(rightFilteredContext.ciphers),
         };
       },
-      sections: left.sections.concat(right.sections).concat([
-        {
-          start: node.start,
-          end: node.end,
-          type: node.type,
-        },
-      ]),
     };
   } else if (isNot(node)) {
     const negate = handleNode(node.value);
@@ -83,13 +79,6 @@ function handleNode(node: AstNode): ProcessInstructions {
           ciphers: context.ciphers.filter((cipher) => !filteredContext.ciphers.includes(cipher)),
         };
       },
-      sections: negate.sections.concat([
-        {
-          start: node.start,
-          end: node.end,
-          type: node.type,
-        },
-      ]),
     };
   } else if (isAnd(node)) {
     const left = handleNode(node.left);
@@ -99,25 +88,11 @@ function handleNode(node: AstNode): ProcessInstructions {
         const leftFilteredContext = left.filter(context);
         return right.filter(leftFilteredContext);
       },
-      sections: left.sections.concat(right.sections).concat([
-        {
-          start: node.start,
-          end: node.end,
-          type: node.type,
-        },
-      ]),
     };
   } else if (isParentheses(node)) {
     const inner = handleNode(node.inner);
     return {
       filter: inner.filter,
-      sections: inner.sections.concat([
-        {
-          start: node.start,
-          end: node.end,
-          type: node.type,
-        },
-      ]),
     };
   } else if (isTerm(node)) {
     // search all fields for term at node value
@@ -130,13 +105,6 @@ function handleNode(node: AstNode): ProcessInstructions {
           ciphers,
         };
       },
-      sections: [
-        {
-          start: node.start,
-          end: node.end,
-          type: node.type,
-        },
-      ],
     };
   } else if (isFieldTerm(node)) {
     const fieldTest = fieldNameToRegexTest(node.field);
@@ -149,13 +117,6 @@ function handleNode(node: AstNode): ProcessInstructions {
           ciphers,
         };
       },
-      sections: [
-        {
-          start: node.start,
-          end: node.end,
-          type: node.type,
-        },
-      ],
     };
   } else if (isHasAttachment(node)) {
     return {
@@ -165,13 +126,6 @@ function handleNode(node: AstNode): ProcessInstructions {
           (cipher) => !!cipher.attachments && cipher.attachments.length > 0,
         ),
       }),
-      sections: [
-        {
-          start: node.start,
-          end: node.end,
-          type: node.type,
-        },
-      ],
     };
   } else if (isHasUri(node)) {
     return {
@@ -181,13 +135,6 @@ function handleNode(node: AstNode): ProcessInstructions {
           (cipher) => !!cipher?.login?.uris && cipher.login.uris.length > 0,
         ),
       }),
-      sections: [
-        {
-          start: node.start,
-          end: node.end,
-          type: node.type,
-        },
-      ],
     };
   } else if (isHasFolder(node)) {
     return {
@@ -195,13 +142,6 @@ function handleNode(node: AstNode): ProcessInstructions {
         ...context,
         ciphers: context.ciphers.filter((cipher) => !!cipher.folderId),
       }),
-      sections: [
-        {
-          start: node.start,
-          end: node.end,
-          type: node.type,
-        },
-      ],
     };
   } else if (isInFolder(node)) {
     // TODO: There is currently no folder name information in a cipher view
@@ -218,13 +158,6 @@ function handleNode(node: AstNode): ProcessInstructions {
               : context.ciphers.filter((cipher) => cipher.folderId === folderId),
         };
       },
-      sections: [
-        {
-          start: node.start,
-          end: node.end,
-          type: node.type,
-        },
-      ],
     };
   } else if (isInCollection(node)) {
     const collectionTest = termToRegexTest(node.collection);
@@ -243,13 +176,6 @@ function handleNode(node: AstNode): ProcessInstructions {
           ),
         };
       },
-      sections: [
-        {
-          start: node.start,
-          end: node.end,
-          type: node.type,
-        },
-      ],
     };
   } else if (isInOrg(node)) {
     // TODO: There is currently no organization name information in a cipher view
@@ -266,13 +192,6 @@ function handleNode(node: AstNode): ProcessInstructions {
               : context.ciphers.filter((cipher) => cipher.organizationId === organizationId),
         };
       },
-      sections: [
-        {
-          start: node.start,
-          end: node.end,
-          type: node.type,
-        },
-      ],
     };
   } else if (isInMyVault(node)) {
     return {
@@ -280,13 +199,6 @@ function handleNode(node: AstNode): ProcessInstructions {
         ...context,
         ciphers: context.ciphers.filter((cipher) => cipher.organizationId == null),
       }),
-      sections: [
-        {
-          start: node.start,
-          end: node.end,
-          type: node.type,
-        },
-      ],
     };
   } else if (isInTrash(node)) {
     return {
@@ -294,13 +206,6 @@ function handleNode(node: AstNode): ProcessInstructions {
         ...context,
         ciphers: context.ciphers.filter((cipher) => cipher.isDeleted),
       }),
-      sections: [
-        {
-          start: node.start,
-          end: node.end,
-          type: node.type,
-        },
-      ],
     };
   } else if (isIsFavorite(node)) {
     return {
@@ -308,13 +213,6 @@ function handleNode(node: AstNode): ProcessInstructions {
         ...context,
         ciphers: context.ciphers.filter((cipher) => cipher.favorite),
       }),
-      sections: [
-        {
-          start: node.start,
-          end: node.end,
-          type: node.type,
-        },
-      ],
     };
   } else if (isTypeFilter(node)) {
     const typeTest = fieldNameToRegexTest(node.cipherType);
@@ -325,13 +223,6 @@ function handleNode(node: AstNode): ProcessInstructions {
           matchEnum(CipherType, cipher.type, typeTest, node.cipherType),
         ),
       }),
-      sections: [
-        {
-          start: node.start,
-          end: node.end,
-          type: node.type,
-        },
-      ],
     };
   } else if (isWebsiteFilter(node)) {
     const websiteTest = termToRegexTest(node.website);
@@ -342,13 +233,6 @@ function handleNode(node: AstNode): ProcessInstructions {
           cipher?.login?.uris?.some((uri) => websiteTest.test(uri.uri)),
         ),
       }),
-      sections: [
-        {
-          start: node.start,
-          end: node.end,
-          type: node.type,
-        },
-      ],
     };
   } else if (isWebsiteMatchFilter(node)) {
     const websiteTest = termToRegexTest(node.website);
@@ -362,13 +246,6 @@ function handleNode(node: AstNode): ProcessInstructions {
           ),
         ),
       }),
-      sections: [
-        {
-          start: node.start,
-          end: node.end,
-          type: node.type,
-        },
-      ],
     };
   } else if (isOrderBy(node)) {
     // TODO: This logic is shaky at best, this operator needs to be rewritten
@@ -411,13 +288,6 @@ function handleNode(node: AstNode): ProcessInstructions {
           ciphers: idOrder.map((id) => context.ciphers.find((cipher) => cipher.id === id)!),
         };
       },
-      sections: [
-        {
-          start: node.start,
-          end: node.end,
-          type: node.type,
-        },
-      ],
     };
   } else {
     throw new Error("Invalid node\n" + JSON.stringify(node, null, 2));
@@ -486,7 +356,7 @@ function fieldNameToRegexTest(field: string) {
   }
 }
 
-const ForbiddenFields = Object.freeze(["login.password", "login.totp"]);
+const ForbiddenFields = Object.freeze(["login.password", "login.totp", "card.code"]);
 
 const ForbiddenLinkedIds: Readonly<LinkedIdType[]> = Object.freeze([
   LoginLinkedId.Password,

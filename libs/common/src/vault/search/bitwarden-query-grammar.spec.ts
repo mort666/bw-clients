@@ -323,6 +323,8 @@ const PartialQuoteEnd = {
   ],
 };
 
+const EmptyParens = "()";
+
 describe("search query grammar", () => {
   const grammar = Grammar.fromCompiled(compiledGrammar);
   let parser: Parser;
@@ -357,6 +359,10 @@ describe("search query grammar", () => {
     for (let i = 0; i < parser.results.length; i++) {
       expect(purgeAstPositionMarkers(parser.results[i])).toEqual(expectedResults[i]);
     }
+  });
+
+  it.each([EmptyParens])("should not parse %s", (query) => {
+    expect(() => parser.feed(query)).toThrow();
   });
 });
 

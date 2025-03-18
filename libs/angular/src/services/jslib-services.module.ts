@@ -356,6 +356,7 @@ import {
   CLIENT_TYPE,
   REFRESH_ACCESS_TOKEN_ERROR_CALLBACK,
   ENV_ADDITIONAL_REGIONS,
+  IS_DEV,
 } from "./injection-tokens";
 import { ModalService } from "./modal.service";
 
@@ -557,7 +558,11 @@ const safeProviders: SafeProvider[] = [
     useClass: AvatarService,
     deps: [ApiServiceAbstraction, StateProvider],
   }),
-  safeProvider({ provide: LogService, useFactory: () => new ConsoleLogService(false), deps: [] }),
+  safeProvider({
+    provide: IS_DEV,
+    useValue: process.env.NODE_ENV === "development",
+  }),
+  safeProvider({ provide: LogService, useClass: ConsoleLogService, deps: [IS_DEV] }),
   safeProvider({
     provide: CollectionService,
     useClass: DefaultCollectionService,
@@ -1473,7 +1478,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: FilterService,
     useClass: DefaultFilterService,
-    deps: [],
+    deps: [LogService],
   }),
   safeProvider({
     provide: SearchHistoryService,

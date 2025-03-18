@@ -2,6 +2,7 @@ import * as lunr from "lunr";
 import { combineLatest, map, Observable, of, OperatorFunction, pipe, switchMap } from "rxjs";
 
 import { UriMatchStrategy } from "../../models/domain/domain-service";
+import { LogService } from "../../platform/abstractions/log.service";
 import { CipherType, FieldType } from "../enums";
 import { CipherView } from "../models/view/cipher.view";
 
@@ -21,7 +22,7 @@ export abstract class FilterService {
 
 export class DefaultFilterService implements FilterService {
   private static registeredPipeline = false;
-  constructor() {
+  constructor(private readonly logService: LogService) {
     // Currently have to ensure this is only done a single time. Lunr allows you to register a function
     // multiple times but they will add a warning message to the console. The way they do that breaks when ran on a service worker.
     if (!DefaultFilterService.registeredPipeline) {
@@ -64,7 +65,7 @@ export class DefaultFilterService implements FilterService {
             try {
               return {
                 isError: false as const,
-                processInstructions: parseQuery(query),
+                processInstructions: parseQuery(query, this.logService),
               };
             } catch {
               return {
