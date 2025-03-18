@@ -477,6 +477,8 @@ const safeProviders: SafeProvider[] = [
       KdfConfigService,
       TaskSchedulerService,
       PrePasswordLoginApiService,
+      ConfigService,
+      OpaqueKeyExchangeService,
     ],
   }),
   safeProvider({

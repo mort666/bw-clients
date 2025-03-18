@@ -13,11 +13,15 @@ import { IdentityCaptchaResponse } from "@bitwarden/common/auth/models/response/
 import { IdentityDeviceVerificationResponse } from "@bitwarden/common/auth/models/response/identity-device-verification.response";
 import { IdentityTokenResponse } from "@bitwarden/common/auth/models/response/identity-token.response";
 import { IdentityTwoFactorResponse } from "@bitwarden/common/auth/models/response/identity-two-factor.response";
+import { OpaqueKeyExchangeService } from "@bitwarden/common/auth/opaque/opaque-key-exchange.service";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { HashPurpose } from "@bitwarden/common/platform/enums";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { PasswordStrengthServiceAbstraction } from "@bitwarden/common/tools/password-strength";
 import { UserId } from "@bitwarden/common/types/guid";
 import { MasterKey } from "@bitwarden/common/types/key";
+import { Argon2KdfConfig, KdfType } from "@bitwarden/key-management";
 
 import { PasswordHashLoginCredentials } from "../models/domain/login-credentials";
 import { CacheData } from "../services/login-strategies/login-strategy.state";
@@ -32,6 +36,12 @@ export class PasswordLoginStrategyData implements LoginStrategyData {
   userEnteredEmail: string;
   /** If 2fa is required, token is returned to bypass captcha */
   captchaBypassToken?: string;
+
+  // TODO: we need to get a security audit as to whether or not this is safe to do. It is only used in memory
+  // for the duration of the login process, but it is still a security risk - especially in 2FA and new device verification
+  /** The user's master password */
+  masterPassword: string;
+
   /** The local version of the user's master key hash */
   localMasterKeyHash: string;
   /** The user's master key */
@@ -65,6 +75,8 @@ export class PasswordLoginStrategy extends BaseLoginStrategy {
     data: PasswordLoginStrategyData,
     private passwordStrengthService: PasswordStrengthServiceAbstraction,
     private policyService: PolicyService,
+    private configService: ConfigService,
+    private opaqueKeyExchangeService: OpaqueKeyExchangeService,
     ...sharedDeps: ConstructorParameters<typeof BaseLoginStrategy>
   ) {
     super(...sharedDeps);
@@ -82,6 +94,7 @@ export class PasswordLoginStrategy extends BaseLoginStrategy {
 
     const data = new PasswordLoginStrategyData();
 
+    data.masterPassword = masterPassword;
     data.masterKey = await this.makePrePasswordLoginMasterKey(masterPassword, email, kdfConfig);
     data.userEnteredEmail = email;
 
@@ -138,6 +151,23 @@ export class PasswordLoginStrategy extends BaseLoginStrategy {
         authResult.forcePasswordReset = ForceSetPasswordReason.WeakMasterPassword;
       }
     }
+
+    return authResult;
+  }
+
+  protected override async processTokenResponse(
+    response: IdentityTokenResponse,
+  ): Promise<AuthResult> {
+    const authResult = await super.processTokenResponse(response);
+
+    const opaqueKeyExchangeFeatureFlagEnabled = await this.configService.getFeatureFlag(
+      FeatureFlag.OpaqueKeyExchange,
+    );
+    if (opaqueKeyExchangeFeatureFlagEnabled) {
+      // Register the user for opaque password key exchange
+      await this.registerUserForOpaqueKeyExchange(authResult.userId);
+    }
+
     return authResult;
   }
 
@@ -245,5 +275,35 @@ export class PasswordLoginStrategy extends BaseLoginStrategy {
 
     const [authResult] = await this.startLogIn();
     return authResult;
+  }
+
+  /**
+   * Registers password using users with the OPAQUE key exchange protocol which is a more secure password
+   * authN protocol which prevents the server from ever knowing anything about the user's password.
+   */
+  private async registerUserForOpaqueKeyExchange(userId: UserId) {
+    const masterPassword = this.cache.value?.masterPassword;
+    const userKey = await firstValueFrom(this.keyService.userKey$(userId));
+
+    // PBKDF2 is not recommended for opaque, so force use of Argon2 with default params if the user is using PBKDF2.
+    const userConfiguredKdf = await this.kdfConfigService.getKdfConfig();
+
+    if (!masterPassword || !userKey || !userConfiguredKdf) {
+      this.logService.error(
+        `Unable to register user for OPAQUE key exchange due to missing data. MasterPassword exists: ${!!masterPassword}; UserKey exists ${!!userKey}; KdfConfig exists: ${!!userConfiguredKdf}`,
+      );
+      return;
+    }
+
+    const opaqueKdf =
+      userConfiguredKdf.kdfType === KdfType.Argon2id ? userConfiguredKdf : new Argon2KdfConfig();
+
+    try {
+      await this.opaqueKeyExchangeService.register(masterPassword, userKey, opaqueKdf);
+    } catch (error) {
+      // If this process fails for any reason, we don't want to stop the login process
+      // so just log the error and continue.
+      this.logService.error(`Failed to register user for OPAQUE key exchange: ${error}`);
+    }
   }
 }
