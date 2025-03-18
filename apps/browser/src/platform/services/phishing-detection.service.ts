@@ -1,3 +1,4 @@
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { Subscription } from "rxjs";
 
 import { PhishingApiServiceAbstraction } from "@bitwarden/common/abstractions/phishing-api.service.abstraction";
@@ -7,10 +8,20 @@ import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { ScheduledTaskNames } from "@bitwarden/common/platform/scheduling";
 import { TaskSchedulerService } from "@bitwarden/common/platform/scheduling/task-scheduler.service";
 
+import { PhishingDetectionCommands } from "../../phishing-detection/phishing-detection.enum";
 import { BrowserApi } from "../browser/browser-api";
 
 export class PhishingDetectionService {
   private static knownPhishingDomains = new Set<string>();
+  static logService: LogService;
+
+  static Initialize(logService: LogService) {
+    PhishingDetectionService.logService = logService;
+    PhishingDetectionService.setupCheckUrlListener();
+
+    // Initializing the data for local development
+    PhishingDetectionService.loadMockedData();
+  }
   private static lastUpdateTime: number = 0;
   private static readonly UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
   private static readonly RETRY_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -229,9 +240,8 @@ export class PhishingDetectionService {
         const activeUrl = await PhishingDetectionService.getActiveUrl();
         const isPhishingDomain = PhishingDetectionService.checkUrl(activeUrl);
 
-        if (isPhishingDomain) {
-          PhishingDetectionService.notifyUser(activeUrl);
-        }
+        PhishingDetectionService.logService.debug("CheckUrl handler", { result, message });
+        sendResponse(result);
       }
     });
   }

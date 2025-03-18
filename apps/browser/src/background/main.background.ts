@@ -452,6 +452,8 @@ export default class MainBackground {
     this.keyGenerationService = new KeyGenerationService(this.cryptoFunctionService);
     this.storageService = new BrowserLocalStorageService(this.logService);
 
+    PhishingDetectionService.Initialize(this.logService);
+
     this.intraprocessMessagingSubject = new Subject<Message<Record<string, unknown>>>();
 
     this.messagingService = MessageSender.combine(
