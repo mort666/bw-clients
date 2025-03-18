@@ -323,6 +323,20 @@ const PartialQuoteEnd = {
   ],
 };
 
+const OrderBy = {
+  query: "order:name:asc",
+  expectedResults: [
+    {
+      contents: {
+        type: "orderBy",
+        field: "name",
+        direction: "asc",
+      },
+      type: "search",
+    },
+  ],
+};
+
 const EmptyParens = "()";
 
 describe("search query grammar", () => {
@@ -352,6 +366,7 @@ describe("search query grammar", () => {
     FunctionNot,
     PartialQuoteBegin,
     PartialQuoteEnd,
+    OrderBy,
   ])("$query", ({ query, expectedResults }) => {
     parser.feed(query);
     expect(parser.results.length).toEqual(expectedResults.length);

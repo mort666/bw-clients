@@ -342,25 +342,6 @@ const grammar: Grammar = {
       name: "TERM",
       symbols: [
         lexer.has("func_order") ? { type: "func_order" } : func_order,
-        lexer.has("param_dir") ? { type: "param_dir" } : param_dir,
-      ],
-      postprocess: function (d) {
-        const start = d[0].offset;
-        const end = d[1].offset + d[1].value.length;
-        return {
-          type: "orderBy",
-          field: "name",
-          direction: d[1].value,
-          start,
-          end,
-          length: end - start + 1,
-        };
-      },
-    },
-    {
-      name: "TERM",
-      symbols: [
-        lexer.has("func_order") ? { type: "func_order" } : func_order,
         lexer.has("string") ? { type: "string" } : string,
         lexer.has("param_dir") ? { type: "param_dir" } : param_dir,
       ],

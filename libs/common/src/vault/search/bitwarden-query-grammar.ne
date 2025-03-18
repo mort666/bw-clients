@@ -72,8 +72,6 @@ TERM ->
       | %func_website %string                  {% function(d) { const start = d[0].offset; const end = d[1].offset + d[1].value.length; return { type: 'website', website: d[1].value, start, end, length: end - start + 1 } } %}
       # only items with a specified website and a given match pattern
       | %func_website %string %access %string  {% function(d) { const start = d[0].offset; const end = d[3].offset + d[3].value.length; return { type: 'websiteMatch', website: d[1].value, matchType: d[3].value, start, end, length: end - start + 1 } } %}
-      # order by name
-      | %func_order %param_dir                 {% function(d) { const start = d[0].offset; const end = d[1].offset + d[1].value.length; return { type: 'orderBy', field: 'name', direction: d[1].value, start, end, length: end - start + 1 } } %}
       # order by a specified field
       | %func_order %string %param_dir         {% function(d) { const start = d[0].offset; const end = d[2].offset + d[2].value.length; return { type: 'orderBy', field: d[1].value, direction: d[2].value, start, end, length: end - start + 1 } } %}
       # Boolean NOT operator
