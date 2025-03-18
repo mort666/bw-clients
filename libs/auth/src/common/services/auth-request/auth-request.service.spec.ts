@@ -1,6 +1,5 @@
 import { mock } from "jest-mock-extended";
 
-import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AuthRequestResponse } from "@bitwarden/common/auth/models/response/auth-request.response";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { FakeMasterPasswordService } from "@bitwarden/common/key-management/master-password/services/fake-master-password.service";
@@ -15,6 +14,8 @@ import { UserId } from "@bitwarden/common/types/guid";
 import { MasterKey, UserKey } from "@bitwarden/common/types/key";
 import { KeyService } from "@bitwarden/key-management";
 
+import { AuthRequestApiService } from "../../abstractions";
+
 import { AuthRequestService } from "./auth-request.service";
 
 describe("AuthRequestService", () => {
@@ -26,7 +27,7 @@ describe("AuthRequestService", () => {
   const appIdService = mock<AppIdService>();
   const keyService = mock<KeyService>();
   const encryptService = mock<EncryptService>();
-  const apiService = mock<ApiService>();
+  const apiService = mock<AuthRequestApiService>();
 
   let mockPrivateKey: Uint8Array;
   let mockPublicKey: Uint8Array;
