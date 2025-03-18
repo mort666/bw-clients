@@ -10,6 +10,7 @@ declare var rparen: any;
 declare var AND: any;
 declare var OR: any;
 declare var string: any;
+declare var func_field: any;
 declare var access: any;
 declare var func_has: any;
 declare var func_in: any;
@@ -33,6 +34,7 @@ let lexer = moo.compile({
   rparen: ")", // Right parenthesis
   // Special search functions
   // Note, there have been issues with reserverd words in the past, so we're using a prefix
+  func_field: "field:",
   func_has: "has:",
   func_in: "in:",
   func_is: "is:",
@@ -165,17 +167,18 @@ const grammar: Grammar = {
     {
       name: "TERM",
       symbols: [
+        lexer.has("func_field") ? { type: "func_field" } : func_field,
         lexer.has("string") ? { type: "string" } : string,
         lexer.has("access") ? { type: "access" } : access,
         lexer.has("string") ? { type: "string" } : string,
       ],
       postprocess: function (d) {
         const start = d[0].offset;
-        const end = d[2].offset + d[2].value.length;
+        const end = d[3].offset + d[3].value.length;
         return {
-          type: "field term",
-          field: d[0].value,
-          term: d[2].value,
+          type: "fieldTerm",
+          field: d[1].value,
+          term: d[3].value,
           start,
           end,
           length: end - start + 1,

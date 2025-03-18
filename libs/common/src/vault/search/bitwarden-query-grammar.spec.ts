@@ -134,11 +134,11 @@ const Parenthesis = {
 };
 
 const QuotedFieldTerm = {
-  query: '"custom field":fizz',
+  query: 'field:"custom field":fizz',
   expectedResults: [
     {
       contents: {
-        type: "field term",
+        type: "fieldTerm",
         field: '"custom field"',
         term: "fizz",
       },

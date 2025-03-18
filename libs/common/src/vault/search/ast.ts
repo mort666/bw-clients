@@ -5,7 +5,7 @@ export const AstNodeTypeNames = [
   "and",
   "or",
   "term",
-  "field term",
+  "fieldTerm",
   "hasAttachment",
   "hasUri",
   "hasFolder",
@@ -109,13 +109,13 @@ export function isTerm(x: AstNode): x is Term {
 }
 
 export type FieldTerm = AstNodeBase & {
-  type: "field term";
+  type: "fieldTerm";
   field: string;
   term: string;
 };
 
 export function isFieldTerm(x: AstNode): x is FieldTerm {
-  return x.type === "field term";
+  return x.type === "fieldTerm";
 }
 
 export type HasAttachment = AstNodeBase & {
