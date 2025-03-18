@@ -710,13 +710,6 @@ export default class MainBackground {
       this.vaultTimeoutSettingsService,
     );
 
-    PhishingDetectionService.initialize(
-      this.auditService,
-      this.logService,
-      this.storageService,
-      this.taskSchedulerService,
-    );
-
     this.fileUploadService = new FileUploadService(this.logService, this.apiService);
     this.cipherFileUploadService = new CipherFileUploadService(
       this.apiService,
@@ -1290,6 +1283,13 @@ export default class MainBackground {
     );
 
     this.inlineMenuFieldQualificationService = new InlineMenuFieldQualificationService();
+
+    PhishingDetectionService.initialize(
+      this.auditService,
+      this.logService,
+      this.storageService,
+      this.taskSchedulerService,
+    );
   }
 
   async bootstrap() {
