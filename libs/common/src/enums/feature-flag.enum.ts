@@ -26,6 +26,7 @@ export enum FeatureFlag {
   CriticalApps = "pm-14466-risk-insights-critical-application",
   EnableRiskInsightsNotifications = "enable-risk-insights-notifications",
   DesktopSendUIRefresh = "desktop-send-ui-refresh",
+  ExportAttachments = "export-attachments",
 
   /* Vault */
   PM9111ExtensionPersistAddEditForm = "pm-9111-extension-persist-add-edit-form",
@@ -43,8 +44,8 @@ export enum FeatureFlag {
   ResellerManagedOrgAlert = "PM-15814-alert-owners-of-reseller-managed-orgs",
   AccountDeprovisioningBanner = "pm-17120-account-deprovisioning-admin-console-banner",
   PM15179_AddExistingOrgsFromProviderPortal = "pm-15179-add-existing-orgs-from-provider-portal",
-  RecoveryCodeLogin = "pm-17128-recovery-code-login",
   PM12276_BreadcrumbEventLogs = "pm-12276-breadcrumbing-for-business-features",
+  PM18794_ProviderPaymentMethod = "pm-18794-provider-payment-method",
 }
 
 export type AllowedFeatureFlagTypes = boolean | number | string;
@@ -81,6 +82,7 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.CriticalApps]: FALSE,
   [FeatureFlag.EnableRiskInsightsNotifications]: FALSE,
   [FeatureFlag.DesktopSendUIRefresh]: FALSE,
+  [FeatureFlag.ExportAttachments]: FALSE,
 
   /* Vault */
   [FeatureFlag.PM9111ExtensionPersistAddEditForm]: FALSE,
@@ -98,8 +100,8 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.ResellerManagedOrgAlert]: FALSE,
   [FeatureFlag.AccountDeprovisioningBanner]: FALSE,
   [FeatureFlag.PM15179_AddExistingOrgsFromProviderPortal]: FALSE,
-  [FeatureFlag.RecoveryCodeLogin]: FALSE,
   [FeatureFlag.PM12276_BreadcrumbEventLogs]: FALSE,
+  [FeatureFlag.PM18794_ProviderPaymentMethod]: FALSE,
 } satisfies Record<FeatureFlag, AllowedFeatureFlagTypes>;
 
 export type DefaultFeatureFlagValueType = typeof DefaultFeatureFlagValue;
