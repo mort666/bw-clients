@@ -45,7 +45,7 @@ export type AstNode =
   | WebsiteMatchFilter
   | OrderBy;
 
-type AstNodeBase = {
+export type AstNodeBase = {
   d: object[];
   type: AstNodeType;
   start: number;

@@ -40,7 +40,10 @@ let lexer = moo.compile({
   func_website: "website:",
   // Ordering functions and parameters
   func_order: "order:",
-  param_dir: /:(?:asc|desc)/,
+  param_dir: {
+    match: /:(?:asc|desc|ASC|DESC)/,
+    value: (s: string) => s.substring(1, s.length).toLowerCase(),
+  },
   // function parameter separator
   access: ":",
   // string match, includes quoted strings with escaped quotes and backslashes
@@ -83,7 +86,6 @@ const grammar: Grammar = {
       postprocess: function (d) {
         return {
           type: "search",
-          d: d,
           contents: d[1],
           start: d[1].start,
           end: d[1].end,
@@ -103,7 +105,7 @@ const grammar: Grammar = {
       postprocess: function (d) {
         const start = d[0].offset;
         const end = d[4].offset;
-        return { type: "parentheses", inner: d[2], d: d, start, end, length: end - start + 1 };
+        return { type: "parentheses", inner: d[2], start, end, length: end - start + 1 };
       },
     },
     { name: "PARENTHESES", symbols: ["TERM"], postprocess: id },
@@ -115,7 +117,6 @@ const grammar: Grammar = {
           type: "and",
           left: d[0],
           right: d[4],
-          d: d,
           start: d[0].start,
           end: d[4].end,
           length: d[4].end - d[0].start + 1,
@@ -130,7 +131,6 @@ const grammar: Grammar = {
           type: "and",
           left: d[0],
           right: d[2],
-          d: d,
           start: d[0].start,
           end: d[2].end,
           length: d[2].end - d[0].start + 1,
@@ -146,7 +146,6 @@ const grammar: Grammar = {
           type: "or",
           left: d[0],
           right: d[4],
-          d: d,
           start: d[0].start,
           end: d[4].end,
           length: d[4].end - d[0].start + 1,
@@ -160,7 +159,7 @@ const grammar: Grammar = {
       postprocess: function (d) {
         const start = d[0].offset;
         const end = d[0].offset + d[0].value.length;
-        return { type: "term", value: d[0].value, d: d[0], start, end, length: d[0].value.length };
+        return { type: "term", value: d[0].value, start, end, length: d[0].value.length };
       },
     },
     {
@@ -177,7 +176,6 @@ const grammar: Grammar = {
           type: "field term",
           field: d[0].value,
           term: d[2].value,
-          d: d,
           start,
           end,
           length: end - start + 1,
@@ -190,7 +188,7 @@ const grammar: Grammar = {
       postprocess: function (d) {
         const start = d[0].offset;
         const length = 14;
-        return { type: "hasAttachment", d: d, start, end: d[0].offset + length, length };
+        return { type: "hasAttachment", start, end: d[0].offset + length, length };
       },
     },
     {
@@ -199,7 +197,7 @@ const grammar: Grammar = {
       postprocess: function (d) {
         const start = d[0].offset;
         const length = 7;
-        return { type: "hasUri", d: d, start, end: d[0].offset + length, length };
+        return { type: "hasUri", start, end: d[0].offset + length, length };
       },
     },
     {
@@ -208,7 +206,7 @@ const grammar: Grammar = {
       postprocess: function (d) {
         const start = d[0].offset;
         const length = 10;
-        return { type: "hasFolder", d: d, start, end: d[0].offset + length, length };
+        return { type: "hasFolder", start, end: d[0].offset + length, length };
       },
     },
     {
@@ -217,7 +215,7 @@ const grammar: Grammar = {
       postprocess: function (d) {
         const start = d[0].offset;
         const length = 14;
-        return { type: "hasCollection", d: d, start, end: d[0].offset + length, length };
+        return { type: "hasCollection", start, end: d[0].offset + length, length };
       },
     },
     {
@@ -231,7 +229,7 @@ const grammar: Grammar = {
       postprocess: function (d) {
         const start = d[0].offset;
         const end = d[3].offset + d[3].value.length;
-        return { type: "inFolder", folder: d[3].value, d: d, start, end, length: end - start };
+        return { type: "inFolder", folder: d[3].value, start, end, length: end - start };
       },
     },
     {
@@ -248,7 +246,6 @@ const grammar: Grammar = {
         return {
           type: "inCollection",
           collection: d[3].value,
-          d: d,
           start,
           end,
           length: end - start + 1,
@@ -266,7 +263,7 @@ const grammar: Grammar = {
       postprocess: function (d) {
         const start = d[0].offset;
         const end = d[3].offset + d[3].value.length;
-        return { type: "inOrg", org: d[3].value, d: d, start, end, length: end - start + 1 };
+        return { type: "inOrg", org: d[3].value, start, end, length: end - start + 1 };
       },
     },
     {
@@ -275,7 +272,7 @@ const grammar: Grammar = {
       postprocess: function (d) {
         const start = d[0].offset;
         const length = 11;
-        return { type: "inMyVault", d: d, start, end: start + length, length };
+        return { type: "inMyVault", start, end: start + length, length };
       },
     },
     {
@@ -284,7 +281,7 @@ const grammar: Grammar = {
       postprocess: function (d) {
         const start = d[0].offset;
         const length = 8;
-        return { type: "inTrash", d: d, start, end: start + length, length };
+        return { type: "inTrash", start, end: start + length, length };
       },
     },
     {
@@ -293,7 +290,7 @@ const grammar: Grammar = {
       postprocess: function (d) {
         const start = d[0].offset;
         const length = 11;
-        return { type: "isFavorite", d: d, start, end: start + length, length };
+        return { type: "isFavorite", start, end: start + length, length };
       },
     },
     {
@@ -305,7 +302,7 @@ const grammar: Grammar = {
       postprocess: function (d) {
         const start = d[0].offset;
         const end = d[1].offset + d[1].value.length;
-        return { type: "type", d: d, cipherType: d[1].value, start, end, length: end - start + 1 };
+        return { type: "type", cipherType: d[1].value, start, end, length: end - start + 1 };
       },
     },
     {
@@ -317,7 +314,7 @@ const grammar: Grammar = {
       postprocess: function (d) {
         const start = d[0].offset;
         const end = d[1].offset + d[1].value.length;
-        return { type: "website", d: d, website: d[1].value, start, end, length: end - start + 1 };
+        return { type: "website", website: d[1].value, start, end, length: end - start + 1 };
       },
     },
     {
@@ -333,7 +330,6 @@ const grammar: Grammar = {
         const end = d[3].offset + d[3].value.length;
         return {
           type: "websiteMatch",
-          d: d,
           website: d[1].value,
           matchType: d[3].value,
           start,
@@ -353,9 +349,8 @@ const grammar: Grammar = {
         const end = d[1].offset + d[1].value.length;
         return {
           type: "orderBy",
-          d: d,
           field: "name",
-          direction: d[1].value.substring(1, d[1].value.length).toLowerCase(),
+          direction: d[1].value,
           start,
           end,
           length: end - start + 1,
@@ -374,9 +369,8 @@ const grammar: Grammar = {
         const end = d[2].offset + d[2].value.length;
         return {
           type: "orderBy",
-          d: d,
           field: d[1].value,
-          direction: d[2].value.substring(1, d[2].value.length).toLowerCase(),
+          direction: d[2].value,
           start,
           end,
           length: end - start + 1,
@@ -391,7 +385,6 @@ const grammar: Grammar = {
         return {
           type: "not",
           value: d[2],
-          d: d,
           start,
           end: d[2].end,
           length: d[2].end - d[0].offset + 1,
