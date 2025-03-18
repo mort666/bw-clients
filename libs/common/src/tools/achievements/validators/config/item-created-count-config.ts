@@ -140,7 +140,8 @@ export class ItemCreatedCountConfig implements Achievement {
       name: name,
       validator: Type.Threshold,
       active: {
-        metric: `item-${cipherType ? `${CipherType[cipherType]}-` : ""}quantity` as MetricId,
+        metric:
+          `item-${cipherType ? `${CipherType[cipherType].toLowerCase()}-` : ""}quantity` as MetricId,
         low: threshold - 1,
         high: threshold,
       },
