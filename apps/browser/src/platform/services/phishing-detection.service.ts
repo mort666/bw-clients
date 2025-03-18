@@ -1,4 +1,3 @@
-import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { Subscription } from "rxjs";
 
 import { PhishingApiServiceAbstraction } from "@bitwarden/common/abstractions/phishing-api.service.abstraction";
@@ -10,18 +9,8 @@ import { TaskSchedulerService } from "@bitwarden/common/platform/scheduling/task
 
 import { PhishingDetectionCommands } from "../../phishing-detection/phishing-detection.enum";
 import { BrowserApi } from "../browser/browser-api";
-
 export class PhishingDetectionService {
   private static knownPhishingDomains = new Set<string>();
-  static logService: LogService;
-
-  static Initialize(logService: LogService) {
-    PhishingDetectionService.logService = logService;
-    PhishingDetectionService.setupCheckUrlListener();
-
-    // Initializing the data for local development
-    PhishingDetectionService.loadMockedData();
-  }
   private static lastUpdateTime: number = 0;
   private static readonly UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
   private static readonly RETRY_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -47,6 +36,11 @@ export class PhishingDetectionService {
     PhishingDetectionService.storageService = storageService;
     PhishingDetectionService.taskSchedulerService = taskSchedulerService;
 
+    PhishingDetectionService.setupCheckUrlListener();
+
+    // Initializing the data for local development
+    PhishingDetectionService.loadMockedData();
+
     // Register the update task
     this.taskSchedulerService.registerTaskHandler(
       ScheduledTaskNames.phishingDomainUpdate,
@@ -64,9 +58,6 @@ export class PhishingDetectionService {
 
     // Set up periodic updates every 24 hours
     this.setupPeriodicUpdates();
-
-    // Set up tab listener
-    this.setupTabEventListeners();
   }
 
   private static setupPeriodicUpdates() {
@@ -231,14 +222,23 @@ export class PhishingDetectionService {
   // @TODO: WIP. We can have a pop-up or send a notification to other services.
   static notifyUser(url: string) {}
 
+  // @TODO: This can be remove once we implement the real code.
+  static loadMockedData() {
+    PhishingDetectionService.knownPhishingDomains.add("google.com");
+    PhishingDetectionService.knownPhishingDomains.add("atlassian.net");
+    PhishingDetectionService.knownPhishingDomains.add("example.com");
+    PhishingDetectionService.knownPhishingDomains.add("w3schools.com");
+  }
+
   /*
     This listener will check the URL when the tab has finished loading.
   */
-  private static setupTabEventListeners(): void {
-    BrowserApi.addListener(chrome.tabs.onUpdated, async (tabId, changeInfo, tab) => {
-      if (changeInfo.status === "complete") {
-        const activeUrl = await PhishingDetectionService.getActiveUrl();
-        const isPhishingDomain = PhishingDetectionService.checkUrl(activeUrl);
+  static setupCheckUrlListener(): void {
+    BrowserApi.addListener(chrome.runtime.onMessage, async (message, sender, sendResponse) => {
+      if (message.command === PhishingDetectionCommands.CheckUrl) {
+        const { activeUrl } = message;
+
+        const result = { isPhishingDomain: PhishingDetectionService.checkUrl(activeUrl) };
 
         PhishingDetectionService.logService.debug("CheckUrl handler", { result, message });
         sendResponse(result);
