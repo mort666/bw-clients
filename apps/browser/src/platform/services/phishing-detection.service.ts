@@ -3,7 +3,6 @@ import { Subscription } from "rxjs";
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { AbstractStorageService } from "@bitwarden/common/platform/abstractions/storage.service";
-import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { ScheduledTaskNames } from "@bitwarden/common/platform/scheduling";
 import { TaskSchedulerService } from "@bitwarden/common/platform/scheduling/task-scheduler.service";
 
@@ -37,9 +36,6 @@ export class PhishingDetectionService {
     PhishingDetectionService.taskSchedulerService = taskSchedulerService;
 
     PhishingDetectionService.setupCheckUrlListener();
-
-    // Initializing the data for local development
-    PhishingDetectionService.loadMockedData();
 
     // Register the update task
     this.taskSchedulerService.registerTaskHandler(
@@ -130,9 +126,10 @@ export class PhishingDetectionService {
     }
   }
 
-  static checkUrl(url: string): boolean {
-    const domain = Utils.getDomain(url);
-    return domain ? PhishingDetectionService.knownPhishingDomains.has(domain) : false;
+  static checkUrl(inputUrl: string): boolean {
+    const url = new URL(inputUrl);
+
+    return url ? PhishingDetectionService.knownPhishingDomains.has(url.hostname) : false;
   }
 
   static async updateKnownPhishingDomains(): Promise<void> {
@@ -209,25 +206,6 @@ export class PhishingDetectionService {
     this.lastUpdateTime = 0;
     this.isUpdating = false;
     this.retryCount = 0;
-  }
-
-  static async getActiveUrl(): Promise<string> {
-    const win = await BrowserApi.getCurrentWindow();
-    const currentWindow = await BrowserApi.tabsQuery({ windowId: win.id, active: true });
-
-    // @TODO: Account for cases with no active windows.
-    return currentWindow[0].url;
-  }
-
-  // @TODO: WIP. We can have a pop-up or send a notification to other services.
-  static notifyUser(url: string) {}
-
-  // @TODO: This can be remove once we implement the real code.
-  static loadMockedData() {
-    PhishingDetectionService.knownPhishingDomains.add("google.com");
-    PhishingDetectionService.knownPhishingDomains.add("atlassian.net");
-    PhishingDetectionService.knownPhishingDomains.add("example.com");
-    PhishingDetectionService.knownPhishingDomains.add("w3schools.com");
   }
 
   /*

@@ -1,4 +1,3 @@
-import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
 
 import { PhishingDetectionBrowserService } from "./content/phishing-detection-browser.service";
@@ -22,9 +21,9 @@ async function loadPhishingDetectionContent() {
   });
 
   if (isPhishingDomain) {
-    const domain = Utils.getDomain(activeUrl);
+    const url = new URL(activeUrl);
 
-    PhishingDetectionBrowserService.notifyUser(domain);
+    PhishingDetectionBrowserService.notifyUser(url.hostname);
   }
 }
 
