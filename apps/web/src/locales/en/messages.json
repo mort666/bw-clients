@@ -10620,5 +10620,8 @@
   },
   "cannotCreateCollection": {
     "message": "Free organizations may have up to 2 collections. Upgrade to a paid plan to add more collections."
+  },
+  "achievements": {
+    "message": "Achievements"
   }
 }
