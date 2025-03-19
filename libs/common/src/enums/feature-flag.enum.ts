@@ -46,6 +46,7 @@ export enum FeatureFlag {
   PM15179_AddExistingOrgsFromProviderPortal = "pm-15179-add-existing-orgs-from-provider-portal",
   PM12276_BreadcrumbEventLogs = "pm-12276-breadcrumbing-for-business-features",
   PM18794_ProviderPaymentMethod = "pm-18794-provider-payment-method",
+  PM19148_InnovationArchive = "pm-19148-innovation-archive",
 }
 
 export type AllowedFeatureFlagTypes = boolean | number | string;
@@ -102,6 +103,7 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.PM15179_AddExistingOrgsFromProviderPortal]: FALSE,
   [FeatureFlag.PM12276_BreadcrumbEventLogs]: FALSE,
   [FeatureFlag.PM18794_ProviderPaymentMethod]: FALSE,
+  [FeatureFlag.PM19148_InnovationArchive]: FALSE,
 } satisfies Record<FeatureFlag, AllowedFeatureFlagTypes>;
 
 export type DefaultFeatureFlagValueType = typeof DefaultFeatureFlagValue;
