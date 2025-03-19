@@ -55,15 +55,33 @@ export class SearchComponent implements ControlValueAccessor, FocusableElement {
   protected inputType = isBrowserSafariApi() ? ("text" as const) : ("search" as const);
   private focused = false;
   private textUpdated$ = new BehaviorSubject<string>("");
+  protected showSavedFilters = false;
 
   @Input() disabled: boolean;
   @Input() placeholder: string;
   @Input() autocomplete: string;
   @Input() history: string[] | null;
+  @Input() savedFilters: Record<string, string> | null;
+
+  get savedFilterData() {
+    if (this.savedFilters == null) {
+      return [];
+    }
+
+    return Object.entries(this.savedFilters).map(([name, filter]) => {
+      return {
+        name,
+        filter,
+      };
+    });
+  }
 
   get showHistory() {
+    // turn off history for now
+    return false;
     return this.history != null && this.focused;
   }
+
   get filteredHistory$() {
     // TODO: Not clear if filtering is better or worse
     return this.textUpdated$.pipe(map((text) => this.history));
@@ -111,6 +129,10 @@ export class SearchComponent implements ControlValueAccessor, FocusableElement {
 
   setDisabledState(isDisabled: boolean) {
     this.disabled = isDisabled;
+  }
+
+  toggleSavedFilters() {
+    this.showSavedFilters = !this.showSavedFilters;
   }
 
   filterToggled() {

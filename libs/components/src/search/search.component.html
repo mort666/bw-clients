@@ -25,11 +25,37 @@
     <button
       bitSuffix
       type="button"
+      bitIconButton="bwi-arrow-circle-down"
+      (click)="toggleSavedFilters()"
+      [buttonType]=""
+      *ngIf="savedFilterData?.length > 0"
+    ></button>
+    <button
+      bitSuffix
+      type="button"
       bitIconButton="bwi-sliders"
       (click)="filterToggled()"
       [buttonType]=""
     ></button>
   </div>
+  <ng-container *ngIf="showSavedFilters">
+    <div class="tw-size-full">
+      <ul
+        class="tw-absolute tw-w-full tw-z-[1000] tw-float-left tw-m-0 tw-pl-0 tw-list-none tw-bg-background tw-overflow-hidden tw-rounded-xl tw-border tw-border-solid tw-border-secondary-300"
+        aria-labelledby="dropdownMenuButton1"
+        data-twe-dropdown-menu-ref
+      >
+        <li
+          *ngFor="let data of savedFilterData"
+          (click)="writeValue(data.filter); onChange(data.filter); onTouch()"
+          class="tw-pl-9 tw-pr-2 tw-block tw-text-ellipsis tw-text-nowrap tw-overflow-hidden hover:tw-bg-background-alt"
+        >
+          {{ data.name }}
+        </li>
+      </ul>
+    </div>
+  </ng-container>
+
   <ng-container *ngIf="showHistory">
     <div class="tw-size-full">
       <ul

@@ -67,7 +67,7 @@ import { TreeNode } from "@bitwarden/common/vault/models/domain/tree-node";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { FilterService } from "@bitwarden/common/vault/search/filter.service";
 import { ServiceUtils } from "@bitwarden/common/vault/service-utils";
-import { DialogService, Icons, ToastService } from "@bitwarden/components";
+import { CardComponent, DialogService, Icons, ToastService } from "@bitwarden/components";
 import {
   AddEditFolderDialogComponent,
   AddEditFolderDialogResult,
@@ -140,7 +140,7 @@ const SearchTextDebounceInterval = 200;
     VaultFilterModule,
     VaultItemsModule,
     SharedModule,
-    DecryptionFailureDialogComponent,
+    CardComponent,
   ],
   providers: [
     RoutedVaultFilterService,

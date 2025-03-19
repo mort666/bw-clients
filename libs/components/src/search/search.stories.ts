@@ -50,3 +50,13 @@ export const WithHistory: Story = {
   }),
   args: {},
 };
+
+export const WithSavedFilters: Story = {
+  render: (args) => ({
+    props: args,
+    template: `
+      <bit-search [(ngModel)]="searchText" [placeholder]="placeholder" [disabled]="disabled" [savedFilters]="{'test': 'test', 'or': 'test OR toast', 'and': 'test AND toast'}"></bit-search>
+    `,
+  }),
+  args: {},
+};
