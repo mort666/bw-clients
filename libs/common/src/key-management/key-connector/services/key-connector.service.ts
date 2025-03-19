@@ -82,9 +82,9 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
     return firstValueFrom(this.stateProvider.getUserState$(USES_KEY_CONNECTOR, userId));
   }
 
-  async userNeedsMigration(userId: UserId) {
+  async userNeedsMigration(userId: UserId, organizations: Organization[]) {
     const loggedInUsingSso = await this.tokenService.getIsExternal(userId);
-    const requiredByOrganization = (await this.getManagingOrganization(userId)) != null;
+    const requiredByOrganization = this.findManagingOrganization(organizations) != null;
     const userIsNotUsingKeyConnector = !(await this.getUsesKeyConnector(userId));
 
     return loggedInUsingSso && requiredByOrganization && userIsNotUsingKeyConnector;
@@ -120,14 +120,8 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
   }
 
   async getManagingOrganization(userId: UserId): Promise<Organization> {
-    const orgs = await firstValueFrom(this.organizationService.organizations$(userId));
-    return orgs.find(
-      (o) =>
-        o.keyConnectorEnabled &&
-        o.type !== OrganizationUserType.Admin &&
-        o.type !== OrganizationUserType.Owner &&
-        !o.isProviderUser,
-    );
+    const organizations = await firstValueFrom(this.organizationService.organizations$(userId));
+    return this.findManagingOrganization(organizations);
   }
 
   async convertNewSsoUserToKeyConnector(
@@ -202,5 +196,15 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
       this.logoutCallback("keyConnectorError");
     }
     throw new Error("Key Connector error");
+  }
+
+  private findManagingOrganization(organizations: Organization[]) {
+    return organizations.find(
+      (o) =>
+        o.keyConnectorEnabled &&
+        o.type !== OrganizationUserType.Admin &&
+        o.type !== OrganizationUserType.Owner &&
+        !o.isProviderUser,
+    );
   }
 }
