@@ -49,7 +49,6 @@ import {
   VaultIcons,
 } from "@bitwarden/vault";
 
-import { Fido2PlaceholderComponent } from "../app/components/fido2placeholder.component";
 import { AccessibilityCookieComponent } from "../auth/accessibility-cookie.component";
 import { maxAccountsGuardFn } from "../auth/guards/max-accounts.guard";
 import { RemovePasswordComponent } from "../auth/remove-password.component";
@@ -181,15 +180,11 @@ const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: "passkeys",
-    component: Fido2PlaceholderComponent,
-  },
-  {
-    path: "passkeys",
+    path: "fido2-assertion",
     component: Fido2VaultComponent,
   },
   {
-    path: "create-passkey",
+    path: "fido2-creation",
     component: Fido2CreateComponent,
   },
   {

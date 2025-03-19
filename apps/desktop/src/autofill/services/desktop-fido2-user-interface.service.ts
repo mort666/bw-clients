@@ -139,7 +139,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
       // make the cipherIds available to the UI.
       this.availableCipherIdsSubject.next(cipherIds);
 
-      await this.showUi("/passkeys", this.windowObject.windowXy);
+      await this.showUi("/fido2-assertion", this.windowObject.windowXy);
 
       const chosenCipherResponse = await this.waitForUiChosenCipher();
 
@@ -224,7 +224,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     this.rpId.next(rpId);
 
     try {
-      await this.showUi("/create-passkey", this.windowObject.windowXy);
+      await this.showUi("/fido2-creation", this.windowObject.windowXy);
 
       // Wait for the UI to wrap up
       const confirmation = await this.waitForUiNewCredentialConfirmation();
