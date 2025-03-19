@@ -139,7 +139,6 @@ describe("Cipher Service", () => {
       domainSettingsService,
       apiService,
       i18nService,
-      searchService,
       stateService,
       autofillSettingsService,
       encryptService,

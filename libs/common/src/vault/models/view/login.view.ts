@@ -5,6 +5,7 @@ import { Utils } from "../../../platform/misc/utils";
 import { DeepJsonify } from "../../../types/deep-jsonify";
 import { LoginLinkedId as LinkedId } from "../../enums";
 import { linkedFieldOption } from "../../linked-field-option.decorator";
+import { searchable } from "../../search/searchable.decorator";
 import { Login } from "../domain/login";
 
 import { Fido2CredentialView } from "./fido2-credential.view";
@@ -12,6 +13,7 @@ import { ItemView } from "./item.view";
 import { LoginUriView } from "./login-uri.view";
 
 export class LoginView extends ItemView {
+  @searchable()
   @linkedFieldOption(LinkedId.Username, { sortPosition: 0 })
   username: string = null;
   @linkedFieldOption(LinkedId.Password, { sortPosition: 1 })

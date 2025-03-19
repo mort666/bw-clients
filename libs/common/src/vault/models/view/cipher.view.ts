@@ -6,6 +6,7 @@ import { InitializerKey } from "../../../platform/services/cryptography/initiali
 import { DeepJsonify } from "../../../types/deep-jsonify";
 import { CipherType, LinkedIdType } from "../../enums";
 import { CipherRepromptType } from "../../enums/cipher-reprompt-type";
+import { searchable } from "../../search/searchable.decorator";
 import { CipherPermissionsApi } from "../api/cipher-permissions.api";
 import { LocalData } from "../data/local.data";
 import { Cipher } from "../domain/cipher";
@@ -22,12 +23,17 @@ import { SshKeyView } from "./ssh-key.view";
 export class CipherView implements View, InitializerMetadata {
   readonly initializerKey = InitializerKey.CipherView;
 
+  @searchable()
   id: string = null;
   organizationId: string = null;
   folderId: string = null;
+  @searchable()
   name: string = null;
+  @searchable()
   notes: string = null;
+  @searchable({ key: "type", strategy: { enum: CipherType } })
   type: CipherType = null;
+  @searchable({ key: "favorite", strategy: { boolean: true } })
   favorite = false;
   organizationUseTotp = false;
   permissions: CipherPermissionsApi = new CipherPermissionsApi();
@@ -46,6 +52,7 @@ export class CipherView implements View, InitializerMetadata {
   revisionDate: Date = null;
   creationDate: Date = null;
   deletedDate: Date = null;
+  @searchable({ key: "reprompt", strategy: { enum: CipherRepromptType } })
   reprompt: CipherRepromptType = CipherRepromptType.None;
 
   /**

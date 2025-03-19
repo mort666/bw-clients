@@ -6,9 +6,11 @@ import { UriMatchStrategy, UriMatchStrategySetting } from "../../../models/domai
 import { View } from "../../../models/view/view";
 import { SafeUrls } from "../../../platform/misc/safe-urls";
 import { Utils } from "../../../platform/misc/utils";
+import { searchable } from "../../search/searchable.decorator";
 import { LoginUri } from "../domain/login-uri";
 
 export class LoginUriView implements View {
+  @searchable({ key: "match detection", strategy: { enum: UriMatchStrategy } })
   match: UriMatchStrategySetting = null;
 
   private _uri: string = null;
@@ -25,6 +27,7 @@ export class LoginUriView implements View {
     this.match = u.match;
   }
 
+  @searchable({ key: "website", strategy: "string" })
   get uri(): string {
     return this._uri;
   }
