@@ -15,10 +15,16 @@ if (document.readyState === "loading") {
 async function loadPhishingDetectionContent() {
   const activeUrl = PhishingDetectionBrowserService.getActiveUrl();
 
-  const { isPhishingDomain } = await chrome.runtime.sendMessage({
+  const response = await chrome.runtime.sendMessage({
     command: PhishingDetectionCommands.CheckUrl,
     activeUrl,
   });
+
+  if (!response) {
+    return;
+  }
+
+  const { isPhishingDomain } = response;
 
   if (isPhishingDomain) {
     const url = new URL(activeUrl);
