@@ -17,9 +17,10 @@ import {
   ItemModule,
   SectionComponent,
   TableModule,
- SectionHeaderComponent } from "@bitwarden/components";
+  SectionHeaderComponent,
+  BitIconButtonComponent,
+} from "@bitwarden/components";
 // import { SearchComponent } from "@bitwarden/components/src/search/search.component";
-import { BitIconButtonComponent } from "@bitwarden/components";
 
 import {
   DesktopFido2UserInterfaceService,

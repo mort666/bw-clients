@@ -7,7 +7,9 @@
       <div class="tw-flex tw-items-center">
         <bit-icon [icon]="Icons.BitwardenShield" class="tw-w-10 tw-mt-2 tw-ml-2"></bit-icon>
 
-        <h2 bitTypography="h4" class="tw-font-semibold tw-text-lg">{{ "savePasskeyQuestion" | i18n }}</h2>
+        <h2 bitTypography="h4" class="tw-font-semibold tw-text-lg">
+          {{ "savePasskeyQuestion" | i18n }}
+        </h2>
       </div>
 
       <button
@@ -33,17 +35,14 @@
         <span bitBadge slot="end">Save</span>
       </button>
     </bit-item>
-
   </bit-section>
-  <bit-section class="tw-bg-background-alt tw-p-4 ">
+  <bit-section class="tw-bg-background-alt tw-p-4">
     <bit-item class="">
-      <button bitLink linkType="primary"type="button" bit-item-content (click)="confirmPasskey()">
+      <button bitLink linkType="primary" type="button" bit-item-content (click)="confirmPasskey()">
         <a bitLink linkType="primary" class="tw-font-medium tw-text-base">
           {{ "saveNewPasskey" | i18n }}
         </a>
-
       </button>
     </bit-item>
-
   </bit-section>
 </div>
