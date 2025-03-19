@@ -9,7 +9,6 @@ import {
 } from "@bitwarden/auth/common";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AuthResult } from "@bitwarden/common/auth/models/domain/auth-result";
-import { TwoFactorRecoveryRequest } from "@bitwarden/common/auth/models/request/two-factor-recovery.request";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
@@ -78,15 +77,14 @@ describe("RecoverTwoFactorComponent", () => {
   describe("handleRecoveryLogin", () => {
     it("should log in successfully and navigate to the two-factor settings page", async () => {
       // Arrange
-      const request = new TwoFactorRecoveryRequest();
-      request.recoveryCode = "testRecoveryCode";
-      request.email = "test@example.com";
+      const email = "test@example.com";
+      const recoveryCode = "testRecoveryCode";
 
       const authResult = new AuthResult();
       mockLoginStrategyService.logIn.mockResolvedValue(authResult);
 
       // Act
-      await component["handleRecoveryLogin"](request);
+      await component["loginWithRecoveryCode"](email, recoveryCode);
 
       // Assert
       expect(mockLoginStrategyService.logIn).toHaveBeenCalledWith(
@@ -102,15 +100,14 @@ describe("RecoverTwoFactorComponent", () => {
 
     it("should handle login errors and redirect to login page", async () => {
       // Arrange
-      const request = new TwoFactorRecoveryRequest();
-      request.recoveryCode = "testRecoveryCode";
-      request.email = "test@example.com";
+      const email = "test@example.com";
+      const recoveryCode = "testRecoveryCode";
 
       const error = new Error("Login failed");
       mockLoginStrategyService.logIn.mockRejectedValue(error);
 
       // Act
-      await component["handleRecoveryLogin"](request);
+      await component["loginWithRecoveryCode"](email, recoveryCode);
 
       // Assert
       expect(mockLogService.error).toHaveBeenCalledWith(
@@ -118,7 +115,7 @@ describe("RecoverTwoFactorComponent", () => {
         error.message,
       );
       expect(mockRouter.navigate).toHaveBeenCalledWith(["/login"], {
-        queryParams: { email: request.email },
+        queryParams: { email: email },
       });
     });
   });
