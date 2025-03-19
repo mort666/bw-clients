@@ -27,6 +27,12 @@ export class PhishingDetectionBrowserService {
     exitButton.id = "change-exit";
     exitButton.classList.add("primary");
     exitButton.textContent = "Exit the page";
+    exitButton.onclick = () => {
+      const barEl = document.getElementById(phishingDivId);
+      if (barEl != null) {
+        barEl.parentElement.removeChild(barEl);
+      }
+    };
 
     wrapper.appendChild(messageElement);
     wrapper.appendChild(exitButton);
