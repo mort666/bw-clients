@@ -16,8 +16,9 @@ import {
   ItemModule,
   SectionComponent,
   TableModule,
- BitIconButtonComponent, SectionHeaderComponent } from "@bitwarden/components";
-
+  BitIconButtonComponent,
+  SectionHeaderComponent,
+} from "@bitwarden/components";
 
 import {
   DesktopFido2UserInterfaceService,
@@ -85,7 +86,7 @@ export class Fido2VaultComponent implements OnInit, OnDestroy {
   }
 
   async chooseCipher(cipherId: string) {
-    this.session?.confirmChosenCipher(cipherId);
+    this.session?.confirmChosenCipher(cipherId, true);
 
     await this.router.navigate(["/"]);
     await this.desktopSettingsService.setModalMode(false);
