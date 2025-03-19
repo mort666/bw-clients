@@ -27,6 +27,7 @@ export enum FeatureFlag {
   EnableRiskInsightsNotifications = "enable-risk-insights-notifications",
   DesktopSendUIRefresh = "desktop-send-ui-refresh",
   ExportAttachments = "export-attachments",
+  SDKGenerators = "sdk-generators",
 
   /* Vault */
   PM9111ExtensionPersistAddEditForm = "pm-9111-extension-persist-add-edit-form",
@@ -83,6 +84,7 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.EnableRiskInsightsNotifications]: FALSE,
   [FeatureFlag.DesktopSendUIRefresh]: FALSE,
   [FeatureFlag.ExportAttachments]: FALSE,
+  [FeatureFlag.SDKGenerators]: FALSE,
 
   /* Vault */
   [FeatureFlag.PM9111ExtensionPersistAddEditForm]: FALSE,
