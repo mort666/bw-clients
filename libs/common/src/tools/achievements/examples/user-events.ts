@@ -51,6 +51,30 @@ const itemUpdated$: Observable<UserActionEvent> = of({
   tags: ["with-folder"],
 });
 
+const itemDeleted$: Observable<UserActionEvent> = of({
+  "@timestamp": Date.now(),
+  user: {
+    id: "08f95669-1a65-4840-ba8b-3538cb3e1496" as UserId,
+  },
+  event: {
+    kind: "event",
+    category: "session",
+    type: "deletion",
+    outcome: "success",
+    provider: "vault",
+  },
+  service: {
+    name: "extension",
+    type: "client",
+    node: { name: "commotion-amused-rinse-trivial-sadly" },
+    environment: "production",
+    version: "2025.3.1-innovation-sprint",
+  },
+  action: "vault-item-removed",
+  labels: { "vault-item-type": "login" },
+  tags: [],
+});
+
 const itemMovedToCollection$: Observable<UserActionEvent> = of(
   {
     "@timestamp": Date.now(),
@@ -100,4 +124,4 @@ const itemMovedToCollection$: Observable<UserActionEvent> = of(
   } satisfies UserActionEvent,
 );
 
-export { itemAdded$, itemUpdated$, itemMovedToCollection$ };
+export { itemAdded$, itemUpdated$, itemDeleted$, itemMovedToCollection$ };
