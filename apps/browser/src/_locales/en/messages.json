@@ -544,6 +544,21 @@
   "searchVault": {
     "message": "Search vault"
   },
+  "archive": {
+    "message": "Archive"
+  },
+  "unarchive": {
+    "message": "Unarchive"
+  },
+  "itemsInArchive": {
+    "message": "Items in archive"
+  },
+  "noItemsInArchive": {
+    "message": "No items in archive"
+  },
+  "noItemsInArchiveDesc": {
+    "message": "Archived items will appear here and will be excluded from general search results and autofill suggestions."
+  },
   "edit": {
     "message": "Edit"
   },
