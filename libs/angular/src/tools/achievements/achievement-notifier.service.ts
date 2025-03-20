@@ -6,8 +6,8 @@ import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/pl
 import { AchievementService } from "@bitwarden/common/tools/achievements/achievement.service.abstraction";
 import { ToastService } from "@bitwarden/components";
 
-import { AchievementIcon } from "./achievement-icon";
 import { AchievementNotifierService as AchievementNotifierServiceAbstraction } from "./achievement-notifier.abstraction";
+import { AchievementIcon } from "./icons/achievement.icon";
 
 export class AchievementNotifierService implements AchievementNotifierServiceAbstraction {
   constructor(
