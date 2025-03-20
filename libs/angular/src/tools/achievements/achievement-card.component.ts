@@ -10,8 +10,7 @@ import {
   TypographyModule,
 } from "@bitwarden/components";
 
-import { AchievementIcon } from "./achievement-icon";
-import { NotAchievedIcon } from "./not-achieved-icon";
+import { AchievementIcon } from "./icons/achievement.icon";
 
 @Component({
   selector: "achievement-card",
@@ -20,7 +19,8 @@ import { NotAchievedIcon } from "./not-achieved-icon";
   imports: [CommonModule, ItemModule, ButtonModule, IconModule, TypographyModule, CardComponent],
 })
 export class AchievementCard {
-  protected icon: Icon = NotAchievedIcon;
+  protected readonly icon: Icon = AchievementIcon;
+  protected iconStyle: string = "tw-grayscale";
 
   title = input.required<string>();
   description = input.required<string>();
@@ -37,14 +37,14 @@ export class AchievementCard {
 
       untracked(() => {
         if (earned) {
-          this.icon = AchievementIcon;
           this.cardClass = "tw-bg-success-100";
+          this.iconStyle = "";
         } else if (progress > 0) {
-          this.icon = AchievementIcon;
           this.cardClass = "tw-bg-info-100";
+          this.iconStyle = "";
         } else {
-          this.icon = NotAchievedIcon;
           this.cardClass = "";
+          this.iconStyle = "tw-grayscale";
         }
       });
     });
