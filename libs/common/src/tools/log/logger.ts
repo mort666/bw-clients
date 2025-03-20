@@ -17,7 +17,7 @@ export abstract class UserEventLogProvider {
 
 type BaselineType = Omit<ServiceFormat & UserFormat, "@timestamp">;
 
-type EventInfo = {
+export type EventInfo = {
   action: string;
   labels?: Record<string, Primitive>;
   tags?: Array<string>;

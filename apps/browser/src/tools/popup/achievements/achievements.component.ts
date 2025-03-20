@@ -1,15 +1,12 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
-import { firstValueFrom } from "rxjs";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { Subject, combineLatestWith, filter, map } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { AchievementsListComponent } from "@bitwarden/angular/tools/achievements/achievements-list.component";
-import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
-import { AchievementHub } from "@bitwarden/common/tools/achievements/achievement-hub";
-import { EventStoreAbstraction } from "@bitwarden/common/tools/achievements/event-store.abstraction.service";
-import { LoginItems_50_Added_Achievement } from "@bitwarden/common/tools/achievements/examples/achievements/login-item-added";
-import { AchievementEarnedEvent, AchievementId } from "@bitwarden/common/tools/achievements/types";
-import { UserId } from "@bitwarden/common/types/guid";
+import { Account, AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { EventInfo, UserEventLogProvider } from "@bitwarden/common/tools/log/logger";
 import { ButtonModule, IconModule } from "@bitwarden/components";
 
 import { PopOutComponent } from "../../../platform/popup/components/pop-out.component";
@@ -33,39 +30,30 @@ import { PopupPageComponent } from "../../../platform/popup/layout/popup-page.co
   ],
 })
 export class AchievementsComponent implements OnInit {
-  private currentUserId: UserId;
-
   constructor(
-    private eventStore: EventStoreAbstraction,
     private accountService: AccountService,
-    private achievementHub: AchievementHub,
-  ) {}
-
-  async ngOnInit() {
-    this.currentUserId = (await firstValueFrom(this.accountService.activeAccount$)).id;
+    private readonly eventLogs: UserEventLogProvider,
+  ) {
+    // FIXME: add a subscription to this service and feed the data somewhere
+    this.accountService.activeAccount$
+      .pipe(
+        filter((account): account is Account => !!account),
+        map((account) => this.eventLogs.capture(account)),
+        combineLatestWith(this._addEvent),
+        takeUntilDestroyed(),
+      )
+      .subscribe(([capture, event]) => capture.info(event));
   }
 
-  testAchievement() {
-    const earnedAchievement: AchievementEarnedEvent = {
-      "@timestamp": Date.now(),
-      event: {
-        kind: "alert",
-        category: "session",
-      },
-      service: {
-        name: "web",
-        type: "client",
-        node: {
-          name: "an-installation-identifier-for-this-client-instance",
-        },
-        environment: "local",
-        version: "2025.3.1-innovation-sprint",
-      },
-      user: { id: this.currentUserId },
-      achievement: { type: "earned", name: LoginItems_50_Added_Achievement.name as AchievementId },
-    };
+  private _addEvent = new Subject<EventInfo>();
 
-    this.eventStore.addEvent(earnedAchievement);
-    // this.achievementHub.addEvent(earnedAchievement);
+  async ngOnInit() {}
+
+  addEvent() {
+    this._addEvent.next({
+      action: "vault-item-added",
+      labels: { "vault-item-type": "login", "vault-item-uri-quantity": 1 },
+      tags: ["with-attachment"],
+    });
   }
 }
