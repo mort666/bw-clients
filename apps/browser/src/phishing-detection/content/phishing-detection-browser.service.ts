@@ -65,8 +65,7 @@ export class PhishingDetectionBrowserService {
     exitButton.style.marginTop = "10px";
     exitButton.textContent = "Exit Page";
     exitButton.addEventListener("click", () => {
-      window.open("about:blank", "_self"); // Open a blank page in the same tab
-      window.close(); // Try to close it
+      window.history.back();
     });
 
     // Append elements
