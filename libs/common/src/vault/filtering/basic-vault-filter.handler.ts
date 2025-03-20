@@ -15,6 +15,7 @@ import {
 import { parseQuery } from "../search/parse";
 
 export type BasicFilter = {
+  terms: string[];
   vaults: string[];
   folders: string[];
   collections: string[];
@@ -26,7 +27,6 @@ export class BasicVaultFilterHandler {
   constructor(private readonly logService: LogService) {}
 
   tryParse(rawFilter: string): { success: true; filter: BasicFilter } | { success: false } {
-    // TODO: Handle vaults
     const expectedBinaryOperator: Record<string, string> = {
       vaults: "or",
       folders: "or",
@@ -197,6 +197,7 @@ export class BasicVaultFilterHandler {
       return {
         success: true,
         filter: {
+          terms: basicFilter.terms ?? [],
           vaults: basicFilter.vaults ?? [],
           collections: basicFilter.collections ?? [],
           folders: basicFilter.folders ?? [],
@@ -234,6 +235,17 @@ export class BasicVaultFilterHandler {
       // TODO: Maybe only quote item when there is containing whitespace so we create as "pretty" of a filter as possible
       addGroupAdvanced(items, (i) => `${preamble}:"${i}"`, binaryOp);
     };
+
+    if (basicFilter.terms != null) {
+      if (basicFilter.terms.length === 2) {
+        throw new Error("Not currently supported and not currently possible through the UI.");
+      }
+
+      if (basicFilter.terms.length === 1) {
+        // Add term
+        addGroup(basicFilter.terms, "term", "WHAT_TO_PUT_HERE_UNREACHABLE");
+      }
+    }
 
     addGroupAdvanced(
       basicFilter.vaults,

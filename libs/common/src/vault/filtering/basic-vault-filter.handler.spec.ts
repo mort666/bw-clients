@@ -8,6 +8,7 @@ describe("BasicVaultFilterHandler", () => {
   const successfulCases: { basicFilter: BasicFilter; rawFilter: string }[] = [
     {
       basicFilter: {
+        terms: [],
         vaults: [null, "org_vault"],
         collections: ["collection_one", "collection_two"],
         fields: ["field_one", "field_two"],
@@ -19,6 +20,7 @@ describe("BasicVaultFilterHandler", () => {
     },
     {
       basicFilter: {
+        terms: [],
         vaults: [null, "org_one"],
         collections: [],
         fields: [],
@@ -29,6 +31,7 @@ describe("BasicVaultFilterHandler", () => {
     },
     {
       basicFilter: {
+        terms: [],
         vaults: [],
         collections: ["collection_one", "Collection two"],
         fields: [],
@@ -39,6 +42,7 @@ describe("BasicVaultFilterHandler", () => {
     },
     {
       basicFilter: {
+        terms: [],
         vaults: [],
         collections: [],
         fields: [],
@@ -49,6 +53,7 @@ describe("BasicVaultFilterHandler", () => {
     },
     {
       basicFilter: {
+        terms: [],
         vaults: [],
         collections: [],
         fields: [],
@@ -59,6 +64,7 @@ describe("BasicVaultFilterHandler", () => {
     },
     {
       basicFilter: {
+        terms: [],
         vaults: [],
         collections: [],
         fields: [],
@@ -70,6 +76,7 @@ describe("BasicVaultFilterHandler", () => {
     },
     {
       basicFilter: {
+        terms: [],
         vaults: [],
         collections: [],
         fields: ["field_one", "Field two"],
@@ -81,6 +88,7 @@ describe("BasicVaultFilterHandler", () => {
     {
       // Example of a filter that we could pretty
       basicFilter: {
+        terms: [],
         vaults: [null],
         collections: [],
         fields: [],
@@ -111,6 +119,7 @@ describe("BasicVaultFilterHandler", () => {
     const extraAllowedSyntax: { basicFilter: BasicFilter; rawFilter: string }[] = [
       {
         basicFilter: {
+          terms: [],
           vaults: [null],
           collections: [],
           fields: [],
@@ -121,6 +130,7 @@ describe("BasicVaultFilterHandler", () => {
       },
       {
         basicFilter: {
+          terms: [],
           vaults: [],
           collections: ["my_collection"],
           fields: [],
@@ -131,6 +141,7 @@ describe("BasicVaultFilterHandler", () => {
       },
       {
         basicFilter: {
+          terms: [],
           vaults: [],
           collections: [],
           fields: [],
@@ -141,6 +152,7 @@ describe("BasicVaultFilterHandler", () => {
       },
       {
         basicFilter: {
+          terms: [],
           vaults: [],
           collections: [],
           fields: [],

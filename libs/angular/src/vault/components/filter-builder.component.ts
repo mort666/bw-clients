@@ -9,7 +9,7 @@ import {
 } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormBuilder, FormsModule, ReactiveFormsModule } from "@angular/forms";
-import { BehaviorSubject, map, Observable, startWith } from "rxjs";
+import { BehaviorSubject, distinctUntilChanged, map, Observable, startWith } from "rxjs";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
@@ -23,7 +23,14 @@ import {
   ChipMultiSelectComponent,
   ChipSelectOption,
   ChipSelectComponent,
+  ToggleGroupModule,
 } from "@bitwarden/components";
+
+import {
+  BasicFilter,
+  BasicVaultFilterHandler,
+} from "@bitwarden/common/vault/filtering/basic-vault-filter.handler";
+import { SearchComponent } from "@bitwarden/components/src/search/search.component";
 
 type FilterData = {
   vaults: ChipSelectOption<string>[] | null;
@@ -34,10 +41,19 @@ type FilterData = {
   anyHaveAttachment: boolean;
 };
 
-type FilterModel = Partial<FilterData & { text: string }>;
+type FilterModel = {
+  text: string;
+  vaults: string[];
+  folders: string[];
+  collections: string[];
+  types: string[];
+  fields: string[];
+};
 
 // TODO: Include more details on basic so consumers can easily interact with it.
-export type Filter = { filter: string } & ({ type: "advanced" } | { type: "basic" });
+export type Filter =
+  | { type: "basic"; details: BasicFilter; raw: string }
+  | { type: "advanced"; raw: string };
 
 const customMap = <T, TResult>(
   map: Map<T, unknown>,
@@ -56,66 +72,84 @@ const customMap = <T, TResult>(
   selector: "app-filter-builder",
   template: `
     <form [formGroup]="form" *ngIf="filterData$ | async as filter">
-      <bit-chip-multi-select
-        placeholderText="Vault"
-        placeholderIcon="bwi-vault"
-        formControlName="vaults"
-        [options]="filter.vaults"
-      ></bit-chip-multi-select>
-      <bit-chip-multi-select
-        placeholderText="Folders"
-        placeholderIcon="bwi-folder"
-        formControlName="folders"
-        [options]="filter.folders"
-        class="tw-pl-2"
-      ></bit-chip-multi-select>
-      <bit-chip-multi-select
-        placeholderText="Collections"
-        placeholderIcon="bwi-collection"
-        formControlName="collections"
-        [options]="filter.collections"
-        class="tw-pl-2"
-      ></bit-chip-multi-select>
-      @for (selectedOtherOption of selectedOptions(); track selectedOtherOption) {
-        @switch (selectedOtherOption) {
-          @case ("types") {
-            <bit-chip-multi-select
-              placeholderText="Types"
-              placeholderIcon="bwi-sliders"
-              formControlName="types"
-              [options]="filter.types"
-              class="tw-pl-2"
-            ></bit-chip-multi-select>
-          }
-          @case ("fields") {
-            <bit-chip-multi-select
-              placeholderText="Fields"
-              placeholderIcon="bwi-filter"
-              formControlName="fields"
-              [options]="filter.fields"
-              class="tw-pl-2"
-            ></bit-chip-multi-select>
+      <div class="tw-mb-2">
+        <bit-search formControlName="text" />
+      </div>
+      @if (mode === "basic") {
+        <bit-chip-multi-select
+          placeholderText="Vault"
+          placeholderIcon="bwi-vault"
+          formControlName="vaults"
+          [options]="filter.vaults"
+        ></bit-chip-multi-select>
+        <bit-chip-multi-select
+          placeholderText="Folders"
+          placeholderIcon="bwi-folder"
+          formControlName="folders"
+          [options]="filter.folders"
+          class="tw-pl-2"
+        ></bit-chip-multi-select>
+        <bit-chip-multi-select
+          placeholderText="Collections"
+          placeholderIcon="bwi-collection"
+          formControlName="collections"
+          [options]="filter.collections"
+          class="tw-pl-2"
+        ></bit-chip-multi-select>
+        @for (selectedOtherOption of selectedOptions(); track selectedOtherOption) {
+          @switch (selectedOtherOption) {
+            @case ("types") {
+              <bit-chip-multi-select
+                placeholderText="Types"
+                placeholderIcon="bwi-sliders"
+                formControlName="types"
+                [options]="filter.types"
+                class="tw-pl-2"
+              ></bit-chip-multi-select>
+            }
+            @case ("fields") {
+              <bit-chip-multi-select
+                placeholderText="Fields"
+                placeholderIcon="bwi-filter"
+                formControlName="fields"
+                [options]="filter.fields"
+                class="tw-pl-2"
+              ></bit-chip-multi-select>
+            }
           }
         }
-      }
-      <ng-container *ngIf="otherOptions$ | async as otherOptions">
-        <bit-chip-select
-          *ngIf="otherOptions.length !== 0"
-          placeholderText="Other filters"
-          placeholderIcon="bwi-sliders"
-          formControlName="otherOptions"
-          [options]="otherOptions"
-          class="tw-pl-2"
+        <ng-container *ngIf="otherOptions$ | async as otherOptions">
+          <bit-chip-select
+            *ngIf="otherOptions.length !== 0"
+            placeholderText="Other filters"
+            placeholderIcon="bwi-sliders"
+            formControlName="otherOptions"
+            [options]="otherOptions"
+            class="tw-pl-2"
+          >
+          </bit-chip-select>
+        </ng-container>
+        <span
+          class="tw-border-l tw-border-0 tw-border-solid tw-border-secondary-300 tw-mx-2"
+        ></span>
+        <button
+          type="button"
+          bitLink
+          linkType="secondary"
+          class="tw-text-sm"
+          (click)="resetFilter()"
         >
-        </bit-chip-select>
-      </ng-container>
-      <span class="tw-border-l tw-border-0 tw-border-solid tw-border-secondary-300 tw-mx-2"></span>
-      <button type="button" bitLink linkType="secondary" class="tw-text-sm" (click)="resetFilter()">
-        Reset
-      </button>
-      <button type="button" bitLink class="tw-ml-2 tw-text-sm" (click)="saveFilter()">
-        Save filter
-      </button>
+          Reset
+        </button>
+        <button type="button" bitLink class="tw-ml-2 tw-text-sm" (click)="saveFilter()">
+          Save filter
+        </button>
+      }
+      <!-- TODO: Align to the right -->
+      <bit-toggle-group selected="basic" (selectedChange)="modeChanged($event)">
+        <bit-toggle value="basic">Basic</bit-toggle>
+        <bit-toggle value="advanced">Advanced</bit-toggle>
+      </bit-toggle-group>
     </form>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -131,23 +165,23 @@ const customMap = <T, TResult>(
     CheckboxModule,
     AsyncPipe,
     ChipSelectComponent,
+    SearchComponent,
+    ToggleGroupModule,
   ],
 })
 export class FilterBuilderComponent implements OnInit {
+  @Input({ required: true }) initialFilter: string;
+
   @Input({ required: true }) ciphers: Observable<CipherView[]> | undefined;
 
-  @Output() searchFilter = new EventEmitter<
-    Partial<{
-      words: string;
-      types: ChipSelectOption<string>[];
-      collections: ChipSelectOption<string>[];
-      vaults: ChipSelectOption<string>[];
-      folders: ChipSelectOption<string>[];
-      fields: ChipSelectOption<string>[];
-    }>
-  >();
+  @Output() searchFilterEvent = new EventEmitter<Filter>();
+
+  @Output() saveFilterEvent = new EventEmitter<string>();
+
+  protected mode: string = "basic";
 
   protected form = this.formBuilder.group({
+    text: this.formBuilder.control<string>(null),
     vaults: this.formBuilder.control<string[]>([]),
     folders: this.formBuilder.control<string[]>([]),
     collections: this.formBuilder.control<string[]>([]),
@@ -172,6 +206,7 @@ export class FilterBuilderComponent implements OnInit {
     private readonly i18nService: I18nService,
     private readonly formBuilder: FormBuilder,
     private readonly vaultFilterMetadataService: VaultFilterMetadataService,
+    private readonly basicVaultFilterHandler: BasicVaultFilterHandler,
   ) {
     // TODO: i18n
     this.loadingFilter = {
@@ -227,18 +262,45 @@ export class FilterBuilderComponent implements OnInit {
       this.form.controls.otherOptions.setValue(null);
     });
 
-    this.form.valueChanges.pipe(map((v) => v));
+    this.form.valueChanges
+      .pipe(
+        // TODO: Debounce?
+        map((v) => this.convertFilter(v)),
+        distinctUntilChanged((previous, current) => {
+          return previous.raw === current.raw;
+        }),
+        takeUntilDestroyed(),
+      )
+      .subscribe((f) => this.searchFilterEvent.emit(f));
   }
 
-  private convertFilter(filter: FilterModel): Filter {
+  private convertFilter(filter: Partial<FilterModel>): Filter {
     // TODO: Support advanced mode
+    if (this.mode === "advanced") {
+      return { type: "advanced", raw: filter.text };
+    }
+
+    const basic = this.convertToBasic(filter);
+
+    return { type: "basic", details: basic, raw: this.basicVaultFilterHandler.toFilter(basic) };
+  }
+
+  private convertToBasic(filter: Partial<FilterModel>): BasicFilter {
     return {
-      type: "basic",
-      filter: "", // TODO: Convert to string
+      terms: filter.text != null ? [filter.text] : [],
+      vaults: filter.vaults ?? [],
+      collections: filter.collections ?? [],
+      fields: filter.fields ?? [],
+      folders: filter.folders ?? [],
+      types: filter.types ?? [],
     };
   }
 
   ngOnInit(): void {
+    if (this.initialFilter != null) {
+      //
+    }
+
     this.filterData$ = this.ciphers.pipe(
       this.vaultFilterMetadataService.collectMetadata(),
       map((metadata) => {
@@ -248,7 +310,7 @@ export class FilterBuilderComponent implements OnInit {
             if (v == null) {
               // Personal vault
               return {
-                value: "personal",
+                value: null,
                 label: "My Vault",
               };
             } else {
@@ -312,7 +374,7 @@ export class FilterBuilderComponent implements OnInit {
             (f, i) => ({ value: f, label: f }) satisfies ChipSelectOption<string>,
           ),
           anyHaveAttachment: metadata.attachmentCount !== 0,
-        } satisfies FilterModel;
+        } satisfies FilterData;
       }),
       startWith(this.loadingFilter),
     );
@@ -320,6 +382,50 @@ export class FilterBuilderComponent implements OnInit {
 
   protected selectedOptions() {
     return this.form.controls.selectedOtherOptions.value;
+  }
+
+  private trySetBasicFilterElements(value: string) {
+    try {
+      const parseResult = this.basicVaultFilterHandler.tryParse(value);
+
+      if (parseResult.success) {
+        if (parseResult.filter.terms.length >= 1) {
+          throw new Error("More than 1 term not actually supported in basic");
+        }
+
+        // This item can be displayed with basic, lets do that.
+        const selectedOtherOptions: string[] = [];
+
+        if (parseResult.filter.types.length !== 0) {
+          selectedOtherOptions.push("types");
+        }
+
+        if (parseResult.filter.fields.length !== 0) {
+          selectedOtherOptions.push("fields");
+        }
+
+        console.log("Parse advanced query", value, parseResult.filter);
+
+        this.form.setValue({
+          text: parseResult.filter.terms.length === 1 ? parseResult.filter.terms[0] : null,
+          vaults: parseResult.filter.vaults,
+          folders: parseResult.filter.folders,
+          collections: parseResult.filter.collections,
+          fields: parseResult.filter.fields,
+          types: parseResult.filter.types,
+          otherOptions: null,
+          selectedOtherOptions: selectedOtherOptions,
+        });
+        return true;
+      } else {
+        // set form to advanced mode and disable switching to basic
+        return false;
+      }
+    } catch (err) {
+      // How should I show off parse errors
+      console.log("Error", err);
+      return false;
+    }
   }
 
   protected resetFilter() {
@@ -336,6 +442,23 @@ export class FilterBuilderComponent implements OnInit {
   }
 
   protected saveFilter() {
-    //
+    // TODO: Handle advanced mode and just emit the raw text
+    const currentFilter = this.convertFilter(this.form.value);
+    this.saveFilterEvent.emit(currentFilter.raw);
+  }
+
+  protected modeChanged(newMode: string) {
+    this.mode = newMode;
+    if (newMode === "advanced") {
+      // Switching to advanced, place basic contents into text
+      this.form.controls.text.setValue(
+        this.basicVaultFilterHandler.toFilter(this.convertToBasic(this.form.value)),
+      );
+    } else {
+      if (!this.trySetBasicFilterElements(this.form.controls.text.value)) {
+        console.log("Could not set filter back to basic, button should have been disabled.");
+        return;
+      }
+    }
   }
 }

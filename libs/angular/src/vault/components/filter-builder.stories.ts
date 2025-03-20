@@ -11,6 +11,9 @@ import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { I18nMockService } from "@bitwarden/components";
 
 import { FilterBuilderComponent } from "./filter-builder.component";
+import { BasicVaultFilterHandler } from "@bitwarden/common/vault/filtering/basic-vault-filter.handler";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
+import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
 
 export default {
   title: "Filter/Filter Builder",
@@ -22,6 +25,7 @@ export default {
         {
           provide: I18nService,
           useValue: new I18nMockService({
+            search: "Search",
             multiSelectLoading: "Loading",
             multiSelectNotFound: "Not Found",
             multiSelectClearAll: "Clear All",
@@ -65,6 +69,15 @@ export default {
             },
           } satisfies VaultFilterMetadataService,
         },
+        {
+          provide: BasicVaultFilterHandler,
+          useClass: BasicVaultFilterHandler,
+          deps: [LogService],
+        },
+        {
+          provide: LogService,
+          useValue: new ConsoleLogService(true),
+        },
       ],
     }),
   ],
@@ -76,13 +89,17 @@ export const Default: Story = {
   render: (args) => ({
     props: args,
     template: /*html*/ `
-      <app-filter-builder [ciphers]="ciphers" (searchFilter)="searchFilter($event)"></app-filter-builder>
+      <app-filter-builder [ciphers]="ciphers" (searchFilterEvent)="searchFilterEvent($event)" (saveFilterEvent)="saveFilterEvent($event)"></app-filter-builder>
+
     `,
   }),
   args: {
     ciphers: of([]),
-    searchFilter: (d: unknown) => {
-      alert(JSON.stringify(d));
+    searchFilterEvent: (d: any) => {
+      console.log(d.raw);
+    },
+    saveFilterEvent: (s: string) => {
+      alert(JSON.stringify(s));
     },
   },
 };
