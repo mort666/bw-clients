@@ -1,4 +1,4 @@
-import { map } from "rxjs";
+import { OperatorFunction, map } from "rxjs";
 
 import { CipherType, FieldType, LinkedIdType } from "../enums";
 import { CipherView } from "../models/view/cipher.view";
@@ -30,7 +30,11 @@ function metaDataKeyEqual<T extends MetadataType>(a: T, b: T) {
   }
 }
 
-export class VaultFilterMetadataService {
+export abstract class VaultFilterMetadataService {
+  abstract collectMetadata(): OperatorFunction<CipherView[], VaultFilterMetadata>;
+}
+
+export class DefaultVaultFilterMetadataService implements VaultFilterMetadataService {
   collectMetadata() {
     const setOrIncrement = <T extends MetadataType>(map: Map<T, number>, key: T) => {
       const entry = Array.from(map.entries()).find(([k]) => metaDataKeyEqual(key, k));
