@@ -3,7 +3,6 @@ import {
   ReplaySubject,
   Subject,
   concat,
-  debounceTime,
   filter,
   map,
   shareReplay,
@@ -26,8 +25,6 @@ import {
   MetricId,
   UserActionEvent,
 } from "./types";
-
-const ACHIEVEMENT_INITIAL_DEBOUNCE_MS = 100;
 
 export class AchievementHub {
   /** Instantiates the achievement hub. A new achievement hub should be created
@@ -88,7 +85,6 @@ export class AchievementHub {
       filter((e) => isEarnedEvent(e)),
       map((e) => e as AchievementEarnedEvent),
       latestEarnedMetrics(),
-      debounceTime(ACHIEVEMENT_INITIAL_DEBOUNCE_MS),
       tap((m) => this.log.debug(m, "earned achievements update")),
       startWith(new Map<AchievementId, AchievementEarnedEvent>()),
     );
@@ -99,7 +95,6 @@ export class AchievementHub {
       filter((e) => isProgressEvent(e)),
       map((e) => e as AchievementProgressEvent),
       latestProgressMetrics(),
-      debounceTime(ACHIEVEMENT_INITIAL_DEBOUNCE_MS),
       tap((m) => this.log.debug(m, "achievement metrics update")),
       startWith(new Map<MetricId, AchievementProgressEvent>()),
     );
