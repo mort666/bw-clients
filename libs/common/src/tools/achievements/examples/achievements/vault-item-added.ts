@@ -21,7 +21,7 @@ const VaultItems_10_Added_Achievement: Achievement = {
 
 const VaultItems_50_Added_Achievement: Achievement = {
   achievement: "50-vault-items-added" as AchievementId,
-  name: "It's 50/50 Vault Items Added",
+  name: "It's 50/50",
   description: "Saved your 50th item to Bitwarden",
   validator: "Threshold",
   active: { metric: VaultItemCreatedProgress, high: 50 },
