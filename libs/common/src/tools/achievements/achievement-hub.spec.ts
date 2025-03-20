@@ -4,8 +4,9 @@ import { ConsoleLogService } from "../../platform/services/console-log.service";
 import { consoleSemanticLoggerProvider } from "../log";
 
 import { AchievementHub } from "./achievement-hub";
-import { ItemCreatedEarnedEvent } from "./examples/achievement-events";
+import { ItemCreatedEarnedEvent, ItemCreatedProgressEvent } from "./examples/achievement-events";
 import {
+  ItemCreatedTracker,
   TotallyAttachedAchievement,
   TotallyAttachedValidator,
 } from "./examples/example-validators";
@@ -81,7 +82,7 @@ describe("AchievementHub", () => {
       const validators$ = new Subject<AchievementValidator[]>();
       const events$ = new Subject<UserActionEvent>();
       const achievements$ = new Subject<AchievementEvent>();
-      const hub = new AchievementHub(validators$, events$, achievements$);
+      const hub = new AchievementHub(validators$, events$, achievements$, 10, testLog);
       const results$ = new ReplaySubject<AchievementEvent | null>(3);
       achievements$.next(ItemCreatedEarnedEvent);
       achievements$.complete();
@@ -98,24 +99,72 @@ describe("AchievementHub", () => {
   });
 
   describe("earned$", () => {
-    it("", async () => {
+    it("includes earned achievements from constructor", async () => {
       const validators$ = new Subject<AchievementValidator[]>();
       const events$ = new Subject<UserActionEvent>();
       const achievements$ = new Subject<AchievementEvent>();
-      const hub = new AchievementHub(validators$, events$, achievements$);
+      const hub = new AchievementHub(validators$, events$, achievements$, 10, testLog);
       const results$ = new ReplaySubject<Map<AchievementId, AchievementEarnedEvent>>(1);
       hub.earned$().subscribe(results$);
+
+      achievements$.next(ItemCreatedEarnedEvent);
+      achievements$.complete();
+
+      const result = await firstValueFrom(results$);
+      expect(result.get(ItemCreatedEarnedEvent.achievement.name)).toEqual(ItemCreatedEarnedEvent);
+    });
+
+    it("includes earned achievements from validators", async () => {
+      const validators$ = new BehaviorSubject<AchievementValidator[]>([TotallyAttachedValidator]);
+      const events$ = new Subject<UserActionEvent>();
+      const achievements$ = new Subject<AchievementEvent>();
+      const hub = new AchievementHub(validators$, events$, achievements$, 10, testLog);
+      const results$ = new ReplaySubject<Map<AchievementId, AchievementEarnedEvent>>(1);
+      hub.earned$().subscribe(results$);
+
+      achievements$.complete();
+      events$.next(ItemAddedEvent);
+
+      const result = await firstValueFrom(results$);
+      expect(result.get(TotallyAttachedValidator.achievement)).toMatchObject({
+        achievement: { type: "earned", name: TotallyAttachedValidator.achievement },
+      });
     });
   });
 
   describe("metrics$", () => {
-    it("", async () => {
+    it("includes progress events from constructor", async () => {
       const validators$ = new Subject<AchievementValidator[]>();
       const events$ = new Subject<UserActionEvent>();
       const achievements$ = new Subject<AchievementEvent>();
-      const hub = new AchievementHub(validators$, events$, achievements$);
+      const hub = new AchievementHub(validators$, events$, achievements$, 10, testLog);
       const results$ = new ReplaySubject<Map<MetricId, AchievementProgressEvent>>(1);
       hub.metrics$().subscribe(results$);
+
+      achievements$.next(ItemCreatedProgressEvent);
+      achievements$.complete();
+
+      const result = await firstValueFrom(results$);
+      expect(result.get(ItemCreatedProgressEvent.achievement.name)).toEqual(
+        ItemCreatedProgressEvent,
+      );
+    });
+
+    it("includes progress events from constructor", async () => {
+      const validators$ = new BehaviorSubject<AchievementValidator[]>([ItemCreatedTracker]);
+      const events$ = new Subject<UserActionEvent>();
+      const achievements$ = new Subject<AchievementEvent>();
+      const hub = new AchievementHub(validators$, events$, achievements$, 10, testLog);
+      const results$ = new ReplaySubject<Map<MetricId, AchievementProgressEvent>>(1);
+      hub.metrics$().subscribe(results$);
+
+      achievements$.complete();
+      events$.next(ItemAddedEvent);
+
+      const result = await firstValueFrom(results$);
+      expect(result.get(ItemCreatedTracker.active.metric)).toMatchObject({
+        achievement: { type: "progress", name: ItemCreatedTracker.active.metric, value: 1 },
+      });
     });
   });
 });
