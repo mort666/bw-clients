@@ -312,7 +312,9 @@ export class PasswordLoginStrategy extends BaseLoginStrategy {
     } catch (error) {
       // If this process fails for any reason, we don't want to stop the login process
       // so just log the error and continue.
-      this.logService.error(`Failed to register user for OPAQUE key exchange: ${error}`);
+      this.logService.error(
+        `Failed to register user for OPAQUE key exchange: ${JSON.stringify(error)}`,
+      );
     }
   }
 }
