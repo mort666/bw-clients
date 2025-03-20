@@ -54,7 +54,7 @@ export type AstNodeBase = {
 };
 export type Search = AstNodeBase & {
   type: "search";
-  contents: Or;
+  contents: AstNode;
 };
 
 export function isSearch(x: AstNode): x is Search {
@@ -72,7 +72,7 @@ export function isNot(x: AstNode): x is Not {
 
 export type Parentheses = AstNodeBase & {
   type: "parentheses";
-  inner: Or;
+  inner: AstNode;
 };
 
 export function isParentheses(x: AstNode): x is Parentheses {
@@ -81,8 +81,8 @@ export function isParentheses(x: AstNode): x is Parentheses {
 
 export type And = AstNodeBase & {
   type: "and";
-  left: And | Parentheses;
-  right: Parentheses;
+  left: AstNode;
+  right: AstNode;
 };
 
 export function isAnd(x: AstNode): x is And {
@@ -91,8 +91,8 @@ export function isAnd(x: AstNode): x is And {
 
 export type Or = AstNodeBase & {
   type: "or";
-  left: Or | And;
-  right: And;
+  left: AstNode;
+  right: AstNode;
 };
 
 export function isOr(x: AstNode): x is Or {
