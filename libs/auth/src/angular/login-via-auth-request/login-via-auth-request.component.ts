@@ -62,10 +62,10 @@ const matchOptions: IsActiveMatchOptions = {
   providers: [{ provide: LoginViaAuthRequestCacheService }],
 })
 export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
-  private authRequest: AuthRequest | undefined = undefined;
   private authRequestKeyPair:
     | { publicKey: Uint8Array | undefined; privateKey: Uint8Array | undefined }
     | undefined = undefined;
+  private accessCode: string | undefined = undefined;
   private authStatus: AuthenticationStatus | undefined = undefined;
   private showResendNotificationTimeoutSeconds = 12;
 
@@ -200,7 +200,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
       this.loginViaAuthRequestCacheService.getCachedLoginViaAuthRequestView();
 
     if (cachedAuthRequest) {
-      await this.processAuthRequestResponse(cachedAuthRequest.authRequestResponse.id);
+      await this.processAuthRequestResponse(cachedAuthRequest.id);
     } else {
       await this.startStandardAuthRequestLogin();
     }
@@ -223,9 +223,9 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
 
   private async startAdminAuthRequestLogin(): Promise<void> {
     try {
-      await this.buildAuthRequest(AuthRequestType.AdminApproval);
+      const authRequest = await this.buildAuthRequest(AuthRequestType.AdminApproval);
 
-      if (!this.authRequest) {
+      if (!authRequest) {
         this.logService.error("Auth request failed to build.");
         return;
       }
@@ -235,9 +235,9 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
         return;
       }
 
-      const authRequestResponse = await this.authRequestApiService.postAdminAuthRequest(
-        this.authRequest as AuthRequest,
-      );
+      const authRequestResponse =
+        await this.authRequestApiService.postAdminAuthRequest(authRequest);
+
       const adminAuthReqStorable = new AdminAuthRequestStorable({
         id: authRequestResponse.id,
         privateKey: this.authRequestKeyPair.privateKey,
@@ -271,24 +271,33 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
       // the verifyAndHandleApprovedAuthReq function will receive the public key back
       // from the looked up auth request and all we need is to make sure that
       // we can use the cached private key that is associated with it.
-      this.authRequest = cachedAuthRequest.authRequest;
-      this.fingerprintPhrase = cachedAuthRequest.fingerprintPhrase;
-      this.authRequestKeyPair = {
-        privateKey: cachedAuthRequest.privateKey
-          ? Utils.fromB64ToArray(cachedAuthRequest.privateKey)
-          : undefined,
-        publicKey: undefined,
-      };
 
-      if (!cachedAuthRequest.authRequestResponse) {
-        this.logService.error("No cached auth request response.");
+      if (!this.email) {
+        this.logService.error("Email not defined when handling an existing auth request.");
         return;
       }
 
-      if (cachedAuthRequest.authRequestResponse.id) {
-        await this.anonymousHubService.createHubConnection(
-          cachedAuthRequest.authRequestResponse.id,
-        );
+      const privateKey = Utils.fromB64ToArray(cachedAuthRequest.privateKey);
+
+      // Re-derive the user's fingerprint phrase
+      // It is important to not use the server's public key here as it could have been compromised via MITM
+      const derivedPublicKeyArrayBuffer =
+        await this.cryptoFunctionService.rsaExtractPublicKey(privateKey);
+
+      this.fingerprintPhrase = await this.authRequestService.getFingerprintPhrase(
+        this.email,
+        derivedPublicKeyArrayBuffer,
+      );
+
+      // Request still pending response from admin set keypair and create hub connection
+      // so that any approvals will be received via push notification
+      this.authRequestKeyPair = {
+        privateKey: privateKey,
+        publicKey: undefined,
+      };
+
+      if (cachedAuthRequest.id) {
+        await this.anonymousHubService.createHubConnection(cachedAuthRequest.id);
       }
     }
   }
@@ -297,12 +306,12 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     this.showResendNotification = false;
 
     try {
-      await this.buildAuthRequest(AuthRequestType.AuthenticateAndUnlock);
+      const authRequest = await this.buildAuthRequest(AuthRequestType.AuthenticateAndUnlock);
 
       // I tried several ways to get the IDE/linter to play nice with checking for null values
       // in less code / more efficiently, but it struggles to identify code paths that
       // are more complicated than this.
-      if (!this.authRequest) {
+      if (!authRequest) {
         this.logService.error("AuthRequest failed to initialize from buildAuthRequest.");
         return;
       }
@@ -318,14 +327,13 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
       }
 
       const authRequestResponse: AuthRequestResponse =
-        await this.authRequestApiService.postAuthRequest(this.authRequest);
+        await this.authRequestApiService.postAuthRequest(authRequest);
 
       if (await this.configService.getFeatureFlag(FeatureFlag.PM9112_DeviceApprovalPersistence)) {
         this.loginViaAuthRequestCacheService.cacheLoginView(
-          this.authRequest,
-          authRequestResponse,
-          this.fingerprintPhrase,
-          this.authRequestKeyPair,
+          authRequestResponse.id,
+          this.authRequestKeyPair.privateKey,
+          this.accessCode,
         );
       }
 
@@ -341,7 +349,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     }, this.showResendNotificationTimeoutSeconds * 1000);
   }
 
-  private async buildAuthRequest(authRequestType: AuthRequestType): Promise<void> {
+  private async buildAuthRequest(authRequestType: AuthRequestType): Promise<AuthRequest> {
     const authRequestKeyPairArray = await this.cryptoFunctionService.rsaGenerateKeyPair(2048);
 
     this.authRequestKeyPair = {
@@ -356,12 +364,6 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const publicKey = Utils.fromBufferToB64(this.authRequestKeyPair.publicKey);
-    const accessCode = await this.passwordGenerationService.generatePassword({
-      type: "password",
-      length: 25,
-    });
-
     if (!this.email) {
       this.logService.error("Email not defined when building auth request.");
       return;
@@ -372,12 +374,19 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
       this.authRequestKeyPair.publicKey,
     );
 
-    this.authRequest = new AuthRequest(
+    this.accessCode = await this.passwordGenerationService.generatePassword({
+      type: "password",
+      length: 25,
+    });
+
+    const b64PublicKey = Utils.fromBufferToB64(this.authRequestKeyPair.publicKey);
+
+    return new AuthRequest(
       this.email,
       deviceIdentifier,
-      publicKey,
+      b64PublicKey,
       authRequestType,
-      accessCode,
+      this.accessCode,
     );
   }
 
@@ -537,8 +546,8 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
 
         await this.reloadCachedStandardAuthRequestIfOneExists();
       } else {
-        if (!this.authRequest) {
-          this.logService.error("No auth request defined when handling approved auth request.");
+        if (!this.accessCode) {
+          this.logService.error("No access code available when handling approved auth request.");
           return;
         }
 
@@ -546,7 +555,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
         // User is unauthenticated, therefore the endpoint requires an access code for user verification.
         const authRequestResponse = await this.authRequestApiService.getAuthResponse(
           requestId,
-          this.authRequest.accessCode,
+          this.accessCode,
         );
 
         // Request doesn't exist anymore
@@ -695,9 +704,9 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.authRequest) {
+    if (!this.accessCode) {
       this.logService.error(
-        "AuthRequest not defined when building auth request login credentials.",
+        "Access code not defined when building auth request login credentials.",
       );
       return;
     }
@@ -720,7 +729,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
 
       return new AuthRequestLoginCredentials(
         this.email,
-        this.authRequest.accessCode,
+        this.accessCode,
         requestId,
         null, // no userKey
         masterKey,
@@ -734,7 +743,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
       );
       return new AuthRequestLoginCredentials(
         this.email,
-        this.authRequest.accessCode,
+        this.accessCode,
         requestId,
         userKey,
         null, // no masterKey
