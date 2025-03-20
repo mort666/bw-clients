@@ -5,6 +5,7 @@ import { firstValueFrom } from "rxjs";
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { AchievementsListComponent } from "@bitwarden/angular/tools/achievements/achievements-list.component";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { AchievementHub } from "@bitwarden/common/tools/achievements/achievement-hub";
 import { EventStoreAbstraction } from "@bitwarden/common/tools/achievements/event-store.abstraction.service";
 import { VaultItems_10_Added_Achievement } from "@bitwarden/common/tools/achievements/examples/achievements";
 import { AchievementEarnedEvent, AchievementId } from "@bitwarden/common/tools/achievements/types";
@@ -37,6 +38,7 @@ export class AchievementsComponent implements OnInit {
   constructor(
     private eventStore: EventStoreAbstraction,
     private accountService: AccountService,
+    private achievementHub: AchievementHub
   ) {}
 
   async ngOnInit() {
@@ -63,6 +65,7 @@ export class AchievementsComponent implements OnInit {
       achievement: { type: "earned", name: VaultItems_10_Added_Achievement.name as AchievementId },
     };
 
-    this.eventStore.addEvent(earnedAchievement);
+    // this.eventStore.addEvent(earnedAchievement);
+    this.achievementHub.addEvent(earnedAchievement);
   }
 }

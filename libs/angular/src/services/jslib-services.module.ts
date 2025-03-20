@@ -248,9 +248,9 @@ import { EventCollectionService } from "@bitwarden/common/services/event/event-c
 import { EventUploadService } from "@bitwarden/common/services/event/event-upload.service";
 import { SearchService } from "@bitwarden/common/services/search.service";
 import { AchievementService as AchievementServiceAbstraction } from "@bitwarden/common/tools/achievements/achievement.service.abstraction";
-import { DefaultAchievementService } from "@bitwarden/common/tools/achievements/default-achievement.service";
 import { EventStore } from "@bitwarden/common/tools/achievements/event-store";
 import { EventStoreAbstraction } from "@bitwarden/common/tools/achievements/event-store.abstraction.service";
+import { HubAchievementService } from "@bitwarden/common/tools/achievements/hub-achievement.service";
 import {
   PasswordStrengthService,
   PasswordStrengthServiceAbstraction,
@@ -359,6 +359,7 @@ import {
   ENV_ADDITIONAL_REGIONS,
 } from "./injection-tokens";
 import { ModalService } from "./modal.service";
+import { AchievementHub } from "@bitwarden/common/tools/achievements/achievement-hub";
 
 /**
  * Provider definitions used in the ngModule.
@@ -1503,8 +1504,8 @@ const safeProviders: SafeProvider[] = [
   }),
   safeProvider({
     provide: AchievementServiceAbstraction,
-    useClass: DefaultAchievementService,
-    deps: [EventStoreAbstraction],
+    useClass: HubAchievementService,
+    deps: [],
   }),
   safeProvider({
     provide: AchievementNotifierServiceAbstraction,

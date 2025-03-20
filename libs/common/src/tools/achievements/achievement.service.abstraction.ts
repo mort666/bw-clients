@@ -9,4 +9,8 @@ export abstract class AchievementService {
 
   abstract achievementsEarned$: (userId: UserId) => Observable<AchievementEarnedEvent>;
   abstract achievementsInProgress$: (userId: UserId) => Observable<AchievementProgressEvent>;
+
+  abstract earned$: Observable<AchievementEarnedEvent>;
+  abstract inProgress$: Observable<AchievementProgressEvent>;
+  
 }

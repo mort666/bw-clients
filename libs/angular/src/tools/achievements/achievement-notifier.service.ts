@@ -32,9 +32,30 @@ export class AchievementNotifierService implements AchievementNotifierServiceAbs
      * Invoke showing toast
      */
     // FIXME getClientType browswer and achievementEarned.service.name.extension won't match
-    const account = await firstValueFrom(this.accountService.activeAccount$);
+    // const account = await firstValueFrom(this.accountService.activeAccount$);
+    // this.achievementService
+    //   .achievementsEarned$(account.id)
+    //   .pipe(
+    //     // Removing filter for testing purposes
+    //     // filter(achievementEarned => achievementEarned.service.name == this.platformUtilsService.getClientType())).pipe(
+    //     switchMap((earned) => this.achievementService.achievementById$(earned.achievement.name)),
+    //     tap((achievement) => {
+    //       //eslint-disable-next-line no-console
+    //       console.log(achievement);
+    //     }),
+    //   )
+    //   .subscribe((achievement) => {
+    //     this.toastService.showToast({
+    //       variant: "info",
+    //       title: achievement.name,
+    //       message: achievement.description,
+    //       icon: AchievementIcon,
+    //     });
+    //   });
+
+    // FIXME Migrate to use achievementHub.earned$() instead of achievementService.achievementsEarned$    
     this.achievementService
-      .achievementsEarned$(account.id)
+      .earned$
       .pipe(
         // Removing filter for testing purposes
         // filter(achievementEarned => achievementEarned.service.name == this.platformUtilsService.getClientType())).pipe(
@@ -52,7 +73,5 @@ export class AchievementNotifierService implements AchievementNotifierServiceAbs
           icon: AchievementIcon,
         });
       });
-
-    // FIXME Migrate to use achievementHub.earned$() instead of achievementService.achievementsEarned$
   }
 }
