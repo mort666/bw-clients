@@ -26,7 +26,7 @@ export class OpaqueKeyExchangeApiService {
       request,
       true,
       true,
-      env.getIdentityUrl(),
+      env.getApiUrl(),
     );
     return new RegistrationStartResponse(response);
   }
@@ -41,7 +41,7 @@ export class OpaqueKeyExchangeApiService {
       request,
       true,
       true,
-      env.getIdentityUrl(),
+      env.getApiUrl(),
     );
     return new RegistrationFinishResponse(response);
   }
