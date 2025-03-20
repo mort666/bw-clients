@@ -2,8 +2,9 @@ import { Meta, moduleMetadata, StoryObj } from "@storybook/angular";
 import { map, of } from "rxjs";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { CipherType } from "@bitwarden/common/vault/enums";
+import { CipherType, FieldType } from "@bitwarden/common/vault/enums";
 import {
+  CustomFieldMetadata,
   VaultFilterMetadata,
   VaultFilterMetadataService,
 } from "@bitwarden/common/vault/filtering/vault-filter-metadata.service";
@@ -58,10 +59,10 @@ export default {
                     [CipherType.SecureNote, 1],
                     [CipherType.SshKey, 1],
                   ]),
-                  fieldNames: new Map([
-                    ["one", 1],
-                    ["two", 1],
-                    ["three", 1],
+                  customFields: new Map<CustomFieldMetadata, number>([
+                    [{ name: "one", type: FieldType.Boolean, linkedType: null }, 1],
+                    [{ name: "one", type: FieldType.Boolean, linkedType: null }, 1],
+                    [{ name: "one", type: FieldType.Boolean, linkedType: null }, 1],
                   ]),
                   attachmentCount: 1,
                 } satisfies VaultFilterMetadata;
@@ -90,7 +91,6 @@ export const Default: Story = {
     props: args,
     template: /*html*/ `
       <app-filter-builder [ciphers]="ciphers" (searchFilterEvent)="searchFilterEvent($event)" (saveFilterEvent)="saveFilterEvent($event)"></app-filter-builder>
-
     `,
   }),
   args: {

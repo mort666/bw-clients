@@ -370,8 +370,8 @@ export class FilterBuilderComponent implements OnInit {
             }
           }),
           fields: customMap(
-            metadata.fieldNames,
-            (f, i) => ({ value: f, label: f }) satisfies ChipSelectOption<string>,
+            metadata.customFields,
+            (f, i) => ({ value: f.name, label: f.name }) satisfies ChipSelectOption<string>,
           ),
           anyHaveAttachment: metadata.attachmentCount !== 0,
         } satisfies FilterData;
@@ -442,7 +442,6 @@ export class FilterBuilderComponent implements OnInit {
   }
 
   protected saveFilter() {
-    // TODO: Handle advanced mode and just emit the raw text
     const currentFilter = this.convertFilter(this.form.value);
     this.saveFilterEvent.emit(currentFilter.raw);
   }
@@ -457,6 +456,7 @@ export class FilterBuilderComponent implements OnInit {
     } else {
       if (!this.trySetBasicFilterElements(this.form.controls.text.value)) {
         console.log("Could not set filter back to basic, button should have been disabled.");
+        this.mode = "advanced";
         return;
       }
     }

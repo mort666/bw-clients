@@ -12,7 +12,7 @@ export type VaultFilterMetadata = {
   attachmentCount: number;
 };
 
-type CustomFieldMetadata = {
+export type CustomFieldMetadata = {
   name: string;
   type: FieldType;
   linkedType: LinkedIdType | null;
