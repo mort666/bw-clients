@@ -6,7 +6,9 @@ import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { OpaqueSessionId, UserId } from "@bitwarden/common/types/guid";
 
+import { HttpStatusCode } from "../../enums/http-status-code.enum";
 import { EncryptService } from "../../key-management/crypto/abstractions/encrypt.service";
+import { ErrorResponse } from "../../models/response/error.response";
 import { LogService } from "../../platform/abstractions/log.service";
 import { SymmetricCryptoKey } from "../../platform/models/domain/symmetric-crypto-key";
 import { OpaqueExportKey, UserKey } from "../../types/key";
@@ -19,6 +21,10 @@ import { RegistrationStartRequest } from "./models/registration-start.request";
 import { SetRegistrationActiveRequest } from "./models/set-registration-active.request";
 import { OpaqueKeyExchangeApiService } from "./opaque-key-exchange-api.service";
 import { OpaqueKeyExchangeService } from "./opaque-key-exchange.service";
+
+interface OpaqueError {
+  Protocol: string;
+}
 
 export class DefaultOpaqueKeyExchangeService implements OpaqueKeyExchangeService {
   constructor(
@@ -104,26 +110,46 @@ export class DefaultOpaqueKeyExchangeService implements OpaqueKeyExchangeService
       new LoginStartRequest(email, Utils.fromBufferToB64(loginStart.credential_request)),
     );
 
-    const loginFinish = cryptoClient.opaque_login_finish(
-      masterPassword,
-      cipherConfig.toSdkConfig(),
-      Utils.fromB64ToArray(loginStartResponse.credentialResponse),
-      loginStart.state,
-    );
+    try {
+      const loginFinish = cryptoClient.opaque_login_finish(
+        masterPassword,
+        cipherConfig.toSdkConfig(),
+        Utils.fromB64ToArray(loginStartResponse.credentialResponse),
+        loginStart.state,
+      );
 
-    const success = await this.opaqueKeyExchangeApiService.loginFinish(
-      new LoginFinishRequest(
-        loginStartResponse.sessionId,
-        Utils.fromBufferToB64(loginFinish.credential_finalization),
-      ),
-    );
-    if (!success) {
-      throw new Error("Login failed");
+      const success = await this.opaqueKeyExchangeApiService.loginFinish(
+        new LoginFinishRequest(
+          loginStartResponse.sessionId,
+          Utils.fromBufferToB64(loginFinish.credential_finalization),
+        ),
+      );
+      if (!success) {
+        throw new Error("Login failed");
+      }
+
+      const exportKey = new SymmetricCryptoKey(loginFinish.export_key) as OpaqueExportKey;
+
+      return { sessionId: loginStartResponse.sessionId, opaqueExportKey: exportKey };
+    } catch (e) {
+      // TODO: this feels so bad, but as we now determine the credentials are invalid client side, we have to improve our
+      // login component error handling so it can handle server or client side errors.
+      if (
+        typeof e === "object" &&
+        (e as OpaqueError)?.Protocol == "Error in validating credentials"
+      ) {
+        // Convert to ErrorResponse so any error thrown here works just like our existing login component handling
+        const errorResponse = new ErrorResponse(
+          {
+            message: "username or password is incorrect",
+          },
+          HttpStatusCode.BadRequest,
+        );
+        throw errorResponse;
+      }
+
+      throw e;
     }
-
-    const exportKey = new SymmetricCryptoKey(loginFinish.export_key) as OpaqueExportKey;
-
-    return { sessionId: loginStartResponse.sessionId, opaqueExportKey: exportKey };
   }
 
   async decryptUserKeyWithExportKey(
