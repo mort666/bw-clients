@@ -187,7 +187,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
   /**
    * Notifies the Fido2UserInterfaceSession that the UI operations has completed and it can return to the OS.
    */
-  notifyConfirmCredential(confirmed: boolean, updatedCipher?: CipherView): void {
+  notifyConfirmCreateCredential(confirmed: boolean, updatedCipher?: CipherView): void {
     if (updatedCipher) {
       this.updatedCipher = updatedCipher;
     }
@@ -229,7 +229,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
       // Wait for the UI to wrap up
       const confirmation = await this.waitForUiNewCredentialConfirmation();
       if (!confirmation) {
-        throw new Error("User cancelled");
+        return { cipherId: undefined, userVerified: false };
       }
 
       if (this.updatedCipher) {

@@ -96,7 +96,7 @@ export class Fido2VaultComponent implements OnInit, OnDestroy {
     await this.router.navigate(["/"]);
     await this.desktopSettingsService.setModalMode(false);
 
-    this.session.notifyConfirmCredential(false);
+    this.session.notifyConfirmCreateCredential(false);
     this.session.confirmChosenCipher(null);
   }
 }

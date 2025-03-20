@@ -94,7 +94,7 @@ export class Fido2CreateComponent implements OnInit {
   }
 
   async addPasskeyToCipher(cipher: CipherView) {
-    this.session.notifyConfirmCredential(true, cipher);
+    this.session.notifyConfirmCreateCredential(true, cipher);
   }
 
   async confirmPasskey() {
@@ -105,16 +105,7 @@ export class Fido2CreateComponent implements OnInit {
         throw new Error("No session found");
       }
 
-      // If we want to we could submit information to the session in order to create the credential
-      // const cipher = await session.createCredential({
-      //   userHandle: "userHandle2",
-      //   userName: "username2",
-      //   credentialName: "zxsd2",
-      //   rpId: "webauthn.io",
-      //   userVerification: true,
-      // });
-
-      this.session.notifyConfirmCredential(true);
+      this.session.notifyConfirmCreateCredential(true);
 
       // Not sure this clean up should happen here or in session.
       // The session currently toggles modal on and send us here
@@ -129,7 +120,7 @@ export class Fido2CreateComponent implements OnInit {
   async closeModal() {
     await this.router.navigate(["/"]);
     await this.desktopSettingsService.setModalMode(false);
-    this.session.notifyConfirmCredential(false);
+    this.session.notifyConfirmCreateCredential(false);
     this.session.confirmChosenCipher(null);
   }
 }
