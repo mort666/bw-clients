@@ -1284,21 +1284,12 @@ export default class MainBackground {
 
     this.inlineMenuFieldQualificationService = new InlineMenuFieldQualificationService();
 
-    this.configService
-      .getFeatureFlag(FeatureFlag.PhishingDetection)
-      .then((enabled) => {
-        if (enabled) {
-          PhishingDetectionService.initialize(
-            this.auditService,
-            this.logService,
-            this.storageService,
-            this.taskSchedulerService,
-          );
-        }
-      })
-      .catch((error) =>
-        this.logService.error("Failed to check phishing detection feature flag", error),
-      );
+    PhishingDetectionService.initialize(
+      this.auditService,
+      this.logService,
+      this.storageService,
+      this.taskSchedulerService,
+    );
   }
 
   async bootstrap() {
