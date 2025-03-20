@@ -187,6 +187,19 @@ const grammar: Grammar = {
     },
     {
       name: "TERM",
+      symbols: [
+        lexer.has("func_has") ? { type: "func_has" } : func_has,
+        lexer.has("func_field") ? { type: "func_field" } : func_field,
+        lexer.has("string") ? { type: "string" } : string,
+      ],
+      postprocess: function (d) {
+        const start = d[0].offset;
+        const end = d[2].offset + d[2].value.length;
+        return { type: "hasField", field: d[2].value, start, end, length: end - start + 1 };
+      },
+    },
+    {
+      name: "TERM",
       symbols: [lexer.has("func_has") ? { type: "func_has" } : func_has, { literal: "attachment" }],
       postprocess: function (d) {
         const start = d[0].offset;
