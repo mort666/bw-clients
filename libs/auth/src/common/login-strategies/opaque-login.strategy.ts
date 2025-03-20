@@ -1,6 +1,6 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { BehaviorSubject, firstValueFrom, map, Observable } from "rxjs";
+import { BehaviorSubject, map, Observable } from "rxjs";
 import { Jsonify } from "type-fest";
 
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
@@ -88,9 +88,10 @@ export class OpaqueLoginStrategy extends BaseLoginStrategy {
   }
 
   override async logIn(credentials: OpaqueLoginCredentials) {
-    this.logService.info("Logging in with OPAQUE");
     const { email, masterPassword, kdfConfig, cipherConfiguration, twoFactor } = credentials;
 
+    // TODO: login returns export key, but we don't use it yet for decryption
+    // we must persist export key to cache and use it for decryption in setUserKey
     const { sessionId } = await this.opaqueKeyExchangeService.login(
       email,
       masterPassword,
@@ -125,6 +126,7 @@ export class OpaqueLoginStrategy extends BaseLoginStrategy {
 
     const [authResult, identityResponse] = await this.startLogIn();
 
+    // TODO: captcha is deprecated remove eventually
     if (identityResponse instanceof IdentityCaptchaResponse) {
       return authResult;
     }
@@ -203,14 +205,16 @@ export class OpaqueLoginStrategy extends BaseLoginStrategy {
     await this.keyService.setMasterKeyEncryptedUserKey(response.key, userId);
 
     // TODO: why not re-use master key from strategy data cache?
-    const masterKey = await firstValueFrom(this.masterPasswordService.masterKey$(userId));
-    if (masterKey) {
-      const userKey = await this.masterPasswordService.decryptUserKeyWithMasterKey(
-        masterKey,
-        userId,
-      );
-      await this.keyService.setUserKey(userKey, userId);
-    }
+    // const masterKey = await firstValueFrom(this.masterPasswordService.masterKey$(userId));
+    // if (masterKey) {
+    //   const userKey = await this.masterPasswordService.decryptUserKeyWithMasterKey(
+    //     masterKey,
+    //     userId,
+    //   );
+    //   await this.keyService.setUserKey(userKey, userId);
+    // }
+
+    // TODO: follow trySetUserKeyWithDeviceKey pattern from SSO login strategy
   }
 
   protected override async setPrivateKey(

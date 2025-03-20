@@ -5,8 +5,6 @@ import { DeviceRequest } from "./device.request";
 import { TokenTwoFactorRequest } from "./token-two-factor.request";
 import { TokenRequest } from "./token.request";
 
-// TODO: we might have to support both login start and login finish requests within this?
-// or, we could have separate OpaqueStartTokenRequest and OpaqueFinishTokenRequest classes
 export class OpaqueTokenRequest extends TokenRequest {
   constructor(
     public email: string,
@@ -21,7 +19,6 @@ export class OpaqueTokenRequest extends TokenRequest {
   toIdentityToken(clientId: ClientType) {
     const obj = super.toIdentityToken(clientId);
 
-    // TODO: what grant type for OPAQUE?
     obj.grant_type = "opaque-ke";
     obj.username = this.email;
     obj.sessionId = this.sessionId;

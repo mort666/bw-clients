@@ -235,6 +235,7 @@ export class ChangePasswordComponent
             : DEFAULT_OPAQUE_KDF_CONFIG,
         );
 
+        // TODO: try catch this just in case server feature flag is disabled and clients still has it enabled.
         const sessionId = await this.opaqueKeyExchangeService.register(
           this.masterPassword,
           newUserKey[0],
