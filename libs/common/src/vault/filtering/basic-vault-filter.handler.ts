@@ -24,80 +24,40 @@ export class BasicVaultFilterHandler {
   }
 
   toFilter(basicFilter: BasicFilter) {
-    const buildGroupAdvanced = (
+    let filter = "";
+    let addedItem = false;
+
+    const addGroupAdvanced = (
       items: string[],
       selector: (item: string) => string,
       binaryOp: string,
     ) => {
       if (items == null || items.length === 0) {
-        return null;
+        return;
       }
 
-      return `(${items.map(selector).join(` ${binaryOp} `)})`;
+      const group = `(${items.map(selector).join(` ${binaryOp} `)})`;
+      if (addedItem) {
+        filter += " AND ";
+      }
+      addedItem = true;
+      filter += group;
     };
 
-    const buildGroup = (items: string[], preamble: string, binaryOp: string) => {
+    const addGroup = (items: string[], preamble: string, binaryOp: string) => {
       // TODO: Maybe only quote item when there is containing whitespace so we create as "pretty" of a filter as possible
-      return buildGroupAdvanced(items, (i) => `${preamble}:"${i}"`, binaryOp);
+      addGroupAdvanced(items, (i) => `${preamble}:"${i}"`, binaryOp);
     };
 
-    let filter = "";
-    let addedItem = false;
-
-    const vaultGroup = buildGroupAdvanced(
+    addGroupAdvanced(
       basicFilter.vaults,
-      (i) => {
-        if (i == null) {
-          return "in:my_vault";
-        }
-
-        return `in:org:"${i}"`;
-      },
+      (i) => (i == null ? "in:my_vault" : `in:org:"${i}"`),
       "OR",
     );
-
-    if (vaultGroup != null) {
-      // vault is the first thing we might add, so no need to check if addedItem is already true
-      addedItem = true;
-      filter += vaultGroup;
-    }
-
-    const foldersGroup = buildGroup(basicFilter.folders, "in:folder", "OR");
-
-    if (foldersGroup != null) {
-      if (addedItem) {
-        filter += " AND ";
-      }
-      addedItem = true;
-      filter += foldersGroup;
-    }
-
-    const collectionsGroup = buildGroup(basicFilter.collections, "in:collection", "OR");
-    if (collectionsGroup != null) {
-      if (addedItem) {
-        filter += " AND ";
-      }
-      addedItem = true;
-      filter += collectionsGroup;
-    }
-
-    const typesGroup = buildGroup(basicFilter.types, "type", "OR");
-    if (typesGroup != null) {
-      if (addedItem) {
-        filter += " AND ";
-      }
-      addedItem = true;
-      filter += typesGroup;
-    }
-
-    const fieldsGroup = buildGroup(basicFilter.fields, "field", "AND");
-    if (fieldsGroup != null) {
-      if (addedItem) {
-        filter += " AND ";
-      }
-      addedItem = true;
-      filter += fieldsGroup;
-    }
+    addGroup(basicFilter.folders, "in:folder", "OR");
+    addGroup(basicFilter.collections, "in:collection", "AND");
+    addGroup(basicFilter.types, "type", "OR");
+    addGroup(basicFilter.fields, "field", "AND");
 
     return filter;
   }

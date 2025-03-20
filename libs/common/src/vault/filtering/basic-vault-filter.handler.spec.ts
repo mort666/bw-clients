@@ -30,7 +30,7 @@ describe("BasicVaultFilterHandler", () => {
           folders: ["folder_one", "folder_two"],
         },
         output:
-          '(in:my_vault OR in:org:"org_vault") AND (in:folder:"folder_one" OR in:folder:"folder_two") AND (in:collection:"collection_one" OR in:collection:"collection_two") AND (type:"Login" OR type:"Card") AND (field:"one" AND field:"two")',
+          '(in:my_vault OR in:org:"org_vault") AND (in:folder:"folder_one" OR in:folder:"folder_two") AND (in:collection:"collection_one" AND in:collection:"collection_two") AND (type:"Login" OR type:"Card") AND (field:"one" AND field:"two")',
       },
       {
         input: {
