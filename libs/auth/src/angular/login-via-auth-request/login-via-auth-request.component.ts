@@ -567,12 +567,14 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
         await this.reloadCachedStandardAuthRequestIfOneExists();
       }
     } catch (error) {
+      if (error instanceof ErrorResponse && error.statusCode === HttpStatusCode.NotFound) {
+        return await this.clearExistingStandardAuthRequestAndStartNewRequest();
+      }
       if (error instanceof ErrorResponse) {
         await this.router.navigate([this.backToRoute]);
         this.validationService.showError(error);
         return;
       }
-
       this.logService.error(error);
     } finally {
       // Manually clean out the cache to make sure sensitive
