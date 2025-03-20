@@ -22,7 +22,7 @@ import {
   TypographyModule,
 } from "@bitwarden/components";
 
-import { AchievementCard } from "./achievement-card.component";
+import { AchievementItem } from "./achievement-item.component";
 
 @Component({
   selector: "achievements-list",
@@ -37,7 +37,7 @@ import { AchievementCard } from "./achievement-card.component";
     TypographyModule,
     JslibModule,
     SectionHeaderComponent,
-    AchievementCard,
+    AchievementItem,
   ],
 })
 export class AchievementsListComponent implements OnInit {
