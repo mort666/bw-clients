@@ -13,6 +13,7 @@ import { LoginStartRequest } from "./models/login-start.request";
 import { OpaqueCipherConfiguration } from "./models/opaque-cipher-configuration";
 import { RegistrationFinishRequest } from "./models/registration-finish.request";
 import { RegistrationStartRequest } from "./models/registration-start.request";
+import { SetRegistrationActiveRequest } from "./models/set-registration-active.request";
 import { OpaqueKeyExchangeApiService } from "./opaque-key-exchange-api.service";
 import { OpaqueKeyExchangeService } from "./opaque-key-exchange.service";
 
@@ -74,6 +75,12 @@ export class DefaultOpaqueKeyExchangeService implements OpaqueKeyExchangeService
     return registrationStartResponse.sessionId;
   }
 
+  async setRegistrationActive(sessionId: OpaqueSessionId): Promise<void> {
+    await this.opaqueKeyExchangeApiService.setRegistrationActive(
+      new SetRegistrationActiveRequest(sessionId),
+    );
+  }
+
   // TODO: we will likely have to break this apart to return the start / finish requests
   // so that the opaque login strategy can send both to the identity token endpoint
   // in separate calls.
@@ -81,7 +88,7 @@ export class DefaultOpaqueKeyExchangeService implements OpaqueKeyExchangeService
     email: string,
     masterPassword: string,
     cipherConfig: OpaqueCipherConfiguration,
-  ): Promise<Uint8Array> {
+  ): Promise<{ sessionId: string; exportKey: Uint8Array }> {
     if (!email || !masterPassword || !cipherConfig) {
       throw new Error(
         `Unable to log in user with missing parameters. email exists: ${!!email}; masterPassword exists: ${!!masterPassword}; cipherConfig exists: ${!!cipherConfig}`,
@@ -112,6 +119,6 @@ export class DefaultOpaqueKeyExchangeService implements OpaqueKeyExchangeService
       throw new Error("Login failed");
     }
 
-    return loginFinish.export_key;
+    return { sessionId: loginStartResponse.sessionId, exportKey: loginFinish.export_key };
   }
 }

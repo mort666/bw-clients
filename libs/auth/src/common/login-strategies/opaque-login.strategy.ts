@@ -8,13 +8,13 @@ import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/mod
 import { AuthResult } from "@bitwarden/common/auth/models/domain/auth-result";
 import { ForceSetPasswordReason } from "@bitwarden/common/auth/models/domain/force-set-password-reason";
 import { OpaqueTokenRequest } from "@bitwarden/common/auth/models/request/identity-token/opaque-token.request";
-import { PasswordTokenRequest } from "@bitwarden/common/auth/models/request/identity-token/password-token.request";
 import { TokenTwoFactorRequest } from "@bitwarden/common/auth/models/request/identity-token/token-two-factor.request";
 import { IdentityCaptchaResponse } from "@bitwarden/common/auth/models/response/identity-captcha.response";
 import { IdentityDeviceVerificationResponse } from "@bitwarden/common/auth/models/response/identity-device-verification.response";
 import { IdentityTokenResponse } from "@bitwarden/common/auth/models/response/identity-token.response";
 import { IdentityTwoFactorResponse } from "@bitwarden/common/auth/models/response/identity-two-factor.response";
 import { OpaqueCipherConfiguration } from "@bitwarden/common/auth/opaque/models/opaque-cipher-configuration";
+import { OpaqueKeyExchangeService } from "@bitwarden/common/auth/opaque/opaque-key-exchange.service";
 import { HashPurpose } from "@bitwarden/common/platform/enums";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { PasswordStrengthServiceAbstraction } from "@bitwarden/common/tools/password-strength";
@@ -49,7 +49,7 @@ export class OpaqueLoginStrategyData implements LoginStrategyData {
 
   static fromJSON(obj: Jsonify<OpaqueLoginStrategyData>): OpaqueLoginStrategyData {
     const data = Object.assign(new OpaqueLoginStrategyData(), obj, {
-      tokenRequest: PasswordTokenRequest.fromJSON(obj.tokenRequest),
+      tokenRequest: OpaqueTokenRequest.fromJSON(obj.tokenRequest),
       masterKey: SymmetricCryptoKey.fromJSON(obj.masterKey),
     });
     return data;
@@ -76,6 +76,7 @@ export class OpaqueLoginStrategy extends BaseLoginStrategy {
     data: OpaqueLoginStrategyData,
     private passwordStrengthService: PasswordStrengthServiceAbstraction,
     private policyService: PolicyService,
+    private opaqueKeyExchangeService: OpaqueKeyExchangeService,
     ...sharedDeps: ConstructorParameters<typeof BaseLoginStrategy>
   ) {
     super(...sharedDeps);
@@ -87,7 +88,14 @@ export class OpaqueLoginStrategy extends BaseLoginStrategy {
   }
 
   override async logIn(credentials: OpaqueLoginCredentials) {
+    this.logService.info("Logging in with OPAQUE");
     const { email, masterPassword, kdfConfig, cipherConfiguration, twoFactor } = credentials;
+
+    const { sessionId } = await this.opaqueKeyExchangeService.login(
+      email,
+      masterPassword,
+      OpaqueCipherConfiguration.fromAny(cipherConfiguration),
+    );
 
     const data = new OpaqueLoginStrategyData();
 
@@ -109,6 +117,7 @@ export class OpaqueLoginStrategy extends BaseLoginStrategy {
     data.tokenRequest = new OpaqueTokenRequest(
       email,
       await this.buildTwoFactor(twoFactor, email),
+      sessionId,
       await this.buildDeviceRequest(),
     );
 
