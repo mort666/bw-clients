@@ -26,9 +26,8 @@
           <bit-option
             *ngFor="let field of existingFields$ | async"
             [value]="field"
-            [label]="field.name"
+            [label]="field.name + ' (' + FieldType[field.type] + ', ' + field.count + ')'"
           >
-            {{ field.name }}:{{ field.type }}({{ field.count }})
           </bit-option>
         </bit-select>
       </bit-form-field>
