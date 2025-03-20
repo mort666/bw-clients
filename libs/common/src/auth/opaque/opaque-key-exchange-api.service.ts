@@ -22,11 +22,11 @@ export class OpaqueKeyExchangeApiService {
     const env = await firstValueFrom(this.environmentService.environment$);
     const response = await this.apiService.send(
       "POST",
-      `/opaque/start-registration`,
+      `/opaque-ke/start-registration`,
       request,
       true,
       true,
-      env.getApiUrl(),
+      env.getIdentityUrl(),
     );
     return new RegistrationStartResponse(response);
   }
@@ -37,11 +37,11 @@ export class OpaqueKeyExchangeApiService {
     const env = await firstValueFrom(this.environmentService.environment$);
     const response = await this.apiService.send(
       "POST",
-      `/opaque/finish-registration`,
+      `/opaque-ke/finish-registration`,
       request,
       true,
       true,
-      env.getApiUrl(),
+      env.getIdentityUrl(),
     );
     return new RegistrationFinishResponse(response);
   }
@@ -62,11 +62,11 @@ export class OpaqueKeyExchangeApiService {
     const env = await firstValueFrom(this.environmentService.environment$);
     const response = await this.apiService.send(
       "POST",
-      `/opaque/start-login`,
+      `/opaque-ke/start-login`,
       request,
       false,
       true,
-      env.getApiUrl(),
+      env.getIdentityUrl(),
     );
     return new LoginStartResponse(response);
   }
@@ -75,11 +75,11 @@ export class OpaqueKeyExchangeApiService {
     const env = await firstValueFrom(this.environmentService.environment$);
     const response = await this.apiService.send(
       "POST",
-      `/opaque/finish-login`,
+      `/opaque-ke/finish-login`,
       request,
       false,
       true,
-      env.getApiUrl(),
+      env.getIdentityUrl(),
     );
     return response == true;
   }
