@@ -53,12 +53,12 @@ describe("VaultFilterMetadataService", () => {
         name: "single personal vault cipher",
         input: [createCipher({ type: CipherType.Card })],
         output: {
-          vaults: new Set([null]),
-          fieldNames: new Set([]),
-          itemTypes: new Set([CipherType.Card]),
-          folders: new Set([]),
-          collections: new Set([]),
-          anyHaveAttachment: false,
+          vaults: new Map([[null, 1]]),
+          fieldNames: new Map([]),
+          itemTypes: new Map([[CipherType.Card, 1]]),
+          folders: new Map([]),
+          collections: new Map([]),
+          attachmentCount: 0,
         },
       },
       {
@@ -94,12 +94,24 @@ describe("VaultFilterMetadataService", () => {
           }),
         ],
         output: {
-          vaults: new Set(["org-one", "org-two"]),
-          fieldNames: new Set(["one", "five"]),
-          itemTypes: new Set([CipherType.Login, CipherType.Card]),
-          folders: new Set([]),
-          collections: new Set(["one", "three"]),
-          anyHaveAttachment: true,
+          vaults: new Map([
+            ["org-one", 2],
+            ["org-two", 2],
+          ]),
+          fieldNames: new Map([
+            ["one", 7],
+            ["five", 1],
+          ]),
+          itemTypes: new Map([
+            [CipherType.Login, 3],
+            [CipherType.Card, 1],
+          ]),
+          folders: new Map([]),
+          collections: new Map([
+            ["one", 3],
+            ["three", 1],
+          ]),
+          attachmentCount: 8,
         },
       },
     ];
@@ -112,7 +124,7 @@ describe("VaultFilterMetadataService", () => {
       expect(actualMetadata.itemTypes).toEqual(output.itemTypes);
       expect(actualMetadata.folders).toEqual(output.folders);
       expect(actualMetadata.collections).toEqual(output.collections);
-      expect(actualMetadata.anyHaveAttachment).toBe(output.anyHaveAttachment);
+      expect(actualMetadata.attachmentCount).toBe(output.attachmentCount);
     });
   });
 });

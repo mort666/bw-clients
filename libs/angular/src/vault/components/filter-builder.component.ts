@@ -7,7 +7,8 @@ import {
   OnInit,
   Output,
 } from "@angular/core";
-import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { FormBuilder, FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { BehaviorSubject, map, Observable, startWith } from "rxjs";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -24,21 +25,27 @@ import {
   ChipSelectComponent,
 } from "@bitwarden/components";
 
-type Filter = {
+type FilterData = {
   vaults: ChipSelectOption<string>[] | null;
   folders: ChipSelectOption<string>[] | null;
   collections: ChipSelectOption<string>[] | null;
   types: ChipSelectOption<string>[];
   fields: ChipSelectOption<string>[] | null;
+  anyHaveAttachment: boolean;
 };
 
-const setMap = <T, TResult>(
-  set: Set<T>,
+type FilterModel = Partial<FilterData & { text: string }>;
+
+// TODO: Include more details on basic so consumers can easily interact with it.
+export type Filter = { filter: string } & ({ type: "advanced" } | { type: "basic" });
+
+const customMap = <T, TResult>(
+  map: Map<T, unknown>,
   selector: (element: T, index: number) => TResult,
 ): TResult[] => {
   let index = 0;
   const results: TResult[] = [];
-  for (const element of set) {
+  for (const element of map.keys()) {
     results.push(selector(element, index++));
   }
 
@@ -48,30 +55,34 @@ const setMap = <T, TResult>(
 @Component({
   selector: "app-filter-builder",
   template: `
-    <ng-container *ngIf="filterData$ | async as filter">
+    <form [formGroup]="form" *ngIf="filterData$ | async as filter">
       <bit-chip-multi-select
         placeholderText="Vault"
         placeholderIcon="bwi-vault"
+        formControlName="vaults"
         [options]="filter.vaults"
       ></bit-chip-multi-select>
       <bit-chip-multi-select
         placeholderText="Folders"
         placeholderIcon="bwi-folder"
+        formControlName="folders"
         [options]="filter.folders"
         class="tw-pl-2"
       ></bit-chip-multi-select>
       <bit-chip-multi-select
         placeholderText="Collections"
         placeholderIcon="bwi-collection"
+        formControlName="collections"
         [options]="filter.collections"
         class="tw-pl-2"
       ></bit-chip-multi-select>
-      @for (selectedOtherOption of selectedOtherOptions$ | async; track selectedOtherOption) {
+      @for (selectedOtherOption of selectedOptions(); track selectedOtherOption) {
         @switch (selectedOtherOption) {
           @case ("types") {
             <bit-chip-multi-select
               placeholderText="Types"
               placeholderIcon="bwi-sliders"
+              formControlName="types"
               [options]="filter.types"
               class="tw-pl-2"
             ></bit-chip-multi-select>
@@ -80,13 +91,10 @@ const setMap = <T, TResult>(
             <bit-chip-multi-select
               placeholderText="Fields"
               placeholderIcon="bwi-filter"
-              [loading]="filter.fields == null"
+              formControlName="fields"
               [options]="filter.fields"
               class="tw-pl-2"
             ></bit-chip-multi-select>
-          }
-          @default {
-            <p>Invalid option {{ selectedOtherOption | json }}</p>
           }
         }
       }
@@ -95,16 +103,20 @@ const setMap = <T, TResult>(
           *ngIf="otherOptions.length !== 0"
           placeholderText="Other filters"
           placeholderIcon="bwi-sliders"
+          formControlName="otherOptions"
           [options]="otherOptions"
           class="tw-pl-2"
-          [(ngModel)]="otherOption"
         >
         </bit-chip-select>
       </ng-container>
       <span class="tw-border-l tw-border-0 tw-border-solid tw-border-secondary-300 tw-mx-2"></span>
-      <button type="button" bitLink linkType="secondary" class="tw-text-sm">Reset</button>
-      <button type="button" bitLink class="tw-ml-2 tw-text-sm">Save filter</button>
-    </ng-container>
+      <button type="button" bitLink linkType="secondary" class="tw-text-sm" (click)="resetFilter()">
+        Reset
+      </button>
+      <button type="button" bitLink class="tw-ml-2 tw-text-sm" (click)="saveFilter()">
+        Save filter
+      </button>
+    </form>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
@@ -135,49 +147,33 @@ export class FilterBuilderComponent implements OnInit {
     }>
   >();
 
-  private loadingFilter: Filter;
+  protected form = this.formBuilder.group({
+    vaults: this.formBuilder.control<string[]>([]),
+    folders: this.formBuilder.control<string[]>([]),
+    collections: this.formBuilder.control<string[]>([]),
+    types: this.formBuilder.control<string[]>([]),
+    fields: this.formBuilder.control<string[]>([]),
+    otherOptions: this.formBuilder.control<string>(null),
+    selectedOtherOptions: this.formBuilder.control<string[]>([]),
+  });
 
-  filterData$: Observable<Filter>;
+  private loadingFilter: FilterData;
+
+  protected filterData$: Observable<FilterData>;
+
+  private defaultOtherOptions: ChipSelectOption<string>[];
 
   // TODO: Set these dynamically based on metadata
-  private _otherOptions = new BehaviorSubject<ChipSelectOption<string>[]>([
-    { value: "types", label: "Types", icon: "bwi-sliders" },
-    { value: "fields", label: "Fields", icon: "bwi-filter" },
-  ]);
+  private _otherOptions: BehaviorSubject<ChipSelectOption<string>[]>;
 
-  otherOptions$ = this._otherOptions.asObservable();
-
-  get otherOption(): string {
-    return null;
-  }
-
-  set otherOption(value: string) {
-    if (value == null) {
-      return;
-    }
-    const current = this._selectedOtherOptions.value;
-    this._selectedOtherOptions.next([...current, value]);
-    // TODO: Remove as option
-    const currentOptions = [...this._otherOptions.value];
-
-    const index = currentOptions.findIndex((o) => o.value === value);
-
-    if (index === -1) {
-      throw new Error("Should be impossible.");
-    }
-
-    currentOptions.splice(index, 1);
-    this._otherOptions.next(currentOptions);
-  }
-
-  private _selectedOtherOptions = new BehaviorSubject<string[]>([]);
-
-  selectedOtherOptions$ = this._selectedOtherOptions.asObservable();
+  protected otherOptions$: Observable<ChipSelectOption<string>[]>;
 
   constructor(
     private readonly i18nService: I18nService,
+    private readonly formBuilder: FormBuilder,
     private readonly vaultFilterMetadataService: VaultFilterMetadataService,
   ) {
+    // TODO: i18n
     this.loadingFilter = {
       vaults: null,
       folders: null,
@@ -189,6 +185,56 @@ export class FilterBuilderComponent implements OnInit {
         { value: "note", label: "Secure Note", icon: "bwi-sticky-note" },
       ],
       fields: null,
+      anyHaveAttachment: true,
+    };
+
+    // TODO: i18n
+    this.defaultOtherOptions = [
+      { value: "types", label: "Types", icon: "bwi-sliders" },
+      { value: "fields", label: "Fields", icon: "bwi-filter" },
+    ];
+
+    this._otherOptions = new BehaviorSubject(this.defaultOtherOptions);
+
+    this.otherOptions$ = this._otherOptions.asObservable();
+
+    this.defaultOtherOptions = [
+      { value: "types", label: "Types", icon: "bwi-sliders" },
+      { value: "fields", label: "Fields", icon: "bwi-filter" },
+    ];
+
+    this.form.controls.otherOptions.valueChanges.pipe(takeUntilDestroyed()).subscribe((option) => {
+      if (option == null) {
+        return;
+      }
+
+      // TODO: Do I need to ensure unique?
+      this.form.controls.selectedOtherOptions.setValue([
+        ...this.form.controls.selectedOtherOptions.value,
+        option,
+      ]);
+      const existingOptions = [...this._otherOptions.value];
+
+      const index = existingOptions.findIndex((o) => o.value === option);
+
+      if (index === -1) {
+        throw new Error("Should never happen.");
+      }
+
+      existingOptions.splice(index, 1);
+      this._otherOptions.next(existingOptions);
+
+      this.form.controls.otherOptions.setValue(null);
+    });
+
+    this.form.valueChanges.pipe(map((v) => v));
+  }
+
+  private convertFilter(filter: FilterModel): Filter {
+    // TODO: Support advanced mode
+    return {
+      type: "basic",
+      filter: "", // TODO: Convert to string
     };
   }
 
@@ -198,7 +244,7 @@ export class FilterBuilderComponent implements OnInit {
       map((metadata) => {
         // TODO: Combine with other info
         return {
-          vaults: setMap(metadata.vaults, (v, i) => {
+          vaults: customMap(metadata.vaults, (v, i) => {
             if (v == null) {
               // Personal vault
               return {
@@ -213,7 +259,7 @@ export class FilterBuilderComponent implements OnInit {
               };
             }
           }),
-          folders: setMap(
+          folders: customMap(
             metadata.folders,
             (f, i) =>
               ({
@@ -221,7 +267,7 @@ export class FilterBuilderComponent implements OnInit {
                 label: `Folder ${i}`,
               }) satisfies ChipSelectOption<string>,
           ),
-          collections: setMap(
+          collections: customMap(
             metadata.collections,
             (c, i) =>
               ({
@@ -229,7 +275,7 @@ export class FilterBuilderComponent implements OnInit {
                 label: `Collection ${i}`,
               }) satisfies ChipSelectOption<string>,
           ),
-          types: setMap(metadata.itemTypes, (t) => {
+          types: customMap(metadata.itemTypes, (t) => {
             switch (t) {
               case CipherType.Login:
                 return { value: "login", label: "Login", icon: "bwi-globe" };
@@ -261,14 +307,35 @@ export class FilterBuilderComponent implements OnInit {
                 throw new Error("Unreachable");
             }
           }),
-          fields: setMap(
+          fields: customMap(
             metadata.fieldNames,
             (f, i) => ({ value: f, label: f }) satisfies ChipSelectOption<string>,
           ),
-          anyHaveAttachment: metadata.anyHaveAttachment,
-        } satisfies Filter & { anyHaveAttachment: boolean };
+          anyHaveAttachment: metadata.attachmentCount !== 0,
+        } satisfies FilterModel;
       }),
       startWith(this.loadingFilter),
     );
+  }
+
+  protected selectedOptions() {
+    return this.form.controls.selectedOtherOptions.value;
+  }
+
+  protected resetFilter() {
+    this._otherOptions.next(this.defaultOtherOptions);
+    this.form.reset({
+      vaults: [],
+      folders: [],
+      types: [],
+      fields: [],
+      otherOptions: null,
+      collections: [],
+      selectedOtherOptions: [],
+    });
+  }
+
+  protected saveFilter() {
+    //
   }
 }

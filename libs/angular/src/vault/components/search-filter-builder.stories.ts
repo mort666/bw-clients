@@ -36,18 +36,32 @@ export default {
             collectMetadata: () => {
               return map<CipherView[], VaultFilterMetadata>((_ciphers) => {
                 return {
-                  vaults: new Set([null, "1", "2"]),
-                  folders: new Set(["1", "2"]),
-                  collections: new Set(["1", "2"]),
-                  itemTypes: new Set([
-                    CipherType.Login,
-                    CipherType.Card,
-                    CipherType.Identity,
-                    CipherType.SecureNote,
-                    CipherType.SshKey,
+                  vaults: new Map([
+                    [null, 1],
+                    ["1", 1],
+                    ["2", 1],
                   ]),
-                  fieldNames: new Set(["one", "two", "three"]),
-                  anyHaveAttachment: true,
+                  folders: new Map([
+                    ["1", 1],
+                    ["2", 1],
+                  ]),
+                  collections: new Map([
+                    ["1", 1],
+                    ["2", 1],
+                  ]),
+                  itemTypes: new Map([
+                    [CipherType.Login, 1],
+                    [CipherType.Card, 1],
+                    [CipherType.Identity, 1],
+                    [CipherType.SecureNote, 1],
+                    [CipherType.SshKey, 1],
+                  ]),
+                  fieldNames: new Map([
+                    ["one", 1],
+                    ["two", 1],
+                    ["three", 1],
+                  ]),
+                  attachmentCount: 1,
                 } satisfies VaultFilterMetadata;
               });
             },
