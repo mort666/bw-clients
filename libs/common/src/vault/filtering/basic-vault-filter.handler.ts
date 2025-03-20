@@ -1,4 +1,17 @@
 import { LogService } from "../../platform/abstractions/log.service";
+import {
+  AstNode,
+  isAnd,
+  isBinary,
+  isFieldTerm,
+  isInCollection,
+  isInFolder,
+  isInMyVault,
+  isInOrg,
+  isOr,
+  isParentheses,
+  isTypeFilter,
+} from "../search/ast";
 import { parseQuery } from "../search/parse";
 
 export type BasicFilter = {
@@ -13,14 +26,187 @@ export class BasicVaultFilterHandler {
   constructor(private readonly logService: LogService) {}
 
   tryParse(rawFilter: string): { success: true; filter: BasicFilter } | { success: false } {
+    // TODO: Handle vaults
+    const expectedBinaryOperator: Record<string, string> = {
+      vaults: "or",
+      folders: "or",
+      collections: "and",
+      types: "or",
+      fields: "and",
+    };
+
     // Parse into AST
     const ast = parseQuery(rawFilter, this.logService).ast;
 
-    if (ast.type !== "search") {
+    const basicFilter: Partial<BasicFilter> = {
+      vaults: null,
+      folders: null,
+      collections: null,
+      types: null,
+      fields: null,
+    };
+
+    type VisitData = {
+      operator: "or" | "and" | null;
+      type: keyof BasicFilter | null;
+      values: string[];
+    };
+
+    const isValidOperator = (data: VisitData) => {
+      if (data.type == null) {
+        return false;
+      }
+
+      if (data.values.length === 1) {
+        // If there aren't multiple values, a null operator is fine and implied
+        return data.operator === null;
+      }
+
+      return expectedBinaryOperator[data.type] === data.operator;
+    };
+
+    const visitNode = (node: AstNode, data: VisitData): boolean => {
+      if (isParentheses(node)) {
+        return visitNode(node.inner, data);
+      }
+
+      if (isBinary(node)) {
+        if (data.operator != null && data.operator !== node.type) {
+          // All inner operators must be the same
+          return false;
+        }
+
+        // Set the operator in case it is null
+        data.operator = node.type;
+        // Visit both left and right
+        return visitNode(node.left, data) && visitNode(node.right, data);
+      }
+
+      let expressionType: keyof BasicFilter = null;
+      let value: string | null | undefined = undefined;
+
+      if (isInMyVault(node)) {
+        expressionType = "vaults";
+        // null is used to indicate personal vault in basic filter
+        value = null;
+      } else if (isInOrg(node)) {
+        expressionType = "vaults";
+        value = node.org;
+      } else if (isInFolder(node)) {
+        expressionType = "folders";
+        value = node.folder;
+      } else if (isInCollection(node)) {
+        expressionType = "collections";
+        value = node.collection;
+      } else if (isTypeFilter(node)) {
+        expressionType = "types";
+        value = node.cipherType;
+      } else if (isFieldTerm(node)) {
+        expressionType = "fields";
+        value = node.field;
+      } else {
+        // There are various nodes we don't support in the basic filter, this is likely one of those.
+        return false;
+      }
+
+      if (data.type == null) {
+        data.type = expressionType;
+      } else if (data.type !== expressionType) {
+        // We've previously visited a node of a different type, unsupported
+        return false;
+      }
+
+      if (value === undefined) {
+        throw new Error("Unreachable");
+      }
+
+      // Is the string quoted?
+      if (value != null && value[0] === '"' && value[value.length - 1] === '"') {
+        // Unquote the string if it's quoted, ideally the ast offers this.
+        value = value.substring(1, value.length - 1);
+      }
+
+      data.values.push(value);
+      return true;
+    };
+
+    const visitTopLevel = (node: AstNode): boolean => {
+      if (isParentheses(node)) {
+        // Process top-level parentheses
+        // Process singular group
+        // TODO: Visit out "useless" parentheses
+        const parenthesesData: VisitData = {
+          operator: null,
+          type: null,
+          values: [],
+        };
+
+        if (!visitNode(node.inner, parenthesesData)) {
+          return false;
+        }
+
+        if (basicFilter[parenthesesData.type] != null) {
+          // We've already got data for this type
+          return false;
+        }
+
+        basicFilter[parenthesesData.type] = parenthesesData.values;
+        return isValidOperator(parenthesesData);
+      } else if (isAnd(node)) {
+        // Process top-level and
+        return visitTopLevel(node.left) && visitTopLevel(node.right);
+      } else if (isOr(node)) {
+        // We do not support top level or
+        return false;
+      } else {
+        // Process singular node
+        const singularData: VisitData = {
+          operator: null,
+          type: null,
+          values: [],
+        };
+        const visitResult = visitNode(node, singularData);
+
+        if (!visitResult) {
+          return false;
+        }
+
+        if (singularData.operator != null) {
+          // If one of these nodes came back with an operator, it was not the kind of node we were expecting
+          return false;
+        }
+
+        if (singularData.values.length !== 1) {
+          // If one of these nodes came back with multiple values, it was not the kind of node we were expecting
+          return false;
+        }
+
+        if (basicFilter[singularData.type] != null) {
+          // Can't have multiple groups about the same type
+          return false;
+        }
+
+        basicFilter[singularData.type] = singularData.values;
+
+        return true;
+      }
+    };
+
+    if (visitTopLevel(ast.contents)) {
+      // Normalize filter for return
+      return {
+        success: true,
+        filter: {
+          vaults: basicFilter.vaults ?? [],
+          collections: basicFilter.collections ?? [],
+          folders: basicFilter.folders ?? [],
+          fields: basicFilter.fields ?? [],
+          types: basicFilter.types ?? [],
+        },
+      };
+    } else {
       return { success: false };
     }
-
-    return { success: false };
   }
 
   toFilter(basicFilter: BasicFilter) {

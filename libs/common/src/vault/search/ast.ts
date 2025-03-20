@@ -99,6 +99,10 @@ export function isOr(x: AstNode): x is Or {
   return x.type === "or";
 }
 
+export function isBinary(x: AstNode): x is And | Or {
+  return x.type === "and" || x.type === "or";
+}
+
 export type Term = AstNodeBase & {
   type: "term";
   value: string;
