@@ -9,26 +9,12 @@ import { Achievement, AchievementId, MetricId } from "../../types";
  */
 export class SendItemCreatedCountConfig implements Achievement {
   // Define send count achievements here
-  static readonly SendItemCreated = new SendItemCreatedCountConfig(
-    "send-item-created",
-    "1st send item created",
-    1,
-  );
-  static readonly SendItemCreated10 = new SendItemCreatedCountConfig(
-    "send-item-created-10",
-    "10 send items created",
-    10,
-  );
-  static readonly SendItemCreated50 = new SendItemCreatedCountConfig(
-    "send-item-created-50",
-    "50 send items created",
-    50,
-  );
-  static readonly SendItemCreated100 = new SendItemCreatedCountConfig(
-    "send-item-created-100",
-    "100 send items created",
-    100,
-  );
+  static readonly AllConfigs: SendItemCreatedCountConfig[] = [
+    new SendItemCreatedCountConfig("send-item-created", "1st send item created", 1),
+    new SendItemCreatedCountConfig("send-item-created-10", "10 send items created", 10),
+    new SendItemCreatedCountConfig("send-item-created-50", "50 send items created", 50),
+    new SendItemCreatedCountConfig("send-item-created-100", "100 send items created", 100),
+  ];
 
   base: Achievement;
   get achievement() {

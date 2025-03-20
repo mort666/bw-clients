@@ -22,6 +22,10 @@ export class SendItemCreatedCountValidator implements AchievementValidator {
     this.sendItemCreatedProgress = config.active.metric;
   }
 
+  static createValidators(configs: SendItemCreatedCountConfig[]): SendItemCreatedCountValidator[] {
+    return configs.map((config) => new SendItemCreatedCountValidator(config));
+  }
+
   base: AchievementValidator;
   get achievement() {
     return this.config.achievement;

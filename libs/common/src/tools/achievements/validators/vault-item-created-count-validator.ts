@@ -30,6 +30,10 @@ export class VaultItemCreatedCountValidator implements AchievementValidator {
     this.itemCreatedProgress = config.active.metric;
   }
 
+  static createValidators(configs: ItemCreatedCountConfig[]): AchievementValidator[] {
+    return configs.map((config) => new VaultItemCreatedCountValidator(config));
+  }
+
   base: AchievementValidator;
   get achievement() {
     return this.config.achievement;

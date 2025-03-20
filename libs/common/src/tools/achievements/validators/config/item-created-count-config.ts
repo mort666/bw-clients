@@ -9,107 +9,68 @@ import { Achievement, AchievementId, MetricId } from "../../types";
  */
 export class ItemCreatedCountConfig implements Achievement {
   // Define the achievements here
+  static readonly AllConfigs: ItemCreatedCountConfig[] = [
+    // Any vault items added
+    new ItemCreatedCountConfig("vault-item-created", "1st item added", 1),
+    new ItemCreatedCountConfig("vault-items-created-ten", "10 items created", 10),
+    new ItemCreatedCountConfig("vault-items-created-fifty", "50 items created", 50),
+    new ItemCreatedCountConfig("vault-items-created-one-hundred", "100 items created", 100),
 
-  // Any vault items added
-  static readonly ItemCreated = new ItemCreatedCountConfig(
-    "vault-item-created",
-    "1st item added",
-    1,
-  );
-  static readonly ItemsCreated10 = new ItemCreatedCountConfig(
-    "vault-items-created-ten",
-    "10 items created",
-    10,
-  );
-  static readonly ItemsCreated50 = new ItemCreatedCountConfig(
-    "vault-items-created-fifty",
-    "50 items created",
-    50,
-  );
-  static readonly ItemsCreated100 = new ItemCreatedCountConfig(
-    "vault-items-created-one-hundred",
-    "100 items created",
-    100,
-  );
+    // Login items added
+    new ItemCreatedCountConfig("login-item-created", "1st login item added", 1, CipherType.Login),
+    new ItemCreatedCountConfig(
+      "login-item-created-ten",
+      "10 login items added",
+      10,
+      CipherType.Login,
+    ),
+    new ItemCreatedCountConfig(
+      "login-item-created-fifty",
+      "50 login items added",
+      50,
+      CipherType.Login,
+    ),
+    new ItemCreatedCountConfig(
+      "login-item-created-one-hundred",
+      "100 login items added",
+      100,
+      CipherType.Login,
+    ),
 
-  // Login items added
-  static readonly LoginItemCreated = new ItemCreatedCountConfig(
-    "login-item-created",
-    "1st login item added",
-    1,
-    CipherType.Login,
-  );
-  static readonly LoginItemCreated10 = new ItemCreatedCountConfig(
-    "login-item-created-ten",
-    "10 login items added",
-    10,
-    CipherType.Login,
-  );
-  static readonly LoginItemCreated50 = new ItemCreatedCountConfig(
-    "login-item-created-fifty",
-    "50 login items added",
-    50,
-    CipherType.Login,
-  );
-  static readonly LoginItemCreated100 = new ItemCreatedCountConfig(
-    "login-item-created-one-hundred",
-    "100 login items added",
-    100,
-    CipherType.Login,
-  );
+    // Card items
+    new ItemCreatedCountConfig("card-item-created", "1st card item added", 1, CipherType.Card),
+    new ItemCreatedCountConfig("card-item-created-3", "3rd card items added", 3, CipherType.Card),
+    new ItemCreatedCountConfig("card-item-created-5", "5th card item added", 5, CipherType.Card),
 
-  // Card items
-  static readonly CardItemCreated = new ItemCreatedCountConfig(
-    "card-item-created",
-    "1st card item added",
-    1,
-    CipherType.Card,
-  );
-  static readonly CardItemCreated3 = new ItemCreatedCountConfig(
-    "card-item-created-3",
-    "3rd card items added",
-    3,
-    CipherType.Card,
-  );
-  static readonly CardItemCreated5 = new ItemCreatedCountConfig(
-    "card-item-created-5",
-    "5th card item added",
-    5,
-    CipherType.Card,
-  );
+    // Note items
+    new ItemCreatedCountConfig(
+      "note-item-created",
+      "1st card item added",
+      1,
+      CipherType.SecureNote,
+    ),
+    new ItemCreatedCountConfig(
+      "note-item-created-ten",
+      "10 card items added",
+      10,
+      CipherType.SecureNote,
+    ),
+    new ItemCreatedCountConfig(
+      "note-item-created-fifty",
+      "50 card items added",
+      50,
+      CipherType.SecureNote,
+    ),
+    new ItemCreatedCountConfig(
+      "note-item-created-one-hundred",
+      "100 card items added",
+      100,
+      CipherType.SecureNote,
+    ),
 
-  // Note items
-  static readonly NoteItemCreated = new ItemCreatedCountConfig(
-    "note-item-created",
-    "1st card item added",
-    1,
-    CipherType.SecureNote,
-  );
-  static readonly NoteItemCreated10 = new ItemCreatedCountConfig(
-    "note-item-created-ten",
-    "10 card items added",
-    10,
-    CipherType.SecureNote,
-  );
-  static readonly NoteItemCreated50 = new ItemCreatedCountConfig(
-    "note-item-created-fifty",
-    "50 card items added",
-    50,
-    CipherType.SecureNote,
-  );
-  static readonly NoteItemCreated100 = new ItemCreatedCountConfig(
-    "note-item-created-one-hundred",
-    "100 card items added",
-    100,
-    CipherType.SecureNote,
-  );
-
-  // SSH Key - Achievements indicate only one so just set threshold at 1
-  static readonly SSHKeyItemCreated = new ItemCreatedCountConfig(
-    "ssh-key-item-created",
-    "1st SSH Key added",
-    1,
-  );
+    // SSH Key - Achievements indicate only one so just set threshold at 1
+    new ItemCreatedCountConfig("ssh-key-item-created", "1st SSH Key added", 1),
+  ];
 
   base: Achievement;
   get achievement() {
