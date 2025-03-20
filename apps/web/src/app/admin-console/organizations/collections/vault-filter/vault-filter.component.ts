@@ -10,6 +10,7 @@ import { ConfigService } from "@bitwarden/common/platform/abstractions/config/co
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { TreeNode } from "@bitwarden/common/vault/models/domain/tree-node";
+import { SavedFiltersService } from "@bitwarden/common/vault/search/saved-filters.service";
 import { SearchHistoryService } from "@bitwarden/common/vault/search/search-history.service";
 import { DialogService, ToastService } from "@bitwarden/components";
 
@@ -50,6 +51,7 @@ export class VaultFilterComponent
     protected dialogService: DialogService,
     protected configService: ConfigService,
     searchHistoryService: SearchHistoryService,
+    savedFiltersService: SavedFiltersService,
   ) {
     super(
       vaultFilterService,
@@ -61,6 +63,7 @@ export class VaultFilterComponent
       dialogService,
       configService,
       searchHistoryService,
+      savedFiltersService,
     );
   }
 

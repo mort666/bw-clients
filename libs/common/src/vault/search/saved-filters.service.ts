@@ -15,7 +15,8 @@ import { OrganizationId, UserId } from "../../types/guid";
 
 export abstract class SavedFiltersService {
   abstract filtersFor$(userId: UserId): Observable<Record<FilterName, FilterString>>;
-  abstract SaveFilter(userId: UserId, name: FilterName, filter: FilterString): Promise<void>;
+  abstract saveFilter(userId: UserId, name: FilterName, filter: FilterString): Promise<void>;
+  abstract deleteFilter(userId: UserId, name: FilterName): Promise<void>;
 }
 
 export type FilterName = string & Tagged<"FilterName">;
@@ -66,7 +67,7 @@ export class DefaultSavedFiltersService implements SavedFiltersService {
     return decryptedState;
   }
 
-  async SaveFilter(userId: UserId, name: FilterName, filter: FilterString): Promise<void> {
+  async saveFilter(userId: UserId, name: FilterName, filter: FilterString): Promise<void> {
     const state = this.stateProvider.get(userId, SavedFiltersStateDefinition);
     await state.update((_, newState) => newState, {
       combineLatestWith: state.state$.pipe(
@@ -80,7 +81,28 @@ export class DefaultSavedFiltersService implements SavedFiltersService {
           return [oldState, userKey] as const;
         }),
         mergeMap(async ([newState, userKey]) => {
-          return await this.encryptHistory(newState, userKey);
+          return await this.encryptFilters(newState, userKey);
+        }),
+      ),
+      shouldUpdate: (oldEncrypted, newEncrypted) => !recordsEqual(oldEncrypted, newEncrypted),
+    });
+  }
+
+  async deleteFilter(userId: UserId, name: FilterName): Promise<void> {
+    const state = this.stateProvider.get(userId, SavedFiltersStateDefinition);
+    await state.update((_, newState) => newState, {
+      combineLatestWith: state.state$.pipe(
+        combineLatestWith(this.keyService.userKey$(userId)),
+        mergeMap(async ([encrypted, userKey]) => {
+          return [await this.decryptFilters(encrypted, userKey), userKey] as const;
+        }),
+        map(([oldState, userKey]) => {
+          oldState ??= {};
+          delete oldState[name];
+          return [oldState, userKey] as const;
+        }),
+        mergeMap(async ([newState, userKey]) => {
+          return await this.encryptFilters(newState, userKey);
         }),
       ),
       shouldUpdate: (oldEncrypted, newEncrypted) => !recordsEqual(oldEncrypted, newEncrypted),
@@ -88,15 +110,15 @@ export class DefaultSavedFiltersService implements SavedFiltersService {
   }
 
   private async decryptFilters(
-    history: UserSearchFilters | null,
+    filters: UserSearchFilters | null,
     userKey: SymmetricCryptoKey | null,
   ): Promise<DecryptedSearchFilters> {
     const decrypted: DecryptedSearchFilters = {};
-    if (history == null || userKey == null) {
+    if (filters == null || userKey == null) {
       return decrypted;
     }
 
-    for (const [k, v] of Object.entries(history)) {
+    for (const [k, v] of Object.entries(filters)) {
       const encryptedKey = new EncString(k as EncryptedString);
       const key = (await encryptedKey.decryptWithKey(userKey, this.encryptService)) as FilterName;
       decrypted[key] = (await v.decryptWithKey(userKey, this.encryptService)) as FilterString;
@@ -104,16 +126,16 @@ export class DefaultSavedFiltersService implements SavedFiltersService {
     return decrypted;
   }
 
-  private async encryptHistory(
-    history: DecryptedSearchFilters | null,
+  private async encryptFilters(
+    filters: DecryptedSearchFilters | null,
     userKey: SymmetricCryptoKey | null,
   ) {
-    if (history == null || userKey == null) {
+    if (filters == null || userKey == null) {
       return null;
     }
 
     const encrypted: UserSearchFilters = {};
-    for (const [k, v] of Object.entries(history)) {
+    for (const [k, v] of Object.entries(filters)) {
       const DecryptedKey = k as FilterName;
       const key = (await this.encryptService.encrypt(DecryptedKey, userKey)).encryptedString!;
       encrypted[key] = await this.encryptService.encrypt(v, userKey);

@@ -1,10 +1,13 @@
-<div class="tw-mb-4">
+<div class="tw-mb-4 tw-w-full">
   <bit-search
     id="search"
     placeholder="{{ searchPlaceholder | i18n }}"
     [(ngModel)]="searchText"
     (ngModelChange)="onSearchTextChanged($event)"
     [history]="searchHistory.history$ | async"
+    [savedFilters]="savedFilters$ | async"
+    (filterSaved)="onFilterSaved($event)"
+    (filterDeleted)="onFilterDeleted($event)"
     autocomplete="off"
     appAutofocus
   />

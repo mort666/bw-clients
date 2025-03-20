@@ -2,7 +2,16 @@
 // @ts-strict-ignore
 import { Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output } from "@angular/core";
 import { Router } from "@angular/router";
-import { debounceTime, firstValueFrom, merge, mergeMap, Subject, switchMap, takeUntil } from "rxjs";
+import {
+  debounceTime,
+  firstValueFrom,
+  merge,
+  mergeMap,
+  Observable,
+  Subject,
+  switchMap,
+  takeUntil,
+} from "rxjs";
 
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
@@ -14,6 +23,11 @@ import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { OrganizationId, UserId } from "@bitwarden/common/types/guid";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { TreeNode } from "@bitwarden/common/vault/models/domain/tree-node";
+import {
+  FilterName,
+  FilterString,
+  SavedFiltersService,
+} from "@bitwarden/common/vault/search/saved-filters.service";
 import {
   SearchHistory,
   SearchHistoryService,
@@ -100,6 +114,7 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
 
   private trialFlowService = inject(TrialFlowService);
   protected searchHistory: SearchHistory;
+  protected savedFilters$: Observable<Record<FilterName, FilterString>>;
 
   constructor(
     protected vaultFilterService: VaultFilterService,
@@ -111,6 +126,7 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
     protected dialogService: DialogService,
     protected configService: ConfigService,
     protected searchHistoryService: SearchHistoryService,
+    protected savedFiltersService: SavedFiltersService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -133,6 +149,7 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
       });
 
     this.searchHistory = this.searchHistoryService.searchHistory(this.userId, this.organizationId);
+    this.savedFilters$ = this.savedFiltersService.filtersFor$(this.userId);
     this.searchTextChanged
       .asObservable()
       .pipe(
@@ -199,6 +216,18 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
   editFolder = async (folder: FolderFilter): Promise<void> => {
     this.onEditFolder.emit(folder);
   };
+
+  async onFilterSaved({ name, filter }: { name: string; filter: string }) {
+    await this.savedFiltersService.saveFilter(
+      this.userId,
+      name as FilterName,
+      filter as FilterString,
+    );
+  }
+
+  async onFilterDeleted({ name }: { name: string }) {
+    await this.savedFiltersService.deleteFilter(this.userId, name as FilterName);
+  }
 
   async getDefaultFilter(): Promise<TreeNode<VaultFilterType>> {
     return await firstValueFrom(this.filters?.typeFilter.data$);

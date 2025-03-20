@@ -1,7 +1,7 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
 import { CommonModule } from "@angular/common";
-import { Component, ElementRef, Input, ViewChild } from "@angular/core";
+import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from "@angular/core";
 import {
   ControlValueAccessor,
   NG_VALUE_ACCESSOR,
@@ -15,6 +15,7 @@ import { I18nPipe } from "@bitwarden/ui-common";
 
 import { IconButtonModule } from "../icon-button";
 import { InputModule } from "../input/input.module";
+import { LinkModule } from "../link";
 import { FocusableElement } from "../shared/focusable-element";
 
 let nextId = 0;
@@ -41,6 +42,7 @@ let nextId = 0;
     I18nPipe,
     CommonModule,
     IconButtonModule,
+    LinkModule,
   ],
 })
 export class SearchComponent implements ControlValueAccessor, FocusableElement {
@@ -54,7 +56,7 @@ export class SearchComponent implements ControlValueAccessor, FocusableElement {
   // Use `type="text"` for Safari to improve rendering performance
   protected inputType = isBrowserSafariApi() ? ("text" as const) : ("search" as const);
   private focused = false;
-  private textUpdated$ = new BehaviorSubject<string>("");
+  protected textUpdated$ = new BehaviorSubject<string>("");
   protected showSavedFilters = false;
 
   @Input() disabled: boolean;
@@ -62,6 +64,8 @@ export class SearchComponent implements ControlValueAccessor, FocusableElement {
   @Input() autocomplete: string;
   @Input() history: string[] | null;
   @Input() savedFilters: Record<string, string> | null;
+  @Output() filterSaved = new EventEmitter<{ name: string; filter: string }>();
+  @Output() filterDeleted = new EventEmitter<{ name: string; filter: string }>();
 
   get savedFilterData() {
     if (this.savedFilters == null) {
@@ -104,6 +108,7 @@ export class SearchComponent implements ControlValueAccessor, FocusableElement {
     if (this.notifyOnChange != undefined) {
       this.notifyOnChange(searchText);
     }
+    this.searchText = searchText;
     this.textUpdated$.next(searchText);
   }
 
@@ -141,5 +146,16 @@ export class SearchComponent implements ControlValueAccessor, FocusableElement {
 
   filterShown() {
     return this._selectedContent.value !== "filter";
+  }
+
+  saveFilter() {
+    this.filterSaved.emit({
+      name: this.searchText,
+      filter: this.searchText,
+    });
+  }
+
+  deleteFilter(toDelete: { name: string; filter: string }) {
+    this.filterDeleted.emit(toDelete);
   }
 }
