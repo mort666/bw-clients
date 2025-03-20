@@ -1,9 +1,11 @@
-import { firstValueFrom, switchMap, tap } from "rxjs";
+import { concat, filter, map, mergeAll, switchMap } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { AchievementService } from "@bitwarden/common/tools/achievements/achievement.service.abstraction";
+import { NextAchievementService } from "@bitwarden/common/tools/achievements/next-achievement.service";
+import { Achievement } from "@bitwarden/common/tools/achievements/types";
+import { UserId } from "@bitwarden/common/types/guid";
 import { Icon, ToastService } from "@bitwarden/components";
 
 import { AchievementNotifierService as AchievementNotifierServiceAbstraction } from "./achievement-notifier.abstraction";
@@ -13,7 +15,7 @@ import { iconMap } from "./icons/iconMap";
 export class AchievementNotifierService implements AchievementNotifierServiceAbstraction {
   constructor(
     private accountService: AccountService,
-    private achievementService: AchievementService,
+    private achievementService: NextAchievementService,
     private platformUtilsService: PlatformUtilsService,
     private i18nService: I18nService,
     private toastService: ToastService,
@@ -24,56 +26,32 @@ export class AchievementNotifierService implements AchievementNotifierServiceAbs
   }
 
   private async setupListeners() {
-    // FIXME Implement achievements earned filter and notififer
-    /* Get the userId from the accountService
-     * Subscribe to achievementService.achievementsEarned$(userId)
-     * Retrieve current device and filter out messages that are not for this client/device (achievements should be only shown on the device that earned them)
-     * Retrieve Achievement by AchievementId via the achievementService
-     * Use information from Achievement to fill out the options for the notification (toast)
-     * Invoke showing toast
-     */
-    // FIXME getClientType browswer and achievementEarned.service.name.extension won't match
-    const account = await firstValueFrom(this.accountService.activeAccount$);
-    this.achievementService
-      .achievementsEarned$(account.id)
+    this.accountService.accounts$
       .pipe(
-        // Removing filter for testing purposes
-        // filter(achievementEarned => achievementEarned.service.name == this.platformUtilsService.getClientType())).pipe(
-        switchMap((earned) => this.achievementService.achievementById$(earned.achievement.name)),
-        tap((achievement) => {
-          //eslint-disable-next-line no-console
-          console.log(achievement);
+        switchMap((accounts) => {
+          const earned$ = Array.from(Object.entries(accounts), ([id, value]) => {
+            const account = { ...value, id: id as UserId };
+            const metadata = this.achievementService.achievementMap();
+            const achievements = this.achievementService.earnedStream$(account).pipe(
+              map((earned) => metadata.get(earned.achievement.name)),
+              // FIXME: exclude achievements earned on another device
+              filter((earned): earned is Achievement => !!earned),
+            );
+
+            return achievements;
+          });
+          return concat(earned$);
         }),
+        mergeAll(),
       )
       .subscribe((achievement) => {
         this.toastService.showToast({
           variant: "info",
           title: achievement.name,
-          message: achievement.description,
+          message: achievement.description ?? "",
           icon: this.lookupIcon(achievement.achievement),
         });
       });
-
-    // FIXME Migrate to use achievementHub.earned$() instead of achievementService.achievementsEarned$
-    // this.achievementService
-    //   .earned$
-    //   .pipe(
-    //     // Removing filter for testing purposes
-    //     // filter(achievementEarned => achievementEarned.service.name == this.platformUtilsService.getClientType())).pipe(
-    //     switchMap((earned) => this.achievementService.achievementById$(earned.achievement.name)),
-    //     tap((achievement) => {
-    //       //eslint-disable-next-line no-console
-    //       console.log(achievement);
-    //     }),
-    //   )
-    //   .subscribe((achievement) => {
-    //     this.toastService.showToast({
-    //       variant: "info",
-    //       title: achievement.name,
-    //       message: achievement.description,
-    //       icon: this.lookupIcon(achievement.name),
-    //     });
-    //   });
   }
 
   lookupIcon(achievementName: string): Icon {

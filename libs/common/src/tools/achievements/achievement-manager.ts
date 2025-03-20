@@ -1,4 +1,4 @@
-import { Observable, OperatorFunction, map, pipe, withLatestFrom } from "rxjs";
+import { Observable, OperatorFunction, combineLatestWith, map, pipe, withLatestFrom } from "rxjs";
 
 import { AchievementId, AchievementValidator, MetricId } from "./types";
 
@@ -7,12 +7,15 @@ import { AchievementId, AchievementValidator, MetricId } from "./types";
 function active(
   metrics$: Observable<ReadonlyMap<MetricId, number>>,
   earned$: Observable<ReadonlySet<AchievementId>>,
+  // TODO: accept a configuration observable that completes without
+  //       emission when the user has opted out of achievements
 ): OperatorFunction<AchievementValidator[], AchievementValidator[]> {
   return pipe(
-    // TODO: accept a configuration observable that completes without
-    //       emission when the user has opted out of achievements
-    withLatestFrom(metrics$, earned$),
-    map(([monitors, metrics, earned]) => {
+    // refresh when an achievement is earned, but not when metrics
+    // update; this may cause metrics to overrun
+    withLatestFrom(metrics$),
+    combineLatestWith(earned$),
+    map(([[monitors, metrics], earned]) => {
       // compute list of active achievements
       const active = monitors.filter((m) => {
         // 🧠 the filters could be lifted into a function argument & delivered

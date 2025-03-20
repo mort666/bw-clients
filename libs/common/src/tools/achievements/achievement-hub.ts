@@ -82,8 +82,7 @@ export class AchievementHub {
 
   earned$(): Observable<Map<AchievementId, AchievementEarnedEvent>> {
     return this.achievementLog.pipe(
-      filter((e) => isEarnedEvent(e)),
-      map((e) => e as AchievementEarnedEvent),
+      filter(isEarnedEvent),
       latestEarnedMetrics(),
       tap((m) => this.log.debug(m, "earned achievements update")),
       startWith(new Map<AchievementId, AchievementEarnedEvent>()),
@@ -92,8 +91,7 @@ export class AchievementHub {
 
   metrics$(): Observable<Map<MetricId, AchievementProgressEvent>> {
     return this.achievementLog.pipe(
-      filter((e) => isProgressEvent(e)),
-      map((e) => e as AchievementProgressEvent),
+      filter(isProgressEvent),
       latestProgressMetrics(),
       tap((m) => this.log.debug(m, "achievement metrics update")),
       startWith(new Map<MetricId, AchievementProgressEvent>()),
