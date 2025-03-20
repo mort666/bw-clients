@@ -124,4 +124,57 @@ const itemMovedToCollection$: Observable<UserActionEvent> = of(
   } satisfies UserActionEvent,
 );
 
-export { itemAdded$, itemUpdated$, itemDeleted$, itemMovedToCollection$ };
+const sendAdded$: Observable<UserActionEvent> = of({
+  "@timestamp": Date.now(),
+  user: {
+    id: "1E2EDBC3-4449-4583-A4AC-ACDFA5C2EC71" as UserId,
+  },
+  event: {
+    kind: "event",
+    category: "session",
+    type: "creation",
+    outcome: "success",
+    provider: "send",
+  },
+  service: {
+    name: "extension",
+    type: "client",
+    node: { name: "commotion-amused-rinse-trivial-sadly" },
+    environment: "production",
+    version: "2025.3.1-innovation-sprint",
+  },
+  action: "send-item-added",
+  tags: ["with-attachment"],
+});
+
+const credentialGenerated$: Observable<UserActionEvent> = of({
+  "@timestamp": Date.now(),
+  user: {
+    id: "1E2EDBC3-4449-4583-A4AC-ACDFA5C2EC71" as UserId,
+  },
+  event: {
+    kind: "event",
+    category: "session",
+    type: "creation",
+    outcome: "success",
+    provider: "credential-generator",
+  },
+  service: {
+    name: "extension",
+    type: "client",
+    node: { name: "commotion-amused-rinse-trivial-sadly" },
+    environment: "production",
+    version: "2025.3.1-innovation-sprint",
+  },
+  action: "credential-generated",
+  labels: { algorithm: "password", "algorithm-category": "password", extension: "firefox" },
+});
+
+export {
+  itemAdded$,
+  itemUpdated$,
+  itemDeleted$,
+  itemMovedToCollection$,
+  sendAdded$,
+  credentialGenerated$,
+};
