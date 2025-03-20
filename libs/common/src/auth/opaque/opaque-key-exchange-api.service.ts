@@ -50,11 +50,11 @@ export class OpaqueKeyExchangeApiService {
     const env = await firstValueFrom(this.environmentService.environment$);
     await this.apiService.send(
       "POST",
-      `/opaque/set-registration-active`,
+      `/opaque-ke/set-registration-active`,
       request,
       true,
       true,
-      env.getApiUrl(),
+      env.getIdentityUrl(),
     );
   }
 
