@@ -5,6 +5,10 @@ import {
   KeyConnectorUserDecryptionOptionResponse,
 } from "./key-connector-user-decryption-option.response";
 import {
+  IOpaqueDecryptionOptionServerResponse,
+  OpaqueDecryptionOptionResponse,
+} from "./opaque-user-decryption-option.response";
+import {
   ITrustedDeviceUserDecryptionOptionServerResponse,
   TrustedDeviceUserDecryptionOptionResponse,
 } from "./trusted-device-user-decryption-option.response";
@@ -18,6 +22,7 @@ export interface IUserDecryptionOptionsServerResponse {
   TrustedDeviceOption?: ITrustedDeviceUserDecryptionOptionServerResponse;
   KeyConnectorOption?: IKeyConnectorUserDecryptionOptionServerResponse;
   WebAuthnPrfOption?: IWebAuthnPrfDecryptionOptionServerResponse;
+  OpaqueOption?: IOpaqueDecryptionOptionServerResponse;
 }
 
 export class UserDecryptionOptionsResponse extends BaseResponse {
@@ -25,6 +30,7 @@ export class UserDecryptionOptionsResponse extends BaseResponse {
   trustedDeviceOption?: TrustedDeviceUserDecryptionOptionResponse;
   keyConnectorOption?: KeyConnectorUserDecryptionOptionResponse;
   webAuthnPrfOption?: WebAuthnPrfDecryptionOptionResponse;
+  opaqueOption?: OpaqueDecryptionOptionResponse;
 
   constructor(response: IUserDecryptionOptionsServerResponse) {
     super(response);
@@ -44,6 +50,12 @@ export class UserDecryptionOptionsResponse extends BaseResponse {
     if (response.WebAuthnPrfOption) {
       this.webAuthnPrfOption = new WebAuthnPrfDecryptionOptionResponse(
         this.getResponseProperty("WebAuthnPrfOption"),
+      );
+    }
+
+    if (response.OpaqueOption) {
+      this.opaqueOption = new OpaqueDecryptionOptionResponse(
+        this.getResponseProperty("OpaqueOption"),
       );
     }
   }

@@ -4,9 +4,12 @@ import { RotateableKeySet } from "@bitwarden/auth/common";
 import { SdkService } from "@bitwarden/common/platform/abstractions/sdk/sdk.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
-import { OpaqueSessionId } from "@bitwarden/common/types/guid";
+import { OpaqueSessionId, UserId } from "@bitwarden/common/types/guid";
 
-import { UserKey } from "../../types/key";
+import { EncryptService } from "../../key-management/crypto/abstractions/encrypt.service";
+import { LogService } from "../../platform/abstractions/log.service";
+import { SymmetricCryptoKey } from "../../platform/models/domain/symmetric-crypto-key";
+import { OpaqueExportKey, UserKey } from "../../types/key";
 
 import { LoginFinishRequest } from "./models/login-finish.request";
 import { LoginStartRequest } from "./models/login-start.request";
@@ -21,6 +24,8 @@ export class DefaultOpaqueKeyExchangeService implements OpaqueKeyExchangeService
   constructor(
     private opaqueKeyExchangeApiService: OpaqueKeyExchangeApiService,
     private sdkService: SdkService,
+    private encryptService: EncryptService,
+    private logService: LogService,
   ) {}
 
   async register(
@@ -81,14 +86,11 @@ export class DefaultOpaqueKeyExchangeService implements OpaqueKeyExchangeService
     );
   }
 
-  // TODO: we will likely have to break this apart to return the start / finish requests
-  // so that the opaque login strategy can send both to the identity token endpoint
-  // in separate calls.
   async login(
     email: string,
     masterPassword: string,
     cipherConfig: OpaqueCipherConfiguration,
-  ): Promise<{ sessionId: string; exportKey: Uint8Array }> {
+  ): Promise<{ sessionId: string; opaqueExportKey: OpaqueExportKey }> {
     if (!email || !masterPassword || !cipherConfig) {
       throw new Error(
         `Unable to log in user with missing parameters. email exists: ${!!email}; masterPassword exists: ${!!masterPassword}; cipherConfig exists: ${!!cipherConfig}`,
@@ -119,6 +121,58 @@ export class DefaultOpaqueKeyExchangeService implements OpaqueKeyExchangeService
       throw new Error("Login failed");
     }
 
-    return { sessionId: loginStartResponse.sessionId, exportKey: loginFinish.export_key };
+    const exportKey = new SymmetricCryptoKey(loginFinish.export_key) as OpaqueExportKey;
+
+    return { sessionId: loginStartResponse.sessionId, opaqueExportKey: exportKey };
+  }
+
+  async decryptUserKeyWithExportKey(
+    userId: UserId,
+    exportKeyEncryptedOpaquePrivateKey: EncString,
+    opaquePublicKeyEncryptedUserKey: EncString,
+    exportKey: OpaqueExportKey,
+  ): Promise<UserKey | null> {
+    if (!userId) {
+      throw new Error("UserId is required. Cannot decrypt user key with export key.");
+    }
+
+    if (!exportKeyEncryptedOpaquePrivateKey) {
+      throw new Error(
+        "Encrypted OPAQUE private key is required. Cannot decrypt user key with export key.",
+      );
+    }
+
+    if (!opaquePublicKeyEncryptedUserKey) {
+      throw new Error("Encrypted user key is required. Cannot decrypt user key with export key.");
+    }
+
+    if (!exportKey) {
+      // User doesn't have an export key, so we can't decrypt the user key.
+      return null;
+    }
+
+    try {
+      // attempt to decrypt exportKeyEncryptedOpaquePrivateKey with exportKey
+      const opaquePrivateKey = await this.encryptService.decryptToBytes(
+        exportKeyEncryptedOpaquePrivateKey,
+        exportKey,
+      );
+
+      if (!opaquePrivateKey) {
+        throw new Error("Failed to decrypt opaque private key with export key.");
+      }
+
+      // Attempt to decrypt opaquePublicKeyEncryptedUserKey with opaquePrivateKey
+      const userKey = await this.encryptService.rsaDecrypt(
+        opaquePublicKeyEncryptedUserKey,
+        opaquePrivateKey,
+      );
+
+      return new SymmetricCryptoKey(userKey) as UserKey;
+    } catch (e) {
+      this.logService.error("Failed to decrypt using export key. Error: ", e);
+
+      return null;
+    }
   }
 }

@@ -160,7 +160,7 @@ export class OpaqueLoginCredentials {
     public email: string,
     public masterPassword: string,
     public kdfConfig: KdfConfig,
-    public cipherConfiguration: OpaqueCipherConfiguration,
+    public opaqueCipherConfiguration: OpaqueCipherConfiguration,
     public twoFactor?: TokenTwoFactorRequest,
   ) {}
 }

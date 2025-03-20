@@ -1508,7 +1508,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: OpaqueKeyExchangeService,
     useClass: DefaultOpaqueKeyExchangeService,
-    deps: [OpaqueKeyExchangeApiService, SdkService],
+    deps: [OpaqueKeyExchangeApiService, SdkService, EncryptService, LogService],
   }),
   safeProvider({
     provide: MasterPasswordApiServiceAbstraction,

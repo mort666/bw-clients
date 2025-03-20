@@ -19,7 +19,7 @@ import { HashPurpose } from "@bitwarden/common/platform/enums";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { PasswordStrengthServiceAbstraction } from "@bitwarden/common/tools/password-strength";
 import { UserId } from "@bitwarden/common/types/guid";
-import { MasterKey } from "@bitwarden/common/types/key";
+import { MasterKey, OpaqueExportKey } from "@bitwarden/common/types/key";
 
 import { OpaqueLoginCredentials } from "../models/domain/login-credentials";
 import { CacheData } from "../services/login-strategies/login-strategy.state";
@@ -40,7 +40,13 @@ export class OpaqueLoginStrategyData implements LoginStrategyData {
 
   /* The user's OPAQUE cipher configuration which controls
   the encryption schemes used during key derivation and key exchange */
-  cipherConfiguration: OpaqueCipherConfiguration;
+  opaqueCipherConfiguration: OpaqueCipherConfiguration;
+
+  /**
+   * The export key used to decrypt the user's key. We have to persist
+   * it to the cache so that we can decrypt after 2FA if required.
+   */
+  opaqueExportKey: OpaqueExportKey;
 
   /**
    * Tracks if the user needs to be forced to update their password
@@ -88,14 +94,12 @@ export class OpaqueLoginStrategy extends BaseLoginStrategy {
   }
 
   override async logIn(credentials: OpaqueLoginCredentials) {
-    const { email, masterPassword, kdfConfig, cipherConfiguration, twoFactor } = credentials;
+    const { email, masterPassword, kdfConfig, opaqueCipherConfiguration, twoFactor } = credentials;
 
-    // TODO: login returns export key, but we don't use it yet for decryption
-    // we must persist export key to cache and use it for decryption in setUserKey
-    const { sessionId } = await this.opaqueKeyExchangeService.login(
+    const { sessionId, opaqueExportKey } = await this.opaqueKeyExchangeService.login(
       email,
       masterPassword,
-      OpaqueCipherConfiguration.fromAny(cipherConfiguration),
+      OpaqueCipherConfiguration.fromAny(opaqueCipherConfiguration),
     );
 
     const data = new OpaqueLoginStrategyData();
@@ -113,7 +117,8 @@ export class OpaqueLoginStrategy extends BaseLoginStrategy {
       HashPurpose.LocalAuthorization,
     );
 
-    data.cipherConfiguration = cipherConfiguration;
+    data.opaqueCipherConfiguration = opaqueCipherConfiguration;
+    data.opaqueExportKey = opaqueExportKey;
 
     data.tokenRequest = new OpaqueTokenRequest(
       email,
@@ -204,17 +209,55 @@ export class OpaqueLoginStrategy extends BaseLoginStrategy {
     // We still need this for local user verification scenarios
     await this.keyService.setMasterKeyEncryptedUserKey(response.key, userId);
 
-    // TODO: why not re-use master key from strategy data cache?
-    // const masterKey = await firstValueFrom(this.masterPasswordService.masterKey$(userId));
-    // if (masterKey) {
-    //   const userKey = await this.masterPasswordService.decryptUserKeyWithMasterKey(
-    //     masterKey,
-    //     userId,
-    //   );
-    //   await this.keyService.setUserKey(userKey, userId);
-    // }
+    await this.trySetUserKeyWithOpaqueExportKey(userId, response);
+  }
 
-    // TODO: follow trySetUserKeyWithDeviceKey pattern from SSO login strategy
+  private async trySetUserKeyWithOpaqueExportKey(
+    userId: UserId,
+    identityTokenResponse: IdentityTokenResponse,
+  ) {
+    const opaqueDecryptionOption = identityTokenResponse.userDecryptionOptions?.opaqueOption;
+
+    if (!opaqueDecryptionOption) {
+      this.logService.error(
+        "Unable to set user key due to missing userDecryptionOptions.opaqueOption.",
+      );
+      return;
+    }
+
+    const opaqueExportKey = this.cache.value.opaqueExportKey;
+    const exportKeyEncryptedOpaquePrivateKey = opaqueDecryptionOption.encryptedPrivateKey;
+    const opaquePublicKeyEncryptedUserKey = opaqueDecryptionOption.encryptedUserKey;
+
+    if (!opaqueExportKey) {
+      this.logService.error("Unable to set user key due to missing opaqueExportKey.");
+      return;
+    }
+
+    if (!exportKeyEncryptedOpaquePrivateKey) {
+      this.logService.error(
+        "Unable to set user key due to missing exportKeyEncryptedOpaquePrivateKey.",
+      );
+      return;
+    }
+
+    if (!opaquePublicKeyEncryptedUserKey) {
+      this.logService.error(
+        "Unable to set user key due to missing opaquePublicKeyEncryptedUserKey.",
+      );
+      return;
+    }
+
+    const userKey = await this.opaqueKeyExchangeService.decryptUserKeyWithExportKey(
+      userId,
+      exportKeyEncryptedOpaquePrivateKey,
+      opaquePublicKeyEncryptedUserKey,
+      opaqueExportKey,
+    );
+
+    if (userKey) {
+      await this.keyService.setUserKey(userKey, userId);
+    }
   }
 
   protected override async setPrivateKey(

@@ -1,6 +1,7 @@
-import { OpaqueSessionId } from "@bitwarden/common/types/guid";
+import { OpaqueSessionId, UserId } from "@bitwarden/common/types/guid";
 
-import { UserKey } from "../../types/key";
+import { EncString } from "../../platform/models/domain/enc-string";
+import { OpaqueExportKey, UserKey } from "../../types/key";
 
 import { OpaqueCipherConfiguration } from "./models/opaque-cipher-configuration";
 
@@ -30,6 +31,13 @@ export abstract class OpaqueKeyExchangeService {
     cipherConfiguration: OpaqueCipherConfiguration,
   ): Promise<{
     sessionId: string;
-    exportKey: Uint8Array;
+    opaqueExportKey: OpaqueExportKey;
   }>;
+
+  abstract decryptUserKeyWithExportKey(
+    userId: UserId,
+    exportKeyEncryptedOpaquePrivateKey: EncString,
+    opaquePublicKeyEncryptedUserKey: EncString,
+    exportKey: OpaqueExportKey,
+  ): Promise<UserKey | null>;
 }
