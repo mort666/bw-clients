@@ -156,11 +156,11 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
 
     // Get email from state for admin auth requests because it is available and also
     // prevents it from being lost on refresh as the loginEmailService email does not persist.
-    this.email = await firstValueFrom(
+    const email = await firstValueFrom(
       this.accountService.activeAccount$.pipe(map((a) => a?.email)),
     );
 
-    if (!this.email) {
+    if (!email) {
       await this.handleMissingEmail();
       return;
     }
@@ -187,11 +187,11 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
   private async initStandardAuthRequestFlow(): Promise<void> {
     this.flow = Flow.StandardAuthRequest;
 
-    this.email = await firstValueFrom(
+    const email = await firstValueFrom(
       this.accountService.activeAccount$.pipe(map((a) => a?.email)),
     );
 
-    if (!this.email) {
+    if (!email) {
       await this.handleMissingEmail();
       return;
     }
@@ -223,7 +223,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
 
   private async startAdminAuthRequestLogin(): Promise<void> {
     try {
-      const authRequest = await this.buildAuthRequest(AuthRequestType.AdminApproval);
+      const authRequest = await this.buildAuthRequest(this.email, AuthRequestType.AdminApproval);
 
       if (!authRequest) {
         this.logService.error("Auth request failed to build.");
@@ -306,7 +306,10 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     this.showResendNotification = false;
 
     try {
-      const authRequest = await this.buildAuthRequest(AuthRequestType.AuthenticateAndUnlock);
+      const authRequest = await this.buildAuthRequest(
+        this.email,
+        AuthRequestType.AuthenticateAndUnlock,
+      );
 
       // I tried several ways to get the IDE/linter to play nice with checking for null values
       // in less code / more efficiently, but it struggles to identify code paths that
@@ -349,7 +352,10 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     }, this.showResendNotificationTimeoutSeconds * 1000);
   }
 
-  private async buildAuthRequest(authRequestType: AuthRequestType): Promise<AuthRequest> {
+  private async buildAuthRequest(
+    email: string,
+    authRequestType: AuthRequestType,
+  ): Promise<AuthRequest> {
     const authRequestKeyPairArray = await this.cryptoFunctionService.rsaGenerateKeyPair(2048);
 
     this.authRequestKeyPair = {
@@ -359,18 +365,8 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
 
     const deviceIdentifier = await this.appIdService.getAppId();
 
-    if (!this.authRequestKeyPair.publicKey) {
-      this.logService.error("AuthRequest public key not set to value in building auth request.");
-      return;
-    }
-
-    if (!this.email) {
-      this.logService.error("Email not defined when building auth request.");
-      return;
-    }
-
     this.fingerprintPhrase = await this.authRequestService.getFingerprintPhrase(
-      this.email,
+      email,
       this.authRequestKeyPair.publicKey,
     );
 
@@ -381,13 +377,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
 
     const b64PublicKey = Utils.fromBufferToB64(this.authRequestKeyPair.publicKey);
 
-    return new AuthRequest(
-      this.email,
-      deviceIdentifier,
-      b64PublicKey,
-      authRequestType,
-      this.accessCode,
-    );
+    return new AuthRequest(email, deviceIdentifier, b64PublicKey, authRequestType, this.accessCode);
   }
 
   private async handleExistingAdminAuthRequest(
