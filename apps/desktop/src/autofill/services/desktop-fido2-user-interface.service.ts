@@ -211,6 +211,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
   async confirmNewCredential({
     credentialName,
     userName,
+    userHandle,
     userVerification,
     rpId,
   }: NewCredentialParams): Promise<{ cipherId: string; userVerified: boolean }> {
@@ -218,6 +219,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
       "confirmNewCredential",
       credentialName,
       userName,
+      userHandle,
       userVerification,
       rpId,
     );
@@ -241,7 +243,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
           credentialName,
           userName,
           rpId,
-          userHandle: "",
+          userHandle,
           userVerification,
         });
         return { cipherId: this.createdCipher.id, userVerified: userVerification };
