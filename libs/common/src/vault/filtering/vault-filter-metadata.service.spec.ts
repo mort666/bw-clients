@@ -1,6 +1,6 @@
 import { firstValueFrom, of } from "rxjs";
 
-import { CipherType } from "../enums";
+import { CipherType, FieldType } from "../enums";
 import { AttachmentView } from "../models/view/attachment.view";
 import { CipherView } from "../models/view/cipher.view";
 import { FieldView } from "../models/view/field.view";
@@ -25,6 +25,8 @@ const createCipher = (data: TestCipher) => {
   cipher.fields = data.fields?.map((f) => {
     const field = new FieldView();
     field.name = f;
+    field.type = FieldType.Text;
+    field.linkedId = null;
     return field;
   });
   cipher.collectionIds = data.collectionIds;
@@ -54,7 +56,7 @@ describe("VaultFilterMetadataService", () => {
         input: [createCipher({ type: CipherType.Card })],
         output: {
           vaults: new Map([[null, 1]]),
-          fieldNames: new Map([]),
+          customFields: new Map([]),
           itemTypes: new Map([[CipherType.Card, 1]]),
           folders: new Map([]),
           collections: new Map([]),
@@ -98,9 +100,9 @@ describe("VaultFilterMetadataService", () => {
             ["org-one", 2],
             ["org-two", 2],
           ]),
-          fieldNames: new Map([
-            ["one", 7],
-            ["five", 1],
+          customFields: new Map([
+            [{ name: "one", type: FieldType.Text, linkedType: null }, 7],
+            [{ name: "five", type: FieldType.Text, linkedType: null }, 1],
           ]),
           itemTypes: new Map([
             [CipherType.Login, 3],
@@ -120,7 +122,7 @@ describe("VaultFilterMetadataService", () => {
       const actualMetadata = await firstValueFrom(of(input).pipe(sut.collectMetadata()));
 
       expect(actualMetadata.vaults).toEqual(output.vaults);
-      expect(actualMetadata.fieldNames).toEqual(output.fieldNames);
+      expect(actualMetadata.customFields).toEqual(output.customFields);
       expect(actualMetadata.itemTypes).toEqual(output.itemTypes);
       expect(actualMetadata.folders).toEqual(output.folders);
       expect(actualMetadata.collections).toEqual(output.collections);
