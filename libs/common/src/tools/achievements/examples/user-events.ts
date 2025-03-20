@@ -3,7 +3,7 @@ import { Observable, of } from "rxjs";
 import { UserId } from "../../../types/guid";
 import { UserActionEvent } from "../types";
 
-const itemAdded$: Observable<UserActionEvent> = of({
+const ItemAddedEvent: UserActionEvent = {
   "@timestamp": Date.now(),
   user: {
     id: "1E2EDBC3-4449-4583-A4AC-ACDFA5C2EC71" as UserId,
@@ -25,7 +25,9 @@ const itemAdded$: Observable<UserActionEvent> = of({
   action: "vault-item-added",
   labels: { "vault-item-type": "login", "vault-item-uri-quantity": 1 },
   tags: ["with-attachment"],
-});
+};
+
+const itemAdded$ = of(ItemAddedEvent);
 
 const itemUpdated$: Observable<UserActionEvent> = of({
   "@timestamp": Date.now(),
@@ -171,6 +173,7 @@ const credentialGenerated$: Observable<UserActionEvent> = of({
 });
 
 export {
+  ItemAddedEvent,
   itemAdded$,
   itemUpdated$,
   itemDeleted$,
