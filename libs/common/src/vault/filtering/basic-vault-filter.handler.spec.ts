@@ -10,12 +10,12 @@ describe("BasicVaultFilterHandler", () => {
       basicFilter: {
         vaults: [null, "org_vault"],
         collections: ["collection_one", "collection_two"],
-        fields: [],
+        fields: ["field_one", "field_two"],
         types: ["Login", "Card"],
         folders: ["folder_one", "folder_two"],
       },
       rawFilter:
-        '(in:my_vault OR in:org:"org_vault") AND (in:folder:"folder_one" OR in:folder:"folder_two") AND (in:collection:"collection_one" AND in:collection:"collection_two") AND (type:"Login" OR type:"Card")',
+        '(in:my_vault OR in:org:"org_vault") AND (in:folder:"folder_one" OR in:folder:"folder_two") AND (in:collection:"collection_one" AND in:collection:"collection_two") AND (type:"Login" OR type:"Card") AND (has:field:"field_one" AND has:field:"field_two")',
     },
     {
       basicFilter: {
@@ -67,6 +67,16 @@ describe("BasicVaultFilterHandler", () => {
       },
       rawFilter:
         '(in:folder:"folder_one" OR in:folder:"Folder two") AND (type:"Card" OR type:"Login")',
+    },
+    {
+      basicFilter: {
+        vaults: [],
+        collections: [],
+        fields: ["field_one", "Field two"],
+        types: [],
+        folders: [],
+      },
+      rawFilter: '(has:field:"field_one" AND has:field:"Field two")',
     },
     {
       // Example of a filter that we could pretty

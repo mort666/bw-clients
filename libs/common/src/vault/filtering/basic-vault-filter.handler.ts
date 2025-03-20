@@ -3,7 +3,7 @@ import {
   AstNode,
   isAnd,
   isBinary,
-  isFieldTerm,
+  isHasField,
   isInCollection,
   isInFolder,
   isInMyVault,
@@ -101,7 +101,7 @@ export class BasicVaultFilterHandler {
       } else if (isTypeFilter(node)) {
         expressionType = "types";
         value = node.cipherType;
-      } else if (isFieldTerm(node)) {
+      } else if (isHasField(node)) {
         expressionType = "fields";
         value = node.field;
       } else {
@@ -243,7 +243,7 @@ export class BasicVaultFilterHandler {
     addGroup(basicFilter.folders, "in:folder", "OR");
     addGroup(basicFilter.collections, "in:collection", "AND");
     addGroup(basicFilter.types, "type", "OR");
-    addGroup(basicFilter.fields, "field", "AND");
+    addGroup(basicFilter.fields, "has:field", "AND");
 
     return filter;
   }
