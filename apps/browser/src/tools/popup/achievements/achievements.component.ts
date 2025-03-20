@@ -3,6 +3,7 @@ import { Component, OnInit } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { AchievementsListComponent } from "@bitwarden/angular/tools/achievements/achievements-list.component";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { EventStoreAbstraction } from "@bitwarden/common/tools/achievements/event-store.abstraction.service";
 import { VaultItems_10_Added_Achievement } from "@bitwarden/common/tools/achievements/examples/achievements";
@@ -27,6 +28,7 @@ import { PopupPageComponent } from "../../../platform/popup/layout/popup-page.co
     PopOutComponent,
     ButtonModule,
     IconModule,
+    AchievementsListComponent,
   ],
 })
 export class AchievementsComponent implements OnInit {
