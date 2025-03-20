@@ -54,7 +54,7 @@ export class OpaqueKeyExchangeApiService {
       request,
       true,
       true,
-      env.getIdentityUrl(),
+      env.getApiUrl(),
     );
   }
 
