@@ -3,20 +3,21 @@ import { Component, effect, input, untracked } from "@angular/core";
 
 import {
   ButtonModule,
-  CardComponent,
   Icon,
   IconModule,
+  ItemModule,
   TypographyModule,
 } from "@bitwarden/components";
 
 import { AchievementIcon } from "./icons/achievement.icon";
+
 @Component({
-  selector: "achievement-card",
-  templateUrl: "achievement-card.component.html",
+  selector: "achievement-item",
+  templateUrl: "achievement-item.component.html",
   standalone: true,
-  imports: [CommonModule, ButtonModule, IconModule, TypographyModule, CardComponent],
+  imports: [CommonModule, ItemModule, ButtonModule, IconModule, TypographyModule],
 })
-export class AchievementCard {
+export class AchievemenItem {
   protected readonly icon: Icon = AchievementIcon;
   protected iconStyle: string = "tw-grayscale";
 

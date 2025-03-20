@@ -6,15 +6,15 @@
     <span bitTypography="body1" slot="end">{{ allAchievementCards.length }}</span>
   </bit-section-header>
 
-  @for (achievement of allAchievementCards; track achievement.name) {
-    <div class="tw-mb-3">
-      <achievement-card
+  <bit-item-group>
+    @for (achievement of allAchievementCards; track achievement.name) {
+      <achievement-item
         [title]="achievement.name"
         [description]="achievement.description"
         [earned]="achievement.earned"
         [date]="achievement.date"
         [progress]="achievement.progress"
-      ></achievement-card>
-    </div>
-  }
+      ></achievement-item>
+    }
+  </bit-item-group>
 </bit-section>
