@@ -1,12 +1,13 @@
-import { BehaviorSubject, SubjectLike, filter, first, from, map, zip } from "rxjs";
+import { BehaviorSubject, SubjectLike, from, map, zip } from "rxjs";
 import { Primitive } from "type-fest";
 
-import { Account, AccountService } from "../../auth/abstractions/account.service";
+import { Account } from "../../auth/abstractions/account.service";
 import { AppIdService } from "../../platform/abstractions/app-id.service";
 import { PlatformUtilsService } from "../../platform/abstractions/platform-utils.service";
 import { UserActionEvent } from "../achievements/types";
 
 import { ServiceFormat, UserFormat, EcsEventType } from "./ecs-format";
+import { disabledSemanticLoggerProvider } from "./factory";
 import { SemanticLogger } from "./semantic-logger.abstraction";
 
 export abstract class UserEventLogProvider {
@@ -25,22 +26,15 @@ export class UserEventLogger {
   constructor(
     idService: AppIdService,
     utilService: PlatformUtilsService,
-    accountService: AccountService,
+    account: Account,
     private now: () => number,
-    private log: SemanticLogger,
     private events$: SubjectLike<UserActionEvent>,
+    private log: SemanticLogger = disabledSemanticLoggerProvider({}),
   ) {
-    zip(
-      from(idService.getAppId()),
-      from(utilService.getApplicationVersion()),
-      accountService.activeAccount$.pipe(
-        filter((account) => !!account),
-        first(),
-      ),
-    )
+    zip(from(idService.getAppId()), from(utilService.getApplicationVersion()))
       .pipe(
         map(
-          ([appId, version, account]) =>
+          ([appId, version]) =>
             ({
               event: {
                 kind: "event",
