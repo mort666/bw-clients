@@ -18,7 +18,7 @@ import { AchievementIcon } from "./icons/achievement.icon";
   imports: [CommonModule, ItemModule, ButtonModule, IconModule, TypographyModule],
 })
 export class AchievementItem {
-  protected readonly icon: Icon = AchievementIcon;
+  icon = input<Icon>(AchievementIcon);
   protected iconStyle: string = "tw-grayscale";
 
   title = input.required<string>();

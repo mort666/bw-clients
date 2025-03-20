@@ -4,10 +4,11 @@ import { AccountService } from "@bitwarden/common/auth/abstractions/account.serv
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { AchievementService } from "@bitwarden/common/tools/achievements/achievement.service.abstraction";
-import { ToastService } from "@bitwarden/components";
+import { Icon, ToastService } from "@bitwarden/components";
 
 import { AchievementNotifierService as AchievementNotifierServiceAbstraction } from "./achievement-notifier.abstraction";
 import { AchievementIcon } from "./icons/achievement.icon";
+import { iconMap } from "./icons/iconMap";
 
 export class AchievementNotifierService implements AchievementNotifierServiceAbstraction {
   constructor(
@@ -32,30 +33,9 @@ export class AchievementNotifierService implements AchievementNotifierServiceAbs
      * Invoke showing toast
      */
     // FIXME getClientType browswer and achievementEarned.service.name.extension won't match
-    // const account = await firstValueFrom(this.accountService.activeAccount$);
-    // this.achievementService
-    //   .achievementsEarned$(account.id)
-    //   .pipe(
-    //     // Removing filter for testing purposes
-    //     // filter(achievementEarned => achievementEarned.service.name == this.platformUtilsService.getClientType())).pipe(
-    //     switchMap((earned) => this.achievementService.achievementById$(earned.achievement.name)),
-    //     tap((achievement) => {
-    //       //eslint-disable-next-line no-console
-    //       console.log(achievement);
-    //     }),
-    //   )
-    //   .subscribe((achievement) => {
-    //     this.toastService.showToast({
-    //       variant: "info",
-    //       title: achievement.name,
-    //       message: achievement.description,
-    //       icon: AchievementIcon,
-    //     });
-    //   });
-
-    // FIXME Migrate to use achievementHub.earned$() instead of achievementService.achievementsEarned$    
+    const account = await firstValueFrom(this.accountService.activeAccount$);
     this.achievementService
-      .earned$
+      .achievementsEarned$(account.id)
       .pipe(
         // Removing filter for testing purposes
         // filter(achievementEarned => achievementEarned.service.name == this.platformUtilsService.getClientType())).pipe(
@@ -70,8 +50,33 @@ export class AchievementNotifierService implements AchievementNotifierServiceAbs
           variant: "info",
           title: achievement.name,
           message: achievement.description,
-          icon: AchievementIcon,
+          icon: this.lookupIcon(achievement.achievement),
         });
       });
+
+    // FIXME Migrate to use achievementHub.earned$() instead of achievementService.achievementsEarned$
+    // this.achievementService
+    //   .earned$
+    //   .pipe(
+    //     // Removing filter for testing purposes
+    //     // filter(achievementEarned => achievementEarned.service.name == this.platformUtilsService.getClientType())).pipe(
+    //     switchMap((earned) => this.achievementService.achievementById$(earned.achievement.name)),
+    //     tap((achievement) => {
+    //       //eslint-disable-next-line no-console
+    //       console.log(achievement);
+    //     }),
+    //   )
+    //   .subscribe((achievement) => {
+    //     this.toastService.showToast({
+    //       variant: "info",
+    //       title: achievement.name,
+    //       message: achievement.description,
+    //       icon: this.lookupIcon(achievement.name),
+    //     });
+    //   });
+  }
+
+  lookupIcon(achievementName: string): Icon {
+    return (iconMap[achievementName] as Icon) ?? AchievementIcon;
   }
 }

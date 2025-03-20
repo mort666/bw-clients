@@ -7,7 +7,7 @@ import { AchievementsListComponent } from "@bitwarden/angular/tools/achievements
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AchievementHub } from "@bitwarden/common/tools/achievements/achievement-hub";
 import { EventStoreAbstraction } from "@bitwarden/common/tools/achievements/event-store.abstraction.service";
-import { VaultItems_10_Added_Achievement } from "@bitwarden/common/tools/achievements/examples/achievements";
+import { LoginItems_50_Added_Achievement } from "@bitwarden/common/tools/achievements/examples/achievements/login-item-added";
 import { AchievementEarnedEvent, AchievementId } from "@bitwarden/common/tools/achievements/types";
 import { UserId } from "@bitwarden/common/types/guid";
 import { ButtonModule, IconModule } from "@bitwarden/components";
@@ -38,7 +38,7 @@ export class AchievementsComponent implements OnInit {
   constructor(
     private eventStore: EventStoreAbstraction,
     private accountService: AccountService,
-    private achievementHub: AchievementHub
+    private achievementHub: AchievementHub,
   ) {}
 
   async ngOnInit() {
@@ -62,10 +62,10 @@ export class AchievementsComponent implements OnInit {
         version: "2025.3.1-innovation-sprint",
       },
       user: { id: this.currentUserId },
-      achievement: { type: "earned", name: VaultItems_10_Added_Achievement.name as AchievementId },
+      achievement: { type: "earned", name: LoginItems_50_Added_Achievement.name as AchievementId },
     };
 
-    // this.eventStore.addEvent(earnedAchievement);
-    this.achievementHub.addEvent(earnedAchievement);
+    this.eventStore.addEvent(earnedAchievement);
+    // this.achievementHub.addEvent(earnedAchievement);
   }
 }

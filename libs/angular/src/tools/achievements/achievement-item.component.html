@@ -1,7 +1,7 @@
 <bit-item>
   <button bit-item-content type="button">
     <div slot="start" class="tw-justify-start tw-flex">
-      <bit-icon [icon]="icon" class="{{ iconStyle }}"></bit-icon>
+      <bit-icon [icon]="icon()" class="{{ iconStyle }}"></bit-icon>
     </div>
     <span>{{ title() }}</span>
     <span slot="secondary">{{ description() }}</span>

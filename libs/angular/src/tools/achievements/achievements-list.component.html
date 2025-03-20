@@ -9,6 +9,7 @@
   <bit-item-group>
     @for (achievement of allAchievementCards; track achievement.name) {
       <achievement-item
+        [icon]="achievement.icon"
         [title]="achievement.name"
         [description]="achievement.description"
         [earned]="achievement.earned"

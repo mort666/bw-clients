@@ -8,6 +8,8 @@ import { AccountService } from "@bitwarden/common/auth/abstractions/account.serv
 import { AchievementService } from "@bitwarden/common/tools/achievements/achievement.service.abstraction";
 import {
   LoginItems_1_Added_Achievement,
+  LoginItems_10_Added_Achievement,
+  LoginItems_50_Added_Achievement,
   VaultItems_10_Added_Achievement,
   VaultItems_1_Added_Achievement,
   VaultItems_50_Added_Achievement,
@@ -15,6 +17,7 @@ import {
 import { UserId } from "@bitwarden/common/types/guid";
 import {
   ButtonModule,
+  Icon,
   IconButtonModule,
   ItemModule,
   SectionComponent,
@@ -23,6 +26,13 @@ import {
 } from "@bitwarden/components";
 
 import { AchievementItem } from "./achievement-item.component";
+import {
+  OneLoginItemCreatedIcon,
+  TenLoginItemsCreatedIcon,
+  FiftyLoginItemsCreatedIcon,
+} from "./icons";
+import { AchievementIcon } from "./icons/achievement.icon";
+import { iconMap } from "./icons/iconMap";
 
 @Component({
   selector: "achievements-list",
@@ -52,13 +62,31 @@ export class AchievementsListComponent implements OnInit {
   ];
 
   mockAchievements = [
-    { ...VaultItems_1_Added_Achievement, earned: false, progress: 0, date: new Date(0) },
-    { ...VaultItems_10_Added_Achievement, earned: false, progress: 1, date: new Date(0) },
-    { ...VaultItems_50_Added_Achievement, earned: true, progress: 0, date: new Date(0) },
+    {
+      ...LoginItems_1_Added_Achievement,
+      earned: false,
+      progress: 0,
+      date: new Date(0),
+      icon: OneLoginItemCreatedIcon,
+    },
+    {
+      ...LoginItems_10_Added_Achievement,
+      earned: false,
+      progress: 1,
+      date: new Date(0),
+      icon: TenLoginItemsCreatedIcon,
+    },
+    {
+      ...LoginItems_50_Added_Achievement,
+      earned: true,
+      progress: 0,
+      date: new Date(0),
+      icon: FiftyLoginItemsCreatedIcon,
+    },
   ];
   //FIXME uses mockedData for AchievmentsList
   allAchievementCards = this.mockAchievements;
-  // allAchievementCards = this.allAchievements.map(achievement => { return { ...achievement, earned: true, progress: 0, date: new Date(0) } });
+  // allAchievementCards = this.allAchievements.map(achievement => { return { ...achievement, earned: true, progress: 0, date: new Date(0), icon: this.lookupIcon(achievement.achievement) } });
 
   constructor(
     private achievementService: AchievementService,
@@ -85,5 +113,9 @@ export class AchievementsListComponent implements OnInit {
 
   async ngOnInit() {
     this.currentUserId = (await firstValueFrom(this.accountService.activeAccount$)).id;
+  }
+
+  lookupIcon(achievementName: string): Icon {
+    return (iconMap[achievementName] as Icon) ?? AchievementIcon;
   }
 }
