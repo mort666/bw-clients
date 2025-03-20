@@ -9,14 +9,25 @@ import { CipherView } from "../models/view/cipher.view";
 import { parseQuery } from "./parse";
 import {
   FilterResult,
+  FilterTagged,
   ObservableSearchContextInput,
   ParseResult,
   SearchContext,
+  TagResult,
 } from "./query.types";
 
 export abstract class FilterService {
   abstract readonly parse: OperatorFunction<string, ParseResult>;
   abstract readonly filter: OperatorFunction<[string | ParseResult, SearchContext], FilterResult>;
+  /**
+   * Tags ciphers based on the provided queries.
+   *
+   * The queries are in the form of a record, where the key is the name of the tag and the value is either a string or a ParseResult query to perform.
+   */
+  abstract readonly tag: OperatorFunction<
+    [[string, string][] | [string, ParseResult][], SearchContext],
+    TagResult
+  >;
   abstract context$(context: ObservableSearchContextInput): Observable<SearchContext>;
 }
 
@@ -60,23 +71,23 @@ export class DefaultFilterService implements FilterService {
           processInstructions: null,
         });
       } else {
-        return query.pipe(
-          map((query: string) => {
-            try {
-              return {
-                isError: false as const,
-                processInstructions: parseQuery(query, this.logService),
-              };
-            } catch {
-              return {
-                isError: true as const,
-                processInstructions: null,
-              };
-            }
-          }),
-        );
+        return query.pipe(map((query: string) => this.parseQueryString(query)));
       }
     };
+  }
+
+  private parseQueryString(query: string): ParseResult {
+    try {
+      return {
+        isError: false as const,
+        processInstructions: parseQuery(query, this.logService),
+      };
+    } catch {
+      return {
+        isError: true as const,
+        processInstructions: null,
+      };
+    }
   }
 
   get filter(): OperatorFunction<[string | ParseResult, SearchContext], FilterResult> {
@@ -102,6 +113,66 @@ export class DefaultFilterService implements FilterService {
             ciphers: parseResult.processInstructions.filter(context).ciphers,
           };
         }
+      }),
+    );
+  }
+
+  get tag(): OperatorFunction<
+    [[string, string][] | [string, ParseResult][], SearchContext],
+    TagResult
+  > {
+    return pipe(
+      switchMap(([queryOrParsedQueries, context]) => {
+        const parsedQueries: [string, ParseResult][] = [];
+        queryOrParsedQueries.forEach(([name, q]) => {
+          if (q == null || typeof q === "string") {
+            // it's a string that needs parsing
+            parsedQueries.push([name, this.parseQueryString(q as string)]);
+          } else {
+            // It's a parsed query
+            parsedQueries.push([name, q]);
+          }
+        });
+        return combineLatest([of(parsedQueries), of(context)]);
+      }),
+      map(([parseResults, context]) => {
+        if (parseResults.length === 0) {
+          return {
+            ciphers: context.ciphers as FilterTagged<CipherView>[],
+            isError: false,
+          };
+        }
+        // Reduce the parse results to a single result
+        return parseResults.reduce(
+          (acc, [name, parseResult]) => {
+            // cannot process if any parse result is error
+            if (parseResult.isError) {
+              return {
+                ciphers: acc.ciphers,
+                isError: true,
+              };
+            }
+            // Identify the ciphers to tag for this query
+            const hitCipherIds = parseResult.processInstructions
+              .filter(context)
+              .ciphers.map((c) => c.id);
+
+            return {
+              // tag ciphers for this query
+              ciphers: acc.ciphers.map((c) => {
+                const tagged = c as FilterTagged<CipherView>;
+                tagged.tags ??= [];
+                if (hitCipherIds.includes(c.id)) {
+                  tagged.tags.push(name);
+                }
+                return tagged;
+              }),
+              isError: acc.isError,
+            };
+          },
+          // Initial value of the accumulator
+          { ciphers: context.ciphers, isError: false } as TagResult,
+        );
       }),
     );
   }

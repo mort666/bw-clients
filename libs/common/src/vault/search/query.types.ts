@@ -31,6 +31,13 @@ export type FilterResult =
       isError: true;
     };
 
+export type TagResult = {
+  ciphers: FilterTagged<CipherView>[];
+  isError: boolean;
+};
+
+export type FilterTagged<T> = T & { tags: string[] };
+
 export type ProcessInstructions = {
   filter: (context: SearchContext) => SearchContext;
   ast: Search;

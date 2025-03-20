@@ -14,6 +14,7 @@ import {
   isAnd,
   isFieldTerm,
   isHasAttachment,
+  isHasField,
   isHasFolder,
   isHasUri,
   isInCollection,
@@ -117,6 +118,17 @@ function handleNode(node: AstNode): { filter: (context: SearchContext) => Search
           ciphers,
         };
       },
+    };
+  } else if (isHasField(node)) {
+    const fieldTest = fieldNameToRegexTest(node.field);
+    return {
+      filter: (context) => ({
+        ...context,
+        ciphers: context.ciphers.filter((cipher) => {
+          const foundValues = fieldValues(cipher, fieldTest);
+          return foundValues.fields.some((foundValue) => !!foundValue.value);
+        }),
+      }),
     };
   } else if (isHasAttachment(node)) {
     return {

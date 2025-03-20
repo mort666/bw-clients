@@ -47,6 +47,8 @@ TERM ->
       %string                                  {% function(d) { const start = d[0].offset; const end = d[0].offset + d[0].value.length; return { type: 'term', value: d[0].value, start, end, length: d[0].value.length } } %} 
       # specified field search term
       | %func_field %string %access %string    {% function(d) { const start = d[0].offset; const end = d[3].offset + d[3].value.length; return { type: 'fieldTerm', field: d[1].value, term: d[3].value, start, end, length: end - start + 1 } } %}
+      # Has specified field as non-null
+      | %func_has %func_field %string          {% function(d) { const start = d[0].offset; const end = d[2].offset + d[2].value.length; return { type: 'hasField', field: d[2].value, start, end, length: end - start + 1 } } %}
       # only items with attachments
       | %func_has "attachment"                 {% function(d) { const start = d[0].offset; const length = 14; return { type: 'hasAttachment', start, end: d[0].offset + length, length } } %}
       # only items with URIs

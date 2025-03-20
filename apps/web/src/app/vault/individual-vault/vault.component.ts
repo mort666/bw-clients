@@ -25,6 +25,7 @@ import {
   takeUntil,
   tap,
   catchError,
+  combineLatestWith,
 } from "rxjs/operators";
 
 import {
@@ -66,6 +67,7 @@ import { CipherRepromptType } from "@bitwarden/common/vault/enums/cipher-repromp
 import { TreeNode } from "@bitwarden/common/vault/models/domain/tree-node";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { FilterService } from "@bitwarden/common/vault/search/filter.service";
+import { SavedFiltersService } from "@bitwarden/common/vault/search/saved-filters.service";
 import { ServiceUtils } from "@bitwarden/common/vault/service-utils";
 import { CardComponent, DialogService, Icons, ToastService } from "@bitwarden/components";
 import {
@@ -274,6 +276,7 @@ export class VaultComponent implements OnInit, OnDestroy {
     private organizationBillingService: OrganizationBillingServiceAbstraction,
     private billingNotificationService: BillingNotificationService,
     private folderService: FolderService,
+    private savedFilterService: SavedFiltersService,
   ) {}
 
   async ngOnInit() {
@@ -356,12 +359,22 @@ export class VaultComponent implements OnInit, OnDestroy {
         });
       }),
     );
+    const savedFilters$ = this.accountService.activeAccount$.pipe(
+      switchMap((account) => this.savedFilterService.filtersFor$(account.id)),
+      map((filters) => {
+        const savedFilters: [string, string][] = [];
+        for (const [key, value] of Object.entries(filters ?? {})) {
+          savedFilters.push([key, value]);
+        }
+        return savedFilters;
+      }),
+    );
 
     const ciphers$ = combineLatest([this.currentSearchText$, context$]).pipe(
-      switchMap(([currentText, context]) => {
-        return this.filterService.filter(of([currentText, context]));
-      }),
-      // this.filterService.filter,
+      // switchMap(([currentText, context]) => {
+      //   return this.filterService.filter(of([currentText, context]));
+      // }),
+      this.filterService.filter,
       switchMap((result) => {
         if (result.isError) {
           // return all ciphers
@@ -370,6 +383,20 @@ export class VaultComponent implements OnInit, OnDestroy {
           // return filtered ciphers
           return of(result.ciphers);
         }
+      }),
+      combineLatestWith(context$),
+      map(([filtered, prevContext]) => {
+        prevContext.ciphers = filtered;
+        return prevContext;
+      }),
+      combineLatestWith(savedFilters$),
+      switchMap(([context, savedFilters]) => {
+        return this.filterService.tag(of([savedFilters, context]));
+      }),
+      // this.filterService.tag,
+      map((result) => {
+        // ignore tagging errors for now
+        return result.ciphers;
       }),
       shareReplay({ refCount: true, bufferSize: 1 }),
     );
