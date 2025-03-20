@@ -71,6 +71,7 @@ import { NotificationsSettingsComponent } from "../autofill/popup/settings/notif
 import { PremiumV2Component } from "../billing/popup/settings/premium-v2.component";
 import BrowserPopupUtils from "../platform/popup/browser-popup-utils";
 import { popupRouterCacheGuard } from "../platform/popup/view-cache/popup-router-cache.service";
+import { AchievementsComponent } from "../tools/popup/achievements/achievements.component";
 import { CredentialGeneratorHistoryComponent } from "../tools/popup/generator/credential-generator-history.component";
 import { CredentialGeneratorComponent } from "../tools/popup/generator/credential-generator.component";
 import { SendAddEditComponent as SendAddEditV2Component } from "../tools/popup/send-v2/add-edit/send-add-edit.component";
@@ -230,6 +231,12 @@ const routes: Routes = [
     path: "environment",
     component: EnvironmentComponent,
     canActivate: [unauthGuardFn(unauthRouteOverrides)],
+    data: { elevation: 1 } satisfies RouteDataProperties,
+  },
+  {
+    path: "achievements",
+    component: AchievementsComponent,
+    canActivate: [authGuard],
     data: { elevation: 1 } satisfies RouteDataProperties,
   },
   {
