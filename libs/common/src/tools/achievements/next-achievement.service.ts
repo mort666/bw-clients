@@ -1,6 +1,4 @@
-import { BehaviorSubject, EMPTY, filter, find, from, Observable } from "rxjs";
-
-import { UserId } from "@bitwarden/common/types/guid";
+import { BehaviorSubject, filter, from } from "rxjs";
 
 import { Account } from "../../auth/abstractions/account.service";
 import { UserEventCollector } from "../log/user-event-collector";
@@ -8,20 +6,14 @@ import { UserEventCollector } from "../log/user-event-collector";
 import { AchievementHub } from "./achievement-hub";
 import { AchievementService as AchievementServiceAbstraction } from "./achievement.service.abstraction";
 import { isEarnedEvent, isProgressEvent } from "./meta";
-import {
-  Achievement,
-  AchievementEarnedEvent,
-  AchievementEvent,
-  AchievementProgressEvent,
-  AchievementValidator,
-} from "./types";
+import { Achievement, AchievementEvent, AchievementValidator } from "./types";
 import { ItemCreatedCountConfig } from "./validators/config/item-created-count-config";
 import { SendItemCreatedCountConfig } from "./validators/config/send-created-count-config";
 import { SendItemCreatedCountValidator } from "./validators/send-item-created-count-validator";
 import { VaultItemCreatedCountValidator } from "./validators/vault-item-created-count-validator";
 
 export class NextAchievementService implements AchievementServiceAbstraction {
-  constructor(private readonly eventLogs: UserEventCollector) {}
+  constructor(private readonly collector: UserEventCollector) {}
 
   private hubs = new Map<string, AchievementHub>();
 
@@ -35,7 +27,7 @@ export class NextAchievementService implements AchievementServiceAbstraction {
 
       // FIXME: load stored achievements
       const achievements$ = from([] as AchievementEvent[]);
-      const events$ = this.eventLogs.events$(account);
+      const events$ = this.collector.events$(account);
       const hub = new AchievementHub(validators$, events$, achievements$);
 
       this.hubs.set(account.id, hub);
@@ -48,8 +40,6 @@ export class NextAchievementService implements AchievementServiceAbstraction {
     ...ItemCreatedCountConfig.AllConfigs,
     ...SendItemCreatedCountConfig.AllConfigs,
   ];
-
-  private _achievementsSubject = from(this._achievements);
 
   achievementMap() {
     return new Map(this._achievements.map((a) => [a.achievement, a] as const));
@@ -79,22 +69,5 @@ export class NextAchievementService implements AchievementServiceAbstraction {
 
   metricsMap$(account: Account) {
     return this.getHub(account).metrics$();
-  }
-
-  achievementById$(achievementId: string): Observable<Achievement> {
-    return this._achievementsSubject.pipe(
-      find((item: Achievement) => item.name === achievementId),
-      filter((f): f is Achievement => !!f),
-    );
-  }
-
-  earned$: Observable<AchievementEarnedEvent> = EMPTY;
-  inProgress$: Observable<AchievementProgressEvent> = EMPTY;
-  achievementsEarned$(userId: UserId): Observable<AchievementEarnedEvent> {
-    return EMPTY;
-  }
-
-  achievementsInProgress$(userId: UserId): Observable<AchievementProgressEvent> {
-    return EMPTY;
   }
 }

@@ -3,7 +3,7 @@ import { concat, filter, map, mergeAll, switchMap } from "rxjs";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { NextAchievementService } from "@bitwarden/common/tools/achievements/next-achievement.service";
+import { AchievementService } from "@bitwarden/common/tools/achievements/achievement.service.abstraction";
 import { Achievement } from "@bitwarden/common/tools/achievements/types";
 import { UserId } from "@bitwarden/common/types/guid";
 import { Icon, ToastService } from "@bitwarden/components";
@@ -15,7 +15,7 @@ import { iconMap } from "./icons/iconMap";
 export class AchievementNotifierService implements AchievementNotifierServiceAbstraction {
   constructor(
     private accountService: AccountService,
-    private achievementService: NextAchievementService,
+    private achievementService: AchievementService,
     private platformUtilsService: PlatformUtilsService,
     private i18nService: I18nService,
     private toastService: ToastService,

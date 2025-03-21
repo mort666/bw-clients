@@ -247,10 +247,10 @@ import { AuditService } from "@bitwarden/common/services/audit.service";
 import { EventCollectionService } from "@bitwarden/common/services/event/event-collection.service";
 import { EventUploadService } from "@bitwarden/common/services/event/event-upload.service";
 import { SearchService } from "@bitwarden/common/services/search.service";
-import { AchievementService as AchievementServiceAbstraction } from "@bitwarden/common/tools/achievements/achievement.service.abstraction";
-import { EventStore } from "@bitwarden/common/tools/achievements/event-store";
-import { EventStoreAbstraction } from "@bitwarden/common/tools/achievements/event-store.abstraction.service";
-import { HubAchievementService } from "@bitwarden/common/tools/achievements/hub-achievement.service";
+import { AchievementService } from "@bitwarden/common/tools/achievements/achievement.service.abstraction";
+import { NextAchievementService } from "@bitwarden/common/tools/achievements/next-achievement.service";
+import { DefaultUserEventCollector } from "@bitwarden/common/tools/log/default-user-event-collector";
+import { UserEventCollector } from "@bitwarden/common/tools/log/user-event-collector";
 import {
   PasswordStrengthService,
   PasswordStrengthServiceAbstraction,
@@ -359,7 +359,6 @@ import {
   ENV_ADDITIONAL_REGIONS,
 } from "./injection-tokens";
 import { ModalService } from "./modal.service";
-import { AchievementHub } from "@bitwarden/common/tools/achievements/achievement-hub";
 
 /**
  * Provider definitions used in the ngModule.
@@ -1498,21 +1497,21 @@ const safeProviders: SafeProvider[] = [
     ],
   }),
   safeProvider({
-    provide: EventStoreAbstraction,
-    useClass: EventStore,
-    deps: [],
+    provide: UserEventCollector,
+    useClass: DefaultUserEventCollector,
+    deps: [AppIdServiceAbstraction, PlatformUtilsServiceAbstraction],
   }),
   safeProvider({
-    provide: AchievementServiceAbstraction,
-    useClass: HubAchievementService,
-    deps: [],
+    provide: AchievementService,
+    useClass: NextAchievementService,
+    deps: [UserEventCollector],
   }),
   safeProvider({
     provide: AchievementNotifierServiceAbstraction,
     useClass: AchievementNotifierService,
     deps: [
       AccountServiceAbstraction,
-      AchievementServiceAbstraction,
+      AchievementService,
       PlatformUtilsServiceAbstraction,
       I18nServiceAbstraction,
       ToastService,

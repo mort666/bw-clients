@@ -1,16 +1,26 @@
 import { Observable } from "rxjs";
 
-import { UserId } from "@bitwarden/common/types/guid";
+import { Account } from "../../auth/abstractions/account.service";
 
-import { Achievement, AchievementEarnedEvent, AchievementProgressEvent } from "./types";
+import {
+  Achievement,
+  AchievementEarnedEvent,
+  AchievementId,
+  AchievementProgressEvent,
+  MetricId,
+} from "./types";
 
 export abstract class AchievementService {
-  abstract achievementById$: (achievementId: string) => Observable<Achievement>;
+  abstract achievementMap: () => Map<AchievementId, Achievement>;
 
-  abstract achievementsEarned$: (userId: UserId) => Observable<AchievementEarnedEvent>;
-  abstract achievementsInProgress$: (userId: UserId) => Observable<AchievementProgressEvent>;
+  abstract earnedStream$: (account: Account, all?: boolean) => Observable<AchievementEarnedEvent>;
 
-  abstract earned$: Observable<AchievementEarnedEvent>;
-  abstract inProgress$: Observable<AchievementProgressEvent>;
-  
+  abstract earnedMap$: (account: Account) => Observable<Map<AchievementId, AchievementEarnedEvent>>;
+
+  abstract progressStream$: (
+    account: Account,
+    all?: boolean,
+  ) => Observable<AchievementProgressEvent>;
+
+  abstract metricsMap$: (account: Account) => Observable<Map<MetricId, AchievementProgressEvent>>;
 }
