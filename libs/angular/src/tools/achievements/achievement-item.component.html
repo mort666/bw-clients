@@ -7,6 +7,8 @@
     <span slot="secondary">{{ description() }}</span>
     @if (earned()) {
       <p slot="secondary">Earned: {{ date() | date: "medium" }}</p>
+    } @else if (progress() > 0) {
+      <p slot="secondary">Progress: {{ progress() }}</p>
     }
   </button>
 </bit-item>
