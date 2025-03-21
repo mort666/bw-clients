@@ -16,8 +16,6 @@ export type ServiceFormat = EcsFormat & {
       /** a unique identifier(s) for this client installation  */
       name: string;
     };
-    /** The environment to which the client was connected */
-    environment: "production" | "testing" | "development" | "local";
 
     /** the unique identifier(s) for this client installation  */
     version: string;

@@ -1,4 +1,4 @@
-import { BehaviorSubject, SubjectLike, from, map, zip } from "rxjs";
+import { BehaviorSubject, SubjectLike, from, map, of, zip } from "rxjs";
 import { Primitive } from "type-fest";
 
 import { Account } from "../../auth/abstractions/account.service";
@@ -22,38 +22,39 @@ export class UserEventMonitor {
   constructor(
     idService: AppIdService,
     utilService: PlatformUtilsService,
-    account: Account,
+    private account: Account,
     private now: () => number,
     private events$: SubjectLike<UserActionEvent>,
     private log: SemanticLogger = disabledSemanticLoggerProvider({}),
   ) {
-    zip(from(idService.getAppId()), from(utilService.getApplicationVersion()))
-      .pipe(
-        map(
-          ([appId, version]) =>
-            ({
-              event: {
-                kind: "event",
-                category: "session",
-              },
-              service: {
-                name: utilService.getDeviceString(),
-                type: "client",
-                node: {
-                  name: appId,
-                },
-                environment: "local",
-                version,
-              },
-              user: {
-                // `account` verified not-null via `filter`
-                id: account!.id,
-                email: (account!.emailVerified && account!.email) || undefined,
-              },
-            }) satisfies BaselineType,
-        ),
-      )
+    zip(
+      from(idService.getAppId()),
+      from(utilService.getApplicationVersion()),
+      of(utilService.getDeviceString()),
+    )
+      .pipe(map(([appId, version, device]) => this.template(appId, device, version)))
       .subscribe((next) => this.baseline$.next(next));
+  }
+
+  template(appId: string, device: string, version: string): BaselineType {
+    return {
+      event: {
+        kind: "event",
+        category: "session",
+      },
+      service: {
+        name: device,
+        type: "client",
+        node: {
+          name: appId,
+        },
+        version,
+      },
+      user: {
+        id: this.account.id,
+        email: (this.account.emailVerified && this.account.email) || undefined,
+      },
+    };
   }
 
   private readonly baseline$ = new BehaviorSubject<BaselineType | null>(null);
