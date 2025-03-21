@@ -28,24 +28,15 @@ export class AchievementItem {
   progress = input<number>(0);
   date = input<Date>();
 
-  protected cardClass: string;
+  protected bgColorClass: string = "";
   constructor() {
-    this.cardClass = "";
-
     effect(() => {
       const earned = this.earned();
-      const progress = this.progress();
 
       untracked(() => {
         if (earned) {
-          this.cardClass = "tw-bg-success-100";
+          this.bgColorClass = "tw-bg-success-100";
           this.iconStyle = "";
-        } else if (progress > 0) {
-          this.cardClass = "tw-bg-info-100";
-          this.iconStyle = "tw-grayscale";
-        } else {
-          this.cardClass = "";
-          this.iconStyle = "tw-grayscale";
         }
       });
     });
