@@ -194,11 +194,18 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Check to see if we have a cached auth request to try to process
+    // [Standard Flow State Management] Check cached auth request
     const cachedAuthRequest: LoginViaAuthRequestView | null =
       this.loginViaAuthRequestCacheService.getCachedLoginViaAuthRequestView();
 
     if (cachedAuthRequest) {
+      if (!cachedAuthRequest.id) {
+        this.logService.error(
+          "No id on the cached auth request when in the standard auth request flow.",
+        );
+        return;
+      }
+
       await this.reloadCachedStandardAuthRequest(cachedAuthRequest);
       await this.processAuthRequestResponse(cachedAuthRequest.id);
     } else {
@@ -223,6 +230,14 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
 
   private async startAdminAuthRequestLogin(): Promise<void> {
     try {
+      if (!this.email) {
+        this.logService.error("No email when starting admin auth request login.");
+        return;
+      }
+
+      // Scope this auth request to just this process. We don't want it to carry
+      // on outside of this scope because it should either be regenerated with
+      // what is in the cache or created initially like it is doing here.
       const authRequest = await this.buildAuthRequest(this.email, AuthRequestType.AdminApproval);
 
       if (!authRequest) {
@@ -282,6 +297,11 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
         return;
       }
 
+      if (!cachedAuthRequest.privateKey) {
+        this.logService.error("No private key on the cached auth request.");
+        return;
+      }
+
       const privateKey = Utils.fromB64ToArray(cachedAuthRequest.privateKey);
 
       // Re-derive the user's fingerprint phrase
@@ -307,6 +327,11 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     this.showResendNotification = false;
 
     try {
+      if (!this.email) {
+        this.logService.error("Email not defined when starting standard auth request login.");
+        return;
+      }
+
       const authRequest = await this.buildAuthRequest(
         this.email,
         AuthRequestType.AuthenticateAndUnlock,
@@ -334,6 +359,16 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
         await this.authRequestApiService.postAuthRequest(authRequest);
 
       if (await this.configService.getFeatureFlag(FeatureFlag.PM9112_DeviceApprovalPersistence)) {
+        if (!this.authRequestKeyPair.privateKey) {
+          this.logService.error("No private key when trying to cache the login view.");
+          return;
+        }
+
+        if (!this.accessCode) {
+          this.logService.error("No access code when trying to cache the login view.");
+          return;
+        }
+
         this.loginViaAuthRequestCacheService.cacheLoginView(
           authRequestResponse.id,
           this.authRequestKeyPair.privateKey,
@@ -365,6 +400,12 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     };
 
     const deviceIdentifier = await this.appIdService.getAppId();
+
+    if (!this.authRequestKeyPair.publicKey) {
+      const errorMessage = "No public key when building an auth request.";
+      this.logService.error(errorMessage);
+      throw new Error(errorMessage);
+    }
 
     this.fingerprintPhrase = await this.authRequestService.getFingerprintPhrase(
       email,
@@ -447,9 +488,15 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     await this.anonymousHubService.createHubConnection(adminAuthRequestStorable.id);
   }
 
+  /**
+   * This is used for trying to get the auth request back out of state.
+   * @param requestId
+   * @private
+   */
   private async retrieveAuthRequest(requestId: string): Promise<AuthRequestResponse> {
-    let authRequestResponse: AuthRequestResponse;
+    let authRequestResponse: AuthRequestResponse | undefined = undefined;
     try {
+      // There are two cases here, the first being
       const userHasAuthenticatedViaSSO = this.authStatus === AuthenticationStatus.Locked;
 
       // Get the response based on whether we've authenticated or not.  We need to call a different API method
@@ -458,8 +505,9 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
         authRequestResponse = await this.authRequestApiService.getAuthRequest(requestId);
       } else {
         if (!this.accessCode) {
-          this.logService.error("No access code available when handling approved auth request.");
-          return;
+          const errorMessage = "No access code available when handling approved auth request.";
+          this.logService.error(errorMessage);
+          throw new Error(errorMessage);
         }
         authRequestResponse = await this.authRequestApiService.getAuthResponse(
           requestId,
@@ -469,82 +517,25 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     } catch (error) {
       // If the request no longer exists, we treat it as if it's been answered (and denied).
       if (error instanceof ErrorResponse && error.statusCode === HttpStatusCode.NotFound) {
-        return null;
+        this.logService.error(error.message);
+        throw new Error(error.message);
       }
     }
+
+    if (authRequestResponse === undefined) {
+      throw new Error("Auth reqeust response not generated");
+    }
+
     return authRequestResponse;
   }
 
   /**
-   * Determines if the Auth Request has been approved, deleted or denied, and handles the response accordingly.
-   * @param requestId The Id of the Auth Request to process
+   * Determines if the Auth Request has been approved, deleted or denied, and handles
+   * the response accordingly.
+   * @param requestId The ID of the Auth Request to process
    * @returns A boolean indicating whether the Auth Request was successfully processed
    */
   private async processAuthRequestResponse(requestId: string): Promise<void> {
-    /**
-     * ***********************************
-     *     Standard Auth Request Flows
-     * ***********************************
-     *
-     * Flow 1: Unauthed user requests approval from device; Approving device has a masterKey in memory.
-     *
-     *         Unauthed user clicks "Login with device" > navigates to /login-with-device which creates a StandardAuthRequest
-     *           > receives approval from a device with authRequestPublicKey(masterKey) > decrypts masterKey > decrypts userKey > proceed to vault
-     *
-     * Flow 2: Unauthed user requests approval from device; Approving device does NOT have a masterKey in memory.
-     *
-     *         Unauthed user clicks "Login with device" > navigates to /login-with-device which creates a StandardAuthRequest
-     *           > receives approval from a device with authRequestPublicKey(userKey) > decrypts userKey > proceeds to vault
-     *
-     *         Note: this flow is an uncommon scenario and relates to TDE off-boarding. The following describes how a user could get into this flow:
-     *           1) An SSO TD user logs into a device via an Admin auth request approval, therefore this device does NOT have a masterKey in memory.
-     *           2) The org admin...
-     *              (2a) Changes the member decryption options from "Trusted devices" to "Master password" AND
-     *              (2b) Turns off the "Require single sign-on authentication" policy
-     *           3) On another device, the user clicks "Login with device", which they can do because the org no longer requires SSO.
-     *           4) The user approves from the device they had previously logged into with SSO TD, which does NOT have a masterKey in memory (see step 1 above).
-     *
-     * Flow 3: Authed SSO TD user requests approval from device; Approving device has a masterKey in memory.
-     *
-     *         SSO TD user authenticates via SSO > navigates to /login-initiated > clicks "Approve from your other device"
-     *           > navigates to /login-with-device which creates a StandardAuthRequest > receives approval from device with authRequestPublicKey(masterKey)
-     *             > decrypts masterKey > decrypts userKey > establishes trust (if required) > proceeds to vault
-     *
-     * Flow 4: Authed SSO TD user requests approval from device; Approving device does NOT have a masterKey in memory.
-     *
-     *         SSO TD user authenticates via SSO > navigates to /login-initiated > clicks "Approve from your other device"
-     *           > navigates to /login-with-device which creates a StandardAuthRequest > receives approval from device with authRequestPublicKey(userKey)
-     *             > decrypts userKey > establishes trust (if required) > proceeds to vault
-     *
-     * ***********************************
-     *     Admin Auth Request Flow
-     * ***********************************
-     *
-     * Flow: Authed SSO TD user requests admin approval.
-     *
-     *         SSO TD user authenticates via SSO > navigates to /login-initiated > clicks "Request admin approval"
-     *           > navigates to /admin-approval-requested which creates an AdminAuthRequest > receives approval from device with authRequestPublicKey(userKey)
-     *             > decrypts userKey > establishes trust (if required) > proceeds to vault
-     *
-     *        Note: TDE users are required to be enrolled in admin password reset, which gives the admin access to the user's userKey.
-     *              This is how admins are able to send over the authRequestPublicKey(userKey) to the user to allow them to unlock.
-     *
-     *
-     *   Summary Table
-     * |-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-     * |      Flow       | Auth Status |           Clicks Button [active route]              |       Navigates to        | Approving device has masterKey in memory (see note 1) |
-     * |-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-     * | Standard Flow 1 | unauthed    | "Login with device"              [/login]           | /login-with-device        | yes                                                   |
-     * | Standard Flow 2 | unauthed    | "Login with device"              [/login]           | /login-with-device        | no                                                    |
-     * | Standard Flow 3 | authed      | "Approve from your other device" [/login-initiated] | /login-with-device        | yes                                                   |
-     * | Standard Flow 4 | authed      | "Approve from your other device" [/login-initiated] | /login-with-device        | no                                                    |
-     * | Admin Flow      | authed      | "Request admin approval"         [/login-initiated] | /admin-approval-requested | NA - admin requests always send encrypted userKey     |
-     * |-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-     *    * Note 1: The phrase "in memory" here is important. It is possible for a user to have a master password for their account, but not have a masterKey IN MEMORY for
-     *              a specific device. For example, if a user registers an account with a master password, then joins an SSO TD org, then logs in to a device via SSO and
-     *              admin auth request, they are now logged into that device but that device does not have masterKey IN MEMORY.
-     */
-
     try {
       const authRequestResponse = await this.retrieveAuthRequest(requestId);
 
@@ -562,10 +553,10 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
       if (authRequestResponse.requestApproved) {
         const userHasAuthenticatedViaSSO = this.authStatus === AuthenticationStatus.Locked;
         if (userHasAuthenticatedViaSSO) {
-          // Handles Standard Flows 3-4 and Admin Flow
+          // [Standard Flow 3-4] Handle authenticated SSO TD user flows
           return await this.handleAuthenticatedFlows(authRequestResponse);
         } else {
-          // Handles Standard Flows 1-2
+          // [Standard Flow 1-2] Handle unauthenticated user flows
           return await this.handleUnauthenticatedFlows(authRequestResponse, requestId);
         }
       }
@@ -582,6 +573,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
   }
 
   private async handleAuthenticatedFlows(authRequestResponse: AuthRequestResponse) {
+    // [Standard Flow 3-4] Handle authenticated SSO TD user flows
     const userId = (await firstValueFrom(this.accountService.activeAccount$))?.id;
     if (!userId) {
       this.logService.error(
@@ -606,6 +598,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     authRequestResponse: AuthRequestResponse,
     requestId: string,
   ) {
+    // [Standard Flow 1-2] Handle unauthenticated user flows
     const authRequestLoginCredentials = await this.buildAuthRequestLoginCredentials(
       requestId,
       authRequestResponse,
@@ -628,21 +621,20 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     userId: UserId,
   ): Promise<void> {
     /**
-     * See verifyAndHandleApprovedAuthReq() for flow details.
-     *
+     * [Flow Type Detection]
      * We determine the type of `key` based on the presence or absence of `masterPasswordHash`:
-     *  - If `masterPasswordHash` has a value, we receive the `key` as an authRequestPublicKey(masterKey) [plus we have authRequestPublicKey(masterPasswordHash)]
-     *  - If `masterPasswordHash` does not have a value, we receive the `key` as an authRequestPublicKey(userKey)
+     *  - If `masterPasswordHash` exists: Standard Flow 1 or 3 (device has masterKey)
+     *  - If no `masterPasswordHash`: Standard Flow 2, 4, or Admin Flow (device sends userKey)
      */
     if (authRequestResponse.masterPasswordHash) {
-      // ...in Standard Auth Request Flow 3
+      // [Standard Flow 1 or 3] Device has masterKey
       await this.authRequestService.setKeysAfterDecryptingSharedMasterKeyAndHash(
         authRequestResponse,
         privateKey,
         userId,
       );
     } else {
-      // ...in Standard Auth Request Flow 4 or Admin Auth Request Flow
+      // [Standard Flow 2, 4, or Admin Flow] Device sends userKey
       await this.authRequestService.setUserKeyAfterDecryptingSharedUserKey(
         authRequestResponse,
         privateKey,
@@ -650,6 +642,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
       );
     }
 
+    // [Admin Flow Cleanup] Clear one-time use admin auth request
     // clear the admin auth request from state so it cannot be used again (it's a one time use)
     // TODO: this should eventually be enforced via deleting this on the server once it is used
     await this.authRequestService.clearAdminAuthRequest(userId);
@@ -659,6 +652,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
       message: this.i18nService.t("loginApproved"),
     });
 
+    // [Device Trust] Establish trust if required
     // Now that we have a decrypted user key in memory, we can check if we
     // need to establish trust on the current device
     const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
