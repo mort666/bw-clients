@@ -10,7 +10,7 @@ import { Icon, ToastService } from "@bitwarden/components";
 
 import { AchievementNotifierService as AchievementNotifierServiceAbstraction } from "./achievement-notifier.abstraction";
 import { AchievementIcon } from "./icons/achievement.icon";
-import { iconMap } from "./icons/iconMap";
+import { iconMap } from "./icons/icon-map";
 
 export class AchievementNotifierService implements AchievementNotifierServiceAbstraction {
   constructor(

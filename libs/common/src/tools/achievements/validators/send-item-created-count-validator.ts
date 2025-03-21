@@ -26,7 +26,6 @@ export class SendItemCreatedCountValidator implements AchievementValidator {
     return configs.map((config) => new SendItemCreatedCountValidator(config));
   }
 
-  base: AchievementValidator;
   get achievement() {
     return this.config.achievement;
   }

@@ -25,7 +25,7 @@ import {
 
 import { AchievementItem } from "./achievement-item.component";
 import { AchievementIcon } from "./icons/achievement.icon";
-import { iconMap } from "./icons/iconMap";
+import { iconMap } from "./icons/icon-map";
 
 @Component({
   selector: "achievements-list",

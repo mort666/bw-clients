@@ -9,7 +9,7 @@ import {
 } from "../types";
 
 export class AttachmentAddedValidator implements AchievementValidator {
-  base: AchievementValidator;
+  base: Pick<AchievementValidator, "active">;
   get achievement() {
     return "item-attached" as AchievementId;
   }
@@ -31,7 +31,7 @@ export class AttachmentAddedValidator implements AchievementValidator {
   }
 
   constructor() {
-    this.base.active = "until-earned";
+    this.base = { active: "until-earned" };
   }
 
   trigger(item: UserActionEvent) {

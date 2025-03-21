@@ -34,7 +34,6 @@ export class VaultItemCreatedCountValidator implements AchievementValidator {
     return configs.map((config) => new VaultItemCreatedCountValidator(config));
   }
 
-  base: AchievementValidator;
   get achievement() {
     return this.config.achievement;
   }
@@ -81,7 +80,7 @@ export class VaultItemCreatedCountValidator implements AchievementValidator {
     }
 
     const lowerConfigType = CipherType[this.config.cipherType].toLowerCase();
-    const lowerItemType = item.labels?.["vault-item-type"].toString().toLowerCase();
+    const lowerItemType = item.labels?.["vault-item-type"]?.toString()?.toLowerCase();
     return lowerItemType === lowerConfigType;
   }
 }

@@ -8,7 +8,7 @@ import {
 } from "../types";
 
 export class ItemUriAddedValidator implements AchievementValidator {
-  base: AchievementValidator;
+  base: Pick<AchievementValidator, "active">;
   get achievement() {
     return "item-uri-added" as AchievementId;
   }
@@ -27,7 +27,7 @@ export class ItemUriAddedValidator implements AchievementValidator {
 
   constructor() {
     // If edit and the uri count is present the achievement is rewarded
-    this.base.active = "until-earned";
+    this.base = { active: "until-earned" };
   }
 
   trigger(item: UserActionEvent) {

@@ -2,7 +2,7 @@ import { PolicyService } from "../admin-console/abstractions/policy/policy.servi
 
 import { ExtensionService } from "./extension/extension.service";
 import { LogProvider } from "./log";
-import { UserEventCollector } from "./log/user-event-monitor";
+import { UserEventMonitor } from "./log/user-event-monitor";
 
 /** Provides access to commonly-used cross-cutting services. */
 export type SystemServiceProvider = {
@@ -15,5 +15,5 @@ export type SystemServiceProvider = {
   /** Event monitoring and diagnostic interfaces */
   readonly log: LogProvider;
 
-  readonly event: UserEventCollector;
+  readonly event: UserEventMonitor;
 };

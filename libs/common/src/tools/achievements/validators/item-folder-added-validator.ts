@@ -8,7 +8,7 @@ import {
 } from "../types";
 
 export class ItemFolderAddedValidator implements AchievementValidator {
-  base: AchievementValidator;
+  base: Pick<AchievementValidator, "active">;
   get achievement() {
     return "item-folder-added" as AchievementId;
   }
@@ -26,7 +26,7 @@ export class ItemFolderAddedValidator implements AchievementValidator {
   }
 
   constructor() {
-    this.base.active = "until-earned";
+    this.base = { active: "until-earned" };
   }
 
   trigger(item: UserActionEvent) {

@@ -16,7 +16,8 @@ export class SendItemCreatedCountConfig implements Achievement {
     new SendItemCreatedCountConfig("send-item-created-100", "100 send items created", 100),
   ];
 
-  base: Achievement;
+  base: Omit<Achievement, "validator" | "hidden">;
+
   get achievement() {
     return this.base.achievement;
   }
@@ -39,12 +40,14 @@ export class SendItemCreatedCountConfig implements Achievement {
   threshold: number;
   private constructor(key: string, name: string, threshold: number) {
     this.threshold = threshold;
-    this.base.achievement = key as AchievementId;
-    this.base.name = name;
-    this.base.active = {
-      metric: "send-item-quantity" as MetricId,
-      low: threshold - 1,
-      high: threshold,
+    this.base = {
+      achievement: key as AchievementId,
+      name: name,
+      active: {
+        metric: "send-item-quantity" as MetricId,
+        low: threshold - 1,
+        high: threshold,
+      },
     };
   }
 }

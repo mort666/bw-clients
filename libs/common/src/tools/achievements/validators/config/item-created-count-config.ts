@@ -92,9 +92,14 @@ export class ItemCreatedCountConfig implements Achievement {
   get hidden() {
     return this.base.hidden;
   }
-  cipherType: CipherType = null;
+  cipherType: CipherType | null = null;
   threshold: number;
-  private constructor(key: string, name: string, threshold: number, cipherType: CipherType = null) {
+  private constructor(
+    key: string,
+    name: string,
+    threshold: number,
+    cipherType: CipherType | null = null,
+  ) {
     this.cipherType = cipherType;
     this.threshold = threshold;
     this.base = {

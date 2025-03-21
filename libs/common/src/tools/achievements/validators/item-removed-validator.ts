@@ -9,7 +9,7 @@ import {
 } from "../types";
 
 export class ItemRemovedValidator implements AchievementValidator {
-  base: AchievementValidator;
+  base: Pick<AchievementValidator, "active">;
   get achievement() {
     return "item-removed" as AchievementId;
   }
@@ -29,9 +29,11 @@ export class ItemRemovedValidator implements AchievementValidator {
   }
   private metric = "item-removed-quantity" as MetricId;
   constructor() {
-    this.base.active = {
-      metric: this.metric,
-      high: 1,
+    this.base = {
+      active: {
+        metric: this.metric,
+        high: 1,
+      },
     };
   }
 

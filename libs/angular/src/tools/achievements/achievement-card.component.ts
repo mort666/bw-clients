@@ -29,6 +29,8 @@ export class AchievementCard {
 
   protected cardClass: string;
   constructor() {
+    this.cardClass = "";
+
     effect(() => {
       const earned = this.earned();
       const progress = this.progress();
