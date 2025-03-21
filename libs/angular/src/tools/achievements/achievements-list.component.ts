@@ -5,7 +5,7 @@ import { filter, switchMap } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { AccountService, Account } from "@bitwarden/common/auth/abstractions/account.service";
-import { NextAchievementService } from "@bitwarden/common/tools/achievements/next-achievement.service";
+import { AchievementService } from "@bitwarden/common/tools/achievements/achievement.service.abstraction";
 import {
   Achievement,
   AchievementEarnedEvent,
@@ -49,7 +49,7 @@ export class AchievementsListComponent {
   private _progress: Map<MetricId, AchievementProgressEvent> = new Map();
 
   constructor(
-    private achievementService: NextAchievementService,
+    private achievementService: AchievementService,
     private accountService: AccountService,
   ) {
     this.achievements = achievementService.achievementMap();

@@ -4,7 +4,7 @@ import { Account } from "../../auth/abstractions/account.service";
 import { UserEventCollector } from "../log/user-event-collector";
 
 import { AchievementHub } from "./achievement-hub";
-import { AchievementService as AchievementServiceAbstraction } from "./achievement.service.abstraction";
+import { AchievementService } from "./achievement.service.abstraction";
 import { isEarnedEvent, isProgressEvent } from "./meta";
 import { Achievement, AchievementEvent, AchievementValidator } from "./types";
 import { ItemCreatedCountConfig } from "./validators/config/item-created-count-config";
@@ -12,7 +12,7 @@ import { SendItemCreatedCountConfig } from "./validators/config/send-created-cou
 import { SendItemCreatedCountValidator } from "./validators/send-item-created-count-validator";
 import { VaultItemCreatedCountValidator } from "./validators/vault-item-created-count-validator";
 
-export class NextAchievementService implements AchievementServiceAbstraction {
+export class NextAchievementService implements AchievementService {
   constructor(private readonly collector: UserEventCollector) {}
 
   private hubs = new Map<string, AchievementHub>();
