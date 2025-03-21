@@ -156,11 +156,11 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
 
     // Get email from state for admin auth requests because it is available and also
     // prevents it from being lost on refresh as the loginEmailService email does not persist.
-    const email = await firstValueFrom(
+    this.email = await firstValueFrom(
       this.accountService.activeAccount$.pipe(map((a) => a?.email)),
     );
 
-    if (!email) {
+    if (!this.email) {
       await this.handleMissingEmail();
       return;
     }
@@ -187,17 +187,19 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
   private async initStandardAuthRequestFlow(): Promise<void> {
     this.flow = Flow.StandardAuthRequest;
 
-    const email = (await firstValueFrom(this.loginEmailService.loginEmail$)) || undefined;
+    this.email = (await firstValueFrom(this.loginEmailService.loginEmail$)) || undefined;
 
-    if (!email) {
+    if (!this.email) {
       await this.handleMissingEmail();
       return;
     }
 
+    // Check to see if we have a cached auth request to try to process
     const cachedAuthRequest: LoginViaAuthRequestView | null =
       this.loginViaAuthRequestCacheService.getCachedLoginViaAuthRequestView();
 
     if (cachedAuthRequest) {
+      await this.reloadCachedStandardAuthRequest(cachedAuthRequest);
       await this.processAuthRequestResponse(cachedAuthRequest.id);
     } else {
       await this.startStandardAuthRequestLogin();
@@ -260,9 +262,14 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected async reloadCachedStandardAuthRequestIfOneExists(): Promise<void> {
-    const cachedAuthRequest =
-      this.loginViaAuthRequestCacheService.getCachedLoginViaAuthRequestView();
+  /**
+   * Loads the cached auth request into the component state.
+   * @param cachedAuthRequest The request to load into the component state
+   * @returns Promise to await for completion
+   */
+  protected async reloadCachedStandardAuthRequest(
+    cachedAuthRequest: LoginViaAuthRequestView,
+  ): Promise<void> {
     if (cachedAuthRequest) {
       // Grab the cached information and store it back in component state.
       // We don't need the public key for handling the authentication request because
@@ -293,10 +300,6 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
         privateKey: privateKey,
         publicKey: undefined,
       };
-
-      if (cachedAuthRequest.id) {
-        await this.anonymousHubService.createHubConnection(cachedAuthRequest.id);
-      }
     }
   }
 
@@ -444,6 +447,39 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     await this.anonymousHubService.createHubConnection(adminAuthRequestStorable.id);
   }
 
+  private async retrieveAuthRequest(requestId: string): Promise<AuthRequestResponse> {
+    let authRequestResponse: AuthRequestResponse;
+    try {
+      const userHasAuthenticatedViaSSO = this.authStatus === AuthenticationStatus.Locked;
+
+      // Get the response based on whether we've authenticated or not.  We need to call a different API method
+      // based on whether we have a token or need to use the accessCode.
+      if (userHasAuthenticatedViaSSO) {
+        authRequestResponse = await this.authRequestApiService.getAuthRequest(requestId);
+      } else {
+        if (!this.accessCode) {
+          this.logService.error("No access code available when handling approved auth request.");
+          return;
+        }
+        authRequestResponse = await this.authRequestApiService.getAuthResponse(
+          requestId,
+          this.accessCode,
+        );
+      }
+    } catch (error) {
+      // If the request no longer exists, we treat it as if it's been answered (and denied).
+      if (error instanceof ErrorResponse && error.statusCode === HttpStatusCode.NotFound) {
+        return null;
+      }
+    }
+    return authRequestResponse;
+  }
+
+  /**
+   * Determines if the Auth Request has been approved, deleted or denied, and handles the response accordingly.
+   * @param requestId The Id of the Auth Request to process
+   * @returns A boolean indicating whether the Auth Request was successfully processed
+   */
   private async processAuthRequestResponse(requestId: string): Promise<void> {
     /**
      * ***********************************
@@ -510,73 +546,38 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
      */
 
     try {
-      const userHasAuthenticatedViaSSO = this.authStatus === AuthenticationStatus.Locked;
+      const authRequestResponse = await this.retrieveAuthRequest(requestId);
 
-      if (userHasAuthenticatedViaSSO) {
-        // Get the auth request from the server
-        // User is authenticated, therefore the endpoint does not require an access code.
-        const authRequestResponse = await this.authRequestApiService.getAuthRequest(requestId);
-
-        // Request doesn't exist anymore
-        if (!authRequestResponse) {
-          return await this.clearExistingStandardAuthRequestAndStartNewRequest();
-        }
-
-        // Request denied
-        if (authRequestResponse.isAnswered && !authRequestResponse.requestApproved) {
-          return await this.clearExistingStandardAuthRequestAndStartNewRequest();
-        }
-
-        if (authRequestResponse.requestApproved) {
-          // Handles Standard Flows 3-4 and Admin Flow
-          await this.handleAuthenticatedFlows(authRequestResponse);
-        }
-
-        await this.reloadCachedStandardAuthRequestIfOneExists();
-      } else {
-        if (!this.accessCode) {
-          this.logService.error("No access code available when handling approved auth request.");
-          return;
-        }
-
-        // Get the auth request from the server
-        // User is unauthenticated, therefore the endpoint requires an access code for user verification.
-        const authRequestResponse = await this.authRequestApiService.getAuthResponse(
-          requestId,
-          this.accessCode,
-        );
-
-        // Request doesn't exist anymore
-        if (!authRequestResponse) {
-          return await this.clearExistingStandardAuthRequestAndStartNewRequest();
-        }
-
-        // Request denied
-        if (authRequestResponse.isAnswered && !authRequestResponse.requestApproved) {
-          return await this.clearExistingStandardAuthRequestAndStartNewRequest();
-        }
-
-        if (authRequestResponse.requestApproved) {
-          // Handles Standard Flows 1-2
-          await this.handleUnauthenticatedFlows(authRequestResponse, requestId);
-        }
-
-        await this.reloadCachedStandardAuthRequestIfOneExists();
-      }
-    } catch (error) {
-      if (error instanceof ErrorResponse && error.statusCode === HttpStatusCode.NotFound) {
+      // Request doesn't exist anymore, so we'll clear the cache and start a new request.
+      if (!authRequestResponse) {
         return await this.clearExistingStandardAuthRequestAndStartNewRequest();
       }
+
+      // Request denied, so we'll clear the cache and start a new request.
+      if (authRequestResponse.isAnswered && !authRequestResponse.requestApproved) {
+        return await this.clearExistingStandardAuthRequestAndStartNewRequest();
+      }
+
+      // Request approved, so we'll log the user in.
+      if (authRequestResponse.requestApproved) {
+        const userHasAuthenticatedViaSSO = this.authStatus === AuthenticationStatus.Locked;
+        if (userHasAuthenticatedViaSSO) {
+          // Handles Standard Flows 3-4 and Admin Flow
+          return await this.handleAuthenticatedFlows(authRequestResponse);
+        } else {
+          // Handles Standard Flows 1-2
+          return await this.handleUnauthenticatedFlows(authRequestResponse, requestId);
+        }
+      }
+
+      // At this point, we know that the request is still pending, so we'll start a hub connection to listen for a response.
+      await this.anonymousHubService.createHubConnection(requestId);
+    } catch (error) {
       if (error instanceof ErrorResponse) {
         await this.router.navigate([this.backToRoute]);
         this.validationService.showError(error);
-        return;
       }
       this.logService.error(error);
-    } finally {
-      // Manually clean out the cache to make sure sensitive
-      // data does not persist longer than it needs to.
-      this.loginViaAuthRequestCacheService.clearCacheLoginView();
     }
   }
 
