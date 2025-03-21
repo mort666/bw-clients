@@ -5,12 +5,14 @@ import { UserEventCollector } from "../log/user-event-collector";
 
 import { AchievementHub } from "./achievement-hub";
 import { AchievementService } from "./achievement.service.abstraction";
+import {
+  FiveItemsCreatedValidator,
+  ItemCreatedValidator,
+  ThreeItemsCreatedValidator,
+  TotallyAttachedValidator,
+} from "./examples/example-validators";
 import { isEarnedEvent, isProgressEvent } from "./meta";
 import { Achievement, AchievementEvent, AchievementValidator } from "./types";
-import { ItemCreatedCountConfig } from "./validators/config/item-created-count-config";
-import { SendItemCreatedCountConfig } from "./validators/config/send-created-count-config";
-import { SendItemCreatedCountValidator } from "./validators/send-item-created-count-validator";
-import { VaultItemCreatedCountValidator } from "./validators/vault-item-created-count-validator";
 
 export class DefaultAchievementService implements AchievementService {
   constructor(private readonly collector: UserEventCollector) {}
@@ -21,8 +23,10 @@ export class DefaultAchievementService implements AchievementService {
     if (!this.hubs.has(account.id)) {
       // FIXME: sync these from the server and load them
       const validators$ = new BehaviorSubject<AchievementValidator[]>([
-        ...VaultItemCreatedCountValidator.createValidators(ItemCreatedCountConfig.AllConfigs),
-        ...SendItemCreatedCountValidator.createValidators(SendItemCreatedCountConfig.AllConfigs),
+        ItemCreatedValidator,
+        ThreeItemsCreatedValidator,
+        FiveItemsCreatedValidator,
+        TotallyAttachedValidator,
       ]);
 
       // FIXME: load stored achievements
@@ -37,8 +41,10 @@ export class DefaultAchievementService implements AchievementService {
   }
 
   private _achievements: Achievement[] = [
-    ...ItemCreatedCountConfig.AllConfigs,
-    ...SendItemCreatedCountConfig.AllConfigs,
+    ItemCreatedValidator,
+    ThreeItemsCreatedValidator,
+    FiveItemsCreatedValidator,
+    TotallyAttachedValidator,
   ];
 
   achievementMap() {

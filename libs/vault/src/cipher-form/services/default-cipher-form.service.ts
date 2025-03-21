@@ -50,7 +50,7 @@ export class DefaultCipherFormService implements CipherFormService {
       "vault-item-uri-quantity": cipher.type === CipherType.Login ? cipher.login.uris.length : null,
     };
     const tags = [
-      cipher.attachments.length > 0 ? "with-attachment" : null,
+      (cipher.attachments?.length ?? 0) > 0 ? "with-attachment" : null,
       cipher.folderId ? "with-folder" : null,
     ];
 

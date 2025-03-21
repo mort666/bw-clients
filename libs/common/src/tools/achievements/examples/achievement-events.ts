@@ -21,7 +21,6 @@ const ItemCreatedEarnedEvent: AchievementEarnedEvent = {
     node: {
       name: "an-installation-identifier-for-this-client-instance",
     },
-    environment: "local",
     version: "2025.3.1-innovation-sprint",
   },
   user: {
@@ -42,7 +41,6 @@ const NextItemCreatedEarnedEvent: AchievementEarnedEvent = {
     node: {
       name: "an-installation-identifier-for-this-client-instance",
     },
-    environment: "local",
     version: "2025.3.1-innovation-sprint",
   },
   user: {
@@ -63,7 +61,6 @@ const ThreeItemsCreatedEarnedEvent: AchievementEarnedEvent = {
     node: {
       name: "an-installation-identifier-for-this-client-instance",
     },
-    environment: "local",
     version: "2025.3.1-innovation-sprint",
   },
   user: {
@@ -84,7 +81,6 @@ const ItemCreatedProgressEvent: AchievementProgressEvent = {
     node: {
       name: "an-installation-identifier-for-this-client-instance",
     },
-    environment: "local",
     version: "2025.3.1-innovation-sprint",
   },
   user: {
@@ -105,7 +101,6 @@ const NextItemCreatedProgressEvent: AchievementProgressEvent = {
     node: {
       name: "an-installation-identifier-for-this-client-instance",
     },
-    environment: "local",
     version: "2025.3.1-innovation-sprint",
   },
   user: {
@@ -126,7 +121,6 @@ const CredentialGeneratedProgressEvent: AchievementProgressEvent = {
     node: {
       name: "an-installation-identifier-for-this-client-instance",
     },
-    environment: "local",
     version: "2025.3.1-innovation-sprint",
   },
   user: {
