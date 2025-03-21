@@ -95,7 +95,6 @@ export const Default: Story = {
     `,
   }),
   args: {
-    ciphers: of([]),
     searchFilterEvent: (d: any) => {
       console.log(d.raw);
     },
