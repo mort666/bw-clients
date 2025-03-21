@@ -13,6 +13,8 @@ import {
 } from "./examples/example-validators";
 import { isEarnedEvent, isProgressEvent } from "./meta";
 import { Achievement, AchievementEvent, AchievementValidator } from "./types";
+import { ItemCreatedCountConfig } from "./validators/config/item-created-count-config";
+import { VaultItemCreatedCountValidator } from "./validators/vault-item-created-count-validator";
 
 export class DefaultAchievementService implements AchievementService {
   constructor(private readonly collector: UserEventCollector) {}
@@ -27,6 +29,7 @@ export class DefaultAchievementService implements AchievementService {
         ThreeItemsCreatedValidator,
         FiveItemsCreatedValidator,
         TotallyAttachedValidator,
+        ...VaultItemCreatedCountValidator.createValidators(ItemCreatedCountConfig.AllConfigs),
       ]);
 
       // FIXME: load stored achievements
@@ -45,6 +48,7 @@ export class DefaultAchievementService implements AchievementService {
     ThreeItemsCreatedValidator,
     FiveItemsCreatedValidator,
     TotallyAttachedValidator,
+    ...ItemCreatedCountConfig.AllConfigs,
   ];
 
   achievementMap() {
