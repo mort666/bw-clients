@@ -40,6 +40,11 @@ export class VaultItemCreatedCountValidator implements AchievementValidator {
   get name() {
     return this.config.name;
   }
+
+  get description() {
+    return this.config.description;
+  }
+
   get validator() {
     return this.config.validator;
   }

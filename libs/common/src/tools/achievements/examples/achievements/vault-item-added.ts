@@ -4,7 +4,7 @@ import { VaultItemCreatedProgress } from "../metrics/metrics";
 const VaultItems_1_Added_Achievement: Achievement = {
   achievement: "vault-item-added" as AchievementId,
   name: "The chosen one",
-  description: "Saved your fist item to Bitwarden",
+  description: "Saved your first item to Bitwarden",
   validator: "Threshold",
   active: { metric: VaultItemCreatedProgress, high: 1 },
   hidden: false,
