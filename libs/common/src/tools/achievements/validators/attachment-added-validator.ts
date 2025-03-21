@@ -14,8 +14,13 @@ export class AttachmentAddedValidator implements AchievementValidator {
     return "item-attached" as AchievementId;
   }
   get name() {
-    return "1st attachment added to item";
+    return "Attachment theory";
   }
+
+  get description() {
+    return "Added an attachment to a vault item";
+  }
+
   get metric() {
     // Does this need to match vault-item-created-count-validator metric id for "item-quantity"
     return "item-quantity" as MetricId;

@@ -14,8 +14,8 @@ const FiveItemsCreatedAchievement = "five-vault-items-created" as AchievementId;
 
 const TotallyAttachedValidator = {
   achievement: TotallyAttachedAchievement,
-  name: "Totally attached <3",
-  description: "Attached a file to a send or item",
+  name: "Attachment theory",
+  description: "Added an attachment to a vault item",
   validator: Type.HasTag,
   active: "until-earned",
   hidden: false,
