@@ -2,6 +2,7 @@ import { UserId } from "../../types/guid";
 
 import { AchievementEarnedEvent, AchievementId, AchievementProgressEvent, MetricId } from "./types";
 
+// FIXME: see <./types.ts> AchievementValidator
 export function progressEvent(name: MetricId, value: number = 1): AchievementProgressEvent {
   return {
     "@timestamp": Date.now(),
@@ -25,6 +26,7 @@ export function progressEvent(name: MetricId, value: number = 1): AchievementPro
   };
 }
 
+// FIXME: see <./types.ts> AchievementValidator
 export function earnedEvent(name: AchievementId): AchievementEarnedEvent {
   return {
     "@timestamp": Date.now(),

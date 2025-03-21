@@ -2,7 +2,7 @@
 // @ts-strict-ignore
 import { APP_INITIALIZER, NgModule, NgZone } from "@angular/core";
 import { Router } from "@angular/router";
-import { BehaviorSubject, merge, of, Subject } from "rxjs";
+import { merge, of, Subject } from "rxjs";
 
 import { CollectionService } from "@bitwarden/admin-console/common";
 import { ViewCacheService } from "@bitwarden/angular/platform/abstractions/view-cache.service";
@@ -111,9 +111,6 @@ import { InlineDerivedStateProvider } from "@bitwarden/common/platform/state/imp
 import { PrimarySecondaryStorageService } from "@bitwarden/common/platform/storage/primary-secondary-storage.service";
 import { WindowStorageService } from "@bitwarden/common/platform/storage/window-storage.service";
 import { SyncService } from "@bitwarden/common/platform/sync";
-import { AchievementHub } from "@bitwarden/common/tools/achievements/achievement-hub";
-import { TotallyAttachedValidator, TotallyAttachedAchievement } from "@bitwarden/common/tools/achievements/examples/example-validators";
-import {AchievementEvent, AchievementValidator,  UserActionEvent } from "@bitwarden/common/tools/achievements/types";
 import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.service.abstraction";
 import { InternalSendService } from "@bitwarden/common/tools/send/services/send.service.abstraction";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
@@ -195,8 +192,6 @@ const DISK_BACKUP_LOCAL_STORAGE = new SafeInjectionToken<
   AbstractStorageService & ObservableStorageService
 >("DISK_BACKUP_LOCAL_STORAGE");
 
-const events$ = new Subject<UserActionEvent>();
-            
 /**
  * Provider definitions used in the ngModule.
  * Add your provider definition here using the safeProvider function as a wrapper. This will give you type safety.
@@ -666,18 +661,6 @@ const safeProviders: SafeProvider[] = [
     provide: SshImportPromptService,
     useClass: DefaultSshImportPromptService,
     deps: [DialogService, ToastService, PlatformUtilsService, I18nServiceAbstraction],
-  }),
-  safeProvider({
-    provide: AchievementHub,
-    useFactory: (   
-    ) => {      
-      const validators$ = new BehaviorSubject<AchievementValidator[]>([TotallyAttachedValidator]);
-      const achievements$ = new Subject<AchievementEvent>();
-      const hub = new AchievementHub(validators$, events$, achievements$);      
-      return hub;
-    },
-    deps: [    
-    ],
   }),
 ];
 

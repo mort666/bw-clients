@@ -1,13 +1,11 @@
-import { Component, OnInit } from "@angular/core";
-import { firstValueFrom } from "rxjs";
+import { Component } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { Subject, combineLatestWith, filter, map } from "rxjs";
 
-import { AchievementNotifierService } from "@bitwarden/angular/tools/achievements/achievement-notifier.abstraction";
 import { AchievementsListComponent } from "@bitwarden/angular/tools/achievements/achievements-list.component";
-import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
-import { EventStoreAbstraction } from "@bitwarden/common/tools/achievements/event-store.abstraction.service";
-import { VaultItems_10_Added_Achievement } from "@bitwarden/common/tools/achievements/examples/achievements";
-import { AchievementEarnedEvent, AchievementId } from "@bitwarden/common/tools/achievements/types";
-import { UserId } from "@bitwarden/common/types/guid";
+import { Account, AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { UserEventCollector } from "@bitwarden/common/tools/log/user-event-collector";
+import { EventInfo } from "@bitwarden/common/tools/log/user-event-monitor";
 
 import { HeaderModule } from "../../layouts/header/header.module";
 import { SharedModule } from "../../shared";
@@ -17,40 +15,29 @@ import { SharedModule } from "../../shared";
   standalone: true,
   imports: [SharedModule, HeaderModule, AchievementsListComponent],
 })
-export class AchievementsComponent implements OnInit {
-  private currentUserId: UserId;
-
+export class AchievementsComponent {
   constructor(
-    private eventStore: EventStoreAbstraction,
-    private achievementNotifierService: AchievementNotifierService,
     private accountService: AccountService,
-  ) {}
-
-  async ngOnInit() {
-    await this.achievementNotifierService.init();
-    this.currentUserId = (await firstValueFrom(this.accountService.activeAccount$)).id;
+    private readonly collector: UserEventCollector,
+  ) {
+    // FIXME: add a subscription to this service and feed the data somewhere
+    this.accountService.activeAccount$
+      .pipe(
+        filter((account): account is Account => !!account),
+        map((account) => this.collector.monitor(account)),
+        combineLatestWith(this._addEvent),
+        takeUntilDestroyed(),
+      )
+      .subscribe(([capture, event]) => capture.info(event));
   }
 
-  testAchievement() {
-    const earnedAchievement: AchievementEarnedEvent = {
-      "@timestamp": Date.now(),
-      event: {
-        kind: "alert",
-        category: "session",
-      },
-      service: {
-        name: "web",
-        type: "client",
-        node: {
-          name: "an-installation-identifier-for-this-client-instance",
-        },
-        environment: "local",
-        version: "2025.3.1-innovation-sprint",
-      },
-      user: { id: this.currentUserId },
-      achievement: { type: "earned", name: VaultItems_10_Added_Achievement.name as AchievementId },
-    };
+  private _addEvent = new Subject<EventInfo>();
 
-    this.eventStore.addEvent(earnedAchievement);
+  addEvent() {
+    this._addEvent.next({
+      action: "vault-item-added",
+      labels: { "vault-item-type": "login", "vault-item-uri-quantity": 1 },
+      tags: ["with-attachment"],
+    });
   }
 }

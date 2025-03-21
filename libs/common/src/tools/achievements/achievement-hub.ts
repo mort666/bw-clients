@@ -97,9 +97,4 @@ export class AchievementHub {
       startWith(new Map<MetricId, AchievementProgressEvent>()),
     );
   }
-
-  //Test methods
-  addEvent(event: AchievementEvent) {
-    this.achievementLog.next(event);
-  }
 }

@@ -12,7 +12,7 @@ import { SendItemCreatedCountConfig } from "./validators/config/send-created-cou
 import { SendItemCreatedCountValidator } from "./validators/send-item-created-count-validator";
 import { VaultItemCreatedCountValidator } from "./validators/vault-item-created-count-validator";
 
-export class NextAchievementService implements AchievementService {
+export class DefaultAchievementService implements AchievementService {
   constructor(private readonly collector: UserEventCollector) {}
 
   private hubs = new Map<string, AchievementHub>();

@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component } from "@angular/core";
+import { Component, NgZone } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { filter, switchMap } from "rxjs";
 
@@ -51,6 +51,7 @@ export class AchievementsListComponent {
   constructor(
     private achievementService: AchievementService,
     private accountService: AccountService,
+    zone: NgZone,
   ) {
     this.achievements = achievementService.achievementMap();
 
@@ -60,7 +61,7 @@ export class AchievementsListComponent {
         switchMap((account) => this.achievementService.earnedMap$(account)),
         takeUntilDestroyed(),
       )
-      .subscribe((earned) => (this._earned = earned));
+      .subscribe((earned) => zone.run(() => (this._earned = earned)));
 
     this.accountService.activeAccount$
       .pipe(
@@ -68,7 +69,7 @@ export class AchievementsListComponent {
         switchMap((account) => this.achievementService.metricsMap$(account)),
         takeUntilDestroyed(),
       )
-      .subscribe((progress) => (this._progress = progress));
+      .subscribe((progress) => zone.run(() => (this._progress = progress)));
   }
 
   protected isEarned(achievement: Achievement) {
@@ -87,7 +88,7 @@ export class AchievementsListComponent {
     return this._progress.get(achievement.active.metric)?.achievement?.value ?? -1;
   }
 
-  protected lookupIcon(achievement: Achievement): Icon {
+  protected icon(achievement: Achievement): Icon {
     return (iconMap[achievement.achievement] as Icon) ?? AchievementIcon;
   }
 }

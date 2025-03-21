@@ -248,7 +248,7 @@ import { EventCollectionService } from "@bitwarden/common/services/event/event-c
 import { EventUploadService } from "@bitwarden/common/services/event/event-upload.service";
 import { SearchService } from "@bitwarden/common/services/search.service";
 import { AchievementService } from "@bitwarden/common/tools/achievements/achievement.service.abstraction";
-import { NextAchievementService } from "@bitwarden/common/tools/achievements/next-achievement.service";
+import { DefaultAchievementService } from "@bitwarden/common/tools/achievements/next-achievement.service";
 import { DefaultUserEventCollector } from "@bitwarden/common/tools/log/default-user-event-collector";
 import { UserEventCollector } from "@bitwarden/common/tools/log/user-event-collector";
 import {
@@ -1503,7 +1503,7 @@ const safeProviders: SafeProvider[] = [
   }),
   safeProvider({
     provide: AchievementService,
-    useClass: NextAchievementService,
+    useClass: DefaultAchievementService,
     deps: [UserEventCollector],
   }),
   safeProvider({
