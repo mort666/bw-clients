@@ -5,12 +5,7 @@ import { UserEventCollector } from "../log/user-event-collector";
 
 import { AchievementHub } from "./achievement-hub";
 import { AchievementService } from "./achievement.service.abstraction";
-import {
-  FiveItemsCreatedValidator,
-  ItemCreatedValidator,
-  ThreeItemsCreatedValidator,
-  TotallyAttachedValidator,
-} from "./examples/example-validators";
+import { TotallyAttachedValidator } from "./examples/example-validators";
 import { isEarnedEvent, isProgressEvent } from "./meta";
 import { Achievement, AchievementEvent, AchievementValidator } from "./types";
 import { ItemCreatedCountConfig } from "./validators/config/item-created-count-config";
@@ -25,9 +20,6 @@ export class DefaultAchievementService implements AchievementService {
     if (!this.hubs.has(account.id)) {
       // FIXME: sync these from the server and load them
       const validators$ = new BehaviorSubject<AchievementValidator[]>([
-        ItemCreatedValidator,
-        ThreeItemsCreatedValidator,
-        FiveItemsCreatedValidator,
         TotallyAttachedValidator,
         ...VaultItemCreatedCountValidator.createValidators(ItemCreatedCountConfig.AllConfigs),
       ]);
@@ -44,9 +36,6 @@ export class DefaultAchievementService implements AchievementService {
   }
 
   private _achievements: Achievement[] = [
-    ItemCreatedValidator,
-    ThreeItemsCreatedValidator,
-    FiveItemsCreatedValidator,
     TotallyAttachedValidator,
     ...ItemCreatedCountConfig.AllConfigs,
   ];
