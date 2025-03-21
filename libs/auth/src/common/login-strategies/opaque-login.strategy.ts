@@ -57,6 +57,7 @@ export class OpaqueLoginStrategyData implements LoginStrategyData {
     const data = Object.assign(new OpaqueLoginStrategyData(), obj, {
       tokenRequest: OpaqueTokenRequest.fromJSON(obj.tokenRequest),
       masterKey: SymmetricCryptoKey.fromJSON(obj.masterKey),
+      opaqueExportKey: SymmetricCryptoKey.fromJSON(obj.opaqueExportKey),
     });
     return data;
   }
