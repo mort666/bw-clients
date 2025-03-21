@@ -7,4 +7,7 @@
   @if (earned()) {
     <h3 bitTypography="body2" class="tw-text-center">{{ date() }}</h3>
   }
+  @if (goal() > 0) {
+    <h3 bitTypography="body2" class="tw-text-center">Progress: {{ progress() }} of {{ goal() }}</h3>
+  }
 </bit-card>

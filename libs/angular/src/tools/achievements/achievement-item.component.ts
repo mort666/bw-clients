@@ -26,6 +26,7 @@ export class AchievementItem {
 
   earned = input<boolean>(false);
   progress = input<number>(0);
+  goal = input<number>(-1);
   date = input<Date>();
 
   protected bgColorClass: string = "";

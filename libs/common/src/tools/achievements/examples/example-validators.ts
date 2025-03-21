@@ -96,7 +96,7 @@ const ThreeItemsCreatedValidator = {
   },
   measure(_item, progress) {
     const value = 1 + (progress.get(ItemCreatedProgress) ?? 0);
-    return [progressEvent(ItemCreatedProgress, value)];
+    return [progressEvent(ItemCreatedProgress, value, 3)];
   },
   award(_measured, progress) {
     const value = progress.get(ItemCreatedProgress);
@@ -116,7 +116,7 @@ const FiveItemsCreatedValidator = {
   },
   measure(_item, progress) {
     const value = 1 + (progress.get(ItemCreatedProgress) ?? 0);
-    return [progressEvent(ItemCreatedProgress, value)];
+    return [progressEvent(ItemCreatedProgress, value, 5)];
   },
   award(_measured, progress) {
     const value = progress.get(ItemCreatedProgress);

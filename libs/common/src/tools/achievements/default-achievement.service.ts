@@ -40,6 +40,10 @@ export class DefaultAchievementService implements AchievementService {
     ...ItemCreatedCountConfig.AllConfigs,
   ];
 
+  active$(account: Account) {
+    return this.getHub(account).active$();
+  }
+
   achievementMap() {
     return new Map(this._achievements.map((a) => [a.achievement, a] as const));
   }

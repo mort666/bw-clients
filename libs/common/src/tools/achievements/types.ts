@@ -14,7 +14,7 @@ export type UserActionEvent = EventFormat & UserFormat & ServiceFormat;
 
 export type AchievementProgressEvent = EventFormat &
   ServiceFormat &
-  UserFormat & { achievement: { type: "progress"; name: MetricId; value: number } };
+  UserFormat & { achievement: { type: "progress"; name: MetricId; value: number; goal?: number } };
 export type AchievementEarnedEvent = EventFormat &
   ServiceFormat &
   UserFormat & { achievement: { type: "earned"; name: AchievementId } };

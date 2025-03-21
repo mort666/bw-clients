@@ -3,14 +3,18 @@ import { UserId } from "../../types/guid";
 import { AchievementEarnedEvent, AchievementId, AchievementProgressEvent, MetricId } from "./types";
 
 // FIXME: see <./types.ts> AchievementValidator
-export function progressEvent(name: MetricId, value: number = 1): AchievementProgressEvent {
+export function progressEvent(
+  name: MetricId,
+  value: number = 1,
+  goal: number | undefined = undefined,
+): AchievementProgressEvent {
   return {
     "@timestamp": Date.now(),
     event: {
       kind: "metric",
       category: "session",
     },
-    achievement: { type: "progress", name, value },
+    achievement: { type: "progress", name, value, goal },
     service: {
       name: "extension",
       type: "client",

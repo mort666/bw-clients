@@ -11,6 +11,8 @@ import {
 } from "./types";
 
 export abstract class AchievementService {
+  abstract active$: (account: Account) => Observable<Set<AchievementId>>;
+
   abstract achievementMap: () => Map<AchievementId, Achievement>;
 
   abstract earnedStream$: (account: Account, all?: boolean) => Observable<AchievementEarnedEvent>;

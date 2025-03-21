@@ -45,6 +45,7 @@ import { iconMap } from "./icons/icon-map";
 })
 export class AchievementsListComponent {
   protected achievements: Array<Achievement>;
+  private _active: Set<AchievementId> = new Set();
   private _earned: Map<AchievementId, AchievementEarnedEvent> = new Map();
   private _progress: Map<MetricId, AchievementProgressEvent> = new Map();
 
@@ -55,21 +56,30 @@ export class AchievementsListComponent {
   ) {
     this.achievements = Array.from(achievementService.achievementMap().values());
 
-    this.accountService.activeAccount$
+    const account$ = this.accountService.activeAccount$.pipe(
+      filter((account): account is Account => !!account),
+    );
+
+    account$
       .pipe(
-        filter((account): account is Account => !!account),
         switchMap((account) => this.achievementService.earnedMap$(account)),
         takeUntilDestroyed(),
       )
       .subscribe((earned) => zone.run(() => (this._earned = earned)));
 
-    this.accountService.activeAccount$
+    account$
       .pipe(
-        filter((account): account is Account => !!account),
         switchMap((account) => this.achievementService.metricsMap$(account)),
         takeUntilDestroyed(),
       )
       .subscribe((progress) => zone.run(() => (this._progress = progress)));
+
+    account$
+      .pipe(
+        switchMap((account) => this.achievementService.active$(account)),
+        takeUntilDestroyed(),
+      )
+      .subscribe((active) => zone.run(() => (this._active = active)));
   }
 
   protected isEarned(achievement: Achievement) {
@@ -81,11 +91,19 @@ export class AchievementsListComponent {
   }
 
   protected progress(achievement: Achievement) {
-    if (achievement.active === "until-earned") {
+    if (achievement.active === "until-earned" || this._earned.has(achievement.achievement)) {
       return -1;
     }
 
     return this._progress.get(achievement.active.metric)?.achievement?.value ?? -1;
+  }
+
+  protected goal(achievement: Achievement) {
+    if (achievement.active === "until-earned" || !this._active.has(achievement.achievement)) {
+      return -1;
+    }
+
+    return this._progress.get(achievement.active.metric)?.achievement?.goal ?? -1;
   }
 
   protected icon(achievement: Achievement): Icon {

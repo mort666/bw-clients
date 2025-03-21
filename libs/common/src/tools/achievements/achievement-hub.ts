@@ -27,6 +27,10 @@ import {
 } from "./types";
 
 export class AchievementHub {
+  private readonly validators = new ReplaySubject<AchievementValidator[]>(1);
+  private readonly achievements = new Subject<AchievementEvent>();
+  private readonly achievementLog: ReplaySubject<AchievementEvent>;
+
   /** Instantiates the achievement hub. A new achievement hub should be created
    *   per-user, and streams should be partitioned by user.
    *  @param validators$ emits the most recent achievement validator list and
@@ -48,7 +52,6 @@ export class AchievementHub {
     bufferSize: number = 1000,
     private log: SemanticLogger = disabledSemanticLoggerProvider({}),
   ) {
-    this.achievements = new Subject<AchievementEvent>();
     this.achievementLog = new ReplaySubject<AchievementEvent>(bufferSize);
     this.achievements.subscribe(this.achievementLog);
 
@@ -57,18 +60,19 @@ export class AchievementHub {
       shareReplay({ bufferSize: 1, refCount: true }),
     );
     const earned$ = this.earned$().pipe(map((m) => new Set(m.keys())));
-    const active$ = validators$.pipe(active(metrics$, earned$));
+    validators$.pipe(active(metrics$, earned$)).subscribe(this.validators);
 
     // TODO: figure out how to to unsubscribe from the event stream;
     //   this likely requires accepting an account-bound observable, which
     //   would also let the hub maintain it's "one user" invariant.
-    concat(achievements$, events$.pipe(achievements(active$, metrics$))).subscribe(
+    concat(achievements$, events$.pipe(achievements(this.validators, metrics$))).subscribe(
       this.achievements,
     );
   }
 
-  private readonly achievements: Subject<AchievementEvent>;
-  private readonly achievementLog: ReplaySubject<AchievementEvent>;
+  active$(): Observable<Set<AchievementId>> {
+    return this.validators.pipe(map((validators) => new Set(validators.map((v) => v.achievement))));
+  }
 
   /** emit all achievement events */
   all$(): Observable<AchievementEvent> {
