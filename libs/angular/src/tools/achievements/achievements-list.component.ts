@@ -44,7 +44,7 @@ import { iconMap } from "./icons/icon-map";
   ],
 })
 export class AchievementsListComponent {
-  protected achievements: Map<AchievementId, Achievement>;
+  protected achievements: Array<Achievement>;
   private _earned: Map<AchievementId, AchievementEarnedEvent> = new Map();
   private _progress: Map<MetricId, AchievementProgressEvent> = new Map();
 
@@ -53,7 +53,7 @@ export class AchievementsListComponent {
     private accountService: AccountService,
     zone: NgZone,
   ) {
-    this.achievements = achievementService.achievementMap();
+    this.achievements = Array.from(achievementService.achievementMap().values());
 
     this.accountService.activeAccount$
       .pipe(

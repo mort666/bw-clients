@@ -17,7 +17,6 @@ export function progressEvent(name: MetricId, value: number = 1): AchievementPro
       node: {
         name: "an-installation-identifier-for-this-client-instance",
       },
-      environment: "local",
       version: "2025.3.1-innovation-sprint",
     },
     user: {
@@ -41,7 +40,6 @@ export function earnedEvent(name: AchievementId): AchievementEarnedEvent {
       node: {
         name: "an-installation-identifier-for-this-client-instance",
       },
-      environment: "local",
       version: "2025.3.1-innovation-sprint",
     },
     user: {
