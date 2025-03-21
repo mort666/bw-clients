@@ -46,10 +46,12 @@ function achievements(
 
         // prevent duplicate updates
         if (distinct.has(key)) {
-          const msg = `${achievement} failed to set ${key}; value already set by ${distinct.get(key)}`;
-          throw new Error(msg);
+          // FIXME Currently skipping this error for demo purposes
+          // const msg = `${achievement} failed to set ${key}; value already set by ${distinct.get(key)}`;
+          // throw new Error(msg);
+        } else {
+          distinct.set(key, achievement);
         }
-        distinct.set(key, achievement);
 
         metrics.set(measured.achievement.name, measured.achievement.value);
       }
