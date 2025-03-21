@@ -89,8 +89,8 @@ into that device but that device does not have masterKey IN MEMORY.
 
 ### View Cache
 
-The component uses `LoginViaAuthRequestCacheService` to manage persistent state across page refreshes. This cache
-stores:
+The component uses `LoginViaAuthRequestCacheService` to manage persistent state across extension close and reopen.
+This cache stores:
 
 - Auth Request ID
 - Private Key
@@ -100,7 +100,7 @@ The cache is used to:
 
 1. Preserve authentication state during extension close
 2. Allow resumption of pending auth requests
-3. Enable processing of approved requests after navigation/refresh
+3. Enable processing of approved requests after extension close and reopen.
 
 ### Component State Variables
 
@@ -163,7 +163,7 @@ protected flow = Flow.StandardAuthRequest
      accessCode
    )
    ```
-4. On page refresh/navigation:
+4. On page refresh/revisit:
    - Component retrieves cached view
    - Reestablishes connection using cached credentials
    - Continues monitoring for approval
