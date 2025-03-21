@@ -6,7 +6,7 @@ import { firstValueFrom } from "rxjs";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
-import { UserEventLogProvider } from "@bitwarden/common/tools/log/logger";
+import { UserEventCollector } from "@bitwarden/common/tools/log/user-event-collector";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { Cipher } from "@bitwarden/common/vault/models/domain/cipher";
@@ -24,7 +24,7 @@ export class DefaultCipherFormService implements CipherFormService {
   private cipherService: CipherService = inject(CipherService);
   private accountService: AccountService = inject(AccountService);
   private apiService: ApiService = inject(ApiService);
-  private system = inject(UserEventLogProvider);
+  private collector = inject(UserEventCollector);
 
   async decryptCipher(cipher: Cipher): Promise<CipherView> {
     const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
@@ -44,7 +44,7 @@ export class DefaultCipherFormService implements CipherFormService {
       null,
       config.originalCipher ?? null,
     );
-    const event = this.system.create(activeUser);
+    const event = this.collector.monitor(activeUser);
     const labels = {
       "vault-item-type": CipherType[cipher.type],
       "vault-item-uri-quantity": cipher.type === CipherType.Login ? cipher.login.uris.length : null,

@@ -3,7 +3,7 @@ import { BehaviorSubject, EMPTY, filter, find, from, Observable } from "rxjs";
 import { UserId } from "@bitwarden/common/types/guid";
 
 import { Account } from "../../auth/abstractions/account.service";
-import { UserEventLogProvider } from "../log/logger";
+import { UserEventCollector } from "../log/user-event-collector";
 
 import { AchievementHub } from "./achievement-hub";
 import { AchievementService as AchievementServiceAbstraction } from "./achievement.service.abstraction";
@@ -21,7 +21,7 @@ import { SendItemCreatedCountValidator } from "./validators/send-item-created-co
 import { VaultItemCreatedCountValidator } from "./validators/vault-item-created-count-validator";
 
 export class NextAchievementService implements AchievementServiceAbstraction {
-  constructor(private readonly eventLogs: UserEventLogProvider) {}
+  constructor(private readonly eventLogs: UserEventCollector) {}
 
   private hubs = new Map<string, AchievementHub>();
 
@@ -35,7 +35,7 @@ export class NextAchievementService implements AchievementServiceAbstraction {
 
       // FIXME: load stored achievements
       const achievements$ = from([] as AchievementEvent[]);
-      const events$ = this.eventLogs.monitor$(account);
+      const events$ = this.eventLogs.events$(account);
       const hub = new AchievementHub(validators$, events$, achievements$);
 
       this.hubs.set(account.id, hub);

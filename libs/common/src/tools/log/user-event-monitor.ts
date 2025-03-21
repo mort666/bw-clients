@@ -1,4 +1,4 @@
-import { BehaviorSubject, Observable, SubjectLike, from, map, zip } from "rxjs";
+import { BehaviorSubject, SubjectLike, from, map, zip } from "rxjs";
 import { Primitive } from "type-fest";
 
 import { Account } from "../../auth/abstractions/account.service";
@@ -10,11 +10,6 @@ import { ServiceFormat, UserFormat, EcsEventType } from "./ecs-format";
 import { disabledSemanticLoggerProvider } from "./factory";
 import { SemanticLogger } from "./semantic-logger.abstraction";
 
-export abstract class UserEventLogProvider {
-  abstract capture: (account: Account) => UserEventLogger;
-  abstract monitor$: (account: Account) => Observable<UserActionEvent>;
-}
-
 type BaselineType = Omit<ServiceFormat & UserFormat, "@timestamp">;
 
 export type EventInfo = {
@@ -23,7 +18,7 @@ export type EventInfo = {
   tags?: Array<string>;
 };
 
-export class UserEventLogger {
+export class UserEventMonitor {
   constructor(
     idService: AppIdService,
     utilService: PlatformUtilsService,
