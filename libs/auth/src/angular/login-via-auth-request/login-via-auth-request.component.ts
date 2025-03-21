@@ -187,9 +187,9 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
   private async initStandardAuthRequestFlow(): Promise<void> {
     this.flow = Flow.StandardAuthRequest;
 
-    this.email = (await firstValueFrom(this.loginEmailService.loginEmail$)) || undefined;
+    const email = (await firstValueFrom(this.loginEmailService.loginEmail$)) || undefined;
 
-    if (!this.email) {
+    if (!email) {
       await this.handleMissingEmail();
       return;
     }
