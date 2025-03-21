@@ -13,9 +13,11 @@ function active(
   return pipe(
     // refresh when an achievement is earned, but not when metrics
     // update; this may cause metrics to overrun
-    withLatestFrom(metrics$),
     combineLatestWith(earned$),
-    map(([[monitors, metrics], earned]) => {
+    withLatestFrom(metrics$),
+
+    // filter validators to active set
+    map(([[monitors, earned], metrics]) => {
       // compute list of active achievements
       const active = monitors.filter((m) => {
         // 🧠 the filters could be lifted into a function argument & delivered
