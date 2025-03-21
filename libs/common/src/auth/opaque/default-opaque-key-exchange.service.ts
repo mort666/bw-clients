@@ -22,7 +22,8 @@ import { SetRegistrationActiveRequest } from "./models/set-registration-active.r
 import { OpaqueKeyExchangeApiService } from "./opaque-key-exchange-api.service";
 import { OpaqueKeyExchangeService } from "./opaque-key-exchange.service";
 
-interface OpaqueError {
+// TODO: the error handling between the SDK and clients should be improved. This is a temporary solution to handle it.
+interface OpaqueSdkLoginError {
   Protocol: string;
 }
 
@@ -136,7 +137,7 @@ export class DefaultOpaqueKeyExchangeService implements OpaqueKeyExchangeService
       // login component error handling so it can handle server or client side errors.
       if (
         typeof e === "object" &&
-        (e as OpaqueError)?.Protocol == "Error in validating credentials"
+        (e as OpaqueSdkLoginError)?.Protocol == "Error in validating credentials"
       ) {
         // Convert to ErrorResponse so any error thrown here works just like our existing login component handling
         const errorResponse = new ErrorResponse(
@@ -152,6 +153,10 @@ export class DefaultOpaqueKeyExchangeService implements OpaqueKeyExchangeService
     }
   }
 
+  // TODO: replace internals with calls to SDK decapsulate_key_from_rotateablekeyset
+  // this will require us to either update the SDK to handle a partial rotateable key set as we don't send
+  // down the userKeyEncryptedOpaquePublicKey on the userDecryptionOptions today or we will need to update the
+  // server to send down the full rotatable key set.
   async decryptUserKeyWithExportKey(
     userId: UserId,
     exportKeyEncryptedOpaquePrivateKey: EncString,
