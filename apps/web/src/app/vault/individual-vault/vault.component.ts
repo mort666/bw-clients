@@ -67,9 +67,17 @@ import { CipherRepromptType } from "@bitwarden/common/vault/enums/cipher-repromp
 import { TreeNode } from "@bitwarden/common/vault/models/domain/tree-node";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { FilterService } from "@bitwarden/common/vault/search/filter.service";
+import { SearchContext } from "@bitwarden/common/vault/search/query.types";
 import { SavedFiltersService } from "@bitwarden/common/vault/search/saved-filters.service";
 import { ServiceUtils } from "@bitwarden/common/vault/service-utils";
-import { CardComponent, DialogService, Icons, ToastService } from "@bitwarden/components";
+import {
+  CardComponent,
+  DialogService,
+  Icons,
+  SearchModule,
+  ToastService,
+} from "@bitwarden/components";
+import { Filter } from "@bitwarden/components/src/search/filter-builder.component";
 import {
   AddEditFolderDialogComponent,
   AddEditFolderDialogResult,
@@ -124,7 +132,6 @@ import {
 } from "./vault-filter/shared/models/routed-vault-filter.model";
 import { VaultFilter } from "./vault-filter/shared/models/vault-filter.model";
 import { FolderFilter, OrganizationFilter } from "./vault-filter/shared/models/vault-filter.type";
-import { VaultFilterModule } from "./vault-filter/vault-filter.module";
 import { VaultHeaderComponent } from "./vault-header/vault-header.component";
 import { VaultOnboardingComponent } from "./vault-onboarding/vault-onboarding.component";
 
@@ -139,10 +146,10 @@ const SearchTextDebounceInterval = 200;
     VaultHeaderComponent,
     VaultOnboardingComponent,
     VaultBannersComponent,
-    VaultFilterModule,
     VaultItemsModule,
     SharedModule,
     CardComponent,
+    SearchModule,
   ],
   providers: [
     RoutedVaultFilterService,
@@ -179,7 +186,7 @@ export class VaultComponent implements OnInit, OnDestroy {
   protected userId$ = this.accountService.activeAccount$.pipe(map((a) => a?.id));
 
   private vaultItemDialogRef?: DialogRef<VaultItemDialogResult> | undefined;
-  private organizations$ = this.userId$.pipe(
+  protected organizations$ = this.userId$.pipe(
     switchMap((id) => this.organizationService.organizations$(id)),
   );
 
@@ -240,6 +247,9 @@ export class VaultComponent implements OnInit, OnDestroy {
     map((results) => results.filter((result) => result !== null && result.shownBanner)),
     shareReplay({ refCount: false, bufferSize: 1 }),
   );
+
+  private _searchContext = new Subject<SearchContext>();
+  protected searchContext$ = this._searchContext.asObservable();
 
   constructor(
     private syncService: SyncService,
@@ -359,6 +369,10 @@ export class VaultComponent implements OnInit, OnDestroy {
         });
       }),
     );
+
+    // TODO: WHO AM I?
+    context$.pipe(takeUntil(this.destroy$)).subscribe(this._searchContext);
+
     const savedFilters$ = this.accountService.activeAccount$.pipe(
       switchMap((account) => this.savedFilterService.filtersFor$(account.id)),
       map((filters) => {
@@ -648,8 +662,8 @@ export class VaultComponent implements OnInit, OnDestroy {
     }
   };
 
-  filterSearchText(searchText: string) {
-    this.searchText$.next(searchText);
+  filterSearchText(searchText: Filter) {
+    this.searchText$.next(searchText.raw);
   }
 
   /**

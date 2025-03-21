@@ -2,25 +2,27 @@ import { Meta, moduleMetadata, StoryObj } from "@storybook/angular";
 import { map, of } from "rxjs";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
+import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
 import { CipherType, FieldType } from "@bitwarden/common/vault/enums";
+import { BasicVaultFilterHandler } from "@bitwarden/common/vault/filtering/basic-vault-filter.handler";
 import {
   CustomFieldMetadata,
   VaultFilterMetadata,
   VaultFilterMetadataService,
 } from "@bitwarden/common/vault/filtering/vault-filter-metadata.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
-import { I18nMockService } from "@bitwarden/components";
-// eslint-disable-next-line no-restricted-imports
-import { SearchComponent } from "@bitwarden/components/src/search/search.component";
+
+import { I18nMockService } from "../utils";
 
 import { FilterBuilderComponent } from "./filter-builder.component";
 
 export default {
-  title: "Filter/In Search",
-  component: SearchComponent,
+  title: "Filter/Filter Builder",
+  component: FilterBuilderComponent,
   decorators: [
     moduleMetadata({
-      imports: [FilterBuilderComponent],
+      imports: [],
       providers: [
         {
           provide: I18nService,
@@ -29,6 +31,7 @@ export default {
             multiSelectLoading: "Loading",
             multiSelectNotFound: "Not Found",
             multiSelectClearAll: "Clear All",
+            removeItem: "Remove Item",
           }),
         },
         {
@@ -59,8 +62,8 @@ export default {
                   ]),
                   customFields: new Map<CustomFieldMetadata, number>([
                     [{ name: "one", type: FieldType.Boolean, linkedType: null }, 1],
-                    [{ name: "one", type: FieldType.Boolean, linkedType: null }, 1],
-                    [{ name: "one", type: FieldType.Boolean, linkedType: null }, 1],
+                    [{ name: "two", type: FieldType.Boolean, linkedType: null }, 1],
+                    [{ name: "three", type: FieldType.Boolean, linkedType: null }, 1],
                   ]),
                   attachmentCount: 1,
                 } satisfies VaultFilterMetadata;
@@ -68,25 +71,36 @@ export default {
             },
           } satisfies VaultFilterMetadataService,
         },
+        {
+          provide: BasicVaultFilterHandler,
+          useClass: BasicVaultFilterHandler,
+          deps: [LogService],
+        },
+        {
+          provide: LogService,
+          useValue: new ConsoleLogService(true),
+        },
       ],
     }),
   ],
 } as Meta;
 
-export const Default: StoryObj<SearchComponent & FilterBuilderComponent> = {
+type Story = StoryObj<FilterBuilderComponent>;
+
+export const Default: Story = {
   render: (args) => ({
     props: args,
     template: /*html*/ `
-      <bit-search [history]="history">
-        <div filter class="tw-absolute tw-w-full tw-z-[1000] tw-float-left tw-m-0 tw-p-5 tw-bg-background tw-rounded-xl tw-border tw-border-solid tw-border-secondary-300">
-          <app-filter-builder [ciphers]="ciphers"></app-filter-builder>
-        </div>
-      </bit-search>
-      <p>Other content below</p>
+      <bit-filter-builder [ciphers]="ciphers" (searchFilterEvent)="searchFilterEvent($event)" (saveFilterEvent)="saveFilterEvent($event)"></bit-filter-builder>
     `,
   }),
   args: {
     ciphers: of([]),
-    history: ["One", "Two"],
+    searchFilterEvent: (d: any) => {
+      console.log(d.raw);
+    },
+    saveFilterEvent: (s: string) => {
+      alert(JSON.stringify(s));
+    },
   },
 };

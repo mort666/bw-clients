@@ -8,7 +8,7 @@ import {
   ReactiveFormsModule,
   FormsModule,
 } from "@angular/forms";
-import { BehaviorSubject, map } from "rxjs";
+import { BehaviorSubject, of } from "rxjs";
 
 import { isBrowserSafariApi } from "@bitwarden/platform";
 import { I18nPipe } from "@bitwarden/ui-common";
@@ -87,9 +87,7 @@ export class SearchComponent implements ControlValueAccessor, FocusableElement {
   }
 
   get filteredHistory$() {
-    // TODO: Not clear if filtering is better or worse
-    return this.textUpdated$.pipe(map((text) => this.history));
-    // return this.textUpdated$.pipe(map((text) => this.history.filter((h) => h.startsWith(text))));
+    return of([]);
   }
 
   private _selectedContent = new BehaviorSubject<string | null>(null);

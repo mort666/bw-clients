@@ -1,4 +1,4 @@
-import { OperatorFunction, map } from "rxjs";
+import { map } from "rxjs";
 
 import { CipherType, FieldType, LinkedIdType } from "../enums";
 import { CipherView } from "../models/view/cipher.view";
@@ -30,11 +30,7 @@ function metaDataKeyEqual<T extends MetadataType>(a: T, b: T) {
   }
 }
 
-export abstract class VaultFilterMetadataService {
-  abstract collectMetadata(): OperatorFunction<CipherView[], VaultFilterMetadata>;
-}
-
-export class DefaultVaultFilterMetadataService implements VaultFilterMetadataService {
+export class VaultFilterMetadataService {
   collectMetadata() {
     const setOrIncrement = <T extends MetadataType>(map: Map<T, number>, key: T) => {
       const entry = Array.from(map.entries()).find(([k]) => metaDataKeyEqual(key, k));
@@ -47,53 +43,56 @@ export class DefaultVaultFilterMetadataService implements VaultFilterMetadataSer
     };
 
     return map<CipherView[], VaultFilterMetadata>((ciphers) => {
-      return ciphers.reduce<VaultFilterMetadata>(
-        (metadata, cipher) => {
-          // Track type
-          setOrIncrement(metadata.itemTypes, cipher.type);
+      const emptyMetadata = {
+        vaults: new Map<string | null, number>(),
+        customFields: new Map<CustomFieldMetadata, number>(),
+        itemTypes: new Map<CipherType, number>(),
+        folders: new Map<string, number>(),
+        collections: new Map<string, number>(),
+        attachmentCount: 0,
+      };
 
-          // Track vault
-          setOrIncrement(metadata.vaults, cipher.organizationId ?? null);
+      if (ciphers == null) {
+        return emptyMetadata;
+      }
 
-          // Track all field names
-          if (cipher.fields != null) {
-            for (const field of cipher.fields) {
-              setOrIncrement(metadata.customFields, {
-                name: field.name,
-                type: field.type,
-                linkedType: field.linkedId,
-              });
-            }
+      return ciphers.reduce<VaultFilterMetadata>((metadata, cipher) => {
+        // Track type
+        setOrIncrement(metadata.itemTypes, cipher.type);
+
+        // Track vault
+        setOrIncrement(metadata.vaults, cipher.organizationId ?? null);
+
+        // Track all field names
+        if (cipher.fields != null) {
+          for (const field of cipher.fields) {
+            setOrIncrement(metadata.customFields, {
+              name: field.name,
+              type: field.type,
+              linkedType: field.linkedId,
+            });
           }
+        }
 
-          // Track all folder ids
-          if (cipher.folderId != null) {
-            setOrIncrement(metadata.folders, cipher.folderId);
+        // Track all folder ids
+        if (cipher.folderId != null) {
+          setOrIncrement(metadata.folders, cipher.folderId);
+        }
+
+        // Track all collections
+        if (cipher.collectionIds != null) {
+          for (const collectionId of cipher.collectionIds) {
+            setOrIncrement(metadata.collections, collectionId);
           }
+        }
 
-          // Track all collections
-          if (cipher.collectionIds != null) {
-            for (const collectionId of cipher.collectionIds) {
-              setOrIncrement(metadata.collections, collectionId);
-            }
-          }
+        // Track if any have an attachment
+        if (cipher.attachments != null && cipher.attachments.length > 0) {
+          metadata.attachmentCount = metadata.attachmentCount + cipher.attachments.length;
+        }
 
-          // Track if any have an attachment
-          if (cipher.attachments != null && cipher.attachments.length > 0) {
-            metadata.attachmentCount = metadata.attachmentCount + cipher.attachments.length;
-          }
-
-          return metadata;
-        },
-        {
-          vaults: new Map<string | null, number>(),
-          customFields: new Map<CustomFieldMetadata, number>(),
-          itemTypes: new Map<CipherType, number>(),
-          folders: new Map<string, number>(),
-          collections: new Map<string, number>(),
-          attachmentCount: 0,
-        },
-      );
+        return metadata;
+      }, emptyMetadata);
     });
   }
 }

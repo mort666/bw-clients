@@ -1,4 +1,4 @@
-import { Observable, combineLatestWith, map, mergeMap } from "rxjs";
+import { Observable, combineLatestWith, map, mergeMap, of } from "rxjs";
 
 // eslint-disable-next-line no-restricted-imports -- TODO this will need to move
 import { KeyService } from "../../../../key-management/src/abstractions/key.service";
@@ -28,7 +28,7 @@ export class SearchHistory {
     private readonly updateCallback: (newSearch: string) => Promise<void>,
   ) {
     this.userHistoryIndexer = orgId ?? userId;
-    this.history$ = userHistory$.pipe(map((h) => h?.[this.userHistoryIndexer] ?? []));
+    this.history$ = of([]);
   }
 
   async push(newSearch: string) {

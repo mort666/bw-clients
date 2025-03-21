@@ -29,14 +29,7 @@
     </bit-callout>
     <bit-card>
       <div class="tw-w-full">
-        <app-vault-filter
-          #vaultFilter
-          [activeFilter]="activeFilter"
-          [searchText]="currentSearchText$ | async"
-          [userId]="userId$ | async"
-          (searchTextChanged)="filterSearchText($event)"
-          (onEditFolder)="editFolder($event)"
-        ></app-vault-filter>
+        <bit-filter-builder [searchContext]="searchContext$" initialFilter="" (searchFilterEvent)="filterSearchText($event)" />
       </div>
 
       <app-vault-items

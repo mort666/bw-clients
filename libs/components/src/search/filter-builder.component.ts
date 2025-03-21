@@ -6,31 +6,47 @@ import {
   Input,
   OnInit,
   Output,
+  signal,
 } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormBuilder, FormsModule, ReactiveFormsModule } from "@angular/forms";
-import { BehaviorSubject, distinctUntilChanged, map, Observable, startWith } from "rxjs";
-
-import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { CipherType } from "@bitwarden/common/vault/enums";
-import { VaultFilterMetadataService } from "@bitwarden/common/vault/filtering/vault-filter-metadata.service";
-import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
-  FormFieldModule,
-  ButtonModule,
-  LinkModule,
-  CheckboxModule,
-  ChipMultiSelectComponent,
-  ChipSelectOption,
-  ChipSelectComponent,
-  ToggleGroupModule,
-} from "@bitwarden/components";
+  BehaviorSubject,
+  debounceTime,
+  distinctUntilChanged,
+  firstValueFrom,
+  map,
+  Observable,
+  of,
+  startWith,
+  switchMap,
+} from "rxjs";
 
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
+import { CipherType } from "@bitwarden/common/vault/enums";
 import {
   BasicFilter,
   BasicVaultFilterHandler,
 } from "@bitwarden/common/vault/filtering/basic-vault-filter.handler";
-import { SearchComponent } from "@bitwarden/components/src/search/search.component";
+import { VaultFilterMetadataService } from "@bitwarden/common/vault/filtering/vault-filter-metadata.service";
+import { SearchContext } from "@bitwarden/common/vault/search/query.types";
+import {
+  FilterName,
+  FilterString,
+  SavedFiltersService,
+} from "@bitwarden/common/vault/search/saved-filters.service";
+
+import { ButtonModule } from "../button";
+import { CheckboxModule } from "../checkbox";
+import { ChipMultiSelectComponent } from "../chip-multi-select";
+import { ChipSelectComponent, ChipSelectOption } from "../chip-select";
+import { FormFieldModule } from "../form-field";
+import { LinkModule } from "../link";
+import { ToggleGroupModule } from "../toggle-group";
+
+import { SearchComponent } from "./search.component";
 
 type FilterData = {
   vaults: ChipSelectOption<string>[] | null;
@@ -69,33 +85,39 @@ const customMap = <T, TResult>(
 };
 
 @Component({
-  selector: "app-filter-builder",
+  selector: "bit-filter-builder",
   template: `
     <form [formGroup]="form" *ngIf="filterData$ | async as filter">
       <div class="tw-mb-2">
-        <bit-search formControlName="text" />
+        <bit-search formControlName="text" [savedFilters]="savedFilters$ | async" />
       </div>
-      @if (mode === "basic") {
-        <bit-chip-multi-select
-          placeholderText="Vault"
-          placeholderIcon="bwi-vault"
-          formControlName="vaults"
-          [options]="filter.vaults"
-        ></bit-chip-multi-select>
-        <bit-chip-multi-select
-          placeholderText="Folders"
-          placeholderIcon="bwi-folder"
-          formControlName="folders"
-          [options]="filter.folders"
-          class="tw-pl-2"
-        ></bit-chip-multi-select>
-        <bit-chip-multi-select
-          placeholderText="Collections"
-          placeholderIcon="bwi-collection"
-          formControlName="collections"
-          [options]="filter.collections"
-          class="tw-pl-2"
-        ></bit-chip-multi-select>
+      @if (mode() === "basic") {
+        @if (filter.vaults != null && filter.vaults.length > 1) {
+          <bit-chip-multi-select
+            placeholderText="Vault"
+            placeholderIcon="bwi-vault"
+            formControlName="vaults"
+            [options]="filter.vaults"
+          ></bit-chip-multi-select>
+        }
+        @if (filter.folders != null && filter.folders.length > 0) {
+          <bit-chip-multi-select
+            placeholderText="Folders"
+            placeholderIcon="bwi-folder"
+            formControlName="folders"
+            [options]="filter.folders"
+            class="tw-pl-2"
+          ></bit-chip-multi-select>
+        }
+        @if (filter.collections != null && filter.collections.length > 0) {
+          <bit-chip-multi-select
+            placeholderText="Collections"
+            placeholderIcon="bwi-collection"
+            formControlName="collections"
+            [options]="filter.collections"
+            class="tw-pl-2"
+          ></bit-chip-multi-select>
+        }
         @for (selectedOtherOption of selectedOptions(); track selectedOtherOption) {
           @switch (selectedOtherOption) {
             @case ("types") {
@@ -129,9 +151,13 @@ const customMap = <T, TResult>(
           >
           </bit-chip-select>
         </ng-container>
-        <span
-          class="tw-border-l tw-border-0 tw-border-solid tw-border-secondary-300 tw-mx-2"
-        ></span>
+      }
+      @if (formIsDirty) {
+        @if (mode() === "basic") {
+          <span
+            class="tw-border-l tw-border-0 tw-border-solid tw-border-secondary-300 tw-mx-2"
+          ></span>
+        }
         <button
           type="button"
           bitLink
@@ -146,9 +172,9 @@ const customMap = <T, TResult>(
         </button>
       }
       <!-- TODO: Align to the right -->
-      <bit-toggle-group selected="basic" (selectedChange)="modeChanged($event)">
+      <bit-toggle-group [selected]="mode()" (selectedChange)="modeChanged($event)">
         <bit-toggle value="basic">Basic</bit-toggle>
-        <bit-toggle value="advanced">Advanced</bit-toggle>
+        <bit-toggle value="advanced" disabled="true">Advanced</bit-toggle>
       </bit-toggle-group>
     </form>
   `,
@@ -172,13 +198,13 @@ const customMap = <T, TResult>(
 export class FilterBuilderComponent implements OnInit {
   @Input({ required: true }) initialFilter: string;
 
-  @Input({ required: true }) ciphers: Observable<CipherView[]> | undefined;
+  @Input({ required: true }) searchContext: Observable<SearchContext>;
 
   @Output() searchFilterEvent = new EventEmitter<Filter>();
 
   @Output() saveFilterEvent = new EventEmitter<string>();
 
-  protected mode: string = "basic";
+  protected mode = signal("basic");
 
   protected form = this.formBuilder.group({
     text: this.formBuilder.control<string>(null),
@@ -190,6 +216,8 @@ export class FilterBuilderComponent implements OnInit {
     otherOptions: this.formBuilder.control<string>(null),
     selectedOtherOptions: this.formBuilder.control<string[]>([]),
   });
+
+  protected savedFilters$: Observable<Record<FilterName, FilterString>>;
 
   private loadingFilter: FilterData;
 
@@ -207,6 +235,9 @@ export class FilterBuilderComponent implements OnInit {
     private readonly formBuilder: FormBuilder,
     private readonly vaultFilterMetadataService: VaultFilterMetadataService,
     private readonly basicVaultFilterHandler: BasicVaultFilterHandler,
+    private readonly logService: LogService,
+    private readonly savedFilterService: SavedFiltersService,
+    private readonly accountService: AccountService,
   ) {
     // TODO: i18n
     this.loadingFilter = {
@@ -262,9 +293,13 @@ export class FilterBuilderComponent implements OnInit {
       this.form.controls.otherOptions.setValue(null);
     });
 
+    this.savedFilters$ = this.accountService.activeAccount$.pipe(
+      switchMap((acc) => this.savedFilterService.filtersFor$(acc.id)),
+    );
+
     this.form.valueChanges
       .pipe(
-        // TODO: Debounce?
+        debounceTime(200),
         map((v) => this.convertFilter(v)),
         distinctUntilChanged((previous, current) => {
           return previous.raw === current.raw;
@@ -275,8 +310,7 @@ export class FilterBuilderComponent implements OnInit {
   }
 
   private convertFilter(filter: Partial<FilterModel>): Filter {
-    // TODO: Support advanced mode
-    if (this.mode === "advanced") {
+    if (this.mode() === "advanced") {
       return { type: "advanced", raw: filter.text };
     }
 
@@ -298,83 +332,91 @@ export class FilterBuilderComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.initialFilter != null) {
-      //
+      if (!this.trySetBasicFilterElements(this.initialFilter)) {
+        this.form.controls.text.setValue(this.initialFilter);
+        this.mode.set("advanced");
+      }
     }
 
-    this.filterData$ = this.ciphers.pipe(
-      this.vaultFilterMetadataService.collectMetadata(),
-      map((metadata) => {
-        // TODO: Combine with other info
-        return {
-          vaults: customMap(metadata.vaults, (v, i) => {
-            if (v == null) {
-              // Personal vault
+    this.filterData$ = this.searchContext.pipe(
+      switchMap((context) => {
+        return of(context.ciphers).pipe(
+          this.vaultFilterMetadataService.collectMetadata(),
+          map((metadata) => {
+            {
               return {
-                value: null,
-                label: "My Vault",
-              };
-            } else {
-              // Get organization info
-              return {
-                value: v,
-                label: `Organization ${i}`,
-              };
+                vaults: customMap(metadata.vaults, (v, i) => {
+                  if (v == null) {
+                    // Personal vault
+                    return {
+                      value: null,
+                      label: "My Vault",
+                    };
+                  } else {
+                    // Get organization info
+                    const org = context.organizations.find((o) => o.id === v);
+
+                    return {
+                      value: org.name,
+                      label: org.name,
+                    };
+                  }
+                }),
+                folders: customMap(metadata.folders, (id, i) => {
+                  const folder = context.folders.find((f) => f.id === id);
+                  return {
+                    value: folder.name,
+                    label: folder.name,
+                  } satisfies ChipSelectOption<string>;
+                }),
+                collections: customMap(metadata.collections, (id, i) => {
+                  const collection = context.collections.find((c) => c.id === id);
+                  return {
+                    value: collection.name,
+                    label: collection.name,
+                  } satisfies ChipSelectOption<string>;
+                }),
+                types: customMap(metadata.itemTypes, (t) => {
+                  switch (t) {
+                    case CipherType.Login:
+                      return { value: "login", label: "Login", icon: "bwi-globe" };
+                    case CipherType.Card:
+                      return {
+                        value: "card",
+                        label: "Card",
+                        icon: "bwi-credit-card",
+                      };
+                    case CipherType.Identity:
+                      return {
+                        value: "identity",
+                        label: "Identity",
+                        icon: "bwi-id-card",
+                      };
+                    case CipherType.SecureNote:
+                      return {
+                        value: "note",
+                        label: "Secure Note",
+                        icon: "bwi-sticky-note",
+                      };
+                    case CipherType.SshKey:
+                      return {
+                        value: "sshkey",
+                        label: "SSH Key",
+                        icon: "bwi-key",
+                      };
+                    default:
+                      throw new Error("Unreachable");
+                  }
+                }),
+                fields: customMap(
+                  metadata.customFields,
+                  (f, i) => ({ value: f.name, label: f.name }) satisfies ChipSelectOption<string>,
+                ),
+                anyHaveAttachment: metadata.attachmentCount !== 0,
+              } satisfies FilterData;
             }
           }),
-          folders: customMap(
-            metadata.folders,
-            (f, i) =>
-              ({
-                value: f,
-                label: `Folder ${i}`,
-              }) satisfies ChipSelectOption<string>,
-          ),
-          collections: customMap(
-            metadata.collections,
-            (c, i) =>
-              ({
-                value: c,
-                label: `Collection ${i}`,
-              }) satisfies ChipSelectOption<string>,
-          ),
-          types: customMap(metadata.itemTypes, (t) => {
-            switch (t) {
-              case CipherType.Login:
-                return { value: "login", label: "Login", icon: "bwi-globe" };
-              case CipherType.Card:
-                return {
-                  value: "card",
-                  label: "Card",
-                  icon: "bwi-credit-card",
-                };
-              case CipherType.Identity:
-                return {
-                  value: "identity",
-                  label: "Identity",
-                  icon: "bwi-id-card",
-                };
-              case CipherType.SecureNote:
-                return {
-                  value: "note",
-                  label: "Secure Note",
-                  icon: "bwi-sticky-note",
-                };
-              case CipherType.SshKey:
-                return {
-                  value: "sshkey",
-                  label: "SSH Key",
-                  icon: "bwi-key",
-                };
-              default:
-                throw new Error("Unreachable");
-            }
-          }),
-          fields: customMap(
-            metadata.customFields,
-            (f, i) => ({ value: f.name, label: f.name }) satisfies ChipSelectOption<string>,
-          ),
-          anyHaveAttachment: metadata.attachmentCount !== 0,
-        } satisfies FilterData;
+        );
       }),
       startWith(this.loadingFilter),
     );
@@ -384,46 +426,57 @@ export class FilterBuilderComponent implements OnInit {
     return this.form.controls.selectedOtherOptions.value;
   }
 
+  protected get formIsDirty() {
+    return this.form.dirty;
+  }
+
   private trySetBasicFilterElements(value: string) {
+    if (value == null || value === "") {
+      this.logService.info("Reseting form.");
+      this.resetFilter();
+      return true;
+    }
+
     try {
+      this.logService.info("Parsing", value);
       const parseResult = this.basicVaultFilterHandler.tryParse(value);
 
-      if (parseResult.success) {
-        if (parseResult.filter.terms.length >= 1) {
-          throw new Error("More than 1 term not actually supported in basic");
-        }
-
-        // This item can be displayed with basic, lets do that.
-        const selectedOtherOptions: string[] = [];
-
-        if (parseResult.filter.types.length !== 0) {
-          selectedOtherOptions.push("types");
-        }
-
-        if (parseResult.filter.fields.length !== 0) {
-          selectedOtherOptions.push("fields");
-        }
-
-        console.log("Parse advanced query", value, parseResult.filter);
-
-        this.form.setValue({
-          text: parseResult.filter.terms.length === 1 ? parseResult.filter.terms[0] : null,
-          vaults: parseResult.filter.vaults,
-          folders: parseResult.filter.folders,
-          collections: parseResult.filter.collections,
-          fields: parseResult.filter.fields,
-          types: parseResult.filter.types,
-          otherOptions: null,
-          selectedOtherOptions: selectedOtherOptions,
-        });
-        return true;
-      } else {
-        // set form to advanced mode and disable switching to basic
+      if (!parseResult.success) {
+        // Could not parse query
         return false;
       }
+
+      if (parseResult.filter.terms.length >= 1) {
+        throw new Error("More than 1 term not actually supported in basic");
+      }
+
+      // This item can be displayed with basic, lets do that.
+      const selectedOtherOptions: string[] = [];
+
+      if (parseResult.filter.types.length !== 0) {
+        selectedOtherOptions.push("types");
+      }
+
+      if (parseResult.filter.fields.length !== 0) {
+        selectedOtherOptions.push("fields");
+      }
+
+      const term = parseResult.filter.terms.length === 1 ? parseResult.filter.terms[0] : null;
+
+      this.form.setValue({
+        text: term === "" ? null : term,
+        vaults: parseResult.filter.vaults,
+        folders: parseResult.filter.folders,
+        collections: parseResult.filter.collections,
+        fields: parseResult.filter.fields,
+        types: parseResult.filter.types,
+        otherOptions: null,
+        selectedOtherOptions: selectedOtherOptions,
+      });
+      return true;
     } catch (err) {
       // How should I show off parse errors
-      console.log("Error", err);
+      this.logService.debug("Error while parsing advanced query", err);
       return false;
     }
   }
@@ -441,13 +494,29 @@ export class FilterBuilderComponent implements OnInit {
     });
   }
 
-  protected saveFilter() {
+  protected async saveFilter() {
     const currentFilter = this.convertFilter(this.form.value);
-    this.saveFilterEvent.emit(currentFilter.raw);
+
+    if (currentFilter.raw == null || currentFilter.raw === "") {
+      // Skip
+      return;
+    }
+
+    const activeUser = await firstValueFrom(
+      this.accountService.activeAccount$.pipe(map((acc) => acc.id)),
+    );
+    await this.savedFilterService.saveFilter(
+      activeUser,
+      currentFilter.raw as FilterName,
+      currentFilter.raw as FilterString,
+    );
   }
 
   protected modeChanged(newMode: string) {
-    this.mode = newMode;
+    if (this.mode() === newMode) {
+      return;
+    }
+
     if (newMode === "advanced") {
       // Switching to advanced, place basic contents into text
       this.form.controls.text.setValue(
@@ -455,10 +524,15 @@ export class FilterBuilderComponent implements OnInit {
       );
     } else {
       if (!this.trySetBasicFilterElements(this.form.controls.text.value)) {
-        console.log("Could not set filter back to basic, button should have been disabled.");
-        this.mode = "advanced";
+        this.logService.info(
+          "Could not set filter back to basic, button should have been disabled.",
+        );
+        // This doesn't actually change the UI, we need to actually disable the button but that
+        // doesn't look available right now.
         return;
       }
     }
+
+    this.mode.set(newMode);
   }
 }

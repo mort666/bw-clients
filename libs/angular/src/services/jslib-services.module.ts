@@ -269,10 +269,8 @@ import {
 } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { TotpService as TotpServiceAbstraction } from "@bitwarden/common/vault/abstractions/totp.service";
 import { VaultSettingsService as VaultSettingsServiceAbstraction } from "@bitwarden/common/vault/abstractions/vault-settings/vault-settings.service";
-import {
-  DefaultVaultFilterMetadataService,
-  VaultFilterMetadataService,
-} from "@bitwarden/common/vault/filtering/vault-filter-metadata.service";
+import { BasicVaultFilterHandler } from "@bitwarden/common/vault/filtering/basic-vault-filter.handler";
+import { VaultFilterMetadataService } from "@bitwarden/common/vault/filtering/vault-filter-metadata.service";
 import { DefaultFilterService, FilterService } from "@bitwarden/common/vault/search/filter.service";
 import {
   SavedFiltersService,
@@ -1500,8 +1498,13 @@ const safeProviders: SafeProvider[] = [
   }),
   safeProvider({
     provide: VaultFilterMetadataService,
-    useClass: DefaultVaultFilterMetadataService,
+    useClass: VaultFilterMetadataService,
     deps: [],
+  }),
+  safeProvider({
+    provide: BasicVaultFilterHandler,
+    useClass: BasicVaultFilterHandler,
+    deps: [LogService],
   }),
 ];
 
