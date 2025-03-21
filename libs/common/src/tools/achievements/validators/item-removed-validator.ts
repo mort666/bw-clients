@@ -14,7 +14,11 @@ export class ItemRemovedValidator implements AchievementValidator {
     return "item-removed" as AchievementId;
   }
   get name() {
-    return "1st item removed from vault";
+    return "It never happened";
+  }
+
+  get description() {
+    return "Removed your first item from the vault";
   }
   // Threshold validator because we are only looking
   // for the action of removed and the threshold is 1

@@ -66,7 +66,7 @@ export class VaultItemCreatedCountValidator implements AchievementValidator {
 
   award(_measured: AchievementProgressEvent[], progress: Map<MetricId, number>) {
     const value = progress.get(this.itemCreatedProgress) ?? 0;
-    return value >= this.config.threshold ? [earnedEvent(this.achievement)] : [];
+    return value >= this.config.high ? [earnedEvent(this.achievement)] : [];
   }
 
   /**

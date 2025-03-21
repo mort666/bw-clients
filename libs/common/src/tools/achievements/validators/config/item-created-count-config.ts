@@ -15,24 +15,28 @@ export class ItemCreatedCountConfig implements Achievement {
       "vault-item-created",
       "The chosen one",
       "Saved your first item to Bitwarden",
+      0,
       1,
     ),
     new ItemCreatedCountConfig(
       "vault-items-created-ten",
       "A decade of security",
       "Saved your 10th item to Bitwarden",
+      1,
       10,
     ),
     new ItemCreatedCountConfig(
       "vault-items-created-fifty",
       "It's 50/50",
       "Saved your 50th item to Bitwarden",
+      10,
       50,
     ),
     new ItemCreatedCountConfig(
       "vault-items-created-one-hundred",
       "Century mark, Now you are thinking with ciphers",
       "Saved your 100th item to Bitwarden",
+      50,
       100,
     ),
 
@@ -41,6 +45,7 @@ export class ItemCreatedCountConfig implements Achievement {
       "login-item-created",
       "Access granted",
       "Saved your first login item with Bitwarden",
+      0,
       1,
       CipherType.Login,
     ),
@@ -48,6 +53,7 @@ export class ItemCreatedCountConfig implements Achievement {
       "10-login-items-added",
       "10 login Items Added",
       "Add 10 items of type login to your vault",
+      1,
       10,
       CipherType.Login,
     ),
@@ -55,6 +61,7 @@ export class ItemCreatedCountConfig implements Achievement {
       "50-login-items-added",
       "50 login items added",
       "Add 50 items of type login to your vault",
+      10,
       50,
       CipherType.Login,
     ),
@@ -62,6 +69,7 @@ export class ItemCreatedCountConfig implements Achievement {
       "login-item-created-one-hundred",
       "100 login items added",
       "Add 100 items of type login to your vault",
+      50,
       100,
       CipherType.Login,
     ),
@@ -71,6 +79,7 @@ export class ItemCreatedCountConfig implements Achievement {
       "card-item-created",
       "Put it on my card",
       "Saved your first card item to Bitwarden",
+      0,
       1,
       CipherType.Card,
     ),
@@ -82,6 +91,7 @@ export class ItemCreatedCountConfig implements Achievement {
       "identity-item-created",
       "Papers, please",
       "Saved your first identity to Bitwarden",
+      0,
       1,
       CipherType.Identity,
     ),
@@ -91,6 +101,7 @@ export class ItemCreatedCountConfig implements Achievement {
       "note-item-created",
       "For my eyes only",
       "Saved your first secure note to Bitwarden",
+      0,
       1,
       CipherType.SecureNote,
     ),
@@ -118,6 +129,7 @@ export class ItemCreatedCountConfig implements Achievement {
       "ssh-key-item-created",
       "Keyed up",
       "Added your first SSH Key to Bitwarden",
+      0,
       1,
       CipherType.SshKey,
     ),
@@ -148,16 +160,19 @@ export class ItemCreatedCountConfig implements Achievement {
     return this.base.hidden;
   }
   cipherType: CipherType | null = null;
-  threshold: number;
+  low: number;
+  high: number;
   private constructor(
     key: string,
     name: string,
     description: string,
-    threshold: number,
+    low: number = 0,
+    high: number = 1,
     cipherType: CipherType | null = null,
   ) {
     this.cipherType = cipherType;
-    this.threshold = threshold;
+    this.low = low;
+    this.high = high;
     this.base = {
       achievement: key as AchievementId,
       name: name,
@@ -166,8 +181,9 @@ export class ItemCreatedCountConfig implements Achievement {
       active: {
         metric:
           `item-${cipherType ? `${CipherType[cipherType].toLowerCase()}-` : ""}quantity` as MetricId,
-        low: threshold - 1,
-        high: threshold,
+        // low: threshold - 1,
+        low: low,
+        high: high,
       },
       hidden: false,
     };
