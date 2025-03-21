@@ -1,20 +1,18 @@
 import { CommonModule } from "@angular/common";
-import { Component, OnInit } from "@angular/core";
+import { Component } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { firstValueFrom } from "rxjs";
+import { filter, switchMap } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
-import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
-import { AchievementService } from "@bitwarden/common/tools/achievements/achievement.service.abstraction";
+import { AccountService, Account } from "@bitwarden/common/auth/abstractions/account.service";
+import { NextAchievementService } from "@bitwarden/common/tools/achievements/next-achievement.service";
 import {
-  LoginItems_1_Added_Achievement,
-  LoginItems_10_Added_Achievement,
-  LoginItems_50_Added_Achievement,
-  VaultItems_10_Added_Achievement,
-  VaultItems_1_Added_Achievement,
-  VaultItems_50_Added_Achievement,
-} from "@bitwarden/common/tools/achievements/examples/achievements";
-import { UserId } from "@bitwarden/common/types/guid";
+  Achievement,
+  AchievementEarnedEvent,
+  AchievementId,
+  AchievementProgressEvent,
+  MetricId,
+} from "@bitwarden/common/tools/achievements/types";
 import {
   ButtonModule,
   Icon,
@@ -26,11 +24,6 @@ import {
 } from "@bitwarden/components";
 
 import { AchievementItem } from "./achievement-item.component";
-import {
-  OneLoginItemCreatedIcon,
-  TenLoginItemsCreatedIcon,
-  FiftyLoginItemsCreatedIcon,
-} from "./icons";
 import { AchievementIcon } from "./icons/achievement.icon";
 import { iconMap } from "./icons/iconMap";
 
@@ -50,72 +43,51 @@ import { iconMap } from "./icons/iconMap";
     AchievementItem,
   ],
 })
-export class AchievementsListComponent implements OnInit {
-  private currentUserId: UserId;
-
-  //FIXME Should be retrieved from achievementService or possibly AchievementManager
-  private allAchievements = [
-    VaultItems_1_Added_Achievement,
-    VaultItems_10_Added_Achievement,
-    VaultItems_50_Added_Achievement,
-    LoginItems_1_Added_Achievement,
-  ];
-
-  mockAchievements = [
-    {
-      ...LoginItems_1_Added_Achievement,
-      earned: false,
-      progress: 0,
-      date: new Date(0),
-      icon: OneLoginItemCreatedIcon,
-    },
-    {
-      ...LoginItems_10_Added_Achievement,
-      earned: false,
-      progress: 1,
-      date: new Date(0),
-      icon: TenLoginItemsCreatedIcon,
-    },
-    {
-      ...LoginItems_50_Added_Achievement,
-      earned: true,
-      progress: 0,
-      date: new Date(0),
-      icon: FiftyLoginItemsCreatedIcon,
-    },
-  ];
-  //FIXME uses mockedData for AchievmentsList
-  allAchievementCards = this.mockAchievements;
-  // allAchievementCards = this.allAchievements.map(achievement => { return { ...achievement, earned: true, progress: 0, date: new Date(0), icon: this.lookupIcon(achievement.achievement) } });
+export class AchievementsListComponent {
+  protected achievements: Map<AchievementId, Achievement>;
+  private _earned: Map<AchievementId, AchievementEarnedEvent> = new Map();
+  private _progress: Map<MetricId, AchievementProgressEvent> = new Map();
 
   constructor(
-    private achievementService: AchievementService,
+    private achievementService: NextAchievementService,
     private accountService: AccountService,
   ) {
-    //FIXME AchievementProgressEvent is missing an identifier for a specific achievement
-    this.achievementService
-      .achievementsInProgress$(this.currentUserId)
-      .pipe(takeUntilDestroyed())
-      .subscribe((event) => {
-        this.allAchievementCards.find((a) => a.name === event.achievement.name);
-        const index = this.allAchievementCards.findIndex((a) => a.name === event.achievement.name);
-        this.allAchievementCards[index].progress = event.achievement.value;
-      });
-    this.achievementService
-      .achievementsEarned$(this.currentUserId)
-      .pipe(takeUntilDestroyed())
-      .subscribe((event) => {
-        const index = this.allAchievementCards.findIndex((a) => a.name === event.achievement.name);
-        this.allAchievementCards[index].earned = true;
-        this.allAchievementCards[index].date = new Date(event["@timestamp"]);
-      });
+    this.achievements = achievementService.achievementMap();
+
+    this.accountService.activeAccount$
+      .pipe(
+        filter((account): account is Account => !!account),
+        switchMap((account) => this.achievementService.earnedMap$(account)),
+        takeUntilDestroyed(),
+      )
+      .subscribe((earned) => (this._earned = earned));
+
+    this.accountService.activeAccount$
+      .pipe(
+        filter((account): account is Account => !!account),
+        switchMap((account) => this.achievementService.metricsMap$(account)),
+        takeUntilDestroyed(),
+      )
+      .subscribe((progress) => (this._progress = progress));
   }
 
-  async ngOnInit() {
-    this.currentUserId = (await firstValueFrom(this.accountService.activeAccount$)).id;
+  protected isEarned(achievement: Achievement) {
+    return this._earned.has(achievement.achievement);
   }
 
-  lookupIcon(achievementName: string): Icon {
-    return (iconMap[achievementName] as Icon) ?? AchievementIcon;
+  protected earnedDate(achievement: Achievement) {
+    return new Date(this._earned.get(achievement.achievement)?.["@timestamp"] ?? 0);
+  }
+
+  protected progress(achievement: Achievement) {
+    if (achievement.active === "until-earned") {
+      return -1;
+    }
+
+    return this._progress.get(achievement.active.metric)?.achievement?.value ?? -1;
+  }
+
+  protected lookupIcon(achievement: Achievement): Icon {
+    return (iconMap[achievement.achievement] as Icon) ?? AchievementIcon;
   }
 }

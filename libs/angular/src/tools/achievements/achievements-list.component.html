@@ -1,4 +1,4 @@
-<bit-section *ngIf="allAchievementCards?.length > 0">
+<bit-section *ngIf="achievements.size > 0">
   <bit-section-header>
     <h2 class="tw-font-bold" bitTypography="h6">
       {{ "achievements" | i18n }}
@@ -7,14 +7,14 @@
   </bit-section-header>
 
   <bit-item-group>
-    @for (achievement of allAchievementCards; track achievement.name) {
+    @for (achievement of achievements; track achievement.name) {
       <achievement-item
-        [icon]="achievement.icon"
+        [icon]="lookupIcon(achievement)"
         [title]="achievement.name"
         [description]="achievement.description"
-        [earned]="achievement.earned"
-        [date]="achievement.date"
-        [progress]="achievement.progress"
+        [earned]="isEarned(achievement)"
+        [date]="earnedDate(achievement)"
+        [progress]="progress(achievement)"
       ></achievement-item>
     }
   </bit-item-group>

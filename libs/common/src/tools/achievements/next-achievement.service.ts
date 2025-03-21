@@ -65,7 +65,7 @@ export class NextAchievementService implements AchievementServiceAbstraction {
   }
 
   earnedMap$(account: Account) {
-    return this.getHub(account).metrics$();
+    return this.getHub(account).earned$();
   }
 
   progressStream$(account: Account, all: boolean = false) {
