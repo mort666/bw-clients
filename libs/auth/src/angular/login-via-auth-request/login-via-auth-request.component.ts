@@ -68,6 +68,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
   private accessCode: string | undefined = undefined;
   private authStatus: AuthenticationStatus | undefined = undefined;
   private showResendNotificationTimeoutSeconds = 12;
+  private loading = true;
 
   protected backToRoute = "/login";
   protected clientType: ClientType;
@@ -110,13 +111,14 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     this.authRequestService.authRequestPushNotification$
       .pipe(takeUntilDestroyed())
       .subscribe((requestId) => {
+        this.loading = true;
         this.processAuthRequestResponse(requestId).catch((e: Error) => {
           this.toastService.showToast({
             variant: "error",
             title: this.i18nService.t("error"),
             message: e.message,
           });
-
+          this.loading = false;
           this.logService.error("Failed to use approved auth request: " + e.message);
         });
       });
@@ -149,6 +151,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     } else {
       await this.initStandardAuthRequestFlow();
     }
+    this.loading = false;
   }
 
   private async initAdminAuthRequestFlow(): Promise<void> {
@@ -199,6 +202,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
       this.loginViaAuthRequestCacheService.getCachedLoginViaAuthRequestView();
 
     if (cachedAuthRequest) {
+      this.logService.info("Found cached auth request.");
       if (!cachedAuthRequest.id) {
         this.logService.error(
           "No id on the cached auth request when in the standard auth request flow.",
@@ -286,12 +290,6 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     cachedAuthRequest: LoginViaAuthRequestView,
   ): Promise<void> {
     if (cachedAuthRequest) {
-      // Grab the cached information and store it back in component state.
-      // We don't need the public key for handling the authentication request because
-      // the verifyAndHandleApprovedAuthReq function will receive the public key back
-      // from the looked up auth request and all we need is to make sure that
-      // we can use the cached private key that is associated with it.
-
       if (!this.email) {
         this.logService.error("Email not defined when handling an existing auth request.");
         return;
@@ -299,6 +297,11 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
 
       if (!cachedAuthRequest.privateKey) {
         this.logService.error("No private key on the cached auth request.");
+        return;
+      }
+
+      if (!cachedAuthRequest.accessCode) {
+        this.logService.error("No access code on the cached auth request.");
         return;
       }
 
@@ -314,12 +317,16 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
         derivedPublicKeyArrayBuffer,
       );
 
-      // Request still pending response from admin set keypair and create hub connection
-      // so that any approvals will be received via push notification
+      // We don't need the public key for handling the authentication request because
+      // the processAuthRequestResponse function will receive the public key back
+      // from the looked up auth request, and all we need is to make sure that
+      // we can use the cached private key that is associated with it.
       this.authRequestKeyPair = {
         privateKey: privateKey,
         publicKey: undefined,
       };
+
+      this.accessCode = cachedAuthRequest.accessCode;
     }
   }
 
@@ -517,13 +524,14 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     } catch (error) {
       // If the request no longer exists, we treat it as if it's been answered (and denied).
       if (error instanceof ErrorResponse && error.statusCode === HttpStatusCode.NotFound) {
+        authRequestResponse = null;
+      } else {
         this.logService.error(error.message);
-        throw new Error(error.message);
       }
     }
 
     if (authRequestResponse === undefined) {
-      throw new Error("Auth reqeust response not generated");
+      throw new Error("Auth request response not generated");
     }
 
     return authRequestResponse;
