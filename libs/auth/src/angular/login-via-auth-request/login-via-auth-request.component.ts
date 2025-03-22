@@ -68,7 +68,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
   private accessCode: string | undefined = undefined;
   private authStatus: AuthenticationStatus | undefined = undefined;
   private showResendNotificationTimeoutSeconds = 12;
-  private loading = true;
+  protected loading = true;
 
   protected backToRoute = "/login";
   protected clientType: ClientType;
@@ -617,6 +617,9 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Clear the cached auth request from state since we're using it to log in.
+    this.loginViaAuthRequestCacheService.clearCacheLoginView();
+
     // Note: keys are set by AuthRequestLoginStrategy success handling
     const authResult = await this.loginStrategyService.logIn(authRequestLoginCredentials);
 
@@ -654,6 +657,9 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     // clear the admin auth request from state so it cannot be used again (it's a one time use)
     // TODO: this should eventually be enforced via deleting this on the server once it is used
     await this.authRequestService.clearAdminAuthRequest(userId);
+
+    // [Standard Flow Cleanup] Clear the cached auth request from state
+    this.loginViaAuthRequestCacheService.clearCacheLoginView();
 
     this.toastService.showToast({
       variant: "success",
