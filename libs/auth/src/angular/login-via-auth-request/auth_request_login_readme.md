@@ -67,7 +67,7 @@ get into this flow:
 7. Establishes trust (if required)
 8. Proceeds to vault
 
-**Note:** TDE users are required to be enrolled in admin password reset, which gives the admin access to the user's
+**Note:** TDE users are required to be enrolled in admin account recovery, which gives the admin access to the user's
 userKey. This is how admins are able to send over the authRequestPublicKey(userKey) to the user to allow them to unlock.
 
 ## Summary Table
