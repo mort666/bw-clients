@@ -112,7 +112,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
       .pipe(takeUntilDestroyed())
       .subscribe((requestId) => {
         this.loading = true;
-        this.processAuthRequestResponse(requestId).catch((e: Error) => {
+        this.handleExistingAuthRequestLogin(requestId).catch((e: Error) => {
           this.toastService.showToast({
             variant: "error",
             title: this.i18nService.t("error"),
@@ -157,19 +157,6 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
   private async initAdminAuthRequestFlow(): Promise<void> {
     this.flow = Flow.AdminAuthRequest;
 
-    // Get email from state for admin auth requests because it is available and also
-    // prevents it from being lost on refresh as the loginEmailService email does not persist.
-    this.email = await firstValueFrom(
-      this.accountService.activeAccount$.pipe(map((a) => a?.email)),
-    );
-
-    if (!this.email) {
-      await this.handleMissingEmail();
-      return;
-    }
-
-    // We only allow a single admin approval request to be active at a time
-    // so we must check state to see if we have an existing one or not
     const userId = (await firstValueFrom(this.accountService.activeAccount$))?.id;
     if (!userId) {
       this.logService.error(
@@ -178,12 +165,12 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const existingAdminAuthRequest = await this.authRequestService.getAdminAuthRequest(userId);
+    const existingAdminAuthRequest = await this.reloadCachedAdminAuthRequest(userId);
 
     if (existingAdminAuthRequest) {
-      await this.handleExistingAdminAuthRequest(existingAdminAuthRequest, userId);
+      await this.handleExistingAdminAuthRequestLogin(existingAdminAuthRequest, userId);
     } else {
-      await this.startAdminAuthRequestLogin();
+      await this.handleNewAdminAuthRequestLogin();
     }
   }
 
@@ -211,9 +198,9 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
       }
 
       await this.reloadCachedStandardAuthRequest(cachedAuthRequest);
-      await this.processAuthRequestResponse(cachedAuthRequest.id);
+      await this.handleExistingAuthRequestLogin(cachedAuthRequest.id);
     } else {
-      await this.startStandardAuthRequestLogin();
+      await this.handleNewStandardAuthRequestLogin();
     }
   }
 
@@ -232,16 +219,14 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     this.loginViaAuthRequestCacheService.clearCacheLoginView();
   }
 
-  private async startAdminAuthRequestLogin(): Promise<void> {
+  private async handleNewAdminAuthRequestLogin(): Promise<void> {
     try {
       if (!this.email) {
         this.logService.error("No email when starting admin auth request login.");
         return;
       }
 
-      // Scope this auth request to just this process. We don't want it to carry
-      // on outside of this scope because it should either be regenerated with
-      // what is in the cache or created initially like it is doing here.
+      // At this point we know there is no
       const authRequest = await this.buildAuthRequest(this.email, AuthRequestType.AdminApproval);
 
       if (!authRequest) {
@@ -282,7 +267,42 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Loads the cached auth request into the component state.
+   * We only allow a single admin approval request to be active at a time
+   * so we can check to see if it's stored in state with the state service
+   * provider.
+   * @param userId
+   * @protected
+   */
+  protected async reloadCachedAdminAuthRequest(
+    userId: UserId,
+  ): Promise<AdminAuthRequestStorable | null> {
+    // Get email from state for admin auth requests because it is available and also
+    // prevents it from being lost on refresh as the loginEmailService email does not persist.
+    this.email = await firstValueFrom(
+      this.accountService.activeAccount$.pipe(map((a) => a?.email)),
+    );
+
+    if (!this.email) {
+      await this.handleMissingEmail();
+      return null;
+    }
+
+    return await this.authRequestService.getAdminAuthRequest(userId);
+  }
+
+  /**
+   * Restores a cached authentication request into the component's state.
+   *
+   * This function checks for the presence of a cached authentication request and,
+   * if available, updates the component's state with the necessary details to
+   * continue processing the request. It ensures that the user's email and the
+   * private key from the cached request are available.
+   *
+   * The private key is converted from Base64 to an ArrayBuffer, and a fingerprint
+   * phrase is derived to verify the request's integrity. The function then sets
+   * the authentication request key pair in the component's state, preparing it
+   * to handle any responses or approvals.
+   *
    * @param cachedAuthRequest The request to load into the component state
    * @returns Promise to await for completion
    */
@@ -291,17 +311,23 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
   ): Promise<void> {
     if (cachedAuthRequest) {
       if (!this.email) {
-        this.logService.error("Email not defined when handling an existing auth request.");
+        this.logService.error(
+          "Email not defined when trying to reload cached standard auth request.",
+        );
         return;
       }
 
       if (!cachedAuthRequest.privateKey) {
-        this.logService.error("No private key on the cached auth request.");
+        this.logService.error(
+          "No private key on the cached auth request when trying to reload cached standard auth request.",
+        );
         return;
       }
 
       if (!cachedAuthRequest.accessCode) {
-        this.logService.error("No access code on the cached auth request.");
+        this.logService.error(
+          "No access code on the cached auth request when trying to reload cached standard auth request.",
+        );
         return;
       }
 
@@ -318,7 +344,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
       );
 
       // We don't need the public key for handling the authentication request because
-      // the processAuthRequestResponse function will receive the public key back
+      // the handleExistingAuthRequestLogin function will receive the public key back
       // from the looked up auth request, and all we need is to make sure that
       // we can use the cached private key that is associated with it.
       this.authRequestKeyPair = {
@@ -330,7 +356,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected async startStandardAuthRequestLogin(): Promise<void> {
+  protected async handleNewStandardAuthRequestLogin(): Promise<void> {
     this.showResendNotification = false;
 
     try {
@@ -429,7 +455,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     return new AuthRequest(email, deviceIdentifier, b64PublicKey, authRequestType, this.accessCode);
   }
 
-  private async handleExistingAdminAuthRequest(
+  private async handleExistingAdminAuthRequestLogin(
     adminAuthRequestStorable: AdminAuthRequestStorable,
     userId: UserId,
   ): Promise<void> {
@@ -524,9 +550,9 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     } catch (error) {
       // If the request no longer exists, we treat it as if it's been answered (and denied).
       if (error instanceof ErrorResponse && error.statusCode === HttpStatusCode.NotFound) {
-        authRequestResponse = null;
+        authRequestResponse = undefined;
       } else {
-        this.logService.error(error.message);
+        this.logService.error(error);
       }
     }
 
@@ -543,7 +569,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
    * @param requestId The ID of the Auth Request to process
    * @returns A boolean indicating whether the Auth Request was successfully processed
    */
-  private async processAuthRequestResponse(requestId: string): Promise<void> {
+  private async handleExistingAuthRequestLogin(requestId: string): Promise<void> {
     try {
       const authRequestResponse = await this.retrieveAuthRequest(requestId);
 
@@ -754,7 +780,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     await this.authRequestService.clearAdminAuthRequest(userId);
 
     // start new auth request
-    await this.startAdminAuthRequestLogin();
+    await this.handleNewAdminAuthRequestLogin();
   }
 
   private async clearExistingStandardAuthRequestAndStartNewRequest(): Promise<void> {
@@ -762,7 +788,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
     this.loginViaAuthRequestCacheService.clearCacheLoginView();
 
     // start new auth request
-    await this.startStandardAuthRequestLogin();
+    await this.handleNewStandardAuthRequestLogin();
   }
 
   private async handlePostLoginNavigation(loginResponse: AuthResult) {
