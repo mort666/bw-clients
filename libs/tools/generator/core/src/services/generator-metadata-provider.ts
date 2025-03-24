@@ -191,8 +191,9 @@ export class GeneratorMetadataProvider {
     dependencies: BoundDependency<"account", Account>,
   ): Observable<CredentialAlgorithm[]> {
     if (isTypeRequest(requested)) {
+      const { type } = requested;
       return this.isAvailable$(dependencies).pipe(
-        map((isAvailable) => this.algorithms(requested).filter(isAvailable)),
+        map((isAvailable) => this.algorithms({ type }).filter(isAvailable)),
       );
     } else if (isAlgorithmRequest(requested)) {
       const { algorithm } = requested;
