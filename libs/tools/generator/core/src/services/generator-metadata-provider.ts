@@ -31,12 +31,15 @@ import {
 } from "../metadata";
 import { availableAlgorithms_vNext } from "../policies/available-algorithms-policy";
 import { CredentialPreference } from "../types";
+import {
+  AlgorithmRequest,
+  TypeRequest,
+  MetadataRequest,
+  isAlgorithmRequest,
+  isTypeRequest,
+} from "../types/metadata-request";
 
 import { PREFERENCES } from "./credential-preferences";
-
-type AlgorithmRequest = { algorithm: CredentialAlgorithm };
-type TypeRequest = { type: CredentialType };
-type MetadataRequest = Partial<AlgorithmRequest & TypeRequest>;
 
 /** Surfaces contextual information to credential generators */
 export class GeneratorMetadataProvider {
@@ -110,18 +113,18 @@ export class GeneratorMetadataProvider {
   algorithms(requested: TypeRequest): CredentialAlgorithm[];
   algorithms(requested: MetadataRequest): CredentialAlgorithm[] {
     let algorithms: CredentialAlgorithm[];
-    if (requested.type) {
+    if (isTypeRequest(requested)) {
       let forwarders: CredentialAlgorithm[] = [];
       if (requested.type === Type.email) {
         forwarders = Array.from(this.site.extensions.keys()).map((forwarder) => ({ forwarder }));
       }
 
       algorithms = AlgorithmsByType[requested.type].concat(forwarders);
-    } else if (requested.algorithm && isForwarderExtensionId(requested.algorithm)) {
+    } else if (isAlgorithmRequest(requested) && isForwarderExtensionId(requested.algorithm)) {
       algorithms = this.site.extensions.has(requested.algorithm.forwarder)
         ? [requested.algorithm]
         : [];
-    } else if (requested.algorithm) {
+    } else if (isAlgorithmRequest(requested)) {
       algorithms = Algorithms.includes(requested.algorithm) ? [requested.algorithm] : [];
     } else {
       this.log.panic(requested, "algorithm or type required");
@@ -187,11 +190,11 @@ export class GeneratorMetadataProvider {
     requested: MetadataRequest,
     dependencies: BoundDependency<"account", Account>,
   ): Observable<CredentialAlgorithm[]> {
-    if (requested.type) {
+    if (isTypeRequest(requested)) {
       return this.isAvailable$(dependencies).pipe(
         map((isAvailable) => this.algorithms(requested).filter(isAvailable)),
       );
-    } else if (requested.algorithm) {
+    } else if (isAlgorithmRequest(requested)) {
       const { algorithm } = requested;
       return this.isAvailable$(dependencies).pipe(
         map((isAvailable) => (isAvailable(algorithm) ? [algorithm] : [])),
