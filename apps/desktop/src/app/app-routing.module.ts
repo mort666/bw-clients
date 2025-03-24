@@ -188,6 +188,10 @@ const routes: Routes = [
     component: Fido2CreateComponent,
   },
   {
+    path: "passkeys",
+    component: Fido2PlaceholderComponent,
+  },
+  {
     path: "",
     component: AnonLayoutWrapperComponent,
     children: [
