@@ -96,12 +96,12 @@ export class GeneratorMetadataProvider {
   }
 
   /** Retrieve the credential algorithm ids that match the request.
-   *  @param requested when this has a `category` property, the method
-   *   returns all algorithms in the category. When this has an `algorithm`
+   *  @param requested when this has a `type` property, the method
+   *   returns all algorithms with the same credential type. When this has an `algorithm`
    *   property, the method returns 0 or 1 matching algorithms.
    *  @returns the matching algorithms. This method always returns an array;
    *   the array is empty when no algorithms match the input criteria.
-   *  @throws when neither `requested.algorithm` nor `requested.category` contains
+   *  @throws when neither `requested.algorithm` nor `requested.type` contains
    *    a value.
    *  @remarks this method enforces technical requirements only.
    *    If you want these algorithms with policy controls applied, use `algorithms$`.
@@ -124,7 +124,7 @@ export class GeneratorMetadataProvider {
     } else if (requested.algorithm) {
       algorithms = Algorithms.includes(requested.algorithm) ? [requested.algorithm] : [];
     } else {
-      this.log.panic(requested, "algorithm or category required");
+      this.log.panic(requested, "algorithm or type required");
     }
 
     return algorithms;
@@ -162,14 +162,14 @@ export class GeneratorMetadataProvider {
   }
 
   /** Retrieve credential algorithms filtered by the user's active policy.
-   *  @param requested when this has a `category` property, the method
-   *   returns all algorithms in the category. When this has an `algorithm`
+   *  @param requested when this has a `type` property, the method
+   *   returns all algorithms with a matching credential type. When this has an `algorithm`
    *   property, the method returns 0 or 1 matching algorithms.
    *  @param dependencies.account the account requesting algorithm access;
    *    this parameter controls which policy, if any, is applied.
    *  @returns an observable that emits matching algorithms. When no algorithms
    *    match the request, an empty array is emitted.
-   *  @throws when neither `requested.algorithm` nor `requested.category` contains
+   *  @throws when neither `requested.algorithm` nor `requested.type` contains
    *    a value.
    *  @remarks this method applies policy controls. In particular, it excludes
    *    algorithms prohibited by a policy control. If you want lists of algorithms
@@ -188,10 +188,8 @@ export class GeneratorMetadataProvider {
     dependencies: BoundDependency<"account", Account>,
   ): Observable<CredentialAlgorithm[]> {
     if (requested.type) {
-      const { type: category } = requested;
-
       return this.isAvailable$(dependencies).pipe(
-        map((isAvailable) => this.algorithms({ type: category }).filter(isAvailable)),
+        map((isAvailable) => this.algorithms(requested).filter(isAvailable)),
       );
     } else if (requested.algorithm) {
       const { algorithm } = requested;
@@ -199,7 +197,7 @@ export class GeneratorMetadataProvider {
         map((isAvailable) => (isAvailable(algorithm) ? [algorithm] : [])),
       );
     } else {
-      this.log.panic(requested, "algorithm or category required");
+      this.log.panic(requested, "algorithm or type required");
     }
   }
 
@@ -235,7 +233,7 @@ export class GeneratorMetadataProvider {
    *  @param dependencies.account$ identifies the account to which the preferences are bound
    *  @returns a subject bound to the user's preferences
    *  @remarks Preferences determine which algorithms are used when generating a
-   *   credential from a credential category (e.g. `PassX` or `Username`). Preferences
+   *   credential from a credential type (e.g. `PassX` or `Username`). Preferences
    *   should not be used to hold navigation history. Use @bitwarden/generator-navigation
    *   instead.
    */
