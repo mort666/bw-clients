@@ -9,7 +9,8 @@ import { AccountService } from "@bitwarden/common/auth/abstractions/account.serv
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
-import { DialogService ,
+import {
+  DialogService,
   BadgeModule,
   ButtonModule,
   DialogModule,
