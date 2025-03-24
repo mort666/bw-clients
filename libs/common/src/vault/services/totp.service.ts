@@ -1,4 +1,4 @@
-import { Observable, map, shareReplay, switchMap, timer } from "rxjs";
+import { Observable, from, shareReplay, switchMap, timer } from "rxjs";
 
 import { TotpResponse } from "@bitwarden/sdk-internal";
 
@@ -32,8 +32,8 @@ export class TotpService implements TotpServiceAbstraction {
     return timer(0, 1000).pipe(
       switchMap(() =>
         this.sdkService.client$.pipe(
-          map((sdk) => {
-            return sdk.vault().totp().generate_totp(key);
+          switchMap((sdk) => {
+            return from(sdk.vault().totp().generate_totp(key));
           }),
         ),
       ),
