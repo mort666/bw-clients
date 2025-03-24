@@ -9,7 +9,7 @@ import { AccountService } from "@bitwarden/common/auth/abstractions/account.serv
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
-import {
+import { DialogService ,
   BadgeModule,
   ButtonModule,
   DialogModule,
@@ -59,6 +59,7 @@ export class Fido2CreateComponent implements OnInit {
     private readonly fido2UserInterfaceService: DesktopFido2UserInterfaceService,
     private readonly accountService: AccountService,
     private readonly cipherService: CipherService,
+    private readonly dialogService: DialogService,
     private readonly domainSettingsService: DomainSettingsService,
     private readonly router: Router,
   ) {}
@@ -101,11 +102,19 @@ export class Fido2CreateComponent implements OnInit {
     try {
       // Retrieve the current UI session to control the flow
       if (!this.session) {
-        // todo: handle error
-        throw new Error("No session found");
+        const confirmed = await this.dialogService.openSimpleDialog({
+          title: { key: "unexpectedErrorShort" },
+          content: { key: "closeThisBitwardenWindow" },
+          type: "danger",
+          acceptButtonText: { key: "closeBitwarden" },
+          cancelButtonText: null,
+        });
+        if (confirmed) {
+          await this.closeModal();
+        }
+      } else {
+        this.session.notifyConfirmCreateCredential(true);
       }
-
-      this.session.notifyConfirmCreateCredential(true);
 
       // Not sure this clean up should happen here or in session.
       // The session currently toggles modal on and send us here
@@ -113,7 +122,17 @@ export class Fido2CreateComponent implements OnInit {
       await this.router.navigate(["/"]);
       await this.desktopSettingsService.setModalMode(false);
     } catch {
-      // TODO: Handle error appropriately
+      const confirmed = await this.dialogService.openSimpleDialog({
+        title: { key: "unableToSavePasskey" },
+        content: { key: "closeThisBitwardenWindow" },
+        type: "danger",
+        acceptButtonText: { key: "closeBitwarden" },
+        cancelButtonText: null,
+      });
+
+      if (confirmed) {
+        await this.closeModal();
+      }
     }
   }
 
