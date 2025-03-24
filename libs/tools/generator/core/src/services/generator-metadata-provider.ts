@@ -215,7 +215,7 @@ export class GeneratorMetadataProvider {
           return algorithm;
         }
 
-        const algorithms = this.algorithms({ type: type });
+        const algorithms = type ? this.algorithms({ type: type }) : [];
         // `?? null` because logging types must be `Jsonify<T>`
         const defaultAlgorithm = algorithms.find(isAvailable) ?? null;
         this.log.debug(

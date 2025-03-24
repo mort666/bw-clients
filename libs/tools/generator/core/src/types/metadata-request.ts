@@ -9,5 +9,5 @@ export function isAlgorithmRequest(request: MetadataRequest): request is Algorit
 }
 
 export function isTypeRequest(request: MetadataRequest): request is TypeRequest {
-  return !!request.algorithm;
+  return !!request.type;
 }

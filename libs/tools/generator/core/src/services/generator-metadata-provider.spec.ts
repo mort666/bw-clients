@@ -285,7 +285,7 @@ describe("GeneratorMetadataProvider", () => {
       const provider = new GeneratorMetadataProvider(SystemProvider, ApplicationProvider, []);
 
       // `any` cast required because this test subverts the type system
-      expect(() => provider.algorithms({} as any)).toThrow("algorithm or category required");
+      expect(() => provider.algorithms({} as any)).toThrow("algorithm or type required");
     });
   });
 
@@ -369,7 +369,7 @@ describe("GeneratorMetadataProvider", () => {
       const provider = new GeneratorMetadataProvider(SystemProvider, ApplicationProvider, []);
 
       expect(() => provider.algorithms$({} as any, { account$: SomeAccount$ })).toThrow(
-        "algorithm or category required",
+        "algorithm or type required",
       );
     });
   });
