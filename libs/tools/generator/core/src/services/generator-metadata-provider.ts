@@ -47,7 +47,7 @@ export class GeneratorMetadataProvider {
   constructor(
     private readonly system: UserStateSubjectDependencyProvider,
     private readonly application: SystemServiceProvider,
-    algorithms: GeneratorMetadata<object>[],
+    algorithms: ReadonlyArray<GeneratorMetadata<object>>,
   ) {
     this.log = system.log({ type: "GeneratorMetadataProvider" });
 
