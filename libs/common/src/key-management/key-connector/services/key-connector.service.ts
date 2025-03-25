@@ -78,8 +78,10 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
     await this.stateProvider.getUser(userId, USES_KEY_CONNECTOR).update(() => usesKeyConnector);
   }
 
-  getUsesKeyConnector(userId: UserId): Promise<boolean> {
-    return firstValueFrom(this.stateProvider.getUserState$(USES_KEY_CONNECTOR, userId));
+  async getUsesKeyConnector(userId: UserId): Promise<boolean> {
+    return (
+      (await firstValueFrom(this.stateProvider.getUserState$(USES_KEY_CONNECTOR, userId))) ?? false
+    );
   }
 
   async userNeedsMigration(userId: UserId, organizations: Organization[]) {
