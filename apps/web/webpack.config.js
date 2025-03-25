@@ -206,8 +206,8 @@ const devServer =
         server: {
           type: "https",
           options: {
-            key: fs.readFileSync("dev-server" + certSuffix + ".pem"),
-            cert: fs.readFileSync("dev-server" + certSuffix + ".pem"),
+            key: fs.readFileSync(path.join(__dirname, "dev-server" + certSuffix + ".pem")),
+            cert: fs.readFileSync(path.join(__dirname, "dev-server" + certSuffix + ".pem")),
           },
         },
         // host: '192.168.1.9',

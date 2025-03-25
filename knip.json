@@ -1,0 +1,5 @@
+{
+  "entry": ["{apps,libs,bitwarden_license}/**/src/index.{ts,tsx}"],
+  "project": ["{apps,libs,bitwarden_license}/**/src/**/*.{ts,tsx}"],
+  "ignore": ["**/bitwarden_license/**"]
+}
