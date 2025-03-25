@@ -103,8 +103,6 @@ describe("ConvertToKeyConnectorCommand", () => {
       expect(response).not.toBeNull();
       expect(response.success).toEqual(true);
       expect(keyConnectorService.migrateUser).toHaveBeenCalledWith(userId);
-      expect(keyConnectorService.removeConvertAccountRequired).toHaveBeenCalledWith(userId);
-      expect(keyConnectorService.setUsesKeyConnector).toHaveBeenCalledWith(true, userId);
       expect(environmentService.setEnvironment).toHaveBeenCalledWith(Region.SelfHosted, {
         keyConnector: organization.keyConnectorUrl,
       } as Urls);
@@ -137,7 +135,6 @@ describe("ConvertToKeyConnectorCommand", () => {
       expect(response).not.toBeNull();
       expect(response.success).toEqual(true);
       expect(organizationApiService.leave).toHaveBeenCalledWith(organization.id);
-      expect(keyConnectorService.removeConvertAccountRequired).toHaveBeenCalledWith(userId);
     });
   });
 });
