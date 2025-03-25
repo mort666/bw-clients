@@ -258,6 +258,7 @@ const safeProviders: SafeProvider[] = [
       PolicyApiServiceAbstraction,
       LogService,
       PolicyService,
+      AccountService,
     ],
   }),
   safeProvider({
@@ -318,6 +319,7 @@ const safeProviders: SafeProvider[] = [
       PlatformUtilsService,
       SsoLoginServiceAbstraction,
       Router,
+      AccountService,
     ],
   }),
   safeProvider({
