@@ -1,6 +1,6 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { combineLatest, filter, firstValueFrom, of, switchMap } from "rxjs";
+import { combineLatest, distinctUntilChanged, filter, firstValueFrom, of, switchMap } from "rxjs";
 
 import { LogoutReason } from "@bitwarden/auth/common";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
@@ -43,6 +43,7 @@ export const USES_KEY_CONNECTOR = new UserKeyDefinition<boolean | null>(
   {
     deserializer: (usesKeyConnector) => usesKeyConnector,
     clearOn: ["logout"],
+    cleanupDelayMs: 0,
   },
 );
 
@@ -52,6 +53,7 @@ export const CONVERT_ACCOUNT_TO_KEY_CONNECTOR = new UserKeyDefinition<boolean | 
   {
     deserializer: (convertAccountToKeyConnector) => convertAccountToKeyConnector,
     clearOn: ["logout"],
+    cleanupDelayMs: 0,
   },
 );
 
@@ -86,24 +88,29 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
             this.organizationService
               .organizations$(account.id)
               .pipe(filter((organizations) => organizations != null)),
+            this.stateProvider
+              .getUserState$(USES_KEY_CONNECTOR, account.id)
+              .pipe(filter((usesKeyConnector) => usesKeyConnector != null)),
             tokenService.hasAccessToken$(account.id).pipe(filter((hasToken) => hasToken)),
           ]),
         ),
-        switchMap(async ([userId, organizations]) => {
-          const needsMigration = await this.userNeedsMigration(userId, organizations);
+        distinctUntilChanged(),
+        switchMap(async ([userId, organizations, usesKeyConnector]) => {
+          const loggedInUsingSso = await this.tokenService.getIsExternal(userId);
+          const requiredByOrganization = this.findManagingOrganization(organizations) != null;
+          const userIsNotUsingKeyConnector = !usesKeyConnector;
+
+          const needsMigration =
+            loggedInUsingSso && requiredByOrganization && userIsNotUsingKeyConnector;
           if (needsMigration) {
             await this.setConvertAccountRequired(true, userId);
+            this.messagingService.send("convertAccountToKeyConnector");
           } else {
             await this.removeConvertAccountRequired(userId);
           }
-          return needsMigration;
         }),
       )
-      .subscribe((needsMigration) => {
-        if (needsMigration) {
-          this.messagingService.send("convertAccountToKeyConnector");
-        }
-      });
+      .subscribe();
   }
 
   async setUsesKeyConnector(usesKeyConnector: boolean, userId: UserId) {
@@ -114,14 +121,6 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
     return (
       (await firstValueFrom(this.stateProvider.getUserState$(USES_KEY_CONNECTOR, userId))) ?? false
     );
-  }
-
-  async userNeedsMigration(userId: UserId, organizations: Organization[]): Promise<boolean> {
-    const loggedInUsingSso = await this.tokenService.getIsExternal(userId);
-    const requiredByOrganization = this.findManagingOrganization(organizations) != null;
-    const userIsNotUsingKeyConnector = !(await this.getUsesKeyConnector(userId));
-
-    return loggedInUsingSso && requiredByOrganization && userIsNotUsingKeyConnector;
   }
 
   async migrateUser(userId: UserId) {
@@ -139,6 +138,9 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
     }
 
     await this.apiService.postConvertToKeyConnector();
+
+    await this.setUsesKeyConnector(true, userId);
+    await this.removeConvertAccountRequired(userId);
   }
 
   // TODO: UserKey should be renamed to MasterKey and typed accordingly
@@ -210,16 +212,16 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
     await this.apiService.postSetKeyConnectorKey(setPasswordRequest);
   }
 
-  async setConvertAccountRequired(status: boolean | null, userId: UserId) {
-    await this.stateProvider.setUserState(CONVERT_ACCOUNT_TO_KEY_CONNECTOR, status, userId);
-  }
-
   getConvertAccountRequired(): Promise<boolean> {
     return firstValueFrom(this.convertAccountToKeyConnectorState.state$);
   }
 
   async removeConvertAccountRequired(userId: UserId) {
     await this.setConvertAccountRequired(null, userId);
+  }
+
+  private async setConvertAccountRequired(status: boolean | null, userId: UserId) {
+    await this.stateProvider.setUserState(CONVERT_ACCOUNT_TO_KEY_CONNECTOR, status, userId);
   }
 
   private handleKeyConnectorError(e: any) {

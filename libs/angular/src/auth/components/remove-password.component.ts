@@ -61,7 +61,7 @@ export class RemovePasswordComponent implements OnInit {
     return this.continuing || this.leaving;
   }
 
-  async convert() {
+  convert = async () => {
     this.continuing = true;
 
     try {
@@ -71,7 +71,6 @@ export class RemovePasswordComponent implements OnInit {
         variant: "success",
         message: this.i18nService.t("removedMasterPassword"),
       });
-      await this.keyConnectorService.removeConvertAccountRequired(this.activeUserId);
 
       await this.router.navigate([""]);
     } catch (e) {
@@ -79,9 +78,9 @@ export class RemovePasswordComponent implements OnInit {
 
       this.handleActionError(e);
     }
-  }
+  };
 
-  async leave() {
+  leave = async () => {
     const confirmed = await this.dialogService.openSimpleDialog({
       title: this.organization.name,
       content: { key: "leaveOrganizationConfirmation" },
@@ -95,12 +94,12 @@ export class RemovePasswordComponent implements OnInit {
     this.leaving = true;
     try {
       await this.organizationApiService.leave(this.organization.id);
+      await this.keyConnectorService.removeConvertAccountRequired(this.activeUserId);
 
       this.toastService.showToast({
         variant: "success",
         message: this.i18nService.t("leftOrganization"),
       });
-      await this.keyConnectorService.removeConvertAccountRequired(this.activeUserId);
 
       await this.router.navigate([""]);
     } catch (e) {
@@ -108,7 +107,7 @@ export class RemovePasswordComponent implements OnInit {
 
       this.handleActionError(e);
     }
-  }
+  };
 
   handleActionError(e: unknown) {
     let message = "";

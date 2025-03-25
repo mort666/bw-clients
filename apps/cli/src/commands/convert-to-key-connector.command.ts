@@ -67,9 +67,6 @@ export class ConvertToKeyConnectorCommand {
         throw e;
       }
 
-      await this.keyConnectorService.removeConvertAccountRequired(this.userId);
-      await this.keyConnectorService.setUsesKeyConnector(true, this.userId);
-
       // Update environment URL - required for api key login
       const env = await firstValueFrom(this.environmentService.environment$);
       const urls = env.getUrls();

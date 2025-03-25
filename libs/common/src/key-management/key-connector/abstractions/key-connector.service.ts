@@ -11,8 +11,6 @@ export abstract class KeyConnectorService {
 
   abstract migrateUser(userId: UserId): Promise<void>;
 
-  abstract userNeedsMigration(userId: UserId, organizations: Organization[]): Promise<boolean>;
-
   abstract convertNewSsoUserToKeyConnector(
     tokenResponse: IdentityTokenResponse,
     orgId: string,
@@ -20,8 +18,6 @@ export abstract class KeyConnectorService {
   ): Promise<void>;
 
   abstract setUsesKeyConnector(enabled: boolean, userId: UserId): Promise<void>;
-
-  abstract setConvertAccountRequired(status: boolean | null, userId: UserId): Promise<void>;
 
   abstract getConvertAccountRequired(): Promise<boolean>;
 
