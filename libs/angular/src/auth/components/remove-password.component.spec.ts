@@ -121,7 +121,6 @@ describe("RemovePasswordComponent", () => {
 
       expect(component.continuing).toBe(true);
       expect(mockKeyConnectorService.migrateUser).toHaveBeenCalledWith(userId);
-      expect(mockKeyConnectorService.removeConvertAccountRequired).toHaveBeenCalledWith(userId);
       expect(mockToastService.showToast).toHaveBeenCalledWith({
         variant: "success",
         message: "removed master password",
@@ -143,7 +142,6 @@ describe("RemovePasswordComponent", () => {
         title: "error occurred",
         message: errorMessage,
       });
-      expect(mockKeyConnectorService.removeConvertAccountRequired).not.toHaveBeenCalled();
       expect(mockRouter.navigate).not.toHaveBeenCalled();
     });
 
@@ -168,7 +166,6 @@ describe("RemovePasswordComponent", () => {
         title: "error occurred",
         message: errorMessage,
       });
-      expect(mockKeyConnectorService.removeConvertAccountRequired).not.toHaveBeenCalled();
       expect(mockRouter.navigate).not.toHaveBeenCalled();
     });
   });
@@ -192,7 +189,6 @@ describe("RemovePasswordComponent", () => {
         variant: "success",
         message: "left organization",
       });
-      expect(mockKeyConnectorService.removeConvertAccountRequired).toHaveBeenCalledWith(userId);
       expect(mockRouter.navigate).toHaveBeenCalledWith([""]);
     });
 
@@ -211,7 +207,6 @@ describe("RemovePasswordComponent", () => {
         title: "error occurred",
         message: errorMessage,
       });
-      expect(mockKeyConnectorService.removeConvertAccountRequired).not.toHaveBeenCalled();
       expect(mockRouter.navigate).not.toHaveBeenCalled();
     });
 
@@ -237,7 +232,6 @@ describe("RemovePasswordComponent", () => {
         title: "error occurred",
         message: errorMessage,
       });
-      expect(mockKeyConnectorService.removeConvertAccountRequired).not.toHaveBeenCalled();
       expect(mockRouter.navigate).not.toHaveBeenCalled();
     });
 
@@ -248,7 +242,6 @@ describe("RemovePasswordComponent", () => {
 
       expect(component.leaving).toBe(false);
       expect(mockOrganizationApiService.leave).not.toHaveBeenCalled();
-      expect(mockKeyConnectorService.removeConvertAccountRequired).not.toHaveBeenCalled();
       expect(mockRouter.navigate).not.toHaveBeenCalled();
     });
   });
