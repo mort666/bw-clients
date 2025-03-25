@@ -1,8 +1,10 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { firstValueFrom } from "rxjs";
+import { combineLatest, filter, firstValueFrom, of, switchMap } from "rxjs";
 
 import { LogoutReason } from "@bitwarden/auth/common";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import {
   Argon2KdfConfig,
   KdfConfig,
@@ -58,6 +60,7 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
   private convertAccountToKeyConnectorState: ActiveUserState<boolean>;
 
   constructor(
+    accountService: AccountService,
     private masterPasswordService: InternalMasterPasswordServiceAbstraction,
     private keyService: KeyService,
     private apiService: ApiService,
@@ -67,11 +70,40 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
     private keyGenerationService: KeyGenerationService,
     private logoutCallback: (logoutReason: LogoutReason, userId?: string) => Promise<void>,
     private stateProvider: StateProvider,
+    private messagingService: MessagingService,
   ) {
     this.usesKeyConnectorState = this.stateProvider.getActive(USES_KEY_CONNECTOR);
     this.convertAccountToKeyConnectorState = this.stateProvider.getActive(
       CONVERT_ACCOUNT_TO_KEY_CONNECTOR,
     );
+
+    accountService.activeAccount$
+      .pipe(
+        filter((account) => account != null),
+        switchMap((account) =>
+          combineLatest([
+            of(account.id),
+            this.organizationService
+              .organizations$(account.id)
+              .pipe(filter((organizations) => organizations != null)),
+            tokenService.hasAccessToken$(account.id).pipe(filter((hasToken) => hasToken)),
+          ]),
+        ),
+        switchMap(async ([userId, organizations]) => {
+          const needsMigration = await this.userNeedsMigration(userId, organizations);
+          if (needsMigration) {
+            await this.setConvertAccountRequired(true, userId);
+          } else {
+            await this.removeConvertAccountRequired(userId);
+          }
+          return needsMigration;
+        }),
+      )
+      .subscribe((needsMigration) => {
+        if (needsMigration) {
+          this.messagingService.send("convertAccountToKeyConnector");
+        }
+      });
   }
 
   async setUsesKeyConnector(usesKeyConnector: boolean, userId: UserId) {
@@ -84,7 +116,7 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
     );
   }
 
-  async userNeedsMigration(userId: UserId, organizations: Organization[]) {
+  async userNeedsMigration(userId: UserId, organizations: Organization[]): Promise<boolean> {
     const loggedInUsingSso = await this.tokenService.getIsExternal(userId);
     const requiredByOrganization = this.findManagingOrganization(organizations) != null;
     const userIsNotUsingKeyConnector = !(await this.getUsesKeyConnector(userId));

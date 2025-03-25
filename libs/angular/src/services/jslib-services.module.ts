@@ -977,6 +977,7 @@ const safeProviders: SafeProvider[] = [
     provide: KeyConnectorServiceAbstraction,
     useClass: KeyConnectorService,
     deps: [
+      AccountServiceAbstraction,
       InternalMasterPasswordServiceAbstraction,
       KeyService,
       ApiServiceAbstraction,
@@ -986,6 +987,7 @@ const safeProviders: SafeProvider[] = [
       KeyGenerationServiceAbstraction,
       LOGOUT_CALLBACK,
       StateProvider,
+      MessagingServiceAbstraction,
     ],
   }),
   safeProvider({

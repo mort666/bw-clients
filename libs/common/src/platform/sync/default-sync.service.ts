@@ -7,7 +7,6 @@ import {
   CollectionData,
   CollectionDetailsResponse,
 } from "@bitwarden/admin-console/common";
-import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { KeyService } from "@bitwarden/key-management";
 
 // FIXME: remove `src` and fix import
@@ -214,14 +213,7 @@ export class DefaultSyncService extends CoreSyncService {
 
     await this.providerService.save(providers, response.id);
 
-    const organizations = await this.syncProfileOrganizations(response, response.id);
-
-    if (await this.keyConnectorService.userNeedsMigration(response.id, organizations)) {
-      await this.keyConnectorService.setConvertAccountRequired(true, response.id);
-      this.messageSender.send("convertAccountToKeyConnector");
-    } else {
-      await this.keyConnectorService.removeConvertAccountRequired(response.id);
-    }
+    await this.syncProfileOrganizations(response, response.id);
   }
 
   private async setForceSetPasswordReasonIfNeeded(profileResponse: ProfileResponse) {
@@ -292,10 +284,6 @@ export class DefaultSyncService extends CoreSyncService {
     });
 
     await this.organizationService.replace(organizations, userId);
-
-    return Object.values(organizations).map(
-      (organizationData) => new Organization(organizationData),
-    );
   }
 
   private async syncFolders(response: FolderResponse[], userId: UserId) {

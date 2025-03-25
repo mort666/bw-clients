@@ -3,6 +3,7 @@ import { firstValueFrom, of } from "rxjs";
 
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { OrganizationUserType } from "@bitwarden/common/admin-console/enums";
+import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { KeyService } from "@bitwarden/key-management";
 
 import { FakeAccountService, FakeStateProvider, mockAccountServiceWith } from "../../../../spec";
@@ -36,6 +37,7 @@ describe("KeyConnectorService", () => {
   const logService = mock<LogService>();
   const organizationService = mock<OrganizationService>();
   const keyGenerationService = mock<KeyGenerationService>();
+  const messagingService = mock<MessagingService>();
 
   let stateProvider: FakeStateProvider;
 
@@ -57,6 +59,7 @@ describe("KeyConnectorService", () => {
     stateProvider = new FakeStateProvider(accountService);
 
     keyConnectorService = new KeyConnectorService(
+      accountService,
       masterPasswordService,
       keyService,
       apiService,
@@ -66,6 +69,7 @@ describe("KeyConnectorService", () => {
       keyGenerationService,
       async () => {},
       stateProvider,
+      messagingService,
     );
   });
 
