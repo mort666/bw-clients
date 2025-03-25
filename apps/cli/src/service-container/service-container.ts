@@ -7,19 +7,19 @@ import * as jsdom from "jsdom";
 import { firstValueFrom } from "rxjs";
 
 import {
-  OrganizationUserApiService,
-  DefaultOrganizationUserApiService,
   DefaultCollectionService,
+  DefaultOrganizationUserApiService,
+  OrganizationUserApiService,
 } from "@bitwarden/admin-console/common";
 import {
-  InternalUserDecryptionOptionsServiceAbstraction,
   AuthRequestService,
+  InternalUserDecryptionOptionsServiceAbstraction,
   LoginStrategyService,
   LoginStrategyServiceAbstraction,
   PinService,
   PinServiceAbstraction,
-  UserDecryptionOptionsService,
   SsoUrlService,
+  UserDecryptionOptionsService,
 } from "@bitwarden/auth/common";
 import { EventCollectionService as EventCollectionServiceAbstraction } from "@bitwarden/common/abstractions/event/event-collection.service";
 import { EventUploadService as EventUploadServiceAbstraction } from "@bitwarden/common/abstractions/event/event-upload.service";
@@ -88,8 +88,8 @@ import { MessageSender } from "@bitwarden/common/platform/messaging";
 import { Account } from "@bitwarden/common/platform/models/domain/account";
 import { GlobalState } from "@bitwarden/common/platform/models/domain/global-state";
 import {
-  TaskSchedulerService,
   DefaultTaskSchedulerService,
+  TaskSchedulerService,
 } from "@bitwarden/common/platform/scheduling";
 import { AppIdService } from "@bitwarden/common/platform/services/app-id.service";
 import { ConfigApiService } from "@bitwarden/common/platform/services/config/config-api.service";
@@ -139,12 +139,14 @@ import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.s
 import { SendStateProvider } from "@bitwarden/common/tools/send/services/send-state.provider";
 import { SendService } from "@bitwarden/common/tools/send/services/send.service";
 import { UserId } from "@bitwarden/common/types/guid";
+import { CipherEncryptionService } from "@bitwarden/common/vault/abstractions/cipher-encryption.service";
 import { InternalFolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import {
   CipherAuthorizationService,
   DefaultCipherAuthorizationService,
 } from "@bitwarden/common/vault/services/cipher-authorization.service";
 import { CipherService } from "@bitwarden/common/vault/services/cipher.service";
+import { DefaultCipherEncryptionService } from "@bitwarden/common/vault/services/default-cipher-encryption.service";
 import { CipherFileUploadService } from "@bitwarden/common/vault/services/file-upload/cipher-file-upload.service";
 import { FolderApiService } from "@bitwarden/common/vault/services/folder/folder-api.service";
 import { FolderService } from "@bitwarden/common/vault/services/folder/folder.service";
@@ -160,11 +162,11 @@ import {
   ImportServiceAbstraction,
 } from "@bitwarden/importer-core";
 import {
-  DefaultKdfConfigService,
-  KdfConfigService,
-  DefaultKeyService as KeyService,
   BiometricStateService,
   DefaultBiometricStateService,
+  DefaultKdfConfigService,
+  DefaultKeyService as KeyService,
+  KdfConfigService,
 } from "@bitwarden/key-management";
 import { NodeCryptoFunctionService } from "@bitwarden/node/services/node-crypto-function.service";
 import {
@@ -211,6 +213,7 @@ export class ServiceContainer {
   appIdService: AppIdService;
   apiService: NodeApiService;
   environmentService: EnvironmentService;
+  cipherEncryptionService: CipherEncryptionService;
   cipherService: CipherService;
   folderService: InternalFolderService;
   organizationUserApiService: OrganizationUserApiService;
@@ -674,6 +677,13 @@ export class ServiceContainer {
       this.policyService,
     );
 
+    this.cipherEncryptionService = new DefaultCipherEncryptionService(
+      this.encryptService,
+      new FallbackBulkEncryptService(this.encryptService),
+      this.keyService,
+      this.configService,
+    );
+
     this.cipherService = new CipherService(
       this.keyService,
       this.domainSettingsService,
@@ -688,6 +698,7 @@ export class ServiceContainer {
       this.configService,
       this.stateProvider,
       this.accountService,
+      this.cipherEncryptionService,
     );
 
     this.folderService = new FolderService(

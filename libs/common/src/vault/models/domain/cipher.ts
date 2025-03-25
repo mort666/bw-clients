@@ -54,8 +54,9 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
   collectionIds: string[];
   creationDate: Date;
   deletedDate: Date;
+  archivedDate: Date;
   reprompt: CipherRepromptType;
-  key: EncString;
+  key: EncString | null;
 
   constructor(obj?: CipherData, localData: LocalData = null) {
     super();

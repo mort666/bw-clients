@@ -12,10 +12,8 @@ import { CipherType } from "../enums/cipher-type";
 import { CipherData } from "../models/data/cipher.data";
 import { LocalData } from "../models/data/local.data";
 import { Cipher } from "../models/domain/cipher";
-import { Field } from "../models/domain/field";
 import { CipherWithIdRequest } from "../models/request/cipher-with-id.request";
 import { CipherView } from "../models/view/cipher.view";
-import { FieldView } from "../models/view/field.view";
 import { AddEditCipherInfo } from "../types/add-edit-cipher-info";
 
 export abstract class CipherService implements UserKeyRotationDataProvider<CipherWithIdRequest> {
@@ -40,16 +38,9 @@ export abstract class CipherService implements UserKeyRotationDataProvider<Ciphe
     keyForCipherKeyDecryption?: SymmetricCryptoKey,
     originalCipher?: Cipher,
   ): Promise<Cipher>;
-  abstract encryptFields(fieldsModel: FieldView[], key: SymmetricCryptoKey): Promise<Field[]>;
-  abstract encryptField(fieldModel: FieldView, key: SymmetricCryptoKey): Promise<Field>;
   abstract get(id: string, userId: UserId): Promise<Cipher>;
   abstract getAll(userId: UserId): Promise<Cipher[]>;
   abstract getAllDecrypted(userId: UserId): Promise<CipherView[]>;
-  abstract getAllDecryptedForGrouping(
-    groupingId: string,
-    userId: UserId,
-    folder?: boolean,
-  ): Promise<CipherView[]>;
   abstract getAllDecryptedForUrl(
     url: string,
     userId: UserId,
