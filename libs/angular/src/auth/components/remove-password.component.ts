@@ -94,7 +94,6 @@ export class RemovePasswordComponent implements OnInit {
     this.leaving = true;
     try {
       await this.organizationApiService.leave(this.organization.id);
-      await this.keyConnectorService.removeConvertAccountRequired(this.activeUserId);
 
       this.toastService.showToast({
         variant: "success",

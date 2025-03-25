@@ -1,3 +1,5 @@
+import { Observable } from "rxjs";
+
 import { Organization } from "../../../admin-console/models/domain/organization";
 import { IdentityTokenResponse } from "../../../auth/models/response/identity-token.response";
 import { UserId } from "../../../types/guid";
@@ -19,7 +21,5 @@ export abstract class KeyConnectorService {
 
   abstract setUsesKeyConnector(enabled: boolean, userId: UserId): Promise<void>;
 
-  abstract getConvertAccountRequired(): Promise<boolean>;
-
-  abstract removeConvertAccountRequired(userId: UserId): Promise<void>;
+  abstract convertAccountRequired$: Observable<boolean>;
 }

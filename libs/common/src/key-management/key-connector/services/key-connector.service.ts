@@ -1,6 +1,14 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { combineLatest, distinctUntilChanged, filter, firstValueFrom, of, switchMap } from "rxjs";
+import {
+  combineLatest,
+  distinctUntilChanged,
+  filter,
+  firstValueFrom,
+  Observable,
+  of,
+  switchMap,
+} from "rxjs";
 
 import { LogoutReason } from "@bitwarden/auth/common";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
@@ -24,12 +32,7 @@ import { KeyGenerationService } from "../../../platform/abstractions/key-generat
 import { LogService } from "../../../platform/abstractions/log.service";
 import { Utils } from "../../../platform/misc/utils";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
-import {
-  ActiveUserState,
-  KEY_CONNECTOR_DISK,
-  StateProvider,
-  UserKeyDefinition,
-} from "../../../platform/state";
+import { KEY_CONNECTOR_DISK, StateProvider, UserKeyDefinition } from "../../../platform/state";
 import { UserId } from "../../../types/guid";
 import { MasterKey } from "../../../types/key";
 import { InternalMasterPasswordServiceAbstraction } from "../../master-password/abstractions/master-password.service.abstraction";
@@ -47,19 +50,8 @@ export const USES_KEY_CONNECTOR = new UserKeyDefinition<boolean | null>(
   },
 );
 
-export const CONVERT_ACCOUNT_TO_KEY_CONNECTOR = new UserKeyDefinition<boolean | null>(
-  KEY_CONNECTOR_DISK,
-  "convertAccountToKeyConnector",
-  {
-    deserializer: (convertAccountToKeyConnector) => convertAccountToKeyConnector,
-    clearOn: ["logout"],
-    cleanupDelayMs: 0,
-  },
-);
-
 export class KeyConnectorService implements KeyConnectorServiceAbstraction {
-  private usesKeyConnectorState: ActiveUserState<boolean>;
-  private convertAccountToKeyConnectorState: ActiveUserState<boolean>;
+  readonly convertAccountRequired$: Observable<boolean>;
 
   constructor(
     accountService: AccountService,
@@ -74,43 +66,34 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
     private stateProvider: StateProvider,
     private messagingService: MessagingService,
   ) {
-    this.usesKeyConnectorState = this.stateProvider.getActive(USES_KEY_CONNECTOR);
-    this.convertAccountToKeyConnectorState = this.stateProvider.getActive(
-      CONVERT_ACCOUNT_TO_KEY_CONNECTOR,
+    this.convertAccountRequired$ = accountService.activeAccount$.pipe(
+      filter((account) => account != null),
+      switchMap((account) =>
+        combineLatest([
+          of(account.id),
+          this.organizationService
+            .organizations$(account.id)
+            .pipe(filter((organizations) => organizations != null)),
+          this.stateProvider
+            .getUserState$(USES_KEY_CONNECTOR, account.id)
+            .pipe(filter((usesKeyConnector) => usesKeyConnector != null)),
+          tokenService.hasAccessToken$(account.id).pipe(filter((hasToken) => hasToken)),
+        ]),
+      ),
+      distinctUntilChanged(),
+      switchMap(async ([userId, organizations, usesKeyConnector]) => {
+        const loggedInUsingSso = await this.tokenService.getIsExternal(userId);
+        const requiredByOrganization = this.findManagingOrganization(organizations) != null;
+        const userIsNotUsingKeyConnector = !usesKeyConnector;
+
+        const needsMigration =
+          loggedInUsingSso && requiredByOrganization && userIsNotUsingKeyConnector;
+        if (needsMigration) {
+          this.messagingService.send("convertAccountToKeyConnector");
+        }
+        return needsMigration;
+      }),
     );
-
-    accountService.activeAccount$
-      .pipe(
-        filter((account) => account != null),
-        switchMap((account) =>
-          combineLatest([
-            of(account.id),
-            this.organizationService
-              .organizations$(account.id)
-              .pipe(filter((organizations) => organizations != null)),
-            this.stateProvider
-              .getUserState$(USES_KEY_CONNECTOR, account.id)
-              .pipe(filter((usesKeyConnector) => usesKeyConnector != null)),
-            tokenService.hasAccessToken$(account.id).pipe(filter((hasToken) => hasToken)),
-          ]),
-        ),
-        distinctUntilChanged(),
-        switchMap(async ([userId, organizations, usesKeyConnector]) => {
-          const loggedInUsingSso = await this.tokenService.getIsExternal(userId);
-          const requiredByOrganization = this.findManagingOrganization(organizations) != null;
-          const userIsNotUsingKeyConnector = !usesKeyConnector;
-
-          const needsMigration =
-            loggedInUsingSso && requiredByOrganization && userIsNotUsingKeyConnector;
-          if (needsMigration) {
-            await this.setConvertAccountRequired(true, userId);
-            this.messagingService.send("convertAccountToKeyConnector");
-          } else {
-            await this.removeConvertAccountRequired(userId);
-          }
-        }),
-      )
-      .subscribe();
   }
 
   async setUsesKeyConnector(usesKeyConnector: boolean, userId: UserId) {
@@ -140,7 +123,6 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
     await this.apiService.postConvertToKeyConnector();
 
     await this.setUsesKeyConnector(true, userId);
-    await this.removeConvertAccountRequired(userId);
   }
 
   // TODO: UserKey should be renamed to MasterKey and typed accordingly
@@ -210,18 +192,6 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
       keys,
     );
     await this.apiService.postSetKeyConnectorKey(setPasswordRequest);
-  }
-
-  getConvertAccountRequired(): Promise<boolean> {
-    return firstValueFrom(this.convertAccountToKeyConnectorState.state$);
-  }
-
-  async removeConvertAccountRequired(userId: UserId) {
-    await this.setConvertAccountRequired(null, userId);
-  }
-
-  private async setConvertAccountRequired(status: boolean | null, userId: UserId) {
-    await this.stateProvider.setUserState(CONVERT_ACCOUNT_TO_KEY_CONNECTOR, status, userId);
   }
 
   private handleKeyConnectorError(e: any) {
