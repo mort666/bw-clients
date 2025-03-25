@@ -1353,7 +1353,7 @@ const safeProviders: SafeProvider[] = [
     useClass: DefaultSetPasswordJitService,
     deps: [
       ApiServiceAbstraction,
-      MasterPasswordApiService,
+      MasterPasswordApiServiceAbstraction,
       KeyService,
       EncryptService,
       I18nServiceAbstraction,
