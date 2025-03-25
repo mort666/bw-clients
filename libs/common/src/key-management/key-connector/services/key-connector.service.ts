@@ -1,18 +1,9 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import {
-  combineLatest,
-  distinctUntilChanged,
-  filter,
-  firstValueFrom,
-  Observable,
-  of,
-  switchMap,
-} from "rxjs";
+import { combineLatest, filter, firstValueFrom, Observable, of, switchMap } from "rxjs";
 
 import { LogoutReason } from "@bitwarden/auth/common";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
-import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import {
   Argon2KdfConfig,
   KdfConfig,
@@ -64,7 +55,6 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
     private keyGenerationService: KeyGenerationService,
     private logoutCallback: (logoutReason: LogoutReason, userId?: string) => Promise<void>,
     private stateProvider: StateProvider,
-    private messagingService: MessagingService,
   ) {
     this.convertAccountRequired$ = accountService.activeAccount$.pipe(
       filter((account) => account != null),
@@ -80,18 +70,12 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
           tokenService.hasAccessToken$(account.id).pipe(filter((hasToken) => hasToken)),
         ]),
       ),
-      distinctUntilChanged(),
       switchMap(async ([userId, organizations, usesKeyConnector]) => {
         const loggedInUsingSso = await this.tokenService.getIsExternal(userId);
         const requiredByOrganization = this.findManagingOrganization(organizations) != null;
         const userIsNotUsingKeyConnector = !usesKeyConnector;
 
-        const needsMigration =
-          loggedInUsingSso && requiredByOrganization && userIsNotUsingKeyConnector;
-        if (needsMigration) {
-          this.messagingService.send("convertAccountToKeyConnector");
-        }
-        return needsMigration;
+        return loggedInUsingSso && requiredByOrganization && userIsNotUsingKeyConnector;
       }),
     );
   }

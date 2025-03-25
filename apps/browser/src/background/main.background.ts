@@ -743,7 +743,6 @@ export default class MainBackground {
       this.keyGenerationService,
       logoutCallback,
       this.stateProvider,
-      this.messagingService,
     );
 
     const sdkClientFactory = flagEnabled("sdk")

@@ -214,6 +214,10 @@ export class DefaultSyncService extends CoreSyncService {
     await this.providerService.save(providers, response.id);
 
     await this.syncProfileOrganizations(response, response.id);
+
+    if (await firstValueFrom(this.keyConnectorService.convertAccountRequired$)) {
+      this.messageSender.send("convertAccountToKeyConnector");
+    }
   }
 
   private async setForceSetPasswordReasonIfNeeded(profileResponse: ProfileResponse) {

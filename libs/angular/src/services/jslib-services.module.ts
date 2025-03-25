@@ -987,7 +987,6 @@ const safeProviders: SafeProvider[] = [
       KeyGenerationServiceAbstraction,
       LOGOUT_CALLBACK,
       StateProvider,
-      MessagingServiceAbstraction,
     ],
   }),
   safeProvider({

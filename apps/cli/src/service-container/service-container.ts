@@ -573,7 +573,6 @@ export class ServiceContainer {
       this.keyGenerationService,
       logoutCallback,
       this.stateProvider,
-      this.messagingService,
     );
 
     this.twoFactorService = new TwoFactorService(
