@@ -51,10 +51,10 @@ import {
 
 import { AccessibilityCookieComponent } from "../auth/accessibility-cookie.component";
 import { maxAccountsGuardFn } from "../auth/guards/max-accounts.guard";
-import { RemovePasswordComponent } from "../auth/remove-password.component";
 import { SetPasswordComponent } from "../auth/set-password.component";
 import { TwoFactorComponentV1 } from "../auth/two-factor-v1.component";
 import { UpdateTempPasswordComponent } from "../auth/update-temp-password.component";
+import { RemovePasswordComponent } from "../key-management/key-connector/remove-password.component";
 import { VaultComponent } from "../vault/app/vault/vault.component";
 
 import { Fido2PlaceholderComponent } from "./components/fido2placeholder.component";
