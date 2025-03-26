@@ -5,6 +5,7 @@ import { PolicyService } from "@bitwarden/common/admin-console/abstractions/poli
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { Account } from "@bitwarden/common/auth/abstractions/account.service";
+import { FakeAccountService, FakeStateProvider } from "@bitwarden/common/spec";
 import { LegacyEncryptorProvider } from "@bitwarden/common/tools/cryptography/legacy-encryptor-provider";
 import { UserEncryptor } from "@bitwarden/common/tools/cryptography/user-encryptor.abstraction";
 import {
@@ -23,7 +24,6 @@ import { UserStateSubjectDependencyProvider } from "@bitwarden/common/tools/stat
 import { deepFreeze } from "@bitwarden/common/tools/util";
 import { UserId } from "@bitwarden/common/types/guid";
 
-import { FakeAccountService, FakeStateProvider } from "../../../../../common/spec";
 import { Algorithm, AlgorithmsByType, CredentialAlgorithm, Type, Types } from "../metadata";
 import catchall from "../metadata/email/catchall";
 import plusAddress from "../metadata/email/plus-address";

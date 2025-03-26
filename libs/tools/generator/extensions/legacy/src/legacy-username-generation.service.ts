@@ -14,13 +14,13 @@ import {
   GeneratorService,
   CatchallGenerationOptions,
   EffUsernameGenerationOptions,
-  Forwarders,
   SubaddressGenerationOptions,
   UsernameGeneratorType,
   ForwarderId,
 } from "@bitwarden/generator-core";
 import { GeneratorNavigationService, GeneratorNavigation } from "@bitwarden/generator-navigation";
 
+import { Forwarders } from "./forwarders";
 import { UsernameGeneratorOptions } from "./username-generation-options";
 import { UsernameGenerationServiceAbstraction } from "./username-generation.service.abstraction";
 

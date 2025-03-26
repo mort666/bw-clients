@@ -6,6 +6,7 @@ import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { GENERATOR_DISK, UserKeyDefinition } from "@bitwarden/common/platform/state";
+import { FakeStateProvider, FakeAccountService, awaitAsync } from "@bitwarden/common/spec";
 import { LegacyEncryptorProvider } from "@bitwarden/common/tools/cryptography/legacy-encryptor-provider";
 import { UserEncryptor } from "@bitwarden/common/tools/cryptography/user-encryptor.abstraction";
 import { disabledSemanticLoggerProvider } from "@bitwarden/common/tools/log";
@@ -15,7 +16,6 @@ import { UserStateSubjectDependencyProvider } from "@bitwarden/common/tools/stat
 import { StateConstraints } from "@bitwarden/common/tools/types";
 import { OrganizationId, PolicyId, UserId } from "@bitwarden/common/types/guid";
 
-import { FakeStateProvider, FakeAccountService, awaitAsync } from "../../../../../common/spec";
 import { CoreProfileMetadata, ProfileContext } from "../metadata/profile-metadata";
 import { GeneratorConstraints } from "../types";
 
