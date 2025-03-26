@@ -37,9 +37,9 @@
 <bit-table-scroll *ngIf="!(isLoading$ | async)" [dataSource]="dataSource" [rowSize]="53">
   <ng-container header>
     <th bitCell bitSortable="name" default>{{ "members" | i18n }}</th>
-    <th bitCell bitSortable="groupsCount">{{ "groups" | i18n }}</th>
-    <th bitCell bitSortable="collectionsCount">{{ "collections" | i18n }}</th>
-    <th bitCell bitSortable="itemsCount">{{ "items" | i18n }}</th>
+    <th bitCell bitSortable="groupsCount" class="tw-w-[278px]">{{ "groups" | i18n }}</th>
+    <th bitCell bitSortable="collectionsCount" class="tw-w-[278px]">{{ "collections" | i18n }}</th>
+    <th bitCell bitSortable="itemsCount" class="tw-w-[278px]">{{ "items" | i18n }}</th>
   </ng-container>
   <ng-template bitRowDef let-row>
     <td bitCell>
@@ -56,8 +56,8 @@
         </div>
       </div>
     </td>
-    <td bitCell class="tw-text-muted">{{ row.groupsCount }}</td>
-    <td bitCell class="tw-text-muted">{{ row.collectionsCount }}</td>
-    <td bitCell class="tw-text-muted">{{ row.itemsCount }}</td>
+    <td bitCell class="tw-text-muted tw-w-[278px]">{{ row.groupsCount }}</td>
+    <td bitCell class="tw-text-muted tw-w-[278px]">{{ row.collectionsCount }}</td>
+    <td bitCell class="tw-text-muted tw-w-[278px]">{{ row.itemsCount }}</td>
   </ng-template>
 </bit-table-scroll>
