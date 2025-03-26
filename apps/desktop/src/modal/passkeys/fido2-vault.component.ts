@@ -1,5 +1,6 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit, OnDestroy } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { RouterModule, Router } from "@angular/router";
 import { firstValueFrom, map, BehaviorSubject, Observable } from "rxjs";
 
@@ -70,8 +71,7 @@ export class Fido2VaultComponent implements OnInit, OnDestroy {
     this.session = this.fido2UserInterfaceService.getCurrentSession();
     this.cipherIds$ = this.session?.availableCipherIds$;
 
-    // eslint-disable-next-line rxjs-angular/prefer-takeuntil
-    this.cipherIds$.subscribe((cipherIds) => {
+    this.cipherIds$.pipe(takeUntilDestroyed()).subscribe((cipherIds) => {
       this.cipherService
         .getAllDecryptedForIds(activeUserId, cipherIds || [])
         .then((ciphers) => {
