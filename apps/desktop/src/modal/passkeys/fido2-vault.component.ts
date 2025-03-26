@@ -89,11 +89,14 @@ export class Fido2VaultComponent implements OnInit, OnDestroy {
   }
 
   async chooseCipher(cipher: CipherView) {
-    const userReprompted =
+    if (
       cipher.reprompt !== CipherRepromptType.None &&
-      !(await this.passwordRepromptService.showPasswordPrompt());
-
-    this.session?.confirmChosenCipher(cipher.id, userReprompted);
+      !(await this.passwordRepromptService.showPasswordPrompt())
+    ) {
+      this.session?.confirmChosenCipher(cipher.id, false);
+    } else {
+      this.session?.confirmChosenCipher(cipher.id, true);
+    }
 
     await this.router.navigate(["/"]);
     await this.desktopSettingsService.setModalMode(false);
