@@ -7,6 +7,7 @@ import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { BitwardenShield } from "@bitwarden/auth/angular";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
@@ -21,14 +22,12 @@ import {
   SectionHeaderComponent,
   BitIconButtonComponent,
 } from "@bitwarden/components";
-// import { SearchComponent } from "@bitwarden/components/src/search/search.component";
 
 import {
   DesktopFido2UserInterfaceService,
   DesktopFido2UserInterfaceSession,
 } from "../../../autofill/services/desktop-fido2-user-interface.service";
 import { DesktopSettingsService } from "../../../platform/services/desktop-settings.service";
-// import { AnchorLinkDirective } from "../../../../../libs/components/src/link/link.directive";
 
 @Component({
   standalone: true,
@@ -45,7 +44,6 @@ import { DesktopSettingsService } from "../../../platform/services/desktop-setti
     SectionComponent,
     ItemModule,
     BadgeModule,
-    // SearchComponent,
   ],
   templateUrl: "fido2-create.component.html",
 })
@@ -62,6 +60,7 @@ export class Fido2CreateComponent implements OnInit {
     private readonly cipherService: CipherService,
     private readonly dialogService: DialogService,
     private readonly domainSettingsService: DomainSettingsService,
+    private readonly logService: LogService,
     private readonly router: Router,
   ) {}
 
@@ -90,9 +89,7 @@ export class Fido2CreateComponent implements OnInit {
         });
         this.ciphersSubject.next(relevantCiphers);
       })
-      .catch(() => {
-        // console.error(err);
-      });
+      .catch((error) => this.logService.error(error));
   }
 
   async addPasskeyToCipher(cipher: CipherView) {

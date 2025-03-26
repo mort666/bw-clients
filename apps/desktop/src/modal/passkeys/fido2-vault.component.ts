@@ -6,6 +6,7 @@ import { firstValueFrom, map, BehaviorSubject, Observable } from "rxjs";
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { BitwardenShield } from "@bitwarden/auth/angular";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
@@ -57,6 +58,7 @@ export class Fido2VaultComponent implements OnInit, OnDestroy {
     private readonly fido2UserInterfaceService: DesktopFido2UserInterfaceService,
     private readonly cipherService: CipherService,
     private readonly accountService: AccountService,
+    private readonly logService: LogService,
     private readonly router: Router,
   ) {}
 
@@ -75,9 +77,7 @@ export class Fido2VaultComponent implements OnInit, OnDestroy {
         .then((ciphers) => {
           this.ciphersSubject.next(ciphers);
         })
-        .catch(() => {
-          // console.error(err);
-        });
+        .catch((error) => this.logService.error(error));
     });
   }
 
