@@ -1,11 +1,13 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit, OnDestroy } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { RouterModule, Router } from "@angular/router";
 import { firstValueFrom, map, BehaviorSubject, Observable } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { BitwardenShield } from "@bitwarden/auth/angular";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherRepromptType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
@@ -59,6 +61,7 @@ export class Fido2VaultComponent implements OnInit, OnDestroy {
     private readonly fido2UserInterfaceService: DesktopFido2UserInterfaceService,
     private readonly cipherService: CipherService,
     private readonly accountService: AccountService,
+    private readonly logService: LogService,
     private readonly passwordRepromptService: PasswordRepromptService,
     private readonly router: Router,
   ) {}
@@ -71,16 +74,13 @@ export class Fido2VaultComponent implements OnInit, OnDestroy {
     this.session = this.fido2UserInterfaceService.getCurrentSession();
     this.cipherIds$ = this.session?.availableCipherIds$;
 
-    // eslint-disable-next-line rxjs-angular/prefer-takeuntil
-    this.cipherIds$.subscribe((cipherIds) => {
+    this.cipherIds$.pipe(takeUntilDestroyed()).subscribe((cipherIds) => {
       this.cipherService
         .getAllDecryptedForIds(activeUserId, cipherIds || [])
         .then((ciphers) => {
           this.ciphersSubject.next(ciphers);
         })
-        .catch(() => {
-          // console.error(err);
-        });
+        .catch((error) => this.logService.error(error));
     });
   }
 

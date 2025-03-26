@@ -160,7 +160,6 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
       this.rpId.pipe(
         filter((id) => id != null),
         take(1),
-        timeout(5000), // 5 seconds timeout
       ),
     );
   }
