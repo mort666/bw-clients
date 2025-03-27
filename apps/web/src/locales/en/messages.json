@@ -6476,14 +6476,17 @@
   "invalidVerificationCode": {
     "message": "Invalid verification code"
   },
-  "convertOrganizationEncryptionDesc": {
-    "message": "$ORGANIZATION$ is using SSO with a self-hosted key server. A master password is no longer required to log in for members of this organization.",
+  "removeMasterPasswordForOrganizationUserKeyConnector": {
+    "message": "$ORGANIZATION$ has updated its member decryption options. You no longer need a password when logging into Bitwarden. Please confirm the domain below with your organization administrator.",
     "placeholders": {
       "organization": {
         "content": "$1",
         "example": "My Org Name"
       }
     }
+  },
+  "keyConnectorDomain": {
+    "message": "Key Connector domain"
   },
   "leaveOrganization": {
     "message": "Leave organization"
