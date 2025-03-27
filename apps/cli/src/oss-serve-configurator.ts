@@ -47,7 +47,6 @@ export class OssServeConfigurator {
   private sendCreateCommand: SendCreateCommand;
   private sendDeleteCommand: SendDeleteCommand;
   private sendEditCommand: SendEditCommand;
-
   private sendGetCommand: SendGetCommand;
   private sendListCommand: SendListCommand;
   private sendRemovePasswordCommand: SendRemovePasswordCommand;

@@ -33,8 +33,8 @@ export class SendReceiveCommand extends DownloadCommand {
     private keyService: KeyService,
     encryptService: EncryptService,
     private cryptoFunctionService: CryptoFunctionService,
-    protected platformUtilsService: PlatformUtilsService,
-    protected environmentService: EnvironmentService,
+    private platformUtilsService: PlatformUtilsService,
+    private environmentService: EnvironmentService,
     private sendApiService: SendApiService,
     apiService: ApiService,
   ) {
@@ -110,12 +110,12 @@ export class SendReceiveCommand extends DownloadCommand {
     }
   }
 
-  protected getIdAndKey(url: URL): [string, string] {
+  private getIdAndKey(url: URL): [string, string] {
     const result = url.hash.slice(1).split("/").slice(-2);
     return [result[0], result[1]];
   }
 
-  protected async getApiUrl(url: URL) {
+  private async getApiUrl(url: URL) {
     const env = await firstValueFrom(this.environmentService.environment$);
     const urls = env.getUrls();
     if (url.origin === "https://send.bitwarden.com") {
