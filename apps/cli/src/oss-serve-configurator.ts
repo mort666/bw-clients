@@ -47,6 +47,7 @@ export class OssServeConfigurator {
   private sendCreateCommand: SendCreateCommand;
   private sendDeleteCommand: SendDeleteCommand;
   private sendEditCommand: SendEditCommand;
+
   private sendGetCommand: SendGetCommand;
   private sendListCommand: SendListCommand;
   private sendRemovePasswordCommand: SendRemovePasswordCommand;
@@ -66,8 +67,6 @@ export class OssServeConfigurator {
       this.serviceContainer.eventCollectionService,
       this.serviceContainer.billingAccountProfileStateService,
       this.serviceContainer.accountService,
-      this.serviceContainer.environmentService,
-      this.serviceContainer.platformUtilsService,
     );
     this.listCommand = new ListCommand(
       this.serviceContainer.cipherService,
@@ -166,10 +165,6 @@ export class OssServeConfigurator {
       this.serviceContainer.searchService,
       this.serviceContainer.encryptService,
       this.serviceContainer.apiService,
-      this.serviceContainer.platformUtilsService,
-      this.serviceContainer.keyService,
-      this.serviceContainer.cryptoFunctionService,
-      this.serviceContainer.sendApiService,
     );
     this.sendEditCommand = new SendEditCommand(
       this.serviceContainer.sendService,
