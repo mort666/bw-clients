@@ -23,7 +23,6 @@ import {
   SendReceiveCommand,
   SendRemovePasswordCommand,
 } from "./commands";
-import { SendDownloadCommand } from "./commands/send-download.command";
 import { SendFileResponse } from "./models/send-file.response";
 import { SendTextResponse } from "./models/send-text.response";
 import { SendResponse } from "./models/send.response";
@@ -68,7 +67,6 @@ export class SendProgram extends BaseProgram {
       .addCommand(this.editCommand())
       .addCommand(this.removePasswordCommand())
       .addCommand(this.deleteCommand())
-      .addCommand(this.downloadCommand())
       .action(async (data: string, options: OptionValues) => {
         const encodedJson = this.makeSendJson(data, options);
 
@@ -161,64 +159,19 @@ export class SendProgram extends BaseProgram {
       });
   }
 
-  private downloadCommand(): Command {
-    return (
-      new Command("download")
-        .arguments("<id>")
-        .description("Downloads file attached to the send owned by you.")
-        .option("--file", "Specifies to return the file content of a Send", true)
-        .option("--password <password>", "Password needed to access the Send.")
-        .option(
-          "--passwordfile <passwordfile>",
-          "Path to a file containing the Sends password as its first line",
-        )
-        // .option("--obj", "Return the Send's json object rather than the Send's content")
-        .option("--output <location>", "Specify a file path to save a File-type Send to")
-        .option("--raw", "Return the raw content of a Send", true)
-        .on("--help", () => {
-          writeLn("");
-          writeLn("  Id:");
-          writeLn("");
-          writeLn("    Search term or Send's globally unique `id`.");
-          writeLn("");
-          writeLn(
-            "    If raw output is specified and no output filename or directory is given for",
-          );
-          writeLn("    an attachment query, the attachment content is written to stdout.");
-          writeLn("");
-          writeLn("  Examples:");
-          writeLn("");
-          writeLn("    bw send download searchText");
-          writeLn("    bw send download id");
-          writeLn("    bw send download id --file");
-          writeLn("    bw send download id --file --output ../Photos/photo.jpg");
-          writeLn("    bw send download id --file --raw");
-          writeLn("", true);
-        })
-        .action(async (id: string, options: OptionValues) => {
-          await this.exitIfLocked();
-          const cmd = new SendDownloadCommand(
-            this.serviceContainer.sendService,
-            this.serviceContainer.environmentService,
-            this.serviceContainer.searchService,
-            this.serviceContainer.encryptService,
-            this.serviceContainer.apiService,
-            this.serviceContainer.platformUtilsService,
-            this.serviceContainer.keyService,
-            this.serviceContainer.cryptoFunctionService,
-            this.serviceContainer.sendApiService,
-          );
-          const response = await cmd.run(id, options);
-          this.processResponse(response);
-        })
-    );
-  }
   private getCommand(): Command {
     return new Command("get")
       .arguments("<id>")
       .description("Get Sends owned by you.")
-      .option("--output <output>", "Output directory or filename for attachment.")
       .option("--text", "Specifies to return the text content of a Send")
+      .option("--file", "Specifies to return the file content of a Send", true)
+      .option("--password <password>", "Password needed to access the Send.")
+      .option(
+        "--passwordfile <passwordfile>",
+        "Path to a file containing the Sends password as its first line",
+      )
+      .option("--raw", "Return the raw content of a Send", true)
+      .option("--output <output>", "Output directory or filename for attachment.")
       .on("--help", () => {
         writeLn("");
         writeLn("  Id:");
@@ -233,6 +186,9 @@ export class SendProgram extends BaseProgram {
         writeLn("    bw send get searchText");
         writeLn("    bw send get id");
         writeLn("    bw send get searchText --text");
+        writeLn("    bw send download id --file");
+        writeLn("    bw send download id --output ../Photos/photo.jpg");
+        writeLn("    bw send download id --file --raw");
         writeLn("", true);
       })
       .action(async (id: string, options: OptionValues) => {
@@ -243,6 +199,7 @@ export class SendProgram extends BaseProgram {
           this.serviceContainer.searchService,
           this.serviceContainer.encryptService,
           this.serviceContainer.apiService,
+          this.serviceContainer.sendDownloadService,
         );
         const response = await cmd.run(id, options);
         this.processResponse(response);
@@ -303,6 +260,7 @@ export class SendProgram extends BaseProgram {
           this.serviceContainer.searchService,
           this.serviceContainer.encryptService,
           this.serviceContainer.apiService,
+          this.serviceContainer.sendDownloadService,
         );
         const cmd = new SendEditCommand(
           this.serviceContainer.sendService,

@@ -5,7 +5,6 @@ import * as inquirer from "inquirer";
 import { firstValueFrom } from "rxjs";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
-import { SearchService } from "@bitwarden/common/abstractions/search.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { ErrorResponse } from "@bitwarden/common/models/response/error.response";
 import { CryptoFunctionService } from "@bitwarden/common/platform/abstractions/crypto-function.service";
@@ -19,7 +18,6 @@ import { SendAccessRequest } from "@bitwarden/common/tools/send/models/request/s
 import { SendAccessView } from "@bitwarden/common/tools/send/models/view/send-access.view";
 import { SendView } from "@bitwarden/common/tools/send/models/view/send.view";
 import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.service.abstraction";
-import { SendService } from "@bitwarden/common/tools/send/services/send.service.abstraction";
 import { KeyService } from "@bitwarden/key-management";
 import { NodeUtils } from "@bitwarden/node/node-utils";
 
@@ -28,13 +26,12 @@ import { Response } from "../../../models/response";
 import { SendAccessResponse } from "../models/send-access.response";
 import { SendResponse } from "../models/send.response";
 
-export class SendDownloadCommand extends DownloadCommand {
+// Note: DownloadCommand is actually an abstract class
+export class SendDownloadService extends DownloadCommand {
   private decKey: SymmetricCryptoKey;
 
   constructor(
-    private sendService: SendService,
     protected environmentService: EnvironmentService,
-    private searchService: SearchService,
     encryptService: EncryptService,
     apiService: ApiService,
     protected platformUtilsService: PlatformUtilsService,
@@ -45,38 +42,14 @@ export class SendDownloadCommand extends DownloadCommand {
     super(encryptService, apiService);
   }
 
-  async run(id: string, options: OptionValues) {
-    const serveCommand = process.env.BW_SERVE === "true";
-    if (serveCommand && !Utils.isGuid(id)) {
-      return Response.badRequest("`" + id + "` is not a GUID.");
-    }
-
-    let sends = await this.getSendView(id);
-    if (sends == null) {
-      return Response.notFound();
-    }
-
+  async download(sends: SendView, options: OptionValues) {
     const env = await firstValueFrom(this.environmentService.environment$);
     const webVaultUrl = env.getWebVaultUrl();
 
     const selector = async (s: SendView): Promise<Response> =>
       Response.success(new SendResponse(s, webVaultUrl));
 
-    // we have multiple results. Attempt to narrow down the results
-    if (Array.isArray(sends)) {
-      // if we have multiple results, return the ids
-      if (sends.length > 1) {
-        return Response.multipleResults(sends.map((s) => s.id));
-      }
-
-      // if we greater than zero results pick the first one
-      if (sends.length > 0) {
-        sends = sends[0];
-      } else {
-        return Response.notFound();
-      }
-    }
-
+    // only attempt to download if requested
     if (options?.file || options?.output || options?.raw) {
       // generate the send url
       const sendWithUrl = new SendResponse(sends, webVaultUrl);
@@ -142,6 +115,7 @@ export class SendDownloadCommand extends DownloadCommand {
 
     return selector(sends);
   }
+
   private createUrlObject(url: string): URL | null {
     try {
       return new URL(url);
@@ -158,23 +132,6 @@ export class SendDownloadCommand extends DownloadCommand {
       100000,
     );
     return Utils.fromBufferToB64(passwordHash);
-  }
-
-  private async getSendView(id: string): Promise<SendView | SendView[]> {
-    if (Utils.isGuid(id)) {
-      const send = await this.sendService.getFromState(id);
-      if (send != null) {
-        return await send.decrypt();
-      }
-    } else if (id.trim() !== "") {
-      let sends = await this.sendService.getAllDecryptedFromState();
-      sends = this.searchService.searchSends(sends, id);
-      if (sends.length > 1) {
-        return sends;
-      } else if (sends.length > 0) {
-        return sends[0];
-      }
-    }
   }
 
   private async sendRequest(
