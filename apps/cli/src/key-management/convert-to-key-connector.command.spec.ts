@@ -50,38 +50,62 @@ describe("ConvertToKeyConnectorCommand", () => {
       logout,
       i18nService,
     );
+
+    i18nService.t.mockImplementation((key: string) => {
+      switch (key) {
+        case "removeMasterPasswordForOrganizationUserKeyConnector":
+          return "Test Organization has updated its member decryption options. You no longer need a password when logging into Bitwarden. Please confirm the domain below with your organization administrator. Key Connector domain: https://keyconnector.example.com";
+        case "removeMasterPasswordAndUnlock":
+          return "Remove master password and unlock";
+        case "leaveOrganizationAndUnlock":
+          return "Leave organization and unlock";
+        case "logOut":
+          return "Log out";
+        case "youHaveBeenLoggedOut":
+          return "You have been logged out.";
+        case "organizationUsingKeyConnectorOptInLoggedOut":
+          return "An organization you are a member of is using Key Connector. In order to access the vault, you must opt-in to Key Connector now via the web vault. You have been logged out.";
+        default:
+          return "";
+      }
+    });
   });
 
   describe("run", () => {
     it("should logout and return error response if no interaction available", async () => {
       process.env.BW_NOINTERACTION = "true";
-      const errorMessage =
-        "An organization you are a member of is using Key Connector. In order to access the vault, you must opt-in to Key Connector now via the web vault. You have been logged out.";
-      i18nService.t.mockReturnValue(errorMessage);
 
       const response = await command.run();
 
       expect(response).not.toBeNull();
       expect(response.success).toEqual(false);
-      expect(response).toEqual(Response.error(new MessageResponse(errorMessage, null)));
+      expect(response).toEqual(
+        Response.error(
+          new MessageResponse(
+            "An organization you are a member of is using Key Connector. In order to access the vault, you must opt-in to Key Connector now via the web vault. You have been logged out.",
+            null,
+          ),
+        ),
+      );
       expect(logout).toHaveBeenCalled();
     });
 
     it("should logout and return error response if interaction answer is exit", async () => {
       process.env.BW_NOINTERACTION = "false";
       keyConnectorService.getManagingOrganization.mockResolvedValue(organization);
-      const errorMessage = "You have been logged out.";
-      i18nService.t.mockReturnValue(errorMessage);
 
       (createPromptModule as jest.Mock).mockImplementation(() =>
-        jest.fn(() => Promise.resolve({ convert: "exit" })),
+        jest.fn((prompt) => {
+          assertPrompt(prompt);
+          return Promise.resolve({ convert: "exit" });
+        }),
       );
 
       const response = await command.run();
 
       expect(response).not.toBeNull();
       expect(response.success).toEqual(false);
-      expect(response).toEqual(Response.error(errorMessage));
+      expect(response).toEqual(Response.error("You have been logged out."));
       expect(logout).toHaveBeenCalled();
     });
 
@@ -96,7 +120,10 @@ describe("ConvertToKeyConnectorCommand", () => {
       } as Environment);
 
       (createPromptModule as jest.Mock).mockImplementation(() =>
-        jest.fn(() => Promise.resolve({ convert: "remove" })),
+        jest.fn((prompt) => {
+          assertPrompt(prompt);
+          return Promise.resolve({ convert: "remove" });
+        }),
       );
 
       const response = await command.run();
@@ -114,7 +141,10 @@ describe("ConvertToKeyConnectorCommand", () => {
       keyConnectorService.getManagingOrganization.mockResolvedValue(organization);
 
       (createPromptModule as jest.Mock).mockImplementation(() =>
-        jest.fn(() => Promise.resolve({ convert: "remove" })),
+        jest.fn((prompt) => {
+          assertPrompt(prompt);
+          return Promise.resolve({ convert: "remove" });
+        }),
       );
 
       keyConnectorService.migrateUser.mockRejectedValue(new Error("Migration failed"));
@@ -128,7 +158,10 @@ describe("ConvertToKeyConnectorCommand", () => {
       keyConnectorService.getManagingOrganization.mockResolvedValue(organization);
 
       (createPromptModule as jest.Mock).mockImplementation(() =>
-        jest.fn(() => Promise.resolve({ convert: "leave" })),
+        jest.fn((prompt) => {
+          assertPrompt(prompt);
+          return Promise.resolve({ convert: "leave" });
+        }),
       );
 
       const response = await command.run();
@@ -137,5 +170,34 @@ describe("ConvertToKeyConnectorCommand", () => {
       expect(response.success).toEqual(true);
       expect(organizationApiService.leave).toHaveBeenCalledWith(organization.id);
     });
+
+    function assertPrompt(prompt: unknown) {
+      expect(typeof prompt).toEqual("object");
+      expect(prompt).toHaveProperty("type");
+      expect(prompt).toHaveProperty("name");
+      expect(prompt).toHaveProperty("message");
+      expect(prompt).toHaveProperty("choices");
+      const promptObj = prompt as Record<string, unknown>;
+      expect(promptObj["type"]).toEqual("list");
+      expect(promptObj["name"]).toEqual("convert");
+      expect(promptObj["message"]).toEqual(
+        `${organization.name} has updated its member decryption options. You no longer need a password when logging into Bitwarden. Please confirm the domain below with your organization administrator. Key Connector domain: ${organization.keyConnectorUrl}`,
+      );
+      expect(promptObj["choices"]).toBeInstanceOf(Array);
+      const choices = promptObj["choices"] as Array<Record<string, unknown>>;
+      expect(choices).toHaveLength(3);
+      expect(choices[0]).toEqual({
+        name: "Remove master password and unlock",
+        value: "remove",
+      });
+      expect(choices[1]).toEqual({
+        name: "Leave organization and unlock",
+        value: "leave",
+      });
+      expect(choices[2]).toEqual({
+        name: "Log out",
+        value: "exit",
+      });
+    }
   });
 });
