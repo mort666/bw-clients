@@ -184,5 +184,29 @@
         "example": "JustTrust.us"
       }
     }
+  },
+  "organizationUsingKeyConnectorOptInLoggedOut": {
+    "message": "An organization you are a member of is using Key Connector. In order to access the vault, you must opt-in to Key Connector now via the web vault. You have been logged out."
+  },
+  "removeMasterPasswordForOrganizationUserKeyConnector": {
+    "message": "$ORGANIZATION$ has updated its member decryption options. You no longer need a password when logging into Bitwarden. Please confirm the domain below with your organization administrator.",
+    "placeholders": {
+      "organization": {
+        "content": "$1",
+        "example": "My Org Name"
+      }
+    }
+  },
+  "removeMasterPasswordAndUnlock": {
+    "message": "Remove master password and unlock"
+  },
+  "leaveOrganizationAndUnlock": {
+    "message": "Leave organization and unlock"
+  },
+  "logOut": {
+    "message": "Log out"
+  },
+  "youHaveBeenLoggedOut": {
+    "message": "You have been logged out."
   }
 }

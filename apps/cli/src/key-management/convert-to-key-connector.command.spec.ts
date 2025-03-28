@@ -15,6 +15,7 @@ import { UserId } from "@bitwarden/common/types/guid";
 
 import { Response } from "../models/response";
 import { MessageResponse } from "../models/response/message.response";
+import { I18nService } from "../platform/services/i18n.service";
 
 import { ConvertToKeyConnectorCommand } from "./convert-to-key-connector.command";
 
@@ -38,6 +39,7 @@ describe("ConvertToKeyConnectorCommand", () => {
   const environmentService = mock<EnvironmentService>();
   const organizationApiService = mock<OrganizationApiServiceAbstraction>();
   const logout = jest.fn();
+  const i18nService = mock<I18nService>();
 
   beforeEach(async () => {
     command = new ConvertToKeyConnectorCommand(
@@ -46,31 +48,30 @@ describe("ConvertToKeyConnectorCommand", () => {
       environmentService,
       organizationApiService,
       logout,
+      i18nService,
     );
   });
 
   describe("run", () => {
     it("should logout and return error response if no interaction available", async () => {
       process.env.BW_NOINTERACTION = "true";
+      const errorMessage =
+        "An organization you are a member of is using Key Connector. In order to access the vault, you must opt-in to Key Connector now via the web vault. You have been logged out.";
+      i18nService.t.mockReturnValue(errorMessage);
 
       const response = await command.run();
 
       expect(response).not.toBeNull();
       expect(response.success).toEqual(false);
-      expect(response).toEqual(
-        Response.error(
-          new MessageResponse(
-            "An organization you are a member of is using Key Connector. In order to access the vault, you must opt-in to Key Connector now via the web vault. You have been logged out.",
-            null,
-          ),
-        ),
-      );
+      expect(response).toEqual(Response.error(new MessageResponse(errorMessage, null)));
       expect(logout).toHaveBeenCalled();
     });
 
     it("should logout and return error response if interaction answer is exit", async () => {
       process.env.BW_NOINTERACTION = "false";
       keyConnectorService.getManagingOrganization.mockResolvedValue(organization);
+      const errorMessage = "You have been logged out.";
+      i18nService.t.mockReturnValue(errorMessage);
 
       (createPromptModule as jest.Mock).mockImplementation(() =>
         jest.fn(() => Promise.resolve({ convert: "exit" })),
@@ -80,7 +81,7 @@ describe("ConvertToKeyConnectorCommand", () => {
 
       expect(response).not.toBeNull();
       expect(response.success).toEqual(false);
-      expect(response).toEqual(Response.error("You have been logged out."));
+      expect(response).toEqual(Response.error(errorMessage));
       expect(logout).toHaveBeenCalled();
     });
 
