@@ -3,6 +3,7 @@
 import { Observable } from "rxjs";
 
 import { UserKeyRotationDataProvider } from "@bitwarden/key-management";
+import { CipherView as SdkCipherView } from "@bitwarden/sdk-internal";
 
 import { UriMatchStrategySetting } from "../../models/domain/domain-service";
 import { SymmetricCryptoKey } from "../../platform/models/domain/symmetric-crypto-key";
@@ -32,6 +33,16 @@ export abstract class CipherService implements UserKeyRotationDataProvider<Ciphe
    * An empty array indicates that all ciphers were successfully decrypted.
    */
   abstract failedToDecryptCiphers$(userId: UserId): Observable<CipherView[]>;
+
+  /**
+   * Decrypts a cipher using the SDK for the given userId.
+   *
+   * @param userId The user ID whose key will be used for decryption
+   * @param cipher The encrypted cipher object
+   *
+   * @returns An observable that emits the decrypted cipher view
+   */
+  abstract decrypt$(userId: UserId, cipher: Cipher): Observable<SdkCipherView>;
   abstract clearCache(userId: UserId): Promise<void>;
   abstract encrypt(
     model: CipherView,
