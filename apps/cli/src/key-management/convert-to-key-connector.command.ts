@@ -44,6 +44,7 @@ export class ConvertToKeyConnectorCommand {
       message: this.i18nService.t(
         "removeMasterPasswordForOrganizationUserKeyConnector",
         organization.name,
+        organization.keyConnectorUrl,
       ),
       choices: [
         {
