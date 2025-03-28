@@ -15,6 +15,7 @@ import {
 import { SemVer } from "semver";
 
 import { KeyService } from "@bitwarden/key-management";
+import { CipherView as SdkCipherView } from "@bitwarden/sdk-internal";
 
 import { ApiService } from "../../abstractions/api.service";
 import { SearchService } from "../../abstractions/search.service";
@@ -30,6 +31,7 @@ import { ListResponse } from "../../models/response/list.response";
 import { View } from "../../models/view/view";
 import { ConfigService } from "../../platform/abstractions/config/config.service";
 import { I18nService } from "../../platform/abstractions/i18n.service";
+import { SdkService } from "../../platform/abstractions/sdk/sdk.service";
 import { StateService } from "../../platform/abstractions/state.service";
 import { sequentialize } from "../../platform/misc/sequentialize";
 import { Utils } from "../../platform/misc/utils";
@@ -111,6 +113,7 @@ export class CipherService implements CipherServiceAbstraction {
     private configService: ConfigService,
     private stateProvider: StateProvider,
     private accountService: AccountService,
+    private sdkService: SdkService,
   ) {}
 
   localData$(userId: UserId): Observable<Record<CipherId, LocalData>> {
@@ -153,6 +156,23 @@ export class CipherService implements CipherServiceAbstraction {
       filter((ciphers) => ciphers != null),
       switchMap((ciphers) => merge(this.forceCipherViews$, of(ciphers))),
       shareReplay({ bufferSize: 1, refCount: true }),
+    );
+  }
+
+  /**
+   * {@link CipherServiceAbstraction.decrypt$}
+   */
+  decrypt$(userId: UserId, cipher: Cipher): Observable<SdkCipherView> {
+    return this.sdkService.userClient$(userId).pipe(
+      map((sdk) => {
+        if (!sdk) {
+          throw new Error("SDK is undefined");
+        }
+
+        using ref = sdk.take();
+
+        return ref.value.vault().ciphers().decrypt(cipher.toSdkCipher());
+      }),
     );
   }
 
