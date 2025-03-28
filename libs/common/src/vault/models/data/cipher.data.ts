@@ -37,7 +37,7 @@ export class CipherData {
   passwordHistory?: PasswordHistoryData[];
   collectionIds?: string[];
   creationDate: string;
-  deletedDate: string;
+  deletedDate: string | null;
   reprompt: CipherRepromptType;
   key: string;
 
