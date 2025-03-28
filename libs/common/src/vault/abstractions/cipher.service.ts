@@ -41,6 +41,8 @@ export abstract class CipherService implements UserKeyRotationDataProvider<Ciphe
    * @param cipher The encrypted cipher object
    *
    * @returns An observable that emits the decrypted cipher view
+   *
+   * @todo Consider moving this to a dedicated service as the cipher service is already quite large.
    */
   abstract decrypt$(userId: UserId, cipher: Cipher): Observable<SdkCipherView>;
   abstract clearCache(userId: UserId): Promise<void>;
