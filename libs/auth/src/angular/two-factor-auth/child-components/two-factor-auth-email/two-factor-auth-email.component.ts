@@ -82,13 +82,11 @@ export class TwoFactorAuthEmailComponent implements OnInit {
 
     // Check if email has already been sent according to the cache
     let emailAlreadySent = false;
-    if (this.twoFactorFormCacheService) {
-      try {
-        const cachedData = await this.twoFactorFormCacheService.getFormData();
-        emailAlreadySent = cachedData?.emailSent === true;
-      } catch (e) {
-        this.logService.error(e);
-      }
+    try {
+      const cachedData = await this.twoFactorFormCacheService.getFormData();
+      emailAlreadySent = cachedData?.emailSent === true;
+    } catch (e) {
+      this.logService.error(e);
     }
 
     if (!emailAlreadySent) {
@@ -133,17 +131,15 @@ export class TwoFactorAuthEmailComponent implements OnInit {
       await this.emailPromise;
 
       // Update cache to indicate email was sent
-      if (this.twoFactorFormCacheService) {
-        try {
-          const cachedData = (await this.twoFactorFormCacheService.getFormData()) || {};
-          await this.twoFactorFormCacheService.saveFormData({
-            ...cachedData,
-            emailSent: true,
-            token: undefined,
-          });
-        } catch (e) {
-          this.logService.error(e);
-        }
+      try {
+        const cachedData = (await this.twoFactorFormCacheService.getFormData()) || {};
+        await this.twoFactorFormCacheService.saveFormData({
+          ...cachedData,
+          emailSent: true,
+          token: undefined,
+        });
+      } catch (e) {
+        this.logService.error(e);
       }
 
       if (doToast) {
