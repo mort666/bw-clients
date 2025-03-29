@@ -21,10 +21,10 @@ export class DesktopTwoFactorFormCacheService extends TwoFactorFormCacheService 
   }
 
   async saveFormData(): Promise<void> {
-    // No-op
+    return Promise.resolve();
   }
 
   async clearFormData(): Promise<void> {
-    // No-op
+    return Promise.resolve();
   }
 }
