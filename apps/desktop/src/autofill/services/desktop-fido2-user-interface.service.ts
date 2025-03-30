@@ -329,7 +329,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
         this.authService.activeAccountStatus$.pipe(
           filter((s) => s === AuthenticationStatus.Unlocked),
           take(1),
-          timeout(30000),
+          timeout({ first: 30000, with: () => of(AuthenticationStatus.Locked) }),
         ),
       );
       if (status2 !== AuthenticationStatus.Unlocked) {
