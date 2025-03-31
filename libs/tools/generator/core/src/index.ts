@@ -13,6 +13,7 @@ export {
   Type,
   Profile,
   GeneratorMetadata,
+  GeneratorProfile,
   AlgorithmMetadata,
   AlgorithmsByType,
 } from "./metadata";

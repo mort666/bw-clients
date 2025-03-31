@@ -14,16 +14,16 @@ import { passphraseLeastPrivilege } from "./passphrase-least-privilege";
 const Passphrase: PolicyConfiguration<PassphraseGeneratorPolicy, PassphraseGenerationOptions> =
   deepFreeze({
     type: PolicyType.PasswordGenerator,
-    disabledValue: Object.freeze({
+    disabledValue: {
       minNumberWords: 0,
       capitalize: false,
       includeNumber: false,
-    }),
+    },
     combine: passphraseLeastPrivilege,
     createEvaluator: (policy) => new PassphraseGeneratorOptionsEvaluator(policy),
   });
 
-describe("Password generator options builder", () => {
+describe("Passphrase generator options builder", () => {
   describe("constructor()", () => {
     it("should set the policy object to a copy of the input policy", () => {
       const policy: any = Object.assign({}, Passphrase.disabledValue);

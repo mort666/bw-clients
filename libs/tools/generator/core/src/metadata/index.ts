@@ -35,5 +35,11 @@ export { toForwarderMetadata } from "./email/forwarder";
 export { AlgorithmMetadata } from "./algorithm-metadata";
 export { GeneratorMetadata } from "./generator-metadata";
 export { ProfileContext, CoreProfileMetadata, ProfileMetadata } from "./profile-metadata";
-export { GeneratorProfile, CredentialAlgorithm, PasswordAlgorithm, CredentialType } from "./type";
+export {
+  GeneratorProfile,
+  CredentialAlgorithm,
+  PasswordAlgorithm,
+  CredentialType,
+  ForwarderExtensionId,
+} from "./type";
 export { isForwarderProfile, toVendorId, isForwarderExtensionId } from "./util";

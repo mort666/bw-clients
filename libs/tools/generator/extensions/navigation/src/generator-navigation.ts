@@ -1,4 +1,5 @@
-import { ForwarderId, UsernameGeneratorType, CredentialAlgorithm } from "@bitwarden/generator-core";
+import { VendorId } from "@bitwarden/common/tools/extension";
+import { UsernameGeneratorType, CredentialAlgorithm } from "@bitwarden/generator-core";
 
 /** Stores credential generator UI state. */
 export type GeneratorNavigation = {
@@ -12,5 +13,5 @@ export type GeneratorNavigation = {
   username?: UsernameGeneratorType;
 
   /** When `username === "forwarded"`, this stores the forwarder implementation. */
-  forwarder?: ForwarderId | "";
+  forwarder?: VendorId | "";
 };

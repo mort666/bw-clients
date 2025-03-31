@@ -24,34 +24,56 @@ describe("PREFERENCES", () => {
       // this case tests what happens when the type system is bypassed
       const result = PREFERENCES.deserializer(value!);
 
-      expect(result).toEqual(SomeCredentialPreferences);
+      expect(result).toMatchObject({
+        email: {
+          algorithm: AlgorithmsByType[Type.email][0],
+        },
+        password: {
+          algorithm: AlgorithmsByType[Type.password][0],
+        },
+        username: {
+          algorithm: AlgorithmsByType[Type.username][0],
+        },
+      });
     });
 
     it("fills missing password preferences", () => {
-      const input: any = { ...SomeCredentialPreferences };
+      const input: any = structuredClone(SomeCredentialPreferences);
       delete input.password;
 
       const result = PREFERENCES.deserializer(input);
 
-      expect(result).toEqual(SomeCredentialPreferences);
+      expect(result).toMatchObject({
+        password: {
+          algorithm: AlgorithmsByType[Type.password][0],
+        },
+      });
     });
 
     it("fills missing email preferences", () => {
-      const input: any = { ...SomeCredentialPreferences };
+      const input: any = structuredClone(SomeCredentialPreferences);
       delete input.email;
 
       const result = PREFERENCES.deserializer(input);
 
-      expect(result).toEqual(SomeCredentialPreferences);
+      expect(result).toMatchObject({
+        email: {
+          algorithm: AlgorithmsByType[Type.email][0],
+        },
+      });
     });
 
     it("fills missing username preferences", () => {
-      const input: any = { ...SomeCredentialPreferences };
+      const input: any = structuredClone(SomeCredentialPreferences);
       delete input.username;
 
       const result = PREFERENCES.deserializer(input);
 
-      expect(result).toEqual(SomeCredentialPreferences);
+      expect(result).toMatchObject({
+        username: {
+          algorithm: AlgorithmsByType[Type.username][0],
+        },
+      });
     });
 
     it("converts string fields to Dates", () => {

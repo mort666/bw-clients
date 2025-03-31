@@ -12,7 +12,7 @@ export function deepFreeze<T extends object>(value: T): Readonly<T> {
   for (const key of keys) {
     const own = value[key];
 
-    if ((own && typeof own === "object") || typeof own === "function") {
+    if (own && typeof own === "object") {
       deepFreeze(own);
     }
   }

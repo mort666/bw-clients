@@ -13,7 +13,7 @@ describe("GeneratedCredential", () => {
     it("assigns category", () => {
       const result = new GeneratedCredential("example", Type.password, new Date(100));
 
-      expect(result.category).toEqual("passphrase");
+      expect(result.category).toEqual(Type.password);
     });
 
     it("passes through date parameters", () => {

@@ -45,6 +45,8 @@ import {
   Algorithm,
   AlgorithmMetadata,
   Type,
+  GeneratorProfile,
+  Profile,
 } from "@bitwarden/generator-core";
 import { GeneratorHistoryService } from "@bitwarden/generator-history";
 
@@ -104,8 +106,12 @@ export class PasswordGeneratorComponent implements OnInit, OnChanges, OnDestroy 
     }
   }
 
+  @Input()
+  profile: GeneratorProfile = Profile.account;
+
   /** Removes bottom margin, passed to downstream components */
-  @Input({ transform: coerceBooleanProperty }) disableMargin = false;
+  @Input({ transform: coerceBooleanProperty })
+  disableMargin = false;
 
   /** tracks the currently selected credential type */
   protected credentialType$ = new BehaviorSubject<CredentialAlgorithm>(Algorithm.password);
@@ -125,7 +131,7 @@ export class PasswordGeneratorComponent implements OnInit, OnChanges, OnDestroy 
    */
   protected async generate(source: string) {
     const algorithm = await firstValueFrom(this.algorithm$);
-    const request: GenerateRequest = { source, algorithm: algorithm.id };
+    const request: GenerateRequest = { source, algorithm: algorithm.id, profile: this.profile };
 
     this.log.debug(request, "generation requested");
     this.generate$.next(request);
@@ -176,10 +182,7 @@ export class PasswordGeneratorComponent implements OnInit, OnChanges, OnDestroy 
 
     // wire up the generator
     this.generatorService
-      .generate$({
-        on$: this.generate$,
-        account$: this.account$,
-      })
+      .generate$({ on$: this.generate$, account$: this.account$ })
       .pipe(
         catchError((error: unknown, generator) => {
           if (typeof error === "string") {
