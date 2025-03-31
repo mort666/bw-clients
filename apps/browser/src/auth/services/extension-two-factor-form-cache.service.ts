@@ -53,7 +53,9 @@ export class ExtensionTwoFactorFormCacheService extends TwoFactorFormCacheServic
    * Observable that emits the current enabled state
    */
   isEnabled$(): Observable<boolean> {
-    return from(this.configService.getFeatureFlag(FeatureFlag.PM9115_TwoFactorFormPersistence));
+    return from(
+      this.configService.getFeatureFlag(FeatureFlag.PM9115_TwoFactorExtensionDataPersistence),
+    );
   }
 
   /**

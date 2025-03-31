@@ -24,7 +24,7 @@ export class ExtensionTwoFactorAuthEmailComponentService
 
   async openPopoutIfApprovedForEmail2fa(): Promise<void> {
     const isTwoFactorFormPersistenceEnabled = await this.configService.getFeatureFlag(
-      FeatureFlag.PM9115_TwoFactorFormPersistence,
+      FeatureFlag.PM9115_TwoFactorExtensionDataPersistence,
     );
 
     if (isTwoFactorFormPersistenceEnabled) {

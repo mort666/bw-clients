@@ -42,7 +42,7 @@ describe("ExtensionTwoFactorFormCacheService", () => {
   describe("feature enabled", () => {
     beforeEach(async () => {
       getFeatureFlag.mockImplementation((featureFlag: FeatureFlag) => {
-        if (featureFlag === FeatureFlag.PM9115_TwoFactorFormPersistence) {
+        if (featureFlag === FeatureFlag.PM9115_TwoFactorExtensionDataPersistence) {
           return Promise.resolve(true);
         }
         return Promise.resolve(false);
@@ -56,7 +56,9 @@ describe("ExtensionTwoFactorFormCacheService", () => {
         const result = await firstValueFrom(service.isEnabled$());
 
         expect(result).toBe(true);
-        expect(getFeatureFlag).toHaveBeenCalledWith(FeatureFlag.PM9115_TwoFactorFormPersistence);
+        expect(getFeatureFlag).toHaveBeenCalledWith(
+          FeatureFlag.PM9115_TwoFactorExtensionDataPersistence,
+        );
       });
     });
 
@@ -65,7 +67,9 @@ describe("ExtensionTwoFactorFormCacheService", () => {
         const result = await service.isEnabled();
 
         expect(result).toBe(true);
-        expect(getFeatureFlag).toHaveBeenCalledWith(FeatureFlag.PM9115_TwoFactorFormPersistence);
+        expect(getFeatureFlag).toHaveBeenCalledWith(
+          FeatureFlag.PM9115_TwoFactorExtensionDataPersistence,
+        );
       });
     });
 
@@ -136,7 +140,7 @@ describe("ExtensionTwoFactorFormCacheService", () => {
     beforeEach(async () => {
       formDataSignal.set(mockFormData);
       getFeatureFlag.mockImplementation((featureFlag: FeatureFlag) => {
-        if (featureFlag === FeatureFlag.PM9115_TwoFactorFormPersistence) {
+        if (featureFlag === FeatureFlag.PM9115_TwoFactorExtensionDataPersistence) {
           return Promise.resolve(false);
         }
         return Promise.resolve(false);
@@ -151,7 +155,9 @@ describe("ExtensionTwoFactorFormCacheService", () => {
         const result = await firstValueFrom(service.isEnabled$());
 
         expect(result).toBe(false);
-        expect(getFeatureFlag).toHaveBeenCalledWith(FeatureFlag.PM9115_TwoFactorFormPersistence);
+        expect(getFeatureFlag).toHaveBeenCalledWith(
+          FeatureFlag.PM9115_TwoFactorExtensionDataPersistence,
+        );
       });
     });
 
@@ -160,7 +166,9 @@ describe("ExtensionTwoFactorFormCacheService", () => {
         const result = await service.isEnabled();
 
         expect(result).toBe(false);
-        expect(getFeatureFlag).toHaveBeenCalledWith(FeatureFlag.PM9115_TwoFactorFormPersistence);
+        expect(getFeatureFlag).toHaveBeenCalledWith(
+          FeatureFlag.PM9115_TwoFactorExtensionDataPersistence,
+        );
       });
     });
 
