@@ -215,6 +215,7 @@ export class Main {
       this.desktopSettingsService,
       this.messagingService,
       this.biometricsService,
+      this.logService,
     );
 
     messageSubject.asObservable().subscribe((message) => {
@@ -246,6 +247,7 @@ export class Main {
       this.desktopSettingsService,
       this.messagingService,
       this.biometricsService,
+      this.logService,
     );
 
     this.desktopCredentialStorageListener = new DesktopCredentialStorageListener(
@@ -309,7 +311,10 @@ export class Main {
           },
         ]);
         if (await firstValueFrom(this.desktopSettingsService.startToTray$)) {
+          this.logService.info("startToTray is enabled");
           await this.trayMain.hideToTray();
+        } else {
+          this.logService.info("startToTray is not enabled");
         }
         this.powerMonitorMain.init();
         await this.updaterMain.init();

@@ -6,6 +6,7 @@ import { app, BrowserWindow, Menu, MenuItemConstructorOptions, nativeImage, Tray
 import { firstValueFrom } from "rxjs";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { BiometricsService } from "@bitwarden/key-management";
 
@@ -28,6 +29,7 @@ export class TrayMain {
     private desktopSettingsService: DesktopSettingsService,
     private messagingService: MessagingService,
     private biometricService: BiometricsService,
+    private logService: LogService,
   ) {
     if (process.platform === "win32") {
       this.icon = path.join(__dirname, "/images/icon.ico");
@@ -119,9 +121,13 @@ export class TrayMain {
   }
 
   async hideToTray() {
+    this.logService.info("In hideToTray");
     this.showTray();
+    this.logService.info("After showTray");
     if (this.windowMain.win != null) {
+      this.logService.info("Hiding window");
       this.windowMain.win.hide();
+      this.logService.info("After hiding window");
     }
     if (this.isDarwin() && !(await firstValueFrom(this.desktopSettingsService.alwaysShowDock$))) {
       this.hideDock();
