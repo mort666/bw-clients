@@ -28,7 +28,7 @@ describe("SecretsManagerPortingApiService", () => {
 
     sut = new SecretsManagerPortingApiService(apiService, encryptService, keyService);
 
-    encryptService.encrypt.mockResolvedValue(mockEncryptedString);
+    encryptService.encryptString.mockResolvedValue(mockEncryptedString);
     encryptService.decryptToUtf8.mockResolvedValue(mockUnencryptedString);
 
     const mockRandomBytes = new Uint8Array(64) as CsprngArray;

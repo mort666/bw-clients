@@ -108,7 +108,7 @@ export class IndividualVaultExportService
     const userKey = await this.keyService.getUserKeyWithLegacySupport(
       await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId)),
     );
-    const encKeyValidation = await this.encryptService.encrypt(Utils.newGuid(), userKey);
+    const encKeyValidation = await this.encryptService.encryptString(Utils.newGuid(), userKey);
 
     const jsonDoc: BitwardenEncryptedIndividualJsonExport = {
       encrypted: true,

@@ -110,7 +110,7 @@ describe("Folder Service", () => {
     model.id = "2";
     model.name = "Test Folder";
 
-    encryptService.encrypt.mockResolvedValue(new EncString("ENC"));
+    encryptService.encryptString.mockResolvedValue(new EncString("ENC"));
 
     const result = await folderService.encrypt(model, null);
 
@@ -211,7 +211,7 @@ describe("Folder Service", () => {
 
     beforeEach(() => {
       encryptedKey = new EncString("Re-encrypted Folder");
-      encryptService.encrypt.mockResolvedValue(encryptedKey);
+      encryptService.encryptString.mockResolvedValue(encryptedKey);
     });
 
     it("returns re-encrypted user folders", async () => {

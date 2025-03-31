@@ -61,7 +61,7 @@ export class NodeEnvSecureStorageService implements AbstractStorageService {
     if (sessionKey == null) {
       throw new Error("No session key available.");
     }
-    const encValue = await this.encryptService.encryptToBytes(
+    const encValue = await this.encryptService.encryptFileData(
       Utils.fromB64ToArray(plainValue),
       sessionKey,
     );

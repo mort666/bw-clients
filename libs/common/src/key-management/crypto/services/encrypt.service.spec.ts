@@ -28,13 +28,13 @@ describe("EncryptService", () => {
 
   describe("encrypt", () => {
     it("throws if no key is provided", () => {
-      return expect(encryptService.encrypt(null, null)).rejects.toThrow(
+      return expect(encryptService.encryptString(null, null)).rejects.toThrow(
         "No encryption key provided.",
       );
     });
     it("returns null if no data is provided", async () => {
       const key = mock<SymmetricCryptoKey>();
-      const actual = await encryptService.encrypt(null, key);
+      const actual = await encryptService.encryptString(null, key);
       expect(actual).toBeNull();
     });
     it("creates an EncString for Aes256Cbc", async () => {
@@ -42,7 +42,7 @@ describe("EncryptService", () => {
       const plainValue = "data";
       cryptoFunctionService.aesEncrypt.mockResolvedValue(makeStaticByteArray(4, 100));
       cryptoFunctionService.randomBytes.mockResolvedValue(makeStaticByteArray(16) as CsprngArray);
-      const result = await encryptService.encrypt(plainValue, key);
+      const result = await encryptService.encryptString(plainValue, key);
       expect(cryptoFunctionService.aesEncrypt).toHaveBeenCalledWith(
         Utils.fromByteStringToArray(plainValue),
         makeStaticByteArray(16),
@@ -59,7 +59,7 @@ describe("EncryptService", () => {
       cryptoFunctionService.hmac.mockResolvedValue(makeStaticByteArray(32));
       cryptoFunctionService.aesEncrypt.mockResolvedValue(makeStaticByteArray(4, 100));
       cryptoFunctionService.randomBytes.mockResolvedValue(makeStaticByteArray(16) as CsprngArray);
-      const result = await encryptService.encrypt(plainValue, key);
+      const result = await encryptService.encryptString(plainValue, key);
       expect(cryptoFunctionService.aesEncrypt).toHaveBeenCalledWith(
         Utils.fromByteStringToArray(plainValue),
         makeStaticByteArray(16),
@@ -85,7 +85,7 @@ describe("EncryptService", () => {
     const plainValue = makeStaticByteArray(16, 1);
 
     it("throws if no key is provided", () => {
-      return expect(encryptService.encryptToBytes(plainValue, null)).rejects.toThrow(
+      return expect(encryptService.encryptFileData(plainValue, null)).rejects.toThrow(
         "No encryption key",
       );
     });
@@ -97,7 +97,7 @@ describe("EncryptService", () => {
       cryptoFunctionService.randomBytes.mockResolvedValue(iv as CsprngArray);
       cryptoFunctionService.aesEncrypt.mockResolvedValue(cipherText);
 
-      const actual = await encryptService.encryptToBytes(plainValue, key);
+      const actual = await encryptService.encryptFileData(plainValue, key);
       const expectedBytes = new Uint8Array(1 + iv.byteLength + cipherText.byteLength);
       expectedBytes.set([EncryptionType.AesCbc256_B64]);
       expectedBytes.set(iv, 1);
@@ -115,7 +115,7 @@ describe("EncryptService", () => {
       cryptoFunctionService.aesEncrypt.mockResolvedValue(cipherText);
       cryptoFunctionService.hmac.mockResolvedValue(mac);
 
-      const actual = await encryptService.encryptToBytes(plainValue, key);
+      const actual = await encryptService.encryptFileData(plainValue, key);
       const expectedBytes = new Uint8Array(
         1 + iv.byteLength + mac.byteLength + cipherText.byteLength,
       );

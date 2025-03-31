@@ -289,7 +289,7 @@ export class TokenService implements TokenServiceAbstraction {
   private async encryptAccessToken(accessToken: string, userId: UserId): Promise<EncString> {
     const accessTokenKey = await this.getOrCreateAccessTokenKey(userId);
 
-    return await this.encryptService.encrypt(accessToken, accessTokenKey);
+    return await this.encryptService.encryptString(accessToken, accessTokenKey);
   }
 
   private async decryptAccessToken(

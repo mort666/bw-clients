@@ -193,7 +193,7 @@ export class PinService implements PinServiceAbstraction {
 
     const pinKey = await this.makePinKey(pin, email, kdfConfig);
 
-    return await this.encryptService.encrypt(userKey.key, pinKey);
+    return await this.encryptService.wrapSymmetricKey(userKey, pinKey);
   }
 
   async storePinKeyEncryptedUserKey(
@@ -239,7 +239,7 @@ export class PinService implements PinServiceAbstraction {
       throw new Error("No UserKey provided. Cannot create userKeyEncryptedPin.");
     }
 
-    return await this.encryptService.encrypt(pin, userKey);
+    return await this.encryptService.encryptString(pin, userKey);
   }
 
   async getOldPinKeyEncryptedMasterKey(userId: UserId): Promise<EncryptedString | null> {

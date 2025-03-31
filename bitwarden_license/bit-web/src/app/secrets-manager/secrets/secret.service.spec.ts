@@ -24,7 +24,7 @@ describe("SecretService", () => {
 
     sut = new SecretService(keyService, apiService, encryptService, accessPolicyService);
 
-    encryptService.encrypt.mockResolvedValue({
+    encryptService.encryptString.mockResolvedValue({
       encryptedString: "mockEncryptedString",
     } as EncString);
     encryptService.decryptToUtf8.mockResolvedValue(mockUnencryptedData);

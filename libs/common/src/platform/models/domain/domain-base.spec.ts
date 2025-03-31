@@ -22,7 +22,7 @@ describe("DomainBase", () => {
   });
 
   function setUpCryptography() {
-    encryptService.encrypt.mockImplementation((value) => {
+    encryptService.encryptString.mockImplementation((value) => {
       let data: string;
       if (typeof value === "string") {
         data = value;
@@ -82,7 +82,7 @@ describe("DomainBase", () => {
 
       const domain = new TestDomain();
 
-      domain.encToString = await encryptService.encrypt("string", key);
+      domain.encToString = await encryptService.encryptString("string", key);
 
       const decrypted = await domain["decryptObjWithKey"](["encToString"], key, encryptService);
 
@@ -96,8 +96,8 @@ describe("DomainBase", () => {
 
       const domain = new TestDomain();
 
-      domain.encToString = await encryptService.encrypt("string", key);
-      domain.encString2 = await encryptService.encrypt("string2", key);
+      domain.encToString = await encryptService.encryptString("string", key);
+      domain.encString2 = await encryptService.encryptString("string2", key);
 
       const decrypted = await domain["decryptObjWithKey"](
         ["encToString", "encString2"],

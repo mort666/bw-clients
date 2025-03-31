@@ -350,7 +350,7 @@ export class NativeMessagingBackground {
       await this.secureCommunication();
     }
 
-    return await this.encryptService.encrypt(
+    return await this.encryptService.encryptString(
       JSON.stringify(message),
       this.secureChannel!.sharedSecret!,
     );

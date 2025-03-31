@@ -271,7 +271,7 @@ export class CipherService implements CipherServiceAbstraction {
         key,
       ).then(async () => {
         if (model.key != null) {
-          attachment.key = await this.encryptService.encrypt(model.key.key, key);
+          attachment.key = await this.encryptService.wrapSymmetricKey(model.key, key);
         }
         encAttachments.push(attachment);
       });
@@ -893,10 +893,10 @@ export class CipherService implements CipherServiceAbstraction {
       await this.updateWithServer(cipher);
     }
 
-    const encFileName = await this.encryptService.encrypt(filename, cipherEncKey);
+    const encFileName = await this.encryptService.encryptString(filename, cipherEncKey);
 
     const dataEncKey = await this.keyService.makeDataEncKey(cipherEncKey);
-    const encData = await this.encryptService.encryptToBytes(new Uint8Array(data), dataEncKey[0]);
+    const encData = await this.encryptService.encryptFileData(new Uint8Array(data), dataEncKey[0]);
 
     const response = await this.cipherFileUploadService.upload(
       cipher,
@@ -1496,8 +1496,11 @@ export class CipherService implements CipherServiceAbstraction {
 
     const dataEncKey = await this.keyService.makeDataEncKey(encKey);
 
-    const encFileName = await this.encryptService.encrypt(attachmentView.fileName, encKey);
-    const encData = await this.encryptService.encryptToBytes(new Uint8Array(decBuf), dataEncKey[0]);
+    const encFileName = await this.encryptService.encryptString(attachmentView.fileName, encKey);
+    const encData = await this.encryptService.encryptFileData(
+      new Uint8Array(decBuf),
+      dataEncKey[0],
+    );
 
     const fd = new FormData();
     try {
@@ -1552,7 +1555,7 @@ export class CipherService implements CipherServiceAbstraction {
           .then(() => {
             const modelProp = (model as any)[map[theProp] || theProp];
             if (modelProp && modelProp !== "") {
-              return self.encryptService.encrypt(modelProp, key);
+              return self.encryptService.encryptString(modelProp, key);
             }
             return null;
           })
@@ -1598,7 +1601,7 @@ export class CipherService implements CipherServiceAbstraction {
               key,
             );
             const uriHash = await this.encryptService.hash(model.login.uris[i].uri, "sha256");
-            loginUri.uriChecksum = await this.encryptService.encrypt(uriHash, key);
+            loginUri.uriChecksum = await this.encryptService.encryptString(uriHash, key);
             cipher.login.uris.push(loginUri);
           }
         }
@@ -1625,8 +1628,11 @@ export class CipherService implements CipherServiceAbstraction {
                 },
                 key,
               );
-              domainKey.counter = await this.encryptService.encrypt(String(viewKey.counter), key);
-              domainKey.discoverable = await this.encryptService.encrypt(
+              domainKey.counter = await this.encryptService.encryptString(
+                String(viewKey.counter),
+                key,
+              );
+              domainKey.discoverable = await this.encryptService.encryptString(
                 String(viewKey.discoverable),
                 key,
               );
@@ -1818,8 +1824,8 @@ export class CipherService implements CipherServiceAbstraction {
     }
 
     // Then, we have to encrypt the cipher key with the proper key.
-    cipher.key = await this.encryptService.encrypt(
-      decryptedCipherKey.key,
+    cipher.key = await this.encryptService.wrapSymmetricKey(
+      decryptedCipherKey,
       keyForCipherKeyEncryption,
     );
 

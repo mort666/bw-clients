@@ -123,7 +123,7 @@ describe("EncString", () => {
       .mockResolvedValue("decrypted");
 
     function setupEncryption() {
-      encryptService.encrypt.mockImplementation(async (data, key) => {
+      encryptService.encryptString.mockImplementation(async (data, key) => {
         if (typeof data === "string") {
           return makeEncString(data);
         } else {

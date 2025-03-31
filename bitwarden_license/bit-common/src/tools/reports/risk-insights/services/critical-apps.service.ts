@@ -164,7 +164,7 @@ export class CriticalAppsService {
     newEntries: string[],
   ): Promise<PasswordHealthReportApplicationsRequest[]> {
     const criticalAppsPromises = newEntries.map(async (url) => {
-      const encryptedUrlName = await this.encryptService.encrypt(url, key);
+      const encryptedUrlName = await this.encryptService.encryptString(url, key);
       return {
         organizationId: orgId,
         url: encryptedUrlName?.encryptedString?.toString() ?? "",

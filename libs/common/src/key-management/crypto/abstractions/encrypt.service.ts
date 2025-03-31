@@ -6,8 +6,24 @@ import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 
 export abstract class EncryptService {
-  abstract encrypt(plainValue: string | Uint8Array, key: SymmetricCryptoKey): Promise<EncString>;
-  abstract encryptToBytes(plainValue: Uint8Array, key: SymmetricCryptoKey): Promise<EncArrayBuffer>;
+  abstract encryptString(plainValue: string, key: SymmetricCryptoKey): Promise<EncString>;
+  abstract encryptFileData(
+    plainValue: Uint8Array,
+    key: SymmetricCryptoKey,
+  ): Promise<EncArrayBuffer>;
+  abstract wrapDecapsulationKey(
+    decapsulationKeyPcks8: Uint8Array,
+    key: SymmetricCryptoKey,
+  ): Promise<EncString>;
+  abstract wrapEncapsulationKey(
+    encapsulationKeySpki: Uint8Array,
+    key: SymmetricCryptoKey,
+  ): Promise<EncString>;
+  abstract wrapSymmetricKey(
+    encapsulatedKey: SymmetricCryptoKey,
+    key: SymmetricCryptoKey,
+  ): Promise<EncString>;
+
   /**
    * Decrypts an EncString to a string
    * @param encString - The EncString to decrypt

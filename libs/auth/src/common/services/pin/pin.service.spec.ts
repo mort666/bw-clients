@@ -189,7 +189,7 @@ describe("PinService", () => {
         await sut.createPinKeyEncryptedUserKey(mockPin, mockUserKey, mockUserId);
 
         // Assert
-        expect(encryptService.encrypt).toHaveBeenCalledWith(mockUserKey.key, mockPinKey);
+        expect(encryptService.wrapSymmetricKey).toHaveBeenCalledWith(mockUserKey, mockPinKey);
       });
     });
 
@@ -278,11 +278,11 @@ describe("PinService", () => {
       });
 
       it("should create a userKeyEncryptedPin from the provided PIN and userKey", async () => {
-        encryptService.encrypt.mockResolvedValue(mockUserKeyEncryptedPin);
+        encryptService.encryptString.mockResolvedValue(mockUserKeyEncryptedPin);
 
         const result = await sut.createUserKeyEncryptedPin(mockPin, mockUserKey);
 
-        expect(encryptService.encrypt).toHaveBeenCalledWith(mockPin, mockUserKey);
+        expect(encryptService.encryptString).toHaveBeenCalledWith(mockPin, mockUserKey);
         expect(result).toEqual(mockUserKeyEncryptedPin);
       });
     });

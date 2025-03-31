@@ -24,7 +24,7 @@ export class EncryptServiceImplementation implements EncryptService {
     protected logMacFailures: boolean,
   ) {}
 
-  async encrypt(plainValue: string | Uint8Array, key: SymmetricCryptoKey): Promise<EncString> {
+  async encryptString(plainValue: string, key: SymmetricCryptoKey): Promise<EncString> {
     if (key == null) {
       throw new Error("No encryption key provided.");
     }
@@ -33,21 +33,75 @@ export class EncryptServiceImplementation implements EncryptService {
       return Promise.resolve(null);
     }
 
-    let plainBuf: Uint8Array;
-    if (typeof plainValue === "string") {
-      plainBuf = Utils.fromUtf8ToArray(plainValue);
-    } else {
-      plainBuf = plainValue;
+    const plainBuf: Uint8Array = Utils.fromUtf8ToArray(plainValue);
+    return this.encryptUint8Array(plainBuf, key);
+  }
+
+  async wrapDecapsulationKey(
+    privateKeyPkcs8: Uint8Array,
+    key: SymmetricCryptoKey,
+  ): Promise<EncString> {
+    if (privateKeyPkcs8 == null) {
+      throw new Error("No private key provided for encapsulation.");
     }
 
-    const encObj = await this.aesEncrypt(plainBuf, key);
+    if (key == null) {
+      throw new Error("No encryption key provided for encapsulation.");
+    }
+
+    return await this.encryptUint8Array(privateKeyPkcs8, key);
+  }
+
+  async wrapEncapsulationKey(
+    encapsulationKeySpki: Uint8Array,
+    key: SymmetricCryptoKey,
+  ): Promise<EncString> {
+    if (encapsulationKeySpki == null) {
+      throw new Error("No encapsulation key provided for encapsulation.");
+    }
+
+    if (key == null) {
+      throw new Error("No encryption key provided for encapsulation.");
+    }
+
+    return await this.encryptUint8Array(encapsulationKeySpki, key);
+  }
+
+  async wrapSymmetricKey(
+    encapsulatedKey: SymmetricCryptoKey,
+    key: SymmetricCryptoKey,
+  ): Promise<EncString> {
+    if (encapsulatedKey == null) {
+      throw new Error("No encapsulated key provided for encapsulation.");
+    }
+
+    if (key == null) {
+      throw new Error("No encryption key provided for encapsulation.");
+    }
+
+    return await this.encryptUint8Array(encapsulatedKey.encKey, key);
+  }
+
+  private async encryptUint8Array(
+    plainValue: Uint8Array,
+    key: SymmetricCryptoKey,
+  ): Promise<EncString> {
+    if (key == null) {
+      throw new Error("No encryption key provided.");
+    }
+
+    if (plainValue == null) {
+      return Promise.resolve(null);
+    }
+
+    const encObj = await this.aesEncrypt(plainValue, key);
     const iv = Utils.fromBufferToB64(encObj.iv);
     const data = Utils.fromBufferToB64(encObj.data);
     const mac = encObj.mac != null ? Utils.fromBufferToB64(encObj.mac) : null;
     return new EncString(encObj.key.encType, data, iv, mac);
   }
 
-  async encryptToBytes(plainValue: Uint8Array, key: SymmetricCryptoKey): Promise<EncArrayBuffer> {
+  async encryptFileData(plainValue: Uint8Array, key: SymmetricCryptoKey): Promise<EncArrayBuffer> {
     if (key == null) {
       throw new Error("No encryption key provided.");
     }

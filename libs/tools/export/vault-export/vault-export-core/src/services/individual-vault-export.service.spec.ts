@@ -181,7 +181,7 @@ describe("VaultExportService", () => {
     folderService.folderViews$.mockReturnValue(of(UserFolderViews));
     folderService.folders$.mockReturnValue(of(UserFolders));
     kdfConfigService.getKdfConfig.mockResolvedValue(DEFAULT_KDF_CONFIG);
-    encryptService.encrypt.mockResolvedValue(new EncString("encrypted"));
+    encryptService.encryptString.mockResolvedValue(new EncString("encrypted"));
 
     exportService = new IndividualVaultExportService(
       folderService,
@@ -271,7 +271,7 @@ describe("VaultExportService", () => {
       });
 
       it("has a mac property", async () => {
-        encryptService.encrypt.mockResolvedValue(mac);
+        encryptService.encryptString.mockResolvedValue(mac);
         exportString = await exportService.getPasswordProtectedExport(password);
         exportObject = JSON.parse(exportString);
 
@@ -279,7 +279,7 @@ describe("VaultExportService", () => {
       });
 
       it("has data property", async () => {
-        encryptService.encrypt.mockResolvedValue(data);
+        encryptService.encryptString.mockResolvedValue(data);
         exportString = await exportService.getPasswordProtectedExport(password);
         exportObject = JSON.parse(exportString);
 

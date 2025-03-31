@@ -293,7 +293,7 @@ describe("TokenService", () => {
 
           const mockEncryptedAccessToken = "encryptedAccessToken";
 
-          encryptService.encrypt.mockResolvedValue({
+          encryptService.encryptString.mockResolvedValue({
             encryptedString: mockEncryptedAccessToken,
           } as any);
 

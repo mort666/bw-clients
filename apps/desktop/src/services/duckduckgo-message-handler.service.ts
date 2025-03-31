@@ -168,7 +168,7 @@ export class DuckDuckGoMessageHandlerService {
     payload: DecryptedCommandData,
     key: SymmetricCryptoKey,
   ): Promise<EncString> {
-    return await this.encryptService.encrypt(JSON.stringify(payload), key);
+    return await this.encryptService.encryptString(JSON.stringify(payload), key);
   }
 
   private async decryptPayload(message: EncryptedMessage): Promise<DecryptedCommandData> {

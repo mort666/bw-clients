@@ -37,7 +37,7 @@ export class OrganizationKeyEncryptor extends OrganizationEncryptor {
     this.assertHasValue("secret", secret);
 
     let packed = this.dataPacker.pack(secret);
-    const encrypted = await this.encryptService.encrypt(packed, this.key);
+    const encrypted = await this.encryptService.encryptString(packed, this.key);
     packed = null;
 
     return encrypted;
