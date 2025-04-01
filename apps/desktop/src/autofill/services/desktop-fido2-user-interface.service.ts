@@ -252,6 +252,11 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     }
   }
 
+  private async hideUi(): Promise<void> {
+    await this.desktopSettingsService.setModalMode(false);
+    await this.router.navigate(["/"]);
+  }
+
   private async showUi(
     route: string,
     position?: { x: number; y: number },
@@ -319,14 +324,22 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     const status = await firstValueFrom(this.authService.activeAccountStatus$);
     if (status !== AuthenticationStatus.Unlocked) {
       await this.showUi("/lock", this.windowObject.windowXy, true);
-      const status2 = await lastValueFrom(
-        this.authService.activeAccountStatus$.pipe(
-          filter((s) => s === AuthenticationStatus.Unlocked),
-          take(1),
-          timeout(30000),
-        ),
-      );
+
+      let status2: AuthenticationStatus;
+      try {
+        status2 = await lastValueFrom(
+          this.authService.activeAccountStatus$.pipe(
+            filter((s) => s === AuthenticationStatus.Unlocked),
+            take(1),
+            timeout(1000 * 60 * 5), // 5 minutes
+          ),
+        );
+      } catch (error) {
+        this.logService.warning("Error while waiting for vault to unlock", error);
+      }
+
       if (status2 !== AuthenticationStatus.Unlocked) {
+        await this.hideUi();
         throw new Error("Vault is not unlocked");
       }
     }
