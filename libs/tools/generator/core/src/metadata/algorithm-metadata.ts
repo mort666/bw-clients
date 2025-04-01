@@ -2,6 +2,8 @@ import { I18nKeyOrLiteral } from "@bitwarden/common/tools/types";
 
 import { CredentialAlgorithm, CredentialType } from "./type";
 
+type I18nKeyOrLiteral = string | { literal: string };
+
 /** Credential generator metadata common across credential generators */
 export type AlgorithmMetadata = {
   /** Uniquely identifies the credential configuration
