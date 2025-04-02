@@ -186,9 +186,9 @@ export class SendProgram extends BaseProgram {
         writeLn("    bw send get searchText");
         writeLn("    bw send get id");
         writeLn("    bw send get searchText --text");
-        writeLn("    bw send download id --file");
-        writeLn("    bw send download id --output ../Photos/photo.jpg");
-        writeLn("    bw send download id --file --raw");
+        writeLn("    bw send get id --file");
+        writeLn("    bw send get id --output ../Photos/photo.jpg");
+        writeLn("    bw send get id --file --raw");
         writeLn("", true);
       })
       .action(async (id: string, options: OptionValues) => {
