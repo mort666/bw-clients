@@ -67,6 +67,7 @@ export class Fido2CreateComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
+    await this.accountService.setShowHeader(false);
     this.session = this.fido2UserInterfaceService.getCurrentSession();
     const rpid = await this.session.getRpId();
     const equivalentDomains = await firstValueFrom(
@@ -92,6 +93,10 @@ export class Fido2CreateComponent implements OnInit {
         this.ciphersSubject.next(relevantCiphers);
       })
       .catch((error) => this.logService.error(error));
+  }
+
+  async ngOnDestroy() {
+    await this.accountService.setShowHeader(true);
   }
 
   async addPasskeyToCipher(cipher: CipherView) {
