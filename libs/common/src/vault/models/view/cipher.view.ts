@@ -1,5 +1,7 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
+import { CipherView as SdkCipherView } from "@bitwarden/sdk-internal";
+
 import { View } from "../../../models/view/view";
 import { InitializerMetadata } from "../../../platform/interfaces/initializer-metadata.interface";
 import { InitializerKey } from "../../../platform/services/cryptography/initializer-key";
@@ -221,5 +223,55 @@ export class CipherView implements View, InitializerMetadata {
     }
 
     return view;
+  }
+
+  /**
+   * Creates a CipherView from the SDK CipherView.
+   */
+  static fromSdkCipherView(obj: SdkCipherView): CipherView | undefined {
+    if (obj == null) {
+      return undefined;
+    }
+
+    const cipherView = new CipherView();
+    const attachments = obj.attachments?.map((a) => AttachmentView.fromSdkAttachmentView(a));
+    const fields = obj.fields?.map((f) => FieldView.fromSdkFieldView(f));
+    const passwordHistory = obj.passwordHistory?.map((ph) =>
+      PasswordHistoryView.fromSdkPasswordHistoryView(ph),
+    );
+    const revisionDate = obj.revisionDate == null ? null : new Date(obj.revisionDate);
+    const creationDate = obj.creationDate == null ? null : new Date(obj.creationDate);
+    const deletedDate = obj.deletedDate == null ? null : new Date(obj.deletedDate);
+
+    Object.assign(cipherView, obj, {
+      revisionDate: revisionDate,
+      creationDate: creationDate,
+      deletedDate: deletedDate,
+      attachments: attachments,
+      fields: fields,
+      passwordHistory: passwordHistory,
+    });
+
+    switch (obj.type) {
+      case CipherType.Card:
+        cipherView.card = CardView.fromSdkCardView(obj.card);
+        break;
+      case CipherType.Identity:
+        cipherView.identity = IdentityView.fromSdkIdentityView(obj.identity);
+        break;
+      case CipherType.Login:
+        cipherView.login = LoginView.fromSdkLoginView(obj.login);
+        break;
+      case CipherType.SecureNote:
+        cipherView.secureNote = SecureNoteView.fromSdkSecureNoteView(obj.secureNote);
+        break;
+      case CipherType.SshKey:
+        cipherView.sshKey = SshKeyView.fromSdkSshKeyView(obj.sshKey);
+        break;
+      default:
+        break;
+    }
+
+    return cipherView;
   }
 }

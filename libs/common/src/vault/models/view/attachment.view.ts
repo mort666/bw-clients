@@ -2,6 +2,8 @@
 // @ts-strict-ignore
 import { Jsonify } from "type-fest";
 
+import { AttachmentView as SdkAttachmentView } from "@bitwarden/sdk-internal";
+
 import { View } from "../../../models/view/view";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
 import { Attachment } from "../domain/attachment";
@@ -39,5 +41,24 @@ export class AttachmentView implements View {
   static fromJSON(obj: Partial<Jsonify<AttachmentView>>): AttachmentView {
     const key = obj.key == null ? null : SymmetricCryptoKey.fromJSON(obj.key);
     return Object.assign(new AttachmentView(), obj, { key: key });
+  }
+
+  /**
+   * Converts the SDK AttachmentView to a AttachmentView.
+   */
+  static fromSdkAttachmentView(obj: SdkAttachmentView): AttachmentView | undefined {
+    if (!obj) {
+      return undefined;
+    }
+
+    const view = new AttachmentView();
+    view.id = obj.id;
+    view.url = obj.url;
+    view.size = obj.size;
+    view.sizeName = obj.sizeName;
+    view.fileName = obj.fileName;
+    view.key = obj.key ? SymmetricCryptoKey.fromString(obj.key) : null;
+
+    return view;
   }
 }
