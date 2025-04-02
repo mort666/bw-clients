@@ -48,7 +48,7 @@ import { DesktopSettingsService } from "../../../platform/services/desktop-setti
   ],
   templateUrl: "fido2-create.component.html",
 })
-export class Fido2CreateComponent implements OnInit {
+export class Fido2CreateComponent implements OnInit, OnDestroy {
   session?: DesktopFido2UserInterfaceSession = null;
   private ciphersSubject = new BehaviorSubject<CipherView[]>([]);
   ciphers$: Observable<CipherView[]> = this.ciphersSubject.asObservable();
