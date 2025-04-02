@@ -21,13 +21,13 @@ import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.s
 import { KeyService } from "@bitwarden/key-management";
 import { NodeUtils } from "@bitwarden/node/node-utils";
 
-import { DownloadCommand } from "../../../commands/download.command";
+import { SendDownload } from "../../../commands/send-download.command";
 import { Response } from "../../../models/response";
 import { SendAccessResponse } from "../models/send-access.response";
 import { SendResponse } from "../models/send.response";
 
 // Note: DownloadCommand is actually an abstract class
-export class SendDownloadService extends DownloadCommand {
+export class SendDownloadService extends SendDownload {
   private decKey: SymmetricCryptoKey;
 
   constructor(
@@ -39,7 +39,7 @@ export class SendDownloadService extends DownloadCommand {
     private cryptoFunctionService: CryptoFunctionService,
     private sendApiService: SendApiService,
   ) {
-    super(encryptService, apiService);
+    super(encryptService, apiService, environmentService, platformUtilsService);
   }
 
   async download(sends: SendView, options: OptionValues) {
