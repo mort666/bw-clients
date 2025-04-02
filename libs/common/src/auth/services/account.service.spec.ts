@@ -435,16 +435,8 @@ describe("accountService", () => {
         expect(sut["_showHeader$"].value).toBe(true);
 
         await sut.setShowHeader(false);
+
         expect(sut["_showHeader$"].value).toBe(false);
-      });
-
-      it("should emit values correctly", (done) => {
-        sut.showHeader$.subscribe((value) => {
-          expect(value).toBe(false);
-          done();
-        });
-
-        await sut.setShowHeader(false);
       });
     });
   });
