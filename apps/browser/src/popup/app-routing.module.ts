@@ -43,7 +43,7 @@ import {
   UserLockIcon,
   VaultIcon,
 } from "@bitwarden/auth/angular";
-import { LockComponent } from "@bitwarden/key-management-ui";
+import { ConfirmKeyConnectorDomainComponent, LockComponent } from "@bitwarden/key-management-ui";
 import {
   NewDeviceVerificationNoticePageOneComponent,
   NewDeviceVerificationNoticePageTwoComponent,
@@ -222,6 +222,12 @@ const routes: Routes = [
   {
     path: "remove-password",
     component: RemovePasswordComponent,
+    canActivate: [authGuard],
+    data: { elevation: 1 } satisfies RouteDataProperties,
+  },
+  {
+    path: "confirm-key-connector-domain",
+    component: ConfirmKeyConnectorDomainComponent,
     canActivate: [authGuard],
     data: { elevation: 1 } satisfies RouteDataProperties,
   },
