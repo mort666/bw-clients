@@ -189,7 +189,7 @@
     "message": "An organization you are a member of is using Key Connector. In order to access the vault, you must opt-in to Key Connector now via the web vault. You have been logged out."
   },
   "removeMasterPasswordForOrganizationUserKeyConnector": {
-    "message": "$ORGANIZATION$ has updated its member decryption options. You no longer need a password when logging into Bitwarden. Please confirm the domain below with your organization administrator. Key Connector domain: $KEYCONNECTORDOMAIN$",
+    "message": "A master password is no longer required for members of the following organization. Please confirm the domain below with your organization administrator. Organization name: $ORGANIZATION$. Key Connector domain: $KEYCONNECTORDOMAIN$",
     "placeholders": {
       "organization": {
         "content": "$1",

@@ -6477,13 +6477,7 @@
     "message": "Invalid verification code"
   },
   "removeMasterPasswordForOrganizationUserKeyConnector": {
-    "message": "$ORGANIZATION$ has updated its member decryption options. You no longer need a password when logging into Bitwarden. Please confirm the domain below with your organization administrator.",
-    "placeholders": {
-      "organization": {
-        "content": "$1",
-        "example": "My Org Name"
-      }
-    }
+    "message": "A master password is no longer required for members of the following organization. Please confirm the domain below with your organization administrator."
   },
   "keyConnectorDomain": {
     "message": "Key Connector domain"
