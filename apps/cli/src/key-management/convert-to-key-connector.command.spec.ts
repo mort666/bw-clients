@@ -54,7 +54,7 @@ describe("ConvertToKeyConnectorCommand", () => {
     i18nService.t.mockImplementation((key: string) => {
       switch (key) {
         case "removeMasterPasswordForOrganizationUserKeyConnector":
-          return "Test Organization has updated its member decryption options. You no longer need a password when logging into Bitwarden. Please confirm the domain below with your organization administrator. Key Connector domain: https://keyconnector.example.com";
+          return "A master password is no longer required for members of the following organization. Please confirm the domain below with your organization administrator. Organization name: Test Organization. Key Connector domain: https://keyconnector.example.com";
         case "removeMasterPasswordAndUnlock":
           return "Remove master password and unlock";
         case "leaveOrganizationAndUnlock":
@@ -181,7 +181,7 @@ describe("ConvertToKeyConnectorCommand", () => {
       expect(promptObj["type"]).toEqual("list");
       expect(promptObj["name"]).toEqual("convert");
       expect(promptObj["message"]).toEqual(
-        `${organization.name} has updated its member decryption options. You no longer need a password when logging into Bitwarden. Please confirm the domain below with your organization administrator. Key Connector domain: ${organization.keyConnectorUrl}`,
+        `A master password is no longer required for members of the following organization. Please confirm the domain below with your organization administrator. Organization name: ${organization.name}. Key Connector domain: ${organization.keyConnectorUrl}`,
       );
       expect(promptObj["choices"]).toBeInstanceOf(Array);
       const choices = promptObj["choices"] as Array<Record<string, unknown>>;
