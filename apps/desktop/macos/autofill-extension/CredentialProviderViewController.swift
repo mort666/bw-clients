@@ -252,8 +252,6 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                     if let excludedCreds = request.excludedCredentials {
                         excludedCredentialIds = excludedCreds.map { $0.credentialID }
                     }
-                } else {
-                    // Fallback on earlier versions
                 }
                 
                 let req = PasskeyRegistrationRequest(
