@@ -23,7 +23,9 @@ export function EditButton({
       title=${buttonText}
       class=${editButtonStyles({ disabled, theme })}
       @click=${(event: Event) => {
-        !disabled && buttonAction(event);
+        if (!disabled) {
+          buttonAction(event);
+        }
       }}
     >
       ${PencilSquare({ disabled, theme })}

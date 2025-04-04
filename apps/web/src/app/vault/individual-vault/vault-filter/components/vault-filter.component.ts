@@ -2,18 +2,17 @@
 // @ts-strict-ignore
 import { Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output } from "@angular/core";
 import { Router } from "@angular/router";
-import { firstValueFrom, Subject } from "rxjs";
+import { firstValueFrom, merge, Subject, switchMap, takeUntil } from "rxjs";
 
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions/billing-api.service.abstraction";
-import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { TreeNode } from "@bitwarden/common/vault/models/domain/tree-node";
-import { DialogService } from "@bitwarden/components";
+import { DialogService, ToastService } from "@bitwarden/components";
 
 import { TrialFlowService } from "../../../../billing/services/trial-flow.service";
 import { VaultFilterService } from "../services/abstractions/vault-filter.service";
@@ -98,6 +97,7 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
     protected policyService: PolicyService,
     protected i18nService: I18nService,
     protected platformUtilsService: PlatformUtilsService,
+    protected toastService: ToastService,
     protected billingApiService: BillingApiServiceAbstraction,
     protected dialogService: DialogService,
     protected configService: ConfigService,
@@ -108,6 +108,19 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
     this.activeFilter.selectedCipherTypeNode =
       (await this.getDefaultFilter()) as TreeNode<CipherTypeFilter>;
     this.isLoaded = true;
+
+    // Without refactoring the entire component, we need to manually update the organization filter whenever the policies update
+    merge(
+      this.policyService.get$(PolicyType.SingleOrg),
+      this.policyService.get$(PolicyType.PersonalOwnership),
+    )
+      .pipe(
+        switchMap(() => this.addOrganizationFilter()),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((orgFilters) => {
+        this.filters.organizationFilter = orgFilters;
+      });
   }
 
   ngOnDestroy() {
@@ -122,11 +135,11 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
 
   applyOrganizationFilter = async (orgNode: TreeNode<OrganizationFilter>): Promise<void> => {
     if (!orgNode?.node.enabled) {
-      this.platformUtilsService.showToast(
-        "error",
-        null,
-        this.i18nService.t("disabledOrganizationFilterError"),
-      );
+      this.toastService.showToast({
+        variant: "error",
+        title: null,
+        message: this.i18nService.t("disabledOrganizationFilterError"),
+      });
       const metadata = await this.billingApiService.getOrganizationBillingMetadata(orgNode.node.id);
       await this.trialFlowService.handleUnpaidSubscriptionDialog(orgNode.node, metadata);
     }
@@ -229,20 +242,17 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
       },
       {
         id: "note",
-        name: this.i18nService.t("typeSecureNote"),
+        name: this.i18nService.t("note"),
         type: CipherType.SecureNote,
         icon: "bwi-sticky-note",
       },
-    ];
-
-    if (await this.configService.getFeatureFlag(FeatureFlag.SSHKeyVaultItem)) {
-      allTypeFilters.push({
+      {
         id: "sshKey",
         name: this.i18nService.t("typeSshKey"),
         type: CipherType.SshKey,
         icon: "bwi-key",
-      });
-    }
+      },
+    ];
 
     const typeFilterSection: VaultFilterSection = {
       data$: this.vaultFilterService.buildTypeTree(
@@ -267,7 +277,7 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
       },
       action: this.applyFolderFilter,
       edit: {
-        text: "editFolder",
+        filterName: this.i18nService.t("folder"),
         action: this.editFolder,
       },
     };

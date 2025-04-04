@@ -2,9 +2,8 @@
 // @ts-strict-ignore
 import { Jsonify } from "type-fest";
 
-import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
-
 import Domain from "../../../platform/models/domain/domain-base";
+import { EncString } from "../../../platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
 import { SshKeyData } from "../data/ssh-key.data";
 import { SshKeyView } from "../view/ssh-key.view";
@@ -37,13 +36,10 @@ export class SshKey extends Domain {
     context = "No Cipher Context",
     encKey?: SymmetricCryptoKey,
   ): Promise<SshKeyView> {
-    return this.decryptObj(
+    return this.decryptObj<SshKey, SshKeyView>(
+      this,
       new SshKeyView(),
-      {
-        privateKey: null,
-        publicKey: null,
-        keyFingerprint: null,
-      },
+      ["privateKey", "publicKey", "keyFingerprint"],
       orgId,
       encKey,
       "DomainType: SshKey; " + context,

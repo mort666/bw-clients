@@ -10,12 +10,14 @@ import {
   KeyService,
 } from "@bitwarden/key-management";
 
+// FIXME: remove `src` and fix import
+// eslint-disable-next-line no-restricted-imports
 import { PinServiceAbstraction } from "../../../../../auth/src/common/abstractions/pin.service.abstraction";
+import { InternalMasterPasswordServiceAbstraction } from "../../../key-management/master-password/abstractions/master-password.service.abstraction";
 import { I18nService } from "../../../platform/abstractions/i18n.service";
 import { HashPurpose } from "../../../platform/enums";
 import { UserId } from "../../../types/guid";
 import { AccountService } from "../../abstractions/account.service";
-import { InternalMasterPasswordServiceAbstraction } from "../../abstractions/master-password.service.abstraction";
 import { UserVerificationApiServiceAbstraction } from "../../abstractions/user-verification/user-verification-api.service.abstraction";
 import { UserVerificationService as UserVerificationServiceAbstraction } from "../../abstractions/user-verification/user-verification.service.abstraction";
 import { VerificationType } from "../../enums/verification-type";
@@ -161,6 +163,8 @@ export class UserVerificationService implements UserVerificationServiceAbstracti
     const request = new VerifyOTPRequest(verification.secret);
     try {
       await this.userVerificationApiService.postAccountVerifyOTP(request);
+      // FIXME: Remove when updating file. Eslint update
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       throw new Error(this.i18nService.t("invalidVerificationCode"));
     }
@@ -219,6 +223,8 @@ export class UserVerificationService implements UserVerificationServiceAbstracti
       request.masterPasswordHash = serverKeyHash;
       try {
         policyOptions = await this.userVerificationApiService.postAccountVerifyPassword(request);
+        // FIXME: Remove when updating file. Eslint update
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         throw new Error(this.i18nService.t("invalidMasterPassword"));
       }
@@ -231,7 +237,7 @@ export class UserVerificationService implements UserVerificationServiceAbstracti
     );
     await this.masterPasswordService.setMasterKeyHash(localKeyHash, userId);
     await this.masterPasswordService.setMasterKey(masterKey, userId);
-    return { policyOptions, masterKey };
+    return { policyOptions, masterKey, kdfConfig, email };
   }
 
   private async verifyUserByPIN(verification: PinVerification, userId: UserId): Promise<boolean> {
