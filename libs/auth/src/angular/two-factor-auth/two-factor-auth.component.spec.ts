@@ -2,7 +2,7 @@ import { Component } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { ActivatedRoute, Router, convertToParamMap } from "@angular/router";
 import { mock, MockProxy } from "jest-mock-extended";
-import { BehaviorSubject, of } from "rxjs";
+import { BehaviorSubject } from "rxjs";
 
 import { WINDOW } from "@bitwarden/angular/services/injection-tokens";
 import {
@@ -34,9 +34,9 @@ import { FakeAccountService, mockAccountServiceWith } from "@bitwarden/common/sp
 import { UserId } from "@bitwarden/common/types/guid";
 import { DialogService, ToastService } from "@bitwarden/components";
 
+import { DefaultTwoFactorFormCacheService } from "../../common/services/auth-request/default-two-factor-form-cache.service";
 import { AnonLayoutWrapperDataService } from "../anon-layout/anon-layout-wrapper-data.service";
 
-import { TwoFactorFormCacheService } from "./abstractions/two-factor-form-cache.service.abstraction";
 import { TwoFactorAuthComponentService } from "./two-factor-auth-component.service";
 import { TwoFactorAuthComponent } from "./two-factor-auth.component";
 
@@ -71,7 +71,7 @@ describe("TwoFactorAuthComponent", () => {
   let anonLayoutWrapperDataService: MockProxy<AnonLayoutWrapperDataService>;
   let mockEnvService: MockProxy<EnvironmentService>;
   let mockLoginSuccessHandlerService: MockProxy<LoginSuccessHandlerService>;
-  let mockTwoFactorFormCacheService: MockProxy<TwoFactorFormCacheService>;
+  let mockTwoFactorFormCacheService: MockProxy<DefaultTwoFactorFormCacheService>;
 
   let mockUserDecryptionOpts: {
     noMasterPassword: UserDecryptionOptions;
@@ -112,9 +112,9 @@ describe("TwoFactorAuthComponent", () => {
 
     anonLayoutWrapperDataService = mock<AnonLayoutWrapperDataService>();
 
-    mockTwoFactorFormCacheService = mock<TwoFactorFormCacheService>();
-    mockTwoFactorFormCacheService.isEnabled$.mockReturnValue(of(false));
-    mockTwoFactorFormCacheService.formData$.mockReturnValue(of(null));
+    mockTwoFactorFormCacheService = mock<DefaultTwoFactorFormCacheService>();
+    mockTwoFactorFormCacheService.getCachedTwoFactorFormData.mockReturnValue(null);
+    mockTwoFactorFormCacheService.init.mockResolvedValue();
 
     mockUserDecryptionOpts = {
       noMasterPassword: new UserDecryptionOptions({
@@ -159,7 +159,9 @@ describe("TwoFactorAuthComponent", () => {
       }),
     };
 
-    selectedUserDecryptionOptions = new BehaviorSubject<UserDecryptionOptions>(undefined);
+    selectedUserDecryptionOptions = new BehaviorSubject<UserDecryptionOptions>(
+      mockUserDecryptionOpts.withMasterPassword,
+    );
     mockUserDecryptionOptionsService.userDecryptionOptions$ = selectedUserDecryptionOptions;
 
     TestBed.configureTestingModule({
@@ -198,7 +200,7 @@ describe("TwoFactorAuthComponent", () => {
         { provide: EnvironmentService, useValue: mockEnvService },
         { provide: AnonLayoutWrapperDataService, useValue: anonLayoutWrapperDataService },
         { provide: LoginSuccessHandlerService, useValue: mockLoginSuccessHandlerService },
-        { provide: TwoFactorFormCacheService, useValue: mockTwoFactorFormCacheService },
+        { provide: DefaultTwoFactorFormCacheService, useValue: mockTwoFactorFormCacheService },
       ],
     });
 
