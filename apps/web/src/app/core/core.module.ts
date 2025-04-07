@@ -50,11 +50,12 @@ import {
 import { AccountApiService as AccountApiServiceAbstraction } from "@bitwarden/common/auth/abstractions/account-api.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
-import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/auth/abstractions/master-password.service.abstraction";
+import { MasterPasswordApiService } from "@bitwarden/common/auth/abstractions/master-password-api.service.abstraction";
 import { SsoLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/sso-login.service.abstraction";
 import { ClientType } from "@bitwarden/common/enums";
 import { ProcessReloadServiceAbstraction } from "@bitwarden/common/key-management/abstractions/process-reload.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
+import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
 import {
   VaultTimeout,
   VaultTimeoutStringType,
@@ -96,6 +97,7 @@ import {
   DefaultThemeStateService,
   ThemeStateService,
 } from "@bitwarden/common/platform/theming/theme-state.service";
+import { DialogService, ToastService } from "@bitwarden/components";
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
 import {
   KdfConfigService,
@@ -103,6 +105,7 @@ import {
   BiometricsService,
 } from "@bitwarden/key-management";
 import { LockComponentService } from "@bitwarden/key-management-ui";
+import { DefaultSshImportPromptService, SshImportPromptService } from "@bitwarden/vault";
 
 import { flagEnabled } from "../../utils/flags";
 import { PolicyListService } from "../admin-console/core/policy-list.service";
@@ -113,6 +116,7 @@ import {
   WebLoginDecryptionOptionsService,
   WebTwoFactorAuthComponentService,
   WebTwoFactorAuthDuoComponentService,
+  LinkSsoService,
 } from "../auth";
 import { WebSsoComponentService } from "../auth/core/services/login/web-sso-component.service";
 import { AcceptOrganizationInviteService } from "../auth/organization-invite/accept-organization.service";
@@ -253,6 +257,7 @@ const safeProviders: SafeProvider[] = [
       PolicyApiServiceAbstraction,
       LogService,
       PolicyService,
+      AccountService,
     ],
   }),
   safeProvider({
@@ -277,6 +282,7 @@ const safeProviders: SafeProvider[] = [
     useClass: WebSetPasswordJitService,
     deps: [
       ApiService,
+      MasterPasswordApiService,
       KeyServiceAbstraction,
       EncryptService,
       I18nServiceAbstraction,
@@ -307,6 +313,7 @@ const safeProviders: SafeProvider[] = [
       PlatformUtilsService,
       SsoLoginServiceAbstraction,
       Router,
+      AccountService,
     ],
   }),
   safeProvider({
@@ -340,6 +347,18 @@ const safeProviders: SafeProvider[] = [
     deps: [I18nServiceAbstraction],
   }),
   safeProvider({
+    provide: LinkSsoService,
+    useClass: LinkSsoService,
+    deps: [
+      SsoLoginServiceAbstraction,
+      ApiService,
+      CryptoFunctionService,
+      EnvironmentService,
+      PasswordGenerationServiceAbstraction,
+      PlatformUtilsService,
+    ],
+  }),
+  safeProvider({
     provide: TwoFactorAuthDuoComponentService,
     useClass: WebTwoFactorAuthDuoComponentService,
     deps: [PlatformUtilsService],
@@ -348,6 +367,11 @@ const safeProviders: SafeProvider[] = [
     provide: LoginDecryptionOptionsService,
     useClass: WebLoginDecryptionOptionsService,
     deps: [MessagingService, RouterService, AcceptOrganizationInviteService],
+  }),
+  safeProvider({
+    provide: SshImportPromptService,
+    useClass: DefaultSshImportPromptService,
+    deps: [DialogService, ToastService, PlatformUtilsService, I18nServiceAbstraction],
   }),
 ];
 
