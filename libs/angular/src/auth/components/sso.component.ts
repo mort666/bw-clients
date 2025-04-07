@@ -222,6 +222,7 @@ export class SsoComponent implements OnInit {
       }
 
       if (authResult.requiresKeyConnectorDomainConfirmation != null) {
+        this.logService.debug("Key Connector domain confirmation required");
         return await this.handleKeyConnectorDomainConfirmation(
           authResult.requiresKeyConnectorDomainConfirmation,
           authResult.userId,
@@ -436,11 +437,12 @@ export class SsoComponent implements OnInit {
       kdfMemory?: number;
       kdfParallelism?: number;
       keyConnectorUrl: string;
+      organizationId: string;
     },
     userId: UserId,
   ) {
     await this.router.navigate(["confirm-key-connector-domain"], {
-      state: {
+      queryParams: {
         ...request,
         userId,
       },

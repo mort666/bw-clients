@@ -1,1 +1,32 @@
-<div></div>
+@if (loading) {
+  <div class="tw-absolute tw-flex tw-size-full tw-items-center tw-justify-center">
+    <i class="bwi bwi-spinner bwi-spin bwi-lg" [attr.aria-label]="'loading' | i18n"></i>
+  </div>
+} @else {
+  <div>
+    <p>{{ "confirmKeyConnectorDomain" | i18n }}.</p>
+    <p class="tw-mb-0">{{ "keyConnectorDomain" | i18n }}:</p>
+    <p class="tw-text-muted tw-mb-6">{{ keyConnectorUrl }}</p>
+
+    <button
+      bitButton
+      type="button"
+      buttonType="primary"
+      class="tw-w-full tw-mb-2"
+      [bitAction]="confirm"
+      [block]="true"
+    >
+      {{ "confirm" | i18n }}
+    </button>
+    <button
+      bitButton
+      type="button"
+      buttonType="secondary"
+      class="tw-w-full"
+      [bitAction]="cancel"
+      [block]="true"
+    >
+      {{ "cancel" | i18n }}
+    </button>
+  </div>
+}
