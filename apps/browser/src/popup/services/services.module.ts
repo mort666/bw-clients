@@ -31,7 +31,6 @@ import {
   TwoFactorAuthDuoComponentService,
   TwoFactorAuthWebAuthnComponentService,
   SsoComponentService,
-  TwoFactorFormCacheService,
 } from "@bitwarden/auth/angular";
 import {
   LockService,
@@ -147,7 +146,6 @@ import { ExtensionTwoFactorAuthComponentService } from "../../auth/services/exte
 import { ExtensionTwoFactorAuthDuoComponentService } from "../../auth/services/extension-two-factor-auth-duo-component.service";
 import { ExtensionTwoFactorAuthEmailComponentService } from "../../auth/services/extension-two-factor-auth-email-component.service";
 import { ExtensionTwoFactorAuthWebAuthnComponentService } from "../../auth/services/extension-two-factor-auth-webauthn-component.service";
-import { ExtensionTwoFactorFormCacheService } from "../../auth/services/extension-two-factor-form-cache.service";
 import { AutofillService as AutofillServiceAbstraction } from "../../autofill/services/abstractions/autofill.service";
 import AutofillService from "../../autofill/services/autofill.service";
 import { InlineMenuFieldQualificationService } from "../../autofill/services/inline-menu-field-qualification.service";
@@ -565,11 +563,6 @@ const safeProviders: SafeProvider[] = [
     provide: TwoFactorAuthWebAuthnComponentService,
     useClass: ExtensionTwoFactorAuthWebAuthnComponentService,
     deps: [],
-  }),
-  safeProvider({
-    provide: TwoFactorFormCacheService,
-    useClass: ExtensionTwoFactorFormCacheService,
-    deps: [PopupViewCacheService, ConfigService],
   }),
   safeProvider({
     provide: TwoFactorAuthDuoComponentService,

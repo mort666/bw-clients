@@ -22,8 +22,6 @@ import {
   ToastService,
 } from "@bitwarden/components";
 
-import { TwoFactorFormCacheService } from "../../abstractions/two-factor-form-cache.service.abstraction";
-
 import { TwoFactorAuthEmailComponentService } from "./two-factor-auth-email-component.service";
 
 @Component({
@@ -45,7 +43,9 @@ import { TwoFactorAuthEmailComponentService } from "./two-factor-auth-email-comp
 })
 export class TwoFactorAuthEmailComponent implements OnInit {
   @Input({ required: true }) tokenFormControl: FormControl | undefined = undefined;
+  @Input({ required: true }) emailSent: boolean = false;
   @Output() tokenChange = new EventEmitter<{ token: string }>();
+  @Output() emailSendEvent = new EventEmitter<void>();
 
   twoFactorEmail: string | undefined = undefined;
   emailPromise: Promise<any> | undefined;
@@ -60,7 +60,6 @@ export class TwoFactorAuthEmailComponent implements OnInit {
     protected appIdService: AppIdService,
     private toastService: ToastService,
     private twoFactorAuthEmailComponentService: TwoFactorAuthEmailComponentService,
-    private twoFactorFormCacheService: TwoFactorFormCacheService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -80,20 +79,15 @@ export class TwoFactorAuthEmailComponent implements OnInit {
 
     this.twoFactorEmail = email2faProviderData.Email;
 
-    // Check if email has already been sent according to the cache
-    let emailAlreadySent = false;
-    try {
-      const cachedData = await this.twoFactorFormCacheService.getFormData();
-      emailAlreadySent = cachedData?.emailSent === true;
-    } catch (e) {
-      this.logService.error(e);
-    }
-
-    if (!emailAlreadySent) {
+    if (!this.emailSent) {
       await this.sendEmail(false);
     }
   }
 
+  /**
+   * Emits the token value to the parent component
+   * @param event - The event object from the input field
+   */
   onTokenChange(event: Event) {
     const tokenValue = (event.target as HTMLInputElement).value || "";
     this.tokenChange.emit({ token: tokenValue });
@@ -130,17 +124,7 @@ export class TwoFactorAuthEmailComponent implements OnInit {
       this.emailPromise = this.apiService.postTwoFactorEmail(request);
       await this.emailPromise;
 
-      // Update cache to indicate email was sent
-      try {
-        const cachedData = (await this.twoFactorFormCacheService.getFormData()) || {};
-        await this.twoFactorFormCacheService.saveFormData({
-          ...cachedData,
-          emailSent: true,
-          token: undefined,
-        });
-      } catch (e) {
-        this.logService.error(e);
-      }
+      this.emailSendEvent.emit();
 
       if (doToast) {
         this.toastService.showToast({

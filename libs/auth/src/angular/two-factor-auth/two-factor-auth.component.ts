@@ -46,6 +46,7 @@ import {
   ToastService,
 } from "@bitwarden/components";
 
+import { DefaultTwoFactorFormCacheService } from "../../common/services/auth-request/default-two-factor-form-cache.service";
 import { AnonLayoutWrapperDataService } from "../anon-layout/anon-layout-wrapper-data.service";
 import {
   TwoFactorAuthAuthenticatorIcon,
@@ -55,7 +56,6 @@ import {
   TwoFactorAuthDuoIcon,
 } from "../icons/two-factor-auth";
 
-import { TwoFactorFormCacheService } from "./abstractions";
 import { TwoFactorAuthAuthenticatorComponent } from "./child-components/two-factor-auth-authenticator.component";
 import { TwoFactorAuthDuoComponent } from "./child-components/two-factor-auth-duo/two-factor-auth-duo.component";
 import { TwoFactorAuthEmailComponent } from "./child-components/two-factor-auth-email/two-factor-auth-email.component";
@@ -101,7 +101,11 @@ interface TwoFactorFormCacheData {
     TwoFactorAuthYubikeyComponent,
     TwoFactorAuthWebAuthnComponent,
   ],
-  providers: [],
+  providers: [
+    {
+      provide: DefaultTwoFactorFormCacheService,
+    },
+  ],
 })
 export class TwoFactorAuthComponent implements OnInit, OnDestroy {
   @ViewChild("continueButton", { read: ElementRef, static: false }) continueButton:
@@ -109,6 +113,11 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
     | undefined = undefined;
 
   loading = true;
+
+  /**
+   * Whether the email has been sent according to the cache
+   */
+  emailSent = false;
 
   orgSsoIdentifier: string | undefined = undefined;
 
@@ -171,7 +180,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
     private anonLayoutWrapperDataService: AnonLayoutWrapperDataService,
     private environmentService: EnvironmentService,
     private loginSuccessHandlerService: LoginSuccessHandlerService,
-    private twoFactorFormCacheService: TwoFactorFormCacheService,
+    private twoFactorFormCacheService: DefaultTwoFactorFormCacheService,
   ) {}
 
   async ngOnInit() {
@@ -180,9 +189,12 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
 
     this.listenForAuthnSessionTimeout();
 
+    // Initialize the cache
+    await this.twoFactorFormCacheService.init();
+
     // Load persisted form data if available
     let loadedCachedProviderType = false;
-    const persistedData = await this.twoFactorFormCacheService.getFormData();
+    const persistedData = this.twoFactorFormCacheService.getCachedTwoFactorFormData();
     if (persistedData) {
       if (persistedData.token) {
         this.form.patchValue({ token: persistedData.token });
@@ -193,6 +205,9 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
       if (persistedData.selectedProviderType !== undefined) {
         this.selectedProviderType = persistedData.selectedProviderType;
         loadedCachedProviderType = true;
+      }
+      if (persistedData.emailSent !== undefined) {
+        this.emailSent = persistedData.emailSent;
       }
     }
 
@@ -218,20 +233,17 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
    */
   async saveFormDataWithPartialData(data: Partial<TwoFactorFormCacheData>) {
     // Get current cached data
-    const currentData = (await this.twoFactorFormCacheService.getFormData()) || {};
+    const currentData = this.twoFactorFormCacheService.getCachedTwoFactorFormData();
 
-    // Only update fields that are present in the data object
-    const updatedData: TwoFactorFormCacheData = {
-      ...currentData,
-      ...Object.entries(data).reduce((acc, [key, value]) => {
-        if (value !== undefined) {
-          acc[key] = value;
-        }
-        return acc;
-      }, {} as any),
-    };
-
-    await this.twoFactorFormCacheService.saveFormData(updatedData);
+    this.twoFactorFormCacheService.cacheTwoFactorFormData({
+      token: data?.token ?? currentData?.token ?? "",
+      remember: data?.remember ?? currentData?.remember ?? false,
+      selectedProviderType:
+        data?.selectedProviderType ??
+        currentData?.selectedProviderType ??
+        TwoFactorProviderType.Authenticator,
+      emailSent: data?.emailSent ?? currentData?.emailSent ?? false,
+    });
   }
 
   /**
@@ -335,7 +347,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
     const rememberValue = remember ?? this.rememberFormControl.value ?? false;
 
     // Persist form data before submitting
-    await this.twoFactorFormCacheService.saveFormData({
+    this.twoFactorFormCacheService.cacheTwoFactorFormData({
       token: tokenValue,
       remember: rememberValue,
       selectedProviderType: this.selectedProviderType,
@@ -363,11 +375,11 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
 
   async selectOtherTwoFactorMethod() {
     // Persist current form data before navigating to another method
-    await this.twoFactorFormCacheService.saveFormData({
-      token: undefined,
-      remember: undefined,
+    this.twoFactorFormCacheService.cacheTwoFactorFormData({
+      token: "",
+      remember: false,
       selectedProviderType: this.selectedProviderType,
-      emailSent: this.selectedProviderType === TwoFactorProviderType.Email,
+      emailSent: false,
     });
 
     const dialogRef = TwoFactorOptionsComponent.open(this.dialogService);
@@ -384,11 +396,11 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
       await this.setAnonLayoutDataByTwoFactorProviderType();
 
       // Update the persisted provider type when a new one is chosen
-      await this.twoFactorFormCacheService.saveFormData({
-        token: undefined,
-        remember: undefined,
+      this.twoFactorFormCacheService.cacheTwoFactorFormData({
+        token: "",
+        remember: false,
         selectedProviderType: response.type,
-        emailSent: false, // Reset email sent state when switching providers
+        emailSent: false,
       });
 
       this.form.reset();
@@ -469,7 +481,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
 
   private async handleAuthResult(authResult: AuthResult) {
     // Clear form cache
-    await this.twoFactorFormCacheService.clearFormData();
+    this.twoFactorFormCacheService.clearCachedTwoFactorFormData();
 
     if (await this.handleMigrateEncryptionKey(authResult)) {
       return; // stop login process
