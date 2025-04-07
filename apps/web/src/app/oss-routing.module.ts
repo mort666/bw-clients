@@ -573,7 +573,7 @@ const routes: Routes = [
       {
         path: "confirm-key-connector-domain",
         component: ConfirmKeyConnectorDomainComponent,
-        canActivate: [authGuard],
+        canActivate: [],
         data: {
           pageTitle: {
             key: "confirmKeyConnectorDomain",
