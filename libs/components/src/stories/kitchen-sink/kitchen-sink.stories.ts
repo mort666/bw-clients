@@ -14,7 +14,6 @@ import {
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 
-// import { DialogService } from "../../dialog";
 import { LayoutComponent } from "../../layout";
 import { I18nMockService } from "../../utils/i18n-mock.service";
 import { positionFixedWrapperDecorator } from "../storybook-decorators";
