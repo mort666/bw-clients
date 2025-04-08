@@ -1,4 +1,4 @@
-import { EMPTY, catchError, firstValueFrom, map } from "rxjs";
+import { EMPTY, catchError, firstValueFrom, map, of } from "rxjs";
 
 import { CipherListView } from "@bitwarden/sdk-internal";
 
@@ -52,7 +52,13 @@ export class DefaultCipherEncryptionService implements CipherEncryptionService {
         }),
         catchError((error: unknown) => {
           this.logService.error(`Failed to decrypt cipher ${cipher.id}: ${error}`);
-          return EMPTY;
+
+          // Return failed cipher view
+          const failedView = new CipherView(cipher);
+          failedView.decryptionFailure = true;
+          failedView.name = "[error: cannot decrypt]";
+
+          return of(failedView);
         }),
       ),
     );
