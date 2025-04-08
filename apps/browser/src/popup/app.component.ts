@@ -115,6 +115,10 @@ export class AppComponent implements OnInit, OnDestroy {
               if (msg.logoutReason) {
                 await this.displayLogoutReason(msg.logoutReason);
               }
+
+              if (this.activeUserId) {
+                await this.router.navigate(["vault"]);
+              }
             });
             this.changeDetectorRef.detectChanges();
           } else if (msg.command === "authBlocked" || msg.command === "goHome") {
