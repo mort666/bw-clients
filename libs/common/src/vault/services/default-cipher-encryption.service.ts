@@ -20,7 +20,7 @@ export class DefaultCipherEncryptionService implements CipherEncryptionService {
   /**
    * {@inheritdoc}
    */
-  async decrypt(userId: UserId, cipher: Cipher): Promise<CipherView> {
+  async decrypt(cipher: Cipher, userId: UserId): Promise<CipherView> {
     return firstValueFrom(
       this.sdkService.userClient$(userId).pipe(
         map((sdk) => {
@@ -67,7 +67,7 @@ export class DefaultCipherEncryptionService implements CipherEncryptionService {
   /**
    * {@inheritdoc}
    */
-  async decryptCipherList(userId: UserId, ciphers: Cipher[]): Promise<CipherListView[]> {
+  async decryptCipherList(ciphers: Cipher[], userId: UserId): Promise<CipherListView[]> {
     return firstValueFrom(
       this.sdkService.userClient$(userId).pipe(
         map((sdk) => {

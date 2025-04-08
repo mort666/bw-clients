@@ -11,19 +11,19 @@ export abstract class CipherEncryptionService {
   /**
    * Decrypts a cipher using the SDK for the given userId.
    *
-   * @param userId The user ID whose key will be used for decryption
    * @param cipher The encrypted cipher object
+   * @param userId The user ID whose key will be used for decryption
    *
    * @returns A promise that resolves to the decrypted cipher view
    */
-  abstract decrypt(userId: UserId, cipher: Cipher): Promise<CipherView>;
+  abstract decrypt(cipher: Cipher, userId: UserId): Promise<CipherView>;
   /**
    * Decrypts a list of ciphers using the SDK for the given userId.
    *
-   * @param userId The user ID whose key will be used for decryption
    * @param ciphers The encrypted cipher objects
+   * @param userId The user ID whose key will be used for decryption
    *
    * @returns A promise that resolves to an array of decrypted cipher list views
    */
-  abstract decryptCipherList(userId: UserId, ciphers: Cipher[]): Promise<CipherListView[]>;
+  abstract decryptCipherList(ciphers: Cipher[], userId: UserId): Promise<CipherListView[]>;
 }
