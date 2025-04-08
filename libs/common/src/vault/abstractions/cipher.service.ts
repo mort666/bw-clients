@@ -3,7 +3,6 @@
 import { Observable } from "rxjs";
 
 import { UserKeyRotationDataProvider } from "@bitwarden/key-management";
-import { CipherView as SdkCipherView } from "@bitwarden/sdk-internal";
 
 import { UriMatchStrategySetting } from "../../models/domain/domain-service";
 import { SymmetricCryptoKey } from "../../platform/models/domain/symmetric-crypto-key";
@@ -34,17 +33,6 @@ export abstract class CipherService implements UserKeyRotationDataProvider<Ciphe
    */
   abstract failedToDecryptCiphers$(userId: UserId): Observable<CipherView[]>;
 
-  /**
-   * Decrypts a cipher using the SDK for the given userId.
-   *
-   * @param userId The user ID whose key will be used for decryption
-   * @param cipher The encrypted cipher object
-   *
-   * @returns An observable that emits the decrypted cipher view
-   *
-   * @todo Consider moving this to a dedicated service as the cipher service is already quite large.
-   */
-  abstract decrypt$(userId: UserId, cipher: Cipher): Observable<SdkCipherView>;
   abstract clearCache(userId: UserId): Promise<void>;
   abstract encrypt(
     model: CipherView,
@@ -227,4 +215,12 @@ export abstract class CipherService implements UserKeyRotationDataProvider<Ciphe
   ): Promise<CipherWithIdRequest[]>;
   abstract getNextCardCipher(userId: UserId): Promise<CipherView>;
   abstract getNextIdentityCipher(userId: UserId): Promise<CipherView>;
+
+  /**
+   * Decrypts a cipher using either the SDK or the legacy method based on the feature flag.
+   * @param cipher The cipher to decrypt.
+   * @param userId The user ID to use for decryption.
+   * @returns A promise that resolves to the decrypted cipher view.
+   */
+  abstract decryptCipherWithSdkOrLegacy(cipher: Cipher, userId: UserId): Promise<CipherView>;
 }
