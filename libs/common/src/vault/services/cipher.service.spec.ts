@@ -15,6 +15,7 @@ import { EncryptService } from "../../key-management/crypto/abstractions/encrypt
 import { UriMatchStrategy } from "../../models/domain/domain-service";
 import { ConfigService } from "../../platform/abstractions/config/config.service";
 import { I18nService } from "../../platform/abstractions/i18n.service";
+import { SdkService } from "../../platform/abstractions/sdk/sdk.service";
 import { StateService } from "../../platform/abstractions/state.service";
 import { Utils } from "../../platform/misc/utils";
 import { EncArrayBuffer } from "../../platform/models/domain/enc-array-buffer";
@@ -23,6 +24,7 @@ import { SymmetricCryptoKey } from "../../platform/models/domain/symmetric-crypt
 import { ContainerService } from "../../platform/services/container.service";
 import { CipherId, UserId } from "../../types/guid";
 import { CipherKey, OrgKey, UserKey } from "../../types/key";
+import { CipherEncryptionService } from "../abstractions/cipher-encryption.service";
 import { CipherFileUploadService } from "../abstractions/file-upload/cipher-file-upload.service";
 import { FieldType } from "../enums";
 import { CipherRepromptType } from "../enums/cipher-reprompt-type";
@@ -122,6 +124,8 @@ describe("Cipher Service", () => {
   const configService = mock<ConfigService>();
   accountService = mockAccountServiceWith(mockUserId);
   const stateProvider = new FakeStateProvider(accountService);
+  const sdkService = mock<SdkService>();
+  const cipherEncryptionService = mock<CipherEncryptionService>();
 
   const userId = "TestUserId" as UserId;
 
@@ -148,6 +152,8 @@ describe("Cipher Service", () => {
       configService,
       stateProvider,
       accountService,
+      sdkService,
+      cipherEncryptionService,
     );
 
     cipherObj = new Cipher(cipherData);
@@ -468,6 +474,31 @@ describe("Cipher Service", () => {
       await expect(
         cipherService.getRotatedData(originalUserKey, newUserKey, mockUserId),
       ).rejects.toThrow("Cannot rotate ciphers when decryption failures are present");
+    });
+  });
+
+  describe("decryptCipherWithSdkOrLegacy", () => {
+    it("should call decrypt method of CipherEncryptionService when feature flag is true", async () => {
+      configService.getFeatureFlag.mockResolvedValue(true);
+      cipherEncryptionService.decrypt.mockResolvedValue(new CipherView(cipherObj));
+
+      const result = await cipherService.decryptCipherWithSdkOrLegacy(cipherObj, userId);
+
+      expect(result).toEqual(new CipherView(cipherObj));
+      expect(cipherEncryptionService.decrypt).toHaveBeenCalledWith(cipherObj, userId);
+    });
+
+    it("should call legacy decrypt when feature flag is false", async () => {
+      const mockUserKey = new SymmetricCryptoKey(new Uint8Array(32)) as UserKey;
+      configService.getFeatureFlag.mockResolvedValue(false);
+      cipherService.getKeyForCipherKeyDecryption = jest.fn().mockResolvedValue(mockUserKey);
+      encryptService.decryptToBytes.mockResolvedValue(new Uint8Array(32));
+      jest.spyOn(cipherObj, "decrypt").mockResolvedValue(new CipherView(cipherObj));
+
+      const result = await cipherService.decryptCipherWithSdkOrLegacy(cipherObj, userId);
+
+      expect(result).toEqual(new CipherView(cipherObj));
+      expect(cipherObj.decrypt).toHaveBeenCalledWith(mockUserKey);
     });
   });
 });
