@@ -289,7 +289,10 @@ export class DesktopAutofillService implements OnDestroy {
         alg,
         type: "public-key",
       })),
-      excludeCredentialDescriptorList: [],
+      excludeCredentialDescriptorList: request.excludedCredentials.map((credentialId) => ({
+        id: new Uint8Array(credentialId),
+        type: "public-key" as const,
+      })),
       requireResidentKey: true,
       requireUserVerification:
         request.userVerification === "required" || request.userVerification === "preferred",
