@@ -130,7 +130,10 @@ describe("ConvertToKeyConnectorCommand", () => {
 
       expect(response).not.toBeNull();
       expect(response.success).toEqual(true);
-      expect(keyConnectorService.migrateUser).toHaveBeenCalledWith(userId);
+      expect(keyConnectorService.migrateUser).toHaveBeenCalledWith(
+        organization.keyConnectorUrl,
+        userId,
+      );
       expect(environmentService.setEnvironment).toHaveBeenCalledWith(Region.SelfHosted, {
         keyConnector: organization.keyConnectorUrl,
       } as Urls);
