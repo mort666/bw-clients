@@ -1,6 +1,7 @@
 import { AttachmentView as SdkAttachmentView } from "@bitwarden/sdk-internal";
 
 import { mockFromJson } from "../../../../spec";
+import { EncString } from "../../../platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
 
 import { AttachmentView } from "./attachment.view";
@@ -25,14 +26,6 @@ describe("AttachmentView", () => {
     });
 
     it("should return an AttachmentView from an SdkAttachmentView", () => {
-      const key = {
-        key: new Uint8Array([1, 2, 3]),
-        keyB64: "encKeyB64_fromString",
-        encKeyB64: "encKeyB64_fromString",
-      } as SymmetricCryptoKey;
-
-      jest.spyOn(SymmetricCryptoKey, "fromString").mockReturnValue(key);
-
       const sdkAttachmentView = {
         id: "id",
         url: "url",
@@ -50,7 +43,8 @@ describe("AttachmentView", () => {
         size: "size",
         sizeName: "sizeName",
         fileName: "fileName",
-        key: key,
+        key: null,
+        encryptedKey: new EncString(sdkAttachmentView.key as string),
       });
     });
   });
