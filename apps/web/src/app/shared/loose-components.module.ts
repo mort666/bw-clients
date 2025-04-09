@@ -1,6 +1,5 @@
 import { NgModule } from "@angular/core";
 
-import { OrganizationTrustComponent } from "@bitwarden/angular/key-management/components/organization-trust.component";
 import {
   PasswordCalloutComponent,
   UserVerificationFormInputComponent,
@@ -129,7 +128,6 @@ import { SharedModule } from "./shared.module";
     OrgReusedPasswordsReportComponent,
     OrgUnsecuredWebsitesReportComponent,
     OrgUserConfirmComponent,
-    OrganizationTrustComponent,
     OrgWeakPasswordsReportComponent,
     PreferencesComponent,
     PremiumBadgeComponent,
@@ -188,7 +186,6 @@ import { SharedModule } from "./shared.module";
     OrgReusedPasswordsReportComponent,
     OrgUnsecuredWebsitesReportComponent,
     OrgUserConfirmComponent,
-    OrganizationTrustComponent,
     OrgWeakPasswordsReportComponent,
     PreferencesComponent,
     PremiumBadgeComponent,
