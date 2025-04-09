@@ -183,10 +183,10 @@ describe("CipherView", () => {
           autofillOnPageLoad: true,
           __fromSdk: true,
         },
-        identity: undefined,
-        card: undefined,
-        secureNote: undefined,
-        sshKey: undefined,
+        identity: new IdentityView(),
+        card: new CardView(),
+        secureNote: new SecureNoteView(),
+        sshKey: new SshKeyView(),
         fields: [
           {
             name: "fieldName",

@@ -234,23 +234,28 @@ export class CipherView implements View, InitializerMetadata {
     }
 
     const cipherView = new CipherView();
-    const attachments = obj.attachments?.map((a) => AttachmentView.fromSdkAttachmentView(a));
-    const fields = obj.fields?.map((f) => FieldView.fromSdkFieldView(f));
-    const passwordHistory = obj.passwordHistory?.map((ph) =>
+    cipherView.id = obj.id;
+    cipherView.organizationId = obj.organizationId;
+    cipherView.folderId = obj.folderId;
+    cipherView.name = obj.name;
+    cipherView.notes = obj.notes;
+    cipherView.type = obj.type;
+    cipherView.favorite = obj.favorite;
+    cipherView.organizationUseTotp = obj.organizationUseTotp;
+    cipherView.permissions = CipherPermissionsApi.fromSdkCipherPermissions(obj.permissions);
+    cipherView.edit = obj.edit;
+    cipherView.viewPassword = obj.viewPassword;
+    cipherView.localData = obj.localData;
+    cipherView.attachments = obj.attachments?.map((a) => AttachmentView.fromSdkAttachmentView(a));
+    cipherView.fields = obj.fields?.map((f) => FieldView.fromSdkFieldView(f));
+    cipherView.passwordHistory = obj.passwordHistory?.map((ph) =>
       PasswordHistoryView.fromSdkPasswordHistoryView(ph),
     );
-    const revisionDate = obj.revisionDate == null ? null : new Date(obj.revisionDate);
-    const creationDate = obj.creationDate == null ? null : new Date(obj.creationDate);
-    const deletedDate = obj.deletedDate == null ? null : new Date(obj.deletedDate);
-
-    Object.assign(cipherView, obj, {
-      revisionDate: revisionDate,
-      creationDate: creationDate,
-      deletedDate: deletedDate,
-      attachments: attachments,
-      fields: fields,
-      passwordHistory: passwordHistory,
-    });
+    cipherView.collectionIds = obj.collectionIds;
+    cipherView.revisionDate = obj.revisionDate == null ? null : new Date(obj.revisionDate);
+    cipherView.creationDate = obj.creationDate == null ? null : new Date(obj.creationDate);
+    cipherView.deletedDate = obj.deletedDate == null ? null : new Date(obj.deletedDate);
+    cipherView.reprompt = obj.reprompt ?? CipherRepromptType.None;
 
     switch (obj.type) {
       case CipherType.Card:
