@@ -135,7 +135,7 @@ describe("DefaultCipherEncryptionService", () => {
       mockSdkClient.vault().ciphers().decrypt.mockReturnValue(sdkCipherView);
       jest.spyOn(CipherView, "fromSdkCipherView").mockReturnValue(expectedCipherView);
 
-      const result = await cipherEncryptionService.decrypt(userId, cipherObj);
+      const result = await cipherEncryptionService.decrypt(cipherObj, userId);
 
       expect(result).toEqual(expectedCipherView);
       expect(cipherObj.toSdkCipher).toHaveBeenCalledTimes(1);
@@ -200,7 +200,7 @@ describe("DefaultCipherEncryptionService", () => {
         .spyOn(Fido2CredentialView, "fromSdkFido2CredentialView")
         .mockReturnValueOnce(fido2CredentialView);
 
-      const result = await cipherEncryptionService.decrypt(userId, cipherObj);
+      const result = await cipherEncryptionService.decrypt(cipherObj, userId);
 
       expect(result).toBe(expectedCipherView);
       expect(result.login?.fido2Credentials).toEqual([fido2CredentialView]);
@@ -219,7 +219,7 @@ describe("DefaultCipherEncryptionService", () => {
           throw new Error(errorMessage);
         });
 
-      const result = await cipherEncryptionService.decrypt(userId, cipherObj);
+      const result = await cipherEncryptionService.decrypt(cipherObj, userId);
 
       expect(result).toBeInstanceOf(CipherView);
       expect(result.decryptionFailure).toBe(true);
