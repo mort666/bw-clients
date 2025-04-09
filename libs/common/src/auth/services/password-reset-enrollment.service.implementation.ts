@@ -1,6 +1,4 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
-import { firstValueFrom, map } from "rxjs";
+import { firstValueFrom } from "rxjs";
 
 import {
   OrganizationUserApiService,
@@ -11,7 +9,6 @@ import { KeyService } from "@bitwarden/key-management";
 import { OrganizationApiServiceAbstraction } from "../../admin-console/abstractions/organization/organization-api.service.abstraction";
 import { EncryptService } from "../../key-management/crypto/abstractions/encrypt.service";
 import { I18nService } from "../../platform/abstractions/i18n.service";
-import { Utils } from "../../platform/misc/utils";
 import { UserKey } from "../../types/key";
 import { AccountService } from "../abstractions/account.service";
 import { PasswordResetEnrollmentServiceAbstraction } from "../abstractions/password-reset-enrollment.service.abstraction";
@@ -28,33 +25,47 @@ export class PasswordResetEnrollmentServiceImplementation
     protected i18nService: I18nService,
   ) {}
 
-  async enrollIfRequired(organizationSsoIdentifier: string): Promise<void> {
+  async enrollIfRequired(
+    organizationSsoIdentifier: string,
+    trustedOrganizationPublicKey: Uint8Array,
+  ): Promise<void> {
     const orgAutoEnrollStatusResponse =
       await this.organizationApiService.getAutoEnrollStatus(organizationSsoIdentifier);
 
+    const activeUserId = (await firstValueFrom(this.accountService.activeAccount$))?.id;
+    if (!activeUserId) {
+      throw new Error("No active user found");
+    }
+
+    const userKey = await firstValueFrom(this.keyService.userKey$(activeUserId));
+    if (!userKey) {
+      throw new Error("No user key found");
+    }
+
     if (!orgAutoEnrollStatusResponse.resetPasswordEnabled) {
-      await this.enroll(orgAutoEnrollStatusResponse.id, null, null);
+      await this.enroll(
+        orgAutoEnrollStatusResponse.id,
+        activeUserId as string,
+        userKey,
+        trustedOrganizationPublicKey,
+      );
     }
   }
 
-  async enroll(organizationId: string): Promise<void>;
-  async enroll(organizationId: string, userId: string, userKey: UserKey): Promise<void>;
-  async enroll(organizationId: string, userId?: string, userKey?: UserKey): Promise<void> {
-    const orgKeyResponse = await this.organizationApiService.getKeys(organizationId);
-    if (orgKeyResponse == null) {
-      throw new Error(this.i18nService.t("resetPasswordOrgKeysError"));
-    }
-
-    const orgPublicKey = Utils.fromB64ToArray(orgKeyResponse.publicKey);
-
-    userId =
-      userId ?? (await firstValueFrom(this.accountService.activeAccount$.pipe(map((a) => a?.id))));
-    userKey = userKey ?? (await this.keyService.getUserKey(userId));
+  async enroll(
+    organizationId: string,
+    userId: string,
+    userKey: UserKey,
+    trustedOrganizationPublicKey: Uint8Array,
+  ): Promise<void> {
     // RSA Encrypt user's userKey.key with organization public key
-    const encryptedKey = await this.encryptService.rsaEncrypt(userKey.key, orgPublicKey);
+    const encryptedKey = await this.encryptService.rsaEncrypt(
+      userKey.key,
+      trustedOrganizationPublicKey,
+    );
 
     const resetRequest = new OrganizationUserResetPasswordEnrollmentRequest();
-    resetRequest.resetPasswordKey = encryptedKey.encryptedString;
+    resetRequest.resetPasswordKey = encryptedKey.encryptedString as string;
 
     await this.organizationUserApiService.putOrganizationUserResetPasswordEnrollment(
       organizationId,

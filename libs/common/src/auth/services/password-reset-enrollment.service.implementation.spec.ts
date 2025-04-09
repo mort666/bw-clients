@@ -2,19 +2,21 @@ import { mock, MockProxy } from "jest-mock-extended";
 import { BehaviorSubject } from "rxjs";
 
 import { OrganizationUserApiService } from "@bitwarden/admin-console/common";
+import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
+import { UserKey } from "@bitwarden/common/types/key";
 import { KeyService } from "@bitwarden/key-management";
 
 import { OrganizationApiServiceAbstraction } from "../../admin-console/abstractions/organization/organization-api.service.abstraction";
 import { OrganizationAutoEnrollStatusResponse } from "../../admin-console/models/response/organization-auto-enroll-status.response";
 import { EncryptService } from "../../key-management/crypto/abstractions/encrypt.service";
 import { I18nService } from "../../platform/abstractions/i18n.service";
-import { UserId } from "../../types/guid";
-import { Account, AccountInfo, AccountService } from "../abstractions/account.service";
+import { Account, AccountService } from "../abstractions/account.service";
 
 import { PasswordResetEnrollmentServiceImplementation } from "./password-reset-enrollment.service.implementation";
 
 describe("PasswordResetEnrollmentServiceImplementation", () => {
   const activeAccountSubject = new BehaviorSubject<Account | null>(null);
+  const userKeySubject = new BehaviorSubject<UserKey | null>(null);
 
   let organizationApiService: MockProxy<OrganizationApiServiceAbstraction>;
   let accountService: MockProxy<AccountService>;
@@ -29,6 +31,7 @@ describe("PasswordResetEnrollmentServiceImplementation", () => {
     accountService = mock<AccountService>();
     accountService.activeAccount$ = activeAccountSubject;
     keyService = mock<KeyService>();
+    keyService.userKey$.mockReturnValue(userKeySubject);
     encryptService = mock<EncryptService>();
     organizationUserApiService = mock<OrganizationUserApiService>();
     i18nService = mock<I18nService>();
@@ -49,11 +52,13 @@ describe("PasswordResetEnrollmentServiceImplementation", () => {
         Id: "orgId",
       });
       organizationApiService.getAutoEnrollStatus.mockResolvedValue(mockResponse);
+      activeAccountSubject.next({ id: "ssoId" } as Account);
+      userKeySubject.next(new SymmetricCryptoKey(new Uint8Array(64)) as UserKey);
 
       const enrollSpy = jest.spyOn(service, "enroll");
       enrollSpy.mockResolvedValue();
 
-      await service.enrollIfRequired("ssoId");
+      await service.enrollIfRequired("ssoId", new Uint8Array(0));
 
       expect(service.enroll).not.toHaveBeenCalled();
     });
@@ -68,53 +73,13 @@ describe("PasswordResetEnrollmentServiceImplementation", () => {
       const enrollSpy = jest.spyOn(service, "enroll");
       enrollSpy.mockResolvedValue();
 
-      await service.enrollIfRequired("ssoId");
+      await service.enrollIfRequired("ssoId", new Uint8Array(0));
 
       expect(service.enroll).toHaveBeenCalled();
     });
   });
 
   describe("enroll", () => {
-    it("should throw an error if the organization keys are not found", async () => {
-      organizationApiService.getKeys.mockResolvedValue(null);
-      i18nService.t.mockReturnValue("resetPasswordOrgKeysError");
-
-      const result = () => service.enroll("orgId");
-
-      await expect(result).rejects.toThrowError("resetPasswordOrgKeysError");
-    });
-
-    it("should enroll the user when no user id or key is provided", async () => {
-      const orgKeyResponse = {
-        publicKey: "publicKey",
-        privateKey: "privateKey",
-      };
-      const encryptedKey = { encryptedString: "encryptedString" };
-      organizationApiService.getKeys.mockResolvedValue(orgKeyResponse as any);
-
-      const user1AccountInfo: AccountInfo = {
-        name: "Test User 1",
-        email: "test1@email.com",
-        emailVerified: true,
-      };
-      activeAccountSubject.next(Object.assign(user1AccountInfo, { id: "userId" as UserId }));
-
-      keyService.getUserKey.mockResolvedValue({ key: "key" } as any);
-      encryptService.rsaEncrypt.mockResolvedValue(encryptedKey as any);
-
-      await service.enroll("orgId");
-
-      expect(
-        organizationUserApiService.putOrganizationUserResetPasswordEnrollment,
-      ).toHaveBeenCalledWith(
-        "orgId",
-        "userId",
-        expect.objectContaining({
-          resetPasswordKey: encryptedKey.encryptedString,
-        }),
-      );
-    });
-
     it("should enroll the user when a user id and key is provided", async () => {
       const orgKeyResponse = {
         publicKey: "publicKey",
@@ -124,7 +89,12 @@ describe("PasswordResetEnrollmentServiceImplementation", () => {
       organizationApiService.getKeys.mockResolvedValue(orgKeyResponse as any);
       encryptService.rsaEncrypt.mockResolvedValue(encryptedKey as any);
 
-      await service.enroll("orgId", "userId", { key: "key" } as any);
+      await service.enroll(
+        "orgId",
+        "userId",
+        new SymmetricCryptoKey(new Uint8Array(64)) as UserKey,
+        new Uint8Array(0),
+      );
 
       expect(
         organizationUserApiService.putOrganizationUserResetPasswordEnrollment,

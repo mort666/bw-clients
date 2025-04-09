@@ -5,9 +5,20 @@ import { Component, DestroyRef, OnInit } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormBuilder, FormControl, ReactiveFormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
-import { catchError, defer, firstValueFrom, from, map, of, switchMap, throwError } from "rxjs";
+import {
+  catchError,
+  defer,
+  firstValueFrom,
+  from,
+  lastValueFrom,
+  map,
+  of,
+  switchMap,
+  throwError,
+} from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { OrganizationTrustComponent } from "@bitwarden/angular/key-management/components/organization-trust.component";
 import {
   LoginEmailServiceAbstraction,
   UserDecryptionOptions,
@@ -25,6 +36,7 @@ import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.servic
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { ValidationService } from "@bitwarden/common/platform/abstractions/validation.service";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { UserId } from "@bitwarden/common/types/guid";
 import {
   AsyncActionsModule,
@@ -79,6 +91,7 @@ export class LoginDecryptionOptionsComponent implements OnInit {
 
   // New User Properties
   private newUserOrgId: string;
+  private newUserOrgName: string;
 
   // Existing User Untrusted Device Properties
   protected canApproveFromOtherDevice = false;
@@ -220,6 +233,7 @@ export class LoginDecryptionOptionsComponent implements OnInit {
     const autoEnrollStatus = await firstValueFrom(autoEnrollStatus$);
 
     this.newUserOrgId = autoEnrollStatus.id;
+    this.newUserOrgName = autoEnrollStatus.name;
   }
 
   private loadExistingUserUntrustedDeviceData(userDecryptionOptions: UserDecryptionOptions) {
@@ -247,7 +261,26 @@ export class LoginDecryptionOptionsComponent implements OnInit {
     }
 
     try {
-      const { publicKey, privateKey } = await this.keyService.initAccount();
+      const organizationPublicKey = Utils.fromB64ToArray(
+        (await this.organizationApiService.getKeys(this.newUserOrgId)).publicKey,
+      );
+
+      const dialogRef = OrganizationTrustComponent.open(this.dialogService, {
+        name: this.newUserOrgName,
+        orgId: this.newUserOrgId,
+        publicKey: organizationPublicKey,
+      });
+      const result = await lastValueFrom(dialogRef.closed);
+      if (result !== true) {
+        this.toastService.showToast({
+          variant: "error",
+          title: null,
+          message: this.i18nService.t("organizationNotTrusted"),
+        });
+        return;
+      }
+
+      const { userKey, publicKey, privateKey } = await this.keyService.initAccount();
       const keysRequest = new KeysRequest(publicKey, privateKey.encryptedString);
       await this.apiService.postAccountKeys(keysRequest);
 
@@ -257,7 +290,12 @@ export class LoginDecryptionOptionsComponent implements OnInit {
         message: this.i18nService.t("accountSuccessfullyCreated"),
       });
 
-      await this.passwordResetEnrollmentService.enroll(this.newUserOrgId);
+      await this.passwordResetEnrollmentService.enroll(
+        this.newUserOrgId,
+        this.activeAccountId,
+        userKey,
+        organizationPublicKey,
+      );
 
       if (this.formGroup.value.rememberDevice) {
         await this.deviceTrustService.trustDevice(this.activeAccountId);
