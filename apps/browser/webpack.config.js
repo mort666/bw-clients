@@ -145,11 +145,6 @@ const plugins = [
     filename: "overlay/list.html",
     chunks: ["overlay/list"],
   }),
-  new HtmlWebpackPlugin({
-    template: "./src/phishing-detection/pages/warning.html",
-    filename: "phishing/warning.html",
-    chunks: ["phishing/warning"],
-  }),
   new CopyWebpackPlugin({
     patterns: [
       {

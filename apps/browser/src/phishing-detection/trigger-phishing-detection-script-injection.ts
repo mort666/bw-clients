@@ -31,11 +31,8 @@ async function loadPhishingDetectionContent() {
 
   const url = new URL(activeUrl);
 
-  const warningUrl = chrome.runtime.getURL("phishing/warning.html");
-
   await chrome.runtime.sendMessage({
     command: PhishingDetectionCommands.RedirectToWarningPage,
-    url: warningUrl,
     phishingHost: url.hostname,
   });
 }

@@ -41,6 +41,7 @@ import {
   DeviceVerificationIcon,
   UserLockIcon,
   VaultIcon,
+  BitwardenLogo,
 } from "@bitwarden/auth/angular";
 import { LockComponent } from "@bitwarden/key-management-ui";
 import {
@@ -65,6 +66,7 @@ import { BlockedDomainsComponent } from "../autofill/popup/settings/blocked-doma
 import { ExcludedDomainsComponent } from "../autofill/popup/settings/excluded-domains.component";
 import { NotificationsSettingsComponent } from "../autofill/popup/settings/notifications.component";
 import { PremiumV2Component } from "../billing/popup/settings/premium-v2.component";
+import { PhishingWarning } from "../phishing-detection/pages/phishing-warning";
 import BrowserPopupUtils from "../platform/popup/browser-popup-utils";
 import { popupRouterCacheGuard } from "../platform/popup/view-cache/popup-router-cache.service";
 import { CredentialGeneratorHistoryComponent } from "../tools/popup/generator/credential-generator-history.component";
@@ -140,6 +142,24 @@ const routes: Routes = [
     component: Fido2Component,
     canActivate: [fido2AuthGuard],
     data: { elevation: 1 } satisfies RouteDataProperties,
+  },
+  {
+    path: "",
+    component: AnonLayoutWrapperComponent,
+    children: [
+      {
+        path: "phishing-warning",
+        component: PhishingWarning,
+        data: {
+          pageIcon: BitwardenLogo,
+
+          pageTitle: "Phishing site detected",
+          pageSubtitle: "Bitwarden has prevented this page from loading.",
+
+          showReadonlyHostname: true,
+        } satisfies AnonLayoutWrapperData,
+      },
+    ],
   },
   {
     path: "",
