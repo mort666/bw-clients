@@ -5,6 +5,7 @@ import { Jsonify } from "type-fest";
 import { AttachmentView as SdkAttachmentView } from "@bitwarden/sdk-internal";
 
 import { View } from "../../../models/view/view";
+import { EncString } from "../../../platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
 import { Attachment } from "../domain/attachment";
 
@@ -15,6 +16,10 @@ export class AttachmentView implements View {
   sizeName: string = null;
   fileName: string = null;
   key: SymmetricCryptoKey = null;
+  /**
+   * The SDK returns an encrypted key for the attachment.
+   */
+  encryptedKey: EncString | undefined;
 
   constructor(a?: Attachment) {
     if (!a) {
@@ -57,7 +62,7 @@ export class AttachmentView implements View {
     view.size = obj.size;
     view.sizeName = obj.sizeName;
     view.fileName = obj.fileName;
-    view.key = obj.key ? SymmetricCryptoKey.fromString(obj.key) : null;
+    view.encryptedKey = new EncString(obj.key);
 
     return view;
   }
