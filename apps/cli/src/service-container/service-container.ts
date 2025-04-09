@@ -693,6 +693,7 @@ export class ServiceContainer {
       this.configService,
       this.stateProvider,
       this.accountService,
+      this.sdkService,
     );
 
     this.folderService = new FolderService(

@@ -77,6 +77,7 @@ describe("ViewV2Component", () => {
     getKeyForCipherKeyDecryption: jest.fn().mockResolvedValue({}),
     deleteWithServer: jest.fn().mockResolvedValue(undefined),
     softDeleteWithServer: jest.fn().mockResolvedValue(undefined),
+    decryptCipherWithSdkOrLegacy: jest.fn().mockResolvedValue(mockCipher),
   };
 
   beforeEach(async () => {
