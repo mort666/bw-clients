@@ -8,6 +8,10 @@ import { BitwardenShield } from "@bitwarden/auth/angular";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
+import {
+  compareCredentialIds,
+  parseCredentialId,
+} from "@bitwarden/common/platform/services/fido2/credential-id-utils";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
@@ -24,6 +28,7 @@ import {
 } from "@bitwarden/components";
 import { PasswordRepromptService } from "@bitwarden/vault";
 
+import { DesktopAutofillService } from "../../../autofill/services/desktop-autofill.service";
 import {
   DesktopFido2UserInterfaceService,
   DesktopFido2UserInterfaceSession,
@@ -52,6 +57,7 @@ export class Fido2CreateComponent implements OnInit, OnDestroy {
   session?: DesktopFido2UserInterfaceSession = null;
   private ciphersSubject = new BehaviorSubject<CipherView[]>([]);
   ciphers$: Observable<CipherView[]> = this.ciphersSubject.asObservable();
+  containsExcludedCiphers: boolean = false;
   readonly Icons = { BitwardenShield };
 
   constructor(
@@ -59,6 +65,7 @@ export class Fido2CreateComponent implements OnInit, OnDestroy {
     private readonly fido2UserInterfaceService: DesktopFido2UserInterfaceService,
     private readonly accountService: AccountService,
     private readonly cipherService: CipherService,
+    private readonly desktopAutofillService: DesktopAutofillService,
     private readonly dialogService: DialogService,
     private readonly domainSettingsService: DomainSettingsService,
     private readonly logService: LogService,
@@ -69,6 +76,7 @@ export class Fido2CreateComponent implements OnInit, OnDestroy {
   async ngOnInit() {
     await this.accountService.setShowHeader(false);
     this.session = this.fido2UserInterfaceService.getCurrentSession();
+    const lastRegistrationRequest = this.desktopAutofillService.lastRegistrationRequest;
     const rpid = await this.session.getRpId();
     const equivalentDomains = await firstValueFrom(
       this.domainSettingsService.getUrlEquivalentDomains(rpid),
@@ -80,16 +88,42 @@ export class Fido2CreateComponent implements OnInit, OnDestroy {
     this.cipherService
       .getAllDecrypted(activeUserId)
       .then((ciphers) => {
-        const relevantCiphers = ciphers.filter((cipher) => {
-          if (!cipher.login || !cipher.login.hasUris) {
-            return false;
-          }
+        if (lastRegistrationRequest.excludedCredentials.length > 0) {
+          const excludedCiphers = ciphers.filter((cipher) => {
+            const credentialId = cipher.login.hasFido2Credentials
+              ? parseCredentialId(cipher.login.fido2Credentials[0]?.credentialId)
+              : new Uint8Array();
+            if (!cipher.login || !cipher.login.hasUris) {
+              return false;
+            }
 
-          return (
-            cipher.login.matchesUri(rpid, equivalentDomains) && !cipher.login.hasFido2Credentials
-          );
-        });
-        this.ciphersSubject.next(relevantCiphers);
+            return (
+              cipher.login.matchesUri(rpid, equivalentDomains) &&
+              compareCredentialIds(
+                credentialId,
+                new Uint8Array(lastRegistrationRequest.excludedCredentials[0]),
+              )
+            );
+          });
+
+          this.containsExcludedCiphers = excludedCiphers.length > 0;
+          this.ciphersSubject.next(excludedCiphers);
+        } else {
+          const relevantCiphers = ciphers.filter((cipher) => {
+            const credentialId = cipher.login.hasFido2Credentials
+              ? Array.from(parseCredentialId(cipher.login.fido2Credentials[0]?.credentialId))
+              : [];
+            if (!cipher.login || !cipher.login.hasUris) {
+              return false;
+            }
+
+            return (
+              cipher.login.matchesUri(rpid, equivalentDomains) &&
+              !lastRegistrationRequest.excludedCredentials.includes(credentialId)
+            );
+          });
+          this.ciphersSubject.next(relevantCiphers);
+        }
       })
       .catch((error) => this.logService.error(error));
   }
@@ -99,7 +133,19 @@ export class Fido2CreateComponent implements OnInit, OnDestroy {
   }
 
   async addPasskeyToCipher(cipher: CipherView) {
-    this.session.notifyConfirmCreateCredential(true, cipher);
+    if (!cipher.login.hasFido2Credentials) {
+      this.session.notifyConfirmCreateCredential(true, cipher);
+    } else {
+      const confirmed = await this.dialogService.openSimpleDialog({
+        title: { key: "overwritePasskey" },
+        content: { key: "alreadyContainsPasskey" },
+        type: "warning",
+      });
+
+      if (confirmed) {
+        this.session.notifyConfirmCreateCredential(true, cipher);
+      }
+    }
   }
 
   async confirmPasskey() {
