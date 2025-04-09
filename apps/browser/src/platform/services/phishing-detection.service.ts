@@ -35,7 +35,7 @@ export class PhishingDetectionService {
     PhishingDetectionService.storageService = storageService;
     PhishingDetectionService.taskSchedulerService = taskSchedulerService;
 
-    PhishingDetectionService.setupCheckUrlListener();
+    PhishingDetectionService.setupListeners();
 
     // Register the update task
     this.taskSchedulerService.registerTaskHandler(
@@ -222,5 +222,22 @@ export class PhishingDetectionService {
         sendResponse(result);
       }
     });
+  }
+
+  static setupRedirectToWarningPageListener(): void {
+    BrowserApi.addListener(chrome.runtime.onMessage, async (message, sender, sendResponse) => {
+      if (message.command === PhishingDetectionCommands.RedirectToWarningPage) {
+        PhishingDetectionService.logService.debug("RedirectToWarningPage handler", {
+          message,
+        });
+
+        await chrome.tabs.update(sender.tab.id, { url: message.url });
+      }
+    });
+  }
+
+  static setupListeners(): void {
+    this.setupCheckUrlListener();
+    this.setupRedirectToWarningPageListener();
   }
 }

@@ -23,14 +23,21 @@ async function loadPhishingDetectionContent() {
   if (!response) {
     return;
   }
-
   const { isPhishingDomain } = response;
 
-  if (isPhishingDomain) {
-    const url = new URL(activeUrl);
-
-    PhishingDetectionBrowserService.notifyUser(url.hostname);
+  if (!isPhishingDomain) {
+    return;
   }
+
+  const url = new URL(activeUrl);
+
+  const warningUrl = chrome.runtime.getURL("phishing/warning.html");
+
+  await chrome.runtime.sendMessage({
+    command: PhishingDetectionCommands.RedirectToWarningPage,
+    url: warningUrl,
+    phishingHost: url.hostname,
+  });
 }
 
 logService.info("Phishing Detection Service loaded.");

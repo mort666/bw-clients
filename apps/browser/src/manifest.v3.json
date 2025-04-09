@@ -175,6 +175,7 @@
         "overlay/menu.html",
         "overlay/button.html",
         "overlay/list.html",
+        "phishing/warning.html",
         "popup/fonts/*"
       ],
       "matches": ["<all_urls>"]
