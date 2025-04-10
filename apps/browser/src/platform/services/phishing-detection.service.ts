@@ -228,12 +228,15 @@ export class PhishingDetectionService {
     BrowserApi.addListener(chrome.runtime.onMessage, async (message, sender, sendResponse) => {
       if (message.command === PhishingDetectionCommands.RedirectToWarningPage) {
         const phishingWarningPage = chrome.runtime.getURL("popup/index.html#/phishing-warning");
+
+        const pageWithViewData = `${phishingWarningPage}?phishingHost=${message.phishingHost}`;
+
         PhishingDetectionService.logService.debug("RedirectToWarningPage handler", {
           message,
-          phishingWarning: phishingWarningPage,
+          phishingWarning: pageWithViewData,
         });
 
-        await chrome.tabs.update(sender.tab.id, { url: phishingWarningPage });
+        await chrome.tabs.update(sender.tab.id, { url: pageWithViewData });
       }
     });
   }

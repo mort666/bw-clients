@@ -2,8 +2,12 @@
   <div>🏢⚠️</div>
 
   <div>
-    <label for="url">Phishing url</label>
-    <input id="url" value="https://catphish.gotcha.io" readonly />
+    <label for="url">Phishing url</label>:
+    <input
+      *ngIf="queryParams$ | async as params"
+      [value]="params.phishingHost || 'https://catphish.gotcha.io'"
+      readonly
+    />
   </div>
 
   <a onclick="alert('Exiting...')"> Exit page </a>

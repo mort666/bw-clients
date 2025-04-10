@@ -2,8 +2,8 @@
 // @ts-strict-ignore
 import { CommonModule } from "@angular/common";
 import { Component, OnDestroy, OnInit } from "@angular/core";
-import { RouterModule } from "@angular/router";
-import { Subject } from "rxjs";
+import { ActivatedRoute, RouterModule } from "@angular/router";
+import { map, Observable, Subject, take } from "rxjs";
 
 import { AnonLayoutComponent } from "@bitwarden/auth/angular";
 import { Icon, IconModule } from "@bitwarden/components";
@@ -11,6 +11,10 @@ import { Icon, IconModule } from "@bitwarden/components";
 import { PopOutComponent } from "../../platform/popup/components/pop-out.component";
 import { PopupHeaderComponent } from "../../platform/popup/layout/popup-header.component";
 import { PopupPageComponent } from "../../platform/popup/layout/popup-page.component";
+
+interface ViewData {
+  phishingHost: string;
+}
 
 @Component({
   standalone: true,
@@ -29,8 +33,6 @@ import { PopupPageComponent } from "../../platform/popup/layout/popup-page.compo
 export class PhishingWarning implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  protected showAcctSwitcher: boolean;
-  protected showBackButton: boolean;
   protected showLogo: boolean = true;
   protected hideIcon: boolean = false;
 
@@ -42,23 +44,19 @@ export class PhishingWarning implements OnInit, OnDestroy {
   protected hasLoggedInAccount: boolean = false;
   protected hideFooter: boolean;
 
+  protected queryParams$: Observable<ViewData>;
+
   protected theme: string;
 
-  constructor() {}
+  constructor(private activatedRoute: ActivatedRoute) {}
 
   async ngOnInit(): Promise<void> {
-    this.resetData();
-  }
-
-  private resetData() {
-    this.pageTitle = "Jimmy pageTitle";
-    this.pageSubtitle = "Jimmy pageSubtitle";
-    this.showReadonlyHostname = null;
-    this.showAcctSwitcher = null;
-    this.showBackButton = null;
-    this.showLogo = true;
-    this.maxWidth = null;
-    this.hideFooter = null;
+    this.queryParams$ = this.activatedRoute.queryParamMap.pipe(
+      take(1),
+      map((queryParamMap) => ({
+        phishingHost: queryParamMap.get("phishingHost"),
+      })),
+    );
   }
 
   ngOnDestroy() {
