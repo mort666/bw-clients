@@ -3586,6 +3586,9 @@
   "passkeyAlreadyExists": {
     "message": "A passkey already exists for this application."
   },
+  "unableToSavePasskey": {
+    "message": "Unable to save passkey"
+  },
   "closeBitwarden": {
     "message": "Close Bitwarden"
   },

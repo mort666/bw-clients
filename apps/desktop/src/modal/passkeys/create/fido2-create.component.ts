@@ -27,7 +27,6 @@ import {
   BitIconButtonComponent,
 } from "@bitwarden/components";
 import { PasswordRepromptService } from "@bitwarden/vault";
-
 import { DesktopAutofillService } from "../../../autofill/services/desktop-autofill.service";
 import {
   DesktopFido2UserInterfaceService,

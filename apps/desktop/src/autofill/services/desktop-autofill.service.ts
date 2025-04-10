@@ -78,6 +78,20 @@ export class DesktopAutofillService implements OnDestroy {
     this.listenIpc();
   }
 
+  async adHocSync(): Promise<any> {
+    this.logService.info("Performing AdHoc sync");
+    const account = await firstValueFrom(this.accountService.activeAccount$);
+    const userId = account?.id;
+
+    if (!userId) {
+      throw new Error("No active user found");
+    }
+
+    const cipherViewMap = await firstValueFrom(this.cipherService.cipherViews$(userId));
+    this.logService.info("Performing AdHoc sync", Object.values(cipherViewMap ?? []));
+    await this.sync(Object.values(cipherViewMap ?? []));
+  }
+
   /** Give metadata about all available credentials in the users vault */
   async sync(cipherViews: CipherView[]) {
     const status = await this.status();
@@ -250,6 +264,15 @@ export class DesktopAutofillService implements OnDestroy {
       } catch (error) {
         this.logService.error("listenPasskeyAssertion error", error);
         callback(error, null);
+      }
+    });
+
+    // Listen for native status messages
+    ipc.autofill.listenNativeStatus(async (clientId, sequenceNumber, status) => {
+      this.logService.info("Received native status", status.key, status.value);
+      if (status.key === "request-sync") {
+        // perform ad-hoc sync
+        await this.adHocSync();
       }
     });
   }
