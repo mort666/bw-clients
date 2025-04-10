@@ -54,6 +54,8 @@ export class PhishingDetectionService {
 
     // Set up periodic updates every 24 hours
     this.setupPeriodicUpdates();
+
+    PhishingDetectionService.logService.info("Phishing detection feature is initialized.");
   }
 
   private static setupPeriodicUpdates() {
