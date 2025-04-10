@@ -2,7 +2,7 @@
 // @ts-strict-ignore
 import { firstValueFrom, map, Observable, Subject } from "rxjs";
 
-import { UserDecryptionOptionsServiceAbstraction } from "@bitwarden/auth/common";
+import { RotateableKeySet, UserDecryptionOptionsServiceAbstraction } from "@bitwarden/auth/common";
 import { KeyService } from "@bitwarden/key-management";
 
 import { DeviceResponse } from "../../../auth/abstractions/devices/responses/device.response";
@@ -10,11 +10,11 @@ import { DevicesApiServiceAbstraction } from "../../../auth/abstractions/devices
 import { SecretVerificationRequest } from "../../../auth/models/request/secret-verification.request";
 import {
   DeviceKeysUpdateRequest,
+  OtherDeviceKeysUpdateRequest,
   UpdateDevicesTrustRequest,
 } from "../../../auth/models/request/update-devices-trust.request";
 import { AppIdService } from "../../../platform/abstractions/app-id.service";
 import { ConfigService } from "../../../platform/abstractions/config/config.service";
-import { CryptoFunctionService } from "../../../platform/abstractions/crypto-function.service";
 import { I18nService } from "../../../platform/abstractions/i18n.service";
 import { KeyGenerationService } from "../../../platform/abstractions/key-generation.service";
 import { LogService } from "../../../platform/abstractions/log.service";
@@ -27,6 +27,7 @@ import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-cr
 import { DEVICE_TRUST_DISK_LOCAL, StateProvider, UserKeyDefinition } from "../../../platform/state";
 import { UserId } from "../../../types/guid";
 import { UserKey, DeviceKey } from "../../../types/key";
+import { CryptoFunctionService } from "../../crypto/abstractions/crypto-function.service";
 import { EncryptService } from "../../crypto/abstractions/encrypt.service";
 import { DeviceTrustServiceAbstraction } from "../abstractions/device-trust.service.abstraction";
 
@@ -187,6 +188,65 @@ export class DeviceTrustService implements DeviceTrustServiceAbstraction {
     return deviceResponse;
   }
 
+  async getRotatedData(
+    oldUserKey: UserKey,
+    newUserKey: UserKey,
+    userId: UserId,
+  ): Promise<DeviceKeysUpdateRequest[]> {
+    if (!userId) {
+      throw new Error("UserId is required. Cannot get rotated data.");
+    }
+    if (!oldUserKey) {
+      throw new Error("Old user key is required. Cannot get rotated data.");
+    }
+    if (!newUserKey) {
+      throw new Error("New user key is required. Cannot get rotated data.");
+    }
+
+    const devices = await this.devicesApiService.getDevices();
+    const devicesToUntrust: string[] = [];
+    const rotatedData = await Promise.all(
+      devices.data
+        .filter((device) => device.isTrusted)
+        .map(async (device) => {
+          const deviceWithKeys = await this.devicesApiService.getDeviceKeys(device.identifier);
+          const publicKey = await this.encryptService.decryptToBytes(
+            deviceWithKeys.encryptedPublicKey,
+            oldUserKey,
+          );
+
+          if (!publicKey) {
+            // Device was trusted but encryption is broken. This should be untrusted
+            devicesToUntrust.push(device.id);
+            return null;
+          }
+
+          const newEncryptedPublicKey = await this.encryptService.encrypt(publicKey, newUserKey);
+          const newEncryptedUserKey = await this.encryptService.rsaEncrypt(
+            newUserKey.key,
+            publicKey,
+          );
+
+          const newRotateableKeySet = new RotateableKeySet(
+            newEncryptedUserKey,
+            newEncryptedPublicKey,
+          );
+
+          const request = new OtherDeviceKeysUpdateRequest();
+          request.encryptedPublicKey = newRotateableKeySet.encryptedPublicKey.encryptedString;
+          request.encryptedUserKey = newRotateableKeySet.encryptedUserKey.encryptedString;
+          request.deviceId = device.id;
+          return request;
+        })
+        .filter((otherDeviceKeysUpdateRequest) => otherDeviceKeysUpdateRequest != null),
+    );
+    if (rotatedData.length > 0) {
+      this.logService.info("[Device trust rotation] Distrusting devices that failed to decrypt.");
+      await this.devicesApiService.untrustDevices(devicesToUntrust);
+    }
+    return rotatedData;
+  }
+
   async rotateDevicesTrust(
     userId: UserId,
     newUserKey: UserKey,
@@ -216,10 +276,7 @@ export class DeviceTrustService implements DeviceTrustServiceAbstraction {
     secretVerificationRequest.masterPasswordHash = masterPasswordHash;
 
     // Get the keys that are used in rotating a devices keys from the server
-    const currentDeviceKeys = await this.devicesApiService.getDeviceKeys(
-      deviceIdentifier,
-      secretVerificationRequest,
-    );
+    const currentDeviceKeys = await this.devicesApiService.getDeviceKeys(deviceIdentifier);
 
     // Decrypt the existing device public key with the old user key
     const decryptedDevicePublicKey = await this.encryptService.decryptToBytes(
