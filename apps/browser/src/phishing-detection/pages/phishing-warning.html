@@ -1,19 +1,8 @@
-<div>
-  <div>🏢⚠️</div>
+<label>Phishing url</label>:
+<input
+  *ngIf="queryParams$ | async as params"
+  [value]="params.phishingHost || 'https://catphish.gotcha.io'"
+  readonly
+/>
 
-  <div>
-    <label for="url">Phishing url</label>:
-    <input
-      *ngIf="queryParams$ | async as params"
-      [value]="params.phishingHost || 'https://catphish.gotcha.io'"
-      readonly
-    />
-  </div>
-
-  <a onclick="alert('Exiting...')"> Exit page </a>
-</div>
-
-<div>
-  <span>Question?</span>
-  <a href="#">Action here</a>
-</div>
+<a (click)="closeTab()" bitButton block buttonType="primary"> Exit page </a>

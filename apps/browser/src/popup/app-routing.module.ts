@@ -66,6 +66,7 @@ import { BlockedDomainsComponent } from "../autofill/popup/settings/blocked-doma
 import { ExcludedDomainsComponent } from "../autofill/popup/settings/excluded-domains.component";
 import { NotificationsSettingsComponent } from "../autofill/popup/settings/notifications.component";
 import { PremiumV2Component } from "../billing/popup/settings/premium-v2.component";
+import { LearnMoreComponent } from "../phishing-detection/pages/learn-more-component";
 import { PhishingWarning } from "../phishing-detection/pages/phishing-warning";
 import BrowserPopupUtils from "../platform/popup/browser-popup-utils";
 import { popupRouterCacheGuard } from "../platform/popup/view-cache/popup-router-cache.service";
@@ -142,24 +143,6 @@ const routes: Routes = [
     component: Fido2Component,
     canActivate: [fido2AuthGuard],
     data: { elevation: 1 } satisfies RouteDataProperties,
-  },
-  {
-    path: "",
-    component: AnonLayoutWrapperComponent,
-    children: [
-      {
-        path: "phishing-warning",
-        component: PhishingWarning,
-        data: {
-          pageIcon: BitwardenLogo,
-
-          pageTitle: "Phishing site detected",
-          pageSubtitle: "Bitwarden has prevented this page from loading.",
-
-          showReadonlyHostname: true,
-        } satisfies AnonLayoutWrapperData,
-      },
-    ],
   },
   {
     path: "",
@@ -708,6 +691,34 @@ const routes: Routes = [
     component: TrashComponent,
     canActivate: [authGuard],
     data: { elevation: 2 } satisfies RouteDataProperties,
+  },
+  {
+    path: "security",
+    component: AnonLayoutWrapperComponent,
+    children: [
+      {
+        path: "phishing-warning",
+        children: [
+          {
+            path: "",
+            component: PhishingWarning,
+          },
+          {
+            path: "",
+            component: LearnMoreComponent,
+            outlet: "secondary",
+          },
+        ],
+        data: {
+          pageIcon: BitwardenLogo,
+
+          pageTitle: "Phishing site detected",
+          pageSubtitle: "Bitwarden has prevented this page from loading.",
+
+          showReadonlyHostname: true,
+        } satisfies AnonLayoutWrapperData,
+      },
+    ],
   },
 ];
 

@@ -5,8 +5,9 @@ import { Component, OnDestroy, OnInit } from "@angular/core";
 import { ActivatedRoute, RouterModule } from "@angular/router";
 import { map, Observable, Subject, take } from "rxjs";
 
-import { AnonLayoutComponent } from "@bitwarden/auth/angular";
-import { Icon, IconModule } from "@bitwarden/components";
+import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { AnonLayoutComponent, InputPasswordComponent } from "@bitwarden/auth/angular";
+import { ButtonModule, Icon, IconModule } from "@bitwarden/components";
 
 import { PopOutComponent } from "../../platform/popup/components/pop-out.component";
 import { PopupHeaderComponent } from "../../platform/popup/layout/popup-header.component";
@@ -25,9 +26,13 @@ interface ViewData {
     IconModule,
     PopOutComponent,
     PopupPageComponent,
+    InputPasswordComponent,
     PopupHeaderComponent,
-    RouterModule,
     PopupPageComponent,
+    CommonModule,
+    JslibModule,
+    ButtonModule,
+    RouterModule,
   ],
 })
 export class PhishingWarning implements OnInit, OnDestroy {
@@ -57,6 +62,9 @@ export class PhishingWarning implements OnInit, OnDestroy {
         phishingHost: queryParamMap.get("phishingHost"),
       })),
     );
+  }
+  closeTab(): void {
+    globalThis.close();
   }
 
   ngOnDestroy() {
