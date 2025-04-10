@@ -7,7 +7,8 @@ import { ScheduledTaskNames } from "@bitwarden/common/platform/scheduling";
 import { TaskSchedulerService } from "@bitwarden/common/platform/scheduling/task-scheduler.service";
 
 import { PhishingDetectionCommands } from "../../phishing-detection/phishing-detection.enum";
-import { BrowserApi } from "../browser/browser-api";
+import { BrowserApi } from "../../platform/browser/browser-api";
+
 export class PhishingDetectionService {
   private static knownPhishingDomains = new Set<string>();
   private static lastUpdateTime: number = 0;
