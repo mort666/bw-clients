@@ -46,7 +46,7 @@ import {
   ToastService,
 } from "@bitwarden/components";
 
-import { TwoFactorAuthCacheService } from "../../common/services/auth-request/two-factor-auth-cache.service";
+import { TwoFactorAuthComponentCacheService } from "../../common/services/auth-request/two-factor-auth-cache.service";
 import { AnonLayoutWrapperDataService } from "../anon-layout/anon-layout-wrapper-data.service";
 import {
   TwoFactorAuthAuthenticatorIcon,
@@ -103,7 +103,7 @@ interface TwoFactorCacheData {
   ],
   providers: [
     {
-      provide: TwoFactorAuthCacheService,
+      provide: TwoFactorAuthComponentCacheService,
     },
   ],
 })
@@ -180,7 +180,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
     private anonLayoutWrapperDataService: AnonLayoutWrapperDataService,
     private environmentService: EnvironmentService,
     private loginSuccessHandlerService: LoginSuccessHandlerService,
-    private twoFactorCacheService: TwoFactorAuthCacheService,
+    private twoFactorCacheService: TwoFactorAuthComponentCacheService,
   ) {}
 
   async ngOnInit() {
@@ -194,7 +194,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
 
     // Load persisted form data if available
     let loadedCachedProviderType = false;
-    const persistedData = this.twoFactorCacheService.getCachedTwoFactorAuth();
+    const persistedData = this.twoFactorCacheService.getCachedData();
     if (persistedData) {
       if (persistedData.token) {
         this.form.patchValue({ token: persistedData.token });
@@ -233,9 +233,9 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
    */
   async saveFormDataWithPartialData(data: Partial<TwoFactorCacheData>) {
     // Get current cached data
-    const currentData = this.twoFactorCacheService.getCachedTwoFactorAuth();
+    const currentData = this.twoFactorCacheService.getCachedData();
 
-    this.twoFactorCacheService.cacheTwoFactorAuth({
+    this.twoFactorCacheService.cacheData({
       token: data?.token ?? currentData?.token ?? "",
       remember: data?.remember ?? currentData?.remember ?? false,
       selectedProviderType:
@@ -347,7 +347,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
     const rememberValue = remember ?? this.rememberFormControl.value ?? false;
 
     // Persist form data before submitting
-    this.twoFactorCacheService.cacheTwoFactorAuth({
+    this.twoFactorCacheService.cacheData({
       token: tokenValue,
       remember: rememberValue,
       selectedProviderType: this.selectedProviderType,
@@ -375,7 +375,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
 
   async selectOtherTwoFactorMethod() {
     // Persist current form data before navigating to another method
-    this.twoFactorCacheService.cacheTwoFactorAuth({
+    this.twoFactorCacheService.cacheData({
       token: "",
       remember: false,
       selectedProviderType: this.selectedProviderType,
@@ -396,7 +396,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
       await this.setAnonLayoutDataByTwoFactorProviderType();
 
       // Update the persisted provider type when a new one is chosen
-      this.twoFactorCacheService.cacheTwoFactorAuth({
+      this.twoFactorCacheService.cacheData({
         token: "",
         remember: false,
         selectedProviderType: response.type,
@@ -481,7 +481,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
 
   private async handleAuthResult(authResult: AuthResult) {
     // Clear form cache
-    this.twoFactorCacheService.clearCachedTwoFactorAuth();
+    this.twoFactorCacheService.clearCachedData();
 
     if (await this.handleMigrateEncryptionKey(authResult)) {
       return; // stop login process

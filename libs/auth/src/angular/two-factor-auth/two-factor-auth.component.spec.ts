@@ -34,7 +34,7 @@ import { FakeAccountService, mockAccountServiceWith } from "@bitwarden/common/sp
 import { UserId } from "@bitwarden/common/types/guid";
 import { DialogService, ToastService } from "@bitwarden/components";
 
-import { TwoFactorAuthCacheService } from "../../common/services/auth-request/two-factor-auth-cache.service";
+import { TwoFactorAuthComponentCacheService } from "../../common/services/auth-request/two-factor-auth-cache.service";
 import { AnonLayoutWrapperDataService } from "../anon-layout/anon-layout-wrapper-data.service";
 
 import { TwoFactorAuthComponentService } from "./two-factor-auth-component.service";
@@ -71,7 +71,7 @@ describe("TwoFactorAuthComponent", () => {
   let anonLayoutWrapperDataService: MockProxy<AnonLayoutWrapperDataService>;
   let mockEnvService: MockProxy<EnvironmentService>;
   let mockLoginSuccessHandlerService: MockProxy<LoginSuccessHandlerService>;
-  let mockTwoFactorAuthCacheService: MockProxy<TwoFactorAuthCacheService>;
+  let mockTwoFactorAuthCompCacheService: MockProxy<TwoFactorAuthComponentCacheService>;
 
   let mockUserDecryptionOpts: {
     noMasterPassword: UserDecryptionOptions;
@@ -112,9 +112,9 @@ describe("TwoFactorAuthComponent", () => {
 
     anonLayoutWrapperDataService = mock<AnonLayoutWrapperDataService>();
 
-    mockTwoFactorAuthCacheService = mock<TwoFactorAuthCacheService>();
-    mockTwoFactorAuthCacheService.getCachedTwoFactorAuth.mockReturnValue(null);
-    mockTwoFactorAuthCacheService.init.mockResolvedValue();
+    mockTwoFactorAuthCompCacheService = mock<TwoFactorAuthComponentCacheService>();
+    mockTwoFactorAuthCompCacheService.getCachedData.mockReturnValue(null);
+    mockTwoFactorAuthCompCacheService.init.mockResolvedValue();
 
     mockUserDecryptionOpts = {
       noMasterPassword: new UserDecryptionOptions({
@@ -200,7 +200,10 @@ describe("TwoFactorAuthComponent", () => {
         { provide: EnvironmentService, useValue: mockEnvService },
         { provide: AnonLayoutWrapperDataService, useValue: anonLayoutWrapperDataService },
         { provide: LoginSuccessHandlerService, useValue: mockLoginSuccessHandlerService },
-        { provide: TwoFactorAuthCacheService, useValue: mockTwoFactorAuthCacheService },
+        {
+          provide: TwoFactorAuthComponentCacheService,
+          useValue: mockTwoFactorAuthCompCacheService,
+        },
       ],
     });
 

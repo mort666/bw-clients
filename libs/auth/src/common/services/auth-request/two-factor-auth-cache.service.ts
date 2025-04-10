@@ -30,13 +30,13 @@ export interface TwoFactorAuthData {
 }
 
 /**
- * This is a cache service used for the login via auth request component.
+ * This is a cache service used for the two factor auth component.
  *
  * There is sensitive information stored temporarily here. Cache will be cleared
  * after 2 minutes.
  */
 @Injectable()
-export class TwoFactorAuthCacheService {
+export class TwoFactorAuthComponentCacheService {
   private viewCacheService: ViewCacheService = inject(ViewCacheService);
   private configService: ConfigService = inject(ConfigService);
 
@@ -67,7 +67,7 @@ export class TwoFactorAuthCacheService {
   /**
    * Update the cache with the new TwoFactorAuthData.
    */
-  cacheTwoFactorAuth(data: TwoFactorAuthData): void {
+  cacheData(data: TwoFactorAuthData): void {
     if (!this.featureEnabled) {
       return;
     }
@@ -83,7 +83,7 @@ export class TwoFactorAuthCacheService {
   /**
    * Clears the cached TwoFactorAuthData.
    */
-  clearCachedTwoFactorAuth(): void {
+  clearCachedData(): void {
     if (!this.featureEnabled) {
       return;
     }
@@ -94,7 +94,7 @@ export class TwoFactorAuthCacheService {
   /**
    * Returns the cached TwoFactorAuthData when available.
    */
-  getCachedTwoFactorAuth(): TwoFactorAuthCache | null {
+  getCachedData(): TwoFactorAuthCache | null {
     if (!this.featureEnabled) {
       return null;
     }
