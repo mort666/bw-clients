@@ -116,6 +116,7 @@ export class SetPasswordJitComponent implements OnInit {
     });
     const result = await lastValueFrom(dialogRef.closed);
     if (result !== true) {
+      this.submitting = false;
       this.toastService.showToast({
         variant: "error",
         title: null,
