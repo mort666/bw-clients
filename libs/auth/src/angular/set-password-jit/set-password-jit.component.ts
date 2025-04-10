@@ -3,17 +3,20 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
-import { firstValueFrom, map } from "rxjs";
+import { firstValueFrom, lastValueFrom, map } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { OrganizationTrustComponent } from "@bitwarden/angular/key-management/components/organization-trust.component";
 import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
 import { PolicyApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/policy/policy-api.service.abstraction";
 import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/models/domain/master-password-policy-options";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { ValidationService } from "@bitwarden/common/platform/abstractions/validation.service";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { UserId } from "@bitwarden/common/types/guid";
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
+import { DialogService } from "@bitwarden/components";
 
 // FIXME: remove `src` and fix import
 // eslint-disable-next-line no-restricted-imports
@@ -41,6 +44,7 @@ export class SetPasswordJitComponent implements OnInit {
   protected masterPasswordPolicyOptions: MasterPasswordPolicyOptions;
   protected orgId: string;
   protected orgSsoIdentifier: string;
+  protected orgName: string;
   protected resetPasswordAutoEnroll: boolean;
   protected submitting = false;
   protected syncLoading = true;
@@ -57,6 +61,7 @@ export class SetPasswordJitComponent implements OnInit {
     private syncService: SyncService,
     private toastService: ToastService,
     private validationService: ValidationService,
+    private dialogService: DialogService,
   ) {}
 
   async ngOnInit() {
@@ -82,6 +87,7 @@ export class SetPasswordJitComponent implements OnInit {
         );
         this.orgId = autoEnrollStatus.id;
         this.resetPasswordAutoEnroll = autoEnrollStatus.resetPasswordEnabled;
+        this.orgName = autoEnrollStatus.name;
         this.masterPasswordPolicyOptions =
           await this.policyApiService.getMasterPasswordPolicyOptsForOrgUser(autoEnrollStatus.id);
       } catch {
@@ -98,6 +104,25 @@ export class SetPasswordJitComponent implements OnInit {
     this.submitting = true;
 
     const userId = (await firstValueFrom(this.accountService.activeAccount$))?.id;
+
+    // Confirm the organization fingerprint
+    const organizationPublicKey = Utils.fromB64ToArray(
+      (await this.organizationApiService.getKeys(this.orgId)).publicKey,
+    );
+    const dialogRef = OrganizationTrustComponent.open(this.dialogService, {
+      name: this.orgName,
+      orgId: this.orgId,
+      publicKey: organizationPublicKey,
+    });
+    const result = await lastValueFrom(dialogRef.closed);
+    if (result !== true) {
+      this.toastService.showToast({
+        variant: "error",
+        title: null,
+        message: this.i18nService.t("organizationNotTrusted"),
+      });
+      return;
+    }
 
     const credentials: SetPasswordCredentials = {
       ...passwordInputResult,
