@@ -22,7 +22,7 @@ export class TwoFactorAuthCache {
   }
 }
 
-export interface TwoFactorFormData {
+export interface TwoFactorAuthData {
   token?: string;
   remember?: boolean;
   selectedProviderType?: TwoFactorProviderType;
@@ -36,7 +36,7 @@ export interface TwoFactorFormData {
  * after 2 minutes.
  */
 @Injectable()
-export class DefaultTwoFactorFormCacheService {
+export class TwoFactorAuthCacheService {
   private viewCacheService: ViewCacheService = inject(ViewCacheService);
   private configService: ConfigService = inject(ConfigService);
 
@@ -44,9 +44,9 @@ export class DefaultTwoFactorFormCacheService {
   private featureEnabled: boolean = false;
 
   /**
-   * Signal for the cached TwoFactorFormData.
+   * Signal for the cached TwoFactorAuthData.
    */
-  private defaultTwoFactorAuthCache: WritableSignal<TwoFactorAuthCache | null> =
+  private twoFactorAuthCache: WritableSignal<TwoFactorAuthCache | null> =
     this.viewCacheService.signal<TwoFactorAuthCache | null>({
       key: TWO_FACTOR_AUTH_CACHE_KEY,
       initialValue: null,
@@ -65,14 +65,14 @@ export class DefaultTwoFactorFormCacheService {
   }
 
   /**
-   * Update the cache with the new TwoFactorFormData.
+   * Update the cache with the new TwoFactorAuthData.
    */
-  cacheTwoFactorFormData(data: TwoFactorFormData): void {
+  cacheTwoFactorAuth(data: TwoFactorAuthData): void {
     if (!this.featureEnabled) {
       return;
     }
 
-    this.defaultTwoFactorAuthCache.set({
+    this.twoFactorAuthCache.set({
       token: data.token,
       remember: data.remember,
       selectedProviderType: data.selectedProviderType,
@@ -81,24 +81,24 @@ export class DefaultTwoFactorFormCacheService {
   }
 
   /**
-   * Clears the cached TwoFactorFormData.
+   * Clears the cached TwoFactorAuthData.
    */
-  clearCachedTwoFactorFormData(): void {
+  clearCachedTwoFactorAuth(): void {
     if (!this.featureEnabled) {
       return;
     }
 
-    this.defaultTwoFactorAuthCache.set(null);
+    this.twoFactorAuthCache.set(null);
   }
 
   /**
-   * Returns the cached TwoFactorFormData when available.
+   * Returns the cached TwoFactorAuthData when available.
    */
-  getCachedTwoFactorFormData(): TwoFactorAuthCache | null {
+  getCachedTwoFactorAuth(): TwoFactorAuthCache | null {
     if (!this.featureEnabled) {
       return null;
     }
 
-    return this.defaultTwoFactorAuthCache();
+    return this.twoFactorAuthCache();
   }
 }
