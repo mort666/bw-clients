@@ -1,12 +1,26 @@
 import { inject, Injectable, WritableSignal } from "@angular/core";
+import { Jsonify } from "type-fest";
 
 import { ViewCacheService } from "@bitwarden/angular/platform/abstractions/view-cache.service";
 import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
-import { TwoFactorFormView } from "@bitwarden/common/auth/models/view/two-factor-form.view";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 
-const TWO_FACTOR_FORM_CACHE_KEY = "two-factor-form-cache";
+const TWO_FACTOR_AUTH_CACHE_KEY = "two-factor-auth-cache";
+
+/**
+ * This is a cache model for the two factor authentication data.
+ */
+export class TwoFactorAuthCache {
+  token: string | undefined = undefined;
+  remember: boolean | undefined = undefined;
+  selectedProviderType: TwoFactorProviderType | undefined = undefined;
+  emailSent: boolean | undefined = undefined;
+
+  static fromJSON(obj: Partial<Jsonify<TwoFactorAuthCache>>): TwoFactorAuthCache {
+    return Object.assign(new TwoFactorAuthCache(), obj);
+  }
+}
 
 export interface TwoFactorFormData {
   token?: string;
@@ -32,11 +46,11 @@ export class DefaultTwoFactorFormCacheService {
   /**
    * Signal for the cached TwoFactorFormData.
    */
-  private defaultTwoFactorFormCache: WritableSignal<TwoFactorFormView | null> =
-    this.viewCacheService.signal<TwoFactorFormView | null>({
-      key: TWO_FACTOR_FORM_CACHE_KEY,
+  private defaultTwoFactorAuthCache: WritableSignal<TwoFactorAuthCache | null> =
+    this.viewCacheService.signal<TwoFactorAuthCache | null>({
+      key: TWO_FACTOR_AUTH_CACHE_KEY,
       initialValue: null,
-      deserializer: TwoFactorFormView.fromJSON,
+      deserializer: TwoFactorAuthCache.fromJSON,
     });
 
   constructor() {}
@@ -58,12 +72,12 @@ export class DefaultTwoFactorFormCacheService {
       return;
     }
 
-    this.defaultTwoFactorFormCache.set({
+    this.defaultTwoFactorAuthCache.set({
       token: data.token,
       remember: data.remember,
       selectedProviderType: data.selectedProviderType,
       emailSent: data.emailSent,
-    } as TwoFactorFormView);
+    } as TwoFactorAuthCache);
   }
 
   /**
@@ -74,17 +88,17 @@ export class DefaultTwoFactorFormCacheService {
       return;
     }
 
-    this.defaultTwoFactorFormCache.set(null);
+    this.defaultTwoFactorAuthCache.set(null);
   }
 
   /**
    * Returns the cached TwoFactorFormData when available.
    */
-  getCachedTwoFactorFormData(): TwoFactorFormView | null {
+  getCachedTwoFactorFormData(): TwoFactorAuthCache | null {
     if (!this.featureEnabled) {
       return null;
     }
 
-    return this.defaultTwoFactorFormCache();
+    return this.defaultTwoFactorAuthCache();
   }
 }
