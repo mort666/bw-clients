@@ -15,7 +15,6 @@ export class TwoFactorAuthCache {
   token: string | undefined = undefined;
   remember: boolean | undefined = undefined;
   selectedProviderType: TwoFactorProviderType | undefined = undefined;
-  emailSent: boolean | undefined = undefined;
 
   static fromJSON(obj: Partial<Jsonify<TwoFactorAuthCache>>): TwoFactorAuthCache {
     return Object.assign(new TwoFactorAuthCache(), obj);
@@ -26,7 +25,6 @@ export interface TwoFactorAuthData {
   token?: string;
   remember?: boolean;
   selectedProviderType?: TwoFactorProviderType;
-  emailSent?: boolean;
 }
 
 /**
@@ -76,7 +74,6 @@ export class TwoFactorAuthComponentCacheService {
       token: data.token,
       remember: data.remember,
       selectedProviderType: data.selectedProviderType,
-      emailSent: data.emailSent,
     } as TwoFactorAuthCache);
   }
 

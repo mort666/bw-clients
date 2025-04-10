@@ -78,7 +78,6 @@ interface TwoFactorCacheData {
   token?: string;
   remember?: boolean;
   selectedProviderType?: TwoFactorProviderType;
-  emailSent?: boolean;
 }
 
 @Component({
@@ -113,11 +112,6 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
     | undefined = undefined;
 
   loading = true;
-
-  /**
-   * Whether the email has been sent according to the cache
-   */
-  emailSent = false;
 
   orgSsoIdentifier: string | undefined = undefined;
 
@@ -206,9 +200,6 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
         this.selectedProviderType = persistedData.selectedProviderType;
         loadedCachedProviderType = true;
       }
-      if (persistedData.emailSent !== undefined) {
-        this.emailSent = persistedData.emailSent;
-      }
     }
 
     // Only set default 2FA provider type if we don't have one from cache
@@ -242,7 +233,6 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
         data?.selectedProviderType ??
         currentData?.selectedProviderType ??
         TwoFactorProviderType.Authenticator,
-      emailSent: data?.emailSent ?? currentData?.emailSent ?? false,
     });
   }
 
@@ -254,7 +244,6 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
       token: this.tokenFormControl.value || undefined,
       remember: this.rememberFormControl.value ?? undefined,
       selectedProviderType: this.selectedProviderType,
-      emailSent: this.selectedProviderType === TwoFactorProviderType.Email,
     };
 
     await this.saveFormDataWithPartialData(formData);
@@ -351,7 +340,6 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
       token: tokenValue,
       remember: rememberValue,
       selectedProviderType: this.selectedProviderType,
-      emailSent: this.selectedProviderType === TwoFactorProviderType.Email,
     });
 
     try {
@@ -379,7 +367,6 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
       token: "",
       remember: false,
       selectedProviderType: this.selectedProviderType,
-      emailSent: false,
     });
 
     const dialogRef = TwoFactorOptionsComponent.open(this.dialogService);
@@ -400,7 +387,6 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
         token: "",
         remember: false,
         selectedProviderType: response.type,
-        emailSent: false,
       });
 
       this.form.reset();

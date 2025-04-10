@@ -22,6 +22,7 @@ import {
   ToastService,
 } from "@bitwarden/components";
 
+import { TwoFactorAuthEmailComponentCacheService } from "./two-factor-auth-email-cache.service";
 import { TwoFactorAuthEmailComponentService } from "./two-factor-auth-email-component.service";
 
 @Component({
@@ -40,15 +41,19 @@ import { TwoFactorAuthEmailComponentService } from "./two-factor-auth-email-comp
     AsyncActionsModule,
     FormsModule,
   ],
+  providers: [
+    {
+      provide: TwoFactorAuthEmailComponentCacheService,
+    },
+  ],
 })
 export class TwoFactorAuthEmailComponent implements OnInit {
   @Input({ required: true }) tokenFormControl: FormControl | undefined = undefined;
-  @Input({ required: true }) emailSent: boolean = false;
   @Output() tokenChange = new EventEmitter<{ token: string }>();
-  @Output() emailSendEvent = new EventEmitter<void>();
 
   twoFactorEmail: string | undefined = undefined;
   emailPromise: Promise<any> | undefined;
+  emailSent = false;
 
   constructor(
     protected i18nService: I18nService,
@@ -60,10 +65,18 @@ export class TwoFactorAuthEmailComponent implements OnInit {
     protected appIdService: AppIdService,
     private toastService: ToastService,
     private twoFactorAuthEmailComponentService: TwoFactorAuthEmailComponentService,
+    private cacheService: TwoFactorAuthEmailComponentCacheService,
   ) {}
 
   async ngOnInit(): Promise<void> {
     await this.twoFactorAuthEmailComponentService.openPopoutIfApprovedForEmail2fa?.();
+    await this.cacheService.init();
+
+    // Check if email was already sent
+    const cachedData = this.cacheService.getCachedData();
+    if (cachedData?.emailSent) {
+      this.emailSent = true;
+    }
 
     const providers = await this.twoFactorService.getProviders();
 
@@ -124,7 +137,8 @@ export class TwoFactorAuthEmailComponent implements OnInit {
       this.emailPromise = this.apiService.postTwoFactorEmail(request);
       await this.emailPromise;
 
-      this.emailSendEvent.emit();
+      this.emailSent = true;
+      this.cacheService.cacheData({ emailSent: this.emailSent });
 
       if (doToast) {
         this.toastService.showToast({

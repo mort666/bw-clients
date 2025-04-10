@@ -14,8 +14,6 @@
     <app-two-factor-auth-email
       [tokenFormControl]="tokenFormControl"
       (tokenChange)="saveFormDataWithPartialData($event)"
-      [emailSent]="emailSent"
-      (emailSendEvent)="saveFormDataWithPartialData({ emailSent: true })"
       *ngIf="selectedProviderType === providerType.Email"
     />
 
