@@ -43,7 +43,7 @@ import {
   UserLockIcon,
   VaultIcon,
 } from "@bitwarden/auth/angular";
-import { ConfirmKeyConnectorDomainComponent, LockComponent } from "@bitwarden/key-management-ui";
+import { LockComponent } from "@bitwarden/key-management-ui";
 import {
   NewDeviceVerificationNoticePageOneComponent,
   NewDeviceVerificationNoticePageTwoComponent,
@@ -67,6 +67,7 @@ import { BlockedDomainsComponent } from "../autofill/popup/settings/blocked-doma
 import { ExcludedDomainsComponent } from "../autofill/popup/settings/excluded-domains.component";
 import { NotificationsSettingsComponent } from "../autofill/popup/settings/notifications.component";
 import { PremiumV2Component } from "../billing/popup/settings/premium-v2.component";
+import { ConfirmKeyConnectorDomainComponent } from "../key-management/key-connector/confirm-key-connector-domain.component";
 import { RemovePasswordComponent } from "../key-management/key-connector/remove-password.component";
 import BrowserPopupUtils from "../platform/popup/browser-popup-utils";
 import { popupRouterCacheGuard } from "../platform/popup/view-cache/popup-router-cache.service";
