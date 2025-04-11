@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, OnDestroy } from "@angular/core";
 import { RouterModule, Router } from "@angular/router";
 import { BehaviorSubject, firstValueFrom, map, Observable } from "rxjs";
 
@@ -22,6 +22,7 @@ import {
   SectionHeaderComponent,
   BitIconButtonComponent,
 } from "@bitwarden/components";
+import { PasswordRepromptService } from "@bitwarden/vault";
 
 import {
   DesktopFido2UserInterfaceService,
@@ -47,7 +48,7 @@ import { DesktopSettingsService } from "../../../platform/services/desktop-setti
   ],
   templateUrl: "fido2-create.component.html",
 })
-export class Fido2CreateComponent implements OnInit {
+export class Fido2CreateComponent implements OnInit, OnDestroy {
   session?: DesktopFido2UserInterfaceSession = null;
   private ciphersSubject = new BehaviorSubject<CipherView[]>([]);
   ciphers$: Observable<CipherView[]> = this.ciphersSubject.asObservable();
@@ -61,10 +62,12 @@ export class Fido2CreateComponent implements OnInit {
     private readonly dialogService: DialogService,
     private readonly domainSettingsService: DomainSettingsService,
     private readonly logService: LogService,
+    private readonly passwordRepromptService: PasswordRepromptService,
     private readonly router: Router,
   ) {}
 
   async ngOnInit() {
+    await this.accountService.setShowHeader(false);
     this.session = this.fido2UserInterfaceService.getCurrentSession();
     const rpid = await this.session.getRpId();
     const equivalentDomains = await firstValueFrom(
@@ -92,8 +95,16 @@ export class Fido2CreateComponent implements OnInit {
       .catch((error) => this.logService.error(error));
   }
 
+  async ngOnDestroy() {
+    await this.accountService.setShowHeader(true);
+  }
+
   async addPasskeyToCipher(cipher: CipherView) {
-    this.session.notifyConfirmCreateCredential(true, cipher);
+    const userVerified = cipher.reprompt
+      ? await this.passwordRepromptService.showPasswordPrompt()
+      : true;
+
+    this.session.notifyConfirmCreateCredential(userVerified, cipher);
   }
 
   async confirmPasskey() {

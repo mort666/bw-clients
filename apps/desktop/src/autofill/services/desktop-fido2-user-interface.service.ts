@@ -97,7 +97,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
 
   private updatedCipher: CipherView;
 
-  private rpId = new BehaviorSubject<string>("");
+  private rpId = new BehaviorSubject<string>(null);
   private availableCipherIdsSubject = new BehaviorSubject<string[]>([""]);
   /**
    * Observable that emits available cipher IDs once they're confirmed by the UI
