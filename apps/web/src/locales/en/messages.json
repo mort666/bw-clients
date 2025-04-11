@@ -2459,9 +2459,6 @@
   "unsecuredWebsitesFound": {
     "message": "Unsecured websites found"
   },
-  "phishingWebsitesFound":{
-    "message": "Phishing websites found"
-  },
   "unsecuredWebsitesFoundReportDesc": {
     "message": "We found $COUNT$ items in your $VAULT$ with unsecured URIs. You should change their URI scheme to https:// if the website allows it.",
     "placeholders": {
@@ -2475,25 +2472,8 @@
       }
     }
   },
-
-  "phishingWebsitesFoundReportDesc": {
-    "message": "We found $COUNT$ items in your $VAULT$ that are classified as phishing webistes.",
-    "placeholders": {
-      "count": {
-        "content": "$1",
-        "example": "8"
-      },
-      "vault": {
-        "content": "$2",
-        "example": "this will be 'vault' or 'vaults'"
-      }
-    }
-  },
   "noUnsecuredWebsites": {
     "message": "No items in your vault have unsecured URIs."
-  },
-  "noPhishingWebsitesFound": {
-    "message": "No websites in your vault have been classified as phishing website."
   },
   "inactive2faReport": {
     "message": "Inactive two-step login"
@@ -2522,12 +2502,6 @@
   },
   "instructions": {
     "message": "Instructions"
-  },
-  "phishingWebsiteReport":{
-    "message": "Phishing websites"
-  },
-  "phishingWebsiteReportDesc":{
-    "message": "List of phishing websites visited. These websites could expose your passwords."
   },
   "exposedPasswordsReport": {
     "message": "Exposed passwords"

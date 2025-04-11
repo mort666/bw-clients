@@ -2,15 +2,12 @@ import { NgModule } from "@angular/core";
 import { RouterModule, Routes } from "@angular/router";
 
 import { authGuard } from "@bitwarden/angular/auth/guards";
-import { canAccessFeature } from "@bitwarden/angular/platform/guard/feature-flag.guard";
-import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 
 import { hasPremiumGuard } from "../../billing/guards/has-premium.guard";
 
 import { BreachReportComponent } from "./pages/breach-report.component";
 import { ExposedPasswordsReportComponent } from "./pages/exposed-passwords-report.component";
 import { InactiveTwoFactorReportComponent } from "./pages/inactive-two-factor-report.component";
-import { PhishingWebsiteReport } from "./pages/phishing-website-report.component";
 import { ReportsHomeComponent } from "./pages/reports-home.component";
 import { ReusedPasswordsReportComponent } from "./pages/reused-passwords-report.component";
 import { UnsecuredWebsitesReportComponent } from "./pages/unsecured-websites-report.component";
@@ -63,12 +60,6 @@ const routes: Routes = [
         component: InactiveTwoFactorReportComponent,
         data: { titleId: "inactive2faReport" },
         canActivate: [hasPremiumGuard()],
-      },
-      {
-        path: "phishing-website-report",
-        component: PhishingWebsiteReport,
-        data: { titleId: "phishingWebsiteReport" },
-        canActivate: [canAccessFeature(FeatureFlag.PhishingDetection)],
       },
     ],
   },
