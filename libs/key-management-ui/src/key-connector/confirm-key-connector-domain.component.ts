@@ -6,6 +6,7 @@ import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { KeyConnectorService } from "@bitwarden/common/key-management/key-connector/abstractions/key-connector.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
+import { SyncService } from "@bitwarden/common/platform/sync";
 import { UserId } from "@bitwarden/common/types/guid";
 import { AsyncActionsModule, ButtonModule, IconButtonModule } from "@bitwarden/components";
 import { KdfType } from "@bitwarden/key-management";
@@ -39,6 +40,7 @@ export class ConfirmKeyConnectorDomainComponent implements OnInit {
     private logService: LogService,
     private keyConnectorService: KeyConnectorService,
     private messagingService: MessagingService,
+    private syncService: SyncService,
   ) {}
 
   async ngOnInit() {
@@ -99,7 +101,11 @@ export class ConfirmKeyConnectorDomainComponent implements OnInit {
       this.kdfParallelism,
     );
 
+    await this.syncService.fullSync(true);
+
     this.messagingService.send("loggedIn");
+
+    await this.router.navigate(["/"]);
   };
 
   cancel = async () => {
