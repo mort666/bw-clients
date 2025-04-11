@@ -775,6 +775,7 @@ describe("Cipher DTO", () => {
         organizationId: "orgId",
         folderId: "folderId",
         edit: true,
+        permissions: new CipherPermissionsApi(),
         viewPassword: true,
         organizationUseTotp: true,
         favorite: false,
@@ -872,7 +873,7 @@ describe("Cipher DTO", () => {
         reprompt: SdkCipherRepromptType.None,
         organizationUseTotp: true,
         edit: true,
-        permissions: undefined,
+        permissions: new CipherPermissionsApi(),
         viewPassword: true,
         localData: undefined,
         attachments: [
