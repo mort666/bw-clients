@@ -6,13 +6,13 @@ import { Organization } from "../../../admin-console/models/domain/organization"
 import { UserId } from "../../../types/guid";
 
 export abstract class KeyConnectorService {
-  abstract setMasterKeyFromUrl(url: string, userId: UserId): Promise<void>;
+  abstract setMasterKeyFromUrl(keyConnectorUrl: string, userId: UserId): Promise<void>;
 
   abstract getManagingOrganization(userId: UserId): Promise<Organization>;
 
   abstract getUsesKeyConnector(userId: UserId): Promise<boolean>;
 
-  abstract migrateUser(userId: UserId): Promise<void>;
+  abstract migrateUser(keyConnectorUrl: string, userId: UserId): Promise<void>;
 
   abstract convertNewSsoUserToKeyConnector(
     orgId: string,
