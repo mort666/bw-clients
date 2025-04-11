@@ -1,9 +1,9 @@
+import { PasswordInputResult } from "@bitwarden/auth/angular";
 import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { MasterPasswordApiService } from "@bitwarden/common/auth/abstractions/master-password-api.service.abstraction";
 import { PasswordRequest } from "@bitwarden/common/auth/models/request/password.request";
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
 import { UserId } from "@bitwarden/common/types/guid";
-import { MasterKey } from "@bitwarden/common/types/key";
 import { KeyService } from "@bitwarden/key-management";
 
 import { ChangePasswordService } from "../../abstractions";
@@ -31,20 +31,13 @@ export class DefaultChangePasswordService implements ChangePasswordService {
     return null; // implemented in Web
   }
 
-  async changePassword(
-    currentMasterKey: MasterKey,
-    currentServerMasterKeyHash: string,
-    newPasswordHint: string,
-    newMasterKey: MasterKey,
-    newServerMasterKeyHash: string,
-    userId: UserId,
-  ) {
+  async changePassword(passwordInputResult: PasswordInputResult, userId: UserId) {
     if (!userId) {
       throw new Error("The change password process requires a userId");
     }
 
     const decryptedUserKey = await this.masterPasswordService.decryptUserKeyWithMasterKey(
-      currentMasterKey,
+      passwordInputResult.currentMasterKey,
       userId,
     );
 
@@ -53,14 +46,14 @@ export class DefaultChangePasswordService implements ChangePasswordService {
     }
 
     const newMasterKeyEncryptedUserKey = await this.keyService.encryptUserKeyWithMasterKey(
-      newMasterKey,
+      passwordInputResult.newMasterKey,
       decryptedUserKey,
     );
 
     const request = new PasswordRequest();
-    request.masterPasswordHash = currentServerMasterKeyHash;
-    request.masterPasswordHint = newPasswordHint;
-    request.newMasterPasswordHash = newServerMasterKeyHash;
+    request.masterPasswordHash = passwordInputResult.currentServerMasterKeyHash;
+    request.newMasterPasswordHash = passwordInputResult.newServerMasterKeyHash;
+    request.masterPasswordHint = passwordInputResult.newPasswordHint;
     request.key = newMasterKeyEncryptedUserKey[1].encryptedString as string;
 
     try {

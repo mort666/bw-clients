@@ -93,7 +93,7 @@ export class ChangePasswordComponent implements OnInit {
         await this.syncService.fullSync(true);
 
         if (this.activeAccount == null) {
-          throw new Error("User or userId not found");
+          throw new Error("User not found");
         }
 
         await this.changePasswordService.rotateUserKeyMasterPasswordAndEncryptedData(
@@ -103,14 +103,7 @@ export class ChangePasswordComponent implements OnInit {
           passwordInputResult.newPasswordHint,
         );
       } else {
-        await this.changePasswordService.changePassword(
-          passwordInputResult.currentMasterKey,
-          passwordInputResult.currentServerMasterKeyHash,
-          passwordInputResult.newPasswordHint,
-          passwordInputResult.newMasterKey,
-          passwordInputResult.newServerMasterKeyHash,
-          this.userId,
-        );
+        await this.changePasswordService.changePassword(passwordInputResult, this.userId);
 
         this.toastService.showToast({
           variant: "success",
@@ -153,8 +146,8 @@ export class ChangePasswordComponent implements OnInit {
 
     const request = new PasswordRequest();
     request.masterPasswordHash = passwordInputResult.currentServerMasterKeyHash;
-    request.masterPasswordHint = passwordInputResult.newPasswordHint;
     request.newMasterPasswordHash = passwordInputResult.newServerMasterKeyHash;
+    request.masterPasswordHint = passwordInputResult.newPasswordHint;
     request.key = newMasterKeyEncryptedUserKey[1].encryptedString as string;
 
     try {

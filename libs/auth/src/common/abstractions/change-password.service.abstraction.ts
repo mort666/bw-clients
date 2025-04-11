@@ -1,6 +1,6 @@
+import { PasswordInputResult } from "@bitwarden/auth/angular";
 import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { UserId } from "@bitwarden/common/types/guid";
-import { MasterKey } from "@bitwarden/common/types/key";
 
 export abstract class ChangePasswordService {
   abstract rotateUserKeyMasterPasswordAndEncryptedData(
@@ -15,12 +15,5 @@ export abstract class ChangePasswordService {
     user: Account,
   ): Promise<void | null>;
 
-  abstract changePassword(
-    currentMasterKey: MasterKey,
-    currentServerMasterKeyHash: string,
-    newPasswordHint: string,
-    newMasterKey: MasterKey,
-    newServerMasterKeyHash: string,
-    userId: UserId,
-  ): Promise<void>;
+  abstract changePassword(passwordInputResult: PasswordInputResult, userId: UserId): Promise<void>;
 }
