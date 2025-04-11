@@ -2,12 +2,21 @@
 // @ts-strict-ignore
 import { CommonModule } from "@angular/common";
 import { Component, OnDestroy, OnInit } from "@angular/core";
+import { ReactiveFormsModule } from "@angular/forms";
 import { ActivatedRoute, RouterModule } from "@angular/router";
 import { map, Observable, Subject, take } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { AnonLayoutComponent, InputPasswordComponent } from "@bitwarden/auth/angular";
-import { ButtonModule, Icon, IconModule } from "@bitwarden/components";
+import {
+  AsyncActionsModule,
+  ButtonModule,
+  CheckboxModule,
+  FormFieldModule,
+  Icon,
+  IconModule,
+  LinkModule,
+} from "@bitwarden/components";
 
 import { PopOutComponent } from "../../platform/popup/components/pop-out.component";
 import { PopupHeaderComponent } from "../../platform/popup/layout/popup-header.component";
@@ -25,12 +34,15 @@ interface ViewData {
     CommonModule,
     IconModule,
     PopOutComponent,
-    PopupPageComponent,
     InputPasswordComponent,
     PopupHeaderComponent,
     PopupPageComponent,
-    CommonModule,
     JslibModule,
+    LinkModule,
+    ReactiveFormsModule,
+    FormFieldModule,
+    AsyncActionsModule,
+    CheckboxModule,
     ButtonModule,
     RouterModule,
   ],
