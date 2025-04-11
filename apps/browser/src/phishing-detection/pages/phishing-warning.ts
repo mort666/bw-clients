@@ -1,42 +1,25 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
 import { CommonModule } from "@angular/common";
 import { Component, OnDestroy, OnInit } from "@angular/core";
-import { ReactiveFormsModule } from "@angular/forms";
+import { FormBuilder, ReactiveFormsModule } from "@angular/forms";
 import { ActivatedRoute, RouterModule } from "@angular/router";
-import { map, Observable, Subject, take } from "rxjs";
+import { Subject, takeUntil } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
-import { AnonLayoutComponent, InputPasswordComponent } from "@bitwarden/auth/angular";
 import {
   AsyncActionsModule,
   ButtonModule,
   CheckboxModule,
   FormFieldModule,
-  Icon,
   IconModule,
   LinkModule,
 } from "@bitwarden/components";
-
-import { PopOutComponent } from "../../platform/popup/components/pop-out.component";
-import { PopupHeaderComponent } from "../../platform/popup/layout/popup-header.component";
-import { PopupPageComponent } from "../../platform/popup/layout/popup-page.component";
-
-interface ViewData {
-  phishingHost: string;
-}
 
 @Component({
   standalone: true,
   templateUrl: "phishing-warning.html",
   imports: [
-    AnonLayoutComponent,
     CommonModule,
     IconModule,
-    PopOutComponent,
-    InputPasswordComponent,
-    PopupHeaderComponent,
-    PopupPageComponent,
     JslibModule,
     LinkModule,
     ReactiveFormsModule,
@@ -48,38 +31,28 @@ interface ViewData {
   ],
 })
 export class PhishingWarning implements OnInit, OnDestroy {
+  formGroup = this.formBuilder.group({
+    phishingHost: [""],
+  });
+
   private destroy$ = new Subject<void>();
 
-  protected showLogo: boolean = true;
-  protected hideIcon: boolean = false;
-
-  protected pageTitle: string;
-  protected pageSubtitle: string;
-  protected pageIcon: Icon;
-  protected showReadonlyHostname: boolean;
-  protected maxWidth: "md" | "3xl";
-  protected hasLoggedInAccount: boolean = false;
-  protected hideFooter: boolean;
-
-  protected queryParams$: Observable<ViewData>;
-
-  protected theme: string;
-
-  constructor(private activatedRoute: ActivatedRoute) {}
+  constructor(
+    private activatedRoute: ActivatedRoute,
+    private formBuilder: FormBuilder,
+  ) {}
 
   async ngOnInit(): Promise<void> {
-    this.queryParams$ = this.activatedRoute.queryParamMap.pipe(
-      take(1),
-      map((queryParamMap) => ({
-        phishingHost: queryParamMap.get("phishingHost"),
-      })),
-    );
+    this.activatedRoute.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      this.formGroup.patchValue({ phishingHost: params.get("phishingHost") });
+      this.formGroup.get("phishingHost")?.disable();
+    });
   }
   closeTab(): void {
     globalThis.close();
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }

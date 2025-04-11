@@ -1,6 +1,8 @@
-<bit-form-field>
-  <bit-label>Phishing url</bit-label>
-  <input [disabled]="true" id="Phishing-url" bitInput type="text" formControlName="name" />
-</bit-form-field>
+<div [formGroup]="formGroup">
+  <bit-form-field>
+    <bit-label>Phishing url</bit-label>
+    <input bitInput type="text" formControlName="phishingHost" />
+  </bit-form-field>
 
-<a (click)="closeTab()" bitButton block buttonType="primary"> Exit page </a>
+  <a (click)="closeTab()" bitButton block buttonType="primary"> Exit page </a>
+</div>
