@@ -41,7 +41,7 @@ import {
   NewDeviceVerificationComponent,
   DeviceVerificationIcon,
 } from "@bitwarden/auth/angular";
-import { ConfirmKeyConnectorDomainComponent, LockComponent } from "@bitwarden/key-management-ui";
+import { LockComponent } from "@bitwarden/key-management-ui";
 import {
   NewDeviceVerificationNoticePageOneComponent,
   NewDeviceVerificationNoticePageTwoComponent,
@@ -74,6 +74,7 @@ import { CompleteTrialInitiationComponent } from "./billing/trial-initiation/com
 import { freeTrialTextResolver } from "./billing/trial-initiation/complete-trial-initiation/resolver/free-trial-text.resolver";
 import { EnvironmentSelectorComponent } from "./components/environment-selector/environment-selector.component";
 import { RouteDataProperties } from "./core";
+import { ConfirmKeyConnectorDomainComponent } from "./key-management/key-connector/confirm-key-connector-domain.component";
 import { RemovePasswordComponent } from "./key-management/key-connector/remove-password.component";
 import { FrontendLayoutComponent } from "./layouts/frontend-layout.component";
 import { UserLayoutComponent } from "./layouts/user-layout.component";
