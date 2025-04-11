@@ -4,7 +4,6 @@ import { MasterPasswordApiService } from "@bitwarden/common/auth/abstractions/ma
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
-import { FakeAccountService, mockAccountServiceWith } from "@bitwarden/common/spec";
 import { UserId } from "@bitwarden/common/types/guid";
 import { MasterKey, UserKey } from "@bitwarden/common/types/key";
 import { KeyService } from "@bitwarden/key-management";
@@ -16,7 +15,6 @@ import { DefaultChangePasswordService } from "./default-change-password.service"
 describe("DefaultChangePasswordService", () => {
   const userId = "userId" as UserId;
 
-  let accountService: FakeAccountService;
   let keyService: MockProxy<KeyService>;
   let masterPasswordApiService: MockProxy<MasterPasswordApiService>;
   let masterPasswordService: MockProxy<InternalMasterPasswordServiceAbstraction>;
@@ -37,13 +35,11 @@ describe("DefaultChangePasswordService", () => {
   ];
 
   beforeEach(() => {
-    accountService = mockAccountServiceWith(userId);
     keyService = mock<KeyService>();
     masterPasswordApiService = mock<MasterPasswordApiService>();
     masterPasswordService = mock<InternalMasterPasswordServiceAbstraction>();
 
     sut = new DefaultChangePasswordService(
-      accountService,
       keyService,
       masterPasswordApiService,
       masterPasswordService,
@@ -62,6 +58,7 @@ describe("DefaultChangePasswordService", () => {
         newPasswordHint,
         newMasterKey,
         newServerMasterKeyHash,
+        userId,
       );
 
       // Assert
@@ -83,6 +80,7 @@ describe("DefaultChangePasswordService", () => {
         newPasswordHint,
         newMasterKey,
         newServerMasterKeyHash,
+        userId,
       );
 
       // Assert
@@ -108,6 +106,7 @@ describe("DefaultChangePasswordService", () => {
           newPasswordHint,
           newMasterKey,
           newServerMasterKeyHash,
+          userId,
         ),
       ).rejects.toThrow("Could not decrypt user key");
     });
