@@ -10,14 +10,14 @@ import { KdfType } from "@bitwarden/key-management";
 
 @Directive()
 export class ConfirmKeyConnectorDomainComponent implements OnInit {
-  protected loading = true;
-  protected keyConnectorUrl!: string;
-  private userId!: UserId;
-  private organizationId!: string;
-  private kdf!: KdfType;
-  private kdfIterations!: number;
-  private kdfMemory?: number;
-  private kdfParallelism?: number;
+  loading = true;
+  keyConnectorUrl!: string;
+  userId!: UserId;
+  organizationId!: string;
+  kdf!: KdfType;
+  kdfIterations!: number;
+  kdfMemory?: number;
+  kdfParallelism?: number;
 
   constructor(
     private route: ActivatedRoute,
