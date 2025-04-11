@@ -436,7 +436,7 @@ export class SsoComponent implements OnInit {
       }
 
       if (authResult.requiresKeyConnectorDomainConfirmation != null) {
-        this.logService.debug("Key Connector domain confirmation required 2");
+        this.logService.debug("Key Connector domain confirmation required");
         return await this.handleKeyConnectorDomainConfirmation(
           authResult.requiresKeyConnectorDomainConfirmation,
           authResult.userId,
