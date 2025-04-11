@@ -36,7 +36,7 @@ import {
   imports: [CommonModule, InputPasswordComponent, JslibModule],
 })
 export class SetPasswordJitComponent implements OnInit {
-  protected InputPasswordFlow = InputPasswordFlow;
+  protected inputPasswordFlow = InputPasswordFlow.SetInitialPasswordAuthedUser;
   protected email: string;
   protected masterPasswordPolicyOptions: MasterPasswordPolicyOptions;
   protected orgId: string;

@@ -34,7 +34,12 @@ import {
   ToastService,
   Translation,
 } from "@bitwarden/components";
-import { KdfConfig, KdfConfigService, KeyService } from "@bitwarden/key-management";
+import {
+  DEFAULT_KDF_CONFIG,
+  KdfConfig,
+  KdfConfigService,
+  KeyService,
+} from "@bitwarden/key-management";
 
 // FIXME: remove `src` and fix import
 // eslint-disable-next-line no-restricted-imports
@@ -45,24 +50,25 @@ import { compareInputs, ValidationGoal } from "../validators/compare-inputs.vali
 import { PasswordInputResult } from "./password-input-result";
 
 /**
- * Determines which form input elements will be displayed in the UI.
+ * Determines which form elements will be displayed in the UI
+ * and which cryptographic keys will be created and emitted.
  */
 export enum InputPasswordFlow {
   /**
-   * - Input: New password
-   * - Input: New password confirm
-   * - Input: New password hint
-   * - Checkbox: Check for breaches
+   * Form elements displayed:
+   * - [Input] New password
+   * - [Input] New password confirm
+   * - [Input] New password hint
+   * - [Checkbox] Check for breaches
    */
-  SetInitialPassword,
-  /**
-   * Everything above, plus:
-   * - Input: Current password (as the first element in the UI)
+  AccountRegistration, // important: this flow does not involve an activeAccount/userId
+  SetInitialPasswordAuthedUser,
+  /*
+   * All form elements above, plus: [Input] Current password (as the first element in the UI)
    */
   ChangePassword,
   /**
-   * Everything above, plus:
-   * - Checkbox: Rotate account encryption key (as the last element in the UI)
+   * All form elements above, plus: [Checkbox] Rotate account encryption key (as the last element in the UI)
    */
   ChangePasswordWithOptionalUserKeyRotation,
 }
@@ -89,10 +95,10 @@ export class InputPasswordComponent implements OnInit {
   @Output() onPasswordFormSubmit = new EventEmitter<PasswordInputResult>();
   @Output() onSecondaryButtonClick = new EventEmitter<void>();
 
-  @Input({ required: true }) inputPasswordFlow!: InputPasswordFlow;
-  @Input({ required: true }) email!: string;
-  @Input({ required: true }) userId!: UserId;
+  @Input({ required: true }) flow!: InputPasswordFlow;
+  @Input({ required: true, transform: (val: string) => val.trim().toLowerCase() }) email!: string;
 
+  @Input() userId?: UserId;
   @Input() loading = false;
   @Input() masterPasswordPolicyOptions: MasterPasswordPolicyOptions | null = null;
 
@@ -133,12 +139,23 @@ export class InputPasswordComponent implements OnInit {
         compareInputs(
           ValidationGoal.InputsShouldNotMatch,
           "newPassword",
-          "hint",
+          "newPasswordHint",
           this.i18nService.t("hintEqualsPassword"),
         ),
       ],
     },
   );
+
+  protected get minPasswordLengthMsg() {
+    if (
+      this.masterPasswordPolicyOptions != null &&
+      this.masterPasswordPolicyOptions.minLength > 0
+    ) {
+      return this.i18nService.t("characterMinimum", this.masterPasswordPolicyOptions.minLength);
+    } else {
+      return this.i18nService.t("characterMinimum", this.minPasswordLength);
+    }
+  }
 
   constructor(
     private auditService: AuditService,
@@ -155,9 +172,14 @@ export class InputPasswordComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.addFormFieldsIfNecessary();
+    this.setButtonText();
+  }
+
+  private addFormFieldsIfNecessary() {
     if (
-      this.inputPasswordFlow === InputPasswordFlow.ChangePassword ||
-      this.inputPasswordFlow === InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation
+      this.flow === InputPasswordFlow.ChangePassword ||
+      this.flow === InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation
     ) {
       // https://github.com/angular/angular/issues/48794
       (this.formGroup as FormGroup<any>).addControl(
@@ -166,14 +188,16 @@ export class InputPasswordComponent implements OnInit {
       );
     }
 
-    if (this.inputPasswordFlow === InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation) {
+    if (this.flow === InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation) {
       // https://github.com/angular/angular/issues/48794
       (this.formGroup as FormGroup<any>).addControl(
         "rotateUserKey",
         this.formBuilder.control<boolean>(false),
       );
     }
+  }
 
+  private setButtonText() {
     if (this.primaryButtonText) {
       this.primaryButtonTextStr = this.i18nService.t(
         this.primaryButtonText.key,
@@ -189,22 +213,9 @@ export class InputPasswordComponent implements OnInit {
     }
   }
 
-  get minPasswordLengthMsg() {
-    if (
-      this.masterPasswordPolicyOptions != null &&
-      this.masterPasswordPolicyOptions.minLength > 0
-    ) {
-      return this.i18nService.t("characterMinimum", this.masterPasswordPolicyOptions.minLength);
-    } else {
-      return this.i18nService.t("characterMinimum", this.minPasswordLength);
-    }
-  }
-
-  getPasswordStrengthScore(score: PasswordStrengthScore) {
-    this.passwordStrengthScore = score;
-  }
-
   protected submit = async () => {
+    this.verifyFlowAndUserId();
+
     this.formGroup.markAllAsTouched();
 
     if (this.formGroup.invalid) {
@@ -216,45 +227,50 @@ export class InputPasswordComponent implements OnInit {
       throw new Error("Email is required to create master key.");
     }
 
-    this.kdfConfig = await firstValueFrom(this.kdfConfigService.getKdfConfig$(this.userId));
-    if (this.kdfConfig == null) {
-      throw new Error("KdfConfig is required to create master key.");
-    }
-
     const currentPassword = this.formGroup.get("currentPassword")?.value || "";
     const newPassword = this.formGroup.controls.newPassword.value;
     const newPasswordHint = this.formGroup.controls.newPasswordHint.value;
     const checkForBreaches = this.formGroup.controls.checkForBreaches.value;
 
-    // 1. Verify current password is correct (if necessary)
+    // 1. Determine kdfConfig
+    if (this.flow === InputPasswordFlow.AccountRegistration) {
+      this.kdfConfig = DEFAULT_KDF_CONFIG;
+    } else {
+      this.kdfConfig = await firstValueFrom(this.kdfConfigService.getKdfConfig$(this.userId));
+    }
+
+    if (this.kdfConfig == null) {
+      throw new Error("KdfConfig is required to create master key.");
+    }
+
+    // 2. Verify current password is correct (if necessary)
     if (
-      this.inputPasswordFlow === InputPasswordFlow.ChangePassword ||
-      this.inputPasswordFlow === InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation
+      this.flow === InputPasswordFlow.ChangePassword ||
+      this.flow === InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation
     ) {
-      const currentPasswordIsCorrect = await this.verifyCurrentPassword(
+      const currentPasswordVerified = await this.verifyCurrentPassword(
         currentPassword,
-        this.userId,
         this.kdfConfig,
       );
-      if (!currentPasswordIsCorrect) {
+      if (!currentPasswordVerified) {
         return;
       }
     }
 
-    // 2. Evaluate new password
-    const newPasswordEvaluatedSuccessfully = await this.evaluateNewPassword(
+    // 3. Verify new password
+    const newPasswordVerified = await this.verifyNewPassword(
       newPassword,
       this.passwordStrengthScore,
       checkForBreaches,
     );
-    if (!newPasswordEvaluatedSuccessfully) {
+    if (!newPasswordVerified) {
       return;
     }
 
-    // 3. Create cryptographic keys
+    // 4. Create cryptographic keys and build a PasswordInputResult object
     const newMasterKey = await this.keyService.makeMasterKey(
       newPassword,
-      this.email.trim().toLowerCase(),
+      this.email,
       this.kdfConfig,
     );
 
@@ -280,12 +296,12 @@ export class InputPasswordComponent implements OnInit {
     };
 
     if (
-      this.inputPasswordFlow === InputPasswordFlow.ChangePassword ||
-      this.inputPasswordFlow === InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation
+      this.flow === InputPasswordFlow.ChangePassword ||
+      this.flow === InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation
     ) {
       const currentMasterKey = await this.keyService.makeMasterKey(
         currentPassword,
-        this.email.trim().toLowerCase(),
+        this.email,
         this.kdfConfig,
       );
 
@@ -307,31 +323,66 @@ export class InputPasswordComponent implements OnInit {
       passwordInputResult.currentLocalMasterKeyHash = currentLocalMasterKeyHash;
     }
 
-    if (this.inputPasswordFlow === InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation) {
+    if (this.flow === InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation) {
       passwordInputResult.rotateUserKey = this.formGroup.get("rotateUserKey")?.value;
     }
 
-    // 4. Emit cryptographic keys and other password related properties
+    // 5. Emit cryptographic keys and other password related properties
     this.onPasswordFormSubmit.emit(passwordInputResult);
   };
 
   /**
-   * Returns true if the current password is correct, false otherwise
+   * This method prevents a dev from passing down the wrong `InputPasswordFlow`
+   * from the parent component or from failing to pass down a `userId` for flows
+   * that require it.
+   *
+   * We cannot mark the `userId` `@Input` as required because in an account registration
+   * flow we will not have an active account `userId` to pass down.
+   */
+  private verifyFlowAndUserId() {
+    /**
+     * There can be no active account (and thus no userId) in an account registration
+     * flow. If there is a userId, it means the dev passed down the wrong InputPasswordFlow
+     * from the parent component.
+     */
+    if (this.flow === InputPasswordFlow.AccountRegistration) {
+      if (this.userId) {
+        throw new Error(
+          "There can be no userId in an account registration flow. Please pass down the appropriate InputPasswordFlow from the parent component.",
+        );
+      }
+    }
+
+    /**
+     * There MUST be an active account (and thus a userId) in all other flows.
+     * If no userId is passed down, it means the dev either:
+     *  (a) passed down the wrong InputPasswordFlow, or
+     *  (b) passed down the correct InputPasswordFlow but failed to pass down a userId
+     */
+    if (this.flow !== InputPasswordFlow.AccountRegistration) {
+      if (!this.userId) {
+        throw new Error("The selected InputPasswordFlow requires that a userId be passed down");
+      }
+    }
+  }
+
+  /**
+   * Returns `true` if the current password is correct (it can be used to successfully decrypt
+   * the masterKeyEncrypedUserKey), `false` otherwise
    */
   private async verifyCurrentPassword(
     currentPassword: string,
-    userId: UserId,
     kdfConfig: KdfConfig,
   ): Promise<boolean> {
     const currentMasterKey = await this.keyService.makeMasterKey(
       currentPassword,
-      this.email.trim().toLowerCase(),
+      this.email,
       kdfConfig,
     );
 
     const decryptedUserKey = await this.masterPasswordService.decryptUserKeyWithMasterKey(
       currentMasterKey,
-      userId,
+      this.userId,
     );
 
     if (decryptedUserKey == null) {
@@ -348,9 +399,10 @@ export class InputPasswordComponent implements OnInit {
   }
 
   /**
-   * Returns true if the new password passes all checks, false otherwise
+   * Returns `true` if the new password is not weak or breached and it passes
+   * any enforced org policy options, `false` otherwise
    */
-  private async evaluateNewPassword(
+  private async verifyNewPassword(
     newPassword: string,
     passwordStrengthScore: PasswordStrengthScore,
     checkForBreaches: boolean,
@@ -414,7 +466,7 @@ export class InputPasswordComponent implements OnInit {
     return true;
   }
 
-  async rotateUserKeyClicked() {
+  protected async rotateUserKeyClicked() {
     const rotateUserKeyCtrl = this.formGroup.get(
       "rotateUserKey",
     ) as unknown as FormControl<boolean>;
@@ -467,5 +519,9 @@ export class InputPasswordComponent implements OnInit {
         rotateUserKeyCtrl.setValue(false);
       }
     }
+  }
+
+  protected getPasswordStrengthScore(score: PasswordStrengthScore) {
+    this.passwordStrengthScore = score;
   }
 }

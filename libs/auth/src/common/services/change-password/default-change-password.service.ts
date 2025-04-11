@@ -1,10 +1,8 @@
-import { firstValueFrom } from "rxjs";
-
-import { Account, AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { MasterPasswordApiService } from "@bitwarden/common/auth/abstractions/master-password-api.service.abstraction";
 import { PasswordRequest } from "@bitwarden/common/auth/models/request/password.request";
-import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
+import { UserId } from "@bitwarden/common/types/guid";
 import { MasterKey } from "@bitwarden/common/types/key";
 import { KeyService } from "@bitwarden/key-management";
 
@@ -12,7 +10,6 @@ import { ChangePasswordService } from "../../abstractions";
 
 export class DefaultChangePasswordService implements ChangePasswordService {
   constructor(
-    private accountService: AccountService,
     private keyService: KeyService,
     private masterPasswordApiService: MasterPasswordApiService,
     private masterPasswordService: InternalMasterPasswordServiceAbstraction,
@@ -40,8 +37,11 @@ export class DefaultChangePasswordService implements ChangePasswordService {
     newPasswordHint: string,
     newMasterKey: MasterKey,
     newServerMasterKeyHash: string,
+    userId: UserId,
   ) {
-    const userId = await firstValueFrom(getUserId(this.accountService.activeAccount$));
+    if (!userId) {
+      throw new Error("The change password process requires a userId");
+    }
 
     const decryptedUserKey = await this.masterPasswordService.decryptUserKeyWithMasterKey(
       currentMasterKey,

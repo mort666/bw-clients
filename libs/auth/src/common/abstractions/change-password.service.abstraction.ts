@@ -1,4 +1,5 @@
 import { Account } from "@bitwarden/common/auth/abstractions/account.service";
+import { UserId } from "@bitwarden/common/types/guid";
 import { MasterKey } from "@bitwarden/common/types/key";
 
 export abstract class ChangePasswordService {
@@ -20,5 +21,6 @@ export abstract class ChangePasswordService {
     newPasswordHint: string,
     newMasterKey: MasterKey,
     newServerMasterKeyHash: string,
+    userId: UserId,
   ): Promise<void>;
 }

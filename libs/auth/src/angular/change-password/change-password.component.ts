@@ -93,7 +93,7 @@ export class ChangePasswordComponent implements OnInit {
         await this.syncService.fullSync(true);
 
         if (this.activeAccount == null) {
-          throw new Error("User not found");
+          throw new Error("User or userId not found");
         }
 
         await this.changePasswordService.rotateUserKeyMasterPasswordAndEncryptedData(
@@ -109,6 +109,7 @@ export class ChangePasswordComponent implements OnInit {
           passwordInputResult.newPasswordHint,
           passwordInputResult.newMasterKey,
           passwordInputResult.newServerMasterKeyHash,
+          this.userId,
         );
 
         this.toastService.showToast({
@@ -181,6 +182,7 @@ export class ChangePasswordComponent implements OnInit {
         title: this.i18nService.t("masterPasswordChanged"),
         message: this.i18nService.t("logBackIn"),
       });
+
       this.messagingService.send("logout");
     } catch {
       this.toastService.showToast({

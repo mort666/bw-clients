@@ -389,7 +389,6 @@ const safeProviders: SafeProvider[] = [
     provide: ChangePasswordService,
     useClass: WebChangePasswordService,
     deps: [
-      AccountService,
       KeyServiceAbstraction,
       MasterPasswordApiServiceAbstraction,
       InternalMasterPasswordServiceAbstraction,
