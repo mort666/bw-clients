@@ -62,10 +62,6 @@ export class ChangePasswordComponent implements OnInit {
     this.userId = this.activeAccount?.id;
     this.email = this.activeAccount?.email;
 
-    if (this.userId == null) {
-      throw new Error("UserId cannot be null");
-    }
-
     this.masterPasswordPolicyOptions = await firstValueFrom(
       this.policyService.masterPasswordPolicyOptions$(this.userId),
     );
@@ -79,13 +75,13 @@ export class ChangePasswordComponent implements OnInit {
     }
   }
 
-  async submitNew(passwordInputResult: PasswordInputResult) {
+  private async submitNew(passwordInputResult: PasswordInputResult) {
     if (
       passwordInputResult.currentPassword == null ||
       passwordInputResult.currentMasterKey == null ||
       passwordInputResult.currentServerMasterKeyHash == null
     ) {
-      throw new Error("Invalid current password credentials");
+      throw new Error("Invalid current password credential(s)");
     }
 
     try {
@@ -93,7 +89,7 @@ export class ChangePasswordComponent implements OnInit {
         await this.syncService.fullSync(true);
 
         if (this.activeAccount == null) {
-          throw new Error("User not found");
+          throw new Error("activeAccount not found");
         }
 
         await this.changePasswordService.rotateUserKeyMasterPasswordAndEncryptedData(
@@ -103,6 +99,10 @@ export class ChangePasswordComponent implements OnInit {
           passwordInputResult.newPasswordHint,
         );
       } else {
+        if (!this.userId) {
+          throw new Error("userId not found");
+        }
+
         await this.changePasswordService.changePassword(passwordInputResult, this.userId);
 
         this.toastService.showToast({
@@ -122,7 +122,11 @@ export class ChangePasswordComponent implements OnInit {
     }
   }
 
-  async submitOld(passwordInputResult: PasswordInputResult) {
+  private async submitOld(passwordInputResult: PasswordInputResult) {
+    if (!this.userId) {
+      throw new Error("userId not found");
+    }
+
     if (passwordInputResult.currentServerMasterKeyHash == null) {
       throw new Error("Invalid current password credentials");
     }
@@ -188,7 +192,7 @@ export class ChangePasswordComponent implements OnInit {
 
   private async updateKey(newPassword: string) {
     if (this.activeAccount == null) {
-      throw new Error("User not found");
+      throw new Error("activeAccount not found");
     }
 
     await this.changePasswordService.rotateUserKeyAndEncryptedDataLegacy(
