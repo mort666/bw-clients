@@ -347,7 +347,7 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
       id: this.id,
       organizationId: this.organizationId,
       folderId: this.folderId,
-      collectionIds: this.collectionIds,
+      collectionIds: this.collectionIds || [],
       key: this.key?.toJSON(),
       name: this.name.toJSON(),
       notes: this.notes?.toJSON(),

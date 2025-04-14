@@ -49,7 +49,7 @@ export class Fido2CredentialView extends ItemView {
     view.rpId = obj.rpId;
     view.userHandle = obj.userHandle;
     view.userName = obj.userName;
-    view.counter = Number(obj.counter);
+    view.counter = parseInt(obj.counter);
     view.rpName = obj.rpName;
     view.userDisplayName = obj.userDisplayName;
     view.discoverable = obj.discoverable?.toLowerCase() === "true" ? true : false;
