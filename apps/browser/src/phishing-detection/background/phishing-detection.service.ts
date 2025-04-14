@@ -9,6 +9,16 @@ import { TaskSchedulerService } from "@bitwarden/common/platform/scheduling/task
 import { PhishingDetectionCommands } from "../../phishing-detection/phishing-detection.enum";
 import { BrowserApi } from "../../platform/browser/browser-api";
 
+export type RedirectMessage = {
+  command: string;
+  phishingHost: string;
+};
+
+export type CheckUrlMessage = {
+  command: string;
+  activeUrl: string;
+};
+
 export class PhishingDetectionService {
   private static knownPhishingDomains = new Set<string>();
   private static lastUpdateTime: number = 0;
@@ -215,35 +225,49 @@ export class PhishingDetectionService {
     This listener will check the URL when the tab has finished loading.
   */
   static setupCheckUrlListener(): void {
-    BrowserApi.addListener(chrome.runtime.onMessage, async (message, sender, sendResponse) => {
-      if (message.command === PhishingDetectionCommands.CheckUrl) {
-        const { activeUrl } = message;
+    BrowserApi.addListener(
+      chrome.runtime.onMessage,
+      async (
+        message: CheckUrlMessage,
+        _: chrome.runtime.MessageSender,
+        sendResponse: (response?: any) => void,
+      ) => {
+        if (message.command === PhishingDetectionCommands.CheckUrl) {
+          const { activeUrl } = message;
 
-        const result = { isPhishingDomain: PhishingDetectionService.checkUrl(activeUrl) };
+          const result = { isPhishingDomain: PhishingDetectionService.checkUrl(activeUrl) };
 
-        PhishingDetectionService.logService.debug("CheckUrl handler", { result, message });
-        sendResponse(result);
-      }
-    });
+          PhishingDetectionService.logService.debug("CheckUrl handler", { result, message });
+          sendResponse(result);
+        }
+      },
+    );
   }
 
   static setupRedirectToWarningPageListener(): void {
-    BrowserApi.addListener(chrome.runtime.onMessage, async (message, sender, sendResponse) => {
-      if (message.command === PhishingDetectionCommands.RedirectToWarningPage) {
-        const phishingWarningPage = chrome.runtime.getURL(
-          "popup/index.html#/security/phishing-warning",
-        );
+    BrowserApi.addListener(
+      chrome.runtime.onMessage,
+      async (
+        message: RedirectMessage,
+        sender: chrome.runtime.MessageSender,
+        _: (response?: any) => void,
+      ) => {
+        if (message.command === PhishingDetectionCommands.RedirectToWarningPage) {
+          const phishingWarningPage = chrome.runtime.getURL(
+            "popup/index.html#/security/phishing-warning",
+          );
 
-        const pageWithViewData = `${phishingWarningPage}?phishingHost=${message.phishingHost}`;
+          const pageWithViewData = `${phishingWarningPage}?phishingHost=${message.phishingHost}`;
 
-        PhishingDetectionService.logService.debug("RedirectToWarningPage handler", {
-          message,
-          phishingWarning: pageWithViewData,
-        });
+          PhishingDetectionService.logService.debug("RedirectToWarningPage handler", {
+            message,
+            phishingWarning: pageWithViewData,
+          });
 
-        await chrome.tabs.update(sender.tab.id, { url: pageWithViewData });
-      }
-    });
+          await chrome.tabs.update(sender.tab.id, { url: pageWithViewData });
+        }
+      },
+    );
   }
 
   static setupListeners(): void {
