@@ -62,6 +62,10 @@ export class ChangePasswordComponent implements OnInit {
     this.userId = this.activeAccount?.id;
     this.email = this.activeAccount?.email;
 
+    if (!this.userId) {
+      throw new Error("userId not found");
+    }
+
     this.masterPasswordPolicyOptions = await firstValueFrom(
       this.policyService.masterPasswordPolicyOptions$(this.userId),
     );
@@ -76,11 +80,7 @@ export class ChangePasswordComponent implements OnInit {
   }
 
   private async submitNew(passwordInputResult: PasswordInputResult) {
-    if (
-      passwordInputResult.currentPassword == null ||
-      passwordInputResult.currentMasterKey == null ||
-      passwordInputResult.currentServerMasterKeyHash == null
-    ) {
+    if (passwordInputResult.currentPassword == null) {
       throw new Error("Invalid current password credential(s)");
     }
 
@@ -90,6 +90,10 @@ export class ChangePasswordComponent implements OnInit {
 
         if (this.activeAccount == null) {
           throw new Error("activeAccount not found");
+        }
+
+        if (passwordInputResult.currentPassword == null) {
+          throw new Error("currentPassword not found");
         }
 
         await this.changePasswordService.rotateUserKeyMasterPasswordAndEncryptedData(

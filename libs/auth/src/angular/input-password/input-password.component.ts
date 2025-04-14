@@ -236,6 +236,9 @@ export class InputPasswordComponent implements OnInit {
     if (this.flow === InputPasswordFlow.AccountRegistration) {
       this.kdfConfig = DEFAULT_KDF_CONFIG;
     } else {
+      if (!this.userId) {
+        throw new Error("userId not passed down");
+      }
       this.kdfConfig = await firstValueFrom(this.kdfConfigService.getKdfConfig$(this.userId));
     }
 
@@ -380,6 +383,10 @@ export class InputPasswordComponent implements OnInit {
       kdfConfig,
     );
 
+    if (!this.userId) {
+      throw new Error("userId not passed down");
+    }
+
     const decryptedUserKey = await this.masterPasswordService.decryptUserKeyWithMasterKey(
       currentMasterKey,
       this.userId,
@@ -474,8 +481,14 @@ export class InputPasswordComponent implements OnInit {
     const rotateUserKey = rotateUserKeyCtrl?.value;
 
     if (rotateUserKey) {
+      if (!this.userId) {
+        throw new Error("userId not passed down");
+      }
+
       const ciphers = await this.cipherService.getAllDecrypted(this.userId);
+
       let hasOldAttachments = false;
+
       if (ciphers != null) {
         for (let i = 0; i < ciphers.length; i++) {
           if (ciphers[i].organizationId == null && ciphers[i].hasOldAttachments) {
