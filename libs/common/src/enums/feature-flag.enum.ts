@@ -56,6 +56,9 @@ export enum FeatureFlag {
   SecurityTasks = "security-tasks",
   CipherKeyEncryption = "cipher-key-encryption",
   PhishingDetection = "phishing-detection",
+
+  /* Platform */
+  IpcChannelFramework = "ipc-channel-framework",
 }
 
 export type AllowedFeatureFlagTypes = boolean | number | string;
@@ -120,6 +123,9 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.PrivateKeyRegeneration]: FALSE,
   [FeatureFlag.UserKeyRotationV2]: FALSE,
   [FeatureFlag.PM4154_BulkEncryptionService]: FALSE,
+
+  /* Platform */
+  [FeatureFlag.IpcChannelFramework]: FALSE,
 } satisfies Record<FeatureFlag, AllowedFeatureFlagTypes>;
 
 export type DefaultFeatureFlagValueType = typeof DefaultFeatureFlagValue;
