@@ -1,3 +1,6 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+
 import { Subscription } from "rxjs";
 
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
@@ -211,17 +214,14 @@ export class PhishingDetectionService {
     this.retryCount = 0;
   }
 
-  /*
-    This listener will check the URL when the tab has finished loading.
-  */
   static setupCheckUrlListener(): void {
     BrowserApi.addListener(
       chrome.runtime.onMessage,
-      async (
+      (
         message: CheckUrlMessage,
         _: chrome.runtime.MessageSender,
-        sendResponse: (response?: any) => void,
-      ) => {
+        sendResponse: (response?: unknown) => void,
+      ): void => {
         if (message.command === PhishingDetectionCommands.CheckUrl) {
           const { activeUrl } = message;
 
@@ -237,11 +237,7 @@ export class PhishingDetectionService {
   static setupRedirectToWarningPageListener(): void {
     BrowserApi.addListener(
       chrome.runtime.onMessage,
-      async (
-        message: RedirectMessage,
-        sender: chrome.runtime.MessageSender,
-        _: (response?: any) => void,
-      ) => {
+      (message: RedirectMessage, sender: chrome.runtime.MessageSender): void => {
         if (message.command === PhishingDetectionCommands.RedirectToWarningPage) {
           const phishingWarningPage = chrome.runtime.getURL(
             "popup/index.html#/security/phishing-warning",
@@ -254,7 +250,16 @@ export class PhishingDetectionService {
             phishingWarning: pageWithViewData,
           });
 
-          await chrome.tabs.update(sender.tab.id, { url: pageWithViewData });
+          if (sender.tab !== undefined || sender.tab !== null) {
+            // To satisfy strict TypeScript
+            const tabId = Number(sender.tab?.id);
+            void browser.tabs.update(tabId, { url: pageWithViewData });
+          } else {
+            PhishingDetectionService.logService.debug("Sender tab id is invalid", {
+              message,
+              phishingWarning: pageWithViewData,
+            });
+          }
         }
       },
     );
