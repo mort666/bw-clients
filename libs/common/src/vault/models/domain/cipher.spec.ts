@@ -845,7 +845,7 @@ describe("Cipher DTO", () => {
         id: "id",
         organizationId: "orgId",
         folderId: "folderId",
-        collectionIds: undefined,
+        collectionIds: [],
         key: "EncryptedString",
         name: "EncryptedString",
         notes: "EncryptedString",
