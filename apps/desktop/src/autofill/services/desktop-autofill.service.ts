@@ -2,6 +2,8 @@ import { Injectable, OnDestroy } from "@angular/core";
 import { autofill } from "desktop_native/napi";
 import {
   Subject,
+  combineLatest,
+  debounceTime,
   distinctUntilChanged,
   filter,
   firstValueFrom,
@@ -12,6 +14,8 @@ import {
 } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
+import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
 import { getOptionalUserId } from "@bitwarden/common/auth/services/account.service";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { UriMatchStrategy } from "@bitwarden/common/models/domain/domain-service";
@@ -52,6 +56,7 @@ export class DesktopAutofillService implements OnDestroy {
     private configService: ConfigService,
     private fido2AuthenticatorService: Fido2AuthenticatorServiceAbstraction<NativeWindowObject>,
     private accountService: AccountService,
+    private authService: AuthService,
   ) {}
 
   async init() {
@@ -59,17 +64,35 @@ export class DesktopAutofillService implements OnDestroy {
       .getFeatureFlag$(FeatureFlag.MacOsNativeCredentialSync)
       .pipe(
         distinctUntilChanged(),
-        switchMap((enabled) => {
-          return this.accountService.activeAccount$.pipe(
-            map((account) => account?.id),
-            filter((userId): userId is UserId => userId != null),
-            switchMap((userId) => this.cipherService.cipherViews$(userId)),
+        //filter((enabled) => enabled === true), // Only proceed if feature is enabled
+        switchMap(() => {
+          return combineLatest([
+            this.accountService.activeAccount$.pipe(
+              map((account) => account?.id),
+              filter((userId): userId is UserId => userId != null),
+            ),
+            this.authService.activeAccountStatus$,
+          ]).pipe(
+            // Only proceed when the vault is unlocked
+            filter(([, status]) => status === AuthenticationStatus.Unlocked),
+            // Then get cipher views
+            switchMap(([userId]) => this.cipherService.cipherViews$(userId)),
           );
         }),
-        // TODO: This will unset all the autofill credentials on the OS
-        // when the account locks. We should instead explicilty clear the credentials
-        // when the user logs out. Maybe by subscribing to the encrypted ciphers observable instead.
+        debounceTime(100), // just a precaution to not spam the sync if there are multiple changes (we typically observe a null change)
+        // No filter for empty arrays here - we want to sync even if there are 0 items
+        filter((cipherViewMap) => cipherViewMap !== null),
+
         mergeMap((cipherViewMap) => this.sync(Object.values(cipherViewMap ?? []))),
+        takeUntil(this.destroy$),
+      )
+      .subscribe();
+
+    // Listen for sign out to clear credentials?
+    this.authService.activeAccountStatus$
+      .pipe(
+        filter((status) => status === AuthenticationStatus.LoggedOut),
+        mergeMap(() => this.sync([])), // sync an empty array
         takeUntil(this.destroy$),
       )
       .subscribe();
@@ -130,6 +153,11 @@ export class DesktopAutofillService implements OnDestroy {
         ...credential,
       }));
     }
+
+    this.logService.warning("Syncing autofill credentials", {
+      fido2Credentials,
+      passwordCredentials,
+    });
 
     const syncResult = await ipc.autofill.runCommand<NativeAutofillSyncCommand>({
       namespace: "autofill",
