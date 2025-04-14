@@ -6,7 +6,7 @@ import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { UserId } from "@bitwarden/common/types/guid";
 import { MasterKey, UserKey } from "@bitwarden/common/types/key";
-import { KeyService } from "@bitwarden/key-management";
+import { KeyService, PBKDF2KdfConfig } from "@bitwarden/key-management";
 
 import { ChangePasswordService } from "../../abstractions";
 
@@ -21,12 +21,18 @@ describe("DefaultChangePasswordService", () => {
 
   let sut: ChangePasswordService;
 
-  const currentMasterKey = new SymmetricCryptoKey(new Uint8Array(32)) as MasterKey;
-  const currentServerMasterKeyHash = "currentServerMasterKeyHash";
+  const inputPasswordResult = {
+    currentMasterKey: new SymmetricCryptoKey(new Uint8Array(32)) as MasterKey,
+    currentServerMasterKeyHash: "currentServerMasterKeyHash",
 
-  const newPasswordHint = "newPasswordHint";
-  const newMasterKey = new SymmetricCryptoKey(new Uint8Array(32)) as MasterKey;
-  const newServerMasterKeyHash = "newServerMasterKeyHash";
+    newPassword: "newPassword",
+    newPasswordHint: "newPasswordHint",
+    newMasterKey: new SymmetricCryptoKey(new Uint8Array(32)) as MasterKey,
+    newServerMasterKeyHash: "newServerMasterKeyHash",
+    newLocalMasterKeyHash: "newLocalMasterKeyHash",
+
+    kdfConfig: new PBKDF2KdfConfig(),
+  };
 
   const decryptedUserKey = new SymmetricCryptoKey(new Uint8Array(64)) as UserKey;
   const newMasterKeyEncryptedUserKey: [UserKey, EncString] = [
@@ -52,21 +58,14 @@ describe("DefaultChangePasswordService", () => {
   describe("changePassword()", () => {
     it("should call the postPassword() API method with a the correct PasswordRequest credentials", async () => {
       // Act
-      await sut.changePassword(
-        currentMasterKey,
-        currentServerMasterKeyHash,
-        newPasswordHint,
-        newMasterKey,
-        newServerMasterKeyHash,
-        userId,
-      );
+      await sut.changePassword(inputPasswordResult, userId);
 
       // Assert
       expect(masterPasswordApiService.postPassword).toHaveBeenCalledWith(
         expect.objectContaining({
-          masterPasswordHash: currentServerMasterKeyHash,
-          masterPasswordHint: newPasswordHint,
-          newMasterPasswordHash: newServerMasterKeyHash,
+          masterPasswordHash: inputPasswordResult.currentServerMasterKeyHash,
+          masterPasswordHint: inputPasswordResult.newPasswordHint,
+          newMasterPasswordHash: inputPasswordResult.newServerMasterKeyHash,
           key: newMasterKeyEncryptedUserKey[1].encryptedString,
         }),
       );
@@ -74,22 +73,15 @@ describe("DefaultChangePasswordService", () => {
 
     it("should call decryptUserKeyWithMasterKey and encryptUserKeyWithMasterKey", async () => {
       // Act
-      await sut.changePassword(
-        currentMasterKey,
-        currentServerMasterKeyHash,
-        newPasswordHint,
-        newMasterKey,
-        newServerMasterKeyHash,
-        userId,
-      );
+      await sut.changePassword(inputPasswordResult, userId);
 
       // Assert
       expect(masterPasswordService.decryptUserKeyWithMasterKey).toHaveBeenCalledWith(
-        currentMasterKey,
+        inputPasswordResult.currentMasterKey,
         userId,
       );
       expect(keyService.encryptUserKeyWithMasterKey).toHaveBeenCalledWith(
-        newMasterKey,
+        inputPasswordResult.newMasterKey,
         decryptedUserKey,
       );
     });
@@ -99,16 +91,9 @@ describe("DefaultChangePasswordService", () => {
       masterPasswordService.decryptUserKeyWithMasterKey.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(
-        sut.changePassword(
-          currentMasterKey,
-          currentServerMasterKeyHash,
-          newPasswordHint,
-          newMasterKey,
-          newServerMasterKeyHash,
-          userId,
-        ),
-      ).rejects.toThrow("Could not decrypt user key");
+      await expect(sut.changePassword(inputPasswordResult, userId)).rejects.toThrow(
+        "Could not decrypt user key",
+      );
     });
   });
 });
