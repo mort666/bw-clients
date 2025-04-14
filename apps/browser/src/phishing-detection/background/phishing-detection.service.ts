@@ -189,18 +189,8 @@ export class PhishingDetectionService {
       );
     } catch (error) {
       this.logService.error("Error details:", error);
-      if (
-        error?.message?.includes("Access token not found") ||
-        error?.message?.includes("Failed to decode access token")
-      ) {
-        this.logService.info(
-          "Authentication required for phishing domain update, will retry when authenticated",
-        );
-        this.scheduleRetry();
-      } else {
-        PhishingDetectionService.logService.error("Failed to update phishing domains:", error);
-        throw error;
-      }
+
+      this.scheduleRetry();
     } finally {
       this.isUpdating = false;
     }
