@@ -48,8 +48,8 @@ import {
 
 import {
   TwoFactorAuthComponentCacheService,
-  TwoFactorAuthData,
-} from "../../common/services/auth-request/two-factor-auth-cache.service";
+  TwoFactorAuthComponentData,
+} from "../../common/services/auth-request/two-factor-auth-component-cache.service";
 import { AnonLayoutWrapperDataService } from "../anon-layout/anon-layout-wrapper-data.service";
 import {
   TwoFactorAuthAuthenticatorIcon,
@@ -110,7 +110,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
   orgSsoIdentifier: string | undefined = undefined;
 
   providerType = TwoFactorProviderType;
-  selectedProviderType: TwoFactorProviderType | undefined = undefined;
+  selectedProviderType: TwoFactorProviderType = TwoFactorProviderType.Authenticator;
 
   // TODO: PM-17176 - build more specific type for 2FA metadata
   twoFactorProviders: Map<TwoFactorProviderType, { [key: string]: string }> | null = null;
@@ -168,7 +168,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
     private anonLayoutWrapperDataService: AnonLayoutWrapperDataService,
     private environmentService: EnvironmentService,
     private loginSuccessHandlerService: LoginSuccessHandlerService,
-    private twoFactorCacheService: TwoFactorAuthComponentCacheService,
+    private twoFactorAuthComponentCacheService: TwoFactorAuthComponentCacheService,
   ) {}
 
   async ngOnInit() {
@@ -178,11 +178,11 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
     this.listenForAuthnSessionTimeout();
 
     // Initialize the cache
-    await this.twoFactorCacheService.init();
+    await this.twoFactorAuthComponentCacheService.init();
 
     // Load persisted form data if available
     let loadedCachedProviderType = false;
-    const persistedData = this.twoFactorCacheService.getCachedData();
+    const persistedData = this.twoFactorAuthComponentCacheService.getCachedData();
     if (persistedData) {
       if (persistedData.token) {
         this.form.patchValue({ token: persistedData.token });
@@ -216,11 +216,11 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
   /**
    * Save specific form data fields to the cache
    */
-  async saveFormDataWithPartialData(data: Partial<TwoFactorAuthData>) {
+  async saveFormDataWithPartialData(data: Partial<TwoFactorAuthComponentData>) {
     // Get current cached data
-    const currentData = this.twoFactorCacheService.getCachedData();
+    const currentData = this.twoFactorAuthComponentCacheService.getCachedData();
 
-    this.twoFactorCacheService.cacheData({
+    this.twoFactorAuthComponentCacheService.cacheData({
       token: data?.token ?? currentData?.token ?? "",
       remember: data?.remember ?? currentData?.remember ?? false,
       selectedProviderType: data?.selectedProviderType ?? currentData?.selectedProviderType,
@@ -231,7 +231,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
    * Save all current form data to the cache
    */
   async saveFormData() {
-    const formData: TwoFactorAuthData = {
+    const formData: TwoFactorAuthComponentData = {
       token: this.tokenFormControl.value || undefined,
       remember: this.rememberFormControl.value ?? undefined,
       selectedProviderType: this.selectedProviderType,
@@ -259,8 +259,10 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
 
   private async set2faProvidersAndData() {
     this.twoFactorProviders = await this.twoFactorService.getProviders();
-    const providerData = this.twoFactorProviders?.get(this.selectedProviderType);
-    this.selectedProviderData = providerData;
+    if (this.selectedProviderType !== undefined) {
+      const providerData = this.twoFactorProviders?.get(this.selectedProviderType);
+      this.selectedProviderData = providerData;
+    }
   }
 
   private listenForAuthnSessionTimeout() {
@@ -327,7 +329,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
     const rememberValue = remember ?? this.rememberFormControl.value ?? false;
 
     // Persist form data before submitting
-    this.twoFactorCacheService.cacheData({
+    this.twoFactorAuthComponentCacheService.cacheData({
       token: tokenValue,
       remember: rememberValue,
       selectedProviderType: this.selectedProviderType,
@@ -354,7 +356,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
 
   async selectOtherTwoFactorMethod() {
     // Persist current form data before navigating to another method
-    this.twoFactorCacheService.cacheData({
+    this.twoFactorAuthComponentCacheService.cacheData({
       token: "",
       remember: false,
       selectedProviderType: this.selectedProviderType,
@@ -374,7 +376,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
       await this.setAnonLayoutDataByTwoFactorProviderType();
 
       // Update the persisted provider type when a new one is chosen
-      this.twoFactorCacheService.cacheData({
+      this.twoFactorAuthComponentCacheService.cacheData({
         token: "",
         remember: false,
         selectedProviderType: response.type,
@@ -458,7 +460,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
 
   private async handleAuthResult(authResult: AuthResult) {
     // Clear form cache
-    this.twoFactorCacheService.clearCachedData();
+    this.twoFactorAuthComponentCacheService.clearCachedData();
 
     if (await this.handleMigrateEncryptionKey(authResult)) {
       return; // stop login process

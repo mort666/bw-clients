@@ -6,27 +6,29 @@ import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-p
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 
-const TWO_FACTOR_AUTH_CACHE_KEY = "two-factor-auth-cache";
+const TWO_FACTOR_AUTH_COMPONENT_CACHE_KEY = "two-factor-auth-component-cache";
 
 /**
  * This is a cache model for the two factor authentication data.
  */
-export class TwoFactorAuthCache {
+export class TwoFactorAuthComponentCache {
   token: string | undefined = undefined;
   remember: boolean | undefined = undefined;
   selectedProviderType: TwoFactorProviderType | undefined = undefined;
 
-  static fromJSON(obj: Partial<Jsonify<TwoFactorAuthCache>>): TwoFactorAuthCache | null {
+  static fromJSON(
+    obj: Partial<Jsonify<TwoFactorAuthComponentCache>>,
+  ): TwoFactorAuthComponentCache | null {
     // Return null if the cache is empty
     if (obj == null) {
       return null;
     }
 
-    return Object.assign(new TwoFactorAuthCache(), obj);
+    return Object.assign(new TwoFactorAuthComponentCache(), obj);
   }
 }
 
-export interface TwoFactorAuthData {
+export interface TwoFactorAuthComponentData {
   token?: string;
   remember?: boolean;
   selectedProviderType?: TwoFactorProviderType;
@@ -49,11 +51,11 @@ export class TwoFactorAuthComponentCacheService {
   /**
    * Signal for the cached TwoFactorAuthData.
    */
-  private twoFactorAuthCache: WritableSignal<TwoFactorAuthCache | null> =
-    this.viewCacheService.signal<TwoFactorAuthCache | null>({
-      key: TWO_FACTOR_AUTH_CACHE_KEY,
+  private twoFactorAuthComponentCache: WritableSignal<TwoFactorAuthComponentCache | null> =
+    this.viewCacheService.signal<TwoFactorAuthComponentCache | null>({
+      key: TWO_FACTOR_AUTH_COMPONENT_CACHE_KEY,
       initialValue: null,
-      deserializer: TwoFactorAuthCache.fromJSON,
+      deserializer: TwoFactorAuthComponentCache.fromJSON,
     });
 
   constructor() {}
@@ -70,16 +72,16 @@ export class TwoFactorAuthComponentCacheService {
   /**
    * Update the cache with the new TwoFactorAuthData.
    */
-  cacheData(data: TwoFactorAuthData): void {
+  cacheData(data: TwoFactorAuthComponentData): void {
     if (!this.featureEnabled) {
       return;
     }
 
-    this.twoFactorAuthCache.set({
+    this.twoFactorAuthComponentCache.set({
       token: data.token,
       remember: data.remember,
       selectedProviderType: data.selectedProviderType,
-    } as TwoFactorAuthCache);
+    } as TwoFactorAuthComponentCache);
   }
 
   /**
@@ -90,17 +92,17 @@ export class TwoFactorAuthComponentCacheService {
       return;
     }
 
-    this.twoFactorAuthCache.set(null);
+    this.twoFactorAuthComponentCache.set(null);
   }
 
   /**
    * Returns the cached TwoFactorAuthData when available.
    */
-  getCachedData(): TwoFactorAuthCache | null {
+  getCachedData(): TwoFactorAuthComponentCache | null {
     if (!this.featureEnabled) {
       return null;
     }
 
-    return this.twoFactorAuthCache();
+    return this.twoFactorAuthComponentCache();
   }
 }
