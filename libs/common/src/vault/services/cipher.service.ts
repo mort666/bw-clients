@@ -1,17 +1,6 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import {
-  combineLatest,
-  filter,
-  firstValueFrom,
-  map,
-  merge,
-  Observable,
-  of,
-  shareReplay,
-  Subject,
-  switchMap,
-} from "rxjs";
+import { combineLatest, filter, firstValueFrom, map, Observable, Subject, switchMap } from "rxjs";
 import { SemVer } from "semver";
 
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
@@ -40,6 +29,7 @@ import { SymmetricCryptoKey } from "../../platform/models/domain/symmetric-crypt
 import { StateProvider } from "../../platform/state";
 import { CipherId, CollectionId, OrganizationId, UserId } from "../../types/guid";
 import { OrgKey, UserKey } from "../../types/key";
+import { perUserCache$ } from "../../vault/utils/observable-utilities";
 import { CipherEncryptionService } from "../abstractions/cipher-encryption.service";
 import { CipherService as CipherServiceAbstraction } from "../abstractions/cipher.service";
 import { CipherFileUploadService } from "../abstractions/file-upload/cipher-file-upload.service";
@@ -92,11 +82,12 @@ export class CipherService implements CipherServiceAbstraction {
     this.sortCiphersByLastUsed,
   );
   /**
-   * Observable that forces the `cipherViews$` observable to re-emit with the provided value.
-   * Used to let subscribers of `cipherViews$` know that the decrypted ciphers have been cleared for the active user.
+   * Observable that forces the `cipherViews$` observable for the given user to emit a null value.
+   * Used to let subscribers of `cipherViews$` know that the decrypted ciphers have been cleared for the user and to
+   * clear them from the shareReplay buffer created in perUserCache$().
    * @private
    */
-  private forceCipherViews$: Subject<CipherView[]> = new Subject<CipherView[]>();
+  private clearCipherViewsForUser$: Subject<UserId> = new Subject<UserId>();
 
   constructor(
     private keyService: KeyService,
@@ -134,13 +125,16 @@ export class CipherService implements CipherServiceAbstraction {
    * A `null` value indicates that the latest encrypted ciphers have not been decrypted yet and that
    * decryption is in progress. The latest decrypted ciphers will be emitted once decryption is complete.
    */
-  cipherViews$(userId: UserId): Observable<CipherView[] | null> {
-    return combineLatest([this.encryptedCiphersState(userId).state$, this.localData$(userId)]).pipe(
-      filter(([ciphers]) => ciphers != null), // Skip if ciphers haven't been loaded yor synced yet
-      switchMap(() => merge(this.forceCipherViews$, this.getAllDecrypted(userId))),
-      shareReplay({ bufferSize: 1, refCount: true }),
+  cipherViews$ = perUserCache$((userId: UserId): Observable<CipherView[] | null> => {
+    return combineLatest([
+      this.encryptedCiphersState(userId).state$,
+      this.localData$(userId),
+      this.keyService.cipherDecryptionKeys$(userId, true),
+    ]).pipe(
+      filter(([ciphers, keys]) => ciphers != null && keys != null), // Skip if ciphers haven't been loaded yor synced yet
+      switchMap(() => this.getAllDecrypted(userId)),
     );
-  }
+  }, this.clearCipherViewsForUser$);
 
   addEditCipherInfo$(userId: UserId): Observable<AddEditCipherInfo> {
     return this.addEditCipherInfoState(userId).state$;
@@ -151,13 +145,11 @@ export class CipherService implements CipherServiceAbstraction {
    *
    * An empty array indicates that all ciphers were successfully decrypted.
    */
-  failedToDecryptCiphers$(userId: UserId): Observable<CipherView[]> {
+  failedToDecryptCiphers$ = perUserCache$((userId: UserId): Observable<CipherView[]> => {
     return this.failedToDecryptCiphersState(userId).state$.pipe(
       filter((ciphers) => ciphers != null),
-      switchMap((ciphers) => merge(this.forceCipherViews$, of(ciphers))),
-      shareReplay({ bufferSize: 1, refCount: true }),
     );
-  }
+  }, this.clearCipherViewsForUser$);
 
   async setDecryptedCipherCache(value: CipherView[], userId: UserId) {
     // Sometimes we might prematurely decrypt the vault and that will result in no ciphers
@@ -192,10 +184,8 @@ export class CipherService implements CipherServiceAbstraction {
     userId ??= activeUserId;
     await this.clearDecryptedCiphersState(userId);
 
-    // Force the cipherView$ observable (which always tracks the active user) to re-emit
-    if (userId == activeUserId) {
-      this.forceCipherViews$.next(null);
-    }
+    // Force the cached cipherView$ observable(s) to emit a null value
+    this.clearCipherViewsForUser$.next(userId);
   }
 
   async encrypt(
@@ -404,10 +394,14 @@ export class CipherService implements CipherServiceAbstraction {
       return await this.getDecryptedCiphers(userId);
     }
 
-    const [newDecCiphers, failedCiphers] = await this.decryptCiphers(
-      await this.getAll(userId),
-      userId,
-    );
+    const decrypted = await this.decryptCiphers(await this.getAll(userId), userId);
+
+    // We failed to decrypt, return empty array but do not cache
+    if (decrypted == null) {
+      return [];
+    }
+
+    const [newDecCiphers, failedCiphers] = decrypted;
 
     await this.setDecryptedCipherCache(newDecCiphers, userId);
     await this.setFailedDecryptedCiphers(failedCiphers, userId);
@@ -431,14 +425,14 @@ export class CipherService implements CipherServiceAbstraction {
   private async decryptCiphers(
     ciphers: Cipher[],
     userId: UserId,
-  ): Promise<[CipherView[], CipherView[]]> {
+  ): Promise<[CipherView[], CipherView[]] | null> {
     if (await this.configService.getFeatureFlag(FeatureFlag.PM19941MigrateCipherDomainToSdk)) {
       return this.decryptCiphersWithSdk(ciphers, userId);
     } else {
       const keys = await firstValueFrom(this.keyService.cipherDecryptionKeys$(userId, true));
       if (keys == null || (keys.userKey == null && Object.keys(keys.orgKeys).length === 0)) {
         // return early if there are no keys to decrypt with
-        return [[], []];
+        return null;
       }
       // Group ciphers by orgId or under 'null' for the user's ciphers
       const grouped = ciphers.reduce(
