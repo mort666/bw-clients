@@ -13,6 +13,30 @@ import {
   TwoFactorAuthData,
 } from "./two-factor-auth-cache.service";
 
+describe("TwoFactorAuthCache", () => {
+  describe("fromJSON", () => {
+    it("returns null when input is null", () => {
+      const result = TwoFactorAuthCache.fromJSON(null as any);
+      expect(result).toBeNull();
+    });
+
+    it("creates a TwoFactorAuthCache instance from valid JSON", () => {
+      const jsonData = {
+        token: "123456",
+        remember: true,
+        selectedProviderType: TwoFactorProviderType.Email,
+      };
+      const result = TwoFactorAuthCache.fromJSON(jsonData as any);
+
+      expect(result).not.toBeNull();
+      expect(result).toBeInstanceOf(TwoFactorAuthCache);
+      expect(result?.token).toBe("123456");
+      expect(result?.remember).toBe(true);
+      expect(result?.selectedProviderType).toBe(TwoFactorProviderType.Email);
+    });
+  });
+});
+
 describe("TwoFactorAuthComponentCacheService", () => {
   let service: TwoFactorAuthComponentCacheService;
   let mockViewCacheService: MockProxy<ViewCacheService>;

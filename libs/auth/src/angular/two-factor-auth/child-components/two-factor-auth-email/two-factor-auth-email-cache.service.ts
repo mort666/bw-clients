@@ -13,7 +13,12 @@ const TWO_FACTOR_AUTH_EMAIL_CACHE_KEY = "two-factor-auth-email-cache";
 export class TwoFactorAuthEmailCache {
   emailSent: boolean = false;
 
-  static fromJSON(obj: Partial<Jsonify<TwoFactorAuthEmailCache>>): TwoFactorAuthEmailCache {
+  static fromJSON(obj: Partial<Jsonify<TwoFactorAuthEmailCache>>): TwoFactorAuthEmailCache | null {
+    // Return null if the cache is empty
+    if (obj == null) {
+      return null;
+    }
+
     return Object.assign(new TwoFactorAuthEmailCache(), obj);
   }
 }

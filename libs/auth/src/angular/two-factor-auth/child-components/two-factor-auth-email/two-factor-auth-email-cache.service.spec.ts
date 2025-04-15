@@ -11,6 +11,24 @@ import {
   TwoFactorAuthEmailComponentCacheService,
 } from "./two-factor-auth-email-cache.service";
 
+describe("TwoFactorAuthEmailCache", () => {
+  describe("fromJSON", () => {
+    it("returns null when input is null", () => {
+      const result = TwoFactorAuthEmailCache.fromJSON(null as any);
+      expect(result).toBeNull();
+    });
+
+    it("creates a TwoFactorAuthEmailCache instance from valid JSON", () => {
+      const jsonData = { emailSent: true };
+      const result = TwoFactorAuthEmailCache.fromJSON(jsonData);
+
+      expect(result).not.toBeNull();
+      expect(result).toBeInstanceOf(TwoFactorAuthEmailCache);
+      expect(result?.emailSent).toBe(true);
+    });
+  });
+});
+
 describe("TwoFactorAuthEmailComponentCacheService", () => {
   let service: TwoFactorAuthEmailComponentCacheService;
   let mockViewCacheService: MockProxy<ViewCacheService>;

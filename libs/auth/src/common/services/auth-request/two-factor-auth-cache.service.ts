@@ -16,7 +16,12 @@ export class TwoFactorAuthCache {
   remember: boolean | undefined = undefined;
   selectedProviderType: TwoFactorProviderType | undefined = undefined;
 
-  static fromJSON(obj: Partial<Jsonify<TwoFactorAuthCache>>): TwoFactorAuthCache {
+  static fromJSON(obj: Partial<Jsonify<TwoFactorAuthCache>>): TwoFactorAuthCache | null {
+    // Return null if the cache is empty
+    if (obj == null) {
+      return null;
+    }
+
     return Object.assign(new TwoFactorAuthCache(), obj);
   }
 }
