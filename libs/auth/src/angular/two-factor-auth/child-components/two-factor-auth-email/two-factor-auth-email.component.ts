@@ -22,7 +22,7 @@ import {
   ToastService,
 } from "@bitwarden/components";
 
-import { TwoFactorAuthEmailComponentCacheService } from "./two-factor-auth-email-cache.service";
+import { TwoFactorAuthEmailComponentCacheService } from "./two-factor-auth-email-component-cache.service";
 import { TwoFactorAuthEmailComponentService } from "./two-factor-auth-email-component.service";
 
 @Component({

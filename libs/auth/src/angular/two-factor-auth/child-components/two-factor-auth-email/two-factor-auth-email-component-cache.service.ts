@@ -5,10 +5,13 @@ import { ViewCacheService } from "@bitwarden/angular/platform/abstractions/view-
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 
-const TWO_FACTOR_AUTH_EMAIL_CACHE_KEY = "two-factor-auth-email-cache";
+/**
+ * The key for the email two factor auth component cache.
+ */
+export const TWO_FACTOR_AUTH_EMAIL_COMPONENT_CACHE_KEY = "two-factor-auth-email-component-cache";
 
 /**
- * Cache model for the email two factor
+ * Cache model for the email two factor auth component.
  */
 export class TwoFactorAuthEmailCache {
   emailSent: boolean = false;
@@ -39,7 +42,7 @@ export class TwoFactorAuthEmailComponentCacheService {
    */
   private emailCache: WritableSignal<TwoFactorAuthEmailCache | null> =
     this.viewCacheService.signal<TwoFactorAuthEmailCache | null>({
-      key: TWO_FACTOR_AUTH_EMAIL_CACHE_KEY,
+      key: TWO_FACTOR_AUTH_EMAIL_COMPONENT_CACHE_KEY,
       initialValue: null,
       deserializer: TwoFactorAuthEmailCache.fromJSON,
     });

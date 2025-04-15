@@ -9,7 +9,7 @@ import { ConfigService } from "@bitwarden/common/platform/abstractions/config/co
 import {
   TwoFactorAuthEmailCache,
   TwoFactorAuthEmailComponentCacheService,
-} from "./two-factor-auth-email-cache.service";
+} from "./two-factor-auth-email-component-cache.service";
 
 describe("TwoFactorAuthEmailCache", () => {
   describe("fromJSON", () => {
