@@ -46,7 +46,10 @@ import {
   ToastService,
 } from "@bitwarden/components";
 
-import { TwoFactorAuthComponentCacheService , TwoFactorAuthData } from "../../common/services/auth-request/two-factor-auth-cache.service";
+import {
+  TwoFactorAuthComponentCacheService,
+  TwoFactorAuthData,
+} from "../../common/services/auth-request/two-factor-auth-cache.service";
 import { AnonLayoutWrapperDataService } from "../anon-layout/anon-layout-wrapper-data.service";
 import {
   TwoFactorAuthAuthenticatorIcon,
@@ -107,7 +110,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
   orgSsoIdentifier: string | undefined = undefined;
 
   providerType = TwoFactorProviderType;
-  selectedProviderType: TwoFactorProviderType = TwoFactorProviderType.Authenticator;
+  selectedProviderType: TwoFactorProviderType | undefined = undefined;
 
   // TODO: PM-17176 - build more specific type for 2FA metadata
   twoFactorProviders: Map<TwoFactorProviderType, { [key: string]: string }> | null = null;
@@ -220,10 +223,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
     this.twoFactorCacheService.cacheData({
       token: data?.token ?? currentData?.token ?? "",
       remember: data?.remember ?? currentData?.remember ?? false,
-      selectedProviderType:
-        data?.selectedProviderType ??
-        currentData?.selectedProviderType ??
-        TwoFactorProviderType.Authenticator,
+      selectedProviderType: data?.selectedProviderType ?? currentData?.selectedProviderType,
     });
   }
 
