@@ -46,7 +46,7 @@ import {
   ToastService,
 } from "@bitwarden/components";
 
-import { TwoFactorAuthComponentCacheService } from "../../common/services/auth-request/two-factor-auth-cache.service";
+import { TwoFactorAuthComponentCacheService , TwoFactorAuthData } from "../../common/services/auth-request/two-factor-auth-cache.service";
 import { AnonLayoutWrapperDataService } from "../anon-layout/anon-layout-wrapper-data.service";
 import {
   TwoFactorAuthAuthenticatorIcon,
@@ -70,15 +70,6 @@ import {
   TwoFactorOptionsComponent,
   TwoFactorOptionsDialogResult,
 } from "./two-factor-options.component";
-
-/**
- * Interface for the cache data structure
- */
-interface TwoFactorCacheData {
-  token?: string;
-  remember?: boolean;
-  selectedProviderType?: TwoFactorProviderType;
-}
 
 @Component({
   standalone: true,
@@ -222,7 +213,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
   /**
    * Save specific form data fields to the cache
    */
-  async saveFormDataWithPartialData(data: Partial<TwoFactorCacheData>) {
+  async saveFormDataWithPartialData(data: Partial<TwoFactorAuthData>) {
     // Get current cached data
     const currentData = this.twoFactorCacheService.getCachedData();
 
@@ -240,7 +231,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
    * Save all current form data to the cache
    */
   async saveFormData() {
-    const formData: TwoFactorCacheData = {
+    const formData: TwoFactorAuthData = {
       token: this.tokenFormControl.value || undefined,
       remember: this.rememberFormControl.value ?? undefined,
       selectedProviderType: this.selectedProviderType,
