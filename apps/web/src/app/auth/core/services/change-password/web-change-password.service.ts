@@ -1,6 +1,6 @@
 import { inject } from "@angular/core";
 
-import { ChangePasswordService, DefaultChangePasswordService } from "@bitwarden/auth/common";
+import { ChangePasswordService, DefaultChangePasswordService } from "@bitwarden/auth/angular";
 import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { UserKeyRotationService } from "@bitwarden/web-vault/app/key-management/key-rotation/user-key-rotation.service";
 

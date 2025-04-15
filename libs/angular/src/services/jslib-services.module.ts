@@ -27,6 +27,8 @@ import {
   TwoFactorAuthComponentService,
   TwoFactorAuthEmailComponentService,
   TwoFactorAuthWebAuthnComponentService,
+  ChangePasswordService,
+  DefaultChangePasswordService,
 } from "@bitwarden/auth/angular";
 import {
   AuthRequestApiService,
@@ -46,8 +48,6 @@ import {
   PinServiceAbstraction,
   UserDecryptionOptionsService,
   UserDecryptionOptionsServiceAbstraction,
-  ChangePasswordService,
-  DefaultChangePasswordService,
 } from "@bitwarden/auth/common";
 import { ApiService as ApiServiceAbstraction } from "@bitwarden/common/abstractions/api.service";
 import { AuditService as AuditServiceAbstraction } from "@bitwarden/common/abstractions/audit.service";

@@ -1,4 +1,3 @@
-export * from "./change-password/default-change-password.service";
 export * from "./pin/pin.service.implementation";
 export * from "./login-email/login-email.service";
 export * from "./login-strategies/login-strategy.service";

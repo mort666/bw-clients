@@ -8,8 +8,7 @@ import { UserId } from "@bitwarden/common/types/guid";
 import { MasterKey, UserKey } from "@bitwarden/common/types/key";
 import { KeyService, PBKDF2KdfConfig } from "@bitwarden/key-management";
 
-import { ChangePasswordService } from "../../abstractions";
-
+import { ChangePasswordService } from "./change-password.service.abstraction";
 import { DefaultChangePasswordService } from "./default-change-password.service";
 
 describe("DefaultChangePasswordService", () => {

@@ -1,12 +1,10 @@
-import { PasswordInputResult } from "@bitwarden/auth/angular";
+import { PasswordInputResult, ChangePasswordService } from "@bitwarden/auth/angular";
 import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { MasterPasswordApiService } from "@bitwarden/common/auth/abstractions/master-password-api.service.abstraction";
 import { PasswordRequest } from "@bitwarden/common/auth/models/request/password.request";
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
 import { UserId } from "@bitwarden/common/types/guid";
 import { KeyService } from "@bitwarden/key-management";
-
-import { ChangePasswordService } from "../../abstractions";
 
 export class DefaultChangePasswordService implements ChangePasswordService {
   constructor(

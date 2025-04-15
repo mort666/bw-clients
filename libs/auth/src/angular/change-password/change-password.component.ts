@@ -1,7 +1,6 @@
 import { Component, Input, OnInit } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 
-import { ChangePasswordService } from "@bitwarden/auth/common";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/models/domain/master-password-policy-options";
 import { Account, AccountService } from "@bitwarden/common/auth/abstractions/account.service";
@@ -24,6 +23,8 @@ import {
   InputPasswordFlow,
 } from "../input-password/input-password.component";
 import { PasswordInputResult } from "../input-password/password-input-result";
+
+import { ChangePasswordService } from "./change-password.service.abstraction";
 
 @Component({
   standalone: true,

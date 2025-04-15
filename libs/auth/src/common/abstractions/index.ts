@@ -1,5 +1,4 @@
 export * from "./auth-request-api.service";
-export * from "./change-password.service.abstraction";
 export * from "./pin.service.abstraction";
 export * from "./login-email.service";
 export * from "./login-strategy.service";
