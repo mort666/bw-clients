@@ -45,7 +45,6 @@ export class Fido2CredentialView extends ItemView {
     view.keyType = obj.keyType as "public-key";
     view.keyAlgorithm = obj.keyAlgorithm as "ECDSA";
     view.keyCurve = obj.keyCurve as "P-256";
-    view.keyValue = obj.keyValue;
     view.rpId = obj.rpId;
     view.userHandle = obj.userHandle;
     view.userName = obj.userName;

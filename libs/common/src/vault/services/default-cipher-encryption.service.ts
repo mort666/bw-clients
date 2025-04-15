@@ -44,7 +44,21 @@ export class DefaultCipherEncryptionService implements CipherEncryptionService {
               .decrypt_fido2_credentials(sdkCipherView);
 
             clientCipherView.login.fido2Credentials = fido2CredentialViews
-              .map((f) => Fido2CredentialView.fromSdkFido2CredentialView(f))
+              .map((f) => {
+                const view = Fido2CredentialView.fromSdkFido2CredentialView(f);
+
+                if (view) {
+                  // TEMPORARY: Manually decrypt the keyValue for Fido2 credentials since don't currently use
+                  // the SDK for Fido2 Authentication.
+                  const decryptedKeyValue = ref.value
+                    .vault()
+                    .ciphers()
+                    .decrypt_key(sdkCipherView, view.keyValue);
+                  view.keyValue = decryptedKeyValue;
+                }
+
+                return view;
+              })
               .filter((view): view is Fido2CredentialView => view !== undefined);
           }
 

@@ -181,7 +181,7 @@ describe("DefaultCipherEncryptionService", () => {
         keyType: "keyType",
         keyAlgorithm: "keyAlgorithm",
         keyCurve: "keyCurve",
-        keyValue: "keyValue",
+        keyValue: "decrypted-key-value",
         rpId: "rpId",
         userHandle: "userHandle",
         userName: "userName",
@@ -194,6 +194,9 @@ describe("DefaultCipherEncryptionService", () => {
 
       mockSdkClient.vault().ciphers().decrypt.mockReturnValue(sdkCipherView);
       mockSdkClient.vault().ciphers().decrypt_fido2_credentials.mockReturnValue(fido2Credentials);
+      mockSdkClient.vault().ciphers().decrypt_key = jest
+        .fn()
+        .mockReturnValue("decrypted-key-value");
 
       jest.spyOn(CipherView, "fromSdkCipherView").mockReturnValue(expectedCipherView);
       jest
@@ -206,6 +209,10 @@ describe("DefaultCipherEncryptionService", () => {
       expect(result.login?.fido2Credentials).toEqual([fido2CredentialView]);
       expect(mockSdkClient.vault().ciphers().decrypt_fido2_credentials).toHaveBeenCalledWith(
         sdkCipherView,
+      );
+      expect(mockSdkClient.vault().ciphers().decrypt_key).toHaveBeenCalledWith(
+        sdkCipherView,
+        fido2CredentialView.keyValue,
       );
       expect(Fido2CredentialView.fromSdkFido2CredentialView).toHaveBeenCalledTimes(1);
     });
