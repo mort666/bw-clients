@@ -8,15 +8,15 @@ import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 
 import {
-  TwoFactorAuthCache,
+  TwoFactorAuthComponentCache,
   TwoFactorAuthComponentCacheService,
-  TwoFactorAuthData,
-} from "./two-factor-auth-cache.service";
+  TwoFactorAuthComponentData,
+} from "./two-factor-auth-component-cache.service";
 
 describe("TwoFactorAuthCache", () => {
   describe("fromJSON", () => {
     it("returns null when input is null", () => {
-      const result = TwoFactorAuthCache.fromJSON(null as any);
+      const result = TwoFactorAuthComponentCache.fromJSON(null as any);
       expect(result).toBeNull();
     });
 
@@ -26,10 +26,10 @@ describe("TwoFactorAuthCache", () => {
         remember: true,
         selectedProviderType: TwoFactorProviderType.Email,
       };
-      const result = TwoFactorAuthCache.fromJSON(jsonData as any);
+      const result = TwoFactorAuthComponentCache.fromJSON(jsonData as any);
 
       expect(result).not.toBeNull();
-      expect(result).toBeInstanceOf(TwoFactorAuthCache);
+      expect(result).toBeInstanceOf(TwoFactorAuthComponentCache);
       expect(result?.token).toBe("123456");
       expect(result?.remember).toBe(true);
       expect(result?.selectedProviderType).toBe(TwoFactorProviderType.Email);
@@ -41,15 +41,15 @@ describe("TwoFactorAuthComponentCacheService", () => {
   let service: TwoFactorAuthComponentCacheService;
   let mockViewCacheService: MockProxy<ViewCacheService>;
   let mockConfigService: MockProxy<ConfigService>;
-  let cacheData: BehaviorSubject<TwoFactorAuthCache | null>;
+  let cacheData: BehaviorSubject<TwoFactorAuthComponentCache | null>;
   let mockSignal: any;
 
   beforeEach(() => {
     mockViewCacheService = mock<ViewCacheService>();
     mockConfigService = mock<ConfigService>();
-    cacheData = new BehaviorSubject<TwoFactorAuthCache | null>(null);
+    cacheData = new BehaviorSubject<TwoFactorAuthComponentCache | null>(null);
     mockSignal = jest.fn(() => cacheData.getValue());
-    mockSignal.set = jest.fn((value: TwoFactorAuthCache | null) => cacheData.next(value));
+    mockSignal.set = jest.fn((value: TwoFactorAuthComponentCache | null) => cacheData.next(value));
     mockViewCacheService.signal.mockReturnValue(mockSignal);
 
     TestBed.configureTestingModule({
@@ -102,7 +102,7 @@ describe("TwoFactorAuthComponentCacheService", () => {
     });
 
     it("caches complete data when feature is enabled", () => {
-      const testData: TwoFactorAuthData = {
+      const testData: TwoFactorAuthComponentData = {
         token: "123456",
         remember: true,
         selectedProviderType: TwoFactorProviderType.Email,
@@ -166,7 +166,7 @@ describe("TwoFactorAuthComponentCacheService", () => {
     });
 
     it("returns cached data when feature is enabled", () => {
-      const testData = new TwoFactorAuthCache();
+      const testData = new TwoFactorAuthComponentCache();
       testData.token = "123456";
       testData.remember = true;
       testData.selectedProviderType = TwoFactorProviderType.Email;

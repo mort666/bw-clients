@@ -46,10 +46,6 @@ import {
   ToastService,
 } from "@bitwarden/components";
 
-import {
-  TwoFactorAuthComponentCacheService,
-  TwoFactorAuthComponentData,
-} from "../../common/services/auth-request/two-factor-auth-component-cache.service";
 import { AnonLayoutWrapperDataService } from "../anon-layout/anon-layout-wrapper-data.service";
 import {
   TwoFactorAuthAuthenticatorIcon,
@@ -64,6 +60,10 @@ import { TwoFactorAuthDuoComponent } from "./child-components/two-factor-auth-du
 import { TwoFactorAuthEmailComponent } from "./child-components/two-factor-auth-email/two-factor-auth-email.component";
 import { TwoFactorAuthWebAuthnComponent } from "./child-components/two-factor-auth-webauthn/two-factor-auth-webauthn.component";
 import { TwoFactorAuthYubikeyComponent } from "./child-components/two-factor-auth-yubikey.component";
+import {
+  TwoFactorAuthComponentCacheService,
+  TwoFactorAuthComponentData,
+} from "./two-factor-auth-component-cache.service";
 import {
   DuoLaunchAction,
   LegacyKeyMigrationAction,
