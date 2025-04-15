@@ -1,9 +1,8 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
-
-import { Subscription } from "rxjs";
+import { mergeMap, Subscription } from "rxjs";
 
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { AbstractStorageService } from "@bitwarden/common/platform/abstractions/storage.service";
 import { ScheduledTaskNames } from "@bitwarden/common/platform/scheduling";
@@ -39,11 +38,36 @@ export class PhishingDetectionService {
   private static retryCount = 0;
 
   static initialize(
+    configService: ConfigService,
     auditService: AuditService,
     logService: LogService,
     storageService: AbstractStorageService,
     taskSchedulerService: TaskSchedulerService,
-  ) {
+  ): void {
+    configService
+      .getFeatureFlag$(FeatureFlag.PhishingDetection)
+      .pipe(
+        mergeMap(async (enabled) => {
+          if (!enabled) {
+            logService.info("phishing detection feature flag is disabled.");
+          }
+          await PhishingDetectionService.enable(
+            auditService,
+            logService,
+            storageService,
+            taskSchedulerService,
+          );
+        }),
+      )
+      .subscribe();
+  }
+
+  static async enable(
+    auditService: AuditService,
+    logService: LogService,
+    storageService: AbstractStorageService,
+    taskSchedulerService: TaskSchedulerService,
+  ): Promise<void> {
     PhishingDetectionService.auditService = auditService;
     PhishingDetectionService.logService = logService;
     PhishingDetectionService.storageService = storageService;
@@ -64,7 +88,7 @@ export class PhishingDetectionService {
     );
 
     // Initial load of cached domains
-    void this.loadCachedDomains();
+    await this.loadCachedDomains();
 
     // Set up periodic updates every 24 hours
     this.setupPeriodicUpdates();

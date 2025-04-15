@@ -1317,23 +1317,13 @@ export default class MainBackground {
 
     this.inlineMenuFieldQualificationService = new InlineMenuFieldQualificationService();
 
-    this.configService
-      .getFeatureFlag(FeatureFlag.PhishingDetection)
-      .then((enabled) => {
-        if (enabled) {
-          PhishingDetectionService.initialize(
-            this.auditService,
-            this.logService,
-            this.storageService,
-            this.taskSchedulerService,
-          );
-        } else {
-          this.logService.info("phishing detection feature flag is disabled.");
-        }
-      })
-      .catch((error) =>
-        this.logService.error("Failed to check phishing detection feature flag", error),
-      );
+    PhishingDetectionService.initialize(
+      this.configService,
+      this.auditService,
+      this.logService,
+      this.storageService,
+      this.taskSchedulerService,
+    );
 
     this.ipcContentScriptManagerService = new IpcContentScriptManagerService(this.configService);
     this.ipcService = new IpcBackgroundService(this.logService);
