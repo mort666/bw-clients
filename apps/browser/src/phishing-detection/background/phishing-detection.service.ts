@@ -226,19 +226,27 @@ export class PhishingDetectionService {
   }
 
   static setupListeners(): void {
-    chrome.webRequest.onCompleted.addListener(
-      (details: chrome.webRequest.WebRequestDetails): void => {
+    chrome.webNavigation.onCompleted.addListener(
+      (details: chrome.webNavigation.WebNavigationFramedCallbackDetails): void => {
         const url = new URL(details.url);
+        const result = PhishingDetectionService.knownPhishingDomains.has(url.hostname);
 
-        if (PhishingDetectionService.knownPhishingDomains.has(url.hostname)) {
+        this.logService.debug("Phishing detection check", {
+          details,
+          result,
+          url,
+        });
+
+        if (result) {
           PhishingDetectionService.RedirectToWarningPage(url.hostname, details.tabId);
         }
       },
-      { urls: ["<all_urls>"], types: ["main_frame"] },
     );
   }
 
   static RedirectToWarningPage(hostname: string, tabId: number) {
+    this.logService.debug("Redirecting to warning page.");
+
     const phishingWarningPage = chrome.runtime.getURL(
       "popup/index.html#/security/phishing-warning",
     );
