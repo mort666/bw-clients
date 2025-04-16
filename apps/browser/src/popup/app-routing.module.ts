@@ -711,10 +711,8 @@ const routes: Routes = [
         ],
         data: {
           pageIcon: PhishingLandingIcon,
-
-          pageTitle: "Phishing site detected",
-          pageSubtitle: "Bitwarden has prevented this page from loading.",
-
+          pageTitle: "Bitwarden blocked it!",
+          pageSubtitle: "Bitwarden blocked a known phishing site from loading.",
           showReadonlyHostname: true,
         } satisfies AnonLayoutWrapperData,
       },
