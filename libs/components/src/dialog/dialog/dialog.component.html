@@ -1,4 +1,4 @@
-@let isDrawer = dialogRef.isDrawer;
+@let isDrawer = dialogRef?.isDrawer;
 <section
   class="tw-flex tw-w-full tw-flex-col tw-self-center tw-overflow-hidden tw-border tw-border-solid tw-border-secondary-300 tw-bg-background tw-text-main"
   [ngClass]="[width, isDrawer ? 'tw-h-screen tw-border-t-0' : 'tw-rounded-xl']"

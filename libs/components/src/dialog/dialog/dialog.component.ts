@@ -33,7 +33,7 @@ import { DialogTitleContainerDirective } from "../directives/dialog-title-contai
   ],
 })
 export class DialogComponent {
-  protected dialogRef = inject(DialogRef);
+  protected dialogRef = inject(DialogRef, { optional: true });
 
   /** Background color */
   @Input()
