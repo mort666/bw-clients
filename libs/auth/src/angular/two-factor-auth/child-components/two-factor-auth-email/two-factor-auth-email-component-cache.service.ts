@@ -13,16 +13,18 @@ export const TWO_FACTOR_AUTH_EMAIL_COMPONENT_CACHE_KEY = "two-factor-auth-email-
 /**
  * Cache model for the email two factor auth component.
  */
-export class TwoFactorAuthEmailCache {
+export class TwoFactorAuthEmailComponentCache {
   emailSent: boolean = false;
 
-  static fromJSON(obj: Partial<Jsonify<TwoFactorAuthEmailCache>>): TwoFactorAuthEmailCache | null {
+  static fromJSON(
+    obj: Partial<Jsonify<TwoFactorAuthEmailComponentCache>>,
+  ): TwoFactorAuthEmailComponentCache | null {
     // Return null if the cache is empty
     if (obj == null) {
       return null;
     }
 
-    return Object.assign(new TwoFactorAuthEmailCache(), obj);
+    return Object.assign(new TwoFactorAuthEmailComponentCache(), obj);
   }
 }
 
@@ -40,11 +42,11 @@ export class TwoFactorAuthEmailComponentCacheService {
   /**
    * Signal for the cached email state.
    */
-  private emailCache: WritableSignal<TwoFactorAuthEmailCache | null> =
-    this.viewCacheService.signal<TwoFactorAuthEmailCache | null>({
+  private emailCache: WritableSignal<TwoFactorAuthEmailComponentCache | null> =
+    this.viewCacheService.signal<TwoFactorAuthEmailComponentCache | null>({
       key: TWO_FACTOR_AUTH_EMAIL_COMPONENT_CACHE_KEY,
       initialValue: null,
-      deserializer: TwoFactorAuthEmailCache.fromJSON,
+      deserializer: TwoFactorAuthEmailComponentCache.fromJSON,
     });
 
   /**
@@ -66,7 +68,7 @@ export class TwoFactorAuthEmailComponentCacheService {
 
     this.emailCache.set({
       emailSent: data.emailSent,
-    } as TwoFactorAuthEmailCache);
+    } as TwoFactorAuthEmailComponentCache);
   }
 
   /**
@@ -83,7 +85,7 @@ export class TwoFactorAuthEmailComponentCacheService {
   /**
    * Get whether the email has been sent.
    */
-  getCachedData(): TwoFactorAuthEmailCache | null {
+  getCachedData(): TwoFactorAuthEmailComponentCache | null {
     if (!this.featureEnabled) {
       return null;
     }
