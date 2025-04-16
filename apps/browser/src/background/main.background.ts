@@ -44,9 +44,9 @@ import { AccountServiceImplementation } from "@bitwarden/common/auth/services/ac
 import { AuthService } from "@bitwarden/common/auth/services/auth.service";
 import { AvatarService } from "@bitwarden/common/auth/services/avatar.service";
 import {
-  DeviceManagementApprovalService,
-  DevicesManagementApprovalAbstraction,
-} from "@bitwarden/common/auth/services/devices/device-management-approval.service";
+  ChromeBrowserExtensionAuthRequestApprovalService,
+  AuthRequestLoginApprovalAbstraction,
+} from "@bitwarden/common/auth/services/devices/chrome-browser-extension-auth-request-approval.service";
 import { DevicesServiceImplementation } from "@bitwarden/common/auth/services/devices/devices.service.implementation";
 import { DevicesApiServiceImplementation } from "@bitwarden/common/auth/services/devices-api.service.implementation";
 import { SsoLoginService } from "@bitwarden/common/auth/services/sso-login.service";
@@ -337,7 +337,7 @@ export default class MainBackground {
   exportService: VaultExportServiceAbstraction;
   searchService: SearchServiceAbstraction;
   notificationsService: NotificationsService;
-  deviceManagementApprovalService: DevicesManagementApprovalAbstraction;
+  deviceManagementApprovalService: AuthRequestLoginApprovalAbstraction;
   systemNotificationService: SystemNotificationServiceAbstraction;
   stateService: StateServiceAbstraction;
   userNotificationSettingsService: UserNotificationSettingsServiceAbstraction;
@@ -1091,7 +1091,7 @@ export default class MainBackground {
       this.platformUtilsService,
     );
 
-    this.deviceManagementApprovalService = new DeviceManagementApprovalService(
+    this.deviceManagementApprovalService = new ChromeBrowserExtensionAuthRequestApprovalService(
       this.platformUtilsService,
       this.logService,
       this.systemNotificationService,

@@ -106,9 +106,9 @@ import { AnonymousHubService } from "@bitwarden/common/auth/services/anonymous-h
 import { AuthService } from "@bitwarden/common/auth/services/auth.service";
 import { AvatarService } from "@bitwarden/common/auth/services/avatar.service";
 import {
-  DeviceManagementApprovalService,
-  DevicesManagementApprovalAbstraction,
-} from "@bitwarden/common/auth/services/devices/device-management-approval.service";
+  ChromeBrowserExtensionAuthRequestApprovalService,
+  AuthRequestLoginApprovalAbstraction,
+} from "@bitwarden/common/auth/services/devices/chrome-browser-extension-auth-request-approval.service";
 import { DevicesServiceImplementation } from "@bitwarden/common/auth/services/devices/devices.service.implementation";
 import { DevicesApiServiceImplementation } from "@bitwarden/common/auth/services/devices-api.service.implementation";
 import { MasterPasswordApiService } from "@bitwarden/common/auth/services/master-password/master-password-api.service.implementation";
@@ -904,8 +904,8 @@ const safeProviders: SafeProvider[] = [
     deps: [LogService, PlatformUtilsServiceAbstraction],
   }),
   safeProvider({
-    provide: DevicesManagementApprovalAbstraction,
-    useClass: DeviceManagementApprovalService,
+    provide: AuthRequestLoginApprovalAbstraction,
+    useClass: ChromeBrowserExtensionAuthRequestApprovalService,
     deps: [PlatformUtilsServiceAbstraction, LogService, SystemNotificationServiceAbstraction],
   }),
   safeProvider({
@@ -924,7 +924,7 @@ const safeProviders: SafeProvider[] = [
       SignalRConnectionService,
       AuthServiceAbstraction,
       WebPushConnectionService,
-      DevicesManagementApprovalAbstraction,
+      AuthRequestLoginApprovalAbstraction,
     ],
   }),
   safeProvider({

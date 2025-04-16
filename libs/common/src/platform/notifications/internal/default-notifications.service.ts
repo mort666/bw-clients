@@ -12,7 +12,7 @@ import {
 } from "rxjs";
 
 import { LogoutReason } from "@bitwarden/auth/common";
-import { DevicesManagementApprovalAbstraction } from "@bitwarden/common/auth/services/devices/device-management-approval.service";
+import { AuthRequestLoginApprovalAbstraction } from "@bitwarden/common/auth/services/devices/chrome-browser-extension-auth-request-approval.service";
 
 import { AccountService } from "../../../auth/abstractions/account.service";
 import { AuthService } from "../../../auth/abstractions/auth.service";
@@ -55,7 +55,7 @@ export class DefaultNotificationsService implements NotificationsServiceAbstract
     private readonly signalRConnectionService: SignalRConnectionService,
     private readonly authService: AuthService,
     private readonly webPushConnectionService: WebPushConnectionService,
-    private deviceManagementApprovalService: DevicesManagementApprovalAbstraction,
+    private deviceManagementApprovalService: AuthRequestLoginApprovalAbstraction,
   ) {
     this.notifications$ = this.accountService.activeAccount$.pipe(
       map((account) => account?.id),

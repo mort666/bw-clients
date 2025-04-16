@@ -9,12 +9,14 @@ import {
   ButtonLocation,
 } from "@bitwarden/common/platform/abstractions/system-notification-service.abstraction";
 
-export abstract class DevicesManagementApprovalAbstraction {
+export abstract class AuthRequestLoginApprovalAbstraction {
   abstract receivedPendingAuthRequest(notificationId: string): Promise<void>;
   abstract checkForPendingAuthRequestsToApprove(notificationId: string): Promise<void>;
 }
 
-export class DeviceManagementApprovalService implements DevicesManagementApprovalAbstraction {
+export class ChromeBrowserExtensionAuthRequestApprovalService
+  implements AuthRequestLoginApprovalAbstraction
+{
   constructor(
     private platformUtilsService: PlatformUtilsService,
     private logService: LogService,
@@ -55,10 +57,13 @@ export class DeviceManagementApprovalService implements DevicesManagementApprova
   }
 
   /**
-   * This will be used probably in a guard to route the user
-   * This is a function because it could cache auth requests coming
-   * in the background, or it could query the server for any outstanding
-   * requests.
+   * Use new device service's endpoint to query for all devices with pending
+   * auth requests.
+   *
+   * This should be used on the application load.
+   *
+   * Navigates user to the devices management screen and opens a dialog
+   * per pending login request.
    */
   async checkForPendingAuthRequestsToApprove(): Promise<void> {
     // STUB
