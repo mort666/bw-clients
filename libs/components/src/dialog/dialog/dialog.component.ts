@@ -10,7 +10,7 @@ import { I18nPipe } from "@bitwarden/ui-common";
 import { BitIconButtonComponent } from "../../icon-button/icon-button.component";
 import { TypographyDirective } from "../../typography/typography.directive";
 import { fadeIn } from "../animations";
-import { DialogRef, IS_DRAWER_TOKEN } from "../dialog.service";
+import { DialogRef } from "../dialog.service";
 import { DialogCloseDirective } from "../directives/dialog-close.directive";
 import { DialogTitleContainerDirective } from "../directives/dialog-title-container.directive";
 
@@ -33,8 +33,7 @@ import { DialogTitleContainerDirective } from "../directives/dialog-title-contai
   ],
 })
 export class DialogComponent {
-  private dialogRef = inject(DialogRef, { optional: true });
-  protected isDrawer = inject(IS_DRAWER_TOKEN, { optional: true }) ?? false;
+  protected dialogRef = inject(DialogRef);
 
   /** Background color */
   @Input()
@@ -76,7 +75,9 @@ export class DialogComponent {
     return ["tw-flex", "tw-flex-col"]
       .concat(
         this.width,
-        !this.isDrawer ? ["tw-p-4", "tw-w-screen", "tw-max-h-[90vh]"] : ["tw-min-h-screen"],
+        !this.dialogRef.isDrawer
+          ? ["tw-p-4", "tw-w-screen", "tw-max-h-[90vh]"]
+          : ["tw-min-h-screen"],
       )
       .flat();
   }

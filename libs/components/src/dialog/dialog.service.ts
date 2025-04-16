@@ -1,13 +1,13 @@
 import {
   Dialog as CdkDialog,
-  DialogConfig,
-  DialogRef as CdkDialogRef,
+  DialogConfig as CdkDialogConfig,
+  DialogRef as CdkDialogRefBase,
   DIALOG_DATA,
   DialogCloseOptions,
 } from "@angular/cdk/dialog";
 import { ComponentType, ScrollStrategy } from "@angular/cdk/overlay";
 import { ComponentPortal, Portal } from "@angular/cdk/portal";
-import { Injectable, InjectionToken, Injector, TemplateRef, inject } from "@angular/core";
+import { Injectable, Injector, TemplateRef, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { NavigationEnd, Router } from "@angular/router";
 import { filter, firstValueFrom, map, Observable, Subject, switchMap } from "rxjs";
@@ -42,13 +42,14 @@ class CustomBlockScrollStrategy implements ScrollStrategy {
   detach() {}
 }
 
-export const IS_DRAWER_TOKEN = new InjectionToken<boolean>("IS_DRAWER");
-
 export abstract class DialogRef<R = unknown, C = unknown>
   implements Pick<CdkDialogRef<R, C>, "close" | "closed" | "disableClose" | "componentInstance">
 {
+  abstract readonly isDrawer?: boolean;
+
+  // --- From CdkDialogRef ---
   abstract close(result?: R, options?: DialogCloseOptions): void;
-  abstract closed: Observable<R | undefined>;
+  abstract readonly closed: Observable<R | undefined>;
   abstract disableClose: boolean | undefined;
   /**
    * @deprecated
@@ -57,7 +58,14 @@ export abstract class DialogRef<R = unknown, C = unknown>
   abstract componentInstance: C | null;
 }
 
+export type DialogConfig<D = unknown, R = unknown> = Pick<
+  CdkDialogConfig<D, R>,
+  "data" | "disableClose" | "ariaModal" | "positionStrategy" | "height" | "width"
+>;
+
 class DrawerDialogRef<R = unknown, C = unknown> implements DialogRef<R, C> {
+  readonly isDrawer = true;
+
   private _closed = new Subject<R | undefined>();
   closed = this._closed.asObservable();
   disableClose = false;
@@ -77,6 +85,38 @@ class DrawerDialogRef<R = unknown, C = unknown> implements DialogRef<R, C> {
   }
 
   componentInstance: C | null = null;
+}
+
+/**
+ * DialogRef that delegates functionality to the CDK implementation
+ **/
+export class CdkDialogRef<R = unknown, C = unknown> implements DialogRef<R, C> {
+  readonly isDrawer = false; // This is not a drawer dialog
+
+  /** This is not available until after construction, as it is returned by `Dialog.open`. */
+  cdkDialogRef!: CdkDialogRefBase<R, C>;
+
+  // --- Delegated to CdkDialogRefBase ---
+
+  close(result?: R, options?: DialogCloseOptions): void {
+    this.cdkDialogRef.close(result, options);
+  }
+
+  get closed(): Observable<R | undefined> {
+    return this.cdkDialogRef.closed;
+  }
+
+  get disableClose(): boolean | undefined {
+    return this.cdkDialogRef.disableClose;
+  }
+  set disableClose(value: boolean | undefined) {
+    this.cdkDialogRef.disableClose = value;
+  }
+
+  // Delegate the `componentInstance` property to the CDK DialogRef
+  get componentInstance(): C | null {
+    return this.cdkDialogRef.componentInstance;
+  }
 }
 
 @Injectable()
@@ -107,17 +147,27 @@ export class DialogService {
     }
   }
 
-  open<R = unknown, D = unknown, C = any>(
+  open<R = unknown, D = unknown, C = unknown>(
     componentOrTemplateRef: ComponentType<C> | TemplateRef<C>,
-    config?: DialogConfig<D, CdkDialogRef<R, C>>,
+    config?: DialogConfig<D, DialogRef<R, C>>,
   ): DialogRef<R, C> {
-    config = {
+    // Create the injector with the custom DialogRef
+    const ref = new CdkDialogRef<R, C>();
+    const injector = this.createInjector({
+      data: config?.data,
+      dialogRef: ref,
+    });
+
+    // Merge the custom config with the default config
+    const _config = {
       backdropClass: this.backDropClasses,
       scrollStrategy: this.defaultScrollStrategy,
+      injector,
       ...config,
     };
 
-    return this.dialog.open(componentOrTemplateRef, config);
+    ref.cdkDialogRef = this.dialog.open<R, D, C>(componentOrTemplateRef, _config);
+    return ref;
   }
 
   /** Opens a dialog in the side drawer */
@@ -130,27 +180,7 @@ export class DialogService {
     const portal = new ComponentPortal(
       component,
       null,
-      Injector.create({
-        providers: [
-          {
-            provide: DIALOG_DATA,
-            useValue: config?.data,
-          },
-          {
-            provide: CdkDialogRef,
-            useValue: this.activeDrawer,
-          },
-          {
-            provide: DialogRef,
-            useValue: this.activeDrawer,
-          },
-          {
-            provide: IS_DRAWER_TOKEN,
-            useValue: true,
-          },
-        ],
-        parent: this.injector,
-      }),
+      this.createInjector({ data: config?.data, dialogRef: this.activeDrawer }),
     );
     this.activeDrawer.portal = portal;
     this.drawerService.open(portal);
@@ -188,5 +218,26 @@ export class DialogService {
   /** Close all open dialogs */
   closeAll(): void {
     return this.dialog.closeAll();
+  }
+
+  /** The injector that is passed to the opened dialog */
+  private createInjector(opts: { data: unknown; dialogRef: DialogRef }): Injector {
+    return Injector.create({
+      providers: [
+        {
+          provide: DIALOG_DATA,
+          useValue: opts.data,
+        },
+        {
+          provide: DialogRef,
+          useValue: opts.dialogRef,
+        },
+        {
+          provide: CdkDialogRefBase,
+          useValue: opts.dialogRef,
+        },
+      ],
+      parent: this.injector,
+    });
   }
 }
