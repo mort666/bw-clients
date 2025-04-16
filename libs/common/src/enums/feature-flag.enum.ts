@@ -112,12 +112,12 @@ export const DefaultFeatureFlagValue = {
 
   /* Auth */
   [FeatureFlag.PM9112_DeviceApprovalPersistence]: FALSE,
+  [FeatureFlag.PM9115_TwoFactorExtensionDataPersistence]: FALSE,
 
   /* Billing */
   [FeatureFlag.TrialPaymentOptional]: FALSE,
   [FeatureFlag.PM15179_AddExistingOrgsFromProviderPortal]: FALSE,
   [FeatureFlag.PM12276_BreadcrumbEventLogs]: FALSE,
-  [FeatureFlag.PM9115_TwoFactorExtensionDataPersistence]: FALSE,
   [FeatureFlag.PM18794_ProviderPaymentMethod]: FALSE,
 
   /* Key Management */
