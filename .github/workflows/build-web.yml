@@ -129,13 +129,6 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Check out Server repo
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          path: server
-          repository: bitwarden/server
-          ref: ${{ github.event.pull_request.head.sha && 'main' || github.ref }}
-
       - name: Check Branch to Publish
         env:
           PUBLISH_BRANCHES: "main,rc,hotfix-rc-web"
