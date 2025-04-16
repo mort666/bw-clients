@@ -7,52 +7,54 @@ import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 
 import {
-  TwoFactorAuthEmailCache,
-  TwoFactorAuthComponentEmailCacheService,
-} from "./two-factor-auth-component-email-cache.service";
+  TwoFactorAuthEmailComponentCache,
+  TwoFactorAuthEmailComponentCacheService,
+} from "./two-factor-auth-email-component-cache.service";
 
 describe("TwoFactorAuthEmailCache", () => {
   describe("fromJSON", () => {
     it("returns null when input is null", () => {
-      const result = TwoFactorAuthComponentEmailCache.fromJSON(null as any);
+      const result = TwoFactorAuthEmailComponentCache.fromJSON(null as any);
       expect(result).toBeNull();
     });
 
     it("creates a TwoFactorAuthEmailCache instance from valid JSON", () => {
       const jsonData = { emailSent: true };
-      const result = TwoFactorAuthEmailCache.fromJSON(jsonData);
+      const result = TwoFactorAuthEmailComponentCache.fromJSON(jsonData);
 
       expect(result).not.toBeNull();
-      expect(result).toBeInstanceOf(TwoFactorAuthEmailCache);
+      expect(result).toBeInstanceOf(TwoFactorAuthEmailComponentCache);
       expect(result?.emailSent).toBe(true);
     });
   });
 });
 
-describe("TwoFactorAuthComponentEmailCacheService", () => {
-  let service: TwoFactorAuthComponentEmailCacheService;
+describe("TwoFactorAuthEmailComponentCacheService", () => {
+  let service: TwoFactorAuthEmailComponentCacheService;
   let mockViewCacheService: MockProxy<ViewCacheService>;
   let mockConfigService: MockProxy<ConfigService>;
-  let cacheData: BehaviorSubject<TwoFactorAuthEmailCache | null>;
+  let cacheData: BehaviorSubject<TwoFactorAuthEmailComponentCache | null>;
   let mockSignal: any;
 
   beforeEach(() => {
     mockViewCacheService = mock<ViewCacheService>();
     mockConfigService = mock<ConfigService>();
-    cacheData = new BehaviorSubject<TwoFactorAuthEmailCache | null>(null);
+    cacheData = new BehaviorSubject<TwoFactorAuthEmailComponentCache | null>(null);
     mockSignal = jest.fn(() => cacheData.getValue());
-    mockSignal.set = jest.fn((value: TwoFactorAuthEmailCache | null) => cacheData.next(value));
+    mockSignal.set = jest.fn((value: TwoFactorAuthEmailComponentCache | null) =>
+      cacheData.next(value),
+    );
     mockViewCacheService.signal.mockReturnValue(mockSignal);
 
     TestBed.configureTestingModule({
       providers: [
-        TwoFactorAuthComponentEmailCacheService,
+        TwoFactorAuthEmailComponentCacheService,
         { provide: ViewCacheService, useValue: mockViewCacheService },
         { provide: ConfigService, useValue: mockConfigService },
       ],
     });
 
-    service = TestBed.inject(TwoFactorAuthComponentEmailCacheService);
+    service = TestBed.inject(TwoFactorAuthEmailComponentCacheService);
   });
 
   it("creates the service", () => {

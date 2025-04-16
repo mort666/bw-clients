@@ -44,6 +44,7 @@ import { TwoFactorAuthEmailComponentService } from "./two-factor-auth-email-comp
   providers: [
     {
       provide: TwoFactorAuthEmailComponentCacheService,
+      useClass: TwoFactorAuthEmailComponentCacheService,
     },
   ],
 })
