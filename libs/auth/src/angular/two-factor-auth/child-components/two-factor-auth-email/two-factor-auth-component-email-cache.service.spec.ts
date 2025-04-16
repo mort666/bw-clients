@@ -142,7 +142,7 @@ describe("TwoFactorAuthEmailComponentCacheService", () => {
     });
 
     it("returns cached data when feature is enabled", () => {
-      const testData = new TwoFactorAuthEmailCache();
+      const testData = new TwoFactorAuthEmailComponentCache();
       testData.emailSent = true;
       cacheData.next(testData);
 
