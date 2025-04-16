@@ -69,6 +69,6 @@ export class PasswordHistoryV2Component implements OnInit {
     const activeUserId = activeAccount.id as UserId;
 
     const cipher = await this.cipherService.get(cipherId, activeUserId);
-    this.cipher = await this.cipherService.decryptCipherWithSdkOrLegacy(cipher, activeUserId);
+    this.cipher = await this.cipherService.decrypt(cipher, activeUserId);
   }
 }

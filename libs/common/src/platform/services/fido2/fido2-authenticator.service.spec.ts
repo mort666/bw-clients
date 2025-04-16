@@ -152,7 +152,7 @@ describe("FidoAuthenticatorService", () => {
           id === excludedCipher.id ? ({ decrypt: () => excludedCipher } as any) : undefined,
         );
         cipherService.getAllDecrypted.mockResolvedValue([excludedCipher]);
-        cipherService.decryptCipherWithSdkOrLegacy.mockResolvedValue(excludedCipher);
+        cipherService.decrypt.mockResolvedValue(excludedCipher);
       });
 
       /**
@@ -221,7 +221,7 @@ describe("FidoAuthenticatorService", () => {
           id === existingCipher.id ? ({ decrypt: () => existingCipher } as any) : undefined,
         );
         cipherService.getAllDecrypted.mockResolvedValue([existingCipher]);
-        cipherService.decryptCipherWithSdkOrLegacy.mockResolvedValue(existingCipher);
+        cipherService.decrypt.mockResolvedValue(existingCipher);
       });
 
       /**
@@ -308,7 +308,7 @@ describe("FidoAuthenticatorService", () => {
         const encryptedCipher = { ...existingCipher, reprompt: CipherRepromptType.Password };
         cipherService.get.mockResolvedValue(encryptedCipher as unknown as Cipher);
 
-        cipherService.decryptCipherWithSdkOrLegacy.mockResolvedValue({
+        cipherService.decrypt.mockResolvedValue({
           ...existingCipher,
           reprompt: CipherRepromptType.Password,
         } as unknown as CipherView);
@@ -354,7 +354,7 @@ describe("FidoAuthenticatorService", () => {
           cipherId === cipher.id ? ({ decrypt: () => cipher } as any) : undefined,
         );
         cipherService.getAllDecrypted.mockResolvedValue([await cipher]);
-        cipherService.decryptCipherWithSdkOrLegacy.mockResolvedValue(cipher);
+        cipherService.decrypt.mockResolvedValue(cipher);
         cipherService.encrypt.mockImplementation(async (cipher) => {
           cipher.login.fido2Credentials[0].credentialId = credentialId; // Replace id for testability
           return {} as any;

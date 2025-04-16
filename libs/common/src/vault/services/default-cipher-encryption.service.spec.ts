@@ -212,7 +212,6 @@ describe("DefaultCipherEncryptionService", () => {
       );
       expect(mockSdkClient.vault().ciphers().decrypt_fido2_private_key).toHaveBeenCalledWith(
         sdkCipherView,
-        fido2Credentials[0].keyValue,
       );
       expect(Fido2CredentialView.fromSdkFido2CredentialView).toHaveBeenCalledTimes(1);
     });

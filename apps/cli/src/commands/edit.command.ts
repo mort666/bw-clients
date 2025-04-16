@@ -90,7 +90,7 @@ export class EditCommand {
       return Response.notFound();
     }
 
-    let cipherView = await this.cipherService.decryptCipherWithSdkOrLegacy(cipher, activeUserId);
+    let cipherView = await this.cipherService.decrypt(cipher, activeUserId);
     if (cipherView.isDeleted) {
       return Response.badRequest("You may not edit a deleted item. Use the restore command first.");
     }
@@ -98,10 +98,7 @@ export class EditCommand {
     const encCipher = await this.cipherService.encrypt(cipherView, activeUserId);
     try {
       const updatedCipher = await this.cipherService.updateWithServer(encCipher);
-      const decCipher = await this.cipherService.decryptCipherWithSdkOrLegacy(
-        updatedCipher,
-        activeUserId,
-      );
+      const decCipher = await this.cipherService.decrypt(updatedCipher, activeUserId);
       const res = new CipherResponse(decCipher);
       return Response.success(res);
     } catch (e) {
@@ -131,10 +128,7 @@ export class EditCommand {
         cipher,
         activeUserId,
       );
-      const decCipher = await this.cipherService.decryptCipherWithSdkOrLegacy(
-        updatedCipher,
-        activeUserId,
-      );
+      const decCipher = await this.cipherService.decrypt(updatedCipher, activeUserId);
       const res = new CipherResponse(decCipher);
       return Response.success(res);
     } catch (e) {

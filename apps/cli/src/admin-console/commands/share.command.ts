@@ -59,14 +59,11 @@ export class ShareCommand {
       return Response.badRequest("This item already belongs to an organization.");
     }
 
-    const cipherView = await this.cipherService.decryptCipherWithSdkOrLegacy(cipher, activeUserId);
+    const cipherView = await this.cipherService.decrypt(cipher, activeUserId);
     try {
       await this.cipherService.shareWithServer(cipherView, organizationId, req, activeUserId);
       const updatedCipher = await this.cipherService.get(cipher.id, activeUserId);
-      const decCipher = await this.cipherService.decryptCipherWithSdkOrLegacy(
-        updatedCipher,
-        activeUserId,
-      );
+      const decCipher = await this.cipherService.decrypt(updatedCipher, activeUserId);
       const res = new CipherResponse(decCipher);
       return Response.success(res);
     } catch (e) {

@@ -200,7 +200,7 @@ export class ViewV2Component {
 
   async getCipherData(id: string, userId: UserId) {
     const cipher = await this.cipherService.get(id, userId);
-    return await this.cipherService.decryptCipherWithSdkOrLegacy(cipher, userId);
+    return await this.cipherService.decrypt(cipher, userId);
   }
 
   async editCipher() {

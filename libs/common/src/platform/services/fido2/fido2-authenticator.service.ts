@@ -151,7 +151,7 @@ export class Fido2AuthenticatorService<ParentWindowReference>
         );
         const encrypted = await this.cipherService.get(cipherId, activeUserId);
 
-        cipher = await this.cipherService.decryptCipherWithSdkOrLegacy(encrypted, activeUserId);
+        cipher = await this.cipherService.decrypt(encrypted, activeUserId);
 
         if (
           !userVerified &&

@@ -18,7 +18,10 @@ export class BackgroundCommunicationBackend implements CommunicationBackend {
         return;
       }
 
-      void this.queue.enqueue({ ...message.message, source: { Web: { id: sender.tab.id } } });
+      void this.queue.enqueue({
+        ...message.message,
+        source: { Web: { id: sender.tab.id } },
+      } as any);
     });
   }
 

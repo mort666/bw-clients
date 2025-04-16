@@ -477,12 +477,12 @@ describe("Cipher Service", () => {
     });
   });
 
-  describe("decryptCipherWithSdkOrLegacy", () => {
+  describe("decrypt", () => {
     it("should call decrypt method of CipherEncryptionService when feature flag is true", async () => {
       configService.getFeatureFlag.mockResolvedValue(true);
       cipherEncryptionService.decrypt.mockResolvedValue(new CipherView(cipherObj));
 
-      const result = await cipherService.decryptCipherWithSdkOrLegacy(cipherObj, userId);
+      const result = await cipherService.decrypt(cipherObj, userId);
 
       expect(result).toEqual(new CipherView(cipherObj));
       expect(cipherEncryptionService.decrypt).toHaveBeenCalledWith(cipherObj, userId);
@@ -495,7 +495,7 @@ describe("Cipher Service", () => {
       encryptService.decryptToBytes.mockResolvedValue(new Uint8Array(32));
       jest.spyOn(cipherObj, "decrypt").mockResolvedValue(new CipherView(cipherObj));
 
-      const result = await cipherService.decryptCipherWithSdkOrLegacy(cipherObj, userId);
+      const result = await cipherService.decrypt(cipherObj, userId);
 
       expect(result).toEqual(new CipherView(cipherObj));
       expect(cipherObj.decrypt).toHaveBeenCalledWith(mockUserKey);

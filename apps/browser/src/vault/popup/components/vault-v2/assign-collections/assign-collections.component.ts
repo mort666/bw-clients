@@ -65,7 +65,7 @@ export class AssignCollections {
         route.queryParams.pipe(
           switchMap(async ({ cipherId }) => {
             const cipherDomain = await this.cipherService.get(cipherId, userId);
-            return await this.cipherService.decryptCipherWithSdkOrLegacy(cipherDomain, userId);
+            return await this.cipherService.decrypt(cipherDomain, userId);
           }),
         ),
       ),

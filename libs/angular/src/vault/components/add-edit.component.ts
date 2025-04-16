@@ -269,7 +269,7 @@ export class AddEditComponent implements OnInit, OnDestroy {
     if (this.cipher == null) {
       if (this.editMode) {
         const cipher = await this.loadCipher(activeUserId);
-        this.cipher = await this.cipherService.decryptCipherWithSdkOrLegacy(cipher, activeUserId);
+        this.cipher = await this.cipherService.decrypt(cipher, activeUserId);
 
         // Adjust Cipher Name if Cloning
         if (this.cloneMode) {

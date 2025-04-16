@@ -221,5 +221,5 @@ export abstract class CipherService implements UserKeyRotationDataProvider<Ciphe
    * @param userId The user ID to use for decryption.
    * @returns A promise that resolves to the decrypted cipher view.
    */
-  abstract decryptCipherWithSdkOrLegacy(cipher: Cipher, userId: UserId): Promise<CipherView>;
+  abstract decrypt(cipher: Cipher, userId: UserId): Promise<CipherView>;
 }

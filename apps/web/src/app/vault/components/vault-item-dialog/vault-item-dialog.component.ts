@@ -466,10 +466,7 @@ export class VaultItemDialogComponent implements OnInit, OnDestroy {
         activeUserId,
       );
 
-      const updatedCipherView = await this.cipherService.decryptCipherWithSdkOrLegacy(
-        updatedCipher,
-        activeUserId,
-      );
+      const updatedCipherView = await this.cipherService.decrypt(updatedCipher, activeUserId);
 
       this.cipherFormComponent.patchCipher((currentCipher) => {
         currentCipher.attachments = updatedCipherView.attachments;
@@ -505,10 +502,7 @@ export class VaultItemDialogComponent implements OnInit, OnDestroy {
       return;
     }
     const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
-    return await this.cipherService.decryptCipherWithSdkOrLegacy(
-      config.originalCipher,
-      activeUserId,
-    );
+    return await this.cipherService.decrypt(config.originalCipher, activeUserId);
   }
 
   private updateTitle() {

@@ -88,10 +88,7 @@ export class AttachmentsComponent implements OnInit {
       const activeUserId = await firstValueFrom(getUserId(this.accountService.activeAccount$));
       this.formPromise = this.saveCipherAttachment(files[0], activeUserId);
       this.cipherDomain = await this.formPromise;
-      this.cipher = await this.cipherService.decryptCipherWithSdkOrLegacy(
-        this.cipherDomain,
-        activeUserId,
-      );
+      this.cipher = await this.cipherService.decrypt(this.cipherDomain, activeUserId);
       this.toastService.showToast({
         variant: "success",
         title: null,
@@ -131,7 +128,7 @@ export class AttachmentsComponent implements OnInit {
       const updatedCipher = await this.deletePromises[attachment.id];
 
       const cipher = new Cipher(updatedCipher);
-      this.cipher = await this.cipherService.decryptCipherWithSdkOrLegacy(cipher, activeUserId);
+      this.cipher = await this.cipherService.decrypt(cipher, activeUserId);
 
       this.toastService.showToast({
         variant: "success",
@@ -227,10 +224,7 @@ export class AttachmentsComponent implements OnInit {
   protected async init() {
     const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
     this.cipherDomain = await this.loadCipher(activeUserId);
-    this.cipher = await this.cipherService.decryptCipherWithSdkOrLegacy(
-      this.cipherDomain,
-      activeUserId,
-    );
+    this.cipher = await this.cipherService.decrypt(this.cipherDomain, activeUserId);
 
     const canAccessPremium = await firstValueFrom(
       this.billingAccountProfileStateService.hasPremiumFromAnySource$(activeUserId),
@@ -292,10 +286,7 @@ export class AttachmentsComponent implements OnInit {
             activeUserId,
             admin,
           );
-          this.cipher = await this.cipherService.decryptCipherWithSdkOrLegacy(
-            this.cipherDomain,
-            activeUserId,
-          );
+          this.cipher = await this.cipherService.decrypt(this.cipherDomain, activeUserId);
 
           // 3. Delete old
           this.deletePromises[attachment.id] = this.deleteCipherAttachment(

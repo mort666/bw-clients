@@ -23,7 +23,7 @@ export class DefaultCipherFormService implements CipherFormService {
 
   async decryptCipher(cipher: Cipher): Promise<CipherView> {
     const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
-    return await this.cipherService.decryptCipherWithSdkOrLegacy(cipher, activeUserId);
+    return await this.cipherService.decrypt(cipher, activeUserId);
   }
 
   async saveCipher(cipher: CipherView, config: CipherFormConfig): Promise<CipherView> {
@@ -42,7 +42,7 @@ export class DefaultCipherFormService implements CipherFormService {
     // Creating a new cipher
     if (cipher.id == null) {
       savedCipher = await this.cipherService.createWithServer(encryptedCipher, config.admin);
-      return await this.cipherService.decryptCipherWithSdkOrLegacy(savedCipher, activeUserId);
+      return await this.cipherService.decrypt(savedCipher, activeUserId);
     }
 
     if (config.originalCipher == null) {
@@ -94,6 +94,6 @@ export class DefaultCipherFormService implements CipherFormService {
       return null;
     }
 
-    return await this.cipherService.decryptCipherWithSdkOrLegacy(savedCipher, activeUserId);
+    return await this.cipherService.decrypt(savedCipher, activeUserId);
   }
 }

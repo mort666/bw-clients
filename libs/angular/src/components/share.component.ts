@@ -76,7 +76,7 @@ export class ShareComponent implements OnInit, OnDestroy {
 
     const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
     const cipherDomain = await this.cipherService.get(this.cipherId, activeUserId);
-    this.cipher = await this.cipherService.decryptCipherWithSdkOrLegacy(cipherDomain, activeUserId);
+    this.cipher = await this.cipherService.decrypt(cipherDomain, activeUserId);
   }
 
   filterCollections() {
@@ -103,10 +103,7 @@ export class ShareComponent implements OnInit, OnDestroy {
 
     const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
     const cipherDomain = await this.cipherService.get(this.cipherId, activeUserId);
-    const cipherView = await this.cipherService.decryptCipherWithSdkOrLegacy(
-      cipherDomain,
-      activeUserId,
-    );
+    const cipherView = await this.cipherService.decrypt(cipherDomain, activeUserId);
     const orgs = await firstValueFrom(this.organizations$);
     const orgName =
       orgs.find((o) => o.id === this.organizationId)?.name ?? this.i18nService.t("organization");

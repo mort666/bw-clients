@@ -207,10 +207,7 @@ export class EncryptedMessageHandlerService {
         return { status: "failure" };
       }
 
-      const cipherView = await this.cipherService.decryptCipherWithSdkOrLegacy(
-        cipher,
-        activeUserId,
-      );
+      const cipherView = await this.cipherService.decrypt(cipher, activeUserId);
       cipherView.name = credentialUpdatePayload.name;
       cipherView.login.password = credentialUpdatePayload.password;
       cipherView.login.username = credentialUpdatePayload.userName;
