@@ -105,6 +105,10 @@ import { AccountServiceImplementation } from "@bitwarden/common/auth/services/ac
 import { AnonymousHubService } from "@bitwarden/common/auth/services/anonymous-hub.service";
 import { AuthService } from "@bitwarden/common/auth/services/auth.service";
 import { AvatarService } from "@bitwarden/common/auth/services/avatar.service";
+import {
+  DeviceManagementApprovalService,
+  DevicesManagementApprovalAbstraction,
+} from "@bitwarden/common/auth/services/devices/device-management-approval.service";
 import { DevicesServiceImplementation } from "@bitwarden/common/auth/services/devices/devices.service.implementation";
 import { DevicesApiServiceImplementation } from "@bitwarden/common/auth/services/devices-api.service.implementation";
 import { MasterPasswordApiService } from "@bitwarden/common/auth/services/master-password/master-password-api.service.implementation";
@@ -182,6 +186,7 @@ import { SdkClientFactory } from "@bitwarden/common/platform/abstractions/sdk/sd
 import { SdkService } from "@bitwarden/common/platform/abstractions/sdk/sdk.service";
 import { StateService as StateServiceAbstraction } from "@bitwarden/common/platform/abstractions/state.service";
 import { AbstractStorageService } from "@bitwarden/common/platform/abstractions/storage.service";
+import { SystemNotificationServiceAbstraction } from "@bitwarden/common/platform/abstractions/system-notification-service.abstraction";
 import { ValidationService as ValidationServiceAbstraction } from "@bitwarden/common/platform/abstractions/validation.service";
 import { StateFactory } from "@bitwarden/common/platform/factories/state-factory";
 import { Message, MessageListener, MessageSender } from "@bitwarden/common/platform/messaging";
@@ -205,6 +210,7 @@ import {
   TaskSchedulerService,
 } from "@bitwarden/common/platform/scheduling";
 import { AppIdService } from "@bitwarden/common/platform/services/app-id.service";
+import { ChromeExtensionSystemNotificationService } from "@bitwarden/common/platform/services/chrome-extension-system-notification.service";
 import { ConfigApiService } from "@bitwarden/common/platform/services/config/config-api.service";
 import { DefaultConfigService } from "@bitwarden/common/platform/services/config/default-config.service";
 import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
@@ -893,6 +899,16 @@ const safeProviders: SafeProvider[] = [
     deps: [],
   }),
   safeProvider({
+    provide: SystemNotificationServiceAbstraction,
+    useClass: ChromeExtensionSystemNotificationService,
+    deps: [LogService, PlatformUtilsServiceAbstraction],
+  }),
+  safeProvider({
+    provide: DevicesManagementApprovalAbstraction,
+    useClass: DeviceManagementApprovalService,
+    deps: [PlatformUtilsServiceAbstraction, LogService, SystemNotificationServiceAbstraction],
+  }),
+  safeProvider({
     provide: NotificationsService,
     useClass: devFlagEnabled("noopNotifications")
       ? NoopNotificationsService
@@ -908,6 +924,7 @@ const safeProviders: SafeProvider[] = [
       SignalRConnectionService,
       AuthServiceAbstraction,
       WebPushConnectionService,
+      DevicesManagementApprovalAbstraction,
     ],
   }),
   safeProvider({

@@ -43,6 +43,10 @@ import { ForceSetPasswordReason } from "@bitwarden/common/auth/models/domain/for
 import { AccountServiceImplementation } from "@bitwarden/common/auth/services/account.service";
 import { AuthService } from "@bitwarden/common/auth/services/auth.service";
 import { AvatarService } from "@bitwarden/common/auth/services/avatar.service";
+import {
+  DeviceManagementApprovalService,
+  DevicesManagementApprovalAbstraction,
+} from "@bitwarden/common/auth/services/devices/device-management-approval.service";
 import { DevicesServiceImplementation } from "@bitwarden/common/auth/services/devices/devices.service.implementation";
 import { DevicesApiServiceImplementation } from "@bitwarden/common/auth/services/devices-api.service.implementation";
 import { SsoLoginService } from "@bitwarden/common/auth/services/sso-login.service";
@@ -110,6 +114,7 @@ import {
   AbstractStorageService,
   ObservableStorageService,
 } from "@bitwarden/common/platform/abstractions/storage.service";
+import { SystemNotificationServiceAbstraction } from "@bitwarden/common/platform/abstractions/system-notification-service.abstraction";
 import { SystemService as SystemServiceAbstraction } from "@bitwarden/common/platform/abstractions/system.service";
 import { StateFactory } from "@bitwarden/common/platform/factories/state-factory";
 import { IpcService } from "@bitwarden/common/platform/ipc";
@@ -130,6 +135,7 @@ import {
   WorkerWebPushConnectionService,
 } from "@bitwarden/common/platform/notifications/internal";
 import { AppIdService } from "@bitwarden/common/platform/services/app-id.service";
+import { ChromeExtensionSystemNotificationService } from "@bitwarden/common/platform/services/chrome-extension-system-notification.service";
 import { ConfigApiService } from "@bitwarden/common/platform/services/config/config-api.service";
 import { DefaultConfigService } from "@bitwarden/common/platform/services/config/default-config.service";
 import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
@@ -331,6 +337,8 @@ export default class MainBackground {
   exportService: VaultExportServiceAbstraction;
   searchService: SearchServiceAbstraction;
   notificationsService: NotificationsService;
+  deviceManagementApprovalService: DevicesManagementApprovalAbstraction;
+  systemNotificationService: SystemNotificationServiceAbstraction;
   stateService: StateServiceAbstraction;
   userNotificationSettingsService: UserNotificationSettingsServiceAbstraction;
   autofillSettingsService: AutofillSettingsServiceAbstraction;
@@ -1078,6 +1086,17 @@ export default class MainBackground {
       this.webPushConnectionService = new UnsupportedWebPushConnectionService();
     }
 
+    this.systemNotificationService = new ChromeExtensionSystemNotificationService(
+      this.logService,
+      this.platformUtilsService,
+    );
+
+    this.deviceManagementApprovalService = new DeviceManagementApprovalService(
+      this.platformUtilsService,
+      this.logService,
+      this.systemNotificationService,
+    );
+
     this.notificationsService = new DefaultNotificationsService(
       this.logService,
       this.syncService,
@@ -1089,6 +1108,7 @@ export default class MainBackground {
       new SignalRConnectionService(this.apiService, this.logService),
       this.authService,
       this.webPushConnectionService,
+      this.deviceManagementApprovalService,
     );
 
     this.fido2UserInterfaceService = new BrowserFido2UserInterfaceService(this.authService);

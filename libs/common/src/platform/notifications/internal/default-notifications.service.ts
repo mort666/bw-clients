@@ -12,6 +12,7 @@ import {
 } from "rxjs";
 
 import { LogoutReason } from "@bitwarden/auth/common";
+import { DevicesManagementApprovalAbstraction } from "@bitwarden/common/auth/services/devices/device-management-approval.service";
 
 import { AccountService } from "../../../auth/abstractions/account.service";
 import { AuthService } from "../../../auth/abstractions/auth.service";
@@ -41,6 +42,7 @@ export class DefaultNotificationsService implements NotificationsServiceAbstract
   notifications$: Observable<readonly [NotificationResponse, UserId]>;
 
   private activitySubject = new BehaviorSubject<"active" | "inactive">("active");
+  private destroy$ = new BehaviorSubject<void>(undefined);
 
   constructor(
     private readonly logService: LogService,
@@ -53,6 +55,7 @@ export class DefaultNotificationsService implements NotificationsServiceAbstract
     private readonly signalRConnectionService: SignalRConnectionService,
     private readonly authService: AuthService,
     private readonly webPushConnectionService: WebPushConnectionService,
+    private deviceManagementApprovalService: DevicesManagementApprovalAbstraction,
   ) {
     this.notifications$ = this.accountService.activeAccount$.pipe(
       map((account) => account?.id),
@@ -211,6 +214,9 @@ export class DefaultNotificationsService implements NotificationsServiceAbstract
           this.messagingService.send("openLoginApproval", {
             notificationId: notification.payload.id,
           });
+          await this.deviceManagementApprovalService.receivedPendingAuthRequest(
+            notification.payload.id,
+          );
         }
         break;
       case NotificationType.SyncOrganizationStatusChanged:
