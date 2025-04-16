@@ -8,19 +8,6 @@ import { AbstractStorageService } from "@bitwarden/common/platform/abstractions/
 import { ScheduledTaskNames } from "@bitwarden/common/platform/scheduling";
 import { TaskSchedulerService } from "@bitwarden/common/platform/scheduling/task-scheduler.service";
 
-import { PhishingDetectionCommands } from "../../phishing-detection/phishing-detection.enum";
-import { BrowserApi } from "../../platform/browser/browser-api";
-
-export type RedirectMessage = {
-  command: string;
-  phishingHost: string;
-};
-
-export type CheckUrlMessage = {
-  command: string;
-  activeUrl: string;
-};
-
 export class PhishingDetectionService {
   private static knownPhishingDomains = new Set<string>();
   private static lastUpdateTime: number = 0;
@@ -238,59 +225,30 @@ export class PhishingDetectionService {
     this.retryCount = 0;
   }
 
-  static setupCheckUrlListener(): void {
-    BrowserApi.addListener(
-      chrome.runtime.onMessage,
-      (
-        message: CheckUrlMessage,
-        _: chrome.runtime.MessageSender,
-        sendResponse: (response?: unknown) => void,
-      ): void => {
-        if (message.command === PhishingDetectionCommands.CheckUrl) {
-          const { activeUrl } = message;
-
-          const result = { isPhishingDomain: PhishingDetectionService.checkUrl(activeUrl) };
-
-          PhishingDetectionService.logService.debug("CheckUrl handler", { result, message });
-          sendResponse(result);
-        }
-      },
-    );
-  }
-
-  static setupRedirectToWarningPageListener(): void {
-    BrowserApi.addListener(
-      chrome.runtime.onMessage,
-      (message: RedirectMessage, sender: chrome.runtime.MessageSender): void => {
-        if (message.command === PhishingDetectionCommands.RedirectToWarningPage) {
-          const phishingWarningPage = chrome.runtime.getURL(
-            "popup/index.html#/security/phishing-warning",
-          );
-
-          const pageWithViewData = `${phishingWarningPage}?phishingHost=${message.phishingHost}`;
-
-          PhishingDetectionService.logService.debug("RedirectToWarningPage handler", {
-            message,
-            phishingWarning: pageWithViewData,
-          });
-
-          if (sender.tab !== undefined || sender.tab !== null) {
-            // To satisfy strict TypeScript
-            const tabId = Number(sender.tab?.id);
-            void browser.tabs.update(tabId, { url: pageWithViewData });
-          } else {
-            PhishingDetectionService.logService.debug("Sender tab id is invalid", {
-              message,
-              phishingWarning: pageWithViewData,
-            });
-          }
-        }
-      },
-    );
-  }
-
   static setupListeners(): void {
-    this.setupCheckUrlListener();
-    this.setupRedirectToWarningPageListener();
+    chrome.webRequest.onCompleted.addListener(
+      (details: chrome.webRequest.WebRequestDetails): void => {
+        const url = new URL(details.url);
+
+        if (PhishingDetectionService.knownPhishingDomains.has(url.hostname)) {
+          PhishingDetectionService.RedirectToWarningPage(url.hostname, details.tabId);
+        }
+      },
+      { urls: ["<all_urls>"], types: ["main_frame"] },
+    );
+  }
+
+  static RedirectToWarningPage(hostname: string, tabId: number) {
+    const phishingWarningPage = chrome.runtime.getURL(
+      "popup/index.html#/security/phishing-warning",
+    );
+
+    const pageWithViewData = `${phishingWarningPage}?phishingHost=${hostname}`;
+
+    chrome.tabs
+      .update(tabId, { url: pageWithViewData })
+      .catch((error) =>
+        this.logService.error("Failed to redirect away from the phishing site.", { error }),
+      );
   }
 }

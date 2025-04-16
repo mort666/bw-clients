@@ -30,12 +30,6 @@
       "matches": ["*://*/*", "file:///*"],
       "exclude_matches": ["*://*/*.xml*", "file:///*.xml*"],
       "run_at": "document_start"
-    },
-    {
-      "js": ["content/trigger-phishing-detection-script-injection.js"],
-      "matches": ["*://*/*", "file:///*"],
-      "exclude_matches": ["*://*/*.xml*", "file:///*.xml*"],
-      "run_at": "document_start"
     }
   ],
   "background": {
