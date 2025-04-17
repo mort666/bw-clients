@@ -596,6 +596,7 @@ const routes: Routes = [
     path: "intro-carousel",
     component: ExtensionAnonLayoutWrapperComponent,
     canActivate: [],
+    data: { elevation: 0, doNotSaveUrl: true } satisfies RouteDataProperties,
     children: [
       {
         path: "",
