@@ -243,8 +243,8 @@ import { StateEventRunnerService } from "@bitwarden/common/platform/state/state-
 import { SyncService } from "@bitwarden/common/platform/sync";
 // eslint-disable-next-line no-restricted-imports -- Needed for DI
 import { DefaultSyncService } from "@bitwarden/common/platform/sync/internal";
-import { UnsupportedSystemNotificationService } from "@bitwarden/common/platform/system-notifications";
-import { SystemNotificationServiceAbstraction } from "@bitwarden/common/platform/system-notifications/system-notification-service.abstraction";
+import { SystemNotificationServiceAbstraction } from "@bitwarden/common/platform/system-notifications/system-notification-service";
+import { UnsupportedSystemNotificationService } from "@bitwarden/common/platform/system-notifications/unsupported-system-notification.service";
 import {
   DefaultThemeStateService,
   ThemeStateService,

@@ -173,7 +173,7 @@ import { SyncService } from "@bitwarden/common/platform/sync";
 // eslint-disable-next-line no-restricted-imports -- Needed for service creation
 import { DefaultSyncService } from "@bitwarden/common/platform/sync/internal";
 import { BrowserSystemNotificationService } from "@bitwarden/common/platform/system-notifications/browser-system-notification.service";
-import { SystemNotificationServiceAbstraction } from "@bitwarden/common/platform/system-notifications/system-notification-service.abstraction";
+import { SystemNotificationServiceAbstraction } from "@bitwarden/common/platform/system-notifications/system-notification-service";
 import { DefaultThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
 import { ApiService } from "@bitwarden/common/services/api.service";
 import { AuditService } from "@bitwarden/common/services/audit.service";

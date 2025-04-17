@@ -5,7 +5,7 @@ import {
   SystemNotificationCreateInfo,
   SystemNotificationEvent,
   SystemNotificationServiceAbstraction as SystemNotificationServiceAbstraction,
-} from "@bitwarden/common/platform/system-notifications/system-notification-service.abstraction";
+} from "@bitwarden/common/platform/system-notifications/system-notification-service";
 
 export class UnsupportedSystemNotificationService implements SystemNotificationServiceAbstraction {
   private systemNotificationClickedSubject = new Subject<SystemNotificationEvent>();
