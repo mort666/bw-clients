@@ -358,7 +358,14 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
       permissions: this.permissions,
       viewPassword: this.viewPassword,
       localData: this.localData
-        ? { lastUsedDate: this.localData.lastUsedDate, lastLaunched: this.localData.lastLaunched }
+        ? {
+            lastUsedDate: this.localData.lastUsedDate
+              ? new Date(this.localData.lastUsedDate).toISOString()
+              : undefined,
+            lastLaunched: this.localData.lastLaunched
+              ? new Date(this.localData.lastLaunched).toISOString()
+              : undefined,
+          }
         : undefined,
       attachments: this.attachments?.map((a) => a.toSdkAttachment()),
       fields: this.fields?.map((f) => f.toSdkField()),

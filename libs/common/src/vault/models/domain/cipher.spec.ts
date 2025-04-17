@@ -770,6 +770,9 @@ describe("Cipher DTO", () => {
 
   describe("toSdkCipher", () => {
     it("should map to SDK Cipher", () => {
+      const lastUsedDate = new Date("2025-04-15T12:00:00.000Z").getTime();
+      const lastLaunched = new Date("2025-04-15T12:00:00.000Z").getTime();
+
       const cipherData: CipherData = {
         id: "id",
         organizationId: "orgId",
@@ -838,7 +841,7 @@ describe("Cipher DTO", () => {
         ],
       };
 
-      const cipher = new Cipher(cipherData);
+      const cipher = new Cipher(cipherData, { lastUsedDate, lastLaunched });
       const sdkCipher = cipher.toSdkCipher();
 
       expect(sdkCipher).toEqual({
@@ -875,7 +878,10 @@ describe("Cipher DTO", () => {
         edit: true,
         permissions: new CipherPermissionsApi(),
         viewPassword: true,
-        localData: undefined,
+        localData: {
+          lastUsedDate: "2025-04-15T12:00:00.000Z",
+          lastLaunched: "2025-04-15T12:00:00.000Z",
+        },
         attachments: [
           {
             id: "a1",

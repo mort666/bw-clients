@@ -245,7 +245,16 @@ export class CipherView implements View, InitializerMetadata {
     cipherView.permissions = CipherPermissionsApi.fromSdkCipherPermissions(obj.permissions);
     cipherView.edit = obj.edit;
     cipherView.viewPassword = obj.viewPassword;
-    cipherView.localData = obj.localData;
+    cipherView.localData = obj.localData
+      ? {
+          lastUsedDate: obj.localData.lastUsedDate
+            ? new Date(obj.localData.lastUsedDate).getTime()
+            : undefined,
+          lastLaunched: obj.localData.lastLaunched
+            ? new Date(obj.localData.lastLaunched).getTime()
+            : undefined,
+        }
+      : undefined;
     cipherView.attachments = obj.attachments?.map((a) => AttachmentView.fromSdkAttachmentView(a));
     cipherView.fields = obj.fields?.map((f) => FieldView.fromSdkFieldView(f));
     cipherView.passwordHistory = obj.passwordHistory?.map((ph) =>

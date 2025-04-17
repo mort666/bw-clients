@@ -30,7 +30,7 @@ export class DefaultCipherEncryptionService implements CipherEncryptionService {
 
           using ref = sdk.take();
           const sdkCipherView = ref.value.vault().ciphers().decrypt(cipher.toSdkCipher());
-          // The SDK returns a cipherView or throws an error if decryption fails.
+
           const clientCipherView = CipherView.fromSdkCipherView(sdkCipherView)!;
 
           // Decrypt Fido2 credentials if available
