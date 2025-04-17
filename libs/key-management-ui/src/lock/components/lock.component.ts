@@ -176,6 +176,9 @@ export class LockComponent implements OnInit, OnDestroy {
       await this.desktopOnInit();
     } else if (this.clientType === ClientType.Browser) {
       this.biometricUnlockBtnText = this.lockComponentService.getBiometricsUnlockBtnText();
+
+      // Navigate to vault when a new active account is set
+      await this.navigateNewActiveAccountUserToVault();
     }
   }
 
@@ -667,6 +670,19 @@ export class LockComponent implements OnInit, OnDestroy {
     );
   }
 
+  /**
+   * Listens for logout events and navigates to the vault if the user is logged in
+   */
+  private async navigateNewActiveAccountUserToVault() {
+    this.broadcasterService.subscribe(BroadcasterSubscriptionId, async (message) => {
+      if (message.command === "switchAccountFinish") {
+        if (this.activeAccount != null) {
+          await this.router.navigate(["vault"]);
+        }
+      }
+    });
+  }
+
   // -----------------------------------------------------------------------------------------------
   // Desktop methods:
   // -----------------------------------------------------------------------------------------------
@@ -737,7 +753,7 @@ export class LockComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
 
-    if (this.clientType === "desktop") {
+    if (this.clientType === ClientType.Desktop || this.clientType === ClientType.Browser) {
       this.broadcasterService.unsubscribe(BroadcasterSubscriptionId);
     }
   }
