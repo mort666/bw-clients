@@ -12,7 +12,7 @@ import {
 } from "rxjs";
 
 import { LogoutReason } from "@bitwarden/auth/common";
-import { AuthRequestLoginApprovalAbstraction } from "@bitwarden/common/auth/services/devices/chrome-browser-extension-auth-request-approval.service";
+import { AuthRequestLoginApprovalAbstraction } from "@bitwarden/common/auth/services/loginAuthRequestApprovalService/chrome-browser-extension-auth-request-approval.service";
 
 import { AccountService } from "../../../auth/abstractions/account.service";
 import { AuthService } from "../../../auth/abstractions/auth.service";

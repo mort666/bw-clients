@@ -105,12 +105,12 @@ import { AccountServiceImplementation } from "@bitwarden/common/auth/services/ac
 import { AnonymousHubService } from "@bitwarden/common/auth/services/anonymous-hub.service";
 import { AuthService } from "@bitwarden/common/auth/services/auth.service";
 import { AvatarService } from "@bitwarden/common/auth/services/avatar.service";
+import { DevicesServiceImplementation } from "@bitwarden/common/auth/services/devices/devices.service.implementation";
+import { DevicesApiServiceImplementation } from "@bitwarden/common/auth/services/devices-api.service.implementation";
 import {
   ChromeBrowserExtensionAuthRequestApprovalService,
   AuthRequestLoginApprovalAbstraction,
-} from "@bitwarden/common/auth/services/devices/chrome-browser-extension-auth-request-approval.service";
-import { DevicesServiceImplementation } from "@bitwarden/common/auth/services/devices/devices.service.implementation";
-import { DevicesApiServiceImplementation } from "@bitwarden/common/auth/services/devices-api.service.implementation";
+} from "@bitwarden/common/auth/services/loginAuthRequestApprovalService/chrome-browser-extension-auth-request-approval.service";
 import { MasterPasswordApiService } from "@bitwarden/common/auth/services/master-password/master-password-api.service.implementation";
 import { PasswordResetEnrollmentServiceImplementation } from "@bitwarden/common/auth/services/password-reset-enrollment.service.implementation";
 import { SsoLoginService } from "@bitwarden/common/auth/services/sso-login.service";

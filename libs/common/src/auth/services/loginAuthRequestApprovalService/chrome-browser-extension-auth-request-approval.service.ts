@@ -65,7 +65,7 @@ export class ChromeBrowserExtensionAuthRequestApprovalService
    * Navigates user to the devices management screen and opens a dialog
    * per pending login request.
    */
-  async checkForPendingAuthRequestsToApprove(): Promise<void> {
+  async checkForPendingAuthRequestsToApprove(notificationId: string): Promise<void> {
     // STUB
   }
 
