@@ -9,9 +9,9 @@ import {
   SystemNotificationCreateInfo,
   SystemNotificationEvent,
   SystemNotificationServiceAbstraction as SystemNotificationServiceAbstraction,
-} from "@bitwarden/common/platform/abstractions/system-notification-service.abstraction";
+} from "@bitwarden/common/platform/system-notifications/system-notification-service.abstraction";
 
-export class SystemNotificationService implements SystemNotificationServiceAbstraction {
+export class BrowserSystemNotificationService implements SystemNotificationServiceAbstraction {
   private systemNotificationClickedSubject = new Subject<SystemNotificationEvent>();
   systemNotificationClicked$: Observable<SystemNotificationEvent>;
 

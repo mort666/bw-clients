@@ -186,7 +186,6 @@ import { SdkClientFactory } from "@bitwarden/common/platform/abstractions/sdk/sd
 import { SdkService } from "@bitwarden/common/platform/abstractions/sdk/sdk.service";
 import { StateService as StateServiceAbstraction } from "@bitwarden/common/platform/abstractions/state.service";
 import { AbstractStorageService } from "@bitwarden/common/platform/abstractions/storage.service";
-import { SystemNotificationServiceAbstraction } from "@bitwarden/common/platform/abstractions/system-notification-service.abstraction";
 import { ValidationService as ValidationServiceAbstraction } from "@bitwarden/common/platform/abstractions/validation.service";
 import { StateFactory } from "@bitwarden/common/platform/factories/state-factory";
 import { Message, MessageListener, MessageSender } from "@bitwarden/common/platform/messaging";
@@ -223,7 +222,6 @@ import { MigrationRunner } from "@bitwarden/common/platform/services/migration-r
 import { DefaultSdkService } from "@bitwarden/common/platform/services/sdk/default-sdk.service";
 import { StateService } from "@bitwarden/common/platform/services/state.service";
 import { StorageServiceProvider } from "@bitwarden/common/platform/services/storage-service.provider";
-import { SystemNotificationService } from "@bitwarden/common/platform/services/system-notification.service";
 import { UserAutoUnlockKeyService } from "@bitwarden/common/platform/services/user-auto-unlock-key.service";
 import { ValidationService } from "@bitwarden/common/platform/services/validation.service";
 import {
@@ -245,6 +243,8 @@ import { StateEventRunnerService } from "@bitwarden/common/platform/state/state-
 import { SyncService } from "@bitwarden/common/platform/sync";
 // eslint-disable-next-line no-restricted-imports -- Needed for DI
 import { DefaultSyncService } from "@bitwarden/common/platform/sync/internal";
+import { UnsupportedSystemNotificationService } from "@bitwarden/common/platform/system-notifications";
+import { SystemNotificationServiceAbstraction } from "@bitwarden/common/platform/system-notifications/system-notification-service.abstraction";
 import {
   DefaultThemeStateService,
   ThemeStateService,
@@ -900,8 +900,8 @@ const safeProviders: SafeProvider[] = [
   }),
   safeProvider({
     provide: SystemNotificationServiceAbstraction,
-    useClass: SystemNotificationService,
-    deps: [LogService, PlatformUtilsServiceAbstraction],
+    useClass: UnsupportedSystemNotificationService,
+    deps: [],
   }),
   safeProvider({
     provide: AuthRequestLoginApprovalAbstraction,

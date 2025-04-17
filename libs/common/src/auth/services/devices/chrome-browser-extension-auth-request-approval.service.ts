@@ -7,7 +7,7 @@ import {
   SystemNotificationServiceAbstraction,
   SystemNotificationEvent,
   ButtonLocation,
-} from "@bitwarden/common/platform/abstractions/system-notification-service.abstraction";
+} from "@bitwarden/common/platform/system-notifications/system-notification-service.abstraction";
 
 export abstract class AuthRequestLoginApprovalAbstraction {
   abstract receivedPendingAuthRequest(notificationId: string): Promise<void>;

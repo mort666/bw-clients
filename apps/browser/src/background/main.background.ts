@@ -114,7 +114,6 @@ import {
   AbstractStorageService,
   ObservableStorageService,
 } from "@bitwarden/common/platform/abstractions/storage.service";
-import { SystemNotificationServiceAbstraction } from "@bitwarden/common/platform/abstractions/system-notification-service.abstraction";
 import { SystemService as SystemServiceAbstraction } from "@bitwarden/common/platform/abstractions/system.service";
 import { StateFactory } from "@bitwarden/common/platform/factories/state-factory";
 import { IpcService } from "@bitwarden/common/platform/ipc";
@@ -150,7 +149,6 @@ import { DefaultSdkClientFactory } from "@bitwarden/common/platform/services/sdk
 import { DefaultSdkService } from "@bitwarden/common/platform/services/sdk/default-sdk.service";
 import { NoopSdkClientFactory } from "@bitwarden/common/platform/services/sdk/noop-sdk-client-factory";
 import { StateService } from "@bitwarden/common/platform/services/state.service";
-import { SystemNotificationService } from "@bitwarden/common/platform/services/system-notification.service";
 import { SystemService } from "@bitwarden/common/platform/services/system.service";
 import { UserAutoUnlockKeyService } from "@bitwarden/common/platform/services/user-auto-unlock-key.service";
 import {
@@ -174,6 +172,8 @@ import { WindowStorageService } from "@bitwarden/common/platform/storage/window-
 import { SyncService } from "@bitwarden/common/platform/sync";
 // eslint-disable-next-line no-restricted-imports -- Needed for service creation
 import { DefaultSyncService } from "@bitwarden/common/platform/sync/internal";
+import { BrowserSystemNotificationService } from "@bitwarden/common/platform/system-notifications/browser-system-notification.service";
+import { SystemNotificationServiceAbstraction } from "@bitwarden/common/platform/system-notifications/system-notification-service.abstraction";
 import { DefaultThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
 import { ApiService } from "@bitwarden/common/services/api.service";
 import { AuditService } from "@bitwarden/common/services/audit.service";
@@ -1086,7 +1086,7 @@ export default class MainBackground {
       this.webPushConnectionService = new UnsupportedWebPushConnectionService();
     }
 
-    this.systemNotificationService = new SystemNotificationService(
+    this.systemNotificationService = new BrowserSystemNotificationService(
       this.logService,
       this.platformUtilsService,
     );
