@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { NavigationEnd, Router, RouterOutlet } from "@angular/router";
@@ -44,8 +46,8 @@ import { DesktopSyncVerificationDialogComponent } from "./components/desktop-syn
 export class AppComponent implements OnInit, OnDestroy {
   private compactModeService = inject(PopupCompactModeService);
 
-  private lastActivity: Date | null = null;
-  private activeUserId: UserId | null = null;
+  private lastActivity: Date;
+  private activeUserId: UserId;
   private recordActivitySubject = new Subject<void>();
   private routerAnimations = false;
 
@@ -83,7 +85,7 @@ export class AppComponent implements OnInit, OnDestroy {
     await this.clearComponentStates();
 
     this.accountService.activeAccount$.pipe(takeUntil(this.destroy$)).subscribe((account) => {
-      this.activeUserId = account?.id ?? null;
+      this.activeUserId = account?.id;
     });
 
     this.authService.activeAccountStatus$
@@ -112,10 +114,6 @@ export class AppComponent implements OnInit, OnDestroy {
             this.authService.logOut(async () => {
               if (msg.logoutReason) {
                 await this.displayLogoutReason(msg.logoutReason);
-              }
-
-              if (this.activeUserId) {
-                await this.router.navigate(["vault"]);
               }
             });
             this.changeDetectorRef.detectChanges();
@@ -184,9 +182,7 @@ export class AppComponent implements OnInit, OnDestroy {
           await this.clearComponentStates();
         }
         if (url.startsWith("/tabs/")) {
-          if (this.activeUserId) {
-            await this.cipherService.setAddEditCipherInfo(null, this.activeUserId);
-          }
+          await this.cipherService.setAddEditCipherInfo(null, this.activeUserId);
         }
         (window as any).previousPopupUrl = url;
 

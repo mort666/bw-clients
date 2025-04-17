@@ -56,9 +56,7 @@ export class VaultBrowserStateService {
     return await firstValueFrom(this.vaultBrowserGroupingsComponentState$);
   }
 
-  async setBrowserGroupingsComponentState(
-    value: BrowserGroupingsComponentState | null,
-  ): Promise<void> {
+  async setBrowserGroupingsComponentState(value: BrowserGroupingsComponentState): Promise<void> {
     await this.activeUserVaultBrowserGroupingsComponentState.update(() => value, {
       shouldUpdate: (current) => !(current == null && value == null),
     });
@@ -68,7 +66,7 @@ export class VaultBrowserStateService {
     return await firstValueFrom(this.vaultBrowserComponentState$);
   }
 
-  async setBrowserVaultItemsComponentState(value: BrowserComponentState | null): Promise<void> {
+  async setBrowserVaultItemsComponentState(value: BrowserComponentState): Promise<void> {
     await this.activeUserVaultBrowserComponentState.update(() => value, {
       shouldUpdate: (current) => !(current == null && value == null),
     });
