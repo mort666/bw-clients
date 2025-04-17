@@ -32,11 +32,13 @@ const accounts: Record<UserId, AccountInfo> = {
     name: "some user",
     email: "some.user@example.com",
     emailVerified: true,
+    creationDate: "2025-01-01T00:00:00Z",
   },
   [AnotherUser]: {
     name: "some other user",
     email: "some.other.user@example.com",
     emailVerified: true,
+    creationDate: "2025-01-01T00:00:00Z",
   },
 };
 
