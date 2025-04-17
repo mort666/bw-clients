@@ -672,7 +672,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: SystemNotificationServiceAbstraction,
     useClass: BrowserSystemNotificationService,
-    deps: [LogService, PlatformUtilsService], // Add any other dependencies your service needs
+    deps: [LogService, PlatformUtilsService],
   }),
 ];
 
