@@ -210,7 +210,6 @@ import {
   TaskSchedulerService,
 } from "@bitwarden/common/platform/scheduling";
 import { AppIdService } from "@bitwarden/common/platform/services/app-id.service";
-import { ChromeExtensionSystemNotificationService } from "@bitwarden/common/platform/services/chrome-extension-system-notification.service";
 import { ConfigApiService } from "@bitwarden/common/platform/services/config/config-api.service";
 import { DefaultConfigService } from "@bitwarden/common/platform/services/config/default-config.service";
 import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
@@ -224,6 +223,7 @@ import { MigrationRunner } from "@bitwarden/common/platform/services/migration-r
 import { DefaultSdkService } from "@bitwarden/common/platform/services/sdk/default-sdk.service";
 import { StateService } from "@bitwarden/common/platform/services/state.service";
 import { StorageServiceProvider } from "@bitwarden/common/platform/services/storage-service.provider";
+import { SystemNotificationService } from "@bitwarden/common/platform/services/system-notification.service";
 import { UserAutoUnlockKeyService } from "@bitwarden/common/platform/services/user-auto-unlock-key.service";
 import { ValidationService } from "@bitwarden/common/platform/services/validation.service";
 import {
@@ -900,7 +900,7 @@ const safeProviders: SafeProvider[] = [
   }),
   safeProvider({
     provide: SystemNotificationServiceAbstraction,
-    useClass: ChromeExtensionSystemNotificationService,
+    useClass: SystemNotificationService,
     deps: [LogService, PlatformUtilsServiceAbstraction],
   }),
   safeProvider({

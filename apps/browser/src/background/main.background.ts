@@ -135,7 +135,6 @@ import {
   WorkerWebPushConnectionService,
 } from "@bitwarden/common/platform/notifications/internal";
 import { AppIdService } from "@bitwarden/common/platform/services/app-id.service";
-import { ChromeExtensionSystemNotificationService } from "@bitwarden/common/platform/services/chrome-extension-system-notification.service";
 import { ConfigApiService } from "@bitwarden/common/platform/services/config/config-api.service";
 import { DefaultConfigService } from "@bitwarden/common/platform/services/config/default-config.service";
 import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
@@ -151,6 +150,7 @@ import { DefaultSdkClientFactory } from "@bitwarden/common/platform/services/sdk
 import { DefaultSdkService } from "@bitwarden/common/platform/services/sdk/default-sdk.service";
 import { NoopSdkClientFactory } from "@bitwarden/common/platform/services/sdk/noop-sdk-client-factory";
 import { StateService } from "@bitwarden/common/platform/services/state.service";
+import { SystemNotificationService } from "@bitwarden/common/platform/services/system-notification.service";
 import { SystemService } from "@bitwarden/common/platform/services/system.service";
 import { UserAutoUnlockKeyService } from "@bitwarden/common/platform/services/user-auto-unlock-key.service";
 import {
@@ -1086,7 +1086,7 @@ export default class MainBackground {
       this.webPushConnectionService = new UnsupportedWebPushConnectionService();
     }
 
-    this.systemNotificationService = new ChromeExtensionSystemNotificationService(
+    this.systemNotificationService = new SystemNotificationService(
       this.logService,
       this.platformUtilsService,
     );

@@ -1,5 +1,6 @@
 import { Observable, Subject } from "rxjs";
 
+import { DeviceType } from "@bitwarden/common/enums";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import {
@@ -10,9 +11,7 @@ import {
   SystemNotificationServiceAbstraction as SystemNotificationServiceAbstraction,
 } from "@bitwarden/common/platform/abstractions/system-notification-service.abstraction";
 
-export class ChromeExtensionSystemNotificationService
-  implements SystemNotificationServiceAbstraction
-{
+export class SystemNotificationService implements SystemNotificationServiceAbstraction {
   private systemNotificationClickedSubject = new Subject<SystemNotificationEvent>();
   systemNotificationClicked$: Observable<SystemNotificationEvent>;
 
@@ -24,6 +23,10 @@ export class ChromeExtensionSystemNotificationService
   }
 
   async createOSNotification(createInfo: SystemNotificationCreateInfo): Promise<undefined> {
+    if (!this.isSupported()) {
+      this.logService.error("While trying to createOSNotification, found that it is not supported");
+    }
+
     chrome.notifications.create(createInfo.id, {
       iconUrl: "https://avatars.githubusercontent.com/u/15990069?s=200",
       message: createInfo.title,
@@ -58,10 +61,22 @@ export class ChromeExtensionSystemNotificationService
   }
 
   clearOSNotification(clearInfo: SystemNotificationClearInfo): undefined {
+    if (!this.isSupported()) {
+      this.logService.error("While trying to clearOSNotification, found that it is not supported");
+    }
+
     chrome.notifications.clear(clearInfo.id);
   }
 
   isSupported(): boolean {
-    return true;
+    switch (this.platformUtilsService.getDevice()) {
+      case DeviceType.EdgeExtension:
+      case DeviceType.VivaldiExtension:
+      case DeviceType.OperaExtension:
+      case DeviceType.ChromeExtension:
+        return true;
+      default:
+        return false;
+    }
   }
 }
