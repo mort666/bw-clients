@@ -675,11 +675,16 @@ export class LockComponent implements OnInit, OnDestroy {
    */
   private async navigateNewActiveAccountUserToVault() {
     this.broadcasterService.subscribe(BroadcasterSubscriptionId, async (message) => {
-      if (message.command === "switchAccountFinish") {
-        if (this.activeAccount != null) {
-          await this.router.navigate(["vault"]);
-        }
+      if (message.command !== "switchAccountFinish") {
+        return;
       }
+
+      // If the user is not logged in, do not navigate to the vault
+      if (this.activeAccount == null) {
+        return;
+      }
+
+      await this.router.navigate(["vault"]);
     });
   }
 
