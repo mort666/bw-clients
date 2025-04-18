@@ -104,9 +104,6 @@ describe("SsoLoginStrategy", () => {
 
     tokenService.getTwoFactorToken.mockResolvedValue(null);
     appIdService.getAppId.mockResolvedValue(deviceId);
-    tokenService.decodeAccessToken.mockResolvedValue({
-      sub: userId,
-    });
 
     const mockVaultTimeoutAction = VaultTimeoutAction.Lock;
     const mockVaultTimeoutActionBSub = new BehaviorSubject<VaultTimeoutAction>(
@@ -185,7 +182,7 @@ describe("SsoLoginStrategy", () => {
 
   it("sets master key encrypted user key for existing SSO users", async () => {
     // Arrange
-    const tokenResponse = identityTokenResponseFactory();
+    const tokenResponse = identityTokenResponseFactory(undefined, undefined, userId);
     apiService.postIdentityToken.mockResolvedValue(tokenResponse);
 
     // Act
@@ -243,6 +240,7 @@ describe("SsoLoginStrategy", () => {
       const idTokenResponse: IdentityTokenResponse = identityTokenResponseFactory(
         null,
         userDecryptionOptsServerResponseWithTdeOption,
+        userId,
       );
 
       apiService.postIdentityToken.mockResolvedValue(idTokenResponse);
@@ -453,10 +451,14 @@ describe("SsoLoginStrategy", () => {
   describe("Key Connector", () => {
     let tokenResponse: IdentityTokenResponse;
     beforeEach(() => {
-      tokenResponse = identityTokenResponseFactory(null, {
-        HasMasterPassword: false,
-        KeyConnectorOption: { KeyConnectorUrl: keyConnectorUrl },
-      });
+      tokenResponse = identityTokenResponseFactory(
+        null,
+        {
+          HasMasterPassword: false,
+          KeyConnectorOption: { KeyConnectorUrl: keyConnectorUrl },
+        },
+        userId,
+      );
       tokenResponse.keyConnectorUrl = keyConnectorUrl;
     });
 
@@ -511,7 +513,7 @@ describe("SsoLoginStrategy", () => {
   describe("Key Connector Pre-TDE", () => {
     let tokenResponse: IdentityTokenResponse;
     beforeEach(() => {
-      tokenResponse = identityTokenResponseFactory();
+      tokenResponse = identityTokenResponseFactory(undefined, undefined, userId);
       tokenResponse.userDecryptionOptions = null;
       tokenResponse.keyConnectorUrl = keyConnectorUrl;
     });

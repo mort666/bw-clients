@@ -111,9 +111,6 @@ describe("PasswordLoginStrategy", () => {
     environmentService = mock<EnvironmentService>();
 
     appIdService.getAppId.mockResolvedValue(deviceId);
-    tokenService.decodeAccessToken.mockResolvedValue({
-      sub: userId,
-    });
 
     loginStrategyService.makePreloginKey.mockResolvedValue(masterKey);
 
@@ -150,7 +147,7 @@ describe("PasswordLoginStrategy", () => {
       environmentService,
     );
     credentials = new PasswordLoginCredentials(email, masterPassword);
-    tokenResponse = identityTokenResponseFactory(masterPasswordPolicy);
+    tokenResponse = identityTokenResponseFactory(masterPasswordPolicy, undefined, userId);
 
     apiService.postIdentityToken.mockResolvedValue(tokenResponse);
 
@@ -194,7 +191,6 @@ describe("PasswordLoginStrategy", () => {
 
     masterPasswordService.masterKeySubject.next(masterKey);
     masterPasswordService.mock.decryptUserKeyWithMasterKey.mockResolvedValue(userKey);
-    tokenService.decodeAccessToken.mockResolvedValue({ sub: userId });
 
     await passwordLoginStrategy.logIn(credentials);
 
@@ -230,7 +226,6 @@ describe("PasswordLoginStrategy", () => {
   it("forces the user to update their master password on successful login when it does not meet master password policy requirements", async () => {
     passwordStrengthService.getPasswordStrength.mockReturnValue({ score: 0 } as any);
     policyService.evaluateMasterPassword.mockReturnValue(false);
-    tokenService.decodeAccessToken.mockResolvedValue({ sub: userId });
 
     const result = await passwordLoginStrategy.logIn(credentials);
 
@@ -245,7 +240,6 @@ describe("PasswordLoginStrategy", () => {
   it("forces the user to update their master password on successful 2FA login when it does not meet master password policy requirements", async () => {
     passwordStrengthService.getPasswordStrength.mockReturnValue({ score: 0 } as any);
     policyService.evaluateMasterPassword.mockReturnValue(false);
-    tokenService.decodeAccessToken.mockResolvedValue({ sub: userId });
 
     const token2FAResponse = new IdentityTwoFactorResponse({
       TwoFactorProviders: ["0"],
@@ -261,7 +255,7 @@ describe("PasswordLoginStrategy", () => {
 
     // Second login request succeeds
     apiService.postIdentityToken.mockResolvedValueOnce(
-      identityTokenResponseFactory(masterPasswordPolicy),
+      identityTokenResponseFactory(masterPasswordPolicy, undefined, userId),
     );
     const secondResult = await passwordLoginStrategy.logInTwoFactor(
       {
@@ -287,7 +281,6 @@ describe("PasswordLoginStrategy", () => {
     const deviceVerificationOtp = "123456";
     const tokenResponse = identityTokenResponseFactory();
     apiService.postIdentityToken.mockResolvedValueOnce(tokenResponse);
-    tokenService.decodeAccessToken.mockResolvedValue({ sub: userId });
 
     await passwordLoginStrategy.logIn(credentials);
 

@@ -189,13 +189,13 @@ export abstract class LoginStrategy {
    * @returns {Promise<UserId>} - A promise that resolves the the UserId when the account information has been successfully saved.
    */
   protected async saveAccountInformation(tokenResponse: IdentityTokenResponse): Promise<UserId> {
-    const accountInformation = await this.tokenService.decodeAccessToken(tokenResponse.accessToken);
-    const userId = accountInformation.sub as UserId;
+    const { userInfo } = tokenResponse;
+    const userId = userInfo.id as UserId;
 
     await this.accountService.addAccount(userId, {
-      name: accountInformation.name,
-      email: accountInformation.email ?? "",
-      emailVerified: accountInformation.email_verified ?? false,
+      name: userInfo.name,
+      email: userInfo.email ?? "",
+      emailVerified: userInfo.emailVerified ?? false,
     });
 
     // User env must be seeded from currently set env before switching to the account
@@ -210,8 +210,8 @@ export abstract class LoginStrategy {
           ...new AccountProfile(),
           ...{
             userId,
-            name: accountInformation.name,
-            email: accountInformation.email,
+            name: userInfo.name,
+            email: userInfo.email,
           },
         },
       }),
@@ -252,7 +252,7 @@ export abstract class LoginStrategy {
     );
 
     await this.billingAccountProfileStateService.setHasPremium(
-      accountInformation.premium ?? false,
+      userInfo.premium ?? false,
       false,
       userId,
     );

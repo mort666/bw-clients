@@ -81,6 +81,14 @@ describe("LoginStrategyService", () => {
 
   const userId = "USER_ID" as UserId;
 
+  const userInfo = {
+    UserId: userId,
+    Name: "NAME",
+    Email: "EMAIL",
+    EmailVerified: true,
+    Premium: false,
+  };
+
   beforeEach(() => {
     accountService = mockAccountServiceWith(userId);
     masterPasswordService = new FakeMasterPasswordService();
@@ -171,6 +179,7 @@ describe("LoginStrategyService", () => {
         refresh_token: "REFRESH_TOKEN",
         scope: "api offline_access",
         token_type: "Bearer",
+        UserInfo: userInfo,
       }),
     );
     apiService.postPrelogin.mockResolvedValue(
@@ -181,13 +190,6 @@ describe("LoginStrategyService", () => {
         KdfParallelism: 1,
       }),
     );
-
-    tokenService.decodeAccessToken.calledWith("ACCESS_TOKEN").mockResolvedValue({
-      sub: "USER_ID",
-      name: "NAME",
-      email: "EMAIL",
-      premium: false,
-    });
 
     const result = await sut.logIn(credentials);
 
@@ -238,15 +240,9 @@ describe("LoginStrategyService", () => {
         refresh_token: "REFRESH_TOKEN",
         scope: "api offline_access",
         token_type: "Bearer",
+        UserInfo: userInfo,
       }),
     );
-
-    tokenService.decodeAccessToken.calledWith("ACCESS_TOKEN").mockResolvedValue({
-      sub: "USER_ID",
-      name: "NAME",
-      email: "EMAIL",
-      premium: false,
-    });
 
     const result = await sut.logInTwoFactor(twoFactorToken, "CAPTCHA");
 
@@ -312,13 +308,6 @@ describe("LoginStrategyService", () => {
       }),
     );
 
-    tokenService.decodeAccessToken.calledWith("ACCESS_TOKEN").mockResolvedValue({
-      sub: "USER_ID",
-      name: "NAME",
-      email: "EMAIL",
-      premium: false,
-    });
-
     await expect(sut.logIn(credentials)).rejects.toThrow(
       `PBKDF2 iterations must be at least ${PBKDF2KdfConfig.PRELOGIN_ITERATIONS_MIN}, but was ${PBKDF2KdfConfig.PRELOGIN_ITERATIONS_MIN - 1}; possible pre-login downgrade attack detected.`,
     );
@@ -346,6 +335,7 @@ describe("LoginStrategyService", () => {
         error_description: "Two factor required.",
         email: undefined,
         ssoEmail2faSessionToken: undefined,
+        UserInfo: userInfo,
       }),
     );
 
@@ -367,15 +357,9 @@ describe("LoginStrategyService", () => {
         refresh_token: "REFRESH_TOKEN",
         scope: "api offline_access",
         token_type: "Bearer",
+        UserInfo: userInfo,
       }),
     );
-
-    tokenService.decodeAccessToken.calledWith("ACCESS_TOKEN").mockResolvedValue({
-      sub: "USER_ID",
-      name: "NAME",
-      email: "EMAIL",
-      premium: false,
-    });
 
     const result = await sut.logInNewDeviceVerification(deviceVerificationOtp);
 

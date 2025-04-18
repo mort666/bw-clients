@@ -91,9 +91,6 @@ describe("UserApiLoginStrategy", () => {
 
     appIdService.getAppId.mockResolvedValue(deviceId);
     tokenService.getTwoFactorToken.mockResolvedValue(null);
-    tokenService.decodeAccessToken.mockResolvedValue({
-      sub: userId,
-    });
 
     apiLogInStrategy = new UserApiLoginStrategy(
       cache,
@@ -170,7 +167,7 @@ describe("UserApiLoginStrategy", () => {
   });
 
   it("sets the encrypted user key and private key from the identity token response", async () => {
-    const tokenResponse = identityTokenResponseFactory();
+    const tokenResponse = identityTokenResponseFactory(undefined, undefined, userId);
 
     apiService.postIdentityToken.mockResolvedValue(tokenResponse);
 
@@ -181,7 +178,7 @@ describe("UserApiLoginStrategy", () => {
   });
 
   it("gets and sets the master key if Key Connector is enabled", async () => {
-    const tokenResponse = identityTokenResponseFactory();
+    const tokenResponse = identityTokenResponseFactory(undefined, undefined, userId);
     tokenResponse.apiUseKeyConnector = true;
 
     const env = mock<Environment>();
@@ -199,7 +196,7 @@ describe("UserApiLoginStrategy", () => {
     const userKey = new SymmetricCryptoKey(new Uint8Array(64).buffer as CsprngArray) as UserKey;
     const masterKey = new SymmetricCryptoKey(new Uint8Array(64).buffer as CsprngArray) as MasterKey;
 
-    const tokenResponse = identityTokenResponseFactory();
+    const tokenResponse = identityTokenResponseFactory(undefined, undefined, userId);
     tokenResponse.apiUseKeyConnector = true;
 
     const env = mock<Environment>();

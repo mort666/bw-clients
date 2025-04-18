@@ -97,9 +97,6 @@ describe("AuthRequestLoginStrategy", () => {
 
     tokenService.getTwoFactorToken.mockResolvedValue(null);
     appIdService.getAppId.mockResolvedValue(deviceId);
-    tokenService.decodeAccessToken.mockResolvedValue({
-      sub: mockUserId,
-    });
 
     authRequestLoginStrategy = new AuthRequestLoginStrategy(
       cache,
@@ -123,7 +120,7 @@ describe("AuthRequestLoginStrategy", () => {
       environmentService,
     );
 
-    tokenResponse = identityTokenResponseFactory();
+    tokenResponse = identityTokenResponseFactory(undefined, undefined, mockUserId);
     apiService.postIdentityToken.mockResolvedValue(tokenResponse);
 
     const mockVaultTimeoutAction = VaultTimeoutAction.Lock;
@@ -157,7 +154,6 @@ describe("AuthRequestLoginStrategy", () => {
 
     masterPasswordService.masterKeySubject.next(masterKey);
     masterPasswordService.mock.decryptUserKeyWithMasterKey.mockResolvedValue(userKey);
-    tokenService.decodeAccessToken.mockResolvedValue({ sub: mockUserId });
 
     await authRequestLoginStrategy.logIn(credentials);
 

@@ -17,6 +17,7 @@ import { IdentityTokenResponse } from "@bitwarden/common/auth/models/response/id
 import { IdentityTwoFactorResponse } from "@bitwarden/common/auth/models/response/identity-two-factor.response";
 import { MasterPasswordPolicyResponse } from "@bitwarden/common/auth/models/response/master-password-policy.response";
 import { IUserDecryptionOptionsServerResponse } from "@bitwarden/common/auth/models/response/user-decryption-options/user-decryption-options.response";
+import { UserInfoResponse } from "@bitwarden/common/auth/models/response/user-info-response";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { FakeMasterPasswordService } from "@bitwarden/common/key-management/master-password/services/fake-master-password.service";
@@ -69,20 +70,23 @@ const defaultUserDecryptionOptionsServerResponse: IUserDecryptionOptionsServerRe
   HasMasterPassword: true,
 };
 
-const decodedToken = {
-  sub: userId,
-  name: name,
-  email: email,
-  premium: false,
-};
-
 const twoFactorProviderType = TwoFactorProviderType.Authenticator;
 const twoFactorToken = "TWO_FACTOR_TOKEN";
 const twoFactorRemember = true;
 
+const userInfoResponse = new UserInfoResponse({
+  Id: userId as string,
+  Email: email,
+  Name: name,
+  EmailVerified: true,
+  CreationDate: "2024-09-13T00:00:00Z",
+  Premium: false,
+});
+
 export function identityTokenResponseFactory(
   masterPasswordPolicyResponse: MasterPasswordPolicyResponse | undefined = undefined,
   userDecryptionOptions: IUserDecryptionOptionsServerResponse | undefined = undefined,
+  id: UserId | undefined = undefined,
 ) {
   return new IdentityTokenResponse({
     ForcePasswordReset: false,
@@ -96,6 +100,7 @@ export function identityTokenResponseFactory(
     refresh_token: refreshToken,
     scope: "api offline_access",
     token_type: "Bearer",
+    UserInfo: { ...userInfoResponse, id: id ?? userId },
     MasterPasswordPolicy: masterPasswordPolicyResponse,
     UserDecryptionOptions: userDecryptionOptions || defaultUserDecryptionOptionsServerResponse,
   });
@@ -154,7 +159,6 @@ describe("LoginStrategy", () => {
     vaultTimeoutSettingsService = mock<VaultTimeoutSettingsService>();
 
     appIdService.getAppId.mockResolvedValue(deviceId);
-    tokenService.decodeAccessToken.calledWith(accessToken).mockResolvedValue(decodedToken);
 
     // The base class is abstract so we test it via PasswordLoginStrategy
     passwordLoginStrategy = new PasswordLoginStrategy(
@@ -372,6 +376,22 @@ describe("LoginStrategy", () => {
       );
 
       expect(apiService.postAccountKeys).toHaveBeenCalled();
+    });
+
+    it("saves account information from userInfoResponse", async () => {
+      accountService.addAccount = jest.fn().mockResolvedValueOnce(null);
+
+      const idTokenResponse = identityTokenResponseFactory();
+      apiService.postIdentityToken.mockResolvedValue(idTokenResponse);
+
+      await passwordLoginStrategy.logIn(credentials);
+
+      expect(accountService.addAccount).toHaveBeenCalledWith(userId, {
+        name: userInfoResponse.name,
+        email: userInfoResponse.email,
+        emailVerified: userInfoResponse.emailVerified,
+        creationDate: userInfoResponse.creationDate,
+      });
     });
   });
 

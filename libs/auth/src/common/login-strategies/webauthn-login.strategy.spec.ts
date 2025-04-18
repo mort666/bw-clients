@@ -101,9 +101,6 @@ describe("WebAuthnLoginStrategy", () => {
 
     tokenService.getTwoFactorToken.mockResolvedValue(null);
     appIdService.getAppId.mockResolvedValue(deviceId);
-    tokenService.decodeAccessToken.mockResolvedValue({
-      sub: userId,
-    });
 
     webAuthnLoginStrategy = new WebAuthnLoginStrategy(
       cache,
@@ -222,6 +219,7 @@ describe("WebAuthnLoginStrategy", () => {
     const idTokenResponse: IdentityTokenResponse = identityTokenResponseFactory(
       null,
       userDecryptionOptsServerResponseWithWebAuthnPrfOption,
+      userId,
     );
 
     apiService.postIdentityToken.mockResolvedValue(idTokenResponse);
@@ -268,6 +266,7 @@ describe("WebAuthnLoginStrategy", () => {
     const idTokenResponse: IdentityTokenResponse = identityTokenResponseFactory(
       null,
       userDecryptionOptsServerResponseWithWebAuthnPrfOption,
+      userId,
     );
 
     apiService.postIdentityToken.mockResolvedValue(idTokenResponse);
@@ -310,6 +309,7 @@ describe("WebAuthnLoginStrategy", () => {
     const idTokenResponse: IdentityTokenResponse = identityTokenResponseFactory(
       null,
       userDecryptionOptsServerResponseWithWebAuthnPrfOption,
+      userId,
     );
 
     apiService.postIdentityToken.mockResolvedValue(idTokenResponse);
@@ -328,6 +328,7 @@ describe("WebAuthnLoginStrategy", () => {
     const idTokenResponse: IdentityTokenResponse = identityTokenResponseFactory(
       null,
       userDecryptionOptsServerResponseWithWebAuthnPrfOption,
+      userId,
     );
 
     apiService.postIdentityToken.mockResolvedValue(idTokenResponse);
