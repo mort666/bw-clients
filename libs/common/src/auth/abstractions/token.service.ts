@@ -196,6 +196,7 @@ export abstract class TokenService {
   /**
    * Gets the email verified status for the active user from the access token.
    * @returns A promise that resolves with the email verified status for the active user.
+   * @deprecated Use AccountService.activeAccount$ instead.
    */
   getEmailVerified: () => Promise<boolean>;
 
