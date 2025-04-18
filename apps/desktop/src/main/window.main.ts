@@ -87,7 +87,7 @@ export class WindowMain {
             applyMainWindowStyles(this.win, this.windowStates[mainWindowSizeKey]);
             // Because modal is used in front of another app, UX wise it makes sense to hide the main window when leaving modal mode.
             this.win.hide();
-          } else if (!lastValue.isModalModeActive && newValue.isModalModeActive) {
+          } else if (newValue.isModalModeActive) {
             // Apply the popup modal styles
             this.logService.info("Applying popup modal styles", newValue.modalPosition);
             applyPopupModalStyles(this.win, newValue.modalPosition);
