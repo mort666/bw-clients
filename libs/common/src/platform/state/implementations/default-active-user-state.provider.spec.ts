@@ -14,6 +14,7 @@ describe("DefaultActiveUserStateProvider", () => {
     name: "name",
     email: "email",
     emailVerified: false,
+    creationDate: "2023-01-04T00:00:00Z",
   };
   const accountService = mockAccountServiceWith(userId, accountInfo);
   let sut: DefaultActiveUserStateProvider;

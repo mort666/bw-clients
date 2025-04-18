@@ -24,6 +24,7 @@ const SomeAccount = {
   email: "someone@example.com",
   emailVerified: true,
   name: "Someone",
+  creationDate: "2024-01-12T20:00:00Z",
 };
 const SomeAccount$ = new BehaviorSubject<Account>(SomeAccount);
 

@@ -32,11 +32,13 @@ describe("EnvironmentService", () => {
         name: "name",
         email: "email",
         emailVerified: false,
+        creationDate: "2023-01-03T00:00:00Z",
       },
       [alternateTestUser]: {
         name: "name",
         email: "email",
         emailVerified: false,
+        creationDate: "2023-01-02T00:00:00Z",
       },
     });
     stateProvider = new FakeStateProvider(accountService);
@@ -50,6 +52,7 @@ describe("EnvironmentService", () => {
       email: "test@example.com",
       name: `Test Name ${userId}`,
       emailVerified: false,
+      creationDate: "2023-01-01T00:00:00Z",
     });
     await awaitAsync();
   };

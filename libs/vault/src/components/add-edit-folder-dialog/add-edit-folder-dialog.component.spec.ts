@@ -51,6 +51,7 @@ describe("AddEditFolderDialogComponent", () => {
       email: "",
       emailVerified: true,
       name: undefined,
+      creationDate: "2024-01-08T12:00:00Z",
     };
 
     await TestBed.configureTestingModule({

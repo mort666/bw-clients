@@ -182,6 +182,7 @@ describe("VaultExportService", () => {
       email: "",
       emailVerified: true,
       name: undefined,
+      creationDate: "",
     };
     const activeAccount = { id: userId, ...accountInfo };
     accountService.activeAccount$ = new BehaviorSubject(activeAccount);

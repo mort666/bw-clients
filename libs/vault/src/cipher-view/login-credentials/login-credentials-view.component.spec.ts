@@ -41,6 +41,7 @@ describe("LoginCredentialsViewComponent", () => {
     status: 0,
     kdf: 0,
     kdfIterations: 0,
+    creationDate: "2024-01-08T12:00:00Z",
   };
   const activeAccount$ = new BehaviorSubject(mockAccount);
 

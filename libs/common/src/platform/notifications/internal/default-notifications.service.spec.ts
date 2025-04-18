@@ -112,7 +112,13 @@ describe("NotificationsService", () => {
     if (userId == null) {
       activeAccount.next(null);
     } else {
-      activeAccount.next({ id: userId, email: "email", name: "Test Name", emailVerified: true });
+      activeAccount.next({
+        id: userId,
+        email: "email",
+        name: "Test Name",
+        emailVerified: true,
+        creationDate: "2023-01-12T20:00:00Z",
+      });
     }
   }
 

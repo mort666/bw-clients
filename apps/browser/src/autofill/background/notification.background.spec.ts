@@ -71,6 +71,7 @@ describe("NotificationBackground", () => {
     email: "test@example.com",
     emailVerified: true,
     name: "Test User",
+    creationDate: "2023-01-12T20:00:00Z",
   });
 
   beforeEach(() => {

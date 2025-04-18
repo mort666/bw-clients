@@ -26,6 +26,7 @@ const SomeAccount = {
   email: "someone@example.com",
   emailVerified: true,
   name: "Someone",
+  creationDate: "2023-01-12T20:00:00Z",
 };
 const SomeAccount$ = new BehaviorSubject<Account>(SomeAccount);
 
@@ -34,6 +35,7 @@ const SomeOtherAccount = {
   email: "someone@example.com",
   emailVerified: true,
   name: "Someone",
+  creationDate: "2023-01-12T20:00:00Z",
 };
 
 type TestType = { foo: string };

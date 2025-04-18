@@ -12,6 +12,7 @@ export type AccountInfo = {
   email: string;
   emailVerified: boolean;
   name: string | undefined;
+  creationDate: string;
 };
 
 export type Account = { id: UserId } & AccountInfo;

@@ -17,6 +17,7 @@ export function mockAccountServiceWith(
       name: "name",
       email: "email",
       emailVerified: true,
+      creationDate: "2025-02-16T12:25:25.303Z",
     },
   };
 
@@ -120,4 +121,5 @@ const loggedOutInfo: AccountInfo = {
   name: undefined,
   email: "",
   emailVerified: false,
+  creationDate: "",
 };

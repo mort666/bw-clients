@@ -196,6 +196,7 @@ export abstract class LoginStrategy {
       name: userInfo.name,
       email: userInfo.email ?? "",
       emailVerified: userInfo.emailVerified ?? false,
+      creationDate: userInfo.creationDate,
     });
 
     // User env must be seeded from currently set env before switching to the account

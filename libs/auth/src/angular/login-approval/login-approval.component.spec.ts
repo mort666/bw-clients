@@ -49,6 +49,7 @@ describe("LoginApprovalComponent", () => {
       id: "test-user-id" as UserId,
       emailVerified: true,
       name: null,
+      creationDate: "2024-01-12T20:00:00Z",
     });
 
     await TestBed.configureTestingModule({

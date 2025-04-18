@@ -69,6 +69,7 @@ describe("UserDecryptionOptionsService", () => {
         name: "Test User 1",
         email: "test1@email.com",
         emailVerified: false,
+        creationDate: "2024-01-12T20:00:00Z",
       });
       await fakeStateProvider.setUserState(
         USER_DECRYPTION_OPTIONS,

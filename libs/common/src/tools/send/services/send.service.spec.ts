@@ -72,6 +72,7 @@ describe("SendService", () => {
       email: "email",
       emailVerified: false,
       name: "name",
+      creationDate: "2024-01-12T20:00:00Z",
     });
 
     // Initial encrypted state

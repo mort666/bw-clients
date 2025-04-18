@@ -59,6 +59,7 @@ describe("AuthService", () => {
       email: "email",
       emailVerified: false,
       name: "name",
+      creationDate: "2023-01-12T20:00:00Z",
     };
 
     beforeEach(() => {
@@ -113,6 +114,7 @@ describe("AuthService", () => {
         email: "email2",
         emailVerified: false,
         name: "name2",
+        creationDate: "2024-01-08T12:00:00Z",
       };
 
       const emissions = trackEmissions(sut.activeAccountStatus$);
@@ -133,6 +135,7 @@ describe("AuthService", () => {
         email: "email2",
         emailVerified: false,
         name: "name2",
+        creationDate: "2023-01-12T20:00:00Z",
       });
 
       const mockFn = jest.fn().mockReturnValue(of(AuthenticationStatus.Locked));

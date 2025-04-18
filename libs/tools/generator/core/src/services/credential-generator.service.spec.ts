@@ -169,12 +169,14 @@ const accounts = {
     name: "some user",
     email: "some.user@example.com",
     emailVerified: true,
+    creationDate: "2024-01-12T20:00:00Z",
   },
   [AnotherUser]: {
     id: AnotherUser,
     name: "some other user",
     email: "some.other.user@example.com",
     emailVerified: true,
+    creationDate: "2024-01-12T20:00:00Z",
   },
 };
 const accountService = new FakeAccountService(accounts);

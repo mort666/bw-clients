@@ -115,6 +115,7 @@ describe("context-menu", () => {
       email: "",
       emailVerified: false,
       name: undefined,
+      creationDate: "",
     });
   });
 

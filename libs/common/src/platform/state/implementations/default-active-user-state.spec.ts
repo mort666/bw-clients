@@ -87,6 +87,7 @@ describe("DefaultActiveUserState", () => {
       email: `test${id}@example.com`,
       emailVerified: false,
       name: `Test User ${id}`,
+      creationDate: "2024-01-12T20:00:00Z",
     });
     await awaitAsync();
   };

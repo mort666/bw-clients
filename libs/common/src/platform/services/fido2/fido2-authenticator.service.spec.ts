@@ -41,6 +41,7 @@ describe("FidoAuthenticatorService", () => {
     email: "test@example.com",
     emailVerified: true,
     name: "Test User",
+    creationDate: "2023-01-03T00:00:00Z",
   });
 
   let cipherService!: MockProxy<CipherService>;

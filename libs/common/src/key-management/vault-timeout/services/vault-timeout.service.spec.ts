@@ -151,6 +151,7 @@ describe("VaultTimeoutService", () => {
         email: null,
         emailVerified: false,
         name: null,
+        creationDate: "",
       });
     }
     accountService.accounts$ = of(
@@ -160,6 +161,7 @@ describe("VaultTimeoutService", () => {
             email: "",
             emailVerified: true,
             name: "",
+            creationDate: "",
           };
           return agg;
         },

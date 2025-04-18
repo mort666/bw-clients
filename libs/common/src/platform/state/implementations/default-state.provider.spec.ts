@@ -75,6 +75,7 @@ describe("DefaultStateProvider", () => {
         emailVerified: false,
         name: "name",
         status: AuthenticationStatus.LoggedOut,
+        creationDate: "2024-01-12T20:00:00Z",
       };
       const keyDefinition = new UserKeyDefinition<string>(
         new StateDefinition("test", "disk"),
@@ -130,6 +131,7 @@ describe("DefaultStateProvider", () => {
       emailVerified: false,
       name: "name",
       status: AuthenticationStatus.LoggedOut,
+      creationDate: "2024-01-12T20:00:00Z",
     };
     const keyDefinition = new UserKeyDefinition<string>(
       new StateDefinition("test", "disk"),

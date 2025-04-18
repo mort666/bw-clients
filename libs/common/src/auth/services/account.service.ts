@@ -61,6 +61,7 @@ const LOGGED_OUT_INFO: AccountInfo = {
   email: "",
   emailVerified: false,
   name: undefined,
+  creationDate: "",
 };
 
 /**

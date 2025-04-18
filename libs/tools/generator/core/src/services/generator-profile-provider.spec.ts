@@ -34,18 +34,21 @@ const accounts: Record<UserId, Account> = {
     name: "some user",
     email: "some.user@example.com",
     emailVerified: true,
+    creationDate: "2024-01-10T20:00:00Z",
   },
   [AnotherUser]: {
     id: AnotherUser,
     name: "some other user",
     email: "some.other.user@example.com",
     emailVerified: true,
+    creationDate: "2024-01-10T20:00:00Z",
   },
   [UnverifiedEmailUser]: {
     id: UnverifiedEmailUser,
     name: "a user with an unverfied email",
     email: "unverified@example.com",
     emailVerified: false,
+    creationDate: "2024-01-18T20:00:00Z",
   },
 };
 const accountService = new FakeAccountService(accounts);

@@ -96,6 +96,7 @@ describe("PasswordResetEnrollmentServiceImplementation", () => {
         name: "Test User 1",
         email: "test1@email.com",
         emailVerified: true,
+        creationDate: "2023-01-12T20:00:00Z",
       };
       activeAccountSubject.next(Object.assign(user1AccountInfo, { id: "userId" as UserId }));
 

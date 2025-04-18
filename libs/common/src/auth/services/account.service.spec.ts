@@ -27,7 +27,12 @@ import {
 } from "./account.service";
 
 describe("accountInfoEqual", () => {
-  const accountInfo: AccountInfo = { name: "name", email: "email", emailVerified: true };
+  const accountInfo: AccountInfo = {
+    name: "name",
+    email: "email",
+    emailVerified: true,
+    creationDate: "2025-03-13T13:25:25.303Z",
+  };
 
   it("compares nulls", () => {
     expect(accountInfoEqual(null, null)).toBe(true);
@@ -76,7 +81,12 @@ describe("accountService", () => {
   let activeAccountIdState: FakeGlobalState<UserId>;
   let accountActivityState: FakeGlobalState<Record<UserId, Date>>;
   const userId = Utils.newGuid() as UserId;
-  const userInfo = { email: "email", name: "name", emailVerified: true };
+  const userInfo = {
+    email: "email",
+    name: "name",
+    emailVerified: true,
+    creationDate: "2025-03-13T13:25:25.303Z",
+  };
 
   beforeEach(() => {
     messagingService = mock();
@@ -294,6 +304,7 @@ describe("accountService", () => {
           email: "",
           emailVerified: false,
           name: undefined,
+          creationDate: "",
         },
       });
     });

@@ -66,6 +66,7 @@ class MockAccountService implements Partial<AccountService> {
     name: "Test User 1",
     email: "test@email.com",
     emailVerified: true,
+    creationDate: "2023-01-12T20:00:00Z",
   });
 }
 

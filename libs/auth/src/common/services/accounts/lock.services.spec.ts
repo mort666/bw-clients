@@ -21,12 +21,14 @@ describe("DefaultLockService", () => {
         name: "name2",
         email: "email2@example.com",
         emailVerified: false,
+        creationDate: "2024-01-12T20:00:00Z",
       });
 
       await accountService.addAccount(mockUser3, {
         name: "name3",
         email: "email3@example.com",
         emailVerified: false,
+        creationDate: "2024-01-12T20:00:00Z",
       });
 
       await sut.lockAll();

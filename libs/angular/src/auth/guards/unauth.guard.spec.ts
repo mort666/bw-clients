@@ -21,6 +21,7 @@ describe("UnauthGuard", () => {
     email: "test@email.com",
     emailVerified: true,
     name: "Test User",
+    creationDate: "2023-01-12T20:00:00Z",
   };
 
   const setup = (
