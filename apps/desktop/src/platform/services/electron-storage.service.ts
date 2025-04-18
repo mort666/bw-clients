@@ -44,6 +44,12 @@ export class ElectronStorageService implements AbstractStorageService {
   private updatesSubject = new Subject<StorageUpdate>();
   updates$;
 
+  // In-memory copy of the data.json
+  //
+  // electron store and conf read the entire file per individual key accessed, which blocks the main
+  // thread making in-memory store access slow, and causing a lot of file I/O.
+  private fileCache: any = null;
+
   constructor(dir: string, defaults = {}) {
     if (!fs.existsSync(dir)) {
       NodeUtils.mkdirpSync(dir, "700");
@@ -54,6 +60,7 @@ export class ElectronStorageService implements AbstractStorageService {
     };
     this.store = new Store(storeConfig);
     this.updates$ = this.updatesSubject.asObservable();
+    this.fileCache = (this.store as any).store;
 
     ipcMain.handle("storageService", (event, options: Options) => {
       switch (options.action) {
@@ -74,13 +81,11 @@ export class ElectronStorageService implements AbstractStorageService {
   }
 
   get<T>(key: string): Promise<T> {
-    const val = this.store.get(key) as T;
-    return Promise.resolve(val != null ? val : null);
+    return Promise.resolve(this.fileCache[key]);
   }
 
   has(key: string): Promise<boolean> {
-    const val = this.store.get(key);
-    return Promise.resolve(val != null);
+    return Promise.resolve(this.fileCache[key] !== undefined);
   }
 
   save(key: string, obj: unknown): Promise<void> {
@@ -92,13 +97,17 @@ export class ElectronStorageService implements AbstractStorageService {
       obj = Array.from(obj);
     }
 
+    this.fileCache[key] = obj;
     this.store.set(key, obj);
+
     this.updatesSubject.next({ key, updateType: "save" });
     return Promise.resolve();
   }
 
   remove(key: string): Promise<void> {
+    delete this.fileCache[key];
     this.store.delete(key);
+
     this.updatesSubject.next({ key, updateType: "remove" });
     return Promise.resolve();
   }
