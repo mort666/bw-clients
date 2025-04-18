@@ -9,7 +9,7 @@ import { ConfigService } from "@bitwarden/common/platform/abstractions/config/co
 const TWO_FACTOR_AUTH_COMPONENT_CACHE_KEY = "two-factor-auth-component-cache";
 
 /**
- * This is a cache model for the two factor authentication data.
+ * Cache model for the two factor authentication data.
  */
 export class TwoFactorAuthComponentCache {
   token: string | undefined = undefined;
@@ -35,10 +35,7 @@ export interface TwoFactorAuthComponentData {
 }
 
 /**
- * This is a cache service used for the two factor auth component.
- *
- * There is sensitive information stored temporarily here. Cache will be cleared
- * after 2 minutes.
+ * Cache service used for the two factor auth component.
  */
 @Injectable()
 export class TwoFactorAuthComponentCacheService {
@@ -61,7 +58,7 @@ export class TwoFactorAuthComponentCacheService {
   constructor() {}
 
   /**
-   * Must be called once before interacting with the cached data, otherwise methods will be noop.
+   * Must be called once before interacting with the cached data.
    */
   async init() {
     this.featureEnabled = await this.configService.getFeatureFlag(
@@ -96,7 +93,7 @@ export class TwoFactorAuthComponentCacheService {
   }
 
   /**
-   * Returns the cached TwoFactorAuthData when available.
+   * Returns the cached TwoFactorAuthData (when available).
    */
   getCachedData(): TwoFactorAuthComponentCache | null {
     if (!this.featureEnabled) {
