@@ -81,7 +81,7 @@ export class TwoFactorAuthEmailComponent implements OnInit {
 
     const providers = await this.twoFactorService.getProviders();
 
-    if (!providers) {
+    if (!providers || providers.size === 0) {
       throw new Error("User has no 2FA Providers");
     }
 
