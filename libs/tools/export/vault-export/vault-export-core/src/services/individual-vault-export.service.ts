@@ -8,11 +8,15 @@ import { PinServiceAbstraction } from "@bitwarden/auth/common";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { CryptoFunctionService } from "@bitwarden/common/key-management/crypto/abstractions/crypto-function.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { CipherWithIdExport, FolderWithIdExport } from "@bitwarden/common/models/export";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { EncArrayBuffer } from "@bitwarden/common/platform/models/domain/enc-array-buffer";
+import { CipherId, UserId } from "@bitwarden/common/types/guid";
+import { CipherEncryptionService } from "@bitwarden/common/vault/abstractions/cipher-encryption.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { CipherType } from "@bitwarden/common/vault/enums";
@@ -51,6 +55,8 @@ export class IndividualVaultExportService
     kdfConfigService: KdfConfigService,
     private accountService: AccountService,
     private apiService: ApiService,
+    private configService: ConfigService,
+    private cipherEncryptionService: CipherEncryptionService,
   ) {
     super(pinService, encryptService, cryptoFunctionService, kdfConfigService);
   }
@@ -116,7 +122,7 @@ export class IndividualVaultExportService
       const cipherFolder = attachmentsFolder.folder(cipher.id);
       for (const attachment of cipher.attachments) {
         const response = await this.downloadAttachment(cipher.id, attachment.id);
-        const decBuf = await this.decryptAttachment(cipher, attachment, response);
+        const decBuf = await this.decryptAttachment(cipher, attachment, response, activeUserId);
         cipherFolder.file(attachment.fileName, decBuf);
       }
     }
@@ -148,8 +154,27 @@ export class IndividualVaultExportService
     cipher: CipherView,
     attachment: AttachmentView,
     response: Response,
-  ) {
+    userId: UserId,
+  ): Promise<Uint8Array> {
     try {
+      const useSdkDecryption = await this.configService.getFeatureFlag(
+        FeatureFlag.PM19941MigrateCipherDomainToSdk,
+      );
+
+      if (useSdkDecryption) {
+        const ciphersData = await firstValueFrom(this.cipherService.ciphers$(userId));
+        const cipherDomain = new Cipher(ciphersData[cipher.id as CipherId]);
+        const attachmentDomain = cipherDomain.attachments?.find((a) => a.id === attachment.id);
+
+        const encArrayBuf = new Uint8Array(await response.arrayBuffer());
+        return await this.cipherEncryptionService.decryptAttachmentContent(
+          cipherDomain,
+          attachmentDomain,
+          encArrayBuf,
+          userId,
+        );
+      }
+
       const encBuf = await EncArrayBuffer.fromResponse(response);
       const key =
         attachment.key != null

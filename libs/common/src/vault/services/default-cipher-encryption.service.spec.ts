@@ -6,6 +6,7 @@ import {
   Cipher as SdkCipher,
   CipherType as SdkCipherType,
   CipherView as SdkCipherView,
+  Attachment as SdkAttachment,
 } from "@bitwarden/sdk-internal";
 
 import { mockEnc } from "../../../spec";
@@ -16,6 +17,7 @@ import { UserId } from "../../types/guid";
 import { CipherRepromptType, CipherType } from "../enums";
 import { CipherPermissionsApi } from "../models/api/cipher-permissions.api";
 import { CipherData } from "../models/data/cipher.data";
+import { Attachment } from "../models/domain/attachment";
 import { Cipher } from "../models/domain/cipher";
 import { CipherView } from "../models/view/cipher.view";
 import { Fido2CredentialView } from "../models/view/fido2-credential.view";
@@ -81,6 +83,9 @@ describe("DefaultCipherEncryptionService", () => {
       ciphers: jest.fn().mockReturnValue({
         decrypt: jest.fn(),
         decrypt_fido2_credentials: jest.fn(),
+      }),
+      attachments: jest.fn().mockReturnValue({
+        decrypt_buffer: jest.fn(),
       }),
     }),
   };
@@ -230,6 +235,36 @@ describe("DefaultCipherEncryptionService", () => {
       expect(result).toBeInstanceOf(CipherView);
       expect(result.decryptionFailure).toBe(true);
       expect(result.name).toBe("[error: cannot decrypt]");
+    });
+  });
+
+  describe("decryptAttachmentContent", () => {
+    it("should decrypt attachment content successfully", async () => {
+      const cipher = new Cipher(cipherData);
+      const attachment = new Attachment(cipherData.attachments![0]);
+      const encryptedContent = new Uint8Array([1, 2, 3, 4]);
+      const expectedDecryptedContent = new Uint8Array([5, 6, 7, 8]);
+
+      jest.spyOn(cipher, "toSdkCipher").mockReturnValue({ id: "id" } as SdkCipher);
+      jest.spyOn(attachment, "toSdkAttachment").mockReturnValue({ id: "a1" } as SdkAttachment);
+
+      mockSdkClient.vault().attachments().decrypt_buffer.mockReturnValue(expectedDecryptedContent);
+
+      const result = await cipherEncryptionService.decryptAttachmentContent(
+        cipher,
+        attachment,
+        encryptedContent,
+        userId,
+      );
+
+      expect(result).toEqual(expectedDecryptedContent);
+      expect(cipher.toSdkCipher).toHaveBeenCalled();
+      expect(attachment.toSdkAttachment).toHaveBeenCalled();
+      expect(mockSdkClient.vault().attachments().decrypt_buffer).toHaveBeenCalledWith(
+        { id: "id" },
+        { id: "a1" },
+        encryptedContent,
+      );
     });
   });
 });

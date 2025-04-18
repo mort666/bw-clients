@@ -4,12 +4,16 @@ import { mock } from "jest-mock-extended";
 import { BehaviorSubject } from "rxjs";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { ErrorResponse } from "@bitwarden/common/models/response/error.response";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { FileDownloadService } from "@bitwarden/common/platform/abstractions/file-download/file-download.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { EncArrayBuffer } from "@bitwarden/common/platform/models/domain/enc-array-buffer";
 import { StateProvider } from "@bitwarden/common/platform/state";
+import { CipherEncryptionService } from "@bitwarden/common/vault/abstractions/cipher-encryption.service";
+import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { AttachmentView } from "@bitwarden/common/vault/models/view/attachment.view";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
@@ -51,6 +55,21 @@ describe("DownloadAttachmentComponent", () => {
     },
   } as CipherView;
 
+  const ciphers$ = new BehaviorSubject({
+    "5555-444-3333": {
+      id: "5555-444-3333",
+      attachments: [
+        {
+          id: "222-3333-4444",
+          fileName: "encrypted-filename",
+          key: "encrypted-key",
+        },
+      ],
+    },
+  });
+
+  const getFeatureFlag = jest.fn().mockResolvedValue(false);
+
   beforeEach(async () => {
     showToast.mockClear();
     getAttachmentData.mockClear();
@@ -67,6 +86,14 @@ describe("DownloadAttachmentComponent", () => {
         { provide: ApiService, useValue: { getAttachmentData } },
         { provide: FileDownloadService, useValue: { download } },
         { provide: PasswordRepromptService, useValue: mock<PasswordRepromptService>() },
+        {
+          provide: ConfigService,
+          useValue: {
+            getFeatureFlag,
+          },
+        },
+        { provide: CipherService, useValue: { ciphers$: () => ciphers$ } },
+        { provide: CipherEncryptionService, useValue: mock<CipherEncryptionService>() },
       ],
     }).compileComponents();
   });
@@ -112,6 +139,29 @@ describe("DownloadAttachmentComponent", () => {
       await component.download();
 
       expect(download).toHaveBeenCalledWith({ blobData: undefined, fileName: attachment.fileName });
+    });
+
+    it("calls file download service with SDK decryption when SDK flag is enabled", async () => {
+      getFeatureFlag.mockResolvedValue(true);
+      getAttachmentData.mockResolvedValue({ url: "https://www.downloadattachement.com" });
+      fetchMock.mockResolvedValue({
+        status: 200,
+        arrayBuffer: jest.fn().mockResolvedValue(new ArrayBuffer(8)),
+      });
+
+      const cipherEncryptionService = TestBed.inject(CipherEncryptionService);
+      const decryptAttachmentContent = jest
+        .spyOn(cipherEncryptionService, "decryptAttachmentContent")
+        .mockResolvedValue(new Uint8Array());
+
+      await component.download();
+
+      expect(getFeatureFlag).toHaveBeenCalledWith(FeatureFlag.PM19941MigrateCipherDomainToSdk);
+      expect(decryptAttachmentContent).toHaveBeenCalled();
+      expect(download).toHaveBeenCalledWith({
+        blobData: new Uint8Array(),
+        fileName: attachment.fileName,
+      });
     });
 
     describe("errors", () => {

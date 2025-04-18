@@ -7,6 +7,7 @@ import { SdkService } from "../../platform/abstractions/sdk/sdk.service";
 import { UserId } from "../../types/guid";
 import { CipherEncryptionService } from "../abstractions/cipher-encryption.service";
 import { CipherType } from "../enums";
+import { Attachment } from "../models/domain/attachment";
 import { Cipher } from "../models/domain/cipher";
 import { CipherView } from "../models/view/cipher.view";
 import { Fido2CredentialView } from "../models/view/fido2-credential.view";
@@ -97,6 +98,37 @@ export class DefaultCipherEncryptionService implements CipherEncryptionService {
         }),
         catchError((error: unknown) => {
           this.logService.error(`Failed to decrypt cipher list: ${error}`);
+          return EMPTY;
+        }),
+      ),
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  async decryptAttachmentContent(
+    cipher: Cipher,
+    attachment: Attachment,
+    encryptedContent: Uint8Array,
+    userId: UserId,
+  ): Promise<Uint8Array> {
+    return firstValueFrom(
+      this.sdkService.userClient$(userId).pipe(
+        map((sdk) => {
+          if (!sdk) {
+            throw new Error("SDK is undefined");
+          }
+
+          using ref = sdk.take();
+
+          return ref.value
+            .vault()
+            .attachments()
+            .decrypt_buffer(cipher.toSdkCipher(), attachment.toSdkAttachment(), encryptedContent);
+        }),
+        catchError((error: unknown) => {
+          this.logService.error(`Failed to decrypt cipher buffer: ${error}`);
           return EMPTY;
         }),
       ),
