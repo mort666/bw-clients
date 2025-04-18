@@ -34,6 +34,12 @@ import { VaultV2SearchComponent } from "../vault-search/vault-v2-search.componen
 export class VaultHeaderV2Component {
   @ViewChild(DisclosureComponent) disclosure: DisclosureComponent;
 
+  @ViewChild(VaultV2SearchComponent) searchComponent!: VaultV2SearchComponent;
+
+  focusSearch(): void {
+    this.searchComponent?.focus();
+  }
+
   /** Emits the visibility status of the disclosure component. */
   protected isDisclosureShown$ = this.vaultPopupListFiltersService.filterVisibilityState$.pipe(
     runInsideAngular(inject(NgZone)), // Browser state updates can happen outside of `ngZone`

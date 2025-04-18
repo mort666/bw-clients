@@ -39,6 +39,10 @@ export class SearchComponent implements ControlValueAccessor, FocusableElement {
 
   @ViewChild("input") private input: ElementRef<HTMLInputElement>;
 
+  focus(): void {
+    this.getFocusTarget()?.focus();
+  }
+
   protected id = `search-id-${nextId++}`;
   protected searchText: string;
   // Use `type="text"` for Safari to improve rendering performance

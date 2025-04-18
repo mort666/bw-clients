@@ -79,6 +79,7 @@ enum VaultState {
 })
 export class VaultV2Component implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild(CdkVirtualScrollableElement) virtualScrollElement?: CdkVirtualScrollableElement;
+  @ViewChild(VaultHeaderV2Component) vaultHeaderRef!: VaultHeaderV2Component;
 
   cipherType = CipherType;
 
@@ -166,6 +167,19 @@ export class VaultV2Component implements OnInit, AfterViewInit, OnDestroy {
         this.vaultScrollPositionService.start(this.virtualScrollElement!);
       });
     }
+
+    // 🔍 Focus the search input after loading completes and the vault is not empty
+    combineLatest([this.loading$, this.vaultPopupItemsService.emptyVault$])
+      .pipe(
+        filter(([loading, isEmpty]) => !loading && !isEmpty),
+        take(1),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        setTimeout(() => {
+          this.vaultHeaderRef?.focusSearch();
+        });
+      });
   }
 
   async ngOnInit() {
