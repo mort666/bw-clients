@@ -24,7 +24,7 @@ const Store: ElectronStoreConstructor = require("electron-store");
 
 interface ElectronStore {
   get: (key: string) => unknown;
-  set: (key: string, obj: unknown) => void;
+  set: (obj: unknown) => void;
   delete: (key: string) => void;
 }
 
@@ -39,6 +39,44 @@ interface SaveOptions extends BaseOptions<"save"> {
 
 type Options = BaseOptions<"get"> | BaseOptions<"has"> | SaveOptions | BaseOptions<"remove">;
 
+// Max one second
+const MAX_FILE_CACHE_WRITE_INTERVAL = 1000;
+class InMemoryFileCache {
+  private fileCache: any = null;
+  private needsWrite = false;
+  private lastWritten = 0;
+
+  constructor(private store: ElectronStore) {
+    this.fileCache = (this.store as any).store;
+    setInterval(() => {
+      if (this.needsWrite && Date.now() - this.lastWritten > MAX_FILE_CACHE_WRITE_INTERVAL) {
+        this.needsWrite = false;
+        this.store.set(this.fileCache);
+        this.lastWritten = Date.now();
+      }
+    }, MAX_FILE_CACHE_WRITE_INTERVAL);
+  }
+
+  get(key: string): unknown {
+    return this.fileCache[key];
+  }
+
+  set(key: string, obj: unknown): void {
+    this.fileCache[key] = obj;
+    this.needsWrite = true;
+  }
+
+  delete(key: string): void {
+    delete this.fileCache[key];
+    this.needsWrite = true;
+  }
+
+  flush(): void {
+    this.store.set(this.fileCache);
+    this.needsWrite = false;
+  }
+}
+
 export class ElectronStorageService implements AbstractStorageService {
   private store: ElectronStore;
   private updatesSubject = new Subject<StorageUpdate>();
@@ -48,7 +86,7 @@ export class ElectronStorageService implements AbstractStorageService {
   //
   // electron store and conf read the entire file per individual key accessed, which blocks the main
   // thread making in-memory store access slow, and causing a lot of file I/O.
-  private fileCache: any = null;
+  private fileCache: InMemoryFileCache;
 
   constructor(dir: string, defaults = {}) {
     if (!fs.existsSync(dir)) {
@@ -60,7 +98,7 @@ export class ElectronStorageService implements AbstractStorageService {
     };
     this.store = new Store(storeConfig);
     this.updates$ = this.updatesSubject.asObservable();
-    this.fileCache = (this.store as any).store;
+    this.fileCache = new InMemoryFileCache(this.store);
 
     ipcMain.handle("storageService", (event, options: Options) => {
       switch (options.action) {
@@ -81,11 +119,11 @@ export class ElectronStorageService implements AbstractStorageService {
   }
 
   get<T>(key: string): Promise<T> {
-    return Promise.resolve(this.fileCache[key]);
+    return Promise.resolve(this.fileCache.get(key) as T);
   }
 
   has(key: string): Promise<boolean> {
-    return Promise.resolve(this.fileCache[key] !== undefined);
+    return Promise.resolve(this.fileCache.get(key) !== undefined);
   }
 
   save(key: string, obj: unknown): Promise<void> {
@@ -97,18 +135,18 @@ export class ElectronStorageService implements AbstractStorageService {
       obj = Array.from(obj);
     }
 
-    this.fileCache[key] = obj;
-    this.store.set(key, obj);
-
+    this.fileCache.set(key, obj);
     this.updatesSubject.next({ key, updateType: "save" });
     return Promise.resolve();
   }
 
   remove(key: string): Promise<void> {
-    delete this.fileCache[key];
-    this.store.delete(key);
-
+    this.fileCache.delete(key);
     this.updatesSubject.next({ key, updateType: "remove" });
     return Promise.resolve();
+  }
+
+  flush() {
+    this.fileCache.flush();
   }
 }

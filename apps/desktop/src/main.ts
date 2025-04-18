@@ -121,6 +121,9 @@ export class Main {
 
     const storageDefaults: any = {};
     this.storageService = new ElectronStorageService(app.getPath("userData"), storageDefaults);
+    app.on("before-quit", () => {
+      this.storageService.flush();
+    });
     this.memoryStorageService = new MemoryStorageService();
     this.memoryStorageForStateProviders = new MemoryStorageServiceForStateProviders();
     const storageServiceProvider = new StorageServiceProvider(
