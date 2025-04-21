@@ -1049,6 +1049,8 @@ export default class MainBackground {
       this.kdfConfigService,
       this.accountService,
       this.apiService,
+      this.configService,
+      this.cipherEncryptionService,
     );
 
     this.organizationVaultExportService = new OrganizationVaultExportService(

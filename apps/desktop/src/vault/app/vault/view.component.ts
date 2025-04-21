@@ -28,6 +28,7 @@ import { MessagingService } from "@bitwarden/common/platform/abstractions/messag
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { CipherId } from "@bitwarden/common/types/guid";
+import { CipherEncryptionService } from "@bitwarden/common/vault/abstractions/cipher-encryption.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { TotpService } from "@bitwarden/common/vault/abstractions/totp.service";
@@ -72,7 +73,8 @@ export class ViewComponent extends BaseViewComponent implements OnInit, OnDestro
     accountService: AccountService,
     toastService: ToastService,
     cipherAuthorizationService: CipherAuthorizationService,
-    private configService: ConfigService,
+    configService: ConfigService,
+    cipherEncryptionService: CipherEncryptionService,
   ) {
     super(
       cipherService,
@@ -100,6 +102,8 @@ export class ViewComponent extends BaseViewComponent implements OnInit, OnDestro
       billingAccountProfileStateService,
       toastService,
       cipherAuthorizationService,
+      configService,
+      cipherEncryptionService,
     );
   }
 

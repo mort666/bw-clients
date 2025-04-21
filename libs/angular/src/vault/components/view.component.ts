@@ -142,7 +142,7 @@ export class ViewComponent implements OnDestroy, OnInit {
     private billingAccountProfileStateService: BillingAccountProfileStateService,
     protected toastService: ToastService,
     private cipherAuthorizationService: CipherAuthorizationService,
-    private configService: ConfigService,
+    protected configService: ConfigService,
     private cipherEncryptionService: CipherEncryptionService,
   ) {}
 

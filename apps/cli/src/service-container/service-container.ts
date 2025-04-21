@@ -811,6 +811,8 @@ export class ServiceContainer {
       this.kdfConfigService,
       this.accountService,
       this.apiService,
+      this.configService,
+      this.cipherEncryptionService,
     );
 
     this.organizationExportService = new OrganizationVaultExportService(
