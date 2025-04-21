@@ -8,6 +8,7 @@ import { AdminAuthRequestStorable } from "@bitwarden/common/auth/models/domain/a
 import { AuthRequestResponse } from "@bitwarden/common/auth/models/response/auth-request.response";
 import { IdentityTokenResponse } from "@bitwarden/common/auth/models/response/identity-token.response";
 import { IUserDecryptionOptionsServerResponse } from "@bitwarden/common/auth/models/response/user-decryption-options/user-decryption-options.response";
+import { UserInfoResponse } from "@bitwarden/common/auth/models/response/user-info-response";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { DeviceTrustServiceAbstraction } from "@bitwarden/common/key-management/device-trust/abstractions/device-trust.service.abstraction";
@@ -77,6 +78,14 @@ describe("SsoLoginStrategy", () => {
   const ssoCodeVerifier = "SSO_CODE_VERIFIER";
   const ssoRedirectUrl = "SSO_REDIRECT_URL";
   const ssoOrgId = "SSO_ORG_ID";
+  const userInfoResponse = {
+    id: userId as string,
+    email: "email@email.com",
+    name: "SSO Name",
+    emailVerified: true,
+    creationDate: "2024-09-13T00:00:00Z",
+    premium: false,
+  };
 
   beforeEach(async () => {
     accountService = mockAccountServiceWith(userId);
@@ -104,6 +113,7 @@ describe("SsoLoginStrategy", () => {
 
     tokenService.getTwoFactorToken.mockResolvedValue(null);
     appIdService.getAppId.mockResolvedValue(deviceId);
+    apiService.getUserInfo.mockResolvedValue(userInfoResponse as UserInfoResponse);
 
     const mockVaultTimeoutAction = VaultTimeoutAction.Lock;
     const mockVaultTimeoutActionBSub = new BehaviorSubject<VaultTimeoutAction>(
@@ -182,7 +192,7 @@ describe("SsoLoginStrategy", () => {
 
   it("sets master key encrypted user key for existing SSO users", async () => {
     // Arrange
-    const tokenResponse = identityTokenResponseFactory(undefined, undefined, userId);
+    const tokenResponse = identityTokenResponseFactory();
     apiService.postIdentityToken.mockResolvedValue(tokenResponse);
 
     // Act
@@ -240,7 +250,6 @@ describe("SsoLoginStrategy", () => {
       const idTokenResponse: IdentityTokenResponse = identityTokenResponseFactory(
         null,
         userDecryptionOptsServerResponseWithTdeOption,
-        userId,
       );
 
       apiService.postIdentityToken.mockResolvedValue(idTokenResponse);
@@ -451,14 +460,10 @@ describe("SsoLoginStrategy", () => {
   describe("Key Connector", () => {
     let tokenResponse: IdentityTokenResponse;
     beforeEach(() => {
-      tokenResponse = identityTokenResponseFactory(
-        null,
-        {
-          HasMasterPassword: false,
-          KeyConnectorOption: { KeyConnectorUrl: keyConnectorUrl },
-        },
-        userId,
-      );
+      tokenResponse = identityTokenResponseFactory(null, {
+        HasMasterPassword: false,
+        KeyConnectorOption: { KeyConnectorUrl: keyConnectorUrl },
+      });
       tokenResponse.keyConnectorUrl = keyConnectorUrl;
     });
 
@@ -513,7 +518,7 @@ describe("SsoLoginStrategy", () => {
   describe("Key Connector Pre-TDE", () => {
     let tokenResponse: IdentityTokenResponse;
     beforeEach(() => {
-      tokenResponse = identityTokenResponseFactory(undefined, undefined, userId);
+      tokenResponse = identityTokenResponseFactory();
       tokenResponse.userDecryptionOptions = null;
       tokenResponse.keyConnectorUrl = keyConnectorUrl;
     });

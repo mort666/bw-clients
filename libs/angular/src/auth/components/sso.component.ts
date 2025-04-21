@@ -180,7 +180,7 @@ export class SsoComponent implements OnInit {
       "&redirect_uri=" +
       encodeURIComponent(this.redirectUri) +
       "&" +
-      "response_type=code&scope=api offline_access&" +
+      "response_type=code&scope=api offline_access openid&" +
       "state=" +
       state +
       "&code_challenge=" +

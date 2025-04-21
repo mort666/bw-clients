@@ -74,19 +74,18 @@ const twoFactorProviderType = TwoFactorProviderType.Authenticator;
 const twoFactorToken = "TWO_FACTOR_TOKEN";
 const twoFactorRemember = true;
 
-const userInfoResponse = new UserInfoResponse({
-  Id: userId as string,
-  Email: email,
-  Name: name,
-  EmailVerified: true,
-  CreationDate: "2024-09-13T00:00:00Z",
-  Premium: false,
-});
+const userInfoResponse = {
+  id: userId as string,
+  email: email,
+  name: name,
+  emailVerified: true,
+  creationDate: "2024-09-13T00:00:00Z",
+  premium: false,
+};
 
 export function identityTokenResponseFactory(
   masterPasswordPolicyResponse: MasterPasswordPolicyResponse | undefined = undefined,
   userDecryptionOptions: IUserDecryptionOptionsServerResponse | undefined = undefined,
-  id: UserId | undefined = undefined,
 ) {
   return new IdentityTokenResponse({
     ForcePasswordReset: false,
@@ -100,7 +99,6 @@ export function identityTokenResponseFactory(
     refresh_token: refreshToken,
     scope: "api offline_access",
     token_type: "Bearer",
-    UserInfo: { ...userInfoResponse, id: id ?? userId },
     MasterPasswordPolicy: masterPasswordPolicyResponse,
     UserDecryptionOptions: userDecryptionOptions || defaultUserDecryptionOptionsServerResponse,
   });
@@ -159,6 +157,8 @@ describe("LoginStrategy", () => {
     vaultTimeoutSettingsService = mock<VaultTimeoutSettingsService>();
 
     appIdService.getAppId.mockResolvedValue(deviceId);
+
+    apiService.getUserInfo.mockResolvedValue(userInfoResponse as UserInfoResponse);
 
     // The base class is abstract so we test it via PasswordLoginStrategy
     passwordLoginStrategy = new PasswordLoginStrategy(

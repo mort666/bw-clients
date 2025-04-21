@@ -4,6 +4,7 @@ import { BehaviorSubject } from "rxjs";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { TwoFactorService } from "@bitwarden/common/auth/abstractions/two-factor.service";
+import { UserInfoResponse } from "@bitwarden/common/auth/models/response/user-info-response";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { KeyConnectorService } from "@bitwarden/common/key-management/key-connector/abstractions/key-connector.service";
@@ -69,6 +70,15 @@ describe("UserApiLoginStrategy", () => {
   const apiClientId = "API_CLIENT_ID";
   const apiClientSecret = "API_CLIENT_SECRET";
 
+  const userInfoResponse = {
+    id: userId as string,
+    email: "email@email.com",
+    name: "Api Name",
+    emailVerified: true,
+    creationDate: "2024-09-13T00:00:00Z",
+    premium: false,
+  };
+
   beforeEach(async () => {
     accountService = mockAccountServiceWith(userId);
     masterPasswordService = new FakeMasterPasswordService();
@@ -91,6 +101,7 @@ describe("UserApiLoginStrategy", () => {
 
     appIdService.getAppId.mockResolvedValue(deviceId);
     tokenService.getTwoFactorToken.mockResolvedValue(null);
+    apiService.getUserInfo.mockResolvedValue(userInfoResponse as UserInfoResponse);
 
     apiLogInStrategy = new UserApiLoginStrategy(
       cache,
@@ -167,7 +178,7 @@ describe("UserApiLoginStrategy", () => {
   });
 
   it("sets the encrypted user key and private key from the identity token response", async () => {
-    const tokenResponse = identityTokenResponseFactory(undefined, undefined, userId);
+    const tokenResponse = identityTokenResponseFactory();
 
     apiService.postIdentityToken.mockResolvedValue(tokenResponse);
 
@@ -178,7 +189,7 @@ describe("UserApiLoginStrategy", () => {
   });
 
   it("gets and sets the master key if Key Connector is enabled", async () => {
-    const tokenResponse = identityTokenResponseFactory(undefined, undefined, userId);
+    const tokenResponse = identityTokenResponseFactory();
     tokenResponse.apiUseKeyConnector = true;
 
     const env = mock<Environment>();
@@ -196,7 +207,7 @@ describe("UserApiLoginStrategy", () => {
     const userKey = new SymmetricCryptoKey(new Uint8Array(64).buffer as CsprngArray) as UserKey;
     const masterKey = new SymmetricCryptoKey(new Uint8Array(64).buffer as CsprngArray) as MasterKey;
 
-    const tokenResponse = identityTokenResponseFactory(undefined, undefined, userId);
+    const tokenResponse = identityTokenResponseFactory();
     tokenResponse.apiUseKeyConnector = true;
 
     const env = mock<Environment>();

@@ -87,6 +87,7 @@ import {
   TwoFactorWebAuthnResponse,
 } from "../auth/models/response/two-factor-web-authn.response";
 import { TwoFactorYubiKeyResponse } from "../auth/models/response/two-factor-yubi-key.response";
+import { UserInfoResponse } from "../auth/models/response/user-info-response";
 import { BitPayInvoiceRequest } from "../billing/models/request/bit-pay-invoice.request";
 import { PaymentRequest } from "../billing/models/request/payment.request";
 import { TaxInfoUpdateRequest } from "../billing/models/request/tax-info-update.request";
@@ -270,6 +271,28 @@ export class ApiService implements ApiServiceAbstraction {
       this.logService.error("Error refreshing access token: ", e);
       throw e;
     }
+  }
+
+  /**
+   * Retrieves the user information from the identity server.
+   * NOTE: The authorization header is manually added because
+   * method is called directly after the user logs in and the token
+   * is not yet available in memory or disk.
+   */
+  async getUserInfo(token: string): Promise<UserInfoResponse> {
+    const env = await firstValueFrom(this.environmentService.environment$);
+
+    const response = await this.send(
+      "GET",
+      "/connect/userinfo",
+      null,
+      false, // authorization token is manually handled below
+      true,
+      env.getIdentityUrl(),
+      (headers) => headers.set("Authorization", "Bearer " + token),
+    );
+
+    return new UserInfoResponse(response);
   }
 
   // TODO: PM-3519: Create and move to AuthRequest Api service

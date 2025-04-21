@@ -11,6 +11,7 @@ import { TokenTwoFactorRequest } from "@bitwarden/common/auth/models/request/ide
 import { IdentityTokenResponse } from "@bitwarden/common/auth/models/response/identity-token.response";
 import { IdentityTwoFactorResponse } from "@bitwarden/common/auth/models/response/identity-two-factor.response";
 import { PreloginResponse } from "@bitwarden/common/auth/models/response/prelogin.response";
+import { UserInfoResponse } from "@bitwarden/common/auth/models/response/user-info-response";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { DeviceTrustServiceAbstraction } from "@bitwarden/common/key-management/device-trust/abstractions/device-trust.service.abstraction";
@@ -82,12 +83,12 @@ describe("LoginStrategyService", () => {
   const userId = "USER_ID" as UserId;
 
   const userInfo = {
-    UserId: userId,
-    Name: "NAME",
-    Email: "EMAIL",
-    EmailVerified: true,
-    Premium: false,
-  };
+    id: userId,
+    name: "NAME",
+    email: "EMAIL",
+    emailVerified: true,
+    premium: false,
+  } as unknown as UserInfoResponse;
 
   beforeEach(() => {
     accountService = mockAccountServiceWith(userId);
@@ -115,6 +116,8 @@ describe("LoginStrategyService", () => {
     vaultTimeoutSettingsService = mock<VaultTimeoutSettingsService>();
     kdfConfigService = mock<KdfConfigService>();
     taskSchedulerService = mock<TaskSchedulerService>();
+
+    apiService.getUserInfo.mockResolvedValue(userInfo);
 
     sut = new LoginStrategyService(
       accountService,

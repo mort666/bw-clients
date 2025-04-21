@@ -182,14 +182,16 @@ export abstract class LoginStrategy {
   }
 
   /**
-   * Initializes the account with information from the IdTokenResponse after successful login.
+   * Initializes the account with information from the IdTokenResponse and userinfo endpoint after successful login.
    * It also sets the access token and refresh token in the token service.
    *
    * @param {IdentityTokenResponse} tokenResponse - The response from the server containing the identity token.
    * @returns {Promise<UserId>} - A promise that resolves the the UserId when the account information has been successfully saved.
    */
-  protected async saveAccountInformation(tokenResponse: IdentityTokenResponse): Promise<UserId> {
-    const { userInfo } = tokenResponse;
+  protected async getAndSaveAccountInformation(
+    tokenResponse: IdentityTokenResponse,
+  ): Promise<UserId> {
+    const userInfo = await this.apiService.getUserInfo(tokenResponse.accessToken);
     const userId = userInfo.id as UserId;
 
     await this.accountService.addAccount(userId, {
@@ -273,7 +275,7 @@ export abstract class LoginStrategy {
     }
 
     // Must come before setting keys, user key needs email to update additional keys.
-    const userId = await this.saveAccountInformation(response);
+    const userId = await this.getAndSaveAccountInformation(response);
     result.userId = userId;
 
     result.resetMasterPassword = response.resetMasterPassword;

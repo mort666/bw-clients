@@ -79,6 +79,7 @@ import {
   TwoFactorWebAuthnResponse,
 } from "../auth/models/response/two-factor-web-authn.response";
 import { TwoFactorYubiKeyResponse } from "../auth/models/response/two-factor-yubi-key.response";
+import { UserInfoResponse } from "../auth/models/response/user-info-response";
 import { BitPayInvoiceRequest } from "../billing/models/request/bit-pay-invoice.request";
 import { PaymentRequest } from "../billing/models/request/payment.request";
 import { TaxInfoUpdateRequest } from "../billing/models/request/tax-info-update.request";
@@ -153,6 +154,7 @@ export abstract class ApiService {
     | IdentityDeviceVerificationResponse
   >;
   refreshIdentityToken: () => Promise<any>;
+  getUserInfo: (accessToken: string) => Promise<UserInfoResponse>;
 
   getProfile: () => Promise<ProfileResponse>;
   getUserSubscription: () => Promise<SubscriptionResponse>;

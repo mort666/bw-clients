@@ -71,7 +71,7 @@ export class LinkSsoService {
       "&redirect_uri=" +
       encodeURIComponent(redirectUri) +
       "&" +
-      "response_type=code&scope=api offline_access&" +
+      "response_type=code&scope=api offline_access openid&" +
       "state=" +
       state +
       "&code_challenge=" +

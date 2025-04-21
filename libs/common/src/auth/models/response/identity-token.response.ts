@@ -6,7 +6,6 @@ import { BaseResponse } from "../../../models/response/base.response";
 
 import { MasterPasswordPolicyResponse } from "./master-password-policy.response";
 import { UserDecryptionOptionsResponse } from "./user-decryption-options/user-decryption-options.response";
-import { UserInfoResponse } from "./user-info-response";
 
 export class IdentityTokenResponse extends BaseResponse {
   accessToken: string;
@@ -26,7 +25,6 @@ export class IdentityTokenResponse extends BaseResponse {
   masterPasswordPolicy: MasterPasswordPolicyResponse;
   apiUseKeyConnector: boolean;
   keyConnectorUrl: string;
-  userInfo: UserInfoResponse;
 
   userDecryptionOptions: UserDecryptionOptionsResponse;
 
@@ -51,7 +49,6 @@ export class IdentityTokenResponse extends BaseResponse {
     this.masterPasswordPolicy = new MasterPasswordPolicyResponse(
       this.getResponseProperty("MasterPasswordPolicy"),
     );
-    this.userInfo = new UserInfoResponse(this.getResponseProperty("UserInfo"));
 
     if (response.UserDecryptionOptions) {
       this.userDecryptionOptions = new UserDecryptionOptionsResponse(

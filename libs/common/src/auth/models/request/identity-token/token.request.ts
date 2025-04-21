@@ -28,7 +28,7 @@ export abstract class TokenRequest {
 
   protected toIdentityToken(clientId: string) {
     const obj: any = {
-      scope: "api offline_access",
+      scope: "api offline_access openid",
       client_id: clientId,
     };
 

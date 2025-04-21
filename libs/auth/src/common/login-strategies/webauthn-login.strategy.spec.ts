@@ -7,6 +7,7 @@ import { TwoFactorService } from "@bitwarden/common/auth/abstractions/two-factor
 import { AuthResult } from "@bitwarden/common/auth/models/domain/auth-result";
 import { IdentityTokenResponse } from "@bitwarden/common/auth/models/response/identity-token.response";
 import { IUserDecryptionOptionsServerResponse } from "@bitwarden/common/auth/models/response/user-decryption-options/user-decryption-options.response";
+import { UserInfoResponse } from "@bitwarden/common/auth/models/response/user-info-response";
 import { WebAuthnLoginAssertionResponseRequest } from "@bitwarden/common/auth/services/webauthn-login/request/webauthn-login-assertion-response.request";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
@@ -66,6 +67,15 @@ describe("WebAuthnLoginStrategy", () => {
   let originalPublicKeyCredential!: PublicKeyCredential | any;
   let originalAuthenticatorAssertionResponse!: AuthenticatorAssertionResponse | any;
 
+  const userInfoResponse = {
+    id: userId as string,
+    email: "email@email.com",
+    name: name,
+    emailVerified: true,
+    creationDate: "2024-09-13T00:00:00Z",
+    premium: false,
+  };
+
   beforeAll(() => {
     // Save off the original classes so we can restore them after all tests are done if they exist
     originalPublicKeyCredential = global.PublicKeyCredential;
@@ -101,6 +111,8 @@ describe("WebAuthnLoginStrategy", () => {
 
     tokenService.getTwoFactorToken.mockResolvedValue(null);
     appIdService.getAppId.mockResolvedValue(deviceId);
+
+    apiService.getUserInfo.mockResolvedValue(userInfoResponse as UserInfoResponse);
 
     webAuthnLoginStrategy = new WebAuthnLoginStrategy(
       cache,
@@ -219,7 +231,6 @@ describe("WebAuthnLoginStrategy", () => {
     const idTokenResponse: IdentityTokenResponse = identityTokenResponseFactory(
       null,
       userDecryptionOptsServerResponseWithWebAuthnPrfOption,
-      userId,
     );
 
     apiService.postIdentityToken.mockResolvedValue(idTokenResponse);
@@ -266,7 +277,6 @@ describe("WebAuthnLoginStrategy", () => {
     const idTokenResponse: IdentityTokenResponse = identityTokenResponseFactory(
       null,
       userDecryptionOptsServerResponseWithWebAuthnPrfOption,
-      userId,
     );
 
     apiService.postIdentityToken.mockResolvedValue(idTokenResponse);
@@ -309,7 +319,6 @@ describe("WebAuthnLoginStrategy", () => {
     const idTokenResponse: IdentityTokenResponse = identityTokenResponseFactory(
       null,
       userDecryptionOptsServerResponseWithWebAuthnPrfOption,
-      userId,
     );
 
     apiService.postIdentityToken.mockResolvedValue(idTokenResponse);
@@ -328,7 +337,6 @@ describe("WebAuthnLoginStrategy", () => {
     const idTokenResponse: IdentityTokenResponse = identityTokenResponseFactory(
       null,
       userDecryptionOptsServerResponseWithWebAuthnPrfOption,
-      userId,
     );
 
     apiService.postIdentityToken.mockResolvedValue(idTokenResponse);

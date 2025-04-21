@@ -5,6 +5,7 @@ import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { TwoFactorService } from "@bitwarden/common/auth/abstractions/two-factor.service";
 import { IdentityTokenResponse } from "@bitwarden/common/auth/models/response/identity-token.response";
+import { UserInfoResponse } from "@bitwarden/common/auth/models/response/user-info-response";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { DeviceTrustServiceAbstraction } from "@bitwarden/common/key-management/device-trust/abstractions/device-trust.service.abstraction";
@@ -75,6 +76,15 @@ describe("AuthRequestLoginStrategy", () => {
   const decUserKey = new SymmetricCryptoKey(new Uint8Array(64).buffer as CsprngArray) as UserKey;
   const decMasterKeyHash = "LOCAL_PASSWORD_HASH";
 
+  const userInfoResponse = {
+    id: mockUserId as string,
+    email: "email@email.com",
+    name: "Auth Request Name",
+    emailVerified: true,
+    creationDate: "2024-09-13T00:00:00Z",
+    premium: false,
+  };
+
   beforeEach(async () => {
     keyService = mock<KeyService>();
     apiService = mock<ApiService>();
@@ -97,6 +107,7 @@ describe("AuthRequestLoginStrategy", () => {
 
     tokenService.getTwoFactorToken.mockResolvedValue(null);
     appIdService.getAppId.mockResolvedValue(deviceId);
+    apiService.getUserInfo.mockResolvedValue(userInfoResponse as UserInfoResponse);
 
     authRequestLoginStrategy = new AuthRequestLoginStrategy(
       cache,
@@ -120,7 +131,7 @@ describe("AuthRequestLoginStrategy", () => {
       environmentService,
     );
 
-    tokenResponse = identityTokenResponseFactory(undefined, undefined, mockUserId);
+    tokenResponse = identityTokenResponseFactory();
     apiService.postIdentityToken.mockResolvedValue(tokenResponse);
 
     const mockVaultTimeoutAction = VaultTimeoutAction.Lock;

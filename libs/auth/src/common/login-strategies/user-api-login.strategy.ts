@@ -89,8 +89,10 @@ export class UserApiLoginStrategy extends LoginStrategy {
   }
 
   // Overridden to save client ID and secret to token service
-  protected async saveAccountInformation(tokenResponse: IdentityTokenResponse): Promise<UserId> {
-    const userId = await super.saveAccountInformation(tokenResponse);
+  protected async getAndSaveAccountInformation(
+    tokenResponse: IdentityTokenResponse,
+  ): Promise<UserId> {
+    const userId = await super.getAndSaveAccountInformation(tokenResponse);
 
     const vaultTimeoutAction = await firstValueFrom(
       this.vaultTimeoutSettingsService.getVaultTimeoutActionByUserId$(userId),

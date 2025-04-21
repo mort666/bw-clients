@@ -10,6 +10,7 @@ import { ForceSetPasswordReason } from "@bitwarden/common/auth/models/domain/for
 import { IdentityTokenResponse } from "@bitwarden/common/auth/models/response/identity-token.response";
 import { IdentityTwoFactorResponse } from "@bitwarden/common/auth/models/response/identity-two-factor.response";
 import { MasterPasswordPolicyResponse } from "@bitwarden/common/auth/models/response/master-password-policy.response";
+import { UserInfoResponse } from "@bitwarden/common/auth/models/response/user-info-response";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { FakeMasterPasswordService } from "@bitwarden/common/key-management/master-password/services/fake-master-password.service";
@@ -58,6 +59,15 @@ const masterPasswordPolicy = new MasterPasswordPolicyResponse({
   EnforceOnLogin: true,
   MinLength: 8,
 });
+
+const userInfoResponse = {
+  id: userId as string,
+  email: "email@email.com",
+  name: "Password Name",
+  emailVerified: true,
+  creationDate: "2024-09-13T00:00:00Z",
+  premium: false,
+};
 
 describe("PasswordLoginStrategy", () => {
   let cache: PasswordLoginStrategyData;
@@ -122,6 +132,7 @@ describe("PasswordLoginStrategy", () => {
       .mockResolvedValue(localHashedPassword);
 
     policyService.evaluateMasterPassword.mockReturnValue(true);
+    apiService.getUserInfo.mockResolvedValue(userInfoResponse as UserInfoResponse);
 
     passwordLoginStrategy = new PasswordLoginStrategy(
       cache,
@@ -147,7 +158,7 @@ describe("PasswordLoginStrategy", () => {
       environmentService,
     );
     credentials = new PasswordLoginCredentials(email, masterPassword);
-    tokenResponse = identityTokenResponseFactory(masterPasswordPolicy, undefined, userId);
+    tokenResponse = identityTokenResponseFactory(masterPasswordPolicy);
 
     apiService.postIdentityToken.mockResolvedValue(tokenResponse);
 
@@ -255,7 +266,7 @@ describe("PasswordLoginStrategy", () => {
 
     // Second login request succeeds
     apiService.postIdentityToken.mockResolvedValueOnce(
-      identityTokenResponseFactory(masterPasswordPolicy, undefined, userId),
+      identityTokenResponseFactory(masterPasswordPolicy),
     );
     const secondResult = await passwordLoginStrategy.logInTwoFactor(
       {
