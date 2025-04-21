@@ -50,7 +50,6 @@ describe("RiskInsightsReportService", () => {
     let testCase = testCaseResults[0];
     expect(testCase).toBeTruthy();
     expect(testCase.cipherMembers).toHaveLength(2);
-    // When by domain, the result should be 2
     expect(testCase.trimmedUris).toHaveLength(2);
     expect(testCase.weakPasswordDetail).toBeTruthy();
     expect(testCase.exposedPasswordDetail).toBeTruthy();
