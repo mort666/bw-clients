@@ -21,7 +21,6 @@ import {
 import { GeneratorConstraints } from "../types/generator-constraints";
 
 /** Generates credentials used in identity and/or authentication flows.
- *  @remarks typically this is for use outside of Bitwarden.
  */
 export abstract class CredentialGeneratorService {
   /** Generates a stream of credentials
@@ -66,7 +65,7 @@ export abstract class CredentialGeneratorService {
    *  @returns a subject bound to the user's preferences
    *  @remarks Preferences determine which algorithms are used when generating a
    *   credential from a credential category (e.g. `PassX` or `Username`). Preferences
-   *   should not be used to hold navigation history. Use @bitwarden/generator-navigation
+   *   should not be used to hold navigation history. Use {@link @bitwarden/generator-navigation}
    *   instead.
    */
   abstract preferences: (

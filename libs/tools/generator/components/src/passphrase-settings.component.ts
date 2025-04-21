@@ -69,7 +69,7 @@ export class PassphraseSettingsComponent implements OnInit, OnChanges, OnDestroy
   /** Emits settings updates and completes if the settings become unavailable.
    * @remarks this does not emit the initial settings. If you would like
    *   to receive live settings updates including the initial update,
-   *   use `CredentialGeneratorService.settings(...)` instead.
+   *   use {@link CredentialGeneratorService.settings} instead.
    */
   @Output()
   readonly onUpdated = new EventEmitter<PassphraseGenerationOptions>();
