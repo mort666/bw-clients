@@ -1,23 +1,9 @@
-import { distinctUntilChanged, map, pairwise, pipe, skipWhile, startWith, takeWhile } from "rxjs";
-
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { I18nKeyOrLiteral } from "@bitwarden/common/tools/types";
 import { isI18nKey } from "@bitwarden/common/tools/util";
-import { UserId } from "@bitwarden/common/types/guid";
 import { AlgorithmInfo, AlgorithmMetadata } from "@bitwarden/generator-core";
 
-export function completeOnAccountSwitch() {
-  return pipe(
-    map(({ id }: { id: UserId | null }) => id),
-    skipWhile((id) => !id),
-    startWith(null as UserId | null),
-    pairwise(),
-    takeWhile(([prev, next]) => (prev ?? next) === next),
-    map(([_, id]) => id),
-    distinctUntilChanged(),
-  );
-}
-
+/** Adapts {@link AlgorithmMetadata} to legacy {@link AlgorithmInfo} structure. */
 export function toAlgorithmInfo(metadata: AlgorithmMetadata, i18n: I18nService) {
   const info: AlgorithmInfo = {
     id: metadata.id,
@@ -39,6 +25,22 @@ export function toAlgorithmInfo(metadata: AlgorithmMetadata, i18n: I18nService) 
   return info;
 }
 
+/** Translates an internationalization key
+ *  @param key the key to translate
+ *  @param i18n the service providing translations
+ *  @returns the translated key; if the key is a literal the literal
+ *   is returned instead.
+ */
 export function translate(key: I18nKeyOrLiteral, i18n: I18nService) {
   return isI18nKey(key) ? i18n.t(key) : key.literal;
+}
+
+/** Returns true when min < max
+ *  @param min the minimum value to check; when this is nullish it becomes 0.
+ *  @param max the maximum value to check; when this is nullish it becomes +Infinity.
+ */
+export function hasRangeOfValues(min?: number, max?: number) {
+  const minimum = min ?? 0;
+  const maximum = max ?? Number.POSITIVE_INFINITY;
+  return minimum < maximum;
 }

@@ -1,5 +1,7 @@
 import { CredentialAlgorithm, CredentialType } from "../metadata";
 
+// FIXME: deprecate or delete `AlgorithmInfo` once a better translation
+//   strategy is identified.
 export type AlgorithmInfo = {
   /** Uniquely identifies the credential configuration
    * @example

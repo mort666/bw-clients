@@ -20,6 +20,8 @@ import {
   BuiltIn,
 } from "@bitwarden/generator-core";
 
+import { hasRangeOfValues } from "./util";
+
 const Controls = Object.freeze({
   length: "length",
   uppercase: "uppercase",
@@ -152,18 +154,18 @@ export class PasswordSettingsComponent implements OnInit, OnChanges, OnDestroy {
         this.policyInEffect = constraints.policyInEffect ?? false;
 
         const toggles = [
-          [Controls.length, (constraints.length?.min ?? 0) < (constraints.length?.max ?? 1)],
+          [Controls.length, hasRangeOfValues(constraints.length?.min, constraints.length?.max)],
           [Controls.uppercase, !constraints.uppercase?.readonly],
           [Controls.lowercase, !constraints.lowercase?.readonly],
           [Controls.number, !constraints.number?.readonly],
           [Controls.special, !constraints.special?.readonly],
           [
             Controls.minNumber,
-            (constraints.minNumber?.min ?? 0) < (constraints.minNumber?.max ?? 1),
+            hasRangeOfValues(constraints.minNumber?.min, constraints.minNumber?.max),
           ],
           [
             Controls.minSpecial,
-            (constraints.minSpecial?.min ?? 0) < (constraints.minSpecial?.max ?? 1),
+            hasRangeOfValues(constraints.minSpecial?.min, constraints.minSpecial?.max),
           ],
         ] as [keyof typeof Controls, boolean][];
 
