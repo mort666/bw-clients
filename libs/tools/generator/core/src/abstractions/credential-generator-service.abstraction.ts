@@ -25,15 +25,14 @@ import { GeneratorConstraints } from "../types/generator-constraints";
  */
 export abstract class CredentialGeneratorService {
   /** Generates a stream of credentials
-   * @param configuration determines which generator's settings are loaded
    * @param dependencies.on$ Required. A new credential is emitted when this emits.
    */
   abstract generate$: (
     dependencies: OnDependency<GenerateRequest> & BoundDependency<"account", Account>,
   ) => Observable<GeneratedCredential>;
 
-  /** Emits metadata concerning the provided generation algorithms
-   *  @param category the category or categories of interest
+  /** Emits metadata for the set of algorithms available to a user.
+   *  @param type the set of algorithms
    *  @param dependences.account$ algorithms are filtered to only
    *   those matching the provided account's policy.
    *  @returns An observable that emits algorithm metadata.
@@ -43,9 +42,11 @@ export abstract class CredentialGeneratorService {
     dependencies: BoundDependency<"account", Account>,
   ) => Observable<AlgorithmMetadata[]>;
 
-  /** Lists metadata for the algorithms in a credential category
-   *  @param type the category or categories of interest
+  /** Lists metadata for a set of algorithms.
+   *  @param type the type or types of algorithms
    *  @returns A list containing the requested metadata.
+   *  @remarks this is a raw data interface. To apply rules such as algorithm availability,
+   *    use {@link algorithms$} instead.
    */
   abstract algorithms: (type: CredentialType | CredentialType[]) => AlgorithmMetadata[];
 
@@ -55,7 +56,9 @@ export abstract class CredentialGeneratorService {
    */
   abstract algorithm: (id: CredentialAlgorithm) => AlgorithmMetadata;
 
-  /** Look up the forwarder metadata for a vendor. */
+  /** Look up the forwarder metadata for a vendor.
+   *  @param id identifies the vendor proving the forwarder
+   */
   abstract forwarder: (id: VendorId) => GeneratorMetadata<ForwarderOptions>;
 
   /** Get a subject bound to credential generator preferences.
@@ -70,11 +73,14 @@ export abstract class CredentialGeneratorService {
     dependencies: BoundDependency<"account", Account>,
   ) => UserStateSubject<CredentialPreference>;
 
-  /** Get a subject bound to a specific user's settings
-   * @param configuration determines which generator's settings are loaded
+  /** Get a subject bound to a specific user's settings. the subject enforces policy for the
+   *  settings by automatically updating incorrect values to those allowed by policy.
+   * @param metadata determines which generator's settings are loaded
    * @param dependencies.account$ identifies the account to which the settings are bound
+   * @param profile identifies the generator profile to load; when this is not specified
+   *    the user's account profile is loaded.
    * @returns a subject bound to the requested user's generator settings
-   * @remarks the subject enforces policy for the settings
+   * @remarks Generator metadata can be looked up using {@link BuiltIn} and {@link forwarder}.
    */
   abstract settings: <Settings extends object>(
     metadata: Readonly<GeneratorMetadata<Settings>>,
@@ -83,9 +89,13 @@ export abstract class CredentialGeneratorService {
   ) => UserStateSubject<Settings>;
 
   /** Get the policy constraints for the provided configuration
+   *  @param metadata determines which generator's policy is loaded
    *  @param dependencies.account$ determines which user's policy is loaded
+   *  @param profile identifies the generator profile to load; when this is not specified
+   *    the user's account profile is loaded.
    *  @returns an observable that emits the policy once `dependencies.account$`
    *   and the policy become available.
+   * @remarks Generator metadata can be looked up using {@link BuiltIn} and {@link forwarder}.
    */
   abstract policy$: <Settings>(
     metadata: Readonly<GeneratorMetadata<Settings>>,
