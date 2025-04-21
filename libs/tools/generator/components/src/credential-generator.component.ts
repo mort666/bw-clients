@@ -197,7 +197,7 @@ export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestro
     this.maybeAlgorithm$
       .pipe(
         map((a) => {
-          if (a && a.i18nKeys.description) {
+          if (a?.i18nKeys?.description) {
             return translate(a.i18nKeys.description, this.i18nService);
           } else {
             return "";

@@ -33,7 +33,7 @@ export abstract class CredentialGeneratorService {
 
   /** Emits metadata for the set of algorithms available to a user.
    *  @param type the set of algorithms
-   *  @param dependences.account$ algorithms are filtered to only
+   *  @param dependencies.account$ algorithms are filtered to only
    *   those matching the provided account's policy.
    *  @returns An observable that emits algorithm metadata.
    */
