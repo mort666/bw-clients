@@ -38,7 +38,7 @@ export class CatchallSettingsComponent implements OnInit, OnDestroy, OnChanges {
    *     never have that value in practice.
    */
   @Input({ required: true })
-  account: Account = null!;
+  account!: Account;
 
   private account$ = new ReplaySubject<Account>(1);
 
