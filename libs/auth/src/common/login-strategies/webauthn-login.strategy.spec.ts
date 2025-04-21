@@ -70,7 +70,7 @@ describe("WebAuthnLoginStrategy", () => {
   const userInfoResponse = {
     id: userId as string,
     email: "email@email.com",
-    name: name,
+    name: "WebAuthn User",
     emailVerified: true,
     creationDate: "2024-09-13T00:00:00Z",
     premium: false,
