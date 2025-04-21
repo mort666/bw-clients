@@ -285,7 +285,7 @@ export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestro
     this.root$
       .pipe(
         map((root): CascadeValue => {
-          if (root.nav === FORWARDER) {
+          if (root.nav === IDENTIFIER) {
             return { nav: root.nav };
           } else if (root.nav) {
             return { nav: root.nav, algorithm: JSON.parse(root.nav) };
