@@ -18,10 +18,11 @@ export class BackgroundCommunicationBackend implements CommunicationBackend {
         return;
       }
 
-      void this.queue.enqueue({
-        ...message.message,
-        source: { Web: { id: sender.tab.id } },
-      } as any);
+      void this.queue.enqueue(
+        new IncomingMessage(message.message.payload, message.message.destination, {
+          Web: { id: sender.tab.id },
+        }),
+      );
     });
   }
 
