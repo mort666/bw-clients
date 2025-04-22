@@ -3,6 +3,7 @@ import { filter, firstValueFrom } from "rxjs";
 
 import { IpcService } from "@bitwarden/common/platform/ipc";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { OutgoingMessage } from "@bitwarden/sdk-internal";
 
 /**
  * Example service that sends a "ping" message and waits for a "pong" response.
@@ -23,16 +24,15 @@ export class IpcPingService {
   async ping() {
     const responsePromise = firstValueFrom(
       this.ipcService.messages$.pipe(
-        filter((m) => Utils.fromBufferToUtf8(new Uint8Array(m.data)) === "pong"),
+        filter((m) => Utils.fromBufferToUtf8(new Uint8Array(m.payload)) === "pong"),
       ),
     );
 
     // eslint-disable-next-line no-console
     console.log("Sending ping...");
-    await this.ipcService.send({
-      data: Array.from(Utils.fromUtf8ToArray("ping")),
-      destination: "BrowserBackground",
-    });
+    await this.ipcService.send(
+      new OutgoingMessage(Utils.fromUtf8ToArray("ping"), "BrowserBackground"),
+    );
     // eslint-disable-next-line no-console
     console.log("Waiting for pong...");
     const response = await responsePromise;

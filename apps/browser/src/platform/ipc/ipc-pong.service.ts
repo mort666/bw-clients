@@ -1,5 +1,6 @@
 import { IpcService } from "@bitwarden/common/platform/ipc";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { OutgoingMessage } from "@bitwarden/sdk-internal";
 
 /**
  * Example service that responds to "ping" messages with "pong".
@@ -12,11 +13,10 @@ export class IpcPongService {
   /** Must be initalized after IpcService */
   async init() {
     this.ipcService.messages$.subscribe((message) => {
-      if (Utils.fromBufferToUtf8(new Uint8Array(message.data)) === "ping") {
-        void this.ipcService.send({
-          data: Array.from(Utils.fromUtf8ToArray("pong")),
-          destination: message.source,
-        });
+      if (Utils.fromBufferToUtf8(new Uint8Array(message.payload)) === "ping") {
+        void this.ipcService.send(
+          new OutgoingMessage(Utils.fromUtf8ToArray("pong"), message.source),
+        );
       }
     });
   }
