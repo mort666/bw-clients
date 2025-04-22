@@ -91,31 +91,31 @@ class DrawerDialogRef<R = unknown, C = unknown> implements DialogRef<R, C> {
  * DialogRef that delegates functionality to the CDK implementation
  **/
 export class CdkDialogRef<R = unknown, C = unknown> implements DialogRef<R, C> {
-  readonly isDrawer = false; // This is not a drawer dialog
+  readonly isDrawer = false;
 
-  /** This is not available until after construction, as it is returned by `Dialog.open`. */
-  cdkDialogRef!: CdkDialogRefBase<R, C>;
+  /** This is not available until after construction, @see DialogService.open. */
+  cdkDialogRefBase!: CdkDialogRefBase<R, C>;
 
   // --- Delegated to CdkDialogRefBase ---
 
   close(result?: R, options?: DialogCloseOptions): void {
-    this.cdkDialogRef.close(result, options);
+    this.cdkDialogRefBase.close(result, options);
   }
 
   get closed(): Observable<R | undefined> {
-    return this.cdkDialogRef.closed;
+    return this.cdkDialogRefBase.closed;
   }
 
   get disableClose(): boolean | undefined {
-    return this.cdkDialogRef.disableClose;
+    return this.cdkDialogRefBase.disableClose;
   }
   set disableClose(value: boolean | undefined) {
-    this.cdkDialogRef.disableClose = value;
+    this.cdkDialogRefBase.disableClose = value;
   }
 
   // Delegate the `componentInstance` property to the CDK DialogRef
   get componentInstance(): C | null {
-    return this.cdkDialogRef.componentInstance;
+    return this.cdkDialogRefBase.componentInstance;
   }
 }
 
@@ -154,8 +154,16 @@ export class DialogService {
     componentOrTemplateRef: ComponentType<C> | TemplateRef<C>,
     config?: DialogConfig<D, DialogRef<R, C>>,
   ): DialogRef<R, C> {
-    // Create the injector with the custom DialogRef
+    /**
+     * This is a bit circular in nature:
+     * We need the DialogRef instance for the DI injector that is passed *to* `Dialog.open`,
+     * but we get the base CDK DialogRef instance *from* `Dialog.open`.
+     *
+     * To break the circle, we define CDKDialogRef as a wrapper for the CDKDialogRefBase.
+     * This allows us to create the class instance and provide the base instance later, almost like "deferred inheritance".
+     **/
     const ref = new CdkDialogRef<R, C>();
+    // TODO outline circular nature
     const injector = this.createInjector({
       data: config?.data,
       dialogRef: ref,
@@ -169,7 +177,7 @@ export class DialogService {
       ...config,
     };
 
-    ref.cdkDialogRef = this.dialog.open<R, D, C>(componentOrTemplateRef, _config);
+    ref.cdkDialogRefBase = this.dialog.open<R, D, C>(componentOrTemplateRef, _config);
     return ref;
   }
 
@@ -179,6 +187,10 @@ export class DialogService {
     config?: DialogConfig<D, DialogRef<R, C>>,
   ): DialogRef<R, C> {
     this.activeDrawer?.close();
+    /**
+     * This is also circular. When creating the DrawerDialogRef, we do not yet have a portal instance to provide to the injector.
+     * Similar to `this.open`, we get around this with mutability.
+     */
     this.activeDrawer = new DrawerDialogRef(this.drawerService);
     const portal = new ComponentPortal(
       component,
