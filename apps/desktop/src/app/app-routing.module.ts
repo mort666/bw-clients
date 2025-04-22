@@ -52,9 +52,9 @@ import { AccessibilityCookieComponent } from "../auth/accessibility-cookie.compo
 import { maxAccountsGuardFn } from "../auth/guards/max-accounts.guard";
 import { SetPasswordComponent } from "../auth/set-password.component";
 import { UpdateTempPasswordComponent } from "../auth/update-temp-password.component";
+import { RemovePasswordComponent } from "../key-management/key-connector/remove-password.component";
 import { Fido2CreateComponent } from "../modal/passkeys/create/fido2-create.component";
 import { Fido2VaultComponent } from "../modal/passkeys/fido2-vault.component";
-import { RemovePasswordComponent } from "../key-management/key-connector/remove-password.component";
 import { VaultComponent } from "../vault/app/vault/vault.component";
 
 import { SendComponent } from "./tools/send/send.component";
