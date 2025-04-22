@@ -93,7 +93,12 @@ export class Fido2CreateComponent implements OnInit, OnDestroy {
             const credentialId = cipher.login.hasFido2Credentials
               ? parseCredentialId(cipher.login.fido2Credentials[0]?.credentialId)
               : new Uint8Array();
-            if (!cipher.login || !cipher.login.hasUris) {
+            if (
+              !cipher.login ||
+              !cipher.login.hasUris ||
+              cipher.deletedDate ||
+              cipher.login.username != lastRegistrationRequest.userName
+            ) {
               return false;
             }
 
@@ -113,7 +118,12 @@ export class Fido2CreateComponent implements OnInit, OnDestroy {
             const credentialId = cipher.login.hasFido2Credentials
               ? Array.from(parseCredentialId(cipher.login.fido2Credentials[0]?.credentialId))
               : [];
-            if (!cipher.login || !cipher.login.hasUris) {
+            if (
+              !cipher.login ||
+              !cipher.login.hasUris ||
+              cipher.deletedDate ||
+              cipher.login.username != lastRegistrationRequest.userName
+            ) {
               return false;
             }
 
