@@ -25,11 +25,14 @@ import { SharedModule } from "../shared";
 })
 export class LayoutComponent {
   protected mainContentId = "main-content";
-
   protected sideNavService = inject(SideNavService);
   protected drawerPortal = inject(DrawerService).portal;
 
-  focusMainContent() {
-    document.getElementById(this.mainContentId)?.focus();
+  getMainContent() {
+    return document.getElementById(this.mainContentId)!;
+  }
+
+  protected focusMainContent() {
+    this.getMainContent().focus();
   }
 }
