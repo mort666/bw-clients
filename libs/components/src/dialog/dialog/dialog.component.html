@@ -8,7 +8,7 @@
 >
   <header
     class="tw-flex tw-justify-between tw-items-center tw-gap-4 tw-border-0 tw-border-b tw-border-solid tw-border-secondary-300"
-    [ngClass]="[isDrawer ? 'tw-py-2 tw-px-4' : 'tw-p-4']"
+    [ngClass]="[isDrawer ? 'tw-p-6 tw-pb-4' : 'tw-p-4']"
   >
     <h2
       bitDialogTitleContainer
@@ -48,7 +48,8 @@
     }
     <div
       [ngClass]="{
-        'tw-p-4': !disablePadding,
+        'tw-p-4': !disablePadding && !isDrawer,
+        'tw-px-6 tw-py-4': !disablePadding && isDrawer,
         'tw-overflow-y-auto': !loading,
         'tw-invisible tw-overflow-y-hidden': loading,
         'tw-bg-background': background === 'default',
@@ -60,7 +61,8 @@
   </div>
 
   <footer
-    class="tw-flex tw-flex-row tw-items-center tw-gap-2 tw-border-0 tw-border-t tw-border-solid tw-border-secondary-300 tw-bg-background tw-p-4"
+    class="tw-flex tw-flex-row tw-items-center tw-gap-2 tw-border-0 tw-border-t tw-border-solid tw-border-secondary-300 tw-bg-background"
+    [ngClass]="[isDrawer ? 'tw-px-6 tw-py-4' : 'tw-p-4']"
   >
     <ng-content select="[bitDialogFooter]"></ng-content>
   </footer>
