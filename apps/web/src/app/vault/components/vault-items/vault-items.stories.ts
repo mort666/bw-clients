@@ -35,7 +35,7 @@ import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { LoginUriView } from "@bitwarden/common/vault/models/view/login-uri.view";
 import { LoginView } from "@bitwarden/common/vault/models/view/login.view";
 import { CipherAuthorizationService } from "@bitwarden/common/vault/services/cipher-authorization.service";
-import { LayoutComponent, positionFixedWrapperDecorator } from "@bitwarden/components";
+import { LayoutComponent } from "@bitwarden/components";
 
 import { GroupView } from "../../../admin-console/organizations/core";
 import { PreloadedEnglishI18nModule } from "../../../core/tests";
@@ -55,7 +55,6 @@ export default {
   title: "Web/Vault/Items",
   component: VaultItemsComponent,
   decorators: [
-    positionFixedWrapperDecorator(),
     componentWrapperDecorator((story) => `<bit-layout>${story}</bit-layout>`),
     moduleMetadata({
       imports: [VaultItemsModule, RouterModule, LayoutComponent],
