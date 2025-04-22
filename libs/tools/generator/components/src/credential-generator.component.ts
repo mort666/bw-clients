@@ -229,7 +229,7 @@ export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestro
 
     // wire up the generator
     this.generatorService
-      .generate$({
+      .generator$({
         on$: this.generate$,
         account$: this.account$,
       })

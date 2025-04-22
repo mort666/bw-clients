@@ -16,7 +16,7 @@ import {
 } from "../metadata";
 import { CredentialGeneratorProviders } from "../providers";
 
-import { DefaultCredentialGeneratorService } from "./credential-generator.service";
+import { DefaultCredentialGeneratorService } from "./default-credential-generator.service";
 
 // Custom type for jest.fn() mocks to preserve their type
 type JestMockFunction<T extends (...args: any) => any> = jest.Mock<ReturnType<T>, Parameters<T>>;
@@ -112,7 +112,7 @@ describe("CredentialGeneratorService", () => {
         account$: of(account),
       };
 
-      const result = await firstValueFrom(service.generate$(dependencies));
+      const result = await firstValueFrom(service.generator$(dependencies));
 
       expect(result).toBe("generatedPassword");
       expect(providers.metadata!.metadata).toHaveBeenCalledWith("testAlgorithm");
@@ -141,7 +141,7 @@ describe("CredentialGeneratorService", () => {
         account$: of(account),
       };
 
-      const result = await firstValueFrom(service.generate$(dependencies));
+      const result = await firstValueFrom(service.generator$(dependencies));
 
       expect(result).toBe("generatedPassword");
       expect(providers.metadata!.metadata).toHaveBeenCalledWith("testAlgorithm");

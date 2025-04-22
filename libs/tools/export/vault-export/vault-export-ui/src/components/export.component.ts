@@ -249,7 +249,7 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
       }),
     );
     this.generatorService
-      .generate$({ on$: this.onGenerate$, account$ })
+      .generator$({ on$: this.onGenerate$, account$ })
       .pipe(takeUntil(this.destroy$))
       .subscribe((generated) => {
         this.exportForm.patchValue({

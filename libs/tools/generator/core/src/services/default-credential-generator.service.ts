@@ -46,7 +46,7 @@ export class DefaultCredentialGeneratorService implements CredentialGeneratorSer
 
   private readonly log: SemanticLogger;
 
-  generate$(dependencies: OnDependency<GenerateRequest> & BoundDependency<"account", Account>) {
+  generator$(dependencies: OnDependency<GenerateRequest> & BoundDependency<"account", Account>) {
     // `on$` is partitioned into several streams so that the generator
     // engine and settings refresh only when their respective inputs change
     const on$ = dependencies.on$.pipe(shareReplay({ refCount: true, bufferSize: 1 }));

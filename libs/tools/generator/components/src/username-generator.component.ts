@@ -207,7 +207,7 @@ export class UsernameGeneratorComponent implements OnInit, OnChanges, OnDestroy 
 
     // wire up the generator
     this.generatorService
-      .generate$({
+      .generator$({
         on$: this.generate$,
         account$: this.account$,
       })

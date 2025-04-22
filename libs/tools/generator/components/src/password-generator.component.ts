@@ -182,7 +182,7 @@ export class PasswordGeneratorComponent implements OnInit, OnChanges, OnDestroy 
 
     // wire up the generator
     this.generatorService
-      .generate$({ on$: this.generate$, account$: this.account$ })
+      .generator$({ on$: this.generate$, account$: this.account$ })
       .pipe(
         catchError((error: unknown, generator) => {
           if (typeof error === "string") {
