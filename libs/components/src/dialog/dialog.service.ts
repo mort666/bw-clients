@@ -133,7 +133,10 @@ export class DialogService {
   private activeDrawer: DrawerDialogRef<any, any> | null = null;
 
   constructor() {
-    /** TODO: This logic should exist outside of `libs/components`. */
+    /**
+     * TODO: This logic should exist outside of `libs/components`.
+     * @see https://bitwarden.atlassian.net/browse/CL-657
+     **/
     /** Close all open dialogs if the vault locks */
     if (this.router && this.authService) {
       this.router.events

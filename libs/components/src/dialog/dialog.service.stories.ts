@@ -1,5 +1,5 @@
 import { DIALOG_DATA, DialogModule, DialogRef } from "@angular/cdk/dialog";
-import { Component, Inject, input } from "@angular/core";
+import { Component, Inject } from "@angular/core";
 import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { RouterTestingModule } from "@angular/router/testing";
 import { Meta, StoryObj, applicationConfig, moduleMetadata } from "@storybook/angular";
@@ -33,8 +33,6 @@ interface Animal {
 })
 class StoryDialogComponent {
   constructor(public dialogService: DialogService) {}
-
-  isDrawer = input(false);
 
   openDialog() {
     this.dialogService.open(StoryDialogContentComponent, {
