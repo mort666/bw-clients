@@ -35,6 +35,7 @@ export * from "./search";
 export * from "./section";
 export * from "./select";
 export * from "./shared/compact-mode.service";
+export * from "./stories/storybook-decorators";
 export * from "./table";
 export * from "./tabs";
 export * from "./toast";

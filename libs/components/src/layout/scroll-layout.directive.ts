@@ -10,26 +10,25 @@ import { LayoutComponent } from "./layout.component";
   providers: [{ provide: VIRTUAL_SCROLLABLE, useExisting: ScrollLayoutDirective }],
 })
 export class ScrollLayoutDirective extends CdkVirtualScrollable {
-  private mainEl: ElementRef<HTMLElement>;
-
   constructor(
-    layout: LayoutComponent,
+    private layout: LayoutComponent,
     scrollDispatcher: ScrollDispatcher,
     ngZone: NgZone,
     @Optional() dir: Directionality,
   ) {
-    const mainEl = new ElementRef(layout.getMainContent());
-    super(mainEl, scrollDispatcher, ngZone, dir);
-    this.mainEl = mainEl;
+    super(layout.mainContent(), scrollDispatcher, ngZone, dir);
   }
 
   override getElementRef(): ElementRef<HTMLElement> {
-    return this.mainEl;
+    return this.layout.mainContent();
   }
 
   override measureBoundingClientRectWithScrollOffset(
     from: "left" | "top" | "right" | "bottom",
   ): number {
-    return this.mainEl.nativeElement.getBoundingClientRect()[from] - this.measureScrollOffset(from);
+    return (
+      this.layout.mainContent().nativeElement.getBoundingClientRect()[from] -
+      this.measureScrollOffset(from)
+    );
   }
 }

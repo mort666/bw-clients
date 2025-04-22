@@ -1,3 +1,4 @@
+@let mainContentId = "main-content";
 <div class="tw-flex tw-w-full">
   <div class="tw-flex tw-w-full" cdkTrapFocus>
     <div
@@ -17,6 +18,7 @@
     </div>
     <ng-content select="bit-side-nav, [slot=side-nav]"></ng-content>
     <main
+      #main
       [id]="mainContentId"
       tabindex="-1"
       class="tw-overflow-auto tw-max-h-screen tw-min-w-0 tw-flex-1 tw-bg-background tw-p-6 md:tw-ml-0 tw-ml-16"

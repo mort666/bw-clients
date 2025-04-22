@@ -1,7 +1,7 @@
 import { A11yModule, CdkTrapFocus } from "@angular/cdk/a11y";
 import { PortalModule } from "@angular/cdk/portal";
 import { CommonModule } from "@angular/common";
-import { Component, inject } from "@angular/core";
+import { Component, ElementRef, inject, viewChild } from "@angular/core";
 import { RouterModule } from "@angular/router";
 
 import { DrawerService } from "../drawer/drawer.service";
@@ -24,15 +24,12 @@ import { SharedModule } from "../shared";
   ],
 })
 export class LayoutComponent {
-  protected mainContentId = "main-content";
   protected sideNavService = inject(SideNavService);
   protected drawerPortal = inject(DrawerService).portal;
 
-  getMainContent() {
-    return document.getElementById(this.mainContentId)!;
-  }
+  mainContent = viewChild.required<ElementRef<HTMLElement>>("main");
 
   protected focusMainContent() {
-    this.getMainContent().focus();
+    this.mainContent().nativeElement.focus();
   }
 }
