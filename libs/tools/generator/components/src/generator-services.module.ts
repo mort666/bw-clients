@@ -3,6 +3,7 @@ import { NgModule } from "@angular/core";
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { safeProvider } from "@bitwarden/angular/platform/utils/safe-provider";
 import { SafeInjectionToken } from "@bitwarden/angular/services/injection-tokens";
+import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -97,8 +98,8 @@ const SYSTEM_SERVICE_PROVIDER = new SafeInjectionToken<SystemServiceProvider>("S
         random: Randomizer,
         encryptor: LegacyEncryptorProvider,
         state: StateProvider,
-        rest: RestClient,
         i18n: I18nService,
+        api: ApiService,
       ) => {
         const userStateDeps = {
           encryptor,
@@ -115,7 +116,7 @@ const SYSTEM_SERVICE_PROVIDER = new SafeInjectionToken<SystemServiceProvider>("S
 
         const generator: providers.GeneratorDependencyProvider = {
           randomizer: random,
-          client: rest,
+          client: new RestClient(api, i18n),
           i18nService: i18n,
         };
 
@@ -137,8 +138,8 @@ const SYSTEM_SERVICE_PROVIDER = new SafeInjectionToken<SystemServiceProvider>("S
         RANDOMIZER,
         LegacyEncryptorProvider,
         StateProvider,
-        RestClient,
         I18nService,
+        ApiService,
       ],
     }),
     safeProvider({
