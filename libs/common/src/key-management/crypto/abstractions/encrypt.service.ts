@@ -8,11 +8,11 @@ import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-cr
 
 export abstract class EncryptService {
   /**
-   * Encrypts a string or Uint8Array to an EncString
+   * Encrypts a string to an EncString
    * @param plainValue - The value to encrypt
    * @param key - The key to encrypt the value with
    */
-  abstract encrypt(plainValue: string | Uint8Array, key: SymmetricCryptoKey): Promise<EncString>;
+  abstract encrypt(plainValue: string, key: SymmetricCryptoKey): Promise<EncString>;
   /**
    * Encrypts a value to a Uint8Array
    * @param plainValue - The value to encrypt
