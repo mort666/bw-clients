@@ -59,6 +59,24 @@ export class EncryptServiceImplementation implements EncryptService {
     return this.encryptUint8Array(Utils.fromUtf8ToArray(plainValue), key);
   }
 
+  async encryptBytes(plainValue: Uint8Array, key: SymmetricCryptoKey): Promise<EncString> {
+    if (key == null) {
+      throw new Error("No encryption key provided.");
+    }
+
+    if (this.blockType0) {
+      if (key.inner().type === EncryptionType.AesCbc256_B64 || key.key.byteLength < 64) {
+        throw new Error("Type 0 encryption is not supported.");
+      }
+    }
+
+    if (plainValue == null) {
+      return null;
+    }
+
+    return this.encryptUint8Array(plainValue, key);
+  }
+
   async wrapDecapsulationKey(
     decapsulationKeyPkcs8: Uint8Array,
     wrappingKey: SymmetricCryptoKey,

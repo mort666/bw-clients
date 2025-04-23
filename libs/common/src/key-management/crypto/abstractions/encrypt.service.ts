@@ -14,6 +14,14 @@ export abstract class EncryptService {
    */
   abstract encrypt(plainValue: string, key: SymmetricCryptoKey): Promise<EncString>;
   /**
+   * Encrypts bytes to an EncString
+   * @param plainValue - The value to encrypt
+   * @param key - The key to encrypt the value with
+   * @deprecated Bytes are not the right abstraction to encrypt in. Use e.g. key wrapping or file encryption instead
+   */
+  abstract encryptBytes(plainValue: Uint8Array, key: SymmetricCryptoKey): Promise<EncString>;
+
+  /**
    * Encrypts a value to a Uint8Array
    * @param plainValue - The value to encrypt
    * @param key - The key to encrypt the value with
