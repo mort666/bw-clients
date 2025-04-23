@@ -751,8 +751,10 @@ describe("deviceTrustService", () => {
           ),
         );
         encryptService.decryptToBytes.mockResolvedValue(new Uint8Array(64));
-        encryptService.encrypt.mockResolvedValue(new EncString("test_encrypted_data"));
-        encryptService.rsaEncrypt.mockResolvedValue(new EncString("test_encrypted_data"));
+        encryptService.wrapEncapsulationKey.mockResolvedValue(new EncString("test_encrypted_data"));
+        encryptService.encapsulateKeyUnsigned.mockResolvedValue(
+          new EncString("test_encrypted_data"),
+        );
 
         const protectedDeviceResponse = new ProtectedDeviceResponse({
           id: "",
