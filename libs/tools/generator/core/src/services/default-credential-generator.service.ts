@@ -1,4 +1,5 @@
 import {
+  EMPTY,
   concatMap,
   distinctUntilChanged,
   filter,
@@ -60,12 +61,14 @@ export class DefaultCredentialGeneratorService implements CredentialGeneratorSer
         } else if (isTypeRequest(requested)) {
           return this.provide.metadata.preference$(requested.type, { account$ });
         } else {
-          this.log.panic(requested, "algorithm or category required");
+          this.log.warn(requested, "algorithm or category required");
+          return EMPTY;
         }
       }),
       filter((algorithm): algorithm is CredentialAlgorithm => !!algorithm),
+      distinctUntilChanged(),
       map((algorithm) => this.provide.metadata.metadata(algorithm)),
-      distinctUntilChanged((previous, current) => previous.id === current.id),
+      shareReplay({ refCount: true, bufferSize: 1 }),
     );
 
     // load the active profile's algorithm settings
@@ -84,9 +87,8 @@ export class DefaultCredentialGeneratorService implements CredentialGeneratorSer
 
     // generation proper
     const generate$ = on$.pipe(
-      withLatestReady(engine$),
-      withLatestReady(settings$),
-      concatMap(([[request, engine], settings]) => engine.generate(request, settings)),
+      withLatestReady(settings$, engine$),
+      concatMap(([request, settings, engine]) => engine.generate(request, settings)),
       takeUntil(anyComplete([settings$])),
     );
 

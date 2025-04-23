@@ -32,7 +32,7 @@ type MockTwoLevelPartial<T> = {
     : T[K];
 };
 
-describe("CredentialGeneratorService", () => {
+describe("DefaultCredentialGeneratorService", () => {
   let service: DefaultCredentialGeneratorService;
   let providers: MockTwoLevelPartial<CredentialGeneratorProviders>;
   let system: any;

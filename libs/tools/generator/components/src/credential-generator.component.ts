@@ -23,6 +23,7 @@ import {
   ReplaySubject,
   Subject,
   takeUntil,
+  tap,
   withLatestFrom,
 } from "rxjs";
 
@@ -49,6 +50,7 @@ import {
   isPasswordAlgorithm,
   CredentialAlgorithm,
   AlgorithmMetadata,
+  Algorithm,
 } from "@bitwarden/generator-core";
 import { GeneratorHistoryService } from "@bitwarden/generator-history";
 
@@ -79,6 +81,8 @@ export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestro
     private ariaLive: LiveAnnouncer,
   ) {}
 
+  protected readonly Algorithm = Algorithm;
+
   /** Binds the component to a specific user's settings. When this input is not provided,
    * the form binds to the active user
    */
@@ -91,7 +95,7 @@ export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestro
    *  @warning this may reveal sensitive information in plaintext.
    */
   @Input()
-  debug: boolean = false;
+  debug: boolean = true;
 
   // this `log` initializer is overridden in `ngOnInit`
   private log: SemanticLogger = disabledSemanticLoggerProvider({});
@@ -230,7 +234,9 @@ export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestro
     // wire up the generator
     this.generatorService
       .generator$({
-        on$: this.generate$,
+        on$: this.generate$.pipe(
+          tap((g) => this.log.debug(g, "generate request issued by component")),
+        ),
         account$: this.account$,
       })
       .pipe(
@@ -290,7 +296,7 @@ export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestro
           } else if (root.nav) {
             return { nav: root.nav, algorithm: JSON.parse(root.nav) };
           } else {
-            this.log.panic(root, "unknown navigation value.");
+            return { nav: IDENTIFIER };
           }
         }),
         takeUntil(this.destroyed),
@@ -305,7 +311,7 @@ export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestro
           } else if (username.nav) {
             return { nav: username.nav, algorithm: JSON.parse(username.nav) };
           } else {
-            this.log.panic(username, "unknown navigation value.");
+            return { nav: FORWARDER };
           }
         }),
         takeUntil(this.destroyed),
