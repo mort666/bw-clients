@@ -1,33 +1,40 @@
 import { CdkScrollable } from "@angular/cdk/scrolling";
-import { Injector, Signal, inject, runInInjectionContext } from "@angular/core";
-import { toSignal } from "@angular/core/rxjs-interop";
-import { map } from "rxjs";
+import { Signal, inject, signal } from "@angular/core";
+import { toObservable, toSignal } from "@angular/core/rxjs-interop";
+import { map, switchMap } from "rxjs";
 
 export type ScrollState = {
   /** `true` when the scrollbar is not at the top-most position */
-  top: Signal<boolean>;
+  top: boolean;
 
   /** `true` when the scrollbar is not at the bottom-most position */
-  bottom: Signal<boolean>;
+  bottom: boolean;
 };
 
 /**
  * Check if a `CdkScrollable` instance has been scrolled
- * @param scrollable The element to check
- * @param injector An optional injector; needed if called from outside an injection context
- * @returns {ScrollState}
+ * @param scrollable The instance to check, defaults to the one provided by the current injector
+ * @returns {Signal<ScrollState>}
  */
-export const hasScrolledFrom = (scrollable: CdkScrollable, injector?: Injector): ScrollState => {
-  const _injector = injector ?? inject(Injector);
-  const scrollState$ = scrollable.elementScrolled().pipe(
-    map(() => ({
-      top: scrollable.measureScrollOffset("top") > 0,
-      bottom: scrollable.measureScrollOffset("bottom") > 0,
-    })),
+export const hasScrolledFrom = (scrollable?: Signal<CdkScrollable>): Signal<ScrollState> => {
+  const _scrollable = scrollable ?? signal(inject(CdkScrollable));
+  const scrollable$ = toObservable(_scrollable);
+
+  const scrollState$ = scrollable$.pipe(
+    switchMap((_scrollable) =>
+      _scrollable.elementScrolled().pipe(
+        map(() => ({
+          top: _scrollable.measureScrollOffset("top") > 0,
+          bottom: _scrollable.measureScrollOffset("bottom") > 0,
+        })),
+      ),
+    ),
   );
 
-  return runInInjectionContext(_injector, () => ({
-    top: toSignal(scrollState$.pipe(map(($) => $.top)), { initialValue: false }),
-    bottom: toSignal(scrollState$.pipe(map(($) => $.bottom)), { initialValue: false }),
-  }));
+  return toSignal(scrollState$, {
+    initialValue: {
+      top: false,
+      bottom: false,
+    },
+  });
 };

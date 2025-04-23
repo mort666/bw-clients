@@ -1,5 +1,5 @@
 import { CdkScrollable } from "@angular/cdk/scrolling";
-import { ChangeDetectionStrategy, Component, inject } from "@angular/core";
+import { ChangeDetectionStrategy, Component } from "@angular/core";
 
 import { hasScrolledFrom } from "../utils/has-scrolled-from";
 
@@ -14,7 +14,7 @@ import { hasScrolledFrom } from "../utils/has-scrolled-from";
   host: {
     class:
       "tw-p-4 tw-pt-0 tw-block tw-overflow-auto tw-border-solid tw-border tw-border-transparent tw-transition-colors tw-duration-200",
-    "[class.tw-border-t-secondary-300]": "this.hasScrolledFrom.top()",
+    "[class.tw-border-t-secondary-300]": "this.hasScrolledFrom().top",
   },
   hostDirectives: [
     {
@@ -24,5 +24,5 @@ import { hasScrolledFrom } from "../utils/has-scrolled-from";
   template: ` <ng-content></ng-content> `,
 })
 export class DrawerBodyComponent {
-  protected hasScrolledFrom = hasScrolledFrom(inject(CdkScrollable));
+  protected hasScrolledFrom = hasScrolledFrom();
 }
