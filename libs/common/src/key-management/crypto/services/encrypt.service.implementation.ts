@@ -296,6 +296,22 @@ export class EncryptServiceImplementation implements EncryptService {
     }
   }
 
+  async decryptFileData(
+    encryptedFileData: EncArrayBuffer,
+    key: SymmetricCryptoKey,
+    decryptTrace?: string,
+  ): Promise<Uint8Array | null> {
+    if (key == null) {
+      throw new Error("No key provided for decryption.");
+    }
+
+    if (encryptedFileData == null) {
+      throw new Error("No data provided for decryption.");
+    }
+
+    return await this.decryptToBytes(encryptedFileData, key, decryptTrace);
+  }
+
   async encapsulateKeyUnsigned(
     sharedKey: SymmetricCryptoKey,
     encapsulationKey: Uint8Array,

@@ -287,6 +287,32 @@ describe("EncryptService", () => {
     });
   });
 
+  describe("decryptFileData", () => {
+    it("throws if no key is provided", () => {
+      return expect(encryptService.decryptFileData(null, null)).rejects.toThrow(
+        "No key provided for decryption.",
+      );
+    });
+    it("throws if no data is provided", () => {
+      return expect(
+        encryptService.decryptFileData(null, new SymmetricCryptoKey(makeStaticByteArray(32))),
+      ).rejects.toThrow("No data provided for decryption.");
+    });
+    it("calls decryptToBytes with the correct parameters", async () => {
+      const key = new SymmetricCryptoKey(makeStaticByteArray(32));
+      const encBuffer = new EncArrayBuffer(makeStaticByteArray(60, EncryptionType.AesCbc256_B64));
+      const decryptedBytes = makeStaticByteArray(10, 200);
+
+      encryptService.decryptToBytes = jest.fn().mockResolvedValue(decryptedBytes);
+
+      const actual = await encryptService.decryptFileData(encBuffer, key);
+
+      expect(encryptService.decryptToBytes).toHaveBeenCalledWith(encBuffer, key, undefined);
+
+      expect(actual).toEqualBuffer(decryptedBytes);
+    });
+  });
+
   describe("decryptToBytes", () => {
     const encType = EncryptionType.AesCbc256_HmacSha256_B64;
     const key = new SymmetricCryptoKey(makeStaticByteArray(64, 100));
