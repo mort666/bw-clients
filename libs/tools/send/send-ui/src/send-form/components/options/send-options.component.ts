@@ -127,7 +127,7 @@ export class SendOptionsComponent implements OnInit {
       pin({ name: () => "send-options.component", distinct: (p, c) => p.id === c.id }),
     );
     const generatedCredential = await firstValueFrom(
-      this.generatorService.generator$({ on$, account$ }),
+      this.generatorService.generate$({ on$, account$ }),
     );
 
     this.sendOptionsForm.patchValue({

@@ -26,7 +26,7 @@ export abstract class CredentialGeneratorService {
   /** Generates a stream of credentials
    * @param dependencies.on$ Required. A new credential is emitted when this emits.
    */
-  abstract generator$: (
+  abstract generate$: (
     dependencies: OnDependency<GenerateRequest> & BoundDependency<"account", Account>,
   ) => Observable<GeneratedCredential>;
 

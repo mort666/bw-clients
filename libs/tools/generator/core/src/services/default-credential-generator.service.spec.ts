@@ -112,7 +112,7 @@ describe("DefaultCredentialGeneratorService", () => {
         account$: of(account),
       };
 
-      const result = await firstValueFrom(service.generator$(dependencies));
+      const result = await firstValueFrom(service.generate$(dependencies));
 
       expect(result).toBe("generatedPassword");
       expect(providers.metadata!.metadata).toHaveBeenCalledWith("testAlgorithm");
@@ -141,7 +141,7 @@ describe("DefaultCredentialGeneratorService", () => {
         account$: of(account),
       };
 
-      const result = await firstValueFrom(service.generator$(dependencies));
+      const result = await firstValueFrom(service.generate$(dependencies));
 
       expect(result).toBe("generatedPassword");
       expect(providers.metadata!.metadata).toHaveBeenCalledWith("testAlgorithm");
