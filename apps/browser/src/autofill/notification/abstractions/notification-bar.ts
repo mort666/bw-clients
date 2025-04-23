@@ -7,6 +7,7 @@ const NotificationTypes = {
   Add: "add",
   Change: "change",
   Unlock: "unlock",
+  SecurityTaskNotice: "security-task-notice",
 } as const;
 
 type NotificationType = (typeof NotificationTypes)[keyof typeof NotificationTypes];
@@ -25,7 +26,7 @@ type NotificationBarIframeInitData = {
   organizations?: OrgView[];
   removeIndividualVault?: boolean;
   theme?: Theme;
-  type?: string; // @TODO use `NotificationType`
+  type?: NotificationType; // @TODO use `NotificationType`
 };
 
 type NotificationBarWindowMessage = {

@@ -242,6 +242,14 @@ export class BrowserApi {
     return tabs.find((t) => t.windowId === currentWindowId) ?? tabs[0];
   }
 
+  /**
+   *
+   * @param tab
+   * @param command
+   * @param data
+   * @returns
+   */
+
   static tabSendMessageData(
     tab: chrome.tabs.Tab,
     command: string,
