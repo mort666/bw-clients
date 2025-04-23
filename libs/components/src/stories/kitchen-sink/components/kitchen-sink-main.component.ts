@@ -12,7 +12,7 @@ import { KitchenSinkToggleList } from "./kitchen-sink-toggle-list.component";
   standalone: true,
   imports: [KitchenSinkSharedModule],
   template: `
-    <bit-dialog title="Dialog Title" [dialogSize]="dialogRef.isDrawer ? 'large' : 'large'">
+    <bit-dialog title="Dialog Title" dialogSize="small">
       <ng-container bitDialogContent>
         <p bitTypography="body1">
           Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt

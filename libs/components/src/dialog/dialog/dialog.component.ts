@@ -2,13 +2,23 @@
 // @ts-strict-ignore
 import { CdkTrapFocus } from "@angular/cdk/a11y";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
+import { CdkScrollable } from "@angular/cdk/scrolling";
 import { CommonModule } from "@angular/common";
-import { Component, HostBinding, Input, inject } from "@angular/core";
+import {
+  AfterViewInit,
+  Component,
+  HostBinding,
+  Injector,
+  Input,
+  inject,
+  viewChild,
+} from "@angular/core";
 
 import { I18nPipe } from "@bitwarden/ui-common";
 
 import { BitIconButtonComponent } from "../../icon-button/icon-button.component";
 import { TypographyDirective } from "../../typography/typography.directive";
+import { ScrollState, hasScrolledFrom } from "../../utils/has-scrolled-from";
 import { fadeIn } from "../animations";
 import { DialogRef } from "../dialog.service";
 import { DialogCloseDirective } from "../directives/dialog-close.directive";
@@ -30,10 +40,14 @@ import { DialogTitleContainerDirective } from "../directives/dialog-title-contai
     DialogCloseDirective,
     I18nPipe,
     CdkTrapFocus,
+    CdkScrollable,
   ],
 })
-export class DialogComponent {
+export class DialogComponent implements AfterViewInit {
   protected dialogRef = inject(DialogRef, { optional: true });
+  private scrollableBody = viewChild.required(CdkScrollable);
+  protected bodyHasScrolledFrom: ScrollState;
+  private injector = inject(Injector);
 
   /** Background color */
   @Input()
@@ -75,15 +89,19 @@ export class DialogComponent {
     return ["tw-flex", "tw-flex-col"]
       .concat(
         this.width,
-        !this.dialogRef.isDrawer
-          ? ["tw-p-4", "tw-w-screen", "tw-max-h-[90vh]"]
-          : ["tw-min-h-screen"],
+        this.dialogRef?.isDrawer
+          ? ["tw-min-h-screen"]
+          : ["tw-p-4", "tw-w-screen", "tw-max-h-[90vh]"],
       )
       .flat();
   }
 
+  ngAfterViewInit(): void {
+    this.bodyHasScrolledFrom = hasScrolledFrom(this.scrollableBody(), this.injector);
+  }
+
   handleEsc() {
-    this.dialogRef.close();
+    this.dialogRef?.close();
   }
 
   get width() {
