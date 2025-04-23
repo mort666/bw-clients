@@ -14,11 +14,11 @@ export abstract class EncryptService {
    */
   abstract encrypt(plainValue: string | Uint8Array, key: SymmetricCryptoKey): Promise<EncString>;
   /**
-   * Encrypts a value to a Uint8Array
-   * @param plainValue - The value to encrypt
+   * Encrypts a file and returns an EncArrayBuffer
+   * @param fileData - The file data to encrypt
    * @param key - The key to encrypt the value with
    */
-  abstract encryptToBytes(plainValue: Uint8Array, key: SymmetricCryptoKey): Promise<EncArrayBuffer>;
+  abstract encryptFileData(fileData: Uint8Array, key: SymmetricCryptoKey): Promise<EncArrayBuffer>;
 
   /**
    * Wraps a decapsulation key (Private key) with a symmetric key

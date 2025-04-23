@@ -135,7 +135,7 @@ export class EncryptServiceImplementation implements EncryptService {
     }
   }
 
-  async encryptToBytes(plainValue: Uint8Array, key: SymmetricCryptoKey): Promise<EncArrayBuffer> {
+  async encryptFileData(fileData: Uint8Array, key: SymmetricCryptoKey): Promise<EncArrayBuffer> {
     if (key == null) {
       throw new Error("No encryption key provided.");
     }
@@ -148,7 +148,7 @@ export class EncryptServiceImplementation implements EncryptService {
 
     const innerKey = key.inner();
     if (innerKey.type === EncryptionType.AesCbc256_HmacSha256_B64) {
-      const encValue = await this.aesEncrypt(plainValue, innerKey);
+      const encValue = await this.aesEncrypt(fileData, innerKey);
       const macLen = encValue.mac.length;
       const encBytes = new Uint8Array(
         1 + encValue.iv.byteLength + macLen + encValue.data.byteLength,
@@ -159,7 +159,7 @@ export class EncryptServiceImplementation implements EncryptService {
       encBytes.set(new Uint8Array(encValue.data), 1 + encValue.iv.byteLength + macLen);
       return new EncArrayBuffer(encBytes);
     } else if (innerKey.type === EncryptionType.AesCbc256_B64) {
-      const encValue = await this.aesEncryptLegacy(plainValue, innerKey);
+      const encValue = await this.aesEncryptLegacy(fileData, innerKey);
       const encBytes = new Uint8Array(1 + encValue.iv.byteLength + encValue.data.byteLength);
       encBytes.set([innerKey.type]);
       encBytes.set(new Uint8Array(encValue.iv), 1);

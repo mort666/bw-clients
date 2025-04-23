@@ -330,7 +330,7 @@ export class SendService implements InternalSendServiceAbstraction {
       key = await this.keyService.getUserKey();
     }
     const encFileName = await this.encryptService.encrypt(fileName, key);
-    const encFileData = await this.encryptService.encryptToBytes(new Uint8Array(data), key);
+    const encFileData = await this.encryptService.encryptFileData(new Uint8Array(data), key);
     return [encFileName, encFileData];
   }
 

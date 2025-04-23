@@ -131,7 +131,7 @@ describe("Cipher Service", () => {
   let cipherObj: Cipher;
 
   beforeEach(() => {
-    encryptService.encryptToBytes.mockReturnValue(Promise.resolve(ENCRYPTED_BYTES));
+    encryptService.encryptFileData.mockReturnValue(Promise.resolve(ENCRYPTED_BYTES));
     encryptService.encrypt.mockReturnValue(Promise.resolve(new EncString(ENCRYPTED_TEXT)));
 
     (window as any).bitwardenContainerService = new ContainerService(keyService, encryptService);

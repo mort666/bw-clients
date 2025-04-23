@@ -898,7 +898,7 @@ export class CipherService implements CipherServiceAbstraction {
     const encFileName = await this.encryptService.encrypt(filename, cipherEncKey);
 
     const dataEncKey = await this.keyService.makeDataEncKey(cipherEncKey);
-    const encData = await this.encryptService.encryptToBytes(new Uint8Array(data), dataEncKey[0]);
+    const encData = await this.encryptService.encryptFileData(new Uint8Array(data), dataEncKey[0]);
 
     const response = await this.cipherFileUploadService.upload(
       cipher,
@@ -1499,7 +1499,10 @@ export class CipherService implements CipherServiceAbstraction {
     const dataEncKey = await this.keyService.makeDataEncKey(encKey);
 
     const encFileName = await this.encryptService.encrypt(attachmentView.fileName, encKey);
-    const encData = await this.encryptService.encryptToBytes(new Uint8Array(decBuf), dataEncKey[0]);
+    const encData = await this.encryptService.encryptFileData(
+      new Uint8Array(decBuf),
+      dataEncKey[0],
+    );
 
     const fd = new FormData();
     try {
