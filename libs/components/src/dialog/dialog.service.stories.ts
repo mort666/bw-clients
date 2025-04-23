@@ -139,6 +139,7 @@ export const Default: Story = {
   },
 };
 
+/** Drawers must be a descendant of `bit-layout`. */
 export const Drawer: Story = {
   play: async (context) => {
     const canvas = context.canvasElement;
