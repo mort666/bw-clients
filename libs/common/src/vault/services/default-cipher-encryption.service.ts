@@ -1,9 +1,10 @@
 import { EMPTY, catchError, firstValueFrom, map, of } from "rxjs";
 
-import { CipherListView } from "@bitwarden/sdk-internal";
+import { BitwardenClient, CipherListView } from "@bitwarden/sdk-internal";
 
 import { LogService } from "../../platform/abstractions/log.service";
 import { SdkService } from "../../platform/abstractions/sdk/sdk.service";
+import { Ref } from "../../platform/misc/reference-counting/rc";
 import { UserId } from "../../types/guid";
 import { CipherEncryptionService } from "../abstractions/cipher-encryption.service";
 import { CipherType } from "../enums";
@@ -21,61 +22,61 @@ export class DefaultCipherEncryptionService implements CipherEncryptionService {
   /**
    * {@inheritdoc}
    */
-  async decrypt(cipher: Cipher, userId: UserId): Promise<CipherView> {
-    return firstValueFrom(
-      this.sdkService.userClient$(userId).pipe(
-        map((sdk) => {
-          if (!sdk) {
-            throw new Error("SDK not available");
-          }
+  async decrypt(cipher: Cipher, userId: UserId, ref: Ref<BitwardenClient>): Promise<CipherView> {
+    // return firstValueFrom(
+    //   this.sdkService.userClient$(userId).pipe(
+    //     map((sdk) => {
+    //       if (!sdk) {
+    //         throw new Error("SDK not available");
+    //       }
 
-          using ref = sdk.take();
-          const sdkCipherView = ref.value.vault().ciphers().decrypt(cipher.toSdkCipher());
+    // using ref = sdk.take();
+    const sdkCipherView = ref.value.vault().ciphers().decrypt(cipher.toSdkCipher());
 
-          const clientCipherView = CipherView.fromSdkCipherView(sdkCipherView)!;
+    const clientCipherView = CipherView.fromSdkCipherView(sdkCipherView)!;
 
-          // Decrypt Fido2 credentials if available
-          if (
-            clientCipherView.type === CipherType.Login &&
-            sdkCipherView.login?.fido2Credentials?.length
-          ) {
-            const fido2CredentialViews = ref.value
-              .vault()
-              .ciphers()
-              .decrypt_fido2_credentials(sdkCipherView);
+    // Decrypt Fido2 credentials if available
+    if (
+      clientCipherView.type === CipherType.Login &&
+      sdkCipherView.login?.fido2Credentials?.length
+    ) {
+      const fido2CredentialViews = ref.value
+        .vault()
+        .ciphers()
+        .decrypt_fido2_credentials(sdkCipherView);
 
-            // TEMPORARY: Manually decrypt the keyValue for Fido2 credentials since don't currently use the SDK for Fido2 Authentication.
-            const decryptedKeyValue = ref.value
-              .vault()
-              .ciphers()
-              .decrypt_fido2_private_key(sdkCipherView);
+      // TEMPORARY: Manually decrypt the keyValue for Fido2 credentials since don't currently use the SDK for Fido2 Authentication.
+      const decryptedKeyValue = ref.value
+        .vault()
+        .ciphers()
+        .decrypt_fido2_private_key(sdkCipherView);
 
-            clientCipherView.login.fido2Credentials = fido2CredentialViews
-              .map((f) => {
-                const view = Fido2CredentialView.fromSdkFido2CredentialView(f)!;
+      clientCipherView.login.fido2Credentials = fido2CredentialViews
+        .map((f) => {
+          const view = Fido2CredentialView.fromSdkFido2CredentialView(f)!;
 
-                return {
-                  ...view,
-                  keyValue: decryptedKeyValue,
-                };
-              })
-              .filter((view): view is Fido2CredentialView => view !== undefined);
-          }
+          return {
+            ...view,
+            keyValue: decryptedKeyValue,
+          };
+        })
+        .filter((view): view is Fido2CredentialView => view !== undefined);
+    }
 
-          return clientCipherView;
-        }),
-        catchError((error: unknown) => {
-          this.logService.error(`Failed to decrypt cipher ${cipher.id}: ${error}`);
+    return clientCipherView;
+    //   }),
+    //   catchError((error: unknown) => {
+    //     this.logService.error(`Failed to decrypt cipher ${cipher.id}: ${error}`);
 
-          // Return failed cipher view
-          const failedView = new CipherView(cipher);
-          failedView.decryptionFailure = true;
-          failedView.name = "[error: cannot decrypt]";
+    //     // Return failed cipher view
+    //     const failedView = new CipherView(cipher);
+    //     failedView.decryptionFailure = true;
+    //     failedView.name = "[error: cannot decrypt]";
 
-          return of(failedView);
-        }),
-      ),
-    );
+    //     return of(failedView);
+    //   }),
+    // ),
+    // );
   }
 
   /**

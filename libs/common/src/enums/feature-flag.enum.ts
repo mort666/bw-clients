@@ -108,7 +108,7 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.SecurityTasks]: FALSE,
   [FeatureFlag.CipherKeyEncryption]: FALSE,
   [FeatureFlag.EndUserNotifications]: FALSE,
-  [FeatureFlag.PM19941MigrateCipherDomainToSdk]: FALSE,
+  [FeatureFlag.PM19941MigrateCipherDomainToSdk]: true,
 
   /* Auth */
   [FeatureFlag.PM9112_DeviceApprovalPersistence]: FALSE,

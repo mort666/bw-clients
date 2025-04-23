@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
 import { combineLatest, filter, firstValueFrom, map, Observable, Subject, switchMap } from "rxjs";
@@ -20,6 +21,7 @@ import { ListResponse } from "../../models/response/list.response";
 import { View } from "../../models/view/view";
 import { ConfigService } from "../../platform/abstractions/config/config.service";
 import { I18nService } from "../../platform/abstractions/i18n.service";
+import { SdkService } from "../../platform/abstractions/sdk/sdk.service";
 import { StateService } from "../../platform/abstractions/state.service";
 import { Utils } from "../../platform/misc/utils";
 import Domain from "../../platform/models/domain/domain-base";
@@ -105,6 +107,7 @@ export class CipherService implements CipherServiceAbstraction {
     private accountService: AccountService,
     private logService: LogService,
     private cipherEncryptionService: CipherEncryptionService,
+    private sdkService: SdkService,
   ) {}
 
   localData$(userId: UserId): Observable<Record<CipherId, LocalData>> {
@@ -489,7 +492,9 @@ export class CipherService implements CipherServiceAbstraction {
    */
   async decrypt(cipher: Cipher, userId: UserId): Promise<CipherView> {
     if (await this.configService.getFeatureFlag(FeatureFlag.PM19941MigrateCipherDomainToSdk)) {
-      return await this.cipherEncryptionService.decrypt(cipher, userId);
+      const sdkClient = await firstValueFrom(this.sdkService.userClient$(userId));
+      using ref = sdkClient.take();
+      return await this.cipherEncryptionService.decrypt(cipher, userId, ref);
     } else {
       const encKey = await this.getKeyForCipherKeyDecryption(cipher, userId);
       return await cipher.decrypt(encKey);
@@ -1863,9 +1868,24 @@ export class CipherService implements CipherServiceAbstraction {
     ciphers: Cipher[],
     userId: UserId,
   ): Promise<[CipherView[], CipherView[]]> {
+    const sdkClient = await firstValueFrom(this.sdkService.userClient$(userId));
+    using ref = sdkClient.take();
+
+    console.log("Decrypting ciphers with SDK: Promise.all");
+    console.time("promise-all-decryption");
     const decryptedViews = await Promise.all(
-      ciphers.map((cipher) => this.cipherEncryptionService.decrypt(cipher, userId)),
+      ciphers.map((cipher) => this.cipherEncryptionService.decrypt(cipher, userId, ref)),
     );
+    console.timeEnd("promise-all-decryption");
+
+    console.log("Decrypting ciphers with SDK: FOR-OF Loop");
+    console.time("for-of-decryption");
+    const decryptedViews_loop = [];
+    for (const cipher of ciphers) {
+      const decryptedView = await this.cipherEncryptionService.decrypt(cipher, userId, ref);
+      decryptedViews_loop.push(decryptedView);
+    }
+    console.timeEnd("for-of-decryption");
 
     const successful: CipherView[] = [];
     const failed: CipherView[] = [];

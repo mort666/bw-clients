@@ -1,5 +1,6 @@
-import { CipherListView } from "@bitwarden/sdk-internal";
+import { BitwardenClient, CipherListView } from "@bitwarden/sdk-internal";
 
+import { Ref } from "../../platform/misc/reference-counting/rc";
 import { UserId } from "../../types/guid";
 import { Attachment } from "../models/domain/attachment";
 import { Cipher } from "../models/domain/cipher";
@@ -17,7 +18,11 @@ export abstract class CipherEncryptionService {
    *
    * @returns A promise that resolves to the decrypted cipher view
    */
-  abstract decrypt(cipher: Cipher, userId: UserId): Promise<CipherView>;
+  abstract decrypt(
+    cipher: Cipher,
+    userId: UserId,
+    sdkClient: Ref<BitwardenClient>,
+  ): Promise<CipherView>;
   /**
    * Decrypts a list of ciphers using the SDK for the given userId.
    *
