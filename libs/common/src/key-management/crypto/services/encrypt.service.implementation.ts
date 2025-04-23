@@ -41,7 +41,7 @@ export class EncryptServiceImplementation implements EncryptService {
     this.blockType0 = getFeatureFlagValue(newConfig, FeatureFlag.PM17987_BlockType0);
   }
 
-  async encrypt(plainValue: string | Uint8Array, key: SymmetricCryptoKey): Promise<EncString> {
+  async encrypt(plainValue: string, key: SymmetricCryptoKey): Promise<EncString> {
     if (key == null) {
       throw new Error("No encryption key provided.");
     }
@@ -53,14 +53,10 @@ export class EncryptServiceImplementation implements EncryptService {
     }
 
     if (plainValue == null) {
-      return Promise.resolve(null);
+      return null;
     }
 
-    if (typeof plainValue === "string") {
-      return this.encryptUint8Array(Utils.fromUtf8ToArray(plainValue), key);
-    } else {
-      return this.encryptUint8Array(plainValue, key);
-    }
+    return this.encryptUint8Array(Utils.fromUtf8ToArray(plainValue), key);
   }
 
   async wrapDecapsulationKey(
