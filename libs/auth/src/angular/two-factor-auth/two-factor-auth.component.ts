@@ -198,7 +198,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
 
     // Only set default 2FA provider type if we don't have one from cache
     if (!loadedCachedProviderType) {
-      await this.setSelected2faProviderType();
+      await this.initializeSelected2faProviderType();
     }
 
     await this.set2faProvidersAndData();
@@ -227,7 +227,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
     });
   }
 
-  private async setSelected2faProviderType() {
+  private async initializeSelected2faProviderType() {
     const webAuthnSupported = this.platformUtilsService.supportsWebAuthn(this.win);
 
     if (
