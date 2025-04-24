@@ -77,11 +77,11 @@ export class DialogComponent {
 
   @HostBinding("class") get classes() {
     // `tw-max-h-[90vh]` is needed to prevent dialogs from overlapping the desktop header
-    return ["tw-flex", "tw-flex-col"]
+    return ["tw-flex", "tw-flex-col", "tw-w-screen"]
       .concat(
         this.width,
         this.dialogRef?.isDrawer
-          ? ["tw-min-h-screen"]
+          ? ["tw-min-h-screen", "md:tw-w-[23rem]"]
           : ["tw-p-4", "tw-w-screen", "tw-max-h-[90vh]"],
       )
       .flat();
