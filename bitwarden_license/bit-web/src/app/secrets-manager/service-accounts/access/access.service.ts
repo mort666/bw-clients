@@ -130,7 +130,7 @@ export class AccessService {
       accessTokenResponses.map(async (s) => {
         const view = new AccessTokenView();
         view.id = s.id;
-        view.name = await this.encryptService.decryptToUtf8(new EncString(s.name), orgKey);
+        view.name = await this.encryptService.decryptString(new EncString(s.name), orgKey);
         view.scopes = s.scopes;
         view.expireAt = s.expireAt ? new Date(s.expireAt) : null;
         view.creationDate = new Date(s.creationDate);

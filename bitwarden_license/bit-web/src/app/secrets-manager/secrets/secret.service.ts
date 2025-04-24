@@ -193,9 +193,9 @@ export class SecretService {
     secretView.revisionDate = secretResponse.revisionDate;
 
     const [name, value, note] = await Promise.all([
-      this.encryptService.decryptToUtf8(new EncString(secretResponse.name), orgKey),
-      this.encryptService.decryptToUtf8(new EncString(secretResponse.value), orgKey),
-      this.encryptService.decryptToUtf8(new EncString(secretResponse.note), orgKey),
+      this.encryptService.decryptString(new EncString(secretResponse.name), orgKey),
+      this.encryptService.decryptString(new EncString(secretResponse.value), orgKey),
+      this.encryptService.decryptString(new EncString(secretResponse.note), orgKey),
     ]);
     secretView.name = name;
     secretView.value = value;
@@ -230,7 +230,7 @@ export class SecretService {
         const secretListView = new SecretListView();
         secretListView.id = s.id;
         secretListView.organizationId = s.organizationId;
-        secretListView.name = await this.encryptService.decryptToUtf8(
+        secretListView.name = await this.encryptService.decryptString(
           new EncString(s.name),
           orgKey,
         );
@@ -259,7 +259,7 @@ export class SecretService {
         const projectsMappedToSecretView = new SecretProjectView();
         projectsMappedToSecretView.id = s.id;
         projectsMappedToSecretView.name = s.name
-          ? await this.encryptService.decryptToUtf8(new EncString(s.name), orgKey)
+          ? await this.encryptService.decryptString(new EncString(s.name), orgKey)
           : null;
         return projectsMappedToSecretView;
       }),

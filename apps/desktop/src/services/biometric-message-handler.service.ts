@@ -160,7 +160,7 @@ export class BiometricMessageHandlerService {
     }
 
     const message: LegacyMessage = JSON.parse(
-      await this.encryptService.decryptToUtf8(
+      await this.encryptService.decryptString(
         rawMessage as EncString,
         SymmetricCryptoKey.fromString(sessionSecret),
       ),

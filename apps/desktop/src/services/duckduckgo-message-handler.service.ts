@@ -188,7 +188,7 @@ export class DuckDuckGoMessageHandlerService {
     }
 
     try {
-      let decryptedResult = await this.encryptService.decryptToUtf8(
+      let decryptedResult = await this.encryptService.decryptString(
         message.encryptedCommand as EncString,
         this.duckduckgoSharedSecret,
         "ddg-shared-key",

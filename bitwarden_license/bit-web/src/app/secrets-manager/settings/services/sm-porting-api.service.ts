@@ -129,7 +129,7 @@ export class SecretsManagerPortingApiService {
       exportData.projects.map(async (p) => {
         const project = new SecretsManagerExportProject();
         project.id = p.id;
-        project.name = await this.encryptService.decryptToUtf8(new EncString(p.name), orgKey);
+        project.name = await this.encryptService.decryptString(new EncString(p.name), orgKey);
         return project;
       }),
     );
@@ -139,9 +139,9 @@ export class SecretsManagerPortingApiService {
         const secret = new SecretsManagerExportSecret();
 
         [secret.key, secret.value, secret.note] = await Promise.all([
-          this.encryptService.decryptToUtf8(new EncString(s.key), orgKey),
-          this.encryptService.decryptToUtf8(new EncString(s.value), orgKey),
-          this.encryptService.decryptToUtf8(new EncString(s.note), orgKey),
+          this.encryptService.decryptString(new EncString(s.key), orgKey),
+          this.encryptService.decryptString(new EncString(s.value), orgKey),
+          this.encryptService.decryptString(new EncString(s.note), orgKey),
         ]);
 
         secret.id = s.id;

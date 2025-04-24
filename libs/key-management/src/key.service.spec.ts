@@ -330,7 +330,7 @@ describe("keyService", () => {
       everHadUserKeyState.nextState(null);
 
       // Mock private key decryption
-      encryptService.decryptToBytes.mockResolvedValue(mockRandomBytes);
+      encryptService.unwrapDecapsulationKey.mockResolvedValue(mockRandomBytes);
     });
 
     it("throws if userKey is null", async () => {
@@ -352,7 +352,7 @@ describe("keyService", () => {
     });
 
     it("throws if encPrivateKey cannot be decrypted with the userKey", async () => {
-      encryptService.decryptToBytes.mockResolvedValue(null);
+      encryptService.unwrapDecapsulationKey.mockResolvedValue(null);
 
       await expect(
         keyService.setUserKeys(mockUserKey, mockEncPrivateKey, mockUserId),
@@ -452,17 +452,16 @@ describe("keyService", () => {
 
       // Decryption of the user private key
       const fakeDecryptedUserPrivateKey = makeStaticByteArray(10, 1);
-      encryptService.decryptToBytes.mockResolvedValue(fakeDecryptedUserPrivateKey);
+      encryptService.unwrapDecapsulationKey.mockResolvedValue(fakeDecryptedUserPrivateKey);
 
       const fakeUserPublicKey = makeStaticByteArray(10, 2);
       cryptoFunctionService.rsaExtractPublicKey.mockResolvedValue(fakeUserPublicKey);
 
       const userPrivateKey = await firstValueFrom(keyService.userPrivateKey$(mockUserId));
 
-      expect(encryptService.decryptToBytes).toHaveBeenCalledWith(
+      expect(encryptService.unwrapDecapsulationKey).toHaveBeenCalledWith(
         fakeEncryptedUserPrivateKey,
-        userKey,
-        "Content: Encrypted Private Key",
+        userKey
       );
 
       expect(userPrivateKey).toBe(fakeDecryptedUserPrivateKey);
@@ -473,7 +472,7 @@ describe("keyService", () => {
 
       const userPrivateKey = await firstValueFrom(keyService.userPrivateKey$(mockUserId));
 
-      expect(encryptService.decryptToBytes).not.toHaveBeenCalled();
+      expect(encryptService.unwrapDecapsulationKey).not.toHaveBeenCalled();
 
       expect(userPrivateKey).toBeFalsy();
     });
@@ -552,7 +551,7 @@ describe("keyService", () => {
         providerKeysState.nextState(keys.providerKeys!);
       }
 
-      encryptService.decryptToBytes.mockImplementation((encryptedPrivateKey, userKey) => {
+      encryptService.unwrapDecapsulationKey.mockImplementation((encryptedPrivateKey, userKey) => {
         // TOOD: Branch between provider and private key?
         return Promise.resolve(fakePrivateKeyDecryption(encryptedPrivateKey, userKey));
       });

@@ -84,8 +84,8 @@ export class SetupBusinessUnitComponent extends BaseAcceptComponent {
 
     const organizationKey = await firstValueFrom(organizationKey$);
 
-    const { encryptedString: encryptedOrganizationKey } = await this.encryptService.encrypt(
-      organizationKey.key,
+    const { encryptedString: encryptedOrganizationKey } = await this.encryptService.wrapSymmetricKey(
+      organizationKey,
       providerKey,
     );
 

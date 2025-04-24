@@ -144,7 +144,7 @@ export class ServiceAccountService {
     serviceAccountView.creationDate = serviceAccountResponse.creationDate;
     serviceAccountView.revisionDate = serviceAccountResponse.revisionDate;
     serviceAccountView.name = serviceAccountResponse.name
-      ? await this.encryptService.decryptToUtf8(
+      ? await this.encryptService.decryptString(
           new EncString(serviceAccountResponse.name),
           organizationKey,
         )
@@ -163,7 +163,7 @@ export class ServiceAccountService {
     view.revisionDate = response.revisionDate;
     view.accessToSecrets = response.accessToSecrets;
     view.name = response.name
-      ? await this.encryptService.decryptToUtf8(new EncString(response.name), organizationKey)
+      ? await this.encryptService.decryptString(new EncString(response.name), organizationKey)
       : null;
     return view;
   }

@@ -58,7 +58,7 @@ function setupUserKeyValidation(
   cipher.notes = mockEnc("EncryptedString");
   cipher.key = mockEnc("EncKey");
   cipherService.getAll.mockResolvedValue([cipher]);
-  encryptService.decryptToBytes.mockResolvedValue(makeStaticByteArray(64));
+  encryptService.decryptFileData.mockResolvedValue(makeStaticByteArray(64));
   (window as any).bitwardenContainerService = new ContainerService(keyService, encryptService);
 }
 
@@ -279,7 +279,7 @@ describe("regenerateIfNeeded", () => {
     };
     setupVerificationResponse(mockVerificationResponse, sdkService);
     setupUserKeyValidation(cipherService, keyService, encryptService);
-    encryptService.decryptToBytes.mockRejectedValue(new Error("error"));
+    encryptService.decryptFileData.mockRejectedValue(new Error("error"));
 
     await sut.regenerateIfNeeded(userId);
 
@@ -328,7 +328,7 @@ describe("regenerateIfNeeded", () => {
     };
     setupVerificationResponse(mockVerificationResponse, sdkService);
     setupUserKeyValidation(cipherService, keyService, encryptService);
-    encryptService.decryptToBytes.mockRejectedValue(new Error("error"));
+    encryptService.decryptFileData.mockRejectedValue(new Error("error"));
 
     await sut.regenerateIfNeeded(userId);
 

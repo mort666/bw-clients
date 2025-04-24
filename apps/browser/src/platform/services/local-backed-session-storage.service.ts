@@ -118,7 +118,7 @@ export class LocalBackedSessionStorageService
       return null;
     }
 
-    const valueJson = await this.encryptService.decryptToUtf8(
+    const valueJson = await this.encryptService.decryptString(
       new EncString(local),
       encKey,
       "browser-session-key",
