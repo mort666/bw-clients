@@ -196,9 +196,12 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
       }
     }
 
-    // Only set default 2FA provider type if we don't have one from cache
+    // If we don't have a cached provider type, set it to the default and cache it
     if (!loadedCachedProviderType) {
-      await this.initializeSelected2faProviderType();
+      this.selectedProviderType = await this.initializeSelected2faProviderType();
+      this.twoFactorAuthComponentCacheService.cacheData({
+        selectedProviderType: this.selectedProviderType,
+      });
     }
 
     await this.set2faProvidersAndData();
@@ -227,7 +230,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
     });
   }
 
-  private async initializeSelected2faProviderType() {
+  private async initializeSelected2faProviderType(): Promise<TwoFactorProviderType> {
     const webAuthnSupported = this.platformUtilsService.supportsWebAuthn(this.win);
 
     if (
@@ -236,12 +239,11 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
     ) {
       const webAuthn2faResponse = this.activatedRoute.snapshot.paramMap.get("webAuthnResponse");
       if (webAuthn2faResponse) {
-        this.selectedProviderType = TwoFactorProviderType.WebAuthn;
-        return;
+        return TwoFactorProviderType.WebAuthn;
       }
     }
 
-    this.selectedProviderType = await this.twoFactorService.getDefaultProvider(webAuthnSupported);
+    return await this.twoFactorService.getDefaultProvider(webAuthnSupported);
   }
 
   private async set2faProvidersAndData() {
