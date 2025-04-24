@@ -152,8 +152,6 @@ describe("EncryptService", () => {
     });
   });
 
-  describe("unwrapSymmetricKey", () => {});
-
   describe("onServerConfigChange", () => {
     const newConfig = mock<ServerConfig>();
 
