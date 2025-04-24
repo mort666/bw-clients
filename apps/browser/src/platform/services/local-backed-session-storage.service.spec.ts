@@ -127,7 +127,7 @@ describe("LocalBackedSessionStorage", () => {
   describe("save", () => {
     const encString = makeEncString("encrypted");
     beforeEach(() => {
-      encryptService.encrypt.mockResolvedValue(encString);
+      encryptService.encryptString.mockResolvedValue(encString);
     });
 
     it("logs a warning when saving the same value twice and in a dev environment", async () => {
@@ -157,7 +157,10 @@ describe("LocalBackedSessionStorage", () => {
 
     it("encrypts and saves the value to local storage", async () => {
       await sut.save("test", "value");
-      expect(encryptService.encrypt).toHaveBeenCalledWith(JSON.stringify("value"), sessionKey);
+      expect(encryptService.encryptString).toHaveBeenCalledWith(
+        JSON.stringify("value"),
+        sessionKey,
+      );
       expect(localStorage.internalStore["session_test"]).toEqual(encString.encryptedString);
     });
 

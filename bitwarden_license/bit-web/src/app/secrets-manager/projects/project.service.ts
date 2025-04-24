@@ -93,7 +93,7 @@ export class ProjectService {
   ): Promise<ProjectRequest> {
     const orgKey = await this.getOrganizationKey(organizationId);
     const request = new ProjectRequest();
-    request.name = await this.encryptService.encryptStringprojectView.name, orgKey);
+    request.name = await this.encryptService.encryptString(projectView.name, orgKey);
 
     return request;
   }

@@ -166,9 +166,9 @@ export class SecretService {
     const orgKey = await this.getOrganizationKey(organizationId);
     const request = new SecretRequest();
     const [key, value, note] = await Promise.all([
-      this.encryptService.encrypt(secretView.name, orgKey),
-      this.encryptService.encrypt(secretView.value, orgKey),
-      this.encryptService.encrypt(secretView.note, orgKey),
+      this.encryptService.encryptString(secretView.name, orgKey),
+      this.encryptService.encryptString(secretView.value, orgKey),
+      this.encryptService.encryptString(secretView.note, orgKey),
     ]);
     request.key = key.encryptedString;
     request.value = value.encryptedString;

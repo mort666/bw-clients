@@ -106,12 +106,10 @@ describe("DefaultvNextCollectionService", () => {
       expect(encryptService.decryptString).toHaveBeenCalledWith(
         expect.objectContaining(new EncString(collection1.name)),
         orgKey1,
-        expect.any(String),
       );
       expect(encryptService.decryptString).toHaveBeenCalledWith(
         expect.objectContaining(new EncString(collection2.name)),
         orgKey2,
-        expect.any(String),
       );
     });
 
