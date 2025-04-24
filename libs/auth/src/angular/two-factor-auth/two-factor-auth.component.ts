@@ -342,13 +342,6 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
   };
 
   async selectOtherTwoFactorMethod() {
-    // Cache current form data before navigating to another method
-    this.twoFactorAuthComponentCacheService.cacheData({
-      token: "",
-      remember: false,
-      selectedProviderType: this.selectedProviderType,
-    });
-
     const dialogRef = TwoFactorOptionsComponent.open(this.dialogService);
     const response: TwoFactorOptionsDialogResult | string | undefined = await lastValueFrom(
       dialogRef.closed,
