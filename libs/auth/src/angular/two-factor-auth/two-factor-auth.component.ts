@@ -227,19 +227,6 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
     });
   }
 
-  /**
-   * Save all current form data to the cache
-   */
-  async saveFormData() {
-    const formData: TwoFactorAuthComponentData = {
-      token: this.tokenFormControl.value || undefined,
-      remember: this.rememberFormControl.value ?? undefined,
-      selectedProviderType: this.selectedProviderType,
-    };
-
-    await this.saveFormDataWithPartialData(formData);
-  }
-
   private async setSelected2faProviderType() {
     const webAuthnSupported = this.platformUtilsService.supportsWebAuthn(this.win);
 
