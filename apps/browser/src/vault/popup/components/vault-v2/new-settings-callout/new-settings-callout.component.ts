@@ -4,7 +4,7 @@ import { Router } from "@angular/router";
 import { firstValueFrom } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
-import { VaultProfileService } from "@bitwarden/angular/vault/services/vault-profile.service";
+import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
@@ -28,12 +28,12 @@ export class NewSettingsCalloutComponent implements OnInit, OnDestroy {
 
   constructor(
     private accountService: AccountService,
-    private vaultProfileService: VaultProfileService,
     private vaultPageService: VaultPageService,
     private router: Router,
     private logService: LogService,
     private copyButtonService: VaultPopupCopyButtonsService,
     private vaultSettingsService: VaultSettingsService,
+    private apiService: ApiService,
   ) {}
 
   async ngOnInit() {
@@ -47,7 +47,9 @@ export class NewSettingsCalloutComponent implements OnInit, OnDestroy {
     let profileCreatedDate: Date;
 
     try {
-      profileCreatedDate = await this.vaultProfileService.getProfileCreationDate(this.activeUserId);
+      const profile = await this.apiService.getProfile();
+
+      profileCreatedDate = new Date(profile.creationDate);
     } catch (e) {
       this.logService.error("Error getting profile creation date", e);
       // Default to before the cutoff date to ensure the callout is shown
