@@ -230,6 +230,14 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Save the remember value to the cache when the checkbox is checked or unchecked
+   */
+  async onRememberChange() {
+    const rememberValue = !!this.rememberFormControl.value;
+    await this.saveFormDataWithPartialData({ remember: rememberValue });
+  }
+
   private async initializeSelected2faProviderType(): Promise<TwoFactorProviderType> {
     const webAuthnSupported = this.platformUtilsService.supportsWebAuthn(this.win);
 
