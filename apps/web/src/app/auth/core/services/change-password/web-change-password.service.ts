@@ -1,14 +1,22 @@
-import { inject } from "@angular/core";
-
 import { ChangePasswordService, DefaultChangePasswordService } from "@bitwarden/auth/angular";
 import { Account } from "@bitwarden/common/auth/abstractions/account.service";
+import { MasterPasswordApiService } from "@bitwarden/common/auth/abstractions/master-password-api.service.abstraction";
+import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
+import { KeyService } from "@bitwarden/key-management";
 import { UserKeyRotationService } from "@bitwarden/web-vault/app/key-management/key-rotation/user-key-rotation.service";
 
 export class WebChangePasswordService
   extends DefaultChangePasswordService
   implements ChangePasswordService
 {
-  userKeyRotationService = inject(UserKeyRotationService);
+  constructor(
+    protected keyService: KeyService,
+    protected masterPasswordApiService: MasterPasswordApiService,
+    protected masterPasswordService: InternalMasterPasswordServiceAbstraction,
+    private userKeyRotationService: UserKeyRotationService,
+  ) {
+    super(keyService, masterPasswordApiService, masterPasswordService);
+  }
 
   override async rotateUserKeyMasterPasswordAndEncryptedData(
     currentPassword: string,

@@ -8,9 +8,9 @@ import { KeyService } from "@bitwarden/key-management";
 
 export class DefaultChangePasswordService implements ChangePasswordService {
   constructor(
-    private keyService: KeyService,
-    private masterPasswordApiService: MasterPasswordApiService,
-    private masterPasswordService: InternalMasterPasswordServiceAbstraction,
+    protected keyService: KeyService,
+    protected masterPasswordApiService: MasterPasswordApiService,
+    protected masterPasswordService: InternalMasterPasswordServiceAbstraction,
   ) {}
 
   async rotateUserKeyMasterPasswordAndEncryptedData(
