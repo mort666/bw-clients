@@ -27,7 +27,7 @@ export class LayoutComponent {
   protected sideNavService = inject(SideNavService);
   protected drawerPortal = inject(DrawerService).portal;
 
-  mainContent = viewChild.required<ElementRef<HTMLElement>>("main");
+  private mainContent = viewChild.required<ElementRef<HTMLElement>>("main");
 
   protected focusMainContent() {
     this.mainContent().nativeElement.focus();
