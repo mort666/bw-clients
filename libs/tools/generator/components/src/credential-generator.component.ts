@@ -23,7 +23,6 @@ import {
   ReplaySubject,
   Subject,
   takeUntil,
-  tap,
   withLatestFrom,
 } from "rxjs";
 
@@ -234,9 +233,7 @@ export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestro
     // wire up the generator
     this.generatorService
       .generate$({
-        on$: this.generate$.pipe(
-          tap((g) => this.log.debug(g, "generate request issued by component")),
-        ),
+        on$: this.generate$,
         account$: this.account$,
       })
       .pipe(

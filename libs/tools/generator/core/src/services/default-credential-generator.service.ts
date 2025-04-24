@@ -1,5 +1,6 @@
 import {
   EMPTY,
+  combineLatest,
   concatMap,
   distinctUntilChanged,
   filter,
@@ -54,7 +55,7 @@ export class DefaultCredentialGeneratorService implements CredentialGeneratorSer
     const account$ = dependencies.account$.pipe(shareReplay({ refCount: true, bufferSize: 1 }));
 
     // load algorithm metadata
-    const algorithm$ = on$.pipe(
+    const metadata$ = on$.pipe(
       switchMap((requested) => {
         if (isAlgorithmRequest(requested)) {
           return of(requested.algorithm);
@@ -71,17 +72,21 @@ export class DefaultCredentialGeneratorService implements CredentialGeneratorSer
       shareReplay({ refCount: true, bufferSize: 1 }),
     );
 
-    // load the active profile's algorithm settings
-    const settings$ = on$.pipe(
+    // load the active profile's settings
+    const profile$ = on$.pipe(
       map((request) => request.profile ?? Profile.account),
       distinctUntilChanged(),
-      withLatestReady(algorithm$),
-      switchMap(([profile, meta]) => this.settings(meta, { account$ }, profile)),
+    );
+    const settings$ = combineLatest([metadata$, profile$]).pipe(
+      tap(([metadata, profile]) =>
+        this.log.debug({ algorithm: metadata.id, profile }, "settings loaded"),
+      ),
+      switchMap(([metadata, profile]) => this.settings(metadata, { account$ }, profile)),
     );
 
     // load the algorithm's engine
-    const engine$ = algorithm$.pipe(
-      tap((meta) => this.log.info({ algorithm: meta.id }, "engine selected")),
+    const engine$ = metadata$.pipe(
+      tap((metadata) => this.log.debug({ algorithm: metadata.id }, "engine selected")),
       map((meta) => meta.engine.create(this.provide.generator)),
     );
 

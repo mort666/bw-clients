@@ -44,6 +44,7 @@ describe("DefaultCredentialGeneratorService", () => {
   beforeEach(() => {
     mockLogger = {
       info: jest.fn(),
+      debug: jest.fn(),
       panic: jest.fn().mockImplementationOnce((c, m) => {
         throw new Error(m ?? c);
       }),
