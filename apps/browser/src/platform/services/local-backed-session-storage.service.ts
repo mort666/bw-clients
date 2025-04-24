@@ -139,7 +139,7 @@ export class LocalBackedSessionStorageService
     }
 
     const valueJson = JSON.stringify(value);
-    const encValue = await this.encryptService.encrypt(valueJson, await this.sessionKey.get());
+    const encValue = await this.encryptService.encryptString(valueJson, await this.sessionKey.get());
     await this.localStorage.save(this.sessionStorageKey(key), encValue.encryptedString);
   }
 

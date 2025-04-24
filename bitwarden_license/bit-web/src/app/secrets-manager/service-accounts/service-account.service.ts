@@ -130,7 +130,7 @@ export class ServiceAccountService {
     serviceAccountView: ServiceAccountView,
   ) {
     const request = new ServiceAccountRequest();
-    request.name = await this.encryptService.encrypt(serviceAccountView.name, organizationKey);
+    request.name = await this.encryptService.encryptStringserviceAccountView.name, organizationKey);
     return request;
   }
 

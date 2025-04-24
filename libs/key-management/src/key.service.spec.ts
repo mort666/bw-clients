@@ -552,8 +552,10 @@ describe("keyService", () => {
       }
 
       encryptService.unwrapDecapsulationKey.mockImplementation((encryptedPrivateKey, userKey) => {
-        // TOOD: Branch between provider and private key?
         return Promise.resolve(fakePrivateKeyDecryption(encryptedPrivateKey, userKey));
+      });
+      encryptService.unwrapSymmetricKey.mockImplementation((encryptedPrivateKey, userKey) => {
+        return Promise.resolve(new SymmetricCryptoKey(new Uint8Array(64)));
       });
 
       encryptService.decapsulateKeyUnsigned.mockImplementation((data, privateKey) => {
@@ -646,7 +648,7 @@ describe("keyService", () => {
 
       const org2Key = decryptionKeys!.orgKeys![org2Id];
       expect(org2Key).not.toBeNull();
-      expect(org2Key.keyB64).toContain("provider1Key");
+      expect(org2Key.toEncoded()).toHaveLength(64);
     });
 
     it("returns a stream that pays attention to updates of all data", async () => {

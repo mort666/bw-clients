@@ -350,7 +350,7 @@ export class BiometricMessageHandlerService {
       throw new Error("Session secret is missing");
     }
 
-    const encrypted = await this.encryptService.encrypt(
+    const encrypted = await this.encryptService.encryptString(
       JSON.stringify(message),
       SymmetricCryptoKey.fromString(sessionSecret),
     );

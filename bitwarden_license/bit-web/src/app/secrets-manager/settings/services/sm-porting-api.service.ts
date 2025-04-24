@@ -86,7 +86,7 @@ export class SecretsManagerPortingApiService {
         importData.projects.map(async (p: any) => {
           const project = new SecretsManagerImportedProjectRequest();
           project.id = p.id;
-          project.name = await this.encryptService.encrypt(p.name, orgKey);
+          project.name = await this.encryptService.encryptString(p.name, orgKey);
           return project;
         }),
       );
@@ -96,9 +96,9 @@ export class SecretsManagerPortingApiService {
           const secret = new SecretsManagerImportedSecretRequest();
 
           [secret.key, secret.value, secret.note] = await Promise.all([
-            this.encryptService.encrypt(s.key, orgKey),
-            this.encryptService.encrypt(s.value, orgKey),
-            this.encryptService.encrypt(s.note, orgKey),
+            this.encryptService.encryptString(s.key, orgKey),
+            this.encryptService.encryptString(s.value, orgKey),
+            this.encryptService.encryptString(s.note, orgKey),
           ]);
 
           secret.id = s.id;
