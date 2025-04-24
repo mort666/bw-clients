@@ -117,6 +117,12 @@ export class IndividualVaultExportService
       for (const attachment of cipher.attachments) {
         const response = await this.downloadAttachment(cipher.id, attachment.id);
         const decBuf = await this.decryptAttachment(cipher, attachment, response);
+
+        // To prevent files with the same name from overwriting each other, we append the attachment id to the file name,
+        // if a file with the same name already exists in the folder
+        if (cipherFolder.file(attachment.fileName) != null) {
+          attachment.fileName += `_${attachment.id}`;
+        }
         cipherFolder.file(attachment.fileName, decBuf);
       }
     }
