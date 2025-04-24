@@ -15,7 +15,7 @@ export class WebChangePasswordService
     newPassword: string,
     user: Account,
     newPasswordHint: string,
-  ): Promise<void | null> {
+  ): Promise<void> {
     await this.userKeyRotationService.rotateUserKeyMasterPasswordAndEncryptedData(
       currentPassword,
       newPassword,
@@ -27,7 +27,7 @@ export class WebChangePasswordService
   override async rotateUserKeyAndEncryptedDataLegacy(
     newPassword: string,
     user: Account,
-  ): Promise<void | null> {
+  ): Promise<void> {
     await this.userKeyRotationService.rotateUserKeyAndEncryptedDataLegacy(newPassword, user);
   }
 }

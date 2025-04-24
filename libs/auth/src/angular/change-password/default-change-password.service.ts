@@ -18,15 +18,12 @@ export class DefaultChangePasswordService implements ChangePasswordService {
     newPassword: string,
     user: Account,
     hint: string,
-  ): Promise<void | null> {
-    return null; // implemented in Web
+  ): Promise<void> {
+    throw new Error("rotateUserKeyMasterPasswordAndEncryptedData() is only implemented in Web");
   }
 
-  async rotateUserKeyAndEncryptedDataLegacy(
-    newPassword: string,
-    user: Account,
-  ): Promise<void | null> {
-    return null; // implemented in Web
+  async rotateUserKeyAndEncryptedDataLegacy(newPassword: string, user: Account): Promise<void> {
+    throw new Error("rotateUserKeyAndEncryptedDataLegacy() is only implemented in Web");
   }
 
   async changePassword(passwordInputResult: PasswordInputResult, userId: UserId) {

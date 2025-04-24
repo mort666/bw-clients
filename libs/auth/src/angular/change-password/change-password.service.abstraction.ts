@@ -8,12 +8,9 @@ export abstract class ChangePasswordService {
     newPassword: string,
     user: Account,
     newPasswordHint: string,
-  ): Promise<void | null>;
+  ): Promise<void>;
 
-  abstract rotateUserKeyAndEncryptedDataLegacy(
-    newPassword: string,
-    user: Account,
-  ): Promise<void | null>;
+  abstract rotateUserKeyAndEncryptedDataLegacy(newPassword: string, user: Account): Promise<void>;
 
   abstract changePassword(passwordInputResult: PasswordInputResult, userId: UserId): Promise<void>;
 }
