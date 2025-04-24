@@ -1,6 +1,5 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { DialogRef } from "@angular/cdk/dialog";
 import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit } from "@angular/core";
 import { ActivatedRoute, Params, Router } from "@angular/router";
 import {
@@ -62,6 +61,7 @@ import { TreeNode } from "@bitwarden/common/vault/models/domain/tree-node";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { ServiceUtils } from "@bitwarden/common/vault/service-utils";
 import {
+  DialogRef,
   BannerModule,
   DialogService,
   Icons,
@@ -69,6 +69,8 @@ import {
   ToastService,
 } from "@bitwarden/components";
 import {
+  AttachmentDialogResult,
+  AttachmentsV2Component,
   CipherFormConfig,
   CipherFormConfigService,
   CollectionAssignmentResult,
@@ -92,10 +94,6 @@ import {
 } from "../../../vault/components/vault-item-dialog/vault-item-dialog.component";
 import { VaultItemEvent } from "../../../vault/components/vault-items/vault-item-event";
 import { VaultItemsModule } from "../../../vault/components/vault-items/vault-items.module";
-import {
-  AttachmentDialogResult,
-  AttachmentsV2Component,
-} from "../../../vault/individual-vault/attachments-v2.component";
 import {
   BulkDeleteDialogResult,
   openBulkDeleteDialog,
@@ -1226,6 +1224,7 @@ export class VaultComponent implements OnInit, OnDestroy {
         organizationId: this.organization?.id,
         parentCollectionId: this.selectedCollection?.node.id,
         limitNestedCollections: !this.organization.canEditAnyCollection,
+        isAdminConsoleActive: true,
       },
     });
 
@@ -1251,6 +1250,7 @@ export class VaultComponent implements OnInit, OnDestroy {
         readonly: readonly,
         isAddAccessCollection: c.unmanaged,
         limitNestedCollections: !this.organization.canEditAnyCollection,
+        isAdminConsoleActive: true,
       },
     });
 

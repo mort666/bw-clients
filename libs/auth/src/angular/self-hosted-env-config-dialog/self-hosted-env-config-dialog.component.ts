@@ -19,6 +19,7 @@ import {
   Urls,
 } from "@bitwarden/common/platform/abstractions/environment.service";
 import {
+  DialogRef,
   AsyncActionsModule,
   ButtonModule,
   DialogModule,
