@@ -2,9 +2,6 @@
   "appName": {
     "message": "Bitwarden"
   },
-  "appLogoLabel": {
-    "message": "Bitwarden logo"
-  },
   "extName": {
     "message": "Bitwarden - Administrador de contraseñas",
     "description": "Extension name, MUST be less than 40 characters (Safari restriction)"
@@ -84,7 +81,7 @@
     "message": "Pista de contraseña maestra (opcional)"
   },
   "passwordStrengthScore": {
-    "message": "Puntuación de fuerza de contraseña $SCORE$",
+    "message": "Password strength score $SCORE$",
     "placeholders": {
       "score": {
         "content": "$1",
@@ -886,9 +883,6 @@
   "followTheStepsBelowToFinishLoggingIn": {
     "message": "Follow the steps below to finish logging in."
   },
-  "followTheStepsBelowToFinishLoggingInWithSecurityKey": {
-    "message": "Follow the steps below to finish logging in with your security key."
-  },
   "restartRegistration": {
     "message": "Reiniciar registro"
   },
@@ -1062,49 +1056,23 @@
   "notificationAddSave": {
     "message": "Guardar"
   },
-  "notificationViewAria": {
-    "message": "View $ITEMNAME$, opens in new window",
+  "loginSaveSuccessDetails": {
+    "message": "$USERNAME$ saved to Bitwarden.",
     "placeholders": {
-      "itemName": {
+      "username": {
         "content": "$1"
       }
     },
-    "description": "Aria label for the view button in notification bar confirmation message"
+    "description": "Shown to user after login is saved."
   },
-  "notificationEditTooltip": {
-    "message": "Edit before saving",
-    "description": "Tooltip and Aria label for edit button on cipher item"
-  },
-  "newNotification": {
-    "message": "New notification"
-  },
-  "labelWithNotification": {
-    "message": "$LABEL$: New notification",
-    "description": "Label for the notification with a new login suggestion.",
+  "loginUpdatedSuccessDetails": {
+    "message": "$USERNAME$ updated in Bitwarden.",
     "placeholders": {
-      "label": {
-        "content": "$1",
-        "example": "Login"
-      }
-    }
-  },
-  "loginSaveConfirmation": {
-    "message": "$ITEMNAME$ saved to Bitwarden.",
-    "placeholders": {
-      "itemName": {
+      "username": {
         "content": "$1"
       }
     },
-    "description": "Shown to user after item is saved."
-  },
-  "loginUpdatedConfirmation": {
-    "message": "$ITEMNAME$ updated in Bitwarden.",
-    "placeholders": {
-      "itemName": {
-        "content": "$1"
-      }
-    },
-    "description": "Shown to user after item is updated."
+    "description": "Shown to user after login is updated."
   },
   "saveAsNewLoginAction": {
     "message": "Save as new login",
@@ -1114,12 +1082,12 @@
     "message": "Update login",
     "description": "Button text for updating an existing login entry."
   },
-  "saveLogin": {
-    "message": "Save login",
+  "saveLoginPrompt": {
+    "message": "Save login?",
     "description": "Prompt asking the user if they want to save their login details."
   },
-  "updateLogin": {
-    "message": "Update existing login",
+  "updateLoginPrompt": {
+    "message": "Update existing login?",
     "description": "Prompt asking the user if they want to update an existing login entry."
   },
   "loginSaveSuccess": {
@@ -1127,7 +1095,7 @@
     "description": "Message displayed when login details are successfully saved."
   },
   "loginUpdateSuccess": {
-    "message": "Inicio de sesión actualizado",
+    "message": "Login updated",
     "description": "Message displayed when login details are successfully updated."
   },
   "loginUpdateTaskSuccess": {
@@ -1156,7 +1124,7 @@
     "description": "Message prompting user to undertake completion of another security task."
   },
   "saveFailure": {
-    "message": "Error al guardar",
+    "message": "Error saving",
     "description": "Error message shown when the system fails to save login details."
   },
   "saveFailureDetails": {
@@ -2558,10 +2526,10 @@
     "message": "Review at-risk logins"
   },
   "reviewAtRiskPasswords": {
-    "message": "Revisar contraseñas de riesgo"
+    "message": "Review at-risk passwords"
   },
   "reviewAtRiskLoginsSlideDesc": {
-    "message": "Las contraseñas de su organización están en riesgo porque son débiles, reutilizadas y/o expuestas.",
+    "message": "Your organization passwords are at-risk because they are weak, reused, and/or exposed.",
     "description": "Description of the review at-risk login slide on the at-risk password page carousel"
   },
   "reviewAtRiskLoginSlideImgAltPeriod": {
@@ -5169,7 +5137,7 @@
     "message": "Introduce la contraseña para la clave SSH."
   },
   "enterSshKeyPassword": {
-    "message": "Introduzca la contraseña"
+    "message": "Enter password"
   },
   "invalidSshKey": {
     "message": "The SSH key is invalid"
@@ -5199,7 +5167,7 @@
     "message": "Para utilizar el desbloqueo biométrico, por favor actualice su aplicación de escritorio o desactive el desbloqueo de huella dactilar en los ajustes del escritorio."
   },
   "changeAtRiskPassword": {
-    "message": "Cambiar contraseña de riesgo"
+    "message": "Change at-risk password"
   },
   "introCarouselLabel": {
     "message": "Welcome to Bitwarden"
@@ -5220,12 +5188,12 @@
     "message": "Level up your logins"
   },
   "secureUserBody": {
-    "message": "Utilice el generador para crear y guardar contraseñas fuertes y únicas para todas sus cuentas."
+    "message": "Use the generator to create and save strong, unique passwords for all your accounts."
   },
   "secureDevices": {
     "message": "Your data, when and where you need it"
   },
   "secureDevicesBody": {
-    "message": "Guarda contraseñas ilimitadas a través de dispositivos ilimitados con aplicaciones móviles, de navegador y de escritorio de Bitwarden."
+    "message": "Save unlimited passwords across unlimited devices with Bitwarden mobile, browser, and desktop apps."
   }
 }

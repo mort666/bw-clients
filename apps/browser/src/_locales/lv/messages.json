@@ -2,9 +2,6 @@
   "appName": {
     "message": "Bitwarden"
   },
-  "appLogoLabel": {
-    "message": "Bitwarden logotips"
-  },
   "extName": {
     "message": "Bitwarden paroļu pārvaldnieks",
     "description": "Extension name, MUST be less than 40 characters (Safari restriction)"
@@ -886,9 +883,6 @@
   "followTheStepsBelowToFinishLoggingIn": {
     "message": "Jāseko zemāk esošajām norādēm, lai pabeigtu pieteikšanos."
   },
-  "followTheStepsBelowToFinishLoggingInWithSecurityKey": {
-    "message": "Jāizpilda zemāk esošās darbības, lai pabeigtu pieteikšanos ar savu drošības atslēgu."
-  },
   "restartRegistration": {
     "message": "Sākt reģistrēšanos no jauna"
   },
@@ -1062,49 +1056,23 @@
   "notificationAddSave": {
     "message": "Jā, saglabāt"
   },
-  "notificationViewAria": {
-    "message": "Apskatīt $ITEMNAME$, tiks atvērts jaunā logā",
+  "loginSaveSuccessDetails": {
+    "message": "$USERNAME$ saglabāts Bitwarden.",
     "placeholders": {
-      "itemName": {
+      "username": {
         "content": "$1"
       }
     },
-    "description": "Aria label for the view button in notification bar confirmation message"
+    "description": "Shown to user after login is saved."
   },
-  "notificationEditTooltip": {
-    "message": "Edit before saving",
-    "description": "Tooltip and Aria label for edit button on cipher item"
-  },
-  "newNotification": {
-    "message": "Jauns paziņojums"
-  },
-  "labelWithNotification": {
-    "message": "$LABEL$: jauns paziņojums",
-    "description": "Label for the notification with a new login suggestion.",
+  "loginUpdatedSuccessDetails": {
+    "message": "$USERNAME$ atjaunināts Bitwarden.",
     "placeholders": {
-      "label": {
-        "content": "$1",
-        "example": "Login"
-      }
-    }
-  },
-  "loginSaveConfirmation": {
-    "message": "$ITEMNAME$ saglabāts Bitwarden.",
-    "placeholders": {
-      "itemName": {
+      "username": {
         "content": "$1"
       }
     },
-    "description": "Shown to user after item is saved."
-  },
-  "loginUpdatedConfirmation": {
-    "message": "$ITEMNAME$ atjaunināts Bitwarden.",
-    "placeholders": {
-      "itemName": {
-        "content": "$1"
-      }
-    },
-    "description": "Shown to user after item is updated."
+    "description": "Shown to user after login is updated."
   },
   "saveAsNewLoginAction": {
     "message": "Saglabāt kā jaunu pieteikšanās vienumu",
@@ -1114,12 +1082,12 @@
     "message": "Atjaunināt pieteikšanās vienumu",
     "description": "Button text for updating an existing login entry."
   },
-  "saveLogin": {
-    "message": "Save login",
+  "saveLoginPrompt": {
+    "message": "Saglabāt pieteikšanās vienumu?",
     "description": "Prompt asking the user if they want to save their login details."
   },
-  "updateLogin": {
-    "message": "Update existing login",
+  "updateLoginPrompt": {
+    "message": "Atjaunināt esošo pieteikšanās vienumu?",
     "description": "Prompt asking the user if they want to update an existing login entry."
   },
   "loginSaveSuccess": {

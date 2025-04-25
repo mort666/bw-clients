@@ -2,9 +2,6 @@
   "appName": {
     "message": "Bitwarden"
   },
-  "appLogoLabel": {
-    "message": "Logótipo do Bitwarden"
-  },
   "extName": {
     "message": "Bitwarden - Gestor de Palavras-passe",
     "description": "Extension name, MUST be less than 40 characters (Safari restriction)"
@@ -886,9 +883,6 @@
   "followTheStepsBelowToFinishLoggingIn": {
     "message": "Siga os passos abaixo para concluir o início de sessão."
   },
-  "followTheStepsBelowToFinishLoggingInWithSecurityKey": {
-    "message": "Siga os passos abaixo para concluir o início de sessão com a sua chave de segurança."
-  },
   "restartRegistration": {
     "message": "Reiniciar registo"
   },
@@ -1062,49 +1056,23 @@
   "notificationAddSave": {
     "message": "Guardar"
   },
-  "notificationViewAria": {
-    "message": "Ver $ITEMNAME$, abrir numa nova janela",
+  "loginSaveSuccessDetails": {
+    "message": "$USERNAME$ guardado no Bitwarden.",
     "placeholders": {
-      "itemName": {
+      "username": {
         "content": "$1"
       }
     },
-    "description": "Aria label for the view button in notification bar confirmation message"
+    "description": "Shown to user after login is saved."
   },
-  "notificationEditTooltip": {
-    "message": "Editar antes de guardar",
-    "description": "Tooltip and Aria label for edit button on cipher item"
-  },
-  "newNotification": {
-    "message": "Nova notificação"
-  },
-  "labelWithNotification": {
-    "message": "$LABEL$: Nova notificação",
-    "description": "Label for the notification with a new login suggestion.",
+  "loginUpdatedSuccessDetails": {
+    "message": "$USERNAME$ atualizado no Bitwarden.",
     "placeholders": {
-      "label": {
-        "content": "$1",
-        "example": "Login"
-      }
-    }
-  },
-  "loginSaveConfirmation": {
-    "message": "$ITEMNAME$ guardado no Bitwarden.",
-    "placeholders": {
-      "itemName": {
+      "username": {
         "content": "$1"
       }
     },
-    "description": "Shown to user after item is saved."
-  },
-  "loginUpdatedConfirmation": {
-    "message": "$ITEMNAME$ atualizado no Bitwarden.",
-    "placeholders": {
-      "itemName": {
-        "content": "$1"
-      }
-    },
-    "description": "Shown to user after item is updated."
+    "description": "Shown to user after login is updated."
   },
   "saveAsNewLoginAction": {
     "message": "Guardar como nova credencial",
@@ -1114,12 +1082,12 @@
     "message": "Atualizar credencial",
     "description": "Button text for updating an existing login entry."
   },
-  "saveLogin": {
-    "message": "Guardar credencial",
+  "saveLoginPrompt": {
+    "message": "Guardar credencial?",
     "description": "Prompt asking the user if they want to save their login details."
   },
-  "updateLogin": {
-    "message": "Atualizar credencial existente",
+  "updateLoginPrompt": {
+    "message": "Atualizar credencial existente?",
     "description": "Prompt asking the user if they want to update an existing login entry."
   },
   "loginSaveSuccess": {

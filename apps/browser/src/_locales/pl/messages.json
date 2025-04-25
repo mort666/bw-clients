@@ -2,9 +2,6 @@
   "appName": {
     "message": "Bitwarden"
   },
-  "appLogoLabel": {
-    "message": "Bitwarden logo"
-  },
   "extName": {
     "message": "Menedżer Haseł Bitwarden",
     "description": "Extension name, MUST be less than 40 characters (Safari restriction)"
@@ -886,9 +883,6 @@
   "followTheStepsBelowToFinishLoggingIn": {
     "message": "Wykonaj poniższe kroki, by dokończyć logowanie"
   },
-  "followTheStepsBelowToFinishLoggingInWithSecurityKey": {
-    "message": "Wykonaj poniższe kroki, aby zakończyć logowanie za pomocą klucza bezpieczeństwa."
-  },
   "restartRegistration": {
     "message": "Zrestartuj rejestrację"
   },
@@ -1062,49 +1056,23 @@
   "notificationAddSave": {
     "message": "Zapisz"
   },
-  "notificationViewAria": {
-    "message": "Wyświetl $ITEMNAME$, otworzy się w nowym oknie",
+  "loginSaveSuccessDetails": {
+    "message": "$USERNAME$ został zapisany w Bitwarden.",
     "placeholders": {
-      "itemName": {
+      "username": {
         "content": "$1"
       }
     },
-    "description": "Aria label for the view button in notification bar confirmation message"
+    "description": "Shown to user after login is saved."
   },
-  "notificationEditTooltip": {
-    "message": "Edytuj przed zapisaniem",
-    "description": "Tooltip and Aria label for edit button on cipher item"
-  },
-  "newNotification": {
-    "message": "Nowe powiadomienie"
-  },
-  "labelWithNotification": {
-    "message": "$LABEL$: Nowe powiadomienie",
-    "description": "Label for the notification with a new login suggestion.",
+  "loginUpdatedSuccessDetails": {
+    "message": "$USERNAME$ został zaktualizowany w Bitwarden.",
     "placeholders": {
-      "label": {
-        "content": "$1",
-        "example": "Login"
-      }
-    }
-  },
-  "loginSaveConfirmation": {
-    "message": "$ITEMNAME$ został zapisany w Bitwarden.",
-    "placeholders": {
-      "itemName": {
+      "username": {
         "content": "$1"
       }
     },
-    "description": "Shown to user after item is saved."
-  },
-  "loginUpdatedConfirmation": {
-    "message": "$ITEMNAME$ został zaktualizowany w Bitwarden.",
-    "placeholders": {
-      "itemName": {
-        "content": "$1"
-      }
-    },
-    "description": "Shown to user after item is updated."
+    "description": "Shown to user after login is updated."
   },
   "saveAsNewLoginAction": {
     "message": "Zapisz jako nowy login",
@@ -1114,11 +1082,11 @@
     "message": "Zaktualizuj dane logowania",
     "description": "Button text for updating an existing login entry."
   },
-  "saveLogin": {
-    "message": "Zapisz dane logowania",
+  "saveLoginPrompt": {
+    "message": "Zapisać dane logowania?",
     "description": "Prompt asking the user if they want to save their login details."
   },
-  "updateLogin": {
+  "updateLoginPrompt": {
     "message": "Zaktualizować istniejące dane logowania?",
     "description": "Prompt asking the user if they want to update an existing login entry."
   },

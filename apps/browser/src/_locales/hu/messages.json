@@ -2,9 +2,6 @@
   "appName": {
     "message": "Bitwarden"
   },
-  "appLogoLabel": {
-    "message": "Bitwarden logó"
-  },
   "extName": {
     "message": "Bitwarden Password Manager",
     "description": "Extension name, MUST be less than 40 characters (Safari restriction)"
@@ -886,9 +883,6 @@
   "followTheStepsBelowToFinishLoggingIn": {
     "message": "Kövessük az alábbi lépéseket a bejelentkezés befejezéséhez."
   },
-  "followTheStepsBelowToFinishLoggingInWithSecurityKey": {
-    "message": "Kövessük az alábbi lépéseket a biztonsági kulccsal bejelentkezés befejezéséhez."
-  },
   "restartRegistration": {
     "message": "Restart registration"
   },
@@ -1062,49 +1056,23 @@
   "notificationAddSave": {
     "message": "Mentés"
   },
-  "notificationViewAria": {
-    "message": "$ITEMNAME$ megtekintése, megnyitás új ablakban",
-    "placeholders": {
-      "itemName": {
-        "content": "$1"
-      }
-    },
-    "description": "Aria label for the view button in notification bar confirmation message"
-  },
-  "notificationEditTooltip": {
-    "message": "Edit before saving",
-    "description": "Tooltip and Aria label for edit button on cipher item"
-  },
-  "newNotification": {
-    "message": "Új értesítés"
-  },
-  "labelWithNotification": {
-    "message": "$LABEL$: Új értesítés",
-    "description": "Label for the notification with a new login suggestion.",
-    "placeholders": {
-      "label": {
-        "content": "$1",
-        "example": "Login"
-      }
-    }
-  },
-  "loginSaveConfirmation": {
+  "loginSaveSuccessDetails": {
     "message": "$USERNAME$ mentésre került a Bitwardenben.",
     "placeholders": {
-      "itemName": {
+      "username": {
         "content": "$1"
       }
     },
-    "description": "Shown to user after item is saved."
+    "description": "Shown to user after login is saved."
   },
-  "loginUpdatedConfirmation": {
+  "loginUpdatedSuccessDetails": {
     "message": "$USERNAME$ frissítésre került a Bitwardenben.",
     "placeholders": {
-      "itemName": {
+      "username": {
         "content": "$1"
       }
     },
-    "description": "Shown to user after item is updated."
+    "description": "Shown to user after login is updated."
   },
   "saveAsNewLoginAction": {
     "message": "Mentés új bejelentkezésként",
@@ -1114,12 +1082,12 @@
     "message": "Bejelentkezés frissítése",
     "description": "Button text for updating an existing login entry."
   },
-  "saveLogin": {
-    "message": "Save login",
+  "saveLoginPrompt": {
+    "message": "Bejelentkezés mentése?",
     "description": "Prompt asking the user if they want to save their login details."
   },
-  "updateLogin": {
-    "message": "Update existing login",
+  "updateLoginPrompt": {
+    "message": "Létező bejelentkezés frissítése?",
     "description": "Prompt asking the user if they want to update an existing login entry."
   },
   "loginSaveSuccess": {
