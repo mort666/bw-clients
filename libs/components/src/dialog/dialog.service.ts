@@ -163,7 +163,6 @@ export class DialogService {
      * This allows us to create the class instance and provide the base instance later, almost like "deferred inheritance".
      **/
     const ref = new CdkDialogRef<R, C>();
-    // TODO outline circular nature
     const injector = this.createInjector({
       data: config?.data,
       dialogRef: ref,
