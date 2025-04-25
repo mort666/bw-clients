@@ -380,18 +380,18 @@ describe("VaultExportService", () => {
       expect(attachment).toBeDefined();
     });
 
-    it("If a ciphers attachments filename is already present in the zipfile then append underscore and attachmentId for the new filename", async () => {
+    it("For each cipher attachment create a dedicated folder with the attachmentId as the name to put the attachment in", async () => {
       const cipherData = new CipherData();
       cipherData.id = "mock-id";
       const cipherView = new CipherView(new Cipher(cipherData));
       // Create 1st attachment with the same filename for the cipher
       const attachmentView = new AttachmentView(new Attachment(new AttachmentData()));
       attachmentView.id = "id-of-file-1";
-      attachmentView.fileName = "mock-file-name";
+      attachmentView.fileName = "mock-file-name.txt";
       // Create 2nd attachment with the same filename for the cipher
       const attachmentView2 = new AttachmentView(new Attachment(new AttachmentData()));
       attachmentView2.id = "id-of-file-2";
-      attachmentView2.fileName = "mock-file-name";
+      attachmentView2.fileName = "mock-file-name.txt";
       cipherView.attachments = [attachmentView, attachmentView2];
       cipherService.getAllDecrypted.mockResolvedValue([cipherView]);
       folderService.getAllDecryptedFromState.mockResolvedValue([]);
@@ -409,10 +409,12 @@ describe("VaultExportService", () => {
       expect(exportedVault.type).toBe("application/zip");
       const exportZip = exportedVault as ExportedVaultAsBlob;
       const zip = await JSZip.loadAsync(exportZip.data);
-      const attachment = await zip.file("attachments/mock-id/mock-file-name")?.async("blob");
+      const attachment = await zip
+        .file("attachments/mock-id/id-of-file-1/mock-file-name.txt")
+        ?.async("blob");
       expect(attachment).toBeDefined();
       const attachment2 = await zip
-        .file("attachments/mock-id/mock-file-name_id-of-file-2")
+        .file("attachments/mock-id/id-of-file-2/mock-file-name.txt")
         ?.async("blob");
       expect(attachment2).toBeDefined();
     });
