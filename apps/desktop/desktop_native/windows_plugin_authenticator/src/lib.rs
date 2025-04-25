@@ -4,12 +4,14 @@
 
 use std::ffi::c_uchar;
 use std::ptr;
+use webauthn::*;
 use windows::Win32::Foundation::*;
 use windows::Win32::System::Com::*;
 use windows::Win32::System::LibraryLoader::*;
 use windows_core::*;
 
 mod pluginauthenticator;
+mod util;
 mod webauthn;
 
 const AUTHENTICATOR_NAME: &str = "Bitwarden Desktop Authenticator";
@@ -26,6 +28,25 @@ pub fn register() -> std::result::Result<(), String> {
     register_com_library()?;
 
     add_authenticator()?;
+
+    // add test credential
+    let test_credential = ExperimentalWebAuthnPluginCredentialDetails::create(
+        String::from("32"),
+        String::from("webauthn.io"),
+        String::from("WebAuthn Website"),
+        String::from("14"),
+        String::from("web user name"),
+        String::from("web user display name"),
+    );
+    let test_credential_list: Vec<ExperimentalWebAuthnPluginCredentialDetails> =
+        vec![test_credential];
+    let credentials = ExperimentalWebAuthnPluginCredentialDetailsList::create(
+        String::from(CLSID),
+        test_credential_list,
+    );
+
+    let result = add_credentials(credentials);
+    println!("test: {:?}", result);
 
     Ok(())
 }
@@ -105,7 +126,7 @@ fn add_authenticator() -> std::result::Result<(), String> {
 
     let add_authenticator_options = webauthn::ExperimentalWebAuthnPluginAddAuthenticatorOptions {
         authenticator_name: authenticator_name_ptr,
-        com_clsid: clsid_ptr,
+        plugin_clsid: clsid_ptr,
         rpid: relying_party_id_ptr,
         light_theme_logo: ptr::null(), // unused by Windows
         dark_theme_logo: ptr::null(),  // unused by Windows

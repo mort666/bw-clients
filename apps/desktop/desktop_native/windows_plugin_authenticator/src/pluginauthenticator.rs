@@ -1,5 +1,8 @@
 /*
-    This file exposes the functions and types defined here: https://github.com/microsoft/webauthn/blob/master/experimental/pluginauthenticator.h
+    This file exposes safe functions and types for interacting with the experimental
+    Windows Plugin Authenticator API defined here:
+
+    https://github.com/microsoft/webauthn/blob/master/experimental/pluginauthenticator.h
 */
 
 use windows::Win32::System::Com::*;
