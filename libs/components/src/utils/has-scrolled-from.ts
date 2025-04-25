@@ -1,7 +1,7 @@
 import { CdkScrollable } from "@angular/cdk/scrolling";
 import { Signal, inject, signal } from "@angular/core";
 import { toObservable, toSignal } from "@angular/core/rxjs-interop";
-import { map, switchMap } from "rxjs";
+import { map, startWith, switchMap } from "rxjs";
 
 export type ScrollState = {
   /** `true` when the scrollbar is not at the top-most position */
@@ -23,6 +23,7 @@ export const hasScrolledFrom = (scrollable?: Signal<CdkScrollable>): Signal<Scro
   const scrollState$ = scrollable$.pipe(
     switchMap((_scrollable) =>
       _scrollable.elementScrolled().pipe(
+        startWith(null),
         map(() => ({
           top: _scrollable.measureScrollOffset("top") > 0,
           bottom: _scrollable.measureScrollOffset("bottom") > 0,
