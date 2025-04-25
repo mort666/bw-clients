@@ -17,6 +17,7 @@ import { UserId } from "@bitwarden/common/types/guid";
 import { UserKey } from "@bitwarden/common/types/key";
 import { ToastService } from "@bitwarden/components";
 import { KeyService } from "@bitwarden/key-management";
+import { I18nPipe } from "@bitwarden/ui-common";
 
 import {
   InputPasswordComponent,
@@ -30,7 +31,7 @@ import { ChangePasswordService } from "./change-password.service.abstraction";
   standalone: true,
   selector: "auth-change-password",
   templateUrl: "change-password.component.html",
-  imports: [InputPasswordComponent],
+  imports: [InputPasswordComponent, I18nPipe],
 })
 export class ChangePasswordComponent implements OnInit {
   @Input() inputPasswordFlow: InputPasswordFlow = InputPasswordFlow.ChangePassword;
@@ -39,6 +40,7 @@ export class ChangePasswordComponent implements OnInit {
   email?: string;
   userId?: UserId;
   masterPasswordPolicyOptions?: MasterPasswordPolicyOptions;
+  initializing = true;
   userkeyRotationV2 = false;
   formPromise?: Promise<any>;
 
@@ -70,6 +72,8 @@ export class ChangePasswordComponent implements OnInit {
     this.masterPasswordPolicyOptions = await firstValueFrom(
       this.policyService.masterPasswordPolicyOptions$(this.userId),
     );
+
+    this.initializing = false;
   }
 
   async handlePasswordFormSubmit(passwordInputResult: PasswordInputResult) {

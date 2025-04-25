@@ -223,7 +223,7 @@ export class InputPasswordComponent implements OnInit {
       return;
     }
 
-    if (this.email == null) {
+    if (!this.email) {
       throw new Error("Email is required to create master key.");
     }
 
