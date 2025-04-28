@@ -168,11 +168,16 @@ export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestro
       .pipe(
         map((algorithms) => algorithms.flat()),
         map((algorithms) => {
+          // construct options for username and email algorithms; replace forwarder
+          // entry with a virtual entry for drill-down
           const usernames = algorithms.filter((a) => !isForwarderExtensionId(a.id));
+          usernames.sort((un) => un.weight);
           const usernameOptions = this.toOptions(usernames);
           usernameOptions.push({ value: FORWARDER, label: this.i18nService.t("forwardedEmail") });
 
+          // construct options for forwarder algorithms; they get their own selection box
           const forwarders = algorithms.filter((a) => isForwarderExtensionId(a.id));
+          forwarders.sort((fwd) => fwd.weight);
           const forwarderOptions = this.toOptions(forwarders);
           forwarderOptions.unshift({ value: NONE_SELECTED, label: this.i18nService.t("select") });
 
@@ -181,8 +186,12 @@ export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestro
         takeUntil(this.destroyed),
       )
       .subscribe(([usernames, forwarders]) => {
-        this.usernameOptions$.next(usernames);
-        this.forwarderOptions$.next(forwarders);
+        // update subjects within the angular zone so that the
+        // template bindings refresh immediately
+        this.zone.run(() => {
+          this.usernameOptions$.next(usernames);
+          this.forwarderOptions$.next(forwarders);
+        });
       });
 
     this.generatorService
@@ -466,10 +475,14 @@ export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestro
         this.username.setValue(username.selection, { emitEvent: false });
         this.forwarder.setValue(forwarder.selection, { emitEvent: false });
 
-        // update cascade visibility
-        activeRoot$.next(root.active);
-        activeIdentifier$.next(username.active);
-        activeForwarder$.next(forwarder.active);
+        // update subjects within the angular zone so that the
+        // template bindings refresh immediately
+        this.zone.run(() => {
+          // update cascade visibility
+          activeRoot$.next(root.active);
+          activeIdentifier$.next(username.active);
+          activeForwarder$.next(forwarder.active);
+        });
       });
 
     // automatically regenerate when the algorithm switches if the algorithm
