@@ -85,14 +85,8 @@ export class ChangePasswordComponent implements OnInit {
   }
 
   private async submitNew(passwordInputResult: PasswordInputResult) {
-    if (passwordInputResult.currentPassword == null) {
-      throw new Error("Invalid current password credential(s)");
-    }
-
     try {
       if (passwordInputResult.rotateUserKey) {
-        await this.syncService.fullSync(true);
-
         if (this.activeAccount == null) {
           throw new Error("activeAccount not found");
         }
@@ -100,6 +94,8 @@ export class ChangePasswordComponent implements OnInit {
         if (passwordInputResult.currentPassword == null) {
           throw new Error("currentPassword not found");
         }
+
+        await this.syncService.fullSync(true);
 
         await this.changePasswordService.rotateUserKeyMasterPasswordAndEncryptedData(
           passwordInputResult.currentPassword,
@@ -137,7 +133,7 @@ export class ChangePasswordComponent implements OnInit {
     }
 
     if (passwordInputResult.currentServerMasterKeyHash == null) {
-      throw new Error("Invalid current password credentials");
+      throw new Error("currentServerMasterKeyHash not found");
     }
 
     if (passwordInputResult.rotateUserKey) {
