@@ -21,6 +21,8 @@ import {
   pairwise,
   MonoTypeOperatorFunction,
   Cons,
+  scan,
+  filter,
 } from "rxjs";
 
 import { ObservableTuple } from "./rx.rxjs";
@@ -243,5 +245,54 @@ export function pin<T>(options?: {
         return value;
       }
     }),
+  );
+}
+
+/** maps a value to a source and keeps a LRC cache of the results
+ *  @param mapResult - maps the stream to a result; this function must return
+ *    a value. It must not return null or undefined.
+ *  @param options.size - the number of entries in the cache
+ *  @param options.key - maps the source to a cache key
+ *  @remarks - LRC is least recently created
+ */
+export function memoizedMap<Source, Result extends NonNullable<any>>(
+  mapResult: (source: Source) => Result,
+  options?: { size?: number; key?: (source: Source) => unknown },
+): OperatorFunction<Source, Result> {
+  return pipe(
+    // scan's accumulator contains the cache
+    scan(
+      ([cache], source) => {
+        const key: unknown = options?.key?.(source) ?? source;
+
+        // cache hit?
+        let result = cache?.get(key);
+        if (result) {
+          return [cache, result] as const;
+        }
+
+        // cache miss
+        result = mapResult(source);
+        cache?.set(key, result);
+
+        // trim cache
+        const overage = cache.size - (options?.size ?? 1);
+        if (overage > 0) {
+          Array.from(cache?.keys() ?? [])
+            .slice(0, overage)
+            .forEach((k) => cache?.delete(k));
+        }
+
+        return [cache, result] as const;
+      },
+      // FIXME: upgrade to a least-recently-used cache
+      [new Map(), null] as [Map<unknown, Result>, Source | null],
+    ),
+
+    // encapsulate cache
+    map(([, result]) => result),
+
+    // preserve `NonNullable` constraint on `Result`
+    filter((result): result is Result => !!result),
   );
 }

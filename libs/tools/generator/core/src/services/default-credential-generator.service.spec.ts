@@ -1,11 +1,14 @@
-import { BehaviorSubject, firstValueFrom, of } from "rxjs";
+import { BehaviorSubject, Subject, firstValueFrom, of } from "rxjs";
 
 import { Account } from "@bitwarden/common/auth/abstractions/account.service";
+import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
 import { Site, VendorId } from "@bitwarden/common/tools/extension";
 import { Bitwarden } from "@bitwarden/common/tools/extension/vendor/bitwarden";
 import { Vendor } from "@bitwarden/common/tools/extension/vendor/data";
+import { SemanticLogger, ifEnabledSemanticLoggerProvider } from "@bitwarden/common/tools/log";
 import { UserId } from "@bitwarden/common/types/guid";
 
+import { awaitAsync } from "../../../../../common/spec";
 import {
   Algorithm,
   CredentialAlgorithm,
@@ -13,8 +16,10 @@ import {
   ForwarderExtensionId,
   GeneratorMetadata,
   Profile,
+  Type,
 } from "../metadata";
 import { CredentialGeneratorProviders } from "../providers";
+import { GenerateRequest, GeneratedCredential } from "../types";
 
 import { DefaultCredentialGeneratorService } from "./default-credential-generator.service";
 
@@ -36,19 +41,15 @@ describe("DefaultCredentialGeneratorService", () => {
   let service: DefaultCredentialGeneratorService;
   let providers: MockTwoLevelPartial<CredentialGeneratorProviders>;
   let system: any;
-  let mockLogger: any;
+  let log: SemanticLogger;
   let mockExtension: { settings: jest.Mock };
   let account: Account;
   let createService: (overrides?: any) => DefaultCredentialGeneratorService;
 
   beforeEach(() => {
-    mockLogger = {
-      info: jest.fn(),
-      debug: jest.fn(),
-      panic: jest.fn().mockImplementationOnce((c, m) => {
-        throw new Error(m ?? c);
-      }),
-    };
+    log = ifEnabledSemanticLoggerProvider(false, new ConsoleLogService(true), {
+      from: "DefaultCredentialGeneratorService tests",
+    });
 
     mockExtension = { settings: jest.fn() };
 
@@ -61,7 +62,7 @@ describe("DefaultCredentialGeneratorService", () => {
     };
 
     system = {
-      log: jest.fn().mockReturnValue(mockLogger),
+      log: jest.fn().mockReturnValue(log),
       extension: mockExtension,
     };
 
@@ -96,33 +97,46 @@ describe("DefaultCredentialGeneratorService", () => {
 
   describe("generate$", () => {
     it("should generate credentials when provided a specific algorithm", async () => {
-      const mockEngine = { generate: jest.fn().mockReturnValue(of("generatedPassword")) };
+      const mockEngine = {
+        generate: jest
+          .fn()
+          .mockReturnValue(
+            of(
+              new GeneratedCredential("generatedPassword", Type.password, Date.now(), "unit test"),
+            ),
+          ),
+      };
       const mockMetadata = {
-        id: "testAlgorithm",
+        id: Algorithm.password,
         engine: { create: jest.fn().mockReturnValue(mockEngine) },
       } as unknown as GeneratorMetadata<any>;
       const mockSettings = new BehaviorSubject({ length: 12 });
-
       providers.metadata!.metadata = jest.fn().mockReturnValue(mockMetadata);
       service = createService({
         settings: () => mockSettings as any,
       });
+      const on$ = new Subject<GenerateRequest>();
+      const account$ = new BehaviorSubject(account);
+      const result$ = new BehaviorSubject<GeneratedCredential | null>(null);
 
-      const dependencies = {
-        on$: of({ algorithm: "testAlgorithm" as CredentialAlgorithm }),
-        account$: of(account),
-      };
+      service.generate$({ on$, account$ }).subscribe(result$);
+      on$.next({ algorithm: Algorithm.password });
+      await awaitAsync();
 
-      const result = await firstValueFrom(service.generate$(dependencies));
-
-      expect(result).toBe("generatedPassword");
-      expect(providers.metadata!.metadata).toHaveBeenCalledWith("testAlgorithm");
+      expect(result$.value?.credential).toEqual("generatedPassword");
+      expect(providers.metadata!.metadata).toHaveBeenCalledWith(Algorithm.password);
       expect(mockMetadata.engine.create).toHaveBeenCalled();
       expect(mockEngine.generate).toHaveBeenCalled();
     });
 
     it("should determine preferred algorithm from credential type and generate credentials", async () => {
-      const mockEngine = { generate: jest.fn().mockReturnValue(of("generatedPassword")) };
+      const mockEngine = {
+        generate: jest
+          .fn()
+          .mockReturnValue(
+            of(new GeneratedCredential("generatedPassword", "password", Date.now(), "unit test")),
+          ),
+      };
       const mockMetadata = {
         id: "testAlgorithm",
         engine: { create: jest.fn().mockReturnValue(mockEngine) },
@@ -137,14 +151,16 @@ describe("DefaultCredentialGeneratorService", () => {
         settings: () => mockSettings as any,
       });
 
-      const dependencies = {
-        on$: of({ type: "password" as CredentialType }),
-        account$: of(account),
-      };
+      const on$ = new Subject<GenerateRequest>();
+      const account$ = new BehaviorSubject(account);
+      const result$ = new BehaviorSubject<GeneratedCredential | null>(null);
 
-      const result = await firstValueFrom(service.generate$(dependencies));
+      service.generate$({ on$, account$ }).subscribe(result$);
+      on$.next({ type: Type.password });
+      await awaitAsync();
 
-      expect(result).toBe("generatedPassword");
+      expect(result$.value?.credential).toBe("generatedPassword");
+      expect(result$.value?.category).toBe(Type.password);
       expect(providers.metadata!.metadata).toHaveBeenCalledWith("testAlgorithm");
     });
   });
@@ -219,10 +235,6 @@ describe("DefaultCredentialGeneratorService", () => {
       expect(() => service.algorithm("invalidAlgo" as CredentialAlgorithm)).toThrow(
         "invalid credential algorithm",
       );
-      expect(mockLogger.panic).toHaveBeenCalledWith(
-        { algorithm: "invalidAlgo" },
-        "invalid credential algorithm",
-      );
     });
   });
 
@@ -248,10 +260,6 @@ describe("DefaultCredentialGeneratorService", () => {
       providers.metadata!.metadata = jest.fn().mockReturnValue(null);
 
       expect(() => service.forwarder(invalidVendorId)).toThrow("invalid vendor");
-      expect(mockLogger.panic).toHaveBeenCalledWith(
-        { algorithm: invalidVendorId },
-        "invalid vendor",
-      );
     });
   });
 
@@ -314,10 +322,6 @@ describe("DefaultCredentialGeneratorService", () => {
       expect(() => service.settings(mockMetadata, { account$: of(account) })).toThrow(
         "failed to load settings; profile metadata not found",
       );
-      expect(mockLogger.panic).toHaveBeenCalledWith(
-        { algorithm: "test", profile: "account" },
-        "failed to load settings; profile metadata not found",
-      );
     });
   });
 
@@ -345,10 +349,6 @@ describe("DefaultCredentialGeneratorService", () => {
       } as unknown as GeneratorMetadata<any>;
 
       expect(() => service.policy$(mockMetadata, { account$: of(account) })).toThrow(
-        "failed to load policy; profile metadata not found",
-      );
-      expect(mockLogger.panic).toHaveBeenCalledWith(
-        { algorithm: "test", profile: "account" },
         "failed to load policy; profile metadata not found",
       );
     });

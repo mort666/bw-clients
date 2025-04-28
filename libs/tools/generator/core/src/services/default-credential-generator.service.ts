@@ -1,15 +1,18 @@
 import {
-  EMPTY,
-  combineLatest,
+  ReplaySubject,
   concatMap,
-  distinctUntilChanged,
   filter,
+  first,
   map,
   of,
+  share,
   shareReplay,
+  switchAll,
   switchMap,
   takeUntil,
   tap,
+  timer,
+  zip,
 } from "rxjs";
 
 import { Account } from "@bitwarden/common/auth/abstractions/account.service";
@@ -17,7 +20,7 @@ import { BoundDependency, OnDependency } from "@bitwarden/common/tools/dependenc
 import { VendorId } from "@bitwarden/common/tools/extension";
 import { SemanticLogger } from "@bitwarden/common/tools/log";
 import { SystemServiceProvider } from "@bitwarden/common/tools/providers";
-import { anyComplete, withLatestReady } from "@bitwarden/common/tools/rx";
+import { anyComplete, memoizedMap } from "@bitwarden/common/tools/rx";
 import { UserStateSubject } from "@bitwarden/common/tools/state/user-state-subject";
 
 import { CredentialGeneratorService } from "../abstractions";
@@ -34,6 +37,9 @@ import { CredentialGeneratorProviders } from "../providers";
 import { GenerateRequest } from "../types";
 import { isAlgorithmRequest, isTypeRequest } from "../types/metadata-request";
 
+const ALGORITHM_CACHE_SIZE = 10;
+const THREE_MINUTES = 3 * 60 * 1000;
+
 export class DefaultCredentialGeneratorService implements CredentialGeneratorService {
   /** Instantiate the `DefaultCredentialGeneratorService`.
    *  @param provide application services required by the credential generator.
@@ -49,50 +55,73 @@ export class DefaultCredentialGeneratorService implements CredentialGeneratorSer
   private readonly log: SemanticLogger;
 
   generate$(dependencies: OnDependency<GenerateRequest> & BoundDependency<"account", Account>) {
-    // `on$` is partitioned into several streams so that the generator
-    // engine and settings refresh only when their respective inputs change
-    const on$ = dependencies.on$.pipe(shareReplay({ refCount: true, bufferSize: 1 }));
+    const request$ = dependencies.on$.pipe(shareReplay({ refCount: true, bufferSize: 1 }));
     const account$ = dependencies.account$.pipe(shareReplay({ refCount: true, bufferSize: 1 }));
 
     // load algorithm metadata
-    const metadata$ = on$.pipe(
-      switchMap((requested) => {
-        if (isAlgorithmRequest(requested)) {
-          return of(requested.algorithm);
-        } else if (isTypeRequest(requested)) {
-          return this.provide.metadata.preference$(requested.type, { account$ });
+    const metadata$ = request$.pipe(
+      switchMap((request) => {
+        if (isAlgorithmRequest(request)) {
+          return of(request.algorithm);
+        } else if (isTypeRequest(request)) {
+          return this.provide.metadata.preference$(request.type, { account$ }).pipe(first());
         } else {
-          this.log.warn(requested, "algorithm or category required");
-          return EMPTY;
+          this.log.panic(request, "algorithm or category required");
         }
       }),
       filter((algorithm): algorithm is CredentialAlgorithm => !!algorithm),
-      distinctUntilChanged(),
-      map((algorithm) => this.provide.metadata.metadata(algorithm)),
+      memoizedMap((algorithm) => this.provide.metadata.metadata(algorithm), {
+        size: ALGORITHM_CACHE_SIZE,
+      }),
       shareReplay({ refCount: true, bufferSize: 1 }),
     );
 
     // load the active profile's settings
-    const profile$ = on$.pipe(
-      map((request) => request.profile ?? Profile.account),
-      distinctUntilChanged(),
-    );
-    const settings$ = combineLatest([metadata$, profile$]).pipe(
-      tap(([metadata, profile]) =>
-        this.log.debug({ algorithm: metadata.id, profile }, "settings loaded"),
+    const settings$ = zip(request$, metadata$).pipe(
+      memoizedMap(
+        ([request, metadata]) => {
+          const profile = request.profile ?? Profile.account;
+          const algorithm = metadata.id;
+
+          // settings stays hot and buffers the most recent value in the cache
+          // for the next `request`
+          const settings$ = this.settings(metadata, { account$ }, profile).pipe(
+            tap(() => this.log.debug({ algorithm, profile }, "settings update received")),
+            share({
+              connector: () => new ReplaySubject<object>(1, THREE_MINUTES),
+              resetOnRefCountZero: () => timer(THREE_MINUTES),
+            }),
+            tap({
+              subscribe: () => this.log.debug({ algorithm, profile }, "settings hot"),
+              complete: () => this.log.debug({ algorithm, profile }, "settings cold"),
+            }),
+            first(),
+          );
+
+          this.log.debug({ algorithm, profile }, "settings cached");
+          return settings$;
+        },
+        { key: ([, metadata]) => metadata.id },
       ),
-      switchMap(([metadata, profile]) => this.settings(metadata, { account$ }, profile)),
+      switchAll(),
     );
 
     // load the algorithm's engine
     const engine$ = metadata$.pipe(
-      tap((metadata) => this.log.debug({ algorithm: metadata.id }, "engine selected")),
-      map((meta) => meta.engine.create(this.provide.generator)),
+      memoizedMap(
+        (metadata) => {
+          const engine = metadata.engine.create(this.provide.generator);
+
+          this.log.debug({ algorithm: metadata.id }, "engine cached");
+          return engine;
+        },
+        { size: ALGORITHM_CACHE_SIZE },
+      ),
     );
 
     // generation proper
-    const generate$ = on$.pipe(
-      withLatestReady(settings$, engine$),
+    const generate$ = zip([request$, settings$, engine$]).pipe(
+      tap(([request]) => this.log.debug(request, "generating credential")),
       concatMap(([request, settings, engine]) => engine.generate(request, settings)),
       takeUntil(anyComplete([settings$])),
     );
