@@ -42,7 +42,6 @@ export abstract class EncryptService {
    * @param key - The key to decrypt the Encrypted object with
    * @param decryptTrace - A string to identify the context of the object being decrypted. This can include: field name, encryption type, cipher id, key type, but should not include
    * sensitive information like encryption keys or data. This is used for logging when decryption errors occur in order to identify what failed to decrypt
-   * @deprecated
    * @returns The decrypted Uint8Array
    */
   abstract decryptToBytes(
@@ -70,6 +69,7 @@ export abstract class EncryptService {
    * Encrypts bytes to an EncString
    * @param plainValue - The value to encrypt
    * @param key - The key to encrypt the value with
+   * @deprecated Bytes are not the right abstraction to encrypt in. Use e.g. key wrapping or file encryption instead
    */
   abstract encryptBytes(plainValue: Uint8Array, key: SymmetricCryptoKey): Promise<EncString>;
   /**
@@ -84,21 +84,21 @@ export abstract class EncryptService {
 
   /**
    * Decrypts an EncString to a string
-   * @param plainValue - The value to encrypt
-   * @param key - The key to encrypt the value with
+   * @param encString - The EncString containing the encrypted string.
+   * @param key - The key to decrypt the value with
    */
   abstract decryptString(encString: EncString, key: SymmetricCryptoKey): Promise<string>;
   /**
    * Decrypts an EncString to a Uint8Array
-   * @param plainValue - The value to encrypt
-   * @param key - The key to encrypt the value with
+   * @param encString - The EncString containing the encrypted bytes.
+   * @param key - The key to decrypt the value with
    * @deprecated Bytes are not the right abstraction to encrypt in. Use e.g. key wrapping or file encryption instead
    */
   abstract decryptBytes(encString: EncString, key: SymmetricCryptoKey): Promise<Uint8Array>;
   /**
-   * Decrypts an encarraybuffer to a Uint8Array
-   * @param encBuffer - The buffer to decrypt
-   * @param key - The key to encrypt the value with
+   * Decrypts an EncArrayBuffer to a Uint8Array
+   * @param encBuffer - The EncArrayBuffer containing the encrypted file bytes.
+   * @param key - The key to decrypt the value with
    */
   abstract decryptFileData(encBuffer: EncArrayBuffer, key: SymmetricCryptoKey): Promise<Uint8Array>;
 
