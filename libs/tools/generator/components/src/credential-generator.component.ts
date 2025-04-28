@@ -171,13 +171,13 @@ export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestro
           // construct options for username and email algorithms; replace forwarder
           // entry with a virtual entry for drill-down
           const usernames = algorithms.filter((a) => !isForwarderExtensionId(a.id));
-          usernames.sort((un) => un.weight);
+          usernames.sort((username) => username.weight);
           const usernameOptions = this.toOptions(usernames);
           usernameOptions.push({ value: FORWARDER, label: this.i18nService.t("forwardedEmail") });
 
           // construct options for forwarder algorithms; they get their own selection box
           const forwarders = algorithms.filter((a) => isForwarderExtensionId(a.id));
-          forwarders.sort((fwd) => fwd.weight);
+          forwarders.sort((forwarder) => forwarder.weight);
           const forwarderOptions = this.toOptions(forwarders);
           forwarderOptions.unshift({ value: NONE_SELECTED, label: this.i18nService.t("select") });
 
@@ -475,14 +475,10 @@ export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestro
         this.username.setValue(username.selection, { emitEvent: false });
         this.forwarder.setValue(forwarder.selection, { emitEvent: false });
 
-        // update subjects within the angular zone so that the
-        // template bindings refresh immediately
-        this.zone.run(() => {
-          // update cascade visibility
-          activeRoot$.next(root.active);
-          activeIdentifier$.next(username.active);
-          activeForwarder$.next(forwarder.active);
-        });
+        // update cascade visibility
+        activeRoot$.next(root.active);
+        activeIdentifier$.next(username.active);
+        activeForwarder$.next(forwarder.active);
       });
 
     // automatically regenerate when the algorithm switches if the algorithm

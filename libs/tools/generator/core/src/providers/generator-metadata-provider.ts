@@ -14,7 +14,7 @@ import { BoundDependency } from "@bitwarden/common/tools/dependencies";
 import { ExtensionSite } from "@bitwarden/common/tools/extension";
 import { SemanticLogger } from "@bitwarden/common/tools/log";
 import { SystemServiceProvider } from "@bitwarden/common/tools/providers";
-import { anyComplete, pin } from "@bitwarden/common/tools/rx";
+import { anyComplete, memoizedMap, pin } from "@bitwarden/common/tools/rx";
 import { UserStateSubject } from "@bitwarden/common/tools/state/user-state-subject";
 import { UserStateSubjectDependencyProvider } from "@bitwarden/common/tools/state/user-state-subject-dependency-provider";
 
@@ -149,7 +149,8 @@ export class GeneratorMetadataProvider {
           .policiesByType$(PolicyType.PasswordGenerator, id)
           .pipe(
             map((p) => availableAlgorithms(p).filter((a) => this._metadata.has(a))),
-            map((p) => new Set(p)),
+            memoizedMap((p) => new Set(p), { key: (p) => JSON.stringify(p) }),
+            distinctUntilChanged(),
             // complete policy emissions otherwise `switchMap` holds `available$` open indefinitely
             takeUntil(anyComplete(id$)),
           );
