@@ -18,6 +18,7 @@ import {
   Aes256CbcKey,
   SymmetricCryptoKey,
 } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
+import { PureCrypto } from "@bitwarden/sdk-internal";
 
 import {
   DefaultFeatureFlagValue,
@@ -38,27 +39,27 @@ export class EncryptServiceImplementation implements EncryptService {
 
   // Proxy functions; Their implementation are temporary before moving at this level to the SDK
   async encryptString(plainValue: string, key: SymmetricCryptoKey): Promise<EncString> {
-    return this.encrypt(plainValue, key);
+    return new EncString(PureCrypto.symmetric_encrypt_string(plainValue, key.toEncoded()));
   }
 
   async encryptBytes(plainValue: Uint8Array, key: SymmetricCryptoKey): Promise<EncString> {
-    return this.encrypt(plainValue, key);
+    return new EncString(PureCrypto.symmetric_encrypt_bytes(plainValue, key.toEncoded()));
   }
 
   async encryptFileData(plainValue: Uint8Array, key: SymmetricCryptoKey): Promise<EncArrayBuffer> {
-    return this.encryptToBytes(plainValue, key);
+    return new EncArrayBuffer(PureCrypto.symmetric_encrypt_filedata(plainValue, key.toEncoded()));
   }
 
   async decryptString(encString: EncString, key: SymmetricCryptoKey): Promise<string> {
-    return this.decryptToUtf8(encString, key);
+    return PureCrypto.symmetric_decrypt_string(encString.encryptedString, key.toEncoded());
   }
 
   async decryptBytes(encString: EncString, key: SymmetricCryptoKey): Promise<Uint8Array> {
-    return this.decryptToBytes(encString, key);
+    return PureCrypto.symmetric_decrypt_bytes(encString.encryptedString, key.toEncoded());
   }
 
   async decryptFileData(encBuffer: EncArrayBuffer, key: SymmetricCryptoKey): Promise<Uint8Array> {
-    return this.decryptToBytes(encBuffer, key);
+    return PureCrypto.symmetric_decrypt_filedata(encBuffer.buffer, key.toEncoded());
   }
 
   async wrapDecapsulationKey(
@@ -73,7 +74,9 @@ export class EncryptServiceImplementation implements EncryptService {
       throw new Error("No wrappingKey provided for wrapping.");
     }
 
-    return await this.encryptUint8Array(decapsulationKeyPkcs8, wrappingKey);
+    return new EncString(
+      PureCrypto.symmetric_encrypt_bytes(decapsulationKeyPkcs8, wrappingKey.toEncoded()),
+    );
   }
 
   async wrapEncapsulationKey(
@@ -88,7 +91,9 @@ export class EncryptServiceImplementation implements EncryptService {
       throw new Error("No wrappingKey provided for wrapping.");
     }
 
-    return await this.encryptUint8Array(encapsulationKeySpki, wrappingKey);
+    return new EncString(
+      PureCrypto.symmetric_encrypt_bytes(encapsulationKeySpki, wrappingKey.toEncoded()),
+    );
   }
 
   async wrapSymmetricKey(
@@ -103,26 +108,36 @@ export class EncryptServiceImplementation implements EncryptService {
       throw new Error("No wrappingKey provided for wrapping.");
     }
 
-    return await this.encryptUint8Array(keyToBeWrapped.toEncoded(), wrappingKey);
+    return new EncString(
+      PureCrypto.wrap_symmetric_key(keyToBeWrapped.toEncoded(), wrappingKey.toEncoded()),
+    );
   }
 
   async unwrapDecapsulationKey(
     wrappedDecapsulationKey: EncString,
     wrappingKey: SymmetricCryptoKey,
   ): Promise<Uint8Array> {
-    return this.decryptBytes(wrappedDecapsulationKey, wrappingKey);
+    return PureCrypto.symmetric_decrypt_bytes(
+      wrappedDecapsulationKey.encryptedString,
+      wrappingKey.toEncoded(),
+    );
   }
   async unwrapEncapsulationKey(
     wrappedEncapsulationKey: EncString,
     wrappingKey: SymmetricCryptoKey,
   ): Promise<Uint8Array> {
-    return this.decryptBytes(wrappedEncapsulationKey, wrappingKey);
+    return PureCrypto.symmetric_decrypt_bytes(
+      wrappedEncapsulationKey.encryptedString,
+      wrappingKey.toEncoded(),
+    );
   }
   async unwrapSymmetricKey(
     keyToBeUnwrapped: EncString,
     wrappingKey: SymmetricCryptoKey,
   ): Promise<SymmetricCryptoKey> {
-    return new SymmetricCryptoKey(await this.decryptBytes(keyToBeUnwrapped, wrappingKey));
+    return new SymmetricCryptoKey(
+      PureCrypto.unwrap_symmetric_key(keyToBeUnwrapped.encryptedString, wrappingKey.toEncoded()),
+    );
   }
 
   async hash(value: string | Uint8Array, algorithm: "sha1" | "sha256" | "sha512"): Promise<string> {
