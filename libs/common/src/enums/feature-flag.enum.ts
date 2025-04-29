@@ -45,6 +45,7 @@ export enum FeatureFlag {
   UserKeyRotationV2 = "userkey-rotation-v2",
   PM4154_BulkEncryptionService = "PM-4154-bulk-encryption-service",
   PM17987_BlockType0 = "pm-17987-block-type-0",
+  EnrollAeadOnKeyRotation = "enroll-aead-on-key-rotation",
 
   /* Tools */
   ItemShare = "item-share",
@@ -126,9 +127,10 @@ export const DefaultFeatureFlagValue = {
 
   /* Key Management */
   [FeatureFlag.PrivateKeyRegeneration]: FALSE,
-  [FeatureFlag.UserKeyRotationV2]: FALSE,
+  [FeatureFlag.UserKeyRotationV2]: true,
   [FeatureFlag.PM4154_BulkEncryptionService]: FALSE,
   [FeatureFlag.PM17987_BlockType0]: FALSE,
+  [FeatureFlag.EnrollAeadOnKeyRotation]: true,
 
   /* Platform */
   [FeatureFlag.IpcChannelFramework]: FALSE,
