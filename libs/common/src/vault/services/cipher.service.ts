@@ -124,12 +124,8 @@ export class CipherService implements CipherServiceAbstraction {
    * decryption is in progress. The latest decrypted ciphers will be emitted once decryption is complete.
    */
   cipherViews$ = perUserCache$((userId: UserId): Observable<CipherView[] | null> => {
-    return combineLatest([
-      this.encryptedCiphersState(userId).state$,
-      this.localData$(userId),
-      this.keyService.cipherDecryptionKeys$(userId, true),
-    ]).pipe(
-      filter(([ciphers, keys]) => ciphers != null && keys != null), // Skip if ciphers haven't been loaded yor synced yet
+    return combineLatest([this.encryptedCiphersState(userId).state$, this.localData$(userId)]).pipe(
+      filter(([ciphers]) => ciphers != null), // Skip if ciphers haven't been loaded yor synced yet
       switchMap(() => this.getAllDecrypted(userId)),
     );
   }, this.clearCipherViewsForUser$);
@@ -881,7 +877,7 @@ export class CipherService implements CipherServiceAbstraction {
 
     const cipherEncKey =
       cipherKeyEncryptionEnabled && cipher.key != null
-        ? (await this.encryptService.unwrapSymmetricKey(cipher.key, encKey) as UserKey)
+        ? ((await this.encryptService.unwrapSymmetricKey(cipher.key, encKey)) as UserKey)
         : encKey;
 
     //if cipher key encryption is disabled but the item has an individual key,
@@ -1497,7 +1493,10 @@ export class CipherService implements CipherServiceAbstraction {
     const dataEncKey = await this.keyService.makeDataEncKey(encKey);
 
     const encFileName = await this.encryptService.encryptString(attachmentView.fileName, encKey);
-    const encData = await this.encryptService.encryptFileData(new Uint8Array(decBuf), dataEncKey[0]);
+    const encData = await this.encryptService.encryptFileData(
+      new Uint8Array(decBuf),
+      dataEncKey[0],
+    );
 
     const fd = new FormData();
     try {
@@ -1625,7 +1624,10 @@ export class CipherService implements CipherServiceAbstraction {
                 },
                 key,
               );
-              domainKey.counter = await this.encryptService.encryptString(String(viewKey.counter), key);
+              domainKey.counter = await this.encryptService.encryptString(
+                String(viewKey.counter),
+                key,
+              );
               domainKey.discoverable = await this.encryptService.encryptString(
                 String(viewKey.discoverable),
                 key,
@@ -1812,7 +1814,10 @@ export class CipherService implements CipherServiceAbstraction {
     if (cipher.key == null) {
       decryptedCipherKey = await this.keyService.makeCipherKey();
     } else {
-      decryptedCipherKey = await this.encryptService.unwrapSymmetricKey(cipher.key, keyForCipherKeyDecryption);
+      decryptedCipherKey = await this.encryptService.unwrapSymmetricKey(
+        cipher.key,
+        keyForCipherKeyDecryption,
+      );
     }
 
     // Then, we have to encrypt the cipher key with the proper key.
