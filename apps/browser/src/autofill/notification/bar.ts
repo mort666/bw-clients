@@ -55,6 +55,10 @@ function applyNotificationBarStyle() {
 function getI18n() {
   return {
     appName: chrome.i18n.getMessage("appName"),
+    atRiskPassword: chrome.i18n.getMessage("atRiskPassword"),
+    atRiskChangePrompt: chrome.i18n.getMessage("atRiskChangePrompt"),
+    atRiskNavigatePrompt: chrome.i18n.getMessage("atRiskNavigatePrompt"),
+    changePassword: chrome.i18n.getMessage("changePassword"),
     close: chrome.i18n.getMessage("close"),
     collection: chrome.i18n.getMessage("collection"),
     folder: chrome.i18n.getMessage("folder"),

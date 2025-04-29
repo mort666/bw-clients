@@ -3,7 +3,10 @@
 import { firstValueFrom, switchMap, map, of } from "rxjs";
 
 import { CollectionService } from "@bitwarden/admin-console/common";
-import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
+import {
+  getOrganizationById,
+  OrganizationService,
+} from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
@@ -84,6 +87,8 @@ export default class NotificationBackground {
     bgAdjustNotificationBar: ({ message, sender }) =>
       this.handleAdjustNotificationBarMessage(message, sender),
     bgChangedPassword: ({ message, sender }) => this.changedPassword(message, sender),
+    bgOpenAtRisksPasswordNotification: ({ message, sender }) =>
+      this.openAtRisksPasswordNotification(message, sender),
     bgCloseNotificationBar: ({ message, sender }) =>
       this.handleCloseNotificationBarMessage(message, sender),
     bgOpenAtRisksPasswords: ({ message, sender }) =>
@@ -370,6 +375,44 @@ export default class NotificationBackground {
         this.notificationQueue.splice(i, 1);
       }
     }
+  }
+
+  /**
+   * Sends a message to trigger the at risk password notification
+   *
+   * @param message - The extension message
+   * @param sender - The contextual sender of the message
+   */
+  async openAtRisksPasswordNotification(
+    message: NotificationBackgroundExtensionMessage,
+    sender: chrome.runtime.MessageSender,
+  ) {
+    const { activeUserId, cipher, securityTask, uri } = message.data;
+
+    const domain = Utils.getDomain(uri);
+    const addLoginIsEnabled = await this.getEnableAddedLoginPrompt();
+    const wasVaultLocked = AuthenticationStatus.Locked && addLoginIsEnabled;
+
+    const organization = await firstValueFrom(
+      this.organizationService
+        .organizations$(activeUserId)
+        .pipe(getOrganizationById(securityTask.organizationId)),
+    );
+
+    this.removeTabFromNotificationQueue(sender.tab);
+    const launchTimestamp = new Date().getTime();
+    const queueMessage: NotificationQueueMessageItem = {
+      domain,
+      wasVaultLocked,
+      type: NotificationQueueMessageType.AtRiskPassword,
+      organization: organization,
+      tab: sender.tab,
+      cipher,
+      launchTimestamp,
+      expires: new Date(launchTimestamp + NOTIFICATION_BAR_LIFESPAN_MS),
+    };
+    this.notificationQueue.push(queueMessage);
+    await this.checkNotificationQueue(sender.tab);
   }
 
   /**

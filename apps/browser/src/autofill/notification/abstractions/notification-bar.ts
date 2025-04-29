@@ -11,7 +11,7 @@ const NotificationTypes = {
   Add: "add",
   Change: "change",
   Unlock: "unlock",
-  SecurityTaskNotice: "security-task-notice",
+  AtRiskPassword: "at-risk-password",
 } as const;
 
 type NotificationType = (typeof NotificationTypes)[keyof typeof NotificationTypes];
@@ -32,6 +32,7 @@ type NotificationBarIframeInitData = {
   removeIndividualVault?: boolean;
   theme?: Theme;
   type?: NotificationType; // @TODO use `NotificationType`
+  passwordChangeUri?: string;
 };
 
 type NotificationBarWindowMessage = {
