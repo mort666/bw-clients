@@ -4,7 +4,6 @@ import { MockProxy } from "jest-mock-extended";
 import mock from "jest-mock-extended/lib/Mock";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
-import { BulkEncryptService } from "@bitwarden/common/key-management/crypto/abstractions/bulk-encrypt.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { ListResponse } from "@bitwarden/common/models/response/list.response";
 import { UserKeyResponse } from "@bitwarden/common/models/response/user-key.response";
@@ -36,7 +35,6 @@ describe("EmergencyAccessService", () => {
   let apiService: MockProxy<ApiService>;
   let keyService: MockProxy<KeyService>;
   let encryptService: MockProxy<EncryptService>;
-  let bulkEncryptService: MockProxy<BulkEncryptService>;
   let cipherService: MockProxy<CipherService>;
   let logService: MockProxy<LogService>;
   let emergencyAccessService: EmergencyAccessService;
@@ -50,7 +48,6 @@ describe("EmergencyAccessService", () => {
     apiService = mock<ApiService>();
     keyService = mock<KeyService>();
     encryptService = mock<EncryptService>();
-    bulkEncryptService = mock<BulkEncryptService>();
     cipherService = mock<CipherService>();
     logService = mock<LogService>();
 
@@ -59,7 +56,6 @@ describe("EmergencyAccessService", () => {
       apiService,
       keyService,
       encryptService,
-      bulkEncryptService,
       cipherService,
       logService,
       configService,

@@ -1,6 +1,5 @@
 import { ServerConfig } from "../../../platform/abstractions/config/server-config";
 import { Decryptable } from "../../../platform/interfaces/decryptable.interface";
-import { Encrypted } from "../../../platform/interfaces/encrypted";
 import { InitializerMetadata } from "../../../platform/interfaces/initializer-metadata.interface";
 import { EncArrayBuffer } from "../../../platform/models/domain/enc-array-buffer";
 import { EncString } from "../../../platform/models/domain/enc-string";
@@ -8,49 +7,6 @@ import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-cr
 
 export abstract class EncryptService {
   /**
-   * @deprecated
-   * Encrypts a string or Uint8Array to an EncString
-   * @param plainValue - The value to encrypt
-   * @param key - The key to encrypt the value with
-   */
-  abstract encrypt(plainValue: string | Uint8Array, key: SymmetricCryptoKey): Promise<EncString>;
-  /**
-   * @deprecated
-   * Encrypts a value to a Uint8Array
-   * @param plainValue - The value to encrypt
-   * @param key - The key to encrypt the value with
-   */
-  abstract encryptToBytes(plainValue: Uint8Array, key: SymmetricCryptoKey): Promise<EncArrayBuffer>;
-  /**
-   * @deprecated
-   * Decrypts an EncString to a string
-   * @param encString - The EncString to decrypt
-   * @param key - The key to decrypt the EncString with
-   * @param decryptTrace - A string to identify the context of the object being decrypted. This can include: field name, encryption type, cipher id, key type, but should not include
-   * sensitive information like encryption keys or data. This is used for logging when decryption errors occur in order to identify what failed to decrypt
-   * @returns The decrypted string
-   */
-  abstract decryptToUtf8(
-    encString: EncString,
-    key: SymmetricCryptoKey,
-    decryptTrace?: string,
-  ): Promise<string>;
-  /**
-   * @deprecated
-   * Decrypts an Encrypted object to a Uint8Array
-   * @param encThing - The Encrypted object to decrypt
-   * @param key - The key to decrypt the Encrypted object with
-   * @param decryptTrace - A string to identify the context of the object being decrypted. This can include: field name, encryption type, cipher id, key type, but should not include
-   * sensitive information like encryption keys or data. This is used for logging when decryption errors occur in order to identify what failed to decrypt
-   * @returns The decrypted Uint8Array
-   */
-  abstract decryptToBytes(
-    encThing: Encrypted,
-    key: SymmetricCryptoKey,
-    decryptTrace?: string,
-  ): Promise<Uint8Array | null>;
-  /**
-   * @deprecated Replaced by BulkEncryptService, remove once the feature is tested and the featureflag PM-4154-multi-worker-encryption-service is removed
    * @param items The items to decrypt
    * @param key The key to decrypt the items with
    */

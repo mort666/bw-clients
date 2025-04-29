@@ -52,7 +52,6 @@ export class InitService {
       this.configService.serverConfig$.subscribe((newConfig) => {
         if (newConfig != null) {
           this.encryptService.onServerConfigChange(newConfig);
-          this.bulkEncryptService.onServerConfigChange(newConfig);
         }
       });
 
@@ -73,9 +72,6 @@ export class InitService {
       this.themingService.applyThemeChangesTo(this.document);
       this.versionService.applyVersionToWindow();
       void this.ipcService.init();
-
-      const containerService = new ContainerService(this.keyService, this.encryptService);
-      containerService.attachToGlobal(this.win);
     };
   }
 }

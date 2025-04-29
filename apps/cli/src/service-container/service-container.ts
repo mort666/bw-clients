@@ -93,7 +93,6 @@ import {
 import { AppIdService } from "@bitwarden/common/platform/services/app-id.service";
 import { ConfigApiService } from "@bitwarden/common/platform/services/config/config-api.service";
 import { DefaultConfigService } from "@bitwarden/common/platform/services/config/default-config.service";
-import { ContainerService } from "@bitwarden/common/platform/services/container.service";
 import { DefaultEnvironmentService } from "@bitwarden/common/platform/services/default-environment.service";
 import { FileUploadService } from "@bitwarden/common/platform/services/file-upload/file-upload.service";
 import { KeyGenerationService } from "@bitwarden/common/platform/services/key-generation.service";
@@ -224,7 +223,6 @@ export class ServiceContainer {
   passwordStrengthService: PasswordStrengthServiceAbstraction;
   userDecryptionOptionsService: InternalUserDecryptionOptionsServiceAbstraction;
   totpService: TotpService;
-  containerService: ContainerService;
   auditService: AuditService;
   importService: ImportServiceAbstraction;
   importApiService: ImportApiServiceAbstraction;
@@ -282,7 +280,6 @@ export class ServiceContainer {
   cipherAuthorizationService: CipherAuthorizationService;
   ssoUrlService: SsoUrlService;
   masterPasswordApiService: MasterPasswordApiServiceAbstraction;
-  bulkEncryptService: FallbackBulkEncryptService;
 
   constructor() {
     let p = null;
@@ -314,7 +311,6 @@ export class ServiceContainer {
       this.logService,
       true,
     );
-    this.bulkEncryptService = new FallbackBulkEncryptService(this.encryptService);
     this.storageService = new LowdbStorageService(this.logService, null, p, false, true);
     this.secureStorageService = new NodeEnvSecureStorageService(
       this.storageService,

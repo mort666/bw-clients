@@ -73,10 +73,7 @@ import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ProcessReloadServiceAbstraction } from "@bitwarden/common/key-management/abstractions/process-reload.service";
 import { CryptoFunctionService as CryptoFunctionServiceAbstraction } from "@bitwarden/common/key-management/crypto/abstractions/crypto-function.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
-import { BulkEncryptServiceImplementation } from "@bitwarden/common/key-management/crypto/services/bulk-encrypt.service.implementation";
 import { EncryptServiceImplementation } from "@bitwarden/common/key-management/crypto/services/encrypt.service.implementation";
-import { FallbackBulkEncryptService } from "@bitwarden/common/key-management/crypto/services/fallback-bulk-encrypt.service";
-import { MultithreadEncryptServiceImplementation } from "@bitwarden/common/key-management/crypto/services/multithread-encrypt.service.implementation";
 import { WebCryptoFunctionService } from "@bitwarden/common/key-management/crypto/services/web-crypto-function.service";
 import { DeviceTrustServiceAbstraction } from "@bitwarden/common/key-management/device-trust/abstractions/device-trust.service.abstraction";
 import { DeviceTrustService } from "@bitwarden/common/key-management/device-trust/services/device-trust.service.implementation";
@@ -133,7 +130,6 @@ import { AppIdService } from "@bitwarden/common/platform/services/app-id.service
 import { ConfigApiService } from "@bitwarden/common/platform/services/config/config-api.service";
 import { DefaultConfigService } from "@bitwarden/common/platform/services/config/default-config.service";
 import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
-import { ContainerService } from "@bitwarden/common/platform/services/container.service";
 import { Fido2ActiveRequestManager } from "@bitwarden/common/platform/services/fido2/fido2-active-request-manager";
 import { Fido2AuthenticatorService } from "@bitwarden/common/platform/services/fido2/fido2-authenticator.service";
 import { Fido2ClientService } from "@bitwarden/common/platform/services/fido2/fido2-client.service";
@@ -325,7 +321,6 @@ export default class MainBackground {
   passwordStrengthService: PasswordStrengthServiceAbstraction;
   totpService: TotpServiceAbstraction;
   autofillService: AutofillServiceAbstraction;
-  containerService: ContainerService;
   auditService: AuditServiceAbstraction;
   authService: AuthServiceAbstraction;
   loginEmailService: LoginEmailServiceAbstraction;
@@ -355,7 +350,6 @@ export default class MainBackground {
   vaultFilterService: VaultFilterService;
   usernameGenerationService: UsernameGenerationServiceAbstraction;
   encryptService: EncryptService;
-  bulkEncryptService: FallbackBulkEncryptService;
   folderApiService: FolderApiServiceAbstraction;
   policyApiService: PolicyApiServiceAbstraction;
   sendApiService: SendApiServiceAbstraction;
@@ -563,13 +557,7 @@ export default class MainBackground {
       storageServiceProvider,
     );
 
-    this.encryptService = BrowserApi.isManifestVersion(2)
-      ? new MultithreadEncryptServiceImplementation(
-          this.cryptoFunctionService,
-          this.logService,
-          true,
-        )
-      : new EncryptServiceImplementation(this.cryptoFunctionService, this.logService, true);
+    this.encryptService = new EncryptServiceImplementation(this.cryptoFunctionService, this.logService, true);
 
     this.singleUserStateProvider = new DefaultSingleUserStateProvider(
       storageServiceProvider,
@@ -854,7 +842,6 @@ export default class MainBackground {
 
     this.themeStateService = new DefaultThemeStateService(this.globalStateProvider);
 
-    this.bulkEncryptService = new FallbackBulkEncryptService(this.encryptService);
 
     this.cipherService = new CipherService(
       this.keyService,
@@ -865,7 +852,6 @@ export default class MainBackground {
       this.stateService,
       this.autofillSettingsService,
       this.encryptService,
-      this.bulkEncryptService,
       this.cipherFileUploadService,
       this.configService,
       this.stateProvider,
@@ -924,7 +910,6 @@ export default class MainBackground {
       lockedCallback,
       logoutCallback,
     );
-    this.containerService = new ContainerService(this.keyService, this.encryptService);
 
     this.sendStateProvider = new SendStateProvider(this.stateProvider);
     this.sendService = new SendService(
@@ -1384,15 +1369,6 @@ export default class MainBackground {
     this.webRequestBackground?.startListening();
     this.syncServiceListener?.listener$().subscribe();
     await this.autoSubmitLoginBackground.init();
-
-    if (
-      BrowserApi.isManifestVersion(2) &&
-      (await this.configService.getFeatureFlag(FeatureFlag.PM4154_BulkEncryptionService))
-    ) {
-      await this.bulkEncryptService.setFeatureFlagEncryptService(
-        new BulkEncryptServiceImplementation(this.cryptoFunctionService, this.logService),
-      );
-    }
 
     // If the user is logged out, switch to the next account
     const active = await firstValueFrom(this.accountService.activeAccount$);

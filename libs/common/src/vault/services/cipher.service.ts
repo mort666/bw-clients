@@ -12,7 +12,6 @@ import { AccountService } from "../../auth/abstractions/account.service";
 import { AutofillSettingsServiceAbstraction } from "../../autofill/services/autofill-settings.service";
 import { DomainSettingsService } from "../../autofill/services/domain-settings.service";
 import { FeatureFlag } from "../../enums/feature-flag.enum";
-import { BulkEncryptService } from "../../key-management/crypto/abstractions/bulk-encrypt.service";
 import { EncryptService } from "../../key-management/crypto/abstractions/encrypt.service";
 import { UriMatchStrategySetting } from "../../models/domain/domain-service";
 import { ErrorResponse } from "../../models/response/error.response";
