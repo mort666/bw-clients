@@ -30,7 +30,9 @@ const GETTING_STARTED_CAROUSEL_DISMISSED_KEY = new UserKeyDefinition<boolean>(
   },
 );
 
-@Injectable()
+@Injectable({
+  providedIn: "root",
+})
 export class AtRiskPasswordPageService {
   private stateProvider = inject(StateProvider);
   private accountService = inject(AccountService);
@@ -86,7 +88,9 @@ export class AtRiskPasswordPageService {
           (t) =>
             t.type === SecurityTaskType.UpdateAtRiskCredential &&
             t.cipherId != null &&
-            ciphers[t.cipherId] != null,
+            ciphers[t.cipherId] != null &&
+            ciphers[t.cipherId].edit &&
+            ciphers[t.cipherId].viewPassword,
         )
         .map((t) => ciphers[t.cipherId!]),
     ),

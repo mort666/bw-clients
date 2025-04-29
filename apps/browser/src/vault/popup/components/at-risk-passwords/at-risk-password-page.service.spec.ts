@@ -33,6 +33,8 @@ describe("AtRiskPasswordPageService", () => {
       id: "cipher",
       organizationId: "org",
       name: "Item 1",
+      edit: true,
+      viewPassword: true,
     } as CipherView,
     {
       id: "cipher2",
@@ -42,7 +44,7 @@ describe("AtRiskPasswordPageService", () => {
   ];
 
   const mockTasks$ = new BehaviorSubject<SecurityTask[]>([task]);
-  const mockCiphers = new BehaviorSubject<CipherView[]>(ciphers);
+  const mockCiphers$ = new BehaviorSubject<CipherView[]>(ciphers);
 
   beforeEach(() => {
     mockStateProvider = mock<StateProvider>();
@@ -51,7 +53,7 @@ describe("AtRiskPasswordPageService", () => {
       pendingTasks$: () => mockTasks$.asObservable(),
     });
     mockCipherService = mock<CipherService>({
-      cipherViews$: () => mockCiphers.asObservable(),
+      cipherViews$: () => mockCiphers$.asObservable(),
     });
 
     TestBed.configureTestingModule({
@@ -96,6 +98,42 @@ describe("AtRiskPasswordPageService", () => {
     it("filters tasks to only include available ciphers", (done) => {
       service.atRiskItems$.subscribe((items) => {
         expect(items).toEqual([ciphers[0]]);
+        done();
+      });
+    });
+
+    it("filters out ciphers that the user cannot edit the password", (done) => {
+      const taskWithNoEditPermission = {
+        ...task,
+        cipherId: "cipher3",
+      } as SecurityTask;
+
+      const taskWithEditPermission = {
+        ...task,
+        cipherId: "cipher4",
+      } as SecurityTask;
+
+      const cipher3 = {
+        id: "cipher3",
+        organizationId: "org",
+        name: "Item 3",
+        edit: true,
+        viewPassword: false,
+      } as CipherView;
+
+      const cipher4 = {
+        id: "cipher4",
+        organizationId: "org",
+        name: "Item 4",
+        edit: true,
+        viewPassword: true,
+      } as CipherView;
+
+      mockTasks$.next([task, taskWithNoEditPermission, taskWithEditPermission]);
+      mockCiphers$.next([...ciphers, cipher3, cipher4]);
+
+      service.atRiskItems$.subscribe((items) => {
+        expect(items).toEqual([ciphers[0], cipher4]);
         done();
       });
     });
