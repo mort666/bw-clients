@@ -5198,5 +5198,11 @@
   },
   "secureDevicesBody": {
     "message": "Save unlimited passwords across unlimited devices with Bitwarden mobile, browser, and desktop apps."
+  },
+  "phishingPageTitle":{
+    "message": "Phishing website"
+  },
+  "closeTab": {
+    "message": "Close tab"
   }
 }

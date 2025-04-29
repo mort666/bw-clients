@@ -1,8 +1,8 @@
 <div [formGroup]="formGroup">
   <bit-form-field>
-    <bit-label>Phishing website</bit-label>
+    <bit-label>{{ "phishingPageTitle" | i18n }}</bit-label>
     <input bitInput type="text" formControlName="phishingHost" />
   </bit-form-field>
 
-  <a (click)="closeTab()" bitButton block buttonType="primary">Close tab</a>
+  <a (click)="closeTab()" bitButton block buttonType="primary">{{ "closeTab" | i18n }}</a>
 </div>
