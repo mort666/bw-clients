@@ -23,6 +23,7 @@ import {
   ReplaySubject,
   Subject,
   takeUntil,
+  tap,
   withLatestFrom,
 } from "rxjs";
 
@@ -183,6 +184,9 @@ export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestro
 
           return [usernameOptions, forwarderOptions] as const;
         }),
+        tap((algorithms) =>
+          this.log.debug({ algorithms: algorithms as object }, "algorithms loaded"),
+        ),
         takeUntil(this.destroyed),
       )
       .subscribe(([usernames, forwarders]) => {
@@ -470,6 +474,15 @@ export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestro
         takeUntil(this.destroyed),
       )
       .subscribe(({ root, username, forwarder }) => {
+        this.log.debug(
+          {
+            root: root.selection,
+            username: username.selection,
+            forwarder: forwarder.selection,
+          },
+          "navigation updated",
+        );
+
         // update navigation; break subscription loop
         this.onRootChanged(root.selection);
         this.username.setValue(username.selection, { emitEvent: false });
