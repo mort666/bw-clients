@@ -11,7 +11,6 @@ import { ApiService } from "../../abstractions/api.service";
 import { SearchService } from "../../abstractions/search.service";
 import { AutofillSettingsService } from "../../autofill/services/autofill-settings.service";
 import { DomainSettingsService } from "../../autofill/services/domain-settings.service";
-import { BulkEncryptService } from "../../key-management/crypto/abstractions/bulk-encrypt.service";
 import { EncryptService } from "../../key-management/crypto/abstractions/encrypt.service";
 import { UriMatchStrategy } from "../../models/domain/domain-service";
 import { ConfigService } from "../../platform/abstractions/config/config.service";
@@ -119,7 +118,6 @@ describe("Cipher Service", () => {
   const i18nService = mock<I18nService>();
   const searchService = mock<SearchService>();
   const encryptService = mock<EncryptService>();
-  const bulkEncryptService = mock<BulkEncryptService>();
   const configService = mock<ConfigService>();
   accountService = mockAccountServiceWith(mockUserId);
   const logService = mock<LogService>();
@@ -145,7 +143,6 @@ describe("Cipher Service", () => {
       stateService,
       autofillSettingsService,
       encryptService,
-      bulkEncryptService,
       cipherFileUploadService,
       configService,
       stateProvider,

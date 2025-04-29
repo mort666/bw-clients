@@ -60,7 +60,6 @@ import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abs
 import { DefaultBillingAccountProfileStateService } from "@bitwarden/common/billing/services/account/billing-account-profile-state.service";
 import { ClientType } from "@bitwarden/common/enums";
 import { EncryptServiceImplementation } from "@bitwarden/common/key-management/crypto/services/encrypt.service.implementation";
-import { FallbackBulkEncryptService } from "@bitwarden/common/key-management/crypto/services/fallback-bulk-encrypt.service";
 import { DeviceTrustServiceAbstraction } from "@bitwarden/common/key-management/device-trust/abstractions/device-trust.service.abstraction";
 import { DeviceTrustService } from "@bitwarden/common/key-management/device-trust/services/device-trust.service.implementation";
 import { KeyConnectorService } from "@bitwarden/common/key-management/key-connector/services/key-connector.service";

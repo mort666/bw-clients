@@ -97,7 +97,6 @@ export class CipherService implements CipherServiceAbstraction {
     private stateService: StateService,
     private autofillSettingsService: AutofillSettingsServiceAbstraction,
     private encryptService: EncryptService,
-    private bulkEncryptService: BulkEncryptService,
     private cipherFileUploadService: CipherFileUploadService,
     private configService: ConfigService,
     private stateProvider: StateProvider,
@@ -441,17 +440,10 @@ export class CipherService implements CipherServiceAbstraction {
     const allCipherViews = (
       await Promise.all(
         Object.entries(grouped).map(async ([orgId, groupedCiphers]) => {
-          if (await this.configService.getFeatureFlag(FeatureFlag.PM4154_BulkEncryptionService)) {
-            return await this.bulkEncryptService.decryptItems(
-              groupedCiphers,
-              keys.orgKeys[orgId as OrganizationId] ?? keys.userKey,
-            );
-          } else {
-            return await this.encryptService.decryptItems(
-              groupedCiphers,
-              keys.orgKeys[orgId as OrganizationId] ?? keys.userKey,
-            );
-          }
+          return await this.encryptService.decryptItems(
+            groupedCiphers,
+            keys.orgKeys[orgId as OrganizationId] ?? keys.userKey,
+          );
         }),
       )
     )
@@ -593,12 +585,7 @@ export class CipherService implements CipherServiceAbstraction {
 
     const ciphers = response.data.map((cr) => new Cipher(new CipherData(cr)));
     const key = await this.keyService.getOrgKey(organizationId);
-    let decCiphers: CipherView[] = [];
-    if (await this.configService.getFeatureFlag(FeatureFlag.PM4154_BulkEncryptionService)) {
-      decCiphers = await this.bulkEncryptService.decryptItems(ciphers, key);
-    } else {
-      decCiphers = await this.encryptService.decryptItems(ciphers, key);
-    }
+    const decCiphers: CipherView[] = await this.encryptService.decryptItems(ciphers, key);
 
     decCiphers.sort(this.getLocaleSortingFunction());
     return decCiphers;

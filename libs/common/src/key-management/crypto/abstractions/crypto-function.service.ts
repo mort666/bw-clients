@@ -1,8 +1,3 @@
-import {
-  CbcDecryptParameters,
-  EcbDecryptParameters,
-} from "../../../platform/models/domain/decrypt-parameters";
-import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
 import { CsprngArray } from "../../../types/csprng";
 
 export abstract class CryptoFunctionService {
@@ -48,19 +43,6 @@ export abstract class CryptoFunctionService {
     algorithm: "sha1" | "sha256" | "sha512",
   ): Promise<Uint8Array | string>;
   abstract compareFast(a: Uint8Array | string, b: Uint8Array | string): Promise<boolean>;
-  abstract aesEncrypt(data: Uint8Array, iv: Uint8Array, key: Uint8Array): Promise<Uint8Array>;
-  abstract aesDecryptFastParameters(
-    data: string,
-    iv: string,
-    mac: string,
-    key: SymmetricCryptoKey,
-  ): CbcDecryptParameters<Uint8Array | string>;
-  abstract aesDecryptFast({
-    mode,
-    parameters,
-  }:
-    | { mode: "cbc"; parameters: CbcDecryptParameters<Uint8Array | string> }
-    | { mode: "ecb"; parameters: EcbDecryptParameters<Uint8Array | string> }): Promise<string>;
   abstract aesDecrypt(
     data: Uint8Array,
     iv: Uint8Array,
