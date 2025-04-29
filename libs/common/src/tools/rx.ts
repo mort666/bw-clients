@@ -248,12 +248,14 @@ export function pin<T>(options?: {
   );
 }
 
-/** maps a value to a source and keeps a LRC cache of the results
+/** maps a value to a result and keeps a cache of the mapping
  *  @param mapResult - maps the stream to a result; this function must return
  *    a value. It must not return null or undefined.
  *  @param options.size - the number of entries in the cache
  *  @param options.key - maps the source to a cache key
- *  @remarks - LRC is least recently created
+ *  @remarks this method is useful for optimization of expensive
+ *    `mapResult` calls. It's also useful when an interned reference type
+ *    is needed.
  */
 export function memoizedMap<Source, Result extends NonNullable<any>>(
   mapResult: (source: Source) => Result,
