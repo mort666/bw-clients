@@ -51,6 +51,8 @@ import {
   CredentialAlgorithm,
   AlgorithmMetadata,
   Algorithm,
+  AlgorithmsByType,
+  Type,
 } from "@bitwarden/generator-core";
 import { GeneratorHistoryService } from "@bitwarden/generator-history";
 
@@ -321,7 +323,8 @@ export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestro
           } else if (username.nav) {
             return { nav: username.nav, algorithm: JSON.parse(username.nav) };
           } else {
-            return { nav: FORWARDER };
+            const [algorithm] = AlgorithmsByType[Type.username];
+            return { nav: JSON.stringify(algorithm), algorithm };
           }
         }),
         takeUntil(this.destroyed),
@@ -336,7 +339,7 @@ export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestro
           } else if (forwarder.nav) {
             return { nav: forwarder.nav, algorithm: JSON.parse(forwarder.nav) };
           } else {
-            this.log.panic(forwarder, "unknown navigation value.");
+            return { nav: NONE_SELECTED };
           }
         }),
         takeUntil(this.destroyed),
