@@ -134,6 +134,8 @@ function getHeaderMessage(
       return i18n.loginSaveSuccess;
     case NotificationTypes.Change:
       return i18n.loginUpdateSuccess;
+    case NotificationTypes.AtRiskPassword:
+      return i18n.changePassword;
     case NotificationTypes.Unlock:
       return "";
     default:

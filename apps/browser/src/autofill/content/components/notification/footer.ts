@@ -7,6 +7,7 @@ import {
   NotificationType,
   NotificationTypes,
 } from "../../../notification/abstractions/notification-bar";
+import { ActionButton } from "../buttons/action-button";
 import { OrgView, FolderView, CollectionView } from "../common-types";
 import { spacing, themes } from "../constants/styles";
 
@@ -35,6 +36,16 @@ export function NotificationFooter({
 }: NotificationFooterProps) {
   const isChangeNotification = notificationType === NotificationTypes.Change;
   const primaryButtonText = i18n.saveAction;
+
+  if (notificationType === NotificationTypes.AtRiskPassword) {
+    return html`<div class=${notificationFooterStyles({ theme })}>
+      ${ActionButton({
+        handleClick: () => {},
+        buttonText: i18n.changePassword,
+        theme,
+      })}
+    </div>`;
+  }
 
   return html`
     <div class=${notificationFooterStyles({ theme })}>

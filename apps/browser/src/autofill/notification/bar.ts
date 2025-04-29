@@ -56,8 +56,6 @@ function getI18n() {
   return {
     appName: chrome.i18n.getMessage("appName"),
     atRiskPassword: chrome.i18n.getMessage("atRiskPassword"),
-    atRiskChangePrompt: chrome.i18n.getMessage("atRiskChangePrompt"),
-    atRiskNavigatePrompt: chrome.i18n.getMessage("atRiskNavigatePrompt"),
     changePassword: chrome.i18n.getMessage("changePassword"),
     close: chrome.i18n.getMessage("close"),
     collection: chrome.i18n.getMessage("collection"),
@@ -185,6 +183,7 @@ async function initNotificationBar(message: NotificationBarWindowMessage) {
           handleSaveAction,
           handleEditOrUpdateAction,
           i18n,
+          params: initData.params,
         }),
         document.body,
       );

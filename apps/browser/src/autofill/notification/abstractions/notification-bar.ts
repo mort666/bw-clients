@@ -33,6 +33,7 @@ type NotificationBarIframeInitData = {
   theme?: Theme;
   type?: NotificationType; // @TODO use `NotificationType`
   passwordChangeUri?: string;
+  params?: NotificationMessageParams;
 };
 
 type NotificationBarWindowMessage = {
@@ -52,7 +53,15 @@ type NotificationBarWindowMessageHandlers = {
   saveCipherAttemptCompleted: ({ message }: { message: NotificationBarWindowMessage }) => void;
 };
 
+type NotificationMessageParamsAtRiskPasswordType = {
+  passwordChangeUri?: string;
+  organizationName: string;
+};
+
+type NotificationMessageParams = NotificationMessageParamsAtRiskPasswordType | any;
+
 export {
+  NotificationMessageParams,
   NotificationTaskInfo,
   NotificationTypes,
   NotificationType,

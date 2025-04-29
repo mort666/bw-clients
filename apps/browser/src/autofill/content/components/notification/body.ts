@@ -4,6 +4,7 @@ import { html } from "lit";
 import { Theme, ThemeTypes } from "@bitwarden/common/platform/enums";
 
 import {
+  NotificationMessageParams,
   NotificationType,
   NotificationTypes,
 } from "../../../notification/abstractions/notification-bar";
@@ -20,29 +21,31 @@ const { css } = createEmotion({
 
 export function NotificationBody({
   ciphers = [],
-  passwordChangeUri,
   i18n,
   notificationType,
   theme = ThemeTypes.Light,
   handleEditOrUpdateAction,
+  params = {},
 }: {
   ciphers?: NotificationCipherData[];
-  passwordChangeUri: string;
   customClasses?: string[];
   i18n: { [key: string]: string };
   notificationType?: NotificationType;
   theme: Theme;
   handleEditOrUpdateAction: (e: Event) => void;
+  params?: NotificationMessageParams;
 }) {
   // @TODO get client vendor from context
   const isSafari = false;
+  const { passwordChangeUri, organizationName } = params;
 
   switch (notificationType) {
     case NotificationTypes.AtRiskPassword:
       return html`
         <div class=${notificationBodyStyles({ isSafari, theme })}>
-          ${passwordChangeUri ? i18n.atRiskChangePrompt : i18n.atRiskNavigatePrompt}
-          ${passwordChangeUri && i18n.changePassword}
+          ${passwordChangeUri
+            ? chrome.i18n.getMessage("atRiskChangePrompt", organizationName)
+            : chrome.i18n.getMessage("atRiskNavigatePrompt", organizationName)}
         </div>
       `;
     default:

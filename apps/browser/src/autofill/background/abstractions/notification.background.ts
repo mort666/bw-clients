@@ -1,4 +1,3 @@
-import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { NeverDomains } from "@bitwarden/common/models/domain/domain-service";
 import { ServerConfig } from "@bitwarden/common/platform/abstractions/config/server-config";
 import { UserId } from "@bitwarden/common/types/guid";
@@ -38,8 +37,8 @@ interface AddUnlockVaultQueueMessage extends NotificationQueueMessage {
 
 interface AtRiskPasswordQueueMessage extends NotificationQueueMessage {
   type: "at-risk-password";
-  organization: Organization;
-  cipher: CipherView;
+  organizationName: string;
+  passwordChangeUri?: string;
 }
 
 type NotificationQueueMessageItem =

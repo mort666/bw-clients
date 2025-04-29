@@ -343,12 +343,17 @@ export default class NotificationBackground {
     tab: chrome.tabs.Tab,
     notificationQueueMessage: NotificationQueueMessageItem,
   ) {
-    const notificationType = notificationQueueMessage.type;
+    const {
+      type: notificationType,
+      wasVaultLocked: isVaultLocked,
+      launchTimestamp,
+      ...params
+    } = notificationQueueMessage;
 
     const typeData: NotificationTypeData = {
-      isVaultLocked: notificationQueueMessage.wasVaultLocked,
+      isVaultLocked,
       theme: await firstValueFrom(this.themeStateService.selectedTheme$),
-      launchTimestamp: notificationQueueMessage.launchTimestamp,
+      launchTimestamp,
     };
 
     switch (notificationType) {
@@ -360,6 +365,7 @@ export default class NotificationBackground {
     await BrowserApi.tabSendMessageData(tab, "openNotificationBar", {
       type: notificationType,
       typeData,
+      params,
     });
   }
 
@@ -387,7 +393,7 @@ export default class NotificationBackground {
     message: NotificationBackgroundExtensionMessage,
     sender: chrome.runtime.MessageSender,
   ) {
-    const { activeUserId, cipher, securityTask, uri } = message.data;
+    const { activeUserId, securityTask, uri } = message.data;
 
     const domain = Utils.getDomain(uri);
     const addLoginIsEnabled = await this.getEnableAddedLoginPrompt();
@@ -405,9 +411,9 @@ export default class NotificationBackground {
       domain,
       wasVaultLocked,
       type: NotificationQueueMessageType.AtRiskPassword,
-      organization: organization,
+      passwordChangeUri: domain,
+      organizationName: organization.name,
       tab: sender.tab,
-      cipher,
       launchTimestamp,
       expires: new Date(launchTimestamp + NOTIFICATION_BAR_LIFESPAN_MS),
     };
