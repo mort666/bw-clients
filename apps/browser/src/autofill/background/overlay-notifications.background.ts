@@ -491,7 +491,7 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
   };
 
   /**
-   * Determines if the at-risk password notification should be triggered.
+   * If there is a security task for this cipher at login, return the task, cipher view, and uri.
    *
    * @param modifyLoginData - The modified login form data
    * @param activeUserId - The currently logged in user ID

@@ -903,7 +903,7 @@ export default class NotificationBackground {
     return null;
   }
 
-  private async getSecurityTasks(userId: UserId) {
+  async getSecurityTasks(userId: UserId) {
     let tasks: SecurityTask[] = [];
 
     if (userId) {
