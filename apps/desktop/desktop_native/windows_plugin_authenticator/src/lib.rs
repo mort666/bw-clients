@@ -97,7 +97,7 @@ pub fn register() -> std::result::Result<(), String> {
         &mut credential_details;
     std::mem::forget(credential_details);
 
-    let mut clsid_string = String::from(CLSID);
+    let mut clsid_string = String::from(format!("{{{}}}",CLSID));
     let mut clsid_vec: Vec<u16> = clsid_string.encode_utf16().collect();
     clsid_vec.push(0);
     let plugin_clsid: *mut u16 = clsid_vec.as_mut_ptr();
