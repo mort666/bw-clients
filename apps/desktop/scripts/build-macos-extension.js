@@ -64,8 +64,6 @@ async function buildMacOs() {
     "-alltargets",
     "-configuration",
     configuration,
-    "-sdk",
-    "macosx15.0", // Specify the SDK version explicitly
     "CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO",
     "OTHER_CODE_SIGN_FLAGS='--timestamp'",
 
