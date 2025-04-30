@@ -683,7 +683,9 @@ jobs:
 
       - name: Rust
         shell: pwsh
-        run: rustup target install aarch64-apple-darwin
+        run: |
+          rustup target add aarch64-apple-darwin
+          rustup target add x86_64-apple-darwin
 
       - name: Print environment
         run: |
@@ -892,7 +894,9 @@ jobs:
 
       - name: Rust
         shell: pwsh
-        run: rustup target install aarch64-apple-darwin
+        run: |
+          rustup target add aarch64-apple-darwin
+          rustup target add x86_64-apple-darwin
 
       - name: Print environment
         run: |
