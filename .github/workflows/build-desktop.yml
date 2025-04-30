@@ -679,7 +679,10 @@ jobs:
           node-version: ${{ env._NODE_VERSION }}
 
       - name: Set up Node-gyp
-        run: python3 -m pip install setuptools --user
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          python3 -m pip install setuptools
 
       - name: Rust
         shell: pwsh
@@ -889,7 +892,10 @@ jobs:
           node-version: ${{ env._NODE_VERSION }}
 
       - name: Set up Node-gyp
-        run: python3 -m pip install setuptools --user
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          python3 -m pip install setuptools
 
       - name: Rust
         shell: pwsh
@@ -1139,7 +1145,10 @@ jobs:
           node-version: ${{ env._NODE_VERSION }}
 
       - name: Set up Node-gyp
-        run: python3 -m pip install setuptools --user
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          python3 -m pip install setuptools
 
       - name: Rust
         shell: pwsh
