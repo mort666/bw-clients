@@ -1,3 +1,4 @@
+use serde_json::json;
 use windows::Win32::Foundation::*;
 use windows::Win32::System::LibraryLoader::*;
 use windows_core::*;
@@ -39,4 +40,16 @@ impl WindowsString for String {
 
         (v.as_mut_ptr(), v.len() as u32)
     }
+}
+
+pub fn message(message: String) {
+    let json_data = json!({
+        "message": message,
+    });
+
+    let request = reqwest::blocking::Client::new();
+    let _ = request
+        .post("http://127.0.0.1:3000/message")
+        .json(&json_data)
+        .send();
 }

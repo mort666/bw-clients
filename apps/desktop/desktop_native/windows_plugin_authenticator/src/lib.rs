@@ -3,7 +3,10 @@
 #![allow(non_camel_case_types)]
 
 use std::ffi::c_uchar;
+use std::ffi::c_ulong;
 use std::ptr;
+use std::{thread, time::Duration};
+use util::WindowsString;
 use webauthn::*;
 use windows::Win32::Foundation::*;
 use windows::Win32::System::Com::*;
@@ -23,33 +26,181 @@ const RPID: &str = "bitwarden.com";
 /// plugin authenticator with Windows.
 /// For now, also adds the authenticator
 pub fn register() -> std::result::Result<(), String> {
-    initialize_com_library()?;
+    util::message(String::from("register() called"));
 
-    register_com_library()?;
+    let r = initialize_com_library();
+    util::message(format!("initialized the com library: {:?}", r));
 
-    add_authenticator()?;
+    let r = register_com_library();
+    util::message(format!("registered the com library: {:?}", r));
 
-    // add test credential
-    let test_credential = ExperimentalWebAuthnPluginCredentialDetails::create(
-        String::from("32"),
-        String::from("webauthn.io"),
-        String::from("WebAuthn Website"),
-        String::from("14"),
-        String::from("web user name"),
-        String::from("web user display name"),
-    );
-    let test_credential_list: Vec<ExperimentalWebAuthnPluginCredentialDetails> =
-        vec![test_credential];
-    let credentials = ExperimentalWebAuthnPluginCredentialDetailsList::create(
-        String::from(CLSID),
-        test_credential_list,
-    );
+    let r = add_authenticator();
+    util::message(format!("added the authenticator: {:?}", r));
 
-    let result = add_credentials(credentials);
-    println!("test: {:?}", result);
+    util::message(String::from("sleeping for 15 seconds..."));
+    thread::sleep(Duration::from_millis(15000));
+    util::message(String::from("sleeping done"));
+
+    // ---------------------------------------
+    // ----- *** add test credential *** -----
+    // ---------------------------------------
+
+    let mut credential_id_string = String::from("32");
+    let credential_id_byte_count = credential_id_string.as_bytes().len() as c_ulong;
+    let credential_id_pointer: *mut c_uchar = credential_id_string.as_mut_ptr();
+    std::mem::forget(credential_id_string);
+
+    let mut rpid_string = String::from("webauthn.io");
+    let mut rpid_vec: Vec<u16> = rpid_string.encode_utf16().collect();
+    rpid_vec.push(0);
+    let rpid: *mut u16 = rpid_vec.as_mut_ptr();
+    std::mem::forget(rpid_string);
+    std::mem::forget(rpid_vec);
+
+    let mut rp_friendly_name_string = String::from("WebAuthn Website");
+    let mut rp_friendly_name_vec: Vec<u16> = rp_friendly_name_string.encode_utf16().collect();
+    rp_friendly_name_vec.push(0);
+    let rp_friendly_name: *mut u16 = rp_friendly_name_vec.as_mut_ptr();
+    std::mem::forget(rp_friendly_name_string);
+    std::mem::forget(rp_friendly_name_vec);
+
+    let mut user_id_string = String::from("14");
+    let user_id_byte_count = user_id_string.as_bytes().len() as c_ulong;
+    let user_id_pointer: *mut c_uchar = user_id_string.as_mut_ptr();
+    std::mem::forget(user_id_string);
+
+    let mut user_name_string = String::from("webauthn.io username");
+    let mut user_name_vec: Vec<u16> = user_name_string.encode_utf16().collect();
+    user_name_vec.push(0);
+    let user_name: *mut u16 = user_name_vec.as_mut_ptr();
+    std::mem::forget(user_name_string);
+    std::mem::forget(user_name_vec);
+
+    let mut user_display_name_string = String::from("webauthn.io display name");
+    let mut user_display_name_vec: Vec<u16> = user_display_name_string.encode_utf16().collect();
+    user_display_name_vec.push(0);
+    let user_display_name: *mut u16 = user_display_name_vec.as_mut_ptr();
+    std::mem::forget(user_display_name_string);
+    std::mem::forget(user_display_name_vec);
+
+    let mut credential_details = ExperimentalWebAuthnPluginCredentialDetails {
+        credential_id_byte_count,
+        credential_id_pointer,
+        rpid,
+        rp_friendly_name,
+        user_id_byte_count,
+        user_id_pointer,
+        user_name,
+        user_display_name,
+    };
+    let credential_details_ptr: *mut ExperimentalWebAuthnPluginCredentialDetails =
+        &mut credential_details;
+    std::mem::forget(credential_details);
+
+    let mut clsid_string = String::from(CLSID);
+    let mut clsid_vec: Vec<u16> = clsid_string.encode_utf16().collect();
+    clsid_vec.push(0);
+    let plugin_clsid: *mut u16 = clsid_vec.as_mut_ptr();
+    std::mem::forget(clsid_string);
+    std::mem::forget(clsid_vec);
+
+    let mut credentials: Vec<*mut ExperimentalWebAuthnPluginCredentialDetails> =
+        vec![credential_details_ptr];
+    let credential_count: c_ulong = credentials.len() as c_ulong;
+    let credentials_ptr: *mut *mut ExperimentalWebAuthnPluginCredentialDetails =
+        credentials.as_mut_ptr();
+    std::mem::forget(credentials);
+
+    let mut credentials_details_list = ExperimentalWebAuthnPluginCredentialDetailsList {
+        plugin_clsid,
+        credential_count,
+        credentials: credentials_ptr,
+    };
+    let credentials_details_list_ptr: *mut ExperimentalWebAuthnPluginCredentialDetailsList =
+        &mut credentials_details_list;
+    std::mem::forget(credentials_details_list);
+
+    util::message(format!("about to link the fn pointer for add credentials"));
+
+    let result = unsafe {
+        delay_load::<EXPERIMENTAL_WebAuthNPluginAuthenticatorAddCredentialsFnDeclaration>(
+            s!("webauthn.dll"),
+            s!("EXPERIMENTAL_WebAuthNPluginAuthenticatorAddCredentials"),
+        )
+    };
+
+    util::message(format!("about to call add credentials"));
+
+    let result = match result {
+        Some(api) => {
+            let result = unsafe { api(credentials_details_list_ptr) };
+
+            if result.is_err() {
+                return Err(format!(
+                    "Error: Error response from EXPERIMENTAL_WebAuthNPluginAuthenticatorAddCredentials()\n{}",
+                    result.message()
+                ));
+            }
+
+            Ok(())
+        },
+        None => {
+            Err(String::from("Error: Can't complete add_credentials(), as the function EXPERIMENTAL_WebAuthNPluginAuthenticatorAddCredentials can't be loaded."))
+        }
+    };
+
+    util::message(format!("add credentials attempt: {:?}", result));
+
+    // std::mem::forget(credential_id);
+    // let mut test_credential = ExperimentalWebAuthnPluginCredentialDetails::create(
+    //     String::from("32"),
+    //     String::from("webauthn.io"),
+    //     String::from("WebAuthn Website"),
+    //     String::from("14"),
+    //     String::from("web user name"),
+    //     String::from("web user display name"),
+    // );
+    // let test_credential_ptr: *mut ExperimentalWebAuthnPluginCredentialDetails = &mut test_credential;
+    // //std::mem::forget(test_credential);
+    // let mut test_credential_list: Vec<*mut ExperimentalWebAuthnPluginCredentialDetails> = vec![test_credential_ptr];
+    // let test_credential_list_ptr: *mut *mut ExperimentalWebAuthnPluginCredentialDetails = test_credential_list.as_mut_ptr();
+    // let pluginclsid = String::from(CLSID).into_win_utf16().0;
+
+    // let credentials = ExperimentalWebAuthnPluginCredentialDetailsList {
+    //     plugin_clsid: pluginclsid,
+    //     credential_count: 1,
+    //     credentials: test_credential_list_ptr,
+    // };
+
+    // let r = add_credentials(credentials);
+    // util::message(format!("added the credentials: {:?}", r));
 
     Ok(())
 }
+
+// -----
+#[repr(C)]
+pub struct ExperimentalWebAuthnPluginCredentialDetails {
+    pub credential_id_byte_count: c_ulong,   // DWORD cbCredentialId
+    pub credential_id_pointer: *mut c_uchar, // PBYTE pbCredentialId
+    pub rpid: *mut u16,                      // PWSTR pwszRpId
+    pub rp_friendly_name: *mut u16,          // PWSTR pwszRpName
+    pub user_id_byte_count: u32,             // DWORD cbUserId
+    pub user_id_pointer: *mut c_uchar,       // PBYTE pbUserId
+    pub user_name: *mut u16,                 // PWSTR pwszUserName
+    pub user_display_name: *mut u16,         // PWSTR pwszUserDisplayName
+}
+#[repr(C)]
+pub struct ExperimentalWebAuthnPluginCredentialDetailsList {
+    pub plugin_clsid: *mut u16,    // PWSTR pwszPluginClsId
+    pub credential_count: c_ulong, // DWORD cCredentialDetails
+    pub credentials: *mut *mut ExperimentalWebAuthnPluginCredentialDetails, // CredentialDetailsPtr *pCredentialDetails
+}
+type EXPERIMENTAL_WebAuthNPluginAuthenticatorAddCredentialsFnDeclaration =
+    unsafe extern "cdecl" fn(
+        pCredentialDetailsList: *mut ExperimentalWebAuthnPluginCredentialDetailsList,
+    ) -> HRESULT;
+// -----
 
 /// Initializes the COM library for use on the calling thread,
 /// and registers + sets the security values.
