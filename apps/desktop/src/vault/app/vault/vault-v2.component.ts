@@ -497,9 +497,11 @@ export class VaultV2Component implements OnInit, OnDestroy {
   }
 
   async buildFormConfig(action: CipherFormMode) {
-    this.config = await this.formConfigService
-      .buildConfig(action, this.cipherId as CipherId, this.addType)
-      .catch(() => null);
+    this.config = await this.formConfigService.buildConfig(
+      action,
+      this.cipherId as CipherId,
+      this.addType,
+    );
   }
 
   async editCipher(cipher: CipherView) {
@@ -510,7 +512,7 @@ export class VaultV2Component implements OnInit, OnDestroy {
     this.cipher = cipher;
     await this.buildFormConfig("edit");
     this.action = "edit";
-    await this.go().catch(() => {});
+    await this.go();
   }
 
   async cloneCipher(cipher: CipherView) {
@@ -521,7 +523,7 @@ export class VaultV2Component implements OnInit, OnDestroy {
     this.cipher = cipher;
     await this.buildFormConfig("clone");
     this.action = "clone";
-    await this.go().catch(() => {});
+    await this.go();
   }
 
   async addCipher(type: CipherType) {
@@ -530,7 +532,15 @@ export class VaultV2Component implements OnInit, OnDestroy {
     await this.buildFormConfig("add");
     this.action = "add";
     this.prefillCipherFromFilter();
-    await this.go().catch(() => {});
+    await this.go();
+
+    if (type === CipherType.SshKey) {
+      this.toastService.showToast({
+        variant: "success",
+        title: "",
+        message: this.i18nService.t("sshKeyGenerated"),
+      });
+    }
   }
 
   addCipherOptions() {
@@ -558,37 +568,37 @@ export class VaultV2Component implements OnInit, OnDestroy {
   async savedCipher(cipher: CipherView) {
     this.cipherId = null;
     this.action = "view";
-    await this.vaultItemsComponent?.refresh().catch(() => {});
+    await this.vaultItemsComponent?.refresh();
     this.cipherId = cipher.id;
     this.cipher = cipher;
     if (this.activeUserId) {
-      await this.cipherService.clearCache(this.activeUserId).catch(() => {});
+      await this.cipherService.clearCache(this.activeUserId);
     }
-    await this.vaultItemsComponent?.load(this.activeFilter.buildFilter()).catch(() => {});
+    await this.vaultItemsComponent?.load(this.activeFilter.buildFilter());
     await this.go().catch(() => {});
-    await this.vaultItemsComponent?.refresh().catch(() => {});
+    await this.vaultItemsComponent?.refresh();
   }
 
   async deleteCipher() {
     this.cipherId = null;
     this.cipher = null;
     this.action = null;
-    await this.go().catch(() => {});
-    await this.vaultItemsComponent?.refresh().catch(() => {});
+    await this.go();
+    await this.vaultItemsComponent?.refresh();
   }
 
   async restoreCipher() {
     this.cipherId = null;
     this.action = null;
-    await this.go().catch(() => {});
-    await this.vaultItemsComponent?.refresh().catch(() => {});
+    await this.go();
+    await this.vaultItemsComponent?.refresh();
   }
 
   async cancelCipher(cipher: CipherView) {
     this.cipherId = cipher.id;
     this.cipher = cipher;
     this.action = this.cipherId != null ? "view" : null;
-    await this.go().catch(() => {});
+    await this.go();
   }
 
   async applyVaultFilter(vaultFilter: VaultFilter) {
@@ -596,10 +606,11 @@ export class VaultV2Component implements OnInit, OnDestroy {
       this.i18nService.t(this.calculateSearchBarLocalizationString(vaultFilter)),
     );
     this.activeFilter = vaultFilter;
-    await this.vaultItemsComponent
-      ?.reload(this.activeFilter.buildFilter(), vaultFilter.status === "trash")
-      .catch(() => {});
-    await this.go().catch(() => {});
+    await this.vaultItemsComponent?.reload(
+      this.activeFilter.buildFilter(),
+      vaultFilter.status === "trash",
+    );
+    await this.go();
   }
 
   private calculateSearchBarLocalizationString(vaultFilter: VaultFilter): string {
