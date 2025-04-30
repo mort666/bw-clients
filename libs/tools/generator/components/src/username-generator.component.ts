@@ -394,8 +394,10 @@ export class UsernameGeneratorComponent implements OnInit, OnChanges, OnDestroy 
     preferences
       .pipe(
         map(({ email, username }) => {
-          const forwarderPref = isForwarderExtensionId(email.algorithm) ? email : null;
           const usernamePref = email.updated > username.updated ? email : username;
+          const forwarderPref = isForwarderExtensionId(usernamePref.algorithm)
+            ? usernamePref
+            : null;
 
           // inject drilldown flags
           const forwarderNav = !forwarderPref

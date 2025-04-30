@@ -437,10 +437,12 @@ export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestro
     preferences
       .pipe(
         map(({ email, username, password }) => {
-          const forwarderPref = isForwarderExtensionId(email.algorithm) ? email : null;
           const usernamePref = email.updated > username.updated ? email : username;
+          const forwarderPref = isForwarderExtensionId(usernamePref.algorithm)
+            ? usernamePref
+            : null;
 
-          // inject drilldown flags
+          // inject drill-down flags
           const forwarderNav = !forwarderPref
             ? NONE_SELECTED
             : JSON.stringify(forwarderPref.algorithm);
