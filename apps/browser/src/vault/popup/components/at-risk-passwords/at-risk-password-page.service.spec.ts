@@ -77,12 +77,13 @@ describe("AtRiskPasswordPageService", () => {
       });
     });
 
-    it("maps ciphers to id objects", () => {
+    it("maps ciphers to id objects", (done) => {
       service.activeUserData$.subscribe(({ ciphers: mappedCiphers }) => {
         expect(mappedCiphers).toEqual({
           cipher: ciphers[0],
           cipher2: ciphers[1],
         });
+        done();
       });
     });
 
