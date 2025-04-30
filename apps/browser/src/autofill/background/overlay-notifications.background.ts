@@ -9,7 +9,7 @@ import { LogService } from "@bitwarden/common/platform/abstractions/log.service"
 import { UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
-import { SecurityTask, TaskService } from "@bitwarden/common/vault/tasks";
+import { SecurityTask, SecurityTaskStatus, TaskService } from "@bitwarden/common/vault/tasks";
 
 import { BrowserApi } from "../../platform/browser/browser-api";
 import { generateDomainMatchPatterns, isInvalidResponseStatusCode } from "../utils";
@@ -514,7 +514,11 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
     const cipherIds: CipherView["id"][] = ciphers.map((c) => c.id);
 
     const securityTask =
-      tasks.length > 0 && tasks.find((task) => cipherIds.indexOf(task.cipherId) > -1);
+      tasks.length > 0 &&
+      tasks.find(
+        (task) =>
+          task.status && SecurityTaskStatus.Pending && cipherIds.indexOf(task.cipherId) > -1,
+      );
 
     const cipher = ciphers.find((cipher) => cipher.id === securityTask.cipherId);
 
