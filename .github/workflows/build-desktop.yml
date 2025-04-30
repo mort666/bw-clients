@@ -655,7 +655,7 @@ jobs:
 
   macos-build:
     name: MacOS Build
-    runs-on: macos-14
+    runs-on: macos-15
     needs:
       - setup
     env:
@@ -864,7 +864,7 @@ jobs:
 
   macos-package-github:
     name: MacOS Package GitHub Release Assets
-    runs-on: macos-14
+    runs-on: macos-15
     if: ${{ needs.setup.outputs.has_secrets == 'true' }}
     needs:
       - browser-build
@@ -1117,7 +1117,7 @@ jobs:
 
   macos-package-mas:
     name: MacOS Package Prod Release Asset
-    runs-on: macos-14
+    runs-on: macos-15
     if: ${{ needs.setup.outputs.has_secrets == 'true' }}
     needs:
       - browser-build
@@ -1159,6 +1159,7 @@ jobs:
           rustup show
           echo "GitHub ref: $GITHUB_REF"
           echo "GitHub event: $GITHUB_EVENT"
+          xcodebuild -showsdks
 
       - name: Get Build Cache
         id: build-cache
