@@ -10,11 +10,13 @@ export function ActionButton({
   disabled = false,
   theme,
   handleClick,
+  fullWidth = true,
 }: {
   buttonText: string | TemplateResult;
   disabled?: boolean;
   theme: Theme;
   handleClick: (e: Event) => void;
+  fullWidth?: boolean;
 }) {
   const handleButtonClick = (event: Event) => {
     if (!disabled) {
@@ -24,7 +26,7 @@ export function ActionButton({
 
   return html`
     <button
-      class=${actionButtonStyles({ disabled, theme })}
+      class=${actionButtonStyles({ disabled, theme, fullWidth })}
       title=${buttonText}
       type="button"
       @click=${handleButtonClick}
@@ -34,14 +36,22 @@ export function ActionButton({
   `;
 }
 
-const actionButtonStyles = ({ disabled, theme }: { disabled: boolean; theme: Theme }) => css`
+const actionButtonStyles = ({
+  disabled,
+  theme,
+  fullWidth,
+}: {
+  disabled: boolean;
+  theme: Theme;
+  fullWidth: boolean;
+}) => css`
   ${typography.body2}
 
   user-select: none;
   border: 1px solid transparent;
   border-radius: ${border.radius.full};
   padding: ${spacing["1"]} ${spacing["3"]};
-  width: 100%;
+  width: ${fullWidth ? "100%" : "auto"};
   overflow: hidden;
   text-align: center;
   text-overflow: ellipsis;

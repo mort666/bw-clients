@@ -57,6 +57,7 @@ import {
 import { CollectionView } from "../content/components/common-types";
 import { NotificationQueueMessageType } from "../enums/notification-queue-message-type.enum";
 import { AutofillService } from "../services/abstractions/autofill.service";
+import { TemporaryNotificationChangeLoginService } from "../services/notification-change-login-password.service";
 
 import {
   AddChangePasswordQueueMessage,
@@ -393,9 +394,11 @@ export default class NotificationBackground {
     message: NotificationBackgroundExtensionMessage,
     sender: chrome.runtime.MessageSender,
   ) {
-    const { activeUserId, securityTask, uri } = message.data;
+    const { activeUserId, securityTask, cipher } = message.data;
+    const domain = Utils.getDomain(sender.tab.url);
+    const passwordChangeUri =
+      await new TemporaryNotificationChangeLoginService().getChangePasswordUrl(cipher);
 
-    const domain = Utils.getDomain(uri);
     const addLoginIsEnabled = await this.getEnableAddedLoginPrompt();
     const wasVaultLocked = AuthenticationStatus.Locked && addLoginIsEnabled;
 
@@ -411,7 +414,7 @@ export default class NotificationBackground {
       domain,
       wasVaultLocked,
       type: NotificationQueueMessageType.AtRiskPassword,
-      passwordChangeUri: domain,
+      passwordChangeUri,
       organizationName: organization.name,
       tab: sender.tab,
       launchTimestamp,

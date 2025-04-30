@@ -78,6 +78,7 @@ export function NotificationContainer({
         organizations,
         personalVaultIsAllowed,
         theme,
+        passwordChangeUri: params?.passwordChangeUri,
       })}
     </div>
   `;

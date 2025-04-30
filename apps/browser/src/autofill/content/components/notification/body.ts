@@ -13,6 +13,8 @@ import { NotificationCipherData } from "../cipher/types";
 import { scrollbarStyles, spacing, themes, typography } from "../constants/styles";
 import { ItemRow } from "../rows/item-row";
 
+import { NotificationConfirmationBody } from "./confirmation/body";
+
 export const componentClassPrefix = "notification-body";
 
 const { css } = createEmotion({
@@ -41,13 +43,18 @@ export function NotificationBody({
 
   switch (notificationType) {
     case NotificationTypes.AtRiskPassword:
-      return html`
-        <div class=${notificationBodyStyles({ isSafari, theme })}>
-          ${passwordChangeUri
-            ? chrome.i18n.getMessage("atRiskChangePrompt", organizationName)
-            : chrome.i18n.getMessage("atRiskNavigatePrompt", organizationName)}
-        </div>
-      `;
+      return NotificationConfirmationBody({
+        error: "At risk password",
+        theme,
+        tasksAreComplete: false,
+        itemName: "",
+        handleOpenVault: () => {},
+        buttonText: "",
+        confirmationMessage: chrome.i18n.getMessage(
+          passwordChangeUri ? "atRiskChangePrompt" : "atRiskNavigatePrompt",
+          organizationName,
+        ),
+      });
     default:
       return html`
         <div class=${notificationBodyStyles({ isSafari, theme })}>

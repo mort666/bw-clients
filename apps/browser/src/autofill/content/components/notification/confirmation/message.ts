@@ -22,7 +22,7 @@ export function NotificationConfirmationMessage({
   handleClick,
   theme,
 }: NotificationConfirmationMessageProps) {
-  const buttonAria = chrome.i18n.getMessage("notificationViewAria", [itemName]);
+  const buttonAria = chrome?.i18n?.getMessage("notificationViewAria", [itemName]);
 
   return html`
     <div>

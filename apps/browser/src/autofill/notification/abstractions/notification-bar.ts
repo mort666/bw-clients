@@ -31,7 +31,7 @@ type NotificationBarIframeInitData = {
   organizations?: OrgView[];
   removeIndividualVault?: boolean;
   theme?: Theme;
-  type?: NotificationType; // @TODO use `NotificationType`
+  type?: NotificationType;
   passwordChangeUri?: string;
   params?: NotificationMessageParams;
 };

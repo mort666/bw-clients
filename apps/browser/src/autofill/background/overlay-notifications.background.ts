@@ -519,9 +519,6 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
     const cipher = ciphers.find((cipher) => cipher.id === securityTask.cipherId);
 
     return { securityTask, cipher, uri: modifyLoginData.uri };
-    // see at-risk-password-component launchChangePassword
-    // DefaultChangeLoginPasswordService
-    // this can be implemented as a provider in the view.
   }
 
   /**

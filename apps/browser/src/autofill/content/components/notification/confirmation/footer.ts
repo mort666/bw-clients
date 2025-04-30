@@ -42,7 +42,13 @@ const notificationConfirmationFooterStyles = ({ theme }: { theme: Theme }) => cs
   }
 `;
 
-function AdditionalTasksButtonContent({ buttonText, theme }: { buttonText: string; theme: Theme }) {
+export function AdditionalTasksButtonContent({
+  buttonText,
+  theme,
+}: {
+  buttonText: string;
+  theme: Theme;
+}) {
   return html`
     <div class=${additionalTasksButtonContentStyles({ theme })}>
       <span>${buttonText}</span>
