@@ -1042,6 +1042,7 @@ jobs:
         working-directory: apps/desktop/desktop_native
         run: |
           rustup target add aarch64-apple-darwin
+          rustup target add x86_64-apple-darwin
           node build.js cross-platform
 
       - name: Build
@@ -1141,7 +1142,9 @@ jobs:
 
       - name: Rust
         shell: pwsh
-        run: rustup target install aarch64-apple-darwin
+        run: |
+          rustup target add aarch64-apple-darwin
+          rustup target add x86_64-apple-darwin
 
       - name: Print environment
         run: |
@@ -1298,6 +1301,7 @@ jobs:
         working-directory: apps/desktop/desktop_native
         run: |
           rustup target add aarch64-apple-darwin
+          rustup target add x86_64-apple-darwin
           node build.js cross-platform
 
       - name: Build
