@@ -175,13 +175,16 @@ export class UsernameGeneratorComponent implements OnInit, OnChanges, OnDestroy 
           // construct options for username and email algorithms; replace forwarder
           // entry with a virtual entry for drill-down
           const usernames = algorithms.filter((a) => !isForwarderExtensionId(a.id));
-          usernames.sort((username) => username.weight);
+          usernames.sort((a, b) => a.weight - b.weight);
           const usernameOptions = this.toOptions(usernames);
-          usernameOptions.push({ value: FORWARDER, label: this.i18nService.t("forwardedEmail") });
+          usernameOptions.splice(-1, 0, {
+            value: FORWARDER,
+            label: this.i18nService.t("forwardedEmail"),
+          });
 
           // construct options for forwarder algorithms; they get their own selection box
           const forwarders = algorithms.filter((a) => isForwarderExtensionId(a.id));
-          forwarders.sort((forwarder) => forwarder.weight);
+          forwarders.sort((a, b) => a.weight - b.weight);
           const forwarderOptions = this.toOptions(forwarders);
           forwarderOptions.unshift({ value: NONE_SELECTED, label: this.i18nService.t("select") });
 
