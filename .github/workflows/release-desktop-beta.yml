@@ -392,7 +392,7 @@ jobs:
 
   macos-build:
     name: MacOS Build
-    runs-on: macos-13
+    runs-on: macos-15
     needs: setup
     env:
       _PACKAGE_VERSION: ${{ needs.setup.outputs.release_version }}
@@ -415,7 +415,7 @@ jobs:
           node-version: ${{ env._NODE_VERSION }}
 
       - name: Set up Node-gyp
-        run: python3 -m pip install setuptools
+        run: python3 -m pip install setuptools --user
 
       - name: Print environment
         run: |
@@ -423,6 +423,7 @@ jobs:
           npm --version
           echo "GitHub ref: $GITHUB_REF"
           echo "GitHub event: $GITHUB_EVENT"
+          xcodebuild -showsdks
 
       - name: Cache Build
         id: build-cache
@@ -524,7 +525,7 @@ jobs:
 
   macos-package-github:
     name: MacOS Package GitHub Release Assets
-    runs-on: macos-13
+    runs-on: macos-15
     needs:
       - setup
       - macos-build
@@ -549,7 +550,7 @@ jobs:
           node-version: ${{ env._NODE_VERSION }}
 
       - name: Set up Node-gyp
-        run: python3 -m pip install setuptools
+        run: python3 -m pip install setuptools --user
 
       - name: Print environment
         run: |
@@ -557,6 +558,7 @@ jobs:
           npm --version
           echo "GitHub ref: $GITHUB_REF"
           echo "GitHub event: $GITHUB_EVENT"
+          xcodebuild -showsdks
 
       - name: Get Build Cache
         id: build-cache
@@ -737,7 +739,7 @@ jobs:
 
   macos-package-mas:
     name: MacOS Package Prod Release Asset
-    runs-on: macos-13
+    runs-on: macos-15
     needs:
       - setup
       - macos-build
@@ -762,7 +764,7 @@ jobs:
           node-version: ${{ env._NODE_VERSION }}
 
       - name: Set up Node-gyp
-        run: python3 -m pip install setuptools
+        run: python3 -m pip install setuptools --user
 
       - name: Print environment
         run: |
@@ -770,6 +772,7 @@ jobs:
           npm --version
           echo "GitHub ref: $GITHUB_REF"
           echo "GitHub event: $GITHUB_EVENT"
+          xcodebuild -showsdks
 
       - name: Get Build Cache
         id: build-cache
