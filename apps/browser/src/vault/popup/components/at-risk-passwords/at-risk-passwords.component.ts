@@ -69,10 +69,7 @@ import { AtRiskPasswordPageService } from "./at-risk-password-page.service";
     DialogModule,
     VaultCarouselModule,
   ],
-  providers: [
-    AtRiskPasswordPageService,
-    { provide: ChangeLoginPasswordService, useClass: DefaultChangeLoginPasswordService },
-  ],
+  providers: [{ provide: ChangeLoginPasswordService, useClass: DefaultChangeLoginPasswordService }],
   selector: "vault-at-risk-passwords",
   standalone: true,
   templateUrl: "./at-risk-passwords.component.html",
