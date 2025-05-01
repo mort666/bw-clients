@@ -45,10 +45,19 @@ pub fn register() -> std::result::Result<(), String> {
     // ----- *** add test credential *** -----
     // ---------------------------------------
 
+    // Style 1, currently used: mem::forget
     let mut credential_id_string = String::from("32");
     let credential_id_byte_count = credential_id_string.as_bytes().len() as c_ulong;
     let credential_id_pointer: *mut c_uchar = credential_id_string.as_mut_ptr();
     std::mem::forget(credential_id_string);
+
+    // Style 2, experimental: Box::leak
+    // Additionally, might need to Pin (same for style 1)
+    //
+    // let credential_id_string = String::from("32");
+    // let credential_id_byte_count = credential_id_string.as_bytes().len() as c_ulong;
+    // let credential_id_box = Box::new(credential_id_string);
+    // let credential_id_pointer: *mut c_uchar = credential_id_box.leak().as_mut_ptr();
 
     let mut rpid_string = String::from("webauthn.io");
     let mut rpid_vec: Vec<u16> = rpid_string.encode_utf16().collect();
