@@ -31,7 +31,7 @@ jobs:
       - name: Branch check
         if: ${{ github.event.inputs.release_type != 'Dry Run' }}
         run: |
-          if [[ "$GITHUB_REF" != "refs/heads/rc" ]] && [[ "$GITHUB_REF" != "refs/heads/hotfix-rc-browser" ]] && [[ "$GITHUB_REF" != "refs/heads/rc-browser-2025.4.0"]]; then
+          if [[ ! "$GITHUB_REF" =~ ^refs/heads/(rc|hotfix-rc-browser|rc-browser-2025\.4\.0)$ ]]; then
             echo "==================================="
             echo "[!] Can only release from the 'rc' or 'hotfix-rc-browser' branches"
             echo "==================================="
