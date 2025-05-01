@@ -23,9 +23,11 @@ describe("LocalGeneratorHistoryService", () => {
   const userKey = new SymmetricCryptoKey(new Uint8Array(64) as CsprngArray) as UserKey;
 
   beforeEach(() => {
-    encryptService.encrypt.mockImplementation((p) => Promise.resolve(p as unknown as EncString));
-    // tests always provide a value for c.encryptedString
-    encryptService.decryptToUtf8.mockImplementation((c) => Promise.resolve(c.encryptedString!));
+    encryptService.encryptString.mockImplementation((p) =>
+      Promise.resolve(p as unknown as EncString),
+    );
+    // in the test environment `c.encryptedString` always has a value
+    encryptService.decryptString.mockImplementation((c) => Promise.resolve(c.encryptedString!));
     keyService.getUserKey.mockImplementation(() => Promise.resolve(userKey));
     keyService.userKey$.mockImplementation(() => of(true as unknown as UserKey));
   });
