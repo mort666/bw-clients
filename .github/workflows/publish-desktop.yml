@@ -107,7 +107,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: setup
     env:
-      _PKG_VERSION: 'desktop-v2025.4.2'
+      _PKG_VERSION: '2025.4.2'
       _RELEASE_TAG: 'desktop-v2025.4.2'
     steps:
       - name: Login to Azure
@@ -178,7 +178,7 @@ jobs:
     needs: setup
     if: inputs.snap_publish
     env:
-      _PKG_VERSION: 'desktop-v2025.4.2'
+      _PKG_VERSION: '2025.4.2'
       _RELEASE_TAG: 'desktop-v2025.4.2'
     steps:
       - name: Checkout Repo
@@ -222,7 +222,7 @@ jobs:
     needs: setup
     if: inputs.choco_publish
     env:
-      _PKG_VERSION: 'desktop-v2025.4.2'
+      _PKG_VERSION: '2025.4.2'
       _RELEASE_TAG: 'desktop-v2025.4.2'
     steps:
       - name: Checkout Repo
