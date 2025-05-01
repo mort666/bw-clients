@@ -399,7 +399,7 @@ export class UsernameGeneratorComponent implements OnInit, OnChanges, OnDestroy 
             ? usernamePref
             : null;
 
-          // inject drilldown flags
+          // inject drill-down flags
           const forwarderNav = !forwarderPref
             ? NONE_SELECTED
             : JSON.stringify(forwarderPref.algorithm);
