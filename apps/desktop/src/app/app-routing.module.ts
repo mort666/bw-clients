@@ -14,6 +14,7 @@ import {
   tdeDecryptionRequiredGuard,
   unauthGuardFn,
 } from "@bitwarden/angular/auth/guards";
+import { featureFlaggedRoute } from "@bitwarden/angular/platform/utils/feature-flagged-route";
 import { NewDeviceVerificationNoticeGuard } from "@bitwarden/angular/vault/guards";
 import {
   AnonLayoutWrapperComponent,
@@ -41,6 +42,7 @@ import {
   NewDeviceVerificationComponent,
   DeviceVerificationIcon,
 } from "@bitwarden/auth/angular";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { LockComponent } from "@bitwarden/key-management-ui";
 import {
   NewDeviceVerificationNoticePageOneComponent,
@@ -55,6 +57,7 @@ import { UpdateTempPasswordComponent } from "../auth/update-temp-password.compon
 import { RemovePasswordComponent } from "../key-management/key-connector/remove-password.component";
 import { Fido2CreateComponent } from "../modal/passkeys/create/fido2-create.component";
 import { Fido2VaultComponent } from "../modal/passkeys/fido2-vault.component";
+import { VaultV2Component } from "../vault/app/vault/vault-v2.component";
 import { VaultComponent } from "../vault/app/vault/vault.component";
 
 import { SendComponent } from "./tools/send/send.component";
@@ -133,11 +136,15 @@ const routes: Routes = [
       },
     ],
   },
-  {
-    path: "vault",
-    component: VaultComponent,
-    canActivate: [authGuard, NewDeviceVerificationNoticeGuard],
-  },
+  ...featureFlaggedRoute({
+    defaultComponent: VaultComponent,
+    flaggedComponent: VaultV2Component,
+    featureFlag: FeatureFlag.PM18520_UpdateDesktopCipherForm,
+    routeOptions: {
+      path: "vault",
+      canActivate: [authGuard, NewDeviceVerificationNoticeGuard],
+    },
+  }),
   { path: "accessibility-cookie", component: AccessibilityCookieComponent },
   { path: "set-password", component: SetPasswordComponent },
   {
@@ -360,7 +367,7 @@ const routes: Routes = [
   imports: [
     RouterModule.forRoot(routes, {
       useHash: true,
-      /*enableTracing: true,*/
+      // enableTracing: true,
     }),
   ],
   exports: [RouterModule],
