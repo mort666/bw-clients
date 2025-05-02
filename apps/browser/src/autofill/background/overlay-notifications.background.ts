@@ -499,10 +499,14 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
   private async getSecurityTaskAndCipherForLoginData(
     modifyLoginData: ModifyLoginCipherFormData,
     activeUserId: UserId,
-  ) {
+  ): Promise<{
+    securityTask: SecurityTask | undefined;
+    cipher: CipherView | undefined;
+    uri: ModifyLoginCipherFormData["uri"];
+  }> {
     const shouldGetTasks: boolean = await this.notificationBackground.getNotificationFlag();
     if (!shouldGetTasks) {
-      return;
+      return { cipher: undefined, securityTask: undefined, uri: modifyLoginData.uri };
     }
 
     const tasks: SecurityTask[] = await this.notificationBackground.getSecurityTasks(activeUserId);
