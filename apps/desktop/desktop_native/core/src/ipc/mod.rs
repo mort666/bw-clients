@@ -44,6 +44,33 @@ pub fn path(name: &str) -> std::path::PathBuf {
         format!(r"\\.\pipe\{hash_b64}.app.{name}").into()
     }
 
+    #[cfg(target_os = "macos")]
+    {
+        // When running in an unsandboxed environment, path is: /Users/<user>/
+        // While running sandboxed, it's different: /Users/<user>/Library/Containers/com.bitwarden.desktop/Data
+        let mut home = dirs::home_dir().unwrap();
+
+        // Check if the app is sandboxed by looking for the Containers directory
+        let containers_position = home
+            .components()
+            .position(|c| c.as_os_str() == "Containers");
+
+        // If the app is sanboxed, we need to use the App Group directory
+        if let Some(position) = containers_position {
+            // We want to use App Groups in /Users/<user>/Library/Group Containers/LTZ2PFU5D6.com.bitwarden.desktop,
+            // so we need to remove all the components after the user. We can use the previous position to do this.
+            while home.components().count() > position - 1 {
+                home.pop();
+            }
+
+            let tmp = home.join("Library/Group Containers/LTZ2PFU5D6.com.bitwarden.desktop/tmp");
+
+            // The tmp directory might not exist, so create it
+            let _ = std::fs::create_dir_all(&tmp);
+            return tmp.join(format!("app.{name}"));
+        }
+    }
+
     #[cfg(any(target_os = "linux", target_os = "macos"))]
     {
         // On Linux and unsandboxed Mac, we use the user's cache directory.
