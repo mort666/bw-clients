@@ -8,3 +8,4 @@ pub mod password;
 pub mod powermonitor;
 pub mod process_isolation;
 pub mod ssh_agent;
+pub mod alloc;

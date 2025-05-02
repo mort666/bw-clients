@@ -23,6 +23,7 @@ impl BitwardenDesktopAgent<BitwardenSshKey> {
         auth_response_rx: Arc<Mutex<tokio::sync::broadcast::Receiver<(u32, bool)>>>,
     ) -> Result<Self, anyhow::Error> {
         let agent = BitwardenDesktopAgent {
+            key_backend: Arc::new(Mutex::new(crate::alloc::LinuxMemfdSecretBackend::new(crate::alloc::LinuxMemfdSecretAlloc::new().unwrap()))),
             keystore: ssh_agent::KeyStore(Arc::new(RwLock::new(HashMap::new()))),
             cancellation_token: CancellationToken::new(),
             show_ui_request_tx: auth_request_tx,

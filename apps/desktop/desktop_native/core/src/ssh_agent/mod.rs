@@ -9,6 +9,7 @@ use tokio_util::sync::CancellationToken;
 
 use bitwarden_russh::{session_bind::SessionBindResult, ssh_agent::{self, SshKey}};
 
+
 #[cfg_attr(target_os = "windows", path = "windows.rs")]
 #[cfg_attr(target_os = "macos", path = "unix.rs")]
 #[cfg_attr(target_os = "linux", path = "unix.rs")]
@@ -22,6 +23,7 @@ mod request_parser;
 
 #[derive(Clone)]
 pub struct BitwardenDesktopAgent<Key> {
+    key_backend: Arc<Mutex<crate::alloc::LinuxMemfdSecretBackend<String, ssh_key::private::PrivateKey>>>,
     keystore: ssh_agent::KeyStore<Key>,
     cancellation_token: CancellationToken,
     show_ui_request_tx: tokio::sync::mpsc::Sender<SshAgentUIRequest>,
@@ -43,7 +45,7 @@ pub struct SshAgentUIRequest {
 
 #[derive(Clone)]
 pub struct BitwardenSshKey {
-    pub private_key: Option<ssh_key::private::PrivateKey>,
+    pub key_backend: Arc<Mutex<crate::alloc::LinuxMemfdSecretBackend<String, ssh_key::private::PrivateKey>>>,
     pub name: String,
     pub cipher_uuid: String,
 }
@@ -54,19 +56,21 @@ impl SshKey for BitwardenSshKey {
     }
 
     fn public_key_bytes(&self) -> Vec<u8> {
-        if let Some(ref private_key) = self.private_key {
-            private_key.public_key().to_bytes().unwrap_or_default()
-        } else {
-            Vec::new()
-        }
+        let a = self.key_backend.blocking_lock();
+        a.get(&self.cipher_uuid)
+            .expect("Key should be present in the keystore")
+            .public_key()
+            .to_bytes()
+            .expect("Cipher private key is always correctly parsed")
     }
 
-    fn private_key(&self) -> Option<Box<dyn ssh_key::SigningKey>> {
-        if let Some(ref private_key) = self.private_key {
-            Some(Box::new(private_key.clone()))
-        } else {
-            None
-        }
+    async fn private_key(&self) -> Option<Box<dyn ssh_key::SigningKey>> {
+        let a = self.key_backend.lock().await;
+        let p = a.get(&self.cipher_uuid)
+            .expect("Key should be present in the keystore")
+            .clone();
+        drop(a);
+        Some(Box::new(p))
     }
 }
 
@@ -204,10 +208,13 @@ impl BitwardenDesktopAgent<BitwardenSshKey> {
                         .public_key()
                         .to_bytes()
                         .expect("Cipher private key is always correctly parsed");
+                    println!("setting key: {}", cipher_id);
+                    self.key_backend.blocking_lock().insert(cipher_id.clone(), private_key.clone());
+                    println!("key backend set key");
                     keystore.0.write().expect("RwLock is not poisoned").insert(
                         public_key_bytes,
                         BitwardenSshKey {
-                            private_key: Some(private_key),
+                            key_backend: self.key_backend.clone(),
                             name: name.clone(),
                             cipher_uuid: cipher_id.clone(),
                         },
@@ -236,7 +243,6 @@ impl BitwardenDesktopAgent<BitwardenSshKey> {
             .expect("RwLock is not poisoned")
             .iter_mut()
             .for_each(|(_public_key, key)| {
-                key.private_key = None;
             });
         Ok(())
     }

@@ -55,6 +55,11 @@ rsa = { workspace = true }
 ed25519 = { workspace = true, features = ["pkcs8"] }
 bytes = { workspace = true }
 sysinfo = { workspace = true, features = ["windows"] }
+memsec = { version = "0.7.0", features = ["alloc_ext"] }
+allocator-api2 = "0.2.21"
+zeroizing-alloc = "0.1.0"
+hashbrown = "0.15.3"
+zeroize = "1.8.1"
 
 [target.'cfg(windows)'.dependencies]
 widestring = { workspace = true, optional = true }
