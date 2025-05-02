@@ -51,6 +51,12 @@ export function toForwarderMetadata(
         storage: {
           key: "forwarder",
           frame: 512,
+          initial: {
+            token: "",
+            baseUrl: "",
+            domain: "",
+            prefix: "",
+          },
           options: {
             deserializer: (value) => value,
             clearOn: ["logout"],
