@@ -517,7 +517,7 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
       tasks.length > 0 &&
       tasks.find(
         (task) =>
-          task.status && SecurityTaskStatus.Pending && cipherIds.indexOf(task.cipherId) > -1,
+          task.status === SecurityTaskStatus.Pending && cipherIds.indexOf(task.cipherId) > -1,
       );
 
     const cipher = ciphers.find((cipher) => cipher.id === securityTask.cipherId);
