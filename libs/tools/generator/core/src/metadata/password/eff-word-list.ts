@@ -23,7 +23,7 @@ const passphrase: GeneratorMetadata<PassphraseGenerationOptions> = {
     useCredential: "useThisPassphrase",
   },
   capabilities: {
-    autogenerate: false,
+    autogenerate: true,
     fields: [],
   },
   engine: {
