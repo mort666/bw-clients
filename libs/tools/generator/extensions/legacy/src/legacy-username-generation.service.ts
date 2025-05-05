@@ -235,23 +235,24 @@ export class LegacyUsernameGenerationService implements UsernameGenerationServic
     options: MappedOptions,
   ) {
     switch (forwarder) {
-      case "anonaddy":
-      case "addyio":
+      case Forwarders.AddyIo.id:
+      case Vendor.addyio:
         await this.addyIo.saveOptions(account, options.forwarders.addyIo);
         return true;
-      case "duckduckgo":
+      case Forwarders.DuckDuckGo.id:
         await this.duckDuckGo.saveOptions(account, options.forwarders.duckDuckGo);
         return true;
-      case "fastmail":
+      case Forwarders.Fastmail.id:
         await this.fastmail.saveOptions(account, options.forwarders.fastmail);
         return true;
-      case "firefoxrelay":
+      case Forwarders.FirefoxRelay.id:
+      case Vendor.mozilla:
         await this.firefoxRelay.saveOptions(account, options.forwarders.firefoxRelay);
         return true;
-      case "forwardemail":
+      case Forwarders.ForwardEmail.id:
         await this.forwardEmail.saveOptions(account, options.forwarders.forwardEmail);
         return true;
-      case "simplelogin":
+      case Forwarders.SimpleLogin.id:
         await this.simpleLogin.saveOptions(account, options.forwarders.simpleLogin);
         return true;
       default:
