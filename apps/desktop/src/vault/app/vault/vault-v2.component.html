@@ -15,9 +15,11 @@
       [cipher]="cipher"
       [action]="action"
       (onEdit)="editCipher($event)"
+      (onArchive)="archiveCipher()"
+      (onUnarchive)="unarchiveCipher()"
+      (onDelete)="deleteCipher()"
       (onRestore)="restoreCipher()"
       (onClone)="cloneCipher($event)"
-      (onDelete)="deleteCipher()"
       (onCancel)="cancelCipher($event)"
     ></app-vault-item-footer>
     <div class="content">

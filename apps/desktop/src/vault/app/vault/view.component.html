@@ -653,6 +653,15 @@
     </button>
     <button
       type="button"
+      (click)="unarchive()"
+      class="primary"
+      [appA11yTitle]="'archive' | i18n"
+      *ngIf="cipher.isArchived"
+    >
+      <i class="bwi bwi-undo bwi-lg bwi-fw" aria-hidden="true"></i>
+    </button>
+    <button
+      type="button"
       class="primary"
       (click)="restore()"
       appA11yTitle="{{ 'restore' | i18n }}"
@@ -675,16 +684,20 @@
     </button>
   </ng-container>
   <div class="right">
-    <button type="button" (click)="archive()" class="danger" [appA11yTitle]="'archive' | i18n">
+    <button
+      type="button"
+      (click)="archive()"
+      class="danger"
+      [appA11yTitle]="'archive' | i18n"
+    >
       <i class="bwi bwi-archive bwi-lg bwi-fw" aria-hidden="true"></i>
     </button>
-  </div>
-  <div class="right" *ngIf="canDeleteCipher$ | async">
     <button
       type="button"
       (click)="delete()"
       class="danger"
       appA11yTitle="{{ (cipher.isDeleted ? 'permanentlyDelete' : 'delete') | i18n }}"
+      *ngIf="canDeleteCipher$ | async"
     >
       <i class="bwi bwi-trash bwi-lg bwi-fw" aria-hidden="true"></i>
     </button>

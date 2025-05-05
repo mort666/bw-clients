@@ -7,7 +7,7 @@ import { AccountService } from "@bitwarden/common/auth/abstractions/account.serv
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
-import { CollectionId, UserId } from "@bitwarden/common/types/guid";
+import { CipherId, CollectionId, UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherRepromptType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
@@ -28,6 +28,8 @@ export class ItemFooterComponent implements OnInit {
   @Input() isSubmitting: boolean = false;
   @Output() onEdit = new EventEmitter<CipherView>();
   @Output() onClone = new EventEmitter<CipherView>();
+  @Output() onArchive = new EventEmitter<CipherView>();
+  @Output() onUnarchive = new EventEmitter<CipherView>();
   @Output() onDelete = new EventEmitter<CipherView>();
   @Output() onRestore = new EventEmitter<CipherView>();
   @Output() onCancel = new EventEmitter<CipherView>();
@@ -83,6 +85,58 @@ export class ItemFooterComponent implements OnInit {
 
   cancel() {
     this.onCancel.emit(this.cipher);
+  }
+
+  async archive(): Promise<boolean> {
+    if (!(await this.promptPassword())) {
+      return false;
+    }
+
+    const confirmed = await this.dialogService.openSimpleDialog({
+      title: { key: "archiveItem" },
+      content: {
+        key: "archiveItemConfirmation",
+      },
+      type: "warning",
+    });
+
+    if (!confirmed) {
+      return false;
+    }
+
+    try {
+      const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
+      await this.cipherService.archiveWithServer(this.cipher.id as CipherId, activeUserId);
+      this.toastService.showToast({
+        variant: "success",
+        message: this.i18nService.t("archivedItem"),
+      });
+      this.onArchive.emit(this.cipher);
+    } catch (e) {
+      this.logService.error(e);
+    }
+
+    return true;
+  }
+
+  async unarchive(): Promise<boolean> {
+    if (!this.cipher.isArchived) {
+      return false;
+    }
+
+    try {
+      const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
+      await this.cipherService.unarchiveWithServer(this.cipher.id as CipherId, activeUserId)
+      this.toastService.showToast({
+        variant: "success",
+        message: this.i18nService.t("unarchivedItem"),
+      });
+      this.onUnarchive.emit(this.cipher);
+    } catch (e) {
+      this.logService.error(e);
+    }
+
+    return true;
   }
 
   async delete(): Promise<boolean> {

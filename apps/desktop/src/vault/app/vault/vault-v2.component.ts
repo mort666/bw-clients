@@ -73,6 +73,7 @@ import { ItemFooterComponent } from "./item-footer.component";
 import { VaultFilterComponent } from "./vault-filter/vault-filter.component";
 import { VaultFilterModule } from "./vault-filter/vault-filter.module";
 import { VaultItemsV2Component } from "./vault-items-v2.component";
+import { CipherStatus } from "@bitwarden/angular/vault/vault-filter/models/cipher-status.model";
 
 const BroadcasterSubscriptionId = "VaultComponent";
 
@@ -299,7 +300,7 @@ export class VaultV2Component implements OnInit, OnDestroy {
       this.cipherService
         .failedToDecryptCiphers$(this.activeUserId)
         .pipe(
-          map((ciphers) => ciphers?.filter((c) => !c.isDeleted) ?? []),
+          map((ciphers) => ciphers?.filter((c) => !c.isDeleted || !c.isArchived) ?? []),
           filter((ciphers) => ciphers.length > 0),
           take(1),
           takeUntil(this.componentIsDestroyed$),
@@ -336,8 +337,18 @@ export class VaultV2Component implements OnInit, OnDestroy {
       await this.addCipher(this.addType).catch(() => {});
     }
 
+    let cipherStatus: CipherStatus = "all";
+
+    if (params.deleted) {
+      cipherStatus = "trash";
+    } else if (params.archived){
+      cipherStatus = "archive";
+    } else if (params.favorites){
+      cipherStatus = "favorites";
+    }
+
     this.activeFilter = new VaultFilter({
-      status: params.deleted ? "trash" : params.favorites ? "favorites" : "all",
+      status: cipherStatus,
       cipherType:
         params.action === "add" || params.type == null
           ? undefined
@@ -554,6 +565,21 @@ export class VaultV2Component implements OnInit, OnDestroy {
       await this.cipherService.clearCache(this.activeUserId).catch(() => {});
     }
     await this.vaultItemsComponent?.load(this.activeFilter.buildFilter()).catch(() => {});
+    await this.go().catch(() => {});
+    await this.vaultItemsComponent?.refresh().catch(() => {});
+  }
+
+  async archiveCipher() {
+    this.cipherId = null;
+    this.cipher = null;
+    this.action = null;
+    await this.go().catch(() => {});
+    await this.vaultItemsComponent?.refresh().catch(() => {});
+  }
+
+  async unarchiveCipher() {
+    this.cipherId = null;
+    this.action = null;
     await this.go().catch(() => {});
     await this.vaultItemsComponent?.refresh().catch(() => {});
   }

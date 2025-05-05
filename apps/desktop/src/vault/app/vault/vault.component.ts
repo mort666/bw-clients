@@ -51,6 +51,7 @@ import { ShareComponent } from "./share.component";
 import { VaultFilterComponent } from "./vault-filter/vault-filter.component";
 import { VaultItemsComponent } from "./vault-items.component";
 import { ViewComponent } from "./view.component";
+import { CipherStatus } from "@bitwarden/angular/vault/vault-filter/models/cipher-status.model";
 
 const BroadcasterSubscriptionId = "VaultComponent";
 
@@ -247,7 +248,7 @@ export class VaultComponent implements OnInit, OnDestroy {
     this.cipherService
       .failedToDecryptCiphers$(this.activeUserId)
       .pipe(
-        map((ciphers) => ciphers?.filter((c) => !c.isDeleted) ?? []),
+        map((ciphers) => ciphers?.filter((c) => !c.isDeleted || !c.isArchived) ?? []),
         filter((ciphers) => ciphers.length > 0),
         take(1),
         takeUntil(this.componentIsDestroyed$),
@@ -286,8 +287,18 @@ export class VaultComponent implements OnInit, OnDestroy {
         this.addCipher(this.addType);
       }
 
+      let cipherStatus: CipherStatus = "all";
+
+      if (params.deleted) {
+        cipherStatus = "trash";
+      } else if (params.archived){
+        cipherStatus = "archive";
+      } else if (params.favorites){
+        cipherStatus = "favorites";
+      }
+
       this.activeFilter = new VaultFilter({
-        status: params.deleted ? "trash" : params.favorites ? "favorites" : "all",
+        status: cipherStatus,
         cipherType:
           params.action === "add" || params.type == null ? null : parseInt(params.type, null),
         selectedFolderId: params.folderId,
@@ -518,6 +529,20 @@ export class VaultComponent implements OnInit, OnDestroy {
   }
 
   async deletedCipher(cipher: CipherView) {
+    this.cipherId = null;
+    this.action = null;
+    this.go();
+    await this.vaultItemsComponent.refresh();
+  }
+
+  async archivedCipher(cipher: CipherView) {
+    this.cipherId = null;
+    this.action = null;
+    this.go();
+    await this.vaultItemsComponent.refresh();
+  }
+
+  async unarchivedCipher(cipher: CipherView) {
     this.cipherId = null;
     this.action = null;
     this.go();

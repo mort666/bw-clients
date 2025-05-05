@@ -1948,6 +1948,12 @@
   "permanentlyDeletedItem": {
     "message": "Item permanently deleted"
   },
+  "archiveItem": {
+    "message": "Item archived"
+  },
+  "unarchiveItem": {
+    "message": "Item unarchived"
+  },
   "restoredItem": {
     "message": "Item restored"
   },
