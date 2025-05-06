@@ -2,10 +2,21 @@ import { Component, DestroyRef, inject, OnInit } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
-import { combineLatest, debounceTime, firstValueFrom, map, Observable, of, skipWhile } from "rxjs";
+import {
+  BehaviorSubject,
+  combineLatest,
+  debounceTime,
+  firstValueFrom,
+  map,
+  Observable,
+  of,
+  skipWhile,
+  switchMap,
+} from "rxjs";
 
 import {
   CriticalAppsService,
+  RiskInsightsApiService,
   RiskInsightsDataService,
   RiskInsightsReportService,
 } from "@bitwarden/bit-common/dirt/reports/risk-insights";
@@ -24,6 +35,7 @@ import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { OrganizationId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import {
   Icons,
@@ -74,6 +86,12 @@ export class AllApplicationsComponent implements OnInit {
   isLoading$: Observable<boolean> = of(false);
   isCriticalAppsFeatureEnabled = false;
 
+  private atRiskInsightsReport = new BehaviorSubject<{
+    data: ApplicationHealthReportDetailWithCriticalFlag[];
+    organization: Organization;
+    summary: ApplicationHealthReportSummary;
+  }>(null);
+
   async ngOnInit() {
     this.isCriticalAppsFeatureEnabled = await this.configService.getFeatureFlag(
       FeatureFlag.CriticalApps,
@@ -112,6 +130,16 @@ export class AllApplicationsComponent implements OnInit {
           if (organization) {
             this.organization = organization;
           }
+
+          if (data && organization) {
+            this.atRiskInsightsReport.next({
+              data,
+              organization,
+              summary: this.applicationSummary,
+            });
+          }
+
+          // this.persistReportData();
         });
 
       this.isLoading$ = this.dataService.isLoading$;
@@ -129,10 +157,49 @@ export class AllApplicationsComponent implements OnInit {
     protected reportService: RiskInsightsReportService,
     private accountService: AccountService,
     protected criticalAppsService: CriticalAppsService,
+    protected riskInsightsApiService: RiskInsightsApiService,
   ) {
     this.searchControl.valueChanges
       .pipe(debounceTime(200), takeUntilDestroyed())
       .subscribe((v) => (this.dataSource.filter = v));
+
+    this.atRiskInsightsReport
+      .asObservable()
+      .pipe(
+        debounceTime(500),
+        switchMap(async (report) => {
+          if (report && report.organization?.id && report.data && report.summary) {
+            const data = await this.reportService.generateRiskInsightsReport(
+              report.organization.id as OrganizationId,
+              report.data,
+              report.summary,
+            );
+            return data;
+          }
+          return null;
+        }),
+        switchMap(async (reportData) => {
+          if (reportData) {
+            const request = { data: reportData };
+            try {
+              const response = await firstValueFrom(
+                this.riskInsightsApiService.saveRiskInsightsReport(
+                  this.organization.id as OrganizationId,
+                  request,
+                ),
+              );
+              // console.log("Risk insights report saved successfully.", JSON.stringify(response));
+              return response;
+            } catch {
+              // console.error("Error saving risk insights report:", error);
+            }
+
+            return null;
+          }
+        }),
+        takeUntilDestroyed(),
+      )
+      .subscribe();
   }
 
   goToCreateNewLoginItem = async () => {
