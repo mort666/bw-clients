@@ -10,6 +10,7 @@ import {
 } from "../../../notification/abstractions/notification-bar";
 import { CipherItem } from "../cipher";
 import { NotificationCipherData } from "../cipher/types";
+import { I18n } from "../common-types";
 import { scrollbarStyles, spacing, themes, typography } from "../constants/styles";
 import { ItemRow } from "../rows/item-row";
 
@@ -21,22 +22,23 @@ const { css } = createEmotion({
   key: componentClassPrefix,
 });
 
+export type NotificationBodyProps = {
+  ciphers?: NotificationCipherData[];
+  i18n: I18n;
+  notificationType?: NotificationType;
+  theme: Theme;
+  handleEditOrUpdateAction: (e: Event) => void;
+  params?: NotificationMessageParams;
+};
+
 export function NotificationBody({
   ciphers = [],
   i18n,
   notificationType,
   theme = ThemeTypes.Light,
   handleEditOrUpdateAction,
-  params = {},
-}: {
-  ciphers?: NotificationCipherData[];
-  customClasses?: string[];
-  i18n: { [key: string]: string };
-  notificationType?: NotificationType;
-  theme: Theme;
-  handleEditOrUpdateAction: (e: Event) => void;
-  params?: NotificationMessageParams;
-}) {
+  params,
+}: NotificationBodyProps) {
   // @TODO get client vendor from context
   const isSafari = false;
   const { passwordChangeUri, organizationName } = params;
@@ -44,6 +46,7 @@ export function NotificationBody({
   switch (notificationType) {
     case NotificationTypes.AtRiskPassword:
       return NotificationConfirmationBody({
+        buttonAria: "",
         error: "At risk password",
         theme,
         tasksAreComplete: false,

@@ -5,19 +5,21 @@ import { Theme } from "@bitwarden/common/platform/enums";
 
 import { border, themes, typography, spacing } from "../constants/styles";
 
+export type ActionButtonProps = {
+  buttonText: string | TemplateResult;
+  disabled?: boolean;
+  theme: Theme;
+  handleClick: (e: Event) => void;
+  fullWidth?: boolean;
+};
+
 export function ActionButton({
   buttonText,
   disabled = false,
   theme,
   handleClick,
   fullWidth = true,
-}: {
-  buttonText: string | TemplateResult;
-  disabled?: boolean;
-  theme: Theme;
-  handleClick: (e: Event) => void;
-  fullWidth?: boolean;
-}) {
+}: ActionButtonProps) {
   const handleButtonClick = (event: Event) => {
     if (!disabled) {
       handleClick(event);

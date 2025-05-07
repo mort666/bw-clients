@@ -8,7 +8,7 @@ import {
   NotificationTypes,
 } from "../../../notification/abstractions/notification-bar";
 import { ActionButton } from "../buttons/action-button";
-import { OrgView, FolderView, CollectionView } from "../common-types";
+import { OrgView, FolderView, I18n, CollectionView } from "../common-types";
 import { spacing, themes } from "../constants/styles";
 
 import { NotificationButtonRow } from "./button-row";
@@ -17,7 +17,7 @@ import { AdditionalTasksButtonContent } from "./confirmation/footer";
 export type NotificationFooterProps = {
   collections?: CollectionView[];
   folders?: FolderView[];
-  i18n: { [key: string]: string };
+  i18n: I18n;
   notificationType?: NotificationType;
   organizations?: OrgView[];
   personalVaultIsAllowed: boolean;
