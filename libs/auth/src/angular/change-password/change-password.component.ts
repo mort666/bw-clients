@@ -1,10 +1,12 @@
 import { Component, Input, OnInit } from "@angular/core";
+import { Router } from "@angular/router";
 import { firstValueFrom } from "rxjs";
 
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/models/domain/master-password-policy-options";
 import { Account, AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { MasterPasswordApiService } from "@bitwarden/common/auth/abstractions/master-password-api.service.abstraction";
+import { ForceSetPasswordReason } from "@bitwarden/common/auth/models/domain/force-set-password-reason";
 import { PasswordRequest } from "@bitwarden/common/auth/models/request/password.request";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
@@ -15,9 +17,13 @@ import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { SyncService } from "@bitwarden/common/platform/sync";
 import { UserId } from "@bitwarden/common/types/guid";
 import { UserKey } from "@bitwarden/common/types/key";
-import { ToastService } from "@bitwarden/components";
+import { DialogService, ToastService, Translation } from "@bitwarden/components";
 import { KeyService } from "@bitwarden/key-management";
 import { I18nPipe } from "@bitwarden/ui-common";
+// import {
+//   AcceptOrganizationInviteService
+// } from "@bitwarden/web-vault/src/app/auth/organization-invite/accept-organization.service";
+// import { RouterService } from "@bitwarden/web-vault/src/app/core";
 
 import {
   InputPasswordComponent,
@@ -38,11 +44,13 @@ export class ChangePasswordComponent implements OnInit {
 
   activeAccount: Account | null = null;
   email?: string;
-  userId?: UserId;
+  activeUserId?: UserId;
   masterPasswordPolicyOptions?: MasterPasswordPolicyOptions;
   initializing = true;
   userkeyRotationV2 = false;
   formPromise?: Promise<any>;
+  secondaryButtonText?: Translation = undefined;
+  forceSetPasswordReason: ForceSetPasswordReason = ForceSetPasswordReason.None;
 
   constructor(
     private accountService: AccountService,
@@ -56,24 +64,73 @@ export class ChangePasswordComponent implements OnInit {
     private policyService: PolicyService,
     private toastService: ToastService,
     private syncService: SyncService,
+    // private routerService: RouterService,
+    // private acceptOrganizationInviteService: AcceptOrganizationInviteService,
+    private dialogService: DialogService,
+    private router: Router,
   ) {}
 
   async ngOnInit() {
     this.userkeyRotationV2 = await this.configService.getFeatureFlag(FeatureFlag.UserKeyRotationV2);
 
     this.activeAccount = await firstValueFrom(this.accountService.activeAccount$);
-    this.userId = this.activeAccount?.id;
+    this.activeUserId = this.activeAccount?.id;
     this.email = this.activeAccount?.email;
 
-    if (!this.userId) {
+    if (!this.activeUserId) {
       throw new Error("userId not found");
     }
 
     this.masterPasswordPolicyOptions = await firstValueFrom(
-      this.policyService.masterPasswordPolicyOptions$(this.userId),
+      this.policyService.masterPasswordPolicyOptions$(this.activeUserId),
     );
 
+    this.forceSetPasswordReason = await firstValueFrom(
+      this.masterPasswordService.forceSetPasswordReason$(this.activeUserId),
+    );
+
+    if (
+      this.forceSetPasswordReason === ForceSetPasswordReason.AdminForcePasswordReset ||
+      this.forceSetPasswordReason === ForceSetPasswordReason.WeakMasterPassword
+    ) {
+      this.secondaryButtonText = { key: "cancel" };
+    } else {
+      this.secondaryButtonText = undefined;
+    }
+
     this.initializing = false;
+  }
+
+  async performSecondaryAction() {
+    if (
+      this.forceSetPasswordReason === ForceSetPasswordReason.AdminForcePasswordReset ||
+      this.forceSetPasswordReason === ForceSetPasswordReason.WeakMasterPassword
+    ) {
+      await this.logOut();
+    } else {
+      await this.cancel();
+    }
+  }
+
+  async logOut() {
+    const confirmed = await this.dialogService.openSimpleDialog({
+      title: { key: "logOut" },
+      content: { key: "logOutConfirmation" },
+      acceptButtonText: { key: "logOut" },
+      type: "warning",
+    });
+
+    if (confirmed) {
+      this.messagingService.send("logout");
+    }
+  }
+
+  async cancel() {
+    // clearing the login redirect url so that the user
+    // does not join the organization if they cancel
+    // await this.routerService.getAndClearLoginRedirectUrl();
+    // await this.acceptOrganizationInviteService.clearOrganizationInvitation();
+    // await this.router.navigate(["/vault"]);
   }
 
   async handlePasswordFormSubmit(passwordInputResult: PasswordInputResult) {
@@ -104,11 +161,11 @@ export class ChangePasswordComponent implements OnInit {
           passwordInputResult.newPasswordHint,
         );
       } else {
-        if (!this.userId) {
+        if (!this.activeUserId) {
           throw new Error("userId not found");
         }
 
-        await this.changePasswordService.changePassword(passwordInputResult, this.userId);
+        await this.changePasswordService.changePassword(passwordInputResult, this.activeUserId);
 
         this.toastService.showToast({
           variant: "success",
@@ -128,7 +185,7 @@ export class ChangePasswordComponent implements OnInit {
   }
 
   private async submitOld(passwordInputResult: PasswordInputResult) {
-    if (!this.userId) {
+    if (!this.activeUserId) {
       throw new Error("userId not found");
     }
 
@@ -165,11 +222,11 @@ export class ChangePasswordComponent implements OnInit {
           // we need to save this for local masterkey verification during rotation
           await this.masterPasswordService.setMasterKeyHash(
             passwordInputResult.newLocalMasterKeyHash,
-            this.userId as UserId,
+            this.activeUserId as UserId,
           );
           await this.masterPasswordService.setMasterKey(
             passwordInputResult.newMasterKey,
-            this.userId as UserId,
+            this.activeUserId as UserId,
           );
           return this.updateKey(passwordInputResult.newPassword);
         });

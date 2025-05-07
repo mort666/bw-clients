@@ -39,6 +39,7 @@ import {
   TwoFactorAuthGuard,
   NewDeviceVerificationComponent,
   DeviceVerificationIcon,
+  ChangePasswordComponent,
 } from "@bitwarden/auth/angular";
 import { LockComponent } from "@bitwarden/key-management-ui";
 import {
@@ -63,8 +64,8 @@ import { AccountComponent } from "./auth/settings/account/account.component";
 import { EmergencyAccessComponent } from "./auth/settings/emergency-access/emergency-access.component";
 import { EmergencyAccessViewComponent } from "./auth/settings/emergency-access/view/emergency-access-view.component";
 import { SecurityRoutingModule } from "./auth/settings/security/security-routing.module";
-import { UpdatePasswordComponent } from "./auth/update-password.component";
-import { UpdateTempPasswordComponent } from "./auth/update-temp-password.component";
+// import { UpdatePasswordComponent } from "./auth/update-password.component";
+// import { UpdateTempPasswordComponent } from "./auth/update-temp-password.component";
 import { VerifyEmailTokenComponent } from "./auth/verify-email-token.component";
 import { VerifyRecoverDeleteComponent } from "./auth/verify-recover-delete.component";
 import { SponsoredFamiliesComponent } from "./billing/settings/sponsored-families.component";
@@ -145,17 +146,62 @@ const routes: Routes = [
         data: { titleId: "deleteOrganization" },
       },
       {
-        path: "update-temp-password",
-        component: UpdateTempPasswordComponent,
-        canActivate: [authGuard],
-        data: { titleId: "updateTempPassword" } satisfies RouteDataProperties,
+        path: "",
+        component: AnonLayoutWrapperComponent,
+        children: [
+          {
+            path: "update-temp-password",
+            children: [
+              {
+                path: "",
+                component: ChangePasswordComponent,
+              },
+            ],
+            data: {
+              pageIcon: undefined,
+              hideFooter: true,
+            } satisfies AnonLayoutWrapperData,
+          },
+        ],
       },
       {
-        path: "update-password",
-        component: UpdatePasswordComponent,
-        canActivate: [authGuard],
+        component: AnonLayoutWrapperComponent,
+        path: "",
+        children: [
+          {
+            path: "update-password",
+            canActivate: [authGuard],
+            children: [
+              {
+                path: "",
+                component: ChangePasswordComponent,
+              },
+            ],
+            data: {
+              pageIcon: undefined,
+              hideFooter: true,
+            } satisfies AnonLayoutWrapperData,
+          },
+        ],
         data: { titleId: "updatePassword" } satisfies RouteDataProperties,
       },
+      // {
+      //   path: "update-temp-password",
+      //   component: ChangePasswordComponent,
+      //   data: {}
+      // },
+      // {
+      //   path: "update-temp-password",
+      //   component: UpdateTempPasswordComponent,
+      //   canActivate: [authGuard],
+      //   data: { titleId: "updateTempPassword" } satisfies RouteDataProperties,
+      // },
+      // {
+      //   path: "update-password",
+      //   component: UpdatePasswordComponent,
+      //   canActivate: [authGuard],
+      //   data: { titleId: "updatePassword" } satisfies RouteDataProperties,
+      // },
       {
         path: "migrate-legacy-encryption",
         loadComponent: () =>
