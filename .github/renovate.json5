@@ -214,7 +214,6 @@
       matchPackageNames: [
         "@babel/core",
         "@babel/preset-env",
-        "@bitwarden/sdk-internal",
         "@electron/fuses",
         "@electron/notarize",
         "@electron/rebuild",
@@ -423,5 +422,5 @@
       reviewers: ["team:team-key-management-dev"],
     },
   ],
-  ignoreDeps: ["@types/koa-bodyparser", "bootstrap", "node-ipc", "node", "npm"],
+  ignoreDeps: ["@types/koa-bodyparser", "bootstrap", "node-ipc", "@bitwarden/sdk-internal"],
 }
