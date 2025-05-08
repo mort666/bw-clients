@@ -55,7 +55,7 @@ export function NotificationFooter({
   }
 
   return html`
-    <div class=${[displayFlex, notificationFooterStyles({ theme })]}>
+    <div class=${[displayFlex(), notificationFooterStyles({ theme })]}>
       ${!isChangeNotification
         ? NotificationButtonRow({
             collections,

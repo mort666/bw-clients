@@ -32,8 +32,6 @@ type NotificationBarIframeInitData = {
   removeIndividualVault?: boolean;
   theme?: Theme;
   type?: NotificationType;
-  passwordChangeUri?: string;
-  params?: NotificationMessageParams;
 };
 
 type NotificationBarWindowMessage = {
