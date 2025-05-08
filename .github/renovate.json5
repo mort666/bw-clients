@@ -4,51 +4,9 @@
   enabledManagers: ["cargo", "github-actions", "npm"],
   packageRules: [
     {
-      // Group all build/test/lint workflows for GitHub Actions together for Platform.
-      // Since they are code owners we don't need to assign a review team in Renovate.
-      // Any changes here should also be reflected in CODEOWNERS.
-      groupName: "github-action",
+      groupName: "Github Action Minor",
       matchManagers: ["github-actions"],
-      matchFileNames: [
-        "./github/workflows/automatic-issue-responses.yml",
-        "./github/workflows/automatic-pull-request-responses.yml",
-        "./github/workflows/build-browser.yml",
-        "./github/workflows/build-cli.yml",
-        "./github/workflows/build-desktop.yml",
-        "./github/workflows/build-web.yml",
-        "./github/workflows/chromatic.yml",
-        "./github/workflows/crowdin-pull.yml",
-        "./github/workflows/enforce-labels.yml",
-        "./github/workflows/lint.yml",
-        "./github/workflows/locales-lint.yml",
-        "./github/workflows/repository-management.yml",
-        "./github/workflows/scan.yml",
-        "./github/workflows/stale-bot.yml",
-        "./github/workflows/test.yml",
-        "./github/workflows/version-auto-bump.yml",
-      ],
-      commitMessagePrefix: "[deps] Platform:",
-    },
-    {
-      // Group all release-related workflows for GitHub Actions together for BRE.
-      // Since they are code owners we don't need to assign a review team in Renovate.
-      // Any changes here should also be reflected in CODEOWNERS.
-      groupName: "github-action",
-      matchManagers: ["github-actions"],
-      matchFileNames: [
-        "./github/workflows/brew-bump-desktop.yml",
-        "./github/workflows/deploy-web.yml",
-        "./github/workflows/publish-cli.yml",
-        "./github/workflows/publish-desktop.yml",
-        "./github/workflows/publish-web.yml",
-        "./github/workflows/retrieve-current-desktop-rollout.yml",
-        "./github/workflows/staged-rollout-desktop.yml",
-        "./github/workflows/release-cli.yml",
-        "./github/workflows/release-desktop-beta.yml",
-        "./github/workflows/release-desktop.yml",
-        "./github/workflows/release-web.yml",
-      ],
-      commitMessagePrefix: "[deps] BRE:",
+      matchUpdateTypes: ["minor", "patch"],
       addLabels: ["hold"],
     },
     {
