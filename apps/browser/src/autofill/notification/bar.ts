@@ -7,6 +7,7 @@ import type { FolderView } from "@bitwarden/common/vault/models/view/folder.view
 import { AdjustNotificationBarMessageData } from "../background/abstractions/notification.background";
 import { NotificationCipherData } from "../content/components/cipher/types";
 import { CollectionView, OrgView } from "../content/components/common-types";
+import { AtRiskNotification } from "../content/components/notification/at-risk-password/container";
 import { NotificationConfirmationContainer } from "../content/components/notification/confirmation/container";
 import { NotificationContainer } from "../content/components/notification/container";
 import { selectedFolder as selectedFolderSignal } from "../content/components/signals/selected-folder";
@@ -19,6 +20,7 @@ import {
   NotificationBarWindowMessage,
   NotificationBarIframeInitData,
   NotificationType,
+  NotificationTypes,
 } from "./abstractions/notification-bar";
 
 const logService = new ConsoleLogService(false);
@@ -149,7 +151,24 @@ async function initNotificationBar(message: NotificationBarWindowMessage) {
     document.body.innerHTML = "";
     // Current implementations utilize a require for scss files which creates the need to remove the node.
     document.head.querySelectorAll('link[rel="stylesheet"]').forEach((node) => node.remove());
+
+    // Handle AtRiskPasswordNotification render
+    if (notificationBarIframeInitData.type === NotificationTypes.AtRiskPassword) {
+      return render(
+        AtRiskNotification({
+          ...notificationBarIframeInitData,
+          type: notificationBarIframeInitData.type as NotificationType,
+          theme: resolvedTheme,
+          i18n,
+          params: initData.params,
+          handleCloseNotification,
+        }),
+        document.body,
+      );
+    }
+
     const orgId = selectedVaultSignal.get();
+
     await Promise.all([
       new Promise<OrgView[]>((resolve) =>
         sendPlatformMessage({ command: "bgGetOrgData" }, resolve),
@@ -183,7 +202,6 @@ async function initNotificationBar(message: NotificationBarWindowMessage) {
           handleSaveAction,
           handleEditOrUpdateAction,
           i18n,
-          params: initData.params,
         }),
         document.body,
       );

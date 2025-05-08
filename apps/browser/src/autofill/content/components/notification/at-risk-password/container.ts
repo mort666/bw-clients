@@ -17,25 +17,21 @@ import { AtRiskNotificationFooter } from "./footer";
 
 export type AtRiskNotificationProps = NotificationBarIframeInitData & {
   handleCloseNotification: (e: Event) => void;
-  handleOpenVault: (e: Event) => void;
-  handleOpenTasks: (e: Event) => void;
 } & {
   error?: string;
   i18n: I18n;
-  itemName: string;
   type: NotificationType;
   params: AtRiskPasswordNotificationParams;
 };
 
 export function AtRiskNotification({
-  error,
   handleCloseNotification,
   i18n,
   theme = ThemeTypes.Light,
   type,
   params,
 }: AtRiskNotificationProps) {
-  const headerMessage = getHeaderMessage(i18n, type, error);
+  const headerMessage = getHeaderMessage(i18n, type);
   const { passwordChangeUri, organizationName } = params;
 
   return html`
@@ -46,13 +42,8 @@ export function AtRiskNotification({
         theme,
       })}
       ${AtRiskNotificationBody({
-        buttonAria: "",
-        error: "At risk password",
         theme,
-        tasksAreComplete: false,
-        itemName: "",
         handleOpenVault: () => {},
-        buttonText: "",
         confirmationMessage: chrome.i18n.getMessage(
           passwordChangeUri ? "atRiskChangePrompt" : "atRiskNavigatePrompt",
           organizationName,
@@ -67,10 +58,6 @@ export function AtRiskNotification({
   `;
 }
 
-function getHeaderMessage(i18n: I18n, type?: NotificationType, error?: string) {
-  if (error) {
-    return i18n.saveFailure;
-  }
-
+function getHeaderMessage(i18n: I18n, type?: NotificationType) {
   return type === NotificationTypes.AtRiskPassword ? i18n.changePassword : undefined;
 }

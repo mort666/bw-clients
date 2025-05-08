@@ -60,7 +60,7 @@ export function NotificationConfirmationBody({
 }
 
 // Allow sharing of styles between notifications (@TODO isolate structural/presentational component layer)
-export const iconContainerStyles = (error?: string) => css`
+export const iconContainerStyles = (error?: string | boolean) => css`
   > svg {
     width: ${!error ? "50px" : "40px"};
     height: fit-content;
