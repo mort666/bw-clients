@@ -7,6 +7,7 @@
 
 use windows::Win32::System::Com::*;
 use windows_core::*;
+use crate::util::*;
 
 /// Used when creating and asserting credentials.
 /// Header File Name: _EXPERIMENTAL_WEBAUTHN_PLUGIN_OPERATION_REQUEST
@@ -75,6 +76,8 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
         _request: *const ExperimentalWebAuthnPluginOperationRequest,
         _response: *mut ExperimentalWebAuthnPluginOperationResponse,
     ) -> HRESULT {
+        message(String::from("make credential hit"));
+        panic!("make credential hit");
         HRESULT(0)
     }
 
@@ -83,6 +86,8 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
         _request: *const ExperimentalWebAuthnPluginOperationRequest,
         _response: *mut ExperimentalWebAuthnPluginOperationResponse,
     ) -> HRESULT {
+        message(String::from("get credential hit"));
+        panic!("get credential hit");
         HRESULT(0)
     }
 
@@ -90,6 +95,8 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
         &self,
         _request: *const ExperimentalWebAuthnPluginCancelOperationRequest,
     ) -> HRESULT {
+        message(String::from("cancel credential hit"));
+        panic!("cancel credential hit");
         HRESULT(0)
     }
 }

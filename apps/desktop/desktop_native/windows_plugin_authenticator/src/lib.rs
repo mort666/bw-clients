@@ -28,18 +28,77 @@ const RPID: &str = "bitwarden.com";
 pub fn register() -> std::result::Result<(), String> {
     util::message(String::from("register() called"));
 
-    let r = initialize_com_library();
-    util::message(format!("initialized the com library: {:?}", r));
+    // ---------------------------------------
+    // ----- *** COM initializations *** -----
+    // ---------------------------------------
 
-    let r = register_com_library();
-    util::message(format!("registered the com library: {:?}", r));
+    // CoInitializeEx
+    let result = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED) };
+    if result.is_err() {
+        util::message(format!("CoInitializeEx() failed with message: {:?}", result.message()));
+        return Err(format!(
+            "Error: couldn't initialize the COM library\n{}",
+            result.message()
+        ));
+    }
+    util::message(String::from("CoInitializeEx() called"));
 
-    let r = add_authenticator();
-    util::message(format!("added the authenticator: {:?}", r));
+    // CoInitializeSecurity
+    let result = unsafe { CoInitializeSecurity(
+        None,
+        -1,
+        None,
+        None,
+        RPC_C_AUTHN_LEVEL_DEFAULT,
+        RPC_C_IMP_LEVEL_IMPERSONATE,
+        None,
+        EOAC_NONE,
+        None,
+    )};
+    if let Err(e) = result {
+        util::message(format!("CoInitializeSecurity() failed with message: {:?}", e.message()));
+        return Err(format!(
+            "Error: couldn't initialize COM security\n{}",
+            e.message()
+        ));
+    }
+    util::message(String::from("CoInitializeSecurity() called"));
+
+    // CoRegisterClassObject
+    static FACTORY: windows_core::StaticComObject<pluginauthenticator::Factory> =
+        pluginauthenticator::Factory().into_static();
+    let clsid: *const GUID = &GUID::from_u128(0xa98925d161f640de9327dc418fcb2ff4);
+    let result = unsafe { CoRegisterClassObject(
+        clsid,
+        FACTORY.as_interface_ref(),
+        CLSCTX_LOCAL_SERVER,
+        REGCLS_MULTIPLEUSE,
+    )};
+    if let Err(e) = result {
+        util::message(format!("CoRegisterClassObject() failed with message: {:?}", e.message()));
+        return Err(format!(
+            "Error: couldn't register the COM library\n{}",
+            e.message()
+        ));
+    }
+    util::message(String::from("CoRegisterClassObject() called"));
 
     util::message(String::from("sleeping for 15 seconds..."));
     thread::sleep(Duration::from_millis(15000));
     util::message(String::from("sleeping done"));
+
+    // let r = initialize_com_library();
+    // util::message(format!("initialized the com library: {:?}", r));
+
+    // let r = register_com_library();
+    // util::message(format!("registered the com library: {:?}", r));
+
+    // let r = add_authenticator();
+    // util::message(format!("added the authenticator: {:?}", r));
+
+    // util::message(String::from("sleeping for 15 seconds..."));
+    // thread::sleep(Duration::from_millis(15000));
+    // util::message(String::from("sleeping done"));
 
     // ---------------------------------------
     // ----- *** add test credential *** -----
@@ -59,106 +118,116 @@ pub fn register() -> std::result::Result<(), String> {
     // let credential_id_box = Box::new(credential_id_string);
     // let credential_id_pointer: *mut c_uchar = credential_id_box.leak().as_mut_ptr();
 
-    let mut rpid_string = String::from("webauthn.io");
-    let mut rpid_vec: Vec<u16> = rpid_string.encode_utf16().collect();
-    rpid_vec.push(0);
-    let rpid: *mut u16 = rpid_vec.as_mut_ptr();
-    std::mem::forget(rpid_string);
-    std::mem::forget(rpid_vec);
+    // let mut rpid_string = String::from("webauthn.io");
+    // let mut rpid_vec: Vec<u16> = rpid_string.encode_utf16().collect();
+    // rpid_vec.push(0);
+    // let rpid: *mut u16 = rpid_vec.as_mut_ptr();
+    // std::mem::forget(rpid_string);
+    // std::mem::forget(rpid_vec);
 
-    let mut rp_friendly_name_string = String::from("WebAuthn Website");
-    let mut rp_friendly_name_vec: Vec<u16> = rp_friendly_name_string.encode_utf16().collect();
-    rp_friendly_name_vec.push(0);
-    let rp_friendly_name: *mut u16 = rp_friendly_name_vec.as_mut_ptr();
-    std::mem::forget(rp_friendly_name_string);
-    std::mem::forget(rp_friendly_name_vec);
+    // let mut rp_friendly_name_string = String::from("WebAuthn Website");
+    // let mut rp_friendly_name_vec: Vec<u16> = rp_friendly_name_string.encode_utf16().collect();
+    // rp_friendly_name_vec.push(0);
+    // let rp_friendly_name: *mut u16 = rp_friendly_name_vec.as_mut_ptr();
+    // std::mem::forget(rp_friendly_name_string);
+    // std::mem::forget(rp_friendly_name_vec);
 
-    let mut user_id_string = String::from("14");
-    let user_id_byte_count = user_id_string.as_bytes().len() as c_ulong;
-    let user_id_pointer: *mut c_uchar = user_id_string.as_mut_ptr();
-    std::mem::forget(user_id_string);
+    // let mut user_id_string = String::from("14");
+    // let user_id_byte_count = user_id_string.as_bytes().len() as c_ulong;
+    // let user_id_pointer: *mut c_uchar = user_id_string.as_mut_ptr();
+    // std::mem::forget(user_id_string);
 
-    let mut user_name_string = String::from("webauthn.io username");
-    let mut user_name_vec: Vec<u16> = user_name_string.encode_utf16().collect();
-    user_name_vec.push(0);
-    let user_name: *mut u16 = user_name_vec.as_mut_ptr();
-    std::mem::forget(user_name_string);
-    std::mem::forget(user_name_vec);
+    // let mut user_name_string = String::from("webauthn.io username");
+    // let mut user_name_vec: Vec<u16> = user_name_string.encode_utf16().collect();
+    // user_name_vec.push(0);
+    // let user_name: *mut u16 = user_name_vec.as_mut_ptr();
+    // std::mem::forget(user_name_string);
+    // std::mem::forget(user_name_vec);
 
-    let mut user_display_name_string = String::from("webauthn.io display name");
-    let mut user_display_name_vec: Vec<u16> = user_display_name_string.encode_utf16().collect();
-    user_display_name_vec.push(0);
-    let user_display_name: *mut u16 = user_display_name_vec.as_mut_ptr();
-    std::mem::forget(user_display_name_string);
-    std::mem::forget(user_display_name_vec);
+    // let mut user_display_name_string = String::from("webauthn.io display name");
+    // let mut user_display_name_vec: Vec<u16> = user_display_name_string.encode_utf16().collect();
+    // user_display_name_vec.push(0);
+    // let user_display_name: *mut u16 = user_display_name_vec.as_mut_ptr();
+    // std::mem::forget(user_display_name_string);
+    // std::mem::forget(user_display_name_vec);
 
-    let mut credential_details = ExperimentalWebAuthnPluginCredentialDetails {
-        credential_id_byte_count,
-        credential_id_pointer,
-        rpid,
-        rp_friendly_name,
-        user_id_byte_count,
-        user_id_pointer,
-        user_name,
-        user_display_name,
-    };
-    let credential_details_ptr: *mut ExperimentalWebAuthnPluginCredentialDetails =
-        &mut credential_details;
-    std::mem::forget(credential_details);
+    // let mut credential_details = ExperimentalWebAuthnPluginCredentialDetails {
+    //     credential_id_byte_count,
+    //     credential_id_pointer,
+    //     rpid,
+    //     rp_friendly_name,
+    //     user_id_byte_count,
+    //     user_id_pointer,
+    //     user_name,
+    //     user_display_name,
+    // };
+    // let credential_details_ptr: *mut ExperimentalWebAuthnPluginCredentialDetails =
+    //     &mut credential_details;
+    // std::mem::forget(credential_details);
 
-    let mut clsid_string = String::from(format!("{{{}}}",CLSID));
-    let mut clsid_vec: Vec<u16> = clsid_string.encode_utf16().collect();
-    clsid_vec.push(0);
-    let plugin_clsid: *mut u16 = clsid_vec.as_mut_ptr();
-    std::mem::forget(clsid_string);
-    std::mem::forget(clsid_vec);
+    // let mut clsid_string = String::from(format!("{{{}}}",CLSID));
+    // let mut clsid_vec: Vec<u16> = clsid_string.encode_utf16().collect();
+    // clsid_vec.push(0);
+    // let plugin_clsid: *mut u16 = clsid_vec.as_mut_ptr();
+    // std::mem::forget(clsid_string);
+    // std::mem::forget(clsid_vec);
 
-    let mut credentials: Vec<*mut ExperimentalWebAuthnPluginCredentialDetails> =
-        vec![credential_details_ptr];
-    let credential_count: c_ulong = credentials.len() as c_ulong;
-    let credentials_ptr: *mut *mut ExperimentalWebAuthnPluginCredentialDetails =
-        credentials.as_mut_ptr();
-    std::mem::forget(credentials);
+    // let mut credentials: Vec<*mut ExperimentalWebAuthnPluginCredentialDetails> =
+    //     vec![credential_details_ptr];
+    // let credential_count: c_ulong = credentials.len() as c_ulong;
+    // let credentials_ptr: *mut *mut ExperimentalWebAuthnPluginCredentialDetails =
+    //     credentials.as_mut_ptr();
+    // std::mem::forget(credentials);
 
-    let mut credentials_details_list = ExperimentalWebAuthnPluginCredentialDetailsList {
-        plugin_clsid,
-        credential_count,
-        credentials: credentials_ptr,
-    };
-    let credentials_details_list_ptr: *mut ExperimentalWebAuthnPluginCredentialDetailsList =
-        &mut credentials_details_list;
-    std::mem::forget(credentials_details_list);
+    // let mut credentials_details_list = ExperimentalWebAuthnPluginCredentialDetailsList {
+    //     plugin_clsid,
+    //     credential_count,
+    //     credentials: credentials_ptr,
+    // };
+    // let credentials_details_list_ptr: *mut ExperimentalWebAuthnPluginCredentialDetailsList =
+    //     &mut credentials_details_list;
+    // std::mem::forget(credentials_details_list);
 
-    util::message(format!("about to link the fn pointer for add credentials"));
+    // util::message(format!("about to link the fn pointer for add credentials"));
 
-    let result = unsafe {
-        delay_load::<EXPERIMENTAL_WebAuthNPluginAuthenticatorAddCredentialsFnDeclaration>(
-            s!("webauthn.dll"),
-            s!("EXPERIMENTAL_WebAuthNPluginAuthenticatorAddCredentials"),
-        )
-    };
+    // let result = unsafe {
+    //     delay_load::<EXPERIMENTAL_WebAuthNPluginAuthenticatorAddCredentialsFnDeclaration>(
+    //         s!("webauthn.dll"),
+    //         s!("EXPERIMENTAL_WebAuthNPluginAuthenticatorAddCredentials"),
+    //     )
+    // };
 
-    util::message(format!("about to call add credentials"));
+    // util::message(format!("about to call add credentials"));
 
-    let result = match result {
-        Some(api) => {
-            let result = unsafe { api(credentials_details_list_ptr) };
+    // let result = match result {
+    //     Some(api) => {
+    //         let result = unsafe { api(credentials_details_list_ptr) };
 
-            if result.is_err() {
-                return Err(format!(
-                    "Error: Error response from EXPERIMENTAL_WebAuthNPluginAuthenticatorAddCredentials()\n{}",
-                    result.message()
-                ));
-            }
+    //         if result.is_err() {
+    //             return Err(format!(
+    //                 "Error: Error response from EXPERIMENTAL_WebAuthNPluginAuthenticatorAddCredentials()\n{}",
+    //                 result.message()
+    //             ));
+    //         }
 
-            Ok(())
-        },
-        None => {
-            Err(String::from("Error: Can't complete add_credentials(), as the function EXPERIMENTAL_WebAuthNPluginAuthenticatorAddCredentials can't be loaded."))
-        }
-    };
+    //         Ok(())
+    //     },
+    //     None => {
+    //         Err(String::from("Error: Can't complete add_credentials(), as the function EXPERIMENTAL_WebAuthNPluginAuthenticatorAddCredentials can't be loaded."))
+    //     }
+    // };
 
-    util::message(format!("add credentials attempt: {:?}", result));
+    // util::message(format!("add credentials attempt: {:?}", result));
+
+
+
+
+
+
+
+
+
+    
 
     // std::mem::forget(credential_id);
     // let mut test_credential = ExperimentalWebAuthnPluginCredentialDetails::create(
