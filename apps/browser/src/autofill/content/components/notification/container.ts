@@ -107,8 +107,6 @@ function getHeaderMessage(i18n: I18n, type?: NotificationType) {
       return i18n.updateLogin;
     case NotificationTypes.Unlock:
       return "";
-    case NotificationTypes.AtRiskPassword:
-      return i18n.atRiskPassword;
     default:
       return undefined;
   }

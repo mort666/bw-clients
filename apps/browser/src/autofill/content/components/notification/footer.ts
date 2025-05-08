@@ -7,8 +7,6 @@ import {
   NotificationType,
   NotificationTypes,
 } from "../../../notification/abstractions/notification-bar";
-import { ActionButton } from "../buttons/action-button";
-import { AdditionalTasksButtonContent } from "../buttons/additional-tasks/button-content";
 import { OrgView, FolderView, I18n, CollectionView } from "../common-types";
 import { spacing, themes } from "../constants/styles";
 
@@ -34,25 +32,10 @@ export function NotificationFooter({
   organizations,
   personalVaultIsAllowed,
   theme,
-  passwordChangeUri,
   handleSaveAction,
 }: NotificationFooterProps) {
   const isChangeNotification = notificationType === NotificationTypes.Change;
   const primaryButtonText = i18n.saveAction;
-
-  if (notificationType === NotificationTypes.AtRiskPassword) {
-    return html`<div class=${notificationFooterStyles({ theme })}>
-      ${passwordChangeUri &&
-      ActionButton({
-        handleClick: () => {
-          open("https://" + passwordChangeUri, "_blank");
-        },
-        buttonText: AdditionalTasksButtonContent({ buttonText: i18n.changePassword, theme }),
-        theme,
-        fullWidth: false,
-      })}
-    </div>`;
-  }
 
   return html`
     <div class=${[displayFlex(), notificationFooterStyles({ theme })]}>
