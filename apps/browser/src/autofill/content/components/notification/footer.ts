@@ -38,7 +38,7 @@ export function NotificationFooter({
   const primaryButtonText = i18n.saveAction;
 
   return html`
-    <div class=${[displayFlex(), notificationFooterStyles({ theme })]}>
+    <div class=${[displayFlex, notificationFooterStyles({ theme })]}>
       ${!isChangeNotification
         ? NotificationButtonRow({
             collections,
@@ -57,7 +57,7 @@ export function NotificationFooter({
   `;
 }
 
-export const displayFlex = () => css`
+export const displayFlex = css`
   display: flex;
 `;
 
