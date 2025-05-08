@@ -29,6 +29,7 @@ import { ServerConfig } from "../../../platform/abstractions/config/server-confi
 import { EncryptService } from "../abstractions/encrypt.service";
 
 export class EncryptServiceImplementation implements EncryptService {
+  protected useSDKForDecryption: boolean = DefaultFeatureFlagValue[FeatureFlag.UseSDKForDecryption];
   private blockType0: boolean = DefaultFeatureFlagValue[FeatureFlag.PM17987_BlockType0];
 
   constructor(
@@ -39,27 +40,27 @@ export class EncryptServiceImplementation implements EncryptService {
 
   // Proxy functions; Their implementation are temporary before moving at this level to the SDK
   async encryptString(plainValue: string, key: SymmetricCryptoKey): Promise<EncString> {
-    return new EncString(PureCrypto.symmetric_encrypt_string(plainValue, key.toEncoded()));
+    return this.encrypt(plainValue, key);
   }
 
   async encryptBytes(plainValue: Uint8Array, key: SymmetricCryptoKey): Promise<EncString> {
-    return new EncString(PureCrypto.symmetric_encrypt_bytes(plainValue, key.toEncoded()));
+    return this.encrypt(plainValue, key);
   }
 
   async encryptFileData(plainValue: Uint8Array, key: SymmetricCryptoKey): Promise<EncArrayBuffer> {
-    return new EncArrayBuffer(PureCrypto.symmetric_encrypt_filedata(plainValue, key.toEncoded()));
+    return this.encryptToBytes(plainValue, key);
   }
 
   async decryptString(encString: EncString, key: SymmetricCryptoKey): Promise<string> {
-    return PureCrypto.symmetric_decrypt_string(encString.encryptedString, key.toEncoded());
+    return this.decryptToUtf8(encString, key);
   }
 
   async decryptBytes(encString: EncString, key: SymmetricCryptoKey): Promise<Uint8Array> {
-    return PureCrypto.symmetric_decrypt_bytes(encString.encryptedString, key.toEncoded());
+    return this.decryptToBytes(encString, key);
   }
 
   async decryptFileData(encBuffer: EncArrayBuffer, key: SymmetricCryptoKey): Promise<Uint8Array> {
-    return PureCrypto.symmetric_decrypt_filedata(encBuffer.buffer, key.toEncoded());
+    return this.decryptToBytes(encBuffer, key);
   }
 
   async wrapDecapsulationKey(
@@ -74,9 +75,7 @@ export class EncryptServiceImplementation implements EncryptService {
       throw new Error("No wrappingKey provided for wrapping.");
     }
 
-    return new EncString(
-      PureCrypto.symmetric_encrypt_bytes(decapsulationKeyPkcs8, wrappingKey.toEncoded()),
-    );
+    return await this.encryptUint8Array(decapsulationKeyPkcs8, wrappingKey);
   }
 
   async wrapEncapsulationKey(
@@ -91,9 +90,7 @@ export class EncryptServiceImplementation implements EncryptService {
       throw new Error("No wrappingKey provided for wrapping.");
     }
 
-    return new EncString(
-      PureCrypto.symmetric_encrypt_bytes(encapsulationKeySpki, wrappingKey.toEncoded()),
-    );
+    return await this.encryptUint8Array(encapsulationKeySpki, wrappingKey);
   }
 
   async wrapSymmetricKey(
@@ -108,36 +105,26 @@ export class EncryptServiceImplementation implements EncryptService {
       throw new Error("No wrappingKey provided for wrapping.");
     }
 
-    return new EncString(
-      PureCrypto.wrap_symmetric_key(keyToBeWrapped.toEncoded(), wrappingKey.toEncoded()),
-    );
+    return await this.encryptUint8Array(keyToBeWrapped.toEncoded(), wrappingKey);
   }
 
   async unwrapDecapsulationKey(
     wrappedDecapsulationKey: EncString,
     wrappingKey: SymmetricCryptoKey,
   ): Promise<Uint8Array> {
-    return PureCrypto.symmetric_decrypt_bytes(
-      wrappedDecapsulationKey.encryptedString,
-      wrappingKey.toEncoded(),
-    );
+    return this.decryptBytes(wrappedDecapsulationKey, wrappingKey);
   }
   async unwrapEncapsulationKey(
     wrappedEncapsulationKey: EncString,
     wrappingKey: SymmetricCryptoKey,
   ): Promise<Uint8Array> {
-    return PureCrypto.symmetric_decrypt_bytes(
-      wrappedEncapsulationKey.encryptedString,
-      wrappingKey.toEncoded(),
-    );
+    return this.decryptBytes(wrappedEncapsulationKey, wrappingKey);
   }
   async unwrapSymmetricKey(
     keyToBeUnwrapped: EncString,
     wrappingKey: SymmetricCryptoKey,
   ): Promise<SymmetricCryptoKey> {
-    return new SymmetricCryptoKey(
-      PureCrypto.unwrap_symmetric_key(keyToBeUnwrapped.encryptedString, wrappingKey.toEncoded()),
-    );
+    return new SymmetricCryptoKey(await this.decryptBytes(keyToBeUnwrapped, wrappingKey));
   }
 
   async hash(value: string | Uint8Array, algorithm: "sha1" | "sha256" | "sha512"): Promise<string> {
@@ -147,6 +134,13 @@ export class EncryptServiceImplementation implements EncryptService {
 
   // Handle updating private properties to turn on/off feature flags.
   onServerConfigChange(newConfig: ServerConfig): void {
+    const oldFlagValue = this.useSDKForDecryption;
+    this.useSDKForDecryption = getFeatureFlagValue(newConfig, FeatureFlag.UseSDKForDecryption);
+    this.logService.debug(
+      "[EncryptService] Updated sdk decryption flag",
+      oldFlagValue,
+      this.useSDKForDecryption,
+    );
     this.blockType0 = getFeatureFlagValue(newConfig, FeatureFlag.PM17987_BlockType0);
   }
 
@@ -243,6 +237,15 @@ export class EncryptServiceImplementation implements EncryptService {
     key: SymmetricCryptoKey,
     decryptContext: string = "no context",
   ): Promise<string> {
+    if (this.useSDKForDecryption) {
+      this.logService.debug("decrypting with SDK");
+      if (encString == null || encString.encryptedString == null) {
+        throw new Error("encString is null or undefined");
+      }
+      return PureCrypto.symmetric_decrypt(encString.encryptedString, key.toEncoded());
+    }
+    this.logService.debug("decrypting with javascript");
+
     if (key == null) {
       throw new Error("No key provided for decryption.");
     }
@@ -306,6 +309,25 @@ export class EncryptServiceImplementation implements EncryptService {
     key: SymmetricCryptoKey,
     decryptContext: string = "no context",
   ): Promise<Uint8Array | null> {
+    if (this.useSDKForDecryption) {
+      this.logService.debug("[EncryptService] Decrypting bytes with SDK");
+      if (
+        encThing.encryptionType == null ||
+        encThing.ivBytes == null ||
+        encThing.dataBytes == null
+      ) {
+        throw new Error("Cannot decrypt, missing type, IV, or data bytes.");
+      }
+      const buffer = EncArrayBuffer.fromParts(
+        encThing.encryptionType,
+        encThing.ivBytes,
+        encThing.dataBytes,
+        encThing.macBytes,
+      ).buffer;
+      return PureCrypto.symmetric_decrypt_array_buffer(buffer, key.toEncoded());
+    }
+    this.logService.debug("[EncryptService] Decrypting bytes with javascript");
+
     if (key == null) {
       throw new Error("No encryption key provided.");
     }
