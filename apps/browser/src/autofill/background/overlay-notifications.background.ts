@@ -444,7 +444,9 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
         { tab },
       );
       this.clearCompletedWebRequest(requestId, tab);
+      return;
     }
+
     const activeUserId = await firstValueFrom(
       this.accountService.activeAccount$.pipe(getOptionalUserId),
     );

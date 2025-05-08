@@ -8,11 +8,11 @@ import {
   NotificationTypes,
 } from "../../../notification/abstractions/notification-bar";
 import { ActionButton } from "../buttons/action-button";
+import { AdditionalTasksButtonContent } from "../buttons/additional-tasks/button-content";
 import { OrgView, FolderView, I18n, CollectionView } from "../common-types";
 import { spacing, themes } from "../constants/styles";
 
 import { NotificationButtonRow } from "./button-row";
-import { AdditionalTasksButtonContent } from "./confirmation/footer";
 
 export type NotificationFooterProps = {
   collections?: CollectionView[];
@@ -55,7 +55,7 @@ export function NotificationFooter({
   }
 
   return html`
-    <div class=${notificationFooterStyles({ theme })}>
+    <div class=${[displayFlex, notificationFooterStyles({ theme })]}>
       ${!isChangeNotification
         ? NotificationButtonRow({
             collections,
@@ -74,8 +74,11 @@ export function NotificationFooter({
   `;
 }
 
-const notificationFooterStyles = ({ theme }: { theme: Theme }) => css`
+export const displayFlex = () => css`
   display: flex;
+`;
+
+export const notificationFooterStyles = ({ theme }: { theme: Theme }) => css`
   background-color: ${themes[theme].background.alt};
   padding: 0 ${spacing[3]} ${spacing[3]} ${spacing[3]};
 

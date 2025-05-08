@@ -3,18 +3,12 @@ import { html } from "lit";
 
 import { Theme, ThemeTypes } from "@bitwarden/common/platform/enums";
 
-import {
-  NotificationMessageParams,
-  NotificationType,
-  NotificationTypes,
-} from "../../../notification/abstractions/notification-bar";
+import { NotificationType } from "../../../notification/abstractions/notification-bar";
 import { CipherItem } from "../cipher";
 import { NotificationCipherData } from "../cipher/types";
 import { I18n } from "../common-types";
 import { scrollbarStyles, spacing, themes, typography } from "../constants/styles";
 import { ItemRow } from "../rows/item-row";
-
-import { NotificationConfirmationBody } from "./confirmation/body";
 
 export const componentClassPrefix = "notification-body";
 
@@ -28,7 +22,6 @@ export type NotificationBodyProps = {
   notificationType?: NotificationType;
   theme: Theme;
   handleEditOrUpdateAction: (e: Event) => void;
-  params?: NotificationMessageParams;
 };
 
 export function NotificationBody({
@@ -37,45 +30,26 @@ export function NotificationBody({
   notificationType,
   theme = ThemeTypes.Light,
   handleEditOrUpdateAction,
-  params,
 }: NotificationBodyProps) {
   // @TODO get client vendor from context
   const isSafari = false;
-  const { passwordChangeUri, organizationName } = params;
 
-  switch (notificationType) {
-    case NotificationTypes.AtRiskPassword:
-      return NotificationConfirmationBody({
-        buttonAria: "",
-        error: "At risk password",
-        theme,
-        tasksAreComplete: false,
-        itemName: "",
-        handleOpenVault: () => {},
-        buttonText: "",
-        confirmationMessage: chrome.i18n.getMessage(
-          passwordChangeUri ? "atRiskChangePrompt" : "atRiskNavigatePrompt",
-          organizationName,
-        ),
-      });
-    default:
-      return html`
-        <div class=${notificationBodyStyles({ isSafari, theme })}>
-          ${ciphers.map((cipher) =>
-            ItemRow({
-              theme,
-              children: CipherItem({
-                cipher,
-                i18n,
-                notificationType,
-                theme,
-                handleAction: handleEditOrUpdateAction,
-              }),
-            }),
-          )}
-        </div>
-      `;
-  }
+  return html`
+    <div class=${notificationBodyStyles({ isSafari, theme })}>
+      ${ciphers.map((cipher) =>
+        ItemRow({
+          theme,
+          children: CipherItem({
+            cipher,
+            i18n,
+            notificationType,
+            theme,
+            handleAction: handleEditOrUpdateAction,
+          }),
+        }),
+      )}
+    </div>
+  `;
 }
 
 const notificationBodyStyles = ({ isSafari, theme }: { isSafari: boolean; theme: Theme }) => css`

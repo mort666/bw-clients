@@ -53,15 +53,13 @@ type NotificationBarWindowMessageHandlers = {
   saveCipherAttemptCompleted: ({ message }: { message: NotificationBarWindowMessage }) => void;
 };
 
-type NotificationMessageParamsAtRiskPasswordType = {
+type AtRiskPasswordNotificationParams = {
   passwordChangeUri?: string;
   organizationName: string;
 };
 
-type NotificationMessageParams = NotificationMessageParamsAtRiskPasswordType | any;
-
 export {
-  NotificationMessageParams,
+  AtRiskPasswordNotificationParams,
   NotificationTaskInfo,
   NotificationTypes,
   NotificationType,

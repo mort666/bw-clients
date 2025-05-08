@@ -1,20 +1,15 @@
-import createEmotion from "@emotion/css/create-instance";
 import { html, nothing } from "lit";
 
 import { Theme } from "@bitwarden/common/platform/enums";
 
-import { themes } from "../../constants/styles";
 import { Celebrate, Keyhole, Warning } from "../../illustrations";
+import { iconContainerStyles, notificationConfirmationBodyStyles } from "../confirmation/body";
 
-import { NotificationConfirmationMessage } from "./message";
+import { AtRiskNotificationMessage } from "./message";
 
 export const componentClassPrefix = "notification-confirmation-body";
 
-const { css } = createEmotion({
-  key: componentClassPrefix,
-});
-
-export type NotificationConfirmationBodyProps = {
+export type AtRiskNotificationBodyProps = {
   buttonAria: string;
   buttonText: string;
   confirmationMessage: string;
@@ -26,7 +21,7 @@ export type NotificationConfirmationBodyProps = {
   handleOpenVault: (e: Event) => void;
 };
 
-export function NotificationConfirmationBody({
+export function AtRiskNotificationBody({
   buttonAria,
   buttonText,
   confirmationMessage,
@@ -36,7 +31,7 @@ export function NotificationConfirmationBody({
   tasksAreComplete,
   theme,
   handleOpenVault,
-}: NotificationConfirmationBodyProps) {
+}: AtRiskNotificationBodyProps) {
   const IconComponent = tasksAreComplete ? Keyhole : !error ? Celebrate : Warning;
 
   const showConfirmationMessage = confirmationMessage || buttonText || messageDetails;
@@ -45,7 +40,7 @@ export function NotificationConfirmationBody({
     <div class=${notificationConfirmationBodyStyles({ theme })}>
       <div class=${iconContainerStyles(error)}>${IconComponent({ theme })}</div>
       ${showConfirmationMessage
-        ? NotificationConfirmationMessage({
+        ? AtRiskNotificationMessage({
             buttonAria,
             buttonText,
             itemName,
@@ -58,19 +53,3 @@ export function NotificationConfirmationBody({
     </div>
   `;
 }
-
-// Allow sharing of styles between notifications (@TODO isolate structural/presentational component layer)
-export const iconContainerStyles = (error?: string) => css`
-  > svg {
-    width: ${!error ? "50px" : "40px"};
-    height: fit-content;
-  }
-`;
-export const notificationConfirmationBodyStyles = ({ theme }: { theme: Theme }) => css`
-  gap: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  background-color: ${themes[theme].background.alt};
-  padding: 12px;
-`;
