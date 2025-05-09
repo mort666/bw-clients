@@ -38,7 +38,7 @@ export class RiskInsightsApiService {
       });
 
     if (dbResponse instanceof Error) {
-      return from(null as Promise<GetRiskInsightsReportResponse>);
+      return null;
     }
     return from(dbResponse as Promise<GetRiskInsightsReportResponse>);
   }

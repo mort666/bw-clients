@@ -89,7 +89,16 @@ export class AllApplicationsComponent implements OnInit {
     data: ApplicationHealthReportDetailWithCriticalFlag[];
     organization: Organization;
     summary: ApplicationHealthReportSummary;
-  }>(null);
+  }>({
+    data: [],
+    organization: new Organization(),
+    summary: {
+      totalMemberCount: 0,
+      totalAtRiskMemberCount: 0,
+      totalApplicationCount: 0,
+      totalAtRiskApplicationCount: 0,
+    },
+  });
 
   async ngOnInit() {
     this.isCriticalAppsFeatureEnabled = await this.configService.getFeatureFlag(
