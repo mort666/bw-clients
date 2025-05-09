@@ -27,7 +27,7 @@ export class RiskInsightsApiService {
     return from(dbResponse as Promise<SaveRiskInsightsReportResponse>);
   }
 
-  getRiskInsightsReport(orgId: OrganizationId): Observable<GetRiskInsightsReportResponse> {
+  getRiskInsightsReport(orgId: OrganizationId): Observable<GetRiskInsightsReportResponse | null> {
     const dbResponse = this.apiService
       .send("GET", `/reports/risk-insights-report/${orgId.toString()}`, null, true, true)
       .catch((error: any): any => {
