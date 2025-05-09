@@ -167,11 +167,20 @@ export interface RiskInsightsReport {
   totalCriticalApplications: number;
 }
 
+export interface ReportInsightsReportData {
+  data: string;
+  key: string;
+}
+
 export interface SaveRiskInsightsReportRequest {
   data: RiskInsightsReport;
 }
 
 export interface SaveRiskInsightsReportResponse {
+  id: string;
+}
+
+export interface GetRiskInsightsReportResponse {
   id: string;
   organizationId: OrganizationId;
   date: string;

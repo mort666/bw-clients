@@ -4,6 +4,7 @@ import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { OrganizationId } from "@bitwarden/common/types/guid";
 
 import {
+  GetRiskInsightsReportResponse,
   SaveRiskInsightsReportRequest,
   SaveRiskInsightsReportResponse,
 } from "../models/password-health";
@@ -24,5 +25,21 @@ export class RiskInsightsApiService {
     );
 
     return from(dbResponse as Promise<SaveRiskInsightsReportResponse>);
+  }
+
+  getRiskInsightsReport(orgId: OrganizationId): Observable<GetRiskInsightsReportResponse> {
+    const dbResponse = this.apiService
+      .send("GET", `/reports/risk-insights-report/${orgId.toString()}`, null, true, true)
+      .catch((error: any): any => {
+        if (error.statusCode === 404) {
+          return null; // Handle 404 by returning null or an appropriate default value
+        }
+        throw error; // Re-throw other errors
+      });
+
+    if (dbResponse instanceof Error) {
+      return from(null as Promise<GetRiskInsightsReportResponse>);
+    }
+    return from(dbResponse as Promise<GetRiskInsightsReportResponse>);
   }
 }

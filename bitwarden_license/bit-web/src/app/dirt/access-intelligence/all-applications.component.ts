@@ -10,7 +10,6 @@ import {
   map,
   Observable,
   of,
-  skipWhile,
   switchMap,
 } from "rxjs";
 
@@ -106,23 +105,51 @@ export class AllApplicationsComponent implements OnInit {
         .pipe(getOrganizationById(organizationId));
 
       combineLatest([
-        this.dataService.applications$,
+        this.riskInsightsApiService.getRiskInsightsReport(organizationId as OrganizationId),
         this.criticalAppsService.getAppsListForOrg(organizationId),
         organization$,
+        this.dataService.applications$,
       ])
         .pipe(
-          takeUntilDestroyed(this.destroyRef),
-          skipWhile(([_, __, organization]) => !organization),
-          map(([applications, criticalApps, organization]) => {
+          switchMap(async ([reportArchive, criticalApps, organization, appHealthReport]) => {
+            if (reportArchive == null) {
+              const report = await firstValueFrom(this.dataService.applications$);
+
+              if (report == null) {
+                this.dataService.fetchApplicationsReport(organizationId as OrganizationId);
+              }
+
+              return {
+                report,
+                criticalApps,
+                organization,
+                fromDb: false,
+              };
+            } else {
+              const [report] = await this.reportService.decryptRiskInsightsReport(
+                organizationId as OrganizationId,
+                reportArchive,
+              );
+
+              return {
+                report,
+                criticalApps,
+                organization,
+                fromDb: true,
+              };
+            }
+          }),
+          map(({ report, criticalApps, organization, fromDb }) => {
             const criticalUrls = criticalApps.map((ca) => ca.uri);
-            const data = applications?.map((app) => ({
+            const data = report?.map((app) => ({
               ...app,
               isMarkedAsCritical: criticalUrls.includes(app.applicationName),
             })) as ApplicationHealthReportDetailWithCriticalFlag[];
-            return { data, organization };
+            return { data, organization, fromDb };
           }),
+          takeUntilDestroyed(this.destroyRef),
         )
-        .subscribe(({ data, organization }) => {
+        .subscribe(({ data, organization, fromDb }) => {
           if (data) {
             this.dataSource.data = data;
             this.applicationSummary = this.reportService.generateApplicationsSummary(data);
@@ -131,16 +158,49 @@ export class AllApplicationsComponent implements OnInit {
             this.organization = organization;
           }
 
-          if (data && organization) {
+          if (!fromDb && data && organization) {
             this.atRiskInsightsReport.next({
               data,
               organization,
               summary: this.applicationSummary,
             });
           }
-
-          // this.persistReportData();
         });
+
+      // combineLatest([
+      //   this.dataService.applications$,
+      //   this.criticalAppsService.getAppsListForOrg(organizationId),
+      //   organization$,
+      // ])
+      //   .pipe(
+      //     takeUntilDestroyed(this.destroyRef),
+      //     skipWhile(([_, __, organization]) => !organization),
+      //     map(([applications, criticalApps, organization]) => {
+      //       const criticalUrls = criticalApps.map((ca) => ca.uri);
+      //       const data = applications?.map((app) => ({
+      //         ...app,
+      //         isMarkedAsCritical: criticalUrls.includes(app.applicationName),
+      //       })) as ApplicationHealthReportDetailWithCriticalFlag[];
+      //       return { data, organization };
+      //     }),
+      //   )
+      //   .subscribe(({ data, organization }) => {
+      //     if (data) {
+      //       this.dataSource.data = data;
+      //       this.applicationSummary = this.reportService.generateApplicationsSummary(data);
+      //     }
+      //     if (organization) {
+      //       this.organization = organization;
+      //     }
+
+      //     if (data && organization) {
+      //       this.atRiskInsightsReport.next({
+      //         data,
+      //         organization,
+      //         summary: this.applicationSummary,
+      //       });
+      //     }
+      //   });
 
       this.isLoading$ = this.dataService.isLoading$;
     }
@@ -169,7 +229,7 @@ export class AllApplicationsComponent implements OnInit {
         debounceTime(500),
         switchMap(async (report) => {
           if (report && report.organization?.id && report.data && report.summary) {
-            const data = await this.reportService.generateRiskInsightsReport(
+            const data = await this.reportService.generateEncryptedRiskInsightsReport(
               report.organization.id as OrganizationId,
               report.data,
               report.summary,
@@ -188,10 +248,9 @@ export class AllApplicationsComponent implements OnInit {
                   request,
                 ),
               );
-              // console.log("Risk insights report saved successfully.", JSON.stringify(response));
               return response;
             } catch {
-              // console.error("Error saving risk insights report:", error);
+              /* continue as usual */
             }
 
             return null;
