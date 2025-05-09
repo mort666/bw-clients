@@ -1,4 +1,4 @@
-import { from, Observable } from "rxjs";
+import { from, Observable, of } from "rxjs";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { OrganizationId } from "@bitwarden/common/types/guid";
@@ -38,7 +38,7 @@ export class RiskInsightsApiService {
       });
 
     if (dbResponse instanceof Error) {
-      return null;
+      return of(null);
     }
     return from(dbResponse as Promise<GetRiskInsightsReportResponse>);
   }
