@@ -87,6 +87,8 @@ export class CompleteTrialInitiationComponent implements OnInit, OnDestroy {
   loading = false;
   productTierValue: number;
 
+  trialLength: number;
+
   orgInfoFormGroup = this.formBuilder.group({
     name: ["", { validators: [Validators.required, Validators.maxLength(50)], updateOn: "change" }],
     billingEmail: [""],
@@ -160,6 +162,8 @@ export class CompleteTrialInitiationComponent implements OnInit, OnDestroy {
 
         this.useTrialStepper = true;
       }
+
+      this.trialLength = qParams.trialLength ? parseInt(qParams.trialLength) : 7;
 
       // Are they coming from an email for sponsoring a families organization
       // After logging in redirect them to setup the families sponsorship
@@ -410,4 +414,6 @@ export class CompleteTrialInitiationComponent implements OnInit, OnDestroy {
         return null;
       });
   }
+
+  protected readonly InputPasswordFlow = InputPasswordFlow;
 }
