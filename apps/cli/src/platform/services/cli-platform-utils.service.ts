@@ -72,6 +72,10 @@ export class CliPlatformUtilsService implements PlatformUtilsService {
     return false;
   }
 
+  isDuckDuckGo(): boolean {
+    return false;
+  }
+
   isMacAppStore() {
     return false;
   }
