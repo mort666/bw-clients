@@ -125,6 +125,10 @@ export class WebPlatformUtilsService implements PlatformUtilsService {
     return true;
   }
 
+  supportsSyncDomains(): boolean {
+    return false;
+  }
+
   showToast(
     type: "error" | "success" | "warning" | "info",
     title: string,
