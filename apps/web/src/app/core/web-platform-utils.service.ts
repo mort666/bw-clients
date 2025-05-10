@@ -88,6 +88,10 @@ export class WebPlatformUtilsService implements PlatformUtilsService {
     return this.getDevice() === DeviceType.SafariBrowser;
   }
 
+  isDuckDuckGo(): boolean {
+    return this.getDevice() === DeviceType.DuckDuckGoBrowser;
+  }
+
   isMacAppStore(): boolean {
     return false;
   }

@@ -151,6 +151,10 @@ export abstract class BrowserPlatformUtilsService implements PlatformUtilsServic
     return this.getDevice() === DeviceType.SafariExtension;
   }
 
+  isDuckDuckGo(): boolean {
+    return false;
+  }
+
   isIE(): boolean {
     return false;
   }

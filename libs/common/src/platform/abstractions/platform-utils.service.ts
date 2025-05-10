@@ -21,6 +21,7 @@ export abstract class PlatformUtilsService {
   abstract isOpera(): boolean;
   abstract isVivaldi(): boolean;
   abstract isSafari(): boolean;
+  abstract isDuckDuckGo(): boolean;
   abstract isMacAppStore(): boolean;
   abstract isViewOpen(): Promise<boolean>;
   abstract launchUri(uri: string, options?: any): void;
