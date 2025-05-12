@@ -200,11 +200,6 @@ export class RiskInsightsReportService {
       key: wrappedReportContentEncryptionKey.encryptedString,
     };
 
-    const encryptedReportDataWithWrappedKey = await this.encryptService.encryptString(
-      JSON.stringify(reportDataWithWrappedKey),
-      orgKey,
-    );
-
     const criticalApps = await firstValueFrom(
       this.criticalAppsService
         .getAppsListForOrg(organizationId)
@@ -214,7 +209,7 @@ export class RiskInsightsReportService {
     const riskInsightReport = {
       organizationId: organizationId,
       date: new Date().toISOString(),
-      reportData: encryptedReportDataWithWrappedKey.encryptedString,
+      reportData: JSON.stringify(reportDataWithWrappedKey),
       totalMembers: summary.totalMemberCount,
       totalAtRiskMembers: summary.totalAtRiskMemberCount,
       totalApplications: summary.totalApplicationCount,
@@ -235,21 +230,12 @@ export class RiskInsightsReportService {
         throw new Error("Organization key not found");
       }
 
-      const decryptedReportDataWithWrappedKey = await this.encryptService.decryptString(
-        new EncString(riskInsightsReportResponse.reportData),
-        orgKey,
-      );
-
-      const reportDataInJson = JSON.parse(decryptedReportDataWithWrappedKey);
+      const reportDataInJson = JSON.parse(riskInsightsReportResponse.reportData);
       const reportEncrypted = reportDataInJson.data;
       const wrappedReportContentEncryptionKey = reportDataInJson.key;
 
-      const freshWrappedReportContentEncryptionKey = new EncString(
-        wrappedReportContentEncryptionKey,
-      );
-
       const unwrappedReportContentEncryptionKey = await this.encryptService.unwrapSymmetricKey(
-        freshWrappedReportContentEncryptionKey,
+        new EncString(wrappedReportContentEncryptionKey),
         orgKey,
       );
 
@@ -269,7 +255,6 @@ export class RiskInsightsReportService {
 
       return [reportJson, summary];
     } catch {
-      // console.error("Error decrypting risk insights report :", error);
       return [null, null];
     }
   }
