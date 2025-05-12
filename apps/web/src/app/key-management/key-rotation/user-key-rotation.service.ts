@@ -121,9 +121,9 @@ export class UserKeyRotationService {
 
     const newMasterKey = await this.keyService.makeMasterKey(newMasterPassword, email, kdfConfig);
 
-    let userKeyBytes = PureCrypto.generate_user_key_aes256_cbc_hmac();
+    let userKeyBytes = PureCrypto.make_user_key_aes256_cbc_hmac();
     if (await this.configService.getFeatureFlag(FeatureFlag.EnrollAeadOnKeyRotation)) {
-      userKeyBytes = PureCrypto.generate_user_key_xchacha20_poly1305();
+      userKeyBytes = PureCrypto.make_user_key_xchacha20_poly1305();
     }
     const newMasterKeyEncryptedUserKey = new EncString(
       PureCrypto.encrypt_user_key_with_master_password(

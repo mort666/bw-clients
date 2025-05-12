@@ -96,10 +96,8 @@ describe("KeyRotationService", () => {
   const mockTrustedPublicKeys = [Utils.fromUtf8ToArray("test-public-key")];
 
   beforeAll(() => {
-    jest.spyOn(PureCrypto, "generate_user_key_aes256_cbc_hmac").mockReturnValue(new Uint8Array(64));
-    jest
-      .spyOn(PureCrypto, "generate_user_key_xchacha20_poly1305")
-      .mockReturnValue(new Uint8Array(70));
+    jest.spyOn(PureCrypto, "make_user_key_aes256_cbc_hmac").mockReturnValue(new Uint8Array(64));
+    jest.spyOn(PureCrypto, "make_user_key_xchacha20_poly1305").mockReturnValue(new Uint8Array(70));
     jest
       .spyOn(PureCrypto, "encrypt_user_key_with_master_password")
       .mockReturnValue("mockNewUserKey");
@@ -294,14 +292,14 @@ describe("KeyRotationService", () => {
       expect(arg.accountUnlockData.emergencyAccessUnlockData.length).toBe(1);
       expect(arg.accountUnlockData.organizationAccountRecoveryUnlockData.length).toBe(1);
       expect(arg.accountUnlockData.passkeyUnlockData.length).toBe(2);
-      expect(PureCrypto.generate_user_key_aes256_cbc_hmac).toHaveBeenCalled();
+      expect(PureCrypto.make_user_key_aes256_cbc_hmac).toHaveBeenCalled();
       expect(PureCrypto.encrypt_user_key_with_master_password).toHaveBeenCalledWith(
         new Uint8Array(64),
         "newMasterPassword",
         mockUser.email,
         DEFAULT_KDF_CONFIG.toSdkConfig(),
       );
-      expect(PureCrypto.generate_user_key_xchacha20_poly1305).not.toHaveBeenCalled();
+      expect(PureCrypto.make_user_key_xchacha20_poly1305).not.toHaveBeenCalled();
     });
 
     it("rotates the userkey to xchacha20poly1305 and encrypted data and changes master password when featureflag is active", async () => {
@@ -339,14 +337,14 @@ describe("KeyRotationService", () => {
       expect(arg.accountUnlockData.emergencyAccessUnlockData.length).toBe(1);
       expect(arg.accountUnlockData.organizationAccountRecoveryUnlockData.length).toBe(1);
       expect(arg.accountUnlockData.passkeyUnlockData.length).toBe(2);
-      expect(PureCrypto.generate_user_key_aes256_cbc_hmac).toHaveBeenCalled();
+      expect(PureCrypto.make_user_key_aes256_cbc_hmac).toHaveBeenCalled();
       expect(PureCrypto.encrypt_user_key_with_master_password).toHaveBeenCalledWith(
         new Uint8Array(70),
         "newMasterPassword",
         mockUser.email,
         DEFAULT_KDF_CONFIG.toSdkConfig(),
       );
-      expect(PureCrypto.generate_user_key_xchacha20_poly1305).toHaveBeenCalled();
+      expect(PureCrypto.make_user_key_xchacha20_poly1305).toHaveBeenCalled();
     });
 
     it("returns early when first trust warning dialog is declined", async () => {
