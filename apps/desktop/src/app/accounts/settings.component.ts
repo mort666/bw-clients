@@ -69,12 +69,10 @@ import { NativeMessagingManifestService } from "../services/native-messaging-man
 import { SharedModule } from "../shared/shared.module";
 
 @Component({
-  selector: "app-settings",
   templateUrl: "settings.component.html",
   standalone: true,
   imports: [
     SharedModule,
-
     ButtonModule,
     SectionComponent,
     SectionHeaderComponent,
