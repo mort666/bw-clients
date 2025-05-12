@@ -8,7 +8,7 @@ import {
   NotificationTypes,
 } from "../../../notification/abstractions/notification-bar";
 import { OrgView, FolderView, I18n, CollectionView } from "../common-types";
-import { spacing, themes } from "../constants/styles";
+import { spacing } from "../constants/styles";
 
 import { NotificationButtonRow } from "./button-row";
 
@@ -38,7 +38,7 @@ export function NotificationFooter({
   const primaryButtonText = i18n.saveAction;
 
   return html`
-    <div class=${[displayFlex, notificationFooterStyles({ theme })]}>
+    <div class=${[displayFlex, notificationFooterStyles({ isChangeNotification })]}>
       ${!isChangeNotification
         ? NotificationButtonRow({
             collections,
@@ -61,12 +61,15 @@ export const displayFlex = css`
   display: flex;
 `;
 
-export const notificationFooterStyles = ({ theme }: { theme: Theme }) => css`
-  background-color: ${themes[theme].background.alt};
-  padding: 0 ${spacing[3]} ${spacing[3]} ${spacing[3]};
+const notificationFooterStyles = ({
+  isChangeNotification,
+}: {
+  isChangeNotification: boolean;
+}) => css`
+  padding: ${spacing[2]} ${spacing[4]} ${isChangeNotification ? spacing[1] : spacing[4]}
+    ${spacing[4]};
 
   :last-child {
     border-radius: 0 0 ${spacing["4"]} ${spacing["4"]};
-    padding-bottom: ${spacing[4]};
   }
 `;
