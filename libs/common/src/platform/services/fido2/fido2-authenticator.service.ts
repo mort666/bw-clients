@@ -354,6 +354,8 @@ export class Fido2AuthenticatorService<ParentWindowReference>
     params: Fido2AuthenticatorGetAssertionParams,
     cipherOptions: CipherView[],
   ) {
+    this.logService?.info("Searching for credentials matching params", params);
+
     if (params.allowCredentialDescriptorList?.length > 0) {
       cipherOptions = await this.findCredentialsById(
         params.allowCredentialDescriptorList,
@@ -425,6 +427,9 @@ export class Fido2AuthenticatorService<ParentWindowReference>
 
     const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
     const ciphers = await this.cipherService.getAllDecrypted(activeUserId);
+
+    this.logService.info("Searching for ciphers by Id", ciphers);
+
     return ciphers.filter(
       (cipher) =>
         !cipher.isDeleted &&
@@ -443,6 +448,9 @@ export class Fido2AuthenticatorService<ParentWindowReference>
   private async findCredentialsByRp(rpId: string): Promise<CipherView[]> {
     const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
     const ciphers = await this.cipherService.getAllDecrypted(activeUserId);
+
+    this.logService.info("Searching for ciphers by RP in", ciphers);
+
     return ciphers.filter(
       (cipher) =>
         !cipher.isDeleted &&
