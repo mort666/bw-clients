@@ -75,7 +75,6 @@ const SyncInterval = 6 * 60 * 60 * 1000; // 6 hours
   selector: "app-root",
   styles: [],
   template: `
-    <ng-template #settings></ng-template>
     <ng-template #premium></ng-template>
     <ng-template #passwordHistory></ng-template>
     <ng-template #appFolderAddEdit></ng-template>
@@ -95,7 +94,6 @@ const SyncInterval = 6 * 60 * 60 * 1000; // 6 hours
   `,
 })
 export class AppComponent implements OnInit, OnDestroy {
-  @ViewChild("settings", { read: ViewContainerRef, static: true }) settingsRef: ViewContainerRef;
   @ViewChild("premium", { read: ViewContainerRef, static: true }) premiumRef: ViewContainerRef;
   @ViewChild("passwordHistory", { read: ViewContainerRef, static: true })
   passwordHistoryRef: ViewContainerRef;
@@ -268,7 +266,7 @@ export class AppComponent implements OnInit, OnDestroy {
             }
             break;
           case "openSettings":
-            await this.openModal<SettingsComponent>(SettingsComponent, this.settingsRef);
+            SettingsComponent.open(this.dialogService);
             break;
           case "openPremium":
             await this.openModal<PremiumComponent>(PremiumComponent, this.premiumRef);

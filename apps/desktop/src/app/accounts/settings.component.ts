@@ -1,6 +1,7 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
 import { Component, OnDestroy, OnInit } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormBuilder } from "@angular/forms";
 import { BehaviorSubject, Observable, Subject, firstValueFrom, of } from "rxjs";
 import {
@@ -14,6 +15,7 @@ import {
   timeout,
 } from "rxjs/operators";
 
+import { VaultTimeoutInputComponent } from "@bitwarden/auth/angular";
 import { PinServiceAbstraction } from "@bitwarden/auth/common";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
@@ -23,6 +25,7 @@ import { UserVerificationService as UserVerificationServiceAbstraction } from "@
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { AutofillSettingsServiceAbstraction } from "@bitwarden/common/autofill/services/autofill-settings.service";
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
+import { ClearClipboardDelaySetting } from "@bitwarden/common/autofill/types";
 import { DeviceType } from "@bitwarden/common/enums";
 import {
   VaultTimeout,
@@ -31,7 +34,6 @@ import {
   VaultTimeoutSettingsService,
   VaultTimeoutStringType,
 } from "@bitwarden/common/key-management/vault-timeout";
-import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
@@ -41,8 +43,22 @@ import { Theme, ThemeTypes } from "@bitwarden/common/platform/enums/theme-type.e
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
 import { UserId } from "@bitwarden/common/types/guid";
-import { DialogService } from "@bitwarden/components";
+import {
+  ButtonModule,
+  CalloutModule,
+  CardComponent,
+  CheckboxModule,
+  DialogModule,
+  DialogService,
+  FormFieldModule,
+  RadioButtonModule,
+  SectionComponent,
+  SectionHeaderComponent,
+  SelectModule,
+  TypographyModule,
+} from "@bitwarden/components";
 import { KeyService, BiometricStateService, BiometricsStatus } from "@bitwarden/key-management";
+import { I18nPipe } from "@bitwarden/ui-common";
 
 import { SetPinComponent } from "../../auth/components/set-pin.component";
 import { SshAgentPromptType } from "../../autofill/models/ssh-agent-setting";
@@ -50,10 +66,29 @@ import { DesktopAutofillSettingsService } from "../../autofill/services/desktop-
 import { DesktopBiometricsService } from "../../key-management/biometrics/desktop.biometrics.service";
 import { DesktopSettingsService } from "../../platform/services/desktop-settings.service";
 import { NativeMessagingManifestService } from "../services/native-messaging-manifest.service";
+import { SharedModule } from "../shared/shared.module";
 
 @Component({
   selector: "app-settings",
   templateUrl: "settings.component.html",
+  standalone: true,
+  imports: [
+    SharedModule,
+
+    ButtonModule,
+    SectionComponent,
+    SectionHeaderComponent,
+    CardComponent,
+    TypographyModule,
+    CalloutModule,
+    CheckboxModule,
+    DialogModule,
+    FormFieldModule,
+    I18nPipe,
+    RadioButtonModule,
+    SelectModule,
+    VaultTimeoutInputComponent,
+  ],
 })
 export class SettingsComponent implements OnInit, OnDestroy {
   // For use in template
@@ -82,10 +117,6 @@ export class SettingsComponent implements OnInit, OnDestroy {
   enableCloseToTrayDescText: string;
   startToTrayText: string;
   startToTrayDescText: string;
-
-  showSecurity = true;
-  showAccountPreferences = true;
-  showAppPreferences = true;
 
   currentUserEmail: string;
   currentUserId: UserId;
@@ -160,7 +191,6 @@ export class SettingsComponent implements OnInit, OnDestroy {
     private pinService: PinServiceAbstraction,
     private logService: LogService,
     private nativeMessagingManifestService: NativeMessagingManifestService,
-    private configService: ConfigService,
   ) {
     const isMac = this.platformUtilsService.getDevice() === DeviceType.MacOsDesktop;
 
@@ -226,6 +256,39 @@ export class SettingsComponent implements OnInit, OnDestroy {
         value: SshAgentPromptType.RememberUntilLock,
       },
     ];
+
+    this.form.controls.clearClipboard.valueChanges
+      .pipe(
+        takeUntilDestroyed(),
+        concatMap(async (t) => {
+          await this.saveClearClipboard(t);
+        }),
+      )
+      .subscribe();
+    this.form.controls.theme.valueChanges
+      .pipe(
+        takeUntilDestroyed(),
+        concatMap(async (theme) => {
+          await this.saveTheme(theme);
+        }),
+      )
+      .subscribe();
+    this.form.controls.locale.valueChanges
+      .pipe(
+        takeUntilDestroyed(),
+        concatMap(async (locale) => {
+          await this.saveLocale(locale);
+        }),
+      )
+      .subscribe();
+    this.form.controls.sshAgentPromptBehavior.valueChanges
+      .pipe(
+        takeUntilDestroyed(),
+        concatMap(async (v) => {
+          await this.saveSshAgentPromptBehavior(v);
+        }),
+      )
+      .subscribe();
   }
 
   async ngOnInit() {
@@ -656,12 +719,12 @@ export class SettingsComponent implements OnInit, OnDestroy {
     await this.desktopSettingsService.setStartToTray(this.form.value.startToTray);
   }
 
-  async saveLocale() {
-    await this.i18nService.setLocale(this.form.value.locale);
+  async saveLocale(locale: string) {
+    await this.i18nService.setLocale(locale);
   }
 
-  async saveTheme() {
-    await this.themeStateService.setSelectedTheme(this.form.value.theme);
+  async saveTheme(theme: Theme) {
+    await this.themeStateService.setSelectedTheme(theme);
   }
 
   async saveMinOnCopyToClipboard() {
@@ -671,8 +734,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
     );
   }
 
-  async saveClearClipboard() {
-    await this.autofillSettingsService.setClearClipboardDelay(this.form.value.clearClipboard);
+  async saveClearClipboard(time: ClearClipboardDelaySetting) {
+    await this.autofillSettingsService.setClearClipboardDelay(time);
   }
 
   async saveAlwaysShowDock() {
@@ -799,10 +862,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
     await this.desktopSettingsService.setSshAgentEnabled(this.form.value.enableSshAgent);
   }
 
-  async saveSshAgentPromptBehavior() {
-    await this.desktopSettingsService.setSshAgentPromptBehavior(
-      this.form.value.sshAgentPromptBehavior,
-    );
+  async saveSshAgentPromptBehavior(value: SshAgentPromptType) {
+    await this.desktopSettingsService.setSshAgentPromptBehavior(value);
   }
 
   async savePreventScreenshots() {
@@ -900,5 +961,9 @@ export class SettingsComponent implements OnInit, OnDestroy {
       default:
         throw new Error("Unsupported platform");
     }
+  }
+
+  static open(dialogService: DialogService) {
+    return dialogService.open(SettingsComponent);
   }
 }
