@@ -73,7 +73,7 @@ export const baseTextStyles = css`
   text-align: left;
   text-overflow: ellipsis;
   line-height: 24px;
-  font-family: "DM Sans", sans-serif;
+  font-family: Roboto, sans-serif;
   font-size: 16px;
 `;
 
