@@ -19,7 +19,7 @@ export function AtRiskNotificationFooter({
   theme,
   passwordChangeUri,
 }: AtRiskNotificationFooterProps) {
-  return html`<div class=${notificationFooterStyles({ theme })}>
+  return html`<div class=${notificationFooterStyles({ isChangeNotification: false })}>
     ${passwordChangeUri &&
     ActionButton({
       handleClick: () => {

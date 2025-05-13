@@ -61,7 +61,7 @@ export const displayFlex = css`
   display: flex;
 `;
 
-const notificationFooterStyles = ({
+export const notificationFooterStyles = ({
   isChangeNotification,
 }: {
   isChangeNotification: boolean;

@@ -48,7 +48,7 @@ export function AtRiskNotification({
           passwordChangeUri ? "atRiskChangePrompt" : "atRiskNavigatePrompt",
           organizationName,
         ),
-      })};
+      })}
       ${AtRiskNotificationFooter({
         i18n,
         theme,
@@ -59,5 +59,5 @@ export function AtRiskNotification({
 }
 
 function getHeaderMessage(i18n: I18n, type?: NotificationType) {
-  return type === NotificationTypes.AtRiskPassword ? i18n.changePassword : undefined;
+  return type === NotificationTypes.AtRiskPassword ? i18n.atRiskPassword : undefined;
 }
