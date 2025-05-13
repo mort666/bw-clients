@@ -101,6 +101,10 @@ export class AllApplicationsComponent implements OnInit {
   });
 
   async ngOnInit() {
+    this.isLoading$ = this.dataService.isLoading$;
+
+    this.dataService.isLoadingData(true);
+
     this.isCriticalAppsFeatureEnabled = await this.configService.getFeatureFlag(
       FeatureFlag.CriticalApps,
     );
@@ -113,105 +117,47 @@ export class AllApplicationsComponent implements OnInit {
         .organizations$(userId)
         .pipe(getOrganizationById(organizationId));
 
+      this.dataService.fetchApplicationsReportFromCache(organizationId as OrganizationId);
+
       combineLatest([
-        this.riskInsightsApiService.getRiskInsightsReport(organizationId as OrganizationId),
-        this.criticalAppsService.getAppsListForOrg(organizationId),
-        organization$,
         this.dataService.applications$,
+        this.dataService.appsSummary$,
+        this.dataService.isReportFromArchive$,
+        organization$,
+        this.criticalAppsService.getAppsListForOrg(organizationId as OrganizationId),
       ])
         .pipe(
-          switchMap(async ([reportArchive, criticalApps, organization, appHealthReport]) => {
-            if (reportArchive == null) {
-              const report = await firstValueFrom(this.dataService.applications$);
-
-              if (report == null) {
-                this.dataService.fetchApplicationsReport(organizationId as OrganizationId);
-              }
-
-              return {
-                report,
-                criticalApps,
-                organization,
-                fromDb: false,
-              };
-            } else {
-              const [report] = await this.reportService.decryptRiskInsightsReport(
-                organizationId as OrganizationId,
-                reportArchive,
-              );
-
-              return {
-                report,
-                criticalApps,
-                organization,
-                fromDb: true,
-              };
-            }
-          }),
-          map(({ report, criticalApps, organization, fromDb }) => {
-            const criticalUrls = criticalApps.map((ca) => ca.uri);
+          map(([report, summary, isReportFromArchive, organization, criticalApps]) => {
+            const criticalUrls = criticalApps?.map((ca) => ca.uri);
             const data = report?.map((app) => ({
               ...app,
               isMarkedAsCritical: criticalUrls.includes(app.applicationName),
             })) as ApplicationHealthReportDetailWithCriticalFlag[];
-            return { data, organization, fromDb };
+
+            return { report: data, summary, criticalApps, isReportFromArchive, organization };
           }),
           takeUntilDestroyed(this.destroyRef),
         )
-        .subscribe(({ data, organization, fromDb }) => {
-          if (data) {
-            this.dataSource.data = data;
-            this.applicationSummary = this.reportService.generateApplicationsSummary(data);
+        .subscribe(({ report, summary, isReportFromArchive, organization }) => {
+          if (report) {
+            this.dataSource.data = report;
+            this.applicationSummary = summary;
           }
+
           if (organization) {
             this.organization = organization;
           }
 
-          if (!fromDb && data && organization) {
+          if (!isReportFromArchive && report && organization) {
             this.atRiskInsightsReport.next({
-              data,
-              organization,
+              data: report,
+              organization: organization,
               summary: this.applicationSummary,
             });
           }
         });
 
-      // combineLatest([
-      //   this.dataService.applications$,
-      //   this.criticalAppsService.getAppsListForOrg(organizationId),
-      //   organization$,
-      // ])
-      //   .pipe(
-      //     takeUntilDestroyed(this.destroyRef),
-      //     skipWhile(([_, __, organization]) => !organization),
-      //     map(([applications, criticalApps, organization]) => {
-      //       const criticalUrls = criticalApps.map((ca) => ca.uri);
-      //       const data = applications?.map((app) => ({
-      //         ...app,
-      //         isMarkedAsCritical: criticalUrls.includes(app.applicationName),
-      //       })) as ApplicationHealthReportDetailWithCriticalFlag[];
-      //       return { data, organization };
-      //     }),
-      //   )
-      //   .subscribe(({ data, organization }) => {
-      //     if (data) {
-      //       this.dataSource.data = data;
-      //       this.applicationSummary = this.reportService.generateApplicationsSummary(data);
-      //     }
-      //     if (organization) {
-      //       this.organization = organization;
-      //     }
-
-      //     if (data && organization) {
-      //       this.atRiskInsightsReport.next({
-      //         data,
-      //         organization,
-      //         summary: this.applicationSummary,
-      //       });
-      //     }
-      //   });
-
-      this.isLoading$ = this.dataService.isLoading$;
+      this.dataService.isLoadingData(false);
     }
   }
 

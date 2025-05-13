@@ -42,7 +42,7 @@ import { RiskInsightsComponent } from "./risk-insights.component";
     },
     {
       provide: RiskInsightsDataService,
-      deps: [RiskInsightsReportService],
+      deps: [RiskInsightsReportService, RiskInsightsApiService],
     },
     safeProvider({
       provide: CriticalAppsService,

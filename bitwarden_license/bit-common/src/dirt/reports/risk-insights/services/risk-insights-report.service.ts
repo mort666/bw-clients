@@ -1,6 +1,6 @@
 // FIXME: Update this file to be type safe
 // @ts-strict-ignore
-import { concatMap, first, firstValueFrom, from, map, Observable, takeWhile, zip } from "rxjs";
+import { concatMap, first, from, map, Observable, zip } from "rxjs";
 
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
@@ -184,9 +184,12 @@ export class RiskInsightsReportService {
       throw new Error("Organization key not found");
     }
 
+    const reportWithSummary = { details, summary };
+
     const reportContentEncryptionKey = await this.keyGeneratorService.createKey(512);
+
     const reportEncrypted = await this.encryptService.encryptString(
-      JSON.stringify(details),
+      JSON.stringify(reportWithSummary),
       reportContentEncryptionKey,
     );
 
@@ -200,21 +203,15 @@ export class RiskInsightsReportService {
       key: wrappedReportContentEncryptionKey.encryptedString,
     };
 
-    const criticalApps = await firstValueFrom(
-      this.criticalAppsService
-        .getAppsListForOrg(organizationId)
-        .pipe(takeWhile((apps) => apps !== null && apps.length > 0)),
-    );
-
     const riskInsightReport = {
       organizationId: organizationId,
       date: new Date().toISOString(),
       reportData: JSON.stringify(reportDataWithWrappedKey),
-      totalMembers: summary.totalMemberCount,
-      totalAtRiskMembers: summary.totalAtRiskMemberCount,
-      totalApplications: summary.totalApplicationCount,
-      totalAtRiskApplications: summary.totalAtRiskApplicationCount,
-      totalCriticalApplications: criticalApps.length,
+      totalMembers: 0,
+      totalAtRiskMembers: 0,
+      totalApplications: 0,
+      totalAtRiskApplications: 0,
+      totalCriticalApplications: 0,
     };
 
     return riskInsightReport;
@@ -244,16 +241,11 @@ export class RiskInsightsReportService {
         unwrappedReportContentEncryptionKey,
       );
 
-      const reportJson: ApplicationHealthReportDetail[] = JSON.parse(reportUnencrypted);
+      const reportWithSummary = JSON.parse(reportUnencrypted);
+      const reportJson = reportWithSummary.details;
+      const reportSummary = reportWithSummary.summary;
 
-      const summary: ApplicationHealthReportSummary = {
-        totalMemberCount: riskInsightsReportResponse.totalMembers,
-        totalAtRiskMemberCount: riskInsightsReportResponse.totalAtRiskMembers,
-        totalApplicationCount: riskInsightsReportResponse.totalApplications,
-        totalAtRiskApplicationCount: riskInsightsReportResponse.totalAtRiskApplications,
-      };
-
-      return [reportJson, summary];
+      return [reportJson, reportSummary];
     } catch {
       return [null, null];
     }

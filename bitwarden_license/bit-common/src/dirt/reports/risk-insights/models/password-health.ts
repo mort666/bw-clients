@@ -183,7 +183,7 @@ export interface SaveRiskInsightsReportResponse {
 export interface GetRiskInsightsReportResponse {
   id: string;
   organizationId: OrganizationId;
-  date: string;
+  reportDate: string;
   reportData: string;
   totalMembers: number;
   totalAtRiskMembers: number;
