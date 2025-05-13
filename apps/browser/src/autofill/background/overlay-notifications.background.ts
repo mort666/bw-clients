@@ -1,9 +1,8 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { firstValueFrom, Subject, switchMap, timer } from "rxjs";
+import { Subject, switchMap, timer } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
-import { getOptionalUserId } from "@bitwarden/common/auth/services/account.service";
 import { CLEAR_NOTIFICATION_LOGIN_DATA_DURATION } from "@bitwarden/common/autofill/constants";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { UserId } from "@bitwarden/common/types/guid";
@@ -445,30 +444,6 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
       );
       this.clearCompletedWebRequest(requestId, tab);
       return;
-    }
-
-    const activeUserId = await firstValueFrom(
-      this.accountService.activeAccount$.pipe(getOptionalUserId),
-    );
-    const { cipher, securityTask } = await this.getSecurityTaskAndCipherForLoginData(
-      modifyLoginData,
-      activeUserId,
-    );
-    const shouldTriggerAtRiskPasswordNotification: boolean = typeof securityTask !== "undefined";
-
-    if (shouldTriggerAtRiskPasswordNotification) {
-      await this.notificationBackground.openAtRisksPasswordNotification(
-        {
-          command: "bgOpenAtRisksPasswordNotification",
-          data: {
-            activeUserId,
-            cipher,
-            securityTask,
-          },
-        },
-        { tab },
-      );
-      this.clearCompletedWebRequest(requestId, tab);
     }
   };
 
