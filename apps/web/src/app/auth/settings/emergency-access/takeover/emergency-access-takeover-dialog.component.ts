@@ -51,8 +51,8 @@ export enum EmergencyAccessTakeoverDialogResultType {
   templateUrl: "./emergency-access-takeover-dialog.component.html",
   imports: [
     ButtonModule,
-    CommonModule,
     CalloutModule,
+    CommonModule,
     DialogModule,
     I18nPipe,
     InputPasswordComponent,
@@ -87,11 +87,11 @@ export class EmergencyAccessTakeoverDialogComponent implements OnInit {
     );
   }
 
-  submit = async () => {
+  protected handlePrimaryButtonClick = async () => {
     await this.inputPasswordComponent.submit();
   };
 
-  async handlePasswordFormSubmit(passwordInputResult: PasswordInputResult) {
+  protected async handlePasswordFormSubmit(passwordInputResult: PasswordInputResult) {
     try {
       await this.emergencyAccessService.takeover(
         this.dialogData.emergencyAccessId,
@@ -112,7 +112,7 @@ export class EmergencyAccessTakeoverDialogComponent implements OnInit {
   }
 
   /**
-   * Strongly typed helper to open a EmergencyAccessTakeoverDialogComponent
+   * Strongly typed helper to open an EmergencyAccessTakeoverDialogComponent
    * @param dialogService Instance of the dialog service that will be used to open the dialog
    * @param dialogConfig Configuration for the dialog
    */

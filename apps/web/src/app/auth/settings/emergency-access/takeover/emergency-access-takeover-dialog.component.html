@@ -1,4 +1,4 @@
-<bit-dialog dialogSize="large">
+<bit-dialog>
   <span bitDialogTitle>
     {{ "takeover" | i18n }}
     <small class="tw-text-muted" *ngIf="dialogData.grantorName">{{ dialogData.grantorName }}</small>
@@ -17,7 +17,7 @@
   </div>
 
   <ng-container bitDialogFooter>
-    <button type="button" bitButton buttonType="primary" (click)="submit()">
+    <button type="button" bitButton buttonType="primary" (click)="handlePrimaryButtonClick()">
       {{ "save" | i18n }}
     </button>
     <button type="button" bitButton buttonType="secondary" bitDialogClose>
