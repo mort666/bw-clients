@@ -19,6 +19,7 @@ export enum FeatureFlag {
 
   /* Auth */
   PM9115_TwoFactorExtensionDataPersistence = "pm-9115-two-factor-extension-data-persistence",
+  PM16117_ChangeExistingPasswordRefactor = "pm-16117-change-existing-password-refactor",
 
   /* Autofill */
   BlockBrowserInjectionsByDomain = "block-browser-injections-by-domain",
@@ -114,6 +115,7 @@ export const DefaultFeatureFlagValue = {
 
   /* Auth */
   [FeatureFlag.PM9115_TwoFactorExtensionDataPersistence]: FALSE,
+  [FeatureFlag.PM16117_ChangeExistingPasswordRefactor]: FALSE,
 
   /* Billing */
   [FeatureFlag.TrialPaymentOptional]: FALSE,

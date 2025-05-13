@@ -27,6 +27,8 @@ import {
   TwoFactorAuthComponentService,
   TwoFactorAuthEmailComponentService,
   TwoFactorAuthWebAuthnComponentService,
+  ChangePasswordService,
+  DefaultChangePasswordService,
 } from "@bitwarden/auth/angular";
 import {
   AuthRequestApiService,
@@ -1527,6 +1529,15 @@ const safeProviders: SafeProvider[] = [
     provide: MasterPasswordApiServiceAbstraction,
     useClass: MasterPasswordApiService,
     deps: [ApiServiceAbstraction, LogService],
+  }),
+  safeProvider({
+    provide: ChangePasswordService,
+    useClass: DefaultChangePasswordService,
+    deps: [
+      KeyService,
+      MasterPasswordApiServiceAbstraction,
+      InternalMasterPasswordServiceAbstraction,
+    ],
   }),
 ];
 
