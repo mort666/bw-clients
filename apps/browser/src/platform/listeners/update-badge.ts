@@ -96,7 +96,7 @@ export class UpdateBadge {
       return;
     }
 
-    const pendingSecurityTasks = await firstValueFrom(
+    const atRiskPasswordTasks = await firstValueFrom(
       this.taskService
         .pendingTasks$(activeUserId)
         .pipe(
@@ -104,8 +104,8 @@ export class UpdateBadge {
         ),
     );
 
-    // Pending security tasks do not depend on the badge counter setting and should always be shown
-    if (pendingSecurityTasks.length > 0) {
+    // Pending at risk tasks do not depend on the badge counter setting and should always be shown
+    if (atRiskPasswordTasks.length > 0) {
       await this.setBadgeText("!");
       await this.setBadgeBackgroundColor("#cb263a"); // equivalent to danger-600
       return;
