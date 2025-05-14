@@ -450,15 +450,18 @@ export class InputPasswordComponent implements OnInit {
     currentPassword: string,
     kdfConfig: KdfConfig,
   ): Promise<boolean> {
+    if (!this.email) {
+      throw new Error("Email is required to verify current password.");
+    }
+    if (!this.userId) {
+      throw new Error("userId is required to verify current password.");
+    }
+
     const currentMasterKey = await this.keyService.makeMasterKey(
       currentPassword,
       this.email,
       kdfConfig,
     );
-
-    if (!this.userId) {
-      throw new Error("userId not passed down");
-    }
 
     const decryptedUserKey = await this.masterPasswordService.decryptUserKeyWithMasterKey(
       currentMasterKey,
