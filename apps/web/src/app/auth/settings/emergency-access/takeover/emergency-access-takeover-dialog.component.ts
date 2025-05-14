@@ -63,7 +63,7 @@ type EmergencyAccessTakeoverDialogResultType =
 })
 export class EmergencyAccessTakeoverDialogComponent implements OnInit {
   @ViewChild(InputPasswordComponent)
-  inputPasswordComponent: InputPasswordComponent;
+  inputPasswordComponent!: InputPasswordComponent;
 
   inputPasswordFlow = InputPasswordFlow.ChangePasswordDelegation;
   masterPasswordPolicyOptions?: MasterPasswordPolicyOptions;
