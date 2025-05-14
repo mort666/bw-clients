@@ -82,7 +82,7 @@ const mySignal = this.viewCacheService.signal({
 mySignal.set("value")
 ```
 
-> [!NOTE] Equality comparison
+> [!NOTE]
 > By default, signals use `Object.is` to determine equality, and `set()` will only trigger updates if
 > the updated value is not equal to the current signal state. See documentation
 > [here](https://angular.dev/guide/signals#signal-equality-functions).
