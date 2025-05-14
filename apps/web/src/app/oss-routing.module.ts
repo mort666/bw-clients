@@ -10,6 +10,7 @@ import {
   unauthGuardFn,
   activeAuthGuard,
 } from "@bitwarden/angular/auth/guards";
+import { canAccessFeature } from "@bitwarden/angular/platform/guard/feature-flag.guard";
 import {
   AnonLayoutWrapperComponent,
   AnonLayoutWrapperData,
@@ -40,6 +41,7 @@ import {
   DeviceVerificationIcon,
   ChangePasswordComponent,
 } from "@bitwarden/auth/angular";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { LockComponent } from "@bitwarden/key-management-ui";
 import { VaultIcons } from "@bitwarden/vault";
 
@@ -59,8 +61,8 @@ import { AccountComponent } from "./auth/settings/account/account.component";
 import { EmergencyAccessComponent } from "./auth/settings/emergency-access/emergency-access.component";
 import { EmergencyAccessViewComponent } from "./auth/settings/emergency-access/view/emergency-access-view.component";
 import { SecurityRoutingModule } from "./auth/settings/security/security-routing.module";
-// import { UpdatePasswordComponent } from "./auth/update-password.component";
-// import { UpdateTempPasswordComponent } from "./auth/update-temp-password.component";
+import { UpdatePasswordComponent } from "./auth/update-password.component";
+import { UpdateTempPasswordComponent } from "./auth/update-temp-password.component";
 import { VerifyEmailTokenComponent } from "./auth/verify-email-token.component";
 import { VerifyRecoverDeleteComponent } from "./auth/verify-recover-delete.component";
 import { SponsoredFamiliesComponent } from "./billing/settings/sponsored-families.component";
@@ -145,27 +147,7 @@ const routes: Routes = [
         component: AnonLayoutWrapperComponent,
         children: [
           {
-            path: "update-temp-password",
-            children: [
-              {
-                path: "",
-                component: ChangePasswordComponent,
-              },
-            ],
-            data: {
-              pageIcon: undefined,
-              hideFooter: true,
-            } satisfies AnonLayoutWrapperData,
-          },
-        ],
-      },
-      {
-        component: AnonLayoutWrapperComponent,
-        path: "",
-        children: [
-          {
-            path: "update-password",
-            canActivate: [authGuard],
+            path: "change-password",
             children: [
               {
                 path: "",
@@ -180,23 +162,34 @@ const routes: Routes = [
         ],
         data: { titleId: "updatePassword" } satisfies RouteDataProperties,
       },
-      // {
-      //   path: "update-temp-password",
-      //   component: ChangePasswordComponent,
-      //   data: {}
-      // },
-      // {
-      //   path: "update-temp-password",
-      //   component: UpdateTempPasswordComponent,
-      //   canActivate: [authGuard],
-      //   data: { titleId: "updateTempPassword" } satisfies RouteDataProperties,
-      // },
-      // {
-      //   path: "update-password",
-      //   component: UpdatePasswordComponent,
-      //   canActivate: [authGuard],
-      //   data: { titleId: "updatePassword" } satisfies RouteDataProperties,
-      // },
+      {
+        path: "update-temp-password",
+        component: UpdateTempPasswordComponent,
+        canActivate: [
+          canAccessFeature(
+            FeatureFlag.PM16117_ChangeExistingPasswordRefactor,
+            false,
+            "/change-password",
+            false,
+          ),
+          authGuard,
+        ],
+        data: { titleId: "updateTempPassword" } satisfies RouteDataProperties,
+      },
+      {
+        path: "update-password",
+        component: UpdatePasswordComponent,
+        canActivate: [
+          canAccessFeature(
+            FeatureFlag.PM16117_ChangeExistingPasswordRefactor,
+            false,
+            "/change-password",
+            false,
+          ),
+          authGuard,
+        ],
+        data: { titleId: "updatePassword" } satisfies RouteDataProperties,
+      },
       {
         path: "migrate-legacy-encryption",
         loadComponent: () =>

@@ -19,7 +19,7 @@ import { UserId } from "@bitwarden/common/types/guid";
 import { MasterKey } from "@bitwarden/common/types/key";
 
 import { LoginStrategyServiceAbstraction } from "../abstractions";
-import { PasswordLoginCredentials } from "../models/domain/login-credentials";
+import { PasswordLoginCredentials } from "../models";
 import { CacheData } from "../services/login-strategies/login-strategy.state";
 
 import { LoginStrategy, LoginStrategyData } from "./login.strategy";
