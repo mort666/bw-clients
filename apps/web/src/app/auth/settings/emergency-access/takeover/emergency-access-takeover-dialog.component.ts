@@ -34,10 +34,12 @@ type EmergencyAccessTakeoverDialogData = {
   emergencyAccessId: string;
 };
 
-// eslint-disable-next-line @bitwarden/platform/no-enums
-export enum EmergencyAccessTakeoverDialogResultType {
-  Done = "done",
-}
+export const EmergencyAccessTakeoverDialogResultTypes = {
+  Done: "done",
+} as const;
+
+type EmergencyAccessTakeoverDialogResultType =
+  (typeof EmergencyAccessTakeoverDialogResultTypes)[keyof typeof EmergencyAccessTakeoverDialogResultTypes];
 
 /**
  * This component is used by a Grantee to take over emergency access of a Grantor's account
@@ -109,7 +111,7 @@ export class EmergencyAccessTakeoverDialogComponent implements OnInit {
       });
     }
 
-    this.dialogRef.close(EmergencyAccessTakeoverDialogResultType.Done);
+    this.dialogRef.close(EmergencyAccessTakeoverDialogResultTypes.Done);
   }
 
   /**
