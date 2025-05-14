@@ -96,7 +96,7 @@ export class UpdateBadge {
       return;
     }
 
-    const atRiskPasswordTasks = await firstValueFrom(
+    const allAtRiskPasswordTasks = await firstValueFrom(
       this.taskService
         .pendingTasks$(activeUserId)
         .pipe(
@@ -104,9 +104,15 @@ export class UpdateBadge {
         ),
     );
 
-    // Pending at risk tasks do not depend on the badge counter setting and should always be shown
-    if (atRiskPasswordTasks.length > 0) {
-      await this.setBadgeText("!");
+    const ciphers = await this.cipherService.getAllDecryptedForUrl(opts?.tab?.url, activeUserId);
+
+    const hasAtRiskPasswordForTab = allAtRiskPasswordTasks.some((task) =>
+      ciphers.some((cipher) => cipher.id === task.cipherId),
+    );
+
+    // Pending at risk tasks should always be shown when present, disregarding the badge counter setting
+    if (hasAtRiskPasswordForTab) {
+      await this.setBadgeText("!", opts?.tab?.id);
       await this.setBadgeBackgroundColor("#cb263a"); // equivalent to danger-600
       return;
     }
@@ -116,7 +122,6 @@ export class UpdateBadge {
       return;
     }
 
-    const ciphers = await this.cipherService.getAllDecryptedForUrl(opts?.tab?.url, activeUserId);
     let countText = ciphers.length == 0 ? "" : ciphers.length.toString();
     if (ciphers.length > 9) {
       countText = "9+";
