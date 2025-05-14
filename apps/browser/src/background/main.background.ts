@@ -288,7 +288,7 @@ import { BrowserStorageServiceProvider } from "../platform/storage/browser-stora
 import { OffscreenStorageService } from "../platform/storage/offscreen-storage.service";
 import { SyncServiceListener } from "../platform/sync/sync-service.listener";
 import { fromChromeRuntimeMessaging } from "../platform/utils/from-chrome-runtime-messaging";
-import { CXPBrowserService } from "../tools/cxp/CXPBrowserService";
+import { CXPBrowserService } from "../tools/cxp/cxp-browser.service";
 import { VaultFilterService } from "../vault/services/vault-filter.service";
 
 import CommandsBackground from "./commands.background";
