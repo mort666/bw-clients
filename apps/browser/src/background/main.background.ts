@@ -288,6 +288,7 @@ import { BrowserStorageServiceProvider } from "../platform/storage/browser-stora
 import { OffscreenStorageService } from "../platform/storage/offscreen-storage.service";
 import { SyncServiceListener } from "../platform/sync/sync-service.listener";
 import { fromChromeRuntimeMessaging } from "../platform/utils/from-chrome-runtime-messaging";
+import { CXPBrowserService } from "../tools/cxp/CXPBrowserService";
 import { VaultFilterService } from "../vault/services/vault-filter.service";
 
 import CommandsBackground from "./commands.background";
@@ -431,6 +432,7 @@ export default class MainBackground {
   private nativeMessagingBackground: NativeMessagingBackground;
 
   private popupViewCacheBackgroundService: PopupViewCacheBackgroundService;
+  private cxpService: CXPBrowserService;
 
   constructor() {
     // Services
@@ -1334,6 +1336,8 @@ export default class MainBackground {
       this.authService,
       this.logService,
     );
+
+    this.cxpService = new CXPBrowserService();
   }
 
   async bootstrap() {
@@ -1384,6 +1388,7 @@ export default class MainBackground {
     this.webRequestBackground?.startListening();
     this.syncServiceListener?.listener$().subscribe();
     await this.autoSubmitLoginBackground.init();
+    this.cxpService.init();
 
     if (
       BrowserApi.isManifestVersion(2) &&
