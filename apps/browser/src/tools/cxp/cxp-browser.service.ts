@@ -20,7 +20,7 @@ export class CXPBrowserService {
           supportedVersions: ["1.0"],
           exportRequest: {
             payload: "base64",
-            importerUsername: "aaberg@bitwarden.com",
+            importerUsername: "aaberg@example.com",
             importerUrl: "https://bitwarden.com/.well-known/cxp.json",
             requestSignature: "base64",
           },
