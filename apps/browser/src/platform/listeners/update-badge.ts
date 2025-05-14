@@ -1,6 +1,6 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { firstValueFrom } from "rxjs";
+import { firstValueFrom, map } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
@@ -9,6 +9,7 @@ import { getOptionalUserId } from "@bitwarden/common/auth/services/account.servi
 import { BadgeSettingsServiceAbstraction } from "@bitwarden/common/autofill/services/badge-settings.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
+import { SecurityTaskType, TaskService } from "@bitwarden/common/vault/tasks";
 
 import MainBackground from "../../background/main.background";
 import IconDetails from "../../vault/background/models/icon-details";
@@ -25,6 +26,7 @@ export class UpdateBadge {
   private badgeSettingsService: BadgeSettingsServiceAbstraction;
   private cipherService: CipherService;
   private accountService: AccountService;
+  private taskService: TaskService;
   private badgeAction: typeof chrome.action | typeof chrome.browserAction;
   private sidebarAction: OperaSidebarAction | FirefoxSidebarAction;
   private win: Window & typeof globalThis;
@@ -38,6 +40,7 @@ export class UpdateBadge {
     this.authService = services.authService;
     this.cipherService = services.cipherService;
     this.accountService = services.accountService;
+    this.taskService = services.taskService;
   }
 
   async run(opts?: { tabId?: number; windowId?: number }): Promise<void> {
@@ -86,15 +89,30 @@ export class UpdateBadge {
   async setUnlocked(opts: BadgeOptions) {
     await this.setBadgeIcon("");
 
-    const enableBadgeCounter = await firstValueFrom(this.badgeSettingsService.enableBadgeCounter$);
-    if (!enableBadgeCounter) {
-      return;
-    }
-
     const activeUserId = await firstValueFrom(
       this.accountService.activeAccount$.pipe(getOptionalUserId),
     );
     if (!activeUserId) {
+      return;
+    }
+
+    const pendingSecurityTasks = await firstValueFrom(
+      this.taskService
+        .pendingTasks$(activeUserId)
+        .pipe(
+          map((tasks) => tasks.filter((t) => t.type === SecurityTaskType.UpdateAtRiskCredential)),
+        ),
+    );
+
+    // Pending security tasks do not depend on the badge counter setting and should always be shown
+    if (pendingSecurityTasks.length > 0) {
+      await this.setBadgeText("!");
+      await this.setBadgeBackgroundColor("#cb263a"); // equivalent to danger-600
+      return;
+    }
+
+    const enableBadgeCounter = await firstValueFrom(this.badgeSettingsService.enableBadgeCounter$);
+    if (!enableBadgeCounter) {
       return;
     }
 
