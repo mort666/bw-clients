@@ -130,13 +130,13 @@ export default {
   ],
   args: {
     InputPasswordFlow: {
-      ChangePasswordDelegation: InputPasswordFlow.ChangePasswordDelegation,
       SetInitialPasswordAccountRegistration:
         InputPasswordFlow.SetInitialPasswordAccountRegistration,
       SetInitialPasswordAuthedUser: InputPasswordFlow.SetInitialPasswordAuthedUser,
       ChangePassword: InputPasswordFlow.ChangePassword,
       ChangePasswordWithOptionalUserKeyRotation:
         InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation,
+      ChangePasswordDelegation: InputPasswordFlow.ChangePasswordDelegation,
     },
     userId: "1" as UserId,
     email: "user@email.com",

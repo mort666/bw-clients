@@ -34,6 +34,7 @@ type EmergencyAccessTakeoverDialogData = {
   emergencyAccessId: string;
 };
 
+// eslint-disable-next-line @bitwarden/platform/no-enums
 export enum EmergencyAccessTakeoverDialogResultType {
   Done = "done",
 }
