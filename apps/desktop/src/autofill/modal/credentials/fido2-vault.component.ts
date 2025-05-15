@@ -23,11 +23,11 @@ import {
 } from "@bitwarden/components";
 import { PasswordRepromptService } from "@bitwarden/vault";
 
+import { DesktopSettingsService } from "../../../platform/services/desktop-settings.service";
 import {
   DesktopFido2UserInterfaceService,
   DesktopFido2UserInterfaceSession,
-} from "../../autofill/services/desktop-fido2-user-interface.service";
-import { DesktopSettingsService } from "../../platform/services/desktop-settings.service";
+} from "../../services/desktop-fido2-user-interface.service";
 
 @Component({
   standalone: true,
@@ -53,6 +53,7 @@ export class Fido2VaultComponent implements OnInit, OnDestroy {
   private ciphersSubject = new BehaviorSubject<CipherView[]>([]);
   ciphers$: Observable<CipherView[]> = this.ciphersSubject.asObservable();
   private cipherIdsSubject = new BehaviorSubject<string[]>([]);
+  protected containsExcludedCiphers: boolean = false;
   cipherIds$: Observable<string[]>;
   readonly Icons = { BitwardenShield };
 
@@ -91,7 +92,9 @@ export class Fido2VaultComponent implements OnInit, OnDestroy {
   }
 
   async chooseCipher(cipher: CipherView) {
-    if (
+    if (this.containsExcludedCiphers) {
+      this.session?.confirmChosenCipher(cipher.id, false);
+    } else if (
       cipher.reprompt !== CipherRepromptType.None &&
       !(await this.passwordRepromptService.showPasswordPrompt())
     ) {
