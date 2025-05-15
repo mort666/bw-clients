@@ -4,13 +4,13 @@ import { FormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
 import {
   BehaviorSubject,
-  combineLatest,
   debounceTime,
   firstValueFrom,
   map,
   Observable,
   of,
   switchMap,
+  zip,
 } from "rxjs";
 
 import {
@@ -119,7 +119,7 @@ export class AllApplicationsComponent implements OnInit {
 
       this.dataService.fetchApplicationsReportFromCache(organizationId as OrganizationId);
 
-      combineLatest([
+      zip([
         this.dataService.applications$,
         this.dataService.appsSummary$,
         this.dataService.isReportFromArchive$,
@@ -138,7 +138,7 @@ export class AllApplicationsComponent implements OnInit {
           }),
           takeUntilDestroyed(this.destroyRef),
         )
-        .subscribe(({ report, summary, isReportFromArchive, organization }) => {
+        .subscribe(({ report, summary, criticalApps, isReportFromArchive, organization }) => {
           if (report) {
             this.dataSource.data = report;
             this.applicationSummary = summary;
@@ -148,11 +148,11 @@ export class AllApplicationsComponent implements OnInit {
             this.organization = organization;
           }
 
-          if (!isReportFromArchive && report && organization) {
+          if (!isReportFromArchive && report && organization && summary && criticalApps) {
             this.atRiskInsightsReport.next({
               data: report,
               organization: organization,
-              summary: this.applicationSummary,
+              summary: summary,
             });
           }
         });
