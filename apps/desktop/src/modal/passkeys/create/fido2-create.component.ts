@@ -8,6 +8,7 @@ import { BitwardenShield } from "@bitwarden/auth/angular";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
+import { Fido2Utils } from "@bitwarden/common/platform/services/fido2/fido2-utils";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
@@ -24,6 +25,7 @@ import {
 } from "@bitwarden/components";
 import { PasswordRepromptService } from "@bitwarden/vault";
 
+import { DesktopAutofillService } from "../../../autofill/services/desktop-autofill.service";
 import {
   DesktopFido2UserInterfaceService,
   DesktopFido2UserInterfaceSession,
@@ -59,6 +61,7 @@ export class Fido2CreateComponent implements OnInit, OnDestroy {
     private readonly fido2UserInterfaceService: DesktopFido2UserInterfaceService,
     private readonly accountService: AccountService,
     private readonly cipherService: CipherService,
+    private readonly desktopAutofillService: DesktopAutofillService,
     private readonly dialogService: DialogService,
     private readonly domainSettingsService: DomainSettingsService,
     private readonly logService: LogService,
@@ -69,6 +72,7 @@ export class Fido2CreateComponent implements OnInit, OnDestroy {
   async ngOnInit() {
     await this.accountService.setShowHeader(false);
     this.session = this.fido2UserInterfaceService.getCurrentSession();
+    const lastRegistrationRequest = this.desktopAutofillService.lastRegistrationRequest;
     const rpid = await this.session.getRpId();
     const equivalentDomains = await firstValueFrom(
       this.domainSettingsService.getUrlEquivalentDomains(rpid),
@@ -81,13 +85,13 @@ export class Fido2CreateComponent implements OnInit, OnDestroy {
       .getAllDecrypted(activeUserId)
       .then((ciphers) => {
         const relevantCiphers = ciphers.filter((cipher) => {
-          if (!cipher.login || !cipher.login.hasUris) {
-            return false;
-          }
+          const userHandle = Fido2Utils.bufferToString(
+            new Uint8Array(lastRegistrationRequest.userHandle),
+          );
 
           return (
             cipher.login.matchesUri(rpid, equivalentDomains) &&
-            (!cipher.login.fido2Credentials || cipher.login.fido2Credentials.length === 0)
+            Fido2Utils.cipherHasNoOtherPasskeys(cipher, userHandle)
           );
         });
         this.ciphersSubject.next(relevantCiphers);
@@ -100,11 +104,21 @@ export class Fido2CreateComponent implements OnInit, OnDestroy {
   }
 
   async addPasskeyToCipher(cipher: CipherView) {
-    const userVerified = cipher.reprompt
-      ? await this.passwordRepromptService.showPasswordPrompt()
-      : true;
+    let isConfirmed = true;
 
-    this.session.notifyConfirmCreateCredential(userVerified, cipher);
+    if (cipher.login.hasFido2Credentials) {
+      isConfirmed = await this.dialogService.openSimpleDialog({
+        title: { key: "overwritePasskey" },
+        content: { key: "alreadyContainsPasskey" },
+        type: "warning",
+      });
+    }
+
+    if (cipher.reprompt) {
+      isConfirmed = await this.passwordRepromptService.showPasswordPrompt();
+    }
+
+    this.session.notifyConfirmCreateCredential(isConfirmed, cipher);
   }
 
   async confirmPasskey() {
