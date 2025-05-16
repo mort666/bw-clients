@@ -10,7 +10,11 @@ import { LogService } from "@bitwarden/common/platform/abstractions/log.service"
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { UserId } from "@bitwarden/common/types/guid";
 import { UserKey } from "@bitwarden/common/types/key";
-import { KeyService, SyncedUnlockStateCommands } from "@bitwarden/key-management";
+import {
+  KeyService,
+  SyncedUnlockStateCommands,
+  SyncedUnlockStateServiceAbstraction,
+} from "@bitwarden/key-management";
 
 import { NativeMessagingBackground } from "../../background/nativeMessaging.background";
 
@@ -23,33 +27,50 @@ export class BackgroundSyncedUnlockService extends SyncedUnlockService {
     private accountService: AccountService,
     private authService: AuthService,
     private vaultTimeoutService: VaultTimeoutService,
+    private syncedUnlockStateService: SyncedUnlockStateServiceAbstraction,
   ) {
     super();
     timer(0, 1000)
       .pipe(
         concatMap(async () => {
           if (this.nativeMessagingBackground().connected) {
-            const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
-            if (activeAccount) {
-              const desktopAccountStatus = await this.getUserStatusFromDesktop(activeAccount.id);
-              const localAccountStatus = await firstValueFrom(
-                this.authService.authStatusFor$(activeAccount.id),
-              );
-              if (
-                desktopAccountStatus === AuthenticationStatus.Locked &&
-                localAccountStatus === AuthenticationStatus.Unlocked
-              ) {
-                await this.vaultTimeoutService.lock(activeAccount.id);
-              }
-              if (
-                desktopAccountStatus === AuthenticationStatus.Unlocked &&
-                localAccountStatus === AuthenticationStatus.Locked
-              ) {
-                const userKey = await this.getUserKeyFromDesktop(activeAccount.id);
-                if (userKey) {
-                  await this.keyService.setUserKey(userKey, activeAccount.id);
+            if (!(await firstValueFrom(this.syncedUnlockStateService.syncedUnlockEnabled$))) {
+              return;
+            }
+
+            try {
+              const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
+              if (activeAccount) {
+                const desktopAccountStatus = await Promise.race([
+                  this.getUserStatusFromDesktop(activeAccount.id),
+                  new Promise((resolve) =>
+                    setTimeout(() => resolve(AuthenticationStatus.Locked), 5000),
+                  ),
+                ]);
+                const localAccountStatus = await firstValueFrom(
+                  this.authService.authStatusFor$(activeAccount.id),
+                );
+                this.logService.info(
+                  `Synced unlock: ${activeAccount.id} - Desktop: ${desktopAccountStatus} - Local: ${localAccountStatus}`,
+                );
+                if (
+                  desktopAccountStatus === AuthenticationStatus.Locked &&
+                  localAccountStatus === AuthenticationStatus.Unlocked
+                ) {
+                  await this.vaultTimeoutService.lock(activeAccount.id);
+                }
+                if (
+                  desktopAccountStatus === AuthenticationStatus.Unlocked &&
+                  localAccountStatus === AuthenticationStatus.Locked
+                ) {
+                  const userKey = await this.getUserKeyFromDesktop(activeAccount.id);
+                  if (userKey) {
+                    await this.keyService.setUserKey(userKey, activeAccount.id);
+                  }
                 }
               }
+            } catch (e) {
+              this.logService.error("Error in synced unlock check", e);
             }
           }
         }),
@@ -58,10 +79,7 @@ export class BackgroundSyncedUnlockService extends SyncedUnlockService {
   }
 
   async isConnected(): Promise<boolean> {
-    this.logService.info("abc");
-    const a = this.nativeMessagingBackground().connected;
-    this.logService.info("aaaaa", a);
-    return a;
+    return this.nativeMessagingBackground().connected;
   }
 
   async lock(userId: UserId): Promise<void> {

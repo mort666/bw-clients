@@ -919,7 +919,6 @@ export default class MainBackground {
     this.vaultSettingsService = new VaultSettingsService(this.stateProvider);
 
     const syncedUnlockStateService = new DefaultSyncedUnlockStateService(this.stateProvider);
-
     this.vaultTimeoutService = new VaultTimeoutService(
       this.accountService,
       this.masterPasswordService,
@@ -948,6 +947,7 @@ export default class MainBackground {
       this.accountService,
       this.authService,
       this.vaultTimeoutService,
+      syncedUnlockStateService,
     );
 
     this.containerService = new ContainerService(this.keyService, this.encryptService);
