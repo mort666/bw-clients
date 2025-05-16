@@ -4,7 +4,8 @@ import { combineLatest, concatMap, filter, firstValueFrom, map, timeout } from "
 
 import { CollectionService } from "@bitwarden/admin-console/common";
 import { LogoutReason } from "@bitwarden/auth/common";
-import { BiometricsService } from "@bitwarden/key-management";
+import { ClientType } from "@bitwarden/common/enums";
+import { BiometricsService, SyncedUnlockStateServiceAbstraction } from "@bitwarden/key-management";
 
 import { SearchService } from "../../../abstractions/search.service";
 import { AccountService } from "../../../auth/abstractions/account.service";
@@ -43,6 +44,7 @@ export class VaultTimeoutService implements VaultTimeoutServiceAbstraction {
     private taskSchedulerService: TaskSchedulerService,
     protected logService: LogService,
     private biometricService: BiometricsService,
+    private syncedUnlockService: SyncedUnlockStateServiceAbstraction,
     private lockedCallback: (userId?: string) => Promise<void> = null,
     private loggedOutCallback: (
       logoutReason: LogoutReason,
@@ -75,6 +77,13 @@ export class VaultTimeoutService implements VaultTimeoutServiceAbstraction {
   }
 
   async checkVaultTimeout(): Promise<void> {
+    if (
+      (await firstValueFrom(this.syncedUnlockService.syncedUnlockEnabled$)) &&
+      this.platformUtilsService.getClientType() === ClientType.Browser
+    ) {
+      return;
+    }
+
     // Get whether or not the view is open a single time so it can be compared for each user
     const isViewOpen = await this.platformUtilsService.isViewOpen();
 

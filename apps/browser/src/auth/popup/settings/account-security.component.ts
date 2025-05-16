@@ -9,6 +9,7 @@ import {
   combineLatest,
   concatMap,
   distinctUntilChanged,
+  filter,
   firstValueFrom,
   map,
   Observable,
@@ -30,6 +31,7 @@ import { getFirstPolicy } from "@bitwarden/common/admin-console/services/policy/
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
+import { SyncedUnlockService } from "@bitwarden/common/key-management/synced-unlock/abstractions/synced-unlock.service";
 import {
   VaultTimeout,
   VaultTimeoutAction,
@@ -63,6 +65,7 @@ import {
   BiometricsService,
   BiometricStateService,
   BiometricsStatus,
+  SyncedUnlockStateServiceAbstraction,
 } from "@bitwarden/key-management";
 
 import { BiometricErrors, BiometricErrorTypes } from "../../../models/biometricErrors";
@@ -110,6 +113,7 @@ export class AccountSecurityComponent implements OnInit, OnDestroy {
   biometricUnavailabilityReason: string;
   showChangeMasterPass = true;
   pinEnabled$: Observable<boolean> = of(true);
+  isConnected = false;
 
   form = this.formBuilder.group({
     vaultTimeout: [null as VaultTimeout | null],
@@ -118,6 +122,7 @@ export class AccountSecurityComponent implements OnInit, OnDestroy {
     pinLockWithMasterPassword: false,
     biometric: false,
     enableAutoBiometricsPrompt: true,
+    syncUnlockWithDesktop: false,
   });
 
   private refreshTimeoutSettings$ = new BehaviorSubject<void>(undefined);
@@ -142,6 +147,8 @@ export class AccountSecurityComponent implements OnInit, OnDestroy {
     private biometricStateService: BiometricStateService,
     private toastService: ToastService,
     private biometricsService: BiometricsService,
+    private syncedUnlockService: SyncedUnlockService,
+    private syncedUnlockStateService: SyncedUnlockStateServiceAbstraction,
   ) {}
 
   async ngOnInit() {
@@ -219,11 +226,34 @@ export class AccountSecurityComponent implements OnInit, OnDestroy {
       enableAutoBiometricsPrompt: await firstValueFrom(
         this.biometricStateService.promptAutomatically$,
       ),
+      syncUnlockWithDesktop: await firstValueFrom(
+        this.syncedUnlockStateService.syncedUnlockEnabled$,
+      ),
     };
     this.form.patchValue(initialValues, { emitEvent: false });
 
+    this.form.controls.syncUnlockWithDesktop.valueChanges
+      .pipe(
+        concatMap(async (enabled) => {
+          if (enabled) {
+            const granted = await BrowserApi.requestPermission({
+              permissions: ["nativeMessaging"],
+            });
+            if (!granted) {
+              this.form.controls.syncUnlockWithDesktop.setValue(false);
+              return;
+            }
+          }
+
+          await this.syncedUnlockStateService.setSyncedUnlockEnabled(enabled);
+        }),
+        takeUntil(this.destroy$),
+      )
+      .subscribe();
+
     timer(0, 1000)
       .pipe(
+        filter(() => !this.form.controls.syncUnlockWithDesktop.value),
         switchMap(async () => {
           const status = await this.biometricsService.getBiometricsStatusForUser(activeAccount.id);
           const biometricSettingAvailable = await this.biometricsService.canEnableBiometricUnlock();

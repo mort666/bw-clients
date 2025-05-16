@@ -11,7 +11,21 @@
         <h2 bitTypography="h6">{{ "unlockMethods" | i18n }}</h2>
       </bit-section-header>
       <bit-card>
-        <bit-form-control [disableMargin]="!((pinEnabled$ | async) || this.form.value.pin)">
+        <bit-form-control [disableMargin]="this.form.value.syncUnlockWithDesktop">
+          <input
+            bitCheckbox
+            id="syncUnlockWithDesktop"
+            type="checkbox"
+            formControlName="syncUnlockWithDesktop"
+          />
+          <bit-label for="syncUnlockWithDesktop" class="tw-whitespace-normal">
+            {{ "syncUnlockWithDesktop" | i18n }}
+          </bit-label>
+        </bit-form-control>
+        <bit-form-control
+          [disableMargin]="!((pinEnabled$ | async) || this.form.value.pin)"
+          *ngIf="!this.form.value.syncUnlockWithDesktop"
+        >
           <input bitCheckbox id="biometric" type="checkbox" formControlName="biometric" />
           <bit-label for="biometric" class="tw-whitespace-normal">{{
             "unlockWithBiometrics" | i18n
@@ -23,7 +37,7 @@
         <bit-form-control
           class="tw-pl-5"
           [disableMargin]="!((pinEnabled$ | async) || this.form.value.pin)"
-          *ngIf="this.form.value.biometric"
+          *ngIf="this.form.value.biometric && !this.form.value.syncUnlockWithDesktop"
         >
           <input
             bitCheckbox
@@ -37,7 +51,9 @@
         </bit-form-control>
         <bit-form-control
           [disableMargin]="!(this.form.value.pin && showMasterPasswordOnClientRestartOption)"
-          *ngIf="(pinEnabled$ | async) || this.form.value.pin"
+          *ngIf="
+            ((pinEnabled$ | async) || this.form.value.pin) && !this.form.value.syncUnlockWithDesktop
+          "
         >
           <input bitCheckbox id="pin" type="checkbox" formControlName="pin" />
           <bit-label for="pin" class="tw-whitespace-normal">{{ "unlockWithPin" | i18n }}</bit-label>
@@ -45,7 +61,11 @@
         <bit-form-control
           class="tw-pl-5"
           disableMargin
-          *ngIf="this.form.value.pin && showMasterPasswordOnClientRestartOption"
+          *ngIf="
+            this.form.value.pin &&
+            showMasterPasswordOnClientRestartOption &&
+            !this.form.value.syncUnlockWithDesktop
+          "
         >
           <input
             bitCheckbox
@@ -70,10 +90,11 @@
           [vaultTimeoutOptions]="vaultTimeoutOptions"
           [formControl]="form.controls.vaultTimeout"
           ngDefaultControl
+          *ngIf="!this.form.value.syncUnlockWithDesktop"
         >
         </auth-vault-timeout-input>
 
-        <bit-form-field disableMargin>
+        <bit-form-field disableMargin *ngIf="!this.form.value.syncUnlockWithDesktop">
           <bit-label for="vaultTimeoutAction">{{ "vaultTimeoutAction1" | i18n }}</bit-label>
           <bit-select id="vaultTimeoutAction" formControlName="vaultTimeoutAction">
             <bit-option
@@ -89,8 +110,14 @@
           </bit-hint>
         </bit-form-field>
 
-        <bit-hint *ngIf="hasVaultTimeoutPolicy" class="tw-mt-4">
+        <bit-hint
+          *ngIf="hasVaultTimeoutPolicy && !this.form.value.syncUnlockWithDesktop"
+          class="tw-mt-4"
+        >
           {{ "vaultTimeoutPolicyAffectingOptions" | i18n }}
+        </bit-hint>
+        <bit-hint *ngIf="this.form.value.syncUnlockWithDesktop">
+          The desktop app's vault timeout settings will be used to lock the vault on this device.
         </bit-hint>
       </bit-card>
     </bit-section>

@@ -2161,6 +2161,9 @@
   "tooManyInvalidPinEntryAttemptsLoggingOut": {
     "message": "Too many invalid PIN entry attempts. Logging out."
   },
+  "syncUnlockWithDesktop": {
+    "message": "Synchronize unlock state with desktop app."
+  },
   "unlockWithBiometrics": {
     "message": "Unlock with biometrics"
   },
