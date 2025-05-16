@@ -1,40 +1,49 @@
+import createEmotion from "@emotion/css/create-instance";
 import { html, nothing } from "lit";
 
 import { Theme } from "@bitwarden/common/platform/enums";
 
+import { spacing, themes } from "../../constants/styles";
 import { Warning } from "../../illustrations";
-import { iconContainerStyles, notificationConfirmationBodyStyles } from "../confirmation/body";
 
 import { AtRiskNotificationMessage } from "./message";
 
-export const componentClassPrefix = "notification-confirmation-body";
+export const componentClassPrefix = "at-risk-notification-body";
+
+const { css } = createEmotion({
+  key: componentClassPrefix,
+});
 
 export type AtRiskNotificationBodyProps = {
-  confirmationMessage: string;
-  messageDetails?: string;
+  riskMessage: string;
   theme: Theme;
-  handleOpenVault: (e: Event) => void;
 };
 
-export function AtRiskNotificationBody({
-  confirmationMessage,
-  messageDetails,
-  theme,
-  handleOpenVault,
-}: AtRiskNotificationBodyProps) {
-  const showConfirmationMessage = confirmationMessage || messageDetails;
-
+export function AtRiskNotificationBody({ riskMessage, theme }: AtRiskNotificationBodyProps) {
   return html`
-    <div class=${notificationConfirmationBodyStyles({ theme })}>
-      <div class=${iconContainerStyles(true)}>${Warning()}</div>
-      ${showConfirmationMessage
+    <div class=${atRiskNotificationBodyStyles({ theme })}>
+      <div class=${iconContainerStyles}>${Warning()}</div>
+      ${riskMessage
         ? AtRiskNotificationMessage({
-            message: confirmationMessage,
-            messageDetails,
+            message: riskMessage,
             theme,
-            handleClick: handleOpenVault,
           })
         : nothing}
     </div>
   `;
 }
+
+const iconContainerStyles = css`
+  > svg {
+    width: 50px;
+    height: auto;
+  }
+`;
+const atRiskNotificationBodyStyles = ({ theme }: { theme: Theme }) => css`
+  gap: ${spacing[4]};
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: ${themes[theme].background.alt};
+  padding: 12px;
+`;

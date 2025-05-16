@@ -1,68 +1,44 @@
+import { css } from "@emotion/css";
 import { html, nothing } from "lit";
 
 import { Theme } from "@bitwarden/common/platform/enums";
 
-import {
-  AdditionalMessageStyles,
-  notificationConfirmationButtonTextStyles,
-  notificationConfirmationMessageStyles,
-} from "../confirmation/message";
+import { themes } from "../../constants/styles";
 
 export type AtRiskNotificationMessageProps = {
-  buttonAria?: string;
-  buttonText?: string;
-  itemName?: string;
   message?: string;
-  messageDetails?: string;
-  handleClick: (e: Event) => void;
   theme: Theme;
 };
 
-export function AtRiskNotificationMessage({
-  buttonAria,
-  buttonText,
-  message,
-  messageDetails,
-  handleClick,
-  theme,
-}: AtRiskNotificationMessageProps) {
+export function AtRiskNotificationMessage({ message, theme }: AtRiskNotificationMessageProps) {
   return html`
     <div>
-      ${message || buttonText
+      ${message
         ? html`
-            <span
-              title=${message || buttonText}
-              class=${notificationConfirmationMessageStyles(theme)}
-            >
-              ${message || nothing}
-              ${buttonText
-                ? html`
-                    <a
-                      title=${buttonText}
-                      class=${notificationConfirmationButtonTextStyles(theme)}
-                      @click=${handleClick}
-                      @keydown=${(e: KeyboardEvent) => handleButtonKeyDown(e, () => handleClick(e))}
-                      aria-label=${buttonAria}
-                      tabindex="0"
-                      role="button"
-                    >
-                      ${buttonText}
-                    </a>
-                  `
-                : nothing}
+            <span title=${message} class=${atRiskNotificationMessageStyles(theme)}>
+              ${message}
             </span>
           `
-        : nothing}
-      ${messageDetails
-        ? html`<div class=${AdditionalMessageStyles({ theme })}>${messageDetails}</div>`
         : nothing}
     </div>
   `;
 }
 
-function handleButtonKeyDown(event: KeyboardEvent, handleClick: () => void) {
-  if (event.key === "Enter" || event.key === " ") {
-    event.preventDefault();
-    handleClick();
-  }
-}
+const baseTextStyles = css`
+  overflow-x: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  line-height: 24px;
+  font-family: Roboto, sans-serif;
+  font-size: 16px;
+`;
+
+const atRiskNotificationMessageStyles = (theme: Theme) => css`
+  ${baseTextStyles}
+
+  color: ${themes[theme].text.main};
+  font-weight: 400;
+  white-space: normal;
+  word-break: break-word;
+  display: inline;
+`;

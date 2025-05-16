@@ -59,13 +59,13 @@ export function NotificationConfirmationBody({
   `;
 }
 
-export const iconContainerStyles = (error?: string | boolean) => css`
+const iconContainerStyles = (error?: string) => css`
   > svg {
     width: ${!error ? "50px" : "40px"};
     height: auto;
   }
 `;
-export const notificationConfirmationBodyStyles = ({ theme }: { theme: Theme }) => css`
+const notificationConfirmationBodyStyles = ({ theme }: { theme: Theme }) => css`
   gap: ${spacing[4]};
   display: flex;
   align-items: center;

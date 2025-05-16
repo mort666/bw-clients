@@ -1,3 +1,4 @@
+import { css } from "@emotion/css";
 import { html } from "lit";
 
 import { Theme } from "@bitwarden/common/platform/enums";
@@ -5,8 +6,7 @@ import { Theme } from "@bitwarden/common/platform/enums";
 import { ActionButton } from "../../buttons/action-button";
 import { AdditionalTasksButtonContent } from "../../buttons/additional-tasks/button-content";
 import { I18n } from "../../common-types";
-// Utilizes default notification styles, not confirmation.
-import { notificationFooterStyles } from "../footer";
+import { spacing } from "../../constants/styles";
 
 export type AtRiskNotificationFooterProps = {
   i18n: I18n;
@@ -19,7 +19,7 @@ export function AtRiskNotificationFooter({
   theme,
   passwordChangeUri,
 }: AtRiskNotificationFooterProps) {
-  return html`<div class=${notificationFooterStyles({ isChangeNotification: false })}>
+  return html`<div class=${atRiskNotificationFooterStyles}>
     ${passwordChangeUri &&
     ActionButton({
       handleClick: () => {
@@ -31,3 +31,12 @@ export function AtRiskNotificationFooter({
     })}
   </div>`;
 }
+
+const atRiskNotificationFooterStyles = css`
+  display: flex;
+  padding: ${spacing[2]} ${spacing[4]} ${spacing[4]} ${spacing[4]};
+
+  :last-child {
+    border-radius: 0 0 ${spacing["4"]} ${spacing["4"]};
+  }
+`;

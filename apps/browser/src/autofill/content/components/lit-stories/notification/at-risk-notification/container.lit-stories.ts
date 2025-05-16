@@ -2,7 +2,6 @@ import { Meta, StoryObj } from "@storybook/web-components";
 
 import { ThemeTypes } from "@bitwarden/common/platform/enums";
 
-import { NotificationTypes } from "../../../../../notification/abstractions/notification-bar";
 import {
   AtRiskNotification,
   AtRiskNotificationProps,
@@ -10,19 +9,15 @@ import {
 import { mockI18n, mockBrowserI18nGetMessage } from "../../mock-data";
 
 export default {
-  title: "Components/Notifications/AtRiskNotification",
+  title: "Components/Notifications/At-Risk Notification",
   argTypes: {
-    error: { control: "text" },
     theme: { control: "select", options: [...Object.values(ThemeTypes)] },
-    type: { control: "select", options: [NotificationTypes.AtRiskPassword] },
   },
   args: {
-    error: "",
-    type: NotificationTypes.AtRiskPassword,
     theme: ThemeTypes.Light,
     handleCloseNotification: () => alert("Close notification action triggered"),
     params: {
-      passwordChangeUri: "https://webtests.dev", // Remove to see "navigate" version of notification
+      passwordChangeUri: "webtests.dev", // Remove to see "navigate" version of notification
       organizationName: "Acme Co.",
     },
     i18n: mockI18n,
