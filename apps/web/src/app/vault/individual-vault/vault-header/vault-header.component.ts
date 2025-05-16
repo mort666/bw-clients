@@ -156,7 +156,9 @@ export class VaultHeaderComponent implements OnInit {
   }
 
   protected get icon() {
-    return this.filter.collectionId && this.filter.collectionId !== All ? "bwi-collection" : "";
+    return this.filter.collectionId && this.filter.collectionId !== All
+      ? "bwi-collection-shared"
+      : "";
   }
 
   /**

@@ -77,20 +77,17 @@
         </p>
       } @else {
         <p>{{ "noItemsInList" | i18n }}</p>
-        @if (filter.type !== "trash") {
-          <button type="button" buttonType="primary" bitButton (click)="addCipher()">
-            <i class="bwi bwi-plus-f bwi-fw" aria-hidden="true"></i>
-            {{ "newItem" | i18n }}
-          </button>
-        }
+        <button
+          type="button"
+          buttonType="primary"
+          bitButton
+          (click)="addCipher()"
+          *ngIf="filter.type !== 'trash'"
+        >
+          <i class="bwi bwi-plus bwi-fw" aria-hidden="true"></i>
+          {{ "newItem" | i18n }}
+        </button>
       }
     </div>
   </div>
 </div>
-
-<ng-template #attachments></ng-template>
-<ng-template #folderAddEdit></ng-template>
-<ng-template #cipherAddEdit></ng-template>
-<ng-template #share></ng-template>
-<ng-template #collectionsModal></ng-template>
-<ng-template #updateKeyTemplate></ng-template>

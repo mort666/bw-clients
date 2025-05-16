@@ -34,12 +34,12 @@ import { EventType } from "@bitwarden/common/enums";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { ErrorResponse } from "@bitwarden/common/models/response/error.response";
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { FileDownloadService } from "@bitwarden/common/platform/abstractions/file-download/file-download.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
-import { EncArrayBuffer } from "@bitwarden/common/platform/models/domain/enc-array-buffer";
 import { CipherId, CollectionId, UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
@@ -139,6 +139,7 @@ export class ViewComponent implements OnDestroy, OnInit {
     private billingAccountProfileStateService: BillingAccountProfileStateService,
     protected toastService: ToastService,
     private cipherAuthorizationService: CipherAuthorizationService,
+    protected configService: ConfigService,
   ) {}
 
   ngOnInit() {
@@ -254,7 +255,7 @@ export class ViewComponent implements OnDestroy, OnInit {
 
     try {
       const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
-      await this.cipherService.unarchiveWithServer(this.cipher.id as CipherId, activeUserId)
+      await this.cipherService.unarchiveWithServer(this.cipher.id as CipherId, activeUserId);
       this.toastService.showToast({
         variant: "success",
         title: null,
@@ -514,19 +515,19 @@ export class ViewComponent implements OnDestroy, OnInit {
     }
 
     try {
-      const encBuf = await EncArrayBuffer.fromResponse(response);
-      const key =
-        attachment.key != null
-          ? attachment.key
-          : await this.keyService.getOrgKey(this.cipher.organizationId);
-      const decBuf = await this.encryptService.decryptToBytes(encBuf, key);
+      const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
+      const decBuf = await this.cipherService.getDecryptedAttachmentBuffer(
+        this.cipher.id as CipherId,
+        attachment,
+        response,
+        activeUserId,
+      );
+
       this.fileDownloadService.download({
         fileName: attachment.fileName,
         blobData: decBuf,
       });
-      // FIXME: Remove when updating file. Eslint update
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
+    } catch {
       this.toastService.showToast({
         variant: "error",
         title: null,

@@ -3,7 +3,7 @@ import { html, nothing } from "lit";
 
 import { Theme } from "@bitwarden/common/platform/enums";
 
-import { themes } from "../../constants/styles";
+import { spacing, themes } from "../../constants/styles";
 import { Celebrate, Keyhole, Warning } from "../../illustrations";
 
 import { NotificationConfirmationMessage } from "./message";
@@ -15,21 +15,23 @@ const { css } = createEmotion({
 });
 
 export type NotificationConfirmationBodyProps = {
+  buttonAria: string;
   buttonText: string;
-  itemName: string;
   confirmationMessage: string;
   error?: string;
+  itemName?: string;
   messageDetails?: string;
   tasksAreComplete?: boolean;
   theme: Theme;
-  handleOpenVault: () => void;
+  handleOpenVault: (e: Event) => void;
 };
 
 export function NotificationConfirmationBody({
+  buttonAria,
   buttonText,
-  itemName,
   confirmationMessage,
   error,
+  itemName,
   messageDetails,
   tasksAreComplete,
   theme,
@@ -44,7 +46,9 @@ export function NotificationConfirmationBody({
       <div class=${iconContainerStyles(error)}>${IconComponent({ theme })}</div>
       ${showConfirmationMessage
         ? NotificationConfirmationMessage({
+            buttonAria,
             buttonText,
+            error,
             itemName,
             message: confirmationMessage,
             messageDetails,
@@ -59,11 +63,11 @@ export function NotificationConfirmationBody({
 const iconContainerStyles = (error?: string) => css`
   > svg {
     width: ${!error ? "50px" : "40px"};
-    height: fit-content;
+    height: auto;
   }
 `;
 const notificationConfirmationBodyStyles = ({ theme }: { theme: Theme }) => css`
-  gap: 16px;
+  gap: ${spacing[4]};
   display: flex;
   align-items: center;
   justify-content: flex-start;
