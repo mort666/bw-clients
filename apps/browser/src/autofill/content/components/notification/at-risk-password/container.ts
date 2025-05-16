@@ -38,6 +38,7 @@ export function AtRiskNotification({
     <div class=${notificationContainerStyles(theme)}>
       ${NotificationHeader({
         handleCloseNotification,
+        i18n,
         message: headerMessage,
         theme,
       })}
