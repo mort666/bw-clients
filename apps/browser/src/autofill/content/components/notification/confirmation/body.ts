@@ -48,6 +48,7 @@ export function NotificationConfirmationBody({
         ? NotificationConfirmationMessage({
             buttonAria,
             buttonText,
+            error,
             itemName,
             message: confirmationMessage,
             messageDetails,
@@ -62,7 +63,7 @@ export function NotificationConfirmationBody({
 export const iconContainerStyles = (error?: string | boolean) => css`
   > svg {
     width: ${!error ? "50px" : "40px"};
-    height: fit-content;
+    height: auto;
   }
 `;
 export const notificationConfirmationBodyStyles = ({ theme }: { theme: Theme }) => css`

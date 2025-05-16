@@ -74,6 +74,10 @@ const actionButtonStyles = ({
       background-color: ${themes[theme].primary["700"]};
       color: ${themes[theme].text.contrast};
     }
+    :focus {
+      outline: 2px solid ${themes[theme].primary["600"]};
+      outline-offset: 1px;
+    }
   `}
 
   svg {
