@@ -1,4 +1,4 @@
-import { html } from "lit";
+import { html, nothing } from "lit";
 
 import { ThemeTypes } from "@bitwarden/common/platform/enums";
 
@@ -50,11 +50,13 @@ export function AtRiskNotification({
           organizationName,
         ),
       })}
-      ${AtRiskNotificationFooter({
-        i18n,
-        theme,
-        passwordChangeUri: params?.passwordChangeUri,
-      })}
+      ${passwordChangeUri
+        ? AtRiskNotificationFooter({
+            i18n,
+            theme,
+            passwordChangeUri: params?.passwordChangeUri,
+          })
+        : nothing}
     </div>
   `;
 }
