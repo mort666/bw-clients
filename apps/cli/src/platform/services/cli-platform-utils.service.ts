@@ -112,7 +112,7 @@ export class CliPlatformUtilsService implements PlatformUtilsService {
     return false;
   }
 
-  supportsBlobDownlaods(): boolean {
+  supportsFileDownloads(): boolean {
     return false;
   }
 
