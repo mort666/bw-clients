@@ -1,0 +1,11 @@
+{
+  "extends": "../shared/tsconfig",
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "paths": {
+      "@bitwarden/ui-common": ["../ui/common/src"]
+    }
+  },
+  "include": ["src", "spec"],
+  "exclude": ["node_modules", "dist"]
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "../shared/tsconfig",
+  "compilerOptions": {
+    "paths": {
+      "@bitwarden/i18n-abstractions": ["../i18n-abstractions/src"]
+    }
+  },
+  "include": ["src", "spec"],
+  "exclude": ["node_modules", "dist"]
+}
