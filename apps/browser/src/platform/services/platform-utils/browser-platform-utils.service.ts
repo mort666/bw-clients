@@ -225,7 +225,7 @@ export abstract class BrowserPlatformUtilsService implements PlatformUtilsServic
     return true;
   }
 
-  supportsBlobDownloads(): boolean {
+  supportsFileDownloads(): boolean {
     return false;
   }
 

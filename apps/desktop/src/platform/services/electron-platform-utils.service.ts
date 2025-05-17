@@ -90,7 +90,7 @@ export class ElectronPlatformUtilsService implements PlatformUtilsService {
     return false;
   }
 
-  supportsBlobDownloads(): boolean {
+  supportsFileDownloads(): boolean {
     return false;
   }
 

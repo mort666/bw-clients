@@ -136,7 +136,7 @@ export class WebPlatformUtilsService implements PlatformUtilsService {
   }
 
   // Safari support for blob downloads is inconsistent and requires workarounds
-  supportsBlobDownloads(): boolean {
+  supportsFileDownloads(): boolean {
     return !(this.getDevice() === DeviceType.SafariBrowser);
   }
 

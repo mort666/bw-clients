@@ -33,10 +33,10 @@ export abstract class PlatformUtilsService {
    */
   abstract supportsAutofill(): boolean;
   /**
-   * Returns true if the device supports native blob downloads without
+   * Returns true if the device supports native file downloads without
    * the need for `target="_blank"`
    */
-  abstract supportsBlobDownloads(): boolean;
+  abstract supportsFileDownloads(): boolean;
   /**
    * @deprecated use `@bitwarden/components/ToastService.showToast` instead
    *
