@@ -9,7 +9,6 @@ import {
   combineLatest,
   concatMap,
   distinctUntilChanged,
-  filter,
   firstValueFrom,
   map,
   Observable,
@@ -250,11 +249,35 @@ export class AccountSecurityComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
       )
       .subscribe();
+    this.syncedUnlockStateService.syncedUnlockEnabled$
+      .pipe(
+        map((enabled) => {
+          if (enabled) {
+            this.form.controls.pin.disable({ emitEvent: false });
+            this.form.controls.pinLockWithMasterPassword.disable({ emitEvent: false });
+            this.form.controls.biometric.disable({ emitEvent: false });
+            this.form.controls.enableAutoBiometricsPrompt.disable({ emitEvent: false });
+            this.form.controls.vaultTimeoutAction.disable({ emitEvent: false });
+          } else {
+            this.form.controls.pin.enable({ emitEvent: false });
+            this.form.controls.pinLockWithMasterPassword.enable({ emitEvent: false });
+            this.form.controls.biometric.enable({ emitEvent: false });
+            this.form.controls.enableAutoBiometricsPrompt.enable({ emitEvent: false });
+            this.form.controls.vaultTimeoutAction.enable({ emitEvent: false });
+          }
+        }),
+        takeUntil(this.destroy$),
+      )
+      .subscribe();
 
     timer(0, 1000)
       .pipe(
-        filter(() => !this.form.controls.syncUnlockWithDesktop.value),
         switchMap(async () => {
+          if (this.form.controls.syncUnlockWithDesktop.value) {
+            this.form.controls.biometric.disable({ emitEvent: false });
+            return;
+          }
+
           const status = await this.biometricsService.getBiometricsStatusForUser(activeAccount.id);
           const biometricSettingAvailable = await this.biometricsService.canEnableBiometricUnlock();
           if (!biometricSettingAvailable) {
@@ -394,6 +417,11 @@ export class AccountSecurityComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
       )
       .subscribe(([availableActions, policy]) => {
+        if (this.form.controls.syncUnlockWithDesktop.value) {
+          this.form.controls.vaultTimeoutAction.disable({ emitEvent: false });
+          return;
+        }
+
         if (policy?.data?.action || availableActions.length <= 1) {
           this.form.controls.vaultTimeoutAction.disable({ emitEvent: false });
         } else {
@@ -403,6 +431,10 @@ export class AccountSecurityComponent implements OnInit, OnDestroy {
   }
 
   async saveVaultTimeout(previousValue: VaultTimeout, newValue: VaultTimeout) {
+    if (newValue == null) {
+      return;
+    }
+
     if (newValue === VaultTimeoutStringType.Never) {
       const confirmed = await this.dialogService.openSimpleDialog({
         title: { key: "warning" },

@@ -5,7 +5,7 @@ import { AccountService } from "@bitwarden/common/auth/abstractions/account.serv
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
 import { SyncedUnlockService } from "@bitwarden/common/key-management/synced-unlock/abstractions/synced-unlock.service";
-import { VaultTimeoutService } from "@bitwarden/common/key-management/vault-timeout";
+import { VaultTimeoutService } from "@bitwarden/common/key-management/vault-timeout/services/vault-timeout.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { UserId } from "@bitwarden/common/types/guid";
@@ -33,7 +33,10 @@ export class BackgroundSyncedUnlockService extends SyncedUnlockService {
     timer(0, 1000)
       .pipe(
         concatMap(async () => {
-          if (this.nativeMessagingBackground().connected) {
+          const isConnected = await this.isConnected();
+          // Needed to resolve dependency cycle
+          this.vaultTimeoutService.setDesktopAppConnected(isConnected);
+          if (isConnected) {
             if (!(await firstValueFrom(this.syncedUnlockStateService.syncedUnlockEnabled$))) {
               return;
             }

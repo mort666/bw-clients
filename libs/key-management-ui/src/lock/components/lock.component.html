@@ -8,18 +8,17 @@
   <ng-container *ngIf="!showLocalUnlockOptions">
     <form [bitSubmit]="submit" [formGroup]="desktopUnlockFormGroup">
       <div class="tw-flex tw-flex-col tw-space-y-3">
-        <bit-hint class="tw-text-center"
-          >This user's account is synchronized with the desktop app.</bit-hint
-        >
+        <bit-hint class="tw-text-center">{{ "lockScreenSynchronizedNote" | i18n }}</bit-hint
+>
         <button type="submit" bitButton bitFormButton buttonType="primary" block>
-          Continue in desktop app
+          {{ "lockScreenContinueInDesktop" | i18n }}
         </button>
       </div>
     </form>
   </ng-container>
   <ng-container *ngIf="showLocalUnlockOptions">
-    <bit-hint class="tw-text-center" *ngIf="unlockViaDesktop">
-      This account has unlock synchronization enabled, but the desktop app is not running.
+    <bit-hint class="tw-text-center tw-mb-3" *ngIf="unlockViaDesktop">
+      {{ "lockScreenDesktopNotRunning" | i18n }}
     </bit-hint>
 
     <!-- Biometrics Unlock -->

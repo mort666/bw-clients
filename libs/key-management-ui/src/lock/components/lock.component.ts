@@ -138,7 +138,7 @@ export class LockComponent implements OnInit, OnDestroy {
 
   unlockViaDesktop = false;
   isDesktopOpen = false;
-  showLocalUnlockOptions = false;
+  showLocalUnlockOptions = true;
   desktopUnlockFormGroup: FormGroup = new FormGroup({});
 
   constructor(
@@ -189,6 +189,9 @@ export class LockComponent implements OnInit, OnDestroy {
       await this.desktopOnInit();
     } else if (this.clientType === ClientType.Browser) {
       this.biometricUnlockBtnText = this.lockComponentService.getBiometricsUnlockBtnText();
+      if (await firstValueFrom(this.syncedUnlockStateService.syncedUnlockEnabled$)) {
+        this.showLocalUnlockOptions = false;
+      }
     }
   }
 
