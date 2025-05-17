@@ -857,7 +857,7 @@ export class ApiService implements ApiServiceAbstraction {
   // Sync APIs
 
   async getSync(): Promise<SyncResponse> {
-    const path = !this.platformUtilsService.supportsSyncDomains()
+    const path = !this.platformUtilsService.supportsAutofill()
       ? "/sync?excludeDomains=true"
       : "/sync";
     const r = await this.send("GET", path, null, true, true);

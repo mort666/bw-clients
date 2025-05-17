@@ -72,10 +72,6 @@ export class CliPlatformUtilsService implements PlatformUtilsService {
     return false;
   }
 
-  isDuckDuckGo(): boolean {
-    return false;
-  }
-
   isMacAppStore() {
     return false;
   }
@@ -112,7 +108,11 @@ export class CliPlatformUtilsService implements PlatformUtilsService {
     return false;
   }
 
-  supportsSyncDomains(): boolean {
+  supportsAutofill(): boolean {
+    return false;
+  }
+
+  supportsBlobDownlaods(): boolean {
     return false;
   }
 

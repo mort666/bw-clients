@@ -55,10 +55,6 @@ export class ElectronPlatformUtilsService implements PlatformUtilsService {
     return false;
   }
 
-  isDuckDuckGo(): boolean {
-    return false;
-  }
-
   isMacAppStore(): boolean {
     return ipc.platform.isMacAppStore;
   }
@@ -90,7 +86,11 @@ export class ElectronPlatformUtilsService implements PlatformUtilsService {
     return true;
   }
 
-  supportsSyncDomains(): boolean {
+  supportsAutofill(): boolean {
+    return false;
+  }
+
+  supportsBlobDownloads(): boolean {
     return false;
   }
 

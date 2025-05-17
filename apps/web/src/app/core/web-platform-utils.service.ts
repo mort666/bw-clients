@@ -35,7 +35,9 @@ export class WebPlatformUtilsService implements PlatformUtilsService {
     } else if (navigator.userAgent.indexOf(" Vivaldi/") !== -1) {
       this.browserCache = DeviceType.VivaldiBrowser;
     } else if (
-      navigator.userAgent.indexOf(" Safari/") !== -1 &&
+      // We are only detecting DuckDuckGo browser on macOS currently, as
+      // it is not presenting the Ddg suffix on Windows. DuckDuckGo users
+      // on Windows will be detected as Edge.
       navigator.userAgent.indexOf("Ddg") !== -1
     ) {
       this.browserCache = DeviceType.DuckDuckGoBrowser;
@@ -88,8 +90,8 @@ export class WebPlatformUtilsService implements PlatformUtilsService {
     return this.getDevice() === DeviceType.SafariBrowser;
   }
 
-  isDuckDuckGo(): boolean {
-    return this.getDevice() === DeviceType.DuckDuckGoBrowser;
+  isWebKit(): boolean {
+    return true;
   }
 
   isMacAppStore(): boolean {
@@ -129,8 +131,13 @@ export class WebPlatformUtilsService implements PlatformUtilsService {
     return true;
   }
 
-  supportsSyncDomains(): boolean {
+  supportsAutofill(): boolean {
     return false;
+  }
+
+  // Safari support for blob downloads is inconsistent and requires workarounds
+  supportsBlobDownloads(): boolean {
+    return !(this.getDevice() === DeviceType.SafariBrowser);
   }
 
   showToast(
