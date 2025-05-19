@@ -22,6 +22,7 @@ on:
       - 'main'
       - 'rc'
       - 'hotfix-rc-desktop'
+      - 'nathan/autofill-fix'
     paths:
       - 'apps/desktop/**'
       - 'libs/**'
