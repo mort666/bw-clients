@@ -5,6 +5,8 @@ import { SigningKey, SigningKeyType, VerifyingKey } from "@bitwarden/key-managem
 export class AccountKeysRequest {
   userKeyEncryptedAccountPrivateKey: string;
   accountPublicKey: string;
+
+  // Cleanup: These should be non-optional after the featureflag is rolled out, and users MUST upgrade https://bitwarden.atlassian.net/browse/PM-21768
   signedPublicKeyOwnershipClaim: string | null;
 
   userKeyEncryptedSigningKey: string | null;
