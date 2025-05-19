@@ -1,7 +1,4 @@
-use std::{
-    error::Error,
-    path::PathBuf,
-};
+use std::{error::Error, path::PathBuf};
 
 use futures::{SinkExt, StreamExt, TryFutureExt};
 
@@ -84,9 +81,9 @@ impl Server {
         // Create the server and start listening for incoming connections
         // in a separate task to avoid blocking the current task
         let server = Server {
-            paths, 
+            paths,
             cancel_token: cancel_token.clone(),
-            server_to_clients_send
+            server_to_clients_send,
         };
         Ok(server)
     }

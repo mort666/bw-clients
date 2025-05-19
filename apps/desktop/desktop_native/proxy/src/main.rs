@@ -56,10 +56,15 @@ async fn main() {
     let should_foreground = windows::allow_foreground();
 
     let sock_paths = desktop_core::ipc::all_paths("bitwarden");
-    let sock_path = *sock_paths.iter().filter(|p| p.exists()).collect::<Vec<_>>().first().unwrap_or_else(|| {
-        error!("No valid socket path found.");
-        std::process::exit(1);
-    });
+    let sock_path = *sock_paths
+        .iter()
+        .filter(|p| p.exists())
+        .collect::<Vec<_>>()
+        .first()
+        .unwrap_or_else(|| {
+            error!("No valid socket path found.");
+            std::process::exit(1);
+        });
 
     let log_path = {
         let mut path = sock_path.clone();
