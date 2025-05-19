@@ -8,7 +8,7 @@ export class PublicAccountKeysResponseModel {
   readonly SignedPublicKeyOwnershipClaim: SignedPublicKeyOwnershipClaim;
 
   constructor(response: any) {
-    this.VerifyingKey = new VerifyingKey(response.verifyingKey, response.verifyingKeyAlgorithm);
+    this.VerifyingKey = new VerifyingKey(response.verifyingKey);
     this.PublicKey = response.publicKey;
     this.SignedPublicKeyOwnershipClaim = response.signedPublicKeyOwnershipClaim;
   }

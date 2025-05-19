@@ -1,12 +1,13 @@
+import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { PureCrypto } from "@bitwarden/sdk-internal";
+
 import { SigningKeyType } from "../enums/signing-key-type.enum";
 
 export class VerifyingKey {
   private innerKey: string;
-  private keyType: SigningKeyType;
 
-  constructor(verifyingKey: string, keyType: SigningKeyType) {
+  constructor(verifyingKey: string) {
     this.innerKey = verifyingKey;
-    this.keyType = keyType;
   }
 
   toString(): string {
@@ -14,6 +15,6 @@ export class VerifyingKey {
   }
 
   algorithm(): SigningKeyType {
-    return this.keyType;
+    return PureCrypto.key_algorithm_for_verifying_key(Utils.fromB64ToArray(this.innerKey));
   }
 }

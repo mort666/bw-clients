@@ -215,9 +215,8 @@ export class UserKeyRotationService {
         verifyingKey: verifyingKeyString,
         signedPublicKeyOwnershipClaim,
         signingKey: signingKeyEncString,
-        signingKeyType,
       } = noSigningKeySdkClient.crypto().make_signing_keys();
-      const verifyingKey = new VerifyingKey(verifyingKeyString, signingKeyType);
+      const verifyingKey = new VerifyingKey(verifyingKeyString);
       const signingKey = new UserSigningKey(signingKeyEncString);
       return {
         userKey: newUserKey,
