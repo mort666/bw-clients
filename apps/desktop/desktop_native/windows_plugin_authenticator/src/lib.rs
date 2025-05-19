@@ -28,17 +28,20 @@ const RPID: &str = "bitwarden.com";
 pub fn register() -> std::result::Result<(), String> {
     util::message(String::from("register() called"));
 
+    util::message(String::from("About to call initialize_com_library()"));
     let r = initialize_com_library();
     util::message(format!("initialized the com library: {:?}", r));
 
+    util::message(String::from("About to call register_com_library()"));
     let r = register_com_library();
     util::message(format!("registered the com library: {:?}", r));
 
+    util::message(String::from("About to call add_authenticator()"));
     let r = add_authenticator();
     util::message(format!("added the authenticator: {:?}", r));
 
-    util::message(String::from("sleeping for 15 seconds..."));
-    thread::sleep(Duration::from_millis(15000));
+    util::message(String::from("sleeping for 20 seconds..."));
+    thread::sleep(Duration::from_millis(20000));
     util::message(String::from("sleeping done"));
 
     // ---------------------------------------
