@@ -110,7 +110,7 @@ export class NativeMessagingMain {
       }
     });
 
-    for (const path in this.ipcServer.getPaths()) {
+    for (const path of this.ipcServer.getPaths()) {
       this.logService.info("Native messaging server started at:", path);
     }
 
@@ -197,17 +197,33 @@ export class NativeMessagingMain {
         break;
       }
       case "linux": {
+        // Because on linux, th path inside the sandbox is different, and we want to support:
+        // Flatpak App, Unsandboxed App, Flatpak Browser, Unsandboxed Browser, Snap App, Unsandboxed App
+        // and any combination of the above, we copy the binary to the applications native-messaging-hosts path
+        // so that a canonical path to put in the manifest can be used.
+
+        // Unsandboxed browser
         for (const [key, value] of Object.entries(this.getLinuxNMHS())) {
           if (existsSync(value)) {
+            let nhmsPath = path.join(value, "NativeMessagingHosts");
+            if (key === "Firefox") {
+              nhmsPath = path.join(value, "native-messaging-hosts");
+            }
+            const browserBinaryPath = path.join(nhmsPath, ".bitwarden_desktop_proxy");
+
+            await fs.mkdir(nhmsPath, { recursive: true });
+            await fs.copyFile(binaryPath, browserBinaryPath);
+            this.logService.info(`Copied ${binaryPath} to ${browserBinaryPath}`);
+
             if (key === "Firefox") {
               await this.writeManifest(
-                path.join(value, "native-messaging-hosts", "com.8bit.bitwarden.json"),
-                await this.generateFirefoxJson(binaryPath),
+                path.join(nhmsPath, "com.8bit.bitwarden.json"),
+                await this.generateFirefoxJson(browserBinaryPath),
               );
             } else {
               await this.writeManifest(
-                path.join(value, "NativeMessagingHosts", "com.8bit.bitwarden.json"),
-                await this.generateChromeJson(binaryPath),
+                path.join(nhmsPath, "com.8bit.bitwarden.json"),
+                await this.generateChromeJson(browserBinaryPath),
               );
             }
           } else {
@@ -216,11 +232,9 @@ export class NativeMessagingMain {
         }
 
         for (const [key, value] of Object.entries(this.getFlatpakNMHS())) {
-          this.logService.info(`Flatpak ${key} found at ${value}`);
           if (existsSync(value)) {
-            this.logService.info(`Flatpak ${key} found at ${value}`);
             const sandboxedProxyBinaryPath = path.join(value, "bitwarden_desktop_proxy");
-            await fs.copyFile(binaryPath, path.join(value, "bitwarden_desktop_proxy"));
+            await fs.copyFile(binaryPath, path.join(value, ".bitwarden_desktop_proxy"));
             this.logService.info(
               `Copied ${sandboxedProxyBinaryPath} to ${path.join(value, "bitwarden_desktop_proxy")}`,
             );
@@ -372,6 +386,9 @@ export class NativeMessagingMain {
   private getFlatpakNMHS() {
     return {
       Firefox: `${this.homedir()}/.var/app/org.mozilla.firefox/.mozilla/native-messaging-hosts/`,
+      Chrome: `${this.homedir()}/.var/app/com.google.Chrome/.config/google-chrome/`,
+      Chromium: `${this.homedir()}/.var/app/org.chromium.Chromium/.config/chromium/`,
+      "Microsoft Edge": `${this.homedir()}/.var/app/com.microsoft.Edge/.config/microsoft-edge/`,
     };
   }
 

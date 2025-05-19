@@ -106,7 +106,7 @@
         "to": "desktop_proxy"
       }
     ],
-    "target": ["deb", "freebsd", "rpm", "AppImage", "snap"],
+    "target": ["snap"],
     "desktop": {
       "Name": "Bitwarden",
       "Type": "Application",
@@ -254,6 +254,12 @@
       {
         "polkit": {
           "action-prefix": "com.bitwarden.Bitwarden"
+        }
+      },
+      {
+        "personal-files": {
+          "read": [],
+          "write": ["$HOME/.config/chromium", "$HOME/.config/google-chrome", "$HOME/.mozilla"]
         }
       },
       "u2f-devices"
