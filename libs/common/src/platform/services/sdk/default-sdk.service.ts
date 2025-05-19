@@ -232,8 +232,8 @@ export class DefaultSdkService implements SdkService {
       ),
     });
 
+    // This is optional to avoid having to mock it on the server
     if (this.stateProvider) {
-      // Initialize the cipher store
       client
         .platform()
         .repository()
@@ -245,15 +245,6 @@ export class DefaultSdkService implements SdkService {
             new CipherMapper(),
           ),
         );
-
-      try {
-        const result = await client.vault().print_the_ciphers();
-        // eslint-disable-next-line no-console
-        console.log("Ciphers: " + result);
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error("Error printing ciphers: " + e);
-      }
     }
   }
 
