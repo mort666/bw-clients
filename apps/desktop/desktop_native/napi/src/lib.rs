@@ -722,7 +722,7 @@ pub mod autofill {
         pub fn get_path(&self) -> String {
             self.server
                 .paths
-                .get(0)
+                .first()
                 .map(|p| p.to_string_lossy().to_string())
                 .unwrap_or_default()
         }
