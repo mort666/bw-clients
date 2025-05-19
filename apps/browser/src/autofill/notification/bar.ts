@@ -7,6 +7,7 @@ import type { FolderView } from "@bitwarden/common/vault/models/view/folder.view
 import { AdjustNotificationBarMessageData } from "../background/abstractions/notification.background";
 import { NotificationCipherData } from "../content/components/cipher/types";
 import { CollectionView, OrgView } from "../content/components/common-types";
+import { AtRiskNotification } from "../content/components/notification/at-risk-password/container";
 import { NotificationConfirmationContainer } from "../content/components/notification/confirmation/container";
 import { NotificationContainer } from "../content/components/notification/container";
 import { selectedFolder as selectedFolderSignal } from "../content/components/signals/selected-folder";
@@ -176,6 +177,22 @@ async function initNotificationBar(message: NotificationBarWindowMessage) {
       );
     }
 
+    // Handle AtRiskPasswordNotification render
+    if (notificationBarIframeInitData.type === NotificationTypes.AtRiskPassword) {
+      return render(
+        AtRiskNotification({
+          ...notificationBarIframeInitData,
+          type: notificationBarIframeInitData.type as NotificationType,
+          theme: resolvedTheme,
+          i18n,
+          params: initData.params,
+          handleCloseNotification,
+        }),
+        document.body,
+      );
+    }
+
+    // Default scenario: add or update password
     const orgId = selectedVaultSignal.get();
 
     await Promise.all([
