@@ -23,6 +23,13 @@ finish-args:
   - --system-talk-name=org.freedesktop.login1
   - --filesystem=xdg-download
   - --device=all
+
+  # Browser integration
+  # The config directory is needed to write manifests for non-flatpak
+  # Sockets are mounted in each app's directory
+  - --filesystem=xdg-config
+  - --filesystem=home/.mozilla
+  - --filesystem=~/.var/app/org.mozilla.firefox/
 modules:
   - name: bitwarden-desktop
     buildsystem: simple

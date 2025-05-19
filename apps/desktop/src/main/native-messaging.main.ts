@@ -110,7 +110,9 @@ export class NativeMessagingMain {
       }
     });
 
-    this.logService.info("Native messaging server started at:", this.ipcServer.getPath());
+    for (const path in this.ipcServer.getPaths()) {
+      this.logService.info("Native messaging server started at:", path);
+    }
 
     ipcMain.on("nativeMessagingReply", (event, msg) => {
       if (msg != null) {
@@ -128,32 +130,43 @@ export class NativeMessagingMain {
     this.ipcServer?.send(JSON.stringify(message));
   }
 
-  async generateManifests() {
-    const baseJson = {
+  private async generateChromeJson(binaryPath: string) {
+    return {
       name: "com.8bit.bitwarden",
       description: "Bitwarden desktop <-> browser bridge",
-      path: this.binaryPath(),
+      path: binaryPath,
       type: "stdio",
-    };
-
-    if (!existsSync(baseJson.path)) {
-      throw new Error(`Unable to find binary: ${baseJson.path}`);
-    }
-
-    const firefoxJson = {
-      ...baseJson,
-      ...{ allowed_extensions: ["{446900e4-71c2-419f-a6a7-df9c091e268b}"] },
-    };
-    const chromeJson = {
-      ...baseJson,
       allowed_origins: await this.loadChromeIds(),
     };
+  }
+
+  private async generateFirefoxJson(binaryPath: string) {
+    return {
+      name: "com.8bit.bitwarden",
+      description: "Bitwarden desktop <-> browser bridge",
+      path: binaryPath,
+      type: "stdio",
+      allowed_extensions: ["{446900e4-71c2-419f-a6a7-df9c091e268b}"],
+    };
+  }
+
+  async generateManifests() {
+    const binaryPath = this.binaryPath();
+    if (!existsSync(binaryPath)) {
+      throw new Error(`Unable to find proxy binary: ${binaryPath}`);
+    }
 
     switch (process.platform) {
       case "win32": {
         const destination = path.join(this.userPath, "browsers");
-        await this.writeManifest(path.join(destination, "firefox.json"), firefoxJson);
-        await this.writeManifest(path.join(destination, "chrome.json"), chromeJson);
+        await this.writeManifest(
+          path.join(destination, "firefox.json"),
+          await this.generateFirefoxJson(binaryPath),
+        );
+        await this.writeManifest(
+          path.join(destination, "chrome.json"),
+          await this.generateChromeJson(binaryPath),
+        );
 
         const nmhs = this.getWindowsNMHS();
         for (const [name, [key, subkey]] of Object.entries(nmhs)) {
@@ -171,9 +184,9 @@ export class NativeMessagingMain {
           if (existsSync(value)) {
             const p = path.join(value, "NativeMessagingHosts", "com.8bit.bitwarden.json");
 
-            let manifest: any = chromeJson;
+            let manifest: any = await this.generateChromeJson(binaryPath);
             if (key === "Firefox" || key === "Zen") {
-              manifest = firefoxJson;
+              manifest = await this.generateFirefoxJson(binaryPath);
             }
 
             await this.writeManifest(p, manifest);
@@ -189,18 +202,42 @@ export class NativeMessagingMain {
             if (key === "Firefox") {
               await this.writeManifest(
                 path.join(value, "native-messaging-hosts", "com.8bit.bitwarden.json"),
-                firefoxJson,
+                await this.generateFirefoxJson(binaryPath),
               );
             } else {
               await this.writeManifest(
                 path.join(value, "NativeMessagingHosts", "com.8bit.bitwarden.json"),
-                chromeJson,
+                await this.generateChromeJson(binaryPath),
               );
             }
           } else {
             this.logService.warning(`${key} not found, skipping.`);
           }
         }
+
+        for (const [key, value] of Object.entries(this.getFlatpakNMHS())) {
+          this.logService.info(`Flatpak ${key} found at ${value}`);
+          if (existsSync(value)) {
+            this.logService.info(`Flatpak ${key} found at ${value}`);
+            const sandboxedProxyBinaryPath = path.join(value, "bitwarden_desktop_proxy");
+            await fs.copyFile(binaryPath, path.join(value, "bitwarden_desktop_proxy"));
+            this.logService.info(
+              `Copied ${sandboxedProxyBinaryPath} to ${path.join(value, "bitwarden_desktop_proxy")}`,
+            );
+
+            if (key === "Firefox") {
+              await this.writeManifest(
+                path.join(value, "com.8bit.bitwarden.json"),
+                await this.generateFirefoxJson(sandboxedProxyBinaryPath),
+              );
+            } else {
+              this.logService.warning(`Flatpak ${key} not supported, skipping.`);
+            }
+          } else {
+            this.logService.warning(`${key} not found, skipping.`);
+          }
+        }
+
         break;
       }
       default:
@@ -266,6 +303,11 @@ export class NativeMessagingMain {
           }
         }
 
+        for (const [, value] of Object.entries(this.getFlatpakNMHS())) {
+          await this.removeIfExists(path.join(value, "com.8bit.bitwarden.json"));
+          await this.removeIfExists(path.join(value, "bitwarden_desktop_proxy"));
+        }
+
         break;
       }
       default:
@@ -324,6 +366,12 @@ export class NativeMessagingMain {
       Chrome: `${this.homedir()}/.config/google-chrome/`,
       Chromium: `${this.homedir()}/.config/chromium/`,
       "Microsoft Edge": `${this.homedir()}/.config/microsoft-edge/`,
+    };
+  }
+
+  private getFlatpakNMHS() {
+    return {
+      Firefox: `${this.homedir()}/.var/app/org.mozilla.firefox/.mozilla/native-messaging-hosts/`,
     };
   }
 

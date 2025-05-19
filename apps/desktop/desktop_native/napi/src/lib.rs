@@ -436,9 +436,9 @@ pub mod ipc {
                 }
             });
 
-            let path = desktop_core::ipc::path(&name);
+            let path = desktop_core::ipc::all_paths(&name);
 
-            let server = desktop_core::ipc::server::Server::start(&path, send).map_err(|e| {
+            let server = desktop_core::ipc::server::Server::start(path.clone(), send).map_err(|e| {
                 napi::Error::from_reason(format!(
                     "Error listening to server - Path: {path:?} - Error: {e} - {e:?}"
                 ))
@@ -449,8 +449,11 @@ pub mod ipc {
 
         /// Return the path to the IPC server.
         #[napi]
-        pub fn get_path(&self) -> String {
-            self.server.path.to_string_lossy().to_string()
+        pub fn get_paths(&self) -> Vec<String> {
+            self.server
+                .paths
+                .iter().map(|p| p.to_string_lossy().to_string())
+                .collect()
         }
 
         /// Stop the IPC server.
@@ -702,7 +705,7 @@ pub mod autofill {
 
             let path = desktop_core::ipc::path(&name);
 
-            let server = desktop_core::ipc::server::Server::start(&path, send).map_err(|e| {
+            let server = desktop_core::ipc::server::Server::start(vec![path.clone()], send).map_err(|e| {
                 napi::Error::from_reason(format!(
                     "Error listening to server - Path: {path:?} - Error: {e} - {e:?}"
                 ))
@@ -714,7 +717,11 @@ pub mod autofill {
         /// Return the path to the IPC server.
         #[napi]
         pub fn get_path(&self) -> String {
-            self.server.path.to_string_lossy().to_string()
+            self.server
+                .paths
+                .get(0)
+                .map(|p| p.to_string_lossy().to_string())
+                .unwrap_or_default()
         }
 
         /// Stop the IPC server.
