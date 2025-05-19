@@ -1,13 +1,15 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
+import { CdkVirtualScrollViewport } from "@angular/cdk/scrolling";
 import {
-  AfterViewInit,
-  ContentChildren,
   Directive,
   HostBinding,
   HostListener,
-  Input,
-  QueryList,
+  Signal,
+  computed,
+  contentChildren,
+  effect,
+  inject,
+  input,
+  signal,
 } from "@angular/core";
 
 import type { A11yCellDirective } from "./a11y-cell.directive";
@@ -17,23 +19,49 @@ import { A11yRowDirective } from "./a11y-row.directive";
   selector: "bitA11yGrid",
   standalone: true,
 })
-export class A11yGridDirective implements AfterViewInit {
+export class A11yGridDirective {
+  private viewPort = inject(CdkVirtualScrollViewport, { optional: true });
+
   @HostBinding("attr.role")
   role = "grid";
 
-  @ContentChildren(A11yRowDirective)
-  rows: QueryList<A11yRowDirective>;
-
   /** The number of pages to navigate on `PageUp` and `PageDown` */
-  @Input() pageSize = 5;
+  pageSize = input(5);
 
-  private grid: A11yCellDirective[][];
+  private rows = contentChildren(A11yRowDirective);
+
+  private grid: Signal<A11yCellDirective[][]> = computed(() =>
+    this.rows().map((row) => [...row.cells()]),
+  );
+
+  private get numRows(): number {
+    return this.viewPort ? this.viewPort.getDataLength() : this.rows().length;
+  }
 
   /** The row that currently has focus */
-  private activeRow = 0;
+  private activeRow = signal(0);
+  private renderedRow = computed(() => this.convertRealRowToRenderedRow(this.activeRow()));
 
   /** The cell that currently has focus */
-  private activeCol = 0;
+  private activeCol = signal(0);
+
+  private focusTarget = computed(() =>
+    this.grid()?.[this.renderedRow()]?.[this.activeCol()]?.getFocusTarget(),
+  );
+
+  constructor() {
+    effect(() => {
+      this.rows().forEach((row) => (row.role = "row"));
+      this.grid()
+        .flat()
+        .forEach((cell) => {
+          cell.role = "gridcell";
+          if (cell.getFocusTarget() !== this.focusTarget()) {
+            cell.getFocusTarget().tabIndex = -1;
+          }
+        });
+    });
+  }
 
   @HostListener("keydown", ["$event"])
   onKeyDown(event: KeyboardEvent) {
@@ -51,16 +79,16 @@ export class A11yGridDirective implements AfterViewInit {
         this.updateCellFocusByDelta(0, -1);
         break;
       case "Home":
-        this.updateCellFocusByDelta(-this.activeRow, -this.activeCol);
+        this.updateCellFocusByDelta(-this.activeRow(), 0);
         break;
       case "End":
-        this.updateCellFocusByDelta(this.grid.length, this.grid[this.grid.length - 1].length);
+        this.updateCellFocusByDelta(this.numRows, 0);
         break;
       case "PageUp":
-        this.updateCellFocusByDelta(-this.pageSize, 0);
+        this.updateCellFocusByDelta(-this.pageSize(), 0);
         break;
       case "PageDown":
-        this.updateCellFocusByDelta(this.pageSize, 0);
+        this.updateCellFocusByDelta(this.pageSize(), 0);
         break;
       default:
         return;
@@ -70,80 +98,59 @@ export class A11yGridDirective implements AfterViewInit {
     event.preventDefault();
   }
 
-  ngAfterViewInit(): void {
-    this.initializeGrid();
-  }
-
-  private initializeGrid(): void {
-    try {
-      this.grid = this.rows.map((listItem) => {
-        listItem.role = "row";
-        return [...listItem.cells];
-      });
-      this.grid.flat().forEach((cell) => {
-        cell.role = "gridcell";
-        cell.getFocusTarget().tabIndex = -1;
-      });
-
-      this.getActiveCellContent().tabIndex = 0;
-      // FIXME: Remove when updating file. Eslint update
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Unable to initialize grid");
+  private convertRealRowToRenderedRow(row: number) {
+    const range = this.viewPort
+      ? this.viewPort.getRenderedRange()
+      : { start: 0, end: this.numRows };
+    if (row >= range.start && row < range.end) {
+      return row - range.start; // Convert real row index to rendered row index
     }
-  }
-
-  /** Get the focusable content of the active cell */
-  private getActiveCellContent(): HTMLElement {
-    return this.grid[this.activeRow][this.activeCol].getFocusTarget();
+    return row;
   }
 
   /** Move focus via a delta against the currently active gridcell */
   private updateCellFocusByDelta(rowDelta: number, colDelta: number) {
-    const prevActive = this.getActiveCellContent();
+    let nextCol = this.activeCol() + colDelta;
+    let nextRow = this.activeRow() + rowDelta;
 
-    this.activeCol += colDelta;
-    this.activeRow += rowDelta;
+    const getNumColumns = (r: number) => this.grid()[this.convertRealRowToRenderedRow(r)].length;
 
     // Row upper bound
-    if (this.activeRow >= this.grid.length) {
-      this.activeRow = this.grid.length - 1;
+    if (nextRow >= this.numRows) {
+      nextRow = this.grid().length - 1;
     }
 
     // Row lower bound
-    if (this.activeRow < 0) {
-      this.activeRow = 0;
+    if (nextRow < 0) {
+      nextRow = 0;
     }
 
     // Column upper bound
-    if (this.activeCol >= this.grid[this.activeRow].length) {
-      if (this.activeRow < this.grid.length - 1) {
+    if (nextCol >= getNumColumns(nextRow)) {
+      if (nextRow < this.numRows - 1) {
         // Wrap to next row on right arrow
-        this.activeCol = 0;
-        this.activeRow += 1;
+        nextCol = 0;
+        nextRow += 1;
       } else {
-        this.activeCol = this.grid[this.activeRow].length - 1;
+        nextCol = getNumColumns(nextRow) - 1;
       }
     }
 
     // Column lower bound
-    if (this.activeCol < 0) {
-      if (this.activeRow > 0) {
+    if (nextCol < 0) {
+      if (nextRow > 0) {
         // Wrap to prev row on left arrow
-        this.activeRow -= 1;
-        this.activeCol = this.grid[this.activeRow].length - 1;
+        nextRow -= 1;
+        nextCol = getNumColumns(nextRow) - 1;
       } else {
-        this.activeCol = 0;
+        nextCol = 0;
       }
     }
 
-    const nextActive = this.getActiveCellContent();
-    nextActive.tabIndex = 0;
-    nextActive.focus();
+    this.activeCol.set(nextCol);
+    this.activeRow.set(nextRow);
 
-    if (nextActive !== prevActive) {
-      prevActive.tabIndex = -1;
-    }
+    this.focusTarget().tabIndex = 0;
+    this.focusTarget().focus();
   }
 }
