@@ -6,7 +6,6 @@ import { DeviceRequest } from "./device.request";
 
 export type SendAccessTokenPasswordPayload = { password: string };
 export type SendAccessTokenEmailOtpPayload = { email: string; otp: string };
-// If truly anonymous, you get no extra fields:
 export type SendAccessTokenAnonymousPayload = object; // empty object
 
 export interface SendAccessTokenPayloadBase {
@@ -15,12 +14,6 @@ export interface SendAccessTokenPayloadBase {
   scope: Scope;
 
   send_id: string;
-
-  // TODO: ask if we need device information on server + device claims added in server validator
-  // device info
-  //   device_type: this.device.type,
-  //   device_identifier: this.device.identifier,
-  //   device_name: this.device.name,
 }
 
 // Payload is the base + only 1 set of 3 credentials.
