@@ -29,9 +29,13 @@ import { KdfConfigService, KeyService } from "@bitwarden/key-management";
 
 import { UserKeyRotationService } from "../../key-management/key-rotation/user-key-rotation.service";
 
+/**
+ * @deprecated use the auth `PasswordSettingsComponent` instead
+ */
 @Component({
   selector: "app-change-password",
   templateUrl: "change-password.component.html",
+  standalone: false,
 })
 export class ChangePasswordComponent
   extends BaseChangePasswordComponent

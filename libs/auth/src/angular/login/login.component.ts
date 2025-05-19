@@ -327,6 +327,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         const isPasswordChangeRequired = await this.isPasswordChangeRequiredByOrgPolicy(
           orgPolicies.enforcedPasswordPolicyOptions,
         );
+
         if (isPasswordChangeRequired) {
           await this.router.navigate(["update-password"]);
           return;
