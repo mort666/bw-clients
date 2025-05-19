@@ -2,9 +2,8 @@ import { Component, OnInit } from "@angular/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 import { firstValueFrom } from "rxjs";
 
-import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
-import { MasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
+import { KeyApiService } from "@bitwarden/common/key-management/keys/services/abstractions/key-api-service.abstraction";
 import { EncryptionType } from "@bitwarden/common/platform/enums";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { KeyService } from "@bitwarden/key-management";
@@ -26,8 +25,6 @@ export class DebugMenu implements OnInit {
   privateKey: string;
   privateKeyType: string;
 
-  masterKey: string;
-
   userId: string;
 
   testClaimPublicKeyOwnershipResult: string;
@@ -45,13 +42,14 @@ export class DebugMenu implements OnInit {
     testClaimPublicKeyOwnershipClaim: this.formBuilder.control("", [Validators.required]),
   });
   otherUserPublicKey: string | null = null;
+  otherUserVerifyingKey: string | null = null;
+  otherUserPublicKeyOwnershipClaim: string | null = null;
 
   constructor(
     private keyService: KeyService,
-    private masterPasswordService: MasterPasswordServiceAbstraction,
     private accountService: AccountService,
     private formBuilder: FormBuilder,
-    private apiService: ApiService,
+    private keyApiService: KeyApiService,
   ) {}
 
   async ngOnInit() {
@@ -86,9 +84,12 @@ export class DebugMenu implements OnInit {
   }
 
   getUserPublicKey = async () => {
-    this.otherUserPublicKey = (
-      await this.apiService.getUserPublicKey(this.formGroup.get("fetchPKIUserId").value)
-    ).publicKey;
+    const keys = await this.keyApiService.getUserPublicKeys(
+      this.formGroup.get("fetchPKIUserId").value,
+    );
+    this.otherUserPublicKey = keys.PublicKey;
+    this.otherUserVerifyingKey = keys.VerifyingKey.toString();
+    this.otherUserPublicKeyOwnershipClaim = keys.SignedPublicKeyOwnershipClaim.toString();
   };
 
   verifyPublicKeyOwnershipClaim = async () => {

@@ -21,7 +21,8 @@
     <div class="tw-flex tw-flex-col tw-space-y-3">
       <h2>User Public Key</h2>
       <input type="text" bitInput formControlName="fetchPKIUserId" placeholder="UserId" />
-      Result: {{ otherUserPublicKey }}
+      Result Public Key: {{ otherUserPublicKey }} Verifying Key:
+      {{ otherUserVerifyingKey }} PublicKeyOwnershipClaim: {{ otherUserPublicKeyOwnershipClaim }}
       <button type="button" bitButton buttonType="primary" block (click)="getUserPublicKey()">
         <span> Get Public Key </span>
       </button>

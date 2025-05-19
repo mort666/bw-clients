@@ -696,11 +696,11 @@ const routes: Routes = [
         path: "reports",
         loadChildren: () => ReportsModule,
       },
-      {
+      buildDevOnlyRoute({
         path: "debug",
         loadComponent: () =>
           import("./key-management/debug/debug.component").then((mod) => mod.DebugMenu),
-      },
+      }),
       { path: "setup/families-for-enterprise", component: FamiliesForEnterpriseSetupComponent },
     ],
   },
@@ -725,6 +725,15 @@ export class OssRoutingModule {}
 
 export function buildFlaggedRoute(flagName: keyof Flags, route: Route): Route {
   return flagEnabled(flagName)
+    ? route
+    : {
+        path: route.path,
+        redirectTo: "/",
+      };
+}
+
+function buildDevOnlyRoute(route: Route): Route {
+  return process.env.NODE_ENV === "development"
     ? route
     : {
         path: route.path,
