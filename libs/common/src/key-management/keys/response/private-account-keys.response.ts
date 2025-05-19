@@ -2,11 +2,14 @@ import { AsymmetricEncryptionDataResponse } from "./asymmetric-encryption-keys.r
 import { UserSigningKeyData } from "./signing-keys.response";
 
 export class PrivateAccountKeysResponseModel {
-  readonly SigningKeys: UserSigningKeyData;
+  readonly SigningKeys: UserSigningKeyData | null = null;
   readonly AsymmetricEncryptionKeys: AsymmetricEncryptionDataResponse;
 
   constructor(response: any) {
-    this.SigningKeys = new UserSigningKeyData(response.signingKeys);
+    if ("signingKeys" in response) {
+      this.SigningKeys = new UserSigningKeyData(response.signingKeys);
+    }
+
     this.AsymmetricEncryptionKeys = new AsymmetricEncryptionDataResponse(
       response.asymmetricEncryptionKeys,
     );

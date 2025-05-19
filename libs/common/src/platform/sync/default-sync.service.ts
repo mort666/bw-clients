@@ -199,13 +199,11 @@ export class DefaultSyncService extends CoreSyncService {
       response.accountKeys.AsymmetricEncryptionKeys.wrappedPrivateKey.encryptedString!,
       response.id,
     );
-    try {
+    if (response.accountKeys.SigningKeys !== null) {
       await this.keyService.setUserSigningKey(
         response.accountKeys.SigningKeys.wrappedSigningKey,
         response.id,
       );
-    } catch (e) {
-      this.logService.error("Sync: Error setting user signing key", e);
     }
     await this.keyService.setProviderKeys(response.providers, response.id);
     await this.keyService.setOrgKeys(
