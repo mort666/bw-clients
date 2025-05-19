@@ -32,10 +32,10 @@ import {
 } from "@bitwarden/components";
 import {
   DecryptionFailureDialogComponent,
+  NudgesService,
+  NudgeType,
   SpotlightComponent,
   VaultIcons,
-  VaultNudgesService,
-  VaultNudgeType,
 } from "@bitwarden/vault";
 
 import { CurrentAccountComponent } from "../../../../auth/popup/account-switching/current-account.component";
@@ -56,9 +56,7 @@ import {
   NewItemDropdownV2Component,
   NewItemInitialValues,
 } from "./new-item-dropdown/new-item-dropdown-v2.component";
-import { NewSettingsCalloutComponent } from "./new-settings-callout/new-settings-callout.component";
 import { VaultHeaderV2Component } from "./vault-header/vault-header-v2.component";
-import { VaultPageService } from "./vault-page.service";
 
 import { AutofillVaultListItemsComponent, VaultListItemsContainerComponent } from ".";
 
@@ -90,28 +88,24 @@ enum VaultState {
     ScrollingModule,
     VaultHeaderV2Component,
     AtRiskPasswordCalloutComponent,
-    NewSettingsCalloutComponent,
     SpotlightComponent,
     RouterModule,
     TypographyModule,
   ],
-  providers: [VaultPageService],
 })
 export class VaultV2Component implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild(CdkVirtualScrollableElement) virtualScrollElement?: CdkVirtualScrollableElement;
 
-  VaultNudgeType = VaultNudgeType;
+  NudgeType = NudgeType;
   cipherType = CipherType;
   private activeUserId$ = this.accountService.activeAccount$.pipe(getUserId);
   showEmptyVaultSpotlight$: Observable<boolean> = this.activeUserId$.pipe(
     switchMap((userId) =>
-      this.vaultNudgesService.showNudge$(VaultNudgeType.EmptyVaultNudge, userId),
+      this.nudgesService.showNudgeSpotlight$(NudgeType.EmptyVaultNudge, userId),
     ),
-    map((nudgeStatus) => !nudgeStatus.hasSpotlightDismissed),
   );
   showHasItemsVaultSpotlight$: Observable<boolean> = this.activeUserId$.pipe(
-    switchMap((userId) => this.vaultNudgesService.showNudge$(VaultNudgeType.HasVaultItems, userId)),
-    map((nudgeStatus) => !nudgeStatus.hasSpotlightDismissed),
+    switchMap((userId) => this.nudgesService.showNudgeSpotlight$(NudgeType.HasVaultItems, userId)),
   );
 
   activeUserId: UserId | null = null;
@@ -152,7 +146,6 @@ export class VaultV2Component implements OnInit, AfterViewInit, OnDestroy {
   protected noResultsIcon = Icons.NoResults;
 
   protected VaultStateEnum = VaultState;
-  protected showNewCustomizationSettingsCallout = false;
 
   constructor(
     private vaultPopupItemsService: VaultPopupItemsService,
@@ -164,7 +157,7 @@ export class VaultV2Component implements OnInit, AfterViewInit, OnDestroy {
     private dialogService: DialogService,
     private vaultCopyButtonsService: VaultPopupCopyButtonsService,
     private introCarouselService: IntroCarouselService,
-    private vaultNudgesService: VaultNudgesService,
+    private nudgesService: NudgesService,
     private router: Router,
     private i18nService: I18nService,
   ) {
@@ -234,8 +227,8 @@ export class VaultV2Component implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  async dismissVaultNudgeSpotlight(type: VaultNudgeType) {
-    await this.vaultNudgesService.dismissNudge(type, this.activeUserId as UserId);
+  async dismissVaultNudgeSpotlight(type: NudgeType) {
+    await this.nudgesService.dismissNudge(type, this.activeUserId as UserId);
   }
 
   protected readonly FeatureFlag = FeatureFlag;
