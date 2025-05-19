@@ -93,7 +93,7 @@ pub fn path(name: &str) -> std::path::PathBuf {
 /// Paths to the ipc sockets including alternative paths.
 /// For flatpak, a path per sandbox is created.
 pub fn all_paths(name: &str) -> Vec<std::path::PathBuf> {
-    let mut paths = vec![path(name)];
+    let paths = vec![path(name)];
     #[cfg(target_os = "linux")]
     {
         // On Linux, in flatpak, we mount sockets in each app's sandboxed directory.
