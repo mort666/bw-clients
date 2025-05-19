@@ -40,7 +40,7 @@ export class A11yGridDirective {
 
   /** The row that currently has focus */
   private activeRow = signal(0);
-  private renderedRow = computed(() => this.convertRealRowToRenderedRow(this.activeRow()));
+  private renderedRow = computed(() => this.convertRealRowToViewportRow(this.activeRow()));
 
   /** The cell that currently has focus */
   private activeCol = signal(0);
@@ -98,14 +98,21 @@ export class A11yGridDirective {
     event.preventDefault();
   }
 
-  private convertRealRowToRenderedRow(row: number) {
-    const range = this.viewPort
-      ? this.viewPort.getRenderedRange()
-      : { start: 0, end: this.numRows };
-    if (row >= range.start && row < range.end) {
-      return row - range.start; // Convert real row index to rendered row index
+  /**
+   * Converts real row index to viewport row index. The two will differ when list virtualization is used.
+   * @param realRow A row index based on the total number of rows in the grid
+   * @returns A row index based on the total number rows being rendered in the viewport.
+   */
+  private convertRealRowToViewportRow(realRow: number): number {
+    if (!this.viewPort) {
+      return realRow;
     }
-    return row;
+
+    const { start, end } = this.viewPort.getRenderedRange();
+    if (realRow >= start && realRow < end) {
+      return realRow - start;
+    }
+    return realRow;
   }
 
   /** Move focus via a delta against the currently active gridcell */
@@ -113,7 +120,7 @@ export class A11yGridDirective {
     let nextCol = this.activeCol() + colDelta;
     let nextRow = this.activeRow() + rowDelta;
 
-    const getNumColumns = (r: number) => this.grid()[this.convertRealRowToRenderedRow(r)].length;
+    const getNumColumns = (r: number) => this.grid()[this.convertRealRowToViewportRow(r)].length;
 
     // Row upper bound
     if (nextRow >= this.numRows) {
