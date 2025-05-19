@@ -57,10 +57,8 @@ impl Server {
         for path in paths.iter() {
             // If the unix socket file already exists, we get an error when trying to bind to it. So we remove it first.
             // Any processes that were using the old socket should remain connected to it but any new connections will use the new socket.
-            if !cfg!(windows) {
-                if path.exists() {
-                    std::fs::remove_file(path)?;
-                }
+            if !cfg!(windows) && path.exists() {
+                std::fs::remove_file(path)?;
             }
 
             let name = path.as_os_str().to_fs_name::<GenericFilePath>()?;

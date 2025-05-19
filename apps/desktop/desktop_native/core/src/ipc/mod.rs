@@ -1,3 +1,5 @@
+use std::vec;
+
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_util::codec::{Framed, LengthDelimitedCodec};
 
@@ -93,7 +95,6 @@ pub fn path(name: &str) -> std::path::PathBuf {
 /// Paths to the ipc sockets including alternative paths.
 /// For flatpak, a path per sandbox is created.
 pub fn all_paths(name: &str) -> Vec<std::path::PathBuf> {
-    let paths = vec![path(name)];
     #[cfg(target_os = "linux")]
     {
         // On Linux, in flatpak, we mount sockets in each app's sandboxed directory.
@@ -103,7 +104,12 @@ pub fn all_paths(name: &str) -> Vec<std::path::PathBuf> {
             .iter()
             .map(|path| flatpak_path.join(path).join(format!(".app.{name}.socket")))
             .collect::<Vec<_>>();
+        let mut paths = vec![path(name)];
         paths.extend(flatpak_paths);
+        paths
     }
-    paths
+    #[cfg(not(target_os = "linux"))]
+    {
+        vec![path(name)]
+    }
 }
