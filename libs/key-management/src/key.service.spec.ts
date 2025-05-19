@@ -22,6 +22,7 @@ import {
   USER_ENCRYPTED_PRIVATE_KEY,
   USER_EVER_HAD_USER_KEY,
   USER_KEY,
+  USER_KEY_ENCRYPTED_SIGNING_KEY,
 } from "@bitwarden/common/platform/services/key-state/user-key.state";
 import { UserKeyDefinition } from "@bitwarden/common/platform/state";
 import {
@@ -395,6 +396,7 @@ describe("keyService", () => {
       USER_ENCRYPTED_ORGANIZATION_KEYS,
       USER_ENCRYPTED_PROVIDER_KEYS,
       USER_ENCRYPTED_PRIVATE_KEY,
+      USER_KEY_ENCRYPTED_SIGNING_KEY,
       USER_KEY,
     ])("key removal", (key: UserKeyDefinition<unknown>) => {
       it(`clears ${key.key} for active user when unspecified`, async () => {
