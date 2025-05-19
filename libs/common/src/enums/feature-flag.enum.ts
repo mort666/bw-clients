@@ -124,11 +124,11 @@ export const DefaultFeatureFlagValue = {
 
   /* Key Management */
   [FeatureFlag.PrivateKeyRegeneration]: FALSE,
-  [FeatureFlag.UserKeyRotationV2]: FALSE,
+  [FeatureFlag.UserKeyRotationV2]: true,
   [FeatureFlag.PM4154_BulkEncryptionService]: FALSE,
   [FeatureFlag.UseSDKForDecryption]: FALSE,
   [FeatureFlag.PM17987_BlockType0]: FALSE,
-  [FeatureFlag.EnrollAeadOnKeyRotation]: FALSE,
+  [FeatureFlag.EnrollAeadOnKeyRotation]: true,
 
   /* Platform */
   [FeatureFlag.IpcChannelFramework]: FALSE,

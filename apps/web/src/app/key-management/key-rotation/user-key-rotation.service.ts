@@ -12,7 +12,8 @@ import { VaultTimeoutService } from "@bitwarden/common/key-management/vault-time
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
-import { HashPurpose } from "@bitwarden/common/platform/enums";
+import { SdkClientFactory } from "@bitwarden/common/platform/abstractions/sdk/sdk-client-factory";
+import { EncryptionType, HashPurpose } from "@bitwarden/common/platform/enums";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { EncryptedString, EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
@@ -23,7 +24,7 @@ import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.servi
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
 import { DialogService, ToastService } from "@bitwarden/components";
-import { KeyService } from "@bitwarden/key-management";
+import { KdfConfig, KeyService, UserSigningKey, VerifyingKey } from "@bitwarden/key-management";
 import {
   AccountRecoveryTrustComponent,
   EmergencyAccessTrustComponent,
@@ -64,6 +65,7 @@ export class UserKeyRotationService {
     private i18nService: I18nService,
     private dialogService: DialogService,
     private configService: ConfigService,
+    private sdkFactory: SdkClientFactory,
   ) {}
 
   /**
@@ -84,6 +86,19 @@ export class UserKeyRotationService {
       this.logService.info("[Userkey rotation] Invalid master password provided. Aborting!");
       throw new Error("Invalid master password");
     }
+    const { masterKey: currentMasterKey, kdfConfig } =
+      await this.userVerificationService.verifyUserByMasterPassword(
+        {
+          type: VerificationType.MasterPassword,
+          secret: oldMasterPassword,
+        } as MasterPasswordVerification,
+        user.id,
+        user.email,
+      );
+    const currentServerMasterKeyHash = await this.keyService.hashMasterKey(
+      oldMasterPassword,
+      currentMasterKey,
+    );
 
     if ((await this.syncService.getLastSync()) === null) {
       this.logService.info("[Userkey rotation] Client was never synced. Aborting!");
@@ -92,137 +107,196 @@ export class UserKeyRotationService {
       );
     }
 
-    const emergencyAccessGrantees = await this.emergencyAccessService.getPublicKeys();
-    const orgs = await this.resetPasswordService.getPublicKeys(user.id);
-    if (orgs.length > 0 || emergencyAccessGrantees.length > 0) {
-      const trustInfoDialog = KeyRotationTrustInfoComponent.open(this.dialogService, {
-        numberOfEmergencyAccessUsers: emergencyAccessGrantees.length,
-        orgName: orgs.length > 0 ? orgs[0].orgName : undefined,
-      });
-      const result = await firstValueFrom(trustInfoDialog.closed);
-      if (!result) {
-        this.logService.info("[Userkey rotation] Trust info dialog closed. Aborting!");
-        return;
-      }
+    const upgradeToV2FeatureFlagEnabled = await this.configService.getFeatureFlag(
+      FeatureFlag.EnrollAeadOnKeyRotation,
+    );
+    if (upgradeToV2FeatureFlagEnabled) {
+      this.logService.info("[Userkey rotation] Upgrade to V2 feature flag is enabled");
     }
 
-    const {
-      masterKey: oldMasterKey,
-      email,
-      kdfConfig,
-    } = await this.userVerificationService.verifyUserByMasterPassword(
-      {
-        type: VerificationType.MasterPassword,
-        secret: oldMasterPassword,
-      },
-      user.id,
-      user.email,
-    );
+    // First, the provided organizations and emergency access users need to be verified;
+    // this is currently done by providing the user a manual confirmation dialog.
+    const { trustedOrgs, trustedEmergencyAccessUsers } = await this.verifyTrust(user);
 
-    const newMasterKey = await this.keyService.makeMasterKey(newMasterPassword, email, kdfConfig);
-
-    let userKeyBytes = PureCrypto.make_user_key_aes256_cbc_hmac();
-    if (await this.configService.getFeatureFlag(FeatureFlag.EnrollAeadOnKeyRotation)) {
-      userKeyBytes = PureCrypto.make_user_key_xchacha20_poly1305();
-    }
-    const newMasterKeyEncryptedUserKey = new EncString(
-      PureCrypto.encrypt_user_key_with_master_password(
-        userKeyBytes,
-        newMasterPassword,
-        email,
-        kdfConfig.toSdkConfig(),
-      ),
-    );
-    const newUnencryptedUserKey = new SymmetricCryptoKey(userKeyBytes) as UserKey;
-
-    if (!newUnencryptedUserKey || !newMasterKeyEncryptedUserKey) {
-      this.logService.info("[Userkey rotation] User key could not be created. Aborting!");
-      throw new Error("User key could not be created");
-    }
-
-    const newMasterKeyAuthenticationHash = await this.keyService.hashMasterKey(
-      newMasterPassword,
-      newMasterKey,
-      HashPurpose.ServerAuthorization,
-    );
-    const masterPasswordUnlockData = new MasterPasswordUnlockDataRequest(
-      kdfConfig,
-      email,
-      newMasterKeyAuthenticationHash,
-      newMasterKeyEncryptedUserKey.encryptedString!,
-      newMasterPasswordHint,
-    );
-
-    const keyPair = await firstValueFrom(this.keyService.userEncryptionKeyPair$(user.id));
-    if (keyPair == null) {
-      this.logService.info("[Userkey rotation] Key pair is null. Aborting!");
-      throw new Error("Key pair is null");
-    }
-    const { privateKey, publicKey } = keyPair;
-
-    const accountKeysRequest = new AccountKeysRequest(
-      (
-        await this.encryptService.wrapDecapsulationKey(privateKey, newUnencryptedUserKey)
-      ).encryptedString!,
-      Utils.fromBufferToB64(publicKey),
-    );
-
+    // Downstream keys from and including the the user key
     const originalUserKey = await firstValueFrom(this.keyService.userKey$(user.id));
     if (originalUserKey == null) {
       this.logService.info("[Userkey rotation] Userkey is null. Aborting!");
       throw new Error("Userkey key is null");
     }
+    const {
+      userKey: newUserKey,
+      signingKey,
+      verifyingKey,
+      signedPublicKeyOwnershipClaim,
+      wrappedPrivateKey,
+      publicKey,
+    } = await this.getNewAccountKeys(originalUserKey, user, kdfConfig);
+    const accountKeysRequest = new AccountKeysRequest(
+      wrappedPrivateKey.encryptedString!,
+      publicKey,
+      signedPublicKeyOwnershipClaim,
+      signingKey.inner(),
+      verifyingKey.toString(),
+      verifyingKey.algorithm(),
+    ) as AccountKeysRequest;
 
-    const rotatedCiphers = await this.cipherService.getRotatedData(
+    // Methods to unlock the user (access the user key)
+    const { unlockDataRequest } = await this.getAccountUnlockDataRequest(
       originalUserKey,
-      newUnencryptedUserKey,
-      user.id,
+      newUserKey,
+      user,
+      kdfConfig,
+      newMasterPassword,
+      newMasterPasswordHint,
+      trustedEmergencyAccessUsers,
+      trustedOrgs,
     );
-    const rotatedFolders = await this.folderService.getRotatedData(
-      originalUserKey,
-      newUnencryptedUserKey,
-      user.id,
+
+    // Any data owned by (encrypted with) the user key directly
+    const accountDataRequest = await this.getAccountDataRequest(originalUserKey, newUserKey, user);
+
+    const request = new RotateUserAccountKeysRequest(
+      unlockDataRequest,
+      accountKeysRequest,
+      accountDataRequest,
+      currentServerMasterKeyHash,
     );
-    const rotatedSends = await this.sendService.getRotatedData(
-      originalUserKey,
-      newUnencryptedUserKey,
-      user.id,
-    );
-    if (rotatedCiphers == null || rotatedFolders == null || rotatedSends == null) {
-      this.logService.info("[Userkey rotation] ciphers, folders, or sends are null. Aborting!");
-      throw new Error("ciphers, folders, or sends are null");
+
+    this.logService.info("[Userkey rotation] Posting user key rotation request to server");
+    await this.apiService.postUserKeyUpdateV2(request);
+    this.logService.info("[Userkey rotation] Userkey rotation request posted to server");
+
+    this.toastService.showToast({
+      variant: "success",
+      title: this.i18nService.t("rotationCompletedTitle"),
+      message: this.i18nService.t("rotationCompletedDesc"),
+      timeout: 15000,
+    });
+
+    // temporary until userkey can be better verified
+    await this.vaultTimeoutService.logOut();
+  }
+
+  private async getNewAccountKeys(
+    originalUserKey: UserKey,
+    user: Account,
+    kdfConfig: KdfConfig,
+  ): Promise<{
+    userKey: UserKey;
+    signingKey?: UserSigningKey;
+    verifyingKey?: VerifyingKey;
+    signedPublicKeyOwnershipClaim?: string;
+    wrappedPrivateKey: EncString;
+    publicKey: string;
+  }> {
+    const { isUpgrading, newUserKey } = await this.makeNewUserKey(originalUserKey, true);
+
+    const keyPair = await firstValueFrom(this.keyService.userEncryptionKeyPair$(user.id));
+    if (keyPair == null) {
+      throw new Error("No user asymmetric encryption key pair found");
     }
-    const accountDataRequest = new UserDataRequest(rotatedCiphers, rotatedFolders, rotatedSends);
+    const { privateKey, publicKey } = keyPair;
+    const wrappedPrivateKey = await this.encryptService.wrapDecapsulationKey(
+      privateKey,
+      newUserKey,
+    );
 
-    for (const details of emergencyAccessGrantees) {
-      this.logService.info("[Userkey rotation] Emergency access grantee: " + details.name);
-      this.logService.info(
-        "[Userkey rotation] Emergency access grantee fingerprint: " +
-          (await this.keyService.getFingerprint(details.granteeId, details.publicKey)).join("-"),
-      );
-
-      const dialogRef = EmergencyAccessTrustComponent.open(this.dialogService, {
-        name: details.name,
-        userId: details.granteeId,
-        publicKey: details.publicKey,
+    if (isUpgrading) {
+      const noSigningKeySdkClient = await this.sdkFactory.createSdkClient({});
+      await noSigningKeySdkClient.crypto().initialize_user_crypto({
+        email: user.email,
+        kdfParams: kdfConfig.toSdkConfig(),
+        privateKey: wrappedPrivateKey.encryptedString!,
+        signingKey: null,
+        method: { decryptedKey: { decrypted_user_key: newUserKey.toBase64() } },
       });
-      const result = await firstValueFrom(dialogRef.closed);
-      if (result === true) {
-        this.logService.info("[Userkey rotation] Emergency access grantee confirmed");
+      const {
+        verifyingKey: verifyingKeyString,
+        signedPublicKeyOwnershipClaim,
+        signingKey: signingKeyEncString,
+        signingKeyType,
+      } = noSigningKeySdkClient.crypto().make_signing_keys();
+      const verifyingKey = new VerifyingKey(verifyingKeyString, signingKeyType);
+      const signingKey = new UserSigningKey(signingKeyEncString);
+      return {
+        userKey: newUserKey,
+        signingKey,
+        verifyingKey,
+        wrappedPrivateKey,
+        signedPublicKeyOwnershipClaim,
+        publicKey: Utils.fromBufferToB64(publicKey),
+      };
+    } else {
+      if (originalUserKey.inner().type === EncryptionType.AesCbc256_HmacSha256_B64) {
+        return {
+          userKey: newUserKey,
+          signingKey: null,
+          verifyingKey: null,
+
+          signedPublicKeyOwnershipClaim: null,
+          wrappedPrivateKey,
+          publicKey: Utils.fromBufferToB64(publicKey),
+        };
       } else {
-        this.logService.info("[Userkey rotation] Emergency access grantee not confirmed");
-        return;
+        const existingSigningKey: UserSigningKey = null;
+        const existingVerifyingKey: VerifyingKey = null;
+
+        return {
+          userKey: newUserKey,
+          signingKey: existingSigningKey,
+          verifyingKey: existingVerifyingKey,
+
+          signedPublicKeyOwnershipClaim: null,
+          wrappedPrivateKey,
+          publicKey: Utils.fromBufferToB64(publicKey),
+        };
       }
     }
-    const trustedUserPublicKeys = emergencyAccessGrantees.map((d) => d.publicKey);
+  }
 
-    const emergencyAccessUnlockData = await this.emergencyAccessService.getRotatedData(
-      newUnencryptedUserKey,
-      trustedUserPublicKeys,
-      user.id,
-    );
+  private async makeNewUserKey(
+    originalUserKey: UserKey,
+    v2FeatureFlagEnabled: boolean,
+  ): Promise<{ isUpgrading: boolean; newUserKey: UserKey }> {
+    let newUserKey: UserKey;
+    let isUpgrading = false;
+    if (this.isV1User(originalUserKey)) {
+      this.logService.info("[Userkey rotation] Existing userkey key is AES256-CBC-HMAC");
+      if (v2FeatureFlagEnabled) {
+        this.logService.info("[Userkey rotation] Upgrading to encryption format v2");
+        newUserKey = new SymmetricCryptoKey(PureCrypto.make_user_key_aes256_cbc_hmac()) as UserKey;
+        isUpgrading = true;
+      } else {
+        this.logService.info("[Userkey rotation] Keeping encryption format v1");
+        newUserKey = new SymmetricCryptoKey(PureCrypto.make_user_key_aes256_cbc_hmac()) as UserKey;
+      }
+    } else {
+      this.logService.info("[Userkey rotation] Keeping encryption format v2");
+      newUserKey = new SymmetricCryptoKey(PureCrypto.make_user_key_xchacha20_poly1305()) as UserKey;
+    }
+    return { isUpgrading, newUserKey };
+  }
 
-    for (const organization of orgs) {
+  private async verifyTrust(
+    user: Account,
+  ): Promise<{ trustedOrgs: Uint8Array[]; trustedEmergencyAccessUsers: Uint8Array[] }> {
+    this.logService.info("[Userkey rotation] Verifying trust...");
+    const emergencyAccessGrantees = await this.emergencyAccessService.getPublicKeys();
+    const organizations = await this.resetPasswordService.getPublicKeys(user.id);
+    if (organizations.length > 0 || emergencyAccessGrantees.length > 0) {
+      const trustInfoDialog = KeyRotationTrustInfoComponent.open(this.dialogService, {
+        numberOfEmergencyAccessUsers: emergencyAccessGrantees.length,
+        orgName: organizations.length > 0 ? organizations[0].orgName : undefined,
+      });
+      const result = await firstValueFrom(trustInfoDialog.closed);
+      if (!result) {
+        this.logService.info("[Userkey rotation] Trust info dialog closed. Aborting!");
+        return { trustedOrgs: [], trustedEmergencyAccessUsers: [] };
+      }
+    }
+
+    for (const organization of organizations) {
       this.logService.info(
         "[Userkey rotation] Reset password organization: " + organization.orgName,
       );
@@ -243,19 +317,90 @@ export class UserKeyRotationService {
         publicKey: organization.publicKey,
       });
       const result = await firstValueFrom(dialogRef.closed);
-      if (result === true) {
-        this.logService.info("[Userkey rotation] Organization trusted");
-      } else {
-        this.logService.info("[Userkey rotation] Organization not trusted");
-        return;
+      if (!result) {
+        this.logService.info("[Userkey rotation] Organization not confirmed");
+        return { trustedOrgs: [], trustedEmergencyAccessUsers: [] };
       }
     }
-    const trustedOrgPublicKeys = orgs.map((d) => d.publicKey);
+
+    for (const details of emergencyAccessGrantees) {
+      this.logService.info("[Userkey rotation] Emergency access grantee: " + details.name);
+      this.logService.info(
+        "[Userkey rotation] Emergency access grantee fingerprint: " +
+          (await this.keyService.getFingerprint(details.granteeId, details.publicKey)).join("-"),
+      );
+
+      const dialogRef = EmergencyAccessTrustComponent.open(this.dialogService, {
+        name: details.name,
+        userId: details.granteeId,
+        publicKey: details.publicKey,
+      });
+      const result = await firstValueFrom(dialogRef.closed);
+      if (result === true) {
+        this.logService.info("[Userkey rotation] Emergency access grantee confirmed");
+      } else {
+        this.logService.info("[Userkey rotation] Emergency access grantee not confirmed");
+        return { trustedOrgs: [], trustedEmergencyAccessUsers: [] };
+      }
+    }
+
+    this.logService.info(
+      "[Userkey rotation] Trust verified for all organizations and emergency access users",
+    );
+
+    return {
+      trustedOrgs: organizations.map((d) => d.publicKey),
+      trustedEmergencyAccessUsers: emergencyAccessGrantees.map((d) => d.publicKey),
+    };
+  }
+
+  private async getAccountUnlockDataRequest(
+    originalUserKey: UserKey,
+    newUnencryptedUserKey: UserKey,
+    user: Account,
+    kdfConfig: KdfConfig,
+    newMasterPassword: string,
+    newMasterPasswordHint: string,
+    trustedEmergencyAccessGranteesPublicKeys: Uint8Array[],
+    trustedOrganizationPublicKeys: Uint8Array[],
+  ): Promise<{ unlockDataRequest: UnlockDataRequest; serverMasterKeyHash: string }> {
+    const newMasterKeyEncryptedUserKey = new EncString(
+      PureCrypto.encrypt_user_key_with_master_password(
+        newUnencryptedUserKey.toEncoded(),
+        newMasterPassword,
+        user.email,
+        kdfConfig.toSdkConfig(),
+      ),
+    );
+    const newMasterKey = await this.keyService.makeMasterKey(
+      newMasterPassword,
+      user.email,
+      kdfConfig,
+    );
+    const newMasterKeyAuthenticationHash = await this.keyService.hashMasterKey(
+      newMasterPassword,
+      newMasterKey,
+      HashPurpose.ServerAuthorization,
+    );
+    const masterPasswordUnlockData = new MasterPasswordUnlockDataRequest(
+      kdfConfig,
+      user.email,
+      newMasterKeyAuthenticationHash,
+      newMasterKeyEncryptedUserKey.encryptedString!,
+      newMasterPasswordHint,
+    );
+
+    const emergencyAccessUnlockData = await this.emergencyAccessService.getRotatedData(
+      newUnencryptedUserKey,
+      trustedEmergencyAccessGranteesPublicKeys,
+      user.id,
+    );
+
     // Note: Reset password keys request model has user verification
     // properties, but the rotation endpoint uses its own MP hash.
     const organizationAccountRecoveryUnlockData = (await this.resetPasswordService.getRotatedData(
       newUnencryptedUserKey,
-      trustedOrgPublicKeys,
+      trustedOrganizationPublicKeys,
       user.id,
     ))!;
     const passkeyUnlockData = await this.webauthnLoginAdminService.getRotatedData(
@@ -270,34 +415,51 @@ export class UserKeyRotationService {
       user.id,
     );
 
-    const unlockDataRequest = new UnlockDataRequest(
-      masterPasswordUnlockData,
-      emergencyAccessUnlockData,
-      organizationAccountRecoveryUnlockData,
-      passkeyUnlockData,
-      trustedDeviceUnlockData,
+    return {
+      unlockDataRequest: new UnlockDataRequest(
+        masterPasswordUnlockData,
+        emergencyAccessUnlockData,
+        organizationAccountRecoveryUnlockData,
+        passkeyUnlockData,
+        trustedDeviceUnlockData,
+      ),
+      serverMasterKeyHash: newMasterKeyAuthenticationHash,
+    };
+  }
+
+  private async getAccountDataRequest(
+    originalUserKey: UserKey,
+    newUnencryptedUserKey: UserKey,
+    user: Account,
+  ): Promise<UserDataRequest> {
+    const rotatedCiphers = await this.cipherService.getRotatedData(
+      originalUserKey,
+      newUnencryptedUserKey,
+      user.id,
     );
-
-    const request = new RotateUserAccountKeysRequest(
-      unlockDataRequest,
-      accountKeysRequest,
-      accountDataRequest,
-      await this.keyService.hashMasterKey(oldMasterPassword, oldMasterKey),
+    const rotatedFolders = await this.folderService.getRotatedData(
+      originalUserKey,
+      newUnencryptedUserKey,
+      user.id,
     );
+    const rotatedSends = await this.sendService.getRotatedData(
+      originalUserKey,
+      newUnencryptedUserKey,
+      user.id,
+    );
+    if (rotatedCiphers == null || rotatedFolders == null || rotatedSends == null) {
+      this.logService.info("[Userkey rotation] ciphers, folders, or sends are null. Aborting!");
+      throw new Error("ciphers, folders, or sends are null");
+    }
+    return new UserDataRequest(rotatedCiphers, rotatedFolders, rotatedSends);
+  }
 
-    this.logService.info("[Userkey rotation] Posting user key rotation request to server");
-    await this.apiService.postUserKeyUpdateV2(request);
-    this.logService.info("[Userkey rotation] Userkey rotation request posted to server");
-
-    this.toastService.showToast({
-      variant: "success",
-      title: this.i18nService.t("rotationCompletedTitle"),
-      message: this.i18nService.t("rotationCompletedDesc"),
-      timeout: 15000,
-    });
-
-    // temporary until userkey can be better verified
-    await this.vaultTimeoutService.logOut();
+  /**
+   * A V1 user has no signing key, and uses AES256-CBC-HMAC.
+   * A V2 user has a signing key, and uses XChaCha20-Poly1305.
+   */
+  private isV1User(userKey: UserKey): boolean {
+    return userKey.inner().type === EncryptionType.AesCbc256_HmacSha256_B64;
   }
 
   /**

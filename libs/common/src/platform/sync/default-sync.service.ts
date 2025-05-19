@@ -193,14 +193,27 @@ export class DefaultSyncService extends CoreSyncService {
       throw new Error("Stamp has changed");
     }
 
+    /// Key management initialization
     await this.keyService.setMasterKeyEncryptedUserKey(response.key, response.id);
-    await this.keyService.setPrivateKey(response.privateKey, response.id);
+    await this.keyService.setPrivateKey(
+      response.accountKeys.AsymmetricEncryptionKeys.wrappedPrivateKey.encryptedString!,
+      response.id,
+    );
+    try {
+      await this.keyService.setUserSigningKey(
+        response.accountKeys.SigningKeys.wrappedSigningKey,
+        response.id,
+      );
+    } catch (e) {
+      this.logService.error("Sync: Error setting user signing key", e);
+    }
     await this.keyService.setProviderKeys(response.providers, response.id);
     await this.keyService.setOrgKeys(
       response.organizations,
       response.providerOrganizations,
       response.id,
     );
+
     await this.avatarService.setSyncAvatarColor(response.id, response.avatarColor);
     await this.tokenService.setSecurityStamp(response.securityStamp, response.id);
     await this.accountService.setAccountEmailVerified(response.id, response.emailVerified);

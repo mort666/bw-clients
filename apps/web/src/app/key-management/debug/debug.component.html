@@ -1,0 +1,61 @@
+<ng-container>
+  <form [formGroup]="formGroup">
+    <h1 class="box-header" id="settingsTitle">User Account</h1>
+    <div class="tw-flex tw-flex-col tw-space-y-3">UserId: {{ userId }}</div>
+    <h1>User Account Encryption</h1>
+    <div class="tw-flex tw-flex-col tw-space-y-3">
+      <h2>User Symmetric Key</h2>
+      Type: {{ userKeyType }} <br />
+      <input type="text" bitInput formControlName="userKey" placeholder="UserKey" />
+      <h2>User Asymmetric Encryption Keys</h2>
+      Type: {{ privateKeyType }} <br />
+      <input type="text" bitInput formControlName="privateKey" placeholder="privateKey" />
+      <input type="text" bitInput formControlName="publicKey" placeholder="publicKey" />
+      <h2>User Signing Key</h2>
+      <input type="text" bitInput formControlName="signingKey" placeholder="signingKey" />
+      <input type="text" bitInput formControlName="verifyingKey" placeholder="verifyingKey" />
+    </div>
+
+    <h1 class="box-header" id="settingsTitle">User Asymmetric Encryption</h1>
+    Tools to debug the asymmetric encryption PKI.
+    <div class="tw-flex tw-flex-col tw-space-y-3">
+      <h2>User Public Key</h2>
+      <input type="text" bitInput formControlName="fetchPKIUserId" placeholder="UserId" />
+      Result: {{ otherUserPublicKey }}
+      <button type="button" bitButton buttonType="primary" block (click)="getUserPublicKey()">
+        <span> Get Public Key </span>
+      </button>
+    </div>
+    <h1 class="box-header" id="settingsTitle">User Signing</h1>
+    Tools to debug user signing.
+    <div class="tw-flex tw-flex-col tw-space-y-3">
+      <h2>Public key ownership claim</h2>
+      Claim
+      <input
+        type="text"
+        bitInput
+        formControlName="testClaimPublicKeyOwnershipClaim"
+        placeholder="PublicKeyOwnershipClaim"
+      />
+      PublicKey
+      <input type="text" bitInput formControlName="testClaimPublicKey" placeholder="PublicKey" />
+      VerifKey
+      <input
+        type="text"
+        bitInput
+        formControlName="testClaimVerifyingKey"
+        placeholder="VerifyingKey"
+      />
+      Result: {{ testClaimPublicKeyOwnershipResult }}
+      <button
+        type="button"
+        bitButton
+        buttonType="primary"
+        block
+        (click)="verifyPublicKeyOwnershipClaim()"
+      >
+        <span> Verify Public Key Ownership Claim </span>
+      </button>
+    </div>
+  </form>
+</ng-container>

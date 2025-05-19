@@ -696,6 +696,11 @@ const routes: Routes = [
         path: "reports",
         loadChildren: () => ReportsModule,
       },
+      {
+        path: "debug",
+        loadComponent: () =>
+          import("./key-management/debug/debug.component").then((mod) => mod.DebugMenu),
+      },
       { path: "setup/families-for-enterprise", component: FamiliesForEnterpriseSetupComponent },
     ],
   },

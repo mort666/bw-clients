@@ -1,3 +1,5 @@
+import { PrivateAccountKeysResponseModel } from "@bitwarden/common/key-management/keys/response/private-account-keys.response";
+
 import { ProfileOrganizationResponse } from "../../admin-console/models/response/profile-organization.response";
 import { ProfileProviderOrganizationResponse } from "../../admin-console/models/response/profile-provider-organization.response";
 import { ProfileProviderResponse } from "../../admin-console/models/response/profile-provider.response";
@@ -18,6 +20,7 @@ export class ProfileResponse extends BaseResponse {
   avatarColor: string;
   creationDate: string;
   privateKey: string;
+  accountKeys: PrivateAccountKeysResponseModel;
   securityStamp: string;
   forcePasswordReset: boolean;
   usesKeyConnector: boolean;
@@ -37,6 +40,7 @@ export class ProfileResponse extends BaseResponse {
     this.culture = this.getResponseProperty("Culture");
     this.twoFactorEnabled = this.getResponseProperty("TwoFactorEnabled");
     this.key = this.getResponseProperty("Key");
+    this.accountKeys = new PrivateAccountKeysResponseModel(this.getResponseProperty("AccountKeys"));
     this.avatarColor = this.getResponseProperty("AvatarColor");
     this.creationDate = this.getResponseProperty("CreationDate");
     this.privateKey = this.getResponseProperty("PrivateKey");

@@ -203,6 +203,7 @@ export class DefaultSdkService implements SdkService {
               },
             },
       privateKey,
+      signingKey: null,
     });
 
     // We initialize the org crypto even if the org_keys are
