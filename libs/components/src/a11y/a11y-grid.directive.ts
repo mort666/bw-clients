@@ -15,6 +15,13 @@ import {
 import type { A11yCellDirective } from "./a11y-cell.directive";
 import { A11yRowDirective } from "./a11y-row.directive";
 
+/**
+ * Implementation of the WAI Data Grid pattern.
+ *
+ * Adds grid-based keyboard navigation to the host element. Queries for children with `A11yRowDirective` and `A11yCellDirective`.
+ *
+ * @see https://www.w3.org/WAI/ARIA/apg/patterns/grid/examples/data-grids/
+ */
 @Directive({
   selector: "bitA11yGrid",
   standalone: true,
@@ -67,28 +74,28 @@ export class A11yGridDirective {
   onKeyDown(event: KeyboardEvent) {
     switch (event.code) {
       case "ArrowUp":
-        this.updateCellFocusByDelta(-1, 0);
+        this.updateActiveCell(-1, 0);
         break;
       case "ArrowRight":
-        this.updateCellFocusByDelta(0, 1);
+        this.updateActiveCell(0, 1);
         break;
       case "ArrowDown":
-        this.updateCellFocusByDelta(1, 0);
+        this.updateActiveCell(1, 0);
         break;
       case "ArrowLeft":
-        this.updateCellFocusByDelta(0, -1);
+        this.updateActiveCell(0, -1);
         break;
       case "Home":
-        this.updateCellFocusByDelta(-this.activeRow(), 0);
+        this.updateActiveCell(-this.activeRow(), 0);
         break;
       case "End":
-        this.updateCellFocusByDelta(this.numRows, 0);
+        this.updateActiveCell(this.numRows, 0);
         break;
       case "PageUp":
-        this.updateCellFocusByDelta(-this.pageSize(), 0);
+        this.updateActiveCell(-this.pageSize(), 0);
         break;
       case "PageDown":
-        this.updateCellFocusByDelta(this.pageSize(), 0);
+        this.updateActiveCell(this.pageSize(), 0);
         break;
       default:
         return;
@@ -100,27 +107,46 @@ export class A11yGridDirective {
 
   /**
    * Converts real row index to viewport row index. The two will differ when list virtualization is used.
-   * @param realRow A row index based on the total number of rows in the grid
+   * @param row A row index based on the total number of rows in the grid
    * @returns A row index based on the total number rows being rendered in the viewport.
    */
-  private convertRealRowToViewportRow(realRow: number): number {
+  private convertRealRowToViewportRow(row: number): number {
+    if (this.viewPort) {
+      const { start } = this.viewPort.getRenderedRange();
+      // TODO, removing this console log makes things break
+      // eslint-disable-next-line no-console
+      console.log(`row: ${row}, start: ${start}, gridLength: ${this.grid().length}`);
+      if (row >= start) {
+        return row - start;
+      }
+    }
+
+    return row;
+  }
+
+  /** Get the number of columns for a particular row */
+  private getNumColumns(row: number) {
+    return this.grid()[this.convertRealRowToViewportRow(row)].length;
+  }
+
+  private scrollRowIntoViewport(row: number) {
     if (!this.viewPort) {
-      return realRow;
+      return;
     }
 
     const { start, end } = this.viewPort.getRenderedRange();
-    if (realRow >= start && realRow < end) {
-      return realRow - start;
+
+    if (row >= start && row <= end) {
+      return;
     }
-    return realRow;
+
+    this.viewPort.scrollToIndex(row);
   }
 
   /** Move focus via a delta against the currently active gridcell */
-  private updateCellFocusByDelta(rowDelta: number, colDelta: number) {
+  private updateActiveCell(rowDelta: number, colDelta: number) {
     let nextCol = this.activeCol() + colDelta;
     let nextRow = this.activeRow() + rowDelta;
-
-    const getNumColumns = (r: number) => this.grid()[this.convertRealRowToViewportRow(r)].length;
 
     // Row upper bound
     if (nextRow >= this.numRows) {
@@ -132,14 +158,17 @@ export class A11yGridDirective {
       nextRow = 0;
     }
 
+    // The row must exist in the viewport before we can query its columns
+    this.scrollRowIntoViewport(nextRow);
+
     // Column upper bound
-    if (nextCol >= getNumColumns(nextRow)) {
+    if (nextCol >= this.getNumColumns(nextRow)) {
       if (nextRow < this.numRows - 1) {
         // Wrap to next row on right arrow
         nextCol = 0;
         nextRow += 1;
       } else {
-        nextCol = getNumColumns(nextRow) - 1;
+        nextCol = this.getNumColumns(nextRow) - 1;
       }
     }
 
@@ -148,7 +177,7 @@ export class A11yGridDirective {
       if (nextRow > 0) {
         // Wrap to prev row on left arrow
         nextRow -= 1;
-        nextCol = getNumColumns(nextRow) - 1;
+        nextCol = this.getNumColumns(nextRow) - 1;
       } else {
         nextCol = 0;
       }
