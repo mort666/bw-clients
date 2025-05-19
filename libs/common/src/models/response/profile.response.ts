@@ -19,8 +19,10 @@ export class ProfileResponse extends BaseResponse {
   key: string;
   avatarColor: string;
   creationDate: string;
+  // Cleanup: Can be removed after moving to accountKeys
   privateKey: string;
-  accountKeys: PrivateAccountKeysResponseModel;
+  // Cleanup: This should be non-optional after the server has been released for a while https://bitwarden.atlassian.net/browse/PM-21768
+  accountKeys: PrivateAccountKeysResponseModel | null;
   securityStamp: string;
   forcePasswordReset: boolean;
   usesKeyConnector: boolean;
@@ -40,7 +42,12 @@ export class ProfileResponse extends BaseResponse {
     this.culture = this.getResponseProperty("Culture");
     this.twoFactorEnabled = this.getResponseProperty("TwoFactorEnabled");
     this.key = this.getResponseProperty("Key");
-    this.accountKeys = new PrivateAccountKeysResponseModel(this.getResponseProperty("AccountKeys"));
+    // Cleanup: This should be non-optional after the server has been released for a while https://bitwarden.atlassian.net/browse/PM-21768
+    if (this.getResponseProperty("AccountKeys") != null) {
+      this.accountKeys = new PrivateAccountKeysResponseModel(
+        this.getResponseProperty("AccountKeys"),
+      );
+    }
     this.avatarColor = this.getResponseProperty("AvatarColor");
     this.creationDate = this.getResponseProperty("CreationDate");
     this.privateKey = this.getResponseProperty("PrivateKey");

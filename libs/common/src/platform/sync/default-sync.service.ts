@@ -195,15 +195,20 @@ export class DefaultSyncService extends CoreSyncService {
 
     /// Key management initialization
     await this.keyService.setMasterKeyEncryptedUserKey(response.key, response.id);
-    await this.keyService.setPrivateKey(
-      response.accountKeys.AsymmetricEncryptionKeys.wrappedPrivateKey.encryptedString!,
-      response.id,
-    );
-    if (response.accountKeys.SigningKeys !== null) {
-      await this.keyService.setUserSigningKey(
-        response.accountKeys.SigningKeys.wrappedSigningKey,
+    // Cleanup: Only the first branch should be kept after the server always returns accountKeys https://bitwarden.atlassian.net/browse/PM-21768
+    if (response.accountKeys != null) {
+      await this.keyService.setPrivateKey(
+        response.accountKeys.AsymmetricEncryptionKeys.wrappedPrivateKey.encryptedString!,
         response.id,
       );
+      if (response.accountKeys.SigningKeys !== null) {
+        await this.keyService.setUserSigningKey(
+          response.accountKeys.SigningKeys.wrappedSigningKey,
+          response.id,
+        );
+      }
+    } else {
+      await this.keyService.setPrivateKey(response.privateKey, response.id);
     }
     await this.keyService.setProviderKeys(response.providers, response.id);
     await this.keyService.setOrgKeys(
