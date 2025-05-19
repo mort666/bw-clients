@@ -8,6 +8,6 @@
       "@bitwarden/key-management": ["../key-management/src"]
     }
   },
-  "include": ["src", "spec", "src/models/verifying-key.ts"],
+  "include": ["src", "spec"],
   "exclude": ["node_modules", "dist"]
 }
