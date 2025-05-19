@@ -1,13 +1,11 @@
-import { SigningKeyType, UserSigningKey, VerifyingKey } from "@bitwarden/key-management";
+import { SigningKey, VerifyingKey } from "@bitwarden/key-management";
 
 export class UserSigningKeyData {
-  readonly keyAlgorithm: SigningKeyType;
-  readonly wrappedSigningKey: UserSigningKey;
+  readonly wrappedSigningKey: SigningKey;
   readonly verifyingKey: VerifyingKey;
 
   constructor(response: any) {
-    this.keyAlgorithm = response.keyAlgorithm;
-    this.wrappedSigningKey = new UserSigningKey(response.wrappedSigningKey);
+    this.wrappedSigningKey = new SigningKey(response.wrappedSigningKey);
     this.verifyingKey = new VerifyingKey(response.verifyingKey);
   }
 }

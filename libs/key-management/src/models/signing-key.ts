@@ -1,11 +1,11 @@
 import { EncString } from "@bitwarden/sdk-internal";
 
 /**
- * Represents a signing key for a user.
+ * Represents a signing key.
  * Internally, this is encrypted and needs an unlocked SDK instance for the correct user
  * to use.
  */
-export class UserSigningKey {
+export class SigningKey {
   private innerKey: EncString;
 
   constructor(innerKey: string) {
@@ -31,8 +31,8 @@ export class UserSigningKey {
   /**
    * Creates a serializable version of the signing key.
    */
-  static fromSerializable(serializable: SerializableUserSigningKeyPair): UserSigningKey {
-    return new UserSigningKey(serializable.signingKey);
+  static fromSerializable(serializable: SerializableUserSigningKeyPair): SigningKey {
+    return new SigningKey(serializable.signingKey);
   }
 }
 

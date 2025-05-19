@@ -60,7 +60,7 @@ import {
   UserPrivateKeyDecryptionFailedError,
 } from "./abstractions/key.service";
 import { KdfConfig } from "./models/kdf-config";
-import { UserSigningKey } from "./models/user-signing-key";
+import { SigningKey } from "./models/signing-key";
 
 export class DefaultKeyService implements KeyServiceAbstraction {
   private readonly activeUserEverHadUserKey: ActiveUserState<boolean>;
@@ -999,7 +999,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
     );
   }
 
-  async setUserSigningKey(userSigningKey: UserSigningKey, userId: UserId): Promise<void> {
+  async setUserSigningKey(userSigningKey: SigningKey, userId: UserId): Promise<void> {
     if (userSigningKey == null) {
       throw new Error("No user signing key provided.");
     }
@@ -1013,13 +1013,13 @@ export class DefaultKeyService implements KeyServiceAbstraction {
     );
   }
 
-  userSigningKey$(userId: UserId): Observable<UserSigningKey | null> {
+  userSigningKey$(userId: UserId): Observable<SigningKey | null> {
     return this.stateProvider.getUser(userId, USER_KEY_ENCRYPTED_SIGNING_KEY).state$.pipe(
       map((encryptedSigningKey) => {
         if (encryptedSigningKey == null) {
           return null;
         }
-        return UserSigningKey.fromSerializable(encryptedSigningKey);
+        return SigningKey.fromSerializable(encryptedSigningKey);
       }),
     );
   }

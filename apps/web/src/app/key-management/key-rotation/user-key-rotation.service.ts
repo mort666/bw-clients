@@ -24,7 +24,7 @@ import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.servi
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
 import { DialogService, ToastService } from "@bitwarden/components";
-import { KdfConfig, KeyService, UserSigningKey, VerifyingKey } from "@bitwarden/key-management";
+import { KdfConfig, KeyService, SigningKey, VerifyingKey } from "@bitwarden/key-management";
 import {
   AccountRecoveryTrustComponent,
   EmergencyAccessTrustComponent,
@@ -136,9 +136,8 @@ export class UserKeyRotationService {
       wrappedPrivateKey.encryptedString!,
       publicKey,
       signedPublicKeyOwnershipClaim,
-      signingKey.inner(),
-      verifyingKey.toString(),
-      verifyingKey.algorithm(),
+      signingKey,
+      verifyingKey,
     ) as AccountKeysRequest;
 
     // Methods to unlock the user (access the user key)
@@ -184,7 +183,7 @@ export class UserKeyRotationService {
     kdfConfig: KdfConfig,
   ): Promise<{
     userKey: UserKey;
-    signingKey?: UserSigningKey;
+    signingKey?: SigningKey;
     verifyingKey?: VerifyingKey;
     signedPublicKeyOwnershipClaim?: string;
     wrappedPrivateKey: EncString;
@@ -217,7 +216,7 @@ export class UserKeyRotationService {
         signingKey: signingKeyEncString,
       } = noSigningKeySdkClient.crypto().make_signing_keys();
       const verifyingKey = new VerifyingKey(verifyingKeyString);
-      const signingKey = new UserSigningKey(signingKeyEncString);
+      const signingKey = new SigningKey(signingKeyEncString);
       return {
         userKey: newUserKey,
         signingKey,
@@ -238,7 +237,7 @@ export class UserKeyRotationService {
           publicKey: Utils.fromBufferToB64(publicKey),
         };
       } else {
-        const existingSigningKey: UserSigningKey = null;
+        const existingSigningKey: SigningKey = null;
         const existingVerifyingKey: VerifyingKey = null;
 
         return {

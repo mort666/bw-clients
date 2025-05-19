@@ -19,7 +19,7 @@ import {
 } from "@bitwarden/common/types/key";
 
 import { KdfConfig } from "../models/kdf-config";
-import { UserSigningKey } from "../models/user-signing-key";
+import { SigningKey } from "../models/signing-key";
 
 export class UserPrivateKeyDecryptionFailedError extends Error {
   constructor() {
@@ -294,7 +294,7 @@ export abstract class KeyService {
    * @param encryptedSigningKey An encrypted signing key
    * @param userId The user id of the user to set the signing key for
    */
-  abstract setUserSigningKey(encryptedSigningKey: UserSigningKey, userId: UserId): Promise<void>;
+  abstract setUserSigningKey(encryptedSigningKey: SigningKey, userId: UserId): Promise<void>;
   /**
    * Returns the private key from memory. If not available, decrypts it
    * from storage and stores it in memory
@@ -458,9 +458,10 @@ export abstract class KeyService {
   abstract userPublicKey$(userId: UserId): Observable<UserPublicKey | null>;
 
   /**
-   * Gets a users signing key.
+   * Gets a users signing keys from local state.
+   * The observable will emit null, exactly if the local state returns null.
    */
-  abstract userSigningKey$(userId: UserId): Observable<UserSigningKey | null>;
+  abstract userSigningKey$(userId: UserId): Observable<SigningKey | null>;
 
   /**
    * Validates that a userkey is correct for a given user
