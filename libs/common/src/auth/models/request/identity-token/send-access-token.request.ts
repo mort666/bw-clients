@@ -23,8 +23,10 @@ export type SendAccessTokenPayload = SendAccessTokenPayloadBase &
   );
 
 export class SendAccessTokenRequest {
+  /// The client_id for the Send client
+  private static readonly CLIENT_ID = ClientType.Send as const;
+
   constructor(
-    public clientId: ClientType,
     public sendId: string,
 
     public password?: string,
@@ -38,7 +40,7 @@ export class SendAccessTokenRequest {
    */
   toIdentityTokenPayload(): SendAccessTokenPayload {
     const base: SendAccessTokenPayloadBase = {
-      client_id: this.clientId,
+      client_id: SendAccessTokenRequest.CLIENT_ID,
       grant_type: GrantTypes.SendAccess,
       scope: Scopes.Send,
 
