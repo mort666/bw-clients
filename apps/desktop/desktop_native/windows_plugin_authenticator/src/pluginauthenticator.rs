@@ -3,9 +3,15 @@
     Windows Plugin Authenticator API defined here:
 
     https://github.com/microsoft/webauthn/blob/master/experimental/pluginauthenticator.h
+
+    The Factory pattern & COM interactions are based on the examples provided here:
+    - https://github.com/microsoft/windows-rs/blob/bb15076311bf185400ecd244d47596b8415450fa/crates/tests/libs/implement/tests/class_factory.rs
+    - https://github.com/microsoft/windows-rs/pull/3531
+    - https://kennykerr.ca/rust-getting-started/how-to-implement-com-interface.html
 */
 
 use windows::Win32::System::Com::*;
+use windows::{Foundation::*, Win32::System::Com::*};
 use windows_core::*;
 
 use crate::util;
@@ -52,12 +58,12 @@ pub unsafe trait EXPERIMENTAL_IPluginAuthenticator: IUnknown {
     fn EXPERIMENTAL_PluginMakeCredential(
         &self,
         request: *const ExperimentalWebAuthnPluginOperationRequest,
-        response: *mut ExperimentalWebAuthnPluginOperationResponse,
+        response: *mut *mut ExperimentalWebAuthnPluginOperationResponse,
     ) -> HRESULT;
     fn EXPERIMENTAL_PluginGetAssertion(
         &self,
         request: *const ExperimentalWebAuthnPluginOperationRequest,
-        response: *mut ExperimentalWebAuthnPluginOperationResponse,
+        response: *mut *mut ExperimentalWebAuthnPluginOperationResponse,
     ) -> HRESULT;
     fn EXPERIMENTAL_PluginCancelOperation(
         &self,
@@ -69,13 +75,13 @@ pub unsafe trait EXPERIMENTAL_IPluginAuthenticator: IUnknown {
 pub struct PluginAuthenticatorComObject;
 
 #[implement(IClassFactory)]
-pub struct Factory();
+pub struct Factory;
 
 impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Impl {
     unsafe fn EXPERIMENTAL_PluginMakeCredential(
         &self,
         _request: *const ExperimentalWebAuthnPluginOperationRequest,
-        _response: *mut ExperimentalWebAuthnPluginOperationResponse,
+        _response: *mut *mut ExperimentalWebAuthnPluginOperationResponse,
     ) -> HRESULT {
         util::message(String::from("EXPERIMENTAL_PluginMakeCredential() called"));
         HRESULT(0)
@@ -84,7 +90,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
     unsafe fn EXPERIMENTAL_PluginGetAssertion(
         &self,
         _request: *const ExperimentalWebAuthnPluginOperationRequest,
-        _response: *mut ExperimentalWebAuthnPluginOperationResponse,
+        _response: *mut *mut ExperimentalWebAuthnPluginOperationResponse,
     ) -> HRESULT {
         util::message(String::from("EXPERIMENTAL_PluginGetAssertion() called"));
         HRESULT(0)

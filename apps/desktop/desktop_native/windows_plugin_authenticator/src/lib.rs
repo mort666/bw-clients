@@ -109,7 +109,7 @@ pub fn register() -> std::result::Result<(), String> {
         &mut credential_details;
     std::mem::forget(credential_details);
 
-    let mut clsid_string = String::from(format!("{{{}}}",CLSID));
+    let mut clsid_string = String::from(format!("{{{}}}", CLSID));
     let mut clsid_vec: Vec<u16> = clsid_string.encode_utf16().collect();
     clsid_vec.push(0);
     let plugin_clsid: *mut u16 = clsid_vec.as_mut_ptr();
@@ -250,13 +250,15 @@ fn initialize_com_library() -> std::result::Result<(), String> {
 /// Registers the Bitwarden Plugin Authenticator COM library with Windows.
 fn register_com_library() -> std::result::Result<(), String> {
     static FACTORY: windows_core::StaticComObject<pluginauthenticator::Factory> =
-        pluginauthenticator::Factory().into_static();
-    let clsid: *const GUID = &GUID::from_u128(0xa98925d161f640de9327dc418fcb2ff4);
+        pluginauthenticator::Factory.into_static();
+    //let clsid: *const GUID = &GUID::from_u128(0xa98925d161f640de9327dc418fcb2ff4);
+    let clsid: *const GUID = &GUID::from_u128(0x0f7dc5d969ce465285726877fd695062);
 
     match unsafe {
         CoRegisterClassObject(
             clsid,
             FACTORY.as_interface_ref(),
+            //FACTORY.as_interface::<pluginauthenticator::EXPERIMENTAL_IPluginAuthenticator>(),
             CLSCTX_LOCAL_SERVER,
             REGCLS_MULTIPLEUSE,
         )
