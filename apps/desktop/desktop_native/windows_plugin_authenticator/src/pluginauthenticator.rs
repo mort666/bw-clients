@@ -80,8 +80,8 @@ pub struct Factory;
 impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Impl {
     unsafe fn EXPERIMENTAL_PluginMakeCredential(
         &self,
-        _request: *const ExperimentalWebAuthnPluginOperationRequest,
-        _response: *mut *mut ExperimentalWebAuthnPluginOperationResponse,
+        request: *const ExperimentalWebAuthnPluginOperationRequest,
+        response: *mut *mut ExperimentalWebAuthnPluginOperationResponse,
     ) -> HRESULT {
         util::message(String::from("EXPERIMENTAL_PluginMakeCredential() called"));
         HRESULT(0)
@@ -89,8 +89,8 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
 
     unsafe fn EXPERIMENTAL_PluginGetAssertion(
         &self,
-        _request: *const ExperimentalWebAuthnPluginOperationRequest,
-        _response: *mut *mut ExperimentalWebAuthnPluginOperationResponse,
+        request: *const ExperimentalWebAuthnPluginOperationRequest,
+        response: *mut *mut ExperimentalWebAuthnPluginOperationResponse,
     ) -> HRESULT {
         util::message(String::from("EXPERIMENTAL_PluginGetAssertion() called"));
         HRESULT(0)
@@ -98,7 +98,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
 
     unsafe fn EXPERIMENTAL_PluginCancelOperation(
         &self,
-        _request: *const ExperimentalWebAuthnPluginCancelOperationRequest,
+        request: *const ExperimentalWebAuthnPluginCancelOperationRequest,
     ) -> HRESULT {
         util::message(String::from("EXPERIMENTAL_PluginCancelOperation() called"));
         HRESULT(0)
