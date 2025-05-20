@@ -447,28 +447,32 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
       return;
     }
 
-    const activeUserId = await firstValueFrom(
-      this.accountService.activeAccount$.pipe(getOptionalUserId),
-    );
-    const { cipher, securityTask } = await this.getSecurityTaskAndCipherForLoginData(
-      modifyLoginData,
-      activeUserId,
-    );
-    const shouldTriggerAtRiskPasswordNotification: boolean = typeof securityTask !== "undefined";
+    const shouldGetTasks: boolean = await this.notificationBackground.getNotificationFlag();
 
-    if (shouldTriggerAtRiskPasswordNotification) {
-      await this.notificationBackground.openAtRisksPasswordNotification(
-        {
-          command: "bgOpenAtRisksPasswordNotification",
-          data: {
-            activeUserId,
-            cipher,
-            securityTask,
-          },
-        },
-        { tab },
+    if (shouldGetTasks) {
+      const activeUserId = await firstValueFrom(
+        this.accountService.activeAccount$.pipe(getOptionalUserId),
       );
-      this.clearCompletedWebRequest(requestId, tab);
+      const { cipher, securityTask } = await this.getSecurityTaskAndCipherForLoginData(
+        modifyLoginData,
+        activeUserId,
+      );
+      const shouldTriggerAtRiskPasswordNotification: boolean = typeof securityTask !== "undefined";
+
+      if (shouldTriggerAtRiskPasswordNotification) {
+        await this.notificationBackground.openAtRisksPasswordNotification(
+          {
+            command: "bgOpenAtRisksPasswordNotification",
+            data: {
+              activeUserId,
+              cipher,
+              securityTask,
+            },
+          },
+          { tab },
+        );
+        this.clearCompletedWebRequest(requestId, tab);
+      }
     }
   };
 
@@ -506,11 +510,6 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
     cipher: CipherView | undefined;
     uri: ModifyLoginCipherFormData["uri"];
   }> {
-    const shouldGetTasks: boolean = await this.notificationBackground.getNotificationFlag();
-    if (!shouldGetTasks) {
-      return { cipher: undefined, securityTask: undefined, uri: modifyLoginData.uri };
-    }
-
     const tasks: SecurityTask[] = await this.notificationBackground.getSecurityTasks(activeUserId);
     const ciphers: CipherView[] = await this.cipherService.getAllDecryptedForUrl(
       modifyLoginData.uri,
