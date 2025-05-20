@@ -24,6 +24,8 @@ export class SendTokenService implements SendTokenServiceAbstraction {
   ) {}
 
   async getSendAccessToken(sendId: string, sendCredentials?: SendAccessCredentials): Promise<void> {
-    // TODO: first
+    // TODO: check in storage for the access token and if it is expired.
+    // If it is expired, we will need to request a new token from the server.
+    // If it is not expired, we will return the token from storage.
   }
 }
