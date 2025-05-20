@@ -2,8 +2,6 @@ import { ClientType } from "../../../../enums";
 import { GrantType, GrantTypes } from "../../../enums/grant-type.enum";
 import { Scope, Scopes } from "../../../enums/scopes.enum";
 
-import { DeviceRequest } from "./device.request";
-
 export type SendAccessTokenPasswordPayload = { password: string };
 export type SendAccessTokenEmailOtpPayload = { email: string; otp: string };
 export type SendAccessTokenAnonymousPayload = object; // empty object
@@ -28,7 +26,6 @@ export class SendAccessTokenRequest {
   constructor(
     public clientId: ClientType,
     public sendId: string,
-    public device: DeviceRequest,
 
     public password?: string,
 
