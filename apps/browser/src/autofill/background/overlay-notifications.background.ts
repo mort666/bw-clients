@@ -268,8 +268,8 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
     const modifyLoginData = this.modifyLoginCipherFormData.get(tabId);
     return (
       !modifyLoginData ||
-      !this.shouldTriggerAddLoginNotification(modifyLoginData) ||
-      !this.shouldTriggerChangePasswordNotification(modifyLoginData)
+      !this.shouldAttemptAddLoginNotification(modifyLoginData) ||
+      !this.shouldAttemptChangePasswordNotification(modifyLoginData)
     );
   };
 
@@ -401,7 +401,7 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
   };
 
   /**
-   * Initializes the add login or change password notification based on the modified login form data
+   * Initializes the add login, change, or at risk password notification based on the modified login form data
    * and the tab details. This will trigger the notification to be displayed to the user.
    *
    * @param requestId - The details of the web response
@@ -413,38 +413,48 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
     modifyLoginData: ModifyLoginCipherFormData,
     tab: chrome.tabs.Tab,
   ) => {
-    if (this.shouldTriggerChangePasswordNotification(modifyLoginData)) {
+    let error: Error;
+
+    if (this.shouldAttemptChangePasswordNotification(modifyLoginData)) {
       // These notifications are temporarily setup as "messages" to the notification background.
       // This will be structured differently in a future refactor.
-      await this.notificationBackground.changedPassword(
-        {
-          command: "bgChangedPassword",
-          data: {
-            url: modifyLoginData.uri,
-            currentPassword: modifyLoginData.password,
-            newPassword: modifyLoginData.newPassword,
+      try {
+        await this.notificationBackground.triggerChangedPasswordNotification(
+          {
+            command: "bgTriggerChangedPasswordNotification",
+            data: {
+              url: modifyLoginData.uri,
+              currentPassword: modifyLoginData.password,
+              newPassword: modifyLoginData.newPassword,
+            },
           },
-        },
-        { tab },
-      );
-      this.clearCompletedWebRequest(requestId, tab);
-      return;
+          { tab },
+        );
+        this.clearCompletedWebRequest(requestId, tab);
+        return;
+      } catch (e) {
+        error = e;
+      }
     }
 
-    if (this.shouldTriggerAddLoginNotification(modifyLoginData)) {
-      await this.notificationBackground.addLogin(
-        {
-          command: "bgAddLogin",
-          login: {
-            url: modifyLoginData.uri,
-            username: modifyLoginData.username,
-            password: modifyLoginData.password || modifyLoginData.newPassword,
+    if (this.shouldAttemptAddLoginNotification(modifyLoginData)) {
+      try {
+        await this.notificationBackground.triggerAddLoginNotification(
+          {
+            command: "bgAddLogin",
+            login: {
+              url: modifyLoginData.uri,
+              username: modifyLoginData.username,
+              password: modifyLoginData.password || modifyLoginData.newPassword,
+            },
           },
-        },
-        { tab },
-      );
-      this.clearCompletedWebRequest(requestId, tab);
-      return;
+          { tab },
+        );
+        this.clearCompletedWebRequest(requestId, tab);
+        return;
+      } catch (e) {
+        error = e;
+      }
     }
 
     const shouldGetTasks: boolean = await this.notificationBackground.getNotificationFlag();
@@ -460,9 +470,9 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
       const shouldTriggerAtRiskPasswordNotification: boolean = typeof securityTask !== "undefined";
 
       if (shouldTriggerAtRiskPasswordNotification) {
-        await this.notificationBackground.openAtRisksPasswordNotification(
+        await this.notificationBackground.triggerAtRiskPasswordNotification(
           {
-            command: "bgOpenAtRisksPasswordNotification",
+            command: "bgTriggerAtRiskPasswordNotification",
             data: {
               activeUserId,
               cipher,
@@ -472,27 +482,29 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
           { tab },
         );
         this.clearCompletedWebRequest(requestId, tab);
+        return;
       }
     }
+    return error;
   };
 
   /**
-   * Determines if the change password notification should be triggered.
+   * Determines if the change password notification should be attempted.
    *
    * @param modifyLoginData - The modified login form data
    */
-  private shouldTriggerChangePasswordNotification = (
+  private shouldAttemptChangePasswordNotification = (
     modifyLoginData: ModifyLoginCipherFormData,
   ) => {
     return modifyLoginData?.newPassword && !modifyLoginData.username;
   };
 
   /**
-   * Determines if the add login notification should be triggered.
+   * Determines if the add login notification should be attempted.
    *
    * @param modifyLoginData - The modified login form data
    */
-  private shouldTriggerAddLoginNotification = (modifyLoginData: ModifyLoginCipherFormData) => {
+  private shouldAttemptAddLoginNotification = (modifyLoginData: ModifyLoginCipherFormData) => {
     return modifyLoginData?.username && (modifyLoginData.password || modifyLoginData.newPassword);
   };
 
