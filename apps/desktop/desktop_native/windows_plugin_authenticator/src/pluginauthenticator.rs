@@ -8,6 +8,7 @@
     - https://github.com/microsoft/windows-rs/blob/bb15076311bf185400ecd244d47596b8415450fa/crates/tests/libs/implement/tests/class_factory.rs
     - https://github.com/microsoft/windows-rs/pull/3531
     - https://kennykerr.ca/rust-getting-started/how-to-implement-com-interface.html
+    - https://github.com/bitwarden/clients/pull/10204/files#diff-a4de81fd5a2389d7b512dd37989a42a452fe36cbc1f32d16d5832880355d5669R106
 */
 
 use windows::Win32::System::Com::*;
@@ -83,6 +84,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
         request: *const ExperimentalWebAuthnPluginOperationRequest,
         response: *mut *mut ExperimentalWebAuthnPluginOperationResponse,
     ) -> HRESULT {
+        panic!("EXPERIMENTAL_PluginMakeCredential() called");
         util::message(String::from("EXPERIMENTAL_PluginMakeCredential() called"));
         HRESULT(0)
     }
@@ -92,6 +94,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
         request: *const ExperimentalWebAuthnPluginOperationRequest,
         response: *mut *mut ExperimentalWebAuthnPluginOperationResponse,
     ) -> HRESULT {
+        panic!("EXPERIMENTAL_PluginGetAssertion() called");
         util::message(String::from("EXPERIMENTAL_PluginGetAssertion() called"));
         HRESULT(0)
     }
@@ -100,6 +103,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
         &self,
         request: *const ExperimentalWebAuthnPluginCancelOperationRequest,
     ) -> HRESULT {
+        panic!("EXPERIMENTAL_PluginCancelOperation() called");
         util::message(String::from("EXPERIMENTAL_PluginCancelOperation() called"));
         HRESULT(0)
     }

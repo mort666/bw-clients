@@ -57,10 +57,11 @@ tokio-util = "=0.7.13"
 typenum = "=1.18.0"
 uniffi =  "=0.28.3"
 widestring = "=1.2.0"
-windows = "=0.61.1"
-windows-core = "=0.61.0"
-windows-future = "=0.2.0"
-windows-registry = "=0.5.1"
+# windows = "=0.61.1"
+windows = { git = "https://github.com/microsoft/windows-rs.git", rev = "d09b4681de02560cf05bd3e57d7ea56b73f3b2f8" }
+windows-core = { git = "https://github.com/microsoft/windows-rs.git", rev = "d09b4681de02560cf05bd3e57d7ea56b73f3b2f8" }
+windows-future = { git = "https://github.com/microsoft/windows-rs.git", rev = "d09b4681de02560cf05bd3e57d7ea56b73f3b2f8" }
+windows-registry = { git = "https://github.com/microsoft/windows-rs.git", rev = "d09b4681de02560cf05bd3e57d7ea56b73f3b2f8" }
 zbus = "=4.4.0"
 zbus_polkit = "=4.0.0"
 zeroizing-alloc = "=0.1.0"
