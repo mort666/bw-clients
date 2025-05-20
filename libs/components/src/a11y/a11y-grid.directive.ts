@@ -23,7 +23,7 @@ import { A11yRowDirective } from "./a11y-row.directive";
  * @see https://www.w3.org/WAI/ARIA/apg/patterns/grid/examples/data-grids/
  */
 @Directive({
-  selector: "bitA11yGrid",
+  selector: "[bitA11yGrid]",
   standalone: true,
 })
 export class A11yGridDirective {

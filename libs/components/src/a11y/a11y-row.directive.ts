@@ -10,7 +10,7 @@ import {
 import { A11yCellDirective } from "./a11y-cell.directive";
 
 @Directive({
-  selector: "bitA11yRow",
+  selector: "[bitA11yRow]",
   standalone: true,
 })
 export class A11yRowDirective {
