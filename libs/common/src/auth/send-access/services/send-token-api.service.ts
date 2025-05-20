@@ -11,7 +11,6 @@ export class SendTokenApiService implements SendTokenApiServiceAbstraction {
     private apiService: ApiService,
   ) {}
 
-  // TODO: talk with Justin about needing to use httpOperations or not.
   async requestSendAccessToken(request: SendAccessTokenRequest): Promise<void> {
     const payload = request.toIdentityTokenPayload();
 
@@ -34,6 +33,6 @@ export class SendTokenApiService implements SendTokenApiServiceAbstraction {
 
     await this.apiService.fetch(req);
 
-    // TODO: add processing.
+    // TODO: add result processing
   }
 }
