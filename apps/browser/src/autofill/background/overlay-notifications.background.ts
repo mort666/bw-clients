@@ -269,7 +269,7 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
     return (
       !modifyLoginData ||
       !this.shouldAttemptAddLoginNotification(modifyLoginData) ||
-      !this.shouldAttemptChangePasswordNotification(modifyLoginData)
+      !this.shouldAttemptChangedPasswordNotification(modifyLoginData)
     );
   };
 
@@ -401,7 +401,7 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
   };
 
   /**
-   * Initializes the add login, change, or at risk password notification based on the modified login form data
+   * Initializes the add login or change password notification based on the modified login form data
    * and the tab details. This will trigger the notification to be displayed to the user.
    *
    * @param requestId - The details of the web response
@@ -413,15 +413,14 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
     modifyLoginData: ModifyLoginCipherFormData,
     tab: chrome.tabs.Tab,
   ) => {
-    let error: Error;
-
-    if (this.shouldAttemptChangePasswordNotification(modifyLoginData)) {
+    let error: string;
+    if (this.shouldAttemptChangedPasswordNotification(modifyLoginData)) {
       // These notifications are temporarily setup as "messages" to the notification background.
       // This will be structured differently in a future refactor.
       try {
-        await this.notificationBackground.triggerChangedPasswordNotification(
+        const result = await this.notificationBackground.triggerChangedPasswordNotification(
           {
-            command: "bgTriggerChangedPasswordNotification",
+            command: "bgChangedPassword",
             data: {
               url: modifyLoginData.uri,
               currentPassword: modifyLoginData.password,
@@ -430,18 +429,21 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
           },
           { tab },
         );
-        this.clearCompletedWebRequest(requestId, tab);
-        return;
+        if (!result) {
+          throw Error("Didn't trigger changedPassword ");
+        }
       } catch (e) {
         error = e;
       }
+      this.clearCompletedWebRequest(requestId, tab);
+      return;
     }
 
     if (this.shouldAttemptAddLoginNotification(modifyLoginData)) {
       try {
-        await this.notificationBackground.triggerAddLoginNotification(
+        const result = await this.notificationBackground.triggerAddLoginNotification(
           {
-            command: "bgAddLogin",
+            command: "bgTriggerAddLoginNotification",
             login: {
               url: modifyLoginData.uri,
               username: modifyLoginData.username,
@@ -450,11 +452,14 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
           },
           { tab },
         );
-        this.clearCompletedWebRequest(requestId, tab);
-        return;
+        if (!result) {
+          throw Error("Didn't trigger addLogin notification");
+        }
       } catch (e) {
         error = e;
       }
+      this.clearCompletedWebRequest(requestId, tab);
+      return error;
     }
 
     const shouldGetTasks: boolean = await this.notificationBackground.getNotificationFlag();
@@ -482,25 +487,23 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
           { tab },
         );
         this.clearCompletedWebRequest(requestId, tab);
-        return;
       }
     }
-    return error;
   };
 
   /**
-   * Determines if the change password notification should be attempted.
+   * Determines if the change password notification should be triggered.
    *
    * @param modifyLoginData - The modified login form data
    */
-  private shouldAttemptChangePasswordNotification = (
+  private shouldAttemptChangedPasswordNotification = (
     modifyLoginData: ModifyLoginCipherFormData,
   ) => {
     return modifyLoginData?.newPassword && !modifyLoginData.username;
   };
 
   /**
-   * Determines if the add login notification should be attempted.
+   * Determines if the add login notification should be triggered.
    *
    * @param modifyLoginData - The modified login form data
    */

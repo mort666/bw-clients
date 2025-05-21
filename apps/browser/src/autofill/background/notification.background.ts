@@ -85,17 +85,16 @@ export default class NotificationBackground {
     ExtensionCommand.AutofillIdentity,
   ]);
   private readonly extensionMessageHandlers: NotificationBackgroundExtensionMessageHandlers = {
-    bgAddLogin: ({ message, sender }) => this.triggerAddLoginNotification(message, sender),
     bgAdjustNotificationBar: ({ message, sender }) =>
       this.handleAdjustNotificationBarMessage(message, sender),
+    bgTriggerAddLoginNotification: ({ message, sender }) =>
+      this.triggerAddLoginNotification(message, sender),
     bgTriggerChangedPasswordNotification: ({ message, sender }) =>
       this.triggerChangedPasswordNotification(message, sender),
     bgTriggerAtRiskPasswordNotification: ({ message, sender }) =>
       this.triggerAtRiskPasswordNotification(message, sender),
     bgCloseNotificationBar: ({ message, sender }) =>
       this.handleCloseNotificationBarMessage(message, sender),
-    bgOpenAtRisksPasswords: ({ message, sender }) =>
-      this.handleOpenAtRisksPasswordsMessage(message, sender),
     bgGetActiveUserServerConfig: () => this.getActiveUserServerConfig(),
     bgGetDecryptedCiphers: () => this.getNotificationCipherData(),
     bgGetEnableChangedPasswordPrompt: () => this.getEnableChangedPasswordPrompt(),
@@ -397,7 +396,7 @@ export default class NotificationBackground {
   async triggerAtRiskPasswordNotification(
     message: NotificationBackgroundExtensionMessage,
     sender: chrome.runtime.MessageSender,
-  ) {
+  ): Promise<boolean> {
     const { activeUserId, securityTask, cipher } = message.data;
     const domain = Utils.getDomain(sender.tab.url);
     const passwordChangeUri =
@@ -426,6 +425,7 @@ export default class NotificationBackground {
     };
     this.notificationQueue.push(queueMessage);
     await this.checkNotificationQueue(sender.tab);
+    return true;
   }
 
   /**
@@ -439,17 +439,17 @@ export default class NotificationBackground {
   async triggerAddLoginNotification(
     message: NotificationBackgroundExtensionMessage,
     sender: chrome.runtime.MessageSender,
-  ): Promise<true | never> {
+  ): Promise<boolean> {
     const authStatus = await this.getAuthStatus();
     if (authStatus === AuthenticationStatus.LoggedOut) {
-      throw Error("Auth status is logged out.");
+      return false;
     }
 
     const loginInfo = message.login;
     const normalizedUsername = loginInfo.username ? loginInfo.username.toLowerCase() : "";
     const loginDomain = Utils.getDomain(loginInfo.url);
     if (loginDomain == null) {
-      throw Error("Login domain is not present.");
+      return false;
     }
 
     const addLoginIsEnabled = await this.getEnableAddedLoginPrompt();
@@ -459,14 +459,14 @@ export default class NotificationBackground {
         await this.pushAddLoginToQueue(loginDomain, loginInfo, sender.tab, true);
       }
 
-      return true;
+      return false;
     }
 
     const activeUserId = await firstValueFrom(
       this.accountService.activeAccount$.pipe(getOptionalUserId),
     );
     if (activeUserId == null) {
-      throw Error("No active user.");
+      return false;
     }
 
     const ciphers = await this.cipherService.getAllDecryptedForUrl(loginInfo.url, activeUserId);
@@ -493,7 +493,7 @@ export default class NotificationBackground {
       );
       return true;
     }
-    throw Error("No change password notification pushed to queue.");
+    return false;
   }
 
   private async pushAddLoginToQueue(
@@ -530,11 +530,11 @@ export default class NotificationBackground {
   async triggerChangedPasswordNotification(
     message: NotificationBackgroundExtensionMessage,
     sender: chrome.runtime.MessageSender,
-  ): Promise<true | never> {
+  ) {
     const changeData = message.data as ChangePasswordMessageData;
     const loginDomain = Utils.getDomain(changeData.url);
     if (loginDomain == null) {
-      throw new Error("No login domain present.");
+      return false;
     }
 
     if ((await this.getAuthStatus()) < AuthenticationStatus.Unlocked) {
@@ -553,7 +553,7 @@ export default class NotificationBackground {
       this.accountService.activeAccount$.pipe(getOptionalUserId),
     );
     if (activeUserId == null) {
-      throw new Error("No active user.");
+      return false;
     }
 
     const ciphers = await this.cipherService.getAllDecryptedForUrl(changeData.url, activeUserId);
@@ -571,7 +571,7 @@ export default class NotificationBackground {
       await this.pushChangePasswordToQueue(id, loginDomain, changeData.newPassword, sender.tab);
       return true;
     }
-    throw Error("No change password notification queued.");
+    return false;
   }
 
   /**
@@ -644,7 +644,6 @@ export default class NotificationBackground {
     };
     this.notificationQueue.push(message);
     await this.checkNotificationQueue(tab);
-    return true;
   }
 
   private async pushUnlockVaultToQueue(loginDomain: string, tab: chrome.tabs.Tab) {

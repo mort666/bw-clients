@@ -335,7 +335,6 @@ describe("OverlayNotificationsBackground", () => {
     const pageDetails = mock<AutofillPageDetails>({ fields: [mock<AutofillField>()] });
     let notificationChangedPasswordSpy: jest.SpyInstance;
     let notificationAddLoginSpy: jest.SpyInstance;
-    let notificationAtRiskPasswordSpy: jest.SpyInstance;
 
     beforeEach(async () => {
       sender = mock<chrome.runtime.MessageSender>({
@@ -347,10 +346,6 @@ describe("OverlayNotificationsBackground", () => {
         "triggerChangedPasswordNotification",
       );
       notificationAddLoginSpy = jest.spyOn(notificationBackground, "triggerAddLoginNotification");
-      notificationAtRiskPasswordSpy = jest.spyOn(
-        notificationBackground,
-        "triggerAtRiskPasswordNotification",
-      );
 
       sendMockExtensionMessage(
         { command: "collectPageDetailsResponse", details: pageDetails },
@@ -411,7 +406,6 @@ describe("OverlayNotificationsBackground", () => {
 
         expect(notificationChangedPasswordSpy).not.toHaveBeenCalled();
         expect(notificationAddLoginSpy).not.toHaveBeenCalled();
-        expect(notificationAtRiskPasswordSpy).not.toHaveBeenCalled();
       });
 
       it("ignores requests for tabs that do not contain stored login data", async () => {
@@ -436,7 +430,6 @@ describe("OverlayNotificationsBackground", () => {
 
         expect(notificationChangedPasswordSpy).not.toHaveBeenCalled();
         expect(notificationAddLoginSpy).not.toHaveBeenCalled();
-        expect(notificationAtRiskPasswordSpy).not.toHaveBeenCalled();
       });
 
       it("clears the notification fallback timeout if the request is completed with an invalid status code", async () => {

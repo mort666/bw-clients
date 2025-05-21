@@ -119,17 +119,19 @@ type NotificationBackgroundExtensionMessageHandlers = {
     sender,
   }: BackgroundOnMessageHandlerParams) => Promise<CollectionView[]>;
   bgCloseNotificationBar: ({ message, sender }: BackgroundOnMessageHandlerParams) => Promise<void>;
-  bgTriggerAtRiskPasswordNotification: ({
+  bgAdjustNotificationBar: ({ message, sender }: BackgroundOnMessageHandlerParams) => Promise<void>;
+  bgTriggerAddLoginNotification: ({
     message,
     sender,
-  }: BackgroundOnMessageHandlerParams) => Promise<void>;
-  bgOpenAtRisksPasswords: ({ message, sender }: BackgroundOnMessageHandlerParams) => Promise<void>;
-  bgAdjustNotificationBar: ({ message, sender }: BackgroundOnMessageHandlerParams) => Promise<void>;
-  bgAddLogin: ({ message, sender }: BackgroundOnMessageHandlerParams) => Promise<true | never>;
+  }: BackgroundOnMessageHandlerParams) => Promise<boolean>;
   bgTriggerChangedPasswordNotification: ({
     message,
     sender,
-  }: BackgroundOnMessageHandlerParams) => Promise<true | never>;
+  }: BackgroundOnMessageHandlerParams) => Promise<boolean>;
+  bgTriggerAtRiskPasswordNotification: ({
+    message,
+    sender,
+  }: BackgroundOnMessageHandlerParams) => Promise<boolean>;
   bgRemoveTabFromNotificationQueue: ({ sender }: BackgroundSenderParam) => void;
   bgSaveCipher: ({ message, sender }: BackgroundOnMessageHandlerParams) => void;
   bgOpenAddEditVaultItemPopout: ({
