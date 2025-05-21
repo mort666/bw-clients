@@ -170,7 +170,7 @@ const routes: Routes = [
         canActivate: [
           canAccessFeature(
             FeatureFlag.PM16117_ChangeExistingPasswordRefactor,
-            true,
+            false,
             "/change-password",
             false,
           ),
@@ -184,7 +184,7 @@ const routes: Routes = [
         canActivate: [
           canAccessFeature(
             FeatureFlag.PM16117_ChangeExistingPasswordRefactor,
-            true,
+            false,
             "/change-password",
             false,
           ),
