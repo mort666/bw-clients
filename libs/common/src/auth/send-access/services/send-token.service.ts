@@ -1,4 +1,4 @@
-import { GlobalStateProvider, KeyDefinition, SEND_AUTH_DISK } from "../../../platform/state";
+import { GlobalStateProvider, KeyDefinition, SEND_ACCESS_DISK } from "../../../platform/state";
 import {
   SendAccessCredentials,
   SendTokenService as SendTokenServiceAbstraction,
@@ -10,7 +10,7 @@ import { SendTokenApiService } from "./send-token-api.service";
 // TODO: will need to build a better type for access token where it contains
 // the expires in and the token itself.
 export const SEND_ACCESS_TOKEN_DICT = KeyDefinition.record<string, string>(
-  SEND_AUTH_DISK,
+  SEND_ACCESS_DISK,
   "accessTokenDict",
   {
     deserializer: (accessTokenDict) => accessTokenDict,
