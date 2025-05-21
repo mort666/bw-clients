@@ -57,7 +57,7 @@ export class A11yGridDirective {
   );
   private numColumns = computed(() => this.renderedRow().length);
 
-  private focusTarget = computed(() => this.renderedRow()?.[this.activeCol()]?.getFocusTarget());
+  focusTarget = computed(() => this.renderedRow()?.[this.activeCol()]?.getFocusTarget());
 
   constructor() {
     // init the grid
