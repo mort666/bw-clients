@@ -40,7 +40,7 @@ export class ItemComponent extends A11yRowDirective {
     this.focusVisibleWithin.set(false);
   }
 
-  private a11yGrid = inject(A11yGridDirective);
+  private a11yGrid = inject(A11yGridDirective, { optional: true });
   private el = inject(ElementRef<HTMLElement>);
 
   constructor() {
@@ -49,7 +49,7 @@ export class ItemComponent extends A11yRowDirective {
     /** Workaround to reset internal component state when view is recycled during virtual scroll */
     effect(
       () => {
-        if (!this.el.nativeElement.contains(this.a11yGrid.focusTarget())) {
+        if (this.a11yGrid && !this.el.nativeElement.contains(this.a11yGrid.focusTarget())) {
           this.focusVisibleWithin.set(false);
         }
       },
