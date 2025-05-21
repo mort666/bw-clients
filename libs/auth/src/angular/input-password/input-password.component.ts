@@ -20,6 +20,7 @@ import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.servi
 import {
   AsyncActionsModule,
   ButtonModule,
+  CalloutComponent,
   CheckboxModule,
   DialogService,
   FormFieldModule,
@@ -95,6 +96,7 @@ interface InputPasswordForm {
     PasswordCalloutComponent,
     PasswordStrengthV2Component,
     JslibModule,
+    CalloutComponent,
   ],
 })
 export class InputPasswordComponent implements OnInit {

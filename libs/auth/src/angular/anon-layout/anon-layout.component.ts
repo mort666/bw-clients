@@ -53,10 +53,10 @@ export class AnonLayoutComponent implements OnInit, OnChanges {
    *
    * @default 'md'
    */
-  @Input() maxWidth: "md" | "3xl" = "md";
+  @Input() maxWidth: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" = "md";
 
   protected logo = BitwardenLogo;
-  protected year = "2024";
+  protected year = "";
   protected clientType: ClientType;
   protected hostname: string;
   protected version: string;

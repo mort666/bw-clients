@@ -155,8 +155,10 @@ const routes: Routes = [
               },
             ],
             data: {
-              pageIcon: undefined,
+              pageIcon: LockIcon,
+              pageTitle: { key: "updateMasterPassword" },
               hideFooter: true,
+              maxWidth: "lg",
             } satisfies AnonLayoutWrapperData,
           },
         ],
@@ -168,7 +170,7 @@ const routes: Routes = [
         canActivate: [
           canAccessFeature(
             FeatureFlag.PM16117_ChangeExistingPasswordRefactor,
-            false,
+            true,
             "/change-password",
             false,
           ),
@@ -182,7 +184,7 @@ const routes: Routes = [
         canActivate: [
           canAccessFeature(
             FeatureFlag.PM16117_ChangeExistingPasswordRefactor,
-            false,
+            true,
             "/change-password",
             false,
           ),
