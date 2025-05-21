@@ -37,6 +37,7 @@ export class A11yGridDirective {
   /** The number of pages to navigate on `PageUp` and `PageDown` */
   pageSize = input(5);
 
+  /** Rows rendered in the DOM. This might not be all rows if virtual scrolling is used. */
   private rows = contentChildren(A11yRowDirective);
   private rows$ = toObservable(this.rows);
 
@@ -51,15 +52,15 @@ export class A11yGridDirective {
   private activeRow = signal(0);
   private activeCol = signal(0);
 
-  private renderedRow = computed(() => this.convertRealRowToViewportRow(this.activeRow()));
-  private numColumns = computed(() => this.grid()[this.renderedRow()].length);
-
-  private focusTarget = computed(() =>
-    this.grid()?.[this.renderedRow()]?.[this.activeCol()]?.getFocusTarget(),
+  private renderedRow = computed(
+    () => this.grid()[this.convertRealRowToViewportRow(this.activeRow())],
   );
+  private numColumns = computed(() => this.renderedRow().length);
+
+  private focusTarget = computed(() => this.renderedRow()?.[this.activeCol()]?.getFocusTarget());
 
   constructor() {
-    // Consolidated effect for row/cell roles and tabIndex management (no focus here!)
+    // init the grid
     effect(() => {
       const focusTarget = this.focusTarget();
       const rows = this.rows();
@@ -80,10 +81,7 @@ export class A11yGridDirective {
 
   private async updateRow(delta: number) {
     const prev = this.activeRow();
-    let nextRow = prev + delta;
-
-    // Clamp to bounds
-    nextRow = Math.max(0, Math.min(nextRow, this.numRows - 1));
+    const nextRow = this.clamp(0, prev + delta, this.numRows - 1);
 
     // If the row is not rendered, scroll and wait for it to render before updating
     if (this.viewPort) {
@@ -111,12 +109,7 @@ export class A11yGridDirective {
   }
 
   private updateCol(delta: number) {
-    this.activeCol.update((prev) => {
-      let nextCol = prev + delta;
-      const cols = this.numColumns();
-      nextCol = Math.max(0, Math.min(nextCol, cols - 1));
-      return nextCol;
-    });
+    this.activeCol.update((prev) => this.clamp(0, prev + delta, this.numColumns() - 1));
 
     this.focusIfPossible();
   }
@@ -127,6 +120,10 @@ export class A11yGridDirective {
       focusTarget.tabIndex = 0;
       focusTarget.focus();
     }
+  }
+
+  private clamp(min: number, n: number, max: number) {
+    return Math.max(min, Math.min(n, max));
   }
 
   @HostListener("keydown", ["$event"])
