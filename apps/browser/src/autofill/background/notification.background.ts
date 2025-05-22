@@ -402,8 +402,9 @@ export default class NotificationBackground {
     const passwordChangeUri =
       await new TemporaryNotificationChangeLoginService().getChangePasswordUrl(cipher);
 
-    const addLoginIsEnabled = await this.getEnableAddedLoginPrompt();
-    const wasVaultLocked = AuthenticationStatus.Locked && addLoginIsEnabled;
+    const authStatus = await this.getAuthStatus();
+
+    const wasVaultLocked = authStatus === AuthenticationStatus.Locked;
 
     const organization = await firstValueFrom(
       this.organizationService
