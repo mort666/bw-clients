@@ -12,7 +12,7 @@
 */
 
 use windows::Win32::System::Com::*;
-use windows::{Foundation::*, Win32::System::Com::*};
+//use windows::{Foundation::*, Win32::System::Com::*};
 use windows_core::*;
 
 use crate::util;

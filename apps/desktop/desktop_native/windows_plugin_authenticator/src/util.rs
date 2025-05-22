@@ -1,3 +1,6 @@
+use std::ffi::OsString;
+use std::os::windows::ffi::OsStrExt;
+
 use serde_json::json;
 use windows::Win32::Foundation::*;
 use windows::Win32::System::LibraryLoader::*;
@@ -24,6 +27,7 @@ pub unsafe fn delay_load<T>(library: PCSTR, function: PCSTR) -> Option<T> {
 pub trait WindowsString {
     fn into_win_utf8(self: Self) -> (*mut u8, u32);
     fn into_win_utf16(self: Self) -> (*mut u16, u32);
+    fn into_win_utf16_wide(self: Self) -> (*mut u16, u32);
 }
 
 impl WindowsString for String {
@@ -36,6 +40,13 @@ impl WindowsString for String {
 
     fn into_win_utf16(self: Self) -> (*mut u16, u32) {
         let mut v: Vec<u16> = self.encode_utf16().collect();
+        v.push(0);
+
+        (v.as_mut_ptr(), v.len() as u32)
+    }
+
+    fn into_win_utf16_wide(self: Self) -> (*mut u16, u32) {
+        let mut v: Vec<u16> = OsString::from(self).encode_wide().collect();
         v.push(0);
 
         (v.as_mut_ptr(), v.len() as u32)
