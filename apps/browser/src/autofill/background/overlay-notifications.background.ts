@@ -413,53 +413,45 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
     modifyLoginData: ModifyLoginCipherFormData,
     tab: chrome.tabs.Tab,
   ) => {
-    let error: string;
+    let result: string;
     if (this.shouldAttemptChangedPasswordNotification(modifyLoginData)) {
       // These notifications are temporarily setup as "messages" to the notification background.
       // This will be structured differently in a future refactor.
-      try {
-        const result = await this.notificationBackground.triggerChangedPasswordNotification(
-          {
-            command: "bgChangedPassword",
-            data: {
-              url: modifyLoginData.uri,
-              currentPassword: modifyLoginData.password,
-              newPassword: modifyLoginData.newPassword,
-            },
+      const success = await this.notificationBackground.triggerChangedPasswordNotification(
+        {
+          command: "bgChangedPassword",
+          data: {
+            url: modifyLoginData.uri,
+            currentPassword: modifyLoginData.password,
+            newPassword: modifyLoginData.newPassword,
           },
-          { tab },
-        );
-        if (!result) {
-          throw Error("Didn't trigger changedPassword ");
-        }
-      } catch (e) {
-        error = e;
+        },
+        { tab },
+      );
+      if (success) {
+        this.clearCompletedWebRequest(requestId, tab);
+      } else {
+        result = "Unqualified changedPassword notification attempt.";
       }
-      this.clearCompletedWebRequest(requestId, tab);
-      return;
     }
 
     if (this.shouldAttemptAddLoginNotification(modifyLoginData)) {
-      try {
-        const result = await this.notificationBackground.triggerAddLoginNotification(
-          {
-            command: "bgTriggerAddLoginNotification",
-            login: {
-              url: modifyLoginData.uri,
-              username: modifyLoginData.username,
-              password: modifyLoginData.password || modifyLoginData.newPassword,
-            },
+      const success = await this.notificationBackground.triggerAddLoginNotification(
+        {
+          command: "bgTriggerAddLoginNotification",
+          login: {
+            url: modifyLoginData.uri,
+            username: modifyLoginData.username,
+            password: modifyLoginData.password || modifyLoginData.newPassword,
           },
-          { tab },
-        );
-        if (!result) {
-          throw Error("Didn't trigger addLogin notification");
-        }
-      } catch (e) {
-        error = e;
+        },
+        { tab },
+      );
+      if (success) {
+        this.clearCompletedWebRequest(requestId, tab);
+      } else {
+        result = "Unqualified addLogin notification attempt.";
       }
-      this.clearCompletedWebRequest(requestId, tab);
-      return error;
     }
 
     const shouldGetTasks: boolean = await this.notificationBackground.getNotificationFlag();
@@ -487,8 +479,11 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
           { tab },
         );
         this.clearCompletedWebRequest(requestId, tab);
+      } else {
+        result = "Unqualified atRiskPassword notification attempt.";
       }
     }
+    return result;
   };
 
   /**
