@@ -10,6 +10,7 @@ import {
   LoginStrategyServiceAbstraction,
   LoginSuccessHandlerService,
   PasswordLoginCredentials,
+  RouteList,
 } from "@bitwarden/auth/common";
 import { InternalPolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyData } from "@bitwarden/common/admin-console/models/data/policy.data";
@@ -328,7 +329,7 @@ export class LoginComponent implements OnInit, OnDestroy {
           orgPolicies.enforcedPasswordPolicyOptions,
         );
         if (isPasswordChangeRequired) {
-          await this.router.navigate(["update-password"]);
+          await this.router.navigate([RouteList.OLDNonCompliantPasswordOnLogin]);
           return;
         }
       }

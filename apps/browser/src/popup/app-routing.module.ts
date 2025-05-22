@@ -15,6 +15,7 @@ import {
   tdeDecryptionRequiredGuard,
   unauthGuardFn,
 } from "@bitwarden/angular/auth/guards";
+import { canAccessFeature } from "@bitwarden/angular/platform/guard/feature-flag.guard";
 import {
   AnonLayoutWrapperComponent,
   AnonLayoutWrapperData,
@@ -40,7 +41,9 @@ import {
   DeviceVerificationIcon,
   UserLockIcon,
   VaultIcon,
+  ChangePasswordComponent,
 } from "@bitwarden/auth/angular";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { LockComponent } from "@bitwarden/key-management-ui";
 
 import { fido2AuthGuard } from "../auth/guards/fido2-auth.guard";
@@ -328,9 +331,21 @@ const routes: Routes = [
     data: { elevation: 1 } satisfies RouteDataProperties,
   },
   {
+    path: "change-password",
+    component: ChangePasswordComponent,
+  },
+  {
     path: "update-temp-password",
     component: UpdateTempPasswordComponent,
-    canActivate: [authGuard],
+    canActivate: [
+      canAccessFeature(
+        FeatureFlag.PM16117_ChangeExistingPasswordRefactor,
+        true,
+        "/change-password",
+        false,
+      ),
+      authGuard,
+    ],
     data: { elevation: 1 } satisfies RouteDataProperties,
   },
   {
