@@ -6,6 +6,7 @@ import { firstValueFrom } from "rxjs";
 import { NativeMessagingVersion } from "@bitwarden/common/enums";
 import { CryptoFunctionService } from "@bitwarden/common/key-management/crypto/abstractions/crypto-function.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
@@ -39,10 +40,14 @@ export class DuckDuckGoMessageHandlerService {
     private encryptedMessageHandlerService: EncryptedMessageHandlerService,
     private dialogService: DialogService,
     private desktopAutofillSettingsService: DesktopAutofillSettingsService,
+    private logService: LogService,
   ) {}
 
   async handleMessage(message: Message) {
     const decryptedCommand = message as UnencryptedMessage;
+    this.logService.info("[Recv-DDG]", {
+      message: decryptedCommand,
+    });
     if (message.version != NativeMessagingVersion.Latest) {
       this.sendResponse({
         messageId: message.messageId,
@@ -64,6 +69,7 @@ export class DuckDuckGoMessageHandlerService {
     const { messageId, payload } = message;
     const { publicKey, applicationName } = payload;
     if (!publicKey) {
+      this.logService.error("[DDG-Handshake] No public key");
       this.sendResponse({
         messageId: messageId,
         version: NativeMessagingVersion.Latest,
@@ -131,8 +137,12 @@ export class DuckDuckGoMessageHandlerService {
         },
       });
       // FIXME: Remove when updating file. Eslint update
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+       
     } catch (error) {
+      this.logService.error("[DDG-Handshake-err]", {
+        error,
+        message: message,
+      });
       this.sendResponse({
         messageId: messageId,
         version: NativeMessagingVersion.Latest,
@@ -175,6 +185,7 @@ export class DuckDuckGoMessageHandlerService {
     if (!this.duckduckgoSharedSecret) {
       const storedKey = await this.stateService.getDuckDuckGoSharedKey();
       if (storedKey == null) {
+        this.logService.info("[Decrypt-DDG] No shared secret, cannot decrypt message");
         this.sendResponse({
           messageId: message.messageId,
           version: NativeMessagingVersion.Latest,
@@ -192,11 +203,18 @@ export class DuckDuckGoMessageHandlerService {
         message.encryptedCommand as EncString,
         this.duckduckgoSharedSecret,
       );
+      this.logService.info("[Decrypt-DDG]", {
+        message: decryptedResult,
+      });
 
       decryptedResult = this.trimNullCharsFromMessage(decryptedResult);
 
       return JSON.parse(decryptedResult);
-    } catch {
+    } catch (error) {
+      this.logService.error("[Decrypt-DDG-err]", {
+        error,
+        message: message.encryptedCommand,
+      });
       this.sendResponse({
         messageId: message.messageId,
         version: NativeMessagingVersion.Latest,
@@ -213,6 +231,7 @@ export class DuckDuckGoMessageHandlerService {
     response: DecryptedCommandData,
   ) {
     if (!this.duckduckgoSharedSecret) {
+      this.logService.info("[Send-DDG] No shared secret, cannot encrypt response");
       this.sendResponse({
         messageId: originalMessage.messageId,
         version: NativeMessagingVersion.Latest,
@@ -234,6 +253,9 @@ export class DuckDuckGoMessageHandlerService {
   }
 
   private sendResponse(response: EncryptedMessageResponse | UnencryptedMessageResponse) {
+    this.logService.info("[Send-DDG]", {
+      message: response,
+    });
     ipc.platform.nativeMessaging.sendReply(response);
   }
 
