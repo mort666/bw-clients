@@ -1,5 +1,4 @@
 import { Component, Input, OnInit } from "@angular/core";
-import { Router } from "@angular/router";
 import { firstValueFrom } from "rxjs";
 
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
@@ -7,7 +6,6 @@ import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/mod
 import { Account, AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { ForceSetPasswordReason } from "@bitwarden/common/auth/models/domain/force-set-password-reason";
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
-import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { SyncService } from "@bitwarden/common/platform/sync";
@@ -45,17 +43,13 @@ export class ChangePasswordComponent implements OnInit {
   constructor(
     private accountService: AccountService,
     private changePasswordService: ChangePasswordService,
-    private configService: ConfigService,
     private i18nService: I18nService,
     private masterPasswordService: InternalMasterPasswordServiceAbstraction,
     private messagingService: MessagingService,
     private policyService: PolicyService,
     private toastService: ToastService,
     private syncService: SyncService,
-    // private routerService: RouterService,
-    // private acceptOrganizationInviteService: AcceptOrganizationInviteService,
     private dialogService: DialogService,
-    private router: Router,
   ) {}
 
   async ngOnInit() {
@@ -121,7 +115,11 @@ export class ChangePasswordComponent implements OnInit {
           throw new Error("userId not found");
         }
 
-        await this.changePasswordService.changePassword(passwordInputResult, this.activeUserId);
+        await this.changePasswordService.changePassword(
+          passwordInputResult,
+          this.activeUserId,
+          this.forceSetPasswordReason === ForceSetPasswordReason.AdminForcePasswordReset,
+        );
 
         this.toastService.showToast({
           variant: "success",
