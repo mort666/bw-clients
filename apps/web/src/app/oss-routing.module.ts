@@ -41,7 +41,6 @@ import {
   DeviceVerificationIcon,
   ChangePasswordComponent,
 } from "@bitwarden/auth/angular";
-import { RouteList } from "@bitwarden/auth/common";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { LockComponent } from "@bitwarden/key-management-ui";
 import { VaultIcons } from "@bitwarden/vault";
@@ -148,44 +147,13 @@ const routes: Routes = [
         component: AnonLayoutWrapperComponent,
         children: [
           {
-            path: RouteList.AdminRecoveryChangePasswordRoute,
+            path: "change-password",
             children: [
               {
                 path: "",
                 component: ChangePasswordComponent,
               },
             ],
-            data: {
-              pageIcon: LockIcon,
-              pageTitle: { key: "updateMasterPassword" },
-              pageSubtitle: { key: "accountRecoveryUpdateMasterPasswordSubtitle" },
-              hideFooter: true,
-              maxWidth: "lg",
-            } satisfies AnonLayoutWrapperData,
-          },
-        ],
-        data: { titleId: "updatePassword" } satisfies RouteDataProperties,
-      },
-      {
-        path: "",
-        component: AnonLayoutWrapperComponent,
-        children: [
-          {
-            path: RouteList.NonCompliantPasswordRoute,
-            children: [
-              {
-                path: "",
-                component: ChangePasswordComponent,
-              },
-            ],
-            data: {
-              pageIcon: LockIcon,
-              pageTitle: { key: "updateMasterPassword" },
-              pageSubtitle: { key: "updateMasterPasswordSubtitle" },
-
-              hideFooter: true,
-              maxWidth: "lg",
-            } satisfies AnonLayoutWrapperData,
           },
         ],
         data: { titleId: "updatePassword" } satisfies RouteDataProperties,
@@ -197,7 +165,7 @@ const routes: Routes = [
           canAccessFeature(
             FeatureFlag.PM16117_ChangeExistingPasswordRefactor,
             false,
-            RouteList.AdminRecoveryChangePasswordRoute,
+            "change-password",
             false,
           ),
           authGuard,
@@ -205,13 +173,13 @@ const routes: Routes = [
         data: { titleId: "updateTempPassword" } satisfies RouteDataProperties,
       },
       {
-        path: RouteList.OLDNonCompliantPasswordOnLogin,
+        path: "update-password",
         component: UpdatePasswordComponent,
         canActivate: [
           canAccessFeature(
             FeatureFlag.PM16117_ChangeExistingPasswordRefactor,
             false,
-            RouteList.NonCompliantPasswordRoute,
+            "change-password",
             false,
           ),
           authGuard,

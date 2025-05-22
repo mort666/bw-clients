@@ -13,6 +13,8 @@ import { UserId } from "@bitwarden/common/types/guid";
 import { DialogService, ToastService, Translation } from "@bitwarden/components";
 import { I18nPipe } from "@bitwarden/ui-common";
 
+import { AnonLayoutWrapperDataService } from "../anon-layout/anon-layout-wrapper-data.service";
+import { LockIcon } from "../icons";
 import {
   InputPasswordComponent,
   InputPasswordFlow,
@@ -45,6 +47,7 @@ export class ChangePasswordComponent implements OnInit {
     private changePasswordService: ChangePasswordService,
     private i18nService: I18nService,
     private masterPasswordService: InternalMasterPasswordServiceAbstraction,
+    private anonLayoutWrapperDataService: AnonLayoutWrapperDataService,
     private messagingService: MessagingService,
     private policyService: PolicyService,
     private toastService: ToastService,
@@ -73,6 +76,24 @@ export class ChangePasswordComponent implements OnInit {
 
     if (this.masterPasswordPolicyOptions?.enforceOnLogin) {
       this.warningText = { key: "masterPasswordInvalidWarning" };
+    }
+
+    if (this.forceSetPasswordReason === ForceSetPasswordReason.AdminForcePasswordReset) {
+      this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
+        pageIcon: LockIcon,
+        pageTitle: { key: "updateMasterPassword" },
+        pageSubtitle: { key: "accountRecoveryUpdateMasterPasswordSubtitle" },
+        hideFooter: true,
+        maxWidth: "lg",
+      });
+    } else if (this.forceSetPasswordReason === ForceSetPasswordReason.WeakMasterPassword) {
+      this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
+        pageIcon: LockIcon,
+        pageTitle: { key: "updateMasterPassword" },
+        pageSubtitle: { key: "updateMasterPasswordSubtitle" },
+        hideFooter: true,
+        maxWidth: "lg",
+      });
     }
   }
 

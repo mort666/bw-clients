@@ -43,7 +43,6 @@ import {
   VaultIcon,
   ChangePasswordComponent,
 } from "@bitwarden/auth/angular";
-import { RouteList } from "@bitwarden/auth/common";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { LockComponent } from "@bitwarden/key-management-ui";
 
@@ -332,17 +331,31 @@ const routes: Routes = [
     data: { elevation: 1 } satisfies RouteDataProperties,
   },
   {
-    path: RouteList.NonCompliantPasswordRoute,
-    component: ChangePasswordComponent,
+    path: "",
+    component: ExtensionAnonLayoutWrapperComponent,
+    children: [
+      {
+        path: "change-password",
+        children: [
+          {
+            path: "",
+            component: ChangePasswordComponent,
+          },
+        ],
+        data: {
+          showBackButton: true,
+        } satisfies ExtensionAnonLayoutWrapperData,
+      },
+    ],
   },
   {
-    path: RouteList.OLDUpdateTempPassword,
+    path: "update-temp-password",
     component: UpdateTempPasswordComponent,
     canActivate: [
       canAccessFeature(
         FeatureFlag.PM16117_ChangeExistingPasswordRefactor,
         false,
-        `/${RouteList.NonCompliantPasswordRoute}`,
+        `/change-password`,
         false,
       ),
       authGuard,
