@@ -1,6 +1,7 @@
 import { ClientType } from "../../../../enums";
 import { GrantType, GrantTypes } from "../../../enums/grant-type.enum";
 import { Scope, Scopes } from "../../../enums/scopes.enum";
+import { SendAccessCredentials } from "../../../send-access/abstractions/send-token.service";
 
 export type SendAccessTokenPasswordPayload = { password: string };
 export type SendAccessTokenEmailOtpPayload = { email: string; otp: string };
@@ -28,11 +29,7 @@ export class SendAccessTokenRequest {
 
   constructor(
     public sendId: string,
-
-    public password?: string,
-
-    public email?: string,
-    public otp?: string,
+    public sendAccessCredentials?: SendAccessCredentials,
   ) {}
 
   /**
@@ -47,10 +44,14 @@ export class SendAccessTokenRequest {
       send_id: this.sendId,
     };
 
-    if (this.password) {
-      return { ...base, password: this.password };
-    } else if (this.email && this.otp) {
-      return { ...base, email: this.email, otp: this.otp };
+    if (this.sendAccessCredentials && this.sendAccessCredentials.type === "password") {
+      return { ...base, password: this.sendAccessCredentials.password };
+    } else if (this.sendAccessCredentials && this.sendAccessCredentials.type === "email-otp") {
+      return {
+        ...base,
+        email: this.sendAccessCredentials.email,
+        otp: this.sendAccessCredentials.otp,
+      };
     } else {
       return base;
     }

@@ -1,16 +1,17 @@
-export interface SendPasswordCredentials {
+export type SendAccessCredentialsType = "password" | "email-otp";
+
+export type SendPasswordCredentials = {
+  type: "password";
   password: string;
-}
-export interface SendEmailOtpCredentials {
+};
+export type SendEmailOtpCredentials = {
+  type: "email-otp";
   email: string;
   otp: string;
-}
+};
 export type SendAccessCredentials = SendPasswordCredentials | SendEmailOtpCredentials;
 
 export abstract class SendTokenService {
-  // TODO: talk with Tools about what expected behavior is for expired access tokens.
-  // Do we implement any local TTL or do we just rely on the server to return a 401 and then we handle that in the api service?
-
   // SendAccessTokens need to be stored in session storage once retrieved.
   // All SendAccessTokens are scoped to a specific send id so all getting and setting should accept a send id.
 
@@ -23,14 +24,12 @@ export abstract class SendTokenService {
 
   // Returned error types should be discriminated union with a type that can be conditioned off for logic.
 
-  // Attempts to get a send access token for a specific send id.
-  // If the token is not found or is expired, it will request a new token from the server.
-  // As send access tokens can be protected by different credentials, the credentials must be passed in for those sends.
-  abstract getSendAccessToken: (
-    sendId: string,
-    sendCredentials?: SendAccessCredentials,
-  ) => Promise<void>;
+  // TODO: define return types.
+  // TODO: consider converting to observable.
+  abstract tryGetSendAccessToken: (sendId: string) => Promise<void>;
 
-  // Private internal logic for getting the access token.
-  // abstract setSendAccessToken: (sendId: string, token: string) => Promise<void>;
+  abstract getSendAccessTokenWithCredentials: (
+    sendId: string,
+    sendAccessCredentials: SendAccessCredentials,
+  ) => Promise<void>;
 }
