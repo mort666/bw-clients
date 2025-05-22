@@ -104,8 +104,10 @@ export const mockTasks = [
 export const mockI18n = {
   appName: "Bitwarden",
   atRiskPassword: "At-risk password",
-  atRiskNavigatePrompt: "$ORGANIZATION$ wants you to change this password because it is at-risk. Navigate to your account settings to change the password.",
-  atRiskChangePrompt: "Your password for this site is at-risk. $ORGANIZATION$ has requested that you change it.",
+  atRiskNavigatePrompt:
+    "$ORGANIZATION$ wants you to change this password because it is at-risk. Navigate to your account settings to change the password.",
+  atRiskChangePrompt:
+    "Your password for this site is at-risk. $ORGANIZATION$ has requested that you change it.",
   changePassword: "Change password",
   close: "Close",
   collection: "Collection",
