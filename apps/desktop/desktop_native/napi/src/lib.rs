@@ -438,6 +438,8 @@ pub mod ipc {
 
             let path = desktop_core::ipc::path(&name);
 
+            println!("[BITWARDEN SERVER] IPC server path: {path:?}");
+
             let server = desktop_core::ipc::server::Server::start(&path, send).map_err(|e| {
                 napi::Error::from_reason(format!(
                     "Error listening to server - Path: {path:?} - Error: {e} - {e:?}"
@@ -734,6 +736,8 @@ pub mod autofill {
             });
 
             let path = desktop_core::ipc::path(&name);
+
+            println!("[BITWARDEN SERVER] IPC server path: {path:?}");
 
             let server = desktop_core::ipc::server::Server::start(&path, send).map_err(|e| {
                 napi::Error::from_reason(format!(
