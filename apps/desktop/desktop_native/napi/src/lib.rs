@@ -374,6 +374,7 @@ pub mod windows_registry {
 #[napi]
 pub mod ipc {
     use desktop_core::ipc::server::{Message, MessageType};
+    use log::info;
     use napi::threadsafe_function::{
         ErrorStrategy, ThreadsafeFunction, ThreadsafeFunctionCallMode,
     };
@@ -439,6 +440,7 @@ pub mod ipc {
             let path = desktop_core::ipc::path(&name);
 
             println!("[BITWARDEN SERVER] IPC server path: {path:?}");
+            info!("[BITWARDEN SERVER] IPC server path: {path:?}");
 
             let server = desktop_core::ipc::server::Server::start(&path, send).map_err(|e| {
                 napi::Error::from_reason(format!(
@@ -482,6 +484,7 @@ pub mod ipc {
 #[napi]
 pub mod autofill {
     use desktop_core::ipc::server::{Message, MessageType};
+    use log::info;
     use napi::threadsafe_function::{
         ErrorStrategy, ThreadsafeFunction, ThreadsafeFunctionCallMode,
     };
@@ -738,6 +741,7 @@ pub mod autofill {
             let path = desktop_core::ipc::path(&name);
 
             println!("[BITWARDEN SERVER] IPC server path: {path:?}");
+            info!("[BITWARDEN SERVER] IPC server path: {path:?}");
 
             let server = desktop_core::ipc::server::Server::start(&path, send).map_err(|e| {
                 napi::Error::from_reason(format!(
