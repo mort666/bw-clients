@@ -290,6 +290,7 @@ const safeProviders: SafeProvider[] = [
       EncryptedMessageHandlerService,
       DialogService,
       DesktopAutofillSettingsService,
+      LogServiceAbstraction,
     ],
   }),
   safeProvider({

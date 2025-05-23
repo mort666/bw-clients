@@ -6,6 +6,7 @@ import { firstValueFrom } from "rxjs";
 import { NativeMessagingVersion } from "@bitwarden/common/enums";
 import { CryptoFunctionService } from "@bitwarden/common/key-management/crypto/abstractions/crypto-function.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
@@ -39,6 +40,7 @@ export class DuckDuckGoMessageHandlerService {
     private encryptedMessageHandlerService: EncryptedMessageHandlerService,
     private dialogService: DialogService,
     private desktopAutofillSettingsService: DesktopAutofillSettingsService,
+    private logService: LogService,
   ) {}
 
   async handleMessage(message: Message) {
@@ -188,6 +190,8 @@ export class DuckDuckGoMessageHandlerService {
     }
 
     try {
+      this.logService.info("Key", this.duckduckgoSharedSecret.keyB64);
+      this.logService.info("Encrypted command", message.encryptedCommand);
       const decryptedResult = await this.decryptDuckDuckGoEncString(
         message.encryptedCommand as EncString,
         this.duckduckgoSharedSecret,
