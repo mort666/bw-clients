@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angular/core";
 import { ReactiveFormsModule, FormBuilder, Validators, FormControl } from "@angular/forms";
-import { firstValueFrom } from "rxjs";
+import { BehaviorSubject, firstValueFrom } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import {
@@ -116,6 +116,9 @@ interface InputPasswordForm {
   ],
 })
 export class InputPasswordComponent implements OnInit {
+  private submittingBehaviorSubject = new BehaviorSubject(false);
+  submitting$ = this.submittingBehaviorSubject.asObservable();
+
   @ViewChild(PasswordStrengthV2Component) passwordStrengthComponent!: PasswordStrengthV2Component;
 
   @Output() onPasswordFormSubmit = new EventEmitter<PasswordInputResult>();
@@ -258,12 +261,15 @@ export class InputPasswordComponent implements OnInit {
   }
 
   submit = async () => {
+    this.submittingBehaviorSubject.next(true);
+
     this.verifyFlow();
 
     this.formGroup.markAllAsTouched();
 
     if (this.formGroup.invalid) {
       this.showErrorSummary = true;
+      this.submittingBehaviorSubject.next(false);
       return;
     }
 
@@ -274,6 +280,7 @@ export class InputPasswordComponent implements OnInit {
 
     if (this.flow === InputPasswordFlow.ChangePasswordDelegation) {
       await this.handleChangePasswordDelegationFlow(newPassword);
+      this.submittingBehaviorSubject.next(false);
       return;
     }
 
@@ -305,6 +312,7 @@ export class InputPasswordComponent implements OnInit {
         this.kdfConfig,
       );
       if (!currentPasswordVerified) {
+        this.submittingBehaviorSubject.next(false);
         return;
       }
     }
@@ -316,6 +324,7 @@ export class InputPasswordComponent implements OnInit {
       checkForBreaches,
     );
     if (!newPasswordVerified) {
+      this.submittingBehaviorSubject.next(false);
       return;
     }
 
@@ -381,6 +390,7 @@ export class InputPasswordComponent implements OnInit {
 
     // 5. Emit cryptographic keys and other password related properties
     this.onPasswordFormSubmit.emit(passwordInputResult);
+    this.submittingBehaviorSubject.next(false);
   };
 
   /**
@@ -436,6 +446,7 @@ export class InputPasswordComponent implements OnInit {
       false,
     );
     if (!newPasswordVerified) {
+      this.submittingBehaviorSubject.next(false);
       return;
     }
 
