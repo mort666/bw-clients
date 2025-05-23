@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
-import { ReactiveFormsModule, FormBuilder, Validators, FormControl } from "@angular/forms";
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angular/forms";
 import { firstValueFrom } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
@@ -10,6 +10,7 @@ import {
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/models/domain/master-password-policy-options";
+import { ForceSetPasswordReason } from "@bitwarden/common/auth/models/domain/force-set-password-reason";
 import { MasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
@@ -66,6 +67,8 @@ export enum InputPasswordFlow {
   ChangePassword,
   /**
    * All form elements above, plus: [Checkbox] Rotate account encryption key (as the last element in the UI)
+   *
+   * Consider changing this to an input.
    */
   ChangePasswordWithOptionalUserKeyRotation,
 }
@@ -108,13 +111,16 @@ export class InputPasswordComponent implements OnInit {
 
   @Input() userId?: UserId;
   @Input() loading = false;
-  @Input() masterPasswordPolicyOptions: MasterPasswordPolicyOptions | null = null;
+  @Input() masterPasswordPolicyOptions: MasterPasswordPolicyOptions | undefined = undefined;
+  @Input() forceSetPasswordReason?: ForceSetPasswordReason;
 
   @Input() inlineButtons = false;
   @Input() primaryButtonText?: Translation;
   protected primaryButtonTextStr: string = "";
   @Input() secondaryButtonText?: Translation;
   protected secondaryButtonTextStr: string = "";
+
+  @Input() showChangePasswordWarning: boolean = true;
 
   protected InputPasswordFlow = InputPasswordFlow;
   private kdfConfig: KdfConfig | null = null;
@@ -188,10 +194,7 @@ export class InputPasswordComponent implements OnInit {
   }
 
   private addFormFieldsIfNecessary() {
-    if (
-      this.flow === InputPasswordFlow.ChangePassword ||
-      this.flow === InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation
-    ) {
+    if (this.isChangePasswordFlow()) {
       this.formGroup.addControl(
         "currentPassword",
         this.formBuilder.nonNullable.control("", Validators.required),
@@ -262,10 +265,7 @@ export class InputPasswordComponent implements OnInit {
     }
 
     // 2. Verify current password is correct (if necessary)
-    if (
-      this.flow === InputPasswordFlow.ChangePassword ||
-      this.flow === InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation
-    ) {
+    if (this.isChangePasswordFlow()) {
       const currentPasswordVerified = await this.verifyCurrentPassword(
         currentPassword,
         this.kdfConfig,
@@ -313,10 +313,7 @@ export class InputPasswordComponent implements OnInit {
       kdfConfig: this.kdfConfig,
     };
 
-    if (
-      this.flow === InputPasswordFlow.ChangePassword ||
-      this.flow === InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation
-    ) {
+    if (this.isChangePasswordFlow()) {
       const currentMasterKey = await this.keyService.makeMasterKey(
         currentPassword,
         this.email,
@@ -549,5 +546,16 @@ export class InputPasswordComponent implements OnInit {
 
   protected getPasswordStrengthScore(score: PasswordStrengthScore) {
     this.passwordStrengthScore = score;
+  }
+
+  /**
+   * Checks if the flow is either ChangePassword or ChangePasswordWithOptionalUserKeyRotation
+   * @private
+   */
+  protected isChangePasswordFlow(): boolean {
+    return (
+      this.flow === InputPasswordFlow.ChangePassword ||
+      this.flow === InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation
+    );
   }
 }

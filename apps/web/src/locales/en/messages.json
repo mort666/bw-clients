@@ -6057,7 +6057,7 @@
     "message": "Update master password"
   },
   "accountRecoveryUpdateMasterPasswordSubtitle": {
-    "message": "Admins have recovered your account. Change you master password to continue."
+    "message": "Change your master password to complete account recovery."
   },
   "updateMasterPasswordSubtitle": {
     "message": "Your master password does not meet this organization’s requirements. Change your master password to continue."

@@ -342,9 +342,6 @@ const routes: Routes = [
             component: ChangePasswordComponent,
           },
         ],
-        data: {
-          showBackButton: true,
-        } satisfies ExtensionAnonLayoutWrapperData,
       },
     ],
   },

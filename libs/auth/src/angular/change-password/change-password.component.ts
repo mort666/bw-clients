@@ -7,6 +7,7 @@ import { Account, AccountService } from "@bitwarden/common/auth/abstractions/acc
 import { ForceSetPasswordReason } from "@bitwarden/common/auth/models/domain/force-set-password-reason";
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { SyncService } from "@bitwarden/common/platform/sync";
 import { UserId } from "@bitwarden/common/types/guid";
@@ -33,7 +34,7 @@ export class ChangePasswordComponent implements OnInit {
   @Input() inputPasswordFlow: InputPasswordFlow = InputPasswordFlow.ChangePassword;
 
   activeAccount: Account | null = null;
-  email?: string;
+  email!: string;
   activeUserId?: UserId;
   masterPasswordPolicyOptions?: MasterPasswordPolicyOptions;
   initializing = true;
@@ -53,6 +54,7 @@ export class ChangePasswordComponent implements OnInit {
     private toastService: ToastService,
     private syncService: SyncService,
     private dialogService: DialogService,
+    private logService: LogService,
   ) {}
 
   async ngOnInit() {
@@ -83,8 +85,6 @@ export class ChangePasswordComponent implements OnInit {
         pageIcon: LockIcon,
         pageTitle: { key: "updateMasterPassword" },
         pageSubtitle: { key: "accountRecoveryUpdateMasterPasswordSubtitle" },
-        hideFooter: true,
-        maxWidth: "lg",
       });
     } else if (this.forceSetPasswordReason === ForceSetPasswordReason.WeakMasterPassword) {
       this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
@@ -153,7 +153,8 @@ export class ChangePasswordComponent implements OnInit {
 
         this.messagingService.send("logout");
       }
-    } catch {
+    } catch (error) {
+      this.logService.error(error);
       this.toastService.showToast({
         variant: "error",
         title: "",
@@ -163,4 +164,6 @@ export class ChangePasswordComponent implements OnInit {
       this.submitting = false;
     }
   }
+
+  protected readonly ForceSetPasswordReason = ForceSetPasswordReason;
 }
