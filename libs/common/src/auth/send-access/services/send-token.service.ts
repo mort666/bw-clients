@@ -1,3 +1,5 @@
+import { Jsonify } from "type-fest";
+
 import { GlobalStateProvider, KeyDefinition, SEND_ACCESS_DISK } from "../../../platform/state";
 // import { SendAccessTokenRequest } from "../../models/request/identity-token/send-access-token.request";
 import {
@@ -8,14 +10,13 @@ import { SendAccessToken } from "../models/send-access-token";
 
 import { SendTokenApiService } from "./send-token-api.service";
 
-// Will need to map sendId to access token
-// TODO: will need to build a better type for access token where it contains
-// the expires in and the token itself.
 export const SEND_ACCESS_TOKEN_DICT = KeyDefinition.record<SendAccessToken, string>(
   SEND_ACCESS_DISK,
   "accessTokenDict",
   {
-    deserializer: (accessTokenDict) => accessTokenDict,
+    deserializer: (sendAccessTokenJson: Jsonify<SendAccessToken>) => {
+      return SendAccessToken.fromJson(sendAccessTokenJson);
+    },
   },
 );
 

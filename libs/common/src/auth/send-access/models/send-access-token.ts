@@ -1,3 +1,5 @@
+import { Jsonify } from "type-fest";
+
 export class SendAccessToken {
   constructor(
     /**
@@ -28,5 +30,9 @@ export class SendAccessToken {
   /** Returns how many full seconds remain until expiry. Returns 0 if expired. */
   timeUntilExpirySeconds(): number {
     return Math.max(0, Math.floor((this.expiresAt - Date.now()) / 1_000));
+  }
+
+  static fromJson(json: Jsonify<SendAccessToken>): SendAccessToken {
+    return new SendAccessToken(json.token, json.expiresAt);
   }
 }
