@@ -405,6 +405,11 @@
       commitMessagePrefix: "[deps] KM:",
       reviewers: ["team:team-key-management-dev"],
     },
+    {
+      // lowdb uses a separate type package for its types, so we need to update them together.
+      groupName: "lowdb",
+      matchPackageNames: ["lowdb", "@types/lowdb"],
+    },
   ],
   ignoreDeps: ["@types/koa-bodyparser", "bootstrap", "node-ipc", "@bitwarden/sdk-internal"],
 }
