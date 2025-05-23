@@ -4,6 +4,9 @@ import { ApiService } from "../../../abstractions/api.service";
 import { EnvironmentService } from "../../../platform/abstractions/environment.service";
 import { SendAccessTokenRequest } from "../../models/request/identity-token/send-access-token.request";
 import { SendTokenApiService as SendTokenApiServiceAbstraction } from "../abstractions/send-token-api.service";
+import { SendAccessToken } from "../models/send-access-token";
+
+export type SendTokenApiRetrievalError = "password-required" | "otp-required" | "unknown-error";
 
 export class SendTokenApiService implements SendTokenApiServiceAbstraction {
   constructor(
@@ -11,7 +14,9 @@ export class SendTokenApiService implements SendTokenApiServiceAbstraction {
     private apiService: ApiService,
   ) {}
 
-  async requestSendAccessToken(request: SendAccessTokenRequest): Promise<void> {
+  async requestSendAccessToken(
+    request: SendAccessTokenRequest,
+  ): Promise<SendAccessToken | SendTokenApiRetrievalError> {
     const payload = request.toIdentityTokenPayload();
 
     const headers = new Headers({
@@ -31,8 +36,17 @@ export class SendTokenApiService implements SendTokenApiServiceAbstraction {
       cache: "no-store",
     });
 
-    await this.apiService.fetch(req);
+    const response = await this.apiService.fetch(req);
+    const responseJson = await response.json();
 
-    // TODO: add result processing
+    if (response.status === 200) {
+      const sendAccessToken = SendAccessToken.fromJson(responseJson);
+      return sendAccessToken;
+    } else if (response.status === 400) {
+      // TODO: add correct error handling for 400
+      return "password-required";
+    }
+
+    return "unknown-error";
   }
 }

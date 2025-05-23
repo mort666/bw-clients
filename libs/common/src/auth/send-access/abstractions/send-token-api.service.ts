@@ -1,4 +1,6 @@
 import { SendAccessTokenRequest } from "../../models/request/identity-token/send-access-token.request";
+import { SendAccessToken } from "../models/send-access-token";
+import { SendTokenApiRetrievalError } from "../services/send-token-api.service";
 
 /**
  * Abstract class for the SendTokenApiService.
@@ -13,5 +15,7 @@ export abstract class SendTokenApiService {
   // ExpiredRequiredPassword  // these will live at higher level in SendTokenService
   // ExpiredRequiredEmailOtp
 
-  abstract requestSendAccessToken: (request: SendAccessTokenRequest) => Promise<unknown>;
+  abstract requestSendAccessToken: (
+    request: SendAccessTokenRequest,
+  ) => Promise<SendAccessToken | SendTokenApiRetrievalError>;
 }

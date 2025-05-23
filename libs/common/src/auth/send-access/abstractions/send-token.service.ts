@@ -1,3 +1,6 @@
+import { SendAccessToken } from "../models/send-access-token";
+import { SendTokenRetrievalError } from "../services/send-token.service";
+
 export type SendAccessCredentialsType = "password" | "email-otp";
 
 export type SendPasswordCredentials = {
@@ -26,7 +29,9 @@ export abstract class SendTokenService {
 
   // TODO: define return types.
   // TODO: consider converting to observable.
-  abstract tryGetSendAccessToken: (sendId: string) => Promise<void>;
+  abstract tryGetSendAccessToken: (
+    sendId: string,
+  ) => Promise<SendAccessToken | SendTokenRetrievalError>;
 
   abstract getSendAccessTokenWithCredentials: (
     sendId: string,
