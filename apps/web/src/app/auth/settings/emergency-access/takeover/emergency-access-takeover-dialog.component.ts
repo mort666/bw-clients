@@ -96,6 +96,10 @@ export class EmergencyAccessTakeoverDialogComponent implements OnInit, AfterView
   }
 
   ngAfterViewInit() {
+    if (!this.inputPasswordComponent) {
+      throw new Error("InputPasswordComponent is not initialized");
+    }
+
     this.submitting$ = combineLatest([
       this.submittingBehaviorSubject.asObservable(),
       this.inputPasswordComponent.submitting$,
