@@ -119,7 +119,9 @@ export class InputPasswordComponent implements OnInit {
   private submittingBehaviorSubject = new BehaviorSubject(false);
   submitting$ = this.submittingBehaviorSubject.asObservable();
 
-  @ViewChild(PasswordStrengthV2Component) passwordStrengthComponent!: PasswordStrengthV2Component;
+  @ViewChild(PasswordStrengthV2Component) passwordStrengthComponent:
+    | PasswordStrengthV2Component
+    | undefined = undefined;
 
   @Output() onPasswordFormSubmit = new EventEmitter<PasswordInputResult>();
   @Output() onSecondaryButtonClick = new EventEmitter<void>();
@@ -632,6 +634,11 @@ export class InputPasswordComponent implements OnInit {
     this.formGroup.patchValue({
       newPassword: await this.passwordGenerationService.generatePassword(options),
     });
+
+    if (!this.passwordStrengthComponent) {
+      throw new Error("PasswordStrengthComponent is not initialized");
+    }
+
     this.passwordStrengthComponent.updatePasswordStrength(
       this.formGroup.controls.newPassword.value,
     );

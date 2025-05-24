@@ -62,7 +62,7 @@ type EmergencyAccessTakeoverDialogResultType =
 })
 export class EmergencyAccessTakeoverDialogComponent implements OnInit, AfterViewInit {
   @ViewChild(InputPasswordComponent)
-  inputPasswordComponent!: InputPasswordComponent;
+  inputPasswordComponent: InputPasswordComponent | undefined = undefined;
 
   private submittingBehaviorSubject = new BehaviorSubject(false);
   submitting$ = this.submittingBehaviorSubject.asObservable();
@@ -108,6 +108,10 @@ export class EmergencyAccessTakeoverDialogComponent implements OnInit, AfterView
   }
 
   protected handlePrimaryButtonClick = async () => {
+    if (!this.inputPasswordComponent) {
+      throw new Error("InputPasswordComponent is not initialized");
+    }
+
     await this.inputPasswordComponent.submit();
   };
 
