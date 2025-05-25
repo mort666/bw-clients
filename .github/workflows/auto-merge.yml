@@ -1,0 +1,116 @@
+name: Auto-Approve Renovate PRs
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-approve-renovate:
+    name: Auto-Approve Renovate PRs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR Author
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          # Check if PR is from Renovate
+          if [[ "$PR_AUTHOR" != "renovate[bot]" ]]; then
+            echo "This PR is not from Renovate bot. Exiting workflow."
+            exit 1
+          fi
+
+          # Additional validation to ensure it's from Renovate
+          if [[ "$PR_BODY" != *"Renovate Bot"* ]] && [[ "$PR_BODY" != *"renovate[bot]"* ]]; then
+            echo "PR body does not contain Renovate Bot signature. Exiting workflow."
+            exit 1
+          fi
+
+          echo "Validated that this is a Renovate PR"
+
+      - name: Get all labels on the PR
+        id: get-labels
+        run: |
+          labels=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "${{ github.event.pull_request.issue_url }}/labels" | jq -r '.[].name')
+          echo "Labels on PR: $labels"
+          echo "labels=$labels" >> $GITHUB_OUTPUT
+
+      - name: Check if PR has 'auto-merge' label
+        if: ${{ !contains(steps.get-labels.outputs.labels, 'auto-merge') }}
+        run: |
+          echo "This PR does not have the 'auto-merge' label. Exiting workflow."
+          exit 1
+
+          echo "Validated that this PR has the 'auto-merge' label"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Validate changed files
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          # Get list of changed files
+          CHANGED_FILES=$(git diff --name-only $BASE_SHA HEAD)
+
+          # Define allowed files
+          allowed_patterns=(
+          '^package\.json$' # Root package.json
+          '^.*\/package\.json$' # Any package.json in subdirectories
+          '^package-lock\.json$' # Root package-lock.json
+          )
+
+          fail=0
+          for file in $CHANGED_FILES; do
+            match=0
+            for pattern in "${allowed_patterns[@]}"; do
+              if [[ "$file" =~ $pattern ]]; then
+                match=1
+                break
+              fi
+            done
+          
+            if [[ "$match" -eq 0 ]]; then
+              echo "Invalid file changed: $file"
+              fail=1
+            fi
+          done
+          
+          if [[ "$fail" -eq 1 ]]; then
+            echo "Workflow failed due to disallowed file changes"
+            exit 1
+          else
+            echo "All changed files match allowed regex patterns"
+          fi
+
+      - name: Setup GitHub CLI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh auth setup-git
+          gh auth status
+
+      - name: Approve and Auto-merge PR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # Approve the PR
+          gh pr review $PR_NUMBER --approve
+
+          # Enable auto-merge
+          gh pr merge $PR_NUMBER --auto --merge
+
+          echo "PR approved and auto-merge enabled"
