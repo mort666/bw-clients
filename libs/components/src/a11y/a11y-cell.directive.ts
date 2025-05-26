@@ -15,8 +15,9 @@ export class A11yCellDirective implements FocusableElement {
 
   getFocusTarget() {
     let focusTarget: HTMLElement | undefined | null;
-    if (this.focusableChild()) {
-      focusTarget = this.focusableChild()!.getFocusTarget();
+    const focusableChild = this.focusableChild();
+    if (focusableChild) {
+      focusTarget = focusableChild.getFocusTarget();
     } else {
       focusTarget = this.elementRef.nativeElement.querySelector<HTMLElement>("button, a");
     }
