@@ -11,7 +11,7 @@ import { LogService } from "@bitwarden/common/platform/abstractions/log.service"
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { SyncService } from "@bitwarden/common/platform/sync";
 import { UserId } from "@bitwarden/common/types/guid";
-import { DialogService, ToastService, Translation } from "@bitwarden/components";
+import { DialogService, ToastService } from "@bitwarden/components";
 import { I18nPipe } from "@bitwarden/ui-common";
 
 import { AnonLayoutWrapperDataService } from "../anon-layout/anon-layout-wrapper-data.service";
@@ -24,6 +24,14 @@ import { PasswordInputResult } from "../input-password/password-input-result";
 
 import { ChangePasswordService } from "./change-password.service.abstraction";
 
+/**
+ * Change Password Component
+ *
+ * NOTE: The change password component uses the input-password component which will show the
+ * current password input form in some flows, although it could be left off. This is intentional
+ * and by design to maintain a strong security posture as some flows could have the user
+ * end up at a change password without having one before.
+ */
 @Component({
   standalone: true,
   selector: "auth-change-password",
@@ -41,7 +49,6 @@ export class ChangePasswordComponent implements OnInit {
   submitting = false;
   formPromise?: Promise<any>;
   forceSetPasswordReason: ForceSetPasswordReason = ForceSetPasswordReason.None;
-  warningText?: Translation;
 
   constructor(
     private accountService: AccountService,
@@ -59,11 +66,16 @@ export class ChangePasswordComponent implements OnInit {
 
   async ngOnInit() {
     this.activeAccount = await firstValueFrom(this.accountService.activeAccount$);
-    this.activeUserId = this.activeAccount?.id;
-    this.email = this.activeAccount?.email;
+
+    if (!this.activeAccount) {
+      throw new Error("No active active account found while trying to change passwords.");
+    }
+
+    this.activeUserId = this.activeAccount.id;
+    this.email = this.activeAccount.email;
 
     if (!this.activeUserId) {
-      throw new Error("userId not found");
+      throw new Error("activeUserId not found");
     }
 
     this.masterPasswordPolicyOptions = await firstValueFrom(
@@ -76,10 +88,6 @@ export class ChangePasswordComponent implements OnInit {
 
     this.initializing = false;
 
-    if (this.masterPasswordPolicyOptions?.enforceOnLogin) {
-      this.warningText = { key: "masterPasswordInvalidWarning" };
-    }
-
     if (this.forceSetPasswordReason === ForceSetPasswordReason.AdminForcePasswordReset) {
       this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
         pageIcon: LockIcon,
@@ -91,7 +99,6 @@ export class ChangePasswordComponent implements OnInit {
         pageIcon: LockIcon,
         pageTitle: { key: "updateMasterPassword" },
         pageSubtitle: { key: "updateMasterPasswordSubtitle" },
-        hideFooter: true,
         maxWidth: "lg",
       });
     }

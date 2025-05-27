@@ -34,6 +34,16 @@ export abstract class ChangePasswordService {
    */
   abstract changePassword(passwordInputResult: PasswordInputResult, userId: UserId): Promise<void>;
 
+  /**
+   * Changes the user's password and re-encrypts the user key with the `newMasterKey`.
+   * - Specifically, this method uses credentials from the `passwordInputResult` to:
+   *   1. Decrypt the user key with the `currentMasterKey`
+   *   2. Re-encrypt that user key with the `newMasterKey`, resulting in a `newMasterKeyEncryptedUserKey`
+   *   3. Build a `PasswordRequest` object that gets PUTed to `"/accounts/update-temp-password"` so that the
+   *        ForcePasswordReset gets set to false.
+   * @param passwordInputResult
+   * @param userId
+   */
   abstract changePasswordForAccountRecovery(
     passwordInputResult: PasswordInputResult,
     userId: UserId,

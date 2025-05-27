@@ -148,7 +148,7 @@ const routes: Routes = [
         canActivate: [
           canAccessFeature(
             FeatureFlag.PM16117_ChangeExistingPasswordRefactor,
-            true,
+            false,
             "change-password",
             false,
           ),
@@ -600,15 +600,7 @@ const routes: Routes = [
       },
       {
         path: "change-password",
-        data: {
-          hideFooter: true,
-        } satisfies AnonLayoutWrapperData,
-        children: [
-          {
-            path: "",
-            component: ChangePasswordComponent,
-          },
-        ],
+        component: ChangePasswordComponent,
       },
     ],
   },

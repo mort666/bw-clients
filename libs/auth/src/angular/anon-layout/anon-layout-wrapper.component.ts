@@ -39,11 +39,6 @@ export interface AnonLayoutWrapperData {
    * Optional flag to set the max-width of the title area. Defaults to null if not provided.
    */
   titleAreaMaxWidth?: "md";
-
-  /**
-   * Optional flag to hide the whole footer.
-   */
-  hideFooter?: boolean;
 }
 
 @Component({
@@ -60,7 +55,6 @@ export class AnonLayoutWrapperComponent implements OnInit, OnDestroy {
   protected showReadonlyHostname: boolean;
   protected maxWidth: "md" | "3xl";
   protected titleAreaMaxWidth: "md";
-  protected hideFooter: boolean;
 
   constructor(
     private router: Router,
@@ -112,7 +106,6 @@ export class AnonLayoutWrapperComponent implements OnInit, OnDestroy {
     this.showReadonlyHostname = Boolean(firstChildRouteData["showReadonlyHostname"]);
     this.maxWidth = firstChildRouteData["maxWidth"];
     this.titleAreaMaxWidth = firstChildRouteData["titleAreaMaxWidth"];
-    this.hideFooter = Boolean(firstChildRouteData["hideFooter"]);
   }
 
   private listenForServiceDataChanges() {
