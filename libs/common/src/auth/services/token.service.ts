@@ -42,7 +42,7 @@ import {
   EMAIL_TWO_FACTOR_TOKEN_RECORD_DISK_LOCAL,
   REFRESH_TOKEN_DISK,
   REFRESH_TOKEN_MEMORY,
-  SECURITY_STAMP_MEMORY,
+  SECURITY_STAMP_DISK,
 } from "./token.state";
 
 // FIXME: update to use a const object instead of a typescript enum
@@ -1045,7 +1045,7 @@ export class TokenService implements TokenServiceAbstraction {
       throw new Error("User id not found. Cannot get security stamp.");
     }
 
-    const securityStamp = await this.getStateValueByUserIdAndKeyDef(userId, SECURITY_STAMP_MEMORY);
+    const securityStamp = await this.getStateValueByUserIdAndKeyDef(userId, SECURITY_STAMP_DISK);
 
     return securityStamp;
   }
@@ -1058,7 +1058,7 @@ export class TokenService implements TokenServiceAbstraction {
     }
 
     await this.singleUserStateProvider
-      .get(userId, SECURITY_STAMP_MEMORY)
+      .get(userId, SECURITY_STAMP_DISK)
       .update((_) => securityStamp);
   }
 

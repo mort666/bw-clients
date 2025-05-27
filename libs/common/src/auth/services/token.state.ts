@@ -70,7 +70,7 @@ export const API_KEY_CLIENT_SECRET_MEMORY = new UserKeyDefinition<string>(
   },
 );
 
-export const SECURITY_STAMP_MEMORY = new UserKeyDefinition<string>(TOKEN_MEMORY, "securityStamp", {
+export const SECURITY_STAMP_DISK = new UserKeyDefinition<string>(TOKEN_DISK, "securityStamp", {
   deserializer: (securityStamp) => securityStamp,
   clearOn: ["logout"],
 });
