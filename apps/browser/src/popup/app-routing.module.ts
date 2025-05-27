@@ -331,21 +331,6 @@ const routes: Routes = [
     data: { elevation: 1 } satisfies RouteDataProperties,
   },
   {
-    path: "",
-    component: ExtensionAnonLayoutWrapperComponent,
-    children: [
-      {
-        path: "change-password",
-        children: [
-          {
-            path: "",
-            component: ChangePasswordComponent,
-          },
-        ],
-      },
-    ],
-  },
-  {
     path: "update-temp-password",
     component: UpdateTempPasswordComponent,
     canActivate: [
@@ -570,6 +555,16 @@ const routes: Routes = [
           },
           showBackButton: true,
         } satisfies RouteDataProperties & ExtensionAnonLayoutWrapperData,
+      },
+      // TODO: Should this have any guards?
+      {
+        path: "change-password",
+        children: [
+          {
+            path: "",
+            component: ChangePasswordComponent,
+          },
+        ],
       },
     ],
   },

@@ -143,25 +143,6 @@ const routes: Routes = [
         data: { titleId: "deleteOrganization" },
       },
       {
-        path: "",
-        component: AnonLayoutWrapperComponent,
-        children: [
-          {
-            path: "change-password",
-            children: [
-              {
-                path: "",
-                component: ChangePasswordComponent,
-              },
-            ],
-            data: {
-              hideFooter: true,
-            } satisfies AnonLayoutWrapperData,
-          },
-        ],
-        data: { titleId: "updatePassword" } satisfies RouteDataProperties,
-      },
-      {
         path: "update-temp-password",
         component: UpdateTempPasswordComponent,
         canActivate: [
@@ -614,6 +595,18 @@ const routes: Routes = [
             path: "",
             component: BrowserExtensionPromptInstallComponent,
             outlet: "secondary",
+          },
+        ],
+      },
+      {
+        path: "change-password",
+        data: {
+          hideFooter: true,
+        } satisfies AnonLayoutWrapperData,
+        children: [
+          {
+            path: "",
+            component: ChangePasswordComponent,
           },
         ],
       },
