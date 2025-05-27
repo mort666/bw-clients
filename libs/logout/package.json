@@ -11,10 +11,5 @@
     "type": "git",
     "url": "https://github.com/bitwarden/clients"
   },
-  "license": "GPL-3.0",
-  "scripts": {
-    "clean": "rimraf dist",
-    "build": "npm run clean && tsc",
-    "build:watch": "npm run clean && tsc -watch"
-  }
+  "license": "GPL-3.0"
 }
