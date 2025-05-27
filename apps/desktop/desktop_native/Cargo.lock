@@ -879,6 +879,7 @@ dependencies = [
  "anyhow",
  "arboard",
  "argon2",
+ "ashpd",
  "base64",
  "bitwarden-russh",
  "byteorder",
