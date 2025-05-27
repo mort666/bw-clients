@@ -559,6 +559,10 @@ const routes: Routes = [
       // TODO: Should this have any guards?
       {
         path: "change-password",
+        data: {
+          elevation: 1,
+          hideFooter: true,
+        } satisfies RouteDataProperties & ExtensionAnonLayoutWrapperData,
         children: [
           {
             path: "",
