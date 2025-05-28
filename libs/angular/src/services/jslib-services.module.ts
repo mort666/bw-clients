@@ -168,6 +168,7 @@ import {
   MasterPasswordServiceAbstraction,
 } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
 import { MasterPasswordService } from "@bitwarden/common/key-management/master-password/services/master-password.service";
+import { SendPasswordService } from "@bitwarden/common/key-management/sends/send-password.service";
 import {
   DefaultVaultTimeoutService,
   DefaultVaultTimeoutSettingsService,
@@ -1432,6 +1433,11 @@ const safeProviders: SafeProvider[] = [
     provide: ViewCacheService,
     useExisting: NoopViewCacheService,
     deps: [],
+  }),
+  safeProvider({
+    provide: SendPasswordService,
+    useClass: SendPasswordService,
+    deps: [CryptoFunctionServiceAbstraction],
   }),
   safeProvider({
     provide: LoginComponentService,
