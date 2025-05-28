@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angular/core";
 import { ReactiveFormsModule, FormBuilder, Validators, FormControl } from "@angular/forms";
-import { BehaviorSubject, firstValueFrom } from "rxjs";
+import { firstValueFrom } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import {
@@ -117,15 +117,13 @@ interface InputPasswordForm {
   ],
 })
 export class InputPasswordComponent implements OnInit {
-  private submittingBehaviorSubject = new BehaviorSubject(false);
-  submitting$ = this.submittingBehaviorSubject.asObservable();
-
   @ViewChild(PasswordStrengthV2Component) passwordStrengthComponent:
     | PasswordStrengthV2Component
     | undefined = undefined;
 
   @Output() onPasswordFormSubmit = new EventEmitter<PasswordInputResult>();
   @Output() onSecondaryButtonClick = new EventEmitter<void>();
+  @Output() isSubmitting = new EventEmitter<boolean>();
 
   @Input({ required: true }) flow!: InputPasswordFlow;
 
@@ -267,7 +265,7 @@ export class InputPasswordComponent implements OnInit {
 
   submit = async () => {
     try {
-      this.submittingBehaviorSubject.next(true);
+      this.isSubmitting.emit(true);
 
       this.verifyFlow();
 
@@ -275,7 +273,6 @@ export class InputPasswordComponent implements OnInit {
 
       if (this.formGroup.invalid) {
         this.showErrorSummary = true;
-        this.submittingBehaviorSubject.next(false);
         return;
       }
 
@@ -396,7 +393,7 @@ export class InputPasswordComponent implements OnInit {
     } catch (e) {
       this.validationService.showError(e);
     } finally {
-      this.submittingBehaviorSubject.next(false);
+      this.isSubmitting.emit(false);
     }
   };
 
@@ -453,7 +450,6 @@ export class InputPasswordComponent implements OnInit {
       false,
     );
     if (!newPasswordVerified) {
-      this.submittingBehaviorSubject.next(false);
       return;
     }
 

@@ -1,6 +1,6 @@
 import { CommonModule } from "@angular/common";
 import { Component, Inject, OnInit, ViewChild } from "@angular/core";
-import { BehaviorSubject, firstValueFrom } from "rxjs";
+import { BehaviorSubject, combineLatest, firstValueFrom, map } from "rxjs";
 
 import {
   InputPasswordComponent,
@@ -65,8 +65,15 @@ export class EmergencyAccessTakeoverDialogComponent implements OnInit {
   @ViewChild(InputPasswordComponent)
   inputPasswordComponent: InputPasswordComponent | undefined = undefined;
 
-  private submittingBehaviorSubject = new BehaviorSubject(false);
-  submitting$ = this.submittingBehaviorSubject.asObservable();
+  private parentSubmittingBehaviorSubject = new BehaviorSubject(false);
+  parentSubmitting$ = this.parentSubmittingBehaviorSubject.asObservable();
+
+  private childSubmittingBehaviorSubject = new BehaviorSubject(false);
+  childSubmitting$ = this.childSubmittingBehaviorSubject.asObservable();
+
+  submitting$ = combineLatest([this.parentSubmitting$, this.childSubmitting$]).pipe(
+    map(([parentIsSubmitting, childIsSubmitting]) => parentIsSubmitting || childIsSubmitting),
+  );
 
   initializing = true;
   inputPasswordFlow = InputPasswordFlow.ChangePasswordDelegation;
@@ -105,7 +112,7 @@ export class EmergencyAccessTakeoverDialogComponent implements OnInit {
   };
 
   protected async handlePasswordFormSubmit(passwordInputResult: PasswordInputResult) {
-    this.submittingBehaviorSubject.next(true);
+    this.parentSubmittingBehaviorSubject.next(true);
 
     try {
       await this.emergencyAccessService.takeover(
@@ -122,10 +129,14 @@ export class EmergencyAccessTakeoverDialogComponent implements OnInit {
         message: this.i18nService.t("unexpectedError"),
       });
     } finally {
-      this.submittingBehaviorSubject.next(false);
+      this.parentSubmittingBehaviorSubject.next(false);
     }
 
     this.dialogRef.close(EmergencyAccessTakeoverDialogResultTypes.Done);
+  }
+
+  protected handleIsSubmittingChange(isSubmitting: boolean) {
+    this.childSubmittingBehaviorSubject.next(isSubmitting);
   }
 
   /**

@@ -23,6 +23,7 @@
         [flow]="inputPasswordFlow"
         [masterPasswordPolicyOptions]="masterPasswordPolicyOptions"
         (onPasswordFormSubmit)="handlePasswordFormSubmit($event)"
+        (isSubmitting)="handleIsSubmittingChange($event)"
       ></auth-input-password>
     }
   </div>
