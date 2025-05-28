@@ -263,7 +263,10 @@ export class InputPasswordComponent implements OnInit {
     }
 
     // 2. Verify current password is correct (if necessary)
-    if (this.isChangePasswordFlow()) {
+    if (
+      this.flow === InputPasswordFlow.ChangePassword ||
+      this.flow === InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation
+    ) {
       const currentPasswordVerified = await this.verifyCurrentPassword(
         currentPassword,
         this.kdfConfig,
@@ -311,7 +314,10 @@ export class InputPasswordComponent implements OnInit {
       kdfConfig: this.kdfConfig,
     };
 
-    if (this.isChangePasswordFlow()) {
+    if (
+      this.flow === InputPasswordFlow.ChangePassword ||
+      this.flow === InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation
+    ) {
       const currentMasterKey = await this.keyService.makeMasterKey(
         currentPassword,
         this.email,
@@ -544,12 +550,5 @@ export class InputPasswordComponent implements OnInit {
 
   protected getPasswordStrengthScore(score: PasswordStrengthScore) {
     this.passwordStrengthScore = score;
-  }
-
-  protected isChangePasswordFlow(): boolean {
-    return (
-      this.flow === InputPasswordFlow.ChangePassword ||
-      this.flow === InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation
-    );
   }
 }
