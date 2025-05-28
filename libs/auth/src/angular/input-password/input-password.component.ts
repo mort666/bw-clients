@@ -192,7 +192,10 @@ export class InputPasswordComponent implements OnInit {
   }
 
   private addFormFieldsIfNecessary() {
-    if (this.isChangePasswordFlow()) {
+    if (
+      this.flow === InputPasswordFlow.ChangePassword ||
+      this.flow === InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation
+    ) {
       this.formGroup.addControl(
         "currentPassword",
         this.formBuilder.nonNullable.control("", Validators.required),
