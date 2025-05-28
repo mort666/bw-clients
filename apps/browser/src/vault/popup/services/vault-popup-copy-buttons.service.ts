@@ -14,6 +14,7 @@ export type CopyButtonDisplayMode = "combined" | "quick";
 type CipherItem = {
   value: string;
   key: string;
+  field?: string;
 };
 
 type CopyButtonsView = {
@@ -74,15 +75,23 @@ export class VaultPopupCopyButtonsService {
     return !!cipher.login.hasTotp || !!cipher.login.password || !!cipher.login.username;
   }
 
+  /*
+   * singleCopiableLogin uses appCopyField instead of appCopyClick. This allows for the TOTP
+   * code to be copied correctly. See #14167
+   */
   private singleCopiableLogin(cipher: CipherView) {
     const loginItems: CipherItem[] = [
-      { value: cipher.login.username, key: "username" },
-      { value: cipher.login.password, key: "password" },
-      { value: cipher.login.totp, key: "totp" },
+      { value: cipher.login.username, key: "copyUsername", field: "username" },
+      { value: cipher.login.password, key: "copyPassword", field: "password" },
+      { value: cipher.login.totp, key: "copyVerificationCode", field: "totp" },
     ];
     // If both the password and username are visible but the password is hidden, return the username
     if (!cipher.viewPassword && cipher.login.username && cipher.login.password) {
-      return { value: cipher.login.username, key: this.i18nService.t("username") };
+      return {
+        value: cipher.login.username,
+        key: this.i18nService.t("copyUsername"),
+        field: "username",
+      };
     }
     return this.findSingleCopiableItem(loginItems);
   }
@@ -109,12 +118,10 @@ export class VaultPopupCopyButtonsService {
    * Given a list of CipherItems, if there is only one item with a value,
    * return it with the translated key. Otherwise return null
    */
-  private findSingleCopiableItem(items: { value: string; key: string }[]): CipherItem | null {
-    const singleItemWithValue = items.find(
-      (key) => key.value && items.every((f) => f === key || !f.value),
-    );
-    return singleItemWithValue
-      ? { value: singleItemWithValue.value, key: this.i18nService.t(singleItemWithValue.key) }
+  findSingleCopiableItem(items: CipherItem[]): CipherItem | null {
+    const itemsWithValue = items.filter(({ value }) => !!value);
+    return itemsWithValue.length === 1
+      ? { ...itemsWithValue[0], key: this.i18nService.t(itemsWithValue[0].key) }
       : null;
   }
 

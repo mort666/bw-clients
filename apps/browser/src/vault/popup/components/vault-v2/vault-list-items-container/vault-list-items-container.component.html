@@ -193,13 +193,9 @@
                     type="button"
                     bitIconButton="bwi-clone"
                     size="small"
-                    [appA11yTitle]="
-                      'copyFieldValue'
-                        | i18n: cbv.singleCopiableLogin.key : cbv.singleCopiableLogin.value
-                    "
-                    [appCopyClick]="cbv.singleCopiableLogin.value"
-                    [valueLabel]="cbv.singleCopiableLogin.key"
-                    showToast
+                    [appA11yTitle]="cbv.singleCopiableLogin.key"
+                    [appCopyField]="$any(cbv.singleCopiableLogin.field)"
+                    [cipher]="cipher"
                   ></button>
                   <ng-container *ngIf="!cbv.singleCopiableLogin">
                     <button
