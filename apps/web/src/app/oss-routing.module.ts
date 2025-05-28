@@ -601,6 +601,7 @@ const routes: Routes = [
       {
         path: "change-password",
         component: ChangePasswordComponent,
+        // TODO: Turn this on with PM-22155 and resolve routing complexities.
         // canActivate: [authGuard],
       },
     ],

@@ -568,6 +568,8 @@ const routes: Routes = [
             component: ChangePasswordComponent,
           },
         ],
+        // TODO: Turn this on with PM-22155 and resolve routing complexities.
+        // canActivate: [authGuard]
       },
     ],
   },
