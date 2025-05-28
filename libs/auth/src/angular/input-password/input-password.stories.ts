@@ -11,12 +11,14 @@ import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/mod
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { MasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { ValidationService } from "@bitwarden/common/platform/abstractions/validation.service";
 import { PasswordStrengthServiceAbstraction } from "@bitwarden/common/tools/password-strength";
 import { UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
 import { DialogService, ToastService } from "@bitwarden/components";
+import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
 import { DEFAULT_KDF_CONFIG, KdfConfigService, KeyService } from "@bitwarden/key-management";
 
 // FIXME: remove `/apps` import from `/libs`
@@ -73,6 +75,7 @@ export default {
           provide: PlatformUtilsService,
           useValue: {
             launchUri: () => Promise.resolve(true),
+            copyToClipboard: () => true,
           },
         },
         {
@@ -124,6 +127,19 @@ export default {
           useValue: {
             showToast: action("ToastService.showToast"),
           } as Partial<ToastService>,
+        },
+        {
+          provide: PasswordGenerationServiceAbstraction,
+          useValue: {
+            getOptions: () => ({}),
+            generatePassword: () => "generated-password",
+          },
+        },
+        {
+          provide: ValidationService,
+          useValue: {
+            showError: () => ["validation error"],
+          },
         },
       ],
     }),
