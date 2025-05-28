@@ -556,7 +556,6 @@ const routes: Routes = [
           showBackButton: true,
         } satisfies RouteDataProperties & ExtensionAnonLayoutWrapperData,
       },
-      // TODO: Should this have any guards?
       {
         path: "change-password",
         data: {

@@ -65,11 +65,14 @@ export const authGuard: CanActivateFn = async (
     return router.createUrlTree(["/set-password"]);
   }
 
-  if (
-    forceSetPasswordReason !== ForceSetPasswordReason.None &&
-    !routerState.url.includes("update-temp-password")
-  ) {
-    return router.createUrlTree(["/update-temp-password"]);
+  if (forceSetPasswordReason !== ForceSetPasswordReason.None) {
+    if (!routerState.url.includes("update-temp-password")) {
+      return router.createUrlTree(["/update-temp-password"]);
+    }
+
+    if (!routerState.url.includes("change-password")) {
+      return router.createUrlTree(["/change-password"]);
+    }
   }
 
   return true;
