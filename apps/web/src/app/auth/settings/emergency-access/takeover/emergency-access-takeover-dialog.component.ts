@@ -1,6 +1,6 @@
 import { CommonModule } from "@angular/common";
-import { AfterViewInit, Component, Inject, OnInit, ViewChild } from "@angular/core";
-import { BehaviorSubject, combineLatest, map } from "rxjs";
+import { Component, Inject, OnInit, ViewChild } from "@angular/core";
+import { BehaviorSubject, firstValueFrom } from "rxjs";
 
 import {
   InputPasswordComponent,
@@ -10,6 +10,7 @@ import {
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/models/domain/master-password-policy-options";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import {
@@ -60,7 +61,7 @@ type EmergencyAccessTakeoverDialogResultType =
     InputPasswordComponent,
   ],
 })
-export class EmergencyAccessTakeoverDialogComponent implements OnInit, AfterViewInit {
+export class EmergencyAccessTakeoverDialogComponent implements OnInit {
   @ViewChild(InputPasswordComponent)
   inputPasswordComponent: InputPasswordComponent | undefined = undefined;
 
@@ -83,32 +84,16 @@ export class EmergencyAccessTakeoverDialogComponent implements OnInit, AfterView
   ) {}
 
   async ngOnInit() {
-    // const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
-    // const grantorPolicies = await this.emergencyAccessService.getGrantorPolicies(
-    //   this.dialogData.emergencyAccessId,
-    // );
+    const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
+    const grantorPolicies = await this.emergencyAccessService.getGrantorPolicies(
+      this.dialogData.emergencyAccessId,
+    );
 
-    // this.masterPasswordPolicyOptions = await firstValueFrom(
-    //   this.policyService.masterPasswordPolicyOptions$(activeUserId, grantorPolicies),
-    // );
+    this.masterPasswordPolicyOptions = await firstValueFrom(
+      this.policyService.masterPasswordPolicyOptions$(activeUserId, grantorPolicies),
+    );
 
     this.initializing = false;
-  }
-
-  ngAfterViewInit() {
-    if (!this.inputPasswordComponent) {
-      throw new Error("InputPasswordComponent is not initialized");
-    }
-
-    this.submitting$ = combineLatest([
-      this.submittingBehaviorSubject.asObservable(),
-      this.inputPasswordComponent.submitting$,
-    ]).pipe(
-      map(
-        ([dialogCompIsSubmitting, inputPasswordCompIsSubmitting]) =>
-          dialogCompIsSubmitting || inputPasswordCompIsSubmitting,
-      ),
-    );
   }
 
   protected handlePrimaryButtonClick = async () => {
