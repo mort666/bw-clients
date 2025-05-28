@@ -1,3 +1,4 @@
+import { SendHashedPassword } from "../../../key-management/sends/send-password.service";
 import { SendAccessToken } from "../models/send-access-token";
 import { SendTokenRetrievalError } from "../services/send-token.service";
 
@@ -5,7 +6,7 @@ export type SendAccessCredentialsType = "password" | "email-otp";
 
 export type SendPasswordCredentials = {
   type: "password";
-  password: string;
+  password: SendHashedPassword;
 };
 export type SendEmailOtpCredentials = {
   type: "email-otp";
@@ -14,6 +15,7 @@ export type SendEmailOtpCredentials = {
 };
 export type SendAccessCredentials = SendPasswordCredentials | SendEmailOtpCredentials;
 
+// TODO: add JSdocs
 export abstract class SendTokenService {
   // SendAccessTokens need to be stored in session storage once retrieved.
   // All SendAccessTokens are scoped to a specific send id so all getting and setting should accept a send id.
@@ -37,4 +39,15 @@ export abstract class SendTokenService {
     sendId: string,
     sendAccessCredentials: SendAccessCredentials,
   ) => Promise<void>;
+
+  /**
+   * Hashes a password for send access.
+   * @param password The raw password string to hash.
+   * @param keyMaterialUrlB64 The base64 URL encoded key material string.
+   * @returns A promise that resolves to the hashed password as a SendHashedPassword.
+   */
+  abstract hashPassword: (
+    password: string,
+    keyMaterialUrlB64: string,
+  ) => Promise<SendHashedPassword>;
 }

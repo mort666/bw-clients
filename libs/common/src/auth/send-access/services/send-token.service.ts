@@ -2,6 +2,10 @@ import { firstValueFrom } from "rxjs";
 import { Jsonify } from "type-fest";
 
 import {
+  SendHashedPassword,
+  SendPasswordService,
+} from "../../../key-management/sends/send-password.service";
+import {
   GlobalState,
   GlobalStateProvider,
   KeyDefinition,
@@ -15,6 +19,9 @@ import {
 import { SendAccessToken } from "../models/send-access-token";
 
 import { SendTokenApiRetrievalError, SendTokenApiService } from "./send-token-api.service";
+
+// TODO: add JSDocs
+// TODO: add tests for this service.
 
 export const SEND_ACCESS_TOKEN_DICT = KeyDefinition.record<SendAccessToken, string>(
   SEND_ACCESS_DISK,
@@ -34,6 +41,7 @@ export class SendTokenService implements SendTokenServiceAbstraction {
   constructor(
     private globalStateProvider: GlobalStateProvider,
     private sendTokenApiService: SendTokenApiService,
+    private sendPasswordService: SendPasswordService,
   ) {
     this.initializeState();
   }
@@ -81,6 +89,10 @@ export class SendTokenService implements SendTokenServiceAbstraction {
     // If it is not expired, we will return the token from storage.
     // const request = new SendAccessTokenRequest(sendId, sendCredentials);
     // const result = await this.sendTokenApiService.requestSendAccessToken(request);
+  }
+
+  async hashPassword(password: string, keyMaterialUrlB64: string): Promise<SendHashedPassword> {
+    return this.sendPasswordService.hashPassword(password, keyMaterialUrlB64);
   }
 
   private async getSendAccessTokenFromStorage(
