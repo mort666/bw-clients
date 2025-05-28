@@ -33,7 +33,9 @@ export const SEND_ACCESS_TOKEN_DICT = KeyDefinition.record<SendAccessToken, stri
   },
 );
 
-export type SendTokenRetrievalError = "expired" | SendTokenApiRetrievalError;
+// TODO: add different error types for each method.
+export type TryGetSendAccessTokenError = "expired" | SendTokenApiRetrievalError;
+// export type GetSendAccessTokenWithCredsError = <subset of SendTokenApiRetrievalError>;
 
 export class SendTokenService implements SendTokenServiceAbstraction {
   private sendAccessTokenDictGlobalState: GlobalState<Record<string, SendAccessToken>> | undefined;
@@ -50,9 +52,13 @@ export class SendTokenService implements SendTokenServiceAbstraction {
     this.sendAccessTokenDictGlobalState = this.globalStateProvider.get(SEND_ACCESS_TOKEN_DICT);
   }
 
-  async tryGetSendAccessToken(sendId: string): Promise<SendAccessToken | SendTokenRetrievalError> {
-    // TODO: check in storage for the access token and if it is expired.
+  async tryGetSendAccessToken(
+    sendId: string,
+  ): Promise<SendAccessToken | TryGetSendAccessTokenError> {
+    // Validate the sendId is a non-empty string.
+    this.validateSendId(sendId);
 
+    // Check in storage for the access token for the given sendId.
     const sendAccessTokenFromStorage = await this.getSendAccessTokenFromStorage(sendId);
 
     if (sendAccessTokenFromStorage != null) {
@@ -60,7 +66,7 @@ export class SendTokenService implements SendTokenServiceAbstraction {
       if (sendAccessTokenFromStorage.isExpired()) {
         return "expired";
       } else {
-        // If it is not expired, we return
+        // If it is not expired, we return it
         return sendAccessTokenFromStorage;
       }
     }
@@ -68,7 +74,6 @@ export class SendTokenService implements SendTokenServiceAbstraction {
     // If we don't have a token in storage, we can try to request a new token from the server.
     const request = new SendAccessTokenRequest(sendId);
 
-    // try {
     const result = await this.sendTokenApiService.requestSendAccessToken(request);
 
     if (result instanceof SendAccessToken) {
@@ -82,13 +87,28 @@ export class SendTokenService implements SendTokenServiceAbstraction {
 
   async getSendAccessTokenWithCredentials(
     sendId: string,
-    sendCredentials: SendAccessCredentials | undefined,
+    sendCredentials: SendAccessCredentials,
   ): Promise<void> {
-    // TODO: check in storage for the access token and if it is expired.
-    // If it is expired, we will need to request a new token from the server.
-    // If it is not expired, we will return the token from storage.
-    // const request = new SendAccessTokenRequest(sendId, sendCredentials);
-    // const result = await this.sendTokenApiService.requestSendAccessToken(request);
+    // Validate the sendId
+    this.validateSendId(sendId);
+
+    // Validate the credentials
+    if (sendCredentials == null) {
+      throw new Error("sendCredentials must be provided.");
+    }
+
+    // Request the access token from the server using the provided credentials.
+    const request = new SendAccessTokenRequest(sendId, sendCredentials);
+    const result = await this.sendTokenApiService.requestSendAccessToken(request);
+
+    if (result instanceof SendAccessToken) {
+      // If we get a token back, we need to store it in the global state.
+      await this.setSendAccessTokenInStorage(sendId, result);
+      return;
+    }
+
+    // Handle errors from the API service.
+    // return result;
   }
 
   async hashPassword(password: string, keyMaterialUrlB64: string): Promise<SendHashedPassword> {
@@ -116,6 +136,12 @@ export class SendTokenService implements SendTokenServiceAbstraction {
         sendAccessTokenDict[sendId] = sendAccessToken;
         return sendAccessTokenDict;
       });
+    }
+  }
+
+  private validateSendId(sendId: string): void {
+    if (sendId == null || sendId.trim() === "") {
+      throw new Error("sendId must be provided.");
     }
   }
 }

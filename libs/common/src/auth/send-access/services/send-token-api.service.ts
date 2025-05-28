@@ -8,6 +8,9 @@ import { SendAccessToken } from "../models/send-access-token";
 
 export type SendTokenApiRetrievalError = "password-required" | "otp-required" | "unknown-error";
 
+// Consider adding types for submission with credentials:
+//   | "invalid-password"
+
 export class SendTokenApiService implements SendTokenApiServiceAbstraction {
   constructor(
     private environmentService: EnvironmentService,
