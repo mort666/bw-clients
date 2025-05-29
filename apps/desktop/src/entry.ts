@@ -3,7 +3,7 @@ import * as path from "path";
 
 import { app } from "electron";
 
-import { autotype } from "@bitwarden/desktop-napi"
+import { autotype } from "@bitwarden/desktop-napi";
 
 if (
   process.platform === "darwin" &&
@@ -42,8 +42,10 @@ if (
   // eslint-disable-next-line
   const Main = require("./main").Main;
 
-  let r = autotype.registerHotkey();
+  const r = autotype.registerHotkey();
+  // eslint-disable-next-line no-console
   console.log("registerHotkey(): ");
+  // eslint-disable-next-line no-console
   console.log(r);
 
   const main = new Main();
