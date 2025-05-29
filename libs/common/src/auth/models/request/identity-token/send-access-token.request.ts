@@ -1,6 +1,6 @@
 import { ClientType } from "../../../../enums";
-import { GrantType, GrantType } from "../../../enums/grant-type.enum";
-import { Scope, Scope } from "../../../enums/scopes.enum";
+import { GrantType } from "../../../enums/grant-type.enum";
+import { Scope } from "../../../enums/scopes.enum";
 import { SendAccessCredentials } from "../../../send-access/abstractions/send-token.service";
 
 export type SendAccessTokenPasswordPayload = { password: string };
