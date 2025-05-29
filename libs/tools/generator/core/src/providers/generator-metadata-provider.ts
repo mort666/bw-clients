@@ -2,6 +2,7 @@ import {
   Observable,
   combineLatestWith,
   distinctUntilChanged,
+  first,
   map,
   shareReplay,
   switchMap,
@@ -29,6 +30,8 @@ import {
   Algorithms,
   Types,
 } from "../metadata";
+import sdkPassphrase from "../metadata/password/sdk-eff-word-list";
+import sdkPassword from "../metadata/password/sdk-random-password";
 import { availableAlgorithms } from "../policies/available-algorithms-policy";
 import { CredentialPreference } from "../types";
 import {
@@ -40,6 +43,7 @@ import {
 } from "../types/metadata-request";
 
 import { PREFERENCES } from "./credential-preferences";
+
 
 /** Surfaces contextual information to credential generators */
 export class GeneratorMetadataProvider {
@@ -83,7 +87,7 @@ export class GeneratorMetadataProvider {
 
       result = toForwarderMetadata(extension);
     } else {
-      result = this._metadata.get(algorithm);
+      result = this._metadata.get(algorithm).pipe(first());
     }
 
     if (!result) {
@@ -92,6 +96,25 @@ export class GeneratorMetadataProvider {
 
     return result;
   }
+
+  private metadataBySdkFlag(
+    algorithm: GeneratorMetadata<unknown & object>,
+    useSdkService: boolean,
+  ): GeneratorMetadata<unknown & object> {
+    if (useSdkService) {
+      if (algorithm.id == "password") {
+        return sdkPassword;
+      } else if (algorithm.id == "passphrase") {
+        return sdkPassphrase;
+      }
+    }
+    return algorithm;
+  }
+
+  // metadata$ built by reading config service
+  // use memoizedMap() to wrap call (creating the map)
+  // 86 _metadata, new metadata will be encapsulated in observable
+  // distinctUntilChanged() after memoized map
 
   /** retrieve credential types */
   types(): ReadonlyArray<CredentialType> {
@@ -148,7 +171,7 @@ export class GeneratorMetadataProvider {
         const policies$ = this.application.policy
           .policiesByType$(PolicyType.PasswordGenerator, id)
           .pipe(
-            map((p) => availableAlgorithms(p).filter((a) => this._metadata.has(a))),
+            map((p) => availableAlgorithms(p).filter((a) => this._metadata.has(a))), // filter the list down based on feature flag, withLatestReady to pull in config
             memoizedMap((p) => new Set(p), { key: (p) => JSON.stringify(p) }),
             distinctUntilChanged(),
             // complete policy emissions otherwise `switchMap` holds `available$` open indefinitely
