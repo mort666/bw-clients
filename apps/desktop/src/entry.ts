@@ -48,6 +48,9 @@ if (
   // eslint-disable-next-line no-console
   console.log(r);
 
+  // eslint-disable-next-line no-console
+  console.log("hello world");
+
   const main = new Main();
   main.bootstrap();
 }
