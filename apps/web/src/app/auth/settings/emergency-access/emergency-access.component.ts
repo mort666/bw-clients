@@ -38,7 +38,7 @@ import {
 } from "./emergency-access-add-edit.component";
 import {
   EmergencyAccessTakeoverDialogComponent,
-  EmergencyAccessTakeoverDialogResultTypes,
+  EmergencyAccessTakeoverDialogResultType,
 } from "./takeover/emergency-access-takeover-dialog.component";
 import {
   EmergencyAccessTakeoverComponent,
@@ -309,7 +309,7 @@ export class EmergencyAccessComponent implements OnInit {
         },
       });
       const result = await lastValueFrom(dialogRef.closed);
-      if (result === EmergencyAccessTakeoverDialogResultTypes.Done) {
+      if (result === EmergencyAccessTakeoverDialogResultType.Done) {
         this.toastService.showToast({
           variant: "success",
           title: null,

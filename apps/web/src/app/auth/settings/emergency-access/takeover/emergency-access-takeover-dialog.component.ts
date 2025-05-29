@@ -34,12 +34,12 @@ type EmergencyAccessTakeoverDialogData = {
   emergencyAccessId: string;
 };
 
-export const EmergencyAccessTakeoverDialogResultTypes = {
+export const EmergencyAccessTakeoverDialogResultType = {
   Done: "done",
 } as const;
 
-type EmergencyAccessTakeoverDialogResultType =
-  (typeof EmergencyAccessTakeoverDialogResultTypes)[keyof typeof EmergencyAccessTakeoverDialogResultTypes];
+export type EmergencyAccessTakeoverDialogResultType =
+  (typeof EmergencyAccessTakeoverDialogResultType)[keyof typeof EmergencyAccessTakeoverDialogResultType];
 
 /**
  * This component is used by a Grantee to take over emergency access of a Grantor's account
@@ -132,7 +132,7 @@ export class EmergencyAccessTakeoverDialogComponent implements OnInit {
       this.parentSubmittingBehaviorSubject.next(false);
     }
 
-    this.dialogRef.close(EmergencyAccessTakeoverDialogResultTypes.Done);
+    this.dialogRef.close(EmergencyAccessTakeoverDialogResultType.Done);
   }
 
   protected handleIsSubmittingChange(isSubmitting: boolean) {
