@@ -8,7 +8,7 @@ import { SendAccessToken } from "../models/send-access-token";
 
 export type SendTokenApiRetrievalError =
   | "password-required"
-  | "otp-required"
+  | "email-and-otp-required"
   | "invalid-password"
   | "invalid-otp"
   | "unknown-error";
@@ -45,11 +45,16 @@ export class SendTokenApiService implements SendTokenApiServiceAbstraction {
     const responseJson = await response.json();
 
     if (response.status === 200) {
-      const sendAccessToken = SendAccessToken.fromJson(responseJson);
+      const sendAccessToken = SendAccessToken.fromResponseData(responseJson);
       return sendAccessToken;
     } else if (response.status === 400) {
-      // TODO: add correct error handling for 400
-      return "password-required";
+      if (responseJson?.error === "invalid_request") {
+        if (responseJson?.error_description === "Password is required.") {
+          return "password-required";
+        } else if (responseJson?.error_description === "Email and OTP are required.") {
+          return "email-and-otp-required";
+        }
+      }
     }
 
     return "unknown-error";

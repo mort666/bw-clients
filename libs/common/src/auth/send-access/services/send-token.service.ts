@@ -35,13 +35,15 @@ export const SEND_ACCESS_TOKEN_DICT = KeyDefinition.record<SendAccessToken, stri
 
 type CredentialsRequiredApiError = Extract<
   SendTokenApiRetrievalError,
-  "password-required" | "otp-required" | "unknown-error"
+  "password-required" | "email-and-otp-required" | "unknown-error"
 >;
 
 function isCredentialsRequiredApiError(
   error: SendTokenApiRetrievalError,
 ): error is CredentialsRequiredApiError {
-  return error === "password-required" || error === "otp-required" || error === "unknown-error";
+  return (
+    error === "password-required" || error === "email-and-otp-required" || error === "unknown-error"
+  );
 }
 
 export type TryGetSendAccessTokenError = "expired" | CredentialsRequiredApiError;
@@ -104,7 +106,7 @@ export class SendTokenService implements SendTokenServiceAbstraction {
 
     if (isCredentialsRequiredApiError(result)) {
       // If we get an expected API error, we return it.
-      // Typically, this will be a "password-required" or "otp-required" error to communicate that the send requires credentials to access.
+      // Typically, this will be a "password-required" or "email-and-otp-required" error to communicate that the send requires credentials to access.
       return result;
     }
 

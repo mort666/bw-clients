@@ -1,5 +1,12 @@
 import { Jsonify } from "type-fest";
 
+export interface SendAccessTokenJson {
+  access_token: string;
+  expires_in: number; // in seconds
+  scope: string;
+  token_type: string;
+}
+
 export class SendAccessToken {
   constructor(
     /**
@@ -14,12 +21,11 @@ export class SendAccessToken {
 
   /**
    * Builds an instance from our Identity token response data
-   * @param accessToken The `access_token` string
-   * @param expiresInSeconds The `expires_in` value (in seconds)
+   * @param sendAccessTokenJson The JSON data from the Identity token response
    */
-  static fromResponseData(accessToken: string, expiresInSeconds: number): SendAccessToken {
-    const expiresAtTimeStamp = Date.now() + expiresInSeconds * 1000;
-    return new SendAccessToken(accessToken, expiresAtTimeStamp);
+  static fromResponseData(sendAccessTokenJson: SendAccessTokenJson): SendAccessToken {
+    const expiresAtTimeStamp = Date.now() + sendAccessTokenJson.expires_in * 1000;
+    return new SendAccessToken(sendAccessTokenJson.access_token, expiresAtTimeStamp);
   }
 
   /** Returns whether the send access token is expired or not */
