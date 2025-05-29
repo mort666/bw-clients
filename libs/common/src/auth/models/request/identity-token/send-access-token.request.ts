@@ -1,6 +1,6 @@
 import { ClientType } from "../../../../enums";
-import { GrantType, GrantTypes } from "../../../enums/grant-type.enum";
-import { Scope, Scopes } from "../../../enums/scopes.enum";
+import { GrantType, GrantType } from "../../../enums/grant-type.enum";
+import { Scope, Scope } from "../../../enums/scopes.enum";
 import { SendAccessCredentials } from "../../../send-access/abstractions/send-token.service";
 
 export type SendAccessTokenPasswordPayload = { password: string };
@@ -38,8 +38,8 @@ export class SendAccessTokenRequest {
   toIdentityTokenPayload(): SendAccessTokenPayload {
     const base: SendAccessTokenPayloadBase = {
       client_id: SendAccessTokenRequest.CLIENT_ID,
-      grant_type: GrantTypes.SendAccess,
-      scope: Scopes.Send,
+      grant_type: GrantType.SendAccess,
+      scope: Scope.Send,
 
       send_id: this.sendId,
     };
