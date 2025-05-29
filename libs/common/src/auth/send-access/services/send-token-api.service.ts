@@ -6,10 +6,12 @@ import { SendAccessTokenRequest } from "../../models/request/identity-token/send
 import { SendTokenApiService as SendTokenApiServiceAbstraction } from "../abstractions/send-token-api.service";
 import { SendAccessToken } from "../models/send-access-token";
 
-export type SendTokenApiRetrievalError = "password-required" | "otp-required" | "unknown-error";
-
-// Consider adding types for submission with credentials:
-//   | "invalid-password"
+export type SendTokenApiRetrievalError =
+  | "password-required"
+  | "otp-required"
+  | "invalid-password"
+  | "invalid-otp"
+  | "unknown-error";
 
 export class SendTokenApiService implements SendTokenApiServiceAbstraction {
   constructor(

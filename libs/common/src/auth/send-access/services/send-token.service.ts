@@ -22,7 +22,6 @@ import { SendTokenApiRetrievalError, SendTokenApiService } from "./send-token-ap
 
 // TODO: add JSDocs
 // TODO: add tests for this service.
-
 export const SEND_ACCESS_TOKEN_DICT = KeyDefinition.record<SendAccessToken, string>(
   SEND_ACCESS_DISK,
   "accessTokenDict",
@@ -33,9 +32,29 @@ export const SEND_ACCESS_TOKEN_DICT = KeyDefinition.record<SendAccessToken, stri
   },
 );
 
-// TODO: add different error types for each method.
-export type TryGetSendAccessTokenError = "expired" | SendTokenApiRetrievalError;
-// export type GetSendAccessTokenWithCredsError = <subset of SendTokenApiRetrievalError>;
+type CredentialsRequiredApiError = Extract<
+  SendTokenApiRetrievalError,
+  "password-required" | "otp-required" | "unknown-error"
+>;
+
+function isCredentialsRequiredApiError(
+  error: SendTokenApiRetrievalError,
+): error is CredentialsRequiredApiError {
+  return error === "password-required" || error === "otp-required" || error === "unknown-error";
+}
+
+export type TryGetSendAccessTokenError = "expired" | CredentialsRequiredApiError;
+
+export type GetSendAcccessTokenError = Extract<
+  SendTokenApiRetrievalError,
+  "invalid-password" | "invalid-otp" | "unknown-error"
+>;
+
+function isGetSendAccessTokenError(
+  error: SendTokenApiRetrievalError,
+): error is GetSendAcccessTokenError {
+  return error === "invalid-password" || error === "invalid-otp" || error === "unknown-error";
+}
 
 export class SendTokenService implements SendTokenServiceAbstraction {
   private sendAccessTokenDictGlobalState: GlobalState<Record<string, SendAccessToken>> | undefined;
@@ -82,13 +101,20 @@ export class SendTokenService implements SendTokenServiceAbstraction {
       return result;
     }
 
-    return result;
+    if (isCredentialsRequiredApiError(result)) {
+      // If we get an expected API error, we return it.
+      // Typically, this will be a "password-required" or "otp-required" error to communicate that the send requires credentials to access.
+      return result;
+    }
+
+    // If we get an unexpected error, we throw.
+    throw new Error(`Unexpected and unhandled API error retrieving send access token: ${result}`);
   }
 
-  async getSendAccessTokenWithCredentials(
+  async getSendAccessToken(
     sendId: string,
     sendCredentials: SendAccessCredentials,
-  ): Promise<void> {
+  ): Promise<SendAccessToken | GetSendAcccessTokenError> {
     // Validate the sendId
     this.validateSendId(sendId);
 
@@ -104,11 +130,17 @@ export class SendTokenService implements SendTokenServiceAbstraction {
     if (result instanceof SendAccessToken) {
       // If we get a token back, we need to store it in the global state.
       await this.setSendAccessTokenInStorage(sendId, result);
-      return;
+      return result;
     }
 
-    // Handle errors from the API service.
-    // return result;
+    if (isGetSendAccessTokenError(result)) {
+      // If we get an expected API error, we return it.
+      // Typically, this will be due to an invalid credentials error
+      return result;
+    }
+
+    // If we get an unexpected error, we throw.
+    throw new Error(`Unexpected and unhandled API error retrieving send access token: ${result}`);
   }
 
   async hashPassword(password: string, keyMaterialUrlB64: string): Promise<SendHashedPassword> {

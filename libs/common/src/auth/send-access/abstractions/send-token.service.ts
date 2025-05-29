@@ -1,6 +1,9 @@
 import { SendHashedPassword } from "../../../key-management/sends/send-password.service";
 import { SendAccessToken } from "../models/send-access-token";
-import { TryGetSendAccessTokenError } from "../services/send-token.service";
+import {
+  GetSendAcccessTokenError,
+  TryGetSendAccessTokenError,
+} from "../services/send-token.service";
 
 export type SendAccessCredentialsType = "password" | "email-otp";
 
@@ -15,21 +18,7 @@ export type SendEmailOtpCredentials = {
 };
 export type SendAccessCredentials = SendPasswordCredentials | SendEmailOtpCredentials;
 
-// TODO: add JSdocs
 export abstract class SendTokenService {
-  // SendAccessTokens need to be stored in session storage once retrieved.
-  // All SendAccessTokens are scoped to a specific send id so all getting and setting should accept a send id.
-
-  // TODO: should this abstraction have separate methods for requesting an access token from the server
-  // and for getting the access token from storage?
-  // One method that does both is ideal.
-  // We will need to extend inputs to include the send id and the credentials.
-  // We will also need to store the send access token with it's expires_in value so we know if it's expired
-  // so that we don't hand out an expired token to make a request.
-
-  // Returned error types should be discriminated union with a type that can be conditioned off for logic.
-
-  // TODO: define return types.
   // TODO: consider converting to observable.
   /**
    * Attempts to retrieve a SendAccessToken for the given sendId.
@@ -46,10 +35,18 @@ export abstract class SendTokenService {
     sendId: string,
   ) => Promise<SendAccessToken | TryGetSendAccessTokenError>;
 
-  abstract getSendAccessTokenWithCredentials: (
+  /**
+   * Retrieves a SendAccessToken for the given sendId using the provided credentials.
+   * If the access token is successfully retrieved from the server, it stores the token in session storage and returns it.
+   * If the access token cannot be granted due to invalid credentials, it returns a GetSendAcccessTokenError.
+   * @param sendId The ID of the send to retrieve the access token for.
+   * @param sendAccessCredentials The credentials to use for accessing the send.
+   * @returns A promise that resolves to a SendAccessToken if found and valid, or a GetSendAcccessTokenError if not.
+   */
+  abstract getSendAccessToken: (
     sendId: string,
     sendAccessCredentials: SendAccessCredentials,
-  ) => Promise<void>;
+  ) => Promise<SendAccessToken | GetSendAcccessTokenError>;
 
   /**
    * Hashes a password for send access.
