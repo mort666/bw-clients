@@ -12,13 +12,14 @@ import {
   SEND_ACCESS_DISK,
 } from "../../../platform/state";
 import { SendAccessTokenRequest } from "../../models/request/identity-token/send-access-token.request";
+import { SendTokenApiService } from "../abstractions/send-token-api.service";
 import {
   SendAccessCredentials,
   SendTokenService as SendTokenServiceAbstraction,
 } from "../abstractions/send-token.service";
 import { SendAccessToken } from "../models/send-access-token";
 
-import { SendTokenApiRetrievalError, SendTokenApiService } from "./send-token-api.service";
+import { SendTokenApiRetrievalError } from "./send-token-api.service";
 
 // TODO: add JSDocs
 // TODO: add tests for this service.
