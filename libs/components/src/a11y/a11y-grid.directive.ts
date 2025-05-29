@@ -105,21 +105,37 @@ export class A11yGridDirective {
     // Only set activeRow after ensuring the row is rendered
     this.activeRow.set(nextRow);
 
-    this.focusIfPossible();
+    const didFocus = this.focusIfPossible();
+    if (didFocus) {
+      return;
+    }
+
+    this.updateCol(-1);
   }
 
   private updateCol(delta: number) {
     this.activeCol.update((prev) => this.clamp(0, prev + delta, this.numColumns() - 1));
 
-    this.focusIfPossible();
+    const didFocus = this.focusIfPossible();
+    if (didFocus) {
+      return;
+    }
+
+    this.updateCol(Math.sign(delta));
   }
 
-  private focusIfPossible() {
+  private focusIfPossible(): boolean {
     const focusTarget = this.focusTarget();
-    if (focusTarget && document.body.contains(focusTarget)) {
+    if (
+      focusTarget &&
+      document.body.contains(focusTarget) &&
+      !(focusTarget as HTMLButtonElement).disabled
+    ) {
       focusTarget.tabIndex = 0;
       focusTarget.focus();
+      return true;
     }
+    return false;
   }
 
   private clamp(min: number, n: number, max: number) {
