@@ -3,6 +3,8 @@ import * as path from "path";
 
 import { app } from "electron";
 
+import { autotype } from "@bitwarden/desktop-napi"
+
 if (
   process.platform === "darwin" &&
   process.argv.some((arg) => arg.indexOf("chrome-extension://") !== -1 || arg.indexOf("{") !== -1)
@@ -39,6 +41,10 @@ if (
 } else {
   // eslint-disable-next-line
   const Main = require("./main").Main;
+
+  let r = autotype.registerHotkey();
+  console.log("registerHotkey(): ");
+  console.log(r);
 
   const main = new Main();
   main.bootstrap();

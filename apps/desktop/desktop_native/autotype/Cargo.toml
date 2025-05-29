@@ -6,5 +6,6 @@ edition.workspace = true
 publish.workspace = true
 
 [dependencies]
-windows = { git = "https://github.com/microsoft/windows-rs.git", rev = "d09b4681de02560cf05bd3e57d7ea56b73f3b2f8", features = ["Win32_UI_Input_KeyboardAndMouse"] }
-windows-core = { git = "https://github.com/microsoft/windows-rs.git", rev = "d09b4681de02560cf05bd3e57d7ea56b73f3b2f8" }
+windows = { git = "https://github.com/microsoft/windows-rs.git", rev = "bbe2bf3a5a020893e785ca79b0a09fc8770ba7e7", features = ["Win32_UI_Input_KeyboardAndMouse"] }
+windows-core = { git = "https://github.com/microsoft/windows-rs.git", rev = "bbe2bf3a5a020893e785ca79b0a09fc8770ba7e7" }
+windows-result = { git = "https://github.com/microsoft/windows-rs.git", rev = "bbe2bf3a5a020893e785ca79b0a09fc8770ba7e7" }
