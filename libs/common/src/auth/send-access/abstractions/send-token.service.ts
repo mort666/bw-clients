@@ -9,7 +9,7 @@ export type SendAccessCredentialsType = "password" | "email-otp";
 
 export type SendPasswordCredentials = {
   type: "password";
-  password: SendHashedPassword;
+  passwordHash: SendHashedPassword;
 };
 export type SendEmailOtpCredentials = {
   type: "email-otp";

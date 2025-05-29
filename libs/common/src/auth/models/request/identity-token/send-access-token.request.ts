@@ -3,7 +3,7 @@ import { GrantType } from "../../../enums/grant-type.enum";
 import { Scope } from "../../../enums/scopes.enum";
 import { SendAccessCredentials } from "../../../send-access/abstractions/send-token.service";
 
-export type SendAccessTokenPasswordPayload = { password: string };
+export type SendAccessTokenPasswordPayload = { password_hash: string };
 export type SendAccessTokenEmailOtpPayload = { email: string; otp: string };
 export type SendAccessTokenAnonymousPayload = object; // empty object
 
@@ -45,7 +45,7 @@ export class SendAccessTokenRequest {
     };
 
     if (this.sendAccessCredentials && this.sendAccessCredentials.type === "password") {
-      return { ...base, password: this.sendAccessCredentials.password };
+      return { ...base, password_hash: this.sendAccessCredentials.passwordHash };
     } else if (this.sendAccessCredentials && this.sendAccessCredentials.type === "email-otp") {
       return {
         ...base,
