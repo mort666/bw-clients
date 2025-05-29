@@ -45,7 +45,7 @@ export class ChangePasswordComponent implements OnInit {
 
   activeAccount: Account | null = null;
   email!: string;
-  activeUserId?: UserId;
+  userId?: UserId;
   masterPasswordPolicyOptions?: MasterPasswordPolicyOptions;
   initializing = true;
   submitting = false;
@@ -73,22 +73,28 @@ export class ChangePasswordComponent implements OnInit {
       throw new Error("No active active account found while trying to change passwords.");
     }
 
-    this.activeUserId = this.activeAccount.id;
+    this.userId = this.activeAccount.id;
     this.email = this.activeAccount.email;
 
-    if (!this.activeUserId) {
+    if (!this.userId) {
       throw new Error("activeUserId not found");
     }
 
     this.masterPasswordPolicyOptions = await firstValueFrom(
-      this.policyService.masterPasswordPolicyOptions$(this.activeUserId),
+      this.policyService.masterPasswordPolicyOptions$(this.userId),
     );
 
+    /**
+     * In the event of the org invitation flow, this will always be ForceSetPasswordReason.None
+     * because the `password-login.strategy` short circuits before setting the force set password
+     * reason. We used to have two separate components, update-temp-password and update-password
+     * which could show discrete messages based on the flow, but we cannot do that with one shared
+     * component. I cannot use the AcceptOrganizationInviteService to determine if we have an org
+     * invite so how can I determine that?
+     */
     this.forceSetPasswordReason = await firstValueFrom(
-      this.masterPasswordService.forceSetPasswordReason$(this.activeUserId),
+      this.masterPasswordService.forceSetPasswordReason$(this.userId),
     );
-
-    this.initializing = false;
 
     if (this.forceSetPasswordReason === ForceSetPasswordReason.AdminForcePasswordReset) {
       this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
@@ -104,6 +110,8 @@ export class ChangePasswordComponent implements OnInit {
         maxWidth: "lg",
       });
     }
+
+    this.initializing = false;
   }
 
   async logOut() {
@@ -141,17 +149,17 @@ export class ChangePasswordComponent implements OnInit {
           passwordInputResult.newPasswordHint,
         );
       } else {
-        if (!this.activeUserId) {
+        if (!this.userId) {
           throw new Error("userId not found");
         }
 
         if (this.forceSetPasswordReason === ForceSetPasswordReason.AdminForcePasswordReset) {
           await this.changePasswordService.changePasswordForAccountRecovery(
             passwordInputResult,
-            this.activeUserId,
+            this.userId,
           );
         } else {
-          await this.changePasswordService.changePassword(passwordInputResult, this.activeUserId);
+          await this.changePasswordService.changePassword(passwordInputResult, this.userId);
         }
 
         this.toastService.showToast({
