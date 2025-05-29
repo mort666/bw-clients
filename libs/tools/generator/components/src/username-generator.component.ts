@@ -52,6 +52,7 @@ import {
   AlgorithmMetadata,
   AlgorithmsByType,
   Type,
+  Algorithm,
 } from "@bitwarden/generator-core";
 import { GeneratorHistoryService } from "@bitwarden/generator-history";
 
@@ -66,6 +67,7 @@ const NONE_SELECTED = "none";
 @Component({
   selector: "tools-username-generator",
   templateUrl: "username-generator.component.html",
+  standalone: false,
 })
 export class UsernameGeneratorComponent implements OnInit, OnChanges, OnDestroy {
   /** Instantiates the username generator
@@ -86,6 +88,9 @@ export class UsernameGeneratorComponent implements OnInit, OnChanges, OnDestroy 
     private formBuilder: FormBuilder,
     private ariaLive: LiveAnnouncer,
   ) {}
+
+  /** exports algorithm symbols to the template */
+  protected readonly Algorithm = Algorithm;
 
   /** Binds the component to a specific user's settings. When this input is not provided,
    * the form binds to the active user

@@ -56,6 +56,7 @@ import { toAlgorithmInfo, translate } from "./util";
 @Component({
   selector: "tools-password-generator",
   templateUrl: "password-generator.component.html",
+  standalone: false,
 })
 export class PasswordGeneratorComponent implements OnInit, OnChanges, OnDestroy {
   constructor(
@@ -68,6 +69,9 @@ export class PasswordGeneratorComponent implements OnInit, OnChanges, OnDestroy 
     private zone: NgZone,
     private ariaLive: LiveAnnouncer,
   ) {}
+
+  /** exports algorithm symbols to the template */
+  protected readonly Algorithm = Algorithm;
 
   /** Binds the component to a specific user's settings. When this input is not provided,
    * the form binds to the active user
@@ -114,7 +118,7 @@ export class PasswordGeneratorComponent implements OnInit, OnChanges, OnDestroy 
   disableMargin = false;
 
   /** tracks the currently selected credential type */
-  protected credentialType$ = new BehaviorSubject<CredentialAlgorithm>(Algorithm.password);
+  protected credentialType$ = new BehaviorSubject<CredentialAlgorithm | null>(null);
 
   /** Emits the last generated value. */
   protected readonly value$ = new BehaviorSubject<string>("");
@@ -159,7 +163,7 @@ export class PasswordGeneratorComponent implements OnInit, OnChanges, OnDestroy 
 
   async ngOnInit() {
     this.log = ifEnabledSemanticLoggerProvider(this.debug, this.logService, {
-      type: "UsernameGeneratorComponent",
+      type: "PasswordGeneratorComponent",
     });
 
     if (!this.account) {
@@ -293,6 +297,9 @@ export class PasswordGeneratorComponent implements OnInit, OnChanges, OnDestroy 
 
   /** Lists the credential types supported by the component. */
   protected passwordOptions$ = new BehaviorSubject<Option<CredentialAlgorithm>[]>([]);
+
+  /** Determines when the password/passphrase selector is visible. */
+  protected showCredentialTypes$ = this.passwordOptions$.pipe(map((options) => options.length > 1));
 
   /** tracks the currently selected credential type */
   protected maybeAlgorithm$ = new ReplaySubject<AlgorithmMetadata>(1);

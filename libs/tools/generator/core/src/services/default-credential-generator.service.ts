@@ -16,14 +16,12 @@ import {
 } from "rxjs";
 
 import { Account } from "@bitwarden/common/auth/abstractions/account.service";
-import { SdkService } from "@bitwarden/common/platform/abstractions/sdk/sdk.service";
 import { BoundDependency, OnDependency } from "@bitwarden/common/tools/dependencies";
 import { VendorId } from "@bitwarden/common/tools/extension";
 import { SemanticLogger } from "@bitwarden/common/tools/log";
 import { SystemServiceProvider } from "@bitwarden/common/tools/providers";
-import { anyComplete, memoizedMap, withLatestReady } from "@bitwarden/common/tools/rx";
+import { anyComplete, memoizedMap } from "@bitwarden/common/tools/rx";
 import { UserStateSubject } from "@bitwarden/common/tools/state/user-state-subject";
-import { BitwardenClient } from "@bitwarden/sdk-internal";
 
 import { CredentialGeneratorService } from "../abstractions";
 import {
@@ -35,7 +33,7 @@ import {
   toVendorId,
   CredentialType,
 } from "../metadata";
-import { CredentialGeneratorProviders, GeneratorDependencyProvider } from "../providers";
+import { CredentialGeneratorProviders } from "../providers";
 import { GenerateRequest } from "../types";
 import { isAlgorithmRequest, isTypeRequest } from "../types/metadata-request";
 
@@ -50,9 +48,8 @@ export class DefaultCredentialGeneratorService implements CredentialGeneratorSer
   constructor(
     private readonly provide: CredentialGeneratorProviders,
     private readonly system: SystemServiceProvider,
-    private readonly sdkService: SdkService,
   ) {
-    this.log = system.log({ type: "CredentialGeneratorService" });
+    this.log = system.log({ type: "DefaultCredentialGeneratorService" });
   }
 
   private readonly log: SemanticLogger;
@@ -81,12 +78,15 @@ export class DefaultCredentialGeneratorService implements CredentialGeneratorSer
 
     // load the active profile's settings
     const settings$ = zip(request$, metadata$).pipe(
+      map(
+        ([request, metadata]) =>
+          [{ ...request, profile: request.profile ?? Profile.account }, metadata] as const,
+      ),
       memoizedMap(
         ([request, metadata]) => {
-          const profile = request.profile ?? Profile.account;
-          const algorithm = metadata.id;
+          const [profile, algorithm] = [request.profile, metadata.id];
 
-          // settings stays hot and buffers the most recent value in the cache
+          // settings$ stays hot and buffers the most recent value in the cache
           // for the next `request`
           const settings$ = this.settings(metadata, { account$ }, profile).pipe(
             tap(() => this.log.debug({ algorithm, profile }, "settings update received")),
@@ -104,17 +104,16 @@ export class DefaultCredentialGeneratorService implements CredentialGeneratorSer
           this.log.debug({ algorithm, profile }, "settings cached");
           return settings$;
         },
-        { key: ([, metadata]) => metadata.id },
+        { key: ([request, metadata]) => `${metadata.id}:${request.profile}` },
       ),
       switchAll(),
     );
 
     // load the algorithm's engine
     const engine$ = metadata$.pipe(
-      withLatestReady(this.sdkService.client$),
       memoizedMap(
-        ([metadata, sdk]) => {
-          const engine = metadata.engine.create(this.getGeneratorDependencies(sdk));
+        (metadata) => {
+          const engine = metadata.engine.create(this.provide.generator);
 
           this.log.debug({ algorithm: metadata.id }, "engine cached");
           return engine;
@@ -216,11 +215,5 @@ export class DefaultCredentialGeneratorService implements CredentialGeneratorSer
     }
 
     return this.provide.profile.constraints$(activeProfile, dependencies);
-  }
-
-  getGeneratorDependencies(sdk: BitwardenClient): GeneratorDependencyProvider {
-    const provider = this.provide.generator;
-    provider.sdk = sdk;
-    return provider;
   }
 }

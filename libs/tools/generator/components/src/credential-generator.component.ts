@@ -67,6 +67,7 @@ const NONE_SELECTED = "none";
 @Component({
   selector: "tools-credential-generator",
   templateUrl: "credential-generator.component.html",
+  standalone: false,
 })
 export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestroy {
   private readonly destroyed = new Subject<void>();
@@ -83,6 +84,7 @@ export class CredentialGeneratorComponent implements OnInit, OnChanges, OnDestro
     private ariaLive: LiveAnnouncer,
   ) {}
 
+  /** exports algorithm symbols to the template */
   protected readonly Algorithm = Algorithm;
 
   /** Binds the component to a specific user's settings. When this input is not provided,
