@@ -259,7 +259,12 @@
       {
         "personal-files": {
           "read": [],
-          "write": ["$HOME/.config/chromium", "$HOME/.config/google-chrome", "$HOME/.mozilla"]
+          "write": [
+            "$HOME/.config/chromium/NativeMessagingHosts/",
+            "$HOME/.config/microsoft-edge/NativeMessagingHosts/",
+            "$HOME/.config/google-chrome/NativeMessagingHosts",
+            "$HOME/.mozilla/"
+          ]
         }
       },
       "u2f-devices"
