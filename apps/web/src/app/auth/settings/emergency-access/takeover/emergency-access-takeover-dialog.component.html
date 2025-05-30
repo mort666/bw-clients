@@ -15,9 +15,10 @@
         <span class="tw-sr-only">{{ "loading" | i18n }}</span>
       </div>
     } @else {
-      <bit-callout type="warning">{{
+      <!-- TODO: PM-22237 -->
+      <!-- <bit-callout type="warning">{{
         "emergencyAccessLoggedOutWarning" | i18n: dialogData.grantorName
-      }}</bit-callout>
+      }}</bit-callout> -->
 
       <auth-input-password
         [flow]="inputPasswordFlow"

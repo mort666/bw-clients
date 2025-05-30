@@ -5785,6 +5785,9 @@
   "resetPasswordMasterPasswordPolicyInEffect": {
     "message": "One or more organization policies require the master password to meet the following requirements:"
   },
+  "changePasswordDelegationMasterPasswordPolicyInEffect": {
+    "message": "One or more organization policies require the master password to meet the following requirements:"
+  },
   "resetPasswordSuccess": {
     "message": "Password reset success!"
   },

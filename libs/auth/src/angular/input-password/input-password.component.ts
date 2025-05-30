@@ -131,7 +131,6 @@ export class InputPasswordComponent implements OnInit {
   @Input() userId?: UserId;
   @Input() loading = false;
   @Input() masterPasswordPolicyOptions: MasterPasswordPolicyOptions | null = null;
-  @Input() message: string = "";
 
   @Input() inlineButtons = false;
   @Input() primaryButtonText?: Translation;
