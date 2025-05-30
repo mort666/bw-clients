@@ -514,6 +514,10 @@ export class NativeMessagingMain {
   private homedir() {
     if (process.platform === "darwin") {
       return userInfo().homedir;
+    } else if (process.env.SNAP) {
+      // Snap mounts a different user directory, making it impossible to access the unsandboxed paths of native messaging hosts under that dir.
+      const username = userInfo().username;
+      return path.join("/home", username);
     } else {
       return homedir();
     }
