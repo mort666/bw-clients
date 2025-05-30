@@ -1,4 +1,4 @@
-use std::vec;
+use std::{env, os::unix::process, path::PathBuf, vec};
 
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_util::codec::{Framed, LengthDelimitedCodec};
@@ -27,6 +27,14 @@ pub const FLATPAK_PATHS: [&str; 4] = [
     "com.google.Chrome/config/google-chrome/NativeMessagingHosts",
     "org.chromium.Chromium/config/chromium/NativeMessagingHosts",
     "com.microsoft.Edge/config/microsoft-edge/NativeMessagingHosts",
+];
+
+#[cfg(target_os = "linux")]
+pub const UNSANDBOXED_PATHS: [&str; 4] = [
+    ".config/chromium/NativeMessagingHosts",
+    ".config/google-chrome/NativeMessagingHosts",
+    ".config/microsoft-edge/NativeMessagingHosts",
+    ".mozilla/native-messaging-hosts",
 ];
 
 /// This is the codec used for communication through the UNIX socket / Windows named pipe.
@@ -106,6 +114,16 @@ pub fn all_paths(name: &str) -> Vec<std::path::PathBuf> {
             .map(|path| flatpak_path.join(path).join(format!(".app.{name}.socket")));
         let mut paths = vec![path(name)];
         paths.extend(flatpak_paths);
+        
+        let username = env::var("USER").unwrap_or_else(|_| "unknown".to_string());
+        // The home directory is changed inside of snap, but we need the host home directory here. The following logic works in default
+        // ubuntu installations, but may not work if the home directory is changed (active directory + mounted homes, etc.).
+        let host_home = PathBuf::from(format!("/home/{username}"));
+        let unsandboxed_paths = UNSANDBOXED_PATHS
+            .iter()
+            .map(|path| host_home.join(path).join(format!(".app.{name}.socket")));
+        paths.extend(unsandboxed_paths);
+
         paths
     }
     #[cfg(not(target_os = "linux"))]
