@@ -33,11 +33,8 @@ Package name: `@bitwarden/generator-navigation`
 
 Backwards compatibility layer for legacy generator support.
 
-:::warning
-
-Do not use this module.
-
-:::
+> [!WARNING]
+> Do not use this module.
 
 ## generator-legacy
 
@@ -45,11 +42,8 @@ Package name: `@bitwarden/generator-legacy`
 
 Backwards compatibility layer for legacy generator support.
 
-:::warning
-
-Do not use this module.
-
-:::
+> [!WARNING]
+> Do not use this module.
 
 ## Navigation
 
