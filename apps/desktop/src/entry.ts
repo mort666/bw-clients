@@ -42,14 +42,12 @@ if (
   // eslint-disable-next-line
   const Main = require("./main").Main;
 
+  // Testing autotype hotkey registration
   const r = autotype.registerHotkey();
   // eslint-disable-next-line no-console
   console.log("registerHotkey(): ");
   // eslint-disable-next-line no-console
   console.log(r);
-
-  // eslint-disable-next-line no-console
-  console.log("hello world");
 
   const main = new Main();
   main.bootstrap();
