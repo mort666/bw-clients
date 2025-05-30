@@ -212,10 +212,7 @@ export class NativeMessagingMain {
             const browserBinaryPath = path.join(nhmsPath, ".bitwarden_desktop_proxy");
 
             await fs.mkdir(nhmsPath, { recursive: true });
-            if (existsSync(browserBinaryPath)) {
-              await fs.unlink(browserBinaryPath);
-            }
-            await fs.link(binaryPath, browserBinaryPath);
+            await this.linkOrCopy(binaryPath, browserBinaryPath);
             this.logService.info(
               `[Native messaging] Hard-linked ${binaryPath} to ${browserBinaryPath}`,
             );
@@ -239,10 +236,7 @@ export class NativeMessagingMain {
         for (const [key, value] of Object.entries(this.getFlatpakNMHS())) {
           if (existsSync(value)) {
             const sandboxedProxyBinaryPath = path.join(value, ".bitwarden_desktop_proxy");
-            if (existsSync(sandboxedProxyBinaryPath)) {
-              await fs.unlink(sandboxedProxyBinaryPath);
-            }
-            await fs.link(binaryPath, path.join(value, ".bitwarden_desktop_proxy"));
+            await this.linkOrCopy(binaryPath, sandboxedProxyBinaryPath);
             this.logService.info(
               `[Native messaging] Hard-linked ${binaryPath} to ${sandboxedProxyBinaryPath}`,
             );
@@ -528,6 +522,22 @@ export class NativeMessagingMain {
   private async removeIfExists(path: string) {
     if (existsSync(path)) {
       await fs.unlink(path);
+    }
+  }
+
+  private async linkOrCopy(source: string, destination: string) {
+    try {
+      if (existsSync(destination)) {
+        await fs.unlink(destination);
+      }
+      await fs.link(source, destination);
+      this.logService.info(`[Native messaging] Hard-linked ${source} to ${destination}`);
+    } catch (e) {
+      this.logService.warning(
+        `[Native messaging] Failed to hard-link ${source} to ${destination}, copying instead: ${e}`,
+      );
+      await fs.copyFile(source, destination);
+      this.logService.info(`[Native messaging] Copied ${source} to ${destination}`);
     }
   }
 }
