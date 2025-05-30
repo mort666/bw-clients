@@ -58,12 +58,16 @@ impl Server {
             // If the unix socket file already exists, we get an error when trying to bind to it. So we remove it first.
             // Any processes that were using the old socket should remain connected to it but any new connections will use the new socket.
             if !cfg!(windows) && path.exists() {
+                println!("Removing existing IPC socket at: {}", path.display());
                 std::fs::remove_file(path)?;
             }
 
             let name = path.as_os_str().to_fs_name::<GenericFilePath>()?;
             let opts = ListenerOptions::new().name(name);
-            let listener = opts.create_tokio()?;
+            let Ok(listener) = opts.create_tokio() else {
+                println!("Failed to create IPC listener for path: {}", path.display());
+                continue;
+            };
 
             let client_to_server_send = client_to_server_send.clone();
             let server_to_clients_recv = server_to_clients_recv.resubscribe();

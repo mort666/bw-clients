@@ -24,9 +24,9 @@ pub const MESSAGE_CHANNEL_BUFFER: usize = 32;
 #[cfg(target_os = "linux")]
 pub const FLATPAK_PATHS: [&str; 4] = [
     "org.mozilla.firefox/.mozilla/native-messaging-hosts",
-    "com.google.Chrome/.config/google-chrome/NativeMessagingHosts",
-    "org.chromium.Chromium/.config/chromium/NativeMessagingHosts",
-    "com.microsoft.Edge/.config/microsoft-edge/NativeMessagingHosts",
+    "com.google.Chrome/config/google-chrome/NativeMessagingHosts",
+    "org.chromium.Chromium/config/chromium/NativeMessagingHosts",
+    "com.microsoft.Edge/config/microsoft-edge/NativeMessagingHosts",
 ];
 
 /// This is the codec used for communication through the UNIX socket / Windows named pipe.

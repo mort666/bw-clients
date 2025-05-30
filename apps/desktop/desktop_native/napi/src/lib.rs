@@ -441,7 +441,7 @@ pub mod ipc {
             let server =
                 desktop_core::ipc::server::Server::start(path.clone(), send).map_err(|e| {
                     napi::Error::from_reason(format!(
-                        "Error listening to server - Path: {path:?} - Error: {e} - {e:?}"
+                        "Error listening to server - Paths: {path:?} - Error: {e} - {e:?}"
                     ))
                 })?;
 
