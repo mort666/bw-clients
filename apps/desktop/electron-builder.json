@@ -106,7 +106,7 @@
         "to": "desktop_proxy"
       }
     ],
-    "target": ["snap"],
+    "target": ["deb", "freebsd", "rpm", "AppImage", "snap"],
     "desktop": {
       "Name": "Bitwarden",
       "Type": "Application",
