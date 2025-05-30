@@ -1,4 +1,4 @@
-use std::{env, os::unix::process, path::PathBuf, vec};
+use std::vec;
 
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_util::codec::{Framed, LengthDelimitedCodec};
@@ -106,6 +106,8 @@ pub fn path(name: &str) -> std::path::PathBuf {
 pub fn all_paths(name: &str) -> Vec<std::path::PathBuf> {
     #[cfg(target_os = "linux")]
     {
+        use std::{env, path::PathBuf};
+
         // On Linux, in flatpak, we mount sockets in each app's sandboxed directory.
         let user_home = dirs::home_dir().unwrap();
         let flatpak_path = user_home.join(".var/app/");
