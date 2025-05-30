@@ -35,7 +35,7 @@ import { PipesModule } from "@bitwarden/web-vault/app/vault/individual-vault/pip
 import { CreateTasksRequest } from "../../vault/services/abstractions/admin-task.abstraction";
 import { DefaultAdminTaskService } from "../../vault/services/default-admin-task.service";
 
-import { AppTableRowScrollableComponent } from "./app-table-row-scrollable.component";
+import { AppTableRowScrollableComponent } from "./app-table-row-scrollable/app-table-row-scrollable.component";
 import { RiskInsightsTabType } from "./risk-insights.component";
 
 @Component({
