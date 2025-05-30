@@ -30,11 +30,11 @@ import {
 } from "@bitwarden/components";
 import { HeaderModule } from "@bitwarden/web-vault/app/layouts/header/header.module";
 
-import { AllApplicationsComponent } from "./all-applications.component";
-import { CriticalApplicationsComponent } from "./critical-applications.component";
-import { PasswordHealthMembersURIComponent } from "./password-health-members-uri.component";
-import { PasswordHealthMembersComponent } from "./password-health-members.component";
-import { PasswordHealthComponent } from "./password-health.component";
+import { AllApplicationsComponent } from "./all-applications/all-applications.component";
+import { CriticalApplicationsComponent } from "./critical-applications/critical-applications.component";
+import { PasswordHealthComponent } from "./password-health/password-health.component";
+import { PasswordHealthMembersComponent } from "./password-health-members/password-health-members.component";
+import { PasswordHealthMembersURIComponent } from "./password-health-members-uri/password-health-members-uri.component";
 
 // FIXME: update to use a const object instead of a typescript enum
 // eslint-disable-next-line @bitwarden/platform/no-enums
