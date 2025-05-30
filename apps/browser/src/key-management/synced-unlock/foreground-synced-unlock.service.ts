@@ -43,7 +43,7 @@ export class ForegroundSyncedUnlockService extends SyncedUnlockService {
       result: AuthenticationStatus;
       error: string;
     }>(SyncedUnlockStateCommands.GetUserStatusFromDesktop, { userId });
-    if (!response.result) {
+    if (response.result == null) {
       throw response.error;
     }
     return response.result;
@@ -54,7 +54,7 @@ export class ForegroundSyncedUnlockService extends SyncedUnlockService {
       result: UserKey;
       error: string;
     }>(SyncedUnlockStateCommands.GetUserKeyFromDesktop, { userId });
-    if (!response.result) {
+    if (response.result == null) {
       return null;
     }
     return response.result;
@@ -65,7 +65,7 @@ export class ForegroundSyncedUnlockService extends SyncedUnlockService {
       result: boolean;
       error: string;
     }>(SyncedUnlockStateCommands.FocusDesktopApp);
-    if (!response.result) {
+    if (response.result == null) {
       throw response.error;
     }
   }

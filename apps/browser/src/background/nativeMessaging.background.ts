@@ -298,18 +298,18 @@ export class NativeMessagingBackground {
 
     const callback = new Promise((resolver, rejecter) => {
       this.callbacks.set(messageId, { resolver, rejecter });
+      message.messageId = messageId;
+      this.send(message)
+        .then(() => {})
+        .catch((e) => {
+          this.logService.error(
+            `[Native Messaging IPC] Error sending message of type ${message.command} to Bitwarden Desktop app. Error: ${e}`,
+          );
+          const callback = this.callbacks.get(messageId);
+          this.callbacks.delete(messageId);
+          callback?.rejecter("errorConnecting");
+        });
     });
-    message.messageId = messageId;
-    try {
-      await this.send(message);
-    } catch (e) {
-      this.logService.info(
-        `[Native Messaging IPC] Error sending message of type ${message.command} to Bitwarden Desktop app. Error: ${e}`,
-      );
-      const callback = this.callbacks.get(messageId);
-      this.callbacks.delete(messageId);
-      callback?.rejecter("errorConnecting");
-    }
 
     setTimeout(() => {
       if (this.callbacks.has(messageId)) {

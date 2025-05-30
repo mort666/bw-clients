@@ -8,8 +8,7 @@
   <ng-container *ngIf="!showLocalUnlockOptions">
     <form [bitSubmit]="submit" [formGroup]="desktopUnlockFormGroup">
       <div class="tw-flex tw-flex-col tw-space-y-3">
-        <bit-hint class="tw-text-center">{{ "lockScreenSynchronizedNote" | i18n }}</bit-hint
->
+        <bit-hint class="tw-text-center">{{ "lockScreenSynchronizedNote" | i18n }}</bit-hint>
         <button type="submit" bitButton bitFormButton buttonType="primary" block>
           {{ "lockScreenContinueInDesktop" | i18n }}
         </button>
@@ -17,8 +16,11 @@
     </form>
   </ng-container>
   <ng-container *ngIf="showLocalUnlockOptions">
-    <bit-hint class="tw-text-center tw-mb-3" *ngIf="unlockViaDesktop">
+    <bit-hint class="tw-text-center tw-mb-3" *ngIf="unlockViaDesktop && !activeUserLoggedOut">
       {{ "lockScreenDesktopNotRunning" | i18n }}
+    </bit-hint>
+    <bit-hint class="tw-text-center tw-mb-3" *ngIf="unlockViaDesktop && activeUserLoggedOut">
+      {{ "lockScreenDesktopRunningButLoggedOut" | i18n }}
     </bit-hint>
 
     <!-- Biometrics Unlock -->

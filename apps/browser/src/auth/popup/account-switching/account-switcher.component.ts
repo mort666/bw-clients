@@ -131,6 +131,12 @@ export class AccountSwitcherComponent implements OnInit, OnDestroy {
 
   async lockAll() {
     this.loading = true;
+
+    const accounts = await firstValueFrom(this.accountService.accounts$);
+    for (const userId of Object.keys(accounts) as UserId[]) {
+      await this.foregroundSyncedUnlockService.lock(userId);
+    }
+
     await this.lockService.lockAll();
     await this.router.navigate(["lock"]);
   }

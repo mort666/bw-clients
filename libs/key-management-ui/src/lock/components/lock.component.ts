@@ -22,6 +22,7 @@ import { InternalPolicyService } from "@bitwarden/common/admin-console/abstracti
 import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/models/domain/master-password-policy-options";
 import { Account, AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
+import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
 import { VerificationType } from "@bitwarden/common/auth/enums/verification-type";
 import { ForceSetPasswordReason } from "@bitwarden/common/auth/models/domain/force-set-password-reason";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
@@ -138,6 +139,7 @@ export class LockComponent implements OnInit, OnDestroy {
 
   unlockViaDesktop = false;
   isDesktopOpen = false;
+  activeUserLoggedOut = false;
   showLocalUnlockOptions = true;
   desktopUnlockFormGroup: FormGroup = new FormGroup({});
 
@@ -212,12 +214,24 @@ export class LockComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
       )
       .subscribe();
-    interval(500)
+    interval(1000)
       .pipe(
         switchMap(async () => {
           try {
+            const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
+            if (activeAccount == null) {
+              return;
+            }
+
             this.isDesktopOpen = await this.syncedUnlockService.isConnected();
-            this.showLocalUnlockOptions = !(this.isDesktopOpen && this.unlockViaDesktop);
+            this.activeUserLoggedOut =
+              (await this.syncedUnlockService.getUserStatusFromDesktop(activeAccount.id)) ===
+              AuthenticationStatus.LoggedOut;
+            this.showLocalUnlockOptions = !(
+              this.isDesktopOpen &&
+              this.unlockViaDesktop &&
+              !this.activeUserLoggedOut
+            );
           } catch (e) {
             this.logService.error(e);
           }
