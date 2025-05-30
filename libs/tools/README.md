@@ -15,17 +15,15 @@ Before you begin:
 - Check out any [Deep Dive docs](https://contributing.bitwarden.com/architecture/deep-dives/) related to your contribution.
 - [Reach out](https://github.com/orgs/bitwarden/discussions/new/choose) to the [tools engineers](https://github.com/orgs/bitwarden/teams/team-tools-dev) with your plans!
 
-:::tip[Want to contribute but don't know where to start?]
-
-One of the realities of software is you can always do it better. Where we think
-there's opportunity for improvement, we're writing FIXMEs.
-
-Many of these come from [new lints](https://github.com/bitwarden/clients/pull/14650/files),
-but that doesn't mean they're simple to solve!
-
-Try taking a look at one!
-
-:::
+> [!TIP]
+> **Want to contribute but don't know where to start?**
+> 
+> One of the realities of software is you can always do it better. Where we think
+> there's opportunity for improvement, we're writing FIXMEs.
+> 
+> Many of these come from [new lints](https://github.com/bitwarden/clients/pull/14650/files),
+> but that doesn't mean they're simple to solve!
+> Try taking a look at one!
 
 ## Navigation
 
