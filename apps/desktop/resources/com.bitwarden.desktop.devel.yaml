@@ -34,10 +34,11 @@ finish-args:
   - --filesystem=xdg-config/microsoft-edge
   - --filesystem=home/.mozilla
   # Flatpak-sandboxed
-  - --filesystem=~/.var/app/org.mozilla.firefox/
-  - --filesystem=~/.var/app/org.chromium.Chromium/
-  - --filesystem=~/.var/app/com.google.Chrome/
-  - --filesystem=~/.var/app/com.microsoft.Edge/
+  - --filesystem=~/.var/app/org.chromium.Chromium/config/chromium/NativeMessagingHosts/
+  - --filesystem=~/.var/app/com.google.Chrome/config/chrome/NativeMessagingHosts/
+  - --filesystem=~/.var/app/com.microsoft.Edge/config/microsoft-edge/NativeMessagingHosts/
+  # Firefox does not create NMHS directory by default
+  - --filesystem=~/.var/app/org.mozilla.firefox/.mozilla/
 modules:
   - name: bitwarden-desktop
     buildsystem: simple
