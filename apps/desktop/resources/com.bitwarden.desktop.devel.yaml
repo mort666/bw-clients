@@ -31,9 +31,13 @@ finish-args:
   # Non-sandboxed
   - --filesystem=xdg-config/google-chrome
   - --filesystem=xdg-config/chromium
+  - --filesystem=xdg-config/microsoft-edge
   - --filesystem=home/.mozilla
   # Flatpak-sandboxed
   - --filesystem=~/.var/app/org.mozilla.firefox/
+  - --filesystem=~/.var/app/org.chromium.Chromium/
+  - --filesystem=~/.var/app/com.google.Chrome/
+  - --filesystem=~/.var/app/com.microsoft.Edge/
 modules:
   - name: bitwarden-desktop
     buildsystem: simple
