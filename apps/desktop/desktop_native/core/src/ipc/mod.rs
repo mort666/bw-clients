@@ -116,7 +116,7 @@ pub fn all_paths(name: &str) -> Vec<std::path::PathBuf> {
             .map(|path| flatpak_path.join(path).join(format!(".app.{name}.socket")));
         let mut paths = vec![path(name)];
         paths.extend(flatpak_paths);
-        
+
         let username = env::var("USER").unwrap_or_else(|_| "unknown".to_string());
         // The home directory is changed inside of snap, but we need the host home directory here. The following logic works in default
         // ubuntu installations, but may not work if the home directory is changed (active directory + mounted homes, etc.).
