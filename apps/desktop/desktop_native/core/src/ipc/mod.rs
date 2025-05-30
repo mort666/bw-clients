@@ -103,8 +103,7 @@ pub fn all_paths(name: &str) -> Vec<std::path::PathBuf> {
         let flatpak_path = user_home.join(".var/app/");
         let flatpak_paths = FLATPAK_PATHS
             .iter()
-            .map(|path| flatpak_path.join(path).join(format!(".app.{name}.socket")))
-            .collect::<Vec<_>>();
+            .map(|path| flatpak_path.join(path).join(format!(".app.{name}.socket")));
         let mut paths = vec![path(name)];
         paths.extend(flatpak_paths);
         paths
