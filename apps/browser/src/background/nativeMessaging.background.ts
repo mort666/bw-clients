@@ -204,6 +204,7 @@ export class NativeMessagingBackground {
 
             this.secureChannel.sharedSecret = new SymmetricCryptoKey(decrypted);
             this.logService.info("[Native Messaging IPC] Secure channel established");
+
             this.secureChannel.setupResolve();
             break;
           }
@@ -294,6 +295,7 @@ export class NativeMessagingBackground {
 
   async callCommand(message: Message): Promise<any> {
     const messageId = this.messageId++;
+
     const callback = new Promise((resolver, rejecter) => {
       this.callbacks.set(messageId, { resolver, rejecter });
     });

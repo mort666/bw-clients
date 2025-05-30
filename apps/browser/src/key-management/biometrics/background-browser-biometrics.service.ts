@@ -119,7 +119,7 @@ export class BackgroundBrowserBiometricsService extends BiometricsService {
   private async ensureConnected() {
     if (!this.nativeMessagingBackground().connected) {
       await this.nativeMessagingBackground().callCommand({
-        command: BiometricsCommands.IsAvailable,
+        command: BiometricsCommands.GetBiometricsStatus,
       });
     }
   }
