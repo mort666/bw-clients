@@ -21,6 +21,7 @@ pub const NATIVE_MESSAGING_BUFFER_SIZE: usize = 1024 * 1024;
 /// but ideally the messages should be processed as quickly as possible.
 pub const MESSAGE_CHANNEL_BUFFER: usize = 32;
 
+#[cfg(target_os = "linux")]
 pub const FLATPAK_PATHS: [&str; 4] = [
     "org.mozilla.firefox/.mozilla/native-messaging-hosts",
     "com.google.Chrome/.config/google-chrome/NativeMessagingHosts",
