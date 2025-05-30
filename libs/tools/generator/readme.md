@@ -48,6 +48,6 @@ Backwards compatibility layer for legacy generator support.
 ## Navigation
 
 - [Tools README](../README.md)
-- [Generator conventions](../conventions.md)
+- [Generator conventions](./conventions.md)
 - [Generator help](https://bitwarden.com/help/generator/)
 - [Generator SDK](https://github.com/bitwarden/sdk-internal/tree/main/crates/bitwarden-generators)
