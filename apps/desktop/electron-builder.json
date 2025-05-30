@@ -106,7 +106,7 @@
         "to": "desktop_proxy"
       }
     ],
-    "target": ["deb", "freebsd", "rpm", "AppImage", "snap"],
+    "target": ["snap"],
     "desktop": {
       "Name": "Bitwarden",
       "Type": "Application",
@@ -260,10 +260,10 @@
         "personal-files": {
           "read": [],
           "write": [
-            "$HOME/.config/chromium/NativeMessagingHosts/",
-            "$HOME/.config/microsoft-edge/NativeMessagingHosts/",
+            "$HOME/.config/chromium/NativeMessagingHosts",
+            "$HOME/.config/microsoft-edge/NativeMessagingHosts",
             "$HOME/.config/google-chrome/NativeMessagingHosts",
-            "$HOME/.mozilla/"
+            "$HOME/.mozilla"
           ]
         }
       },
