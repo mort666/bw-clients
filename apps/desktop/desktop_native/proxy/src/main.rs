@@ -100,7 +100,7 @@ async fn main() {
     let (out_send, mut out_recv) = tokio::sync::mpsc::channel(MESSAGE_CHANNEL_BUFFER);
 
     let mut handle = tokio::spawn(
-        desktop_core::ipc::client::connect(sock_path.to_path_buf(), out_send, in_recv)
+        desktop_core::ipc::client::connect(sock_path, out_send, in_recv)
             .map(|r| r.map_err(|e| e.to_string())),
     );
 
