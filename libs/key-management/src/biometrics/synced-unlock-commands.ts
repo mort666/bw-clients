@@ -6,4 +6,5 @@ export enum SyncedUnlockStateCommands {
   GetUserKeyFromDesktop = "getUserKeyFromDesktop",
   GetUserStatusFromDesktop = "getUserStatusFromDesktop",
   FocusDesktopApp = "focusDesktopApp",
+  IsConnectionTrusted = "isConnectionTrusted",
 }

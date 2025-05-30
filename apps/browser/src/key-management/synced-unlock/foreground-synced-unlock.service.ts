@@ -69,4 +69,15 @@ export class ForegroundSyncedUnlockService extends SyncedUnlockService {
       throw response.error;
     }
   }
+
+  async isConnectionTrusted(): Promise<boolean> {
+    const response = await BrowserApi.sendMessageWithResponse<{
+      result: boolean;
+      error: string;
+    }>(SyncedUnlockStateCommands.IsConnectionTrusted);
+    if (response.result == null) {
+      throw response.error;
+    }
+    return response.result;
+  }
 }

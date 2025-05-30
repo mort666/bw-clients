@@ -2180,6 +2180,9 @@
   "lockScreenDesktopRunningButLoggedOut": {
     "message": "User account synchronization is enabled, but the active account is logged out in the desktop app."
   },
+  "lockScreenDesktopRunningButNotTrusted": {
+    "message": "The connection fingerprint verification was denied in the desktop app."
+  },
   "unlockWithBiometrics": {
     "message": "Unlock with biometrics"
   },

@@ -85,6 +85,7 @@ export default class RuntimeBackground {
         SyncedUnlockStateCommands.GetUserKeyFromDesktop,
         SyncedUnlockStateCommands.GetUserStatusFromDesktop,
         SyncedUnlockStateCommands.FocusDesktopApp,
+        SyncedUnlockStateCommands.IsConnectionTrusted,
         "getUseTreeWalkerApiForPageDetailsCollectionFeatureFlag",
         "getUserPremiumStatus",
       ];
@@ -224,6 +225,9 @@ export default class RuntimeBackground {
       }
       case SyncedUnlockStateCommands.FocusDesktopApp: {
         return await this.main.syncedUnlockService.focusDesktopApp();
+      }
+      case SyncedUnlockStateCommands.IsConnectionTrusted: {
+        return await this.main.syncedUnlockService.isConnectionTrusted();
       }
       case "getUseTreeWalkerApiForPageDetailsCollectionFeatureFlag": {
         return await this.configService.getFeatureFlag(

@@ -18,8 +18,14 @@ import {
 
 import { NativeMessagingBackground } from "../../background/nativeMessaging.background";
 
+const SYNC_INTERVAL = 1000; // 1 second
+const TRUST_DENIED_TIMEOUT = 30000; // 30 seconds
+const STATUS_TIMEOUT = 5000; // 5 seconds
+
 @Injectable()
 export class BackgroundSyncedUnlockService extends SyncedUnlockService {
+  private hasTrustDenied = false;
+
   constructor(
     private nativeMessagingBackground: () => NativeMessagingBackground,
     private logService: LogService,
@@ -30,7 +36,7 @@ export class BackgroundSyncedUnlockService extends SyncedUnlockService {
     private syncedUnlockStateService: SyncedUnlockStateServiceAbstraction,
   ) {
     super();
-    timer(0, 1000)
+    timer(0, SYNC_INTERVAL)
       .pipe(
         concatMap(async () => {
           const isConnected = await this.isConnected();
@@ -47,14 +53,11 @@ export class BackgroundSyncedUnlockService extends SyncedUnlockService {
                 const desktopAccountStatus = await Promise.race([
                   this.getUserStatusFromDesktop(activeAccount.id),
                   new Promise((resolve) =>
-                    setTimeout(() => resolve(AuthenticationStatus.Locked), 5000),
+                    setTimeout(() => resolve(AuthenticationStatus.Locked), STATUS_TIMEOUT),
                   ),
                 ]);
                 const localAccountStatus = await firstValueFrom(
                   this.authService.authStatusFor$(activeAccount.id),
-                );
-                this.logService.info(
-                  `Synced unlock: ${activeAccount.id} - Desktop: ${desktopAccountStatus} - Local: ${localAccountStatus}`,
                 );
                 if (
                   desktopAccountStatus === AuthenticationStatus.Locked &&
@@ -66,9 +69,16 @@ export class BackgroundSyncedUnlockService extends SyncedUnlockService {
                   desktopAccountStatus === AuthenticationStatus.Unlocked &&
                   localAccountStatus === AuthenticationStatus.Locked
                 ) {
+                  this.logService.info("Asking for user key from desktop");
                   const userKey = await this.getUserKeyFromDesktop(activeAccount.id);
-                  if (userKey) {
+                  if (userKey != null) {
                     await this.keyService.setUserKey(userKey, activeAccount.id);
+                  } else {
+                    this.hasTrustDenied = true;
+                    // this means the user has denied access to the key on connection fingerprint verification
+                    // Wait 30 seconds
+                    await new Promise((resolve) => setTimeout(resolve, TRUST_DENIED_TIMEOUT));
+                    this.hasTrustDenied = false;
                   }
                 }
               }
@@ -116,5 +126,9 @@ export class BackgroundSyncedUnlockService extends SyncedUnlockService {
     await this.nativeMessagingBackground().callCommand({
       command: SyncedUnlockStateCommands.FocusDesktopApp,
     });
+  }
+
+  async isConnectionTrusted(): Promise<boolean> {
+    return !this.hasTrustDenied && this.isConnected();
   }
 }

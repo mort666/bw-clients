@@ -8,4 +8,5 @@ export abstract class SyncedUnlockService {
   abstract getUserStatusFromDesktop(userId: UserId): Promise<AuthenticationStatus>;
   abstract getUserKeyFromDesktop(userId: UserId): Promise<UserKey | null>;
   abstract focusDesktopApp(): Promise<void>;
+  abstract isConnectionTrusted(): Promise<boolean>;
 }

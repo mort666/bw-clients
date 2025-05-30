@@ -139,8 +139,10 @@ export class LockComponent implements OnInit, OnDestroy {
 
   unlockViaDesktop = false;
   isDesktopOpen = false;
+  isDesktopConnectionTrusted = false;
   activeUserLoggedOut = false;
   showLocalUnlockOptions = true;
+  synchronizedUnlockUnavailabilityReason: string = "";
   desktopUnlockFormGroup: FormGroup = new FormGroup({});
 
   constructor(
@@ -224,14 +226,41 @@ export class LockComponent implements OnInit, OnDestroy {
             }
 
             this.isDesktopOpen = await this.syncedUnlockService.isConnected();
+            this.isDesktopConnectionTrusted = await this.syncedUnlockService.isConnectionTrusted();
             this.activeUserLoggedOut =
               (await this.syncedUnlockService.getUserStatusFromDesktop(activeAccount.id)) ===
               AuthenticationStatus.LoggedOut;
-            this.showLocalUnlockOptions = !(
-              this.isDesktopOpen &&
-              this.unlockViaDesktop &&
-              !this.activeUserLoggedOut
-            );
+
+            // Synchronized unlock not enabled
+            if (!this.unlockViaDesktop) {
+              this.showLocalUnlockOptions = true;
+              this.synchronizedUnlockUnavailabilityReason = "";
+              return;
+            }
+
+            // Synchronized unlock enabled, but cannot be used
+            if (!this.isDesktopOpen) {
+              this.showLocalUnlockOptions = true;
+              this.synchronizedUnlockUnavailabilityReason = this.i18nService.t(
+                "lockScreenDesktopNotRunning",
+              );
+              return;
+            } else if (this.activeUserLoggedOut) {
+              this.showLocalUnlockOptions = true;
+              this.synchronizedUnlockUnavailabilityReason = this.i18nService.t(
+                "lockScreenDesktopRunningButLoggedOut",
+              );
+              return;
+            } else if (!this.isDesktopConnectionTrusted) {
+              this.showLocalUnlockOptions = true;
+              this.synchronizedUnlockUnavailabilityReason = this.i18nService.t(
+                "lockScreenDesktopRunningButNotTrusted",
+              );
+              return;
+            }
+
+            this.showLocalUnlockOptions = false;
+            this.synchronizedUnlockUnavailabilityReason = "";
           } catch (e) {
             this.logService.error(e);
           }

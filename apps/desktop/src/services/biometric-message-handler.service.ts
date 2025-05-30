@@ -276,6 +276,14 @@ export class BiometricMessageHandlerService {
       case SyncedUnlockStateCommands.GetUserKeyFromDesktop: {
         if (!(await this.validateFingerprint(appId))) {
           this.logService.info("[Native Messaging IPC] Fingerprint validation failed.");
+          return await this.send(
+            {
+              command: SyncedUnlockStateCommands.GetUserKeyFromDesktop,
+              messageId,
+              response: null,
+            },
+            appId,
+          );
         }
 
         const userId = message.userId as UserId;

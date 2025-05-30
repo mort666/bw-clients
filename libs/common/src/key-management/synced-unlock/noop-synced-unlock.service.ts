@@ -24,4 +24,8 @@ export class NoopSyncedUnlockService extends SyncedUnlockService {
   focusDesktopApp(): Promise<void> {
     return Promise.resolve();
   }
+
+  isConnectionTrusted(): Promise<boolean> {
+    return Promise.resolve(false);
+  }
 }

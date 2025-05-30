@@ -16,11 +16,8 @@
     </form>
   </ng-container>
   <ng-container *ngIf="showLocalUnlockOptions">
-    <bit-hint class="tw-text-center tw-mb-3" *ngIf="unlockViaDesktop && !activeUserLoggedOut">
-      {{ "lockScreenDesktopNotRunning" | i18n }}
-    </bit-hint>
-    <bit-hint class="tw-text-center tw-mb-3" *ngIf="unlockViaDesktop && activeUserLoggedOut">
-      {{ "lockScreenDesktopRunningButLoggedOut" | i18n }}
+    <bit-hint class="tw-text-center tw-mb-3" *ngIf="unlockViaDesktop">
+      {{ synchronizedUnlockUnavailabilityReason }}
     </bit-hint>
 
     <!-- Biometrics Unlock -->
