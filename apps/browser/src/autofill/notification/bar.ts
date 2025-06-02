@@ -200,6 +200,7 @@ export function getNotificationTestId(
     [NotificationTypes.Unlock]: "unlock-notification-bar",
     [NotificationTypes.Add]: "save-notification-bar",
     [NotificationTypes.Change]: "update-notification-bar",
+    [NotificationTypes.AtRiskPassword]: "at-risk-password-notification-bar",
   }[notificationType];
 }
 
