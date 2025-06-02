@@ -151,16 +151,18 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
     override func loadView() {
         let view = NSView()
         // Hide the native window since we only need the IPC connection
-        view.isHidden = true    
+//        view.isHidden = true
         self.view = view
     }
     
     override func prepareInterfaceForExtensionConfiguration() {
+        logger.log("[autofill-extension] prepareInterfaceForExtensionConfiguration called")
         client.sendNativeStatus(key: "request-sync", value: "")
         self.extensionContext.completeExtensionConfigurationRequest()
     }
        
     override func provideCredentialWithoutUserInteraction(for credentialRequest: any ASCredentialRequest) {
+        logger.log("[autofill-extension] provideCredentialWithoutUserInteraction called \(credentialRequest.description)")
         let timeoutTimer = createTimer()
 
         if let request = credentialRequest as? ASPasskeyCredentialRequest {
@@ -227,16 +229,14 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
         logger.log("[autofill-extension] provideCredentialWithoutUserInteraction2 called wrong")
         self.extensionContext.cancelRequest(withError: BitwardenError.Internal("Invalid authentication request"))
     }
-    
-    /*
-     Implement this method if provideCredentialWithoutUserInteraction(for:) can fail with
-     ASExtensionError.userInteractionRequired. In this case, the system may present your extension's
-     UI and call this method. Show appropriate UI for authenticating the user then provide the password
-     by completing the extension request with the associated ASPasswordCredential.
-     
+
+//     Implement this method if provideCredentialWithoutUserInteraction(for:) can fail with
+//     ASExtensionError.userInteractionRequired. In this case, the system may present your extension's
+//     UI and call this method. Show appropriate UI for authenticating the user then provide the password
+//     by completing the extension request with the associated ASPasswordCredential.
      override func prepareInterfaceToProvideCredential(for credentialIdentity: ASPasswordCredentialIdentity) {
+         logger.log("[autofill-extension] prepareInterfaceToProvideCredential called \(credentialIdentity)")
      }
-     */
 
     private func createTimer() -> DispatchWorkItem {
         // Create a timer for 600 second timeout
