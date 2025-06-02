@@ -25,6 +25,12 @@ import {
 } from "./abstractions/overlay-notifications.background";
 import NotificationBackground from "./notification.background";
 
+type LoginSecurityTaskInfo = {
+  securityTask: SecurityTask;
+  cipher: CipherView;
+  uri: ModifyLoginCipherFormData["uri"];
+};
+
 export class OverlayNotificationsBackground implements OverlayNotificationsBackgroundInterface {
   private websiteOriginsWithFields: WebsiteOriginsWithFields = new Map();
   private activeFormSubmissionRequests: ActiveFormSubmissionRequests = new Set();
@@ -454,33 +460,36 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
       }
     }
 
-    const shouldGetTasks: boolean = await this.notificationBackground.getNotificationFlag();
+    const shouldGetTasks =
+      (await this.notificationBackground.getNotificationFlag()) && !modifyLoginData.newPassword;
 
     if (shouldGetTasks) {
       const activeUserId = await firstValueFrom(
         this.accountService.activeAccount$.pipe(getOptionalUserId),
       );
-      const { cipher, securityTask } = await this.getSecurityTaskAndCipherForLoginData(
-        modifyLoginData,
-        activeUserId,
-      );
-      const shouldTriggerAtRiskPasswordNotification: boolean = typeof securityTask !== "undefined";
 
-      if (shouldTriggerAtRiskPasswordNotification) {
-        await this.notificationBackground.triggerAtRiskPasswordNotification(
-          {
-            command: "bgTriggerAtRiskPasswordNotification",
-            data: {
-              activeUserId,
-              cipher,
-              securityTask,
-            },
-          },
-          { tab },
+      if (activeUserId) {
+        const loginSecurityTaskInfo = await this.getSecurityTaskAndCipherForLoginData(
+          modifyLoginData,
+          activeUserId,
         );
-        this.clearCompletedWebRequest(requestId, tab);
-      } else {
-        result = "Unqualified atRiskPassword notification attempt.";
+
+        if (loginSecurityTaskInfo) {
+          await this.notificationBackground.triggerAtRiskPasswordNotification(
+            {
+              command: "bgTriggerAtRiskPasswordNotification",
+              data: {
+                activeUserId,
+                cipher: loginSecurityTaskInfo.cipher,
+                securityTask: loginSecurityTaskInfo.securityTask,
+              },
+            },
+            { tab },
+          );
+          this.clearCompletedWebRequest(requestId, tab);
+        } else {
+          result = "Unqualified atRiskPassword notification attempt.";
+        }
       }
     }
     return result;
@@ -515,29 +524,49 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
   private async getSecurityTaskAndCipherForLoginData(
     modifyLoginData: ModifyLoginCipherFormData,
     activeUserId: UserId,
-  ): Promise<{
-    securityTask: SecurityTask | undefined;
-    cipher: CipherView | undefined;
-    uri: ModifyLoginCipherFormData["uri"];
-  }> {
+  ): Promise<LoginSecurityTaskInfo | null> {
     const tasks: SecurityTask[] = await this.notificationBackground.getSecurityTasks(activeUserId);
-    const ciphers: CipherView[] = await this.cipherService.getAllDecryptedForUrl(
+    if (!tasks?.length) {
+      return null;
+    }
+
+    const urlCiphers: CipherView[] = await this.cipherService.getAllDecryptedForUrl(
       modifyLoginData.uri,
       activeUserId,
     );
+    if (!urlCiphers?.length) {
+      return null;
+    }
 
-    const cipherIds: CipherView["id"][] = ciphers.map((c) => c.id);
+    const securityTaskForLogin = urlCiphers.reduce(
+      (taskInfo: LoginSecurityTaskInfo | null, cipher: CipherView) => {
+        if (
+          // exit early if info was found already
+          taskInfo ||
+          // exit early if the entered login info doesn't match an existing cipher
+          modifyLoginData.username !== cipher.login.username ||
+          modifyLoginData.password !== cipher.login.password
+        ) {
+          return taskInfo;
+        }
 
-    const securityTask =
-      tasks.length > 0 &&
-      tasks.find(
-        (task) =>
-          task.status === SecurityTaskStatus.Pending && cipherIds.indexOf(task.cipherId) > -1,
-      );
+        // Find the first security task for the cipherId belonging to the entered login
+        const cipherSecurityTask = tasks.find(
+          ({ cipherId, status }) =>
+            cipher.id === cipherId && // match security task cipher id to url cipher id
+            status === SecurityTaskStatus.Pending, // security task has not been completed
+        );
 
-    const cipher = ciphers.find((cipher) => cipher.id === securityTask.cipherId);
+        if (cipherSecurityTask) {
+          return { securityTask: cipherSecurityTask, cipher, uri: modifyLoginData.uri };
+        }
 
-    return { securityTask, cipher, uri: modifyLoginData.uri };
+        return taskInfo;
+      },
+      null,
+    );
+
+    return securityTaskForLogin;
   }
 
   /**
