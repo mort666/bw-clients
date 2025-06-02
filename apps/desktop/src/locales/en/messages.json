@@ -1933,9 +1933,12 @@
     "message": "Item permanently deleted"
   },
   "archiveItem": {
+    "message": "Archive item"
+  },
+  "archivedItem": {
     "message": "Item archived"
   },
-  "unarchiveItem": {
+  "unarchivedItem": {
     "message": "Item unarchived"
   },
   "restoredItem": {

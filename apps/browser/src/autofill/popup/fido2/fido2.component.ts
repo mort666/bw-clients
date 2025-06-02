@@ -191,7 +191,8 @@ export class Fido2Component implements OnInit, OnDestroy {
               this.accountService.activeAccount$.pipe(getUserId),
             );
             this.ciphers = (await this.cipherService.getAllDecrypted(activeUserId)).filter(
-              (cipher) => cipher.type === CipherType.Login && !cipher.isDeleted,
+              (cipher) =>
+                cipher.type === CipherType.Login && !cipher.isDeleted && !cipher.isArchived,
             );
 
             this.displayedCiphers = this.ciphers.filter(

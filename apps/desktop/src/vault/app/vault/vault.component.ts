@@ -293,9 +293,9 @@ export class VaultComponent implements OnInit, OnDestroy {
 
       if (params.deleted) {
         cipherStatus = "trash";
-      } else if (params.archived){
+      } else if (params.archived) {
         cipherStatus = "archive";
-      } else if (params.favorites){
+      } else if (params.favorites) {
         cipherStatus = "favorites";
       }
 
@@ -342,7 +342,7 @@ export class VaultComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!cipher.isDeleted) {
+    if (!cipher.isDeleted || !cipher.isArchived) {
       menu.push({
         label: this.i18nService.t("edit"),
         click: () =>
@@ -680,6 +680,7 @@ export class VaultComponent implements OnInit, OnDestroy {
     await this.vaultItemsComponent.reload(
       this.activeFilter.buildFilter(),
       vaultFilter.status === "trash",
+      vaultFilter.status === "archive",
     );
     this.go();
   }

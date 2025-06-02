@@ -135,12 +135,12 @@ export class CipherView implements View, InitializerMetadata {
     return this.login.passwordRevisionDate;
   }
 
-  get isDeleted(): boolean {
-    return this.deletedDate != null;
-  }
-
   get isArchived(): boolean {
     return this.archivedDate != null;
+  }
+
+  get isDeleted(): boolean {
+    return this.deletedDate != null;
   }
 
   get linkedFieldOptions() {

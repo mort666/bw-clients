@@ -32,6 +32,7 @@ export class VaultItemsComponent implements OnInit, OnDestroy {
   loaded = false;
   ciphers: CipherView[] = [];
   deleted = false;
+  archived = false;
   organization: Organization;
   CipherType = CipherType;
 
@@ -84,19 +85,20 @@ export class VaultItemsComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  async load(filter: (cipher: CipherView) => boolean = null, deleted = false) {
+  async load(filter: (cipher: CipherView) => boolean = null, deleted = false, archived = false) {
     this.deleted = deleted ?? false;
+    this.archived = archived ?? false;
     await this.applyFilter(filter);
     this.loaded = true;
   }
 
-  async reload(filter: (cipher: CipherView) => boolean = null, deleted = false) {
+  async reload(filter: (cipher: CipherView) => boolean = null, deleted = false, archived = false) {
     this.loaded = false;
-    await this.load(filter, deleted);
+    await this.load(filter, deleted, archived);
   }
 
   async refresh() {
-    await this.reload(this.filter, this.deleted);
+    await this.reload(this.filter, this.deleted, this.archived);
   }
 
   async applyFilter(filter: (cipher: CipherView) => boolean = null) {
@@ -123,6 +125,7 @@ export class VaultItemsComponent implements OnInit, OnDestroy {
     return !this.searchPending && this.isSearchable;
   }
 
+  protected archivedFilter: (cipher: CipherView) => boolean = (c) => c.isArchived === this.archived;
   protected deletedFilter: (cipher: CipherView) => boolean = (c) => c.isDeleted === this.deleted;
 
   /**
@@ -154,7 +157,7 @@ export class VaultItemsComponent implements OnInit, OnDestroy {
           return this.searchService.searchCiphers(
             userId,
             searchText,
-            [filter, this.deletedFilter],
+            [filter, this.deletedFilter, this.archivedFilter],
             allCiphers,
           );
         }),
