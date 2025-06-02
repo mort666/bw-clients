@@ -1,11 +1,14 @@
 import { mock, MockProxy } from "jest-mock-extended";
 
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
 import { CollectionService, CollectionView } from "@bitwarden/admin-console/common";
 import { PinServiceAbstraction } from "@bitwarden/auth/common";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { MockSdkService } from "@bitwarden/common/platform/spec/mock-sdk.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
@@ -30,6 +33,7 @@ describe("ImportService", () => {
   let encryptService: MockProxy<EncryptService>;
   let pinService: MockProxy<PinServiceAbstraction>;
   let accountService: MockProxy<AccountService>;
+  let sdkService: MockSdkService;
 
   beforeEach(() => {
     cipherService = mock<CipherService>();
@@ -40,6 +44,7 @@ describe("ImportService", () => {
     keyService = mock<KeyService>();
     encryptService = mock<EncryptService>();
     pinService = mock<PinServiceAbstraction>();
+    sdkService = new MockSdkService();
 
     importService = new ImportService(
       cipherService,
@@ -51,6 +56,7 @@ describe("ImportService", () => {
       encryptService,
       pinService,
       accountService,
+      sdkService,
     );
   });
 

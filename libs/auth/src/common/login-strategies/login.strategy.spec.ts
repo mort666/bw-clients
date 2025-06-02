@@ -11,15 +11,14 @@ import { AuthResult } from "@bitwarden/common/auth/models/domain/auth-result";
 import { ForceSetPasswordReason } from "@bitwarden/common/auth/models/domain/force-set-password-reason";
 import { PasswordTokenRequest } from "@bitwarden/common/auth/models/request/identity-token/password-token.request";
 import { TokenTwoFactorRequest } from "@bitwarden/common/auth/models/request/identity-token/token-two-factor.request";
-import { IdentityCaptchaResponse } from "@bitwarden/common/auth/models/response/identity-captcha.response";
 import { IdentityDeviceVerificationResponse } from "@bitwarden/common/auth/models/response/identity-device-verification.response";
 import { IdentityTokenResponse } from "@bitwarden/common/auth/models/response/identity-token.response";
 import { IdentityTwoFactorResponse } from "@bitwarden/common/auth/models/response/identity-two-factor.response";
 import { MasterPasswordPolicyResponse } from "@bitwarden/common/auth/models/response/master-password-policy.response";
 import { IUserDecryptionOptionsServerResponse } from "@bitwarden/common/auth/models/response/user-decryption-options/user-decryption-options.response";
-import { FakeMasterPasswordService } from "@bitwarden/common/auth/services/master-password/fake-master-password.service";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
+import { FakeMasterPasswordService } from "@bitwarden/common/key-management/master-password/services/fake-master-password.service";
 import {
   VaultTimeoutAction,
   VaultTimeoutSettingsService,
@@ -59,7 +58,6 @@ const accessToken = "ACCESS_TOKEN";
 const refreshToken = "REFRESH_TOKEN";
 const userKey = "USER_KEY";
 const privateKey = "PRIVATE_KEY";
-const captchaSiteKey = "CAPTCHA_SITE_KEY";
 const kdf = 0;
 const kdfIterations = 10000;
 const userId = Utils.newGuid() as UserId;
@@ -296,36 +294,29 @@ describe("LoginStrategy", () => {
 
       const expected = new AuthResult();
       expected.userId = userId;
-      expected.forcePasswordReset = ForceSetPasswordReason.AdminForcePasswordReset;
       expected.resetMasterPassword = true;
-      expected.twoFactorProviders = {} as Partial<
-        Record<TwoFactorProviderType, Record<string, string>>
-      >;
-      expected.captchaSiteKey = "";
       expected.twoFactorProviders = null;
       expect(result).toEqual(expected);
     });
 
-    it("rejects login if CAPTCHA is required", async () => {
-      // Sample CAPTCHA response
-      const tokenResponse = new IdentityCaptchaResponse({
-        error: "invalid_grant",
-        error_description: "Captcha required.",
-        HCaptcha_SiteKey: captchaSiteKey,
-      });
+    it("processes a forcePasswordReset response properly", async () => {
+      const tokenResponse = identityTokenResponseFactory();
+      tokenResponse.forcePasswordReset = true;
 
       apiService.postIdentityToken.mockResolvedValue(tokenResponse);
-      masterPasswordService.masterKeySubject.next(masterKey);
-      masterPasswordService.mock.decryptUserKeyWithMasterKey.mockResolvedValue(userKey);
 
       const result = await passwordLoginStrategy.logIn(credentials);
 
-      expect(stateService.addAccount).not.toHaveBeenCalled();
-      expect(messagingService.send).not.toHaveBeenCalled();
-
       const expected = new AuthResult();
-      expected.captchaSiteKey = captchaSiteKey;
+      expected.userId = userId;
+      expected.resetMasterPassword = false;
+      expected.twoFactorProviders = null;
       expect(result).toEqual(expected);
+
+      expect(masterPasswordService.mock.setForceSetPasswordReason).toHaveBeenCalledWith(
+        ForceSetPasswordReason.AdminForcePasswordReset,
+        userId,
+      );
     });
 
     it("makes a new public and private key for an old account", async () => {
@@ -475,7 +466,6 @@ describe("LoginStrategy", () => {
       cache.tokenRequest = new PasswordTokenRequest(
         email,
         masterPasswordHash,
-        "",
         new TokenTwoFactorRequest(),
       );
 
@@ -507,7 +497,6 @@ describe("LoginStrategy", () => {
 
       await passwordLoginStrategy.logInTwoFactor(
         new TokenTwoFactorRequest(twoFactorProviderType, twoFactorToken, twoFactorRemember),
-        "",
       );
 
       expect(apiService.postIdentityToken).toHaveBeenCalledWith(
@@ -524,13 +513,11 @@ describe("LoginStrategy", () => {
 
   describe("Device verification", () => {
     it("processes device verification response", async () => {
-      const captchaToken = "test-captcha-token";
       const deviceVerificationResponse = new IdentityDeviceVerificationResponse({
         error: "invalid_grant",
         error_description: "Device verification required.",
         email: "test@bitwarden.com",
         deviceVerificationRequest: true,
-        captchaToken: captchaToken,
       });
 
       apiService.postIdentityToken.mockResolvedValue(deviceVerificationResponse);
@@ -539,7 +526,6 @@ describe("LoginStrategy", () => {
       cache.tokenRequest = new PasswordTokenRequest(
         email,
         masterPasswordHash,
-        "",
         new TokenTwoFactorRequest(),
       );
 
