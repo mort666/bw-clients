@@ -183,6 +183,27 @@ function resolveNotificationType(initData: NotificationBarIframeInitData): Notif
 }
 
 /**
+ * Returns the appropriate test ID based on the resolved notification type.
+ *
+ * @param type - The resolved NotificationType.
+ * @param isConfirmation - Optional flag for confirmation vs. notification container.
+ */
+export function getNotificationTestId(
+  notificationType: NotificationType,
+  isConfirmation = false,
+): string {
+  if (isConfirmation) {
+    return "confirmation-notification-bar";
+  }
+
+  return {
+    [NotificationTypes.Unlock]: "unlock-notification-bar",
+    [NotificationTypes.Add]: "save-notification-bar",
+    [NotificationTypes.Change]: "update-notification-bar",
+  }[notificationType];
+}
+
+/**
  * Sets the text content of an element identified by ID within a template's content.
  *
  * @param template - The template whose content will be searched for the element.
@@ -219,6 +240,7 @@ async function initNotificationBar(message: NotificationBarWindowMessage) {
   if (useComponentBar) {
     const resolvedType = resolveNotificationType(notificationBarIframeInitData);
     const headerMessage = getNotificationHeaderMessage(i18n, resolvedType);
+    const notificationTestId = getNotificationTestId(resolvedType);
     appendHeaderMessageToTitle(headerMessage);
 
     document.body.innerHTML = "";
@@ -231,6 +253,7 @@ async function initNotificationBar(message: NotificationBarWindowMessage) {
           ...notificationBarIframeInitData,
           headerMessage,
           type: resolvedType,
+          notificationTestId,
           theme: resolvedTheme,
           personalVaultIsAllowed: !personalVaultDisallowed,
           handleCloseNotification,
@@ -293,6 +316,7 @@ async function initNotificationBar(message: NotificationBarWindowMessage) {
           headerMessage,
           type: resolvedType,
           theme: resolvedTheme,
+          notificationTestId,
           personalVaultIsAllowed: !personalVaultDisallowed,
           handleCloseNotification,
           handleSaveAction,
@@ -523,23 +547,25 @@ function handleSaveCipherConfirmation(message: NotificationBarWindowMessage) {
   const resolvedTheme = getResolvedTheme(theme ?? ThemeTypes.Light);
   const resolvedType = resolveNotificationType(notificationBarIframeInitData);
   const headerMessage = getConfirmationHeaderMessage(i18n, resolvedType, error);
+  const notificationTestId = getNotificationTestId(resolvedType, true);
 
   globalThis.setTimeout(() => sendPlatformMessage({ command: "bgCloseNotificationBar" }), 5000);
 
   return render(
     NotificationConfirmationContainer({
       ...notificationBarIframeInitData,
-      type: type as NotificationType,
-      theme: resolvedTheme,
-      handleCloseNotification,
-      headerMessage,
-      i18n,
       error,
-      itemName: itemName ?? i18n.typeLogin,
-      task,
+      handleCloseNotification,
+      handleOpenTasks: () => sendPlatformMessage({ command: "bgOpenAtRisksPasswords" }),
       handleOpenVault: (e: Event) =>
         cipherId ? openViewVaultItemPopout(cipherId) : openAddEditVaultItemPopout(e, {}),
-      handleOpenTasks: () => sendPlatformMessage({ command: "bgOpenAtRisksPasswords" }),
+      headerMessage,
+      i18n,
+      itemName: itemName ?? i18n.typeLogin,
+      notificationTestId,
+      task,
+      theme: resolvedTheme,
+      type: type as NotificationType,
     }),
     document.body,
   );
