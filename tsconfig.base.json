@@ -40,6 +40,7 @@
       "@bitwarden/platform": ["./libs/platform/src"],
       "@bitwarden/platform/*": ["./libs/platform/src/*"],
       "@bitwarden/send-ui": ["./libs/tools/send/send-ui/src"],
+      "@bitwarden/storage": ["libs/storage/src/index.ts"],
       "@bitwarden/tools-card": ["./libs/tools/card/src"],
       "@bitwarden/ui-common": ["./libs/ui/common/src"],
       "@bitwarden/ui-common/setup-jest": ["./libs/ui/common/src/setup-jest"],
