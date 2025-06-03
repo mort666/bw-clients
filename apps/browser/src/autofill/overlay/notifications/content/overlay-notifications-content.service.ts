@@ -5,6 +5,7 @@ import { EVENTS } from "@bitwarden/common/autofill/constants";
 import {
   NotificationBarIframeInitData,
   NotificationType,
+  NotificationTypes,
 } from "../../../notification/abstractions/notification-bar";
 import { sendExtensionMessage, setElementStyles } from "../../../utils";
 import {
@@ -18,8 +19,7 @@ export class OverlayNotificationsContentService
 {
   private notificationBarElement: HTMLElement | null = null;
   private notificationBarIframeElement: HTMLIFrameElement | null = null;
-  private currentNotificationBarType: string | null = null;
-  private removeTabFromNotificationQueueTypes = new Set(["add", "change"]);
+  private currentNotificationBarType: NotificationType | null = null;
   private notificationRefreshFlag: boolean = false;
   private notificationBarElementStyles: Partial<CSSStyleDeclaration> = {
     height: "82px",
@@ -296,9 +296,16 @@ export class OverlayNotificationsContentService
     this.notificationBarElement.remove();
     this.notificationBarElement = null;
 
+    // Exclude Unlock
+    const removableNotificationTypes = [
+      NotificationTypes.Add,
+      NotificationTypes.Change,
+      NotificationTypes.AtRiskPassword,
+    ];
+
     if (
       closedByUserAction &&
-      this.removeTabFromNotificationQueueTypes.has(this.currentNotificationBarType)
+      removableNotificationTypes.some((nt) => nt === this.currentNotificationBarType)
     ) {
       void sendExtensionMessage("bgRemoveTabFromNotificationQueue");
     }

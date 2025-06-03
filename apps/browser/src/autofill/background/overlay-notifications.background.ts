@@ -434,9 +434,7 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
         },
         { tab },
       );
-      if (success) {
-        this.clearCompletedWebRequest(requestId, tab);
-      } else {
+      if (!success) {
         result = "Unqualified changedPassword notification attempt.";
       }
     }
@@ -453,9 +451,7 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
         },
         { tab },
       );
-      if (success) {
-        this.clearCompletedWebRequest(requestId, tab);
-      } else {
+      if (!success) {
         result = "Unqualified addLogin notification attempt.";
       }
     }
@@ -486,12 +482,12 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
             },
             { tab },
           );
-          this.clearCompletedWebRequest(requestId, tab);
         } else {
           result = "Unqualified atRiskPassword notification attempt.";
         }
       }
     }
+    this.clearCompletedWebRequest(requestId, tab);
     return result;
   };
 
