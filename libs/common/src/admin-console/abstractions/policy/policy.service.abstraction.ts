@@ -44,8 +44,6 @@ export abstract class PolicyService {
    * @param policies The policies to be evaluated; if null or undefined, it will default to using policies from sync data.
    * @returns a set of options which represent the minimum Master Password settings that the user must
    * comply with in order to comply with **all** applicable Master Password policies.
-   *
-   * @deprecated Deprecating because the parameters can be made more strict and clear.
    */
   abstract masterPasswordPolicyOptions$: (
     userId: UserId,
@@ -53,27 +51,12 @@ export abstract class PolicyService {
   ) => Observable<MasterPasswordPolicyOptions | undefined>;
 
   /**
-   * Combines all Master Password policies that apply to the user.
-   * Used for after a login / sync has occurred and the policy state has been set in state.
-   * @param userId The user against whom the policy needs to be enforced.
-   * @returns a set of options which represent the minimum Master Password settings that the user must
-   * comply with in order to comply with **all** applicable Master Password policies.
+   * Combines all Master Password policies that are passed in.
+   * @param policies
    */
-  abstract masterPasswordPolicyOptionsByUserId$: (
-    userId: UserId,
-  ) => Observable<MasterPasswordPolicyOptions | undefined>;
-
-  /**
-   * Combines all Master Password policies that apply to the user that comes from the policies that
-   * are passed to this function.
-   * This would be used prior to obtaining a user id, such as before login for an org invite.
-   * @param policies The policies to be evaluated.
-   * @returns a set of options which represent the minimum Master Password settings that the user must
-   * comply with in order to comply with **all** applicable Master Password policies.
-   */
-  abstract masterPasswordPolicyOptionsPriorToSync$: (
+  abstract combineMasterPasswordPolicies(
     policies: Policy[],
-  ) => Observable<MasterPasswordPolicyOptions | undefined>;
+  ): MasterPasswordPolicyOptions | undefined;
 
   /**
    * Evaluates whether a proposed Master Password complies with all Master Password policies that apply to the user.
