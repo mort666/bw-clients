@@ -67,7 +67,7 @@ export abstract class PolicyService {
    * Combines all Master Password policies that apply to the user that comes from the policies that
    * are passed to this function.
    * This would be used prior to obtaining a user id, such as before login for an org invite.
-   * @param policies The policies to be evaluated; if null or undefined, it will default to using policies from sync data.
+   * @param policies The policies to be evaluated.
    * @returns a set of options which represent the minimum Master Password settings that the user must
    * comply with in order to comply with **all** applicable Master Password policies.
    */
