@@ -3,8 +3,6 @@
 import { Params } from "@angular/router";
 import { Jsonify } from "type-fest";
 
-import { UserId } from "@bitwarden/common/types/guid";
-
 export class OrganizationInvite {
   email: string;
   initOrganization: boolean;
@@ -14,7 +12,6 @@ export class OrganizationInvite {
   organizationName: string;
   organizationUserId: string;
   token: string;
-  userId: UserId;
 
   static fromJSON(json: Jsonify<OrganizationInvite>): OrganizationInvite | null {
     if (json == null) {
@@ -38,7 +35,6 @@ export class OrganizationInvite {
       organizationName: params.organizationName,
       organizationUserId: params.organizationUserId,
       token: params.token,
-      userId: params.userId,
     });
   }
 }

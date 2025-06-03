@@ -104,9 +104,9 @@ export class WebLoginComponentService
       if (
         await this.configService.getFeatureFlag(FeatureFlag.PM16117_ChangeExistingPasswordRefactor)
       ) {
-        // Properly error if we don't have an org invite with
+        // Properly error if we don't have an org invite
         enforcedPasswordPolicyOptions = await firstValueFrom(
-          this.policyService.masterPasswordPolicyOptions$(orgInvite.userId, policies),
+          this.policyService.masterPasswordPolicyOptionsPriorToSync$(policies),
         );
       } else {
         enforcedPasswordPolicyOptions = await firstValueFrom(

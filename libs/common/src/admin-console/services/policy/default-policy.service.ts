@@ -87,63 +87,19 @@ export class DefaultPolicyService implements PolicyService {
     policies?: Policy[],
   ): Observable<MasterPasswordPolicyOptions | undefined> {
     const policies$ = policies ? of(policies) : this.policies$(userId);
-    return policies$.pipe(
-      map((obsPolicies) => {
-        let enforcedOptions: MasterPasswordPolicyOptions | undefined = undefined;
-        const filteredPolicies =
-          obsPolicies.filter((p) => p.type === PolicyType.MasterPassword) ?? [];
+    return policies$.pipe(map((obsPolicies) => this.policyMapping(obsPolicies)));
+  }
 
-        if (filteredPolicies.length === 0) {
-          return;
-        }
+  masterPasswordPolicyOptionsByUserId$(
+    userId: UserId,
+  ): Observable<MasterPasswordPolicyOptions | undefined> {
+    return this.policies$(userId).pipe(map((obsPolicies) => this.policyMapping(obsPolicies)));
+  }
 
-        filteredPolicies.forEach((currentPolicy) => {
-          if (!currentPolicy.enabled || !currentPolicy.data) {
-            return;
-          }
-
-          if (!enforcedOptions) {
-            enforcedOptions = new MasterPasswordPolicyOptions();
-          }
-
-          if (
-            currentPolicy.data.minComplexity != null &&
-            currentPolicy.data.minComplexity > enforcedOptions.minComplexity
-          ) {
-            enforcedOptions.minComplexity = currentPolicy.data.minComplexity;
-          }
-
-          if (
-            currentPolicy.data.minLength != null &&
-            currentPolicy.data.minLength > enforcedOptions.minLength
-          ) {
-            enforcedOptions.minLength = currentPolicy.data.minLength;
-          }
-
-          if (currentPolicy.data.requireUpper) {
-            enforcedOptions.requireUpper = true;
-          }
-
-          if (currentPolicy.data.requireLower) {
-            enforcedOptions.requireLower = true;
-          }
-
-          if (currentPolicy.data.requireNumbers) {
-            enforcedOptions.requireNumbers = true;
-          }
-
-          if (currentPolicy.data.requireSpecial) {
-            enforcedOptions.requireSpecial = true;
-          }
-
-          if (currentPolicy.data.enforceOnLogin) {
-            enforcedOptions.enforceOnLogin = true;
-          }
-        });
-
-        return enforcedOptions;
-      }),
-    );
+  masterPasswordPolicyOptionsPriorToSync$(
+    policies: Policy[],
+  ): Observable<MasterPasswordPolicyOptions | undefined> {
+    return of(policies).pipe(map((obsPolicies) => this.policyMapping(obsPolicies)));
   }
 
   evaluateMasterPassword(
@@ -240,5 +196,60 @@ export class DefaultPolicyService implements PolicyService {
       default:
         return organization.canManagePolicies;
     }
+  }
+
+  private policyMapping(obsPolicies: Policy[]): MasterPasswordPolicyOptions | undefined {
+    let enforcedOptions: MasterPasswordPolicyOptions | undefined = undefined;
+    const filteredPolicies = obsPolicies.filter((p) => p.type === PolicyType.MasterPassword) ?? [];
+
+    if (filteredPolicies.length === 0) {
+      return;
+    }
+
+    filteredPolicies.forEach((currentPolicy) => {
+      if (!currentPolicy.enabled || !currentPolicy.data) {
+        return;
+      }
+
+      if (!enforcedOptions) {
+        enforcedOptions = new MasterPasswordPolicyOptions();
+      }
+
+      if (
+        currentPolicy.data.minComplexity != null &&
+        currentPolicy.data.minComplexity > enforcedOptions.minComplexity
+      ) {
+        enforcedOptions.minComplexity = currentPolicy.data.minComplexity;
+      }
+
+      if (
+        currentPolicy.data.minLength != null &&
+        currentPolicy.data.minLength > enforcedOptions.minLength
+      ) {
+        enforcedOptions.minLength = currentPolicy.data.minLength;
+      }
+
+      if (currentPolicy.data.requireUpper) {
+        enforcedOptions.requireUpper = true;
+      }
+
+      if (currentPolicy.data.requireLower) {
+        enforcedOptions.requireLower = true;
+      }
+
+      if (currentPolicy.data.requireNumbers) {
+        enforcedOptions.requireNumbers = true;
+      }
+
+      if (currentPolicy.data.requireSpecial) {
+        enforcedOptions.requireSpecial = true;
+      }
+
+      if (currentPolicy.data.enforceOnLogin) {
+        enforcedOptions.enforceOnLogin = true;
+      }
+    });
+
+    return enforcedOptions;
   }
 }

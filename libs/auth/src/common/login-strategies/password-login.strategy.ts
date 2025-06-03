@@ -98,6 +98,8 @@ export class PasswordLoginStrategy extends LoginStrategy {
       await this.buildDeviceRequest(),
     );
 
+    // TODO: add master password policy conditions to the cache so that it is available after 2fa for password evaluation
+
     this.cache.next(data);
 
     const [authResult, identityResponse] = await this.startLogIn();
