@@ -46,28 +46,23 @@ pub fn path(name: &str) -> std::path::PathBuf {
 
     #[cfg(target_os = "macos")]
     {
-        // When running in an unsandboxed environment, path is: /Users/<user>/
-        // While running sandboxed, it's different: /Users/<user>/Library/Containers/com.bitwarden.desktop/Data
         let mut home = dirs::home_dir().unwrap();
 
-        // Check if the app is sandboxed by looking for the Containers directory
-        let containers_position = home
-            .components()
-            .position(|c| c.as_os_str() == "Containers");
-
-        // If the app is sanboxed, we need to use the App Group directory
-        let position = containers_position.unwrap_or(4);
-        
-        // We want to use App Groups in /Users/<user>/Library/Group Containers/LTZ2PFU5D6.com.bitwarden.desktop,
-        // so we need to remove all the components after the user. We can use the previous position to do this.
-        while home.components().count() > position - 1 {
-            home.pop();
+        // Always trim back to /Users/<user> (first 2 components) if we detect sandboxing
+        if home.components().any(|c| c.as_os_str() == "Containers") {
+            // Sandboxed: trim to /Users/<user>
+            while home.components().count() > 2 {
+                home.pop();
+            }
         }
+        // Unsandboxed paths should already be /Users/<user>
 
         let tmp = home.join("Library/Group Containers/LTZ2PFU5D6.com.bitwarden.desktop/tmp");
 
-        // The tmp directory might not exist, so create it
-        let _ = std::fs::create_dir_all(&tmp);
+        if let Err(e) = std::fs::create_dir_all(&tmp) {
+            eprintln!("Warning: Failed to create tmp directory: {}", e);
+        }
+
         return tmp.join(format!("app.{name}"));
     }
 
