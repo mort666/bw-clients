@@ -170,13 +170,6 @@ const routes: Routes = [
         ],
         data: { titleId: "updatePassword" } satisfies RouteDataProperties,
       },
-      {
-        path: "migrate-legacy-encryption",
-        loadComponent: () =>
-          import("./key-management/migrate-encryption/migrate-legacy-encryption.component").then(
-            (mod) => mod.MigrateFromLegacyEncryptionComponent,
-          ),
-      },
     ],
   },
   {
