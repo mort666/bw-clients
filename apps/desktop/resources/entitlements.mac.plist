@@ -18,5 +18,9 @@
 	<array>
 		<string>LTZ2PFU5D6.*</string>
 	</array>
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<key>com.apple.security.network.server</key>
+	<true/>
 </dict>
 </plist>
