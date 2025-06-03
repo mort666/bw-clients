@@ -543,6 +543,8 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
         if (
           // exit early if info was found already
           taskInfo ||
+          // exit early if the cipher was deleted
+          cipher.deletedDate ||
           // exit early if the entered login info doesn't match an existing cipher
           modifyLoginData.username !== cipher.login.username ||
           modifyLoginData.password !== cipher.login.password
