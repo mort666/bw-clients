@@ -10,6 +10,8 @@ import {
 import { I18nPipe } from "@bitwarden/ui-common";
 import { DarkImageSourceDirective, VaultCarouselModule } from "@bitwarden/vault";
 
+// FIXME: update to use a const object instead of a typescript enum
+// eslint-disable-next-line @bitwarden/platform/no-enums
 export enum AtRiskCarouselDialogResult {
   Dismissed = "dismissed",
 }
@@ -25,7 +27,6 @@ export enum AtRiskCarouselDialogResult {
     DarkImageSourceDirective,
     I18nPipe,
   ],
-  standalone: true,
 })
 export class AtRiskCarouselDialogComponent {
   private dialogRef = inject(DialogRef);

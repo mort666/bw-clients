@@ -26,6 +26,8 @@ export interface WebVaultGeneratorDialogResult {
   generatedValue?: string;
 }
 
+// FIXME: update to use a const object instead of a typescript enum
+// eslint-disable-next-line @bitwarden/platform/no-enums
 export enum WebVaultGeneratorDialogAction {
   Selected = "selected",
   Canceled = "canceled",
@@ -34,7 +36,6 @@ export enum WebVaultGeneratorDialogAction {
 @Component({
   selector: "web-vault-generator-dialog",
   templateUrl: "./web-generator-dialog.component.html",
-  standalone: true,
   imports: [CommonModule, CipherFormGeneratorComponent, ButtonModule, DialogModule, I18nPipe],
 })
 export class WebVaultGeneratorDialogComponent {

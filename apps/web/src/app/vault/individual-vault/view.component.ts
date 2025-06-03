@@ -54,6 +54,8 @@ export interface ViewCipherDialogParams {
   disableEdit?: boolean;
 }
 
+// FIXME: update to use a const object instead of a typescript enum
+// eslint-disable-next-line @bitwarden/platform/no-enums
 export enum ViewCipherDialogResult {
   Edited = "edited",
   Deleted = "deleted",
@@ -71,7 +73,6 @@ export interface ViewCipherDialogCloseResult {
 @Component({
   selector: "app-vault-view",
   templateUrl: "view.component.html",
-  standalone: true,
   imports: [CipherViewComponent, CommonModule, AsyncActionsModule, DialogModule, SharedModule],
   providers: [
     { provide: ViewPasswordHistoryService, useClass: VaultViewPasswordHistoryService },
