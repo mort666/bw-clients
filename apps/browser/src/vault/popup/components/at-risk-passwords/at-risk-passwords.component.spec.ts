@@ -36,7 +36,6 @@ import { AtRiskPasswordPageService } from "./at-risk-password-page.service";
 import { AtRiskPasswordsComponent } from "./at-risk-passwords.component";
 
 @Component({
-  standalone: true,
   selector: "popup-header",
   template: `<ng-content></ng-content>`,
 })
@@ -46,7 +45,6 @@ class MockPopupHeaderComponent {
 }
 
 @Component({
-  standalone: true,
   selector: "popup-page",
   template: `<ng-content></ng-content>`,
 })
@@ -55,7 +53,6 @@ class MockPopupPageComponent {
 }
 
 @Component({
-  standalone: true,
   selector: "app-vault-icon",
   template: `<ng-content></ng-content>`,
 })

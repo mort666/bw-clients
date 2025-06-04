@@ -9,7 +9,6 @@ import { AtRiskPasswordPageService } from "../at-risk-passwords/at-risk-password
 
 @Component({
   selector: "vault-at-risk-password-callout",
-  standalone: true,
   imports: [CommonModule, AnchorLinkDirective, RouterModule, CalloutModule, I18nPipe],
   templateUrl: "./at-risk-password-callout.component.html",
 })

@@ -71,7 +71,6 @@ import { AtRiskPasswordPageService } from "./at-risk-password-page.service";
   ],
   providers: [{ provide: ChangeLoginPasswordService, useClass: DefaultChangeLoginPasswordService }],
   selector: "vault-at-risk-passwords",
-  standalone: true,
   templateUrl: "./at-risk-passwords.component.html",
 })
 export class AtRiskPasswordsComponent implements OnInit {
