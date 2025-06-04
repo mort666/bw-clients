@@ -26,17 +26,26 @@ export abstract class BrowserPlatformUtilsService implements PlatformUtilsServic
       return this.deviceCache;
     }
 
-    if (BrowserPlatformUtilsService.isFirefox()) {
+    if (
+      navigator.userAgent.indexOf(" Firefox/") !== -1 ||
+      navigator.userAgent.indexOf(" Gecko/") !== -1
+    ) {
       this.deviceCache = DeviceType.FirefoxExtension;
-    } else if (BrowserPlatformUtilsService.isOpera(globalContext)) {
+    } else if (
+      !!globalContext.opr?.addons ||
+      !!globalContext.opera ||
+      navigator.userAgent.indexOf(" OPR/") >= 0
+    ) {
       this.deviceCache = DeviceType.OperaExtension;
-    } else if (BrowserPlatformUtilsService.isEdge()) {
+    } else if (navigator.userAgent.indexOf(" Edg/") !== -1) {
       this.deviceCache = DeviceType.EdgeExtension;
-    } else if (BrowserPlatformUtilsService.isVivaldi()) {
+    } else if (navigator.userAgent.indexOf(" Vivaldi/") !== -1) {
       this.deviceCache = DeviceType.VivaldiExtension;
-    } else if (BrowserPlatformUtilsService.isChrome(globalContext)) {
+    } else if (globalContext.chrome && navigator.userAgent.indexOf(" Chrome/") !== -1) {
       this.deviceCache = DeviceType.ChromeExtension;
-    } else if (BrowserPlatformUtilsService.isSafari(globalContext)) {
+    } else if (navigator.userAgent.indexOf("Ddg") !== -1) {
+      this.deviceCache = DeviceType.DuckDuckGoExtension;
+    } else if (navigator.userAgent.indexOf(" Safari/") !== -1) {
       this.deviceCache = DeviceType.SafariExtension;
     }
 
@@ -56,77 +65,24 @@ export abstract class BrowserPlatformUtilsService implements PlatformUtilsServic
     return ClientType.Browser;
   }
 
-  /**
-   * @deprecated Do not call this directly, use getDevice() instead
-   */
-  static isFirefox(): boolean {
-    return (
-      navigator.userAgent.indexOf(" Firefox/") !== -1 ||
-      navigator.userAgent.indexOf(" Gecko/") !== -1
-    );
-  }
-
   isFirefox(): boolean {
     return this.getDevice() === DeviceType.FirefoxExtension;
-  }
-
-  /**
-   * @deprecated Do not call this directly, use getDevice() instead
-   */
-  private static isChrome(globalContext: Window | ServiceWorkerGlobalScope): boolean {
-    return globalContext.chrome && navigator.userAgent.indexOf(" Chrome/") !== -1;
   }
 
   isChrome(): boolean {
     return this.getDevice() === DeviceType.ChromeExtension;
   }
 
-  /**
-   * @deprecated Do not call this directly, use getDevice() instead
-   */
-  private static isEdge(): boolean {
-    return navigator.userAgent.indexOf(" Edg/") !== -1;
-  }
-
   isEdge(): boolean {
     return this.getDevice() === DeviceType.EdgeExtension;
-  }
-
-  /**
-   * @deprecated Do not call this directly, use getDevice() instead
-   */
-  private static isOpera(globalContext: Window | ServiceWorkerGlobalScope): boolean {
-    return (
-      !!globalContext.opr?.addons ||
-      !!globalContext.opera ||
-      navigator.userAgent.indexOf(" OPR/") >= 0
-    );
   }
 
   isOpera(): boolean {
     return this.getDevice() === DeviceType.OperaExtension;
   }
 
-  /**
-   * @deprecated Do not call this directly, use getDevice() instead
-   */
-  private static isVivaldi(): boolean {
-    return navigator.userAgent.indexOf(" Vivaldi/") !== -1;
-  }
-
   isVivaldi(): boolean {
     return this.getDevice() === DeviceType.VivaldiExtension;
-  }
-
-  /**
-   * @deprecated Do not call this directly, use getDevice() instead
-   */
-  static isSafari(globalContext: Window | ServiceWorkerGlobalScope): boolean {
-    // Opera masquerades as Safari, so make sure we're not there first
-    return (
-      !BrowserPlatformUtilsService.isOpera(globalContext) &&
-      navigator.userAgent.indexOf(" Safari/") !== -1
-    );
   }
 
   private static safariVersion(): string {
