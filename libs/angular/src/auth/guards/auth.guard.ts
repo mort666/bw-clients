@@ -68,16 +68,18 @@ export const authGuard: CanActivateFn = async (
     return router.createUrlTree(["/set-password"]);
   }
 
+  // When the PM16117_ChangeExistingPasswordRefactor flag is removed also remove the conditional check
+  // for update-temp-password here. That route will no longer be in effect.
   if (
-    (forceSetPasswordReason !== ForceSetPasswordReason.None &&
-      !routerState.url.includes("update-temp-password")) ||
+    forceSetPasswordReason !== ForceSetPasswordReason.None &&
+    !routerState.url.includes("update-temp-password") &&
     !routerState.url.includes("change-password")
   ) {
-    const SetInitialPasswordRefactorFlagOn = await configService.getFeatureFlag(
+    const setInitialPasswordRefactorFlagOn = await configService.getFeatureFlag(
       FeatureFlag.PM16117_ChangeExistingPasswordRefactor,
     );
 
-    const route = SetInitialPasswordRefactorFlagOn ? "/change-password" : "/update-temp-password";
+    const route = setInitialPasswordRefactorFlagOn ? "/change-password" : "/update-temp-password";
 
     return router.createUrlTree([route]);
   }

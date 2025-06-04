@@ -40,6 +40,8 @@ export class PasswordLoginStrategyData implements LoginStrategyData {
    */
   forcePasswordResetReason: ForceSetPasswordReason = ForceSetPasswordReason.None;
 
+  passwordPolicy: MasterPasswordPolicyOptions;
+
   static fromJSON(obj: Jsonify<PasswordLoginStrategyData>): PasswordLoginStrategyData {
     const data = Object.assign(new PasswordLoginStrategyData(), obj, {
       tokenRequest: PasswordTokenRequest.fromJSON(obj.tokenRequest),
@@ -99,6 +101,12 @@ export class PasswordLoginStrategy extends LoginStrategy {
     );
 
     // TODO: add master password policy conditions to the cache so that it is available after 2fa for password evaluation
+    // This should work, need to verify the case where a user is invited to an org and has 2fa.
+    if (
+      await this.configService.getFeatureFlag(FeatureFlag.PM16117_ChangeExistingPasswordRefactor)
+    ) {
+      data.passwordPolicy = credentials.masterPasswordPolicies;
+    }
 
     this.cache.next(data);
 
@@ -170,15 +178,14 @@ export class PasswordLoginStrategy extends LoginStrategy {
     }
 
     // The identity result can contain master password policies for the user's organizations
-    let masterPasswordPolicyOptions;
+    let masterPasswordPolicyOptions: MasterPasswordPolicyOptions | undefined;
 
     if (
       await this.configService.getFeatureFlag(FeatureFlag.PM16117_ChangeExistingPasswordRefactor)
     ) {
       masterPasswordPolicyOptions = credentials.masterPasswordPolicies;
-      authResult.orgInviteAndWeakPassword = true;
 
-      if (!masterPasswordPolicyOptions.enforceOnLogin) {
+      if (!masterPasswordPolicyOptions?.enforceOnLogin) {
         return;
       }
     } else {

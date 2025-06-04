@@ -234,15 +234,15 @@ export class LoginComponent implements OnInit, OnDestroy {
     let credentials: PasswordLoginCredentials;
 
     if (
-      (await this.configService.getFeatureFlag(
-        FeatureFlag.PM16117_ChangeExistingPasswordRefactor,
-      )) &&
-      this.loginComponentService.getOrgPoliciesFromOrgInvite
+      await this.configService.getFeatureFlag(FeatureFlag.PM16117_ChangeExistingPasswordRefactor)
     ) {
-      const orgPoliciesFromInvite = await this.loginComponentService.getOrgPoliciesFromOrgInvite();
-      const orgMasterPasswordPolicyOptions =
-        orgPoliciesFromInvite?.enforcedPasswordPolicyOptions ?? undefined;
+      const orgPoliciesFromInvite = this.loginComponentService.getOrgPoliciesFromOrgInvite
+        ? await this.loginComponentService.getOrgPoliciesFromOrgInvite()
+        : null;
+
+      const orgMasterPasswordPolicyOptions = orgPoliciesFromInvite?.enforcedPasswordPolicyOptions;
       this.passwordPoliciesFromOrgInvite = orgPoliciesFromInvite?.policies;
+
       credentials = new PasswordLoginCredentials(
         email,
         masterPassword,
@@ -336,9 +336,14 @@ export class LoginComponent implements OnInit, OnDestroy {
     if (
       await this.configService.getFeatureFlag(FeatureFlag.PM16117_ChangeExistingPasswordRefactor)
     ) {
-      // Check if we had a
+      // Check if we have policies to set from an org invite scenario.
       if (this.passwordPoliciesFromOrgInvite) {
         await this.setPoliciesIntoState(authResult.userId, this.passwordPoliciesFromOrgInvite);
+
+        // Short circuit here so that we prevent the accept organization invite from prematurely
+        // accepting the org invite by getting routed away to vault.
+        // await this.router.navigate(["change-password"]);
+        // return;
       }
     } else {
       // TODO: PM-18269 - evaluate if we can combine this with the
