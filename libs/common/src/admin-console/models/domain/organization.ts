@@ -302,8 +302,15 @@ export class Organization {
     return this.isAdmin || this.permissions.manageResetPassword;
   }
 
+  /**
+   * @returns True if the user can manage device approvals. To maintain backwards compatibility with the legacy coupling of manageResetPassword and manageUsers permission,
+   * the latter has been added as a prerequisite.
+   */
   get canManageDeviceApprovals() {
-    return (this.isAdmin || this.permissions.manageResetPassword) && this.useSso;
+    return (
+      (this.isAdmin || (this.permissions.manageResetPassword && this.permissions.manageUsers)) &&
+      this.useSso
+    );
   }
 
   get isExemptFromPolicies() {
