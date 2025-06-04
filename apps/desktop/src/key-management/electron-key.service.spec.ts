@@ -119,7 +119,7 @@ describe("ElectronKeyService", () => {
             cryptoFunctionService.randomBytes.mockResolvedValue(
               clientKeyHalfBytes.buffer as CsprngArray,
             );
-            encryptService.encryptString.mockResolvedValue(encryptedClientKeyHalf);
+            encryptService.encrypt.mockResolvedValue(encryptedClientKeyHalf);
 
             await keyService.setUserKey(userKey, mockUserId);
 
@@ -145,7 +145,7 @@ describe("ElectronKeyService", () => {
               mockUserId,
             );
             expect(cryptoFunctionService.randomBytes).toHaveBeenCalledWith(32);
-            expect(encryptService.encryptString).toHaveBeenCalledWith(clientKeyHalf, userKey);
+            expect(encryptService.encrypt).toHaveBeenCalledWith(clientKeyHalf, userKey);
           });
 
           it("sets decrypted biometric client key half and biometric unlock key when existing biometric client key half stored", async () => {
