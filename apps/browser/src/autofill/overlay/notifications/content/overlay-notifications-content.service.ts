@@ -296,17 +296,13 @@ export class OverlayNotificationsContentService
     this.notificationBarElement.remove();
     this.notificationBarElement = null;
 
-    // Exclude Unlock
-    const removableNotificationTypes = [
+    const removableNotificationTypes = new Set([
       NotificationTypes.Add,
       NotificationTypes.Change,
       NotificationTypes.AtRiskPassword,
-    ];
+    ] as NotificationType[]);
 
-    if (
-      closedByUserAction &&
-      removableNotificationTypes.some((nt) => nt === this.currentNotificationBarType)
-    ) {
+    if (closedByUserAction && removableNotificationTypes.has(this.currentNotificationBarType)) {
       void sendExtensionMessage("bgRemoveTabFromNotificationQueue");
     }
 
