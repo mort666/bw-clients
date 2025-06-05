@@ -2,8 +2,12 @@
 // @ts-strict-ignore
 import { combineLatest, filter, firstValueFrom, Observable, of, switchMap } from "rxjs";
 
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
 import { LogoutReason } from "@bitwarden/auth/common";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
 import {
   Argon2KdfConfig,
   KdfConfig,
@@ -91,7 +95,9 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
 
   async migrateUser(keyConnectorUrl: string, userId: UserId) {
     const masterKey = await firstValueFrom(this.masterPasswordService.masterKey$(userId));
-    const keyConnectorRequest = new KeyConnectorUserKeyRequest(masterKey.encKeyB64);
+    const keyConnectorRequest = new KeyConnectorUserKeyRequest(
+      Utils.fromBufferToB64(masterKey.inner().encryptionKey),
+    );
 
     try {
       await this.apiService.postUserKeyToKeyConnector(keyConnectorUrl, keyConnectorRequest);
@@ -141,7 +147,9 @@ export class KeyConnectorService implements KeyConnectorServiceAbstraction {
       await this.tokenService.getEmail(),
       kdfConfig,
     );
-    const keyConnectorRequest = new KeyConnectorUserKeyRequest(masterKey.encKeyB64);
+    const keyConnectorRequest = new KeyConnectorUserKeyRequest(
+      Utils.fromBufferToB64(masterKey.inner().encryptionKey),
+    );
     await this.masterPasswordService.setMasterKey(masterKey, userId);
 
     const userKey = await this.keyService.makeUserKey(masterKey);

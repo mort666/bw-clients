@@ -13,7 +13,6 @@ import {
 @Component({
   selector: "vault-browser-extension-prompt",
   templateUrl: "./browser-extension-prompt.component.html",
-  standalone: true,
   imports: [CommonModule, I18nPipe, ButtonComponent, IconModule],
 })
 export class BrowserExtensionPromptComponent implements OnInit, OnDestroy {
@@ -61,6 +60,6 @@ export class BrowserExtensionPromptComponent implements OnInit, OnDestroy {
   }
 
   openExtension(): void {
-    this.browserExtensionPromptService.openExtension();
+    this.browserExtensionPromptService.openExtension(true);
   }
 }

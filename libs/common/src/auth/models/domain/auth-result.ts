@@ -2,15 +2,11 @@
 // @ts-strict-ignore
 import { KdfType } from "@bitwarden/key-management";
 
-import { Utils } from "../../../platform/misc/utils";
 import { UserId } from "../../../types/guid";
 import { TwoFactorProviderType } from "../../enums/two-factor-provider-type";
 
-import { ForceSetPasswordReason } from "./force-set-password-reason";
-
 export class AuthResult {
   userId: UserId;
-  captchaSiteKey = "";
   // TODO: PM-3287 - Remove this after 3 releases of backwards compatibility. - Target release 2023.12 for removal
   /**
    * @deprecated
@@ -19,7 +15,6 @@ export class AuthResult {
    * */
   resetMasterPassword = false;
 
-  forcePasswordReset: ForceSetPasswordReason = ForceSetPasswordReason.None;
   twoFactorProviders: Partial<Record<TwoFactorProviderType, Record<string, string>>> = null;
   ssoEmail2FaSessionToken?: string;
   email: string;
@@ -33,10 +28,6 @@ export class AuthResult {
     keyConnectorUrl: string;
     organizationId: string;
   };
-
-  get requiresCaptcha() {
-    return !Utils.isNullOrWhitespace(this.captchaSiteKey);
-  }
 
   get requiresTwoFactor() {
     return this.twoFactorProviders != null;

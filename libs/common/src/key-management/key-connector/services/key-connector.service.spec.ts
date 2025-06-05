@@ -3,6 +3,8 @@ import { firstValueFrom, of, timeout, TimeoutError } from "rxjs";
 
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { OrganizationUserType } from "@bitwarden/common/admin-console/enums";
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
 import { KeyService } from "@bitwarden/key-management";
 
 import { FakeAccountService, FakeStateProvider, mockAccountServiceWith } from "../../../../spec";
@@ -229,7 +231,9 @@ describe("KeyConnectorService", () => {
       // Arrange
       const masterKey = getMockMasterKey();
       masterPasswordService.masterKeySubject.next(masterKey);
-      const keyConnectorRequest = new KeyConnectorUserKeyRequest(masterKey.encKeyB64);
+      const keyConnectorRequest = new KeyConnectorUserKeyRequest(
+        Utils.fromBufferToB64(masterKey.inner().encryptionKey),
+      );
 
       jest.spyOn(apiService, "postUserKeyToKeyConnector").mockResolvedValue();
 
@@ -247,7 +251,9 @@ describe("KeyConnectorService", () => {
     it("should handle errors thrown during migration", async () => {
       // Arrange
       const masterKey = getMockMasterKey();
-      const keyConnectorRequest = new KeyConnectorUserKeyRequest(masterKey.encKeyB64);
+      const keyConnectorRequest = new KeyConnectorUserKeyRequest(
+        Utils.fromBufferToB64(masterKey.inner().encryptionKey),
+      );
       masterPasswordService.masterKeySubject.next(masterKey);
       const error = new Error("Failed to post user key to key connector");
       jest.spyOn(apiService, "postUserKeyToKeyConnector").mockRejectedValue(error);
@@ -411,6 +417,7 @@ describe("KeyConnectorService", () => {
           name: "TEST_KEY_CONNECTOR_ORG",
           usePolicies: true,
           useSso: true,
+          useOrganizationDomains: true,
           useKeyConnector: usesKeyConnector,
           useScim: true,
           useGroups: true,
