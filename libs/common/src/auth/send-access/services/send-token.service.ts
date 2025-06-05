@@ -42,7 +42,9 @@ function isCredentialsRequiredApiError(
   error: SendTokenApiRetrievalError,
 ): error is CredentialsRequiredApiError {
   return (
-    error === "password-required" || error === "email-and-otp-required" || error === "unknown-error"
+    error === "password-hash-required" ||
+    error === "email-and-otp-required" ||
+    error === "unknown-error"
   );
 }
 
@@ -56,7 +58,7 @@ export type GetSendAcccessTokenError = Extract<
 function isGetSendAccessTokenError(
   error: SendTokenApiRetrievalError,
 ): error is GetSendAcccessTokenError {
-  return error === "invalid-password" || error === "invalid-otp" || error === "unknown-error";
+  return error === "invalid-password-hash" || error === "invalid-otp" || error === "unknown-error";
 }
 
 export class SendTokenService implements SendTokenServiceAbstraction {
