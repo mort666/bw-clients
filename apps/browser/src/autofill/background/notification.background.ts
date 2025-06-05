@@ -70,8 +70,8 @@ import {
   LockedVaultPendingNotificationsData,
   NotificationBackgroundExtensionMessage,
   NotificationBackgroundExtensionMessageHandlers,
-  GenericNotificationData,
-  GenericNotificationQueueMessage,
+  BasicNotificationData,
+  BasicNotificationQueueMessage,
   AtRiskPasswordNotificationsData,
   UnlockVaultMessageData,
   AdjustNotificationBarMessageData,
@@ -399,8 +399,8 @@ export default class NotificationBackground {
    * @param message NotificationBackgroundExtensionMessage
    * @param sender chrome.runtime.MessageSender
    */
-  async openGenericNotification(
-    message: NotificationBackgroundExtensionMessage<GenericNotificationData>,
+  async triggerBasicNotification(
+    message: NotificationBackgroundExtensionMessage<BasicNotificationData>,
     sender: chrome.runtime.MessageSender,
   ) {
     this.removeTabFromNotificationQueue(sender.tab);
@@ -408,7 +408,7 @@ export default class NotificationBackground {
     const addLoginIsEnabled = await this.getEnableAddedLoginPrompt();
     const wasVaultLocked = AuthenticationStatus.Locked && addLoginIsEnabled;
 
-    const queueMessage: GenericNotificationQueueMessage = {
+    const queueMessage: BasicNotificationQueueMessage = {
       domain: Utils.getDomain(sender.tab.url),
       type: StandardNotificationType.Generic,
       tab: sender.tab,

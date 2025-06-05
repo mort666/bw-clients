@@ -4,10 +4,10 @@ import { ThemeTypes } from "@bitwarden/common/platform/enums/theme-type.enum";
 
 import { PresentationalNotificationProps } from "../../../notification/presentational/notification";
 import { ExampleComponent } from "../../../notification/types/example-component";
-import { GenericNotification } from "../../../notification/types/generic-notification";
+import { BasicNotification } from "../../../notification/types/generic-notification";
 
 export default {
-  title: "Components/Refactor/GenericNotification",
+  title: "Components/Refactor/BasicNotification",
   argTypes: {
     title: { control: "text" },
     message: { control: "text" },
@@ -28,7 +28,7 @@ export default {
   },
 } as Meta<PresentationalNotificationProps>;
 
-const Template = (args: PresentationalNotificationProps) => GenericNotification();
+const Template = (args: PresentationalNotificationProps) => BasicNotification();
 
 export const Default: StoryObj<PresentationalNotificationProps> = {
   render: Template,

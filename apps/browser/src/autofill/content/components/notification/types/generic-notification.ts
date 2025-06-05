@@ -5,7 +5,7 @@ import { ThemeTypes } from "@bitwarden/common/platform/enums";
 import { ActionButton } from "../../buttons/action-button";
 import "../presentational/notification";
 
-export function GenericNotification() {
+export function BasicNotification() {
   const header = "Header text";
   const body = "Body text";
   const footer = html`${ActionButton({

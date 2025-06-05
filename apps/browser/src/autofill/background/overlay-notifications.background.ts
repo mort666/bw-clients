@@ -377,9 +377,9 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
 
     const tab = await BrowserApi.getTab(tabId);
 
-    await this.notificationBackground.openGenericNotification(
+    await this.notificationBackground.triggerBasicNotification(
       {
-        command: "bgOpenGenericNotification",
+        command: "bgOpenBasicNotification",
         data: {
           message: "message",
         },

@@ -61,13 +61,13 @@ interface AtRiskPasswordQueueMessage extends NotificationQueueMessage {
   passwordChangeUri?: string;
 }
 
-export type GenericNotificationData = {
+export type BasicNotificationData = {
   message: string;
 };
 
-export type GenericNotificationQueueMessage = TempNotificationQueueMessage<
+export type BasicNotificationQueueMessage = TempNotificationQueueMessage<
   typeof StandardNotificationType.Generic,
-  GenericNotificationData
+  BasicNotificationData
 >;
 
 type NotificationQueueMessageItem =
@@ -75,7 +75,7 @@ type NotificationQueueMessageItem =
   | AddChangePasswordQueueMessage
   | AddUnlockVaultQueueMessage
   | AtRiskPasswordQueueMessage
-  | GenericNotificationQueueMessage;
+  | BasicNotificationQueueMessage;
 
 type LockedVaultPendingNotificationsData = {
   commandToRetry: {
