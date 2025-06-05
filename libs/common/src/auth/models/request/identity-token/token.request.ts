@@ -3,9 +3,7 @@
 import { DeviceRequest } from "./device.request";
 import { TokenTwoFactorRequest } from "./token-two-factor.request";
 
-// TODO Consider scoping this token request to the Bitwarden API
-// This allows us to create a SendTokenRequest that is scoped to the Send API
-// and not the entire Bitwarden API
+// Base token request for normal user focused identity server token endpoint requests.
 export abstract class TokenRequest {
   protected device?: DeviceRequest;
   protected authRequest: string;
