@@ -30,6 +30,8 @@ export interface GeneratorDialogResult {
   generatedValue?: string;
 }
 
+// FIXME: update to use a const object instead of a typescript enum
+// eslint-disable-next-line @bitwarden/platform/no-enums
 export enum GeneratorDialogAction {
   Selected = "selected",
   Canceled = "canceled",
@@ -38,7 +40,6 @@ export enum GeneratorDialogAction {
 @Component({
   selector: "app-vault-generator-dialog",
   templateUrl: "./vault-generator-dialog.component.html",
-  standalone: true,
   imports: [
     PopupPageComponent,
     PopupHeaderComponent,

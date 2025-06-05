@@ -24,6 +24,8 @@ export interface AttachmentsDialogParams {
 /**
  * Enum representing the possible results of the attachment dialog.
  */
+// FIXME: update to use a const object instead of a typescript enum
+// eslint-disable-next-line @bitwarden/platform/no-enums
 export enum AttachmentDialogResult {
   Uploaded = "uploaded",
   Removed = "removed",
@@ -40,7 +42,6 @@ export interface AttachmentDialogCloseResult {
 @Component({
   selector: "app-vault-attachments-v2",
   templateUrl: "attachments-v2.component.html",
-  standalone: true,
   imports: [ButtonModule, CommonModule, DialogModule, I18nPipe, CipherAttachmentsComponent],
 })
 export class AttachmentsV2Component {

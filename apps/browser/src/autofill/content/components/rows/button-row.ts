@@ -38,6 +38,7 @@ export function ButtonRow({ theme, primaryButton, selectButtons }: ButtonRowProp
               <option-selection
                 key=${id}
                 theme=${theme}
+                .id=${id}
                 .label=${label}
                 .options=${options}
                 .handleSelectionUpdate=${handleSelectionUpdate}
@@ -62,7 +63,7 @@ const buttonRowStyles = css`
 
   > button {
     max-width: min-content;
-    flex: 1 1 50%;
+    flex: 1 1 25%;
   }
 
   > div {

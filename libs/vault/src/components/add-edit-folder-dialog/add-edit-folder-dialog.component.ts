@@ -34,6 +34,8 @@ import {
 } from "@bitwarden/components";
 import { KeyService } from "@bitwarden/key-management";
 
+// FIXME: update to use a const object instead of a typescript enum
+// eslint-disable-next-line @bitwarden/platform/no-enums
 export enum AddEditFolderDialogResult {
   Created = "created",
   Deleted = "deleted",
@@ -45,7 +47,6 @@ export type AddEditFolderDialogData = {
 };
 
 @Component({
-  standalone: true,
   selector: "vault-add-edit-folder-dialog",
   templateUrl: "./add-edit-folder-dialog.component.html",
   imports: [

@@ -2,13 +2,19 @@ import { Component, computed, HostBinding, input } from "@angular/core";
 
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 
+// FIXME: update to use a const object instead of a typescript enum
+// eslint-disable-next-line @bitwarden/platform/no-enums
 enum CharacterType {
   Letter,
   Emoji,
   Special,
   Number,
 }
-
+/**
+ * The color password is used primarily in the Generator pages and in the Login type form. It includes
+ * the logic for displaying letters as `text-main`, numbers as `primary`, and special symbols as
+ * `danger`.
+ */
 @Component({
   selector: "bit-color-password",
   template: `@for (character of passwordCharArray(); track $index; let i = $index) {
@@ -19,7 +25,6 @@ enum CharacterType {
       }
     </span>
   }`,
-  standalone: true,
 })
 export class ColorPasswordComponent {
   password = input<string>("");

@@ -2,12 +2,16 @@
 // @ts-strict-ignore
 import { firstValueFrom } from "rxjs";
 
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
 import {
   CollectionAccessDetailsResponse,
   CollectionDetailsResponse,
   CollectionRequest,
   CollectionResponse,
 } from "@bitwarden/admin-console/common";
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
 import { LogoutReason } from "@bitwarden/auth/common";
 
 import { ApiService as ApiServiceAbstraction } from "../abstractions/api.service";
@@ -139,6 +143,10 @@ import { AttachmentResponse } from "../vault/models/response/attachment.response
 import { CipherResponse } from "../vault/models/response/cipher.response";
 import { OptionalCipherResponse } from "../vault/models/response/optional-cipher.response";
 
+export type HttpOperations = {
+  createRequest: (url: string, request: RequestInit) => Request;
+};
+
 /**
  * @deprecated The `ApiService` class is deprecated and calls should be extracted into individual
  * api services. The `send` method is still allowed to be used within api services. For background
@@ -164,6 +172,7 @@ export class ApiService implements ApiServiceAbstraction {
     private logService: LogService,
     private logoutCallback: (logoutReason: LogoutReason) => Promise<void>,
     private vaultTimeoutSettingsService: VaultTimeoutSettingsService,
+    private readonly httpOperations: HttpOperations,
     private customUserAgent: string = null,
   ) {
     this.device = platformUtilsService.getDevice();
@@ -199,7 +208,7 @@ export class ApiService implements ApiServiceAbstraction {
     const env = await firstValueFrom(this.environmentService.environment$);
 
     const response = await this.fetch(
-      new Request(env.getIdentityUrl() + "/connect/token", {
+      this.httpOperations.createRequest(env.getIdentityUrl() + "/connect/token", {
         body: this.qsStringify(identityToken),
         credentials: await this.getCredentials(),
         cache: "no-store",
@@ -505,8 +514,9 @@ export class ApiService implements ApiServiceAbstraction {
     return new CipherResponse(r);
   }
 
-  putShareCiphers(request: CipherBulkShareRequest): Promise<any> {
-    return this.send("PUT", "/ciphers/share", request, true, false);
+  async putShareCiphers(request: CipherBulkShareRequest): Promise<ListResponse<CipherResponse>> {
+    const r = await this.send("PUT", "/ciphers/share", request, true, true);
+    return new ListResponse<CipherResponse>(r, CipherResponse);
   }
 
   async putCipherCollections(
@@ -1393,7 +1403,7 @@ export class ApiService implements ApiServiceAbstraction {
     }
     const env = await firstValueFrom(this.environmentService.environment$);
     const response = await this.fetch(
-      new Request(env.getEventsUrl() + "/collect", {
+      this.httpOperations.createRequest(env.getEventsUrl() + "/collect", {
         cache: "no-store",
         credentials: await this.getCredentials(),
         method: "POST",
@@ -1440,7 +1450,7 @@ export class ApiService implements ApiServiceAbstraction {
     const authHeader = await this.getActiveBearerToken();
 
     const response = await this.fetch(
-      new Request(keyConnectorUrl + "/user-keys", {
+      this.httpOperations.createRequest(keyConnectorUrl + "/user-keys", {
         cache: "no-store",
         method: "GET",
         headers: new Headers({
@@ -1465,7 +1475,7 @@ export class ApiService implements ApiServiceAbstraction {
     const authHeader = await this.getActiveBearerToken();
 
     const response = await this.fetch(
-      new Request(keyConnectorUrl + "/user-keys", {
+      this.httpOperations.createRequest(keyConnectorUrl + "/user-keys", {
         cache: "no-store",
         method: "POST",
         headers: new Headers({
@@ -1485,7 +1495,7 @@ export class ApiService implements ApiServiceAbstraction {
 
   async getKeyConnectorAlive(keyConnectorUrl: string) {
     const response = await this.fetch(
-      new Request(keyConnectorUrl + "/alive", {
+      this.httpOperations.createRequest(keyConnectorUrl + "/alive", {
         cache: "no-store",
         method: "GET",
         headers: new Headers({
@@ -1554,7 +1564,7 @@ export class ApiService implements ApiServiceAbstraction {
     const env = await firstValueFrom(this.environmentService.environment$);
     const path = `/sso/prevalidate?domainHint=${encodeURIComponent(identifier)}`;
     const response = await this.fetch(
-      new Request(env.getIdentityUrl() + path, {
+      this.httpOperations.createRequest(env.getIdentityUrl() + path, {
         cache: "no-store",
         credentials: await this.getCredentials(),
         headers: headers,
@@ -1598,18 +1608,6 @@ export class ApiService implements ApiServiceAbstraction {
       true,
     );
     return new OrganizationSponsorshipSyncStatusResponse(response);
-  }
-
-  async deleteRevokeSponsorship(sponsoringOrganizationId: string): Promise<void> {
-    return await this.send(
-      "DELETE",
-      "/organization/sponsorship/" +
-        (this.platformUtilsService.isSelfHost() ? "self-hosted/" : "") +
-        sponsoringOrganizationId,
-      null,
-      true,
-      false,
-    );
   }
 
   async deleteRemoveSponsorship(sponsoringOrgId: string): Promise<void> {
@@ -1695,7 +1693,7 @@ export class ApiService implements ApiServiceAbstraction {
     const env = await firstValueFrom(this.environmentService.environment$);
     const decodedToken = await this.tokenService.decodeAccessToken();
     const response = await this.fetch(
-      new Request(env.getIdentityUrl() + "/connect/token", {
+      this.httpOperations.createRequest(env.getIdentityUrl() + "/connect/token", {
         body: this.qsStringify({
           grant_type: "refresh_token",
           client_id: decodedToken.client_id,
@@ -1804,7 +1802,7 @@ export class ApiService implements ApiServiceAbstraction {
     };
     requestInit.headers = requestHeaders;
     requestInit.body = requestBody;
-    const response = await this.fetch(new Request(requestUrl, requestInit));
+    const response = await this.fetch(this.httpOperations.createRequest(requestUrl, requestInit));
 
     const responseType = response.headers.get("content-type");
     const responseIsJson = responseType != null && responseType.indexOf("application/json") !== -1;
@@ -1873,7 +1871,7 @@ export class ApiService implements ApiServiceAbstraction {
     let responseJson: any = null;
     if (this.isJsonResponse(response)) {
       responseJson = await response.json();
-    } else if (this.isTextResponse(response)) {
+    } else if (this.isTextPlainResponse(response)) {
       responseJson = { Message: await response.text() };
     }
 
@@ -1929,8 +1927,8 @@ export class ApiService implements ApiServiceAbstraction {
     return typeHeader != null && typeHeader.indexOf("application/json") > -1;
   }
 
-  private isTextResponse(response: Response): boolean {
+  private isTextPlainResponse(response: Response): boolean {
     const typeHeader = response.headers.get("content-type");
-    return typeHeader != null && typeHeader.indexOf("text") > -1;
+    return typeHeader != null && typeHeader.indexOf("text/plain") > -1;
   }
 }

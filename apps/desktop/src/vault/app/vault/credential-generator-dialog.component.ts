@@ -31,13 +31,14 @@ export interface CredentialGeneratorDialogResult {
   generatedValue?: string;
 }
 
+// FIXME: update to use a const object instead of a typescript enum
+// eslint-disable-next-line @bitwarden/platform/no-enums
 export enum CredentialGeneratorDialogAction {
   Selected = "selected",
   Canceled = "canceled",
 }
 
 @Component({
-  standalone: true,
   selector: "credential-generator-dialog",
   templateUrl: "credential-generator-dialog.component.html",
   imports: [
