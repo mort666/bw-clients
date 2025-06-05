@@ -43,11 +43,11 @@ if (
   const Main = require("./main").Main;
 
   // Testing autotype hotkey registration
-  const r = autotype.registerHotkey();
+  //const r = autotype.registerHotkey();
   // eslint-disable-next-line no-console
-  console.log("registerHotkey(): ");
+  //console.log("registerHotkey(): ");
   // eslint-disable-next-line no-console
-  console.log(r);
+  //console.log(r);
 
   const main = new Main();
   main.bootstrap();
