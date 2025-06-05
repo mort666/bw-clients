@@ -16,7 +16,7 @@ export class PasswordLoginCredentials {
     public email: string,
     public masterPassword: string,
     public twoFactor?: TokenTwoFactorRequest,
-    public masterPasswordPolicies?: MasterPasswordPolicyOptions,
+    public masterPasswordPoliciesFromOrgInvite?: MasterPasswordPolicyOptions,
   ) {}
 }
 

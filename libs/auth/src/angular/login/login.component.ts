@@ -236,6 +236,9 @@ export class LoginComponent implements OnInit, OnDestroy {
     if (
       await this.configService.getFeatureFlag(FeatureFlag.PM16117_ChangeExistingPasswordRefactor)
     ) {
+      // Try to retrieve any org policies from an org invite now so we can send it to the
+      // login strategies. Since it is optional and we only want to be doing this on the
+      // web we will only send in content in the right context.
       const orgPoliciesFromInvite = this.loginComponentService.getOrgPoliciesFromOrgInvite
         ? await this.loginComponentService.getOrgPoliciesFromOrgInvite()
         : null;
@@ -310,7 +313,7 @@ export class LoginComponent implements OnInit, OnDestroy {
          This is now unsupported and requires a downgraded client */
       this.toastService.showToast({
         variant: "error",
-        title: this.i18nService.t("errorOccured"),
+        title: this.i18nService.t("errorOccurred"),
         message: this.i18nService.t("legacyEncryptionUnsupported"),
       });
       return;

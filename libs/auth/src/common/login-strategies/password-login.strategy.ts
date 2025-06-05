@@ -105,7 +105,7 @@ export class PasswordLoginStrategy extends LoginStrategy {
     if (
       await this.configService.getFeatureFlag(FeatureFlag.PM16117_ChangeExistingPasswordRefactor)
     ) {
-      data.passwordPolicy = credentials.masterPasswordPolicies;
+      data.passwordPolicy = credentials.masterPasswordPoliciesFromOrgInvite;
     }
 
     this.cache.next(data);
@@ -183,9 +183,9 @@ export class PasswordLoginStrategy extends LoginStrategy {
     if (
       await this.configService.getFeatureFlag(FeatureFlag.PM16117_ChangeExistingPasswordRefactor)
     ) {
-      // Take credentials from a potential org invite first, then take from
-      masterPasswordPolicyOptions = credentials.masterPasswordPolicies
-        ? credentials.masterPasswordPolicies
+      // !IMPORTANT! Take credentials from a potential org invite first, then take from
+      masterPasswordPolicyOptions = credentials.masterPasswordPoliciesFromOrgInvite
+        ? credentials.masterPasswordPoliciesFromOrgInvite
         : this.getMasterPasswordPolicyOptionsFromResponse(identityResponse);
 
       if (!masterPasswordPolicyOptions?.enforceOnLogin) {

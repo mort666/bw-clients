@@ -84,14 +84,6 @@ export class ChangePasswordComponent implements OnInit {
       this.policyService.masterPasswordPolicyOptions$(this.userId),
     );
 
-    /**
-     * In the event of the org invitation flow, this will always be ForceSetPasswordReason.None
-     * because the `password-login.strategy` short circuits before setting the force set password
-     * reason. We used to have two separate components, update-temp-password and update-password
-     * which could show discrete messages based on the flow, but we cannot do that with one shared
-     * component. I cannot use the AcceptOrganizationInviteService to determine if we have an org
-     * invite so how can I determine that?
-     */
     this.forceSetPasswordReason = await firstValueFrom(
       this.masterPasswordService.forceSetPasswordReason$(this.userId),
     );
