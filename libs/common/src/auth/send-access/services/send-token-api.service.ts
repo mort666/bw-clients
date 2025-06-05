@@ -7,11 +7,27 @@ import { SendTokenApiService as SendTokenApiServiceAbstraction } from "../abstra
 import { SendAccessToken } from "../models/send-access-token";
 
 export type SendTokenApiRetrievalError =
-  | "password-required"
+  | "invalid-request"
+  | "send-id-required"
+  | "password-hash-required"
   | "email-and-otp-required"
-  | "invalid-password"
+  | "invalid-grant"
+  | "invalid-password-hash"
   | "invalid-otp"
+  | "json-parse-error"
   | "unknown-error";
+
+const INVALID_REQUEST_ERROR_MAPPING: Record<string, SendTokenApiRetrievalError> = {
+  "send_id is required.": "send-id-required",
+  "Password hash is required.": "password-hash-required",
+  "": "invalid-request", // This is a catch-all for any null/undefined invalid request error descriptions
+};
+
+const INVALID_GRANT_ERROR_MAPPING: Record<string, SendTokenApiRetrievalError> = {
+  "Password hash invalid.": "invalid-password-hash",
+  "Invalid OTP.": "invalid-otp",
+  "": "invalid-grant", // This is a catch-all for any null/undefined invalid grant error descriptions
+};
 
 export class SendTokenApiService implements SendTokenApiServiceAbstraction {
   constructor(
@@ -42,21 +58,45 @@ export class SendTokenApiService implements SendTokenApiServiceAbstraction {
     });
 
     const response = await this.apiService.fetch(req);
-    const responseJson = await response.json();
+
+    // TODO: Determine if we need the isJsonResponse check here like API service
+    let responseJson: any;
+    try {
+      responseJson = await response.json();
+    } catch {
+      // Only expected for server runtime exceptions or maybe CORS errors
+      return "json-parse-error";
+    }
 
     if (response.status === 200) {
       const sendAccessToken = SendAccessToken.fromResponseData(responseJson);
       return sendAccessToken;
-    } else if (response.status === 400) {
-      if (responseJson?.error === "invalid_request") {
-        if (responseJson?.error_description === "Password is required.") {
-          return "password-required";
-        } else if (responseJson?.error_description === "Email and OTP are required.") {
-          return "email-and-otp-required";
-        }
-      }
     }
 
+    if (response.status === 400 && responseJson?.error) {
+      return this.mapTokenResponseToError(responseJson.error, responseJson.error_description);
+    }
+
+    // TODO: maybe log this error?
     return "unknown-error";
+  }
+
+  private mapTokenResponseToError(
+    error: string,
+    errorDescription?: string,
+  ): SendTokenApiRetrievalError {
+    const errorDescKey = errorDescription ?? "";
+    switch (error) {
+      case "invalid_request": {
+        return INVALID_REQUEST_ERROR_MAPPING[errorDescKey] || "invalid-request";
+      }
+
+      case "invalid_grant": {
+        return INVALID_GRANT_ERROR_MAPPING[errorDescKey] || "invalid-grant";
+      }
+
+      default:
+        return "unknown-error";
+    }
   }
 }
