@@ -34,7 +34,7 @@ export function PresentationalNotificationHeader({
     <div class=${notificationHeaderStyles({ standalone, theme })}>
       ${showIcon ? BrandIconContainer({ theme }) : null}
       ${message ? NotificationHeaderMessage({ message, theme }) : null}
-      ${isDismissable ? CloseButton({ handleCloseNotification, theme }) : null}
+      ${isDismissable ? CloseButton({ handleCloseNotification, theme, i18n: {} }) : null}
     </div>
   `;
 }

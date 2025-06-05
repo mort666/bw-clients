@@ -3,10 +3,7 @@ import { html } from "lit";
 
 import { Theme, ThemeTypes } from "@bitwarden/common/platform/enums";
 
-import {
-  NotificationMessageParams,
-  NotificationType,
-} from "../../../../notification/abstractions/notification-bar";
+import { NotificationType } from "../../../../notification/abstractions/notification-bar";
 import { NotificationCipherData } from "../../cipher/types";
 import { scrollbarStyles, spacing, themes, typography } from "../../constants/styles";
 
@@ -40,7 +37,7 @@ export function PresentationalNotificationBody({
   notificationType?: NotificationType;
   theme?: Theme;
   handleEditOrUpdateAction?: (e: Event) => void;
-  params?: NotificationMessageParams;
+  params?: any;
   content: string;
   icon: undefined | BodyIconType;
 }) {
