@@ -21,7 +21,7 @@ export default {
     theme: { control: "select", options: [...Object.values(ThemeTypes)] },
   },
   args: {
-    title: "Generic Alert",
+    title: "Basic Notification",
     message: "Notifications are happening, more or less constantly.",
     footer: ExampleComponent({ message: "Plain" }),
     theme: ThemeTypes.Light,

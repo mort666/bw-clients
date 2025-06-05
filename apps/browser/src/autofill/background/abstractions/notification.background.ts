@@ -13,7 +13,7 @@ const StandardNotificationType = {
   ChangePassword: "change",
   UnlockVault: "unlock",
   AtRiskPassword: "at-risk-password",
-  Generic: "generic",
+  Basic: "basic",
 } as const;
 
 type StandardNotificationTypes =
@@ -66,7 +66,7 @@ export type BasicNotificationData = {
 };
 
 export type BasicNotificationQueueMessage = TempNotificationQueueMessage<
-  typeof StandardNotificationType.Generic,
+  typeof StandardNotificationType.Basic,
   BasicNotificationData
 >;
 

@@ -394,7 +394,7 @@ export default class NotificationBackground {
   }
 
   /**
-   * Open the generic notification
+   * Open the basic notification
    *
    * @param message NotificationBackgroundExtensionMessage
    * @param sender chrome.runtime.MessageSender
@@ -410,7 +410,7 @@ export default class NotificationBackground {
 
     const queueMessage: BasicNotificationQueueMessage = {
       domain: Utils.getDomain(sender.tab.url),
-      type: StandardNotificationType.Generic,
+      type: StandardNotificationType.Basic,
       tab: sender.tab,
       launchTimestamp,
       wasVaultLocked,
