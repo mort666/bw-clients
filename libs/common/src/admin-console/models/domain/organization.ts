@@ -307,10 +307,15 @@ export class Organization {
    * the latter has been added as a prerequisite.
    */
   get canManageDeviceApprovals() {
-    return (
-      (this.isAdmin || (this.permissions.manageResetPassword && this.permissions.manageUsers)) &&
-      this.useSso
-    );
+    if (!this.useSso) {
+      return false;
+    }
+
+    if (this.isAdmin) {
+      return true;
+    }
+
+    return this.permissions.manageResetPassword && this.permissions.manageUsers;
   }
 
   get isExemptFromPolicies() {
