@@ -3,8 +3,8 @@ import { Meta, StoryObj } from "@storybook/web-components";
 import { ThemeTypes } from "@bitwarden/common/platform/enums/theme-type.enum";
 
 import { PresentationalNotificationProps } from "../../../notification/presentational/notification";
+import { BasicNotification } from "../../../notification/types/basic-notification";
 import { ExampleComponent } from "../../../notification/types/example-component";
-import { BasicNotification } from "../../../notification/types/generic-notification";
 
 export default {
   title: "Components/Refactor/BasicNotification",
