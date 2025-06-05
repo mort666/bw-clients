@@ -4,6 +4,7 @@ import { Scope } from "../../../enums/scopes.enum";
 import { SendAccessCredentials } from "../../../send-access/abstractions/send-token.service";
 
 export type SendAccessTokenPasswordPayload = { password_hash: string };
+export type SendAccessTokenEmailPayload = { email: string };
 export type SendAccessTokenEmailOtpPayload = { email: string; otp: string };
 export type SendAccessTokenAnonymousPayload = object; // empty object
 
@@ -19,6 +20,7 @@ export interface SendAccessTokenPayloadBase {
 export type SendAccessTokenPayload = SendAccessTokenPayloadBase &
   (
     | SendAccessTokenPasswordPayload
+    | SendAccessTokenEmailPayload
     | SendAccessTokenEmailOtpPayload
     | SendAccessTokenAnonymousPayload
   );
@@ -46,6 +48,8 @@ export class SendAccessTokenRequest {
 
     if (this.sendAccessCredentials && this.sendAccessCredentials.type === "password") {
       return { ...base, password_hash: this.sendAccessCredentials.passwordHash };
+    } else if (this.sendAccessCredentials && this.sendAccessCredentials.type === "email") {
+      return { ...base, email: this.sendAccessCredentials.email };
     } else if (this.sendAccessCredentials && this.sendAccessCredentials.type === "email-otp") {
       return {
         ...base,

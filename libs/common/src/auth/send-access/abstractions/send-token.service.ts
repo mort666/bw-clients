@@ -5,18 +5,28 @@ import {
   TryGetSendAccessTokenError,
 } from "../services/send-token.service";
 
-export type SendAccessCredentialsType = "password" | "email-otp";
-
 export type SendPasswordCredentials = {
   type: "password";
   passwordHash: SendHashedPassword;
 };
+
+// Credentials for sending an OTP to the user's email address.
+// This is used when the send requires email verification with an OTP.
+export type SendEmailCredentials = {
+  type: "email";
+  email: string;
+};
+
+// Credentials for getting a send access token using an email and OTP.
 export type SendEmailOtpCredentials = {
   type: "email-otp";
   email: string;
   otp: string;
 };
-export type SendAccessCredentials = SendPasswordCredentials | SendEmailOtpCredentials;
+export type SendAccessCredentials =
+  | SendPasswordCredentials
+  | SendEmailCredentials
+  | SendEmailOtpCredentials;
 
 export abstract class SendTokenService {
   // TODO: consider converting to observable.
