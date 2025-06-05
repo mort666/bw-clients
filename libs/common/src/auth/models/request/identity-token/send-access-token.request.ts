@@ -37,6 +37,7 @@ export class SendAccessTokenRequest {
   /**
    * Builds the payload to send to /connect/token
    */
+  // TODO: add tests for this method
   toIdentityTokenPayload(): SendAccessTokenPayload {
     const base: SendAccessTokenPayloadBase = {
       client_id: SendAccessTokenRequest.CLIENT_ID,

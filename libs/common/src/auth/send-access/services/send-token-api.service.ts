@@ -6,7 +6,7 @@ import { SendAccessTokenRequest } from "../../models/request/identity-token/send
 import { SendTokenApiService as SendTokenApiServiceAbstraction } from "../abstractions/send-token-api.service";
 import { SendAccessToken } from "../models/send-access-token";
 
-export type SendTokenApiRetrievalError =
+export type SendTokenApiError =
   | "invalid-request"
   | "send-id-required"
   | "password-hash-required"
@@ -17,18 +17,19 @@ export type SendTokenApiRetrievalError =
   | "json-parse-error"
   | "unknown-error";
 
-const INVALID_REQUEST_ERROR_MAPPING: Record<string, SendTokenApiRetrievalError> = {
+const INVALID_REQUEST_ERROR_MAPPING: Record<string, SendTokenApiError> = {
   "send_id is required.": "send-id-required",
   "Password hash is required.": "password-hash-required",
   "": "invalid-request", // This is a catch-all for any null/undefined invalid request error descriptions
 };
 
-const INVALID_GRANT_ERROR_MAPPING: Record<string, SendTokenApiRetrievalError> = {
+const INVALID_GRANT_ERROR_MAPPING: Record<string, SendTokenApiError> = {
   "Password hash invalid.": "invalid-password-hash",
   "Invalid OTP.": "invalid-otp",
   "": "invalid-grant", // This is a catch-all for any null/undefined invalid grant error descriptions
 };
 
+// TODO: add tests for this service.
 export class SendTokenApiService implements SendTokenApiServiceAbstraction {
   constructor(
     private environmentService: EnvironmentService,
@@ -37,7 +38,7 @@ export class SendTokenApiService implements SendTokenApiServiceAbstraction {
 
   async requestSendAccessToken(
     request: SendAccessTokenRequest,
-  ): Promise<SendAccessToken | SendTokenApiRetrievalError> {
+  ): Promise<SendAccessToken | SendTokenApiError> {
     const payload = request.toIdentityTokenPayload();
 
     const headers = new Headers({
@@ -81,10 +82,7 @@ export class SendTokenApiService implements SendTokenApiServiceAbstraction {
     return "unknown-error";
   }
 
-  private mapTokenResponseToError(
-    error: string,
-    errorDescription?: string,
-  ): SendTokenApiRetrievalError {
+  private mapTokenResponseToError(error: string, errorDescription?: string): SendTokenApiError {
     const errorDescKey = errorDescription ?? "";
     switch (error) {
       case "invalid_request": {

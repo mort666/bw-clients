@@ -19,7 +19,7 @@ import {
 } from "../abstractions/send-token.service";
 import { SendAccessToken } from "../models/send-access-token";
 
-import { SendTokenApiRetrievalError } from "./send-token-api.service";
+import { SendTokenApiError } from "./send-token-api.service";
 
 // TODO: add JSDocs
 // TODO: add tests for this service.
@@ -34,12 +34,12 @@ export const SEND_ACCESS_TOKEN_DICT = KeyDefinition.record<SendAccessToken, stri
 );
 
 type CredentialsRequiredApiError = Extract<
-  SendTokenApiRetrievalError,
+  SendTokenApiError,
   "password-required" | "email-and-otp-required" | "unknown-error"
 >;
 
 function isCredentialsRequiredApiError(
-  error: SendTokenApiRetrievalError,
+  error: SendTokenApiError,
 ): error is CredentialsRequiredApiError {
   return (
     error === "password-hash-required" ||
@@ -51,13 +51,11 @@ function isCredentialsRequiredApiError(
 export type TryGetSendAccessTokenError = "expired" | CredentialsRequiredApiError;
 
 export type GetSendAcccessTokenError = Extract<
-  SendTokenApiRetrievalError,
+  SendTokenApiError,
   "invalid-password" | "invalid-otp" | "unknown-error"
 >;
 
-function isGetSendAccessTokenError(
-  error: SendTokenApiRetrievalError,
-): error is GetSendAcccessTokenError {
+function isGetSendAccessTokenError(error: SendTokenApiError): error is GetSendAcccessTokenError {
   return error === "invalid-password-hash" || error === "invalid-otp" || error === "unknown-error";
 }
 
