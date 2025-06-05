@@ -1,3 +1,5 @@
+import { Observable } from "rxjs";
+
 import { SendHashedPassword } from "../../../key-management/sends/send-password.service";
 import { SendAccessToken } from "../models/send-access-token";
 import {
@@ -29,7 +31,6 @@ export type SendAccessCredentials =
   | SendEmailOtpCredentials;
 
 export abstract class SendTokenService {
-  // TODO: consider converting to observable.
   /**
    * Attempts to retrieve a SendAccessToken for the given sendId.
    * If the access token is found in session storage and is not expired, then it returns the token.
@@ -39,11 +40,11 @@ export abstract class SendTokenService {
    * If an access token cannot be granted b/c the send requires credentials, then it returns a SendTokenRetrievalError indicating which credentials are required.
    * Any submissions of credentials will be handled by the getSendAccessTokenWithCredentials method.
    * @param sendId The ID of the send to retrieve the access token for.
-   * @returns A promise that resolves to a SendAccessToken if found and valid, or a SendTokenRetrievalError if not.
+   * @returns An observable that emits a SendAccessToken if successful, or a TryGetSendAccessTokenError if not.
    */
-  abstract tryGetSendAccessToken: (
+  abstract tryGetSendAccessToken$: (
     sendId: string,
-  ) => Promise<SendAccessToken | TryGetSendAccessTokenError>;
+  ) => Observable<SendAccessToken | TryGetSendAccessTokenError>;
 
   /**
    * Retrieves a SendAccessToken for the given sendId using the provided credentials.
@@ -51,12 +52,12 @@ export abstract class SendTokenService {
    * If the access token cannot be granted due to invalid credentials, it returns a GetSendAcccessTokenError.
    * @param sendId The ID of the send to retrieve the access token for.
    * @param sendAccessCredentials The credentials to use for accessing the send.
-   * @returns A promise that resolves to a SendAccessToken if found and valid, or a GetSendAcccessTokenError if not.
+   * @returns An observable that emits a SendAccessToken if successful, or a GetSendAcccessTokenError if not.
    */
-  abstract getSendAccessToken: (
+  abstract getSendAccessToken$: (
     sendId: string,
     sendAccessCredentials: SendAccessCredentials,
-  ) => Promise<SendAccessToken | GetSendAcccessTokenError>;
+  ) => Observable<SendAccessToken | GetSendAcccessTokenError>;
 
   /**
    * Hashes a password for send access.

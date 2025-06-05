@@ -1,4 +1,4 @@
-import { firstValueFrom } from "rxjs";
+import { defer, firstValueFrom, from, Observable } from "rxjs";
 import { Jsonify } from "type-fest";
 
 import {
@@ -76,7 +76,12 @@ export class SendTokenService implements SendTokenServiceAbstraction {
     this.sendAccessTokenDictGlobalState = this.globalStateProvider.get(SEND_ACCESS_TOKEN_DICT);
   }
 
-  async tryGetSendAccessToken(
+  tryGetSendAccessToken$(sendId: string): Observable<SendAccessToken | TryGetSendAccessTokenError> {
+    // Defer the execution to ensure that a cold observable is returned.
+    return defer(() => from(this._tryGetSendAccessToken(sendId)));
+  }
+
+  private async _tryGetSendAccessToken(
     sendId: string,
   ): Promise<SendAccessToken | TryGetSendAccessTokenError> {
     // Validate the sendId is a non-empty string.
@@ -116,7 +121,15 @@ export class SendTokenService implements SendTokenServiceAbstraction {
     throw new Error(`Unexpected and unhandled API error retrieving send access token: ${result}`);
   }
 
-  async getSendAccessToken(
+  getSendAccessToken$(
+    sendId: string,
+    sendCredentials: SendAccessCredentials,
+  ): Observable<SendAccessToken | GetSendAcccessTokenError> {
+    // Defer the execution to ensure that a cold observable is returned.
+    return defer(() => from(this._getSendAccessToken(sendId, sendCredentials)));
+  }
+
+  private async _getSendAccessToken(
     sendId: string,
     sendCredentials: SendAccessCredentials,
   ): Promise<SendAccessToken | GetSendAcccessTokenError> {
