@@ -9,7 +9,6 @@ import { ConfirmKeyConnectorDomainComponent as BaseConfirmKeyConnectorDomainComp
 @Component({
   selector: "app-confirm-key-connector-domain",
   templateUrl: "confirm-key-connector-domain.component.html",
-  standalone: true,
   imports: [CommonModule, JslibModule, ButtonModule, AsyncActionsModule, RouterModule],
 })
 export class ConfirmKeyConnectorDomainComponent extends BaseConfirmKeyConnectorDomainComponent {}
