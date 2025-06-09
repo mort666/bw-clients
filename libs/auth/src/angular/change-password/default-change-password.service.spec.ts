@@ -97,7 +97,7 @@ describe("DefaultChangePasswordService", () => {
 
     it("should throw if a userId was not found", async () => {
       // Arrange
-      const userId: undefined = undefined;
+      const userId: null = null;
 
       // Act
       const testFn = sut.changePassword(passwordInputResult, userId);
@@ -109,7 +109,7 @@ describe("DefaultChangePasswordService", () => {
     it("should throw if a currentMasterKey was not found", async () => {
       // Arrange
       const incorrectPasswordInputResult = { ...passwordInputResult };
-      incorrectPasswordInputResult.currentMasterKey = undefined;
+      incorrectPasswordInputResult.currentMasterKey = null;
 
       // Act
       const testFn = sut.changePassword(incorrectPasswordInputResult, userId);
@@ -123,7 +123,7 @@ describe("DefaultChangePasswordService", () => {
     it("should throw if a currentServerMasterKeyHash was not found", async () => {
       // Arrange
       const incorrectPasswordInputResult = { ...passwordInputResult };
-      incorrectPasswordInputResult.currentServerMasterKeyHash = undefined;
+      incorrectPasswordInputResult.currentServerMasterKeyHash = null;
 
       // Act
       const testFn = sut.changePassword(incorrectPasswordInputResult, userId);

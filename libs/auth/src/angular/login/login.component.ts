@@ -244,6 +244,9 @@ export class LoginComponent implements OnInit, OnDestroy {
         : null;
 
       const orgMasterPasswordPolicyOptions = orgPoliciesFromInvite?.enforcedPasswordPolicyOptions;
+
+      // Grab the org policies from invite so that it can be evaluated after we have logged in and
+      // received a user id.
       this.passwordPoliciesFromOrgInvite = orgPoliciesFromInvite?.policies;
 
       credentials = new PasswordLoginCredentials(
@@ -342,11 +345,6 @@ export class LoginComponent implements OnInit, OnDestroy {
       // Check if we have policies to set from an org invite scenario.
       if (this.passwordPoliciesFromOrgInvite) {
         await this.setPoliciesIntoState(authResult.userId, this.passwordPoliciesFromOrgInvite);
-
-        // Short circuit here so that we prevent the accept organization invite from prematurely
-        // accepting the org invite by getting routed away to vault.
-        // await this.router.navigate(["change-password"]);
-        // return;
       }
     } else {
       // TODO: PM-18269 - evaluate if we can combine this with the

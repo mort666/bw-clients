@@ -31,9 +31,9 @@ export class AnonLayoutComponent implements OnInit, OnChanges {
     return ["tw-h-full"];
   }
 
-  @Input() title?: string;
-  @Input() subtitle?: string;
-  @Input() icon?: Icon;
+  @Input() title: string;
+  @Input() subtitle: string;
+  @Input() icon: Icon;
   @Input() showReadonlyHostname?: boolean;
   @Input() hideLogo: boolean = false;
   @Input() hideFooter: boolean = false;
@@ -56,8 +56,8 @@ export class AnonLayoutComponent implements OnInit, OnChanges {
   protected logo = BitwardenLogo;
   protected year: string;
   protected clientType: ClientType;
-  protected hostname?: string;
-  protected version?: string;
+  protected hostname: string;
+  protected version: string;
 
   protected hideYearAndVersion = false;
 

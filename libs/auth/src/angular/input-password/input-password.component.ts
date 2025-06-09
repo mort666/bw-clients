@@ -163,7 +163,7 @@ export class InputPasswordComponent implements OnInit {
 
   protected get minPasswordLengthMsg() {
     if (
-      this.masterPasswordPolicyOptions != null &&
+      this.masterPasswordPolicyOptions != undefined &&
       this.masterPasswordPolicyOptions.minLength > 0
     ) {
       return this.i18nService.t("characterMinimum", this.masterPasswordPolicyOptions.minLength);

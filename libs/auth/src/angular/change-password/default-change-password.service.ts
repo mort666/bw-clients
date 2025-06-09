@@ -58,7 +58,7 @@ export class DefaultChangePasswordService implements ChangePasswordService {
     );
 
     const request = new PasswordRequest();
-    request.masterPasswordHash = passwordInputResult.currentServerMasterKeyHash ?? "";
+    request.masterPasswordHash = passwordInputResult.currentServerMasterKeyHash;
     request.newMasterPasswordHash = passwordInputResult.newServerMasterKeyHash;
     request.masterPasswordHint = passwordInputResult.newPasswordHint;
     request.key = newMasterKeyEncryptedUserKey[1].encryptedString as string;

@@ -52,6 +52,8 @@ export class ChangePasswordComponent implements OnInit {
   formPromise?: Promise<any>;
   forceSetPasswordReason: ForceSetPasswordReason = ForceSetPasswordReason.None;
 
+  protected readonly ForceSetPasswordReason = ForceSetPasswordReason;
+
   constructor(
     private accountService: AccountService,
     private changePasswordService: ChangePasswordService,
@@ -77,7 +79,7 @@ export class ChangePasswordComponent implements OnInit {
     this.email = this.activeAccount.email;
 
     if (!this.userId) {
-      throw new Error("activeUserId not found");
+      throw new Error("userId not found");
     }
 
     this.masterPasswordPolicyOptions = await firstValueFrom(
@@ -174,5 +176,13 @@ export class ChangePasswordComponent implements OnInit {
     }
   }
 
-  protected readonly ForceSetPasswordReason = ForceSetPasswordReason;
+  /**
+   * Shows the logout button in the case of admin force reset password or weak password upon login.
+   */
+  protected shouldShowLogoutText(): { key: string } | undefined {
+    return this.forceSetPasswordReason === ForceSetPasswordReason.AdminForcePasswordReset ||
+      this.forceSetPasswordReason === ForceSetPasswordReason.WeakMasterPassword
+      ? { key: "logOut" }
+      : undefined;
+  }
 }
