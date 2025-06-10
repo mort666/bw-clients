@@ -44,13 +44,17 @@ export default class OsBiometricsServiceWindows implements OsBiometricService {
 
   async getBiometricKey(userId: UserId): Promise<SymmetricCryptoKey | null> {
     const value = await passwords.getPassword(SERVICE, getLookupKeyForUser(userId));
+    let clientKeyHalfB64: string | null = null;
+    if (this.clientKeyHalves.has(userId.toString())) {
+      clientKeyHalfB64 = Utils.fromBufferToB64(this.clientKeyHalves.get(userId.toString()));
+    }
 
     if (value == null || value == "") {
       return null;
     } else if (!EncString.isSerializedEncString(value)) {
       // Update to format encrypted with client key half
       const storageDetails = await this.getStorageDetails({
-        clientKeyHalfB64: null, // todo fix
+        clientKeyHalfB64: clientKeyHalfB64,
       });
 
       await biometrics.setBiometricSecret(
@@ -65,7 +69,7 @@ export default class OsBiometricsServiceWindows implements OsBiometricService {
       const encValue = new EncString(value);
       this.setIv(encValue.iv);
       const storageDetails = await this.getStorageDetails({
-        clientKeyHalfB64: null, // todo fix
+        clientKeyHalfB64: clientKeyHalfB64,
       });
       return SymmetricCryptoKey.fromString(
         await biometrics.getBiometricSecret(

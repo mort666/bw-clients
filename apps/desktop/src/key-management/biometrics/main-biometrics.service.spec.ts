@@ -3,7 +3,6 @@ import { mock, MockProxy } from "jest-mock-extended";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
-import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { EncryptionType } from "@bitwarden/common/platform/enums";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { UserId } from "@bitwarden/common/types/guid";
@@ -35,7 +34,6 @@ describe("MainBiometricsService", function () {
   const i18nService = mock<I18nService>();
   const windowMain = mock<WindowMain>();
   const logService = mock<LogService>();
-  const messagingService = mock<MessagingService>();
   const biometricStateService = mock<BiometricStateService>();
   const cryptoFunctionService = mock<MainCryptoFunctionService>();
   const encryptService = mock<EncryptService>();
@@ -45,7 +43,6 @@ describe("MainBiometricsService", function () {
       i18nService,
       windowMain,
       logService,
-      messagingService,
       process.platform,
       biometricStateService,
       encryptService,
@@ -65,7 +62,6 @@ describe("MainBiometricsService", function () {
         i18nService,
         windowMain,
         logService,
-        messagingService,
         "win32",
         biometricStateService,
         encryptService,
@@ -82,7 +78,6 @@ describe("MainBiometricsService", function () {
         i18nService,
         windowMain,
         logService,
-        messagingService,
         "darwin",
         biometricStateService,
         encryptService,
@@ -98,7 +93,6 @@ describe("MainBiometricsService", function () {
         i18nService,
         windowMain,
         logService,
-        messagingService,
         "linux",
         biometricStateService,
         encryptService,
@@ -120,7 +114,6 @@ describe("MainBiometricsService", function () {
         i18nService,
         windowMain,
         logService,
-        messagingService,
         process.platform,
         biometricStateService,
         encryptService,
@@ -209,7 +202,6 @@ describe("MainBiometricsService", function () {
         i18nService,
         windowMain,
         logService,
-        messagingService,
         process.platform,
         biometricStateService,
         encryptService,
@@ -230,7 +222,6 @@ describe("MainBiometricsService", function () {
         i18nService,
         windowMain,
         logService,
-        messagingService,
         process.platform,
         biometricStateService,
         encryptService,
@@ -254,7 +245,6 @@ describe("MainBiometricsService", function () {
         i18nService,
         windowMain,
         logService,
-        messagingService,
         process.platform,
         biometricStateService,
         encryptService,
@@ -306,7 +296,6 @@ describe("MainBiometricsService", function () {
         i18nService,
         windowMain,
         logService,
-        messagingService,
         process.platform,
         biometricStateService,
         encryptService,
@@ -344,7 +333,6 @@ describe("MainBiometricsService", function () {
         i18nService,
         windowMain,
         logService,
-        messagingService,
         process.platform,
         biometricStateService,
         encryptService,
@@ -372,7 +360,6 @@ describe("MainBiometricsService", function () {
         i18nService,
         windowMain,
         logService,
-        messagingService,
         process.platform,
         biometricStateService,
         encryptService,
@@ -403,7 +390,6 @@ describe("MainBiometricsService", function () {
         i18nService,
         windowMain,
         logService,
-        messagingService,
         process.platform,
         biometricStateService,
         encryptService,
