@@ -5,7 +5,6 @@ import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.servic
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { EncryptionType } from "@bitwarden/common/platform/enums";
-import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { UserId } from "@bitwarden/common/types/guid";
 import {
@@ -148,9 +147,9 @@ describe("MainBiometricsService", function () {
       ];
 
       for (const [supportsBiometric, needsSetup, canAutoSetup, expected] of testCases) {
-        innerService.osSupportsBiometric.mockResolvedValue(supportsBiometric as boolean);
-        innerService.osBiometricsNeedsSetup.mockResolvedValue(needsSetup as boolean);
-        innerService.osBiometricsCanAutoSetup.mockResolvedValue(canAutoSetup as boolean);
+        innerService.supportsBiometrics.mockResolvedValue(supportsBiometric as boolean);
+        innerService.needsSetup.mockResolvedValue(needsSetup as boolean);
+        innerService.canAutoSetup.mockResolvedValue(canAutoSetup as boolean);
 
         const actual = await sut.getBiometricsStatus();
         expect(actual).toBe(expected);
@@ -221,7 +220,7 @@ describe("MainBiometricsService", function () {
 
       await sut.setupBiometrics();
 
-      expect(osBiometricsService.osBiometricsSetup).toHaveBeenCalled();
+      expect(osBiometricsService.runSetup).toHaveBeenCalled();
     });
   });
 
@@ -282,7 +281,7 @@ describe("MainBiometricsService", function () {
     it("should return the biometric key if a valid key is returned", async () => {
       const userId = "test" as UserId;
       (sut as any).clientKeyHalves.set(userId, "testKeyHalf");
-      const biometricKey = Utils.fromBufferToB64(new Uint8Array(64));
+      const biometricKey = new SymmetricCryptoKey(new Uint8Array(64));
       osBiometricsService.getBiometricKey.mockResolvedValue(biometricKey);
 
       const userKey = await sut.unlockWithBiometricsForUser(userId);

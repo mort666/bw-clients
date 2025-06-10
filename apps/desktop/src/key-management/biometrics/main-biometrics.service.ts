@@ -2,8 +2,6 @@ import { CryptoFunctionService } from "@bitwarden/common/key-management/crypto/a
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
-import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
-import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { UserId } from "@bitwarden/common/types/guid";
 import { UserKey } from "@bitwarden/common/types/key";
@@ -16,15 +14,13 @@ import { OsBiometricService } from "./os-biometrics.service";
 
 export class MainBiometricsService extends DesktopBiometricsService {
   private osBiometricsService: OsBiometricService;
-  private clientKeyHalves = new Map<string, string | null>();
   private shouldAutoPrompt = true;
 
   constructor(
     private i18nService: I18nService,
     private windowMain: WindowMain,
     private logService: LogService,
-    private messagingService: MessagingService,
-    private platform: NodeJS.Platform,
+    platform: NodeJS.Platform,
     private biometricStateService: BiometricStateService,
     private encryptService: EncryptService,
     private cryptoFunctionService: CryptoFunctionService,
@@ -37,6 +33,9 @@ export class MainBiometricsService extends DesktopBiometricsService {
         this.i18nService,
         this.windowMain,
         this.logService,
+        this.biometricStateService,
+        this.encryptService,
+        this.cryptoFunctionService,
       );
     } else if (platform === "darwin") {
       // eslint-disable-next-line
@@ -45,7 +44,11 @@ export class MainBiometricsService extends DesktopBiometricsService {
     } else if (platform === "linux") {
       // eslint-disable-next-line
       const OsBiometricsServiceLinux = require("./os-biometrics-linux.service").default;
-      this.osBiometricsService = new OsBiometricsServiceLinux(this.i18nService, this.windowMain);
+      this.osBiometricsService = new OsBiometricsServiceLinux(
+        this.biometricStateService,
+        this.encryptService,
+        this.cryptoFunctionService,
+      );
     } else {
       throw new Error("Unsupported platform");
     }
@@ -60,11 +63,11 @@ export class MainBiometricsService extends DesktopBiometricsService {
    * @returns the status of the biometrics of the platform
    */
   async getBiometricsStatus(): Promise<BiometricsStatus> {
-    if (!(await this.osBiometricsService.osSupportsBiometric())) {
+    if (!(await this.osBiometricsService.supportsBiometrics())) {
       return BiometricsStatus.HardwareUnavailable;
     } else {
-      if (await this.osBiometricsService.osBiometricsNeedsSetup()) {
-        if (await this.osBiometricsService.osBiometricsCanAutoSetup()) {
+      if (await this.osBiometricsService.needsSetup()) {
+        if (await this.osBiometricsService.canAutoSetup()) {
           return BiometricsStatus.AutoSetupNeeded;
         } else {
           return BiometricsStatus.ManualSetupNeeded;
@@ -85,20 +88,12 @@ export class MainBiometricsService extends DesktopBiometricsService {
     if (!(await this.biometricStateService.getBiometricUnlockEnabled(userId))) {
       return BiometricsStatus.NotEnabledLocally;
     }
-
     const platformStatus = await this.getBiometricsStatus();
     if (!(platformStatus === BiometricsStatus.Available)) {
       return platformStatus;
     }
 
-    const requireClientKeyHalf = await this.biometricStateService.getRequirePasswordOnStart(userId);
-    const clientKeyHalfB64 = this.clientKeyHalves.get(userId);
-    const clientKeyHalfSatisfied = !requireClientKeyHalf || !!clientKeyHalfB64;
-    if (!clientKeyHalfSatisfied) {
-      return BiometricsStatus.UnlockNeeded;
-    }
-
-    return BiometricsStatus.Available;
+    return await this.osBiometricsService.getBiometricsFirstUnlockStatusForUser(userId);
   }
 
   async authenticateBiometric(): Promise<boolean> {
@@ -106,7 +101,7 @@ export class MainBiometricsService extends DesktopBiometricsService {
   }
 
   async setupBiometrics(): Promise<void> {
-    return await this.osBiometricsService.osBiometricsSetup();
+    return await this.osBiometricsService.runSetup();
   }
 
   async authenticateWithBiometrics(): Promise<boolean> {
@@ -114,51 +109,23 @@ export class MainBiometricsService extends DesktopBiometricsService {
   }
 
   async unlockWithBiometricsForUser(userId: UserId): Promise<UserKey | null> {
-    const biometricKey = await this.osBiometricsService.getBiometricKey(
-      "Bitwarden_biometric",
-      `${userId}_user_biometric`,
-      this.clientKeyHalves.get(userId) ?? undefined,
-    );
-    if (biometricKey == null) {
-      return null;
-    }
-
-    return SymmetricCryptoKey.fromString(biometricKey) as UserKey;
+    return (await this.osBiometricsService.getBiometricKey(userId)) as UserKey;
   }
 
   async setBiometricProtectedUnlockKeyForUser(
     userId: UserId,
     key: SymmetricCryptoKey,
   ): Promise<void> {
-    const service = "Bitwarden_biometric";
-    const storageKey = `${userId}_user_biometric`;
-    if (!this.clientKeyHalves.has(userId)) {
-      const clientKeyHalf = await this.getOrCreateBiometricEncryptionClientKeyHalf(key, userId);
-      if (clientKeyHalf == null) {
-        throw new Error("Client key half is required for biometric unlock but not set.");
-      } else {
-        this.clientKeyHalves.set(userId, Utils.fromBufferToB64(clientKeyHalf));
-      }
-    }
-
-    return await this.osBiometricsService.setBiometricKey(
-      service,
-      storageKey,
-      key.toBase64(),
-      this.clientKeyHalves.get(userId) ?? undefined,
-    );
+    return await this.osBiometricsService.setBiometricKey(userId, key);
   }
 
   async deleteBiometricUnlockKeyForUser(userId: UserId): Promise<void> {
-    return await this.osBiometricsService.deleteBiometricKey(
-      "Bitwarden_biometric",
-      `${userId}_user_biometric`,
-    );
+    return await this.osBiometricsService.deleteBiometricKey(userId);
   }
 
   /**
    * Set whether to auto-prompt the user for biometric unlock; this can be used to prevent auto-prompting being initiated by a process reload.
-   * Reasons for enabling auto prompt include: Starting the app, un-minimizing the app, manually account switching
+   * Reasons for enabling auto mpt include: Starting the app, un-minimizing the app, manually account switching
    * @param value Whether to auto-prompt the user for biometric unlock
    */
   async setShouldAutopromptNow(value: boolean): Promise<void> {
@@ -175,31 +142,5 @@ export class MainBiometricsService extends DesktopBiometricsService {
 
   async canEnableBiometricUnlock(): Promise<boolean> {
     return true;
-  }
-
-  private async getOrCreateBiometricEncryptionClientKeyHalf(
-    key: SymmetricCryptoKey,
-    userId: UserId,
-  ): Promise<Uint8Array | null> {
-    const requireClientKeyHalf = await this.biometricStateService.getRequirePasswordOnStart(userId);
-    if (!requireClientKeyHalf) {
-      return null;
-    }
-
-    // Retrieve existing key half if it exists
-    let clientKeyHalf: Uint8Array | null = null;
-    const encryptedClientKeyHalf =
-      await this.biometricStateService.getEncryptedClientKeyHalf(userId);
-    if (encryptedClientKeyHalf != null) {
-      clientKeyHalf = await this.encryptService.decryptBytes(encryptedClientKeyHalf, key);
-    }
-    if (clientKeyHalf == null) {
-      // Set a key half if it doesn't exist
-      const keyBytes = await this.cryptoFunctionService.randomBytes(32);
-      const encKey = await this.encryptService.encryptBytes(keyBytes, key);
-      await this.biometricStateService.setEncryptedClientKeyHalf(encKey, userId);
-    }
-
-    return clientKeyHalf;
   }
 }

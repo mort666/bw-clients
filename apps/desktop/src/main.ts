@@ -192,7 +192,6 @@ export class Main {
       this.i18nService,
       this.windowMain,
       this.logService,
-      this.messagingService,
       process.platform,
       biometricStateService,
       encryptService,
