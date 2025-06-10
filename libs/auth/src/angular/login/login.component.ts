@@ -58,7 +58,6 @@ export enum LoginUiState {
 }
 
 @Component({
-  standalone: true,
   templateUrl: "./login.component.html",
   imports: [
     AsyncActionsModule,

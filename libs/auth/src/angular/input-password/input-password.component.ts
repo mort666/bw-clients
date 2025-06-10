@@ -83,7 +83,6 @@ interface InputPasswordForm {
 }
 
 @Component({
-  standalone: true,
   selector: "auth-input-password",
   templateUrl: "./input-password.component.html",
   imports: [

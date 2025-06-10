@@ -35,7 +35,6 @@ import { ChangePasswordService } from "./change-password.service.abstraction";
  * end up at a change password without having one before.
  */
 @Component({
-  standalone: true,
   selector: "auth-change-password",
   templateUrl: "change-password.component.html",
   imports: [InputPasswordComponent, I18nPipe],
