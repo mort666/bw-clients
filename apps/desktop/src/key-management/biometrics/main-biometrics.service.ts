@@ -1,6 +1,9 @@
+import { CryptoFunctionService } from "@bitwarden/common/key-management/crypto/abstractions/crypto-function.service";
+import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { UserId } from "@bitwarden/common/types/guid";
 import { UserKey } from "@bitwarden/common/types/key";
@@ -23,6 +26,8 @@ export class MainBiometricsService extends DesktopBiometricsService {
     private messagingService: MessagingService,
     private platform: NodeJS.Platform,
     private biometricStateService: BiometricStateService,
+    private encryptService: EncryptService,
+    private cryptoFunctionService: CryptoFunctionService,
   ) {
     super();
     if (platform === "win32") {
@@ -104,10 +109,6 @@ export class MainBiometricsService extends DesktopBiometricsService {
     return await this.osBiometricsService.osBiometricsSetup();
   }
 
-  async setClientKeyHalfForUser(userId: UserId, value: string | null): Promise<void> {
-    this.clientKeyHalves.set(userId, value);
-  }
-
   async authenticateWithBiometrics(): Promise<boolean> {
     return await this.osBiometricsService.authenticateBiometric();
   }
@@ -125,17 +126,25 @@ export class MainBiometricsService extends DesktopBiometricsService {
     return SymmetricCryptoKey.fromString(biometricKey) as UserKey;
   }
 
-  async setBiometricProtectedUnlockKeyForUser(userId: UserId, value: string): Promise<void> {
+  async setBiometricProtectedUnlockKeyForUser(
+    userId: UserId,
+    key: SymmetricCryptoKey,
+  ): Promise<void> {
     const service = "Bitwarden_biometric";
     const storageKey = `${userId}_user_biometric`;
     if (!this.clientKeyHalves.has(userId)) {
-      throw new Error("No client key half provided for user");
+      const clientKeyHalf = await this.getOrCreateBiometricEncryptionClientKeyHalf(key, userId);
+      if (clientKeyHalf == null) {
+        throw new Error("Client key half is required for biometric unlock but not set.");
+      } else {
+        this.clientKeyHalves.set(userId, Utils.fromBufferToB64(clientKeyHalf));
+      }
     }
 
     return await this.osBiometricsService.setBiometricKey(
       service,
       storageKey,
-      value,
+      key.toBase64(),
       this.clientKeyHalves.get(userId) ?? undefined,
     );
   }
@@ -166,5 +175,31 @@ export class MainBiometricsService extends DesktopBiometricsService {
 
   async canEnableBiometricUnlock(): Promise<boolean> {
     return true;
+  }
+
+  private async getOrCreateBiometricEncryptionClientKeyHalf(
+    key: SymmetricCryptoKey,
+    userId: UserId,
+  ): Promise<Uint8Array | null> {
+    const requireClientKeyHalf = await this.biometricStateService.getRequirePasswordOnStart(userId);
+    if (!requireClientKeyHalf) {
+      return null;
+    }
+
+    // Retrieve existing key half if it exists
+    let clientKeyHalf: Uint8Array | null = null;
+    const encryptedClientKeyHalf =
+      await this.biometricStateService.getEncryptedClientKeyHalf(userId);
+    if (encryptedClientKeyHalf != null) {
+      clientKeyHalf = await this.encryptService.decryptBytes(encryptedClientKeyHalf, key);
+    }
+    if (clientKeyHalf == null) {
+      // Set a key half if it doesn't exist
+      const keyBytes = await this.cryptoFunctionService.randomBytes(32);
+      const encKey = await this.encryptService.encryptBytes(keyBytes, key);
+      await this.biometricStateService.setEncryptedClientKeyHalf(encKey, userId);
+    }
+
+    return clientKeyHalf;
   }
 }
