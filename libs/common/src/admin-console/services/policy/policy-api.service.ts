@@ -1,5 +1,7 @@
 import { firstValueFrom, map, switchMap } from "rxjs";
 
+import { MasterPasswordPolicyResponse } from "@bitwarden/common/auth/models/response/master-password-policy.response";
+
 import { ApiService } from "../../../abstractions/api.service";
 import { AccountService } from "../../../auth/abstractions/account.service";
 import { getUserId } from "../../../auth/services/account.service";
@@ -43,6 +45,11 @@ export class PolicyApiService implements PolicyApiServiceAbstraction {
       true,
     );
     return new ListResponse(r, PolicyResponse);
+  }
+
+  async getMasterPasswordPoliciesForAcceptedOrConfirmedUser(): Promise<MasterPasswordPolicyResponse> {
+    const r = await this.apiService.send("GET", "/policies/master-password", null, true, true);
+    return new MasterPasswordPolicyResponse(r);
   }
 
   async getPoliciesByToken(
@@ -100,7 +107,7 @@ export class PolicyApiService implements PolicyApiServiceAbstraction {
         this.accountService.activeAccount$.pipe(
           getUserId,
           switchMap((userId) =>
-            this.policyService.masterPasswordPolicyOptions$(userId, [masterPasswordPolicy]),
+            this.policyService.masterPasswordPolicyOptionsFromSync$(userId, [masterPasswordPolicy]),
           ),
           map((policy) => policy ?? null),
         ),

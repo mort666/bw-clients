@@ -91,7 +91,9 @@ export class EmergencyAccessTakeoverComponent
     this.accountService.activeAccount$
       .pipe(
         getUserId,
-        switchMap((userId) => this.policyService.masterPasswordPolicyOptions$(userId, policies)),
+        switchMap((userId) =>
+          this.policyService.masterPasswordPolicyOptionsFromSync$(userId, policies),
+        ),
         takeUntil(this.destroy$),
       )
       .subscribe((enforcedPolicyOptions) => (this.enforcedPolicyOptions = enforcedPolicyOptions));

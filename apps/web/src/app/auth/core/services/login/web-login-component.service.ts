@@ -110,7 +110,7 @@ export class WebLoginComponentService
           this.accountService.activeAccount$.pipe(
             getUserId,
             switchMap((userId) =>
-              this.policyService.masterPasswordPolicyOptions$(userId, policies),
+              this.policyService.masterPasswordPolicyOptionsFromSync$(userId, policies),
             ),
           ),
         );

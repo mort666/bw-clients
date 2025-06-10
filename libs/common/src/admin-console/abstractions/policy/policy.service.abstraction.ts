@@ -45,7 +45,7 @@ export abstract class PolicyService {
    * @returns a set of options which represent the minimum Master Password settings that the user must
    * comply with in order to comply with **all** applicable Master Password policies.
    */
-  abstract masterPasswordPolicyOptions$: (
+  abstract masterPasswordPolicyOptionsFromSync$: (
     userId: UserId,
     policies?: Policy[],
   ) => Observable<MasterPasswordPolicyOptions | undefined>;

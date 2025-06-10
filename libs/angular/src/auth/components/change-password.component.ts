@@ -56,7 +56,7 @@ export class ChangePasswordComponent implements OnInit, OnDestroy {
     this.accountService.activeAccount$
       .pipe(
         getUserId,
-        switchMap((userId) => this.policyService.masterPasswordPolicyOptions$(userId)),
+        switchMap((userId) => this.policyService.masterPasswordPolicyOptionsFromSync$(userId)),
         takeUntil(this.destroy$),
       )
       .subscribe(

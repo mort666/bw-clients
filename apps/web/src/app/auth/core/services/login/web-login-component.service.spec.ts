@@ -134,7 +134,7 @@ describe("WebLoginComponentService", () => {
           resetPasswordPolicyEnabled,
         ]);
 
-        internalPolicyService.masterPasswordPolicyOptions$.mockReturnValue(
+        internalPolicyService.masterPasswordPolicyOptionsFromSync$.mockReturnValue(
           of(masterPasswordPolicyOptions),
         );
 
