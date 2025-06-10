@@ -1,6 +1,6 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { NgIf } from "@angular/common";
+import { NgIf, NgClass } from "@angular/common";
 import { Component, ElementRef, Input, ViewChild } from "@angular/core";
 import {
   ControlValueAccessor,
@@ -32,7 +32,7 @@ let nextId = 0;
     },
   ],
   standalone: true,
-  imports: [InputModule, ReactiveFormsModule, FormsModule, I18nPipe, NgIf],
+  imports: [InputModule, ReactiveFormsModule, FormsModule, I18nPipe, NgIf, NgClass],
 })
 export class SearchComponent implements ControlValueAccessor, FocusableElement {
   private notifyOnChange: (v: string) => void;

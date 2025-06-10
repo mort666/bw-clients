@@ -1,6 +1,6 @@
-<label class="tw-sr-only" [for]="id">{{ "search" | i18n }}</label>
 <div class="tw-relative tw-flex tw-items-center">
-  <form class="tw-relative tw-flex tw-items-center tw-w-full">
+  <form role="search" class="tw-relative tw-flex tw-items-center tw-w-full">
+    <label class="tw-sr-only" [for]="id">{{ "search" | i18n }}</label>
     <label
       [for]="id"
       aria-hidden="true"
@@ -29,10 +29,14 @@
       *ngIf="searchText"
       (mouseenter)="resetHovered = true"
       (mouseleave)="resetHovered = false"
-      [class.opacity-0]="!isInputFocused && !isInputHovered && !resetHovered"
-      [class.tw-bg-text-muted]="isInputFocused || isInputHovered || resetHovered"
+      [ngClass]="{
+        'tw-opacity-0': !isInputFocused && !isInputHovered && !resetHovered,
+        'tw-bg-text-muted': isInputFocused || isInputHovered || resetHovered,
+      }"
       class="bw-reset-btn tw-size-6 tw-absolute hover:tw-bg-text-main tw-right-2 tw-z-20 !tw-mb-0 tw-cursor-pointer"
       type="reset"
+      [attr.aria-label]="searchText ? ('Reset search' | i18n) : ('' | i18n)"
+      [attr.aria-hidden]="!searchText"
       (click)="clearSearch()"
     ></button>
   </form>
