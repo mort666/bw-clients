@@ -1,7 +1,7 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
 import { NgIf, NgClass } from "@angular/common";
-import { Component, ElementRef, Input, ViewChild } from "@angular/core";
+import { Component, ElementRef, Input, ViewChild, signal, computed } from "@angular/core";
 import {
   ControlValueAccessor,
   NG_VALUE_ACCESSOR,
@@ -44,10 +44,11 @@ export class SearchComponent implements ControlValueAccessor, FocusableElement {
   protected searchText: string;
   // Use `type="text"` for Safari to improve rendering performance
   protected inputType = isBrowserSafariApi() ? ("text" as const) : ("search" as const);
-  // Optional: Track focus and hover state of the input to emulate the hiding/showing of the native reset button
-  protected isInputFocused = false;
-  protected isInputHovered = false;
-  protected resetHovered = false;
+
+  protected isInputFocused = signal(false);
+  protected isFormHovered = signal(false);
+
+  protected showResetButton = computed(() => this.isInputFocused() || this.isFormHovered());
 
   @Input() disabled: boolean;
   @Input() placeholder: string;
