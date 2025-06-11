@@ -125,7 +125,7 @@ export class MainBiometricsService extends DesktopBiometricsService {
 
   /**
    * Set whether to auto-prompt the user for biometric unlock; this can be used to prevent auto-prompting being initiated by a process reload.
-   * Reasons for enabling auto mpt include: Starting the app, un-minimizing the app, manually account switching
+   * Reasons for enabling auto-prompt include: Starting the app, un-minimizing the app, manually account switching
    * @param value Whether to auto-prompt the user for biometric unlock
    */
   async setShouldAutopromptNow(value: boolean): Promise<void> {

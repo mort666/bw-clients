@@ -49,9 +49,8 @@ export default class OsBiometricsServiceLinux implements OsBiometricService {
   }
 
   async authenticateBiometric(): Promise<boolean> {
-    //const hwnd = Buffer.from("");
-    //return await biometrics.prompt(hwnd, "");
-    return true;
+    const hwnd = Buffer.from("");
+    return await biometrics.prompt(hwnd, "");
   }
 
   async supportsBiometrics(): Promise<boolean> {
@@ -67,8 +66,7 @@ export default class OsBiometricsServiceLinux implements OsBiometricService {
     }
 
     // check whether the polkit policy is loaded via dbus call to polkit
-    //return !(await biometrics.available());
-    return false;
+    return !(await biometrics.available());
   }
 
   async canAutoSetup(): Promise<boolean> {
