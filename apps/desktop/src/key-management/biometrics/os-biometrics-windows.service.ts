@@ -274,7 +274,7 @@ export default class OsBiometricsServiceWindows implements OsBiometricService {
 
   async runSetup(): Promise<void> {}
 
-  private async getOrCreateBiometricEncryptionClientKeyHalf(
+  async getOrCreateBiometricEncryptionClientKeyHalf(
     userId: UserId,
     key: SymmetricCryptoKey,
   ): Promise<Uint8Array | null> {
@@ -308,11 +308,14 @@ export default class OsBiometricsServiceWindows implements OsBiometricService {
 
   async getBiometricsFirstUnlockStatusForUser(userId: UserId): Promise<BiometricsStatus> {
     const requireClientKeyHalf = await this.biometricStateService.getRequirePasswordOnStart(userId);
-    const clientKeyHalfB64 = this.clientKeyHalves.get(userId);
-    const clientKeyHalfSatisfied = !requireClientKeyHalf || !!clientKeyHalfB64;
-    if (!clientKeyHalfSatisfied) {
+    if (!requireClientKeyHalf) {
+      return BiometricsStatus.Available;
+    }
+
+    if (this.clientKeyHalves.has(userId)) {
+      return BiometricsStatus.Available;
+    } else {
       return BiometricsStatus.UnlockNeeded;
     }
-    return BiometricsStatus.Available;
   }
 }
