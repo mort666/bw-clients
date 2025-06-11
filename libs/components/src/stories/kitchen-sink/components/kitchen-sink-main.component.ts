@@ -9,7 +9,6 @@ import { KitchenSinkTable } from "./kitchen-sink-table.component";
 import { KitchenSinkToggleList } from "./kitchen-sink-toggle-list.component";
 
 @Component({
-  standalone: true,
   imports: [KitchenSinkSharedModule],
   template: `
     <bit-dialog title="Dialog Title" dialogSize="large">
@@ -26,7 +25,6 @@ class KitchenSinkDialog {
 }
 
 @Component({
-  standalone: true,
   selector: "bit-tab-main",
   imports: [KitchenSinkSharedModule, KitchenSinkTable, KitchenSinkToggleList, KitchenSinkForm],
   template: `
@@ -55,12 +53,6 @@ class KitchenSinkDialog {
         run, we'll be able to spot-check visual changes in a more app-like environment than just the
         isolated stories. The stories for the Kitchen Sink exist to be tested by the Chromatic UI
         tests.
-      </p>
-
-      <p bitTypography="body1">
-        NOTE: These stories will treat "Light & Dark" mode as "Light" mode. This is done to avoid a
-        bug with the way that we render the same component twice in the same iframe and how that
-        interacts with the <code>router-outlet</code>.
       </p>
     </bit-callout>
 
@@ -178,7 +170,7 @@ export class KitchenSinkMainComponent {
   }
 
   navItems = [
-    { icon: "bwi-collection", name: "Password Managers", route: "/" },
-    { icon: "bwi-collection", name: "Favorites", route: "/" },
+    { icon: "bwi-collection-shared", name: "Password Managers", route: "/" },
+    { icon: "bwi-collection-shared", name: "Favorites", route: "/" },
   ];
 }

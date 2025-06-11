@@ -16,7 +16,6 @@ import { DialogTitleContainerDirective } from "../directives/dialog-title-contai
   selector: "bit-dialog",
   templateUrl: "./dialog.component.html",
   animations: [fadeIn],
-  standalone: true,
   imports: [
     CommonModule,
     DialogTitleContainerDirective,
@@ -63,7 +62,8 @@ export class DialogComponent {
   @Input() loading = false;
 
   @HostBinding("class") get classes() {
-    return ["tw-flex", "tw-flex-col", "tw-max-h-screen", "tw-w-screen", "tw-p-4"].concat(
+    // `tw-max-h-[90vh]` is needed to prevent dialogs from overlapping the desktop header
+    return ["tw-flex", "tw-flex-col", "tw-w-screen", "tw-p-4", "tw-max-h-[90vh]"].concat(
       this.width,
     );
   }

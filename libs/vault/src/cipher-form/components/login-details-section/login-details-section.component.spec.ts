@@ -23,7 +23,6 @@ import { AutofillOptionsComponent } from "../autofill-options/autofill-options.c
 import { LoginDetailsSectionComponent } from "./login-details-section.component";
 
 @Component({
-  standalone: true,
   selector: "vault-autofill-options",
   template: "",
 })
@@ -46,7 +45,10 @@ describe("LoginDetailsSectionComponent", () => {
 
   beforeEach(async () => {
     getInitialCipherView.mockClear();
-    cipherFormContainer = mock<CipherFormContainer>({ getInitialCipherView });
+    cipherFormContainer = mock<CipherFormContainer>({
+      getInitialCipherView,
+      website: "example.com",
+    });
 
     generationService = mock<CipherFormGenerationService>();
     auditService = mock<AuditService>();

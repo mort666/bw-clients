@@ -4,8 +4,8 @@ import { Injectable } from "@angular/core";
 import { Subject } from "rxjs";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
+import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { ListResponse } from "@bitwarden/common/models/response/list.response";
-import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { KeyService } from "@bitwarden/key-management";
@@ -130,7 +130,10 @@ export class ServiceAccountService {
     serviceAccountView: ServiceAccountView,
   ) {
     const request = new ServiceAccountRequest();
-    request.name = await this.encryptService.encrypt(serviceAccountView.name, organizationKey);
+    request.name = await this.encryptService.encryptString(
+      serviceAccountView.name,
+      organizationKey,
+    );
     return request;
   }
 
@@ -144,7 +147,7 @@ export class ServiceAccountService {
     serviceAccountView.creationDate = serviceAccountResponse.creationDate;
     serviceAccountView.revisionDate = serviceAccountResponse.revisionDate;
     serviceAccountView.name = serviceAccountResponse.name
-      ? await this.encryptService.decryptToUtf8(
+      ? await this.encryptService.decryptString(
           new EncString(serviceAccountResponse.name),
           organizationKey,
         )
@@ -163,7 +166,7 @@ export class ServiceAccountService {
     view.revisionDate = response.revisionDate;
     view.accessToSecrets = response.accessToSecrets;
     view.name = response.name
-      ? await this.encryptService.decryptToUtf8(new EncString(response.name), organizationKey)
+      ? await this.encryptService.decryptString(new EncString(response.name), organizationKey)
       : null;
     return view;
   }

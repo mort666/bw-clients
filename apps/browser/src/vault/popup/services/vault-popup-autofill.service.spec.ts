@@ -67,6 +67,7 @@ describe("VaultPopupAutofillService", () => {
       .mockReturnValue(true);
 
     mockAutofillService.collectPageDetailsFromTab$.mockReturnValue(new BehaviorSubject([]));
+    mockDomainSettingsService.blockedInteractionsUris$ = new BehaviorSubject({});
 
     testBed = TestBed.configureTestingModule({
       providers: [
@@ -352,7 +353,7 @@ describe("VaultPopupAutofillService", () => {
       });
 
       it("should add a URI to the cipher and save with the server", async () => {
-        const mockEncryptedCipher = {} as Cipher;
+        const mockEncryptedCipher = { cipher: {} as Cipher, encryptedFor: mockUserId };
         mockCipherService.encrypt.mockResolvedValue(mockEncryptedCipher);
         const result = await service.doAutofillAndSave(mockCipher);
         expect(result).toBe(true);

@@ -1,12 +1,22 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { signal } from "@angular/core";
+import { importProvidersFrom, signal } from "@angular/core";
+import { ActivatedRoute } from "@angular/router";
 import { action } from "@storybook/addon-actions";
-import { componentWrapperDecorator, Meta, moduleMetadata, StoryObj } from "@storybook/angular";
+import {
+  applicationConfig,
+  componentWrapperDecorator,
+  Meta,
+  moduleMetadata,
+  StoryObj,
+} from "@storybook/angular";
 import { BehaviorSubject } from "rxjs";
 
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
 import { CollectionView } from "@bitwarden/admin-console/common";
-import { ViewCacheService } from "@bitwarden/angular/platform/abstractions/view-cache.service";
+import { ViewCacheService } from "@bitwarden/angular/platform/view-cache";
+import { NudgeStatus, NudgesService } from "@bitwarden/angular/vault";
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
 import { EventCollectionService } from "@bitwarden/common/abstractions/event/event-collection.service";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
@@ -16,24 +26,31 @@ import { DomainSettingsService } from "@bitwarden/common/autofill/services/domai
 import { ClientType } from "@bitwarden/common/enums";
 import { UriMatchStrategy } from "@bitwarden/common/models/domain/domain-service";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
-import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
+import { SshKeyData } from "@bitwarden/common/vault/models/data/ssh-key.data";
 import { Cipher } from "@bitwarden/common/vault/models/domain/cipher";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
 import { LoginView } from "@bitwarden/common/vault/models/view/login.view";
-import { AsyncActionsModule, ButtonModule, ToastService } from "@bitwarden/components";
+import { AsyncActionsModule, ButtonModule, ItemModule, ToastService } from "@bitwarden/components";
 import {
   CipherFormConfig,
   CipherFormGenerationService,
   PasswordRepromptService,
 } from "@bitwarden/vault";
+// FIXME: remove `/apps` import from `/libs`
+// FIXME: remove `src` and fix import
+// eslint-disable-next-line no-restricted-imports
+import { PreloadedEnglishI18nModule } from "@bitwarden/web-vault/src/app/core/tests";
+
+import { SshImportPromptService } from "../services/ssh-import-prompt.service";
 
 import { CipherFormService } from "./abstractions/cipher-form.service";
 import { TotpCaptureService } from "./abstractions/totp-capture.service";
 import { CipherFormModule } from "./cipher-form.module";
 import { CipherFormComponent } from "./components/cipher-form.component";
+import { NewItemNudgeComponent } from "./components/new-item-nudge/new-item-nudge.component";
 import { CipherFormCacheService } from "./services/default-cipher-form-cache.service";
 
 const defaultConfig: CipherFormConfig = {
@@ -119,8 +136,23 @@ export default {
   component: CipherFormComponent,
   decorators: [
     moduleMetadata({
-      imports: [CipherFormModule, AsyncActionsModule, ButtonModule],
+      imports: [
+        CipherFormModule,
+        AsyncActionsModule,
+        ButtonModule,
+        ItemModule,
+        NewItemNudgeComponent,
+      ],
       providers: [
+        {
+          provide: NudgesService,
+          useValue: {
+            showNudge$: new BehaviorSubject({
+              hasBadgeDismissed: true,
+              hasSpotlightDismissed: true,
+            } as NudgeStatus),
+          },
+        },
         {
           provide: CipherFormService,
           useClass: TestAddEditFormService,
@@ -135,6 +167,12 @@ export default {
           provide: PasswordRepromptService,
           useValue: {
             enabled$: new BehaviorSubject(true),
+          },
+        },
+        {
+          provide: SshImportPromptService,
+          useValue: {
+            importSshKeyFromClipboard: () => Promise.resolve(new SshKeyData()),
           },
         },
         {
@@ -207,12 +245,22 @@ export default {
             getFeatureFlag: () => Promise.resolve(false),
           },
         },
-        { provide: I18nService, useValue: { t: (...keys: string[]) => keys.join(" ") } },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              queryParams: {},
+            },
+          },
+        },
       ],
     }),
     componentWrapperDecorator(
       (story) => `<div class="tw-bg-background-alt tw-text-main tw-border">${story}</div>`,
     ),
+    applicationConfig({
+      providers: [importProvidersFrom(PreloadedEnglishI18nModule)],
+    }),
   ],
   args: {
     config: defaultConfig,
@@ -226,7 +274,7 @@ export default {
 
 type Story = StoryObj<CipherFormComponent>;
 
-export const Default: Story = {
+export const Add: Story = {
   render: (args) => {
     return {
       props: {
@@ -234,15 +282,28 @@ export const Default: Story = {
         ...args,
       },
       template: /*html*/ `
-        <vault-cipher-form [config]="config" (cipherSaved)="onSave($event)" formId="test-form" [submitBtn]="submitBtn"></vault-cipher-form>
-        <button type="submit" form="test-form" bitButton buttonType="primary" #submitBtn>Submit</button>
+        <vault-cipher-form [config]="config" (cipherSaved)="onSave($event)" formId="test-form"></vault-cipher-form>
       `,
     };
   },
 };
 
 export const Edit: Story = {
-  ...Default,
+  render: (args) => {
+    return {
+      props: {
+        onSave: actionsData.onSave,
+        ...args,
+      },
+      template: /*html*/ `
+        <vault-cipher-form [config]="config" (cipherSaved)="onSave($event)" formId="test-form" [submitBtn]="submitBtn">
+          <bit-item slot="attachment-button">
+            <button bit-item-content type="button">Attachments</button>
+          </bit-item>
+        </vault-cipher-form>
+      `,
+    };
+  },
   args: {
     config: {
       ...defaultConfig,
@@ -253,7 +314,7 @@ export const Edit: Story = {
 };
 
 export const PartialEdit: Story = {
-  ...Default,
+  ...Add,
   args: {
     config: {
       ...defaultConfig,
@@ -264,7 +325,7 @@ export const PartialEdit: Story = {
 };
 
 export const Clone: Story = {
-  ...Default,
+  ...Add,
   args: {
     config: {
       ...defaultConfig,
@@ -274,8 +335,27 @@ export const Clone: Story = {
   },
 };
 
+export const WithSubmitButton: Story = {
+  render: (args) => {
+    return {
+      props: {
+        onSave: actionsData.onSave,
+        ...args,
+      },
+      template: /*html*/ `
+      <div class="tw-p-4">
+        <vault-cipher-form [config]="config" (cipherSaved)="onSave($event)" formId="test-form" [submitBtn]="submitBtn"></vault-cipher-form>
+      </div>
+      <div class="tw-p-4">
+        <button type="submit" form="test-form" bitButton buttonType="primary" #submitBtn>Submit</button>
+      </div>
+      `,
+    };
+  },
+};
+
 export const NoPersonalOwnership: Story = {
-  ...Default,
+  ...Add,
   args: {
     config: {
       ...defaultConfig,

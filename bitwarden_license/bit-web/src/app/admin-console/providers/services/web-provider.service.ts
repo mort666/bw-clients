@@ -11,7 +11,7 @@ import { ProviderAddOrganizationRequest } from "@bitwarden/common/admin-console/
 import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions/billing-api.service.abstraction";
 import { PlanType } from "@bitwarden/common/billing/enums";
 import { CreateClientOrganizationRequest } from "@bitwarden/common/billing/models/request/create-client-organization.request";
-import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
+import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { StateProvider } from "@bitwarden/common/platform/state";
 import { OrganizationId } from "@bitwarden/common/types/guid";
@@ -36,7 +36,7 @@ export class WebProviderService {
     const orgKey = await this.keyService.getOrgKey(organizationId);
     const providerKey = await this.keyService.getProviderKey(providerId);
 
-    const encryptedOrgKey = await this.encryptService.encrypt(orgKey.key, providerKey);
+    const encryptedOrgKey = await this.encryptService.wrapSymmetricKey(orgKey, providerKey);
 
     const request = new ProviderAddOrganizationRequest();
     request.organizationId = organizationId;
@@ -55,7 +55,7 @@ export class WebProviderService {
       ),
     );
     const providerKey = await this.keyService.getProviderKey(providerId);
-    const encryptedOrgKey = await this.encryptService.encrypt(orgKey.key, providerKey);
+    const encryptedOrgKey = await this.encryptService.wrapSymmetricKey(orgKey, providerKey);
     await this.providerApiService.addOrganizationToProvider(providerId, {
       key: encryptedOrgKey.encryptedString,
       organizationId,
@@ -74,15 +74,15 @@ export class WebProviderService {
 
     const [publicKey, encryptedPrivateKey] = await this.keyService.makeKeyPair(organizationKey);
 
-    const encryptedCollectionName = await this.encryptService.encrypt(
+    const encryptedCollectionName = await this.encryptService.encryptString(
       this.i18nService.t("defaultCollection"),
       organizationKey,
     );
 
     const providerKey = await this.keyService.getProviderKey(providerId);
 
-    const encryptedProviderKey = await this.encryptService.encrypt(
-      organizationKey.key,
+    const encryptedProviderKey = await this.encryptService.wrapSymmetricKey(
+      organizationKey,
       providerKey,
     );
 

@@ -27,6 +27,14 @@ export class DesktopLockComponentService implements LockComponentService {
     return null;
   }
 
+  popOutBrowserExtension(): Promise<void> {
+    throw new Error("Method not supported on this platform.");
+  }
+
+  closeBrowserExtensionPopout(): void {
+    throw new Error("Method not supported on this platform.");
+  }
+
   async isWindowVisible(): Promise<boolean> {
     return ipc.platform.isWindowVisible();
   }
@@ -54,7 +62,7 @@ export class DesktopLockComponentService implements LockComponentService {
       map(([biometricsStatus, userDecryptionOptions, pinDecryptionAvailable]) => {
         const unlockOpts: UnlockOptions = {
           masterPassword: {
-            enabled: userDecryptionOptions.hasMasterPassword,
+            enabled: userDecryptionOptions?.hasMasterPassword,
           },
           pin: {
             enabled: pinDecryptionAvailable,

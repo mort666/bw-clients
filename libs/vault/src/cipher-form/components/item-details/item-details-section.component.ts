@@ -6,19 +6,21 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angular/forms";
 import { concatMap, map } from "rxjs";
 
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
 import { CollectionView } from "@bitwarden/admin-console/common";
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { OrganizationUserType } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { CollectionId, OrganizationId } from "@bitwarden/common/types/guid";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
   CardComponent,
   FormFieldModule,
   IconButtonModule,
-  SectionComponent,
   SectionHeaderComponent,
   SelectItemView,
   SelectModule,
@@ -34,10 +36,8 @@ import { CipherFormContainer } from "../../cipher-form-container";
 @Component({
   selector: "vault-item-details-section",
   templateUrl: "./item-details-section.component.html",
-  standalone: true,
   imports: [
     CardComponent,
-    SectionComponent,
     TypographyModule,
     FormFieldModule,
     ReactiveFormsModule,
@@ -74,6 +74,8 @@ export class ItemDetailsSectionComponent implements OnInit {
   /** The email address associated with the active account */
   protected userEmail$ = this.accountService.activeAccount$.pipe(map((account) => account.email));
 
+  protected organizations: Organization[] = [];
+
   @Input({ required: true })
   config: CipherFormConfig;
 
@@ -88,10 +90,6 @@ export class ItemDetailsSectionComponent implements OnInit {
    */
   get partialEdit(): boolean {
     return this.config.mode === "partial-edit";
-  }
-
-  get organizations(): Organization[] {
-    return this.config.organizations;
   }
 
   get allowPersonalOwnership() {
@@ -158,7 +156,7 @@ export class ItemDetailsSectionComponent implements OnInit {
 
   get allowOwnershipChange() {
     // Do not allow ownership change in edit mode and the cipher is owned by an organization
-    if (this.config.mode === "edit" && this.originalCipherView.organizationId != null) {
+    if (this.config.mode === "edit" && this.originalCipherView?.organizationId != null) {
       return false;
     }
 
@@ -186,6 +184,10 @@ export class ItemDetailsSectionComponent implements OnInit {
   }
 
   async ngOnInit() {
+    this.organizations = this.config.organizations.sort(
+      Utils.getSortFunction(this.i18nService, "name"),
+    );
+
     if (!this.allowPersonalOwnership && this.organizations.length === 0) {
       throw new Error("No organizations available for ownership.");
     }
@@ -275,9 +277,9 @@ export class ItemDetailsSectionComponent implements OnInit {
         // Disable Collections Options if Owner/Admin does not have Edit/Manage permissions on item
         // Disable Collections Options if Custom user does not have Edit/Manage permissions on item
         if (
-          (organization.allowAdminAccessToAllCollectionItems &&
+          (organization?.allowAdminAccessToAllCollectionItems &&
             (!this.originalCipherView.viewPassword || !this.originalCipherView.edit)) ||
-          (organization.type === OrganizationUserType.Custom &&
+          (organization?.type === OrganizationUserType.Custom &&
             !this.originalCipherView.viewPassword)
         ) {
           this.itemDetailsForm.controls.collectionIds.disable();

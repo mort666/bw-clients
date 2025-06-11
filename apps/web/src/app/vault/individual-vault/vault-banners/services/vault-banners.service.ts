@@ -3,6 +3,7 @@ import { Observable, combineLatest, firstValueFrom, map, filter, mergeMap, take 
 
 import { UserDecryptionOptionsServiceAbstraction } from "@bitwarden/auth/common";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { DevicesServiceAbstraction } from "@bitwarden/common/auth/abstractions/devices/devices.service.abstraction";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import {
@@ -14,14 +15,18 @@ import {
 } from "@bitwarden/common/platform/state";
 import { UserId } from "@bitwarden/common/types/guid";
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
+import { UnionOfValues } from "@bitwarden/common/vault/types/union-of-values";
 import { PBKDF2KdfConfig, KdfConfigService, KdfType } from "@bitwarden/key-management";
 
-export enum VisibleVaultBanner {
-  KDFSettings = "kdf-settings",
-  OutdatedBrowser = "outdated-browser",
-  Premium = "premium",
-  VerifyEmail = "verify-email",
-}
+export const VisibleVaultBanner = {
+  KDFSettings: "kdf-settings",
+  OutdatedBrowser: "outdated-browser",
+  Premium: "premium",
+  VerifyEmail: "verify-email",
+  PendingAuthRequest: "pending-auth-request",
+} as const;
+
+export type VisibleVaultBanner = UnionOfValues<typeof VisibleVaultBanner>;
 
 type PremiumBannerReprompt = {
   numberOfDismissals: number;
@@ -30,7 +35,7 @@ type PremiumBannerReprompt = {
 };
 
 /** Banners that will be re-shown on a new session */
-type SessionBanners = Omit<VisibleVaultBanner, VisibleVaultBanner.Premium>;
+type SessionBanners = Omit<VisibleVaultBanner, typeof VisibleVaultBanner.Premium>;
 
 export const PREMIUM_BANNER_REPROMPT_KEY = new UserKeyDefinition<PremiumBannerReprompt>(
   PREMIUM_BANNER_DISK_LOCAL,
@@ -60,7 +65,22 @@ export class VaultBannersService {
     private kdfConfigService: KdfConfigService,
     private syncService: SyncService,
     private userDecryptionOptionsService: UserDecryptionOptionsServiceAbstraction,
+    private devicesService: DevicesServiceAbstraction,
   ) {}
+
+  /** Returns true when the pending auth request banner should be shown */
+  async shouldShowPendingAuthRequestBanner(userId: UserId): Promise<boolean> {
+    const devices = await firstValueFrom(this.devicesService.getDevices$());
+    const hasPendingRequest = devices.some(
+      (device) => device.response?.devicePendingAuthRequest != null,
+    );
+
+    const alreadyDismissed = (await this.getBannerDismissedState(userId)).includes(
+      VisibleVaultBanner.PendingAuthRequest,
+    );
+
+    return hasPendingRequest && !alreadyDismissed;
+  }
 
   shouldShowPremiumBanner$(userId: UserId): Observable<boolean> {
     const premiumBannerState = this.premiumBannerState(userId);

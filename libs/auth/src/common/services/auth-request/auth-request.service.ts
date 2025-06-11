@@ -5,13 +5,13 @@ import { Jsonify } from "type-fest";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
-import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/auth/abstractions/master-password.service.abstraction";
 import { AdminAuthRequestStorable } from "@bitwarden/common/auth/models/domain/admin-auth-req-storable";
 import { PasswordlessAuthRequest } from "@bitwarden/common/auth/models/request/passwordless-auth.request";
 import { AuthRequestResponse } from "@bitwarden/common/auth/models/response/auth-request.response";
+import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
+import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
 import { AuthRequestPushNotification } from "@bitwarden/common/models/response/notification.response";
 import { AppIdService } from "@bitwarden/common/platform/abstractions/app-id.service";
-import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
@@ -43,6 +43,10 @@ export class AuthRequestService implements AuthRequestServiceAbstraction {
   private authRequestPushNotificationSubject = new Subject<string>();
   authRequestPushNotification$: Observable<string>;
 
+  // Observable emission is used to trigger a toast in consuming components
+  private adminLoginApprovedSubject = new Subject<void>();
+  adminLoginApproved$: Observable<void>;
+
   constructor(
     private appIdService: AppIdService,
     private accountService: AccountService,
@@ -53,6 +57,7 @@ export class AuthRequestService implements AuthRequestServiceAbstraction {
     private stateProvider: StateProvider,
   ) {
     this.authRequestPushNotification$ = this.authRequestPushNotificationSubject.asObservable();
+    this.adminLoginApproved$ = this.adminLoginApprovedSubject.asObservable();
   }
 
   async getAdminAuthRequest(userId: UserId): Promise<AdminAuthRequestStorable | null> {
@@ -98,30 +103,12 @@ export class AuthRequestService implements AuthRequestServiceAbstraction {
     }
     const pubKey = Utils.fromB64ToArray(authRequest.publicKey);
 
-    const userId = (await firstValueFrom(this.accountService.activeAccount$)).id;
-    const masterKey = await firstValueFrom(this.masterPasswordService.masterKey$(userId));
-    const masterKeyHash = await firstValueFrom(this.masterPasswordService.masterKeyHash$(userId));
-    let encryptedMasterKeyHash;
-    let keyToEncrypt;
-
-    if (masterKey && masterKeyHash) {
-      // Only encrypt the master password hash if masterKey exists as
-      // we won't have a masterKeyHash without a masterKey
-      encryptedMasterKeyHash = await this.encryptService.rsaEncrypt(
-        Utils.fromUtf8ToArray(masterKeyHash),
-        pubKey,
-      );
-      keyToEncrypt = masterKey.encKey;
-    } else {
-      const userKey = await this.keyService.getUserKey();
-      keyToEncrypt = userKey.key;
-    }
-
-    const encryptedKey = await this.encryptService.rsaEncrypt(keyToEncrypt, pubKey);
+    const keyToEncrypt = await this.keyService.getUserKey();
+    const encryptedKey = await this.encryptService.encapsulateKeyUnsigned(keyToEncrypt, pubKey);
 
     const response = new PasswordlessAuthRequest(
       encryptedKey.encryptedString,
-      encryptedMasterKeyHash?.encryptedString,
+      undefined,
       await this.appIdService.getAppId(),
       approve,
     );
@@ -166,12 +153,12 @@ export class AuthRequestService implements AuthRequestServiceAbstraction {
     pubKeyEncryptedUserKey: string,
     privateKey: Uint8Array,
   ): Promise<UserKey> {
-    const decryptedUserKeyBytes = await this.encryptService.rsaDecrypt(
+    const decryptedUserKey = await this.encryptService.decapsulateKeyUnsigned(
       new EncString(pubKeyEncryptedUserKey),
       privateKey,
     );
 
-    return new SymmetricCryptoKey(decryptedUserKeyBytes) as UserKey;
+    return decryptedUserKey as UserKey;
   }
 
   async decryptPubKeyEncryptedMasterKeyAndHash(
@@ -206,5 +193,9 @@ export class AuthRequestService implements AuthRequestServiceAbstraction {
 
   async getFingerprintPhrase(email: string, publicKey: Uint8Array): Promise<string> {
     return (await this.keyService.getFingerprint(email.toLowerCase(), publicKey)).join("-");
+  }
+
+  emitAdminLoginApproved(): void {
+    this.adminLoginApprovedSubject.next();
   }
 }

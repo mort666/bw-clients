@@ -1,3 +1,5 @@
+// FIXME: update to use a const object instead of a typescript enum
+// eslint-disable-next-line @bitwarden/platform/no-enums
 export enum BiometricAction {
   Authenticate = "authenticate",
   GetStatus = "status",
@@ -15,9 +17,22 @@ export enum BiometricAction {
   SetShouldAutoprompt = "setShouldAutoprompt",
 }
 
-export type BiometricMessage = {
-  action: BiometricAction;
-  key?: string;
-  userId?: string;
-  data?: any;
-};
+export type BiometricMessage =
+  | {
+      action: BiometricAction.SetClientKeyHalf;
+      userId: string;
+      key: string | null;
+    }
+  | {
+      action: BiometricAction.SetKeyForUser;
+      userId: string;
+      key: string;
+    }
+  | {
+      action: Exclude<
+        BiometricAction,
+        BiometricAction.SetClientKeyHalf | BiometricAction.SetKeyForUser
+      >;
+      userId?: string;
+      data?: any;
+    };

@@ -6,8 +6,8 @@ import {
   PinServiceAbstraction,
   UserDecryptionOptionsServiceAbstraction,
 } from "@bitwarden/auth/common";
-import { VaultTimeoutSettingsService } from "@bitwarden/common/abstractions/vault-timeout/vault-timeout-settings.service";
 import { DeviceType } from "@bitwarden/common/enums";
+import { VaultTimeoutSettingsService } from "@bitwarden/common/key-management/vault-timeout";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { UserId } from "@bitwarden/common/types/guid";
 import { KeyService, BiometricsService, BiometricsStatus } from "@bitwarden/key-management";
@@ -101,6 +101,22 @@ describe("DesktopLockComponentService", () => {
     it("returns null", () => {
       const result = service.getPreviousUrl();
       expect(result).toBeNull();
+    });
+  });
+
+  describe("popOutBrowserExtension", () => {
+    it("throws platform not supported error", () => {
+      expect(() => service.popOutBrowserExtension()).toThrow(
+        "Method not supported on this platform.",
+      );
+    });
+  });
+
+  describe("closeBrowserExtensionPopout", () => {
+    it("throws platform not supported error", () => {
+      expect(() => service.closeBrowserExtensionPopout()).toThrow(
+        "Method not supported on this platform.",
+      );
     });
   });
 

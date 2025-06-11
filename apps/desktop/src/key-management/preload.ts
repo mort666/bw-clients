@@ -1,4 +1,5 @@
 import { ipcRenderer } from "electron";
+import { Jsonify } from "type-fest";
 
 import { UserKey } from "@bitwarden/common/types/key";
 import { BiometricsStatus } from "@bitwarden/key-management";
@@ -14,7 +15,7 @@ const biometric = {
     ipcRenderer.invoke("biometric", {
       action: BiometricAction.GetStatus,
     } satisfies BiometricMessage),
-  unlockWithBiometricsForUser: (userId: string): Promise<UserKey | null> =>
+  unlockWithBiometricsForUser: (userId: string): Promise<Jsonify<UserKey> | null> =>
     ipcRenderer.invoke("biometric", {
       action: BiometricAction.UnlockForUser,
       userId: userId,
@@ -39,7 +40,7 @@ const biometric = {
     ipcRenderer.invoke("biometric", {
       action: BiometricAction.Setup,
     } satisfies BiometricMessage),
-  setClientKeyHalf: (userId: string, value: string): Promise<void> =>
+  setClientKeyHalf: (userId: string, value: string | null): Promise<void> =>
     ipcRenderer.invoke("biometric", {
       action: BiometricAction.SetClientKeyHalf,
       userId: userId,
