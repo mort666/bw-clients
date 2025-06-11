@@ -17,16 +17,14 @@ export class DefaultChangeLoginPasswordService implements ChangeLoginPasswordSer
   private apiService: PartialApiService;
   private platformUtilsService: PartialPlatformUtilsService;
 
-  // Constructor for Angular DI
   constructor(
-    @Inject("IApiService") apiService: PartialApiService,
-    @Inject("IPlatformUtilsService") platformUtilsService: PartialPlatformUtilsService,
+    @Inject("ApiService") apiService: PartialApiService,
+    @Inject("PlatformUtilsService") platformUtilsService: PartialPlatformUtilsService,
   ) {
     this.apiService = apiService;
     this.platformUtilsService = platformUtilsService;
   }
 
-  // Static factory method for standalone creation
   static create(apiService: PartialApiService, platformUtilsService: PartialPlatformUtilsService) {
     const instance = new DefaultChangeLoginPasswordService(null!, null!);
     instance.apiService = apiService;
