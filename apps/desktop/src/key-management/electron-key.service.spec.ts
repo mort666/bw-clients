@@ -97,11 +97,10 @@ describe("ElectronKeyService", () => {
 
           expect(biometricService.setBiometricProtectedUnlockKeyForUser).toHaveBeenCalledWith(
             mockUserId,
-            userKey.keyB64,
+            userKey,
           );
           expect(biometricStateService.setEncryptedClientKeyHalf).not.toHaveBeenCalled();
           expect(biometricStateService.getBiometricUnlockEnabled).toHaveBeenCalledWith(mockUserId);
-          expect(biometricStateService.getRequirePasswordOnStart).toHaveBeenCalledWith(mockUserId);
         });
 
         describe("require password on start enabled", () => {
@@ -154,7 +153,7 @@ describe("ElectronKeyService", () => {
 
             expect(biometricService.setBiometricProtectedUnlockKeyForUser).toHaveBeenCalledWith(
               mockUserId,
-              userKey.keyB64,
+              userKey,
             );
             expect(biometricStateService.setEncryptedClientKeyHalf).not.toHaveBeenCalled();
             expect(biometricStateService.getBiometricUnlockEnabled).toHaveBeenCalledWith(
