@@ -1,19 +1,38 @@
-import { Injectable } from "@angular/core";
+import { Inject, Injectable } from "@angular/core";
 
-import { ApiService } from "@bitwarden/common/abstractions/api.service";
-import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 
 import { ChangeLoginPasswordService } from "../abstractions/change-login-password.service";
 
+interface PartialApiService {
+  nativeFetch(request: Request): Promise<Response>;
+}
+interface PartialPlatformUtilsService {
+  getClientType(): string;
+}
 @Injectable()
 export class DefaultChangeLoginPasswordService implements ChangeLoginPasswordService {
+  private apiService: PartialApiService;
+  private platformUtilsService: PartialPlatformUtilsService;
+
+  // Constructor for Angular DI
   constructor(
-    private apiService: ApiService,
-    private platformUtilsService: PlatformUtilsService,
-  ) {}
+    @Inject("IApiService") apiService: PartialApiService,
+    @Inject("IPlatformUtilsService") platformUtilsService: PartialPlatformUtilsService,
+  ) {
+    this.apiService = apiService;
+    this.platformUtilsService = platformUtilsService;
+  }
+
+  // Static factory method for standalone creation
+  static create(apiService: PartialApiService, platformUtilsService: PartialPlatformUtilsService) {
+    const instance = new DefaultChangeLoginPasswordService(null!, null!);
+    instance.apiService = apiService;
+    instance.platformUtilsService = platformUtilsService;
+    return instance;
+  }
 
   /**
    * @inheritDoc
