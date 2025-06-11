@@ -27,7 +27,7 @@ export default class OsBiometricsServiceWindows implements OsBiometricService {
   private _iv: string | null = null;
   // Use getKeyMaterial helper instead of direct access
   private _osKeyHalf: string | null = null;
-  private clientKeyHalves = new Map<string, Uint8Array | null>();
+  private clientKeyHalves = new Map<UserId, Uint8Array>();
 
   constructor(
     private i18nService: I18nService,
@@ -45,8 +45,8 @@ export default class OsBiometricsServiceWindows implements OsBiometricService {
   async getBiometricKey(userId: UserId): Promise<SymmetricCryptoKey | null> {
     const value = await passwords.getPassword(SERVICE, getLookupKeyForUser(userId));
     let clientKeyHalfB64: string | null = null;
-    if (this.clientKeyHalves.has(userId.toString())) {
-      clientKeyHalfB64 = Utils.fromBufferToB64(this.clientKeyHalves.get(userId.toString()));
+    if (this.clientKeyHalves.has(userId)) {
+      clientKeyHalfB64 = Utils.fromBufferToB64(this.clientKeyHalves.get(userId));
     }
 
     if (value == null || value == "") {
@@ -283,8 +283,8 @@ export default class OsBiometricsServiceWindows implements OsBiometricService {
       return null;
     }
 
-    if (this.clientKeyHalves.has(userId.toString())) {
-      return this.clientKeyHalves.get(userId.toString());
+    if (this.clientKeyHalves.has(userId)) {
+      return this.clientKeyHalves.get(userId);
     }
 
     // Retrieve existing key half if it exists
@@ -301,7 +301,7 @@ export default class OsBiometricsServiceWindows implements OsBiometricService {
       await this.biometricStateService.setEncryptedClientKeyHalf(encKey, userId);
     }
 
-    this.clientKeyHalves.set(userId.toString(), clientKeyHalf);
+    this.clientKeyHalves.set(userId, clientKeyHalf);
 
     return clientKeyHalf;
   }
