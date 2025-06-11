@@ -184,12 +184,23 @@ describe("MainBiometricsService", function () {
         biometricStateService.getRequirePasswordOnStart.mockResolvedValue(
           requirePasswordOnStart as boolean,
         );
-        (sut as any).clientKeyHalves = new Map();
-        const userId = "test" as UserId;
-        if (hasKeyHalf) {
-          (sut as any).clientKeyHalves.set(userId, "test");
+        if (!requirePasswordOnStart) {
+          (sut as any).osBiometricsService.getBiometricsFirstUnlockStatusForUser = jest
+            .fn()
+            .mockResolvedValue(BiometricsStatus.Available);
+        } else {
+          if (hasKeyHalf) {
+            (sut as any).osBiometricsService.getBiometricsFirstUnlockStatusForUser = jest
+              .fn()
+              .mockResolvedValue(BiometricsStatus.Available);
+          } else {
+            (sut as any).osBiometricsService.getBiometricsFirstUnlockStatusForUser = jest
+              .fn()
+              .mockResolvedValue(BiometricsStatus.UnlockNeeded);
+          }
         }
 
+        const userId = "test" as UserId;
         const actual = await sut.getBiometricsStatusForUser(userId);
         expect(actual).toBe(expected);
       }
@@ -256,34 +267,24 @@ describe("MainBiometricsService", function () {
 
     it("should return null if no biometric key is returned ", async () => {
       const userId = "test" as UserId;
-      (sut as any).clientKeyHalves.set(userId, "testKeyHalf");
-
+      osBiometricsService.getBiometricKey.mockResolvedValue(null);
       const userKey = await sut.unlockWithBiometricsForUser(userId);
 
       expect(userKey).toBeNull();
-      expect(osBiometricsService.getBiometricKey).toHaveBeenCalledWith(
-        "Bitwarden_biometric",
-        `${userId}_user_biometric`,
-        "testKeyHalf",
-      );
+      expect(osBiometricsService.getBiometricKey).toHaveBeenCalledWith(userId);
     });
 
     it("should return the biometric key if a valid key is returned", async () => {
       const userId = "test" as UserId;
-      (sut as any).clientKeyHalves.set(userId, "testKeyHalf");
       const biometricKey = new SymmetricCryptoKey(new Uint8Array(64));
       osBiometricsService.getBiometricKey.mockResolvedValue(biometricKey);
 
       const userKey = await sut.unlockWithBiometricsForUser(userId);
 
       expect(userKey).not.toBeNull();
-      expect(userKey!.keyB64).toBe(biometricKey);
+      expect(userKey!.keyB64).toBe(biometricKey.toBase64());
       expect(userKey!.inner().type).toBe(EncryptionType.AesCbc256_HmacSha256_B64);
-      expect(osBiometricsService.getBiometricKey).toHaveBeenCalledWith(
-        "Bitwarden_biometric",
-        `${userId}_user_biometric`,
-        "testKeyHalf",
-      );
+      expect(osBiometricsService.getBiometricKey).toHaveBeenCalledWith(userId);
     });
   });
 
@@ -305,25 +306,12 @@ describe("MainBiometricsService", function () {
       (sut as any).osBiometricsService = osBiometricsService;
     });
 
-    it("should throw an error if no client key half is provided", async () => {
-      const userId = "test" as UserId;
-      await expect(sut.setBiometricProtectedUnlockKeyForUser(userId, unlockKey)).rejects.toThrow(
-        "No client key half provided for user",
-      );
-    });
-
     it("should call the platform specific setBiometricKey method", async () => {
       const userId = "test" as UserId;
-      (sut as any).clientKeyHalves.set(userId, "testKeyHalf");
 
       await sut.setBiometricProtectedUnlockKeyForUser(userId, unlockKey);
 
-      expect(osBiometricsService.setBiometricKey).toHaveBeenCalledWith(
-        "Bitwarden_biometric",
-        `${userId}_user_biometric`,
-        unlockKey,
-        "testKeyHalf",
-      );
+      expect(osBiometricsService.setBiometricKey).toHaveBeenCalledWith(userId, unlockKey);
     });
   });
 
@@ -345,10 +333,7 @@ describe("MainBiometricsService", function () {
 
       await sut.deleteBiometricUnlockKeyForUser(userId);
 
-      expect(osBiometricsService.deleteBiometricKey).toHaveBeenCalledWith(
-        "Bitwarden_biometric",
-        `${userId}_user_biometric`,
-      );
+      expect(osBiometricsService.deleteBiometricKey).toHaveBeenCalledWith(userId);
     });
   });
 
