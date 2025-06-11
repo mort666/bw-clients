@@ -184,12 +184,23 @@ describe("MainBiometricsService", function () {
         biometricStateService.getRequirePasswordOnStart.mockResolvedValue(
           requirePasswordOnStart as boolean,
         );
-        (sut as any).clientKeyHalves = new Map();
-        const userId = "test" as UserId;
-        if (hasKeyHalf) {
-          (sut as any).clientKeyHalves.set(userId, "test");
+        if (!requirePasswordOnStart) {
+          (sut as any).osBiometricsService.getBiometricsFirstUnlockStatusForUser = jest
+            .fn()
+            .mockResolvedValue(BiometricsStatus.Available);
+        } else {
+          if (hasKeyHalf) {
+            (sut as any).osBiometricsService.getBiometricsFirstUnlockStatusForUser = jest
+              .fn()
+              .mockResolvedValue(BiometricsStatus.Available);
+          } else {
+            (sut as any).osBiometricsService.getBiometricsFirstUnlockStatusForUser = jest
+              .fn()
+              .mockResolvedValue(BiometricsStatus.UnlockNeeded);
+          }
         }
 
+        const userId = "test" as UserId;
         const actual = await sut.getBiometricsStatusForUser(userId);
         expect(actual).toBe(expected);
       }
