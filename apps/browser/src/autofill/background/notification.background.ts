@@ -43,7 +43,7 @@ import { LoginView } from "@bitwarden/common/vault/models/view/login.view";
 import { TaskService } from "@bitwarden/common/vault/tasks";
 import { SecurityTaskType } from "@bitwarden/common/vault/tasks/enums";
 import { SecurityTask } from "@bitwarden/common/vault/tasks/models/security-task";
-import { DefaultChangeLoginPasswordService } from "@bitwarden/vault";
+import { ChangeLoginPasswordService } from "@bitwarden/vault";
 
 import { openUnlockPopout } from "../../auth/popup/utils/auth-popout-window";
 import { BrowserApi } from "../../platform/browser/browser-api";
@@ -140,6 +140,7 @@ export default class NotificationBackground {
     private themeStateService: ThemeStateService,
     private userNotificationSettingsService: UserNotificationSettingsServiceAbstraction,
     private taskService: TaskService,
+    private changeLoginPasswordService: ChangeLoginPasswordService,
     protected messagingService: MessagingService,
   ) {}
 
@@ -401,10 +402,7 @@ export default class NotificationBackground {
   ): Promise<boolean> {
     const { activeUserId, securityTask, cipher } = message.data;
     const domain = Utils.getDomain(sender.tab.url);
-    const passwordChangeUri = await DefaultChangeLoginPasswordService.create(
-      { nativeFetch: fetch },
-      { getClientType: () => "browser" },
-    ).getChangePasswordUrl(cipher);
+    const passwordChangeUri = await this.changeLoginPasswordService.getChangePasswordUrl(cipher);
 
     const authStatus = await this.getAuthStatus();
 
