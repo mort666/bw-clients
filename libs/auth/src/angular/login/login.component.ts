@@ -84,8 +84,6 @@ export class LoginComponent implements OnInit, OnDestroy {
   isKnownDevice = false;
   loginUiState: LoginUiState = LoginUiState.EMAIL_ENTRY;
 
-  passwordPoliciesFromOrgInvite?: Policy[];
-
   formGroup = this.formBuilder.group(
     {
       email: ["", [Validators.required, Validators.email]],
@@ -244,10 +242,6 @@ export class LoginComponent implements OnInit, OnDestroy {
 
       const orgMasterPasswordPolicyOptions = orgPoliciesFromInvite?.enforcedPasswordPolicyOptions;
 
-      // Grab the org policies from invite so that it can be evaluated after we have logged in and
-      // received a user id.
-      this.passwordPoliciesFromOrgInvite = orgPoliciesFromInvite?.policies;
-
       credentials = new PasswordLoginCredentials(
         email,
         masterPassword,
@@ -339,13 +333,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     // The AuthGuard will handle routing to update-temp-password based on state
 
     if (
-      await this.configService.getFeatureFlag(FeatureFlag.PM16117_ChangeExistingPasswordRefactor)
+      !(await this.configService.getFeatureFlag(FeatureFlag.PM16117_ChangeExistingPasswordRefactor))
     ) {
-      // Check if we have policies to set from an org invite scenario.
-      if (this.passwordPoliciesFromOrgInvite) {
-        await this.setPoliciesIntoState(authResult.userId, this.passwordPoliciesFromOrgInvite);
-      }
-    } else {
       // TODO: PM-18269 - evaluate if we can combine this with the
       // password evaluation done in the password login strategy.
       // If there's an existing org invite, use it to get the org's password policies

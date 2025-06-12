@@ -100,12 +100,6 @@ export class PasswordLoginStrategy extends LoginStrategy {
       await this.buildDeviceRequest(),
     );
 
-    if (
-      await this.configService.getFeatureFlag(FeatureFlag.PM16117_ChangeExistingPasswordRefactor)
-    ) {
-      data.passwordPolicy = credentials.masterPasswordPoliciesFromOrgInvite;
-    }
-
     this.cache.next(data);
 
     const [authResult, identityResponse] = await this.startLogIn();
@@ -181,7 +175,8 @@ export class PasswordLoginStrategy extends LoginStrategy {
     if (
       await this.configService.getFeatureFlag(FeatureFlag.PM16117_ChangeExistingPasswordRefactor)
     ) {
-      // !IMPORTANT! Take credentials from a potential org invite first, then take from
+      // Either take credentials from a potential org invite first, then take from
+      // the identity response if that doesn't exist.
       masterPasswordPolicyOptions = credentials.masterPasswordPoliciesFromOrgInvite
         ? credentials.masterPasswordPoliciesFromOrgInvite
         : this.getMasterPasswordPolicyOptionsFromResponse(identityResponse);
