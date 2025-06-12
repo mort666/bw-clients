@@ -100,8 +100,6 @@ export class PasswordLoginStrategy extends LoginStrategy {
       await this.buildDeviceRequest(),
     );
 
-    // TODO: add master password policy conditions to the cache so that it is available after 2fa for password evaluation
-    // This should work, need to verify the case where a user is invited to an org and has 2fa.
     if (
       await this.configService.getFeatureFlag(FeatureFlag.PM16117_ChangeExistingPasswordRefactor)
     ) {
