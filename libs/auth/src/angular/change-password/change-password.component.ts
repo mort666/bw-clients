@@ -43,7 +43,7 @@ export class ChangePasswordComponent implements OnInit {
   @Input() inputPasswordFlow: InputPasswordFlow = InputPasswordFlow.ChangePassword;
 
   activeAccount: Account | null = null;
-  email!: string;
+  email?: string;
   userId?: UserId;
   masterPasswordPolicyOptions?: MasterPasswordPolicyOptions;
   initializing = true;
@@ -157,8 +157,7 @@ export class ChangePasswordComponent implements OnInit {
 
         this.toastService.showToast({
           variant: "success",
-          title: this.i18nService.t("masterPasswordChanged"),
-          message: this.i18nService.t("masterPasswordChangedDesc"),
+          message: this.i18nService.t("masterPasswordChanged"),
         });
 
         this.messagingService.send("logout");

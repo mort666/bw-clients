@@ -32,7 +32,10 @@ export abstract class ChangePasswordService {
    * @param userId the `userId`
    * @throws if the `userId`, `currentMasterKey`, or `currentServerMasterKeyHash` is not found
    */
-  abstract changePassword(passwordInputResult: PasswordInputResult, userId: UserId): Promise<void>;
+  abstract changePassword(
+    passwordInputResult: PasswordInputResult,
+    userId: UserId | null,
+  ): Promise<void>;
 
   /**
    * Changes the user's password and re-encrypts the user key with the `newMasterKey`.

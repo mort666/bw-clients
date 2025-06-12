@@ -27,7 +27,7 @@ export class DefaultChangePasswordService implements ChangePasswordService {
 
   private async preparePasswordChange(
     passwordInputResult: PasswordInputResult,
-    userId: UserId,
+    userId: UserId | null,
   ): Promise<[UserKey, EncString]> {
     if (!userId) {
       throw new Error("userId not found");
@@ -51,7 +51,7 @@ export class DefaultChangePasswordService implements ChangePasswordService {
     );
   }
 
-  async changePassword(passwordInputResult: PasswordInputResult, userId: UserId) {
+  async changePassword(passwordInputResult: PasswordInputResult, userId: UserId | null) {
     const newMasterKeyEncryptedUserKey = await this.preparePasswordChange(
       passwordInputResult,
       userId,
