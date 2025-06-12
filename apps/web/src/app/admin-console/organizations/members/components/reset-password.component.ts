@@ -98,7 +98,7 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
     this.accountService.activeAccount$
       .pipe(
         getUserId,
-        switchMap((userId) => this.policyService.masterPasswordPolicyOptionsFromSync$(userId)),
+        switchMap((userId) => this.policyService.masterPasswordPolicyOptions$(userId)),
         takeUntil(this.destroy$),
       )
       .subscribe(

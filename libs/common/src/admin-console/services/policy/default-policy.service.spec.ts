@@ -127,9 +127,7 @@ describe("PolicyService", () => {
       ];
       jest.spyOn(policyService as any, "policies$").mockReturnValue(of(model));
 
-      const result = await firstValueFrom(
-        policyService.masterPasswordPolicyOptionsFromSync$(userId),
-      );
+      const result = await firstValueFrom(policyService.masterPasswordPolicyOptions$(userId));
 
       expect(result).toEqual({
         minComplexity: 5,
@@ -154,9 +152,7 @@ describe("PolicyService", () => {
       ];
       jest.spyOn(policyService as any, "policies$").mockReturnValue(of(model));
 
-      const result = await firstValueFrom(
-        policyService.masterPasswordPolicyOptionsFromSync$(userId),
-      );
+      const result = await firstValueFrom(policyService.masterPasswordPolicyOptions$(userId));
 
       expect(result).toBeUndefined();
     });
@@ -173,9 +169,7 @@ describe("PolicyService", () => {
       ];
       jest.spyOn(policyService as any, "policies$").mockReturnValue(of(model));
 
-      const result = await firstValueFrom(
-        policyService.masterPasswordPolicyOptionsFromSync$(userId),
-      );
+      const result = await firstValueFrom(policyService.masterPasswordPolicyOptions$(userId));
 
       expect(result).toEqual({
         minComplexity: 0,

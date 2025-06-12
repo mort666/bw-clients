@@ -536,7 +536,7 @@ export class LoginCommand {
     );
 
     const enforcedPolicyOptions = await firstValueFrom(
-      this.policyService.masterPasswordPolicyOptionsFromSync$(userId),
+      this.policyService.masterPasswordPolicyOptions$(userId),
     );
 
     // Verify master password meets policy requirements

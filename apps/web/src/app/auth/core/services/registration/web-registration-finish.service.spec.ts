@@ -149,9 +149,7 @@ describe("WebRegistrationFinishService", () => {
 
       acceptOrgInviteService.getOrganizationInvite.mockResolvedValue(orgInvite);
       policyApiService.getPoliciesByToken.mockResolvedValue(masterPasswordPolicies);
-      policyService.masterPasswordPolicyOptionsFromSync$.mockReturnValue(
-        of(masterPasswordPolicyOptions),
-      );
+      policyService.masterPasswordPolicyOptions$.mockReturnValue(of(masterPasswordPolicyOptions));
 
       const result = await service.getMasterPasswordPolicyOptsFromOrgInvite();
 

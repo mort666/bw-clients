@@ -70,7 +70,7 @@ export class WebRegistrationFinishService
     }
 
     const masterPasswordPolicyOpts: MasterPasswordPolicyOptions = await firstValueFrom(
-      this.policyService.masterPasswordPolicyOptionsFromSync$(null, policies),
+      this.policyService.masterPasswordPolicyOptions$(null, policies),
     );
 
     return masterPasswordPolicyOpts;

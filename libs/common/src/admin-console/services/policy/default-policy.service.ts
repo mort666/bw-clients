@@ -82,7 +82,7 @@ export class DefaultPolicyService implements PolicyService {
     });
   }
 
-  masterPasswordPolicyOptionsFromSync$(
+  masterPasswordPolicyOptions$(
     userId: UserId,
     policies?: Policy[],
   ): Observable<MasterPasswordPolicyOptions | undefined> {

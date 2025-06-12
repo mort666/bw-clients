@@ -107,7 +107,7 @@ export class PolicyApiService implements PolicyApiServiceAbstraction {
         this.accountService.activeAccount$.pipe(
           getUserId,
           switchMap((userId) =>
-            this.policyService.masterPasswordPolicyOptionsFromSync$(userId, [masterPasswordPolicy]),
+            this.policyService.masterPasswordPolicyOptions$(userId, [masterPasswordPolicy]),
           ),
           map((policy) => policy ?? null),
         ),

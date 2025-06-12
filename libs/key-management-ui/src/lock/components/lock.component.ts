@@ -603,9 +603,7 @@ export class LockComponent implements OnInit, OnDestroy {
           this.enforcedMasterPasswordOptions = await firstValueFrom(
             this.accountService.activeAccount$.pipe(
               getUserId,
-              switchMap((userId) =>
-                this.policyService.masterPasswordPolicyOptionsFromSync$(userId),
-              ),
+              switchMap((userId) => this.policyService.masterPasswordPolicyOptions$(userId)),
             ),
           );
         }
