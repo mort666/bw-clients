@@ -3,12 +3,16 @@
 import { ErrorHandler, LOCALE_ID, NgModule } from "@angular/core";
 import { Subject } from "rxjs";
 
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
 import {
   CollectionService,
   DefaultCollectionService,
   DefaultOrganizationUserApiService,
   OrganizationUserApiService,
 } from "@bitwarden/admin-console/common";
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
 import {
   AnonLayoutWrapperDataService,
   DefaultAnonLayoutWrapperDataService,
@@ -27,7 +31,11 @@ import {
   TwoFactorAuthComponentService,
   TwoFactorAuthEmailComponentService,
   TwoFactorAuthWebAuthnComponentService,
+  ChangePasswordService,
+  DefaultChangePasswordService,
 } from "@bitwarden/auth/angular";
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
 import {
   AuthRequestApiService,
   AuthRequestService,
@@ -136,11 +144,13 @@ import {
 import { AccountBillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions/account/account-billing-api.service.abstraction";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { OrganizationBillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions/organizations/organization-billing-api.service.abstraction";
+import { OrganizationSponsorshipApiServiceAbstraction } from "@bitwarden/common/billing/abstractions/organizations/organization-sponsorship-api.service.abstraction";
 import { TaxServiceAbstraction } from "@bitwarden/common/billing/abstractions/tax.service.abstraction";
 import { AccountBillingApiService } from "@bitwarden/common/billing/services/account/account-billing-api.service";
 import { DefaultBillingAccountProfileStateService } from "@bitwarden/common/billing/services/account/billing-account-profile-state.service";
 import { BillingApiService } from "@bitwarden/common/billing/services/billing-api.service";
 import { OrganizationBillingApiService } from "@bitwarden/common/billing/services/organization/organization-billing-api.service";
+import { OrganizationSponsorshipApiService } from "@bitwarden/common/billing/services/organization/organization-sponsorship-api.service";
 import { OrganizationBillingService } from "@bitwarden/common/billing/services/organization-billing.service";
 import { TaxService } from "@bitwarden/common/billing/services/tax.service";
 import { BulkEncryptService } from "@bitwarden/common/key-management/crypto/abstractions/bulk-encrypt.service";
@@ -261,6 +271,7 @@ import {
   InternalSendService,
   SendService as SendServiceAbstraction,
 } from "@bitwarden/common/tools/send/services/send.service.abstraction";
+import { CipherEncryptionService } from "@bitwarden/common/vault/abstractions/cipher-encryption.service";
 import { CipherService as CipherServiceAbstraction } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherFileUploadService as CipherFileUploadServiceAbstraction } from "@bitwarden/common/vault/abstractions/file-upload/cipher-file-upload.service";
 import { FolderApiServiceAbstraction } from "@bitwarden/common/vault/abstractions/folder/folder-api.service.abstraction";
@@ -271,10 +282,15 @@ import {
 import { TotpService as TotpServiceAbstraction } from "@bitwarden/common/vault/abstractions/totp.service";
 import { VaultSettingsService as VaultSettingsServiceAbstraction } from "@bitwarden/common/vault/abstractions/vault-settings/vault-settings.service";
 import {
+  DefaultEndUserNotificationService,
+  EndUserNotificationService,
+} from "@bitwarden/common/vault/notifications";
+import {
   CipherAuthorizationService,
   DefaultCipherAuthorizationService,
 } from "@bitwarden/common/vault/services/cipher-authorization.service";
 import { CipherService } from "@bitwarden/common/vault/services/cipher.service";
+import { DefaultCipherEncryptionService } from "@bitwarden/common/vault/services/default-cipher-encryption.service";
 import { CipherFileUploadService } from "@bitwarden/common/vault/services/file-upload/cipher-file-upload.service";
 import { FolderApiService } from "@bitwarden/common/vault/services/folder/folder-api.service";
 import { FolderService } from "@bitwarden/common/vault/services/folder/folder.service";
@@ -306,12 +322,9 @@ import {
   UserAsymmetricKeysRegenerationService,
 } from "@bitwarden/key-management";
 import { SafeInjectionToken } from "@bitwarden/ui-common";
-import {
-  DefaultEndUserNotificationService,
-  EndUserNotificationService,
-  NewDeviceVerificationNoticeService,
-  PasswordRepromptService,
-} from "@bitwarden/vault";
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
+import { PasswordRepromptService } from "@bitwarden/vault";
 import {
   IndividualVaultExportService,
   IndividualVaultExportServiceAbstraction,
@@ -324,18 +337,22 @@ import {
 import { DeviceTrustToastService as DeviceTrustToastServiceAbstraction } from "../auth/services/device-trust-toast.service.abstraction";
 import { DeviceTrustToastService } from "../auth/services/device-trust-toast.service.implementation";
 import { FormValidationErrorsService as FormValidationErrorsServiceAbstraction } from "../platform/abstractions/form-validation-errors.service";
-import { ViewCacheService } from "../platform/abstractions/view-cache.service";
+import { DocumentLangSetter } from "../platform/i18n";
 import { FormValidationErrorsService } from "../platform/services/form-validation-errors.service";
 import { LoggingErrorHandler } from "../platform/services/logging-error-handler";
-import { NoopViewCacheService } from "../platform/services/noop-view-cache.service";
 import { AngularThemingService } from "../platform/services/theming/angular-theming.service";
 import { AbstractThemingService } from "../platform/services/theming/theming.service.abstraction";
 import { safeProvider, SafeProvider } from "../platform/utils/safe-provider";
+import { ViewCacheService } from "../platform/view-cache";
+// eslint-disable-next-line no-restricted-imports -- Needed for DI
+import { NoopViewCacheService } from "../platform/view-cache/internal";
 
 import {
   CLIENT_TYPE,
   DEFAULT_VAULT_TIMEOUT,
+  DOCUMENT,
   ENV_ADDITIONAL_REGIONS,
+  HTTP_OPERATIONS,
   INTRAPROCESS_MESSAGING_SUBJECT,
   LOCALES_DIRECTORY,
   LOCKED_CALLBACK,
@@ -363,6 +380,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider(ModalService),
   safeProvider(PasswordRepromptService),
   safeProvider({ provide: WINDOW, useValue: window }),
+  safeProvider({ provide: DOCUMENT, useValue: document }),
   safeProvider({
     provide: LOCALE_ID as SafeInjectionToken<string>,
     useFactory: (i18nService: I18nServiceAbstraction) => i18nService.translationLocale,
@@ -506,6 +524,7 @@ const safeProviders: SafeProvider[] = [
       stateProvider: StateProvider,
       accountService: AccountServiceAbstraction,
       logService: LogService,
+      cipherEncryptionService: CipherEncryptionService,
     ) =>
       new CipherService(
         keyService,
@@ -522,6 +541,7 @@ const safeProviders: SafeProvider[] = [
         stateProvider,
         accountService,
         logService,
+        cipherEncryptionService,
       ),
     deps: [
       KeyService,
@@ -538,6 +558,7 @@ const safeProviders: SafeProvider[] = [
       StateProvider,
       AccountServiceAbstraction,
       LogService,
+      CipherEncryptionService,
     ],
   }),
   safeProvider({
@@ -585,7 +606,11 @@ const safeProviders: SafeProvider[] = [
     useClass: AvatarService,
     deps: [ApiServiceAbstraction, StateProvider],
   }),
-  safeProvider({ provide: LogService, useFactory: () => new ConsoleLogService(false), deps: [] }),
+  safeProvider({
+    provide: LogService,
+    useFactory: () => new ConsoleLogService(process.env.NODE_ENV === "development"),
+    deps: [],
+  }),
   safeProvider({
     provide: CollectionService,
     useClass: DefaultCollectionService,
@@ -696,6 +721,10 @@ const safeProviders: SafeProvider[] = [
     deps: [ToastService, I18nServiceAbstraction],
   }),
   safeProvider({
+    provide: HTTP_OPERATIONS,
+    useValue: { createRequest: (url, request) => new Request(url, request) },
+  }),
+  safeProvider({
     provide: ApiServiceAbstraction,
     useClass: ApiService,
     deps: [
@@ -707,6 +736,7 @@ const safeProviders: SafeProvider[] = [
       LogService,
       LOGOUT_CALLBACK,
       VaultTimeoutSettingsService,
+      HTTP_OPERATIONS,
     ],
   }),
   safeProvider({
@@ -1065,6 +1095,11 @@ const safeProviders: SafeProvider[] = [
     deps: [ApiServiceAbstraction, SyncService],
   }),
   safeProvider({
+    provide: OrganizationSponsorshipApiServiceAbstraction,
+    useClass: OrganizationSponsorshipApiService,
+    deps: [ApiServiceAbstraction, PlatformUtilsServiceAbstraction],
+  }),
+  safeProvider({
     provide: OrganizationBillingApiServiceAbstraction,
     useClass: OrganizationBillingApiService,
     deps: [ApiServiceAbstraction],
@@ -1255,6 +1290,7 @@ const safeProviders: SafeProvider[] = [
       I18nServiceAbstraction,
       OrganizationApiServiceAbstraction,
       SyncService,
+      ConfigService,
     ],
   }),
   safeProvider({
@@ -1426,12 +1462,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: CipherAuthorizationService,
     useClass: DefaultCipherAuthorizationService,
-    deps: [
-      CollectionService,
-      OrganizationServiceAbstraction,
-      AccountServiceAbstraction,
-      ConfigService,
-    ],
+    deps: [CollectionService, OrganizationServiceAbstraction, AccountServiceAbstraction],
   }),
   safeProvider({
     provide: AuthRequestApiService,
@@ -1448,7 +1479,6 @@ const safeProviders: SafeProvider[] = [
     useClass: DefaultLoginDecryptionOptionsService,
     deps: [MessagingServiceAbstraction],
   }),
-  safeProvider(NewDeviceVerificationNoticeService),
   safeProvider({
     provide: UserAsymmetricKeysRegenerationApiService,
     useClass: DefaultUserAsymmetricKeysRegenerationApiService,
@@ -1479,7 +1509,6 @@ const safeProviders: SafeProvider[] = [
       StateProvider,
       ApiServiceAbstraction,
       OrganizationServiceAbstraction,
-      ConfigService,
       AuthServiceAbstraction,
       NotificationsService,
       MessageListener,
@@ -1488,7 +1517,13 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: EndUserNotificationService,
     useClass: DefaultEndUserNotificationService,
-    deps: [StateProvider, ApiServiceAbstraction, NotificationsService],
+    deps: [
+      StateProvider,
+      ApiServiceAbstraction,
+      NotificationsService,
+      AuthServiceAbstraction,
+      LogService,
+    ],
   }),
   safeProvider({
     provide: DeviceTrustToastServiceAbstraction,
@@ -1504,6 +1539,25 @@ const safeProviders: SafeProvider[] = [
     provide: MasterPasswordApiServiceAbstraction,
     useClass: MasterPasswordApiService,
     deps: [ApiServiceAbstraction, LogService],
+  }),
+  safeProvider({
+    provide: DocumentLangSetter,
+    useClass: DocumentLangSetter,
+    deps: [DOCUMENT, I18nServiceAbstraction],
+  }),
+  safeProvider({
+    provide: CipherEncryptionService,
+    useClass: DefaultCipherEncryptionService,
+    deps: [SdkService, LogService],
+  }),
+  safeProvider({
+    provide: ChangePasswordService,
+    useClass: DefaultChangePasswordService,
+    deps: [
+      KeyService,
+      MasterPasswordApiServiceAbstraction,
+      InternalMasterPasswordServiceAbstraction,
+    ],
   }),
 ];
 

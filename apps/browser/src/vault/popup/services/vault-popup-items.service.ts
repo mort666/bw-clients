@@ -50,6 +50,7 @@ export class VaultPopupItemsService {
   private cachedSearchText = inject(PopupViewCacheService).signal<string>({
     key: "vault-search-text",
     initialValue: "",
+    persistNavigation: true,
   });
 
   readonly searchText$ = toObservable(this.cachedSearchText);
@@ -318,13 +319,13 @@ export class VaultPopupItemsService {
    * @private
    */
   private sortCiphersForAutofill(a: CipherView, b: CipherView): number {
-    const typeOrder: Record<CipherType, number> = {
+    const typeOrder = {
       [CipherType.Login]: 1,
       [CipherType.Card]: 2,
       [CipherType.Identity]: 3,
       [CipherType.SecureNote]: 4,
       [CipherType.SshKey]: 5,
-    };
+    } as Record<CipherType, number>;
 
     // Compare types first
     if (typeOrder[a.type] < typeOrder[b.type]) {

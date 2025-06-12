@@ -105,23 +105,10 @@ describe("AuthRequestService", () => {
       );
     });
 
-    it("should use the master key and hash if they exist", async () => {
-      masterPasswordService.masterKeySubject.next({ encKey: new Uint8Array(64) } as MasterKey);
-      masterPasswordService.masterKeyHashSubject.next("MASTER_KEY_HASH");
-
-      await sut.approveOrDenyAuthRequest(
-        true,
-        new AuthRequestResponse({ id: "123", publicKey: "KEY" }),
-      );
-
-      expect(encryptService.encapsulateKeyUnsigned).toHaveBeenCalledWith(
-        { encKey: new Uint8Array(64) },
-        expect.anything(),
-      );
-    });
-
     it("should use the user key if the master key and hash do not exist", async () => {
-      keyService.getUserKey.mockResolvedValueOnce({ key: new Uint8Array(64) } as UserKey);
+      keyService.getUserKey.mockResolvedValueOnce(
+        new SymmetricCryptoKey(new Uint8Array(64)) as UserKey,
+      );
 
       await sut.approveOrDenyAuthRequest(
         true,
@@ -129,7 +116,7 @@ describe("AuthRequestService", () => {
       );
 
       expect(encryptService.encapsulateKeyUnsigned).toHaveBeenCalledWith(
-        { key: new Uint8Array(64) },
+        new SymmetricCryptoKey(new Uint8Array(64)),
         expect.anything(),
       );
     });
@@ -239,45 +226,6 @@ describe("AuthRequestService", () => {
         mockPrivateKey,
       );
       expect(result).toEqual(mockDecryptedUserKey);
-    });
-  });
-
-  describe("decryptAuthReqPubKeyEncryptedMasterKeyAndHash", () => {
-    it("returns a decrypted master key and hash when given a valid public key encrypted master key, public key encrypted master key hash, and an auth req private key", async () => {
-      // Arrange
-      const mockPubKeyEncryptedMasterKey = "pubKeyEncryptedMasterKey";
-      const mockPubKeyEncryptedMasterKeyHash = "pubKeyEncryptedMasterKeyHash";
-
-      const mockDecryptedMasterKeyBytes = new Uint8Array(64);
-      const mockDecryptedMasterKey = new SymmetricCryptoKey(
-        mockDecryptedMasterKeyBytes,
-      ) as MasterKey;
-      const mockDecryptedMasterKeyHashBytes = new Uint8Array(64);
-      const mockDecryptedMasterKeyHash = Utils.fromBufferToUtf8(mockDecryptedMasterKeyHashBytes);
-
-      encryptService.rsaDecrypt.mockResolvedValueOnce(mockDecryptedMasterKeyHashBytes);
-      encryptService.decapsulateKeyUnsigned.mockResolvedValueOnce(
-        new SymmetricCryptoKey(mockDecryptedMasterKeyBytes),
-      );
-
-      // Act
-      const result = await sut.decryptPubKeyEncryptedMasterKeyAndHash(
-        mockPubKeyEncryptedMasterKey,
-        mockPubKeyEncryptedMasterKeyHash,
-        mockPrivateKey,
-      );
-
-      // Assert
-      expect(encryptService.decapsulateKeyUnsigned).toHaveBeenCalledWith(
-        new EncString(mockPubKeyEncryptedMasterKey),
-        mockPrivateKey,
-      );
-      expect(encryptService.rsaDecrypt).toHaveBeenCalledWith(
-        new EncString(mockPubKeyEncryptedMasterKeyHash),
-        mockPrivateKey,
-      );
-      expect(result.masterKey).toEqual(mockDecryptedMasterKey);
-      expect(result.masterKeyHash).toEqual(mockDecryptedMasterKeyHash);
     });
   });
 

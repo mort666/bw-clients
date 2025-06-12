@@ -14,6 +14,7 @@ import { AuthRequestPushNotification } from "@bitwarden/common/models/response/n
 import { AppIdService } from "@bitwarden/common/platform/abstractions/app-id.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
+import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import {
   AUTH_REQUEST_DISK_LOCAL,
   StateProvider,
@@ -102,29 +103,12 @@ export class AuthRequestService implements AuthRequestServiceAbstraction {
     }
     const pubKey = Utils.fromB64ToArray(authRequest.publicKey);
 
-    const userId = (await firstValueFrom(this.accountService.activeAccount$)).id;
-    const masterKey = await firstValueFrom(this.masterPasswordService.masterKey$(userId));
-    const masterKeyHash = await firstValueFrom(this.masterPasswordService.masterKeyHash$(userId));
-    let encryptedMasterKeyHash;
-    let keyToEncrypt;
-
-    if (masterKey && masterKeyHash) {
-      // Only encrypt the master password hash if masterKey exists as
-      // we won't have a masterKeyHash without a masterKey
-      encryptedMasterKeyHash = await this.encryptService.rsaEncrypt(
-        Utils.fromUtf8ToArray(masterKeyHash),
-        pubKey,
-      );
-      keyToEncrypt = masterKey;
-    } else {
-      keyToEncrypt = await this.keyService.getUserKey();
-    }
-
+    const keyToEncrypt = await this.keyService.getUserKey();
     const encryptedKey = await this.encryptService.encapsulateKeyUnsigned(keyToEncrypt, pubKey);
 
     const response = new PasswordlessAuthRequest(
       encryptedKey.encryptedString,
-      encryptedMasterKeyHash?.encryptedString,
+      undefined,
       await this.appIdService.getAppId(),
       approve,
     );
@@ -169,10 +153,12 @@ export class AuthRequestService implements AuthRequestServiceAbstraction {
     pubKeyEncryptedUserKey: string,
     privateKey: Uint8Array,
   ): Promise<UserKey> {
-    return (await this.encryptService.decapsulateKeyUnsigned(
+    const decryptedUserKey = await this.encryptService.decapsulateKeyUnsigned(
       new EncString(pubKeyEncryptedUserKey),
       privateKey,
-    )) as UserKey;
+    );
+
+    return decryptedUserKey as UserKey;
   }
 
   async decryptPubKeyEncryptedMasterKeyAndHash(
@@ -180,15 +166,17 @@ export class AuthRequestService implements AuthRequestServiceAbstraction {
     pubKeyEncryptedMasterKeyHash: string,
     privateKey: Uint8Array,
   ): Promise<{ masterKey: MasterKey; masterKeyHash: string }> {
-    const masterKey = (await this.encryptService.decapsulateKeyUnsigned(
+    const decryptedMasterKeyArrayBuffer = await this.encryptService.rsaDecrypt(
       new EncString(pubKeyEncryptedMasterKey),
       privateKey,
-    )) as MasterKey;
+    );
 
     const decryptedMasterKeyHashArrayBuffer = await this.encryptService.rsaDecrypt(
       new EncString(pubKeyEncryptedMasterKeyHash),
       privateKey,
     );
+
+    const masterKey = new SymmetricCryptoKey(decryptedMasterKeyArrayBuffer) as MasterKey;
     const masterKeyHash = Utils.fromBufferToUtf8(decryptedMasterKeyHashArrayBuffer);
 
     return {

@@ -2,7 +2,11 @@
 // @ts-strict-ignore
 import { firstValueFrom, map, Observable, Subject } from "rxjs";
 
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
 import { RotateableKeySet, UserDecryptionOptionsServiceAbstraction } from "@bitwarden/auth/common";
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
 import { KeyService } from "@bitwarden/key-management";
 
 import { DeviceResponse } from "../../../auth/abstractions/devices/responses/device.response";
@@ -85,6 +89,8 @@ export class DeviceTrustService implements DeviceTrustServiceAbstraction {
   ) {
     this.supportsDeviceTrust$ = this.userDecryptionOptionsService.userDecryptionOptions$.pipe(
       map((options) => {
+        // TODO: Eslint upgrade. Please resolve this since the ?? does nothing
+        // eslint-disable-next-line no-constant-binary-expression
         return options?.trustedDeviceOption != null ?? false;
       }),
     );
@@ -93,6 +99,8 @@ export class DeviceTrustService implements DeviceTrustServiceAbstraction {
   supportsDeviceTrustByUserId$(userId: UserId): Observable<boolean> {
     return this.userDecryptionOptionsService.userDecryptionOptionsById$(userId).pipe(
       map((options) => {
+        // TODO: Eslint upgrade. Please resolve this since the ?? does nothing
+        // eslint-disable-next-line no-constant-binary-expression
         return options?.trustedDeviceOption != null ?? false;
       }),
     );
@@ -164,10 +172,10 @@ export class DeviceTrustService implements DeviceTrustServiceAbstraction {
       this.encryptService.encapsulateKeyUnsigned(userKey, devicePublicKey),
 
       // Encrypt devicePublicKey with user key
-      this.encryptService.encrypt(devicePublicKey, userKey),
+      this.encryptService.wrapEncapsulationKey(devicePublicKey, userKey),
 
       // Encrypt devicePrivateKey with deviceKey
-      this.encryptService.encrypt(devicePrivateKey, deviceKey),
+      this.encryptService.wrapDecapsulationKey(devicePrivateKey, deviceKey),
     ]);
 
     // Send encrypted keys to server
@@ -192,7 +200,7 @@ export class DeviceTrustService implements DeviceTrustServiceAbstraction {
     oldUserKey: UserKey,
     newUserKey: UserKey,
     userId: UserId,
-  ): Promise<DeviceKeysUpdateRequest[]> {
+  ): Promise<OtherDeviceKeysUpdateRequest[]> {
     if (!userId) {
       throw new Error("UserId is required. Cannot get rotated data.");
     }
@@ -209,9 +217,8 @@ export class DeviceTrustService implements DeviceTrustServiceAbstraction {
       devices.data
         .filter((device) => device.isTrusted)
         .map(async (device) => {
-          const deviceWithKeys = await this.devicesApiService.getDeviceKeys(device.identifier);
-          const publicKey = await this.encryptService.decryptToBytes(
-            deviceWithKeys.encryptedPublicKey,
+          const publicKey = await this.encryptService.unwrapEncapsulationKey(
+            new EncString(device.encryptedPublicKey),
             oldUserKey,
           );
 
@@ -221,9 +228,12 @@ export class DeviceTrustService implements DeviceTrustServiceAbstraction {
             return null;
           }
 
-          const newEncryptedPublicKey = await this.encryptService.encrypt(publicKey, newUserKey);
-          const newEncryptedUserKey = await this.encryptService.rsaEncrypt(
-            newUserKey.key,
+          const newEncryptedPublicKey = await this.encryptService.wrapEncapsulationKey(
+            publicKey,
+            newUserKey,
+          );
+          const newEncryptedUserKey = await this.encryptService.encapsulateKeyUnsigned(
+            newUserKey,
             publicKey,
           );
 
@@ -279,7 +289,7 @@ export class DeviceTrustService implements DeviceTrustServiceAbstraction {
     const currentDeviceKeys = await this.devicesApiService.getDeviceKeys(deviceIdentifier);
 
     // Decrypt the existing device public key with the old user key
-    const decryptedDevicePublicKey = await this.encryptService.decryptToBytes(
+    const decryptedDevicePublicKey = await this.encryptService.unwrapEncapsulationKey(
       currentDeviceKeys.encryptedPublicKey,
       oldUserKey,
     );
@@ -291,7 +301,7 @@ export class DeviceTrustService implements DeviceTrustServiceAbstraction {
     );
 
     // Re-encrypt the device public key with the new user key
-    const encryptedDevicePublicKey = await this.encryptService.encrypt(
+    const encryptedDevicePublicKey = await this.encryptService.wrapEncapsulationKey(
       decryptedDevicePublicKey,
       newUserKey,
     );
@@ -395,7 +405,7 @@ export class DeviceTrustService implements DeviceTrustServiceAbstraction {
 
     try {
       // attempt to decrypt encryptedDevicePrivateKey with device key
-      const devicePrivateKey = await this.encryptService.decryptToBytes(
+      const devicePrivateKey = await this.encryptService.unwrapDecapsulationKey(
         encryptedDevicePrivateKey,
         deviceKey,
       );
