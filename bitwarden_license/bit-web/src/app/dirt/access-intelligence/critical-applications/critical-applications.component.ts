@@ -36,6 +36,7 @@ import { CreateTasksRequest } from "../../../vault/services/abstractions/admin-t
 import { DefaultAdminTaskService } from "../../../vault/services/default-admin-task.service";
 import { AppTableRowScrollableComponent } from "../app-table-row-scrollable/app-table-row-scrollable.component";
 import { RiskInsightsTabType } from "../risk-insights.component";
+import { RiskInsightsStore } from "../risk-insights.store";
 
 @Component({
   standalone: true,
@@ -64,6 +65,8 @@ export class CriticalApplicationsComponent implements OnInit {
   isNotificationsFeatureEnabled: boolean = false;
   enableRequestPasswordChange = false;
 
+  readonly store = inject(RiskInsightsStore);
+
   async ngOnInit() {
     this.isNotificationsFeatureEnabled = await this.configService.getFeatureFlag(
       FeatureFlag.EnableRiskInsightsNotifications,
@@ -71,7 +74,7 @@ export class CriticalApplicationsComponent implements OnInit {
     this.organizationId = this.activatedRoute.snapshot.paramMap.get("organizationId") ?? "";
     combineLatest([
       this.dataService.applications$,
-      this.criticalAppsService.getAppsListForOrg(this.organizationId),
+      this.criticalAppsService.generateAppsListForOrg$(this.organizationId),
     ])
       .pipe(
         takeUntilDestroyed(this.destroyRef),
@@ -87,7 +90,7 @@ export class CriticalApplicationsComponent implements OnInit {
       .subscribe((applications) => {
         if (applications) {
           this.dataSource.data = applications;
-          this.applicationSummary = this.reportService.generateApplicationsSummary(applications);
+          // this.applicationSummary = this.reportService.generateApplicationsSummary(applications);
           this.enableRequestPasswordChange = this.applicationSummary.totalAtRiskMemberCount > 0;
         }
       });
@@ -192,7 +195,4 @@ export class CriticalApplicationsComponent implements OnInit {
   trackByFunction(_: number, item: ApplicationHealthReportDetailWithCriticalFlag) {
     return item.applicationName;
   }
-  isDrawerOpenForTableRow = (applicationName: string) => {
-    return this.dataService.drawerInvokerId === applicationName;
-  };
 }

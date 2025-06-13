@@ -10,7 +10,7 @@ import {
   RiskInsightsReportService,
 } from "@bitwarden/bit-common/dirt/reports/risk-insights";
 import {
-  ApplicationHealthReportDetail,
+  // ApplicationHealthReportDetail,
   ApplicationHealthReportDetailWithCriticalFlag,
   ApplicationHealthReportSummary,
 } from "@bitwarden/bit-common/dirt/reports/risk-insights/models/password-health";
@@ -85,7 +85,7 @@ export class AllApplicationsComponent implements OnInit {
 
       combineLatest([
         this.dataService.applications$,
-        this.criticalAppsService.getAppsListForOrg(organizationId),
+        this.criticalAppsService.generateAppsListForOrg$(organizationId),
         organization$,
       ])
         .pipe(
@@ -131,18 +131,18 @@ export class AllApplicationsComponent implements OnInit {
       .subscribe((v) => (this.dataSource.filter = v));
   }
 
-  goToCreateNewLoginItem = async () => {
-    // TODO: implement
-    this.toastService.showToast({
-      variant: "warning",
-      title: "",
-      message: "Not yet implemented",
-    });
-  };
+  // goToCreateNewLoginItem = async () => {
+  //   // TODO: implement
+  //   this.toastService.showToast({
+  //     variant: "warning",
+  //     title: "",
+  //     message: "Not yet implemented",
+  //   });
+  // };
 
-  isMarkedAsCriticalItem(applicationName: string) {
-    return this.selectedUrls.has(applicationName);
-  }
+  // isMarkedAsCriticalItem(applicationName: string) {
+  //   return this.selectedUrls.has(applicationName);
+  // }
 
   markAppsAsCritical = async () => {
     this.markingAsCritical = true;
@@ -164,9 +164,9 @@ export class AllApplicationsComponent implements OnInit {
     }
   };
 
-  trackByFunction(_: number, item: ApplicationHealthReportDetail) {
-    return item.applicationName;
-  }
+  // trackByFunction(_: number, item: ApplicationHealthReportDetail) {
+  //   return item.applicationName;
+  // }
 
   showAppAtRiskMembers = async (applicationName: string) => {
     const info = {

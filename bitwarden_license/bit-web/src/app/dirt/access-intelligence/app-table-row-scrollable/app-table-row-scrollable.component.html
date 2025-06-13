@@ -13,7 +13,7 @@
       <td
         bitCell
         *ngIf="showRowCheckBox"
-        [ngClass]="{ 'tw-bg-primary-100': isDrawerIsOpenForThisRecord(row.applicationName) }"
+        [ngClass]="{ 'tw-bg-primary-100': isRowSelected(row.applicationName) }"
       >
         <input
           bitCheckbox
@@ -27,7 +27,7 @@
       <td
         bitCell
         *ngIf="!showRowCheckBox"
-        [ngClass]="{ 'tw-bg-primary-100': isDrawerIsOpenForThisRecord(row.applicationName) }"
+        [ngClass]="{ 'tw-bg-primary-100': isRowSelected(row.applicationName) }"
       >
         <i class="bwi bwi-star-f" *ngIf="row.isMarkedAsCritical"></i>
       </td>
@@ -36,33 +36,24 @@
       </td>
       <td
         class="tw-cursor-pointer"
-        [ngClass]="{ 'tw-bg-primary-100': isDrawerIsOpenForThisRecord(row.applicationName) }"
+        [ngClass]="{ 'tw-bg-primary-100': isRowSelected(row.applicationName) }"
         (click)="showAppAtRiskMembers(row.applicationName)"
         (keypress)="showAppAtRiskMembers(row.applicationName)"
         bitCell
       >
         <span>{{ row.applicationName }}</span>
       </td>
-      <td
-        bitCell
-        [ngClass]="{ 'tw-bg-primary-100': isDrawerIsOpenForThisRecord(row.applicationName) }"
-      >
+      <td bitCell [ngClass]="{ 'tw-bg-primary-100': isRowSelected(row.applicationName) }">
         <span>
           {{ row.atRiskPasswordCount }}
         </span>
       </td>
-      <td
-        bitCell
-        [ngClass]="{ 'tw-bg-primary-100': isDrawerIsOpenForThisRecord(row.applicationName) }"
-      >
+      <td bitCell [ngClass]="{ 'tw-bg-primary-100': isRowSelected(row.applicationName) }">
         <span>
           {{ row.passwordCount }}
         </span>
       </td>
-      <td
-        bitCell
-        [ngClass]="{ 'tw-bg-primary-100': isDrawerIsOpenForThisRecord(row.applicationName) }"
-      >
+      <td bitCell [ngClass]="{ 'tw-bg-primary-100': isRowSelected(row.applicationName) }">
         <span>
           {{ row.atRiskMemberCount }}
         </span>
@@ -70,14 +61,14 @@
       <td
         bitCell
         data-testid="total-membership"
-        [ngClass]="{ 'tw-bg-primary-100': isDrawerIsOpenForThisRecord(row.applicationName) }"
+        [ngClass]="{ 'tw-bg-primary-100': isRowSelected(row.applicationName) }"
       >
         {{ row.memberCount }}
       </td>
       <td
         bitCell
         *ngIf="showRowMenuForCriticalApps"
-        [ngClass]="{ 'tw-bg-primary-100': isDrawerIsOpenForThisRecord(row.applicationName) }"
+        [ngClass]="{ 'tw-bg-primary-100': isRowSelected(row.applicationName) }"
       >
         <button
           [bitMenuTriggerFor]="rowMenu"

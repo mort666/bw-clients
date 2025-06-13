@@ -82,7 +82,7 @@
     [dataSource]="dataSource"
     [showRowCheckBox]="false"
     [showRowMenuForCriticalApps]="true"
-    [isDrawerIsOpenForThisRecord]="isDrawerOpenForTableRow"
+    [selectedApplication]="dataService.drawerInvokerId"
     [showAppAtRiskMembers]="showAppAtRiskMembers"
     [unmarkAsCriticalApp]="unmarkAsCriticalApp"
   ></app-table-row-scrollable>

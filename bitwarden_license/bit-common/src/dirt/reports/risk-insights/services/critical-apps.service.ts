@@ -36,7 +36,7 @@ export class CriticalAppsService {
 
   private fetchOrg$ = this.orgId
     .pipe(
-      switchMap((orgId) => this.retrieveCriticalApps(orgId)),
+      switchMap((orgId) => this._retrieveCriticalApps(orgId)),
       takeUntil(this.teardown),
     )
     .subscribe((apps) => this.criticalAppsList.next(apps));
@@ -48,7 +48,7 @@ export class CriticalAppsService {
   ) {}
 
   // Get a list of critical apps for a given organization
-  getAppsListForOrg(orgId: string): Observable<PasswordHealthReportApplicationsResponse[]> {
+  generateAppsListForOrg$(orgId: string): Observable<PasswordHealthReportApplicationsResponse[]> {
     return this.criticalAppsList
       .asObservable()
       .pipe(map((apps) => apps.filter((app) => app.organizationId === orgId)));
@@ -67,8 +67,8 @@ export class CriticalAppsService {
     }
 
     // only save records that are not already in the database
-    const newEntries = await this.filterNewEntries(orgId as OrganizationId, selectedUrls);
-    const criticalAppsRequests = await this.encryptNewEntries(
+    const newEntries = await this._filterNewEntries(orgId as OrganizationId, selectedUrls);
+    const criticalAppsRequests = await this._encryptNewEntries(
       orgId as OrganizationId,
       key,
       newEntries,
@@ -94,6 +94,7 @@ export class CriticalAppsService {
       }
     }
     this.criticalAppsList.next(updatedList);
+    return updatedList;
   }
 
   // Get the critical apps for a given organization
@@ -120,7 +121,7 @@ export class CriticalAppsService {
     this.criticalAppsList.next(this.criticalAppsList.value.filter((f) => f.uri !== selectedUrl));
   }
 
-  private retrieveCriticalApps(
+  private _retrieveCriticalApps(
     orgId: OrganizationId | null,
   ): Observable<PasswordHealthReportApplicationsResponse[]> {
     if (orgId === null) {
@@ -149,7 +150,10 @@ export class CriticalAppsService {
     return result$ as Observable<PasswordHealthReportApplicationsResponse[]>;
   }
 
-  private async filterNewEntries(orgId: OrganizationId, selectedUrls: string[]): Promise<string[]> {
+  private async _filterNewEntries(
+    orgId: OrganizationId,
+    selectedUrls: string[],
+  ): Promise<string[]> {
     return await firstValueFrom(this.criticalAppsList).then((criticalApps) => {
       const criticalAppsUri = criticalApps
         .filter((f) => f.organizationId === orgId)
@@ -158,7 +162,7 @@ export class CriticalAppsService {
     });
   }
 
-  private async encryptNewEntries(
+  private async _encryptNewEntries(
     orgId: OrganizationId,
     key: OrgKey,
     newEntries: string[],
