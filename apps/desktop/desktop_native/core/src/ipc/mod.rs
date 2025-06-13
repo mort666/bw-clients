@@ -118,6 +118,14 @@ pub fn all_paths(name: &str) -> Vec<std::path::PathBuf> {
         paths.extend(flatpak_paths);
 
         let username = env::var("USER").unwrap_or_else(|_| "unknown".to_string());
+        let test = homedir::home(username.clone());
+        println!("homedir {:?}", test.unwrap());
+        println!("username {:?}", username.clone());
+        println!(
+            "home path {:?}",
+            env::var("USER").unwrap_or_else(|_| "unknown".to_string())
+        );
+
         // The home directory is changed inside of snap, but we need the host home directory here. The following logic works in default
         // ubuntu installations, but may not work if the home directory is changed (active directory + mounted homes, etc.).
         let host_home = PathBuf::from(format!("/home/{username}"));
