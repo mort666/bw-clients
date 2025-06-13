@@ -117,22 +117,17 @@ pub fn all_paths(name: &str) -> Vec<std::path::PathBuf> {
         let mut paths = vec![path(name)];
         paths.extend(flatpak_paths);
 
+        // Additionally, we add the host home directory path, to mount sockets into the unsandboxed apps.
         let username = env::var("USER").unwrap_or_else(|_| "unknown".to_string());
-        let test = homedir::home(username.clone());
-        println!("homedir {:?}", test.unwrap());
-        println!("username {:?}", username.clone());
-        println!(
-            "home path {:?}",
-            env::var("USER").unwrap_or_else(|_| "unknown".to_string())
-        );
-
-        // The home directory is changed inside of snap, but we need the host home directory here. The following logic works in default
-        // ubuntu installations, but may not work if the home directory is changed (active directory + mounted homes, etc.).
-        let host_home = PathBuf::from(format!("/home/{username}"));
-        let unsandboxed_paths = UNSANDBOXED_PATHS
-            .iter()
-            .map(|path| host_home.join(path).join(format!(".app.{name}.socket")));
-        paths.extend(unsandboxed_paths);
+        // The HOME env variable is changed / mapped inside of snap sandbox but we need the host home directory here.
+        let host_home = homedir::home(username.clone()).ok().flatten();
+        if let Some(host_home) = host_home {
+            // Add the host home directory paths for unsandboxed apps.
+            let unsandboxed_paths = UNSANDBOXED_PATHS
+                .iter()
+                .map(|path| host_home.join(path).join(format!(".app.{name}.socket")));
+            paths.extend(unsandboxed_paths);
+        }
 
         paths
     }
