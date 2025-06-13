@@ -4,7 +4,10 @@ import { of } from "rxjs";
 
 import { Account, AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { UserId } from "@bitwarden/common/types/guid";
-import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
+import {
+  CipherService,
+  EncryptionContext,
+} from "@bitwarden/common/vault/abstractions/cipher.service";
 import { Cipher } from "@bitwarden/common/vault/models/domain/cipher";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { LoginView } from "@bitwarden/common/vault/models/view/login.view";
@@ -26,6 +29,7 @@ describe("DefaultCipherFormService", () => {
   beforeEach(() => {
     markAsCompleteMock = jest.fn().mockResolvedValue(undefined);
     pendingTasks$ = jest.fn().mockReturnValue(of([]));
+    cipherServiceMock.encrypt.mockResolvedValue({} as EncryptionContext);
 
     testBed = TestBed.configureTestingModule({
       providers: [
