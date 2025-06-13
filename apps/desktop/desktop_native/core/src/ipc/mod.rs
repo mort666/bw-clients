@@ -106,7 +106,7 @@ pub fn path(name: &str) -> std::path::PathBuf {
 pub fn all_paths(name: &str) -> Vec<std::path::PathBuf> {
     #[cfg(target_os = "linux")]
     {
-        use std::{env, path::PathBuf};
+        use std::env;
 
         // On Linux, in flatpak, we mount sockets in each app's sandboxed directory.
         let user_home = dirs::home_dir().unwrap();
