@@ -3,6 +3,8 @@ mod dpapi;
 #[cfg(target_os = "linux")]
 mod memfd_secret;
 #[cfg(target_os = "linux")]
+mod mlock;
+
 #[cfg(target_os = "macos")]
 mod mlock;
 
