@@ -86,7 +86,7 @@ impl SecureMemoryStore for DpapiSecretKVStore {
     }
 
     fn remove(&mut self, key: &str) {
-        if let Some(value) = self.map.remove(key) {
+        if let Some(mut value) = self.map.remove(key) {
             unsafe {
                 std::ptr::write_bytes(value.as_mut_ptr(), 0, value.len());
             }
@@ -94,7 +94,7 @@ impl SecureMemoryStore for DpapiSecretKVStore {
     }
 
     fn clear(&mut self) {
-        for (_, value) in self.map.drain() {
+        for (_, mut value) in self.map.drain() {
             unsafe {
                 std::ptr::write_bytes(value.as_mut_ptr(), 0, value.len());
             }
