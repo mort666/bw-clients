@@ -67,6 +67,7 @@ windows = { workspace = true, features = [
     "Storage_Streams",
     "Win32_Foundation",
     "Win32_Security_Credentials",
+    "Win32_Security_Cryptography",
     "Win32_System_WinRT",
     "Win32_UI_Input_KeyboardAndMouse",
     "Win32_UI_WindowsAndMessaging",
