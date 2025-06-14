@@ -115,9 +115,9 @@ mod tests {
     fn test_dpapi_secret_kv_store() {
         let mut store = DpapiSecretKVStore::new();
         let key = "test_key".to_string();
-        let mut value = vec![1, 2, 3, 4, 5];
+        let value = vec![1, 2, 3, 4, 5];
 
-        store.put(key.clone(), &mut value);
+        store.put(key.clone(), &value);
         assert!(store.has(&key));
         assert_eq!(store.get(&key), Some(value));
     }

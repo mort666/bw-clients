@@ -2,6 +2,8 @@
 mod dpapi;
 #[cfg(target_os = "linux")]
 mod memfd_secret;
+#[cfg(target_os = "linux")]
+#[cfg(target_os = "macos")]
 mod mlock;
 
 /// The secure memory store provides an ephemeral key-value store for sensitive data.
