@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use pkcs8::der::zeroize::Zeroize;
 use windows::Win32::Security::Cryptography::{
     CryptProtectMemory, CryptUnprotectMemory, CRYPTPROTECTMEMORY_BLOCK_SIZE,
     CRYPTPROTECTMEMORY_SAME_PROCESS,
