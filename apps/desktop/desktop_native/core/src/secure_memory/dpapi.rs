@@ -26,7 +26,7 @@ impl DpapiSecretKVStore {
 }
 
 impl SecureMemoryStore for DpapiSecretKVStore {
-    fn put(&mut self, key: String, value: &mut [u8]) {
+    fn put(&mut self, key: String, value: &[u8]) {
         let length_header_len = std::mem::size_of::<usize>();
 
         // The allocated data has to be a multiple of CRYPTPROTECTMEMORY_BLOCK_SIZE, so we pad it and write the length in front
