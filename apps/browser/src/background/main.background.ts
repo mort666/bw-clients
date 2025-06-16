@@ -2,7 +2,7 @@
 // @ts-strict-ignore
 import "core-js/proposals/explicit-resource-management";
 
-import { filter, firstValueFrom, map, merge, Observable, of, Subject, timeout } from "rxjs";
+import { concatMap, filter, firstValueFrom, map, merge, Observable, Subject, timeout } from "rxjs";
 
 import { CollectionService, DefaultCollectionService } from "@bitwarden/admin-console/common";
 import {
@@ -1766,10 +1766,16 @@ export default class MainBackground {
     await this.tabsBackground.init();
   }
 
-  yieldGeneratedPassword = async (
-    $on: Observable<GenerateRequest>,
-  ): Promise<Observable<GeneratedCredential>> => {
-    return of(new GeneratedCredential(await this.generatePassword(), "password", new Date()));
+  yieldGeneratedPassword = ($on: Observable<GenerateRequest>): Observable<GeneratedCredential> => {
+    return $on.pipe(
+      concatMap(async () => {
+        const options = (await this.passwordGenerationService.getOptions())?.[0] ?? {};
+        const password = await this.passwordGenerationService.generatePassword(options);
+        const credential = new GeneratedCredential(password, "password", new Date());
+
+        return credential;
+      }),
+    );
   };
 
   generatePassword = async (): Promise<string> => {

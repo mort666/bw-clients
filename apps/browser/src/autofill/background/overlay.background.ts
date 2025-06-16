@@ -237,7 +237,7 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     private accountService: AccountService,
     private generatePasswordCallback: (
       $on: Observable<GenerateRequest>,
-    ) => Promise<Observable<GeneratedCredential>>,
+    ) => Observable<GeneratedCredential>,
     private addPasswordCallback: (password: string) => Promise<void>,
   ) {
     this.initOverlayEventObservables();
