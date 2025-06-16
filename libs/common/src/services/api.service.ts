@@ -1418,7 +1418,6 @@ export class ApiService implements ApiServiceAbstraction {
       headers.set("User-Agent", this.customUserAgent);
     }
     const env = await firstValueFrom(this.environmentService.environment$);
-    // TODO: MDG stringify the request array into requests of no more than 50 KiB
 
     // Break uploads into chunks of 100 events
     let bail = false;
