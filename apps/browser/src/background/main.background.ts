@@ -2,7 +2,7 @@
 // @ts-strict-ignore
 import "core-js/proposals/explicit-resource-management";
 
-import { filter, firstValueFrom, map, merge, Subject, timeout } from "rxjs";
+import { filter, firstValueFrom, map, merge, Observable, of, Subject, timeout } from "rxjs";
 
 import { CollectionService, DefaultCollectionService } from "@bitwarden/admin-console/common";
 import {
@@ -207,6 +207,8 @@ import { FolderService } from "@bitwarden/common/vault/services/folder/folder.se
 import { TotpService } from "@bitwarden/common/vault/services/totp.service";
 import { VaultSettingsService } from "@bitwarden/common/vault/services/vault-settings/vault-settings.service";
 import { DefaultTaskService, TaskService } from "@bitwarden/common/vault/tasks";
+import { GenerateRequest } from "@bitwarden/generator-core";
+import { GeneratedCredential } from "@bitwarden/generator-history";
 import {
   legacyPasswordGenerationServiceFactory,
   legacyUsernameGenerationServiceFactory,
@@ -1763,6 +1765,12 @@ export default class MainBackground {
     await this.overlayBackground.init();
     await this.tabsBackground.init();
   }
+
+  yieldGeneratedPassword = async (
+    $on: Observable<GenerateRequest>,
+  ): Promise<Observable<GeneratedCredential>> => {
+    return of(new GeneratedCredential(await this.generatePassword(), "password", new Date()));
+  };
 
   generatePassword = async (): Promise<string> => {
     const options = (await this.passwordGenerationService.getOptions())?.[0] ?? {};
