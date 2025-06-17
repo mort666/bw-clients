@@ -2,7 +2,9 @@
 // @ts-strict-ignore
 import { Directive, HostListener, Input } from "@angular/core";
 
+import { ClientType } from "@bitwarden/common/enums";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 
 import { ToastService, ToastVariant } from "../";
@@ -18,6 +20,7 @@ export class CopyClickDirective {
     private platformUtilsService: PlatformUtilsService,
     private toastService: ToastService,
     private i18nService: I18nService,
+    private messagingService: MessagingService,
   ) {}
 
   @Input("appCopyClick") valueToCopy = "";
@@ -53,6 +56,10 @@ export class CopyClickDirective {
 
   @HostListener("click") onClick() {
     this.platformUtilsService.copyToClipboard(this.valueToCopy);
+
+    if (this.platformUtilsService.getClientType() === ClientType.Desktop) {
+      this.messagingService.send("minimizeOnCopy");
+    }
 
     if (this._showToast) {
       const message = this.valueLabel
