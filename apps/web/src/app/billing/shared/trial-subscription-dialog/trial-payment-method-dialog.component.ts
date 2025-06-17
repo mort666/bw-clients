@@ -140,7 +140,6 @@ export class TrialPaymentMethodDialogComponent implements OnInit, OnDestroy {
   productTypes = ProductTierType;
   formPromise: Promise<string>;
   singleOrgPolicyAppliesToActiveUser = false;
-  isInTrialFlow = false;
   discount = 0;
 
   formGroup = this.formBuilder.group({
@@ -228,16 +227,6 @@ export class TrialPaymentMethodDialogComponent implements OnInit, OnDestroy {
       }
     }
 
-    if (this.currentPlan && this.currentPlan.productTier !== ProductTierType.Enterprise) {
-      const upgradedPlan = this.passwordManagerPlans.find((plan) =>
-        this.currentPlan.productTier === ProductTierType.Free
-          ? plan.type === PlanType.FamiliesAnnually
-          : plan.upgradeSortOrder == this.currentPlan.upgradeSortOrder + 1,
-      );
-
-      this.plan = upgradedPlan.type;
-      this.productTier = upgradedPlan.productTier;
-    }
     this.accountService.activeAccount$
       .pipe(
         getUserId,
