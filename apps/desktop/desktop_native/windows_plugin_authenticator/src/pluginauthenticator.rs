@@ -84,7 +84,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
         request: *const ExperimentalWebAuthnPluginOperationRequest,
         response: *mut *mut ExperimentalWebAuthnPluginOperationResponse,
     ) -> HRESULT {
-        panic!("EXPERIMENTAL_PluginMakeCredential() called");
+        //panic!("EXPERIMENTAL_PluginMakeCredential() called");
         util::message(String::from("EXPERIMENTAL_PluginMakeCredential() called"));
         HRESULT(0)
     }
@@ -94,7 +94,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
         request: *const ExperimentalWebAuthnPluginOperationRequest,
         response: *mut *mut ExperimentalWebAuthnPluginOperationResponse,
     ) -> HRESULT {
-        panic!("EXPERIMENTAL_PluginGetAssertion() called");
+        //panic!("EXPERIMENTAL_PluginGetAssertion() called");
         util::message(String::from("EXPERIMENTAL_PluginGetAssertion() called"));
         HRESULT(0)
     }
@@ -103,7 +103,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
         &self,
         request: *const ExperimentalWebAuthnPluginCancelOperationRequest,
     ) -> HRESULT {
-        panic!("EXPERIMENTAL_PluginCancelOperation() called");
+        //panic!("EXPERIMENTAL_PluginCancelOperation() called");
         util::message(String::from("EXPERIMENTAL_PluginCancelOperation() called"));
         HRESULT(0)
     }

@@ -87,8 +87,8 @@ xmlns:build="http://schemas.microsoft.com/developer/appx/2015/build">
         <Resource Language="zh-tw" />
     </Resources>
     <Dependencies>
-        <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.14316.0"
-            MaxVersionTested="10.0.14316.0" />
+        <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.22635.4515"
+            MaxVersionTested="10.0.26120.4250" />
     </Dependencies>
     <Capabilities>
         <rescap:Capability Name="runFullTrust" />
@@ -114,7 +114,7 @@ xmlns:build="http://schemas.microsoft.com/developer/appx/2015/build">
                 </uap:Extension>
                 <com:Extension Category="windows.comServer">
                     <com:ComServer>
-                        <com:ExeServer Executable="Bitwarden.exe" DisplayName="Bitwarden Passkey Manager">
+                        <com:ExeServer Executable="app\Bitwarden.exe" DisplayName="Bitwarden Passkey Manager">
                             <com:Class Id="0f7dc5d9-69ce-4652-8572-6877fd695062"
                                 DisplayName="Bitwarden Passkey Manager" />
                         </com:ExeServer>
