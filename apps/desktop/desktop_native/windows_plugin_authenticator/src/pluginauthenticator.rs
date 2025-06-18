@@ -116,13 +116,11 @@ impl IClassFactory_Impl for Factory_Impl {
         iid: *const GUID,
         object: *mut *mut core::ffi::c_void,
     ) -> Result<()> {
-        assert!(outer.is_null());
-        let unknown: IInspectable = PluginAuthenticatorComObject.into();
+        let unknown: IInspectable = PluginAuthenticatorComObject.into();    // TODO: IUnknown ?
         unsafe { unknown.query(iid, object).ok() }
     }
 
     fn LockServer(&self, lock: BOOL) -> Result<()> {
-        assert!(lock.as_bool());
         Ok(())
     }
 }
