@@ -79,7 +79,7 @@ export class TrialPaymentMethodService {
       passwordManager: {
         additionalStorage: 0,
         plan: selectedPlan?.type,
-        seats: subscription.seats,
+        seats: subscription.seats ?? 0,
       },
       taxInformation: {
         postalCode: taxInformation.postalCode,
@@ -90,9 +90,10 @@ export class TrialPaymentMethodService {
 
     if (organization.useSecretsManager) {
       request.secretsManager = {
-        seats: subscription.smSeats,
+        seats: subscription.smSeats ?? 0,
         additionalMachineAccounts:
-          subscription.smServiceAccounts - subscription.plan.SecretsManager.baseServiceAccount,
+          (subscription.smServiceAccounts ?? 0) -
+          (subscription.plan?.SecretsManager?.baseServiceAccount ?? 0),
       };
     }
 
@@ -100,11 +101,12 @@ export class TrialPaymentMethodService {
       const invoice = await taxService.previewOrganizationInvoice(request);
       return invoice.taxAmount;
     } catch (error) {
-      const translatedMessage = i18nService.t(error.message);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const translatedMessage = i18nService.t(errorMessage);
       toastService.showToast({
         title: "",
         variant: "error",
-        message: !translatedMessage || translatedMessage === "" ? error.message : translatedMessage,
+        message: !translatedMessage || translatedMessage === "" ? errorMessage : translatedMessage,
       });
       throw error;
     }

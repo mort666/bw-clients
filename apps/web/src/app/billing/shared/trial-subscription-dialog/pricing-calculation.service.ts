@@ -58,7 +58,7 @@ export class PricingCalculationService {
     if (selectedPlan.productTier === ProductTierType.Families) {
       return selectedPlan.PasswordManager.baseSeats;
     }
-    return subscription?.seats;
+    return subscription?.seats ?? 0;
   }
 
   calculateTotal(
