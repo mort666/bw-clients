@@ -1,13 +1,17 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { Directive, HostListener, Input } from "@angular/core";
+import { Directive, HostListener, Input, InjectionToken, Inject, Optional } from "@angular/core";
 
-import { ClientType } from "@bitwarden/common/enums";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 
 import { ToastService, ToastVariant } from "../";
+
+export interface CopyClickListener {
+  onCopy(value: string): void;
+}
+
+export const COPY_CLICK_LISTENER = new InjectionToken<CopyClickListener>("CopyClickListener");
 
 @Directive({
   selector: "[appCopyClick]",
@@ -20,7 +24,7 @@ export class CopyClickDirective {
     private platformUtilsService: PlatformUtilsService,
     private toastService: ToastService,
     private i18nService: I18nService,
-    private messagingService: MessagingService,
+    @Optional() @Inject(COPY_CLICK_LISTENER) private copyListener?: CopyClickListener,
   ) {}
 
   @Input("appCopyClick") valueToCopy = "";
@@ -57,8 +61,8 @@ export class CopyClickDirective {
   @HostListener("click") onClick() {
     this.platformUtilsService.copyToClipboard(this.valueToCopy);
 
-    if (this.platformUtilsService.getClientType() === ClientType.Desktop) {
-      this.messagingService.send("minimizeOnCopy");
+    if (this.copyListener) {
+      this.copyListener.onCopy(this.valueToCopy);
     }
 
     if (this._showToast) {
