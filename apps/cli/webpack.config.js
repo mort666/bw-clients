@@ -19,6 +19,10 @@ const moduleRules = [
     use: "ts-loader",
     exclude: path.resolve(__dirname, "node_modules"),
   },
+  {
+    test: /\.spec\.ts$|[\\/]spec[\\/]/,
+    exclude: true,
+  },
 ];
 
 const plugins = [

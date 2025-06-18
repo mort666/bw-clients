@@ -1,5 +1,5 @@
 export * from "./client-locations";
-export * from "./fake-storage.service";
+export * from "./spec/fake-storage.service";
 export * from "./html-storage-location.enum";
 export * from "./memory-storage.service";
 export * from "./serialized-memory-storage.service";

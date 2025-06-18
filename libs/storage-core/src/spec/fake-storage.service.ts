@@ -1,8 +1,8 @@
 import { MockProxy, mock } from "jest-mock-extended";
 import { Subject } from "rxjs";
 
-import { StorageOptions } from "./storage-options";
-import { StorageService, ObservableStorageService, StorageUpdate } from "./storage.service";
+import { StorageOptions } from "../storage-options";
+import { StorageService, ObservableStorageService, StorageUpdate } from "../storage.service";
 
 const INTERNAL_KEY = "__internal__";
 
