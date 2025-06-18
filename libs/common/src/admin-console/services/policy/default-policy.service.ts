@@ -234,14 +234,11 @@ export class DefaultPolicyService implements PolicyService {
         source.minComplexity ?? target.minComplexity,
       );
       target.minLength = Math.max(target.minLength, source.minLength ?? target.minLength);
-      target.requireUpper = target.requireUpper || (source.requireUpper ?? target.requireUpper);
-      target.requireLower = target.requireLower || (source.requireLower ?? target.requireLower);
-      target.requireNumbers =
-        target.requireNumbers || (source.requireNumbers ?? target.requireNumbers);
-      target.requireSpecial =
-        target.requireSpecial || (source.requireSpecial ?? target.requireSpecial);
-      target.enforceOnLogin =
-        target.enforceOnLogin || (source.enforceOnLogin ?? target.enforceOnLogin);
+      target.requireUpper = Boolean(target.requireUpper || source.requireUpper);
+      target.requireLower = Boolean(target.requireLower || source.requireLower);
+      target.requireNumbers = Boolean(target.requireNumbers || source.requireNumbers);
+      target.requireSpecial = Boolean(target.requireSpecial || source.requireSpecial);
+      target.enforceOnLogin = Boolean(target.enforceOnLogin || source.enforceOnLogin);
     }
   }
 }

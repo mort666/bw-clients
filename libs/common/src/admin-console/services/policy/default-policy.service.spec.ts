@@ -654,6 +654,32 @@ describe("PolicyService", () => {
 
       expect(result).toBeUndefined();
     });
+
+    it("returns undefined when policies are not MasterPassword related", () => {
+      const unrelatedPolicyRequirements = {
+        minComplexity: 3,
+        minLength: 10,
+        requireUpper: true,
+      };
+      const policies = [
+        new Policy(
+          policyData(
+            "1",
+            "org1",
+            PolicyType.MaximumVaultTimeout,
+            true,
+            unrelatedPolicyRequirements,
+          ),
+        ),
+        new Policy(
+          policyData("2", "org2", PolicyType.DisableSend, true, unrelatedPolicyRequirements),
+        ),
+      ];
+
+      const result = policyService.combinePoliciesIntoMasterPasswordPolicyOptions(policies);
+
+      expect(result).toBeUndefined();
+    });
   });
 
   function policyData(

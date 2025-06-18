@@ -51,10 +51,10 @@ export abstract class PolicyService {
   ) => Observable<MasterPasswordPolicyOptions | undefined>;
 
   /**
-   * Combines all Master Password policies that are passed in and returns
+   * Combines all Master Password Policies that are passed in and returns
    * back the strongest combination of all the policies in the form of a
-   * MasterPasswordPolicyOptions.
-   * @param policies
+   * MasterPasswordPolicyOptions. Returns `undefined` if no master password
+   * policies apply to a user.
    */
   abstract combinePoliciesIntoMasterPasswordPolicyOptions(
     policies: Policy[],
