@@ -875,3 +875,57 @@ pub mod logging {
         fn flush(&self) {}
     }
 }
+
+#[napi]
+pub mod autotype {
+    use autotype::WindowInfo as _WindowInfo;
+
+    #[napi(object)]
+    pub struct WindowInfo {
+        pub handle: u32,
+        pub title: String,
+    }
+
+    impl From<_WindowInfo> for WindowInfo {
+        fn from(w: _WindowInfo) -> Self {
+            WindowInfo {
+                handle: w.handle as u32,
+                title: w.title,
+            }
+        }
+    }
+
+    #[napi]
+    pub async fn get_active_windows() -> napi::Result<Vec<WindowInfo>> {
+        autotype::get_active_windows()
+            .map(|windows| windows.into_iter().map(WindowInfo::from).collect())
+            .map_err(|e| napi::Error::from_reason(e.to_string()))
+    }
+
+    #[napi]
+    pub async fn get_focused_window() -> napi::Result<WindowInfo> {
+        autotype::get_focused_window()
+            .map(WindowInfo::from)
+            .map_err(|e| napi::Error::from_reason(e.to_string()))
+    }
+
+    #[napi]
+    pub async fn set_window_foreground(handle: u32) -> napi::Result<()> {
+        autotype::set_window_foreground(handle as isize).map_err(|e| {
+            napi::Error::from_reason(format!(
+                "Setting window foreground failed - Error: {e} - {e:?}"
+            ))
+        })
+    }
+
+    #[napi]
+    pub async fn perform_autotype(
+        username: String,
+        password: String,
+        send_enter: bool,
+    ) -> napi::Result<()> {
+        autotype::perform_autotype(&username, &password, send_enter).map_err(|e| {
+            napi::Error::from_reason(format!("Perform autotype failed - Error: {e} - {e:?}"))
+        })
+    }
+}

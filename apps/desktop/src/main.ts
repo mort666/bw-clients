@@ -39,6 +39,7 @@ import { MenuMain } from "./main/menu/menu.main";
 import { MessagingMain } from "./main/messaging.main";
 import { NativeMessagingMain } from "./main/native-messaging.main";
 import { PowerMonitorMain } from "./main/power-monitor.main";
+import { ShortcutsMain } from "./main/shortcuts.main";
 import { TrayMain } from "./main/tray.main";
 import { UpdaterMain } from "./main/updater.main";
 import { WindowMain } from "./main/window.main";
@@ -53,6 +54,7 @@ import { ElectronStorageService } from "./platform/services/electron-storage.ser
 import { EphemeralValueStorageService } from "./platform/services/ephemeral-value-storage.main.service";
 import { I18nMainService } from "./platform/services/i18n.main.service";
 import { SSOLocalhostCallbackService } from "./platform/services/sso-localhost-callback.service";
+import { AutotypeService } from "./services/autotype.service";
 import { ElectronMainMessagingService } from "./services/electron-main-messaging.service";
 import { isMacAppStore } from "./utils";
 
@@ -75,6 +77,7 @@ export class Main {
   messagingMain: MessagingMain;
   updaterMain: UpdaterMain;
   menuMain: MenuMain;
+  shortcutsMain: ShortcutsMain;
   powerMonitorMain: PowerMonitorMain;
   trayMain: TrayMain;
   biometricsService: DesktopBiometricsService;
@@ -103,6 +106,10 @@ export class Main {
 
     app.on("ready", () => {
       // on ready stuff...
+    });
+
+    app.on("will-quit", () => {
+      this.shortcutsMain.destroy();
     });
 
     if (appDataPath != null) {
@@ -286,6 +293,8 @@ export class Main {
       this.ssoUrlService,
     );
 
+    this.shortcutsMain = new ShortcutsMain(this, new AutotypeService());
+
     this.nativeAutofillMain = new NativeAutofillMain(this.logService, this.windowMain);
     void this.nativeAutofillMain.init();
   }
@@ -318,6 +327,7 @@ export class Main {
         }
         this.powerMonitorMain.init();
         await this.updaterMain.init();
+        await this.shortcutsMain.init();
 
         const [browserIntegrationEnabled, ddgIntegrationEnabled] = await Promise.all([
           firstValueFrom(this.desktopSettingsService.browserIntegrationEnabled$),

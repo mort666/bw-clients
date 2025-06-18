@@ -198,3 +198,13 @@ export declare namespace logging {
   }
   export function initNapiLog(jsLogFn: (err: Error | null, arg0: LogLevel, arg1: string) => any): void
 }
+export declare namespace autotype {
+  export interface WindowInfo {
+    handle: number
+    title: string
+  }
+  export function getActiveWindows(): Promise<Array<WindowInfo>>
+  export function getFocusedWindow(): Promise<WindowInfo>
+  export function setWindowForeground(handle: number): Promise<void>
+  export function performAutotype(username: string, password: string, sendEnter: boolean): Promise<void>
+}
