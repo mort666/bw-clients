@@ -34,8 +34,8 @@ import {
   AdjustPaymentDialogResultType,
 } from "../../shared/adjust-payment-dialog/adjust-payment-dialog.component";
 import {
+  TRIAL_PAYMENT_METHOD_DIALOG_RESULT_TYPE,
   TrialPaymentMethodDialogComponent,
-  TrialPaymentMethodDialogResultType,
 } from "../../shared/trial-subscription-dialog/trial-payment-method-dialog.component";
 import { FreeTrial } from "../../types/free-trial";
 
@@ -202,7 +202,7 @@ export class OrganizationPaymentMethodComponent implements OnDestroy {
       },
     });
     const result = await lastValueFrom(dialogRef.closed);
-    if (result === TrialPaymentMethodDialogResultType.Submitted) {
+    if (result === TRIAL_PAYMENT_METHOD_DIALOG_RESULT_TYPE.SUBMITTED) {
       this.location.replaceState(this.location.path(), "", {});
       if (this.launchPaymentModalAutomatically && !this.organization.enabled) {
         await this.syncService.fullSync(true);
