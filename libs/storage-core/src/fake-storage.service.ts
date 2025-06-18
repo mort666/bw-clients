@@ -2,11 +2,11 @@ import { MockProxy, mock } from "jest-mock-extended";
 import { Subject } from "rxjs";
 
 import { StorageOptions } from "./storage-options";
-import { AbstractStorageService, ObservableStorageService, StorageUpdate } from "./storage.service";
+import { StorageService, ObservableStorageService, StorageUpdate } from "./storage.service";
 
 const INTERNAL_KEY = "__internal__";
 
-export class FakeStorageService implements AbstractStorageService, ObservableStorageService {
+export class FakeStorageService implements StorageService, ObservableStorageService {
   private store: Record<string, unknown>;
   private updatesSubject = new Subject<StorageUpdate>();
   private _valuesRequireDeserialization = false;
@@ -16,11 +16,11 @@ export class FakeStorageService implements AbstractStorageService, ObservableSto
    * amount of calls. It is not recommended to use this to mock implementations as
    * they are not respected.
    */
-  mock: MockProxy<AbstractStorageService>;
+  mock: MockProxy<StorageService>;
 
   constructor(initial?: Record<string, unknown>) {
     this.store = initial ?? {};
-    this.mock = mock<AbstractStorageService>();
+    this.mock = mock<StorageService>();
   }
 
   /**
