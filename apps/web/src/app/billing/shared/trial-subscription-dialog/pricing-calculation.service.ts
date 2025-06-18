@@ -42,7 +42,7 @@ export class PricingCalculationService {
 
     return (
       plan.SecretsManager.basePrice +
-      this.calculateSecretsManagerSeatTotal(plan, subscription?.smSeats) +
+      this.calculateSecretsManagerSeatTotal(plan, subscription?.smSeats ?? 0) +
       this.calculateAdditionalServiceAccountTotal(plan, 0)
     ); // This will be calculated separately
   }
