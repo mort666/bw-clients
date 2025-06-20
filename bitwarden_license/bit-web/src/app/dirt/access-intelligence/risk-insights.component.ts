@@ -14,7 +14,6 @@ import {
   DrawerType,
   PasswordHealthReportApplicationsResponse,
 } from "@bitwarden/bit-common/dirt/reports/risk-insights/models/password-health";
-import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { devFlagEnabled } from "@bitwarden/common/platform/misc/flags";
 import { OrganizationId } from "@bitwarden/common/types/guid";
 import {
@@ -84,7 +83,6 @@ export class RiskInsightsComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private configService: ConfigService,
     protected dataService: RiskInsightsDataService,
     private criticalAppsService: CriticalAppsService,
   ) {

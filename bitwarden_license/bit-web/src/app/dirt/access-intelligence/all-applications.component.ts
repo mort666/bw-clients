@@ -4,13 +4,13 @@ import { FormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
 import {
   BehaviorSubject,
+  combineLatest,
   debounceTime,
   firstValueFrom,
   map,
   Observable,
   of,
   switchMap,
-  zip,
 } from "rxjs";
 
 import {
@@ -85,7 +85,6 @@ export class AllApplicationsComponent implements OnInit {
 
   destroyRef = inject(DestroyRef);
   isLoading$: Observable<boolean> = of(false);
-  isCriticalAppsFeatureEnabled = false;
 
   private atRiskInsightsReport = new BehaviorSubject<{
     data: ApplicationHealthReportDetailWithCriticalFlag[];
@@ -107,10 +106,6 @@ export class AllApplicationsComponent implements OnInit {
 
     this.dataService.isLoadingData(true);
 
-    this.isCriticalAppsFeatureEnabled = await this.configService.getFeatureFlag(
-      FeatureFlag.CriticalApps,
-    );
-
     const organizationId = this.activatedRoute.snapshot.paramMap.get("organizationId") ?? "";
     const userId = await firstValueFrom(getUserId(this.accountService.activeAccount$));
 
@@ -119,25 +114,70 @@ export class AllApplicationsComponent implements OnInit {
         .organizations$(userId)
         .pipe(getOrganizationById(organizationId));
 
+      await this.dataService.fetchCipherViewsForOrganization(organizationId as OrganizationId);
       this.dataService.fetchApplicationsReportFromCache(organizationId as OrganizationId);
 
-      zip([
+      combineLatest([
         this.dataService.applications$,
         this.dataService.appsSummary$,
         this.dataService.isReportFromArchive$,
         organization$,
         this.criticalAppsService.getAppsListForOrg(organizationId as OrganizationId),
+        this.dataService.cipherViewsForOrganization$,
       ])
         .pipe(
-          map(([report, summary, isReportFromArchive, organization, criticalApps]) => {
-            const criticalUrls = criticalApps?.map((ca) => ca.uri);
-            const data = report?.map((app) => ({
-              ...app,
-              isMarkedAsCritical: criticalUrls.includes(app.applicationName),
-            })) as ApplicationHealthReportDetailWithCriticalFlag[];
+          map(
+            ([
+              report,
+              summary,
+              isReportFromArchive,
+              organization,
+              criticalApps,
+              cipherViewsForOrg,
+            ]) => {
+              const criticalUrls = criticalApps?.map((ca) => ca.uri);
+              const data = report?.map((app) => ({
+                ...app,
+                isMarkedAsCritical: criticalUrls.includes(app.applicationName),
+              })) as ApplicationHealthReportDetailWithCriticalFlag[];
 
-            return { report: data, summary, criticalApps, isReportFromArchive, organization };
-          }),
+              return {
+                report: data,
+                summary,
+                criticalApps,
+                isReportFromArchive,
+                organization,
+                cipherViewsForOrg,
+              };
+            },
+          ),
+          switchMap(
+            async ({
+              report,
+              summary,
+              isReportFromArchive,
+              organization,
+              criticalApps,
+              cipherViewsForOrg,
+            }) => {
+              if (report && organization) {
+                const dataWithCiphers = await this.reportService.identifyCiphers(
+                  report,
+                  cipherViewsForOrg,
+                );
+
+                return {
+                  report: dataWithCiphers,
+                  summary,
+                  isReportFromArchive,
+                  organization,
+                  criticalApps,
+                };
+              }
+
+              return { report: [], summary, isReportFromArchive, organization, criticalApps: [] };
+            },
+          ),
           takeUntilDestroyed(this.destroyRef),
         )
         .subscribe(({ report, summary, criticalApps, isReportFromArchive, organization }) => {
@@ -150,7 +190,7 @@ export class AllApplicationsComponent implements OnInit {
             this.organization = organization;
           }
 
-          if (!isReportFromArchive && report && organization && summary && criticalApps) {
+          if (!isReportFromArchive && report && organization && summary) {
             this.atRiskInsightsReport.next({
               data: report,
               organization: organization,
@@ -200,14 +240,14 @@ export class AllApplicationsComponent implements OnInit {
             const request = { data: reportData };
             try {
               const response = await firstValueFrom(
-                this.riskInsightsApiService.saveRiskInsightsReport(
-                  this.organization.id as OrganizationId,
-                  request,
-                ),
+                this.riskInsightsApiService.saveRiskInsightsReport(request),
               );
               return response;
             } catch {
               /* continue as usual */
+            } finally {
+              // now that we have saved the data, we are in sync with the archive
+              this.dataService.setReportFromArchiveStatus(true);
             }
 
             return null;

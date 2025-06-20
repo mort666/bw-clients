@@ -39,11 +39,11 @@ describe("RiskInsightsApiService", () => {
 
     apiService.send.mockReturnValue(Promise.resolve(response));
 
-    service.saveRiskInsightsReport(orgId, request).subscribe((result) => {
+    service.saveRiskInsightsReport(request).subscribe((result) => {
       expect(result).toEqual(response);
       expect(apiService.send).toHaveBeenCalledWith(
-        "PUT",
-        `/reports/risk-insights-report/${orgId.toString()}`,
+        "POST",
+        `/reports/organization-reports`,
         request.data,
         true,
         true,

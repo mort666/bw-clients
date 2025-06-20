@@ -13,12 +13,11 @@ export class RiskInsightsApiService {
   constructor(private apiService: ApiService) {}
 
   saveRiskInsightsReport(
-    orgId: OrganizationId,
     request: SaveRiskInsightsReportRequest,
   ): Observable<SaveRiskInsightsReportResponse> {
     const dbResponse = this.apiService.send(
-      "PUT",
-      `/reports/risk-insights-report/${orgId.toString()}`,
+      "POST",
+      `/reports/organization-reports`,
       request.data,
       true,
       true,
@@ -29,7 +28,7 @@ export class RiskInsightsApiService {
 
   getRiskInsightsReport(orgId: OrganizationId): Observable<GetRiskInsightsReportResponse | null> {
     const dbResponse = this.apiService
-      .send("GET", `/reports/risk-insights-report/${orgId.toString()}`, null, true, true)
+      .send("GET", `/reports/organization-reports/latest/${orgId.toString()}`, null, true, true)
       .catch((error: any): any => {
         if (error.statusCode === 404) {
           return null; // Handle 404 by returning null or an appropriate default value

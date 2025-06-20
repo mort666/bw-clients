@@ -256,10 +256,8 @@ export class RiskInsightsReportService {
 
   async identifyCiphers(
     data: ApplicationHealthReportDetail[],
-    organizationId: string,
+    cipherViews: CipherView[],
   ): Promise<ApplicationHealthReportDetailWithCriticalFlagAndCipher[]> {
-    const cipherViews = await this.cipherService.getAllFromApiForOrganization(organizationId);
-
     const dataWithCiphers = data.map(
       (app, index) =>
         ({
