@@ -2,7 +2,17 @@
 // @ts-strict-ignore
 import "core-js/proposals/explicit-resource-management";
 
-import { concatMap, filter, firstValueFrom, map, merge, Observable, Subject, timeout } from "rxjs";
+import {
+  concatMap,
+  filter,
+  firstValueFrom,
+  map,
+  merge,
+  Observable,
+  of,
+  Subject,
+  timeout,
+} from "rxjs";
 
 import { CollectionService, DefaultCollectionService } from "@bitwarden/admin-console/common";
 import {
@@ -207,7 +217,7 @@ import { FolderService } from "@bitwarden/common/vault/services/folder/folder.se
 import { TotpService } from "@bitwarden/common/vault/services/totp.service";
 import { VaultSettingsService } from "@bitwarden/common/vault/services/vault-settings/vault-settings.service";
 import { DefaultTaskService, TaskService } from "@bitwarden/common/vault/tasks";
-import { GenerateRequest } from "@bitwarden/generator-core";
+import { GenerateRequest, Type } from "@bitwarden/generator-core";
 import { GeneratedCredential } from "@bitwarden/generator-history";
 import {
   legacyPasswordGenerationServiceFactory,
@@ -1753,7 +1763,7 @@ export default class MainBackground {
       this.totpService,
       this.accountService,
       this.yieldGeneratedPassword,
-      (password) => this.addPasswordToHistory(password),
+      this.addPasswordToHistory,
     );
 
     this.tabsBackground = new TabsBackground(
@@ -1778,13 +1788,10 @@ export default class MainBackground {
     );
   };
 
-  generatePassword = async (): Promise<string> => {
-    const options = (await this.passwordGenerationService.getOptions())?.[0] ?? {};
-    return await this.passwordGenerationService.generatePassword(options);
-  };
-
   generatePasswordToClipboard = async () => {
-    const password = await this.generatePassword();
+    const { credential: password } = await firstValueFrom(
+      this.yieldGeneratedPassword(of({ source: "clipboard", type: Type.password })),
+    );
     this.platformUtilsService.copyToClipboard(password);
     await this.addPasswordToHistory(password);
   };
