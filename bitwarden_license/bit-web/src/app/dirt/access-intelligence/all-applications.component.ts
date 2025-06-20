@@ -22,6 +22,7 @@ import {
 import {
   ApplicationHealthReportDetail,
   ApplicationHealthReportDetailWithCriticalFlag,
+  ApplicationHealthReportDetailWithCriticalFlagAndCipher,
   ApplicationHealthReportSummary,
 } from "@bitwarden/bit-common/dirt/reports/risk-insights/models/password-health";
 import {
@@ -31,19 +32,19 @@ import {
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
-import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { OrganizationId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import {
+  IconButtonModule,
   Icons,
   NoItemsModule,
   SearchModule,
   TableDataSource,
   ToastService,
 } from "@bitwarden/components";
-import { CardComponent } from "@bitwarden/tools-card";
+import { CardComponent } from "@bitwarden/dirt-card";
 import { HeaderModule } from "@bitwarden/web-vault/app/layouts/header/header.module";
 import { SharedModule } from "@bitwarden/web-vault/app/shared";
 import { PipesModule } from "@bitwarden/web-vault/app/vault/individual-vault/pipes/pipes.module";
@@ -52,7 +53,6 @@ import { AppTableRowScrollableComponent } from "./app-table-row-scrollable.compo
 import { ApplicationsLoadingComponent } from "./risk-insights-loading.component";
 
 @Component({
-  standalone: true,
   selector: "tools-all-applications",
   templateUrl: "./all-applications.component.html",
   imports: [
@@ -64,10 +64,12 @@ import { ApplicationsLoadingComponent } from "./risk-insights-loading.component"
     NoItemsModule,
     SharedModule,
     AppTableRowScrollableComponent,
+    IconButtonModule,
   ],
 })
 export class AllApplicationsComponent implements OnInit {
-  protected dataSource = new TableDataSource<ApplicationHealthReportDetailWithCriticalFlag>();
+  protected dataSource =
+    new TableDataSource<ApplicationHealthReportDetailWithCriticalFlagAndCipher>();
   protected selectedUrls: Set<string> = new Set<string>();
   protected searchControl = new FormControl("", { nonNullable: true });
   protected loading = true;
@@ -241,7 +243,7 @@ export class AllApplicationsComponent implements OnInit {
       this.toastService.showToast({
         variant: "success",
         title: "",
-        message: this.i18nService.t("appsMarkedAsCritical"),
+        message: this.i18nService.t("applicationsMarkedAsCriticalSuccess"),
       });
     } finally {
       this.selectedUrls.clear();

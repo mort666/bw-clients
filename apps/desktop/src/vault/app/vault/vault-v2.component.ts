@@ -8,18 +8,17 @@ import {
   ViewChild,
   ViewContainerRef,
 } from "@angular/core";
-import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ActivatedRoute, Router } from "@angular/router";
-import { firstValueFrom, Subject, takeUntil, switchMap } from "rxjs";
+import { firstValueFrom, Subject, takeUntil, switchMap, lastValueFrom, Observable } from "rxjs";
 import { filter, map, take } from "rxjs/operators";
 
 import { CollectionService, CollectionView } from "@bitwarden/admin-console/common";
-import { ModalRef } from "@bitwarden/angular/components/modal/modal.ref";
-import { ModalService } from "@bitwarden/angular/services/modal.service";
 import { VaultViewPasswordHistoryService } from "@bitwarden/angular/services/view-password-history.service";
 import { VaultFilter } from "@bitwarden/angular/vault/vault-filter/models/vault-filter.model";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { EventCollectionService } from "@bitwarden/common/abstractions/event/event-collection.service";
+import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
+import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { Account, AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
@@ -29,24 +28,28 @@ import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.servic
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { SyncService } from "@bitwarden/common/platform/sync";
-import { CipherId, CollectionId, UserId } from "@bitwarden/common/types/guid";
+import { CipherId, CollectionId, OrganizationId, UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
+import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { PremiumUpgradePromptService } from "@bitwarden/common/vault/abstractions/premium-upgrade-prompt.service";
 import { TotpService } from "@bitwarden/common/vault/abstractions/totp.service";
 import { ViewPasswordHistoryService } from "@bitwarden/common/vault/abstractions/view-password-history.service";
-import { CipherType } from "@bitwarden/common/vault/enums";
+import { CipherType, toCipherType } from "@bitwarden/common/vault/enums";
 import { CipherRepromptType } from "@bitwarden/common/vault/enums/cipher-reprompt-type";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
-import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
 import {
   BadgeModule,
   ButtonModule,
   DialogService,
   ItemModule,
   ToastService,
+  CopyClickListener,
+  COPY_CLICK_LISTENER,
 } from "@bitwarden/components";
 import { I18nPipe } from "@bitwarden/ui-common";
 import {
+  AddEditFolderDialogComponent,
+  AddEditFolderDialogResult,
   AttachmentDialogResult,
   AttachmentsV2Component,
   ChangeLoginPasswordService,
@@ -56,10 +59,12 @@ import {
   CipherFormMode,
   CipherFormModule,
   CipherViewComponent,
+  CollectionAssignmentResult,
   DecryptionFailureDialogComponent,
   DefaultChangeLoginPasswordService,
   DefaultCipherFormConfigService,
   PasswordRepromptService,
+  CipherFormComponent,
 } from "@bitwarden/vault";
 
 import { NavComponent } from "../../../app/layout/nav.component";
@@ -68,7 +73,7 @@ import { DesktopCredentialGenerationService } from "../../../services/desktop-ci
 import { DesktopPremiumUpgradePromptService } from "../../../services/desktop-premium-upgrade-prompt.service";
 import { invokeMenu, RendererMenuItem } from "../../../utils";
 
-import { FolderAddEditComponent } from "./folder-add-edit.component";
+import { AssignCollectionsDesktopComponent } from "./assign-collections";
 import { ItemFooterComponent } from "./item-footer.component";
 import { VaultFilterComponent } from "./vault-filter/vault-filter.component";
 import { VaultFilterModule } from "./vault-filter/vault-filter.module";
@@ -79,7 +84,6 @@ const BroadcasterSubscriptionId = "VaultComponent";
 @Component({
   selector: "app-vault",
   templateUrl: "vault-v2.component.html",
-  standalone: true,
   imports: [
     BadgeModule,
     CommonModule,
@@ -111,15 +115,21 @@ const BroadcasterSubscriptionId = "VaultComponent";
       useClass: DesktopPremiumUpgradePromptService,
     },
     { provide: CipherFormGenerationService, useClass: DesktopCredentialGenerationService },
+    {
+      provide: COPY_CLICK_LISTENER,
+      useExisting: VaultV2Component,
+    },
   ],
 })
-export class VaultV2Component implements OnInit, OnDestroy {
+export class VaultV2Component implements OnInit, OnDestroy, CopyClickListener {
   @ViewChild(VaultItemsV2Component, { static: true })
   vaultItemsComponent: VaultItemsV2Component | null = null;
   @ViewChild(VaultFilterComponent, { static: true })
   vaultFilterComponent: VaultFilterComponent | null = null;
   @ViewChild("folderAddEdit", { read: ViewContainerRef, static: true })
   folderAddEditModalRef: ViewContainerRef | null = null;
+  @ViewChild(CipherFormComponent)
+  cipherFormComponent: CipherFormComponent | null = null;
 
   action: CipherFormMode | "view" | null = null;
   cipherId: string | null = null;
@@ -141,6 +151,12 @@ export class VaultV2Component implements OnInit, OnDestroy {
   cipher: CipherView | null = new CipherView();
   collections: CollectionView[] | null = null;
   config: CipherFormConfig | null = null;
+  isSubmitting = false;
+
+  private organizations$: Observable<Organization[]> = this.accountService.activeAccount$.pipe(
+    map((a) => a?.id),
+    switchMap((id) => this.organizationService.organizations$(id)),
+  );
 
   protected canAccessAttachments$ = this.accountService.activeAccount$.pipe(
     filter((account): account is Account => !!account),
@@ -149,14 +165,14 @@ export class VaultV2Component implements OnInit, OnDestroy {
     ),
   );
 
-  private modal: ModalRef | null = null;
   private componentIsDestroyed$ = new Subject<boolean>();
+  private allOrganizations: Organization[] = [];
+  private allCollections: CollectionView[] = [];
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private i18nService: I18nService,
-    private modalService: ModalService,
     private broadcasterService: BroadcasterService,
     private changeDetectorRef: ChangeDetectorRef,
     private ngZone: NgZone,
@@ -176,6 +192,8 @@ export class VaultV2Component implements OnInit, OnDestroy {
     private formConfigService: CipherFormConfigService,
     private premiumUpgradePromptService: PremiumUpgradePromptService,
     private collectionService: CollectionService,
+    private organizationService: OrganizationService,
+    private folderService: FolderService,
   ) {}
 
   async ngOnInit() {
@@ -311,6 +329,16 @@ export class VaultV2Component implements OnInit, OnDestroy {
           });
         });
     }
+
+    this.organizations$.pipe(takeUntil(this.componentIsDestroyed$)).subscribe((orgs) => {
+      this.allOrganizations = orgs;
+    });
+
+    this.collectionService.decryptedCollections$
+      .pipe(takeUntil(this.componentIsDestroyed$))
+      .subscribe((collections) => {
+        this.allCollections = collections;
+      });
   }
 
   ngOnDestroy() {
@@ -322,6 +350,7 @@ export class VaultV2Component implements OnInit, OnDestroy {
 
   async load() {
     const params = await firstValueFrom(this.route.queryParams).catch();
+    const paramCipherAddType = toCipherType(params.addType);
     if (params.cipherId) {
       const cipherView = new CipherView();
       cipherView.id = params.cipherId;
@@ -332,17 +361,15 @@ export class VaultV2Component implements OnInit, OnDestroy {
       } else {
         await this.viewCipher(cipherView).catch(() => {});
       }
-    } else if (params.action === "add") {
-      this.addType = Number(params.addType);
+    } else if (params.action === "add" && paramCipherAddType) {
+      this.addType = paramCipherAddType;
       await this.addCipher(this.addType).catch(() => {});
     }
 
+    const paramCipherType = toCipherType(params.type);
     this.activeFilter = new VaultFilter({
       status: params.deleted ? "trash" : params.favorites ? "favorites" : "all",
-      cipherType:
-        params.action === "add" || params.type == null
-          ? undefined
-          : (parseInt(params.type) as CipherType),
+      cipherType: params.action === "add" || paramCipherType == null ? undefined : paramCipherType,
       selectedFolderId: params.folderId,
       selectedCollectionId: params.selectedCollectionId,
       selectedOrganizationId: params.selectedOrganizationId,
@@ -351,6 +378,13 @@ export class VaultV2Component implements OnInit, OnDestroy {
     if (this.vaultItemsComponent) {
       await this.vaultItemsComponent.reload(this.activeFilter.buildFilter()).catch(() => {});
     }
+  }
+
+  /**
+   * Handler for Vault level CopyClickDirectives to send the minimizeOnCopy message
+   */
+  onCopy() {
+    this.messagingService.send("minimizeOnCopy");
   }
 
   async viewCipher(cipher: CipherView) {
@@ -364,7 +398,14 @@ export class VaultV2Component implements OnInit, OnDestroy {
         cipher.collectionIds.includes(c.id),
       ) ?? null;
     this.action = "view";
+
     await this.go().catch(() => {});
+    await this.eventCollectionService.collect(
+      EventType.Cipher_ClientViewed,
+      cipher.id,
+      false,
+      cipher.organizationId,
+    );
   }
 
   async openAttachmentsDialog() {
@@ -381,6 +422,26 @@ export class VaultV2Component implements OnInit, OnDestroy {
       result?.action === AttachmentDialogResult.Uploaded
     ) {
       await this.vaultItemsComponent?.refresh().catch(() => {});
+
+      if (this.cipherFormComponent == null) {
+        return;
+      }
+
+      const updatedCipher = await this.cipherService.get(
+        this.cipherId as CipherId,
+        this.activeUserId as UserId,
+      );
+      const updatedCipherView = await this.cipherService.decrypt(
+        updatedCipher,
+        this.activeUserId as UserId,
+      );
+
+      this.cipherFormComponent.patchCipher((currentCipher) => {
+        currentCipher.attachments = updatedCipherView.attachments;
+        currentCipher.revisionDate = updatedCipherView.revisionDate;
+
+        return currentCipher;
+      });
     }
   }
 
@@ -418,6 +479,16 @@ export class VaultV2Component implements OnInit, OnDestroy {
               this.cloneCipher(cipher).catch(() => {});
             });
           },
+        });
+      }
+
+      if (cipher.canAssignToCollections) {
+        menu.push({
+          label: this.i18nService.t("assignToCollections"),
+          click: () =>
+            this.functionWithChangeDetection(async () => {
+              await this.shareCipher(cipher);
+            }),
         });
       }
     }
@@ -513,6 +584,9 @@ export class VaultV2Component implements OnInit, OnDestroy {
     this.cipherId = cipher.id;
     this.cipher = cipher;
     await this.buildFormConfig("edit");
+    if (!cipher.edit && this.config) {
+      this.config.mode = "partial-edit";
+    }
     this.action = "edit";
     await this.go().catch(() => {});
   }
@@ -528,8 +602,42 @@ export class VaultV2Component implements OnInit, OnDestroy {
     await this.go().catch(() => {});
   }
 
+  async shareCipher(cipher: CipherView) {
+    if (!cipher) {
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("errorOccurred"),
+        message: this.i18nService.t("nothingSelected"),
+      });
+      return;
+    }
+
+    if (!(await this.passwordReprompt(cipher))) {
+      return;
+    }
+
+    const availableCollections = this.getAvailableCollections(cipher);
+
+    const dialog = AssignCollectionsDesktopComponent.open(this.dialogService, {
+      data: {
+        ciphers: [cipher],
+        organizationId: cipher.organizationId as OrganizationId,
+        availableCollections,
+      },
+    });
+
+    const result = await lastValueFrom(dialog.closed);
+    if (result === CollectionAssignmentResult.Saved) {
+      await this.savedCipher(cipher);
+    }
+  }
+
   async addCipher(type: CipherType) {
+    if (this.action === "add") {
+      return;
+    }
     this.addType = type || this.activeFilter.cipherType;
+    this.cipher = new CipherView();
     this.cipherId = null;
     await this.buildFormConfig("add");
     this.action = "add";
@@ -560,6 +668,7 @@ export class VaultV2Component implements OnInit, OnDestroy {
     await this.vaultItemsComponent?.load(this.activeFilter.buildFilter()).catch(() => {});
     await this.go().catch(() => {});
     await this.vaultItemsComponent?.refresh().catch(() => {});
+    this.isSubmitting = false;
   }
 
   async deleteCipher() {
@@ -595,6 +704,16 @@ export class VaultV2Component implements OnInit, OnDestroy {
     await this.go().catch(() => {});
   }
 
+  private getAvailableCollections(cipher: CipherView): CollectionView[] {
+    const orgId = cipher.organizationId;
+    if (!orgId || orgId === "MyVault") {
+      return [];
+    }
+
+    const organization = this.allOrganizations.find((o) => o.id === orgId);
+    return this.allCollections.filter((c) => c.organizationId === organization?.id && !c.readOnly);
+  }
+
   private calculateSearchBarLocalizationString(vaultFilter: VaultFilter): string {
     if (vaultFilter.status === "favorites") {
       return "searchFavorites";
@@ -625,38 +744,32 @@ export class VaultV2Component implements OnInit, OnDestroy {
   }
 
   async editFolder(folderId: string) {
-    if (this.modal != null) {
-      this.modal.close();
-    }
-    if (this.folderAddEditModalRef == null) {
+    if (!this.activeUserId) {
       return;
     }
-    const [modal, childComponent] = await this.modalService
-      .openViewRef(
-        FolderAddEditComponent,
-        this.folderAddEditModalRef,
-        (comp) => (comp.folderId = folderId),
-      )
-      .catch(() => [null, null] as any);
-    this.modal = modal;
-    if (childComponent) {
-      childComponent.onSavedFolder.subscribe(async (folder: FolderView) => {
-        this.modal?.close();
-        await this.vaultFilterComponent
-          ?.reloadCollectionsAndFolders(this.activeFilter)
-          .catch(() => {});
-      });
-      childComponent.onDeletedFolder.subscribe(async (folder: FolderView) => {
-        this.modal?.close();
-        await this.vaultFilterComponent
-          ?.reloadCollectionsAndFolders(this.activeFilter)
-          .catch(() => {});
-      });
+    const folderView = await firstValueFrom(
+      this.folderService.getDecrypted$(folderId, this.activeUserId),
+    );
+
+    if (!folderView) {
+      return;
     }
-    if (this.modal) {
-      this.modal.onClosed.pipe(takeUntilDestroyed()).subscribe(() => {
-        this.modal = null;
-      });
+
+    const dialogRef = AddEditFolderDialogComponent.open(this.dialogService, {
+      editFolderConfig: {
+        folder: {
+          ...folderView,
+        },
+      },
+    });
+
+    const result = await lastValueFrom(dialogRef.closed);
+
+    if (
+      result === AddEditFolderDialogResult.Deleted ||
+      result === AddEditFolderDialogResult.Created
+    ) {
+      await this.vaultFilterComponent?.reloadCollectionsAndFolders(this.activeFilter);
     }
   }
 
@@ -701,10 +814,6 @@ export class VaultV2Component implements OnInit, OnDestroy {
       .catch(() => {});
   }
 
-  private addCipherWithChangeDetection(type: CipherType) {
-    this.functionWithChangeDetection(() => this.addCipher(type).catch(() => {}));
-  }
-
   private copyValue(cipher: CipherView, value: string, labelI18nKey: string, aType: string) {
     this.functionWithChangeDetection(() => {
       (async () => {
@@ -735,9 +844,14 @@ export class VaultV2Component implements OnInit, OnDestroy {
     });
   }
 
+  protected onSubmit = async () => {
+    this.isSubmitting = true;
+    return Promise.resolve(true);
+  };
+
   private prefillCipherFromFilter() {
     if (this.activeFilter.selectedCollectionId != null && this.vaultFilterComponent != null) {
-      const collections = this.vaultFilterComponent.collections.fullList.filter(
+      const collections = this.vaultFilterComponent.collections?.fullList.filter(
         (c) => c.id === this.activeFilter.selectedCollectionId,
       );
       if (collections.length > 0) {
@@ -749,6 +863,13 @@ export class VaultV2Component implements OnInit, OnDestroy {
     }
     if (this.activeFilter.selectedFolderId && this.activeFilter.selectedFolder) {
       this.folderId = this.activeFilter.selectedFolderId;
+    }
+
+    if (this.addOrganizationId && this.config) {
+      this.config.initialValues = {
+        ...this.config.initialValues,
+        organizationId: this.addOrganizationId as OrganizationId,
+      };
     }
   }
 

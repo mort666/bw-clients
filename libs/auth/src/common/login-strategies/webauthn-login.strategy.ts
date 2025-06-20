@@ -17,7 +17,6 @@ import { LoginStrategy, LoginStrategyData } from "./login.strategy";
 
 export class WebAuthnLoginStrategyData implements LoginStrategyData {
   tokenRequest: WebAuthnLoginTokenRequest;
-  captchaBypassToken?: string;
   credentials: WebAuthnLoginCredentials;
 
   static fromJSON(obj: Jsonify<WebAuthnLoginStrategyData>): WebAuthnLoginStrategyData {
@@ -67,7 +66,10 @@ export class WebAuthnLoginStrategy extends LoginStrategy {
 
     if (masterKeyEncryptedUserKey) {
       // set the master key encrypted user key if it exists
-      await this.keyService.setMasterKeyEncryptedUserKey(masterKeyEncryptedUserKey, userId);
+      await this.masterPasswordService.setMasterKeyEncryptedUserKey(
+        masterKeyEncryptedUserKey,
+        userId,
+      );
     }
 
     const userDecryptionOptions = idTokenResponse?.userDecryptionOptions;

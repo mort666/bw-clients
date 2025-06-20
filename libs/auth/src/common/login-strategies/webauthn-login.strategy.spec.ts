@@ -208,12 +208,9 @@ describe("WebAuthnLoginStrategy", () => {
 
     expect(authResult).toBeInstanceOf(AuthResult);
     expect(authResult).toMatchObject({
-      captchaSiteKey: "",
-      forcePasswordReset: 0,
       resetMasterPassword: false,
       twoFactorProviders: null,
       requiresTwoFactor: false,
-      requiresCaptcha: false,
     });
   });
 
@@ -240,8 +237,8 @@ describe("WebAuthnLoginStrategy", () => {
 
     // Assert
     // Master key encrypted user key should be set
-    expect(keyService.setMasterKeyEncryptedUserKey).toHaveBeenCalledTimes(1);
-    expect(keyService.setMasterKeyEncryptedUserKey).toHaveBeenCalledWith(
+    expect(masterPasswordService.mock.setMasterKeyEncryptedUserKey).toHaveBeenCalledTimes(1);
+    expect(masterPasswordService.mock.setMasterKeyEncryptedUserKey).toHaveBeenCalledWith(
       idTokenResponse.key,
       userId,
     );
