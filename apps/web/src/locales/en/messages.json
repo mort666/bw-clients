@@ -10666,8 +10666,8 @@
       }
     }
   },
-  "subscribetoEnterpriseSubtitle": {
-    "message": "Your 7-day $PLAN$ trial starts today. Add a payment method now to continue using continue using these features after your trial ends: ",
+  "subscribeEnterpriseSubtitle": {
+    "message": "Your 7-day $PLAN$ trial starts today. Add a payment method now to continue using these features after your trial ends: ",
     "placeholders": {
       "plan": {
         "content": "$1",
