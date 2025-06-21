@@ -3594,8 +3594,9 @@ describe("OverlayBackground", () => {
       });
 
       it("sends a message to the list port indicating that the generated password should be updated", async () => {
-        sendPortMessage(listMessageConnectorSpy, { command: "refreshGeneratedPassword", portKey });
         overlayBackground["credential$"].next("refresh");
+
+        sendPortMessage(listMessageConnectorSpy, { command: "refreshGeneratedPassword", portKey });
 
         await flushPromises();
 
