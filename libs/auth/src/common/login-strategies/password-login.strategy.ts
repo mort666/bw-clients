@@ -40,8 +40,6 @@ export class PasswordLoginStrategyData implements LoginStrategyData {
    */
   forcePasswordResetReason: ForceSetPasswordReason = ForceSetPasswordReason.None;
 
-  passwordPolicy: MasterPasswordPolicyOptions;
-
   static fromJSON(obj: Jsonify<PasswordLoginStrategyData>): PasswordLoginStrategyData {
     const data = Object.assign(new PasswordLoginStrategyData(), obj, {
       tokenRequest: PasswordTokenRequest.fromJSON(obj.tokenRequest),
@@ -176,7 +174,7 @@ export class PasswordLoginStrategy extends LoginStrategy {
     if (
       await this.configService.getFeatureFlag(FeatureFlag.PM16117_ChangeExistingPasswordRefactor)
     ) {
-      // Get the master password policy options from both the org invite and the identity response
+      // Get the master password policy options from both the org invite and the identity response.
       masterPasswordPolicyOptions = this.policyService.combineMasterPasswordPolicyOptions(
         credentials.masterPasswordPoliciesFromOrgInvite,
         this.getMasterPasswordPolicyOptionsFromResponse(identityResponse),

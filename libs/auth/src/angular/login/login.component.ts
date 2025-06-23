@@ -342,6 +342,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.masterPasswordService.forceSetPasswordReason$(authResult.userId),
       );
 
+      // TODO: PM-22663 use the new service to handle routing.
       if (forceSetPasswordReason === ForceSetPasswordReason.WeakMasterPassword) {
         await this.router.navigate(["change-password"]);
         return;
