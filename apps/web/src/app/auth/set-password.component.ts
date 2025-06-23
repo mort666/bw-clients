@@ -1,7 +1,7 @@
 import { Component, inject } from "@angular/core";
 
 import { SetPasswordComponent as BaseSetPasswordComponent } from "@bitwarden/angular/auth/components/set-password.component";
-import { OrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/organization-invite-service";
+import { OrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/organization-invite.service";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { MasterKey, UserKey } from "@bitwarden/common/types/key";
 

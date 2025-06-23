@@ -16,7 +16,7 @@ import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { SsoLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/sso-login.service.abstraction";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
-import { OrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/organization-invite-service";
+import { OrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/organization-invite.service";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { CryptoFunctionService } from "@bitwarden/common/key-management/crypto/abstractions/crypto-function.service";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";

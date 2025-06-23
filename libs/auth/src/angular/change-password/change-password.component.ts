@@ -1,10 +1,12 @@
 import { Component, Input, OnInit } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 
+import { MasterPasswordPolicyServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/policy/master-password-policy.service.abstraction";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/models/domain/master-password-policy-options";
 import { Account, AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { ForceSetPasswordReason } from "@bitwarden/common/auth/models/domain/force-set-password-reason";
+import { OrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/organization-invite.service";
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
@@ -58,7 +60,9 @@ export class ChangePasswordComponent implements OnInit {
     private changePasswordService: ChangePasswordService,
     private i18nService: I18nService,
     private masterPasswordService: InternalMasterPasswordServiceAbstraction,
+    private masterPasswordPolicyOptionsService: MasterPasswordPolicyServiceAbstraction,
     private anonLayoutWrapperDataService: AnonLayoutWrapperDataService,
+    private organizationInviteService: OrganizationInviteService,
     private messagingService: MessagingService,
     private policyService: PolicyService,
     private toastService: ToastService,
@@ -81,7 +85,6 @@ export class ChangePasswordComponent implements OnInit {
       throw new Error("userId not found");
     }
 
-    // New Master Password Policy Options service
     // this.masterPasswordPolicyOptions = await firstValueFrom(
     //   this.policyService.postAuthenticatedMasterPasswordPolicyOptions$(this.userId)
     // ) ?? undefined;
@@ -89,6 +92,30 @@ export class ChangePasswordComponent implements OnInit {
     this.forceSetPasswordReason = await firstValueFrom(
       this.masterPasswordService.forceSetPasswordReason$(this.userId),
     );
+
+    // New Master Password Policy Options service
+    const orgInvite = await this.organizationInviteService.getOrganizationInvite();
+
+    switch (this.forceSetPasswordReason) {
+      case ForceSetPasswordReason.WeakMasterPassword:
+        if (orgInvite) {
+          if (!orgInvite.token) {
+            this.logService.error("No org token found when trying to retrieve policies.");
+            return;
+          }
+          this.masterPasswordPolicyOptions =
+            await this.masterPasswordPolicyOptionsService.getForInvitedMember(orgInvite.token);
+        } else {
+          this.masterPasswordPolicyOptions =
+            await this.masterPasswordPolicyOptionsService.getByUserId(this.userId);
+        }
+        break;
+      case ForceSetPasswordReason.AdminForcePasswordReset:
+      default:
+        this.masterPasswordPolicyOptions =
+          await this.masterPasswordPolicyOptionsService.getByUserId(this.userId);
+        break;
+    }
 
     if (this.forceSetPasswordReason === ForceSetPasswordReason.AdminForcePasswordReset) {
       this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({

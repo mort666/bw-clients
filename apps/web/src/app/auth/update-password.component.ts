@@ -1,7 +1,7 @@
 import { Component, inject } from "@angular/core";
 
 import { UpdatePasswordComponent as BaseUpdatePasswordComponent } from "@bitwarden/angular/auth/components/update-password.component";
-import { OrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/organization-invite-service";
+import { OrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/organization-invite.service";
 
 import { RouterService } from "../core";
 

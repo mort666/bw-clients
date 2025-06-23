@@ -18,7 +18,7 @@ import { OrganizationKeysRequest } from "@bitwarden/common/admin-console/models/
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { OrganizationInvite } from "@bitwarden/common/auth/services/organization-invite/organization-invite";
-import { OrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/organization-invite-service";
+import { OrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/organization-invite.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
@@ -26,6 +26,11 @@ import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { OrgKey } from "@bitwarden/common/types/key";
 import { KeyService } from "@bitwarden/key-management";
 
+/**
+ * We'd like to consolidate the feature service and the organization-invite.service.ts. There should
+ * be a default-organization-invite.service.ts and a web-organization-invite.service which this
+ * file could be.
+ */
 @Injectable()
 export class AcceptOrganizationInviteService {
   private orgNameSubject: BehaviorSubject<string> = new BehaviorSubject<string>(null);

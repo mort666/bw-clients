@@ -51,7 +51,8 @@ import { AccountService } from "@bitwarden/common/auth/abstractions/account.serv
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { MasterPasswordApiService } from "@bitwarden/common/auth/abstractions/master-password-api.service.abstraction";
 import { SsoLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/sso-login.service.abstraction";
-import { OrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/organization-invite-service";
+import { OrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/organization-invite.service";
+import { WebOrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/web-organization-invite.service";
 import { ClientType } from "@bitwarden/common/enums";
 import { ProcessReloadServiceAbstraction } from "@bitwarden/common/key-management/abstractions/process-reload.service";
 import { CryptoFunctionService } from "@bitwarden/common/key-management/crypto/abstractions/crypto-function.service";
@@ -243,6 +244,11 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: CLIENT_TYPE,
     useValue: ClientType.Web,
+  }),
+  safeProvider({
+    provide: OrganizationInviteService,
+    useClass: WebOrganizationInviteService,
+    deps: [GlobalStateProvider],
   }),
   safeProvider({
     provide: RegistrationFinishServiceAbstraction,

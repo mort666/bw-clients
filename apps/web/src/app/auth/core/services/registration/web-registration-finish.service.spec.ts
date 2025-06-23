@@ -10,7 +10,7 @@ import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/mod
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { AccountApiService } from "@bitwarden/common/auth/abstractions/account-api.service";
 import { OrganizationInvite } from "@bitwarden/common/auth/services/organization-invite/organization-invite";
-import { OrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/organization-invite-service";
+import { OrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/organization-invite.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";

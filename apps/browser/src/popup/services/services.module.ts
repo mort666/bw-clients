@@ -49,6 +49,8 @@ import {
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { SsoLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/sso-login.service.abstraction";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
+import { DefaultOrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/default-organization-invite.service";
+import { OrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/organization-invite.service";
 import {
   AutofillSettingsService,
   AutofillSettingsServiceAbstraction,
@@ -542,6 +544,11 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: CLIENT_TYPE,
     useValue: ClientType.Browser,
+  }),
+  safeProvider({
+    provide: OrganizationInviteService,
+    useClass: DefaultOrganizationInviteService,
+    deps: [],
   }),
   safeProvider({
     provide: LockComponentService,

@@ -5,7 +5,7 @@ import { ActivatedRoute, Params, Router } from "@angular/router";
 
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { OrganizationInvite } from "@bitwarden/common/auth/services/organization-invite/organization-invite";
-import { OrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/organization-invite-service";
+import { OrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/organization-invite.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 

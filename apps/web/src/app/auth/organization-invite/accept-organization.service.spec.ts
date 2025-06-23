@@ -16,8 +16,8 @@ import { OrganizationKeysResponse } from "@bitwarden/common/admin-console/models
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { OrganizationInvite } from "@bitwarden/common/auth/services/organization-invite/organization-invite";
-import { OrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/organization-invite-service";
 import { ORGANIZATION_INVITE } from "@bitwarden/common/auth/services/organization-invite/organization-invite-state";
+import { OrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/organization-invite.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
