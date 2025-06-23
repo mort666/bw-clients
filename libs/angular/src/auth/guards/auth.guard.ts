@@ -60,15 +60,45 @@ export const authGuard: CanActivateFn = async (
     masterPasswordService.forceSetPasswordReason$(userId),
   );
 
+  const isSetInitialPasswordFlagOn = await configService.getFeatureFlag(
+    FeatureFlag.PM16117_SetInitialPasswordRefactor,
+  );
+  const isChangePasswordFlagOn = await configService.getFeatureFlag(
+    FeatureFlag.PM16117_ChangeExistingPasswordRefactor,
+  );
+
+  // User JIT provisioned into a master-password-encryption org
+  if (
+    forceSetPasswordReason === ForceSetPasswordReason.SsoNewJitProvisionedUser &&
+    !routerState.url.includes("set-password-jit") &&
+    !routerState.url.includes("set-initial-password")
+  ) {
+    const route = isSetInitialPasswordFlagOn ? "/set-initial-password" : "/set-password-jit";
+    return router.createUrlTree([route]);
+  }
+
+  // TDE org user has "manage account recovery" permission
   if (
     forceSetPasswordReason ===
       ForceSetPasswordReason.TdeUserWithoutPasswordHasPasswordResetPermission &&
-    !routerState.url.includes("set-password")
+    !routerState.url.includes("set-password") &&
+    !routerState.url.includes("set-initial-password")
   ) {
-    return router.createUrlTree(["/set-password"]);
+    const route = isSetInitialPasswordFlagOn ? "/set-initial-password" : "/set-password";
+    return router.createUrlTree([route]);
   }
 
-  if (await configService.getFeatureFlag(FeatureFlag.PM16117_ChangeExistingPasswordRefactor)) {
+  // TDE Offboarding
+  if (
+    forceSetPasswordReason === ForceSetPasswordReason.TdeOffboarding &&
+    !routerState.url.includes("update-temp-password") &&
+    !routerState.url.includes("set-initial-password")
+  ) {
+    const route = isSetInitialPasswordFlagOn ? "/set-initial-password" : "/update-temp-password";
+    return router.createUrlTree([route]);
+  }
+
+  if (isChangePasswordFlagOn) {
     // When the PM16117_ChangeExistingPasswordRefactor flag is removed AS WELL AS the cleanup for
     // update-temp-password also remove the conditional check for update-temp-password here.
     // That route will no longer be in effect.
