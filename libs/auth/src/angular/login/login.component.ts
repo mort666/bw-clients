@@ -17,8 +17,10 @@ import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/mod
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { DevicesApiServiceAbstraction } from "@bitwarden/common/auth/abstractions/devices-api.service.abstraction";
 import { AuthResult } from "@bitwarden/common/auth/models/domain/auth-result";
+import { ForceSetPasswordReason } from "@bitwarden/common/auth/models/domain/force-set-password-reason";
 import { ClientType, HttpStatusCode } from "@bitwarden/common/enums";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { MasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
 import { ErrorResponse } from "@bitwarden/common/models/response/error.response";
 import { AppIdService } from "@bitwarden/common/platform/abstractions/app-id.service";
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
@@ -124,6 +126,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     private logService: LogService,
     private validationService: ValidationService,
     private loginSuccessHandlerService: LoginSuccessHandlerService,
+    private masterPasswordService: MasterPasswordServiceAbstraction,
     private configService: ConfigService,
   ) {
     this.clientType = this.platformUtilsService.getClientType();
@@ -333,8 +336,17 @@ export class LoginComponent implements OnInit, OnDestroy {
     // The AuthGuard will handle routing to update-temp-password based on state
 
     if (
-      !(await this.configService.getFeatureFlag(FeatureFlag.PM16117_ChangeExistingPasswordRefactor))
+      await this.configService.getFeatureFlag(FeatureFlag.PM16117_ChangeExistingPasswordRefactor)
     ) {
+      const forceSetPasswordReason: ForceSetPasswordReason = await firstValueFrom(
+        this.masterPasswordService.forceSetPasswordReason$(authResult.userId),
+      );
+
+      if (forceSetPasswordReason === ForceSetPasswordReason.WeakMasterPassword) {
+        await this.router.navigate(["change-password"]);
+        return;
+      }
+    } else {
       // TODO: PM-18269 - evaluate if we can combine this with the
       // password evaluation done in the password login strategy.
       // If there's an existing org invite, use it to get the org's password policies

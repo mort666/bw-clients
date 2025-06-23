@@ -87,10 +87,14 @@ export class DefaultPolicyService implements PolicyService {
     policies?: Policy[],
   ): Observable<MasterPasswordPolicyOptions | undefined> {
     const policies$ = policies ? of(policies) : this.policies$(userId);
-    return policies$.pipe(map((obsPolicies) => this.combineMasterPasswordPolicies(obsPolicies)));
+    return policies$.pipe(
+      map((obsPolicies) => this.combinePoliciesIntoMasterPasswordPolicyOptions(obsPolicies)),
+    );
   }
 
-  combineMasterPasswordPolicies(policies: Policy[]): MasterPasswordPolicyOptions | undefined {
+  combinePoliciesIntoMasterPasswordPolicyOptions(
+    policies: Policy[],
+  ): MasterPasswordPolicyOptions | undefined {
     let enforcedOptions: MasterPasswordPolicyOptions | undefined = undefined;
     const filteredPolicies = policies.filter((p) => p.type === PolicyType.MasterPassword) ?? [];
 
@@ -100,49 +104,33 @@ export class DefaultPolicyService implements PolicyService {
 
     filteredPolicies.forEach((currentPolicy) => {
       if (!currentPolicy.enabled || !currentPolicy.data) {
-        return;
+        return undefined;
       }
 
       if (!enforcedOptions) {
         enforcedOptions = new MasterPasswordPolicyOptions();
       }
 
-      if (
-        currentPolicy.data.minComplexity != null &&
-        currentPolicy.data.minComplexity > enforcedOptions.minComplexity
-      ) {
-        enforcedOptions.minComplexity = currentPolicy.data.minComplexity;
-      }
-
-      if (
-        currentPolicy.data.minLength != null &&
-        currentPolicy.data.minLength > enforcedOptions.minLength
-      ) {
-        enforcedOptions.minLength = currentPolicy.data.minLength;
-      }
-
-      if (currentPolicy.data.requireUpper) {
-        enforcedOptions.requireUpper = true;
-      }
-
-      if (currentPolicy.data.requireLower) {
-        enforcedOptions.requireLower = true;
-      }
-
-      if (currentPolicy.data.requireNumbers) {
-        enforcedOptions.requireNumbers = true;
-      }
-
-      if (currentPolicy.data.requireSpecial) {
-        enforcedOptions.requireSpecial = true;
-      }
-
-      if (currentPolicy.data.enforceOnLogin) {
-        enforcedOptions.enforceOnLogin = true;
-      }
+      this.mergeMasterPasswordPolicyOptions(enforcedOptions, currentPolicy.data);
     });
 
     return enforcedOptions;
+  }
+
+  combineMasterPasswordPolicyOptions(
+    ...policies: MasterPasswordPolicyOptions[]
+  ): MasterPasswordPolicyOptions | undefined {
+    let combinedOptions: MasterPasswordPolicyOptions | undefined = undefined;
+
+    policies.forEach((currentOptions) => {
+      if (!combinedOptions) {
+        combinedOptions = new MasterPasswordPolicyOptions();
+      }
+
+      this.mergeMasterPasswordPolicyOptions(combinedOptions, currentOptions);
+    });
+
+    return combinedOptions;
   }
 
   evaluateMasterPassword(
@@ -238,6 +226,28 @@ export class DefaultPolicyService implements PolicyService {
         return false;
       default:
         return organization.canManagePolicies;
+    }
+  }
+
+  private mergeMasterPasswordPolicyOptions(
+    target: MasterPasswordPolicyOptions | undefined,
+    source: MasterPasswordPolicyOptions | undefined,
+  ) {
+    if (!target) {
+      target = new MasterPasswordPolicyOptions();
+    }
+
+    if (source) {
+      target.minComplexity = Math.max(
+        target.minComplexity,
+        source.minComplexity ?? target.minComplexity,
+      );
+      target.minLength = Math.max(target.minLength, source.minLength ?? target.minLength);
+      target.requireUpper = target.requireUpper || source.requireUpper;
+      target.requireLower = target.requireLower || source.requireLower;
+      target.requireNumbers = target.requireNumbers || source.requireNumbers;
+      target.requireSpecial = target.requireSpecial || source.requireSpecial;
+      target.enforceOnLogin = target.enforceOnLogin || source.enforceOnLogin;
     }
   }
 }

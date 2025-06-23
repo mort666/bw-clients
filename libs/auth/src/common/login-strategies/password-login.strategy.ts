@@ -163,7 +163,8 @@ export class PasswordLoginStrategy extends LoginStrategy {
     credentials: PasswordLoginCredentials,
     authResult: AuthResult,
   ): Promise<void> {
-    // TODO: PM-21084 - investigate if we should be sending down masterPasswordPolicy on the IdentityDeviceVerificationResponse like we do for the IdentityTwoFactorResponse
+    // TODO: PM-21084 - investigate if we should be sending down masterPasswordPolicy on the
+    // IdentityDeviceVerificationResponse like we do for the IdentityTwoFactorResponse
     // If the response is a device verification response, we don't need to evaluate the password
     if (identityResponse instanceof IdentityDeviceVerificationResponse) {
       return;
@@ -175,11 +176,11 @@ export class PasswordLoginStrategy extends LoginStrategy {
     if (
       await this.configService.getFeatureFlag(FeatureFlag.PM16117_ChangeExistingPasswordRefactor)
     ) {
-      // Either take credentials from a potential org invite first, then take from
-      // the identity response if that doesn't exist.
-      masterPasswordPolicyOptions = credentials.masterPasswordPoliciesFromOrgInvite
-        ? credentials.masterPasswordPoliciesFromOrgInvite
-        : this.getMasterPasswordPolicyOptionsFromResponse(identityResponse);
+      // Get the master password policy options from both the org invite and the identity response
+      masterPasswordPolicyOptions = this.policyService.combineMasterPasswordPolicyOptions(
+        credentials.masterPasswordPoliciesFromOrgInvite,
+        this.getMasterPasswordPolicyOptionsFromResponse(identityResponse),
+      );
 
       if (!masterPasswordPolicyOptions?.enforceOnLogin) {
         return;
@@ -207,6 +208,8 @@ export class PasswordLoginStrategy extends LoginStrategy {
       });
       return;
     }
+
+    // Also set master password policy options here
 
     // Authentication was successful, save the force update password options with the state service
     // if there isn't already a reason set (this would only be AdminForcePasswordReset as that can be set server side

@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 
-import { PolicyApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/policy/policy-api.service.abstraction";
+import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/models/domain/master-password-policy-options";
 import { Account, AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { ForceSetPasswordReason } from "@bitwarden/common/auth/models/domain/force-set-password-reason";
@@ -60,7 +60,7 @@ export class ChangePasswordComponent implements OnInit {
     private masterPasswordService: InternalMasterPasswordServiceAbstraction,
     private anonLayoutWrapperDataService: AnonLayoutWrapperDataService,
     private messagingService: MessagingService,
-    private policyApiService: PolicyApiServiceAbstraction,
+    private policyService: PolicyService,
     private toastService: ToastService,
     private syncService: SyncService,
     private dialogService: DialogService,
@@ -81,9 +81,10 @@ export class ChangePasswordComponent implements OnInit {
       throw new Error("userId not found");
     }
 
-    this.masterPasswordPolicyOptions = MasterPasswordPolicyOptions.fromResponse(
-      await this.policyApiService.getMasterPasswordPoliciesForAcceptedOrConfirmedUser(),
-    );
+    // New Master Password Policy Options service
+    // this.masterPasswordPolicyOptions = await firstValueFrom(
+    //   this.policyService.postAuthenticatedMasterPasswordPolicyOptions$(this.userId)
+    // ) ?? undefined;
 
     this.forceSetPasswordReason = await firstValueFrom(
       this.masterPasswordService.forceSetPasswordReason$(this.userId),

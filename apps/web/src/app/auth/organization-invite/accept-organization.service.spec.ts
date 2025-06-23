@@ -15,22 +15,20 @@ import { ResetPasswordPolicyOptions } from "@bitwarden/common/admin-console/mode
 import { OrganizationKeysResponse } from "@bitwarden/common/admin-console/models/response/organization-keys.response";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
+import { OrganizationInvite } from "@bitwarden/common/auth/services/organization-invite/organization-invite";
+import { OrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/organization-invite-service";
+import { ORGANIZATION_INVITE } from "@bitwarden/common/auth/services/organization-invite/organization-invite-state";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { FakeGlobalState } from "@bitwarden/common/spec/fake-state";
 import { OrgKey } from "@bitwarden/common/types/key";
-import { DialogService } from "@bitwarden/components";
 import { KeyService } from "@bitwarden/key-management";
 
 import { I18nService } from "../../core/i18n.service";
 
-import {
-  AcceptOrganizationInviteService,
-  ORGANIZATION_INVITE,
-} from "./accept-organization.service";
-import { OrganizationInvite } from "./organization-invite";
+import { AcceptOrganizationInviteService } from "./accept-organization.service";
 
 describe("AcceptOrganizationInviteService", () => {
   let sut: AcceptOrganizationInviteService;
@@ -43,10 +41,10 @@ describe("AcceptOrganizationInviteService", () => {
   let logService: MockProxy<LogService>;
   let organizationApiService: MockProxy<OrganizationApiServiceAbstraction>;
   let organizationUserApiService: MockProxy<OrganizationUserApiService>;
+  let organizationInviteService: MockProxy<OrganizationInviteService>;
   let i18nService: MockProxy<I18nService>;
   let globalStateProvider: FakeGlobalStateProvider;
   let globalState: FakeGlobalState<OrganizationInvite>;
-  let dialogService: MockProxy<DialogService>;
   let accountService: MockProxy<AccountService>;
 
   beforeEach(() => {
@@ -59,10 +57,10 @@ describe("AcceptOrganizationInviteService", () => {
     logService = mock();
     organizationApiService = mock();
     organizationUserApiService = mock();
+    organizationInviteService = mock();
     i18nService = mock();
     globalStateProvider = new FakeGlobalStateProvider();
     globalState = globalStateProvider.getFake(ORGANIZATION_INVITE);
-    dialogService = mock();
     accountService = mock();
 
     sut = new AcceptOrganizationInviteService(
@@ -76,8 +74,7 @@ describe("AcceptOrganizationInviteService", () => {
       organizationApiService,
       organizationUserApiService,
       i18nService,
-      globalStateProvider,
-      dialogService,
+      organizationInviteService,
       accountService,
     );
   });

@@ -51,6 +51,7 @@ import { AccountService } from "@bitwarden/common/auth/abstractions/account.serv
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { MasterPasswordApiService } from "@bitwarden/common/auth/abstractions/master-password-api.service.abstraction";
 import { SsoLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/sso-login.service.abstraction";
+import { OrganizationInviteService } from "@bitwarden/common/auth/services/organization-invite/organization-invite-service";
 import { ClientType } from "@bitwarden/common/enums";
 import { ProcessReloadServiceAbstraction } from "@bitwarden/common/key-management/abstractions/process-reload.service";
 import { CryptoFunctionService } from "@bitwarden/common/key-management/crypto/abstractions/crypto-function.service";
@@ -120,7 +121,6 @@ import {
   LinkSsoService,
 } from "../auth";
 import { WebSsoComponentService } from "../auth/core/services/login/web-sso-component.service";
-import { AcceptOrganizationInviteService } from "../auth/organization-invite/accept-organization.service";
 import { HtmlStorageService } from "../core/html-storage.service";
 import { I18nService } from "../core/i18n.service";
 import { WebFileDownloadService } from "../core/web-file-download.service";
@@ -250,11 +250,10 @@ const safeProviders: SafeProvider[] = [
     deps: [
       KeyServiceAbstraction,
       AccountApiServiceAbstraction,
-      AcceptOrganizationInviteService,
+      OrganizationInviteService,
       PolicyApiServiceAbstraction,
       LogService,
       PolicyService,
-      AccountService,
     ],
   }),
   safeProvider({
@@ -272,16 +271,16 @@ const safeProviders: SafeProvider[] = [
     provide: SetPasswordJitService,
     useClass: WebSetPasswordJitService,
     deps: [
-      ApiService,
-      MasterPasswordApiService,
-      KeyServiceAbstraction,
       EncryptService,
       I18nServiceAbstraction,
       KdfConfigService,
+      KeyServiceAbstraction,
+      MasterPasswordApiService,
       InternalMasterPasswordServiceAbstraction,
       OrganizationApiServiceAbstraction,
       OrganizationUserApiService,
       InternalUserDecryptionOptionsServiceAbstraction,
+      OrganizationInviteService,
     ],
   }),
   safeProvider({
@@ -293,7 +292,7 @@ const safeProviders: SafeProvider[] = [
     provide: LoginComponentService,
     useClass: WebLoginComponentService,
     deps: [
-      AcceptOrganizationInviteService,
+      OrganizationInviteService,
       LogService,
       PolicyApiServiceAbstraction,
       InternalPolicyService,
@@ -358,7 +357,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: LoginDecryptionOptionsService,
     useClass: WebLoginDecryptionOptionsService,
-    deps: [MessagingService, RouterService, AcceptOrganizationInviteService],
+    deps: [MessagingService, RouterService, OrganizationInviteService],
   }),
   safeProvider({
     provide: IpcService,
