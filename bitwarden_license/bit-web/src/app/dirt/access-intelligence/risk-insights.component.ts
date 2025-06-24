@@ -124,7 +124,7 @@ export class RiskInsightsComponent implements OnInit {
         if (applications) {
           this.appsCount = applications.length;
           this.criticalAppsCount = criticalApps.length;
-          this.dataLastUpdated = new Date(dataLastUpdated);
+          this.dataLastUpdated = dataLastUpdated;
         }
       });
   }

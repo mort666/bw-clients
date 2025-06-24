@@ -35,7 +35,7 @@ export class RiskInsightsDataService {
   private errorSubject = new BehaviorSubject<string | null>(null);
   error$ = this.errorSubject.asObservable();
 
-  private dataLastUpdatedSubject = new BehaviorSubject<Date | null>(null);
+  private dataLastUpdatedSubject = new BehaviorSubject<Date>(new Date());
   dataLastUpdated$ = this.dataLastUpdatedSubject.asObservable();
 
   private cipherViewsForOrganizationSubject = new BehaviorSubject<CipherView[]>([]);

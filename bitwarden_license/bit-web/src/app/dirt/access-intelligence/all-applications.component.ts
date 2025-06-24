@@ -180,9 +180,12 @@ export class AllApplicationsComponent implements OnInit {
           ),
           takeUntilDestroyed(this.destroyRef),
         )
-        .subscribe(({ report, summary, criticalApps, isReportFromArchive, organization }) => {
+        .subscribe(({ report, summary, isReportFromArchive, organization }) => {
           if (report) {
             this.dataSource.data = report;
+          }
+
+          if (summary) {
             this.applicationSummary = summary;
           }
 
