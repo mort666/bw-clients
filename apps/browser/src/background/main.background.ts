@@ -204,6 +204,7 @@ import { DefaultCipherEncryptionService } from "@bitwarden/common/vault/services
 import { CipherFileUploadService } from "@bitwarden/common/vault/services/file-upload/cipher-file-upload.service";
 import { FolderApiService } from "@bitwarden/common/vault/services/folder/folder-api.service";
 import { FolderService } from "@bitwarden/common/vault/services/folder/folder.service";
+import { RestrictedItemTypesService } from "@bitwarden/common/vault/services/restricted-item-types.service";
 import { TotpService } from "@bitwarden/common/vault/services/totp.service";
 import { VaultSettingsService } from "@bitwarden/common/vault/services/vault-settings/vault-settings.service";
 import { DefaultTaskService, TaskService } from "@bitwarden/common/vault/tasks";
@@ -411,6 +412,7 @@ export default class MainBackground {
   inlineMenuFieldQualificationService: InlineMenuFieldQualificationService;
   taskService: TaskService;
   cipherEncryptionService: CipherEncryptionService;
+  restrictedItemTypesService: RestrictedItemTypesService;
 
   ipcContentScriptManagerService: IpcContentScriptManagerService;
   ipcService: IpcService;
@@ -437,7 +439,7 @@ export default class MainBackground {
 
   constructor() {
     // Services
-    const lockedCallback = async (userId?: string) => {
+    const lockedCallback = async (userId: UserId) => {
       await this.refreshBadge();
       await this.refreshMenu(true);
       if (this.systemService != null) {
@@ -1044,6 +1046,13 @@ export default class MainBackground {
       this.sdkService,
     );
 
+    this.restrictedItemTypesService = new RestrictedItemTypesService(
+      this.configService,
+      this.accountService,
+      this.organizationService,
+      this.policyService,
+    );
+
     this.individualVaultExportService = new IndividualVaultExportService(
       this.folderService,
       this.cipherService,
@@ -1054,6 +1063,7 @@ export default class MainBackground {
       this.kdfConfigService,
       this.accountService,
       this.apiService,
+      this.restrictedItemTypesService,
     );
 
     this.organizationVaultExportService = new OrganizationVaultExportService(
@@ -1066,6 +1076,7 @@ export default class MainBackground {
       this.collectionService,
       this.kdfConfigService,
       this.accountService,
+      this.restrictedItemTypesService,
     );
 
     this.exportService = new VaultExportService(
@@ -1231,6 +1242,9 @@ export default class MainBackground {
     this.overlayNotificationsBackground = new OverlayNotificationsBackground(
       this.logService,
       this.notificationBackground,
+      this.taskService,
+      this.accountService,
+      this.cipherService,
     );
 
     this.autoSubmitLoginBackground = new AutoSubmitLoginBackground(
@@ -1326,7 +1340,6 @@ export default class MainBackground {
       this.collectionService,
       this.organizationService,
       this.accountService,
-      this.configService,
     );
 
     this.inlineMenuFieldQualificationService = new InlineMenuFieldQualificationService();
@@ -1538,6 +1551,7 @@ export default class MainBackground {
     }
   }
 
+  // TODO: PM-21212 - consolidate the logic of this method into the new ExtensionLogoutService
   async logout(logoutReason: LogoutReason, userId?: UserId) {
     const activeUserId = await firstValueFrom(
       this.accountService.activeAccount$.pipe(

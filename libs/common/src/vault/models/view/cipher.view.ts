@@ -210,6 +210,7 @@ export class CipherView implements View, InitializerMetadata {
     }
 
     const view = new CipherView();
+    const creationDate = obj.creationDate == null ? null : new Date(obj.creationDate);
     const revisionDate = obj.revisionDate == null ? null : new Date(obj.revisionDate);
     const deletedDate = obj.deletedDate == null ? null : new Date(obj.deletedDate);
     const attachments = obj.attachments?.map((a: any) => AttachmentView.fromJSON(a));
@@ -217,6 +218,7 @@ export class CipherView implements View, InitializerMetadata {
     const passwordHistory = obj.passwordHistory?.map((ph: any) => PasswordHistoryView.fromJSON(ph));
 
     Object.assign(view, obj, {
+      creationDate: creationDate,
       revisionDate: revisionDate,
       deletedDate: deletedDate,
       attachments: attachments,
