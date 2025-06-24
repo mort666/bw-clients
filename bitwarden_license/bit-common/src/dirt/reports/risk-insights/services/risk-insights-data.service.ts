@@ -14,8 +14,8 @@ import {
   DrawerType,
 } from "../models/password-health";
 
-import { ReportDecipherService } from "./report-decipher.service";
 import { RiskInsightsApiService } from "./risk-insights-api.service";
+import { RiskInsightsEncryptionService } from "./risk-insights-encryption.service";
 import { RiskInsightsReportService } from "./risk-insights-report.service";
 export class RiskInsightsDataService {
   private applicationsSubject = new BehaviorSubject<ApplicationHealthReportDetail[] | null>(null);
@@ -52,7 +52,7 @@ export class RiskInsightsDataService {
     private reportService: RiskInsightsReportService,
     private riskInsightsApiService: RiskInsightsApiService,
     private cipherService: CipherService,
-    private reportDecipherService: ReportDecipherService,
+    private riskInsightsEncryptionService: RiskInsightsEncryptionService,
   ) {}
 
   /**
@@ -99,10 +99,11 @@ export class RiskInsightsDataService {
               lastUpdated: new Date(),
             };
           } else {
-            const [report, summary] = await this.reportDecipherService.decryptRiskInsightsReport(
-              organizationId as OrganizationId,
-              reportFromArchive,
-            );
+            const [report, summary] =
+              await this.riskInsightsEncryptionService.decryptRiskInsightsReport(
+                organizationId as OrganizationId,
+                reportFromArchive,
+              );
 
             return {
               report,

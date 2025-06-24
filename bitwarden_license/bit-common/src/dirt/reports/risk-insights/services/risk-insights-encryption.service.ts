@@ -13,7 +13,7 @@ import {
   GetRiskInsightsReportResponse,
 } from "../models/password-health";
 
-export class ReportDecipherService {
+export class RiskInsightsEncryptionService {
   constructor(
     private keyService: KeyService,
     private encryptService: EncryptService,

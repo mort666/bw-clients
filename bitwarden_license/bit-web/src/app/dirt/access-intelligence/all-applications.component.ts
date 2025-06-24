@@ -24,7 +24,7 @@ import {
   ApplicationHealthReportDetailWithCriticalFlagAndCipher,
   ApplicationHealthReportSummary,
 } from "@bitwarden/bit-common/dirt/reports/risk-insights/models/password-health";
-import { ReportDecipherService } from "@bitwarden/bit-common/dirt/reports/risk-insights/services/report-decipher.service";
+import { RiskInsightsEncryptionService } from "@bitwarden/bit-common/dirt/reports/risk-insights/services/risk-insights-encryption.service";
 import {
   getOrganizationById,
   OrganizationService,
@@ -222,7 +222,7 @@ export class AllApplicationsComponent implements OnInit {
     private accountService: AccountService,
     protected criticalAppsService: CriticalAppsService,
     protected riskInsightsApiService: RiskInsightsApiService,
-    protected reportDecipherService: ReportDecipherService,
+    protected reportDecipherService: RiskInsightsEncryptionService,
   ) {
     this.searchControl.valueChanges
       .pipe(debounceTime(200), takeUntilDestroyed())
