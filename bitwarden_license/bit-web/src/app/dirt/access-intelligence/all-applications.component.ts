@@ -9,7 +9,6 @@ import {
   firstValueFrom,
   map,
   Observable,
-  of,
   switchMap,
 } from "rxjs";
 
@@ -25,6 +24,7 @@ import {
   ApplicationHealthReportDetailWithCriticalFlagAndCipher,
   ApplicationHealthReportSummary,
 } from "@bitwarden/bit-common/dirt/reports/risk-insights/models/password-health";
+import { ReportDecipherService } from "@bitwarden/bit-common/dirt/reports/risk-insights/services/report-decipher.service";
 import {
   getOrganizationById,
   OrganizationService,
@@ -84,7 +84,7 @@ export class AllApplicationsComponent implements OnInit {
   };
 
   destroyRef = inject(DestroyRef);
-  isLoading$: Observable<boolean> = of(false);
+  isLoading$: Observable<boolean> = this.dataService.isLoading$;
 
   private atRiskInsightsReport = new BehaviorSubject<{
     data: ApplicationHealthReportDetailWithCriticalFlag[];
@@ -102,8 +102,6 @@ export class AllApplicationsComponent implements OnInit {
   });
 
   async ngOnInit() {
-    this.isLoading$ = this.dataService.isLoading$;
-
     this.dataService.isLoadingData(true);
 
     const organizationId = this.activatedRoute.snapshot.paramMap.get("organizationId") ?? "";
@@ -126,6 +124,7 @@ export class AllApplicationsComponent implements OnInit {
         this.dataService.cipherViewsForOrganization$,
       ])
         .pipe(
+          takeUntilDestroyed(this.destroyRef),
           map(
             ([
               report,
@@ -160,7 +159,7 @@ export class AllApplicationsComponent implements OnInit {
               criticalApps,
               cipherViewsForOrg,
             }) => {
-              if (report && organization) {
+              if (!!report && organization) {
                 const dataWithCiphers = await this.reportService.identifyCiphers(
                   report,
                   cipherViewsForOrg,
@@ -178,31 +177,36 @@ export class AllApplicationsComponent implements OnInit {
               return { report: [], summary, isReportFromArchive, organization, criticalApps: [] };
             },
           ),
-          takeUntilDestroyed(this.destroyRef),
         )
-        .subscribe(({ report, summary, isReportFromArchive, organization }) => {
-          if (report) {
-            this.dataSource.data = report;
-          }
+        .subscribe({
+          next: ({ report, summary, isReportFromArchive, organization }) => {
+            if (report) {
+              this.dataSource.data = report;
+            }
 
-          if (summary) {
-            this.applicationSummary = summary;
-          }
+            if (summary) {
+              this.applicationSummary = summary;
+            }
 
-          if (organization) {
-            this.organization = organization;
-          }
+            if (organization) {
+              this.organization = organization;
+            }
 
-          if (!isReportFromArchive && report && organization && summary) {
-            this.atRiskInsightsReport.next({
-              data: report,
-              organization: organization,
-              summary: summary,
-            });
-          }
+            if (!isReportFromArchive && !!report && !!organization && !!summary) {
+              this.atRiskInsightsReport.next({
+                data: report,
+                organization: organization,
+                summary: summary,
+              });
+            }
+
+            if (!!report && !!summary && !!organization) {
+              this.dataService.isLoadingData(false);
+            }
+          },
         });
 
-      this.dataService.isLoadingData(false);
+      // this.dataService.isLoadingData(false);
     }
   }
 
@@ -218,6 +222,7 @@ export class AllApplicationsComponent implements OnInit {
     private accountService: AccountService,
     protected criticalAppsService: CriticalAppsService,
     protected riskInsightsApiService: RiskInsightsApiService,
+    protected reportDecipherService: ReportDecipherService,
   ) {
     this.searchControl.valueChanges
       .pipe(debounceTime(200), takeUntilDestroyed())
@@ -229,7 +234,7 @@ export class AllApplicationsComponent implements OnInit {
         debounceTime(500),
         switchMap(async (report) => {
           if (report && report.organization?.id && report.data && report.summary) {
-            const data = await this.reportService.generateEncryptedRiskInsightsReport(
+            const data = await this.reportDecipherService.generateEncryptedRiskInsightsReport(
               report.organization.id as OrganizationId,
               report.data,
               report.summary,

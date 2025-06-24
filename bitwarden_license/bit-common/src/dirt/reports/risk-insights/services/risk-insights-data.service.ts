@@ -1,6 +1,5 @@
-import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { BehaviorSubject } from "rxjs";
-import { switchMap } from "rxjs/operators";
+import { BehaviorSubject, firstValueFrom } from "rxjs";
+import { map, switchMap } from "rxjs/operators";
 
 import { OrganizationId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
@@ -15,6 +14,7 @@ import {
   DrawerType,
 } from "../models/password-health";
 
+import { ReportDecipherService } from "./report-decipher.service";
 import { RiskInsightsApiService } from "./risk-insights-api.service";
 import { RiskInsightsReportService } from "./risk-insights-report.service";
 export class RiskInsightsDataService {
@@ -52,6 +52,7 @@ export class RiskInsightsDataService {
     private reportService: RiskInsightsReportService,
     private riskInsightsApiService: RiskInsightsApiService,
     private cipherService: CipherService,
+    private reportDecipherService: ReportDecipherService,
   ) {}
 
   /**
@@ -59,38 +60,46 @@ export class RiskInsightsDataService {
    * @param organizationId The ID of the organization.
    */
   fetchApplicationsReport(organizationId: string, isRefresh?: boolean): void {
-    this.reportService
-      .generateApplicationsReport$(organizationId)
-      .pipe(takeUntilDestroyed())
-      .subscribe({
-        next: (reports: ApplicationHealthReportDetail[]) => {
-          this.applicationsSubject.next(reports);
-          this.errorSubject.next(null);
-          this.appsSummarySubject.next(this.reportService.generateApplicationsSummary(reports));
-          this.dataLastUpdatedSubject.next(new Date());
-        },
-        error: () => {
-          this.applicationsSubject.next([]);
-        },
-      });
+    this.reportService.generateApplicationsReport$(organizationId).subscribe({
+      next: (reports: ApplicationHealthReportDetail[]) => {
+        this.applicationsSubject.next(reports);
+        this.errorSubject.next(null);
+        this.appsSummarySubject.next(this.reportService.generateApplicationsSummary(reports));
+        this.dataLastUpdatedSubject.next(new Date());
+      },
+      error: () => {
+        this.applicationsSubject.next([]);
+      },
+    });
   }
 
-  fetchApplicationsReportFromCache(organizationId: string) {
+  fetchApplicationsReportFromCache(organizationId: string, isRefresh: boolean = false) {
     return this.riskInsightsApiService
       .getRiskInsightsReport(organizationId as OrganizationId)
       .pipe(
+        map((reportFromArchive) => {
+          if (isRefresh) {
+            // we force a refresh if isRefresh is true
+            // ignore all data from the server
+            return null;
+          }
+          return reportFromArchive;
+        }),
         switchMap(async (reportFromArchive) => {
           if (!reportFromArchive || !reportFromArchive?.date) {
-            this.fetchApplicationsReport(organizationId);
+            const report = await firstValueFrom(
+              this.reportService.generateApplicationsReport$(organizationId),
+            );
+            const summary = this.reportService.generateApplicationsSummary(report);
 
             return {
-              report: [],
-              summary: null,
+              report,
+              summary,
               fromArchive: false,
               lastUpdated: new Date(),
             };
           } else {
-            const [report, summary] = await this.reportService.decryptRiskInsightsReport(
+            const [report, summary] = await this.reportDecipherService.decryptRiskInsightsReport(
               organizationId as OrganizationId,
               reportFromArchive,
             );
@@ -106,14 +115,9 @@ export class RiskInsightsDataService {
       )
       .subscribe({
         next: ({ report, summary, fromArchive, lastUpdated }) => {
-          // in this block, only set the applicationsSubject and appsSummarySubject if the report is from archive
-          // the fetchApplicationsReport will set them if the report is not from archive
-          if (fromArchive) {
-            this.applicationsSubject.next(report);
-            this.errorSubject.next(null);
-            this.appsSummarySubject.next(summary);
-          }
-
+          this.applicationsSubject.next(report);
+          this.errorSubject.next(null);
+          this.appsSummarySubject.next(summary);
           this.isReportFromArchiveSubject.next(fromArchive);
           this.dataLastUpdatedSubject.next(lastUpdated);
         },
@@ -150,7 +154,8 @@ export class RiskInsightsDataService {
   }
 
   refreshApplicationsReport(organizationId: string): void {
-    this.fetchApplicationsReport(organizationId, true);
+    this.isLoadingData(true);
+    this.fetchApplicationsReportFromCache(organizationId, true);
   }
 
   isActiveDrawerType = (drawerType: DrawerType): boolean => {

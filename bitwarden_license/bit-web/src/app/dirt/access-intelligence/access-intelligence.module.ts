@@ -9,6 +9,7 @@ import {
   RiskInsightsDataService,
   RiskInsightsReportService,
 } from "@bitwarden/bit-common/dirt/reports/risk-insights/services";
+import { ReportDecipherService } from "@bitwarden/bit-common/dirt/reports/risk-insights/services/report-decipher.service";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
@@ -34,15 +35,16 @@ import { RiskInsightsComponent } from "./risk-insights.component";
         AuditService,
         CipherService,
         MemberCipherDetailsApiService,
-        KeyService,
-        EncryptService,
-        CriticalAppsService,
-        KeyGenerationService,
       ],
     },
     {
       provide: RiskInsightsDataService,
-      deps: [RiskInsightsReportService, RiskInsightsApiService, CipherService],
+      deps: [
+        RiskInsightsReportService,
+        RiskInsightsApiService,
+        CipherService,
+        ReportDecipherService,
+      ],
     },
     safeProvider({
       provide: CriticalAppsService,
@@ -57,6 +59,11 @@ import { RiskInsightsComponent } from "./risk-insights.component";
     safeProvider({
       provide: RiskInsightsApiService,
       deps: [ApiService],
+    }),
+    safeProvider({
+      provide: ReportDecipherService,
+      useClass: ReportDecipherService,
+      deps: [KeyService, EncryptService, KeyGenerationService],
     }),
   ],
 })

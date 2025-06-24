@@ -3,14 +3,10 @@ import { firstValueFrom } from "rxjs";
 import { ZXCVBNResult } from "zxcvbn";
 
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
-import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
-import { KeyGenerationService } from "@bitwarden/common/platform/abstractions/key-generation.service";
 import { PasswordStrengthServiceAbstraction } from "@bitwarden/common/tools/password-strength";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
-import { KeyService } from "@bitwarden/key-management";
 
 import { mockCiphers } from "./ciphers.mock";
-import { CriticalAppsService } from "./critical-apps.service";
 import { MemberCipherDetailsApiService } from "./member-cipher-details-api.service";
 import { mockMemberCipherDetails } from "./member-cipher-details-api.service.spec";
 import { RiskInsightsReportService } from "./risk-insights-report.service";
@@ -21,10 +17,6 @@ describe("RiskInsightsReportService", () => {
   const auditService = mock<AuditService>();
   const cipherService = mock<CipherService>();
   const memberCipherDetailsService = mock<MemberCipherDetailsApiService>();
-  const keyService = mock<KeyService>();
-  const encryptService = mock<EncryptService>();
-  const criticalAppsService = mock<CriticalAppsService>();
-  const keyGenerationService = mock<KeyGenerationService>();
 
   beforeEach(() => {
     pwdStrengthService.getPasswordStrength.mockImplementation((password: string) => {
@@ -45,10 +37,6 @@ describe("RiskInsightsReportService", () => {
       auditService,
       cipherService,
       memberCipherDetailsService,
-      keyService,
-      encryptService,
-      criticalAppsService,
-      keyGenerationService,
     );
   });
 
