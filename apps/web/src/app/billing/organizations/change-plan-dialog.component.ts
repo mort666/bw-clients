@@ -68,6 +68,7 @@ import { BillingNotificationService } from "../services/billing-notification.ser
 import { BillingSharedModule } from "../shared/billing-shared.module";
 import { PaymentComponent } from "../shared/payment/payment.component";
 import { CostSummaryComponent } from "../shared/trial-subscription-dialog/cost-summary.component";
+import { TrialPaymentMethodService } from "../shared/trial-subscription-dialog/trial-payment-method.service";
 
 type ChangePlanDialogParams = {
   organizationId: string;
@@ -111,6 +112,7 @@ interface OnSuccessArgs {
 @Component({
   templateUrl: "./change-plan-dialog.component.html",
   imports: [BillingSharedModule, CostSummaryComponent],
+  providers: [TrialPaymentMethodService],
 })
 export class ChangePlanDialogComponent implements OnInit, OnDestroy {
   @ViewChild(PaymentComponent) paymentComponent: PaymentComponent;
@@ -219,11 +221,15 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
     private accountService: AccountService,
     private organizationBillingService: OrganizationBillingService,
     private billingNotificationService: BillingNotificationService,
+    private trialPaymentMethodService: TrialPaymentMethodService,
   ) {}
 
   async ngOnInit(): Promise<void> {
     if (this.dialogParams.organizationId) {
-      this.currentPlanName = this.resolvePlanName(this.dialogParams.productTierType);
+      this.currentPlanName = this.trialPaymentMethodService.resolvePlanName(
+        this.dialogParams.productTierType,
+        this.i18nService,
+      );
       this.sub =
         this.dialogParams.subscription ??
         (await this.organizationApiService.getSubscription(this.dialogParams.organizationId));
@@ -302,9 +308,10 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
         selected: false,
       },
     ];
-    this.discountPercentageFromSub = this.isSecretsManagerTrial()
-      ? 0
-      : (this.sub?.customerDiscount?.percentOff ?? 0);
+    this.discountPercentageFromSub = this.trialPaymentMethodService.getDiscountPercentageFromSub(
+      this.sub,
+      this.isSecretsManagerTrial(),
+    );
 
     this.setInitialPlanSelection();
     this.loading = false;
@@ -328,7 +335,10 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
 
     return this.i18nService.t(
       "upgradeFreeOrganization",
-      this.resolvePlanName(this.dialogParams.productTierType),
+      this.trialPaymentMethodService.resolvePlanName(
+        this.dialogParams.productTierType,
+        this.i18nService,
+      ),
     );
   }
 
@@ -503,9 +513,9 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
 
   get selectedPlanInterval() {
     if (this.isSubscriptionCanceled) {
-      return this.currentPlan.isAnnual ? "year" : "month";
+      return this.trialPaymentMethodService.getSelectedPlanInterval(this.currentPlan);
     }
-    return this.selectedPlan.isAnnual ? "year" : "month";
+    return this.trialPaymentMethodService.getSelectedPlanInterval(this.selectedPlan);
   }
 
   get selectableProducts() {
@@ -582,7 +592,7 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
   }
 
   get storageGb() {
-    return this.sub?.maxStorageGb ? this.sub?.maxStorageGb - 1 : 0;
+    return this.trialPaymentMethodService.getStorageGb(this.sub);
   }
 
   get teamsStarterPlanIsAvailable() {
@@ -590,16 +600,7 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
   }
 
   get additionalServiceAccount() {
-    if (!this.currentPlan || !this.currentPlan.SecretsManager) {
-      return 0;
-    }
-
-    const baseServiceAccount = this.currentPlan.SecretsManager?.baseServiceAccount || 0;
-    const usedServiceAccounts = this.sub?.smServiceAccounts || 0;
-
-    const additionalServiceAccounts = baseServiceAccount - usedServiceAccounts;
-
-    return additionalServiceAccounts <= 0 ? Math.abs(additionalServiceAccounts) : 0;
+    return this.trialPaymentMethodService.getAdditionalServiceAccount(this.currentPlan, this.sub);
   }
 
   changedProduct() {
@@ -890,21 +891,6 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
         return ["bwi-paypal text-primary"];
       default:
         return [];
-    }
-  }
-
-  resolvePlanName(productTier: ProductTierType) {
-    switch (productTier) {
-      case ProductTierType.Enterprise:
-        return this.i18nService.t("planNameEnterprise");
-      case ProductTierType.Free:
-        return this.i18nService.t("planNameFree");
-      case ProductTierType.Families:
-        return this.i18nService.t("planNameFamilies");
-      case ProductTierType.Teams:
-        return this.i18nService.t("planNameTeams");
-      case ProductTierType.TeamsStarter:
-        return this.i18nService.t("planNameTeamsStarter");
     }
   }
 

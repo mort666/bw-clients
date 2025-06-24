@@ -220,7 +220,10 @@ export class TrialPaymentMethodDialogComponent implements OnInit, OnDestroy {
   resolveHeaderName(): string {
     return this.i18nService.t(
       "upgradeFreeOrganization",
-      this.resolvePlanName(this.dialogParams.productTierType),
+      this.trialPaymentMethodService.resolvePlanName(
+        this.dialogParams.productTierType,
+        this.i18nService,
+      ),
     );
   }
 
@@ -270,7 +273,7 @@ export class TrialPaymentMethodDialogComponent implements OnInit, OnDestroy {
   }
 
   get selectedPlanInterval(): string {
-    return this.currentPlan?.isAnnual ? "year" : "month";
+    return this.trialPaymentMethodService.getSelectedPlanInterval(this.currentPlan);
   }
 
   get selectablePlans(): PlanResponse[] {
@@ -282,14 +285,11 @@ export class TrialPaymentMethodDialogComponent implements OnInit, OnDestroy {
   }
 
   get storageGb(): number {
-    return this.sub?.maxStorageGb ? this.sub.maxStorageGb - 1 : 0;
+    return this.trialPaymentMethodService.getStorageGb(this.sub);
   }
 
   get additionalServiceAccount(): number {
-    return this.pricingCalculationService.calculateAdditionalServiceAccount(
-      this.currentPlan,
-      this.sub,
-    );
+    return this.trialPaymentMethodService.getAdditionalServiceAccount(this.currentPlan, this.sub);
   }
 
   get showTaxIdField(): boolean {
@@ -386,7 +386,10 @@ export class TrialPaymentMethodDialogComponent implements OnInit, OnDestroy {
   // Private methods
   private async initializeComponent(): Promise<void> {
     if (this.dialogParams.organizationId) {
-      this.currentPlanName = this.resolvePlanName(this.dialogParams.productTierType);
+      this.currentPlanName = this.trialPaymentMethodService.resolvePlanName(
+        this.dialogParams.productTierType,
+        this.i18nService,
+      );
       this.sub =
         this.dialogParams.subscription ??
         (await this.organizationApiService.getSubscription(this.dialogParams.organizationId));
@@ -421,9 +424,10 @@ export class TrialPaymentMethodDialogComponent implements OnInit, OnDestroy {
       this.changedProduct();
     }
 
-    this.discountPercentageFromSub = this.isSecretsManagerTrial()
-      ? 0
-      : (this.sub?.customerDiscount?.percentOff ?? 0);
+    this.discountPercentageFromSub = this.trialPaymentMethodService.getDiscountPercentageFromSub(
+      this.sub,
+      this.isSecretsManagerTrial(),
+    );
 
     this.setInitialPlanIntervalSelection();
 
@@ -520,20 +524,5 @@ export class TrialPaymentMethodDialogComponent implements OnInit, OnDestroy {
       .catch(() => {
         this.estimatedTax = 0;
       });
-  }
-
-  private resolvePlanName(productTier: ProductTierType): string {
-    switch (productTier) {
-      case ProductTierType.Enterprise:
-        return this.i18nService.t("planNameEnterprise");
-      case ProductTierType.Free:
-        return this.i18nService.t("planNameFree");
-      case ProductTierType.Families:
-        return this.i18nService.t("planNameFamilies");
-      case ProductTierType.Teams:
-        return this.i18nService.t("planNameTeams");
-      case ProductTierType.TeamsStarter:
-        return this.i18nService.t("planNameTeamsStarter");
-    }
   }
 }

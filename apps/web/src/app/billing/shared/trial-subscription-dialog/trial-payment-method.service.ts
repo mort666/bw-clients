@@ -148,4 +148,47 @@ export class TrialPaymentMethodService {
 
     await apiService.postAccountPayment(request);
   }
+
+  resolvePlanName(productTier: ProductTierType, i18nService: I18nService): string {
+    switch (productTier) {
+      case ProductTierType.Enterprise:
+        return i18nService.t("planNameEnterprise");
+      case ProductTierType.Free:
+        return i18nService.t("planNameFree");
+      case ProductTierType.Families:
+        return i18nService.t("planNameFamilies");
+      case ProductTierType.Teams:
+        return i18nService.t("planNameTeams");
+      case ProductTierType.TeamsStarter:
+        return i18nService.t("planNameTeamsStarter");
+    }
+  }
+
+  getSelectedPlanInterval(plan: PlanResponse): string {
+    return plan?.isAnnual ? "year" : "month";
+  }
+
+  getStorageGb(sub: OrganizationSubscriptionResponse): number {
+    return sub?.maxStorageGb ? sub.maxStorageGb - 1 : 0;
+  }
+
+  getAdditionalServiceAccount(
+    currentPlan: PlanResponse,
+    sub: OrganizationSubscriptionResponse,
+  ): number {
+    if (!currentPlan || !currentPlan.SecretsManager) {
+      return 0;
+    }
+    const baseServiceAccount = currentPlan.SecretsManager?.baseServiceAccount || 0;
+    const usedServiceAccounts = sub?.smServiceAccounts || 0;
+    const additionalServiceAccounts = baseServiceAccount - usedServiceAccounts;
+    return additionalServiceAccounts <= 0 ? Math.abs(additionalServiceAccounts) : 0;
+  }
+
+  getDiscountPercentageFromSub(
+    sub: OrganizationSubscriptionResponse,
+    isSecretsManagerTrial: boolean,
+  ): number {
+    return isSecretsManagerTrial ? 0 : (sub?.customerDiscount?.percentOff ?? 0);
+  }
 }
