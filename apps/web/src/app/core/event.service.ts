@@ -467,20 +467,20 @@ export class EventService {
         break;
       // Secrets Manager
       case EventType.Secret_Retrieved:
-        msg = this.i18nService.t("accessedSecret", this.formatSecretId(ev));
-        humanReadableMsg = this.i18nService.t("accessedSecret", this.getShortId(ev.secretId));
+        msg = this.i18nService.t("accessedSecretWithId", this.formatSecretId(ev));
+        humanReadableMsg = this.i18nService.t("accessedSecretWithId", this.getShortId(ev.secretId));
         break;
       case EventType.Secret_Created:
-        msg = this.i18nService.t("createdSecret", this.formatSecretId(ev));
-        humanReadableMsg = this.i18nService.t("createdSecret", this.getShortId(ev.secretId));
+        msg = this.i18nService.t("createdSecretWithId", this.formatSecretId(ev));
+        humanReadableMsg = this.i18nService.t("createdSecretWithId", this.getShortId(ev.secretId));
         break;
       case EventType.Secret_Deleted:
-        msg = this.i18nService.t("deletedSecret", this.formatSecretId(ev));
-        humanReadableMsg = this.i18nService.t("deletedSecret", this.getShortId(ev.secretId));
+        msg = this.i18nService.t("deletedSecretWithId", this.formatSecretId(ev));
+        humanReadableMsg = this.i18nService.t("deletedSecretWithId", this.getShortId(ev.secretId));
         break;
       case EventType.Secret_Edited:
-        msg = this.i18nService.t("editedSecret", this.formatSecretId(ev));
-        humanReadableMsg = this.i18nService.t("editedSecret", this.getShortId(ev.secretId));
+        msg = this.i18nService.t("editedSecretWithId", this.formatSecretId(ev));
+        humanReadableMsg = this.i18nService.t("editedSecretWithId", this.getShortId(ev.secretId));
         break;
       default:
         break;

@@ -8204,7 +8204,7 @@
   "errorReadingImportFile": {
     "message": "An error occurred when trying to read the import file"
   },
-  "accessedSecret": {
+  "accessedSecretWithId": {
     "message": "Accessed secret with identifier: $SECRET_ID$",
     "placeholders": {
       "secret_id": {
@@ -8213,7 +8213,16 @@
       }
     }
   },
-   "editedSecret": {
+  "accessedSecret": {
+  "message": "Accessed secret $SECRET_ID$.",
+    "placeholders": {
+      "secret_id": {
+        "content": "$1",
+        "example": "4d34e8a8"
+      }
+    }
+  },
+   "editedSecretWithId": {
     "message": "Edited a secret  with identifier: $SECRET_ID$",
     "placeholders": {
       "secret_id": {
@@ -8222,7 +8231,7 @@
       }
     }
   },
-   "deletedSecret": {
+   "deletedSecretWithId": {
     "message": "Deleted a secret with identifier: $SECRET_ID$",
     "placeholders": {
       "secret_id": {
@@ -8231,7 +8240,7 @@
       }
     }
   },
-   "createdSecret": {
+   "createdSecretWithId": {
     "message": "Created a new secret with identifier: $SECRET_ID$",
     "placeholders": {
       "secret_id": {
