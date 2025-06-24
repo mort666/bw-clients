@@ -15,11 +15,9 @@ import { SyncService } from "@bitwarden/common/platform/sync";
 import { UserId } from "@bitwarden/common/types/guid";
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
-import { DialogService, ToastService } from "@bitwarden/components";
+import { AnonLayoutWrapperDataService, DialogService, ToastService, Icons } from "@bitwarden/components";
 import { I18nPipe } from "@bitwarden/ui-common";
 
-import { AnonLayoutWrapperDataService } from "../anon-layout/anon-layout-wrapper-data.service";
-import { LockIcon } from "../icons";
 import {
   InputPasswordComponent,
   InputPasswordFlow,
@@ -94,38 +92,41 @@ export class ChangePasswordComponent implements OnInit {
     );
 
     // New Master Password Policy Options service
-    const orgInvite = await this.organizationInviteService.getOrganizationInvite();
+    // const orgInvite = await this.organizationInviteService.getOrganizationInvite();
 
-    switch (this.forceSetPasswordReason) {
-      case ForceSetPasswordReason.WeakMasterPassword:
-        if (orgInvite) {
-          if (!orgInvite.token) {
-            this.logService.error("No org token found when trying to retrieve policies.");
-            return;
-          }
-          this.masterPasswordPolicyOptions =
-            await this.masterPasswordPolicyOptionsService.getForInvitedMember(orgInvite.token);
-        } else {
-          this.masterPasswordPolicyOptions =
-            await this.masterPasswordPolicyOptionsService.getByUserId(this.userId);
-        }
-        break;
-      case ForceSetPasswordReason.AdminForcePasswordReset:
-      default:
-        this.masterPasswordPolicyOptions =
-          await this.masterPasswordPolicyOptionsService.getByUserId(this.userId);
-        break;
-    }
+    // switch (this.forceSetPasswordReason) {
+    //   case ForceSetPasswordReason.WeakMasterPassword:
+    //     if (orgInvite) {
+    //       if (!orgInvite.token) {
+    //         this.logService.error("No org token found when trying to retrieve policies.");
+    //         return;
+    //       }
+    //       // Jared I think you wanted this to fetch the token inside the function call but we have
+    //       // it here and it could make sense to just pass it in? but it does go against the whole
+    //       // self-sufficient notion of this service.
+    //       this.masterPasswordPolicyOptions =
+    //         await this.masterPasswordPolicyOptionsService.getForInvitedMember(orgInvite.token);
+    //     } else {
+    //       this.masterPasswordPolicyOptions =
+    //         await this.masterPasswordPolicyOptionsService.getByUserId(this.userId);
+    //     }
+    //     break;
+    //   case ForceSetPasswordReason.AdminForcePasswordReset:
+    //   default:
+    //     this.masterPasswordPolicyOptions =
+    //       await this.masterPasswordPolicyOptionsService.getByUserId(this.userId);
+    //     break;
+    // }
 
     if (this.forceSetPasswordReason === ForceSetPasswordReason.AdminForcePasswordReset) {
       this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
-        pageIcon: LockIcon,
+        pageIcon: Icons.LockIcon,
         pageTitle: { key: "updateMasterPassword" },
         pageSubtitle: { key: "accountRecoveryUpdateMasterPasswordSubtitle" },
       });
     } else if (this.forceSetPasswordReason === ForceSetPasswordReason.WeakMasterPassword) {
       this.anonLayoutWrapperDataService.setAnonLayoutWrapperData({
-        pageIcon: LockIcon,
+        pageIcon: Icons.LockIcon,
         pageTitle: { key: "updateMasterPassword" },
         pageSubtitle: { key: "updateMasterPasswordSubtitle" },
         maxWidth: "lg",

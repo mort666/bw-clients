@@ -142,6 +142,15 @@ import { DesktopSetPasswordJitService } from "./desktop-set-password-jit.service
 import { InitService } from "./init.service";
 import { NativeMessagingManifestService } from "./native-messaging-manifest.service";
 import { RendererCryptoFunctionService } from "./renderer-crypto-function.service";
+import {
+  MasterPasswordPolicyServiceAbstraction
+} from "@bitwarden/common/admin-console/abstractions/policy/master-password-policy.service.abstraction";
+import {
+  DefaultMasterPasswordPolicyService
+} from "@bitwarden/common/admin-console/services/policy/default-master-password-policy.service";
+import {
+  PolicyApiServiceAbstraction
+} from "@bitwarden/common/admin-console/abstractions/policy/policy-api.service.abstraction";
 
 const RELOAD_CALLBACK = new SafeInjectionToken<() => any>("RELOAD_CALLBACK");
 
@@ -384,15 +393,19 @@ const safeProviders: SafeProvider[] = [
     deps: [],
   }),
   safeProvider({
+    provide: MasterPasswordPolicyServiceAbstraction,
+    useClass: DefaultMasterPasswordPolicyService,
+    deps: [PolicyApiServiceAbstraction],
+  }),
+  safeProvider({
     provide: SetPasswordJitService,
     useClass: DesktopSetPasswordJitService,
     deps: [
-      ApiService,
-      MasterPasswordApiService,
-      KeyService,
       EncryptService,
       I18nServiceAbstraction,
       KdfConfigService,
+      KeyService,
+      MasterPasswordApiService,
       InternalMasterPasswordServiceAbstraction,
       OrganizationApiServiceAbstraction,
       OrganizationUserApiService,

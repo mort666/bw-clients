@@ -1,5 +1,3 @@
-import { MasterPasswordPolicyResponse } from "@bitwarden/common/auth/models/response/master-password-policy.response";
-
 import { ListResponse } from "../../../models/response/list.response";
 import { PolicyType } from "../../enums";
 import { MasterPasswordPolicyOptions } from "../../models/domain/master-password-policy-options";
@@ -11,8 +9,6 @@ export abstract class PolicyApiServiceAbstraction {
   abstract getPolicy: (organizationId: string, type: PolicyType) => Promise<PolicyResponse>;
   abstract getPolicies: (organizationId: string) => Promise<ListResponse<PolicyResponse>>;
 
-  abstract getMasterPasswordPoliciesForAcceptedOrConfirmedUser: () => Promise<MasterPasswordPolicyResponse>;
-
   abstract getPoliciesByToken: (
     organizationId: string,
     token: string,
@@ -20,8 +16,11 @@ export abstract class PolicyApiServiceAbstraction {
     organizationUserId: string,
   ) => Promise<Policy[] | undefined>;
 
+  /**
+   * This takes an organization id to get org policies for. The user is inferred by the
+   */
   abstract getMasterPasswordPolicyOptsForOrgUser: (
-    orgId: string,
+    organizationId: string,
   ) => Promise<MasterPasswordPolicyOptions | null>;
   abstract putPolicy: (
     organizationId: string,
