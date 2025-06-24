@@ -40,30 +40,48 @@ export class CostSummaryComponent {
   }
 
   get passwordManagerSeats(): number {
+    if (!this.selectedPlan || !this.sub) {
+      return 0;
+    }
     return this.pricingCalculationService.getPasswordManagerSeats(this.selectedPlan, this.sub);
   }
 
-  passwordManagerSeatTotal(plan: PlanResponse): number {
+  passwordManagerSeatTotal(plan: PlanResponse | undefined): number {
+    if (!plan || !this.sub) {
+      return 0;
+    }
     return this.pricingCalculationService.calculatePasswordManagerSeatTotal(
       plan,
       this.sub,
-      this.isSecretsManagerTrial,
+      this.isSecretsManagerTrial ?? false,
     );
   }
 
-  secretsManagerSeatTotal(plan: PlanResponse, seats: number): number {
+  secretsManagerSeatTotal(plan: PlanResponse | undefined, seats: number | undefined): number {
+    if (!plan || seats === undefined) {
+      return 0;
+    }
     return this.pricingCalculationService.calculateSecretsManagerSeatTotal(plan, seats);
   }
 
-  additionalStorageTotal(plan: PlanResponse): number {
+  additionalStorageTotal(plan: PlanResponse | undefined): number {
+    if (!plan || !this.sub) {
+      return 0;
+    }
     return this.pricingCalculationService.calculateAdditionalStorageTotal(plan, this.sub);
   }
 
-  additionalStoragePriceMonthly(selectedPlan: PlanResponse): number {
+  additionalStoragePriceMonthly(selectedPlan: PlanResponse | undefined): number {
+    if (!selectedPlan || !selectedPlan.PasswordManager) {
+      return 0;
+    }
     return selectedPlan.PasswordManager.additionalStoragePricePerGb;
   }
 
-  additionalServiceAccountTotal(plan: PlanResponse): number {
+  additionalServiceAccountTotal(plan: PlanResponse | undefined): number {
+    if (!plan || this.additionalServiceAccount === undefined) {
+      return 0;
+    }
     return this.pricingCalculationService.calculateAdditionalServiceAccountTotal(
       plan,
       this.additionalServiceAccount,
@@ -71,6 +89,9 @@ export class CostSummaryComponent {
   }
 
   calculateTotalAppliedDiscount(total: number): number {
+    if (this.discountPercentageFromSub === undefined) {
+      return 0;
+    }
     return this.pricingCalculationService.calculateTotalAppliedDiscount(
       total,
       this.discountPercentageFromSub,
@@ -81,7 +102,10 @@ export class CostSummaryComponent {
     this.totalOpened = !this.totalOpened;
   }
 
-  secretsManagerSubtotal() {
+  secretsManagerSubtotal(): number {
+    if (!this.selectedPlan || !this.sub || this.secretsManagerTotal === undefined) {
+      return 0;
+    }
     return this.pricingCalculationService.calculateSecretsManagerSubtotal(
       this.selectedPlan,
       this.sub,
@@ -89,7 +113,10 @@ export class CostSummaryComponent {
     );
   }
 
-  get passwordManagerSubtotal() {
+  get passwordManagerSubtotal(): number {
+    if (!this.selectedPlan || !this.sub) {
+      return 0;
+    }
     return this.pricingCalculationService.calculatePasswordManagerSubtotal(
       this.selectedPlan,
       this.sub,
@@ -97,12 +124,15 @@ export class CostSummaryComponent {
     );
   }
 
-  get total() {
+  get total(): number {
+    if (!this.organization || !this.selectedPlan || !this.sub) {
+      return 0;
+    }
     return this.pricingCalculationService.calculateTotal(
       this.organization,
       this.selectedPlan,
       this.passwordManagerSubtotal,
-      this.estimatedTax,
+      this.estimatedTax ?? 0,
       this.sub,
     );
   }
