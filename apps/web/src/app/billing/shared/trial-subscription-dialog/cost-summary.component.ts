@@ -17,21 +17,21 @@ import { PricingCalculationService } from "./pricing-calculation.service";
   imports: [SharedModule],
 })
 export class CostSummaryComponent {
-  @Input() organization: Organization;
-  @Input() sub: OrganizationSubscriptionResponse;
-  @Input() selectedPlan: PlanResponse;
-  @Input() selectedInterval: number;
-  @Input() discountPercentageFromSub: number;
-  @Input() discountPercentage: number;
-  @Input() acceptingSponsorship: boolean;
-  @Input() additionalServiceAccount: number;
+  @Input() organization?: Organization;
+  @Input() sub?: OrganizationSubscriptionResponse;
+  @Input() selectedPlan?: PlanResponse;
+  @Input() selectedInterval?: number;
+  @Input() discountPercentageFromSub?: number;
+  @Input() discountPercentage?: number;
+  @Input() acceptingSponsorship?: boolean;
+  @Input() additionalServiceAccount?: number;
   @Input() planIntervals = PlanInterval;
-  @Input() totalOpened: boolean;
-  @Input() storageGb: number;
-  @Input() isSecretsManagerTrial: boolean;
-  @Input() estimatedTax: number;
+  @Input() totalOpened?: boolean;
+  @Input() storageGb?: number;
+  @Input() isSecretsManagerTrial?: boolean;
+  @Input() estimatedTax?: number;
   discount = 0;
-  secretsManagerTotal: number;
+  secretsManagerTotal?: number;
 
   constructor(public pricingCalculationService: PricingCalculationService) {}
 
