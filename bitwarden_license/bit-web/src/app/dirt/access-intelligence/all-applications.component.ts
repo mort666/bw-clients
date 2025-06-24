@@ -205,8 +205,6 @@ export class AllApplicationsComponent implements OnInit {
             }
           },
         });
-
-      // this.dataService.isLoadingData(false);
     }
   }
 
