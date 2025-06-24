@@ -11,7 +11,6 @@ import {
   ViewChild,
 } from "@angular/core";
 import { FormBuilder, Validators } from "@angular/forms";
-import { Router } from "@angular/router";
 import { firstValueFrom, map, Subject, switchMap, takeUntil } from "rxjs";
 
 import { ManageTaxInformationComponent } from "@bitwarden/angular/billing/components";
@@ -54,7 +53,6 @@ import { PaymentComponent } from "../payment/payment.component";
 
 import { CostSummaryComponent } from "./cost-summary.component";
 import { PlanSelectionService } from "./plan-selection.service";
-import { PricingCalculationService } from "./pricing-calculation.service";
 import { TrialPaymentMethodService } from "./trial-payment-method.service";
 
 // Types
@@ -94,7 +92,7 @@ interface PlanCard {
 @Component({
   templateUrl: "./trial-payment-method-dialog.component.html",
   imports: [BillingSharedModule, CostSummaryComponent],
-  providers: [TrialPaymentMethodService, PlanSelectionService, PricingCalculationService],
+  providers: [TrialPaymentMethodService, PlanSelectionService],
 })
 export class TrialPaymentMethodDialogComponent implements OnInit, OnDestroy {
   @ViewChild(PaymentComponent) paymentComponent: PaymentComponent;
@@ -189,7 +187,6 @@ export class TrialPaymentMethodDialogComponent implements OnInit, OnDestroy {
     private toastService: ToastService,
     private apiService: ApiService,
     private i18nService: I18nService,
-    private router: Router,
     private policyService: PolicyService,
     private organizationService: OrganizationService,
     private formBuilder: FormBuilder,
@@ -199,7 +196,6 @@ export class TrialPaymentMethodDialogComponent implements OnInit, OnDestroy {
     private accountService: AccountService,
     private trialPaymentMethodService: TrialPaymentMethodService,
     private planSelectionService: PlanSelectionService,
-    private pricingCalculationService: PricingCalculationService,
   ) {
     this.initialPaymentMethod = this.dialogParams.initialPaymentMethod ?? PaymentMethodType.Card;
   }
