@@ -52,6 +52,7 @@ import {
 import { BillingSharedModule } from "../billing-shared.module";
 import { PaymentComponent } from "../payment/payment.component";
 
+import { CostSummaryComponent } from "./cost-summary.component";
 import { PlanSelectionService } from "./plan-selection.service";
 import { PricingCalculationService } from "./pricing-calculation.service";
 import { TrialPaymentMethodService } from "./trial-payment-method.service";
@@ -92,7 +93,7 @@ interface PlanCard {
 // Component
 @Component({
   templateUrl: "./trial-payment-method-dialog.component.html",
-  imports: [BillingSharedModule],
+  imports: [BillingSharedModule, CostSummaryComponent],
   providers: [TrialPaymentMethodService, PlanSelectionService, PricingCalculationService],
 })
 export class TrialPaymentMethodDialogComponent implements OnInit, OnDestroy {
@@ -165,7 +166,6 @@ export class TrialPaymentMethodDialogComponent implements OnInit, OnDestroy {
   // Data properties
   selfHosted = false;
   singleOrgPolicyAppliesToActiveUser = false;
-  discount = 0;
   planType: string;
   selectedPlan: PlanResponse;
   selectedInterval: number = 1;
@@ -285,36 +285,6 @@ export class TrialPaymentMethodDialogComponent implements OnInit, OnDestroy {
     return this.sub?.maxStorageGb ? this.sub.maxStorageGb - 1 : 0;
   }
 
-  get passwordManagerSubtotal(): number {
-    return this.pricingCalculationService.calculatePasswordManagerSubtotal(
-      this.selectedPlan,
-      this.sub,
-      this.discount,
-    );
-  }
-
-  secretsManagerSubtotal(): number {
-    return this.pricingCalculationService.calculateSecretsManagerSubtotal(
-      this.selectedPlan,
-      this.sub,
-      this.secretsManagerTotal,
-    );
-  }
-
-  get passwordManagerSeats(): number {
-    return this.pricingCalculationService.getPasswordManagerSeats(this.selectedPlan, this.sub);
-  }
-
-  get total(): number {
-    return this.pricingCalculationService.calculateTotal(
-      this.organization,
-      this.selectedPlan,
-      this.passwordManagerSubtotal,
-      this.estimatedTax,
-      this.sub,
-    );
-  }
-
   get additionalServiceAccount(): number {
     return this.pricingCalculationService.calculateAdditionalServiceAccount(
       this.currentPlan,
@@ -327,41 +297,6 @@ export class TrialPaymentMethodDialogComponent implements OnInit, OnDestroy {
       this.organizationId,
       this.productTier,
       this.providerId,
-    );
-  }
-
-  // Pricing calculation methods
-  passwordManagerSeatTotal(plan: PlanResponse): number {
-    return this.pricingCalculationService.calculatePasswordManagerSeatTotal(
-      plan,
-      this.sub,
-      this.isSecretsManagerTrial(),
-    );
-  }
-
-  secretsManagerSeatTotal(plan: PlanResponse, seats: number): number {
-    return this.pricingCalculationService.calculateSecretsManagerSeatTotal(plan, seats);
-  }
-
-  additionalStorageTotal(plan: PlanResponse): number {
-    return this.pricingCalculationService.calculateAdditionalStorageTotal(plan, this.sub);
-  }
-
-  additionalStoragePriceMonthly(selectedPlan: PlanResponse): number {
-    return selectedPlan.PasswordManager.additionalStoragePricePerGb;
-  }
-
-  additionalServiceAccountTotal(plan: PlanResponse): number {
-    return this.pricingCalculationService.calculateAdditionalServiceAccountTotal(
-      plan,
-      this.additionalServiceAccount,
-    );
-  }
-
-  calculateTotalAppliedDiscount(total: number): number {
-    return this.pricingCalculationService.calculateTotalAppliedDiscount(
-      total,
-      this.discountPercentageFromSub,
     );
   }
 
@@ -388,10 +323,6 @@ export class TrialPaymentMethodDialogComponent implements OnInit, OnDestroy {
     this.taxInformation = event;
     this.changedCountry();
     this.refreshSalesTax();
-  }
-
-  toggleTotalOpened(): void {
-    this.totalOpened = !this.totalOpened;
   }
 
   onKeydown(event: KeyboardEvent, index: number): void {

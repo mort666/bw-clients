@@ -67,6 +67,7 @@ import { KeyService } from "@bitwarden/key-management";
 import { BillingNotificationService } from "../services/billing-notification.service";
 import { BillingSharedModule } from "../shared/billing-shared.module";
 import { PaymentComponent } from "../shared/payment/payment.component";
+import { CostSummaryComponent } from "../shared/trial-subscription-dialog/cost-summary.component";
 
 type ChangePlanDialogParams = {
   organizationId: string;
@@ -109,7 +110,7 @@ interface OnSuccessArgs {
 
 @Component({
   templateUrl: "./change-plan-dialog.component.html",
-  imports: [BillingSharedModule],
+  imports: [BillingSharedModule, CostSummaryComponent],
 })
 export class ChangePlanDialogComponent implements OnInit, OnDestroy {
   @ViewChild(PaymentComponent) paymentComponent: PaymentComponent;
@@ -194,7 +195,6 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
   paymentSource?: PaymentSourceResponse;
   plans: ListResponse<PlanResponse>;
   isSubscriptionCanceled: boolean = false;
-  secretsManagerTotal: number;
 
   private destroy$ = new Subject<void>();
 
@@ -585,114 +585,6 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
     return this.sub?.maxStorageGb ? this.sub?.maxStorageGb - 1 : 0;
   }
 
-  passwordManagerSeatTotal(plan: PlanResponse): number {
-    if (!plan.PasswordManager.hasAdditionalSeatsOption || this.isSecretsManagerTrial()) {
-      return 0;
-    }
-
-    const result = plan.PasswordManager.seatPrice * Math.abs(this.sub?.seats || 0);
-    return result;
-  }
-
-  secretsManagerSeatTotal(plan: PlanResponse, seats: number): number {
-    if (!plan.SecretsManager.hasAdditionalSeatsOption) {
-      return 0;
-    }
-
-    return plan.SecretsManager.seatPrice * Math.abs(seats || 0);
-  }
-
-  additionalStorageTotal(plan: PlanResponse): number {
-    if (!plan.PasswordManager.hasAdditionalStorageOption) {
-      return 0;
-    }
-
-    return (
-      plan.PasswordManager.additionalStoragePricePerGb *
-      // TODO: Eslint upgrade. Please resolve this  since the null check does nothing
-      // eslint-disable-next-line no-constant-binary-expression
-      Math.abs(this.sub?.maxStorageGb ? this.sub?.maxStorageGb - 1 : 0 || 0)
-    );
-  }
-
-  additionalStoragePriceMonthly(selectedPlan: PlanResponse) {
-    return selectedPlan.PasswordManager.additionalStoragePricePerGb;
-  }
-
-  additionalServiceAccountTotal(plan: PlanResponse): number {
-    if (
-      !plan.SecretsManager.hasAdditionalServiceAccountOption ||
-      this.additionalServiceAccount == 0
-    ) {
-      return 0;
-    }
-
-    return plan.SecretsManager.additionalPricePerServiceAccount * this.additionalServiceAccount;
-  }
-
-  get passwordManagerSubtotal() {
-    if (!this.selectedPlan || !this.selectedPlan.PasswordManager) {
-      return 0;
-    }
-
-    let subTotal = this.selectedPlan.PasswordManager.basePrice;
-    if (this.selectedPlan.PasswordManager.hasAdditionalSeatsOption) {
-      subTotal += this.passwordManagerSeatTotal(this.selectedPlan);
-    }
-    if (this.selectedPlan.PasswordManager.hasPremiumAccessOption) {
-      subTotal += this.selectedPlan.PasswordManager.premiumAccessOptionPrice;
-    }
-    return subTotal - this.discount;
-  }
-
-  secretsManagerSubtotal() {
-    const plan = this.selectedPlan;
-    if (!plan || !plan.SecretsManager) {
-      return this.secretsManagerTotal || 0;
-    }
-
-    if (this.secretsManagerTotal) {
-      return this.secretsManagerTotal;
-    }
-
-    this.secretsManagerTotal =
-      plan.SecretsManager.basePrice +
-      this.secretsManagerSeatTotal(plan, this.sub?.smSeats) +
-      this.additionalServiceAccountTotal(plan);
-    return this.secretsManagerTotal;
-  }
-
-  get passwordManagerSeats() {
-    if (!this.selectedPlan) {
-      return 0;
-    }
-
-    if (this.selectedPlan.productTier === ProductTierType.Families) {
-      return this.selectedPlan.PasswordManager.baseSeats;
-    }
-    return this.sub?.seats;
-  }
-
-  get total() {
-    if (!this.organization || !this.selectedPlan) {
-      return 0;
-    }
-
-    if (this.organization.useSecretsManager) {
-      return (
-        this.passwordManagerSubtotal +
-        this.additionalStorageTotal(this.selectedPlan) +
-        this.secretsManagerSubtotal() +
-        this.estimatedTax
-      );
-    }
-    return (
-      this.passwordManagerSubtotal +
-      this.additionalStorageTotal(this.selectedPlan) +
-      this.estimatedTax
-    );
-  }
-
   get teamsStarterPlanIsAvailable() {
     return this.selectablePlans.some((plan) => plan.type === PlanType.TeamsStarter);
   }
@@ -982,15 +874,6 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
 
   toggleShowPayment() {
     this.showPayment = true;
-  }
-
-  toggleTotalOpened() {
-    this.totalOpened = !this.totalOpened;
-  }
-
-  calculateTotalAppliedDiscount(total: number) {
-    const discountedTotal = total * (this.discountPercentageFromSub / 100);
-    return discountedTotal;
   }
 
   get paymentSourceClasses() {
