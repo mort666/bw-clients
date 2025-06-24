@@ -20,7 +20,7 @@ export class RiskInsightsEncryptionService {
     private keyGeneratorService: KeyGenerationService,
   ) {}
 
-  async generateEncryptedRiskInsightsReport(
+  async encryptRiskInsightsReport(
     organizationId: OrganizationId,
     details: ApplicationHealthReportDetail[],
     summary: ApplicationHealthReportSummary,

@@ -232,7 +232,7 @@ export class AllApplicationsComponent implements OnInit {
         debounceTime(500),
         switchMap(async (report) => {
           if (report && report.organization?.id && report.data && report.summary) {
-            const data = await this.reportDecipherService.generateEncryptedRiskInsightsReport(
+            const data = await this.reportDecipherService.encryptRiskInsightsReport(
               report.organization.id as OrganizationId,
               report.data,
               report.summary,
