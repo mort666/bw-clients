@@ -87,7 +87,7 @@ export class AllApplicationsComponent implements OnInit {
   isLoading$: Observable<boolean> = this.dataService.isLoading$;
 
   private atRiskInsightsReport = new BehaviorSubject<{
-    data: ApplicationHealthReportDetailWithCriticalFlag[];
+    data: ApplicationHealthReportDetailWithCriticalFlagAndCipher[];
     organization: Organization;
     summary: ApplicationHealthReportSummary;
   }>({
@@ -230,6 +230,19 @@ export class AllApplicationsComponent implements OnInit {
       .asObservable()
       .pipe(
         debounceTime(500),
+        map((report) => {
+          // remove ciphers, as we don't want to store them with the report
+          // cipherIds are ok, but not the full cipher objects
+          const reportDataWithoutCiphers = report.data.map(
+            (app) =>
+              ({
+                ...app,
+                cipher: null,
+              }) as ApplicationHealthReportDetailWithCriticalFlagAndCipher,
+          );
+
+          return { data: reportDataWithoutCiphers, ...report };
+        }),
         switchMap(async (report) => {
           if (report && report.organization?.id && report.data && report.summary) {
             const data = await this.reportDecipherService.encryptRiskInsightsReport(
