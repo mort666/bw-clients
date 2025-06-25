@@ -137,7 +137,7 @@ export class RiskInsightsDataService {
       this.cipherViewsForOrganizationSubject.next([]);
     }
 
-    if (this.cipherViewsForOrganizationSubject.value) {
+    if (this.cipherViewsForOrganizationSubject.value.length > 0) {
       return;
     }
 
