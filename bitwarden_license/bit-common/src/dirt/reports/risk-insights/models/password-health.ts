@@ -166,5 +166,31 @@ export enum DrawerType {
   OrgAtRiskMembers = 2,
   OrgAtRiskApps = 3,
 }
+export interface RiskInsightsReport {
+  organizationId: OrganizationId;
+  date: string;
+  reportData: string;
+  totalMembers: number;
+  totalAtRiskMembers: number;
+  totalApplications: number;
+  totalAtRiskApplications: number;
+  totalCriticalApplications: number;
+}
+
+// [FIX-ME] This interface is not implemented yet. Remove this eslint-disable when implemented.
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface ReportInsightsReportData {}
+
+// [FIX-ME] This interface is not implemented yet. Remove this eslint-disable when implemented.
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface SaveRiskInsightsReportRequest {}
+
+// [FIX-ME] This interface is not implemented yet. Remove this eslint-disable when implemented.
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface SaveRiskInsightsReportResponse {}
+
+// [FIX-ME] This interface is not implemented yet. Remove this eslint-disable when implemented.
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface GetRiskInsightsReportResponse {}
 
 export type PasswordHealthReportApplicationId = Opaque<string, "PasswordHealthReportApplicationId">;
