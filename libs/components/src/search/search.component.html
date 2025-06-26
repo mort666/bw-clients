@@ -37,7 +37,7 @@
     }"
     class="bw-reset-btn tw-size-6 tw-absolute hover:tw-bg-text-main tw-end-2 tw-z-20 !tw-mb-0 tw-cursor-pointer"
     type="reset"
-    [attr.aria-label]="searchText ? ('Reset search' | i18n) : ''"
+    [attr.aria-label]="'resetSearch' | i18n"
     [attr.aria-hidden]="!searchText"
     (click)="clearSearch()"
   ></button>
