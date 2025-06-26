@@ -192,7 +192,10 @@ export class SsoLoginStrategy extends LoginStrategy {
 
     if (masterKeyEncryptedUserKey) {
       // set the master key encrypted user key if it exists
-      await this.keyService.setMasterKeyEncryptedUserKey(masterKeyEncryptedUserKey, userId);
+      await this.masterPasswordService.setMasterKeyEncryptedUserKey(
+        masterKeyEncryptedUserKey,
+        userId,
+      );
     }
 
     const userDecryptionOptions = tokenResponse?.userDecryptionOptions;
