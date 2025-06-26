@@ -1,5 +1,7 @@
 <form
   role="search"
+  #form="ngForm"
+  ngForm
   (mouseenter)="isFormHovered.set(true)"
   (mouseleave)="isFormHovered.set(false)"
   class="tw-relative tw-flex tw-items-center tw-w-full"
@@ -19,9 +21,9 @@
     [id]="id"
     [placeholder]="placeholder ?? ('search' | i18n)"
     class="tw-ps-9"
+    name="searchText"
     [ngModel]="searchText"
     (ngModelChange)="onChange($event)"
-    [ngModelOptions]="{ standalone: true }"
     (focus)="isInputFocused.set(true)"
     (blur)="isInputFocused.set(false); onTouch()"
     [disabled]="disabled"

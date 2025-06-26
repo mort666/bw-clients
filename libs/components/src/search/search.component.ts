@@ -31,7 +31,6 @@ let nextId = 0;
       useExisting: SearchComponent,
     },
   ],
-  standalone: true,
   imports: [InputModule, ReactiveFormsModule, FormsModule, I18nPipe, NgIf, NgClass],
 })
 export class SearchComponent implements ControlValueAccessor, FocusableElement {
