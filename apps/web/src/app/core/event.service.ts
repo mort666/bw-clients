@@ -668,6 +668,11 @@ export class EventService {
     return ids
       .map((secretId) => {
         const shortId = this.getShortId(secretId);
+
+        if (ev.type == EventType.Secret_Deleted || ev.type == EventType.Secrets_Deleted_Bulk) {
+          return shortId;
+        }
+
         const a = this.makeAnchor(shortId);
         a.setAttribute("href", `#/sm/${ev.organizationId}/secrets?search=${shortId}`);
         return a.outerHTML;
