@@ -470,6 +470,17 @@ export class EventService {
         msg = this.i18nService.t("accessedSecretWithId", this.formatSecretId(ev));
         humanReadableMsg = this.i18nService.t("accessedSecretWithId", this.getShortId(ev.secretId));
         break;
+      case EventType.Secrets_Retrieved_Bulk:
+        msg = this.i18nService.t("accessedSecretWithIds", this.formatSecretIds(ev));
+        humanReadableMsg = this.i18nService.t(
+          "accessedSecretWithIds",
+          this.getShortId(ev.secretId),
+        );
+        break;
+      case EventType.Secrets_Deleted_Bulk:
+        msg = this.i18nService.t("deletedSecretWithIds", this.formatSecretIds(ev));
+        humanReadableMsg = this.i18nService.t("deletedSecretWithIds", this.getShortId(ev.secretId));
+        break;
       case EventType.Secret_Created:
         msg = this.i18nService.t("createdSecretWithId", this.formatSecretId(ev));
         humanReadableMsg = this.i18nService.t("createdSecretWithId", this.getShortId(ev.secretId));
@@ -642,6 +653,26 @@ export class EventService {
     const a = this.makeAnchor(shortId);
     a.setAttribute("href", "#/sm/" + ev.organizationId + "/secrets?search=" + shortId);
     return a.outerHTML;
+  }
+
+  formatSecretIds(ev: EventResponse): string {
+    if (!ev.secretIds || ev.secretIds.trim() === "") {
+      return "";
+    }
+
+    const ids = ev.secretIds
+      .split(",")
+      .map((id) => id.trim())
+      .filter((id) => id);
+
+    return ids
+      .map((secretId) => {
+        const shortId = this.getShortId(secretId);
+        const a = this.makeAnchor(shortId);
+        a.setAttribute("href", `#/sm/${ev.organizationId}/secrets?search=${shortId}`);
+        return a.outerHTML;
+      })
+      .join(", ");
   }
 
   private makeAnchor(shortId: string) {

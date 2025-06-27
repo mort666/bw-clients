@@ -8237,6 +8237,15 @@
       }
     }
   },
+  "accessedSecretWithIds": {
+    "message": "Accessed secrets with the following identifiers: $SECRET_ID$",
+    "placeholders": {
+      "secret_id": {
+        "content": "$1",
+        "example": "4d34e8a8"
+      }
+    }
+  },
   "accessedSecret": {
   "message": "Accessed secret $SECRET_ID$.",
     "placeholders": {
@@ -8257,6 +8266,15 @@
   },
    "deletedSecretWithId": {
     "message": "Deleted a secret with identifier: $SECRET_ID$",
+    "placeholders": {
+      "secret_id": {
+        "content": "$1",
+        "example": "4d34e8a8"
+      }
+    }
+  },
+   "deletedSecretWithIds": {
+    "message": "Deleted secrets with these identifiers: $SECRET_ID$",
     "placeholders": {
       "secret_id": {
         "content": "$1",
