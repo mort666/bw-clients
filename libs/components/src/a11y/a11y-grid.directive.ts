@@ -26,7 +26,6 @@ import { A11yRowDirective } from "./a11y-row.directive";
  */
 @Directive({
   selector: "[bitA11yGrid]",
-  standalone: true,
 })
 export class A11yGridDirective {
   private viewPort = inject(CdkVirtualScrollViewport, { optional: true });

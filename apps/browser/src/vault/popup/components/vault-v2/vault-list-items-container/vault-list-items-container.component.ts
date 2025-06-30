@@ -43,6 +43,7 @@ import {
   SectionHeaderComponent,
   TypographyModule,
   MenuModule,
+  ScrollLayoutDirective,
 } from "@bitwarden/components";
 import {
   CopyCipherFieldDirective,
@@ -52,7 +53,7 @@ import {
 } from "@bitwarden/vault";
 
 import { BrowserApi } from "../../../../../platform/browser/browser-api";
-import BrowserPopupUtils from "../../../../../platform/popup/browser-popup-utils";
+import BrowserPopupUtils from "../../../../../platform/browser/browser-popup-utils";
 import { VaultPopupAutofillService } from "../../../services/vault-popup-autofill.service";
 import { VaultPopupCopyButtonsService } from "../../../services/vault-popup-copy-buttons.service";
 import { VaultPopupSectionService } from "../../../services/vault-popup-section.service";
@@ -78,10 +79,10 @@ import { ItemMoreOptionsComponent } from "../item-more-options/item-more-options
     DecryptionFailureDialogComponent,
     MenuModule,
     CopyCipherFieldDirective,
+    ScrollLayoutDirective,
   ],
   selector: "app-vault-list-items-container",
   templateUrl: "vault-list-items-container.component.html",
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VaultListItemsContainerComponent implements OnInit, AfterViewInit {
