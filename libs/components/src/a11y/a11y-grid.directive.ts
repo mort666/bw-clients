@@ -11,8 +11,8 @@ import {
   input,
   signal,
 } from "@angular/core";
-import { toObservable } from "@angular/core/rxjs-interop";
-import { firstValueFrom, skip, filter, take } from "rxjs";
+import { takeUntilDestroyed, toObservable } from "@angular/core/rxjs-interop";
+import { firstValueFrom, skip, filter, take, fromEvent, switchMap } from "rxjs";
 
 import type { A11yCellDirective } from "./a11y-cell.directive";
 import { A11yRowDirective } from "./a11y-row.directive";
@@ -59,6 +59,19 @@ export class A11yGridDirective {
   focusTarget = computed(() => this.renderedRow()?.[this.activeCol()]?.getFocusTarget());
 
   constructor() {
+    /**
+     * Scrolling the virtual viewport will often destroy the only element with a focusable tabIndex, resulting in lost focus.
+     * Mitigate this by jumping to the active row when focusing the scrollable element.
+     **/
+    if (this.viewPort) {
+      fromEvent(this.viewPort.getElementRef().nativeElement, "focus")
+        .pipe(
+          takeUntilDestroyed(),
+          switchMap(() => this.updateRow(0)),
+        )
+        .subscribe();
+    }
+
     // init the grid
     effect(() => {
       const focusTarget = this.focusTarget();
@@ -145,12 +158,14 @@ export class A11yGridDirective {
   async onKeyDown(event: KeyboardEvent) {
     switch (event.code) {
       case "ArrowUp":
+        this.updateCol(-this.activeCol());
         await this.updateRow(-1);
         break;
       case "ArrowRight":
         this.updateCol(1);
         break;
       case "ArrowDown":
+        this.updateCol(-this.activeCol());
         await this.updateRow(1);
         break;
       case "ArrowLeft":
