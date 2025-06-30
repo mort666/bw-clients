@@ -2,7 +2,7 @@
 // @ts-strict-ignore
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import { NgClass } from "@angular/common";
-import { Component, ContentChild, HostBinding, Input } from "@angular/core";
+import { Component, HostBinding, Input, AfterContentInit, contentChild } from "@angular/core";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { I18nPipe } from "@bitwarden/ui-common";
@@ -11,12 +11,14 @@ import { TypographyDirective } from "../typography/typography.directive";
 
 import { BitFormControlAbstraction } from "./form-control.abstraction";
 
+// Increments for each instance of this component
+let nextId = 0;
 @Component({
   selector: "bit-form-control",
   templateUrl: "form-control.component.html",
   imports: [NgClass, TypographyDirective, I18nPipe],
 })
-export class FormControlComponent {
+export class FormControlComponent implements AfterContentInit {
   @Input() label: string;
 
   private _inline = false;
@@ -35,8 +37,8 @@ export class FormControlComponent {
     return this._disableMargin;
   }
 
-  @ContentChild(BitFormControlAbstraction) protected formControl: BitFormControlAbstraction;
-
+  formControl = contentChild(BitFormControlAbstraction);
+  inputId = "";
   @HostBinding("class") get classes() {
     return []
       .concat(this.inline ? ["tw-inline-block", "tw-me-4"] : ["tw-block"])
@@ -46,15 +48,15 @@ export class FormControlComponent {
   constructor(private i18nService: I18nService) {}
 
   get required() {
-    return this.formControl.required;
+    return this.formControl().required;
   }
 
   get hasError() {
-    return this.formControl.hasError;
+    return this.formControl().hasError;
   }
 
   get error() {
-    return this.formControl.error;
+    return this.formControl().error;
   }
 
   get displayError() {
@@ -68,6 +70,19 @@ export class FormControlComponent {
         }
 
         return this.error;
+    }
+  }
+
+  inputElementId: string = "";
+
+  ngAfterContentInit() {
+    const nativeElement = this.formControl()._elementRef.nativeElement;
+    const currentElementId = nativeElement.id;
+    const nextElementId = `bit-control-id-${nextId++}`;
+    this.inputElementId = currentElementId || nextElementId;
+
+    if (!currentElementId) {
+      nativeElement.setAttribute("id", nextElementId);
     }
   }
 }

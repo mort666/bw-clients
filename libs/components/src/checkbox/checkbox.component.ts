@@ -1,6 +1,6 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { Component, HostBinding, Input, Optional, Self } from "@angular/core";
+import { Component, ElementRef, HostBinding, Input, Optional, Self } from "@angular/core";
 import { NgControl, Validators } from "@angular/forms";
 
 import { BitFormControlAbstraction } from "../form-control";
@@ -10,7 +10,7 @@ import { BitFormControlAbstraction } from "../form-control";
   template: "",
   providers: [{ provide: BitFormControlAbstraction, useExisting: CheckboxComponent }],
 })
-export class CheckboxComponent implements BitFormControlAbstraction {
+export class CheckboxComponent extends BitFormControlAbstraction {
   @HostBinding("class")
   protected inputClasses = [
     "tw-appearance-none",
@@ -80,7 +80,12 @@ export class CheckboxComponent implements BitFormControlAbstraction {
     "indeterminate:disabled:before:tw-bg-text-muted",
   ];
 
-  constructor(@Optional() @Self() private ngControl?: NgControl) {}
+  constructor(
+    elementRef: ElementRef,
+    @Optional() @Self() private ngControl?: NgControl,
+  ) {
+    super(elementRef);
+  }
 
   @HostBinding("style.--mask-image")
   protected maskImage =
@@ -98,7 +103,7 @@ export class CheckboxComponent implements BitFormControlAbstraction {
   set disabled(value: any) {
     this._disabled = value != null && value !== false;
   }
-  private _disabled: boolean;
+  // private _disabled: boolean;
 
   @Input()
   get required() {
@@ -109,7 +114,7 @@ export class CheckboxComponent implements BitFormControlAbstraction {
   set required(value: any) {
     this._required = value != null && value !== false;
   }
-  private _required: boolean;
+  // private _required: boolean;
 
   get hasError() {
     return this.ngControl?.status === "INVALID" && this.ngControl?.touched;

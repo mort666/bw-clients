@@ -1,6 +1,6 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { Component, HostBinding, Input, Optional, Self } from "@angular/core";
+import { Component, ElementRef, HostBinding, Input, Optional, Self } from "@angular/core";
 import { NgControl, Validators } from "@angular/forms";
 
 import { BitFormControlAbstraction } from "../form-control";
@@ -12,7 +12,7 @@ let nextId = 0;
   template: "",
   providers: [{ provide: BitFormControlAbstraction, useExisting: RadioInputComponent }],
 })
-export class RadioInputComponent implements BitFormControlAbstraction {
+export class RadioInputComponent extends BitFormControlAbstraction {
   @HostBinding("attr.id") @Input() id = `bit-radio-input-${nextId++}`;
 
   @HostBinding("class")
@@ -72,7 +72,12 @@ export class RadioInputComponent implements BitFormControlAbstraction {
     "checked:disabled:before:tw-bg-secondary-600",
   ];
 
-  constructor(@Optional() @Self() private ngControl?: NgControl) {}
+  constructor(
+    elementRef: ElementRef,
+    @Optional() @Self() private ngControl?: NgControl,
+  ) {
+    super(elementRef);
+  }
 
   @HostBinding()
   @Input()
@@ -82,7 +87,7 @@ export class RadioInputComponent implements BitFormControlAbstraction {
   set disabled(value: any) {
     this._disabled = value != null && value !== false;
   }
-  private _disabled: boolean;
+  // private _disabled: boolean;
 
   @Input()
   get required() {
@@ -93,7 +98,7 @@ export class RadioInputComponent implements BitFormControlAbstraction {
   set required(value: any) {
     this._required = value != null && value !== false;
   }
-  private _required: boolean;
+  // private _required: boolean;
 
   get hasError() {
     return this.ngControl?.status === "INVALID" && this.ngControl?.touched;
