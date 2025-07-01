@@ -4,7 +4,6 @@ import { RouterModule, Router } from "@angular/router";
 import { combineLatest, map, Observable, switchMap } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
-import { BitwardenShield } from "@bitwarden/auth/angular";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { Fido2Utils } from "@bitwarden/common/platform/services/fido2/fido2-utils";
@@ -32,6 +31,7 @@ import {
   DesktopFido2UserInterfaceSession,
 } from "../../services/desktop-fido2-user-interface.service";
 
+import { BitwardenShield } from "./bitwarden-shield.icon";
 import { Fido2PasskeyExistsIcon } from "./fido2-passkey-exists-icon";
 
 const DIALOG_MESSAGES = {

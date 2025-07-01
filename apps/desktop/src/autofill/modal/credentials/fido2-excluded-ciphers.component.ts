@@ -3,7 +3,6 @@ import { Component, OnInit, OnDestroy } from "@angular/core";
 import { RouterModule, Router } from "@angular/router";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
-import { BitwardenShield } from "@bitwarden/auth/angular";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import {
   BadgeModule,
@@ -23,6 +22,7 @@ import {
   DesktopFido2UserInterfaceSession,
 } from "../../services/desktop-fido2-user-interface.service";
 
+import { BitwardenShield } from "./bitwarden-shield.icon";
 import { Fido2PasskeyExistsIcon } from "./fido2-passkey-exists-icon";
 
 @Component({
