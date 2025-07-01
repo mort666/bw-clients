@@ -4,7 +4,6 @@ import { RouterModule, Router } from "@angular/router";
 import { firstValueFrom, map, BehaviorSubject, Observable, Subject, takeUntil } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
-import { BitwardenShield } from "@bitwarden/auth/angular";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
@@ -29,6 +28,8 @@ import {
   DesktopFido2UserInterfaceService,
   DesktopFido2UserInterfaceSession,
 } from "../../services/desktop-fido2-user-interface.service";
+
+import { BitwardenShield } from "./bitwarden-shield.icon";
 
 @Component({
   standalone: true,
