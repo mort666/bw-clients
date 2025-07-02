@@ -176,8 +176,9 @@ export class Fido2CreateComponent implements OnInit, OnDestroy {
               Fido2Utils.cipherHasNoOtherPasskeys(cipher, userHandle) &&
               !cipher.deletedDate,
           );
-        } catch {
-          await this.showErrorDialog(DIALOG_MESSAGES.unexpectedErrorShort);
+        } catch (e) {
+          console.error("Error decrypting and filtering ciphers:", e);
+          await this.showErrorDialog(e);
           return [];
         }
       }),
