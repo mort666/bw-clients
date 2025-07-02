@@ -5,7 +5,6 @@ import {
   HostBinding,
   Input,
   Output,
-  input,
 } from "@angular/core";
 
 let nextId = 0;
@@ -18,16 +17,14 @@ export class ToggleGroupComponent<TValue = unknown> {
   private id = nextId++;
   name = `bit-toggle-group-${this.id}`;
 
-  readonly fullWidth = input<boolean, unknown>(undefined, { transform: booleanAttribute });
-  // TODO: Skipped for migration because:
-  //  Your application code writes to the input. This prevents migration.
+  @Input({ transform: booleanAttribute }) fullWidth?: boolean;
   @Input() selected?: TValue;
   @Output() selectedChange = new EventEmitter<TValue>();
 
   @HostBinding("attr.role") role = "radiogroup";
   @HostBinding("class")
   get classList() {
-    return ["tw-flex"].concat(this.fullWidth() ? ["tw-w-full", "[&>*]:tw-flex-1"] : []);
+    return ["tw-flex"].concat(this.fullWidth ? ["tw-w-full", "[&>*]:tw-flex-1"] : []);
   }
 
   onInputInteraction(value: TValue) {
