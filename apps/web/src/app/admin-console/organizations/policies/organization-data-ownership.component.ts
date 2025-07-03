@@ -5,7 +5,7 @@ import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { BasePolicy, BasePolicyComponent } from "./base-policy.component";
 
 export class OrganizationDataOwnershipPolicy extends BasePolicy {
-  name = "organizationDataOwnership";
+  name = "personalOwnership";
   description = "personalOwnershipPolicyDesc";
   type = PolicyType.OrganizationDataOwnership;
   component = OrganizationDataOwnershipPolicyComponent;
