@@ -255,8 +255,7 @@ impl MacOSProviderClient {
                     .remove(&sequence_number)
                 {
                     cb.error(BitwardenError::Internal(format!(
-                        "Error sending message: {}",
-                        e
+                        "Error sending message: {e}"
                     )));
                 }
             }
