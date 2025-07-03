@@ -170,6 +170,8 @@ export class Fido2CreateComponent implements OnInit, OnDestroy {
 
         try {
           const allCiphers = await this.cipherService.getAllDecrypted(activeUserId);
+          console.log("Retrieved all decrypted ciphers", allCiphers);
+
           return allCiphers.filter(
             (cipher) =>
               cipher.login?.matchesUri(rpid, equivalentDomains) &&
