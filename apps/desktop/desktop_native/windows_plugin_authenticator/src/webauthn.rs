@@ -15,6 +15,17 @@ use windows_core::*;
 use crate::util::*;
 use crate::com_buffer::ComBuffer;
 
+/// Windows WebAuthn Authenticator Options structure
+/// Header File Name: _EXPERIMENTAL_WEBAUTHN_CTAPCBOR_AUTHENTICATOR_OPTIONS
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ExperimentalWebAuthnCtapCborAuthenticatorOptions {
+    pub version: u32,                 // DWORD dwVersion
+    pub user_presence: i32,           // LONG lUp: +1=TRUE, 0=Not defined, -1=FALSE
+    pub user_verification: i32,       // LONG lUv: +1=TRUE, 0=Not defined, -1=FALSE
+    pub require_resident_key: i32,    // LONG lRequireResidentKey: +1=TRUE, 0=Not defined, -1=FALSE
+}
+
 /// Used when adding a Windows plugin authenticator.
 /// Header File Name: _EXPERIMENTAL_WEBAUTHN_PLUGIN_ADD_AUTHENTICATOR_OPTIONS
 /// Header File Usage: EXPERIMENTAL_WebAuthNPluginAddAuthenticator()

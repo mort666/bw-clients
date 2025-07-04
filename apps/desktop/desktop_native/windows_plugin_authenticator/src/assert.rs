@@ -7,16 +7,6 @@ use crate::types::*;
 use crate::utils::{self as util, delay_load};
 use crate::com_provider::ExperimentalWebAuthnPluginOperationResponse;
 
-// Authenticator Options from WebAuthn header 
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct EXPERIMENTAL_WEBAUTHN_CTAPCBOR_AUTHENTICATOR_OPTIONS {
-    pub dwVersion: u32,
-    pub lUp: i32,  // User presence: +1=TRUE, 0=Not defined, -1=FALSE
-    pub lUv: i32,  // User verification: +1=TRUE, 0=Not defined, -1=FALSE
-    pub lRequireResidentKey: i32, // Resident key: +1=TRUE, 0=Not defined, -1=FALSE
-}
-
 // Windows API types for WebAuthn (from webauthn.h.sample)
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -30,7 +20,7 @@ pub struct EXPERIMENTAL_WEBAUTHN_CTAPCBOR_GET_ASSERTION_REQUEST {
     pub CredentialList: WEBAUTHN_CREDENTIAL_LIST,
     pub cbCborExtensionsMap: u32,
     pub pbCborExtensionsMap: *const u8,
-    pub pAuthenticatorOptions: *const EXPERIMENTAL_WEBAUTHN_CTAPCBOR_AUTHENTICATOR_OPTIONS,
+    pub pAuthenticatorOptions: *const crate::webauthn::ExperimentalWebAuthnCtapCborAuthenticatorOptions,
     // Add other fields as needed...
 }
 

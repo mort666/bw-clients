@@ -215,7 +215,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                 // Extract user verification requirement from authenticator options
                 let user_verification = if !decoded_request.pAuthenticatorOptions.is_null() {
                     let auth_options = &*decoded_request.pAuthenticatorOptions;
-                    match auth_options.lUv {
+                    match auth_options.user_verification {
                         1 => Some(UserVerificationRequirement::Required),
                         -1 => Some(UserVerificationRequirement::Discouraged),
                         0 | _ => Some(UserVerificationRequirement::Preferred), // Default or undefined
@@ -352,7 +352,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                 // Extract user verification requirement from authenticator options
                 let user_verification = if !decoded_request.pAuthenticatorOptions.is_null() {
                     let auth_options = &*decoded_request.pAuthenticatorOptions;
-                    match auth_options.lUv {
+                    match auth_options.user_verification {
                         1 => Some(UserVerificationRequirement::Required),
                         -1 => Some(UserVerificationRequirement::Discouraged),
                         0 | _ => Some(UserVerificationRequirement::Preferred), // Default or undefined
