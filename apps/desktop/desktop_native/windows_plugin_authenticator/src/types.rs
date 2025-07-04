@@ -1,5 +1,41 @@
 use tokio::sync::oneshot;
 
+/// User verification requirement as defined by WebAuthn spec
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum UserVerificationRequirement {
+    Required,
+    Preferred, 
+    Discouraged,
+}
+
+impl Default for UserVerificationRequirement {
+    fn default() -> Self {
+        UserVerificationRequirement::Preferred
+    }
+}
+
+impl From<u32> for UserVerificationRequirement {
+    fn from(value: u32) -> Self {
+        match value {
+            1 => UserVerificationRequirement::Required,
+            2 => UserVerificationRequirement::Preferred,
+            3 => UserVerificationRequirement::Discouraged,
+            _ => UserVerificationRequirement::Preferred, // Default fallback
+        }
+    }
+}
+
+impl Into<String> for UserVerificationRequirement {
+    fn into(self) -> String {
+        match self {
+            UserVerificationRequirement::Required => "required".to_string(),
+            UserVerificationRequirement::Preferred => "preferred".to_string(),
+            UserVerificationRequirement::Discouraged => "discouraged".to_string(),
+        }
+    }
+}
+
 /// Assertion request structure
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -8,7 +44,7 @@ pub struct PasskeyAssertionRequest {
     pub transaction_id: String,
     pub client_data_hash: Vec<u8>,
     pub allowed_credentials: Vec<Vec<u8>>,
-    pub user_verification: bool,
+    pub user_verification: UserVerificationRequirement,
 }
 
 /// Registration request structure
@@ -20,7 +56,7 @@ pub struct PasskeyRegistrationRequest {
     pub user_id: Vec<u8>,
     pub user_name: String,
     pub client_data_hash: Vec<u8>,
-    pub user_verification: bool,
+    pub user_verification: UserVerificationRequirement,
     pub supported_algorithms: Vec<i32>,  // COSE algorithm identifiers
 }
 

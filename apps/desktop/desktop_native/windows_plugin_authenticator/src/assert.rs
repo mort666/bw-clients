@@ -7,6 +7,16 @@ use crate::types::*;
 use crate::utils::{self as util, delay_load};
 use crate::com_provider::ExperimentalWebAuthnPluginOperationResponse;
 
+// Authenticator Options from WebAuthn header 
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct EXPERIMENTAL_WEBAUTHN_CTAPCBOR_AUTHENTICATOR_OPTIONS {
+    pub dwVersion: u32,
+    pub lUp: i32,  // User presence: +1=TRUE, 0=Not defined, -1=FALSE
+    pub lUv: i32,  // User verification: +1=TRUE, 0=Not defined, -1=FALSE
+    pub lRequireResidentKey: i32, // Resident key: +1=TRUE, 0=Not defined, -1=FALSE
+}
+
 // Windows API types for WebAuthn (from webauthn.h.sample)
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -20,6 +30,7 @@ pub struct EXPERIMENTAL_WEBAUTHN_CTAPCBOR_GET_ASSERTION_REQUEST {
     pub CredentialList: WEBAUTHN_CREDENTIAL_LIST,
     pub cbCborExtensionsMap: u32,
     pub pbCborExtensionsMap: *const u8,
+    pub pAuthenticatorOptions: *const EXPERIMENTAL_WEBAUTHN_CTAPCBOR_AUTHENTICATOR_OPTIONS,
     // Add other fields as needed...
 }
 
@@ -109,7 +120,7 @@ pub unsafe fn decode_get_assertion_request(encoded_request: &[u8]) -> Result<Dec
 pub struct RequestContext {
     pub rpid: Option<String>,
     pub allowed_credentials: Vec<Vec<u8>>,
-    pub user_verification: Option<bool>,
+    pub user_verification: Option<UserVerificationRequirement>,
     pub user_id: Option<Vec<u8>>,
     pub user_name: Option<String>,
     pub user_display_name: Option<String>,
@@ -148,7 +159,7 @@ pub fn send_assertion_request(rpid: &str, transaction_id: &str, context: &Reques
         transaction_id: transaction_id.to_string(),
         client_data_hash,
         allowed_credentials: context.allowed_credentials.clone(),
-        user_verification: context.user_verification.unwrap_or(false),
+        user_verification: context.user_verification.unwrap_or_default(),
     };
     
     util::message(&format!("Assertion request data - RP ID: {}, Client data hash: {} bytes, Allowed credentials: {}", 

@@ -212,6 +212,18 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                     Vec::new()
                 };
                 
+                // Extract user verification requirement from authenticator options
+                let user_verification = if !decoded_request.pAuthenticatorOptions.is_null() {
+                    let auth_options = &*decoded_request.pAuthenticatorOptions;
+                    match auth_options.lUv {
+                        1 => Some(UserVerificationRequirement::Required),
+                        -1 => Some(UserVerificationRequirement::Discouraged),
+                        0 | _ => Some(UserVerificationRequirement::Preferred), // Default or undefined
+                    }
+                } else {
+                    None
+                };
+                
                 // Create request context from properly decoded data
                 let mut request_context = RequestContext::default();
                 request_context.rpid = Some(rpid.clone());
@@ -220,6 +232,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                 request_context.user_display_name = user_info.2;
                 request_context.client_data_hash = Some(client_data_hash);
                 request_context.supported_algorithms = supported_algorithms;
+                request_context.user_verification = user_verification;
                 
                 util::message(&format!("Make credential request - RP: {}, User: {}", 
                     rpid, 
@@ -336,10 +349,23 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                     hash_slice.to_vec()
                 };
                 
+                // Extract user verification requirement from authenticator options
+                let user_verification = if !decoded_request.pAuthenticatorOptions.is_null() {
+                    let auth_options = &*decoded_request.pAuthenticatorOptions;
+                    match auth_options.lUv {
+                        1 => Some(UserVerificationRequirement::Required),
+                        -1 => Some(UserVerificationRequirement::Discouraged),
+                        0 | _ => Some(UserVerificationRequirement::Preferred), // Default or undefined
+                    }
+                } else {
+                    None
+                };
+                
                 // Create request context from properly decoded data
                 let mut request_context = RequestContext::default();
                 request_context.rpid = Some(rpid.clone());
                 request_context.client_data_hash = Some(client_data_hash);
+                request_context.user_verification = user_verification;
                 // TODO: Extract allowed credentials from CredentialList if available
                 
                 util::message(&format!("Get assertion request - RP: {}", rpid));

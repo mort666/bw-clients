@@ -51,6 +51,16 @@ pub struct WEBAUTHN_CREDENTIAL_LIST {
     pub pCredentials: *const u8, // Placeholder
 }
 
+// Authenticator Options from WebAuthn header 
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct EXPERIMENTAL_WEBAUTHN_CTAPCBOR_AUTHENTICATOR_OPTIONS {
+    pub dwVersion: u32,
+    pub lUp: i32,  // User presence: +1=TRUE, 0=Not defined, -1=FALSE
+    pub lUv: i32,  // User verification: +1=TRUE, 0=Not defined, -1=FALSE
+    pub lRequireResidentKey: i32, // Resident key: +1=TRUE, 0=Not defined, -1=FALSE
+}
+
 // Make Credential Request structure (from sample header)
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -66,6 +76,7 @@ pub struct EXPERIMENTAL_WEBAUTHN_CTAPCBOR_MAKE_CREDENTIAL_REQUEST {
     pub CredentialList: WEBAUTHN_CREDENTIAL_LIST,
     pub cbCborExtensionsMap: u32,
     pub pbCborExtensionsMap: *const u8,
+    pub pAuthenticatorOptions: *const EXPERIMENTAL_WEBAUTHN_CTAPCBOR_AUTHENTICATOR_OPTIONS,
     // Add other fields as needed...
 }
 
@@ -203,7 +214,7 @@ pub fn send_registration_request(rpid: &str, transaction_id: &str, context: &Req
         user_id,
         user_name,
         client_data_hash,
-        user_verification: context.user_verification.unwrap_or(false),
+        user_verification: context.user_verification.unwrap_or_default(),
         supported_algorithms: context.supported_algorithms.clone(),
     };
     
