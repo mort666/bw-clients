@@ -4,8 +4,8 @@ use std::ptr;
 
 use crate::types::*;
 use crate::utils::{self as util, wstr_to_string};
-use crate::assert::{RequestContext, decode_get_assertion_request, create_get_assertion_response, send_assertion_request};
-use crate::make_credential::{decode_make_credential_request, create_make_credential_response, send_registration_request};
+use crate::assert::{WindowsAssertionRequest, decode_get_assertion_request, create_get_assertion_response, send_assertion_request, parse_credential_list};
+use crate::make_credential::{WindowsRegistrationRequest, decode_make_credential_request, create_make_credential_response, send_registration_request};
 
 /// Used when creating and asserting credentials.
 /// Header File Name: _EXPERIMENTAL_WEBAUTHN_PLUGIN_OPERATION_REQUEST
@@ -224,22 +224,30 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                     None
                 };
                 
-                // Create request context from properly decoded data
-                let mut request_context = RequestContext::default();
-                request_context.rpid = Some(rpid.clone());
-                request_context.user_id = Some(user_info.0);
-                request_context.user_name = Some(user_info.1);
-                request_context.user_display_name = user_info.2;
-                request_context.client_data_hash = Some(client_data_hash);
-                request_context.supported_algorithms = supported_algorithms;
-                request_context.user_verification = user_verification;
+                // Extract excluded credentials from credential list (for make credential, these are credentials to exclude)
+                let excluded_credentials = parse_credential_list(&decoded_request.CredentialList);
+                if !excluded_credentials.is_empty() {
+                    util::message(&format!("Found {} excluded credentials for make credential", excluded_credentials.len()));
+                }
+                
+                // Create Windows registration request
+                let registration_request = WindowsRegistrationRequest {
+                    rpid: rpid.clone(),
+                    user_id: user_info.0,
+                    user_name: user_info.1,
+                    user_display_name: user_info.2,
+                    client_data_hash,
+                    excluded_credentials,
+                    user_verification: user_verification.unwrap_or_default(),
+                    supported_algorithms,
+                };
                 
                 util::message(&format!("Make credential request - RP: {}, User: {}", 
                     rpid, 
-                    request_context.user_name.as_deref().unwrap_or("unknown")));
+                    registration_request.user_name));
                 
                 // Send registration request
-                if let Some(passkey_response) = send_registration_request(&rpid, &transaction_id, &request_context) {
+                if let Some(passkey_response) = send_registration_request(&transaction_id, &registration_request) {
                     util::message(&format!("Registration response received: {:?}", passkey_response));
                     
                     // Create proper WebAuthn response from passkey_response
@@ -361,17 +369,21 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                     None
                 };
                 
-                // Create request context from properly decoded data
-                let mut request_context = RequestContext::default();
-                request_context.rpid = Some(rpid.clone());
-                request_context.client_data_hash = Some(client_data_hash);
-                request_context.user_verification = user_verification;
-                // TODO: Extract allowed credentials from CredentialList if available
+                // Extract allowed credentials from credential list
+                let allowed_credentials = parse_credential_list(&decoded_request.CredentialList);
                 
-                util::message(&format!("Get assertion request - RP: {}", rpid));
+                // Create Windows assertion request
+                let assertion_request = WindowsAssertionRequest {
+                    rpid: rpid.clone(),
+                    client_data_hash,
+                    allowed_credentials: allowed_credentials.clone(),
+                    user_verification: user_verification.unwrap_or_default(),
+                };
+                
+                util::message(&format!("Get assertion request - RP: {}, Allowed credentials: {}", rpid, allowed_credentials.len()));
                 
                 // Send assertion request
-                if let Some(passkey_response) = send_assertion_request(&rpid, &transaction_id, &request_context) {
+                if let Some(passkey_response) = send_assertion_request(&transaction_id, &assertion_request) {
                     util::message(&format!("Assertion response received: {:?}", passkey_response));
                     
                     // Create proper WebAuthn response from passkey_response

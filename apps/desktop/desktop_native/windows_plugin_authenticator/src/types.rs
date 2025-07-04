@@ -58,6 +58,7 @@ pub struct PasskeyRegistrationRequest {
     pub client_data_hash: Vec<u8>,
     pub user_verification: UserVerificationRequirement,
     pub supported_algorithms: Vec<i32>,  // COSE algorithm identifiers
+    pub excluded_credentials: Vec<Vec<u8>>,  // Credentials to exclude from creation
 }
 
 /// Sync request structure

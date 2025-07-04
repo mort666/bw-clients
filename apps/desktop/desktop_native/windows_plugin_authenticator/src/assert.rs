@@ -28,9 +28,19 @@ pub type PEXPERIMENTAL_WEBAUTHN_CTAPCBOR_GET_ASSERTION_REQUEST = *mut EXPERIMENT
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+pub struct WEBAUTHN_CREDENTIAL_EX {
+    pub dwVersion: u32,
+    pub cbId: u32,
+    pub pbId: *const u8,
+    pub pwszCredentialType: *const u16,  // LPCWSTR
+    pub dwTransports: u32,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct WEBAUTHN_CREDENTIAL_LIST {
     pub cCredentials: u32,
-    pub pCredentials: *const u8, // Placeholder
+    pub ppCredentials: *const *const WEBAUTHN_CREDENTIAL_EX,
 }
 
 // Windows API function signatures for decoding get assertion requests
@@ -105,60 +115,89 @@ pub unsafe fn decode_get_assertion_request(encoded_request: &[u8]) -> Result<Dec
     Ok(DecodedGetAssertionRequest::new(pp_get_assertion_request, free_fn))
 }
 
-/// Context information parsed from the incoming request
+/// Windows WebAuthn assertion request context
 #[derive(Debug, Clone)]
-pub struct RequestContext {
-    pub rpid: Option<String>,
+pub struct WindowsAssertionRequest {
+    pub rpid: String,
+    pub client_data_hash: Vec<u8>,
     pub allowed_credentials: Vec<Vec<u8>>,
-    pub user_verification: Option<UserVerificationRequirement>,
-    pub user_id: Option<Vec<u8>>,
-    pub user_name: Option<String>,
-    pub user_display_name: Option<String>,
-    pub client_data_hash: Option<Vec<u8>>,
-    pub supported_algorithms: Vec<i32>,  // COSE algorithm identifiers
+    pub user_verification: UserVerificationRequirement,
 }
 
-impl Default for RequestContext {
-    fn default() -> Self {
-        Self {
-            rpid: None,
-            allowed_credentials: Vec::new(),
-            user_verification: None,
-            user_id: None,
-            user_name: None,
-            user_display_name: None,
-            client_data_hash: None,
-            supported_algorithms: Vec::new(),
-        }
+/// Windows WebAuthn registration request context  
+#[derive(Debug, Clone)]
+pub struct WindowsRegistrationRequest {
+    pub rpid: String,
+    pub user_id: Vec<u8>,
+    pub user_name: String,
+    pub user_display_name: Option<String>,
+    pub client_data_hash: Vec<u8>,
+    pub excluded_credentials: Vec<Vec<u8>>,
+    pub user_verification: UserVerificationRequirement,
+    pub supported_algorithms: Vec<i32>,
+}
+
+/// Parse allowed credentials from WEBAUTHN_CREDENTIAL_LIST
+pub unsafe fn parse_credential_list(credential_list: &WEBAUTHN_CREDENTIAL_LIST) -> Vec<Vec<u8>> {
+    let mut allowed_credentials = Vec::new();
+    
+    if credential_list.cCredentials == 0 || credential_list.ppCredentials.is_null() {
+        util::message("No credentials in credential list");
+        return allowed_credentials;
     }
+    
+    util::message(&format!("Parsing {} credentials from credential list", credential_list.cCredentials));
+    
+    // ppCredentials is an array of pointers to WEBAUTHN_CREDENTIAL_EX
+    let credentials_array = std::slice::from_raw_parts(
+        credential_list.ppCredentials,
+        credential_list.cCredentials as usize
+    );
+    
+    for (i, &credential_ptr) in credentials_array.iter().enumerate() {
+        if credential_ptr.is_null() {
+            util::message(&format!("WARNING: Credential {} is null, skipping", i));
+            continue;
+        }
+        
+        let credential = &*credential_ptr;
+        
+        if credential.cbId == 0 || credential.pbId.is_null() {
+            util::message(&format!("WARNING: Credential {} has invalid ID, skipping", i));
+            continue;
+        }
+        
+        // Extract credential ID bytes
+        let credential_id_slice = std::slice::from_raw_parts(
+            credential.pbId,
+            credential.cbId as usize
+        );
+        
+        allowed_credentials.push(credential_id_slice.to_vec());
+        util::message(&format!("Parsed credential {}: {} bytes", i, credential.cbId));
+    }
+    
+    util::message(&format!("Successfully parsed {} allowed credentials", allowed_credentials.len()));
+    allowed_credentials
 }
 
 /// Helper for assertion requests
-pub fn send_assertion_request(rpid: &str, transaction_id: &str, context: &RequestContext) -> Option<PasskeyResponse> {
-    // Extract client data hash from context - this is required for WebAuthn
-    let client_data_hash = match &context.client_data_hash {
-        Some(hash) if !hash.is_empty() => hash.clone(),
-        _ => {
-            util::message("ERROR: Client data hash is required for assertion but not provided");
-            return None;
-        }
-    };
-    
-    let request = PasskeyAssertionRequest {
-        rp_id: rpid.to_string(),
+pub fn send_assertion_request(transaction_id: &str, request: &WindowsAssertionRequest) -> Option<PasskeyResponse> {
+    let passkey_request = PasskeyAssertionRequest {
+        rp_id: request.rpid.clone(),
         transaction_id: transaction_id.to_string(),
-        client_data_hash,
-        allowed_credentials: context.allowed_credentials.clone(),
-        user_verification: context.user_verification.unwrap_or_default(),
+        client_data_hash: request.client_data_hash.clone(),
+        allowed_credentials: request.allowed_credentials.clone(),
+        user_verification: request.user_verification.clone(),
     };
     
     util::message(&format!("Assertion request data - RP ID: {}, Client data hash: {} bytes, Allowed credentials: {}", 
-        rpid, request.client_data_hash.len(), request.allowed_credentials.len()));
+        request.rpid, request.client_data_hash.len(), request.allowed_credentials.len()));
     
-    match serde_json::to_string(&request) {
+    match serde_json::to_string(&passkey_request) {
         Ok(request_json) => {
             util::message(&format!("Sending assertion request: {}", request_json));
-            crate::ipc::send_passkey_request(RequestType::Assertion, request_json, rpid)
+            crate::ipc::send_passkey_request(RequestType::Assertion, request_json, &request.rpid)
         },
         Err(e) => {
             util::message(&format!("ERROR: Failed to serialize assertion request: {}", e));

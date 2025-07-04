@@ -23,7 +23,8 @@ mod com_buffer;
 // Re-export main functionality
 pub use sync::{send_sync_request, sync_credentials_to_windows, get_credentials_from_windows};
 pub use ipc::{set_request_sender, send_passkey_request};
-pub use types::{PasskeyRequest, PasskeyResponse, SyncedCredential, RequestEvent, RequestType};
+pub use types::{PasskeyRequest, PasskeyResponse, SyncedCredential, RequestEvent, RequestType, UserVerificationRequirement};
+pub use assert::{WindowsAssertionRequest, WindowsRegistrationRequest};
 pub use com_registration::{initialize_com_library, register_com_library, add_authenticator};
 
 // Re-export utilities

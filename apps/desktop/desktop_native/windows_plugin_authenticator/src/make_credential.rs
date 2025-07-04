@@ -6,7 +6,7 @@ use windows_core::{HRESULT, s};
 use crate::types::*;
 use crate::utils::{self as util, delay_load};
 use crate::com_provider::ExperimentalWebAuthnPluginOperationResponse;
-use crate::assert::RequestContext;
+use crate::assert::{WindowsRegistrationRequest, parse_credential_list};
 
 // Windows API types for WebAuthn (from webauthn.h.sample)
 #[repr(C)]
@@ -46,9 +46,19 @@ pub struct WEBAUTHN_COSE_CREDENTIAL_PARAMETERS {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+pub struct WEBAUTHN_CREDENTIAL_EX {
+    pub dwVersion: u32,
+    pub cbId: u32,
+    pub pbId: *const u8,
+    pub pwszCredentialType: *const u16,  // LPCWSTR
+    pub dwTransports: u32,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct WEBAUTHN_CREDENTIAL_LIST {
     pub cCredentials: u32,
-    pub pCredentials: *const u8, // Placeholder
+    pub ppCredentials: *const *const WEBAUTHN_CREDENTIAL_EX,
 }
 
 // Make Credential Request structure (from sample header)
@@ -161,57 +171,25 @@ pub unsafe fn decode_make_credential_request(encoded_request: &[u8]) -> Result<D
 }
 
 /// Helper for registration requests  
-pub fn send_registration_request(rpid: &str, transaction_id: &str, context: &RequestContext) -> Option<PasskeyResponse> {
-    // Validate required fields
-    if rpid.is_empty() {
-        util::message("ERROR: RP ID is required but empty");
-        return None;
-    }
+pub fn send_registration_request(transaction_id: &str, request: &WindowsRegistrationRequest) -> Option<PasskeyResponse> {
+    util::message(&format!("Registration request data - RP ID: {}, User ID: {} bytes, User name: {}, Client data hash: {} bytes, Algorithms: {:?}, Excluded credentials: {}", 
+        request.rpid, request.user_id.len(), request.user_name, request.client_data_hash.len(), request.supported_algorithms, request.excluded_credentials.len()));
     
-    // Extract user ID from context - this is required for registration
-    let user_id = match &context.user_id {
-        Some(id) if !id.is_empty() => id.clone(),
-        _ => {
-            util::message("ERROR: User ID is required for registration but not provided");
-            return None;
-        }
-    };
-    
-    // Extract user name from context - this is required for registration
-    let user_name = match &context.user_name {
-        Some(name) if !name.is_empty() => name.clone(),
-        _ => {
-            util::message("ERROR: User name is required for registration but not provided");
-            return None;
-        }
-    };
-    
-    // Extract client data hash from context - this is required for WebAuthn
-    let client_data_hash = match &context.client_data_hash {
-        Some(hash) if !hash.is_empty() => hash.clone(),
-        _ => {
-            util::message("ERROR: Client data hash is required for registration but not provided");
-            return None;
-        }
-    };
-    
-    util::message(&format!("Registration request data - RP ID: {}, User ID: {} bytes, User name: {}, Client data hash: {} bytes, Algorithms: {:?}", 
-        rpid, user_id.len(), user_name, client_data_hash.len(), context.supported_algorithms));
-    
-    let request = PasskeyRegistrationRequest {
-        rp_id: rpid.to_string(),
+    let passkey_request = PasskeyRegistrationRequest {
+        rp_id: request.rpid.clone(),
         transaction_id: transaction_id.to_string(),
-        user_id,
-        user_name,
-        client_data_hash,
-        user_verification: context.user_verification.unwrap_or_default(),
-        supported_algorithms: context.supported_algorithms.clone(),
+        user_id: request.user_id.clone(),
+        user_name: request.user_name.clone(),
+        client_data_hash: request.client_data_hash.clone(),
+        user_verification: request.user_verification.clone(),
+        supported_algorithms: request.supported_algorithms.clone(),
+        excluded_credentials: request.excluded_credentials.clone(),
     };
     
-    match serde_json::to_string(&request) {
+    match serde_json::to_string(&passkey_request) {
         Ok(request_json) => {
             util::message(&format!("Sending registration request: {}", request_json));
-            crate::ipc::send_passkey_request(RequestType::Registration, request_json, rpid)
+            crate::ipc::send_passkey_request(RequestType::Registration, request_json, &request.rpid)
         },
         Err(e) => {
             util::message(&format!("ERROR: Failed to serialize registration request: {}", e));
