@@ -200,10 +200,7 @@ export class NativeAutofillWindowsMain {
     const trackingKey = `${data.clientId}_${data.sequenceNumber}`;
     const timeout = options.timeout || 30000; // 30 second default timeout
 
-    // Send the original data without adding requestId
-    const dataWithId = { ...data };
-
-    this.logService.info(`Sending awaitable request ${trackingKey} to ${channel}`, { dataWithId });
+    this.logService.info(`Sending awaitable request ${trackingKey} to ${channel}`, { data });
 
     return new Promise<T>((resolve, reject) => {
       // Set up timeout
@@ -226,7 +223,7 @@ export class NativeAutofillWindowsMain {
       );
 
       // Send the request
-      this.windowMain.win.webContents.send(channel, dataWithId);
+      this.windowMain.win.webContents.send(channel, data);
     });
   }
 
@@ -257,61 +254,45 @@ export class NativeAutofillWindowsMain {
 
     ipcMain.on("autofill.completePasskeySync", (event, data) => {
       this.logService.warning("autofill.completePasskeySync", data);
-      const { clientId, sequenceNumber, response, requestId } = data;
+      const { clientId, sequenceNumber, response } = data;
 
       // Handle awaitable passkey requests using clientId and sequenceNumber
       if (clientId !== undefined && sequenceNumber !== undefined) {
         const trackingKey = `${clientId}_${sequenceNumber}`;
         this.handlePasskeyResponse(trackingKey, response);
-      }
-      // Fallback to requestId for backward compatibility
-      else if (requestId) {
-        this.handlePasskeyResponse(requestId, response);
       }
     });
 
     ipcMain.on("autofill.completePasskeyRegistration", (event, data) => {
       this.logService.warning("autofill.completePasskeyRegistration", data);
-      const { clientId, sequenceNumber, response, requestId } = data;
+      const { clientId, sequenceNumber, response } = data;
 
       // Handle awaitable passkey requests using clientId and sequenceNumber
       if (clientId !== undefined && sequenceNumber !== undefined) {
         const trackingKey = `${clientId}_${sequenceNumber}`;
         this.handlePasskeyResponse(trackingKey, response);
-      }
-      // Fallback to requestId for backward compatibility
-      else if (requestId) {
-        this.handlePasskeyResponse(requestId, response);
       }
     });
 
     ipcMain.on("autofill.completePasskeyAssertion", (event, data) => {
       this.logService.warning("autofill.completePasskeyAssertion", data);
-      const { clientId, sequenceNumber, response, requestId } = data;
+      const { clientId, sequenceNumber, response } = data;
 
       // Handle awaitable passkey requests using clientId and sequenceNumber
       if (clientId !== undefined && sequenceNumber !== undefined) {
         const trackingKey = `${clientId}_${sequenceNumber}`;
         this.handlePasskeyResponse(trackingKey, response);
       }
-      // Fallback to requestId for backward compatibility
-      else if (requestId) {
-        this.handlePasskeyResponse(requestId, response);
-      }
     });
 
     ipcMain.on("autofill.completeError", (event, data) => {
       this.logService.warning("autofill.completeError", data);
-      const { clientId, sequenceNumber, error, requestId } = data;
+      const { clientId, sequenceNumber, error } = data;
 
       // Handle awaitable passkey requests using clientId and sequenceNumber
       if (clientId !== undefined && sequenceNumber !== undefined) {
         const trackingKey = `${clientId}_${sequenceNumber}`;
         this.handlePasskeyResponse(trackingKey, { error: String(error) });
-      }
-      // Fallback to requestId for backward compatibility
-      else if (requestId) {
-        this.handlePasskeyResponse(requestId, { error: String(error) });
       }
     });
   }
