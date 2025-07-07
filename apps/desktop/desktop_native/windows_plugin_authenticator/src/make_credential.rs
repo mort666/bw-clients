@@ -196,6 +196,7 @@ pub fn send_registration_request(
         user_name: request.user_name.clone(),
         client_data_hash: request.client_data_hash.clone(),
         user_verification: request.user_verification.clone(),
+        window_xy: Position { x: 400, y: 400 },
         supported_algorithms: request.supported_algorithms.clone(),
         excluded_credentials: request.excluded_credentials.clone(),
     };

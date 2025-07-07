@@ -135,6 +135,7 @@ pub fn send_assertion_request(
         client_data_hash: request.client_data_hash.clone(),
         allowed_credentials: request.allowed_credentials.clone(),
         user_verification: request.user_verification.clone(),
+        window_xy: Position { x: 400, y: 400 },
     };
 
     util::message(&format!(

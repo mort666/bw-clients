@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use tokio::sync::oneshot;
 
 /// User verification requirement as defined by WebAuthn spec
@@ -36,29 +37,41 @@ impl Into<String> for UserVerificationRequirement {
     }
 }
 
-/// Assertion request structure
+/// IDENTICAL to napi/lib.rs/PasskeyAssertionRequest
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PasskeyAssertionRequest {
     pub rp_id: String,
-    pub transaction_id: String,
     pub client_data_hash: Vec<u8>,
-    pub allowed_credentials: Vec<Vec<u8>>,
     pub user_verification: UserVerificationRequirement,
+    pub allowed_credentials: Vec<Vec<u8>>,
+    pub window_xy: Position,
+
+    pub transaction_id: String,
 }
 
-/// Registration request structure
+// Identical to napi/lib.rs/Position
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Position {
+    pub x: i32,
+    pub y: i32,
+}
+
+/// IDENTICAL to napi/lib.rs/PasskeyRegistrationRequest
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PasskeyRegistrationRequest {
     pub rp_id: String,
-    pub transaction_id: String,
-    pub user_handle: Vec<u8>,
     pub user_name: String,
+    pub user_handle: Vec<u8>,
     pub client_data_hash: Vec<u8>,
     pub user_verification: UserVerificationRequirement,
-    pub supported_algorithms: Vec<i32>, // COSE algorithm identifiers
-    pub excluded_credentials: Vec<Vec<u8>>, // Credentials to exclude from creation
+    pub supported_algorithms: Vec<i32>,
+    pub window_xy: Position,
+    pub excluded_credentials: Vec<Vec<u8>>,
+
+    pub transaction_id: String,
 }
 
 /// Sync request structure

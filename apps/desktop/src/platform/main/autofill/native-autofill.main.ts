@@ -59,18 +59,8 @@ export class NativeAutofillMain {
     });
   }
 
-  private async handleAssertionRequest(
-    request: passkey_authenticator.PasskeyAssertionRequest,
-  ): Promise<string> {
+  private async handleAssertionRequest(request: autofill.PasskeyAssertionRequest): Promise<string> {
     this.logService.info("Handling assertion request for rpId:", request.rpId);
-
-    const normalized_request: autofill.PasskeyAssertionRequest = {
-      rpId: request.rpId,
-      allowedCredentials: request.allowedCredentials,
-      clientDataHash: request.clientDataHash,
-      userVerification: autofill.UserVerification.Required,
-      windowXy: { x: 400, y: 400 },
-    };
 
     try {
       // Generate unique identifiers for tracking this request
@@ -83,7 +73,7 @@ export class NativeAutofillMain {
         {
           clientId,
           sequenceNumber,
-          request: normalized_request,
+          request: request,
         },
         { waitForResponse: true, timeout: 60000 },
       );
@@ -113,19 +103,9 @@ export class NativeAutofillMain {
   }
 
   private async handleRegistrationRequest(
-    request: passkey_authenticator.PasskeyRegistrationRequest,
+    request: autofill.PasskeyRegistrationRequest,
   ): Promise<string> {
     this.logService.info("Handling registration request for rpId:", request.rpId);
-
-    const normalized_request: autofill.PasskeyRegistrationRequest = {
-      rpId: request.rpId,
-      clientDataHash: request.clientDataHash,
-      userName: request.userName,
-      userHandle: request.userHandle,
-      userVerification: autofill.UserVerification.Required,
-      supportedAlgorithms: request.supportedAlgorithms,
-      windowXy: { x: 400, y: 400 },
-    };
 
     try {
       // Generate unique identifiers for tracking this request
@@ -138,7 +118,7 @@ export class NativeAutofillMain {
         {
           clientId,
           sequenceNumber,
-          request: normalized_request,
+          request: request,
         },
         { waitForResponse: true, timeout: 60000 },
       );

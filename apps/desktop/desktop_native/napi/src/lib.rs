@@ -831,31 +831,6 @@ pub mod passkey_authenticator {
     #[napi(object)]
     #[derive(serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct PasskeyAssertionRequest {
-        pub rp_id: String,
-        pub transaction_id: String,
-        pub client_data_hash: Vec<u8>,
-        pub allowed_credentials: Vec<Vec<u8>>,
-        pub user_verification: bool,
-    }
-
-    #[napi(object)]
-    #[derive(serde::Serialize, serde::Deserialize)]
-    #[serde(rename_all = "camelCase")]
-
-    pub struct PasskeyRegistrationRequest {
-        pub rp_id: String,
-        pub transaction_id: String,
-        pub user_handle: Vec<u8>,
-        pub user_name: String,
-        pub client_data_hash: Vec<u8>,
-        pub user_verification: bool,
-        pub supported_algorithms: Vec<i32>,
-    }
-
-    #[napi(object)]
-    #[derive(serde::Serialize, serde::Deserialize)]
-    #[serde(rename_all = "camelCase")]
     pub struct PasskeySyncRequest {
         pub rp_id: String,
     }
