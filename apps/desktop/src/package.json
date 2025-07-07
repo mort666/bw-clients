@@ -15,4 +15,3 @@
     "@bitwarden/desktop-napi": "file:../desktop_native/napi"
   }
 }
-
