@@ -352,8 +352,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                         } => {
                             util::message("Creating WebAuthn make credential response");
 
-                            match create_make_credential_response(credential_id, attestation_object)
-                            {
+                            match create_make_credential_response(attestation_object) {
                                 Ok(webauthn_response) => {
                                     util::message("Successfully created WebAuthn response");
                                     *response = webauthn_response;

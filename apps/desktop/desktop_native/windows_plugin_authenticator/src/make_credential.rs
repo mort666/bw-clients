@@ -196,7 +196,7 @@ pub fn send_registration_request(
         user_name: request.user_name.clone(),
         client_data_hash: request.client_data_hash.clone(),
         user_verification: request.user_verification.clone(),
-        window_xy: Position { x: 400, y: 400 },
+        window_xy: Position { x: 400, y: 400 }, // TODO: Get actual window position
         supported_algorithms: request.supported_algorithms.clone(),
         excluded_credentials: request.excluded_credentials.clone(),
     };
@@ -218,7 +218,6 @@ pub fn send_registration_request(
 
 /// Creates a WebAuthn make credential response from Bitwarden's registration response
 pub unsafe fn create_make_credential_response(
-    credential_id: Vec<u8>,
     attestation_object: Vec<u8>,
 ) -> std::result::Result<*mut ExperimentalWebAuthnPluginOperationResponse, HRESULT> {
     // Use the attestation object directly as the encoded response
