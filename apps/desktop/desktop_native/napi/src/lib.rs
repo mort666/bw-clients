@@ -839,26 +839,6 @@ pub mod passkey_authenticator {
     #[derive(serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
 
-    pub struct PasskeyAssertionResponse {
-        pub credential_id: Vec<u8>,
-        pub authenticator_data: Vec<u8>,
-        pub signature: Vec<u8>,
-        pub user_handle: Vec<u8>,
-    }
-
-    #[napi(object)]
-    #[derive(serde::Serialize, serde::Deserialize)]
-    #[serde(rename_all = "camelCase")]
-
-    pub struct PasskeyRegistrationResponse {
-        pub credential_id: Vec<u8>,
-        pub attestation_object: Vec<u8>,
-    }
-
-    #[napi(object)]
-    #[derive(serde::Serialize, serde::Deserialize)]
-    #[serde(rename_all = "camelCase")]
-
     pub struct PasskeySyncResponse {
         pub credentials: Vec<SyncedCredential>,
     }

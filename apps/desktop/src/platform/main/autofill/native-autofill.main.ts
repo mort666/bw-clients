@@ -82,10 +82,7 @@ export class NativeAutofillMain {
         // Convert the response to the format expected by the NAPI bridge
         return JSON.stringify({
           type: "assertion_response",
-          credentialId: response.credentialId,
-          authenticatorData: response.authenticatorData,
-          signature: response.signature,
-          userHandle: response.userHandle,
+          ...response,
         });
       } else {
         return JSON.stringify({
@@ -129,8 +126,7 @@ export class NativeAutofillMain {
         // Convert the response to the format expected by the NAPI bridge
         return JSON.stringify({
           type: "registration_response",
-          credentialId: response.credentialId,
-          attestationObject: response.attestationObject,
+          ...response,
         });
       } else {
         return JSON.stringify({

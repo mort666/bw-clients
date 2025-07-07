@@ -95,13 +95,17 @@ pub enum PasskeyRequest {
 pub enum PasskeyResponse {
     #[serde(rename = "assertion_response", rename_all = "camelCase")]
     AssertionResponse {
-        credential_id: Vec<u8>,
-        authenticator_data: Vec<u8>,
-        signature: Vec<u8>,
+        rp_id: String,
         user_handle: Vec<u8>,
+        signature: Vec<u8>,
+        client_data_hash: Vec<u8>,
+        authenticator_data: Vec<u8>,
+        credential_id: Vec<u8>,
     },
     #[serde(rename = "registration_response", rename_all = "camelCase")]
     RegistrationResponse {
+        rp_id: String,
+        client_data_hash: Vec<u8>,
         credential_id: Vec<u8>,
         attestation_object: Vec<u8>,
     },

@@ -199,16 +199,6 @@ export declare namespace passkey_authenticator {
   export interface PasskeySyncRequest {
     rpId: string
   }
-  export interface PasskeyAssertionResponse {
-    credentialId: Array<number>
-    authenticatorData: Array<number>
-    signature: Array<number>
-    userHandle: Array<number>
-  }
-  export interface PasskeyRegistrationResponse {
-    credentialId: Array<number>
-    attestationObject: Array<number>
-  }
   export interface PasskeySyncResponse {
     credentials: Array<SyncedCredential>
   }

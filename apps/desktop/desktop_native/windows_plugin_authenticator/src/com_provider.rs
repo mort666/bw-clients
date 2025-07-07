@@ -347,6 +347,8 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                         PasskeyResponse::RegistrationResponse {
                             credential_id,
                             attestation_object,
+                            rp_id,
+                            client_data_hash,
                         } => {
                             util::message("Creating WebAuthn make credential response");
 
@@ -511,6 +513,8 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                             authenticator_data,
                             signature,
                             user_handle,
+                            rp_id,
+                            client_data_hash,
                         } => {
                             util::message("Creating WebAuthn get assertion response");
 
