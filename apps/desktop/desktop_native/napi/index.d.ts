@@ -194,7 +194,7 @@ export declare namespace passkey_authenticator {
     credentialId: string
     rpId: string
     userName: string
-    userId: string
+    userHandle: string
   }
   export interface PasskeyAssertionRequest {
     rpId: string
@@ -206,7 +206,7 @@ export declare namespace passkey_authenticator {
   export interface PasskeyRegistrationRequest {
     rpId: string
     transactionId: string
-    userId: Array<number>
+    userHandle: Array<number>
     userName: string
     clientDataHash: Array<number>
     userVerification: boolean

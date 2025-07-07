@@ -407,10 +407,27 @@ pub fn remove_all_credentials(
     }
 }
 
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct WEBAUTHN_CREDENTIAL_EX {
+    pub dwVersion: u32,
+    pub cbId: u32,
+    pub pbId: *const u8,
+    pub pwszCredentialType: *const u16, // LPCWSTR
+    pub dwTransports: u32,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct WEBAUTHN_CREDENTIAL_LIST {
+    pub cCredentials: u32,
+    pub ppCredentials: *const *const WEBAUTHN_CREDENTIAL_EX,
+}
+
 // Forward declarations for Windows types we need
 type WEBAUTHN_ASSERTION = *const u8; // Placeholder - would need actual definition
 type PCWEBAUTHN_USER_ENTITY_INFORMATION = *const u8; // Placeholder - would need actual definition
-type WEBAUTHN_CREDENTIAL_LIST = *const u8; // Placeholder - would need actual definition
+//type WEBAUTHN_CREDENTIAL_LIST = *const u8; // Placeholder - would need actual definition
 type EXPERIMENTAL_PWEBAUTHN_CTAPCBOR_AUTHENTICATOR_OPTIONS = *const u8; // Placeholder
 type EXPERIMENTAL_PWEBAUTHN_CTAPCBOR_HMAC_SALT_EXTENSION = *const u8; // Placeholder
 

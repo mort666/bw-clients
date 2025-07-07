@@ -825,7 +825,7 @@ pub mod passkey_authenticator {
         pub credential_id: String, // base64url encoded
         pub rp_id: String,
         pub user_name: String,
-        pub user_id: String, // base64url encoded
+        pub user_handle: String, // base64url encoded
     }
 
     #[napi(object)]
@@ -846,7 +846,7 @@ pub mod passkey_authenticator {
     pub struct PasskeyRegistrationRequest {
         pub rp_id: String,
         pub transaction_id: String,
-        pub user_id: Vec<u8>,
+        pub user_handle: Vec<u8>,
         pub user_name: String,
         pub client_data_hash: Vec<u8>,
         pub user_verification: bool,

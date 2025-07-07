@@ -5,7 +5,7 @@ use tokio::sync::oneshot;
 #[serde(rename_all = "lowercase")]
 pub enum UserVerificationRequirement {
     Required,
-    Preferred, 
+    Preferred,
     Discouraged,
 }
 
@@ -53,12 +53,12 @@ pub struct PasskeyAssertionRequest {
 pub struct PasskeyRegistrationRequest {
     pub rp_id: String,
     pub transaction_id: String,
-    pub user_id: Vec<u8>,
+    pub user_handle: Vec<u8>,
     pub user_name: String,
     pub client_data_hash: Vec<u8>,
     pub user_verification: UserVerificationRequirement,
-    pub supported_algorithms: Vec<i32>,  // COSE algorithm identifiers
-    pub excluded_credentials: Vec<Vec<u8>>,  // Credentials to exclude from creation
+    pub supported_algorithms: Vec<i32>, // COSE algorithm identifiers
+    pub excluded_credentials: Vec<Vec<u8>>, // Credentials to exclude from creation
 }
 
 /// Sync request structure
@@ -80,26 +80,22 @@ pub enum PasskeyRequest {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum PasskeyResponse {
-    #[serde(rename = "assertion_response",rename_all = "camelCase")]
+    #[serde(rename = "assertion_response", rename_all = "camelCase")]
     AssertionResponse {
         credential_id: Vec<u8>,
         authenticator_data: Vec<u8>,
         signature: Vec<u8>,
         user_handle: Vec<u8>,
     },
-    #[serde(rename = "registration_response",rename_all = "camelCase")]
+    #[serde(rename = "registration_response", rename_all = "camelCase")]
     RegistrationResponse {
         credential_id: Vec<u8>,
         attestation_object: Vec<u8>,
     },
-    #[serde(rename = "sync_response",rename_all = "camelCase")]
-    SyncResponse {
-        credentials: Vec<SyncedCredential>,
-    },
-    #[serde(rename = "error",rename_all = "camelCase")]
-    Error {
-        message: String,
-    },
+    #[serde(rename = "sync_response", rename_all = "camelCase")]
+    SyncResponse { credentials: Vec<SyncedCredential> },
+    #[serde(rename = "error", rename_all = "camelCase")]
+    Error { message: String },
 }
 
 /// Credential data for sync operations
@@ -109,7 +105,7 @@ pub struct SyncedCredential {
     pub credential_id: Vec<u8>,
     pub rp_id: String,
     pub user_name: String,
-    pub user_id: Vec<u8>,
+    pub user_handle: Vec<u8>,
 }
 
 /// Request type enumeration for type discrimination

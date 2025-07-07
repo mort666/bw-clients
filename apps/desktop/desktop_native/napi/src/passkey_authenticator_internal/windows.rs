@@ -98,7 +98,7 @@ impl From<windows_plugin_authenticator::SyncedCredential> for SyncedCredential {
                 .encode(&cred.credential_id),
             rp_id: cred.rp_id,
             user_name: cred.user_name,
-            user_id: base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(&cred.user_id),
+            user_handle: base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(&cred.user_handle),
         }
     }
 }
@@ -112,8 +112,8 @@ impl From<SyncedCredential> for windows_plugin_authenticator::SyncedCredential {
                 .unwrap_or_default(),
             rp_id: cred.rp_id,
             user_name: cred.user_name,
-            user_id: base64::engine::general_purpose::URL_SAFE_NO_PAD
-                .decode(&cred.user_id)
+            user_handle: base64::engine::general_purpose::URL_SAFE_NO_PAD
+                .decode(&cred.user_handle)
                 .unwrap_or_default(),
         }
     }
@@ -134,10 +134,10 @@ pub fn sync_credentials_to_windows(credentials: Vec<SyncedCredential>) -> napi::
         } else {
             cred.credential_id.clone()
         };
-        let truncated_user_id = if cred.user_id.len() > 16 {
-            format!("{}...", &cred.user_id[..16])
+        let truncated_user_id = if cred.user_handle.len() > 16 {
+            format!("{}...", &cred.user_handle[..16])
         } else {
-            cred.user_id.clone()
+            cred.user_handle.clone()
         };
         log::info!(
             "[NAPI] Credential {}: RP={}, User={}, CredID={}, UserID={}",

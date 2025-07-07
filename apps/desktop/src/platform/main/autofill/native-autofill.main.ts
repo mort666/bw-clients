@@ -121,7 +121,7 @@ export class NativeAutofillMain {
       rpId: request.rpId,
       clientDataHash: request.clientDataHash,
       userName: request.userName,
-      userHandle: request.userId,
+      userHandle: request.userHandle,
       userVerification: autofill.UserVerification.Required,
       supportedAlgorithms: request.supportedAlgorithms,
       windowXy: { x: 400, y: 400 },
@@ -221,7 +221,7 @@ export class NativeAutofillMain {
   private async sendAndOptionallyWait<T = any>(
     channel: string,
     data: any,
-    options?: { waitForResponse?: boolean; timeout?: number; responseChannel?: string },
+    options?: { waitForResponse?: boolean; timeout?: number },
   ): Promise<T | void> {
     if (!options?.waitForResponse) {
       // Just send without waiting for response (existing behavior)
@@ -232,7 +232,6 @@ export class NativeAutofillMain {
 
     // Use clientId and sequenceNumber as the tracking key
     const trackingKey = `${data.clientId}_${data.sequenceNumber}`;
-    const responseChannel = options.responseChannel || `${channel}_response`;
     const timeout = options.timeout || 30000; // 30 second default timeout
 
     // Send the original data without adding requestId
@@ -268,27 +267,29 @@ export class NativeAutofillMain {
   async init() {
     this.initWindows();
 
-    ipcMain.handle("autofill.syncPasskeys", async (event, data: NativeAutofillSyncParams): Promise<string> => {
-      this.logService.info("autofill.syncPasskeys", data);
-      const { credentials } = data;
-      const mapped = credentials.map((cred: NativeAutofillFido2Credential) => {
-        const x: passkey_authenticator.SyncedCredential = {
-          credentialId: cred.credentialId,
-          rpId: cred.rpId,
-          userName: cred.userName,
-          userId: cred.userHandle
-        };
-        this.logService.info("Mapped credential:", x);
-        return x;
-      });
+    ipcMain.handle(
+      "autofill.syncPasskeys",
+      async (event, data: NativeAutofillSyncParams): Promise<string> => {
+        this.logService.info("autofill.syncPasskeys", data);
+        const { credentials } = data;
+        const mapped = credentials.map((cred: NativeAutofillFido2Credential) => {
+          const x: passkey_authenticator.SyncedCredential = {
+            credentialId: cred.credentialId,
+            rpId: cred.rpId,
+            userName: cred.userName,
+            userHandle: cred.userHandle,
+          };
+          this.logService.info("Mapped credential:", x);
+          return x;
+        });
 
-      this.logService.info("Syncing passkeys to Windows:", mapped);
-        
-      passkey_authenticator.syncCredentialsToWindows(mapped);
+        this.logService.info("Syncing passkeys to Windows:", mapped);
 
-      return "worked";
-    });
+        passkey_authenticator.syncCredentialsToWindows(mapped);
 
+        return "worked";
+      },
+    );
 
     ipcMain.handle(
       "autofill.runCommand",
@@ -383,7 +384,6 @@ export class NativeAutofillMain {
       }
     });
 
-    
     ipcMain.on("autofill.completePasskeySync", (event, data) => {
       this.logService.warning("autofill.completePasskeySync", data);
       const { clientId, sequenceNumber, response, requestId } = data;
