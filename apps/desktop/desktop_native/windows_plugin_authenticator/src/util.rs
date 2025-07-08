@@ -1,6 +1,3 @@
-use std::ffi::OsString;
-use std::os::windows::ffi::OsStrExt;
-
 use std::fs::{create_dir_all, OpenOptions};
 use std::io::Write;
 use std::path::Path;
@@ -9,6 +6,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use windows::Win32::Foundation::*;
 use windows::Win32::System::LibraryLoader::*;
 use windows_core::*;
+
+use crate::com_buffer::ComBuffer;
 
 pub unsafe fn delay_load<T>(library: PCSTR, function: PCSTR) -> Option<T> {
     let library = LoadLibraryExA(library, None, LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
@@ -28,32 +27,27 @@ pub unsafe fn delay_load<T>(library: PCSTR, function: PCSTR) -> Option<T> {
     None
 }
 
+/// Trait for converting strings to Windows-compatible wide strings using COM allocation
 pub trait WindowsString {
-    fn into_win_utf8(self: Self) -> (*mut u8, u32);
-    fn into_win_utf16(self: Self) -> (*mut u16, u32);
-    fn into_win_utf16_wide(self: Self) -> (*mut u16, u32);
+    /// Converts to null-terminated UTF-16 using COM allocation
+    fn to_com_utf16(&self) -> (*mut u16, u32);
+    /// Converts to Vec<u16> for temporary use (caller must keep Vec alive)
+    fn to_utf16(&self) -> Vec<u16>;
 }
 
-impl WindowsString for String {
-    fn into_win_utf8(self: Self) -> (*mut u8, u32) {
-        let mut v = self.into_bytes();
-        v.push(0);
-
-        (v.as_mut_ptr(), v.len() as u32)
+impl WindowsString for str {
+    fn to_com_utf16(&self) -> (*mut u16, u32) {
+        let mut wide_vec: Vec<u16> = self.encode_utf16().collect();
+        wide_vec.push(0); // null terminator
+        let wide_bytes: Vec<u8> = wide_vec.iter().flat_map(|&x| x.to_le_bytes()).collect();
+        let (ptr, byte_count) = ComBuffer::from_buffer(&wide_bytes);
+        (ptr as *mut u16, byte_count)
     }
 
-    fn into_win_utf16(self: Self) -> (*mut u16, u32) {
-        let mut v: Vec<u16> = self.encode_utf16().collect();
-        v.push(0);
-
-        (v.as_mut_ptr(), v.len() as u32)
-    }
-
-    fn into_win_utf16_wide(self: Self) -> (*mut u16, u32) {
-        let mut v: Vec<u16> = OsString::from(self).encode_wide().collect();
-        v.push(0);
-
-        (v.as_mut_ptr(), v.len() as u32)
+    fn to_utf16(&self) -> Vec<u16> {
+        let mut wide_vec: Vec<u16> = self.encode_utf16().collect();
+        wide_vec.push(0); // null terminator
+        wide_vec
     }
 }
 

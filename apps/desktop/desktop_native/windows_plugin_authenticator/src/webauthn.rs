@@ -7,7 +7,7 @@
 
 use windows_core::*;
 
-use crate::util::{debug_log, delay_load};
+use crate::util::{debug_log, delay_load, WindowsString};
 use crate::com_buffer::ComBuffer;
 
 /// Windows WebAuthn Authenticator Options structure
@@ -72,9 +72,6 @@ impl ExperimentalWebAuthnPluginCredentialDetails {
         user_name: String,
         user_display_name: String,
     ) -> Self {
-        use std::ffi::OsString;
-        use std::os::windows::ffi::OsStrExt;
-
         // Convert credential_id bytes to hex string, then allocate with COM
         let credential_id_string = hex::encode(&credential_id);
         let (credential_id_pointer, credential_id_byte_count) = ComBuffer::from_buffer(credential_id_string.as_bytes());
@@ -83,36 +80,21 @@ impl ExperimentalWebAuthnPluginCredentialDetails {
         let user_id_string = hex::encode(&user_id);
         let (user_id_pointer, user_id_byte_count) = ComBuffer::from_buffer(user_id_string.as_bytes());
 
-        // Convert strings to null-terminated wide strings and allocate with COM
-        let mut rpid_vec: Vec<u16> = OsString::from(rpid).encode_wide().collect();
-        rpid_vec.push(0);
-        let rpid_bytes: Vec<u8> = rpid_vec.iter().flat_map(|&x| x.to_le_bytes()).collect();
-        let (rpid_ptr, _) = ComBuffer::from_buffer(rpid_bytes);
-
-        let mut rp_friendly_name_vec: Vec<u16> = OsString::from(rp_friendly_name).encode_wide().collect();
-        rp_friendly_name_vec.push(0);
-        let rp_friendly_name_bytes: Vec<u8> = rp_friendly_name_vec.iter().flat_map(|&x| x.to_le_bytes()).collect();
-        let (rp_friendly_name_ptr, _) = ComBuffer::from_buffer(rp_friendly_name_bytes);
-
-        let mut user_name_vec: Vec<u16> = OsString::from(user_name).encode_wide().collect();
-        user_name_vec.push(0);
-        let user_name_bytes: Vec<u8> = user_name_vec.iter().flat_map(|&x| x.to_le_bytes()).collect();
-        let (user_name_ptr, _) = ComBuffer::from_buffer(user_name_bytes);
-
-        let mut user_display_name_vec: Vec<u16> = OsString::from(user_display_name).encode_wide().collect();
-        user_display_name_vec.push(0);
-        let user_display_name_bytes: Vec<u8> = user_display_name_vec.iter().flat_map(|&x| x.to_le_bytes()).collect();
-        let (user_display_name_ptr, _) = ComBuffer::from_buffer(user_display_name_bytes);
+        // Convert strings to null-terminated wide strings using trait methods
+        let (rpid_ptr, _) = rpid.to_com_utf16();
+        let (rp_friendly_name_ptr, _) = rp_friendly_name.to_com_utf16();
+        let (user_name_ptr, _) = user_name.to_com_utf16();
+        let (user_display_name_ptr, _) = user_display_name.to_com_utf16();
 
         Self {
             credential_id_byte_count,
             credential_id_pointer,
-            rpid: rpid_ptr as *mut u16,
-            rp_friendly_name: rp_friendly_name_ptr as *mut u16,
+            rpid: rpid_ptr,
+            rp_friendly_name: rp_friendly_name_ptr,
             user_id_byte_count,
             user_id_pointer,
-            user_name: user_name_ptr as *mut u16,
-            user_display_name: user_display_name_ptr as *mut u16,
+            user_name: user_name_ptr,
+            user_display_name: user_display_name_ptr,
         }
     }
 }
@@ -136,7 +118,7 @@ impl ExperimentalWebAuthnPluginCredentialDetailsList {
         credentials: Vec<ExperimentalWebAuthnPluginCredentialDetails>,
     ) -> Self {
         // Convert credentials to COM-allocated pointers
-        let mut credential_pointers: Vec<*mut ExperimentalWebAuthnPluginCredentialDetails> = credentials
+        let credential_pointers: Vec<*mut ExperimentalWebAuthnPluginCredentialDetails> = credentials
             .into_iter()
             .map(|cred| {
                 // Use COM allocation for each credential struct
@@ -160,14 +142,11 @@ impl ExperimentalWebAuthnPluginCredentialDetailsList {
             std::ptr::null_mut()
         };
 
-        // Convert CLSID to wide string and allocate with COM
-        let mut clsid_wide: Vec<u16> = clsid.encode_utf16().collect();
-        clsid_wide.push(0); // null terminator
-        let clsid_bytes: Vec<u8> = clsid_wide.iter().flat_map(|&x| x.to_le_bytes()).collect();
-        let (clsid_ptr, _) = ComBuffer::from_buffer(clsid_bytes);
+        // Convert CLSID to wide string using trait method
+        let (clsid_ptr, _) = clsid.to_com_utf16();
         
         Self {
-            plugin_clsid: clsid_ptr as *mut u16,
+            plugin_clsid: clsid_ptr,
             credential_count: credentials_len as u32,
             credentials: credentials_pointer,
         }
@@ -276,8 +255,7 @@ pub fn get_all_credentials(
     match result {
         Some(api) => {
             // Create the wide string and keep it alive during the API call
-            let mut clsid_wide: Vec<u16> = plugin_clsid.encode_utf16().collect();
-            clsid_wide.push(0); // null terminator
+            let clsid_wide = plugin_clsid.to_utf16();
             let mut credentials_list_ptr: *mut ExperimentalWebAuthnPluginCredentialDetailsList = std::ptr::null_mut();
             
             let result = unsafe { api(clsid_wide.as_ptr(), &mut credentials_list_ptr) };
@@ -318,8 +296,7 @@ pub fn remove_all_credentials(
         Some(api) => {
             debug_log("Function loaded successfully, calling API...");
             // Create the wide string and keep it alive during the API call
-            let mut clsid_wide: Vec<u16> = plugin_clsid.encode_utf16().collect();
-            clsid_wide.push(0); // null terminator
+            let clsid_wide = plugin_clsid.to_utf16();
             
             let result = unsafe { api(clsid_wide.as_ptr()) };
 
