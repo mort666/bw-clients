@@ -13,7 +13,7 @@ mod ipc;
 mod make_credential;
 mod sync;
 mod types;
-pub mod utils;
+mod util;
 mod webauthn;
 
 // Re-export main functionality
@@ -28,7 +28,6 @@ pub use types::{
 };
 
 // Re-export utilities
-pub use utils as util;
 
 /// Handles initialization and registration for the Bitwarden desktop app as a
 /// plugin authenticator with Windows.

@@ -3,7 +3,7 @@ use serde_json;
 
 use crate::ipc::send_passkey_request;
 use crate::types::*;
-use crate::utils::{self as util, wstr_to_string};
+use crate::util::{self, wstr_to_string};
 use crate::webauthn::*;
 
 /// Helper for sync requests - requests credentials from Electron for a specific RP ID

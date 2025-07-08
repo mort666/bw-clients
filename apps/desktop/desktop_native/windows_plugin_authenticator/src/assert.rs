@@ -4,9 +4,9 @@ use std::ptr;
 use windows_core::{s, HRESULT};
 
 use crate::com_provider::ExperimentalWebAuthnPluginOperationResponse;
-use crate::types::*;
-use crate::utils::{self as util, delay_load};
+use crate::util::delay_load;
 use crate::webauthn::WEBAUTHN_CREDENTIAL_LIST;
+use crate::{types::*, util};
 
 // Windows API types for WebAuthn (from webauthn.h.sample)
 #[repr(C)]

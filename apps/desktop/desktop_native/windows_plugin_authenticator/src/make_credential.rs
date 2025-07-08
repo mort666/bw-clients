@@ -5,7 +5,7 @@ use windows_core::{s, HRESULT};
 
 use crate::com_provider::ExperimentalWebAuthnPluginOperationResponse;
 use crate::types::*;
-use crate::utils::{self as util, delay_load};
+use crate::util::{self, delay_load};
 use crate::webauthn::WEBAUTHN_CREDENTIAL_LIST;
 
 /// Windows WebAuthn registration request context  

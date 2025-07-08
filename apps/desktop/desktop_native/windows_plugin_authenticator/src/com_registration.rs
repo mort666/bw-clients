@@ -5,7 +5,7 @@ use windows::Win32::System::Com::*;
 use windows_core::{s, ComObjectInterface, GUID, HRESULT, HSTRING, PCWSTR};
 
 use crate::com_provider;
-use crate::utils::delay_load;
+use crate::util::delay_load;
 use crate::webauthn::*;
 use hex;
 

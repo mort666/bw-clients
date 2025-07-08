@@ -11,7 +11,7 @@ use crate::make_credential::{
     WindowsRegistrationRequest,
 };
 use crate::types::*;
-use crate::utils::{self as util, wstr_to_string};
+use crate::util::{self, wstr_to_string};
 use crate::webauthn::WEBAUTHN_CREDENTIAL_LIST;
 
 /// Used when creating and asserting credentials.

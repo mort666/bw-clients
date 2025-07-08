@@ -1,8 +1,8 @@
-use tokio::sync::{mpsc, oneshot};
 use std::sync::Mutex;
+use tokio::sync::{mpsc, oneshot};
 
 use crate::types::*;
-use crate::utils::{self as util};
+use crate::util;
 
 /// Global channel sender for request notifications
 static REQUEST_SENDER: Mutex<Option<mpsc::UnboundedSender<RequestEvent>>> = Mutex::new(None);
@@ -13,7 +13,7 @@ pub fn set_request_sender(sender: mpsc::UnboundedSender<RequestEvent>) {
         Ok(mut tx) => {
             *tx = Some(sender);
             util::message("Passkey request callback registered");
-        },
+        }
         Err(e) => {
             util::message(&format!("Failed to register passkey callback: {:?}", e));
         }
@@ -21,15 +21,19 @@ pub fn set_request_sender(sender: mpsc::UnboundedSender<RequestEvent>) {
 }
 
 /// Sends a passkey request and waits for response
-pub fn send_passkey_request(request_type: RequestType, request_json: String, rpid: &str) -> Option<PasskeyResponse> {
+pub fn send_passkey_request(
+    request_type: RequestType,
+    request_json: String,
+    rpid: &str,
+) -> Option<PasskeyResponse> {
     let request_desc = match &request_type {
         RequestType::Assertion => format!("assertion request for {}", rpid),
         RequestType::Registration => format!("registration request for {}", rpid),
         RequestType::Sync => format!("sync request for {}", rpid),
     };
-    
+
     util::message(&format!("Passkey {}", request_desc));
-        
+
     if let Ok(tx_guard) = REQUEST_SENDER.lock() {
         if let Some(sender) = tx_guard.as_ref() {
             let (response_tx, response_rx) = oneshot::channel();
@@ -38,14 +42,14 @@ pub fn send_passkey_request(request_type: RequestType, request_json: String, rpi
                 request_json,
                 response_sender: response_tx,
             };
-            
+
             if let Ok(()) = sender.send(event) {
                 // Wait for response from TypeScript callback
                 match response_rx.blocking_recv() {
                     Ok(response) => {
                         util::message(&format!("Received callback response {:?}", response));
                         Some(response)
-                    },
+                    }
                     Err(_) => {
                         util::message("No response from callback");
                         None
