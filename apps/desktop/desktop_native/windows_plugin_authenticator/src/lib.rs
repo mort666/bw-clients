@@ -30,11 +30,6 @@ pub use types::{
 // Re-export utilities
 pub use utils as util;
 
-const AUTHENTICATOR_NAME: &str = "Bitwarden Desktop Authenticator";
-//const AAGUID: &str = "d548826e-79b4-db40-a3d8-11116f7e8349";
-const CLSID: &str = "0f7dc5d9-69ce-4652-8572-6877fd695062";
-const RPID: &str = "bitwarden.com";
-
 /// Handles initialization and registration for the Bitwarden desktop app as a
 /// plugin authenticator with Windows.
 /// For now, also adds the authenticator
