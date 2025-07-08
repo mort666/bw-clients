@@ -64,51 +64,6 @@ pub struct ExperimentalWebAuthnPluginCredentialDetails {
 }
 
 impl ExperimentalWebAuthnPluginCredentialDetails {
-    pub fn create(
-        credential_id: String,
-        rpid: String,
-        rp_friendly_name: String,
-        user_id: String,
-        user_name: String,
-        user_display_name: String,
-    ) -> Self {
-        // Use COM allocation for all strings
-        let (credential_id_pointer, credential_id_byte_count) = ComBuffer::from_buffer(credential_id.as_bytes());
-        let (user_id_pointer, user_id_byte_count) = ComBuffer::from_buffer(user_id.as_bytes());
-
-        // Convert to wide strings and allocate with COM
-        let mut rpid_wide: Vec<u16> = rpid.encode_utf16().collect();
-        rpid_wide.push(0);
-        let rpid_bytes: Vec<u8> = rpid_wide.iter().flat_map(|&x| x.to_le_bytes()).collect();
-        let (rpid_ptr, _) = ComBuffer::from_buffer(rpid_bytes);
-
-        let mut rp_friendly_name_wide: Vec<u16> = rp_friendly_name.encode_utf16().collect();
-        rp_friendly_name_wide.push(0);
-        let rp_friendly_name_bytes: Vec<u8> = rp_friendly_name_wide.iter().flat_map(|&x| x.to_le_bytes()).collect();
-        let (rp_friendly_name_ptr, _) = ComBuffer::from_buffer(rp_friendly_name_bytes);
-
-        let mut user_name_wide: Vec<u16> = user_name.encode_utf16().collect();
-        user_name_wide.push(0);
-        let user_name_bytes: Vec<u8> = user_name_wide.iter().flat_map(|&x| x.to_le_bytes()).collect();
-        let (user_name_ptr, _) = ComBuffer::from_buffer(user_name_bytes);
-
-        let mut user_display_name_wide: Vec<u16> = user_display_name.encode_utf16().collect();
-        user_display_name_wide.push(0);
-        let user_display_name_bytes: Vec<u8> = user_display_name_wide.iter().flat_map(|&x| x.to_le_bytes()).collect();
-        let (user_display_name_ptr, _) = ComBuffer::from_buffer(user_display_name_bytes);
-
-        Self {
-            credential_id_byte_count,
-            credential_id_pointer,
-            rpid: rpid_ptr as *mut u16,
-            rp_friendly_name: rp_friendly_name_ptr as *mut u16,
-            user_id_byte_count,
-            user_id_pointer,
-            user_name: user_name_ptr as *mut u16,
-            user_display_name: user_display_name_ptr as *mut u16,
-        }
-    }
-
     pub fn create_from_bytes(
         credential_id: Vec<u8>,
         rpid: String,
@@ -174,20 +129,6 @@ pub struct ExperimentalWebAuthnPluginCredentialDetailsList {
     pub credential_count: u32,
     pub credentials: *mut *mut ExperimentalWebAuthnPluginCredentialDetails,
 }
-
-/*
-let mut credentials: Vec<ExperimentalWebAuthnPluginCredentialDetails>
-
-let mut credentials: Vec<*mut ExperimentalWebAuthnPluginCredentialDetails> = credentials
-    .iter()
-    .map(|cred| cred as *mut _)
-    .collect();
-
-let credentials_len = credentials.len();
-let credentials_capacity = credentials.capacity();
-let mut credentials_pointer = credentials.as_mut_ptr();
-std::mem::forget(credentials);
-*/
 
 impl ExperimentalWebAuthnPluginCredentialDetailsList {
     pub fn create(
