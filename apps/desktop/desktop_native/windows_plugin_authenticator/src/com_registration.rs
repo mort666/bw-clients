@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::ffi::c_uchar;
 use std::ptr;
 
@@ -7,11 +8,104 @@ use windows_core::{s, ComObjectInterface, GUID, HRESULT, HSTRING, PCWSTR};
 use crate::com_provider;
 use crate::util::delay_load;
 use crate::webauthn::*;
+use ciborium::value::Value;
 use hex;
 
 const AUTHENTICATOR_NAME: &str = "Bitwarden Desktop Authenticator";
 const CLSID: &str = "0f7dc5d9-69ce-4652-8572-6877fd695062";
 const RPID: &str = "bitwarden.com";
+const AAGUID: &str = "d548826e-79b4-db40-a3d8-11116f7e8349";
+
+/// Parses a UUID string (with hyphens) into bytes
+fn parse_uuid_to_bytes(uuid_str: &str) -> Result<Vec<u8>, String> {
+    let uuid_clean = uuid_str.replace("-", "");
+    if uuid_clean.len() != 32 {
+        return Err("Invalid UUID format".to_string());
+    }
+
+    uuid_clean
+        .chars()
+        .collect::<Vec<char>>()
+        .chunks(2)
+        .map(|chunk| {
+            let hex_str: String = chunk.iter().collect();
+            u8::from_str_radix(&hex_str, 16)
+                .map_err(|_| format!("Invalid hex character in UUID: {}", hex_str))
+        })
+        .collect()
+}
+
+/// Converts the CLSID constant string to a GUID
+fn parse_clsid_to_guid() -> Result<GUID, String> {
+    // Remove hyphens and parse as hex
+    let clsid_clean = CLSID.replace("-", "");
+    if clsid_clean.len() != 32 {
+        return Err("Invalid CLSID format".to_string());
+    }
+
+    // Convert to u128 and create GUID
+    let clsid_u128 = u128::from_str_radix(&clsid_clean, 16)
+        .map_err(|_| "Failed to parse CLSID as hex".to_string())?;
+
+    Ok(GUID::from_u128(clsid_u128))
+}
+
+/// Generates CBOR-encoded authenticator info according to FIDO CTAP2 specifications
+/// See: https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#authenticatorGetInfo
+fn generate_cbor_authenticator_info() -> Result<Vec<u8>, String> {
+    // Parse AAGUID from string format to bytes
+    let aaguid_bytes = parse_uuid_to_bytes(AAGUID)?;
+
+    // Create the authenticator info map according to CTAP2 spec
+    let mut authenticator_info = BTreeMap::new();
+
+    // 1: versions - Array of supported FIDO versions
+    authenticator_info.insert(
+        Value::Integer(1.into()),
+        Value::Array(vec![
+            Value::Text("FIDO_2_0".to_string()),
+            Value::Text("FIDO_2_1".to_string()),
+        ]),
+    );
+
+    // 2: extensions - Array of supported extensions (empty for now)
+    authenticator_info.insert(Value::Integer(2.into()), Value::Array(vec![]));
+
+    // 3: aaguid - 16-byte AAGUID
+    authenticator_info.insert(Value::Integer(3.into()), Value::Bytes(aaguid_bytes));
+
+    // 4: options - Map of supported options
+    let mut options = BTreeMap::new();
+    options.insert(Value::Text("rk".to_string()), Value::Bool(true)); // resident key
+    options.insert(Value::Text("up".to_string()), Value::Bool(true)); // user presence
+    options.insert(Value::Text("uv".to_string()), Value::Bool(true)); // user verification
+    authenticator_info.insert(Value::Integer(4.into()), Value::Map(options));
+
+    // 9: transports - Array of supported transports
+    authenticator_info.insert(
+        Value::Integer(9.into()),
+        Value::Array(vec![Value::Text("internal".to_string())]),
+    );
+
+    // 10: algorithms - Array of supported algorithms
+    let mut algorithm = BTreeMap::new();
+    algorithm.insert(Value::Text("alg".to_string()), Value::Integer((-7).into())); // ES256
+    algorithm.insert(
+        Value::Text("type".to_string()),
+        Value::Text("public-key".to_string()),
+    );
+    authenticator_info.insert(
+        Value::Integer(10.into()),
+        Value::Array(vec![Value::Map(algorithm)]),
+    );
+
+    // Encode to CBOR
+    let mut buffer = Vec::new();
+    ciborium::ser::into_writer(&Value::Map(authenticator_info), &mut buffer)
+        .map_err(|e| format!("Failed to encode CBOR: {}", e))?;
+
+    Ok(buffer)
+}
 
 /// Initializes the COM library for use on the calling thread,
 /// and registers + sets the security values.
@@ -50,8 +144,8 @@ pub fn initialize_com_library() -> std::result::Result<(), String> {
 pub fn register_com_library() -> std::result::Result<(), String> {
     static FACTORY: windows_core::StaticComObject<com_provider::Factory> =
         com_provider::Factory.into_static();
-    //let clsid: *const GUID = &GUID::from_u128(0xa98925d161f640de9327dc418fcb2ff4);
-    let clsid: *const GUID = &GUID::from_u128(0x0f7dc5d969ce465285726877fd695062);
+    let clsid_guid = parse_clsid_to_guid().map_err(|e| format!("Failed to parse CLSID: {}", e))?;
+    let clsid: *const GUID = &clsid_guid;
 
     match unsafe {
         CoRegisterClassObject(
@@ -81,12 +175,9 @@ pub fn add_authenticator() -> std::result::Result<(), String> {
     let relying_party_id: HSTRING = RPID.into();
     let relying_party_id_ptr = PCWSTR(relying_party_id.as_ptr()).as_ptr();
 
-    // let aaguid: HSTRING = format!("{{{}}}", AAGUID).into();
-    // let aaguid_ptr = PCWSTR(aaguid.as_ptr()).as_ptr();
-
-    // Example authenticator info blob
-    let cbor_authenticator_info = "A60182684649444F5F325F30684649444F5F325F310282637072666B686D61632D7365637265740350D548826E79B4DB40A3D811116F7E834904A362726BF5627570F5627576F5098168696E7465726E616C0A81A263616C672664747970656A7075626C69632D6B6579";
-    let mut authenticator_info_bytes = hex::decode(cbor_authenticator_info).unwrap();
+    // Generate CBOR authenticator info dynamically
+    let mut authenticator_info_bytes = generate_cbor_authenticator_info()
+        .map_err(|e| format!("Failed to generate authenticator info: {}", e))?;
 
     let add_authenticator_options = ExperimentalWebAuthnPluginAddAuthenticatorOptions {
         authenticator_name: authenticator_name_ptr,
@@ -140,3 +231,79 @@ type EXPERIMENTAL_WebAuthNPluginAddAuthenticatorFnDeclaration = unsafe extern "c
     ppPluginAddAuthenticatorResponse: *mut *mut ExperimentalWebAuthnPluginAddAuthenticatorResponse,
 )
     -> HRESULT;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_generate_cbor_authenticator_info() {
+        let result = generate_cbor_authenticator_info();
+        assert!(result.is_ok(), "CBOR generation should succeed");
+
+        let cbor_bytes = result.unwrap();
+        assert!(!cbor_bytes.is_empty(), "CBOR bytes should not be empty");
+
+        // Verify the CBOR can be decoded back
+        let decoded: Result<Value, _> = ciborium::de::from_reader(&cbor_bytes[..]);
+        assert!(decoded.is_ok(), "Generated CBOR should be valid");
+
+        // Verify it's a map with expected keys
+        if let Value::Map(map) = decoded.unwrap() {
+            assert!(
+                map.contains_key(&Value::Integer(1.into())),
+                "Should contain versions (key 1)"
+            );
+            assert!(
+                map.contains_key(&Value::Integer(2.into())),
+                "Should contain extensions (key 2)"
+            );
+            assert!(
+                map.contains_key(&Value::Integer(3.into())),
+                "Should contain aaguid (key 3)"
+            );
+            assert!(
+                map.contains_key(&Value::Integer(4.into())),
+                "Should contain options (key 4)"
+            );
+            assert!(
+                map.contains_key(&Value::Integer(9.into())),
+                "Should contain transports (key 9)"
+            );
+            assert!(
+                map.contains_key(&Value::Integer(10.into())),
+                "Should contain algorithms (key 10)"
+            );
+        } else {
+            panic!("CBOR should decode to a map");
+        }
+
+        // Print the generated CBOR for verification
+        println!("Generated CBOR hex: {}", hex::encode(&cbor_bytes));
+    }
+
+    #[test]
+    fn test_aaguid_parsing() {
+        let result = parse_uuid_to_bytes(AAGUID);
+        assert!(result.is_ok(), "AAGUID parsing should succeed");
+        
+        let aaguid_bytes = result.unwrap();
+        assert_eq!(aaguid_bytes.len(), 16, "AAGUID should be 16 bytes");
+        assert_eq!(aaguid_bytes[0], 0xd5, "First byte should be 0xd5");
+        assert_eq!(aaguid_bytes[1], 0x48, "Second byte should be 0x48");
+
+        // Verify full expected AAGUID
+        let expected_hex = "d548826e79b4db40a3d811116f7e8349";
+        let expected_bytes = hex::decode(expected_hex).unwrap();
+        assert_eq!(
+            aaguid_bytes, expected_bytes,
+            "AAGUID should match expected value"
+        );
+    }
+    
+    #[test]
+    fn test_parse_clsid_to_guid() {
+        let result = parse_clsid_to_guid();
+        assert!(result.is_ok(), "CLSID parsing should succeed");
+    }
+}
