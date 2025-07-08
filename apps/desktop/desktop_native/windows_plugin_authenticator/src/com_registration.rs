@@ -1,4 +1,3 @@
-use std::collections::BTreeMap;
 use std::ffi::c_uchar;
 use std::ptr;
 
@@ -57,47 +56,47 @@ fn generate_cbor_authenticator_info() -> Result<Vec<u8>, String> {
     let aaguid_bytes = parse_uuid_to_bytes(AAGUID)?;
 
     // Create the authenticator info map according to CTAP2 spec
-    let mut authenticator_info = BTreeMap::new();
+    // Using Vec<(Value, Value)> because that's what ciborium::Value::Map expects
+    let mut authenticator_info = Vec::new();
 
     // 1: versions - Array of supported FIDO versions
-    authenticator_info.insert(
+    authenticator_info.push((
         Value::Integer(1.into()),
         Value::Array(vec![
             Value::Text("FIDO_2_0".to_string()),
             Value::Text("FIDO_2_1".to_string()),
         ]),
-    );
+    ));
 
     // 2: extensions - Array of supported extensions (empty for now)
-    authenticator_info.insert(Value::Integer(2.into()), Value::Array(vec![]));
+    authenticator_info.push((Value::Integer(2.into()), Value::Array(vec![])));
 
     // 3: aaguid - 16-byte AAGUID
-    authenticator_info.insert(Value::Integer(3.into()), Value::Bytes(aaguid_bytes));
+    authenticator_info.push((Value::Integer(3.into()), Value::Bytes(aaguid_bytes)));
 
     // 4: options - Map of supported options
-    let mut options = BTreeMap::new();
-    options.insert(Value::Text("rk".to_string()), Value::Bool(true)); // resident key
-    options.insert(Value::Text("up".to_string()), Value::Bool(true)); // user presence
-    options.insert(Value::Text("uv".to_string()), Value::Bool(true)); // user verification
-    authenticator_info.insert(Value::Integer(4.into()), Value::Map(options));
+    let options = vec![
+        (Value::Text("rk".to_string()), Value::Bool(true)), // resident key
+        (Value::Text("up".to_string()), Value::Bool(true)), // user presence
+        (Value::Text("uv".to_string()), Value::Bool(true)), // user verification
+    ];
+    authenticator_info.push((Value::Integer(4.into()), Value::Map(options)));
 
     // 9: transports - Array of supported transports
-    authenticator_info.insert(
+    authenticator_info.push((
         Value::Integer(9.into()),
         Value::Array(vec![Value::Text("internal".to_string())]),
-    );
+    ));
 
     // 10: algorithms - Array of supported algorithms
-    let mut algorithm = BTreeMap::new();
-    algorithm.insert(Value::Text("alg".to_string()), Value::Integer((-7).into())); // ES256
-    algorithm.insert(
-        Value::Text("type".to_string()),
-        Value::Text("public-key".to_string()),
-    );
-    authenticator_info.insert(
+    let algorithm = vec![
+        (Value::Text("alg".to_string()), Value::Integer((-7).into())), // ES256
+        (Value::Text("type".to_string()), Value::Text("public-key".to_string())),
+    ];
+    authenticator_info.push((
         Value::Integer(10.into()),
         Value::Array(vec![Value::Map(algorithm)]),
-    );
+    ));
 
     // Encode to CBOR
     let mut buffer = Vec::new();
