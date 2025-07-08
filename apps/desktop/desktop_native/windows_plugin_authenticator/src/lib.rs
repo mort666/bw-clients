@@ -2,10 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_camel_case_types)]
 
-use std::ffi::{c_uchar, c_ulong, OsString};
-use std::os::windows::ffi::OsStrExt;
 use std::{thread, time::Duration};
-use windows_core::*;
 
 // New modular structure
 mod assert;

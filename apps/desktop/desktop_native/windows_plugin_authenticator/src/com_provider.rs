@@ -202,11 +202,11 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                     }
                 };
 
-                let rp_name = if rp_info.pwszName.is_null() {
-                    String::new()
-                } else {
-                    wstr_to_string(rp_info.pwszName).unwrap_or_default()
-                };
+                // let rp_name = if rp_info.pwszName.is_null() {
+                //     String::new()
+                // } else {
+                //     wstr_to_string(rp_info.pwszName).unwrap_or_default()
+                // };
 
                 // Extract user information
                 if decoded_request.pUserInformation.is_null() {
@@ -257,18 +257,6 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                         decoded_request.cbClientDataHash as usize,
                     );
                     hash_slice.to_vec()
-                };
-
-                // Extract RP ID raw bytes for authenticator data
-                let rpid_bytes = if decoded_request.cbRpId > 0 && !decoded_request.pbRpId.is_null()
-                {
-                    let rpid_slice = std::slice::from_raw_parts(
-                        decoded_request.pbRpId,
-                        decoded_request.cbRpId as usize,
-                    );
-                    rpid_slice.to_vec()
-                } else {
-                    rpid.as_bytes().to_vec()
                 };
 
                 // Extract supported algorithms
@@ -345,10 +333,10 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                     // Create proper WebAuthn response from passkey_response
                     match passkey_response {
                         PasskeyResponse::RegistrationResponse {
-                            credential_id,
+                            credential_id: _,
                             attestation_object,
-                            rp_id,
-                            client_data_hash,
+                            rp_id: _,
+                            client_data_hash: _,
                         } => {
                             util::message("Creating WebAuthn make credential response");
 
@@ -512,8 +500,8 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                             authenticator_data,
                             signature,
                             user_handle,
-                            rp_id,
-                            client_data_hash,
+                            rp_id: _,
+                            client_data_hash: _,
                         } => {
                             util::message("Creating WebAuthn get assertion response");
 

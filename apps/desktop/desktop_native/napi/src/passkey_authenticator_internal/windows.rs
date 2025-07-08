@@ -1,10 +1,7 @@
 use anyhow::{anyhow, Result};
 use napi::{
     bindgen_prelude::Promise,
-    threadsafe_function::{
-        ErrorStrategy::CalleeHandled, ThreadsafeFunction, ThreadsafeFunctionCallMode,
-    },
-    JsObject,
+    threadsafe_function::{ErrorStrategy::CalleeHandled, ThreadsafeFunction},
 };
 use serde_json;
 use tokio::sync::mpsc;
