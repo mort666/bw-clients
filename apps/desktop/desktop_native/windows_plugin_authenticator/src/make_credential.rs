@@ -5,7 +5,7 @@ use windows_core::{s, HRESULT};
 
 use crate::com_provider::ExperimentalWebAuthnPluginOperationResponse;
 use crate::types::*;
-use crate::util::{self, delay_load};
+use crate::util::{debug_log, delay_load};
 use crate::webauthn::WEBAUTHN_CREDENTIAL_LIST;
 
 /// Windows WebAuthn registration request context  
@@ -114,7 +114,7 @@ impl Drop for DecodedMakeCredentialRequest {
     fn drop(&mut self) {
         if !self.ptr.is_null() {
             if let Some(free_fn) = self.free_fn {
-                util::message("Freeing decoded make credential request");
+                debug_log("Freeing decoded make credential request");
                 unsafe {
                     free_fn(self.ptr);
                 }
@@ -127,7 +127,7 @@ impl Drop for DecodedMakeCredentialRequest {
 pub unsafe fn decode_make_credential_request(
     encoded_request: &[u8],
 ) -> Result<DecodedMakeCredentialRequest, String> {
-    util::message("Attempting to decode make credential request using Windows API");
+    debug_log("Attempting to decode make credential request using Windows API");
 
     // Try to load the Windows API decode function
     let decode_fn = match delay_load::<EXPERIMENTAL_WebAuthNDecodeMakeCredentialRequestFn>(
@@ -160,7 +160,7 @@ pub unsafe fn decode_make_credential_request(
 
     // Check if the call succeeded (following C++ THROW_IF_FAILED pattern)
     if result.is_err() {
-        util::message(&format!(
+        debug_log(&format!(
             "ERROR: EXPERIMENTAL_WebAuthNDecodeMakeCredentialRequest failed with HRESULT: 0x{:08x}",
             result.0
         ));
@@ -171,7 +171,7 @@ pub unsafe fn decode_make_credential_request(
     }
 
     if pp_make_credential_request.is_null() {
-        util::message("ERROR: Windows API succeeded but returned null pointer");
+        debug_log("ERROR: Windows API succeeded but returned null pointer");
         return Err("Windows API returned null pointer".to_string());
     }
 
@@ -186,7 +186,7 @@ pub fn send_registration_request(
     transaction_id: &str,
     request: &WindowsRegistrationRequest,
 ) -> Option<PasskeyResponse> {
-    util::message(&format!("Registration request data - RP ID: {}, User ID: {} bytes, User name: {}, Client data hash: {} bytes, Algorithms: {:?}, Excluded credentials: {}", 
+    debug_log(&format!("Registration request data - RP ID: {}, User ID: {} bytes, User name: {}, Client data hash: {} bytes, Algorithms: {:?}, Excluded credentials: {}", 
         request.rpid, request.user_id.len(), request.user_name, request.client_data_hash.len(), request.supported_algorithms, request.excluded_credentials.len()));
 
     let passkey_request = PasskeyRegistrationRequest {
@@ -203,11 +203,11 @@ pub fn send_registration_request(
 
     match serde_json::to_string(&passkey_request) {
         Ok(request_json) => {
-            util::message(&format!("Sending registration request: {}", request_json));
+            debug_log(&format!("Sending registration request: {}", request_json));
             crate::ipc::send_passkey_request(RequestType::Registration, request_json, &request.rpid)
         }
         Err(e) => {
-            util::message(&format!(
+            debug_log(&format!(
                 "ERROR: Failed to serialize registration request: {}",
                 e
             ));

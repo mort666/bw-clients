@@ -2,7 +2,7 @@ use std::sync::Mutex;
 use tokio::sync::{mpsc, oneshot};
 
 use crate::types::*;
-use crate::util;
+use crate::util::debug_log;
 
 /// Global channel sender for request notifications
 static REQUEST_SENDER: Mutex<Option<mpsc::UnboundedSender<RequestEvent>>> = Mutex::new(None);
@@ -12,10 +12,10 @@ pub fn set_request_sender(sender: mpsc::UnboundedSender<RequestEvent>) {
     match REQUEST_SENDER.lock() {
         Ok(mut tx) => {
             *tx = Some(sender);
-            util::message("Passkey request callback registered");
+            debug_log("Passkey request callback registered");
         }
         Err(e) => {
-            util::message(&format!("Failed to register passkey callback: {:?}", e));
+            debug_log(&format!("Failed to register passkey callback: {:?}", e));
         }
     }
 }
@@ -32,7 +32,7 @@ pub fn send_passkey_request(
         RequestType::Sync => format!("sync request for {}", rpid),
     };
 
-    util::message(&format!("Passkey {}", request_desc));
+    debug_log(&format!("Passkey {}", request_desc));
 
     if let Ok(tx_guard) = REQUEST_SENDER.lock() {
         if let Some(sender) = tx_guard.as_ref() {
@@ -47,20 +47,20 @@ pub fn send_passkey_request(
                 // Wait for response from TypeScript callback
                 match response_rx.blocking_recv() {
                     Ok(response) => {
-                        util::message(&format!("Received callback response {:?}", response));
+                        debug_log(&format!("Received callback response {:?}", response));
                         Some(response)
                     }
                     Err(_) => {
-                        util::message("No response from callback");
+                        debug_log("No response from callback");
                         None
                     }
                 }
             } else {
-                util::message("Failed to send event to callback");
+                debug_log("Failed to send event to callback");
                 None
             }
         } else {
-            util::message("No callback registered for passkey requests");
+            debug_log("No callback registered for passkey requests");
             None
         }
     } else {

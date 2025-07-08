@@ -4,9 +4,9 @@ use std::ptr;
 use windows_core::{s, HRESULT};
 
 use crate::com_provider::ExperimentalWebAuthnPluginOperationResponse;
-use crate::util::delay_load;
+use crate::types::*;
+use crate::util::{debug_log, delay_load};
 use crate::webauthn::WEBAUTHN_CREDENTIAL_LIST;
-use crate::{types::*, util};
 
 // Windows API types for WebAuthn (from webauthn.h.sample)
 #[repr(C)]
@@ -63,7 +63,7 @@ impl Drop for DecodedGetAssertionRequest {
     fn drop(&mut self) {
         if !self.ptr.is_null() {
             if let Some(free_fn) = self.free_fn {
-                util::message("Freeing decoded get assertion request");
+                debug_log("Freeing decoded get assertion request");
                 unsafe {
                     free_fn(self.ptr);
                 }
@@ -76,7 +76,7 @@ impl Drop for DecodedGetAssertionRequest {
 pub unsafe fn decode_get_assertion_request(
     encoded_request: &[u8],
 ) -> Result<DecodedGetAssertionRequest, String> {
-    util::message("Attempting to decode get assertion request using Windows API");
+    debug_log("Attempting to decode get assertion request using Windows API");
 
     // Load the Windows WebAuthn API function
     let decode_fn: Option<EXPERIMENTAL_WebAuthNDecodeGetAssertionRequestFn> = delay_load(
@@ -138,7 +138,7 @@ pub fn send_assertion_request(
         window_xy: Position { x: 400, y: 400 },
     };
 
-    util::message(&format!(
+    debug_log(&format!(
         "Assertion request data - RP ID: {}, Client data hash: {} bytes, Allowed credentials: {}",
         request.rpid,
         request.client_data_hash.len(),
@@ -147,11 +147,11 @@ pub fn send_assertion_request(
 
     match serde_json::to_string(&passkey_request) {
         Ok(request_json) => {
-            util::message(&format!("Sending assertion request: {}", request_json));
+            debug_log(&format!("Sending assertion request: {}", request_json));
             crate::ipc::send_passkey_request(RequestType::Assertion, request_json, &request.rpid)
         }
         Err(e) => {
-            util::message(&format!(
+            debug_log(&format!(
                 "ERROR: Failed to serialize assertion request: {}",
                 e
             ));
@@ -217,7 +217,7 @@ pub unsafe fn create_get_assertion_response(
     // Encode to CBOR with error handling
     let mut cbor_data = Vec::new();
     if let Err(e) = ciborium::ser::into_writer(&cbor_value, &mut cbor_data) {
-        util::message(&format!(
+        debug_log(&format!(
             "ERROR: Failed to encode CBOR assertion response: {:?}",
             e
         ));

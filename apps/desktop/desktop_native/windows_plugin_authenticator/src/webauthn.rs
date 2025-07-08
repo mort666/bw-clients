@@ -7,7 +7,7 @@
 
 use windows_core::*;
 
-use crate::util::{self, *};
+use crate::util::{debug_log, delay_load};
 use crate::com_buffer::ComBuffer;
 
 /// Windows WebAuthn Authenticator Options structure
@@ -198,7 +198,7 @@ pub type EXPERIMENTAL_WebAuthNPluginAuthenticatorRemoveAllCredentialsFnDeclarati
 pub fn add_credentials(
     mut credentials_list: ExperimentalWebAuthnPluginCredentialDetailsList,
 ) -> std::result::Result<(), String> {
-    util::message("Loading EXPERIMENTAL_WebAuthNPluginAuthenticatorAddCredentials function...");
+    debug_log("Loading EXPERIMENTAL_WebAuthNPluginAuthenticatorAddCredentials function...");
     
     let result = unsafe {
         delay_load::<EXPERIMENTAL_WebAuthNPluginAuthenticatorAddCredentialsFnDeclaration>(
@@ -209,26 +209,26 @@ pub fn add_credentials(
 
     match result {
         Some(api) => {
-            util::message("Function loaded successfully, calling API...");
-            util::message(&format!("Credential list: plugin_clsid valid: {}, credential_count: {}", 
+            debug_log("Function loaded successfully, calling API...");
+            debug_log(&format!("Credential list: plugin_clsid valid: {}, credential_count: {}", 
                 !credentials_list.plugin_clsid.is_null(), credentials_list.credential_count));
             
             let result = unsafe { api(&mut credentials_list) };
 
             if result.is_err() {
                 let error_code = result.0;
-                util::message(&format!("API call failed with HRESULT: 0x{:x}", error_code));
+                debug_log(&format!("API call failed with HRESULT: 0x{:x}", error_code));
                 return Err(format!(
                     "Error: Error response from EXPERIMENTAL_WebAuthNPluginAuthenticatorAddCredentials()\nHRESULT: 0x{:x}\n{}",
                     error_code, result.message()
                 ));
             }
 
-            util::message("API call succeeded");
+            debug_log("API call succeeded");
             Ok(())
         },
         None => {
-            util::message("Failed to load EXPERIMENTAL_WebAuthNPluginAuthenticatorAddCredentials function from webauthn.dll");
+            debug_log("Failed to load EXPERIMENTAL_WebAuthNPluginAuthenticatorAddCredentials function from webauthn.dll");
             Err(String::from("Error: Can't complete add_credentials(), as the function EXPERIMENTAL_WebAuthNPluginAuthenticatorAddCredentials can't be loaded."))
         }
     }
@@ -305,7 +305,7 @@ pub fn get_all_credentials(
 pub fn remove_all_credentials(
     plugin_clsid: String,
 ) -> std::result::Result<(), String> {
-    util::message("Loading EXPERIMENTAL_WebAuthNPluginAuthenticatorRemoveAllCredentials function...");
+    debug_log("Loading EXPERIMENTAL_WebAuthNPluginAuthenticatorRemoveAllCredentials function...");
     
     let result = unsafe {
         delay_load::<EXPERIMENTAL_WebAuthNPluginAuthenticatorRemoveAllCredentialsFnDeclaration>(
@@ -316,7 +316,7 @@ pub fn remove_all_credentials(
 
     match result {
         Some(api) => {
-            util::message("Function loaded successfully, calling API...");
+            debug_log("Function loaded successfully, calling API...");
             // Create the wide string and keep it alive during the API call
             let mut clsid_wide: Vec<u16> = plugin_clsid.encode_utf16().collect();
             clsid_wide.push(0); // null terminator
@@ -325,7 +325,7 @@ pub fn remove_all_credentials(
 
             if result.is_err() {
                 let error_code = result.0;
-                util::message(&format!("API call failed with HRESULT: 0x{:x}", error_code));
+                debug_log(&format!("API call failed with HRESULT: 0x{:x}", error_code));
                 
                 return Err(format!(
                     "Error: Error response from EXPERIMENTAL_WebAuthNPluginAuthenticatorRemoveAllCredentials()\nHRESULT: 0x{:x}\n{}",
@@ -333,11 +333,11 @@ pub fn remove_all_credentials(
                 ));
             }
 
-            util::message("API call succeeded");
+            debug_log("API call succeeded");
             Ok(())
         },
         None => {
-            util::message("Failed to load EXPERIMENTAL_WebAuthNPluginAuthenticatorRemoveAllCredentials function from webauthn.dll");
+            debug_log("Failed to load EXPERIMENTAL_WebAuthNPluginAuthenticatorRemoveAllCredentials function from webauthn.dll");
             Err(String::from("Error: Can't complete remove_all_credentials(), as the function EXPERIMENTAL_WebAuthNPluginAuthenticatorRemoveAllCredentials can't be loaded."))
         }
     }

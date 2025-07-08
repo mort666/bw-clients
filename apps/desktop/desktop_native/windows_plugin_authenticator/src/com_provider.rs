@@ -11,7 +11,7 @@ use crate::make_credential::{
     WindowsRegistrationRequest,
 };
 use crate::types::*;
-use crate::util::{self, wstr_to_string};
+use crate::util::{debug_log, wstr_to_string};
 use crate::webauthn::WEBAUTHN_CREDENTIAL_LIST;
 
 /// Used when creating and asserting credentials.
@@ -73,11 +73,11 @@ pub unsafe fn parse_credential_list(credential_list: &WEBAUTHN_CREDENTIAL_LIST) 
     let mut allowed_credentials = Vec::new();
 
     if credential_list.cCredentials == 0 || credential_list.ppCredentials.is_null() {
-        util::message("No credentials in credential list");
+        debug_log("No credentials in credential list");
         return allowed_credentials;
     }
 
-    util::message(&format!(
+    debug_log(&format!(
         "Parsing {} credentials from credential list",
         credential_list.cCredentials
     ));
@@ -90,14 +90,14 @@ pub unsafe fn parse_credential_list(credential_list: &WEBAUTHN_CREDENTIAL_LIST) 
 
     for (i, &credential_ptr) in credentials_array.iter().enumerate() {
         if credential_ptr.is_null() {
-            util::message(&format!("WARNING: Credential {} is null, skipping", i));
+            debug_log(&format!("WARNING: Credential {} is null, skipping", i));
             continue;
         }
 
         let credential = &*credential_ptr;
 
         if credential.cbId == 0 || credential.pbId.is_null() {
-            util::message(&format!(
+            debug_log(&format!(
                 "WARNING: Credential {} has invalid ID, skipping",
                 i
             ));
@@ -109,13 +109,13 @@ pub unsafe fn parse_credential_list(credential_list: &WEBAUTHN_CREDENTIAL_LIST) 
             std::slice::from_raw_parts(credential.pbId, credential.cbId as usize);
 
         allowed_credentials.push(credential_id_slice.to_vec());
-        util::message(&format!(
+        debug_log(&format!(
             "Parsed credential {}: {} bytes",
             i, credential.cbId
         ));
     }
 
-    util::message(&format!(
+    debug_log(&format!(
         "Successfully parsed {} allowed credentials",
         allowed_credentials.len()
     ));
@@ -134,34 +134,34 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
         request: *const ExperimentalWebAuthnPluginOperationRequest,
         response: *mut *mut ExperimentalWebAuthnPluginOperationResponse,
     ) -> HRESULT {
-        util::message("=== EXPERIMENTAL_PluginMakeCredential() called ===");
+        debug_log("=== EXPERIMENTAL_PluginMakeCredential() called ===");
 
         if request.is_null() {
-            util::message("ERROR: NULL request pointer");
+            debug_log("ERROR: NULL request pointer");
             return HRESULT(-1);
         }
 
         if response.is_null() {
-            util::message("ERROR: NULL response pointer");
+            debug_log("ERROR: NULL response pointer");
             return HRESULT(-1);
         }
 
         let req = &*request;
         let transaction_id = format!("{:?}", req.transaction_id);
 
-        util::message(&format!("Transaction ID: {}", transaction_id));
-        util::message(&format!("Window Handle: {:?}", req.window_handle));
-        util::message(&format!(
+        debug_log(&format!("Transaction ID: {}", transaction_id));
+        debug_log(&format!("Window Handle: {:?}", req.window_handle));
+        debug_log(&format!(
             "Request Signature Byte Count: {}",
             req.request_signature_byte_count
         ));
-        util::message(&format!(
+        debug_log(&format!(
             "Encoded Request Byte Count: {}",
             req.encoded_request_byte_count
         ));
 
         if req.encoded_request_byte_count == 0 || req.encoded_request_pointer.is_null() {
-            util::message("ERROR: No encoded request data provided");
+            debug_log("ERROR: No encoded request data provided");
             return HRESULT(-1);
         }
 
@@ -170,7 +170,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
             req.encoded_request_byte_count as usize,
         );
 
-        util::message(&format!(
+        debug_log(&format!(
             "Encoded request: {} bytes",
             encoded_request_slice.len()
         ));
@@ -179,24 +179,24 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
         match decode_make_credential_request(encoded_request_slice) {
             Ok(decoded_wrapper) => {
                 let decoded_request = decoded_wrapper.as_ref();
-                util::message("Successfully decoded make credential request using Windows API");
+                debug_log("Successfully decoded make credential request using Windows API");
 
                 // Extract RP information
                 if decoded_request.pRpInformation.is_null() {
-                    util::message("ERROR: RP information is null");
+                    debug_log("ERROR: RP information is null");
                     return HRESULT(-1);
                 }
 
                 let rp_info = &*decoded_request.pRpInformation;
 
                 let rpid = if rp_info.pwszId.is_null() {
-                    util::message("ERROR: RP ID is null");
+                    debug_log("ERROR: RP ID is null");
                     return HRESULT(-1);
                 } else {
                     match wstr_to_string(rp_info.pwszId) {
                         Ok(id) => id,
                         Err(e) => {
-                            util::message(&format!("ERROR: Failed to decode RP ID: {}", e));
+                            debug_log(&format!("ERROR: Failed to decode RP ID: {}", e));
                             return HRESULT(-1);
                         }
                     }
@@ -210,14 +210,14 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
 
                 // Extract user information
                 if decoded_request.pUserInformation.is_null() {
-                    util::message("ERROR: User information is null");
+                    debug_log("ERROR: User information is null");
                     return HRESULT(-1);
                 }
 
                 let user = &*decoded_request.pUserInformation;
 
                 let user_id = if user.pbId.is_null() || user.cbId == 0 {
-                    util::message("ERROR: User ID is required for registration");
+                    debug_log("ERROR: User ID is required for registration");
                     return HRESULT(-1);
                 } else {
                     let id_slice = std::slice::from_raw_parts(user.pbId, user.cbId as usize);
@@ -225,13 +225,13 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                 };
 
                 let user_name = if user.pwszName.is_null() {
-                    util::message("ERROR: User name is required for registration");
+                    debug_log("ERROR: User name is required for registration");
                     return HRESULT(-1);
                 } else {
                     match wstr_to_string(user.pwszName) {
                         Ok(name) => name,
                         Err(_) => {
-                            util::message("ERROR: Failed to decode user name");
+                            debug_log("ERROR: Failed to decode user name");
                             return HRESULT(-1);
                         }
                     }
@@ -249,7 +249,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                 let client_data_hash = if decoded_request.cbClientDataHash == 0
                     || decoded_request.pbClientDataHash.is_null()
                 {
-                    util::message("ERROR: Client data hash is required for registration");
+                    debug_log("ERROR: Client data hash is required for registration");
                     return HRESULT(-1);
                 } else {
                     let hash_slice = std::slice::from_raw_parts(
@@ -298,7 +298,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                 // Extract excluded credentials from credential list (for make credential, these are credentials to exclude)
                 let excluded_credentials = parse_credential_list(&decoded_request.CredentialList);
                 if !excluded_credentials.is_empty() {
-                    util::message(&format!(
+                    debug_log(&format!(
                         "Found {} excluded credentials for make credential",
                         excluded_credentials.len()
                     ));
@@ -316,7 +316,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                     supported_algorithms,
                 };
 
-                util::message(&format!(
+                debug_log(&format!(
                     "Make credential request - RP: {}, User: {}",
                     rpid, registration_request.user_name
                 ));
@@ -325,7 +325,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                 if let Some(passkey_response) =
                     send_registration_request(&transaction_id, &registration_request)
                 {
-                    util::message(&format!(
+                    debug_log(&format!(
                         "Registration response received: {:?}",
                         passkey_response
                     ));
@@ -338,16 +338,16 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                             rp_id: _,
                             client_data_hash: _,
                         } => {
-                            util::message("Creating WebAuthn make credential response");
+                            debug_log("Creating WebAuthn make credential response");
 
                             match create_make_credential_response(attestation_object) {
                                 Ok(webauthn_response) => {
-                                    util::message("Successfully created WebAuthn response");
+                                    debug_log("Successfully created WebAuthn response");
                                     *response = webauthn_response;
                                     HRESULT(0)
                                 }
                                 Err(e) => {
-                                    util::message(&format!(
+                                    debug_log(&format!(
                                         "ERROR: Failed to create WebAuthn response: {}",
                                         e
                                     ));
@@ -357,26 +357,24 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                             }
                         }
                         PasskeyResponse::Error { message } => {
-                            util::message(&format!("Registration request failed: {}", message));
+                            debug_log(&format!("Registration request failed: {}", message));
                             *response = ptr::null_mut();
                             HRESULT(-1)
                         }
                         _ => {
-                            util::message(
-                                "ERROR: Unexpected response type for registration request",
-                            );
+                            debug_log("ERROR: Unexpected response type for registration request");
                             *response = ptr::null_mut();
                             HRESULT(-1)
                         }
                     }
                 } else {
-                    util::message("ERROR: No response from registration request");
+                    debug_log("ERROR: No response from registration request");
                     *response = ptr::null_mut();
                     HRESULT(-1)
                 }
             }
             Err(e) => {
-                util::message(&format!(
+                debug_log(&format!(
                     "ERROR: Failed to decode make credential request: {}",
                     e
                 ));
@@ -391,24 +389,24 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
         request: *const ExperimentalWebAuthnPluginOperationRequest,
         response: *mut *mut ExperimentalWebAuthnPluginOperationResponse,
     ) -> HRESULT {
-        util::message("EXPERIMENTAL_PluginGetAssertion() called");
+        debug_log("EXPERIMENTAL_PluginGetAssertion() called");
 
         // Validate input parameters
         if request.is_null() || response.is_null() {
-            util::message("Invalid parameters passed to EXPERIMENTAL_PluginGetAssertion");
+            debug_log("Invalid parameters passed to EXPERIMENTAL_PluginGetAssertion");
             return HRESULT(-1);
         }
 
         let req = &*request;
         let transaction_id = format!("{:?}", req.transaction_id);
 
-        util::message(&format!(
+        debug_log(&format!(
             "Get assertion request - Transaction: {}",
             transaction_id
         ));
 
         if req.encoded_request_byte_count == 0 || req.encoded_request_pointer.is_null() {
-            util::message("ERROR: No encoded request data provided");
+            debug_log("ERROR: No encoded request data provided");
             *response = ptr::null_mut();
             return HRESULT(-1);
         }
@@ -422,18 +420,18 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
         match decode_get_assertion_request(encoded_request_slice) {
             Ok(decoded_wrapper) => {
                 let decoded_request = decoded_wrapper.as_ref();
-                util::message("Successfully decoded get assertion request using Windows API");
+                debug_log("Successfully decoded get assertion request using Windows API");
 
                 // Extract RP information
                 let rpid = if decoded_request.pwszRpId.is_null() {
-                    util::message("ERROR: RP ID is null");
+                    debug_log("ERROR: RP ID is null");
                     *response = ptr::null_mut();
                     return HRESULT(-1);
                 } else {
                     match wstr_to_string(decoded_request.pwszRpId) {
                         Ok(id) => id,
                         Err(e) => {
-                            util::message(&format!("ERROR: Failed to decode RP ID: {}", e));
+                            debug_log(&format!("ERROR: Failed to decode RP ID: {}", e));
                             *response = ptr::null_mut();
                             return HRESULT(-1);
                         }
@@ -444,7 +442,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                 let client_data_hash = if decoded_request.cbClientDataHash == 0
                     || decoded_request.pbClientDataHash.is_null()
                 {
-                    util::message("ERROR: Client data hash is required for assertion");
+                    debug_log("ERROR: Client data hash is required for assertion");
                     *response = ptr::null_mut();
                     return HRESULT(-1);
                 } else {
@@ -478,7 +476,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                     user_verification: user_verification.unwrap_or_default(),
                 };
 
-                util::message(&format!(
+                debug_log(&format!(
                     "Get assertion request - RP: {}, Allowed credentials: {}",
                     rpid,
                     allowed_credentials.len()
@@ -488,7 +486,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                 if let Some(passkey_response) =
                     send_assertion_request(&transaction_id, &assertion_request)
                 {
-                    util::message(&format!(
+                    debug_log(&format!(
                         "Assertion response received: {:?}",
                         passkey_response
                     ));
@@ -503,7 +501,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                             rp_id: _,
                             client_data_hash: _,
                         } => {
-                            util::message("Creating WebAuthn get assertion response");
+                            debug_log("Creating WebAuthn get assertion response");
 
                             match create_get_assertion_response(
                                 credential_id,
@@ -512,14 +510,12 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                                 user_handle,
                             ) {
                                 Ok(webauthn_response) => {
-                                    util::message(
-                                        "Successfully created WebAuthn assertion response",
-                                    );
+                                    debug_log("Successfully created WebAuthn assertion response");
                                     *response = webauthn_response;
                                     HRESULT(0)
                                 }
                                 Err(e) => {
-                                    util::message(&format!(
+                                    debug_log(&format!(
                                         "ERROR: Failed to create WebAuthn assertion response: {}",
                                         e
                                     ));
@@ -529,24 +525,24 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
                             }
                         }
                         PasskeyResponse::Error { message } => {
-                            util::message(&format!("Assertion request failed: {}", message));
+                            debug_log(&format!("Assertion request failed: {}", message));
                             *response = ptr::null_mut();
                             HRESULT(-1)
                         }
                         _ => {
-                            util::message("ERROR: Unexpected response type for assertion request");
+                            debug_log("ERROR: Unexpected response type for assertion request");
                             *response = ptr::null_mut();
                             HRESULT(-1)
                         }
                     }
                 } else {
-                    util::message("ERROR: No response from assertion request");
+                    debug_log("ERROR: No response from assertion request");
                     *response = ptr::null_mut();
                     HRESULT(-1)
                 }
             }
             Err(e) => {
-                util::message(&format!(
+                debug_log(&format!(
                     "ERROR: Failed to decode get assertion request: {}",
                     e
                 ));
@@ -560,7 +556,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
         &self,
         request: *const ExperimentalWebAuthnPluginCancelOperationRequest,
     ) -> HRESULT {
-        util::message("EXPERIMENTAL_PluginCancelOperation() called");
+        debug_log("EXPERIMENTAL_PluginCancelOperation() called");
         HRESULT(0)
     }
 }

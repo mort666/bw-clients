@@ -3,12 +3,12 @@ use serde_json;
 
 use crate::ipc::send_passkey_request;
 use crate::types::*;
-use crate::util::{self, wstr_to_string};
+use crate::util::{debug_log, wstr_to_string};
 use crate::webauthn::*;
 
 /// Helper for sync requests - requests credentials from Electron for a specific RP ID
 pub fn send_sync_request(rpid: &str) -> Option<PasskeyResponse> {
-    util::message(&format!(
+    debug_log(&format!(
         "[SYNC] send_sync_request called for RP ID: {}",
         rpid
     ));
@@ -17,27 +17,27 @@ pub fn send_sync_request(rpid: &str) -> Option<PasskeyResponse> {
         rp_id: rpid.to_string(),
     };
 
-    util::message(&format!("[SYNC] Created sync request for RP ID: {}", rpid));
+    debug_log(&format!("[SYNC] Created sync request for RP ID: {}", rpid));
 
     match serde_json::to_string(&request) {
         Ok(request_json) => {
-            util::message(&format!(
+            debug_log(&format!(
                 "[SYNC] Serialized sync request to JSON: {}",
                 request_json
             ));
-            util::message(&format!("[SYNC] Sending sync request to Electron via IPC"));
+            debug_log(&format!("[SYNC] Sending sync request to Electron via IPC"));
             let response = send_passkey_request(RequestType::Sync, request_json, rpid);
             match &response {
-                Some(resp) => util::message(&format!(
+                Some(resp) => debug_log(&format!(
                     "[SYNC] Received response from Electron: {:?}",
                     resp
                 )),
-                None => util::message("[SYNC] No response received from Electron"),
+                None => debug_log("[SYNC] No response received from Electron"),
             }
             response
         }
         Err(e) => {
-            util::message(&format!(
+            debug_log(&format!(
                 "[SYNC] ERROR: Failed to serialize sync request: {}",
                 e
             ));
@@ -51,7 +51,7 @@ pub fn sync_credentials_to_windows(
     credentials: Vec<SyncedCredential>,
     plugin_clsid: &str,
 ) -> Result<(), String> {
-    util::message(&format!(
+    debug_log(&format!(
         "[SYNC_TO_WIN] sync_credentials_to_windows called with {} credentials for plugin CLSID: {}",
         credentials.len(),
         plugin_clsid
@@ -61,7 +61,7 @@ pub fn sync_credentials_to_windows(
     let formatted_clsid = format!("{{{}}}", plugin_clsid);
 
     if credentials.is_empty() {
-        util::message("[SYNC_TO_WIN] No credentials to sync, proceeding with empty sync");
+        debug_log("[SYNC_TO_WIN] No credentials to sync, proceeding with empty sync");
     }
 
     // Convert Bitwarden credentials to Windows credential details
@@ -79,7 +79,7 @@ pub fn sync_credentials_to_windows(
             hex::encode(&cred.user_handle)
         };
 
-        util::message(&format!("[SYNC_TO_WIN] Converting credential {}: RP ID: {}, User: {}, Credential ID: {} ({} bytes), User ID: {} ({} bytes)", 
+        debug_log(&format!("[SYNC_TO_WIN] Converting credential {}: RP ID: {}, User: {}, Credential ID: {} ({} bytes), User ID: {} ({} bytes)", 
             i + 1, cred.rp_id, cred.user_name, truncated_cred_id, cred.credential_id.len(), truncated_user_id, cred.user_handle.len()));
 
         let win_cred = ExperimentalWebAuthnPluginCredentialDetails::create_from_bytes(
@@ -92,7 +92,7 @@ pub fn sync_credentials_to_windows(
         );
 
         win_credentials.push(win_cred);
-        util::message(&format!(
+        debug_log(&format!(
             "[SYNC_TO_WIN] Converted credential {} to Windows format",
             i + 1
         ));
@@ -105,17 +105,17 @@ pub fn sync_credentials_to_windows(
     );
 
     // First try to remove all existing credentials for this plugin
-    util::message("Attempting to remove all existing credentials before sync...");
+    debug_log("Attempting to remove all existing credentials before sync...");
     match remove_all_credentials(formatted_clsid.clone()) {
         Ok(()) => {
-            util::message("Successfully removed existing credentials");
+            debug_log("Successfully removed existing credentials");
         }
         Err(e) if e.contains("can't be loaded") => {
-            util::message("RemoveAllCredentials function not available - this is expected for some Windows versions");
+            debug_log("RemoveAllCredentials function not available - this is expected for some Windows versions");
             // This is fine, the function might not exist in all versions
         }
         Err(e) => {
-            util::message(&format!(
+            debug_log(&format!(
                 "Warning: Failed to remove existing credentials: {}",
                 e
             ));
@@ -125,17 +125,17 @@ pub fn sync_credentials_to_windows(
 
     // Add the new credentials (only if we have any)
     if credentials.is_empty() {
-        util::message("No credentials to add to Windows - sync completed successfully");
+        debug_log("No credentials to add to Windows - sync completed successfully");
         Ok(())
     } else {
-        util::message("Adding new credentials to Windows...");
+        debug_log("Adding new credentials to Windows...");
         match add_credentials(credentials_list) {
             Ok(()) => {
-                util::message("Successfully synced credentials to Windows");
+                debug_log("Successfully synced credentials to Windows");
                 Ok(())
             }
             Err(e) => {
-                util::message(&format!(
+                debug_log(&format!(
                     "ERROR: Failed to add credentials to Windows: {}",
                     e
                 ));
@@ -147,7 +147,7 @@ pub fn sync_credentials_to_windows(
 
 /// Gets all credentials from Windows for a specific plugin - used when Electron requests current state
 pub fn get_credentials_from_windows(plugin_clsid: &str) -> Result<Vec<SyncedCredential>, String> {
-    util::message(&format!(
+    debug_log(&format!(
         "Getting all credentials from Windows for plugin CLSID: {}",
         plugin_clsid
     ));
@@ -157,7 +157,7 @@ pub fn get_credentials_from_windows(plugin_clsid: &str) -> Result<Vec<SyncedCred
 
     match get_all_credentials(formatted_clsid) {
         Ok(Some(credentials_list)) => {
-            util::message(&format!(
+            debug_log(&format!(
                 "Retrieved {} credentials from Windows",
                 credentials_list.credential_count
             ));
@@ -223,7 +223,7 @@ pub fn get_credentials_from_windows(plugin_clsid: &str) -> Result<Vec<SyncedCred
                             user_handle: user_id,
                         };
 
-                        util::message(&format!("Converted Windows credential: RP ID: {}, User: {}, Credential ID: {} bytes", 
+                        debug_log(&format!("Converted Windows credential: RP ID: {}, User: {}, Credential ID: {} bytes", 
                             synced_cred.rp_id, synced_cred.user_name, synced_cred.credential_id.len()));
 
                         bitwarden_credentials.push(synced_cred);
@@ -234,11 +234,11 @@ pub fn get_credentials_from_windows(plugin_clsid: &str) -> Result<Vec<SyncedCred
             Ok(bitwarden_credentials)
         }
         Ok(None) => {
-            util::message("No credentials found in Windows");
+            debug_log("No credentials found in Windows");
             Ok(Vec::new())
         }
         Err(e) => {
-            util::message(&format!(
+            debug_log(&format!(
                 "ERROR: Failed to get credentials from Windows: {}",
                 e
             ));

@@ -83,7 +83,7 @@ pub fn file_log(msg: &str) {
     }
 }
 
-pub fn message(message: &str) {
+pub fn debug_log(message: &str) {
     file_log(message)
 }
 

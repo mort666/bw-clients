@@ -27,30 +27,32 @@ pub use types::{
     UserVerificationRequirement,
 };
 
+use crate::util::debug_log;
+
 // Re-export utilities
 
 /// Handles initialization and registration for the Bitwarden desktop app as a
 /// plugin authenticator with Windows.
 /// For now, also adds the authenticator
 pub fn register() -> std::result::Result<(), String> {
-    util::message("register() called");
+    debug_log("register() called");
 
-    util::message("About to call initialize_com_library()");
+    debug_log("About to call initialize_com_library()");
     let r = com_registration::initialize_com_library();
-    util::message(&format!("initialized the com library: {:?}", r));
+    debug_log(&format!("initialized the com library: {:?}", r));
 
-    util::message("About to call register_com_library()");
+    debug_log("About to call register_com_library()");
     let r = com_registration::register_com_library();
-    util::message(&format!("registered the com library: {:?}", r));
+    debug_log(&format!("registered the com library: {:?}", r));
 
-    util::message("About to call add_authenticator()");
+    debug_log("About to call add_authenticator()");
     let r = com_registration::add_authenticator();
     //let r = add_authenticator_using_wide_encoding();
-    util::message(&format!("added the authenticator: {:?}", r));
+    debug_log(&format!("added the authenticator: {:?}", r));
 
-    util::message("sleeping for 5 seconds...");
+    debug_log("sleeping for 5 seconds...");
     thread::sleep(Duration::from_millis(5000));
-    util::message("sleeping done");
+    debug_log("sleeping done");
 
     //let r = syncCredentials();
     //util::message(&format!("sync credentials: {:?}", r));
