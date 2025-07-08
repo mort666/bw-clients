@@ -5,7 +5,6 @@ use napi::{
 };
 use serde_json;
 use tokio::sync::mpsc;
-use windows_plugin_authenticator::util;
 
 // Use the PasskeyRequestEvent from the parent module
 pub use crate::passkey_authenticator::{PasskeyRequestEvent, SyncedCredential};
@@ -52,7 +51,6 @@ pub async fn on_request(
             match promise_result {
                 Ok(promise_result) => match promise_result.await {
                     Ok(result) => {
-                        util::message(&format!("CALLBACK COMPLETED WITH RESPONSE: {}", result));
                         // Parse the JSON response directly back to Rust enum
                         let response: windows_plugin_authenticator::PasskeyResponse =
                             match serde_json::from_str(&result) {

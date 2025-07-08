@@ -554,7 +554,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
 
     unsafe fn EXPERIMENTAL_PluginCancelOperation(
         &self,
-        request: *const ExperimentalWebAuthnPluginCancelOperationRequest,
+        _request: *const ExperimentalWebAuthnPluginCancelOperationRequest,
     ) -> HRESULT {
         debug_log("EXPERIMENTAL_PluginCancelOperation() called");
         HRESULT(0)
@@ -564,7 +564,7 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
 impl IClassFactory_Impl for Factory_Impl {
     fn CreateInstance(
         &self,
-        outer: windows_core::Ref<IUnknown>,
+        _outer: windows_core::Ref<IUnknown>,
         iid: *const windows_core::GUID,
         object: *mut *mut core::ffi::c_void,
     ) -> windows_core::Result<()> {
@@ -572,7 +572,7 @@ impl IClassFactory_Impl for Factory_Impl {
         unsafe { unknown.query(iid, object).ok() }
     }
 
-    fn LockServer(&self, lock: windows_core::BOOL) -> windows_core::Result<()> {
+    fn LockServer(&self, _lock: windows_core::BOOL) -> windows_core::Result<()> {
         Ok(())
     }
 }
