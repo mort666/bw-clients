@@ -85,7 +85,7 @@ export class EventService {
     let msg = "";
     let humanReadableMsg = "";
     let eventName = "";
-    const eventLink = ev.cipherId ? this.formatCipherId(ev, options) : "";
+    let eventLink = "";
 
     switch (ev.type) {
       // User
@@ -130,11 +130,13 @@ export class EventService {
         msg = this.i18nService.t("createdItemId", this.formatCipherId(ev, options));
         humanReadableMsg = this.i18nService.t("createdItemId", this.getShortId(ev.cipherId));
         eventName = this.i18nService.t("createdItemId", "");
+        eventLink = this.formatCipherId(ev, options);
         break;
       case EventType.Cipher_Updated:
         msg = this.i18nService.t("editedItemId", this.formatCipherId(ev, options));
         humanReadableMsg = this.i18nService.t("editedItemId", this.getShortId(ev.cipherId));
         eventName = this.i18nService.t("editedItemId", "");
+        eventLink = this.formatCipherId(ev, options);
         break;
       case EventType.Cipher_Deleted:
         msg = this.i18nService.t("permanentlyDeletedItemId", this.formatCipherId(ev, options));
@@ -143,15 +145,19 @@ export class EventService {
           this.getShortId(ev.cipherId),
         );
         eventName = this.i18nService.t("permanentlyDeletedItemId", "");
+        eventLink = this.formatCipherId(ev, options);
         break;
       case EventType.Cipher_SoftDeleted:
         msg = this.i18nService.t("deletedItemId", this.formatCipherId(ev, options));
         humanReadableMsg = this.i18nService.t("deletedItemId", this.getShortId(ev.cipherId));
+        eventName = this.i18nService.t("deletedItemId", "");
+        eventLink = this.formatCipherId(ev, options);
         break;
       case EventType.Cipher_Restored:
         msg = this.i18nService.t("restoredItemId", this.formatCipherId(ev, options));
         humanReadableMsg = this.i18nService.t("restoredItemId", this.formatCipherId(ev, options));
         eventName = this.i18nService.t("restoredItemId", "");
+        eventLink = this.formatCipherId(ev, options);
         break;
       case EventType.Cipher_AttachmentCreated:
         msg = this.i18nService.t("createdAttachmentForItem", this.formatCipherId(ev, options));
@@ -160,6 +166,7 @@ export class EventService {
           this.getShortId(ev.cipherId),
         );
         eventName = this.i18nService.t("createdAttachmentForItem", "");
+        eventLink = this.formatCipherId(ev, options);
         break;
       case EventType.Cipher_AttachmentDeleted:
         msg = this.i18nService.t("deletedAttachmentForItem", this.formatCipherId(ev, options));
@@ -168,21 +175,25 @@ export class EventService {
           this.getShortId(ev.cipherId),
         );
         eventName = this.i18nService.t("deletedAttachmentForItem", "");
+        eventLink = this.formatCipherId(ev, options);
         break;
       case EventType.Cipher_Shared:
         msg = this.i18nService.t("movedItemIdToOrg", this.formatCipherId(ev, options));
         humanReadableMsg = this.i18nService.t("movedItemIdToOrg", this.getShortId(ev.cipherId));
         eventName = this.i18nService.t("movedItemIdToOrg", "");
+        eventLink = this.formatCipherId(ev, options);
         break;
       case EventType.Cipher_ClientViewed:
         msg = this.i18nService.t("viewedItemId", this.formatCipherId(ev, options));
         humanReadableMsg = this.i18nService.t("viewedItemId", this.getShortId(ev.cipherId));
         eventName = this.i18nService.t("viewedItemId", "");
+        eventLink = this.formatCipherId(ev, options);
         break;
       case EventType.Cipher_ClientToggledPasswordVisible:
         msg = this.i18nService.t("viewedPasswordItemId", this.formatCipherId(ev, options));
         humanReadableMsg = this.i18nService.t("viewedPasswordItemId", this.getShortId(ev.cipherId));
         eventName = this.i18nService.t("viewedPasswordItemId", "");
+        eventLink = this.formatCipherId(ev, options);
         break;
       case EventType.Cipher_ClientToggledHiddenFieldVisible:
         msg = this.i18nService.t("viewedHiddenFieldItemId", this.formatCipherId(ev, options));
@@ -191,6 +202,7 @@ export class EventService {
           this.getShortId(ev.cipherId),
         );
         eventName = this.i18nService.t("viewedHiddenFieldItemId", "");
+        eventLink = this.formatCipherId(ev, options);
         break;
       case EventType.Cipher_ClientToggledCardNumberVisible:
         msg = this.i18nService.t("viewedCardNumberItemId", this.formatCipherId(ev, options));
@@ -199,6 +211,7 @@ export class EventService {
           this.getShortId(ev.cipherId),
         );
         eventName = this.i18nService.t("viewedCardNumberItemId", "");
+        eventLink = this.formatCipherId(ev, options);
         break;
       case EventType.Cipher_ClientToggledCardCodeVisible:
         msg = this.i18nService.t("viewedSecurityCodeItemId", this.formatCipherId(ev, options));
@@ -207,6 +220,7 @@ export class EventService {
           this.getShortId(ev.cipherId),
         );
         eventName = this.i18nService.t("viewedSecurityCodeItemId", "");
+        eventLink = this.formatCipherId(ev, options);
         break;
       case EventType.Cipher_ClientCopiedHiddenField:
         msg = this.i18nService.t("copiedHiddenFieldItemId", this.formatCipherId(ev, options));
@@ -215,11 +229,13 @@ export class EventService {
           this.getShortId(ev.cipherId),
         );
         eventName = this.i18nService.t("copiedHiddenFieldItemId", "");
+        eventLink = this.formatCipherId(ev, options);
         break;
       case EventType.Cipher_ClientCopiedPassword:
         msg = this.i18nService.t("copiedPasswordItemId", this.formatCipherId(ev, options));
         humanReadableMsg = this.i18nService.t("copiedPasswordItemId", this.getShortId(ev.cipherId));
         eventName = this.i18nService.t("copiedPasswordItemId", "");
+        eventLink = this.formatCipherId(ev, options);
         break;
       case EventType.Cipher_ClientCopiedCardCode:
         msg = this.i18nService.t("copiedSecurityCodeItemId", this.formatCipherId(ev, options));
@@ -228,11 +244,13 @@ export class EventService {
           this.getShortId(ev.cipherId),
         );
         eventName = this.i18nService.t("copiedSecurityCodeItemId", "");
+        eventLink = this.formatCipherId(ev, options);
         break;
       case EventType.Cipher_ClientAutofilled:
         msg = this.i18nService.t("autofilledItemId", this.formatCipherId(ev, options));
         humanReadableMsg = this.i18nService.t("autofilledItemId", this.getShortId(ev.cipherId));
         eventName = this.i18nService.t("autofilledItemId", "");
+        eventLink = this.formatCipherId(ev, options);
         break;
       case EventType.Cipher_UpdatedCollections:
         msg = this.i18nService.t("editedCollectionsForItem", this.formatCipherId(ev, options));
@@ -241,6 +259,7 @@ export class EventService {
           this.getShortId(ev.cipherId),
         );
         eventName = this.i18nService.t("editedCollectionsForItem", "");
+        eventLink = this.formatCipherId(ev, options);
         break;
       // Collection
       case EventType.Collection_Created:
