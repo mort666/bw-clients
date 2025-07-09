@@ -9,6 +9,10 @@ type ExampleOptions = {
     readonly d?: number;
     readonly e: string;
   };
+  readonly f: {
+    readonly h?: number;
+    readonly i: string;
+  };
 };
 
 const EXAMPLE_DEFAULTS = Object.freeze({
@@ -27,12 +31,16 @@ describe("mergeOptions", () => {
     const options: ExampleOptions = {
       required_func: () => {},
       b: "test",
+      f: {
+        i: "example",
+      },
     };
 
     const merged = mergeOptions(options, EXAMPLE_DEFAULTS);
 
     // can access properties
     expect(merged.a).toBe(42);
+    expect(merged.c.d).toBe(1);
 
     expect(merged).toEqual({
       a: 0,
