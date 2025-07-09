@@ -137,7 +137,7 @@ export abstract class BaseEventsComponent {
     endDate: string,
     continuationToken: string,
   ) {
-    await this.eventService.loadAllOrganizationCiphers(this.organizationId, this.userId);
+    await this.eventService.loadAllOrganizationInfo(this.organizationId, this.userId);
     const response = await this.requestEvents(startDate, endDate, continuationToken);
 
     const events = await Promise.all(

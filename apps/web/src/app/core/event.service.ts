@@ -1,8 +1,7 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
 import { Injectable } from "@angular/core";
 import { switchMap } from "rxjs";
 
+import { OrganizationUserApiService } from "@bitwarden/admin-console/common";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
@@ -17,15 +16,16 @@ import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 
 @Injectable()
 export class EventService {
-  private policies: Policy[];
-  private organizationCiphers: CipherView[] = [];
+  private policies: Policy[] = [];
   private ciphers: CipherView[] = [];
+  private organizationUserIdMap: Map<string, { name: string; email: string }> = new Map();
 
   constructor(
     private i18nService: I18nService,
     policyService: PolicyService,
     accountService: AccountService,
     private cipherService: CipherService,
+    private organizationUserApiService: OrganizationUserApiService,
   ) {
     accountService.activeAccount$
       .pipe(
@@ -54,17 +54,19 @@ export class EventService {
     return [start.toISOString(), end.toISOString()];
   }
 
-  async loadAllOrganizationCiphers(organizationId: OrganizationId, userId: UserId) {
-    // this.organizationCiphers =
-    //   await this.cipherService.getAllFromApiForOrganization(organizationId);
+  async loadAllOrganizationInfo(organizationId: OrganizationId, userId: UserId) {
     this.ciphers = await this.cipherService.getAllDecrypted(userId);
+
+    const orgUsers = await this.organizationUserApiService.getAllMiniUserDetails(organizationId);
+    orgUsers.data.forEach((u) => {
+      this.organizationUserIdMap.set(u.id, { name: u.name, email: u.email });
+    });
   }
 
   async getEventInfo(ev: EventResponse, options = new EventOptions()): Promise<EventInfo> {
     const appInfo = this.getAppInfo(ev);
-    // const cv = this.organizationCiphers.find((c) => c.id === ev.cipherId);
     const cv = this.ciphers.find((c) => c.id === ev.cipherId);
-    options.cipher = cv;
+    options.cipher = cv ?? null;
     options.useCipherName = !!cv;
 
     const { message, humanReadableMessage, eventName, eventLink } = await this.getEventMessage(
@@ -72,8 +74,8 @@ export class EventService {
       options,
     );
     return {
-      message: message,
-      humanReadableMessage: humanReadableMessage,
+      message: message ?? "",
+      humanReadableMessage: humanReadableMessage ?? "",
       appIcon: appInfo[0],
       appName: appInfo[1],
       eventName: eventName.replace(".", ""),
@@ -303,6 +305,8 @@ export class EventService {
           "invitedUserId",
           this.getShortId(ev.organizationUserId),
         );
+        eventName = this.i18nService.t("invitedUserId", "");
+        eventLink = this.formatOrgUserId(ev);
         break;
       case EventType.OrganizationUser_Confirmed:
         msg = this.i18nService.t("confirmedUserId", this.formatOrgUserId(ev));
@@ -310,6 +314,8 @@ export class EventService {
           "confirmedUserId",
           this.getShortId(ev.organizationUserId),
         );
+        eventName = this.i18nService.t("confirmedUserId", "");
+        eventLink = this.formatOrgUserId(ev);
         break;
       case EventType.OrganizationUser_Updated:
         msg = this.i18nService.t("editedUserId", this.formatOrgUserId(ev));
@@ -317,6 +323,8 @@ export class EventService {
           "editedUserId",
           this.getShortId(ev.organizationUserId),
         );
+        eventName = this.i18nService.t("editedUserId", "");
+        eventLink = this.formatOrgUserId(ev);
         break;
       case EventType.OrganizationUser_Removed:
         msg = this.i18nService.t("removedUserId", this.formatOrgUserId(ev));
@@ -324,6 +332,8 @@ export class EventService {
           "removedUserId",
           this.getShortId(ev.organizationUserId),
         );
+        eventName = this.i18nService.t("removedUserId", "");
+        eventLink = this.formatOrgUserId(ev);
         break;
       case EventType.OrganizationUser_UpdatedGroups:
         msg = this.i18nService.t("editedGroupsForUser", this.formatOrgUserId(ev));
@@ -331,6 +341,8 @@ export class EventService {
           "editedGroupsForUser",
           this.getShortId(ev.organizationUserId),
         );
+        eventName = this.i18nService.t("editedGroupsForUser", "");
+        eventLink = this.formatOrgUserId(ev);
         break;
       case EventType.OrganizationUser_UnlinkedSso:
         msg = this.i18nService.t("unlinkedSsoUser", this.formatOrgUserId(ev));
@@ -338,6 +350,8 @@ export class EventService {
           "unlinkedSsoUser",
           this.getShortId(ev.organizationUserId),
         );
+        eventName = this.i18nService.t("unlinkedSsoUser", "");
+        eventLink = this.formatOrgUserId(ev);
         break;
       case EventType.OrganizationUser_ResetPassword_Enroll:
         msg = this.i18nService.t("eventEnrollAccountRecovery", this.formatOrgUserId(ev));
@@ -345,6 +359,8 @@ export class EventService {
           "eventEnrollAccountRecovery",
           this.getShortId(ev.organizationUserId),
         );
+        eventName = this.i18nService.t("eventEnrollAccountRecovery", "");
+        eventLink = this.formatOrgUserId(ev);
         break;
       case EventType.OrganizationUser_ResetPassword_Withdraw:
         msg = this.i18nService.t("eventWithdrawAccountRecovery", this.formatOrgUserId(ev));
@@ -352,6 +368,8 @@ export class EventService {
           "eventWithdrawAccountRecovery",
           this.getShortId(ev.organizationUserId),
         );
+        eventName = this.i18nService.t("eventWithdrawAccountRecovery", "");
+        eventLink = this.formatOrgUserId(ev);
         break;
       case EventType.OrganizationUser_AdminResetPassword:
         msg = this.i18nService.t("eventAdminPasswordReset", this.formatOrgUserId(ev));
@@ -359,6 +377,8 @@ export class EventService {
           "eventAdminPasswordReset",
           this.getShortId(ev.organizationUserId),
         );
+        eventName = this.i18nService.t("eventAdminPasswordReset", "");
+        eventLink = this.formatOrgUserId(ev);
         break;
       case EventType.OrganizationUser_ResetSsoLink:
         msg = this.i18nService.t("eventResetSsoLink", this.formatOrgUserId(ev));
@@ -366,6 +386,8 @@ export class EventService {
           "eventResetSsoLink",
           this.getShortId(ev.organizationUserId),
         );
+        eventName = this.i18nService.t("eventResetSsoLink", "");
+        eventLink = this.formatOrgUserId(ev);
         break;
       case EventType.OrganizationUser_FirstSsoLogin:
         msg = this.i18nService.t("firstSsoLogin", this.formatOrgUserId(ev));
@@ -373,6 +395,8 @@ export class EventService {
           "firstSsoLogin",
           this.getShortId(ev.organizationUserId),
         );
+        eventName = this.i18nService.t("firstSsoLogin", "");
+        eventLink = this.formatOrgUserId(ev);
         break;
       case EventType.OrganizationUser_Revoked:
         msg = this.i18nService.t("revokedUserId", this.formatOrgUserId(ev));
@@ -380,6 +404,8 @@ export class EventService {
           "revokedUserId",
           this.getShortId(ev.organizationUserId),
         );
+        eventName = this.i18nService.t("revokedUserId", "");
+        eventLink = this.formatOrgUserId(ev);
         break;
       case EventType.OrganizationUser_Restored:
         msg = this.i18nService.t("restoredUserId", this.formatOrgUserId(ev));
@@ -387,6 +413,8 @@ export class EventService {
           "restoredUserId",
           this.getShortId(ev.organizationUserId),
         );
+        eventName = this.i18nService.t("restoredUserId", "");
+        eventLink = this.formatOrgUserId(ev);
         break;
       case EventType.OrganizationUser_ApprovedAuthRequest:
         msg = this.i18nService.t("approvedAuthRequest", this.formatOrgUserId(ev));
@@ -394,6 +422,8 @@ export class EventService {
           "approvedAuthRequest",
           this.getShortId(ev.organizationUserId),
         );
+        eventName = this.i18nService.t("approvedAuthRequest", "");
+        eventLink = this.formatOrgUserId(ev);
         break;
       case EventType.OrganizationUser_RejectedAuthRequest:
         msg = this.i18nService.t("rejectedAuthRequest", this.formatOrgUserId(ev));
@@ -401,6 +431,8 @@ export class EventService {
           "rejectedAuthRequest",
           this.getShortId(ev.organizationUserId),
         );
+        eventName = this.i18nService.t("rejectedAuthRequest", "");
+        eventLink = this.formatOrgUserId(ev);
         break;
       case EventType.OrganizationUser_Deleted:
         msg = this.i18nService.t("deletedUserId", this.formatOrgUserId(ev));
@@ -408,6 +440,8 @@ export class EventService {
           "deletedUserId",
           this.getShortId(ev.organizationUserId),
         );
+        eventName = this.i18nService.t("deletedUserId", "");
+        eventLink = this.formatOrgUserId(ev);
         break;
       case EventType.OrganizationUser_Left:
         msg = this.i18nService.t("userLeftOrganization", this.formatOrgUserId(ev));
@@ -415,6 +449,8 @@ export class EventService {
           "userLeftOrganization",
           this.getShortId(ev.organizationUserId),
         );
+        eventName = this.i18nService.t("userLeftOrganization", "");
+        eventLink = this.formatOrgUserId(ev);
         break;
       // Org
       case EventType.Organization_Updated:
@@ -653,7 +689,18 @@ export class EventService {
 
   private formatOrgUserId(ev: EventResponse) {
     const shortId = this.getShortId(ev.organizationUserId);
-    const a = this.makeAnchor(shortId);
+
+    let userNameOrEmail = "";
+    if (this.organizationUserIdMap.has(ev.organizationUserId)) {
+      const user = this.organizationUserIdMap.get(ev.organizationUserId);
+      if (user) {
+        userNameOrEmail = user.name ?? user.email;
+      }
+    }
+
+    const anchorName = userNameOrEmail ? userNameOrEmail : shortId;
+
+    const a = this.makeAnchor(anchorName);
     a.setAttribute(
       "href",
       "#/organizations/" +
@@ -744,16 +791,17 @@ export class EventService {
 }
 
 export class EventInfo {
-  message: string;
-  humanReadableMessage: string;
-  appIcon: string;
-  appName: string;
-  eventName: string;
-  eventLink: string;
+  message: string = "";
+  humanReadableMessage: string = "";
+  appIcon: string = "";
+  appName: string = "";
+  eventName: string = "";
+  eventLink: string = "";
 }
 
 export class EventOptions {
   cipherInfo = true;
   useCipherName = false;
   cipher: CipherView | null = null;
+  organizationUserIdMap: Map<string, { name: string; email: string }> = new Map();
 }
