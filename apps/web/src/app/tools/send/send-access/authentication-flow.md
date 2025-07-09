@@ -9,7 +9,7 @@ Anyone can access a public send. The token endpoint automatically issues a token
 ```mermaid
 sequenceDiagram
     participant Visitor
-    participant TryAccess as try-access.component
+    participant TryAccess as try-send-access.guard
     participant SendToken as send-token API
     participant ViewContent as view-content.component
     participant SendAccess as send-access API
@@ -34,7 +34,7 @@ Password protected sends redirect to a password challenge prompt.
 ```mermaid
 sequenceDiagram
     participant Visitor
-    participant TryAccess as try-access.component
+    participant TryAccess as try-send-access.guard
     participant PasswordAuth as password-authentication.component
     participant SendToken as send-token API
     participant ViewContent as view-content.component
@@ -68,7 +68,7 @@ Visiting the view page without a token redirects to a try-access flow, above.
 sequenceDiagram
     participant Visitor
     participant ViewContent as view-content.component
-    participant TryAccess as try-access.component
+    participant TryAccess as try-send-access.guard
 
     Visitor->>ViewContent: Navigate to send URL (with id and key)
     ViewContent->>TryAccess: Redirect to try-access (with id and key)

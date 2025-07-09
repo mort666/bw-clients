@@ -9,13 +9,13 @@ import { SystemServiceProvider } from "@bitwarden/common/tools/providers.js";
 import { SendAccessRequest } from "@bitwarden/common/tools/send/models/request/send-access.request";
 import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.service.abstraction";
 
-import { TOKEN_KEY, SEND_KEY_KEY } from "./send-access-memory";
+import { SEND_RESPONSE_KEY, SEND_CONTEXT_KEY } from "./send-access-memory";
 import { isErrorResponse } from "./util";
 
 const TEN_SECONDS = 10_000;
 
 @Injectable({ providedIn: "root" })
-export class SendAccessAuthenticationService {
+export class SendAccessService {
   private readonly logger: SemanticLogger;
 
   constructor(
@@ -31,6 +31,8 @@ export class SendAccessAuthenticationService {
   }
 
   redirect$(sendId: string) {
+    // FIXME: when the send authentication APIs become available, this method
+    //   should delegate to the API
     const response$ = from(this.api.postSendAccess(sendId, new SendAccessRequest()));
 
     const redirect$ = response$.pipe(
@@ -84,16 +86,12 @@ export class SendAccessAuthenticationService {
     return url;
   }
 
-  async setToken(token: string) {
-    return this.state.getGlobal(TOKEN_KEY).update(() => token);
-  }
-
-  async setKey(key: string) {
-    return this.state.getGlobal(SEND_KEY_KEY).update(() => key);
+  async setContext(sendId: string, key: string) {
+    return this.state.getGlobal(SEND_CONTEXT_KEY).update(() => ({ id: sendId, key }));
   }
 
   async clear(): Promise<void> {
-    await this.state.getGlobal(TOKEN_KEY).update(() => null);
-    await this.state.getGlobal(SEND_KEY_KEY).update(() => null);
+    await this.state.getGlobal(SEND_RESPONSE_KEY).update(() => null);
+    await this.state.getGlobal(SEND_CONTEXT_KEY).update(() => null);
   }
 }
