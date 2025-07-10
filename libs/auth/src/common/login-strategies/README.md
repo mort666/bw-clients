@@ -7,7 +7,7 @@
 > - [Authentication Methods](#authentication-methods)
 > - [The Credentials Object](#the-credentials-object)
 > - [The Login Strategy](#the-login-strategy)
-> - [The `logIn()` Method](#the-login-method)
+> - [The `logIn()` and `startLogin()` Methods](#the-login-and-startlogin-methods)
 > - [Handling the `AuthResult`](#handling-the-authresult)
 
 <br>
@@ -24,7 +24,7 @@ Bitwarden provides 5 methods for logging in to Bitwarden, as defined in our [`Au
 
 <br>
 
-- Methods 1-4 can be initiated from the `LoginComponent` on our Angular Clients (route `/login`).
+- Methods 1-4 can be initiated from the `LoginComponent` on our Angular Clients (route `/login`). [EDIT: These methods can also be initiated from the CLI client].
 - Method 5 can only be initiated from the CLI client.
 
 <br>
@@ -84,7 +84,7 @@ For example, the `PasswordLoginCredentials` object has `type = 0` (which is `Aut
 
 <br>
 
-## The `logIn()` Method
+## The `logIn()` and `startLogin()` Methods
 
 Each login strategy has it's own implementation of the `logIn()` method, which takes the credentials object as its sole argument and triggers a process that does the following _at minimum_:
 
