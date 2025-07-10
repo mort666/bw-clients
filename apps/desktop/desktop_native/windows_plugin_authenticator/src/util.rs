@@ -77,9 +77,7 @@ pub fn file_log(msg: &str) {
     }
 }
 
-pub fn debug_log(message: &str) {
-    file_log(message)
-}
+pub fn debug_log(message: &str) {}
 
 // Helper function to convert Windows wide string (UTF-16) to Rust String
 pub unsafe fn wstr_to_string(

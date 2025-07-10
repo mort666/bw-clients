@@ -28,7 +28,7 @@ export class NativeAutofillMain {
   }
 
   async init() {
-    const enableWindowsPasskeyProvider = true;
+    const enableWindowsPasskeyProvider = false;
     if (enableWindowsPasskeyProvider) {
       this.windowsMain.initWindows();
       this.windowsMain.setupWindowsRendererIPCHandlers();
