@@ -19,7 +19,7 @@ import {
  */
 function buildKeyDefinition<T>(key: string): UserKeyDefinition<T> {
   return new UserKeyDefinition<T>(ORGANIZATION_MANAGEMENT_PREFERENCES_DISK, key, {
-    deserializer: (obj) => obj! as T,
+    deserializer: (obj) => obj as T | null,
     clearOn: ["logout"],
   });
 }
