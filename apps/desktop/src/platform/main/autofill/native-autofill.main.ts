@@ -28,8 +28,11 @@ export class NativeAutofillMain {
   }
 
   async init() {
-    this.windowsMain.initWindows();
-    this.windowsMain.setupWindowsRendererIPCHandlers();
+    const enableWindowsPasskeyProvider = true;
+    if (enableWindowsPasskeyProvider) {
+      this.windowsMain.initWindows();
+      this.windowsMain.setupWindowsRendererIPCHandlers();
+    }
 
     ipcMain.handle(
       "autofill.runCommand",
