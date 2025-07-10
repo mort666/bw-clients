@@ -1,8 +1,13 @@
 import { mock } from "jest-mock-extended";
 
+import {
+  OrganizationUserApiService,
+  OrganizationUserUserMiniResponse,
+} from "@bitwarden/admin-console/common";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { EventType } from "@bitwarden/common/enums/event-type.enum";
+import { ListResponse } from "@bitwarden/common/models/response/list.response";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { mockAccountServiceWith } from "@bitwarden/common/spec";
@@ -18,20 +23,93 @@ describe("EventService", () => {
   let mockPolicyService = mock<PolicyService>();
   let mockAccountService: AccountService;
   let mockCipherService = mock<CipherService>();
+  let mockOrgUserApiService = mock<OrganizationUserApiService>();
+
   const userId = Utils.newGuid() as UserId;
   const orgId = Utils.newGuid() as OrganizationId;
 
-  beforeEach(() => {
+  const orgUserMiniResponse: ListResponse<OrganizationUserUserMiniResponse> = {
+    continuationToken: null,
+    data: [
+      {
+        id: userId,
+        name: "Test User",
+        email: "testuser@example.com",
+      } as unknown as OrganizationUserUserMiniResponse,
+    ],
+  } as ListResponse<OrganizationUserUserMiniResponse>;
+
+  const baseEvent = {
+    type: EventType.Cipher_Created,
+    cipherId: "abcdef1234567890",
+    organizationId: "orgid1234567890" as OrganizationId,
+    organizationUserId: userId,
+    userId: userId,
+    deviceType: 0, // Android
+  } as any;
+
+  beforeEach(async () => {
     mocki18nService = mock<I18nService>();
     mockPolicyService = mock<PolicyService>();
     mockAccountService = mockAccountServiceWith(userId);
     mockCipherService = mock<CipherService>();
+    mockOrgUserApiService = mock<OrganizationUserApiService>();
     eventService = new EventService(
       mocki18nService,
       mockPolicyService,
       mockAccountService,
       mockCipherService,
+      mockOrgUserApiService,
     );
+
+    // Default mock for i18nService.t
+    mocki18nService.t.mockImplementation((key: string, value?: string) => {
+      if (value) {
+        return `${key}:${value}`;
+      }
+      return key;
+    });
+
+    // mock response for getAllDecrypted
+    mockCipherService.getAllDecrypted.mockResolvedValue([
+      { id: "abcdef1234567890", name: "Test Cipher" } as CipherView,
+    ]);
+    // mock response for getAllMiniUserDetails
+    mockOrgUserApiService.getAllMiniUserDetails.mockResolvedValue(orgUserMiniResponse);
+
+    // this method will use the mocks defined above
+    await eventService.loadAllOrganizationInfo(orgId, userId);
+  });
+
+  it("should return correct app info for deviceType Android", async () => {
+    const event = { ...baseEvent, type: 0, deviceType: 1 }; // DeviceType.Android
+    mocki18nService.t.mockImplementation((key: string) => {
+      if (key === "mobile") {
+        return "Mobile";
+      }
+      if (key === "unknown") {
+        return "Unknown";
+      }
+      return key;
+    });
+    const info = await eventService.getEventInfo(event);
+
+    expect(info.appIcon).toBe("bwi-mobile");
+    expect(info.appName).toContain("Mobile");
+  });
+
+  it("should return correct app info for serviceAccountId", async () => {
+    const event = { ...baseEvent, type: 0, serviceAccountId: "svc123" };
+    mocki18nService.t.mockImplementation((key: string) => {
+      if (key === "sdk") {
+        return "SDK";
+      }
+      return key;
+    });
+    const info = await eventService.getEventInfo(event);
+
+    expect(info.appIcon).toBe("bwi-globe");
+    expect(info.appName).toBe("SDK");
   });
 
   describe("formatDateFilters", () => {
@@ -73,13 +151,6 @@ describe("EventService", () => {
   });
 
   describe("getEventInfo for Ciphers", () => {
-    const baseEvent = {
-      type: EventType.Cipher_Created,
-      cipherId: "abcdef1234567890",
-      organizationId: "orgid1234567890" as OrganizationId,
-      deviceType: 0,
-    } as any;
-
     const testCases = [
       { type: EventType.Cipher_Created, eventName: "createdItemId" },
       { type: EventType.Cipher_Updated, eventName: "editedItemId" },
@@ -112,20 +183,6 @@ describe("EventService", () => {
       },
     ];
 
-    beforeEach(async () => {
-      // Default mock for i18nService.t
-      mocki18nService.t.mockImplementation((key: string, value?: string) => {
-        if (value) {
-          return `${key}:${value}`;
-        }
-        return key;
-      });
-      mockCipherService.getAllDecrypted.mockResolvedValue([
-        { id: "abcdef1234567890", name: "Test Cipher" } as CipherView,
-      ]);
-      await eventService.loadAllOrganizationCiphers(orgId, userId);
-    });
-
     testCases.forEach(({ type, eventName }) => {
       it(`should return correct info for event type ${type}`, async () => {
         const event = { ...baseEvent, type };
@@ -140,49 +197,48 @@ describe("EventService", () => {
         expect(info.eventLink).toContain("<code>Test Cipher</code>");
       });
     });
+  });
 
-    it("should return correct info for Cipher_Created event", async () => {
-      const event = { ...baseEvent, type: EventType.Cipher_Created };
+  describe("getEventInfo for Organization Users", () => {
+    const testCases = [
+      { type: EventType.OrganizationUser_Invited, eventName: "invitedUserId" },
+      { type: EventType.OrganizationUser_Confirmed, eventName: "confirmedUserId" },
+      { type: EventType.OrganizationUser_Updated, eventName: "editedUserId" },
+      { type: EventType.OrganizationUser_Removed, eventName: "removedUserId" },
+      { type: EventType.OrganizationUser_UpdatedGroups, eventName: "editedGroupsForUser" },
+      { type: EventType.OrganizationUser_UnlinkedSso, eventName: "unlinkedSsoUser" },
+      {
+        type: EventType.OrganizationUser_ResetPassword_Enroll,
+        eventName: "eventEnrollAccountRecovery",
+      },
+      {
+        type: EventType.OrganizationUser_ResetPassword_Withdraw,
+        eventName: "eventWithdrawAccountRecovery",
+      },
+      { type: EventType.OrganizationUser_AdminResetPassword, eventName: "eventAdminPasswordReset" },
+      { type: EventType.OrganizationUser_ResetSsoLink, eventName: "eventResetSsoLink" },
+      { type: EventType.OrganizationUser_FirstSsoLogin, eventName: "firstSsoLogin" },
+      { type: EventType.OrganizationUser_Revoked, eventName: "revokedUserId" },
+      { type: EventType.OrganizationUser_Restored, eventName: "restoredUserId" },
+      { type: EventType.OrganizationUser_ApprovedAuthRequest, eventName: "approvedAuthRequest" },
+      { type: EventType.OrganizationUser_RejectedAuthRequest, eventName: "rejectedAuthRequest" },
+      { type: EventType.OrganizationUser_Deleted, eventName: "deletedUserId" },
+      { type: EventType.OrganizationUser_Left, eventName: "userLeftOrganization" },
+    ];
 
-      const info = await eventService.getEventInfo(event);
+    testCases.forEach(({ type, eventName }) => {
+      it(`should return correct info for user event type ${type}`, async () => {
+        const event = { ...baseEvent, type };
 
-      expect(info.message).toContain("Test Cipher");
-      expect(info.humanReadableMessage).toContain("createdItemId:abcdef12");
-      expect(info.appIcon).toBe("bwi-mobile");
-      expect(info.appName).toBe("mobile - Android");
-      expect(info.eventName).toBe("createdItemId");
-      expect(info.eventLink).toContain("<code>Test Cipher</code>");
-    });
+        const info = await eventService.getEventInfo(event);
 
-    it("should return correct app info for deviceType Android", async () => {
-      const event = { ...baseEvent, type: 0, deviceType: 1 }; // DeviceType.Android
-      mocki18nService.t.mockImplementation((key: string) => {
-        if (key === "mobile") {
-          return "Mobile";
-        }
-        if (key === "unknown") {
-          return "Unknown";
-        }
-        return key;
+        expect(info.message).toContain("Test User");
+        expect(info.humanReadableMessage).toContain(eventName);
+        expect(info.appIcon).toBe("bwi-mobile");
+        expect(info.appName).toBe("mobile - Android");
+        expect(info.eventName).toBe(eventName);
+        expect(info.eventLink).toContain("<code>Test User</code>");
       });
-      const info = await eventService.getEventInfo(event);
-
-      expect(info.appIcon).toBe("bwi-mobile");
-      expect(info.appName).toContain("Mobile");
-    });
-
-    it("should return correct app info for serviceAccountId", async () => {
-      const event = { ...baseEvent, type: 0, serviceAccountId: "svc123" };
-      mocki18nService.t.mockImplementation((key: string) => {
-        if (key === "sdk") {
-          return "SDK";
-        }
-        return key;
-      });
-      const info = await eventService.getEventInfo(event);
-
-      expect(info.appIcon).toBe("bwi-globe");
-      expect(info.appName).toBe("SDK");
     });
   });
 });
