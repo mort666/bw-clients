@@ -149,17 +149,6 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
         let req = &*request;
         let transaction_id = format!("{:?}", req.transaction_id);
 
-        debug_log(&format!("Transaction ID: {}", transaction_id));
-        debug_log(&format!("Window Handle: {:?}", req.window_handle));
-        debug_log(&format!(
-            "Request Signature Byte Count: {}",
-            req.request_signature_byte_count
-        ));
-        debug_log(&format!(
-            "Encoded Request Byte Count: {}",
-            req.encoded_request_byte_count
-        ));
-
         if req.encoded_request_byte_count == 0 || req.encoded_request_pointer.is_null() {
             debug_log("ERROR: No encoded request data provided");
             return HRESULT(-1);
