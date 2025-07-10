@@ -3,9 +3,12 @@ use std::alloc::{alloc, Layout};
 use std::ptr;
 use windows_core::{s, HRESULT};
 
-use crate::com_provider::ExperimentalWebAuthnPluginOperationResponse;
+use crate::com_provider::{
+    parse_credential_list, ExperimentalWebAuthnPluginOperationRequest,
+    ExperimentalWebAuthnPluginOperationResponse,
+};
 use crate::types::*;
-use crate::util::{debug_log, delay_load};
+use crate::util::{debug_log, delay_load, wstr_to_string};
 use crate::webauthn::WEBAUTHN_CREDENTIAL_LIST;
 
 /// Windows WebAuthn registration request context  
@@ -124,7 +127,7 @@ impl Drop for DecodedMakeCredentialRequest {
 }
 
 // Function to decode make credential request using Windows API
-pub unsafe fn decode_make_credential_request(
+unsafe fn decode_make_credential_request(
     encoded_request: &[u8],
 ) -> Result<DecodedMakeCredentialRequest, String> {
     debug_log("Attempting to decode make credential request using Windows API");
@@ -182,7 +185,7 @@ pub unsafe fn decode_make_credential_request(
 }
 
 /// Helper for registration requests  
-pub fn send_registration_request(
+fn send_registration_request(
     transaction_id: &str,
     request: &WindowsRegistrationRequest,
 ) -> Option<PasskeyResponse> {
@@ -217,7 +220,7 @@ pub fn send_registration_request(
 }
 
 /// Creates a WebAuthn make credential response from Bitwarden's registration response
-pub unsafe fn create_make_credential_response(
+unsafe fn create_make_credential_response(
     attestation_object: Vec<u8>,
 ) -> std::result::Result<*mut ExperimentalWebAuthnPluginOperationResponse, HRESULT> {
     // Use the attestation object directly as the encoded response
@@ -252,4 +255,248 @@ pub unsafe fn create_make_credential_response(
     );
 
     Ok(operation_response_ptr)
+}
+
+/// Implementation of EXPERIMENTAL_PluginMakeCredential moved from com_provider.rs
+pub unsafe fn experimental_plugin_make_credential(
+    request: *const ExperimentalWebAuthnPluginOperationRequest,
+    response: *mut *mut ExperimentalWebAuthnPluginOperationResponse,
+) -> HRESULT {
+    debug_log("=== EXPERIMENTAL_PluginMakeCredential() called ===");
+
+    if request.is_null() {
+        debug_log("ERROR: NULL request pointer");
+        return HRESULT(-1);
+    }
+
+    if response.is_null() {
+        debug_log("ERROR: NULL response pointer");
+        return HRESULT(-1);
+    }
+
+    let req = &*request;
+    let transaction_id = format!("{:?}", req.transaction_id);
+
+    if req.encoded_request_byte_count == 0 || req.encoded_request_pointer.is_null() {
+        debug_log("ERROR: No encoded request data provided");
+        return HRESULT(-1);
+    }
+
+    let encoded_request_slice = std::slice::from_raw_parts(
+        req.encoded_request_pointer,
+        req.encoded_request_byte_count as usize,
+    );
+
+    debug_log(&format!(
+        "Encoded request: {} bytes",
+        encoded_request_slice.len()
+    ));
+
+    // Try to decode the request using Windows API
+    match decode_make_credential_request(encoded_request_slice) {
+        Ok(decoded_wrapper) => {
+            let decoded_request = decoded_wrapper.as_ref();
+            debug_log("Successfully decoded make credential request using Windows API");
+
+            // Extract RP information
+            if decoded_request.pRpInformation.is_null() {
+                debug_log("ERROR: RP information is null");
+                return HRESULT(-1);
+            }
+
+            let rp_info = &*decoded_request.pRpInformation;
+
+            let rpid = if rp_info.pwszId.is_null() {
+                debug_log("ERROR: RP ID is null");
+                return HRESULT(-1);
+            } else {
+                match wstr_to_string(rp_info.pwszId) {
+                    Ok(id) => id,
+                    Err(e) => {
+                        debug_log(&format!("ERROR: Failed to decode RP ID: {}", e));
+                        return HRESULT(-1);
+                    }
+                }
+            };
+
+            // let rp_name = if rp_info.pwszName.is_null() {
+            //     String::new()
+            // } else {
+            //     wstr_to_string(rp_info.pwszName).unwrap_or_default()
+            // };
+
+            // Extract user information
+            if decoded_request.pUserInformation.is_null() {
+                debug_log("ERROR: User information is null");
+                return HRESULT(-1);
+            }
+
+            let user = &*decoded_request.pUserInformation;
+
+            let user_id = if user.pbId.is_null() || user.cbId == 0 {
+                debug_log("ERROR: User ID is required for registration");
+                return HRESULT(-1);
+            } else {
+                let id_slice = std::slice::from_raw_parts(user.pbId, user.cbId as usize);
+                id_slice.to_vec()
+            };
+
+            let user_name = if user.pwszName.is_null() {
+                debug_log("ERROR: User name is required for registration");
+                return HRESULT(-1);
+            } else {
+                match wstr_to_string(user.pwszName) {
+                    Ok(name) => name,
+                    Err(_) => {
+                        debug_log("ERROR: Failed to decode user name");
+                        return HRESULT(-1);
+                    }
+                }
+            };
+
+            let user_display_name = if user.pwszDisplayName.is_null() {
+                None
+            } else {
+                wstr_to_string(user.pwszDisplayName).ok()
+            };
+
+            let user_info = (user_id, user_name, user_display_name);
+
+            // Extract client data hash
+            let client_data_hash = if decoded_request.cbClientDataHash == 0
+                || decoded_request.pbClientDataHash.is_null()
+            {
+                debug_log("ERROR: Client data hash is required for registration");
+                return HRESULT(-1);
+            } else {
+                let hash_slice = std::slice::from_raw_parts(
+                    decoded_request.pbClientDataHash,
+                    decoded_request.cbClientDataHash as usize,
+                );
+                hash_slice.to_vec()
+            };
+
+            // Extract supported algorithms
+            let supported_algorithms = if decoded_request
+                .WebAuthNCredentialParameters
+                .cCredentialParameters
+                > 0
+                && !decoded_request
+                    .WebAuthNCredentialParameters
+                    .pCredentialParameters
+                    .is_null()
+            {
+                let params_count = decoded_request
+                    .WebAuthNCredentialParameters
+                    .cCredentialParameters as usize;
+                let params_ptr = decoded_request
+                    .WebAuthNCredentialParameters
+                    .pCredentialParameters;
+
+                (0..params_count)
+                    .map(|i| unsafe { &*params_ptr.add(i) }.lAlg)
+                    .collect()
+            } else {
+                Vec::new()
+            };
+
+            // Extract user verification requirement from authenticator options
+            let user_verification = if !decoded_request.pAuthenticatorOptions.is_null() {
+                let auth_options = &*decoded_request.pAuthenticatorOptions;
+                match auth_options.user_verification {
+                    1 => Some(UserVerificationRequirement::Required),
+                    -1 => Some(UserVerificationRequirement::Discouraged),
+                    0 | _ => Some(UserVerificationRequirement::Preferred), // Default or undefined
+                }
+            } else {
+                None
+            };
+
+            // Extract excluded credentials from credential list
+            let excluded_credentials = parse_credential_list(&decoded_request.CredentialList);
+            if !excluded_credentials.is_empty() {
+                debug_log(&format!(
+                    "Found {} excluded credentials for make credential",
+                    excluded_credentials.len()
+                ));
+            }
+
+            // Create Windows registration request
+            let registration_request = WindowsRegistrationRequest {
+                rpid: rpid.clone(),
+                user_id: user_info.0,
+                user_name: user_info.1,
+                user_display_name: user_info.2,
+                client_data_hash,
+                excluded_credentials,
+                user_verification: user_verification.unwrap_or_default(),
+                supported_algorithms,
+            };
+
+            debug_log(&format!(
+                "Make credential request - RP: {}, User: {}",
+                rpid, registration_request.user_name
+            ));
+
+            // Send registration request
+            if let Some(passkey_response) =
+                send_registration_request(&transaction_id, &registration_request)
+            {
+                debug_log(&format!(
+                    "Registration response received: {:?}",
+                    passkey_response
+                ));
+
+                // Create proper WebAuthn response from passkey_response
+                match passkey_response {
+                    PasskeyResponse::RegistrationResponse {
+                        credential_id: _,
+                        attestation_object,
+                        rp_id: _,
+                        client_data_hash: _,
+                    } => {
+                        debug_log("Creating WebAuthn make credential response");
+
+                        match create_make_credential_response(attestation_object) {
+                            Ok(webauthn_response) => {
+                                debug_log("Successfully created WebAuthn response");
+                                *response = webauthn_response;
+                                HRESULT(0)
+                            }
+                            Err(e) => {
+                                debug_log(&format!(
+                                    "ERROR: Failed to create WebAuthn response: {}",
+                                    e
+                                ));
+                                *response = ptr::null_mut();
+                                HRESULT(-1)
+                            }
+                        }
+                    }
+                    PasskeyResponse::Error { message } => {
+                        debug_log(&format!("Registration request failed: {}", message));
+                        *response = ptr::null_mut();
+                        HRESULT(-1)
+                    }
+                    _ => {
+                        debug_log("ERROR: Unexpected response type for registration request");
+                        *response = ptr::null_mut();
+                        HRESULT(-1)
+                    }
+                }
+            } else {
+                debug_log("ERROR: No response from registration request");
+                *response = ptr::null_mut();
+                HRESULT(-1)
+            }
+        }
+        Err(e) => {
+            debug_log(&format!(
+                "ERROR: Failed to decode make credential request: {}",
+                e
+            ));
+            *response = ptr::null_mut();
+            HRESULT(-1)
+        }
+    }
 }

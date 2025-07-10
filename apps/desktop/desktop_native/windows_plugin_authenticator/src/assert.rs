@@ -3,9 +3,12 @@ use std::alloc::{alloc, Layout};
 use std::ptr;
 use windows_core::{s, HRESULT};
 
-use crate::com_provider::ExperimentalWebAuthnPluginOperationResponse;
+use crate::com_provider::{
+    parse_credential_list, ExperimentalWebAuthnPluginOperationRequest,
+    ExperimentalWebAuthnPluginOperationResponse,
+};
 use crate::types::*;
-use crate::util::{debug_log, delay_load};
+use crate::util::{debug_log, delay_load, wstr_to_string};
 use crate::webauthn::WEBAUTHN_CREDENTIAL_LIST;
 
 // Windows API types for WebAuthn (from webauthn.h.sample)
@@ -73,7 +76,7 @@ impl Drop for DecodedGetAssertionRequest {
 }
 
 // Function to decode get assertion request using Windows API
-pub unsafe fn decode_get_assertion_request(
+unsafe fn decode_get_assertion_request(
     encoded_request: &[u8],
 ) -> Result<DecodedGetAssertionRequest, String> {
     debug_log("Attempting to decode get assertion request using Windows API");
@@ -125,7 +128,7 @@ pub struct WindowsAssertionRequest {
 }
 
 /// Helper for assertion requests
-pub fn send_assertion_request(
+fn send_assertion_request(
     transaction_id: &str,
     request: &WindowsAssertionRequest,
 ) -> Option<PasskeyResponse> {
@@ -161,7 +164,7 @@ pub fn send_assertion_request(
 }
 
 /// Creates a WebAuthn get assertion response from Bitwarden's assertion response
-pub unsafe fn create_get_assertion_response(
+unsafe fn create_get_assertion_response(
     credential_id: Vec<u8>,
     authenticator_data: Vec<u8>,
     signature: Vec<u8>,
@@ -254,4 +257,172 @@ pub unsafe fn create_get_assertion_response(
     );
 
     Ok(operation_response_ptr)
+}
+
+/// Implementation of EXPERIMENTAL_PluginGetAssertion moved from com_provider.rs
+pub unsafe fn experimental_plugin_get_assertion(
+    request: *const ExperimentalWebAuthnPluginOperationRequest,
+    response: *mut *mut ExperimentalWebAuthnPluginOperationResponse,
+) -> HRESULT {
+    debug_log("EXPERIMENTAL_PluginGetAssertion() called");
+
+    // Validate input parameters
+    if request.is_null() || response.is_null() {
+        debug_log("Invalid parameters passed to EXPERIMENTAL_PluginGetAssertion");
+        return HRESULT(-1);
+    }
+
+    let req = &*request;
+    let transaction_id = format!("{:?}", req.transaction_id);
+
+    debug_log(&format!(
+        "Get assertion request - Transaction: {}",
+        transaction_id
+    ));
+
+    if req.encoded_request_byte_count == 0 || req.encoded_request_pointer.is_null() {
+        debug_log("ERROR: No encoded request data provided");
+        *response = ptr::null_mut();
+        return HRESULT(-1);
+    }
+
+    let encoded_request_slice = std::slice::from_raw_parts(
+        req.encoded_request_pointer,
+        req.encoded_request_byte_count as usize,
+    );
+
+    // Try to decode the request using Windows API
+    match decode_get_assertion_request(encoded_request_slice) {
+        Ok(decoded_wrapper) => {
+            let decoded_request = decoded_wrapper.as_ref();
+            debug_log("Successfully decoded get assertion request using Windows API");
+
+            // Extract RP information
+            let rpid = if decoded_request.pwszRpId.is_null() {
+                debug_log("ERROR: RP ID is null");
+                *response = ptr::null_mut();
+                return HRESULT(-1);
+            } else {
+                match wstr_to_string(decoded_request.pwszRpId) {
+                    Ok(id) => id,
+                    Err(e) => {
+                        debug_log(&format!("ERROR: Failed to decode RP ID: {}", e));
+                        *response = ptr::null_mut();
+                        return HRESULT(-1);
+                    }
+                }
+            };
+
+            // Extract client data hash
+            let client_data_hash = if decoded_request.cbClientDataHash == 0
+                || decoded_request.pbClientDataHash.is_null()
+            {
+                debug_log("ERROR: Client data hash is required for assertion");
+                *response = ptr::null_mut();
+                return HRESULT(-1);
+            } else {
+                let hash_slice = std::slice::from_raw_parts(
+                    decoded_request.pbClientDataHash,
+                    decoded_request.cbClientDataHash as usize,
+                );
+                hash_slice.to_vec()
+            };
+
+            // Extract user verification requirement from authenticator options
+            let user_verification = if !decoded_request.pAuthenticatorOptions.is_null() {
+                let auth_options = &*decoded_request.pAuthenticatorOptions;
+                match auth_options.user_verification {
+                    1 => Some(UserVerificationRequirement::Required),
+                    -1 => Some(UserVerificationRequirement::Discouraged),
+                    0 | _ => Some(UserVerificationRequirement::Preferred), // Default or undefined
+                }
+            } else {
+                None
+            };
+
+            // Extract allowed credentials from credential list
+            let allowed_credentials = parse_credential_list(&decoded_request.CredentialList);
+
+            // Create Windows assertion request
+            let assertion_request = WindowsAssertionRequest {
+                rpid: rpid.clone(),
+                client_data_hash,
+                allowed_credentials: allowed_credentials.clone(),
+                user_verification: user_verification.unwrap_or_default(),
+            };
+
+            debug_log(&format!(
+                "Get assertion request - RP: {}, Allowed credentials: {}",
+                rpid,
+                allowed_credentials.len()
+            ));
+
+            // Send assertion request
+            if let Some(passkey_response) =
+                send_assertion_request(&transaction_id, &assertion_request)
+            {
+                debug_log(&format!(
+                    "Assertion response received: {:?}",
+                    passkey_response
+                ));
+
+                // Create proper WebAuthn response from passkey_response
+                match passkey_response {
+                    PasskeyResponse::AssertionResponse {
+                        credential_id,
+                        authenticator_data,
+                        signature,
+                        user_handle,
+                        rp_id: _,
+                        client_data_hash: _,
+                    } => {
+                        debug_log("Creating WebAuthn get assertion response");
+
+                        match create_get_assertion_response(
+                            credential_id,
+                            authenticator_data,
+                            signature,
+                            user_handle,
+                        ) {
+                            Ok(webauthn_response) => {
+                                debug_log("Successfully created WebAuthn assertion response");
+                                *response = webauthn_response;
+                                HRESULT(0)
+                            }
+                            Err(e) => {
+                                debug_log(&format!(
+                                    "ERROR: Failed to create WebAuthn assertion response: {}",
+                                    e
+                                ));
+                                *response = ptr::null_mut();
+                                HRESULT(-1)
+                            }
+                        }
+                    }
+                    PasskeyResponse::Error { message } => {
+                        debug_log(&format!("Assertion request failed: {}", message));
+                        *response = ptr::null_mut();
+                        HRESULT(-1)
+                    }
+                    _ => {
+                        debug_log("ERROR: Unexpected response type for assertion request");
+                        *response = ptr::null_mut();
+                        HRESULT(-1)
+                    }
+                }
+            } else {
+                debug_log("ERROR: No response from assertion request");
+                *response = ptr::null_mut();
+                HRESULT(-1)
+            }
+        }
+        Err(e) => {
+            debug_log(&format!(
+                "ERROR: Failed to decode get assertion request: {}",
+                e
+            ));
+            *response = ptr::null_mut();
+            HRESULT(-1)
+        }
+    }
 }
