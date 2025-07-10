@@ -14,7 +14,7 @@
 
 ## Authentication Methods
 
-Bitwarden provides 5 methods for logging in to Bitwarden, as defined in our `AuthenticationType` enum. They are:
+Bitwarden provides 5 methods for logging in to Bitwarden, as defined in our [`AuthenticationType`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/enums/authentication-type.ts) enum. They are:
 
 1. Login with Master Password
 2. Login with Device (aka Login with Auth Request)
@@ -24,8 +24,8 @@ Bitwarden provides 5 methods for logging in to Bitwarden, as defined in our `Aut
 
 <br>
 
-- Methods 1-4 can be initiated from the `LoginComponent` (route `/login`) on our Angular Clients.
-- Method 5 &mdash; Login with User API Key &mdash; can only be initiated from the CLI client.
+- Methods 1-4 can be initiated from the `LoginComponent` on our Angular Clients (route `/login`).
+- Method 5 can only be initiated from the CLI client.
 
 <br>
 
@@ -53,7 +53,7 @@ export class PasswordLoginCredentials {
 
 Notice that the `type` is automatically set to `AuthenticationType.Password`, and that the `PasswordLoginCredentials` object simply requires an `email` and `masterPassword` to initiate the login process.
 
-Each login method builds it's respective credentials object, as defined in `login-credentials.ts`
+Each authentication method builds it's respective credentials object, as defined in [login-credentials.ts](https://github.com/bitwarden/clients/blob/main/libs/auth/src/common/models/domain/login-credentials.ts).
 
 - `PasswordLoginCredentials`
 - `AuthRequestLoginCredentials`
@@ -67,6 +67,7 @@ Each login method builds it's respective credentials object, as defined in `logi
 
 The credentials object gets forwarded to our `LoginStrategyService`, which acts as an orchestrator to determine which specific **login strategy** should be used for the login process.
 
+> [!IMPORTANT]
 > Our authentication methods are handled by different [login strategies](https://github.com/bitwarden/clients/tree/main/libs/auth/src/common/login-strategies) in our code, making use of the [Strategy Pattern](https://refactoring.guru/design-patterns/strategy). Those strategies are:
 >
 > - `PasswordLoginStrategy`
@@ -85,7 +86,7 @@ For example, the `PasswordLoginCredentials` object has `type = 0` (which is `Aut
 
 ## The `logIn()` Method
 
-Each login strategy has it's own implementation of the `logIn()` method, which takes the credentials objects as its sole argument and triggers a process that does the following _at minimum_:
+Each login strategy has it's own implementation of the `logIn()` method, which takes the credentials object as its sole argument and triggers a process that does the following _at minimum_:
 
 <br>
 
@@ -116,40 +117,44 @@ Each login strategy has it's own implementation of the `logIn()` method, which t
 
   The `startLogin()` method does two main things:
 
-  1.  Calls the `postIdentityToken()` method on the `ApiService`, passing in the `tokenRequest` property from the `LoginStrategyData` object
+  - **2a) &mdash; Calls the `postIdentityToken()` method on the `ApiService`, passing in the `tokenRequest` property from the `LoginStrategyData` object**
 
-      - The `postIdentityToken()` method ultimately makes a `POST` request to the `/connect/token` endpoint on our Identity Server.
+    - The `postIdentityToken()` method ultimately makes a `POST` request to the `/connect/token` endpoint on our Identity Server.
 
-        - The contents of the payload for this request are determined by calling the `toIdentityToken()` method that exists on the base `TokenRequest` object, but can be extended by the sub-classes. This method translates "the information in the `TokenRequest` into the payload that will be sent to the `/connect/token` endpoint on our Identity Server.
+      - The contents of the payload for this request are determined by calling the `toIdentityToken()` method that exists on the base `TokenRequest` object, but can be extended by the sub-classes. This method translates "the information in the `TokenRequest` into the payload that will be sent to the `/connect/token` endpoint on our Identity Server.
 
-      - The Identity Server validates the request based on the grant type, and then generates a response that will be some form of `IdentityResponse`:
+    - The Identity Server validates the request based on the grant type, and then generates a response that will be some form of `Identity[Type]Response`:
 
-        - `IdentityTokenResponse`
+      - [`IdentityTokenResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-token.response.ts)
 
-          - This response contains:
+        - This response contains:
 
-            - Authentication Information
-            - Decryption Information
+          - Authentication information for the user
+          - Decryption information for the user
 
-        - `IdentityTwoFactorResponse`
-        - `IdentityDeviceVerificationResponse`
+      - [`IdentityTwoFactorResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-two-factor.response.ts)
 
-  2.  Calls one of the following methods based on the `IdentityResponse` type:
+        - This response contains information about the user's 2FA requirements.
 
-      - `processTokenResponse()`
+      - [`IdentityDeviceVerificationResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-device-verification.response.ts)
 
-        - This method runs if the response to `postIdentityToken()` was of type `IdentityTokenResponse`
-        - This method does two main things:
-          - Set **authentication info** to state via `saveAccountInformation()`
-          - Set **decryption** info to state via `setMasterKey()`, `setUserKey()`, and `setPrivateKey()`
+        - This reponse contains information about whether or not the user's device has been verified.
 
-      - `processTwoFactorResponse()`
+  - **2b) &mdash; Calls one of the following methods based on the type of `Identity[Type]Response`, each of which returns an `AuthResult`:**
 
-        - This method runs if the response to `postIdentityToken()` was of type `IdentityTwoFactorResponse`
+    - If `IdentityTokenResponse`, call `processTokenResponse()`
 
-      - `processDeviceVerificationResponse()`
+      - This method does two main things:
+        - Set the user's **authentication information** to state via `saveAccountInformation()`
+        - Set the user's **decryption information** to state via `setMasterKey()`, `setUserKey()`, and `setPrivateKey()`
 
-        - This method runs if the response to `postIdentityToken()` was of type `IdentityDeviceVerificationResponse`
+    - If `IdentityTwoFactorResponse`, call `processTwoFactorResponse()`
+
+      - This method adds the necessary data for the 2FA process to the `AuthResult`
+
+    - If `IdentityDeviceVerificationResponse`, call `processDeviceVerificationResponse()`
+
+      - This method simply sets `requiresDeviceVerification` to `true` on the `AuthResult`.
 
 <br>
 
@@ -167,5 +172,4 @@ For example, if the `AuthResult` contains:
 
 - `requiresTwoFactor` &mdash; then navigate user to `/2fa`
 - `requiresDeviceVerification` &mdash; then navigate user to `/device-verification`
-- `forcePasswordReset` &mdash; then navigate user to `/update-temp-password`
 - If there are no additional requirements according to the `AuthResult`, then navigate user to `/vault`
