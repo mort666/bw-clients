@@ -6,6 +6,8 @@ import { autofill, passkey_authenticator } from "@bitwarden/desktop-napi";
 import { WindowMain } from "../../../main/window.main";
 
 import { NativeAutofillFido2Credential, NativeAutofillSyncParams } from "./sync.command";
+import { CommandDefinition } from "./command";
+import type { RunCommandParams, RunCommandResult } from "./native-autofill.main";
 
 export class NativeAutofillWindowsMain {
   private pendingPasskeyRequests = new Map<string, (response: any) => void>();
@@ -227,28 +229,19 @@ export class NativeAutofillWindowsMain {
     });
   }
 
+  /**
+   * These Handlers react to requests coming from the electron RENDERER process.
+   */
   setupWindowsRendererIPCHandlers() {
+    // This will run a command in windows and return the result.
+    // Only the "sync" command is supported for now.
     ipcMain.handle(
-      "autofill.syncPasskeys",
-      async (event, data: NativeAutofillSyncParams): Promise<string> => {
-        this.logService.info("autofill.syncPasskeys", data);
-        const { credentials } = data;
-        const mapped = credentials.map((cred: NativeAutofillFido2Credential) => {
-          const x: passkey_authenticator.SyncedCredential = {
-            credentialId: cred.credentialId,
-            rpId: cred.rpId,
-            userName: cred.userName,
-            userHandle: cred.userHandle,
-          };
-          this.logService.info("Mapped credential:", x);
-          return x;
-        });
-
-        this.logService.info("Syncing passkeys to Windows:", mapped);
-
-        passkey_authenticator.syncCredentialsToWindows(mapped);
-
-        return "worked";
+      "autofill.runCommand",
+      <C extends CommandDefinition>(
+        _event: any,
+        params: RunCommandParams<C>,
+      ): Promise<RunCommandResult<C>> => {
+        return this.runCommand(params);
       },
     );
 
@@ -316,6 +309,55 @@ export class NativeAutofillWindowsMain {
       resolver(response);
     } else {
       this.logService.warning("No pending request found for tracking key:", trackingKey);
+    }
+  }
+
+  private async runCommand<C extends CommandDefinition>(
+    command: RunCommandParams<C>,
+  ): Promise<RunCommandResult<C>> {
+    try {
+      this.logService.info("Windows runCommand (sync) is called with command:", command);
+
+      if (command.namespace !== "autofill") {
+        this.logService.error("Invalid command namespace:", command.namespace);
+        return { type: "error", error: "Invalid command namespace" } as RunCommandResult<C>;
+      }
+
+      if (command.command !== "sync") {
+        this.logService.error("Invalid command:", command.command);
+        return { type: "error", error: "Invalid command" } as RunCommandResult<C>;
+      }
+
+      const syncParams = command.params as NativeAutofillSyncParams;
+
+      const fido2Credentials = syncParams.credentials.filter((c) => c.type === "fido2");
+
+      const mapped = fido2Credentials.map((cred: NativeAutofillFido2Credential) => {
+        const x: passkey_authenticator.SyncedCredential = {
+          credentialId: cred.credentialId,
+          rpId: cred.rpId,
+          userName: cred.userName,
+          userHandle: cred.userHandle,
+        };
+        this.logService.info("Mapped credential:", x);
+        return x;
+      });
+
+      this.logService.info("Syncing passkeys to Windows:", mapped);
+
+      passkey_authenticator.syncCredentialsToWindows(mapped);
+
+      // TODO: Return a meaningful result
+      const res = { value: { added: 999 } } as RunCommandResult<C>;
+      return res;
+    } catch (e) {
+      this.logService.error(`Error running autofill command '${command.command}':`, e);
+
+      if (e instanceof Error) {
+        return { type: "error", error: e.stack ?? String(e) } as RunCommandResult<C>;
+      }
+
+      return { type: "error", error: String(e) } as RunCommandResult<C>;
     }
   }
 }

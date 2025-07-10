@@ -7,9 +7,6 @@ import { RunCommandParams, RunCommandResult } from "../platform/main/autofill/na
 import { NativeAutofillSyncParams } from "../platform/main/autofill/sync.command";
 
 export default {
-
-  syncPasskeys: (params: NativeAutofillSyncParams): Promise<string> => ipcRenderer.invoke("autofill.syncPasskeys", params),
-
   runCommand: <C extends Command>(params: RunCommandParams<C>): Promise<RunCommandResult<C>> =>
     ipcRenderer.invoke("autofill.runCommand", params),
 

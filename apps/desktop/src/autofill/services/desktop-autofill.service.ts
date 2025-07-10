@@ -61,7 +61,6 @@ export class DesktopAutofillService implements OnDestroy {
       .pipe(
         distinctUntilChanged(),
         switchMap((enabled) => {
-        
           return this.accountService.activeAccount$.pipe(
             map((account) => account?.id),
             filter((userId): userId is UserId => userId != null),
@@ -77,7 +76,6 @@ export class DesktopAutofillService implements OnDestroy {
       .subscribe();
 
     this.listenIpc();
- 
   }
 
   /** Give metadata about all available credentials in the users vault */
@@ -97,9 +95,9 @@ export class DesktopAutofillService implements OnDestroy {
     let passwordCredentials: NativeAutofillPasswordCredential[];
 
     fido2Credentials = (await getCredentialsForAutofill(cipherViews)).map((credential) => ({
-        type: "fido2",
-        ...credential,
-      }));
+      type: "fido2",
+      ...credential,
+    }));
 
     // Mock a couple of passkeys for testing purposes
     fido2Credentials.push({
@@ -120,14 +118,6 @@ export class DesktopAutofillService implements OnDestroy {
     });
 
     this.logService.info("Found FIDO2 credentials", fido2Credentials.length);
-
-    console.log("ipc.autofill",ipc.autofill);
-    console.log("ipc.autofill.syncpasskeys", ipc.autofill.syncPasskeys);
-    const res = await ipc.autofill.syncPasskeys({
-      credentials: [...fido2Credentials],
-    });
-    this.logService.warning("syncPasskeys result", res);
-
 
     const syncResult = await ipc.autofill.runCommand<NativeAutofillSyncCommand>({
       namespace: "autofill",
