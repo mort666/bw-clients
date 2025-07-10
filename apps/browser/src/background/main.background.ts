@@ -1820,6 +1820,7 @@ export default class MainBackground {
       this.cipherService,
       this.badgeSettingsService,
       this.logService,
+      this.taskService,
     );
 
     this.tabsBackground = new TabsBackground(
