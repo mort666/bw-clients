@@ -10,7 +10,7 @@ use crate::webauthn::*;
 use ciborium::value::Value;
 use hex;
 
-const AUTHENTICATOR_NAME: &str = "Bitwarden Desktop Authenticator";
+const AUTHENTICATOR_NAME: &str = "Bitwarden Desktop";
 const CLSID: &str = "0f7dc5d9-69ce-4652-8572-6877fd695062";
 const RPID: &str = "bitwarden.com";
 const AAGUID: &str = "d548826e-79b4-db40-a3d8-11116f7e8349";
@@ -85,13 +85,19 @@ fn generate_cbor_authenticator_info() -> Result<Vec<u8>, String> {
     // 9: transports - Array of supported transports
     authenticator_info.push((
         Value::Integer(9.into()),
-        Value::Array(vec![Value::Text("internal".to_string())]),
+        Value::Array(vec![
+            Value::Text("internal".to_string()),
+            Value::Text("hybrid".to_string()),
+        ]),
     ));
 
     // 10: algorithms - Array of supported algorithms
     let algorithm = vec![
         (Value::Text("alg".to_string()), Value::Integer((-7).into())), // ES256
-        (Value::Text("type".to_string()), Value::Text("public-key".to_string())),
+        (
+            Value::Text("type".to_string()),
+            Value::Text("public-key".to_string()),
+        ),
     ];
     authenticator_info.push((
         Value::Integer(10.into()),
@@ -285,7 +291,7 @@ mod tests {
     fn test_aaguid_parsing() {
         let result = parse_uuid_to_bytes(AAGUID);
         assert!(result.is_ok(), "AAGUID parsing should succeed");
-        
+
         let aaguid_bytes = result.unwrap();
         assert_eq!(aaguid_bytes.len(), 16, "AAGUID should be 16 bytes");
         assert_eq!(aaguid_bytes[0], 0xd5, "First byte should be 0xd5");
@@ -299,7 +305,7 @@ mod tests {
             "AAGUID should match expected value"
         );
     }
-    
+
     #[test]
     fn test_parse_clsid_to_guid() {
         let result = parse_clsid_to_guid();
