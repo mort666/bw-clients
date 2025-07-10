@@ -20,6 +20,7 @@ const EXAMPLE_DEFAULTS = Object.freeze({
   optional_func: () => {},
   c: {
     d: 1,
+    e: "default",
   },
   f: {
     h: 1,
@@ -39,12 +40,52 @@ describe("mergeOptions", () => {
     const merged = mergeOptions(options, EXAMPLE_DEFAULTS);
 
     // can access properties
-    expect(merged.a).toBe(42);
+    expect(merged.a).toBe(0);
     expect(merged.c.d).toBe(1);
 
     expect(merged).toEqual({
       a: 0,
       b: "test",
+      c: {
+        d: 1,
+        e: "default",
+      },
+      f: {
+        h: 1,
+        i: "example",
+      },
+      optional_func: EXAMPLE_DEFAULTS.optional_func,
+      required_func: options.required_func,
+    });
+  });
+
+  it("maintains required properties under optional properties", () => {
+    const options: ExampleOptions = {
+      required_func: () => {},
+      b: "test",
+      c: {
+        e: "custom",
+      },
+      f: {
+        i: "example",
+      },
+    };
+
+    const merged = mergeOptions(options, EXAMPLE_DEFAULTS);
+
+    expect(merged).toEqual({
+      a: 0,
+      b: "test",
+      c: {
+        d: 1, // default value from EXAMPLE_DEFAULTS
+        e: "custom", // overridden by options
+      },
+      f: {
+        h: 1, // default value from EXAMPLE_DEFAULTS
+        i: "example", // overridden by options
+      },
+      optional_func: EXAMPLE_DEFAULTS.optional_func,
+      required_func: options.required_func,
     });
   });
 
@@ -66,6 +107,16 @@ describe("mergeOptions", () => {
     expect(merged).toEqual({
       a: 42,
       b: "test",
+      c: {
+        d: 1,
+        e: "default",
+      },
+      f: {
+        h: 1,
+        i: "example",
+      },
+      optional_func: EXAMPLE_DEFAULTS.optional_func,
+      required_func: options.required_func,
     });
   });
 

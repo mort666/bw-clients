@@ -32,16 +32,41 @@ export type OptionsWithDefaultsDeep<Options, Defaults> = Simplify<
 >;
 
 type DefaultsForDeep<Options extends object> = Simplify<
+  // Optional properties part
   Omit<
     Required<{
       [K in keyof Options]: Required<Options>[K] extends Primitive | Function
         ? Options[K]
         : Required<Options>[K] extends object
-          ? DefaultsForDeep<Required<Options>[K]>
+          ? InternalDefaultsForDeep<Required<Options>[K]>
           : never; // should only ever be primitive, function, or object
     }>,
-    RequiredPrimitiveKeysOf<Options> | RequiredMethodKeysOf<Options>
-  >
+    RequiredKeysOf<Options>
+  > &
+    // Manages properties of object type at any level where all properties up the tree are required
+    Omit<
+      Required<{
+        [K in keyof Options]: Required<Options>[K] extends Primitive | Function
+          ? Options[K]
+          : Required<Options>[K] extends object
+            ? DefaultsForDeep<Required<Options>[K]>
+            : never; // should only ever be primitive, function, or object
+      }>,
+      RequiredPrimitiveKeysOf<Options> | RequiredMethodKeysOf<Options>
+    >
+>;
+
+// Internal helper type to recursively build defaults for nested objects
+// This variant does not assume that the Options object defines required properties.
+// It is used to build the defaults for nested optional objects in the `DefaultsForDeep` type.
+type InternalDefaultsForDeep<Options extends object> = Simplify<
+  Required<{
+    [K in keyof Options]: Required<Options>[K] extends Primitive | Function
+      ? Options[K]
+      : Required<Options>[K] extends object
+        ? InternalDefaultsForDeep<Required<Options>[K]>
+        : never; // should only ever be primitive, function, or object
+  }>
 >;
 
 // Returns only the keys of `Obj` that are required and not records
@@ -54,17 +79,108 @@ type RequiredMethodKeysOf<Obj extends object> = RequiredKeysOf<
   Pick<Obj, ConditionalKeys<Obj, Function>>
 >;
 
+type OptionsObjectFilter<T> = object & {
+  [K in keyof T]: Required<T[K]> extends Function | Primitive
+    ? T[K] // primitives and functions are allowed as-is
+    : Required<T>[K] extends object
+      ? OptionsObjectFilter<T[K]> // recursively apply to nested objects
+      : never; // should only ever be primitive, function, or object
+};
+
+/**
+ * Merges objects with particular type requirements specific to the case of merging an options object with a defaults object.
+ * Properties marked as optional in the options object will be required in the defaults object.
+ *
+ * Usage here does not, allow the absence of a property in the resolved options to convey meaning. The resolved merged options
+ * will always have all properties as required.
+ *
+ * # Example
+ *
+ * ```ts
+ * import { mergeOptions } from "./options";
+ *
+ * type ExampleOptions = {
+ *   readonly a?: number;
+ *   readonly required_func: () => void;
+ *   readonly optional_func?: () => void;
+ *   readonly b: string;
+ *   readonly c?: {
+ *     readonly d?: number;
+ *     readonly e?: string;
+ *   };
+ *   readonly f: {
+ *     readonly h?: number;
+ *     readonly i: string;
+ *   };
+ * };
+ *
+ * const EXAMPLE_DEFAULTS = Object.freeze({
+ *   a: 0,
+ *   optional_func: () => {},
+ *   c: {
+ *     d: 1,
+ *     e: "default"
+ *   },
+ *   f: {
+ *     h: 1,
+ *   },
+ * });
+ *
+ * function test() {
+ *   const options: ExampleOptions = {
+ *     required_func: () => {},
+ *     b: "test",
+ *     f: {
+ *       i: "example",
+ *     },
+ *   };
+ *   expect(mergeOptions<ExampleOptions>(options
+ *     ,
+ *     EXAMPLE_DEFAULTS,
+ *   )).toEqual({
+ *     a: 0,
+ *     b: "test",
+ *     c: {
+ *       d: 1,
+ *       e: "default",
+ *     },
+ *     f: {
+ *       h: 1,
+ *       i: "example",
+ *     },
+ *     optional_func: EXAMPLE_DEFAULTS.optional_func,
+ *     required_func: options.required_func,
+ *   });
+ * }
+ *
+ *
+ * @param options the options to merge with defaults
+ * @param defaults default values for the options object.
+ * @returns
+ */
 export function mergeOptions<
   Options extends object,
   // const Defaults extends DefaultsForDeep<Options>,
 >(
-  options: Options,
+  options: OptionsObjectFilter<Options>,
   defaults: DefaultsForDeep<Options>, //Defaults,
 ): OptionsWithDefaultsDeep<Options, DefaultsForDeep<Options>> {
   const result = { ...options } as any;
   for (const key in defaults) {
     if (result[key] == null) {
       result[key] = (defaults as any)[key];
+      continue;
+    }
+    if (
+      typeof result[key] === "object" &&
+      typeof (defaults as any)[key] === "object" &&
+      !(result[key] instanceof Function)
+    ) {
+      // recursively merge objects
+      result[key] = mergeOptions(
+        result[key] as OptionsObjectFilter<Options[keyof Options]>,
+        (defaults as any)[key],
+      ) as any;
     }
   }
   return result as OptionsWithDefaultsDeep<Options, DefaultsForDeep<Options>>;
