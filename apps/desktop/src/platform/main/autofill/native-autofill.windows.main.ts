@@ -5,9 +5,9 @@ import { autofill, passkey_authenticator } from "@bitwarden/desktop-napi";
 
 import { WindowMain } from "../../../main/window.main";
 
-import { NativeAutofillFido2Credential, NativeAutofillSyncParams } from "./sync.command";
 import { CommandDefinition } from "./command";
 import type { RunCommandParams, RunCommandResult } from "./native-autofill.main";
+import { NativeAutofillFido2Credential, NativeAutofillSyncParams } from "./sync.command";
 
 export class NativeAutofillWindowsMain {
   private pendingPasskeyRequests = new Map<string, (response: any) => void>();
@@ -329,23 +329,23 @@ export class NativeAutofillWindowsMain {
       }
 
       const syncParams = command.params as NativeAutofillSyncParams;
-
+      // Only sync FIDO2 credentials
       const fido2Credentials = syncParams.credentials.filter((c) => c.type === "fido2");
 
-      const mapped = fido2Credentials.map((cred: NativeAutofillFido2Credential) => {
-        const x: passkey_authenticator.SyncedCredential = {
+      const mappedCredentials = fido2Credentials.map((cred: NativeAutofillFido2Credential) => {
+        const credential: passkey_authenticator.SyncedCredential = {
           credentialId: cred.credentialId,
           rpId: cred.rpId,
           userName: cred.userName,
           userHandle: cred.userHandle,
         };
-        this.logService.info("Mapped credential:", x);
-        return x;
+        this.logService.info("Mapped credential:", credential);
+        return credential;
       });
 
-      this.logService.info("Syncing passkeys to Windows:", mapped);
+      this.logService.info("Syncing passkeys to Windows:", mappedCredentials);
 
-      passkey_authenticator.syncCredentialsToWindows(mapped);
+      passkey_authenticator.syncCredentialsToWindows(mappedCredentials);
 
       // TODO: Return a meaningful result
       const res = { value: { added: 999 } } as RunCommandResult<C>;
