@@ -2093,6 +2093,12 @@
   "default": {
     "message": "Default"
   },
+  "developerTools": {
+    "message": "Developer Tools"
+  },
+  "featureFlags": {
+    "message": "Feature flags"
+  },
   "domainRules": {
     "message": "Domain rules"
   },

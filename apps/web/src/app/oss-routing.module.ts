@@ -176,6 +176,22 @@ const routes: Routes = [
     path: "",
     component: AnonLayoutWrapperComponent,
     children: [
+      // TODO: consider adding guard to prevent access to this route if env is not dev or qa.
+      // TODO: figure out why this doesn't work when other one does.
+      // this is for anon-web scenario
+      {
+        path: "feature-flags",
+        data: {
+          pageTitle: {
+            key: "featureFlags",
+          },
+          maxWidth: "3xl",
+          hideIcon: true, // TODO: log bug with UIF or offer a PR to fix where this isn't reset to false upon navigation
+        } satisfies RouteDataProperties & AnonLayoutWrapperData,
+        loadComponent: () =>
+          import("@bitwarden/angular/platform/feature-flags").then((m) => m.FeatureFlagsComponent),
+      },
+
       {
         path: "signup",
         canActivate: [unauthGuardFn()],
@@ -699,6 +715,27 @@ const routes: Routes = [
             path: "sponsored-families",
             component: SponsoredFamiliesComponent,
             data: { titleId: "sponsoredFamilies" } satisfies RouteDataProperties,
+          },
+          // TODO: consider adding guard to prevent access to this route if env is not dev or qa.
+          {
+            path: "developer-tools",
+            data: { titleId: "developerTools" } satisfies RouteDataProperties,
+            loadComponent: () =>
+              import("./platform/settings/developer-tools").then((m) => m.DeveloperToolsComponent),
+            children: [
+              {
+                path: "",
+                redirectTo: "feature-flags",
+                pathMatch: "full",
+              },
+              {
+                path: "feature-flags",
+                loadComponent: () =>
+                  import("@bitwarden/angular/platform/feature-flags").then(
+                    (m) => m.FeatureFlagsComponent,
+                  ),
+              },
+            ],
           },
         ],
       },

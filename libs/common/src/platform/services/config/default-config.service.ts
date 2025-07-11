@@ -17,7 +17,11 @@ import { SemVer } from "semver";
 
 import { AuthService } from "../../../auth/abstractions/auth.service";
 import { AuthenticationStatus } from "../../../auth/enums/authentication-status";
-import { FeatureFlag, getFeatureFlagValue } from "../../../enums/feature-flag.enum";
+import {
+  AllowedFeatureFlagTypes,
+  FeatureFlag,
+  getFeatureFlagValue,
+} from "../../../enums/feature-flag.enum";
 import { UserId } from "../../../types/guid";
 import { ConfigApiServiceAbstraction } from "../../abstractions/config/config-api.service.abstraction";
 import { ConfigService } from "../../abstractions/config/config.service";
@@ -55,6 +59,8 @@ export class DefaultConfigService implements ConfigService {
   private failedFetchFallbackSubject = new Subject<ServerConfig>();
 
   serverConfig$: Observable<ServerConfig>;
+
+  featureStates$: Observable<{ [key: string]: AllowedFeatureFlagTypes } | undefined>;
 
   serverSettings$: Observable<ServerSettings>;
 
@@ -115,6 +121,10 @@ export class DefaultConfigService implements ConfigService {
 
     this.serverSettings$ = this.serverConfig$.pipe(
       map((config) => config?.settings ?? new ServerSettings()),
+    );
+
+    this.featureStates$ = this.serverConfig$.pipe(
+      map((config) => config?.featureStates ?? undefined),
     );
   }
 
