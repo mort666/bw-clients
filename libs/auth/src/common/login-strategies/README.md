@@ -16,16 +16,19 @@
 
 Bitwarden provides 5 methods for logging in to Bitwarden, as defined in our [`AuthenticationType`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/enums/authentication-type.ts) enum. They are:
 
-1. Login with Master Password
-2. Login with Device (aka Login with Auth Request)
-3. Login with SSO
-4. Login with Passkey (aka Login with WebAuthn)
-5. Login with User API Key
+1. [Login with Master Password](https://bitwarden.com/help/bitwarden-security-white-paper/#authentication-and-decryption) &mdash; authentication and an email address and master password
+2. [Login with Device](https://bitwarden.com/help/log-in-with-device/) (aka Login with Auth Request) &mdash; authentication with a one-time access code
+3. [Login with SSO](https://bitwarden.com/help/about-sso/) &mdash; authentication with an SSO Identity Provider (IdP) through SAML or OpenID Connect (OIDC)
+4. [Login with Passkey](https://bitwarden.com/help/login-with-passkeys/) (aka Login with WebAuthn) &mdash; authentication with a passkey
+5. [Login with User API Key](https://bitwarden.com/help/personal-api-key/) &mdash; authentication with an API key and secret.
 
 <br>
 
-- Methods 1-4 can be initiated from the `LoginComponent` on our Angular Clients (route `/login`). [EDIT: These methods can also be initiated from the CLI client].
-- Method 5 can only be initiated from the CLI client.
+- Methods 1-4
+  - Can be initiated from the `LoginComponent` on our Angular clients (route `/login`)
+  - Can be initiated from our CLI client
+- Method 5
+  - Can be initiated _only_ from our CLI client
 
 <br>
 
@@ -47,6 +50,7 @@ export class PasswordLoginCredentials {
     public email: string,
     public masterPassword: string,
     public twoFactor?: TokenTwoFactorRequest,
+    public masterPasswordPoliciesFromOrgInvite?: MasterPasswordPolicyOptions,
   ) {}
 }
 ```
@@ -123,13 +127,15 @@ Each login strategy has it's own implementation of the `logIn()` method, which t
 
       - The contents of the payload for this request are determined by calling the `toIdentityToken()` method that exists on the base `TokenRequest` object, but can be extended by the sub-classes. This method translates "the information in the `TokenRequest` into the payload that will be sent to the `/connect/token` endpoint on our Identity Server.
 
-    - The Identity Server validates the request based on the grant type, and then generates a response that will be some form of `Identity[Type]Response`:
+    - The Identity Server validates the request based on the grant type, and then generates a response that will be some form of `IdentityResponse`:
 
       - [`IdentityTokenResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-token.response.ts)
 
         - This response contains:
 
           - Authentication information for the user
+            - Access Token
+            - Refresh Token
           - Decryption information for the user
 
       - [`IdentityTwoFactorResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-two-factor.response.ts)
@@ -140,13 +146,19 @@ Each login strategy has it's own implementation of the `logIn()` method, which t
 
         - This reponse contains information about whether or not the user's device has been verified.
 
-  - **2b) &mdash; Calls one of the following methods based on the type of `Identity[Type]Response`, each of which returns an `AuthResult`:**
+  - **2b) &mdash; Calls one of the following methods based on the type of `IdentityResponse`, each of which returns an `AuthResult`:**
 
     - If `IdentityTokenResponse`, call `processTokenResponse()`
 
-      - This method does two main things:
+      - This method does three main things:
+
         - Set the user's **authentication information** to state via `saveAccountInformation()`
+
+          - Decodes the Access Token
+
         - Set the user's **decryption information** to state via `setMasterKey()`, `setUserKey()`, and `setPrivateKey()`
+
+        - Set a `forceSetPasswordReason` in state, if necessary.
 
     - If `IdentityTwoFactorResponse`, call `processTwoFactorResponse()`
 
