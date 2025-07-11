@@ -17,6 +17,8 @@ import { OrganizationId, UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 
+import { GroupApiService, GroupView } from "../admin-console/organizations/core";
+
 import { EventService } from "./event.service";
 
 describe("EventService", () => {
@@ -27,10 +29,12 @@ describe("EventService", () => {
   let mockCipherService = mock<CipherService>();
   let mockOrgUserApiService = mock<OrganizationUserApiService>();
   let mockCollectionService = mock<CollectionService>();
+  let mockGroupApiService = mock<GroupApiService>();
 
   const userId = Utils.newGuid() as UserId;
   const orgId = Utils.newGuid() as OrganizationId;
   const collectionId = Utils.newGuid() as string;
+  const groupId = Utils.newGuid() as string;
 
   const orgUserMiniResponse: ListResponse<OrganizationUserUserMiniResponse> = {
     continuationToken: null,
@@ -50,6 +54,13 @@ describe("EventService", () => {
     } as CollectionView,
   ];
 
+  const groupViews = [
+    {
+      id: groupId,
+      name: "Test Group",
+    } as GroupView,
+  ];
+
   const baseEvent = {
     type: EventType.Cipher_Created,
     cipherId: "abcdef1234567890",
@@ -57,6 +68,7 @@ describe("EventService", () => {
     organizationUserId: userId,
     userId: userId,
     collectionId: collectionId,
+    groupId: groupId,
     deviceType: 0, // Android
   } as any;
 
@@ -67,6 +79,7 @@ describe("EventService", () => {
     mockCipherService = mock<CipherService>();
     mockOrgUserApiService = mock<OrganizationUserApiService>();
     mockCollectionService = mock<CollectionService>();
+    mockGroupApiService = mock<GroupApiService>();
     eventService = new EventService(
       mocki18nService,
       mockPolicyService,
@@ -74,6 +87,7 @@ describe("EventService", () => {
       mockCipherService,
       mockOrgUserApiService,
       mockCollectionService,
+      mockGroupApiService,
     );
 
     // reset mocks
@@ -92,6 +106,7 @@ describe("EventService", () => {
     ]);
     mockOrgUserApiService.getAllMiniUserDetails.mockResolvedValue(orgUserMiniResponse);
     mockCollectionService.getAllDecrypted.mockResolvedValue(collectionViews);
+    mockGroupApiService.getAll.mockResolvedValue(groupViews);
 
     // this method will use the mocks defined above
     await eventService.loadAllOrganizationInfo(orgId, userId);
@@ -277,6 +292,29 @@ describe("EventService", () => {
         expect(info.appName).toBe("mobile - Android");
         expect(info.eventName).toBe(eventName);
         expect(info.eventLink).toContain("<code>Test Collection</code>");
+      });
+    });
+  });
+
+  describe("getEventInfo for Groups", () => {
+    const testCases = [
+      { type: EventType.Group_Created, eventName: "createdGroupId" },
+      { type: EventType.Group_Updated, eventName: "editedGroupId" },
+      { type: EventType.Group_Deleted, eventName: "deletedGroupId" },
+    ];
+
+    testCases.forEach(({ type, eventName }) => {
+      it(`should return correct info for group event type ${type}`, async () => {
+        const event = { ...baseEvent, type, groupId };
+
+        const info = await eventService.getEventInfo(event);
+
+        expect(info.message).toContain("Test Group");
+        expect(info.humanReadableMessage).toContain(eventName);
+        expect(info.appIcon).toBe("bwi-mobile");
+        expect(info.appName).toBe("mobile - Android");
+        expect(info.eventName).toBe(eventName);
+        expect(info.eventLink).toContain("<code>Test Group</code>");
       });
     });
   });

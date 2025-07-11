@@ -14,12 +14,15 @@ import { OrganizationId, UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 
+import { GroupApiService } from "../admin-console/organizations/core";
+
 @Injectable()
 export class EventService {
   private policies: Policy[] = [];
   private ciphers: CipherView[] = [];
   private organizationUserIdMap: Map<string, { name: string; email: string }> = new Map();
   private collections: Map<string, { name: string }> = new Map();
+  private groupIdMap: Map<string, { name: string }> = new Map();
 
   constructor(
     private i18nService: I18nService,
@@ -28,6 +31,7 @@ export class EventService {
     private cipherService: CipherService,
     private organizationUserApiService: OrganizationUserApiService,
     private collectionService: CollectionService,
+    private groupApiService: GroupApiService,
   ) {
     accountService.activeAccount$
       .pipe(
@@ -65,6 +69,10 @@ export class EventService {
 
     (await this.collectionService.getAllDecrypted()).map((c) => {
       this.collections.set(c.id, { name: c.name });
+    });
+
+    (await this.groupApiService.getAll(organizationId)).map((g) => {
+      this.groupIdMap.set(g.id, { name: g.name });
     });
   }
 
@@ -300,14 +308,20 @@ export class EventService {
       case EventType.Group_Created:
         msg = this.i18nService.t("createdGroupId", this.formatGroupId(ev));
         humanReadableMsg = this.i18nService.t("createdGroupId", this.getShortId(ev.groupId));
+        eventName = this.i18nService.t("createdGroupId", "");
+        eventLink = this.formatGroupId(ev);
         break;
       case EventType.Group_Updated:
         msg = this.i18nService.t("editedGroupId", this.formatGroupId(ev));
         humanReadableMsg = this.i18nService.t("editedGroupId", this.getShortId(ev.groupId));
+        eventName = this.i18nService.t("editedGroupId", "");
+        eventLink = this.formatGroupId(ev);
         break;
       case EventType.Group_Deleted:
         msg = this.i18nService.t("deletedGroupId", this.formatGroupId(ev));
         humanReadableMsg = this.i18nService.t("deletedGroupId", this.getShortId(ev.groupId));
+        eventName = this.i18nService.t("deletedGroupId", "");
+        eventLink = this.formatGroupId(ev);
         break;
       // Org user
       case EventType.OrganizationUser_Invited:
@@ -683,7 +697,8 @@ export class EventService {
 
   private formatGroupId(ev: EventResponse) {
     const shortId = this.getShortId(ev.groupId);
-    const a = this.makeAnchor(shortId);
+    const anchorName = this.groupIdMap.get(ev.groupId)?.name ?? shortId;
+    const a = this.makeAnchor(anchorName);
     a.setAttribute("href", "#/organizations/" + ev.organizationId + "/groups?search=" + shortId);
     return a.outerHTML;
   }
