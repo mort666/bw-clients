@@ -1,6 +1,8 @@
 import { mock } from "jest-mock-extended";
 
 import {
+  CollectionService,
+  CollectionView,
   OrganizationUserApiService,
   OrganizationUserUserMiniResponse,
 } from "@bitwarden/admin-console/common";
@@ -24,9 +26,11 @@ describe("EventService", () => {
   let mockAccountService: AccountService;
   let mockCipherService = mock<CipherService>();
   let mockOrgUserApiService = mock<OrganizationUserApiService>();
+  let mockCollectionService = mock<CollectionService>();
 
   const userId = Utils.newGuid() as UserId;
   const orgId = Utils.newGuid() as OrganizationId;
+  const collectionId = Utils.newGuid() as string;
 
   const orgUserMiniResponse: ListResponse<OrganizationUserUserMiniResponse> = {
     continuationToken: null,
@@ -39,12 +43,20 @@ describe("EventService", () => {
     ],
   } as ListResponse<OrganizationUserUserMiniResponse>;
 
+  const collectionViews = [
+    {
+      id: collectionId,
+      name: "Test Collection",
+    } as CollectionView,
+  ];
+
   const baseEvent = {
     type: EventType.Cipher_Created,
     cipherId: "abcdef1234567890",
     organizationId: "orgid1234567890" as OrganizationId,
     organizationUserId: userId,
     userId: userId,
+    collectionId: collectionId,
     deviceType: 0, // Android
   } as any;
 
@@ -54,13 +66,18 @@ describe("EventService", () => {
     mockAccountService = mockAccountServiceWith(userId);
     mockCipherService = mock<CipherService>();
     mockOrgUserApiService = mock<OrganizationUserApiService>();
+    mockCollectionService = mock<CollectionService>();
     eventService = new EventService(
       mocki18nService,
       mockPolicyService,
       mockAccountService,
       mockCipherService,
       mockOrgUserApiService,
+      mockCollectionService,
     );
+
+    // reset mocks
+    jest.clearAllMocks();
 
     // Default mock for i18nService.t
     mocki18nService.t.mockImplementation((key: string, value?: string) => {
@@ -70,12 +87,11 @@ describe("EventService", () => {
       return key;
     });
 
-    // mock response for getAllDecrypted
     mockCipherService.getAllDecrypted.mockResolvedValue([
       { id: "abcdef1234567890", name: "Test Cipher" } as CipherView,
     ]);
-    // mock response for getAllMiniUserDetails
     mockOrgUserApiService.getAllMiniUserDetails.mockResolvedValue(orgUserMiniResponse);
+    mockCollectionService.getAllDecrypted.mockResolvedValue(collectionViews);
 
     // this method will use the mocks defined above
     await eventService.loadAllOrganizationInfo(orgId, userId);
@@ -238,6 +254,29 @@ describe("EventService", () => {
         expect(info.appName).toBe("mobile - Android");
         expect(info.eventName).toBe(eventName);
         expect(info.eventLink).toContain("<code>Test User</code>");
+      });
+    });
+  });
+
+  describe("getEventInfo for Collections", () => {
+    const testCases = [
+      { type: EventType.Collection_Created, eventName: "createdCollectionId" },
+      { type: EventType.Collection_Updated, eventName: "editedCollectionId" },
+      { type: EventType.Collection_Deleted, eventName: "deletedCollectionId" },
+    ];
+
+    testCases.forEach(({ type, eventName }) => {
+      it(`should return correct info for collection event type ${type}`, async () => {
+        const event = { ...baseEvent, type };
+
+        const info = await eventService.getEventInfo(event);
+
+        expect(info.message).toContain("Test Collection");
+        expect(info.humanReadableMessage).toContain(eventName);
+        expect(info.appIcon).toBe("bwi-mobile");
+        expect(info.appName).toBe("mobile - Android");
+        expect(info.eventName).toBe(eventName);
+        expect(info.eventLink).toContain("<code>Test Collection</code>");
       });
     });
   });

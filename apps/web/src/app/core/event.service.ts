@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { switchMap } from "rxjs";
 
-import { OrganizationUserApiService } from "@bitwarden/admin-console/common";
+import { CollectionService, OrganizationUserApiService } from "@bitwarden/admin-console/common";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
@@ -19,6 +19,7 @@ export class EventService {
   private policies: Policy[] = [];
   private ciphers: CipherView[] = [];
   private organizationUserIdMap: Map<string, { name: string; email: string }> = new Map();
+  private collections: Map<string, { name: string }> = new Map();
 
   constructor(
     private i18nService: I18nService,
@@ -26,6 +27,7 @@ export class EventService {
     accountService: AccountService,
     private cipherService: CipherService,
     private organizationUserApiService: OrganizationUserApiService,
+    private collectionService: CollectionService,
   ) {
     accountService.activeAccount$
       .pipe(
@@ -57,9 +59,12 @@ export class EventService {
   async loadAllOrganizationInfo(organizationId: OrganizationId, userId: UserId) {
     this.ciphers = await this.cipherService.getAllDecrypted(userId);
 
-    const orgUsers = await this.organizationUserApiService.getAllMiniUserDetails(organizationId);
-    orgUsers.data.forEach((u) => {
+    (await this.organizationUserApiService.getAllMiniUserDetails(organizationId)).data.map((u) => {
       this.organizationUserIdMap.set(u.id, { name: u.name, email: u.email });
+    });
+
+    (await this.collectionService.getAllDecrypted()).map((c) => {
+      this.collections.set(c.id, { name: c.name });
     });
   }
 
@@ -270,6 +275,8 @@ export class EventService {
           "createdCollectionId",
           this.getShortId(ev.collectionId),
         );
+        eventName = this.i18nService.t("createdCollectionId", "");
+        eventLink = this.formatCollectionId(ev);
         break;
       case EventType.Collection_Updated:
         msg = this.i18nService.t("editedCollectionId", this.formatCollectionId(ev));
@@ -277,6 +284,8 @@ export class EventService {
           "editedCollectionId",
           this.getShortId(ev.collectionId),
         );
+        eventName = this.i18nService.t("editedCollectionId", "");
+        eventLink = this.formatCollectionId(ev);
         break;
       case EventType.Collection_Deleted:
         msg = this.i18nService.t("deletedCollectionId", this.formatCollectionId(ev));
@@ -284,6 +293,8 @@ export class EventService {
           "deletedCollectionId",
           this.getShortId(ev.collectionId),
         );
+        eventName = this.i18nService.t("deletedCollectionId", "");
+        eventLink = this.formatCollectionId(ev);
         break;
       // Group
       case EventType.Group_Created:
@@ -679,7 +690,10 @@ export class EventService {
 
   private formatCollectionId(ev: EventResponse) {
     const shortId = this.getShortId(ev.collectionId);
-    const a = this.makeAnchor(shortId);
+
+    const anchorName = this.collections.get(ev.collectionId)?.name ?? shortId;
+
+    const a = this.makeAnchor(anchorName);
     a.setAttribute(
       "href",
       `#/organizations/${ev.organizationId}/vault?collectionId=${ev.collectionId}`,
