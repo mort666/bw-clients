@@ -3,15 +3,20 @@
     <i class="bwi bwi-spinner bwi-spin tw-text-2xl" aria-hidden="true"></i>
   </div>
 } @else {
-  <bit-table-scroll [dataSource]="tableDataSource" [rowSize]="50">
+  <!-- // TODO: add forced update to config -->
+  <!-- // TODO: add filtering inline for table -->
+
+  <bit-table [dataSource]="tableDataSource">
     <ng-container header>
       <th bitCell bitSortable="key" default>key</th>
       <th bitCell bitSortable="value" default>value</th>
     </ng-container>
 
-    <ng-template bitRowDef let-row>
-      <td bitCell>{{ row.key }}</td>
-      <td bitCell>{{ row.value }}</td>
+    <ng-template body let-rows$>
+      <tr bitRow *ngFor="let r of rows$ | async">
+        <td bitCell>{{ r.key }}</td>
+        <td bitCell>{{ r.value }}</td>
+      </tr>
     </ng-template>
-  </bit-table-scroll>
+  </bit-table>
 }
