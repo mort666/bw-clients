@@ -99,7 +99,7 @@ export class AllApplicationsComponent implements OnInit {
                 ...app,
                 isMarkedAsCritical: criticalUrls.includes(app.applicationName),
               })) as ApplicationHealthReportDetailWithCriticalFlag[];
-              return { data, organization };
+              return { data, organization, memberDetails };
             }
 
             return { data: applications, organization, memberDetails };
