@@ -18,7 +18,6 @@ import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 @Injectable()
 export class EventService {
   private policies: Policy[];
-  private organizationCiphers: CipherView[] = [];
   private ciphers: CipherView[] = [];
 
   constructor(
@@ -55,14 +54,11 @@ export class EventService {
   }
 
   async loadAllOrganizationCiphers(organizationId: OrganizationId, userId: UserId) {
-    // this.organizationCiphers =
-    //   await this.cipherService.getAllFromApiForOrganization(organizationId);
     this.ciphers = await this.cipherService.getAllDecrypted(userId);
   }
 
   async getEventInfo(ev: EventResponse, options = new EventOptions()): Promise<EventInfo> {
     const appInfo = this.getAppInfo(ev);
-    // const cv = this.organizationCiphers.find((c) => c.id === ev.cipherId);
     const cv = this.ciphers.find((c) => c.id === ev.cipherId);
     options.cipher = cv;
     options.useCipherName = !!cv;
