@@ -44,6 +44,7 @@ describe("RiskInsightsReportService", () => {
     const result = await firstValueFrom(service.generateRawDataReport$("orgId"));
 
     expect(result.ciphers).toHaveLength(6);
+    expect(result.members).toHaveLength(9);
 
     let testCaseResults = result.ciphers.filter(
       (x) => x.id === "cbea34a8-bde4-46ad-9d19-b05001228ab1",
@@ -68,10 +69,23 @@ describe("RiskInsightsReportService", () => {
     expect(testCase.reusedPasswordCount).toEqual(1);
   });
 
+  it("should generate the raw data for members correctly", async () => {
+    const result = await firstValueFrom(service.generateRawDataReport$("orgId"));
+
+    expect(result.members).toHaveLength(9);
+
+    let testCaseResults = result.members.filter((x) => x.email === "invited.user1@secureco.com");
+    expect(testCaseResults).toHaveLength(1);
+
+    testCaseResults = result.members.filter((x) => x.email === "invited.user2@secureco.com");
+    expect(testCaseResults).toHaveLength(1);
+  });
+
   it("should generate the raw data + uri report correctly", async () => {
     const result = await firstValueFrom(service.generateRawDataUriReport$("orgId"));
 
     expect(result.ciphers).toHaveLength(11);
+    expect(result.members).toHaveLength(9);
 
     // Two ciphers that have google.com as their uri. There should be 2 results
     const googleResults = result.ciphers.filter((x) => x.trimmedUri === "google.com");
@@ -143,7 +157,7 @@ describe("RiskInsightsReportService", () => {
       reportResult.members,
     );
 
-    expect(reportSummary.totalMemberCount).toEqual(7);
+    expect(reportSummary.totalMemberCount).toEqual(9);
     expect(reportSummary.totalAtRiskMemberCount).toEqual(6);
     expect(reportSummary.totalApplicationCount).toEqual(8);
     expect(reportSummary.totalAtRiskApplicationCount).toEqual(7);

@@ -68,6 +68,7 @@ export class RiskInsightsDataService {
         },
         error: () => {
           this.applicationsSubject.next([]);
+          this.memberDetailsSubject.next([]);
         },
       });
   }
