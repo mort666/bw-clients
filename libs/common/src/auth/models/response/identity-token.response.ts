@@ -11,21 +11,24 @@ import { MasterPasswordPolicyResponse } from "./master-password-policy.response"
 import { UserDecryptionOptionsResponse } from "./user-decryption-options/user-decryption-options.response";
 
 export class IdentityTokenResponse extends BaseResponse {
+  // Authentication Information
   accessToken: string;
   expiresIn: number;
   refreshToken: string;
   tokenType: string;
 
+  // Decryption Information
   resetMasterPassword: boolean;
   privateKey: string; // userKeyEncryptedPrivateKey
   key?: EncString; // masterKeyEncryptedUserKey
-  twoFactorToken: string;
+  twoFactorToken: string; // a token that can be used to bypass 2FA. Generated when a user chooses to "remember" their 2FA response.
   kdf: KdfType;
   kdfIterations: number;
   kdfMemory?: number;
   kdfParallelism?: number;
-  forcePasswordReset: boolean;
-  masterPasswordPolicy: MasterPasswordPolicyResponse;
+  forcePasswordReset: boolean; // whether the user must immediately set/change their password
+  masterPasswordPolicy: MasterPasswordPolicyResponse; // the combined master password policies for any organizations of which the user is a member
+
   apiUseKeyConnector: boolean;
   keyConnectorUrl: string;
 

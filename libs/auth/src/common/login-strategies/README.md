@@ -86,6 +86,100 @@ The `LoginStrategyService` uses the `type` property on the credentials object to
 
 For example, the `PasswordLoginCredentials` object has `type = 0` (which is `AuthenticationType.Password`). This tells the `LoginStrategyService` to use the `PasswordLoginStrategy` for the login process.
 
+Here is what all of this looks like so far:
+
+```mermaid
+flowchart TD
+    %% Top row: Login methods
+    A1[Login with Master Password]
+    A2[Login with Device / Auth Request]
+    A3[Login with SSO]
+    A4[Login with Passkey / WebAuthn]
+    A5[Login with User API Key - CLI only]
+
+    %% Second row: Credentials objects
+    B1[PasswordLoginCredentials]
+    B2[AuthRequestLoginCredentials]
+    B3[SsoLoginCredentials]
+    B4[WebAuthnLoginCredentials]
+    B5[UserApiLoginCredentials]
+
+    %% Third row: Banner-wide LoginStrategyService
+    C["""────────────────────────────────────────────
+    LoginStrategyService
+    ────────────────────────────────────────────"""]
+
+    %% Fourth row: Login Strategies
+    D1[PasswordLoginStrategy]
+    D2[AuthRequestLoginStrategy]
+    D3[SsoLoginStrategy]
+    D4[WebAuthnLoginStrategy]
+    D5[UserApiLoginStrategy]
+
+    %% Fifth row: Token Request objects
+    E1[PasswordTokenRequest]
+    E2[PasswordTokenRequest]
+    E3[SsoTokenRequest]
+    E4[WebAuthnTokenRequest]
+    E5[UserApiTokenRequest]
+
+    %% Align rows and arrows
+    A1 --> B1
+    A2 --> B2
+    A3 --> B3
+    A4 --> B4
+    A5 --> B5
+
+    B1 --> C
+    B2 --> C
+    B3 --> C
+    B4 --> C
+    B5 --> C
+
+    C --> D1
+    C --> D2
+    C --> D3
+    C --> D4
+    C --> D5
+
+    D1 --> E1
+    D2 --> E2
+    D3 --> E3
+    D4 --> E4
+    D5 --> E5
+
+    %% Style login method boxes (navy background, white text)
+    style A1 fill:#003366,stroke:#003366,color:#FFFFFF
+    style A2 fill:#003366,stroke:#003366,color:#FFFFFF
+    style A3 fill:#003366,stroke:#003366,color:#FFFFFF
+    style A4 fill:#003366,stroke:#003366,color:#FFFFFF
+    style A5 fill:#003366,stroke:#003366,color:#FFFFFF
+
+    %% Style credentials object boxes (orange background, black text)
+    style B1 fill:#FFA500,stroke:#CC8400,color:#000000
+    style B2 fill:#FFA500,stroke:#CC8400,color:#000000
+    style B3 fill:#FFA500,stroke:#CC8400,color:#000000
+    style B4 fill:#FFA500,stroke:#CC8400,color:#000000
+    style B5 fill:#FFA500,stroke:#CC8400,color:#000000
+
+    %% Style LoginStrategyService banner (dark green background, white text)
+    style C fill:#2E8B57,stroke:#2E8B57,color:#FFFFFF
+
+    %% Style login strategy boxes (lighter green background, black text)
+    style D1 fill:#90EE90,stroke:#66CC66,color:#000000
+    style D2 fill:#90EE90,stroke:#66CC66,color:#000000
+    style D3 fill:#90EE90,stroke:#66CC66,color:#000000
+    style D4 fill:#90EE90,stroke:#66CC66,color:#000000
+    style D5 fill:#90EE90,stroke:#66CC66,color:#000000
+
+    %% Style token request boxes (light gray background, black text)
+    style E1 fill:#E5E8E8,stroke:#BDC3C7,color:#000000
+    style E2 fill:#E5E8E8,stroke:#BDC3C7,color:#000000
+    style E3 fill:#E5E8E8,stroke:#BDC3C7,color:#000000
+    style E4 fill:#E5E8E8,stroke:#BDC3C7,color:#000000
+    style E5 fill:#E5E8E8,stroke:#BDC3C7,color:#000000
+```
+
 <br>
 
 ## The `logIn()` and `startLogin()` Methods
