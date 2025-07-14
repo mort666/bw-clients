@@ -60,4 +60,9 @@ export abstract class ConfigService {
    * Triggers a check that the config for the currently active user is up-to-date. If it is not, it will be fetched from the server and stored.
    */
   abstract ensureConfigFetched(): Promise<void>;
+
+  /**
+   * Refreshes the server config, forcing a new retrieval from the server.
+   */
+  abstract refreshServerConfig(): void;
 }

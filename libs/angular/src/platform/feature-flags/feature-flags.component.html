@@ -3,20 +3,30 @@
     <i class="bwi bwi-spinner bwi-spin tw-text-2xl" aria-hidden="true"></i>
   </div>
 } @else {
-  <!-- // TODO: add forced update to config -->
-  <!-- // TODO: add filtering inline for table -->
+  <button buttonType="primary" type="button" bitButton (click)="refresh()" class="tw-mb-4">
+    {{ "refresh" | i18n }}
+  </button>
 
-  <bit-table [dataSource]="tableDataSource">
-    <ng-container header>
-      <th bitCell bitSortable="key" default>key</th>
-      <th bitCell bitSortable="value" default>value</th>
-    </ng-container>
+  <bit-search
+    id="search"
+    placeholder="{{ 'filter' | i18n }}"
+    [(ngModel)]="searchText"
+    (ngModelChange)="onSearchTextChanged($event)"
+  />
 
-    <ng-template body let-rows$>
-      <tr bitRow *ngFor="let r of rows$ | async">
-        <td bitCell>{{ r.key }}</td>
-        <td bitCell>{{ r.value }}</td>
-      </tr>
-    </ng-template>
-  </bit-table>
+  <div class="tw-flex tw-flex-col">
+    <bit-table [dataSource]="tableDataSource">
+      <ng-container header>
+        <th bitCell bitSortable="key" default>{{ "flagName" | i18n }}</th>
+        <th bitCell bitSortable="value" default>{{ "flagValue" | i18n }}</th>
+      </ng-container>
+
+      <ng-template body let-rows$>
+        <tr bitRow *ngFor="let r of rows$ | async">
+          <td bitCell>{{ r.key }}</td>
+          <td bitCell>{{ r.value }}</td>
+        </tr>
+      </ng-template>
+    </bit-table>
+  </div>
 }

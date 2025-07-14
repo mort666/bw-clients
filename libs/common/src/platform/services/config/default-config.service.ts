@@ -9,6 +9,7 @@ import {
   Observable,
   of,
   shareReplay,
+  startWith,
   Subject,
   switchMap,
   tap,
@@ -57,6 +58,7 @@ export const GLOBAL_SERVER_CONFIGURATIONS = KeyDefinition.record<ServerConfig, A
 // FIXME: currently we are limited to api requests for active users. Update to accept a UserId and APIUrl once ApiService supports it.
 export class DefaultConfigService implements ConfigService {
   private failedFetchFallbackSubject = new Subject<ServerConfig>();
+  private manualRefresh$ = new Subject<void>();
 
   serverConfig$: Observable<ServerConfig>;
 
@@ -82,22 +84,28 @@ export class DefaultConfigService implements ConfigService {
       userId$,
       this.environmentService.environment$,
       authStatus$,
+      // must have default value so combineLatest will emit once others have emitted
+      this.manualRefresh$.pipe(startWith(false)),
     ]).pipe(
-      switchMap(([userId, environment, authStatus]) => {
+      switchMap(([userId, environment, authStatus, manualRefresh]) => {
         if (userId == null || authStatus !== AuthenticationStatus.Unlocked) {
           return this.globalConfigFor$(environment.getApiUrl()).pipe(
-            map((config) => [config, null, environment] as const),
+            map((config) => [config, null, environment, manualRefresh] as const),
           );
         }
 
         return this.userConfigFor$(userId).pipe(
-          map((config) => [config, userId, environment] as const),
+          map((config) => [config, userId, environment, manualRefresh] as const),
         );
       }),
       tap(async (rec) => {
-        const [existingConfig, userId, environment] = rec;
+        const [existingConfig, userId, environment, manualRefresh] = rec;
         // Grab new config if older retrieval interval
-        if (!existingConfig || this.olderThanRetrievalInterval(existingConfig.utcDate)) {
+        if (
+          !existingConfig ||
+          this.olderThanRetrievalInterval(existingConfig.utcDate) ||
+          manualRefresh
+        ) {
           await this.renewConfig(existingConfig, userId, environment);
         }
       }),
@@ -126,6 +134,10 @@ export class DefaultConfigService implements ConfigService {
     this.featureStates$ = this.serverConfig$.pipe(
       map((config) => config?.featureStates ?? undefined),
     );
+  }
+
+  refreshServerConfig() {
+    this.manualRefresh$.next();
   }
 
   getFeatureFlag$<Flag extends FeatureFlag>(key: Flag) {

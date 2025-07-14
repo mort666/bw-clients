@@ -2099,6 +2099,12 @@
   "featureFlags": {
     "message": "Feature flags"
   },
+  "flagName": {
+    "message": "Flag name"
+  },
+  "flagValue": {
+    "message": "Flag value"
+  },
   "domainRules": {
     "message": "Domain rules"
   },
