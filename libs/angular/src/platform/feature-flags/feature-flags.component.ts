@@ -2,10 +2,12 @@ import { CommonModule } from "@angular/common";
 import { Component, DestroyRef, OnInit } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormsModule } from "@angular/forms";
-import { map } from "rxjs";
+import { map, tap } from "rxjs";
 
 import { AllowedFeatureFlagTypes } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
+import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import {
   ButtonModule,
   FormFieldModule,
@@ -13,6 +15,7 @@ import {
   SearchModule,
   TableDataSource,
   TableModule,
+  ToastService,
 } from "@bitwarden/components";
 import { I18nPipe } from "@bitwarden/ui-common";
 
@@ -34,17 +37,25 @@ export class FeatureFlagsComponent implements OnInit {
   loading = true;
   tableDataSource = new TableDataSource<{ key: string; value: AllowedFeatureFlagTypes }>();
 
+  featureStates: { [key: string]: AllowedFeatureFlagTypes } | undefined = undefined;
+
   searchText = "";
 
   constructor(
     private destroyRef: DestroyRef,
     private configService: ConfigService,
+    private platformUtilsService: PlatformUtilsService,
+    private toastService: ToastService,
+    private i18nService: I18nService,
   ) {}
 
   ngOnInit() {
     this.configService.featureStates$
       .pipe(
         takeUntilDestroyed(this.destroyRef),
+        tap((states) => {
+          this.featureStates = states;
+        }),
         map((states) => {
           if (!states) {
             return [];
@@ -70,5 +81,13 @@ export class FeatureFlagsComponent implements OnInit {
 
   refresh() {
     this.configService.refreshServerConfig();
+  }
+
+  copyJsonToClipboard() {
+    this.platformUtilsService.copyToClipboard(JSON.stringify(this.featureStates));
+    this.toastService.showToast({
+      variant: "success",
+      message: this.i18nService.t("copySuccessful"),
+    });
   }
 }

@@ -2105,6 +2105,9 @@
   "flagValue": {
     "message": "Flag value"
   },
+  "copyData": {
+    "message": "Copy data"
+  },
   "domainRules": {
     "message": "Domain rules"
   },

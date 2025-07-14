@@ -3,11 +3,21 @@
     <i class="bwi bwi-spinner bwi-spin tw-text-2xl" aria-hidden="true"></i>
   </div>
 } @else {
-  <button buttonType="primary" type="button" bitButton (click)="refresh()" class="tw-mb-4">
-    {{ "refresh" | i18n }}
-  </button>
+  <div class="tw-flex tw-flex-row tw-gap-3">
+    <button buttonType="primary" type="button" bitButton (click)="refresh()" class="tw-mb-4">
+      {{ "refresh" | i18n }}
+    </button>
 
-  <!-- TODO: add copy data button -->
+    <button
+      buttonType="primary"
+      type="button"
+      bitButton
+      (click)="copyJsonToClipboard()"
+      class="tw-mb-4"
+    >
+      {{ "copyData" | i18n }}
+    </button>
+  </div>
 
   <bit-search
     id="search"
