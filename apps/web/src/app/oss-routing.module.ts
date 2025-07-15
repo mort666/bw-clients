@@ -13,6 +13,7 @@ import {
 import { ChangePasswordComponent } from "@bitwarden/angular/auth/password-management/change-password";
 import { SetInitialPasswordComponent } from "@bitwarden/angular/auth/password-management/set-initial-password/set-initial-password.component";
 import { canAccessFeature } from "@bitwarden/angular/platform/guard/feature-flag.guard";
+import { preventProdAccessGuard } from "@bitwarden/angular/platform/guard/prevent-prod-access.guard";
 import {
   PasswordHintComponent,
   RegistrationFinishComponent,
@@ -176,11 +177,9 @@ const routes: Routes = [
     path: "",
     component: AnonLayoutWrapperComponent,
     children: [
-      // TODO: consider adding guard to prevent access to this route if env is not dev or qa.
-      // TODO: figure out why this doesn't work when other one does.
-      // this is for anon-web scenario
       {
         path: "feature-flags",
+        canMatch: [preventProdAccessGuard],
         data: {
           pageTitle: {
             key: "featureFlags",
@@ -716,10 +715,10 @@ const routes: Routes = [
             component: SponsoredFamiliesComponent,
             data: { titleId: "sponsoredFamilies" } satisfies RouteDataProperties,
           },
-          // TODO: consider adding guard to prevent access to this route if env is not dev or qa.
           {
             path: "developer-tools",
             data: { titleId: "developerTools" } satisfies RouteDataProperties,
+            canMatch: [preventProdAccessGuard],
             loadComponent: () =>
               import("./platform/settings/developer-tools").then((m) => m.DeveloperToolsComponent),
             children: [
