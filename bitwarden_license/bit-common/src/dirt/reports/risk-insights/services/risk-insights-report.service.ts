@@ -178,8 +178,6 @@ export class RiskInsightsReportService {
     reports: ApplicationHealthReportDetail[],
     memberDetails: MemberDetailsFlat[],
   ): ApplicationHealthReportSummary {
-    // const totalMembers = reports.flatMap((x) => x.memberDetails);
-    // const uniqueMembers = this.getUniqueMembers(totalMembers);
     const uniqueMembers = this.getUniqueMembers(memberDetails);
 
     const atRiskMembers = reports.flatMap((x) => x.atRiskMemberDetails);
