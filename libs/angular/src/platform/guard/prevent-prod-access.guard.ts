@@ -5,6 +5,7 @@ import { firstValueFrom } from "rxjs";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { PRODUCTION_REGIONS } from "@bitwarden/common/platform/services/default-environment.service";
 
+// TODO: consider moving logic to service and also not showing when self hosted.
 /**
  * Guard to prevent matching routes in production environments.
  * Allows for developer tooling that should only be accessible in non-production environments.
