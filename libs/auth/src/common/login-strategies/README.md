@@ -205,8 +205,6 @@ Each login strategy has it's own implementation of the `logIn()` method, which t
   - `WebAuthnTokenRequest`
   - `UserApiTokenRequest`
 
-  The `TokenRequest` object contains a method called `toIdentityToken()`, "which is responsible for translating the information in the `TokenRequest` into the payload that will be sent to the `/connect/token` endpoint on our Identity Server (more on this later).
-
 <br>
 
 - ### 2 &mdash; Call the base `startLogin()` method
@@ -215,17 +213,15 @@ Each login strategy has it's own implementation of the `logIn()` method, which t
 
   The `startLogin()` method does two main things:
 
-  - **2a) &mdash; Calls the `postIdentityToken()` method on the `ApiService`, passing in the `tokenRequest` property from the `LoginStrategyData` object**
+  - **2a) &mdash; Makes a `POST` request to the `/connect/token` endpoint on our Identity Server.**
 
-    - The `postIdentityToken()` method ultimately makes a `POST` request to the `/connect/token` endpoint on our Identity Server.
+    - `REQUEST` &mdash; The contents of the payload for this request are determined by the `toIdentityToken()` method that exists on the base `TokenRequest` object (which can be overridden by the sub-classes). This method translates the information in the `TokenRequest` into the payload that will be sent to the `/connect/token` endpoint on our Identity Server.
 
-      - The contents of the payload for this request are determined by calling the `toIdentityToken()` method that exists on the base `TokenRequest` object, but can be extended by the sub-classes. This method translates "the information in the `TokenRequest` into the payload that will be sent to the `/connect/token` endpoint on our Identity Server.
-
-    - The Identity Server validates the request based on the grant type, and then generates a response that will be some form of `IdentityResponse`:
+    - `RESPONSE` &mdash; The Identity Server validates the request based on the grant type, and then generates a response that will be some form of `IdentityResponse`. There are three possibilities:
 
       - [`IdentityTokenResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-token.response.ts)
 
-        - This response contains:
+        - This response contains means the user has been authenticated. The response contains:
 
           - Authentication information for the user
             - Access Token
@@ -234,11 +230,11 @@ Each login strategy has it's own implementation of the `logIn()` method, which t
 
       - [`IdentityTwoFactorResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-two-factor.response.ts)
 
-        - This response contains information about the user's 2FA requirements.
+        - This response means that the user will need to complete Two Factor Authentication, and the response contains information about the user's 2FA requirements (i.e. which 2FA providers they have available to them, etc.)
 
       - [`IdentityDeviceVerificationResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-device-verification.response.ts)
 
-        - This reponse contains information about whether or not the user's device has been verified.
+        - This reponse means that the user will need to verify their new device.
 
   - **2b) &mdash; Calls one of the following methods based on the type of `IdentityResponse`, each of which returns an `AuthResult`:**
 
