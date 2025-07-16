@@ -15,7 +15,7 @@ export const GENERATOR_HISTORY = SecretKeyDefinition.array(
   "localGeneratorHistory",
   SecretClassifier.allSecret<GeneratedCredential>(),
   {
-    deserializer: (obj) => GeneratedCredential.fromJSON(obj!),
+    deserializer: (obj) => obj && GeneratedCredential.fromJSON(obj),
     clearOn: ["logout"],
   },
 );
