@@ -198,6 +198,8 @@ import { SdkService } from "@bitwarden/common/platform/abstractions/sdk/sdk.serv
 import { StateService as StateServiceAbstraction } from "@bitwarden/common/platform/abstractions/state.service";
 import { AbstractStorageService } from "@bitwarden/common/platform/abstractions/storage.service";
 import { ValidationService as ValidationServiceAbstraction } from "@bitwarden/common/platform/abstractions/validation.service";
+import { ActionsService } from "@bitwarden/common/platform/actions";
+import { UnsupportedActionsService } from "@bitwarden/common/platform/actions/unsupported-actions.service";
 import { StateFactory } from "@bitwarden/common/platform/factories/state-factory";
 import { Message, MessageListener, MessageSender } from "@bitwarden/common/platform/messaging";
 // eslint-disable-next-line no-restricted-imports -- Used for dependency injection
@@ -945,6 +947,11 @@ const safeProviders: SafeProvider[] = [
     deps: [],
   }),
   safeProvider({
+    provide: ActionsService,
+    useClass: UnsupportedActionsService,
+    deps: [],
+  }),
+  safeProvider({
     provide: ServerNotificationsService,
     useClass: devFlagEnabled("noopNotifications")
       ? NoopNotificationsService
@@ -960,6 +967,7 @@ const safeProviders: SafeProvider[] = [
       SignalRConnectionService,
       AuthServiceAbstraction,
       WebPushConnectionService,
+      ActionsService,
     ],
   }),
   safeProvider({

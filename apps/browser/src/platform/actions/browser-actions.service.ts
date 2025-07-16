@@ -21,6 +21,11 @@ export class BrowserActionsService implements ActionsService {
       }
       case DeviceType.SafariBrowser:
       case DeviceType.SafariExtension:
+        break;
     }
+  }
+
+  openPopupToUrl(url: string): Promise<void> {
+    return Promise.resolve(undefined);
   }
 }

@@ -1134,7 +1134,7 @@ export default class MainBackground {
     const userAgent = navigator.userAgent;
 
     const isChrome =
-      userAgent.includes("Chrome") && !userAgent.includes("Edge") && !userAgent.includes("OPR");
+      userAgent.includes("Chrome") || userAgent.includes("Edge") || userAgent.includes("OPR");
     const isSafari = userAgent.includes("Safari") && !userAgent.includes("Chrome");
     const isFirefox = userAgent.includes("Firefox");
 
@@ -1158,6 +1158,7 @@ export default class MainBackground {
       new SignalRConnectionService(this.apiService, this.logService),
       this.authService,
       this.webPushConnectionService,
+      this.actionsService,
     );
 
     this.fido2UserInterfaceService = new BrowserFido2UserInterfaceService(this.authService);

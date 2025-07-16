@@ -427,8 +427,7 @@ export default class RuntimeBackground {
   /**
    * Opens the popup.
    *
-   * Migrating to the browser actions service, not deprecating yet.
-   * @private
+   * @deprecated Migrating to the browser actions service.
    */
   private async openPopup() {
     await this.main.openPopup();

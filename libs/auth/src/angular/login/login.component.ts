@@ -1,13 +1,5 @@
 import { CommonModule } from "@angular/common";
-import {
-  Component,
-  ElementRef,
-  HostListener,
-  NgZone,
-  OnDestroy,
-  OnInit,
-  ViewChild,
-} from "@angular/core";
+import { Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild } from "@angular/core";
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angular/forms";
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
 import { firstValueFrom, Subject, take, takeUntil } from "rxjs";
@@ -38,10 +30,6 @@ import { MessagingService } from "@bitwarden/common/platform/abstractions/messag
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { ValidationService } from "@bitwarden/common/platform/abstractions/validation.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
-import {
-  ButtonActions,
-  SystemNotificationService,
-} from "@bitwarden/common/platform/notifications/system-notification-service";
 import { PasswordStrengthServiceAbstraction } from "@bitwarden/common/tools/password-strength";
 import { UserId } from "@bitwarden/common/types/guid";
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
@@ -139,30 +127,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     private loginSuccessHandlerService: LoginSuccessHandlerService,
     private masterPasswordService: MasterPasswordServiceAbstraction,
     private configService: ConfigService,
-    private systemNotificationService: SystemNotificationService,
   ) {
     this.clientType = this.platformUtilsService.getClientType();
-  }
-
-  @HostListener("document:keydown.control.b", ["$event"])
-  async onCtrlB(event: KeyboardEvent) {
-    if (process.env.ENV === "development") {
-      event.preventDefault();
-      await this.systemNotificationService.create({
-        id: Math.random() * 10000000 + "",
-        type: ButtonActions.AuthRequestNotification,
-        title: "Test",
-        body: "Body",
-        buttons: [],
-      });
-    }
-
-    // this.systemNotificationService.notificationClicked$.pipe(takeUntilDestroyed()).subscribe((value) => {
-    //   if (value == ButtonActions.AuthRequestNotification)
-    // });
-    // this.ngZone.onStable.pipe(take(1), takeUntil(this.destroy$)).subscribe(() => {
-    //   this.masterPasswordInputRef?.nativeElement?.focus();
-    // });
   }
 
   async ngOnInit(): Promise<void> {

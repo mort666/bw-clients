@@ -14,6 +14,7 @@ import {
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
 import { LogoutReason } from "@bitwarden/auth/common";
+import { ActionsService } from "@bitwarden/common/platform/actions";
 
 import { AccountService } from "../../../auth/abstractions/account.service";
 import { AuthService } from "../../../auth/abstractions/auth.service";
@@ -55,6 +56,7 @@ export class DefaultNotificationsService implements NotificationsServiceAbstract
     private readonly signalRConnectionService: SignalRConnectionService,
     private readonly authService: AuthService,
     private readonly webPushConnectionService: WebPushConnectionService,
+    private readonly actionsService: ActionsService,
   ) {
     this.notifications$ = this.accountService.activeAccount$.pipe(
       map((account) => account?.id),
@@ -213,6 +215,7 @@ export class DefaultNotificationsService implements NotificationsServiceAbstract
         await this.syncService.syncDeleteSend(notification.payload as SyncSendNotification);
         break;
       case NotificationType.AuthRequest:
+        await this.actionsService.openPopup();
         this.messagingService.send("openLoginApproval", {
           notificationId: notification.payload.id,
         });
