@@ -3,11 +3,20 @@
 import { mock } from "jest-mock-extended";
 import { ReplaySubject, Observable } from "rxjs";
 
+// FIXME: Update this file to be type safe and remove this and next line
+// eslint-disable-next-line no-restricted-imports
+import { KdfConfig } from "@bitwarden/key-management";
+
 import { ForceSetPasswordReason } from "../../../auth/models/domain/force-set-password-reason";
 import { EncString } from "../../../platform/models/domain/enc-string";
 import { UserId } from "../../../types/guid";
 import { MasterKey, UserKey } from "../../../types/key";
 import { InternalMasterPasswordServiceAbstraction } from "../abstractions/master-password.service.abstraction";
+import {
+  MasterKeyWrappedUserKey,
+  MasterPasswordAuthenticationData,
+  MasterPasswordUnlockData,
+} from "../types/master-password.types";
 
 export class FakeMasterPasswordService implements InternalMasterPasswordServiceAbstraction {
   mock = mock<InternalMasterPasswordServiceAbstraction>();
@@ -70,5 +79,39 @@ export class FakeMasterPasswordService implements InternalMasterPasswordServiceA
     userKey?: EncString,
   ): Promise<UserKey> {
     return this.mock.decryptUserKeyWithMasterKey(masterKey, userId, userKey);
+  }
+
+  makeMasterPasswordAuthenticationData(
+    password: string,
+    kdf: KdfConfig,
+    salt: string,
+    userId: UserId,
+  ): Promise<MasterPasswordAuthenticationData> {
+    return this.mock.makeMasterPasswordAuthenticationData(password, kdf, salt, userId);
+  }
+
+  makeMasterPasswordUnlockData(
+    password: string,
+    kdf: KdfConfig,
+    salt: string,
+    userKey: UserKey,
+  ): Promise<MasterPasswordUnlockData> {
+    return this.mock.makeMasterPasswordUnlockData(password, kdf, salt, userKey);
+  }
+
+  makeMasterKeyWrappedUserKey(
+    password: string,
+    kdf: KdfConfig,
+    salt: string,
+    userKey: UserKey,
+  ): Promise<MasterKeyWrappedUserKey> {
+    return this.mock.makeMasterKeyWrappedUserKey(password, kdf, salt, userKey);
+  }
+
+  unwrapMasterKeyWrappedUserKey(
+    password: string,
+    masterPasswordUnlockData: MasterPasswordUnlockData,
+  ): Promise<UserKey> {
+    return this.mock.unwrapMasterKeyWrappedUserKey(password, masterPasswordUnlockData);
   }
 }

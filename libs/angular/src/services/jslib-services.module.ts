@@ -1023,6 +1023,7 @@ const safeProviders: SafeProvider[] = [
       KeyGenerationServiceAbstraction,
       EncryptService,
       LogService,
+      CryptoFunctionServiceAbstraction,
     ],
   }),
   safeProvider({
