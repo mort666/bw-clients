@@ -110,7 +110,7 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
 
   // TODO: Remove this method and decrypt directly in the service instead
   /**
-   * @deprecated
+   * @deprecated This will be made private
    */
   async getMasterKeyEncryptedUserKey(userId: UserId): Promise<EncString> {
     if (userId == null) {
@@ -130,11 +130,9 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
       throw new Error("User ID is required.");
     }
 
-    const masterKeyWrappedUserKey = EncString.fromJSON(
-      await firstValueFrom(
-        this.stateProvider.getUser(userId, MASTER_KEY_ENCRYPTED_USER_KEY).state$,
-      ),
-    ) as MasterKeyWrappedUserKey;
+    const masterKeyWrappedUserKey = (await this.getMasterKeyEncryptedUserKey(
+      userId,
+    )) as MasterKeyWrappedUserKey;
     const kdf = await firstValueFrom(this.kdfConfigService.getKdfConfig$(userId));
     const salt = this.emailToSalt(
       await firstValueFrom(

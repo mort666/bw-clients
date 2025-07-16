@@ -5,9 +5,14 @@ import * as rxjs from "rxjs";
 import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 // eslint-disable-next-line no-restricted-imports
-import { KdfConfig, PBKDF2KdfConfig } from "@bitwarden/key-management";
+import { KdfConfig, KdfConfigService, PBKDF2KdfConfig } from "@bitwarden/key-management";
 
-import { makeEncString, makeSymmetricCryptoKey } from "../../../../spec";
+import {
+  FakeAccountService,
+  makeEncString,
+  makeSymmetricCryptoKey,
+  mockAccountServiceWith,
+} from "../../../../spec";
 import { ForceSetPasswordReason } from "../../../auth/models/domain/force-set-password-reason";
 import { KeyGenerationService } from "../../../platform/abstractions/key-generation.service";
 import { LogService } from "../../../platform/abstractions/log.service";
@@ -32,6 +37,8 @@ describe("MasterPasswordService", () => {
   let encryptService: MockProxy<EncryptService>;
   let logService: MockProxy<LogService>;
   let cryptoFunctionService: MockProxy<CryptoFunctionService>;
+  let kdfConfigService: MockProxy<KdfConfigService>;
+  let accountService: FakeAccountService;
 
   const userId = "user-id" as UserId;
   const mockUserState = {
@@ -54,6 +61,8 @@ describe("MasterPasswordService", () => {
     encryptService = mock<EncryptService>();
     logService = mock<LogService>();
     cryptoFunctionService = mock<CryptoFunctionService>();
+    kdfConfigService = mock<KdfConfigService>();
+    accountService = mockAccountServiceWith(userId);
 
     stateProvider.getUser.mockReturnValue(mockUserState as any);
 
@@ -66,6 +75,8 @@ describe("MasterPasswordService", () => {
       encryptService,
       logService,
       cryptoFunctionService,
+      kdfConfigService,
+      accountService,
     );
 
     encryptService.unwrapSymmetricKey.mockResolvedValue(makeSymmetricCryptoKey(64, 1));
@@ -203,82 +214,103 @@ describe("MasterPasswordService", () => {
       const updateFn = mockUserState.update.mock.calls[0][0];
       expect(updateFn(null)).toEqual(encryptedKey.toJSON());
     });
+  });
 
-    describe("makeMasterPasswordAuthenticationData", () => {
-      const password = "test-password";
-      const kdf: KdfConfig = new PBKDF2KdfConfig(600_000);
-      const salt = "test@bitwarden.com" as MasterPasswordSalt;
-      const masterKey = makeSymmetricCryptoKey(32, 2);
-      const masterKeyHash = makeSymmetricCryptoKey(32, 3).toEncoded();
+  describe("makeMasterPasswordAuthenticationData", () => {
+    const password = "test-password";
+    const kdf: KdfConfig = new PBKDF2KdfConfig(600_000);
+    const salt = "test@bitwarden.com" as MasterPasswordSalt;
+    const masterKey = makeSymmetricCryptoKey(32, 2);
+    const masterKeyHash = makeSymmetricCryptoKey(32, 3).toEncoded();
 
-      beforeEach(() => {
-        keyGenerationService.deriveKeyFromPassword.mockResolvedValue(masterKey);
-        cryptoFunctionService.pbkdf2.mockResolvedValue(masterKeyHash);
-      });
-
-      it("derives master key and creates authentication hash", async () => {
-        const result = await sut.makeMasterPasswordAuthenticationData(password, kdf, salt);
-
-        expect(keyGenerationService.deriveKeyFromPassword).toHaveBeenCalledWith(
-          password,
-          salt,
-          kdf,
-        );
-        expect(cryptoFunctionService.pbkdf2).toHaveBeenCalledWith(
-          masterKey.toEncoded(),
-          password,
-          "sha256",
-          1,
-        );
-
-        expect(result).toEqual({
-          kdf,
-          salt,
-          masterPasswordAuthenticationHash: Utils.fromBufferToB64(masterKeyHash),
-        });
-      });
+    beforeEach(() => {
+      keyGenerationService.deriveKeyFromPassword.mockResolvedValue(masterKey);
+      cryptoFunctionService.pbkdf2.mockResolvedValue(masterKeyHash);
     });
 
-    describe("wrapUnwrapUserKeyWithPassword", () => {
-      const password = "test-password";
-      const kdf: KdfConfig = new PBKDF2KdfConfig(600_000);
-      const salt = "test@bitwarden.com" as MasterPasswordSalt;
-      const userKey = makeSymmetricCryptoKey(64, 2) as UserKey;
+    it("derives master key and creates authentication hash", async () => {
+      const result = await sut.makeMasterPasswordAuthenticationData(password, kdf, salt);
 
-      it("wraps and unwraps user key with password", async () => {
-        const wrappedKey = await sut.makeMasterKeyWrappedUserKey(password, kdf, salt, userKey);
-        const unwrappedUserkey = await sut.unwrapUserKeyFromMasterPasswordUnlockData(password, {
-          kdf,
-          salt,
-          masterKeyWrappedUserKey: wrappedKey,
-        });
-        expect(unwrappedUserkey).toEqual(userKey);
+      expect(keyGenerationService.deriveKeyFromPassword).toHaveBeenCalledWith(password, salt, kdf);
+      expect(cryptoFunctionService.pbkdf2).toHaveBeenCalledWith(
+        masterKey.toEncoded(),
+        password,
+        "sha256",
+        1,
+      );
+
+      expect(result).toEqual({
+        kdf,
+        salt,
+        masterPasswordAuthenticationHash: Utils.fromBufferToB64(masterKeyHash),
       });
     });
+  });
 
-    describe("makeMasterPasswordUnlockData", () => {
-      const password = "test-password";
-      const kdf: KdfConfig = new PBKDF2KdfConfig(600_000);
-      const salt = "test@bitwarden.com" as MasterPasswordSalt;
-      const userKey = makeSymmetricCryptoKey(32, 2) as UserKey;
+  describe("wrapUnwrapUserKeyWithPassword", () => {
+    const password = "test-password";
+    const kdf: KdfConfig = new PBKDF2KdfConfig(600_000);
+    const salt = "test@bitwarden.com" as MasterPasswordSalt;
+    const userKey = makeSymmetricCryptoKey(64, 2) as UserKey;
 
-      beforeEach(() => {
-        // Mock makeMasterKeyWrappedUserKey to return a known value
-        jest
-          .spyOn(sut, "makeMasterKeyWrappedUserKey")
-          .mockResolvedValue(makeEncString("wrapped-key") as any);
+    it("wraps and unwraps user key with password", async () => {
+      const wrappedKey = await sut.makeMasterKeyWrappedUserKey(password, kdf, salt, userKey);
+      const unwrappedUserkey = await sut.unwrapUserKeyFromMasterPasswordUnlockData(password, {
+        kdf,
+        salt,
+        masterKeyWrappedUserKey: wrappedKey,
       });
+      expect(unwrappedUserkey).toEqual(userKey);
+    });
+  });
 
-      it("returns MasterPasswordUnlockData with correct fields", async () => {
-        const result = await sut.makeMasterPasswordUnlockData(password, kdf, salt, userKey);
+  describe("makeMasterPasswordUnlockData", () => {
+    const password = "test-password";
+    const kdf: KdfConfig = new PBKDF2KdfConfig(600_000);
+    const salt = "test@bitwarden.com" as MasterPasswordSalt;
+    const userKey = makeSymmetricCryptoKey(32, 2) as UserKey;
 
-        expect(sut.makeMasterKeyWrappedUserKey).toHaveBeenCalledWith(password, kdf, salt, userKey);
-        expect(result).toEqual({
-          salt,
-          kdf,
-          masterKeyWrappedUserKey: makeEncString("wrapped-key"),
-        });
+    beforeEach(() => {
+      jest
+        .spyOn(sut, "makeMasterKeyWrappedUserKey")
+        .mockResolvedValue(makeEncString("wrapped-key") as any);
+    });
+
+    it("returns MasterPasswordUnlockData with correct fields", async () => {
+      const result = await sut.makeMasterPasswordUnlockData(password, kdf, salt, userKey);
+
+      expect(sut.makeMasterKeyWrappedUserKey).toHaveBeenCalledWith(password, kdf, salt, userKey);
+      expect(result).toEqual({
+        salt,
+        kdf,
+        masterKeyWrappedUserKey: makeEncString("wrapped-key"),
       });
+    });
+  });
+
+  describe("getDecryptedUserKeyWithMasterPassword", () => {
+    const password = "test-password";
+    const kdfConfig = new PBKDF2KdfConfig(600_000);
+    const userKey = makeSymmetricCryptoKey(64, 2) as UserKey;
+
+    beforeEach(() => {
+      kdfConfigService.getKdfConfig$.mockReturnValue(of(kdfConfig));
+      jest.spyOn(sut, "unwrapUserKeyFromMasterPasswordUnlockData").mockResolvedValue(userKey);
+    });
+
+    it("throws if password is null or empty", async () => {
+      await expect(
+        sut.getDecryptedUserKeyWithMasterPassword(null as unknown as string, userId),
+      ).rejects.toThrow("Password is required.");
+      await expect(sut.getDecryptedUserKeyWithMasterPassword("", userId)).rejects.toThrow(
+        "Password is required.",
+      );
+    });
+
+    it("throws if userId is null", async () => {
+      await expect(
+        sut.getDecryptedUserKeyWithMasterPassword(password, null as unknown as UserId),
+      ).rejects.toThrow("User ID is required.");
     });
   });
 });
