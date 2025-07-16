@@ -2,10 +2,11 @@
 // @ts-strict-ignore
 import { firstValueFrom, map, Observable } from "rxjs";
 
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 // eslint-disable-next-line no-restricted-imports
-import { KdfConfig } from "@bitwarden/key-management";
+import { KdfConfig, KdfConfigService } from "@bitwarden/key-management";
 import { PureCrypto } from "@bitwarden/sdk-internal";
 
 import { ForceSetPasswordReason } from "../../../auth/models/domain/force-set-password-reason";
@@ -74,6 +75,8 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     private encryptService: EncryptService,
     private logService: LogService,
     private cryptoFunctionService: CryptoFunctionService,
+    private kdfConfigService: KdfConfigService,
+    private accountService: AccountService,
   ) {}
 
   /**
@@ -127,10 +130,27 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
       throw new Error("User ID is required.");
     }
 
-    const masterKey = await firstValueFrom(this.masterKey$(userId));
-    const userKey = await this.getMasterKeyEncryptedUserKey(userId);
+    const masterKeyWrappedUserKey = EncString.fromJSON(
+      await firstValueFrom(
+        this.stateProvider.getUser(userId, MASTER_KEY_ENCRYPTED_USER_KEY).state$,
+      ),
+    ) as MasterKeyWrappedUserKey;
+    const kdf = await firstValueFrom(this.kdfConfigService.getKdfConfig$(userId));
+    const salt = this.emailToSalt(
+      await firstValueFrom(
+        this.accountService.accounts$.pipe(map((accounts) => accounts[userId].email)),
+      ),
+    );
 
-    return this.decryptUserKeyWithMasterKey(masterKey, userId, userKey);
+    return this.unwrapUserKeyFromMasterPasswordUnlockData(password, {
+      salt,
+      kdf,
+      masterKeyWrappedUserKey,
+    });
+  }
+
+  emailToSalt(email: string): MasterPasswordSalt {
+    return email.toLowerCase().trim() as MasterPasswordSalt;
   }
 
   /**

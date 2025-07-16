@@ -237,51 +237,46 @@ describe("MasterPasswordService", () => {
           masterPasswordAuthenticationHash: Utils.fromBufferToB64(masterKeyHash),
         });
       });
+    });
 
-      describe("makeMasterPasswordUnlockData", () => {
-        const password = "test-password";
-        const kdf: KdfConfig = new PBKDF2KdfConfig(600_000);
-        const salt = "test@bitwarden.com" as MasterPasswordSalt;
-        const userKey = makeSymmetricCryptoKey(32, 2) as UserKey;
+    describe("wrapUnwrapUserKeyWithPassword", () => {
+      const password = "test-password";
+      const kdf: KdfConfig = new PBKDF2KdfConfig(600_000);
+      const salt = "test@bitwarden.com" as MasterPasswordSalt;
+      const userKey = makeSymmetricCryptoKey(64, 2) as UserKey;
 
-        beforeEach(() => {
-          // Mock makeMasterKeyWrappedUserKey to return a known value
-          jest
-            .spyOn(sut, "makeMasterKeyWrappedUserKey")
-            .mockResolvedValue(makeEncString("wrapped-key") as any);
+      it("wraps and unwraps user key with password", async () => {
+        const wrappedKey = await sut.makeMasterKeyWrappedUserKey(password, kdf, salt, userKey);
+        const unwrappedUserkey = await sut.unwrapUserKeyFromMasterPasswordUnlockData(password, {
+          kdf,
+          salt,
+          masterKeyWrappedUserKey: wrappedKey,
         });
+        expect(unwrappedUserkey).toEqual(userKey);
+      });
+    });
 
-        it("returns MasterPasswordUnlockData with correct fields", async () => {
-          const result = await sut.makeMasterPasswordUnlockData(password, kdf, salt, userKey);
+    describe("makeMasterPasswordUnlockData", () => {
+      const password = "test-password";
+      const kdf: KdfConfig = new PBKDF2KdfConfig(600_000);
+      const salt = "test@bitwarden.com" as MasterPasswordSalt;
+      const userKey = makeSymmetricCryptoKey(32, 2) as UserKey;
 
-          expect(sut.makeMasterKeyWrappedUserKey).toHaveBeenCalledWith(
-            password,
-            kdf,
-            salt,
-            userKey,
-          );
-          expect(result).toEqual({
-            salt,
-            kdf,
-            masterKeyWrappedUserKey: makeEncString("wrapped-key"),
-          });
-        });
+      beforeEach(() => {
+        // Mock makeMasterKeyWrappedUserKey to return a known value
+        jest
+          .spyOn(sut, "makeMasterKeyWrappedUserKey")
+          .mockResolvedValue(makeEncString("wrapped-key") as any);
       });
 
-      describe("wrapUnwrapUserKeyWithPassword", () => {
-        const password = "test-password";
-        const kdf: KdfConfig = new PBKDF2KdfConfig(600_000);
-        const salt = "test@bitwarden.com" as MasterPasswordSalt;
-        const userKey = makeSymmetricCryptoKey(64, 2) as UserKey;
+      it("returns MasterPasswordUnlockData with correct fields", async () => {
+        const result = await sut.makeMasterPasswordUnlockData(password, kdf, salt, userKey);
 
-        it("wraps and unwraps user key with password", async () => {
-          const wrappedKey = await sut.makeMasterKeyWrappedUserKey(password, kdf, salt, userKey);
-          const unwrappedUserkey = await sut.unwrapUserKeyFromMasterPasswordUnlockData(password, {
-            kdf,
-            salt,
-            masterKeyWrappedUserKey: wrappedKey,
-          });
-          expect(unwrappedUserkey).toEqual(userKey);
+        expect(sut.makeMasterKeyWrappedUserKey).toHaveBeenCalledWith(password, kdf, salt, userKey);
+        expect(result).toEqual({
+          salt,
+          kdf,
+          masterKeyWrappedUserKey: makeEncString("wrapped-key"),
         });
       });
     });
