@@ -2,7 +2,7 @@ import { mock, MockProxy } from "jest-mock-extended";
 import { of } from "rxjs";
 import * as rxjs from "rxjs";
 
-import { makeSymmetricCryptoKey } from "../../../../spec";
+import { makeEncString, makeSymmetricCryptoKey } from "../../../../spec";
 import { ForceSetPasswordReason } from "../../../auth/models/domain/force-set-password-reason";
 import { KeyGenerationService } from "../../../platform/abstractions/key-generation.service";
 import { LogService } from "../../../platform/abstractions/log.service";
@@ -11,12 +11,18 @@ import { EncString } from "../../../platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
 import { StateProvider } from "../../../platform/state";
 import { UserId } from "../../../types/guid";
-import { MasterKey } from "../../../types/key";
+import { MasterKey, UserKey } from "../../../types/key";
 import { EncryptService } from "../../crypto/abstractions/encrypt.service";
 
 import { MasterPasswordService } from "./master-password.service";
-import { KeyService } from "@bitwarden/key-management";
+import { KdfConfig, KdfType, KeyService, PBKDF2KdfConfig } from "@bitwarden/key-management";
 import { CryptoFunctionService } from "../../crypto/abstractions/crypto-function.service";
+import {
+  MasterPasswordAuthenticationHash,
+  MasterPasswordSalt,
+} from "../types/master-password.types";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
 
 describe("MasterPasswordService", () => {
   let sut: MasterPasswordService;
@@ -65,6 +71,10 @@ describe("MasterPasswordService", () => {
 
     encryptService.unwrapSymmetricKey.mockResolvedValue(makeSymmetricCryptoKey(64, 1));
     keyGenerationService.stretchKey.mockResolvedValue(makeSymmetricCryptoKey(64, 3));
+    Object.defineProperty(SdkLoadService, "Ready", {
+      value: Promise.resolve(),
+      configurable: true,
+    });
   });
 
   describe("setForceSetPasswordReason", () => {
@@ -193,6 +203,88 @@ describe("MasterPasswordService", () => {
       expect(mockUserState.update).toHaveBeenCalled();
       const updateFn = mockUserState.update.mock.calls[0][0];
       expect(updateFn(null)).toEqual(encryptedKey.toJSON());
+    });
+
+    describe("makeMasterPasswordAuthenticationData", () => {
+      const password = "test-password";
+      const kdf: KdfConfig = new PBKDF2KdfConfig(600_000);
+      const salt = "test@bitwarden.com" as MasterPasswordSalt;
+      const masterKey = makeSymmetricCryptoKey(32, 2);
+      const masterKeyHash = makeSymmetricCryptoKey(32, 3).toEncoded();
+
+      beforeEach(() => {
+        keyGenerationService.deriveKeyFromPassword.mockResolvedValue(masterKey);
+        cryptoFunctionService.pbkdf2.mockResolvedValue(masterKeyHash);
+      });
+
+      it("derives master key and creates authentication hash", async () => {
+        const result = await sut.makeMasterPasswordAuthenticationData(password, kdf, salt);
+
+        expect(keyGenerationService.deriveKeyFromPassword).toHaveBeenCalledWith(
+          password,
+          salt,
+          kdf,
+        );
+        expect(cryptoFunctionService.pbkdf2).toHaveBeenCalledWith(
+          masterKey.toEncoded(),
+          password,
+          "sha256",
+          1,
+        );
+
+        expect(result).toEqual({
+          kdf,
+          salt,
+          masterPasswordAuthenticationHash: Utils.fromBufferToB64(masterKeyHash),
+        });
+      });
+
+      describe("makeMasterPasswordUnlockData", () => {
+        const password = "test-password";
+        const kdf: KdfConfig = new PBKDF2KdfConfig(600_000);
+        const salt = "test@bitwarden.com" as MasterPasswordSalt;
+        const userKey = makeSymmetricCryptoKey(32, 2) as UserKey;
+
+        beforeEach(() => {
+          // Mock makeMasterKeyWrappedUserKey to return a known value
+          jest
+            .spyOn(sut, "makeMasterKeyWrappedUserKey")
+            .mockResolvedValue(makeEncString("wrapped-key") as any);
+        });
+
+        it("returns MasterPasswordUnlockData with correct fields", async () => {
+          const result = await sut.makeMasterPasswordUnlockData(password, kdf, salt, userKey);
+
+          expect(sut.makeMasterKeyWrappedUserKey).toHaveBeenCalledWith(
+            password,
+            kdf,
+            salt,
+            userKey,
+          );
+          expect(result).toEqual({
+            salt,
+            kdf,
+            masterKeyWrappedUserKey: makeEncString("wrapped-key"),
+          });
+        });
+      });
+
+      describe("wrapUnwrapUserKeyWithPassword", () => {
+        const password = "test-password";
+        const kdf: KdfConfig = new PBKDF2KdfConfig(600_000);
+        const salt = "test@bitwarden.com" as MasterPasswordSalt;
+        const userKey = makeSymmetricCryptoKey(64, 2) as UserKey;
+
+        it("wraps and unwraps user key with password", async () => {
+          const wrappedKey = await sut.makeMasterKeyWrappedUserKey(password, kdf, salt, userKey);
+          const unwrappedUserkey = await sut.unwrapMasterKeyWrappedUserKey(password, {
+            kdf,
+            salt,
+            masterKeyWrappedUserKey: wrappedKey,
+          });
+          expect(unwrappedUserkey).toEqual(userKey);
+        });
+      });
     });
   });
 });
