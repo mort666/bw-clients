@@ -15,7 +15,7 @@ export type MasterKeyWrappedUserKey = Opaque<EncString, "MasterPasswordSalt">;
  * The data required to unlock the master password.
  */
 export type MasterPasswordUnlockData = {
-  salt: string;
+  salt: MasterPasswordSalt;
   kdf: KdfConfig;
   masterKeyWrappedUserKey: MasterKeyWrappedUserKey;
 };
@@ -24,7 +24,7 @@ export type MasterPasswordUnlockData = {
  * The data required to unlock the master password.
  */
 export type MasterPasswordAuthenticationData = {
-  salt: string;
+  salt: MasterPasswordSalt;
   kdf: KdfConfig;
   masterPasswordAuthenticationHash: MasterPasswordAuthenticationHash;
 };
