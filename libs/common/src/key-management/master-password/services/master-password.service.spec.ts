@@ -277,7 +277,7 @@ describe("MasterPasswordService", () => {
 
         it("wraps and unwraps user key with password", async () => {
           const wrappedKey = await sut.makeMasterKeyWrappedUserKey(password, kdf, salt, userKey);
-          const unwrappedUserkey = await sut.unwrapMasterKeyWrappedUserKey(password, {
+          const unwrappedUserkey = await sut.unwrapUserKeyFromMasterPasswordUnlockData(password, {
             kdf,
             salt,
             masterKeyWrappedUserKey: wrappedKey,

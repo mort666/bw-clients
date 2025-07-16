@@ -20,7 +20,13 @@ import { MasterKey, UserKey } from "../../../types/key";
 import { EncryptService } from "../../crypto/abstractions/encrypt.service";
 import { InternalMasterPasswordServiceAbstraction } from "../abstractions/master-password.service.abstraction";
 import { KdfConfig, KeyService } from "@bitwarden/key-management";
-import { MasterKeyWrappedUserKey, MasterPasswordAuthenticationData, MasterPasswordAuthenticationHash, MasterPasswordSalt, MasterPasswordUnlockData } from "../types/master-password.types";
+import {
+  MasterKeyWrappedUserKey,
+  MasterPasswordAuthenticationData,
+  MasterPasswordAuthenticationHash,
+  MasterPasswordSalt,
+  MasterPasswordUnlockData,
+} from "../types/master-password.types";
 import { PureCrypto } from "@bitwarden/sdk-internal";
 import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
 import { CryptoFunctionService } from "../../crypto/abstractions/crypto-function.service";
@@ -66,7 +72,7 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     private encryptService: EncryptService,
     private logService: LogService,
     private cryptoFunctionService: CryptoFunctionService,
-  ) { }
+  ) {}
 
   /**
    * @deprecated This will be made private
@@ -118,7 +124,6 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     if (userId == null) {
       throw new Error("User ID is required.");
     }
-
 
     const masterKey = await firstValueFrom(this.masterKey$(userId));
     const userKey = await this.getMasterKeyEncryptedUserKey(userId);
@@ -250,7 +255,7 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
   }
 
   /**
-   * Makes the authentication hash for authenticating to the server with the master password. 
+   * Makes the authentication hash for authenticating to the server with the master password.
    */
   async makeMasterPasswordAuthenticationData(
     password: string,
@@ -259,18 +264,20 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
   ): Promise<MasterPasswordAuthenticationData> {
     const SERVER_AUTHENTICATION_HASH_ITERATIONS = 1;
 
-    const masterKey = await this.keyGenerationService.deriveKeyFromPassword(
+    const masterKey = (await this.keyGenerationService.deriveKeyFromPassword(
       password,
       salt,
       kdf,
-    ) as MasterKey;
+    )) as MasterKey;
 
-    const masterPasswordAuthenticationHash = Utils.fromBufferToB64(await this.cryptoFunctionService.pbkdf2(
-      masterKey.toEncoded(),
-      password,
-      "sha256",
-      SERVER_AUTHENTICATION_HASH_ITERATIONS,
-    )) as MasterPasswordAuthenticationHash;
+    const masterPasswordAuthenticationHash = Utils.fromBufferToB64(
+      await this.cryptoFunctionService.pbkdf2(
+        masterKey.toEncoded(),
+        password,
+        "sha256",
+        SERVER_AUTHENTICATION_HASH_ITERATIONS,
+      ),
+    ) as MasterPasswordAuthenticationHash;
 
     return {
       kdf,
@@ -283,20 +290,37 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
    * Creates a MasterPasswordUnlockData bundle that encrypts the user-key with a key derived from the password. The
    * bundle also contains the KDF settings and salt used to derive the key, which are required to decrypt the user-key later.
    */
-  async makeMasterPasswordUnlockData(password: string, kdf: KdfConfig, salt: MasterPasswordSalt, userKey: UserKey): Promise<MasterPasswordUnlockData> {
+  async makeMasterPasswordUnlockData(
+    password: string,
+    kdf: KdfConfig,
+    salt: MasterPasswordSalt,
+    userKey: UserKey,
+  ): Promise<MasterPasswordUnlockData> {
     return {
       salt,
       kdf,
-      masterKeyWrappedUserKey: await this.makeMasterKeyWrappedUserKey(password, kdf, salt, userKey)
+      masterKeyWrappedUserKey: await this.makeMasterKeyWrappedUserKey(password, kdf, salt, userKey),
     };
   }
 
   /**
-  * Wraps a user-key with a password provided KDF settings. The same KDF settings and salt must be provided to unwrap the user-key, otherwise it will fail to decrypt.
-  */
-  async makeMasterKeyWrappedUserKey(password: string, kdf: KdfConfig, salt: MasterPasswordSalt, userKey: UserKey): Promise<MasterKeyWrappedUserKey> {
+   * Wraps a user-key with a password provided KDF settings. The same KDF settings and salt must be provided to unwrap the user-key, otherwise it will fail to decrypt.
+   */
+  async makeMasterKeyWrappedUserKey(
+    password: string,
+    kdf: KdfConfig,
+    salt: MasterPasswordSalt,
+    userKey: UserKey,
+  ): Promise<MasterKeyWrappedUserKey> {
     await SdkLoadService.Ready;
-    return new EncString(PureCrypto.encrypt_user_key_with_master_password(userKey.toEncoded(), password, salt, kdf.toSdkConfig())) as MasterKeyWrappedUserKey;
+    return new EncString(
+      PureCrypto.encrypt_user_key_with_master_password(
+        userKey.toEncoded(),
+        password,
+        salt,
+        kdf.toSdkConfig(),
+      ),
+    ) as MasterKeyWrappedUserKey;
   }
 
   /**
@@ -304,14 +328,19 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
    * @throws If the encryption type is not supported.
    * @throws If the password, KDF, or salt don't match the original wrapping parameters.
    */
-  async unwrapMasterKeyWrappedUserKey(password: string, masterPasswordUnlockData: MasterPasswordUnlockData): Promise<UserKey> {
+  async unwrapUserKeyFromMasterPasswordUnlockData(
+    password: string,
+    masterPasswordUnlockData: MasterPasswordUnlockData,
+  ): Promise<UserKey> {
     await SdkLoadService.Ready;
-    const userKey = new SymmetricCryptoKey(PureCrypto.decrypt_user_key_with_master_password(
-      masterPasswordUnlockData.masterKeyWrappedUserKey!.encryptedString,
-      password,
-      masterPasswordUnlockData.salt,
-      masterPasswordUnlockData.kdf.toSdkConfig(),
-    ));
+    const userKey = new SymmetricCryptoKey(
+      PureCrypto.decrypt_user_key_with_master_password(
+        masterPasswordUnlockData.masterKeyWrappedUserKey!.encryptedString,
+        password,
+        masterPasswordUnlockData.salt,
+        masterPasswordUnlockData.kdf.toSdkConfig(),
+      ),
+    );
     return userKey as UserKey;
   }
 }

@@ -108,10 +108,10 @@ export class FakeMasterPasswordService implements InternalMasterPasswordServiceA
     return this.mock.makeMasterKeyWrappedUserKey(password, kdf, salt, userKey);
   }
 
-  unwrapMasterKeyWrappedUserKey(
+  unwrapUserKeyFromMasterPasswordUnlockData(
     password: string,
     masterPasswordUnlockData: MasterPasswordUnlockData,
   ): Promise<UserKey> {
-    return this.mock.unwrapMasterKeyWrappedUserKey(password, masterPasswordUnlockData);
+    return this.mock.unwrapUserKeyFromMasterPasswordUnlockData(password, masterPasswordUnlockData);
   }
 }

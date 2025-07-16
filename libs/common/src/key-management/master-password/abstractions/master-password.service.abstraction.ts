@@ -1,11 +1,17 @@
 import { Observable } from "rxjs";
 
+// eslint-disable-next-line no-restricted-imports
+import { KdfConfig } from "@bitwarden/key-management";
+
 import { ForceSetPasswordReason } from "../../../auth/models/domain/force-set-password-reason";
 import { EncString } from "../../../platform/models/domain/enc-string";
 import { UserId } from "../../../types/guid";
 import { MasterKey, UserKey } from "../../../types/key";
-import { KdfConfig } from "@bitwarden/key-management";
-import { MasterKeyWrappedUserKey, MasterPasswordAuthenticationData, MasterPasswordUnlockData } from "../types/master-password.types";
+import {
+  MasterKeyWrappedUserKey,
+  MasterPasswordAuthenticationData,
+  MasterPasswordUnlockData,
+} from "../types/master-password.types";
 
 export abstract class MasterPasswordServiceAbstraction {
   /**
@@ -47,7 +53,6 @@ export abstract class MasterPasswordServiceAbstraction {
     userKey?: EncString,
   ) => Promise<UserKey | null>;
 
-
   abstract makeMasterPasswordAuthenticationData: (
     password: string,
     kdf: KdfConfig,
@@ -69,7 +74,7 @@ export abstract class MasterPasswordServiceAbstraction {
     userKey: UserKey,
   ) => Promise<MasterKeyWrappedUserKey>;
 
-  abstract unwrapMasterKeyWrappedUserKey: (
+  abstract unwrapUserKeyFromMasterPasswordUnlockData: (
     password: string,
     masterPasswordUnlockData: MasterPasswordUnlockData,
   ) => Promise<UserKey>;
