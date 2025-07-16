@@ -2,6 +2,11 @@ import { mock, MockProxy } from "jest-mock-extended";
 import { of } from "rxjs";
 import * as rxjs from "rxjs";
 
+import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
+// eslint-disable-next-line no-restricted-imports
+import { KdfConfig, PBKDF2KdfConfig } from "@bitwarden/key-management";
+
 import { makeEncString, makeSymmetricCryptoKey } from "../../../../spec";
 import { ForceSetPasswordReason } from "../../../auth/models/domain/force-set-password-reason";
 import { KeyGenerationService } from "../../../platform/abstractions/key-generation.service";
@@ -12,17 +17,11 @@ import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-cr
 import { StateProvider } from "../../../platform/state";
 import { UserId } from "../../../types/guid";
 import { MasterKey, UserKey } from "../../../types/key";
+import { CryptoFunctionService } from "../../crypto/abstractions/crypto-function.service";
 import { EncryptService } from "../../crypto/abstractions/encrypt.service";
+import { MasterPasswordSalt } from "../types/master-password.types";
 
 import { MasterPasswordService } from "./master-password.service";
-import { KdfConfig, KdfType, KeyService, PBKDF2KdfConfig } from "@bitwarden/key-management";
-import { CryptoFunctionService } from "../../crypto/abstractions/crypto-function.service";
-import {
-  MasterPasswordAuthenticationHash,
-  MasterPasswordSalt,
-} from "../types/master-password.types";
-import { Utils } from "@bitwarden/common/platform/misc/utils";
-import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
 
 describe("MasterPasswordService", () => {
   let sut: MasterPasswordService;

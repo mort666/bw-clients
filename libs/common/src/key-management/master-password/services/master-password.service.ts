@@ -2,11 +2,17 @@
 // @ts-strict-ignore
 import { firstValueFrom, map, Observable } from "rxjs";
 
+import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
+// eslint-disable-next-line no-restricted-imports
+import { KdfConfig } from "@bitwarden/key-management";
+import { PureCrypto } from "@bitwarden/sdk-internal";
+
 import { ForceSetPasswordReason } from "../../../auth/models/domain/force-set-password-reason";
 import { KeyGenerationService } from "../../../platform/abstractions/key-generation.service";
 import { LogService } from "../../../platform/abstractions/log.service";
 import { StateService } from "../../../platform/abstractions/state.service";
-import { EncryptionType, HashPurpose } from "../../../platform/enums";
+import { EncryptionType } from "../../../platform/enums";
 import { EncryptedString, EncString } from "../../../platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
 import {
@@ -17,9 +23,9 @@ import {
 } from "../../../platform/state";
 import { UserId } from "../../../types/guid";
 import { MasterKey, UserKey } from "../../../types/key";
+import { CryptoFunctionService } from "../../crypto/abstractions/crypto-function.service";
 import { EncryptService } from "../../crypto/abstractions/encrypt.service";
 import { InternalMasterPasswordServiceAbstraction } from "../abstractions/master-password.service.abstraction";
-import { KdfConfig, KeyService } from "@bitwarden/key-management";
 import {
   MasterKeyWrappedUserKey,
   MasterPasswordAuthenticationData,
@@ -27,10 +33,6 @@ import {
   MasterPasswordSalt,
   MasterPasswordUnlockData,
 } from "../types/master-password.types";
-import { PureCrypto } from "@bitwarden/sdk-internal";
-import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
-import { CryptoFunctionService } from "../../crypto/abstractions/crypto-function.service";
-import { Utils } from "@bitwarden/common/platform/misc/utils";
 
 /** Memory since master key shouldn't be available on lock */
 const MASTER_KEY = new UserKeyDefinition<MasterKey>(MASTER_PASSWORD_MEMORY, "masterKey", {
