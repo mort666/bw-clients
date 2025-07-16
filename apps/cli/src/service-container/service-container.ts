@@ -437,6 +437,7 @@ export class ServiceContainer {
       this.keyGenerationService,
       this.encryptService,
       this.logService,
+      this.cryptoFunctionService,
     );
 
     this.kdfConfigService = new DefaultKdfConfigService(this.stateProvider);
