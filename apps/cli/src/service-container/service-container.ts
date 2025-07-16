@@ -431,6 +431,7 @@ export class ServiceContainer {
       migrationRunner,
     );
 
+    this.kdfConfigService = new DefaultKdfConfigService(this.stateProvider);
     this.masterPasswordService = new MasterPasswordService(
       this.stateProvider,
       this.stateService,
@@ -438,9 +439,9 @@ export class ServiceContainer {
       this.encryptService,
       this.logService,
       this.cryptoFunctionService,
+      this.kdfConfigService,
+      this.accountService,
     );
-
-    this.kdfConfigService = new DefaultKdfConfigService(this.stateProvider);
 
     this.pinService = new PinService(
       this.accountService,
