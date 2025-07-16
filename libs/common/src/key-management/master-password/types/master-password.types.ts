@@ -1,8 +1,9 @@
 import { Opaque } from "type-fest";
 
-import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 // eslint-disable-next-line no-restricted-imports
 import { KdfConfig } from "@bitwarden/key-management";
+
+import { EncString } from "../../crypto/models/enc-string";
 
 /**
  * The Base64-encoded master password authentication hash, that is sent to the server for authentication.
