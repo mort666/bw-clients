@@ -287,30 +287,4 @@ describe("MasterPasswordService", () => {
       });
     });
   });
-
-  describe("getDecryptedUserKeyWithMasterPassword", () => {
-    const password = "test-password";
-    const kdfConfig = new PBKDF2KdfConfig(600_000);
-    const userKey = makeSymmetricCryptoKey(64, 2) as UserKey;
-
-    beforeEach(() => {
-      kdfConfigService.getKdfConfig$.mockReturnValue(of(kdfConfig));
-      jest.spyOn(sut, "unwrapUserKeyFromMasterPasswordUnlockData").mockResolvedValue(userKey);
-    });
-
-    it("throws if password is null or empty", async () => {
-      await expect(
-        sut.getDecryptedUserKeyWithMasterPassword(null as unknown as string, userId),
-      ).rejects.toThrow("Password is required.");
-      await expect(sut.getDecryptedUserKeyWithMasterPassword("", userId)).rejects.toThrow(
-        "Password is required.",
-      );
-    });
-
-    it("throws if userId is null", async () => {
-      await expect(
-        sut.getDecryptedUserKeyWithMasterPassword(password, null as unknown as UserId),
-      ).rejects.toThrow("User ID is required.");
-    });
-  });
 });

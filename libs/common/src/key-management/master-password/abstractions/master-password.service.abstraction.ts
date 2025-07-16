@@ -84,6 +84,7 @@ export abstract class InternalMasterPasswordServiceAbstraction extends MasterPas
   /**
    * Set the master key for the user.
    * Note: Use {@link clearMasterKey} to clear the master key.
+   * @deprecated
    * @param masterKey The master key.
    * @param userId The user ID.
    * @throws If the user ID or master key is missing.
@@ -91,6 +92,7 @@ export abstract class InternalMasterPasswordServiceAbstraction extends MasterPas
   abstract setMasterKey: (masterKey: MasterKey, userId: UserId) => Promise<void>;
   /**
    * Clear the master key for the user.
+   * @deprecated
    * @param userId The user ID.
    * @throws If the user ID is missing.
    */
@@ -98,6 +100,7 @@ export abstract class InternalMasterPasswordServiceAbstraction extends MasterPas
   /**
    * Set the master key hash for the user.
    * Note: Use {@link clearMasterKeyHash} to clear the master key hash.
+   * @deprecated
    * @param masterKeyHash The master key hash.
    * @param userId The user ID.
    * @throws If the user ID or master key hash is missing.
@@ -105,6 +108,7 @@ export abstract class InternalMasterPasswordServiceAbstraction extends MasterPas
   abstract setMasterKeyHash: (masterKeyHash: string, userId: UserId) => Promise<void>;
   /**
    * Clear the master key hash for the user.
+   * @deprecated
    * @param userId The user ID.
    * @throws If the user ID is missing.
    */
