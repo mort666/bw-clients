@@ -288,7 +288,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
    * Derive a master key from a password and email.
    *
    * @deprecated Please use `makeMasterPasswordAuthenticationData`, `unwrapMasterKeyWrappedUserKey` or `makeMasterKeyWrappedUserKey` in @link MasterPasswordService instead.
-   * 
+   *
    * @remarks
    * Does not validate the kdf config to ensure it satisfies the minimum requirements for the given kdf type.
    * TODO: Move to MasterPasswordService
