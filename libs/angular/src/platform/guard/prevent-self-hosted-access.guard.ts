@@ -4,16 +4,17 @@ import { firstValueFrom } from "rxjs";
 
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 
+// TODO: should we have a devTools guard instead of prod env and self hosted env checks?
 /**
- * Guard to prevent matching routes in production environments.
- * Allows for developer tooling that should only be accessible in non-production environments.
+ * Guard to prevent matching routes in self-hosted environments.
+ * Allows for developer tooling that should only be accessible in non-self-hosted environments.
  */
-export const preventProdAccessGuard: CanMatchFn = async (): Promise<boolean> => {
+export const preventSelfHostedAccessGuard: CanMatchFn = async (): Promise<boolean> => {
   const environmentService = inject(EnvironmentService);
 
   const environment = await firstValueFrom(environmentService.environment$);
 
-  if (environment.isProduction()) {
+  if (environment.isSelfHosted()) {
     return false;
   }
 

@@ -14,6 +14,7 @@ import { ChangePasswordComponent } from "@bitwarden/angular/auth/password-manage
 import { SetInitialPasswordComponent } from "@bitwarden/angular/auth/password-management/set-initial-password/set-initial-password.component";
 import { canAccessFeature } from "@bitwarden/angular/platform/guard/feature-flag.guard";
 import { preventProdAccessGuard } from "@bitwarden/angular/platform/guard/prevent-prod-access.guard";
+import { preventSelfHostedAccessGuard } from "@bitwarden/angular/platform/guard/prevent-self-hosted-access.guard";
 import {
   PasswordHintComponent,
   RegistrationFinishComponent,
@@ -179,7 +180,7 @@ const routes: Routes = [
     children: [
       {
         path: "feature-flags",
-        canMatch: [preventProdAccessGuard],
+        canMatch: [preventProdAccessGuard, preventSelfHostedAccessGuard],
         data: {
           pageTitle: {
             key: "featureFlags",
@@ -718,7 +719,7 @@ const routes: Routes = [
           {
             path: "developer-tools",
             data: { titleId: "developerTools" } satisfies RouteDataProperties,
-            canMatch: [preventProdAccessGuard],
+            canMatch: [preventProdAccessGuard, preventSelfHostedAccessGuard],
             loadComponent: () =>
               import("./platform/settings/developer-tools").then((m) => m.DeveloperToolsComponent),
             children: [
