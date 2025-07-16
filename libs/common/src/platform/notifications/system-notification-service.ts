@@ -9,11 +9,11 @@ export type ButtonActionsKeys = (typeof ButtonActions)[keyof typeof ButtonAction
 // This is currently tailored for chrome extension's api, if safari works
 // differently where clicking a notification button produces a different
 // identifier we need to reconcile that here.
-export const ButtonLocation = {
+export const ButtonLocation = Object.freeze({
   FirstOptionalButton: 0, // this is the first optional button we can set
   SecondOptionalButton: 1, // this is the second optional button we can set
   NotificationButton: 2, // this is when you click the notification as a whole
-};
+});
 
 export type ButtonLocationKeys = (typeof ButtonLocation)[keyof typeof ButtonLocation];
 
