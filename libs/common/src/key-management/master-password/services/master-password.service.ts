@@ -6,7 +6,7 @@ import { ForceSetPasswordReason } from "../../../auth/models/domain/force-set-pa
 import { KeyGenerationService } from "../../../platform/abstractions/key-generation.service";
 import { LogService } from "../../../platform/abstractions/log.service";
 import { StateService } from "../../../platform/abstractions/state.service";
-import { EncryptionType } from "../../../platform/enums";
+import { EncryptionType, HashPurpose } from "../../../platform/enums";
 import { EncryptedString, EncString } from "../../../platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
 import {
@@ -19,6 +19,12 @@ import { UserId } from "../../../types/guid";
 import { MasterKey, UserKey } from "../../../types/key";
 import { EncryptService } from "../../crypto/abstractions/encrypt.service";
 import { InternalMasterPasswordServiceAbstraction } from "../abstractions/master-password.service.abstraction";
+import { KdfConfig, KeyService } from "@bitwarden/key-management";
+import { MasterKeyWrappedUserKey, MasterPasswordAuthenticationData, MasterPasswordAuthenticationHash, MasterPasswordSalt, MasterPasswordUnlockData } from "../types/master-password.types";
+import { PureCrypto } from "@bitwarden/sdk-internal";
+import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
+import { CryptoFunctionService } from "../../crypto/abstractions/crypto-function.service";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
 
 /** Memory since master key shouldn't be available on lock */
 const MASTER_KEY = new UserKeyDefinition<MasterKey>(MASTER_PASSWORD_MEMORY, "masterKey", {
@@ -59,8 +65,12 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     private keyGenerationService: KeyGenerationService,
     private encryptService: EncryptService,
     private logService: LogService,
-  ) {}
+    private cryptoFunctionService: CryptoFunctionService,
+  ) { }
 
+  /**
+   * @deprecated This will be made private
+   */
   masterKey$(userId: UserId): Observable<MasterKey> {
     if (userId == null) {
       throw new Error("User ID is required.");
@@ -68,6 +78,9 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     return this.stateProvider.getUser(userId, MASTER_KEY).state$;
   }
 
+  /**
+   * @deprecated
+   */
   masterKeyHash$(userId: UserId): Observable<string> {
     if (userId == null) {
       throw new Error("User ID is required.");
@@ -85,6 +98,9 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
   }
 
   // TODO: Remove this method and decrypt directly in the service instead
+  /**
+   * @deprecated
+   */
   async getMasterKeyEncryptedUserKey(userId: UserId): Promise<EncString> {
     if (userId == null) {
       throw new Error("User ID is required.");
@@ -95,6 +111,24 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     return EncString.fromJSON(key);
   }
 
+  async getDecryptedUserKeyWithMasterPassword(password: string, userId: UserId): Promise<UserKey> {
+    if (password == null || password === "") {
+      throw new Error("Password is required.");
+    }
+    if (userId == null) {
+      throw new Error("User ID is required.");
+    }
+
+
+    const masterKey = await firstValueFrom(this.masterKey$(userId));
+    const userKey = await this.getMasterKeyEncryptedUserKey(userId);
+
+    return this.decryptUserKeyWithMasterKey(masterKey, userId, userKey);
+  }
+
+  /**
+   * @deprecated
+   */
   async setMasterKey(masterKey: MasterKey, userId: UserId): Promise<void> {
     if (masterKey == null) {
       throw new Error("Master key is required.");
@@ -105,6 +139,9 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     await this.stateProvider.getUser(userId, MASTER_KEY).update((_) => masterKey);
   }
 
+  /**
+   * @deprecated
+   */
   async clearMasterKey(userId: UserId): Promise<void> {
     if (userId == null) {
       throw new Error("User ID is required.");
@@ -112,6 +149,9 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     await this.stateProvider.getUser(userId, MASTER_KEY).update((_) => null);
   }
 
+  /**
+   * @deprecated
+   */
   async setMasterKeyHash(masterKeyHash: string, userId: UserId): Promise<void> {
     if (masterKeyHash == null) {
       throw new Error("Master key hash is required.");
@@ -122,6 +162,9 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     await this.stateProvider.getUser(userId, MASTER_KEY_HASH).update((_) => masterKeyHash);
   }
 
+  /**
+   * @deprecated
+   */
   async clearMasterKeyHash(userId: UserId): Promise<void> {
     if (userId == null) {
       throw new Error("User ID is required.");
@@ -162,6 +205,9 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     await this.stateProvider.getUser(userId, FORCE_SET_PASSWORD_REASON).update((_) => reason);
   }
 
+  /**
+   * @deprecated Please use `unwrapMasterKeyWrappedUserKey` instead.
+   */
   async decryptUserKeyWithMasterKey(
     masterKey: MasterKey,
     userId: UserId,
@@ -201,5 +247,71 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     }
 
     return decUserKey as UserKey;
+  }
+
+  /**
+   * Makes the authentication hash for authenticating to the server with the master password. 
+   */
+  async makeMasterPasswordAuthenticationData(
+    password: string,
+    kdf: KdfConfig,
+    salt: MasterPasswordSalt,
+  ): Promise<MasterPasswordAuthenticationData> {
+    const SERVER_AUTHENTICATION_HASH_ITERATIONS = 1;
+
+    const masterKey = await this.keyGenerationService.deriveKeyFromPassword(
+      password,
+      salt,
+      kdf,
+    ) as MasterKey;
+
+    const masterPasswordAuthenticationHash = Utils.fromBufferToB64(await this.cryptoFunctionService.pbkdf2(
+      masterKey.toEncoded(),
+      password,
+      "sha256",
+      SERVER_AUTHENTICATION_HASH_ITERATIONS,
+    )) as MasterPasswordAuthenticationHash;
+
+    return {
+      kdf,
+      salt,
+      masterPasswordAuthenticationHash,
+    } as MasterPasswordAuthenticationData;
+  }
+
+  /**
+   * Creates a MasterPasswordUnlockData bundle that encrypts the user-key with a key derived from the password. The
+   * bundle also contains the KDF settings and salt used to derive the key, which are required to decrypt the user-key later.
+   */
+  async makeMasterPasswordUnlockData(password: string, kdf: KdfConfig, salt: MasterPasswordSalt, userKey: UserKey): Promise<MasterPasswordUnlockData> {
+    return {
+      salt,
+      kdf,
+      masterKeyWrappedUserKey: await this.makeMasterKeyWrappedUserKey(password, kdf, salt, userKey)
+    };
+  }
+
+  /**
+  * Wraps a user-key with a password provided KDF settings. The same KDF settings and salt must be provided to unwrap the user-key, otherwise it will fail to decrypt.
+  */
+  async makeMasterKeyWrappedUserKey(password: string, kdf: KdfConfig, salt: MasterPasswordSalt, userKey: UserKey): Promise<MasterKeyWrappedUserKey> {
+    await SdkLoadService.Ready;
+    return new EncString(PureCrypto.encrypt_user_key_with_master_password(userKey.toEncoded(), password, salt, kdf.toSdkConfig())) as MasterKeyWrappedUserKey;
+  }
+
+  /**
+   * Unwraps a user-key that was wrapped with a password provided KDF settings. The same KDF settings and salt must be provided to unwrap the user-key, otherwise it will fail to decrypt.
+   * @throws If the encryption type is not supported.
+   * @throws If the password, KDF, or salt don't match the original wrapping parameters.
+   */
+  async unwrapMasterKeyWrappedUserKey(password: string, masterPasswordUnlockData: MasterPasswordUnlockData): Promise<UserKey> {
+    await SdkLoadService.Ready;
+    const userKey = new SymmetricCryptoKey(PureCrypto.decrypt_user_key_with_master_password(
+      masterPasswordUnlockData.masterKeyWrappedUserKey!.encryptedString,
+      password,
+      masterPasswordUnlockData.salt,
+      masterPasswordUnlockData.kdf.toSdkConfig(),
+    ));
+    return userKey as UserKey;
   }
 }

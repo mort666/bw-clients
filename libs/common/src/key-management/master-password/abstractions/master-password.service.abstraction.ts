@@ -4,6 +4,8 @@ import { ForceSetPasswordReason } from "../../../auth/models/domain/force-set-pa
 import { EncString } from "../../../platform/models/domain/enc-string";
 import { UserId } from "../../../types/guid";
 import { MasterKey, UserKey } from "../../../types/key";
+import { KdfConfig } from "@bitwarden/key-management";
+import { MasterKeyWrappedUserKey, MasterPasswordAuthenticationData, MasterPasswordUnlockData } from "../types/master-password.types";
 
 export abstract class MasterPasswordServiceAbstraction {
   /**
@@ -44,6 +46,33 @@ export abstract class MasterPasswordServiceAbstraction {
     userId: string,
     userKey?: EncString,
   ) => Promise<UserKey | null>;
+
+
+  abstract makeMasterPasswordAuthenticationData: (
+    password: string,
+    kdf: KdfConfig,
+    salt: string,
+    userId: UserId,
+  ) => Promise<MasterPasswordAuthenticationData>;
+
+  abstract makeMasterPasswordUnlockData: (
+    password: string,
+    kdf: KdfConfig,
+    salt: string,
+    userKey: UserKey,
+  ) => Promise<MasterPasswordUnlockData>;
+
+  abstract makeMasterKeyWrappedUserKey: (
+    password: string,
+    kdf: KdfConfig,
+    salt: string,
+    userKey: UserKey,
+  ) => Promise<MasterKeyWrappedUserKey>;
+
+  abstract unwrapMasterKeyWrappedUserKey: (
+    password: string,
+    masterPasswordUnlockData: MasterPasswordUnlockData,
+  ) => Promise<UserKey>;
 }
 
 export abstract class InternalMasterPasswordServiceAbstraction extends MasterPasswordServiceAbstraction {

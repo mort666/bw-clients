@@ -15,6 +15,8 @@ import { MasterKey } from "../../../types/key";
 import { EncryptService } from "../../crypto/abstractions/encrypt.service";
 
 import { MasterPasswordService } from "./master-password.service";
+import { KeyService } from "@bitwarden/key-management";
+import { CryptoFunctionService } from "../../crypto/abstractions/crypto-function.service";
 
 describe("MasterPasswordService", () => {
   let sut: MasterPasswordService;
@@ -24,6 +26,7 @@ describe("MasterPasswordService", () => {
   let keyGenerationService: MockProxy<KeyGenerationService>;
   let encryptService: MockProxy<EncryptService>;
   let logService: MockProxy<LogService>;
+  let cryptoFunctionService: MockProxy<CryptoFunctionService>;
 
   const userId = "user-id" as UserId;
   const mockUserState = {
@@ -45,6 +48,7 @@ describe("MasterPasswordService", () => {
     keyGenerationService = mock<KeyGenerationService>();
     encryptService = mock<EncryptService>();
     logService = mock<LogService>();
+    cryptoFunctionService = mock<CryptoFunctionService>();
 
     stateProvider.getUser.mockReturnValue(mockUserState as any);
 
@@ -56,6 +60,7 @@ describe("MasterPasswordService", () => {
       keyGenerationService,
       encryptService,
       logService,
+      cryptoFunctionService,
     );
 
     encryptService.unwrapSymmetricKey.mockResolvedValue(makeSymmetricCryptoKey(64, 1));
