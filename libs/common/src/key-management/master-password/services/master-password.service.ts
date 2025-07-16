@@ -14,7 +14,6 @@ import { KeyGenerationService } from "../../../platform/abstractions/key-generat
 import { LogService } from "../../../platform/abstractions/log.service";
 import { StateService } from "../../../platform/abstractions/state.service";
 import { EncryptionType } from "../../../platform/enums";
-import { EncryptedString, EncString } from "../../../platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
 import {
   MASTER_PASSWORD_DISK,
@@ -26,6 +25,7 @@ import { UserId } from "../../../types/guid";
 import { MasterKey, UserKey } from "../../../types/key";
 import { CryptoFunctionService } from "../../crypto/abstractions/crypto-function.service";
 import { EncryptService } from "../../crypto/abstractions/encrypt.service";
+import { EncryptedString, EncString } from "../../crypto/models/enc-string";
 import { InternalMasterPasswordServiceAbstraction } from "../abstractions/master-password.service.abstraction";
 import {
   MasterKeyWrappedUserKey,

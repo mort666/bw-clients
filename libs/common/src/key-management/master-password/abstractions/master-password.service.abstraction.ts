@@ -4,9 +4,9 @@ import { Observable } from "rxjs";
 import { KdfConfig } from "@bitwarden/key-management";
 
 import { ForceSetPasswordReason } from "../../../auth/models/domain/force-set-password-reason";
-import { EncString } from "../../../platform/models/domain/enc-string";
 import { UserId } from "../../../types/guid";
 import { MasterKey, UserKey } from "../../../types/key";
+import { EncString } from "../../crypto/models/enc-string";
 import {
   MasterKeyWrappedUserKey,
   MasterPasswordAuthenticationData,
