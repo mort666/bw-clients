@@ -21,6 +21,7 @@ jobs:
         files: |
           apps/desktop/native-messaging-test-runner/**
           apps/desktop/src/services/duckduckgo-message-handler.service.ts
+          apps/desktop/src/services/encrypted-message-handler.service.ts
 
     - name: Comment on PR if monitored files changed
       if: steps.changed-files.outputs.any_changed == 'true'
