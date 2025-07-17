@@ -19,7 +19,7 @@ jobs:
       uses: tj-actions/changed-files@v44
       with:
         files: |
-          apps/desktop/native-messaging-test-runner/*
+          apps/desktop/native-messaging-test-runner/**
           apps/desktop/src/services/duckduckgo-message-handler.service.ts
 
     - name: Comment on PR if monitored files changed
