@@ -13,8 +13,8 @@ import { MasterKey, UserKey } from "../../../types/key";
 import { EncString } from "../../crypto/models/enc-string";
 import { InternalMasterPasswordServiceAbstraction } from "../abstractions/master-password.service.abstraction";
 import {
-  MasterKeyWrappedUserKey,
   MasterPasswordAuthenticationData,
+  MasterPasswordSalt,
   MasterPasswordUnlockData,
 } from "../types/master-password.types";
 
@@ -84,7 +84,7 @@ export class FakeMasterPasswordService implements InternalMasterPasswordServiceA
   makeMasterPasswordAuthenticationData(
     password: string,
     kdf: KdfConfig,
-    salt: string,
+    salt: MasterPasswordSalt,
     userId: UserId,
   ): Promise<MasterPasswordAuthenticationData> {
     return this.mock.makeMasterPasswordAuthenticationData(password, kdf, salt, userId);
@@ -93,19 +93,10 @@ export class FakeMasterPasswordService implements InternalMasterPasswordServiceA
   makeMasterPasswordUnlockData(
     password: string,
     kdf: KdfConfig,
-    salt: string,
+    salt: MasterPasswordSalt,
     userKey: UserKey,
   ): Promise<MasterPasswordUnlockData> {
     return this.mock.makeMasterPasswordUnlockData(password, kdf, salt, userKey);
-  }
-
-  makeMasterKeyWrappedUserKey(
-    password: string,
-    kdf: KdfConfig,
-    salt: string,
-    userKey: UserKey,
-  ): Promise<MasterKeyWrappedUserKey> {
-    return this.mock.makeMasterKeyWrappedUserKey(password, kdf, salt, userKey);
   }
 
   unwrapUserKeyFromMasterPasswordUnlockData(
