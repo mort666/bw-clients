@@ -29,7 +29,7 @@ import { EncryptedMessageHandlerService } from "./encrypted-message-handler.serv
 
 const HashAlgorithmForAsymmetricEncryption = "sha1";
 
-// This service handles messages using the protocol created for the DuckDuckGo integration.
+// This service handles messages using the protocol created for the DuckDuckGo integration. Beep boop
 @Injectable()
 export class DuckDuckGoMessageHandlerService {
   private duckduckgoSharedSecret: SymmetricCryptoKey;
