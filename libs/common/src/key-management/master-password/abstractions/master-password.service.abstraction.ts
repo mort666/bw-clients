@@ -8,8 +8,8 @@ import { UserId } from "../../../types/guid";
 import { MasterKey, UserKey } from "../../../types/key";
 import { EncString } from "../../crypto/models/enc-string";
 import {
-  MasterKeyWrappedUserKey,
   MasterPasswordAuthenticationData,
+  MasterPasswordSalt,
   MasterPasswordUnlockData,
 } from "../types/master-password.types";
 
@@ -62,7 +62,7 @@ export abstract class MasterPasswordServiceAbstraction {
   abstract makeMasterPasswordAuthenticationData: (
     password: string,
     kdf: KdfConfig,
-    salt: string,
+    salt: MasterPasswordSalt,
     userId: UserId,
   ) => Promise<MasterPasswordAuthenticationData>;
 
@@ -73,19 +73,9 @@ export abstract class MasterPasswordServiceAbstraction {
   abstract makeMasterPasswordUnlockData: (
     password: string,
     kdf: KdfConfig,
-    salt: string,
+    salt: MasterPasswordSalt,
     userKey: UserKey,
   ) => Promise<MasterPasswordUnlockData>;
-
-  /**
-   * Wraps a user-key with a password provided KDF settings. The same KDF settings and salt must be provided to unwrap the user-key, otherwise it will fail to decrypt.
-   */
-  abstract makeMasterKeyWrappedUserKey: (
-    password: string,
-    kdf: KdfConfig,
-    salt: string,
-    userKey: UserKey,
-  ) => Promise<MasterKeyWrappedUserKey>;
 
   /**
    * Unwraps a user-key that was wrapped with a password provided KDF settings. The same KDF settings and salt must be provided to unwrap the user-key, otherwise it will fail to decrypt.
