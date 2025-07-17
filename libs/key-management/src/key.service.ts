@@ -210,7 +210,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
   }
 
   /**
-   * @deprecated Please use `makeMasterKeyWrappedUserKey` in {@link MasterPasswordService} instead.
+   * @deprecated Please use `makeMasterPasswordUnlockData` in {@link MasterPasswordService} instead.
    */
   async makeUserKey(masterKey: MasterKey | null): Promise<[UserKey, EncString]> {
     if (masterKey == null) {
@@ -258,7 +258,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
 
   // TODO: Move to MasterPasswordService
   /**
-   * @deprecated Please use `makeMasterPasswordAuthenticationData`, `unwrapMasterKeyWrappedUserKey` or `makeMasterKeyWrappedUserKey` in @link MasterPasswordService instead.
+   * @deprecated Please use `makeMasterPasswordAuthenticationData`, `unwrapUserKeyFromMasterPasswordUnlockData` or `makeMasterPasswordUnlockData` in @link MasterPasswordService instead.
    */
   async getOrDeriveMasterKey(password: string, userId?: UserId) {
     const [resolvedUserId, email] = await firstValueFrom(
@@ -287,7 +287,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
   /**
    * Derive a master key from a password and email.
    *
-   * @deprecated Please use `makeMasterPasswordAuthenticationData`, `unwrapMasterKeyWrappedUserKey` or `makeMasterKeyWrappedUserKey` in @link MasterPasswordService instead.
+   * @deprecated Please use `makeMasterPasswordAuthenticationData`, `makeMasterPasswordAuthenticationData`, `unwrapUserKeyFromMasterPasswordUnlockData` in @link MasterPasswordService instead.
    *
    * @remarks
    * Does not validate the kdf config to ensure it satisfies the minimum requirements for the given kdf type.
@@ -307,7 +307,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
   }
 
   /**
-   * @deprecated Please use `makeMasterKeyWrappedUserKey` in {@link MasterPasswordService} instead.
+   * @deprecated Please use `makeMasterPasswordUnlockData` in {@link MasterPasswordService} instead.
    */
   async encryptUserKeyWithMasterKey(
     masterKey: MasterKey,

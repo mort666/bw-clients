@@ -260,21 +260,8 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     salt: MasterPasswordSalt,
     userKey: UserKey,
   ): Promise<MasterPasswordUnlockData> {
-    return {
-      salt,
-      kdf,
-      masterKeyWrappedUserKey: await this.makeMasterKeyWrappedUserKey(password, kdf, salt, userKey),
-    };
-  }
-
-  async makeMasterKeyWrappedUserKey(
-    password: string,
-    kdf: KdfConfig,
-    salt: MasterPasswordSalt,
-    userKey: UserKey,
-  ): Promise<MasterKeyWrappedUserKey> {
     await SdkLoadService.Ready;
-    return new EncString(
+    const masterKeyWrappedUserKey = new EncString(
       PureCrypto.encrypt_user_key_with_master_password(
         userKey.toEncoded(),
         password,
@@ -282,6 +269,11 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
         kdf.toSdkConfig(),
       ),
     ) as MasterKeyWrappedUserKey;
+    return {
+      salt,
+      kdf,
+      masterKeyWrappedUserKey,
+    };
   }
 
   async unwrapUserKeyFromMasterPasswordUnlockData(
