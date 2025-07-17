@@ -22,12 +22,14 @@ export abstract class MasterPasswordServiceAbstraction {
   abstract forceSetPasswordReason$: (userId: UserId) => Observable<ForceSetPasswordReason>;
   /**
    * An observable that emits the master key for the user.
+   * @deprecated Interacting with the master-key directly is deprecated. Please use {@link makeMasterPasswordUnlockData} and {@link makeMasterPasswordAuthenticationData}, {@link unwrapUserKeyFromMasterPasswordUnlockData}, or {@link makeMasterKeyWrappedUserKey} instead.
    * @param userId The user ID.
    * @throws If the user ID is missing.
    */
   abstract masterKey$: (userId: UserId) => Observable<MasterKey>;
   /**
    * An observable that emits the master key hash for the user.
+   * @deprecated Interacting with the master-key directly is deprecated. Please use {@link makeMasterPasswordAuthenticationData}.
    * @param userId The user ID.
    * @throws If the user ID is missing.
    */
@@ -40,6 +42,7 @@ export abstract class MasterPasswordServiceAbstraction {
   abstract getMasterKeyEncryptedUserKey: (userId: UserId) => Promise<EncString>;
   /**
    * Decrypts the user key with the provided master key
+   * @deprecated Interacting with the master-key directly is deprecated. Please use {@link unwrapUserKeyFromMasterPasswordUnlockData} instead.
    * @param masterKey The user's master key
    *    * @param userId The desired user
    * @param userKey The user's encrypted symmetric key
@@ -53,6 +56,9 @@ export abstract class MasterPasswordServiceAbstraction {
     userKey?: EncString,
   ) => Promise<UserKey | null>;
 
+  /**
+   * Makes the authentication hash for authenticating to the server with the master password.
+   */
   abstract makeMasterPasswordAuthenticationData: (
     password: string,
     kdf: KdfConfig,
@@ -60,6 +66,10 @@ export abstract class MasterPasswordServiceAbstraction {
     userId: UserId,
   ) => Promise<MasterPasswordAuthenticationData>;
 
+  /**
+   * Creates a MasterPasswordUnlockData bundle that encrypts the user-key with a key derived from the password. The
+   * bundle also contains the KDF settings and salt used to derive the key, which are required to decrypt the user-key later.
+   */
   abstract makeMasterPasswordUnlockData: (
     password: string,
     kdf: KdfConfig,
@@ -67,6 +77,9 @@ export abstract class MasterPasswordServiceAbstraction {
     userKey: UserKey,
   ) => Promise<MasterPasswordUnlockData>;
 
+  /**
+   * Wraps a user-key with a password provided KDF settings. The same KDF settings and salt must be provided to unwrap the user-key, otherwise it will fail to decrypt.
+   */
   abstract makeMasterKeyWrappedUserKey: (
     password: string,
     kdf: KdfConfig,
@@ -74,6 +87,11 @@ export abstract class MasterPasswordServiceAbstraction {
     userKey: UserKey,
   ) => Promise<MasterKeyWrappedUserKey>;
 
+  /**
+   * Unwraps a user-key that was wrapped with a password provided KDF settings. The same KDF settings and salt must be provided to unwrap the user-key, otherwise it will fail to decrypt.
+   * @throws If the encryption type is not supported.
+   * @throws If the password, KDF, or salt don't match the original wrapping parameters.
+   */
   abstract unwrapUserKeyFromMasterPasswordUnlockData: (
     password: string,
     masterPasswordUnlockData: MasterPasswordUnlockData,

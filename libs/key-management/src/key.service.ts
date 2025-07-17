@@ -210,7 +210,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
   }
 
   /**
-   * @deprecated Please use `makeMasterKeyWrappedUserKey` in @link MasterPasswordService instead.
+   * @deprecated Please use `makeMasterKeyWrappedUserKey` in {@link MasterPasswordService} instead.
    */
   async makeUserKey(masterKey: MasterKey | null): Promise<[UserKey, EncString]> {
     if (masterKey == null) {
@@ -307,7 +307,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
   }
 
   /**
-   * @deprecated Please use `makeMasterKeyWrappedUserKey` in @link MasterPasswordService instead.
+   * @deprecated Please use `makeMasterKeyWrappedUserKey` in {@link MasterPasswordService} instead.
    */
   async encryptUserKeyWithMasterKey(
     masterKey: MasterKey,
@@ -319,7 +319,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
 
   // TODO: move to MasterPasswordService
   /**
-   * @deprecated Please use `makeMasterPasswordAuthenticationData` in @link MasterPasswordService instead.
+   * @deprecated Please use `makeMasterPasswordAuthenticationData` in {@link MasterPasswordService} instead.
    */
   async hashMasterKey(
     password: string,

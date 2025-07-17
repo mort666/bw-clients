@@ -79,9 +79,6 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     private accountService: AccountService,
   ) {}
 
-  /**
-   * @deprecated This will be made private
-   */
   masterKey$(userId: UserId): Observable<MasterKey> {
     if (userId == null) {
       throw new Error("User ID is required.");
@@ -89,9 +86,6 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     return this.stateProvider.getUser(userId, MASTER_KEY).state$;
   }
 
-  /**
-   * @deprecated
-   */
   masterKeyHash$(userId: UserId): Observable<string> {
     if (userId == null) {
       throw new Error("User ID is required.");
@@ -123,9 +117,6 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     return email.toLowerCase().trim() as MasterPasswordSalt;
   }
 
-  /**
-   * @deprecated
-   */
   async setMasterKey(masterKey: MasterKey, userId: UserId): Promise<void> {
     if (masterKey == null) {
       throw new Error("Master key is required.");
@@ -136,9 +127,6 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     await this.stateProvider.getUser(userId, MASTER_KEY).update((_) => masterKey);
   }
 
-  /**
-   * @deprecated
-   */
   async clearMasterKey(userId: UserId): Promise<void> {
     if (userId == null) {
       throw new Error("User ID is required.");
@@ -146,9 +134,6 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     await this.stateProvider.getUser(userId, MASTER_KEY).update((_) => null);
   }
 
-  /**
-   * @deprecated
-   */
   async setMasterKeyHash(masterKeyHash: string, userId: UserId): Promise<void> {
     if (masterKeyHash == null) {
       throw new Error("Master key hash is required.");
@@ -159,9 +144,6 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     await this.stateProvider.getUser(userId, MASTER_KEY_HASH).update((_) => masterKeyHash);
   }
 
-  /**
-   * @deprecated
-   */
   async clearMasterKeyHash(userId: UserId): Promise<void> {
     if (userId == null) {
       throw new Error("User ID is required.");
@@ -202,9 +184,6 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     await this.stateProvider.getUser(userId, FORCE_SET_PASSWORD_REASON).update((_) => reason);
   }
 
-  /**
-   * @deprecated Please use `unwrapMasterKeyWrappedUserKey` instead.
-   */
   async decryptUserKeyWithMasterKey(
     masterKey: MasterKey,
     userId: UserId,
@@ -246,9 +225,6 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     return decUserKey as UserKey;
   }
 
-  /**
-   * Makes the authentication hash for authenticating to the server with the master password.
-   */
   async makeMasterPasswordAuthenticationData(
     password: string,
     kdf: KdfConfig,
@@ -278,10 +254,6 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     } as MasterPasswordAuthenticationData;
   }
 
-  /**
-   * Creates a MasterPasswordUnlockData bundle that encrypts the user-key with a key derived from the password. The
-   * bundle also contains the KDF settings and salt used to derive the key, which are required to decrypt the user-key later.
-   */
   async makeMasterPasswordUnlockData(
     password: string,
     kdf: KdfConfig,
@@ -295,9 +267,6 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     };
   }
 
-  /**
-   * Wraps a user-key with a password provided KDF settings. The same KDF settings and salt must be provided to unwrap the user-key, otherwise it will fail to decrypt.
-   */
   async makeMasterKeyWrappedUserKey(
     password: string,
     kdf: KdfConfig,
@@ -315,11 +284,6 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     ) as MasterKeyWrappedUserKey;
   }
 
-  /**
-   * Unwraps a user-key that was wrapped with a password provided KDF settings. The same KDF settings and salt must be provided to unwrap the user-key, otherwise it will fail to decrypt.
-   * @throws If the encryption type is not supported.
-   * @throws If the password, KDF, or salt don't match the original wrapping parameters.
-   */
   async unwrapUserKeyFromMasterPasswordUnlockData(
     password: string,
     masterPasswordUnlockData: MasterPasswordUnlockData,
