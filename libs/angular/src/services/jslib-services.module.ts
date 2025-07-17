@@ -217,6 +217,7 @@ import {
   WebPushConnectionService,
   WebPushNotificationsApiService,
 } from "@bitwarden/common/platform/notifications/internal";
+import { SystemNotificationsService } from "@bitwarden/common/platform/notifications/system-notifications-service";
 import {
   DefaultTaskSchedulerService,
   TaskSchedulerService,
@@ -967,6 +968,7 @@ const safeProviders: SafeProvider[] = [
       SignalRConnectionService,
       AuthServiceAbstraction,
       WebPushConnectionService,
+      SystemNotificationsService,
       ActionsService,
     ],
   }),

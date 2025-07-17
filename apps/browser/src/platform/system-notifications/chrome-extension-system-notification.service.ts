@@ -8,10 +8,10 @@ import {
   SystemNotificationClearInfo,
   SystemNotificationCreateInfo,
   SystemNotificationEvent,
-  SystemNotificationService,
-} from "@bitwarden/common/platform/notifications/system-notification-service";
+  SystemNotificationsService,
+} from "@bitwarden/common/platform/notifications/system-notifications-service";
 
-export class ChromeExtensionSystemNotificationService implements SystemNotificationService {
+export class ChromeExtensionSystemNotificationService implements SystemNotificationsService {
   private systemNotificationClickedSubject = new Subject<SystemNotificationEvent>();
   notificationClicked$: Observable<SystemNotificationEvent>;
 

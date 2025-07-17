@@ -130,8 +130,11 @@ import {
   WebPushNotificationsApiService,
   WorkerWebPushConnectionService,
 } from "@bitwarden/common/platform/notifications/internal";
-import { SystemNotificationService } from "@bitwarden/common/platform/notifications/system-notification-service";
-import { UnsupportedSystemNotificationService } from "@bitwarden/common/platform/notifications/unsupported-system-notification.service";
+import {
+  ButtonActions,
+  SystemNotificationsService,
+} from "@bitwarden/common/platform/notifications/system-notifications-service";
+import { UnsupportedSystemNotificationsService } from "@bitwarden/common/platform/notifications/unsupported-system-notifications.service";
 import { AppIdService } from "@bitwarden/common/platform/services/app-id.service";
 import { ConfigApiService } from "@bitwarden/common/platform/services/config/config-api.service";
 import { DefaultConfigService } from "@bitwarden/common/platform/services/config/default-config.service";
@@ -347,7 +350,7 @@ export default class MainBackground {
   exportService: VaultExportServiceAbstraction;
   searchService: SearchServiceAbstraction;
   notificationsService: ServerNotificationsService;
-  systemNotificationService: SystemNotificationService;
+  systemNotificationService: SystemNotificationsService;
   actionsService: ActionsService;
   stateService: StateServiceAbstraction;
   userNotificationSettingsService: UserNotificationSettingsServiceAbstraction;
@@ -1129,7 +1132,9 @@ export default class MainBackground {
       this.webPushConnectionService = new UnsupportedWebPushConnectionService();
     }
 
-    this.actionsService = new BrowserActionsService(this.platformUtilsService);
+    this.logService.info(`The background service is registered as ${navigator.userAgent}`);
+
+    this.actionsService = new BrowserActionsService(this.logService, this.platformUtilsService);
 
     const userAgent = navigator.userAgent;
 
@@ -1144,8 +1149,22 @@ export default class MainBackground {
         this.platformUtilsService,
       );
     } else {
-      this.systemNotificationService = new UnsupportedSystemNotificationService();
+      this.systemNotificationService = new UnsupportedSystemNotificationsService();
     }
+
+    setTimeout(async () => {
+      await this.systemNotificationService.create({
+        id: Math.random() * 100000 + "",
+        type: ButtonActions.AuthRequestNotification,
+        title: "Test Notification",
+        body: "Body",
+        buttons: [
+          {
+            title: "First Button",
+          },
+        ],
+      });
+    }, 1);
 
     this.notificationsService = new DefaultNotificationsService(
       this.logService,
@@ -1158,6 +1177,7 @@ export default class MainBackground {
       new SignalRConnectionService(this.apiService, this.logService),
       this.authService,
       this.webPushConnectionService,
+      this.systemNotificationService,
       this.actionsService,
     );
 

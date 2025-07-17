@@ -35,11 +35,11 @@ export type SystemNotificationClearInfo = {
 
 export type SystemNotificationEvent = {
   id: string;
-  type: string;
+  type: ButtonActionsKeys;
   buttonIdentifier: number;
 };
 
-export abstract class SystemNotificationService {
+export abstract class SystemNotificationsService {
   abstract notificationClicked$: Observable<SystemNotificationEvent>;
   abstract create(createInfo: SystemNotificationCreateInfo): Promise<undefined>;
   abstract clear(clearInfo: SystemNotificationClearInfo): undefined;

@@ -15,6 +15,11 @@ import {
 // eslint-disable-next-line no-restricted-imports
 import { LogoutReason } from "@bitwarden/auth/common";
 import { ActionsService } from "@bitwarden/common/platform/actions";
+import {
+  ButtonActions,
+  SystemNotificationEvent,
+  SystemNotificationsService,
+} from "@bitwarden/common/platform/notifications/system-notifications-service";
 
 import { AccountService } from "../../../auth/abstractions/account.service";
 import { AuthService } from "../../../auth/abstractions/auth.service";
@@ -56,8 +61,20 @@ export class DefaultNotificationsService implements NotificationsServiceAbstract
     private readonly signalRConnectionService: SignalRConnectionService,
     private readonly authService: AuthService,
     private readonly webPushConnectionService: WebPushConnectionService,
-    private readonly actionsService: ActionsService,
+    private readonly systemNotificationService: SystemNotificationsService,
+    private readonly actionService: ActionsService,
   ) {
+    this.systemNotificationService.notificationClicked$
+      .pipe(
+        map(async (value: SystemNotificationEvent) => {
+          switch (value.type) {
+            case ButtonActions.AuthRequestNotification:
+              await this.actionService.openPopup();
+          }
+        }),
+      )
+      .subscribe();
+
     this.notifications$ = this.accountService.activeAccount$.pipe(
       map((account) => account?.id),
       distinctUntilChanged(),
@@ -215,7 +232,6 @@ export class DefaultNotificationsService implements NotificationsServiceAbstract
         await this.syncService.syncDeleteSend(notification.payload as SyncSendNotification);
         break;
       case NotificationType.AuthRequest:
-        await this.actionsService.openPopup();
         this.messagingService.send("openLoginApproval", {
           notificationId: notification.payload.id,
         });
