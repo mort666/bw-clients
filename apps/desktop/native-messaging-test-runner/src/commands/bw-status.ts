@@ -26,6 +26,6 @@ import * as config from "../variables";
   LogUtils.logSuccess("Handshake success response");
   const status = await nativeMessageService.checkStatus(handshakeResponse.sharedKey);
 
-  LogUtils.logSuccess("Status output is: ", status);
+  LogUtils.logSuccess("beep boop Status output is: ", status);
   nativeMessageService.disconnect();
 })();
