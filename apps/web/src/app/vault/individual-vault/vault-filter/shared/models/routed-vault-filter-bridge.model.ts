@@ -145,7 +145,7 @@ export class RoutedVaultFilterBridge implements VaultFilter {
   get folderId(): string {
     return this.legacyFilter.folderId;
   }
-  get collectionId(): string {
+  get collectionId(): CollectionId {
     return this.legacyFilter.collectionId;
   }
   resetFilter(): void {
