@@ -8,7 +8,7 @@ on:
 jobs:
   check-files:
     name: Check files
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: read
       pull-requests: write
@@ -33,13 +33,6 @@ jobs:
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
       with:
         script: |
-          const changedFiles = `${{ steps.changes.outputs.monitored_files }}`.split(' ').filter(file => file.trim() !== '');
-          
-          if (changedFiles.length === 0) {
-            console.log('No changed files found');
-            return;
-          }
-          
           const message = `⚠️🦆 **DuckDuckGo Integration files have been modified in this PR:**
           
            ${changedFiles.map(file => `- \`${file}\``).join('\n')}
