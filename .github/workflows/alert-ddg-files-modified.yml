@@ -33,9 +33,11 @@ jobs:
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
       with:
         script: |
+          const changedFiles = `${{ steps.changed-files.outputs.monitored_files }}`.split(' ').filter(file => file.trim() !== '');
+
           const message = `⚠️🦆 **DuckDuckGo Integration files have been modified in this PR:**
           
-           ${changedFiles.map(file => `- \`${file}\``).join('\n')}
+          ${changedFiles.map(file => `- \`${file}\``).join('\n')}
           
           Please run the DuckDuckGo native messaging test runner from this branch [these instructions](https://contributing.bitwarden.com/getting-started/clients/desktop/native-messaging-test-runner) and ensure it functions properly.`;
           
