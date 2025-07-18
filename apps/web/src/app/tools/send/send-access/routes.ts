@@ -8,7 +8,6 @@ import { RouteDataProperties } from "../../../core";
 import { SendAccessExplainerComponent } from "./send-access-explainer.component";
 import { SendAccessPasswordComponent } from "./send-access-password.component";
 import { trySendAccess } from "./try-send-access.guard";
-import { ViewContentComponent } from "./view-content.component";
 
 /** Routes to reach send access screens */
 export const SendAccessRoutes: Routes = [
@@ -49,8 +48,7 @@ export const SendAccessRoutes: Routes = [
     } satisfies RouteDataProperties & AnonLayoutWrapperData,
     children: [
       {
-        path: "send/password/:sendId/:key",
-        component: ViewContentComponent,
+        path: "send/password/:sendId",
       },
       {
         path: "",

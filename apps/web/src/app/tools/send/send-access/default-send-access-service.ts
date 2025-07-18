@@ -1,31 +1,30 @@
-import { Injectable } from "@angular/core";
+import { Injectable, Inject } from "@angular/core";
 import { Router, UrlTree } from "@angular/router";
 import { map, of, from, catchError, timeout } from "rxjs";
 
 import { ErrorResponse } from "@bitwarden/common/models/response/error.response";
 import { StateProvider } from "@bitwarden/common/platform/state";
 import { SemanticLogger } from "@bitwarden/common/tools/log";
-import { SystemServiceProvider } from "@bitwarden/common/tools/providers.js";
+import { SystemServiceProvider } from "@bitwarden/common/tools/providers";
 import { SendAccessRequest } from "@bitwarden/common/tools/send/models/request/send-access.request";
 import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.service.abstraction";
+import { SYSTEM_SERVICE_PROVIDER } from "@bitwarden/generator-components";
 
 import { SEND_RESPONSE_KEY, SEND_CONTEXT_KEY } from "./send-access-memory";
+import { SendAccessService } from "./send-access-service.abstraction";
 import { isErrorResponse } from "./util";
 
 const TEN_SECONDS = 10_000;
 
 @Injectable({ providedIn: "root" })
-export class SendAccessService {
+export class DefaultSendAccessService implements SendAccessService {
   private readonly logger: SemanticLogger;
 
   constructor(
     private readonly state: StateProvider,
     private readonly api: SendApiService,
     private readonly router: Router,
-    system: SystemServiceProvider,
-    private configuration = {
-      tryAccessTimeoutMs: TEN_SECONDS,
-    },
+    @Inject(SYSTEM_SERVICE_PROVIDER) system: SystemServiceProvider,
   ) {
     this.logger = system.log({ type: "SendAccessAuthenticationService" });
   }
@@ -36,7 +35,7 @@ export class SendAccessService {
     const response$ = from(this.api.postSendAccess(sendId, new SendAccessRequest()));
 
     const redirect$ = response$.pipe(
-      timeout({ first: this.configuration.tryAccessTimeoutMs }),
+      timeout({ first: TEN_SECONDS }),
       map((_response) => {
         this.logger.info("public send detected; redirecting to send access with token.");
         const url = this.toViewRedirect(sendId);
@@ -87,7 +86,7 @@ export class SendAccessService {
   }
 
   async setContext(sendId: string, key: string) {
-    return this.state.getGlobal(SEND_CONTEXT_KEY).update(() => ({ id: sendId, key }));
+    await this.state.getGlobal(SEND_CONTEXT_KEY).update(() => ({ id: sendId, key }));
   }
 
   async clear(): Promise<void> {

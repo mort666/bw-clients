@@ -5,7 +5,7 @@ import { from, ignoreElements, concat } from "rxjs";
 import { SystemServiceProvider } from "@bitwarden/common/tools/providers";
 import { SYSTEM_SERVICE_PROVIDER } from "@bitwarden/generator-components";
 
-import { SendAccessService } from "./send-access.service";
+import { SendAccessService } from "./send-access-service.abstraction";
 
 export const trySendAccess: CanActivateFn = (
   route: ActivatedRouteSnapshot,
