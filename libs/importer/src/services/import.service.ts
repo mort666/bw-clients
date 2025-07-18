@@ -102,6 +102,7 @@ import {
 import { ImportResult } from "../models/import-result";
 import { ImportApiServiceAbstraction } from "../services/import-api.service.abstraction";
 import { ImportServiceAbstraction } from "../services/import.service.abstraction";
+import { OrganizationId } from "@bitwarden/common/types/guid";
 
 export class ImportService implements ImportServiceAbstraction {
   featuredImportOptions = featuredImportOptions as readonly ImportOption[];
@@ -128,7 +129,7 @@ export class ImportService implements ImportServiceAbstraction {
   async import(
     importer: Importer,
     fileContents: string,
-    organizationId: string = null,
+    organizationId: OrganizationId = null,
     selectedImportTarget: FolderView | CollectionView = null,
     canAccessImportExport: boolean,
   ): Promise<ImportResult> {
@@ -191,7 +192,7 @@ export class ImportService implements ImportServiceAbstraction {
   getImporter(
     format: ImportType | "bitwardenpasswordprotected",
     promptForPassword_callback: () => Promise<string>,
-    organizationId: string = null,
+    organizationId: OrganizationId = null,
   ): Importer {
     if (promptForPassword_callback == null) {
       return null;
@@ -380,7 +381,10 @@ export class ImportService implements ImportServiceAbstraction {
     return await this.importApiService.postImportCiphers(request);
   }
 
-  private async handleOrganizationalImport(importResult: ImportResult, organizationId: string) {
+  private async handleOrganizationalImport(
+    importResult: ImportResult,
+    organizationId: OrganizationId,
+  ) {
     const request = new ImportOrganizationCiphersRequest();
     const activeUserId = await firstValueFrom(
       this.accountService.activeAccount$.pipe(map((a) => a?.id)),
