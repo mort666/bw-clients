@@ -80,7 +80,7 @@ describe("Netwrix Password Secure CSV Importer", () => {
   });
 
   it("should parse an item and create a collection when importing into an organization", async () => {
-    importer.organizationId = Utils.newGuid();
+    importer.organizationId = Utils.newGuid() as OrganizationId;
     const result = await importer.parse(credentialsData);
 
     expect(result).not.toBeNull();

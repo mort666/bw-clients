@@ -147,7 +147,7 @@ describe("PasswordXPCsvImporter", () => {
   });
 
   it("should convert folders to collections when importing into an organization", async () => {
-    importer.organizationId = "someOrg";
+    importer.organizationId = "someOrg" as OrganizationId;
     const result: ImportResult = await importer.parse(withFolders);
     expect(result.success).toBe(true);
     expect(result.ciphers.length).toBe(5);
