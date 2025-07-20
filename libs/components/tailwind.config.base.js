@@ -11,7 +11,7 @@ module.exports = {
   content: [
     "./src/**/*.{html,ts}",
     "../../libs/components/src/**/*.{html,ts}",
-    "../../libs/key-management/src/**/*.{html,ts}",
+    "../../libs/key-management-ui/src/**/*.{html,ts}",
     "../../libs/auth/src/**/*.{html,ts}",
   ],
   safelist: [],
@@ -63,6 +63,7 @@ module.exports = {
         100: rgba("--color-notification-100"),
         600: rgba("--color-notification-600"),
       },
+      // art styles deprecated, use 'illustration' instead
       art: {
         primary: rgba("--color-art-primary"),
         accent: rgba("--color-art-accent"),
@@ -82,7 +83,19 @@ module.exports = {
         alt3: rgba("--color-background-alt3"),
         alt4: rgba("--color-background-alt4"),
       },
+      hover: {
+        default: "var(--color-hover-default)",
+        contrast: "var(--color-hover-contrast)",
+      },
       "marketing-logo": rgba("--color-marketing-logo"),
+      illustration: {
+        outline: rgba("--color-illustration-outline"),
+        "bg-primary": rgba("--color-illustration-bg-primary"),
+        "bg-secondary": rgba("--color-illustration-bg-secondary"),
+        "bg-tertiary": rgba("--color-illustration-bg-tertiary"),
+        tertiary: rgba("--color-illustration-tertiary"),
+        logo: rgba("--color-illustration-logo"),
+      },
     },
     textColor: {
       main: rgba("--color-text-main"),
@@ -141,6 +154,9 @@ module.exports = {
         ...theme("width"),
         "90vw": "90vw",
       }),
+      fontSize: {
+        "3xl": ["1.75rem", "2rem"],
+      },
     },
   },
   plugins: [

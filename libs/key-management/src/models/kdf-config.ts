@@ -1,8 +1,8 @@
 import { Jsonify } from "type-fest";
 
-// FIXME: remove `src` and fix import
-// eslint-disable-next-line no-restricted-imports
-import { RangeWithDefault } from "../../../common/src/platform/misc/range-with-default";
+import { RangeWithDefault } from "@bitwarden/common/platform/misc/range-with-default";
+import { Kdf } from "@bitwarden/sdk-internal";
+
 import { KdfType } from "../enums/kdf-type.enum";
 
 /**
@@ -49,6 +49,14 @@ export class PBKDF2KdfConfig {
 
   static fromJSON(json: Jsonify<PBKDF2KdfConfig>): PBKDF2KdfConfig {
     return new PBKDF2KdfConfig(json.iterations);
+  }
+
+  toSdkConfig(): Kdf {
+    return {
+      pBKDF2: {
+        iterations: this.iterations,
+      },
+    };
   }
 }
 
@@ -124,6 +132,16 @@ export class Argon2KdfConfig {
 
   static fromJSON(json: Jsonify<Argon2KdfConfig>): Argon2KdfConfig {
     return new Argon2KdfConfig(json.iterations, json.memory, json.parallelism);
+  }
+
+  toSdkConfig(): Kdf {
+    return {
+      argon2id: {
+        iterations: this.iterations,
+        memory: this.memory,
+        parallelism: this.parallelism,
+      },
+    };
   }
 }
 

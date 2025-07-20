@@ -4,7 +4,6 @@ import { NgModule } from "@angular/core";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { RouterModule } from "@angular/router";
-import { InfiniteScrollDirective } from "ngx-infinite-scroll";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { CoreModule } from "@bitwarden/web-vault/app/core";
@@ -20,7 +19,7 @@ import { MaximumVaultTimeoutPolicyComponent } from "./admin-console/policies/max
 import { AppRoutingModule } from "./app-routing.module";
 import { AppComponent } from "./app.component";
 import { FreeFamiliesSponsorshipPolicyComponent } from "./billing/policies/free-families-sponsorship.component";
-import { AccessIntelligenceModule } from "./tools/access-intelligence/access-intelligence.module";
+import { AccessIntelligenceModule } from "./dirt/access-intelligence/access-intelligence.module";
 
 /**
  * This is the AppModule for the commercial version of Bitwarden.
@@ -37,7 +36,6 @@ import { AccessIntelligenceModule } from "./tools/access-intelligence/access-int
     FormsModule,
     ReactiveFormsModule,
     CoreModule,
-    InfiniteScrollDirective,
     DragDropModule,
     AppRoutingModule,
     OssRoutingModule,

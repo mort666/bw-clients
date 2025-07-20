@@ -7,6 +7,8 @@ import { BehaviorSubject } from "rxjs";
 import { I18nPipe } from "@bitwarden/angular/platform/pipes/i18n.pipe";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { IconButtonModule, NavigationModule } from "@bitwarden/components";
+// FIXME: remove `src` and fix import
+// eslint-disable-next-line no-restricted-imports
 import { NavItemComponent } from "@bitwarden/components/src/navigation/nav-item.component";
 
 import { ProductSwitcherItem, ProductSwitcherService } from "../shared/product-switcher.service";
@@ -193,7 +195,7 @@ describe("NavigationProductSwitcherComponent", () => {
 
       const navItem = fixture.debugElement.query(By.directive(NavItemComponent));
 
-      expect(navItem.componentInstance.forceActiveStyles).toBe(true);
+      expect(navItem.componentInstance.forceActiveStyles()).toBe(true);
     });
   });
 

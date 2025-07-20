@@ -1,13 +1,10 @@
 import { Meta, StoryObj } from "@storybook/web-components";
 
-import { Theme, ThemeTypes } from "@bitwarden/common/platform/enums/theme-type.enum";
+import { ThemeTypes } from "@bitwarden/common/platform/enums/theme-type.enum";
 
-import { CloseButton } from "../../buttons/close-button";
+import { CloseButton, CloseButtonProps } from "../../buttons/close-button";
+import { mockI18n } from "../mock-data";
 
-type Args = {
-  handleCloseNotification: (e: Event) => void;
-  theme: Theme;
-};
 export default {
   title: "Components/Buttons/Close Button",
   argTypes: {
@@ -19,11 +16,18 @@ export default {
     handleCloseNotification: () => {
       alert("Close button clicked!");
     },
+    i18n: mockI18n,
   },
-} as Meta<Args>;
+  parameters: {
+    design: {
+      type: "figma",
+      url: "https://www.figma.com/design/LEhqLAcBPY8uDKRfU99n9W/Autofill-notification-redesign?node-id=502-24633&t=2O7uCAkwRZCcjumm-4",
+    },
+  },
+} as Meta<CloseButtonProps>;
 
-const Template = (args: Args) => CloseButton({ ...args });
+const Template = (args: CloseButtonProps) => CloseButton({ ...args });
 
-export const Default: StoryObj<Args> = {
+export const Default: StoryObj<CloseButtonProps> = {
   render: Template,
 };
