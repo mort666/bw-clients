@@ -17,6 +17,9 @@ import { FocusableElement } from "../shared/focusable-element";
 
 let nextId = 0;
 
+/**
+ * Do not nest Search components inside another `<form>`, as they already contain their own standalone `<form>` element for searching.
+ */
 @Component({
   selector: "bit-search",
   templateUrl: "./search.component.html",
