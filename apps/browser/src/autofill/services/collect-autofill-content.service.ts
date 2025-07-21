@@ -1033,12 +1033,83 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
   private processMutationRecords(mutations: MutationRecord[]) {
     for (let mutationIndex = 0; mutationIndex < mutations.length; mutationIndex++) {
       const mutation: MutationRecord = mutations[mutationIndex];
-      const processMutationRecord = () => this.processMutationRecord(mutation);
-      requestIdleCallbackPolyfill(processMutationRecord, { timeout: 500 });
+      const processMutationRecordCallback = () => this.processMutationRecord(mutation);
+      requestIdleCallbackPolyfill(processMutationRecordCallback, { timeout: 500 });
     }
   }
 
   /**
+   * Processes a single mutation record and updates the autofill elements if necessary.
+   * @param mutation
+   * @private
+   */
+  private newProcessMutationRecord(mutation: MutationRecord) {
+    if (mutation.type === "childList") {
+      const removedAutofillElementNodes = this.getMutatedAutofillElements(mutation.removedNodes);
+
+      for (const elementNode of removedAutofillElementNodes) {
+        this.deleteCachedAutofillElement(
+          elementNode as ElementWithOpId<HTMLFormElement> | ElementWithOpId<FormFieldElement>,
+        );
+      }
+
+      const addedAutofillElementNodes = this.getMutatedAutofillElements(mutation.addedNodes);
+
+      if (addedAutofillElementNodes.size && this.autofillOverlayContentService) {
+        this.setupOverlayListenersOnMutatedElements(
+          // @TODO temp conversion
+          Array.from(addedAutofillElementNodes.values()),
+        );
+      }
+
+      if (removedAutofillElementNodes.size || addedAutofillElementNodes.size) {
+        this.flagPageDetailsUpdateIsRequired();
+      }
+
+      return;
+    }
+
+    if (mutation.type === "attributes") {
+      this.handleAutofillElementAttributeMutation(mutation);
+    }
+  }
+
+  private getMutatedAutofillElements(nodes: NodeList): Set<Node> {
+    let mutatedAutofillElements: HTMLElement[] = [];
+
+    if (!nodes.length) {
+      return new Set<Node>(mutatedAutofillElements);
+    }
+
+    for (let index = 0; index < nodes.length; index++) {
+      const node = nodes[index];
+      if (!nodeIsElement(node)) {
+        continue;
+      }
+
+      if (nodeIsFormElement(node) || this.isNodeFormFieldElement(node)) {
+        mutatedAutofillElements = [...mutatedAutofillElements, node as HTMLElement];
+      }
+
+      const autofillElements = this.domQueryService.query<HTMLElement>(
+        node,
+        `form, ${this.formFieldQueryString}`,
+        (walkerNode: Node) =>
+          nodeIsFormElement(walkerNode) || this.isNodeFormFieldElement(walkerNode),
+        this.mutationObserver,
+        true,
+      );
+
+      if (autofillElements.length) {
+        mutatedAutofillElements = [...mutatedAutofillElements, ...autofillElements];
+      }
+    }
+
+    return new Set<Node>(mutatedAutofillElements);
+  }
+
+  /**
+   * @deprecated Use {@link newProcessMutationRecord} and handle desired side-effects as a separate concern
    * Processes a single mutation record and updates the autofill elements if necessary.
    * @param mutation
    * @private
@@ -1059,6 +1130,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
   }
 
   /**
+   * @deprecated Use {@link getMutatedAutofillElements} and handle desired side-effects as a separate concern
    * Checks if the passed nodes either contain or are autofill elements.
    *
    * @param nodes - The nodes to check
@@ -1123,7 +1195,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
   private setupOverlayListenersOnMutatedElements(mutatedElements: Node[]) {
     for (let elementIndex = 0; elementIndex < mutatedElements.length; elementIndex++) {
       const node = mutatedElements[elementIndex];
-      const buildAutofillFieldItem = () => {
+      const buildAutofillFieldItemCallback = () => {
         if (
           !this.isNodeFormFieldElement(node) ||
           this.autofillFieldElements.get(node as ElementWithOpId<FormFieldElement>)
@@ -1136,7 +1208,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
         void this.buildAutofillFieldItem(node as ElementWithOpId<FormFieldElement>, -1);
       };
 
-      requestIdleCallbackPolyfill(buildAutofillFieldItem, { timeout: 1000 });
+      requestIdleCallbackPolyfill(buildAutofillFieldItemCallback, { timeout: 1000 });
     }
   }
 
@@ -1411,6 +1483,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
    * Validates whether a password field is within the document.
    */
   isPasswordFieldWithinDocument(): boolean {
+    // console.log('🚀 🚀 CollectAutofillContentService 🚀 isPasswordFieldWithinDocument 🚀 isPasswordFieldWithinDocument');
     return (
       this.domQueryService.query<HTMLInputElement>(
         globalThis.document.documentElement,
