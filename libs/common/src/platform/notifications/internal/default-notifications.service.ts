@@ -14,13 +14,6 @@ import {
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
 import { LogoutReason } from "@bitwarden/auth/common";
-import { ActionsService } from "@bitwarden/common/platform/actions";
-import {
-  ButtonActions,
-  ButtonLocation,
-  SystemNotificationEvent,
-  SystemNotificationsService,
-} from "@bitwarden/common/platform/notifications/system-notifications-service";
 
 import { AccountService } from "../../../auth/abstractions/account.service";
 import { AuthService } from "../../../auth/abstractions/auth.service";
@@ -62,20 +55,7 @@ export class DefaultNotificationsService implements NotificationsServiceAbstract
     private readonly signalRConnectionService: SignalRConnectionService,
     private readonly authService: AuthService,
     private readonly webPushConnectionService: WebPushConnectionService,
-    private readonly systemNotificationService: SystemNotificationsService,
-    private readonly actionService: ActionsService,
   ) {
-    this.systemNotificationService.notificationClicked$
-      .pipe(
-        filter(
-          (event: SystemNotificationEvent) => event.type === ButtonActions.AuthRequestNotification,
-        ),
-        mergeMap((event: SystemNotificationEvent) =>
-          this.handleAuthRequestNotificationClicked(event),
-        ),
-      )
-      .subscribe();
-
     this.notifications$ = this.accountService.activeAccount$.pipe(
       map((account) => account?.id),
       distinctUntilChanged(),
@@ -91,26 +71,6 @@ export class DefaultNotificationsService implements NotificationsServiceAbstract
       }),
       share(), // Multiple subscribers should only create a single connection to the server
     );
-  }
-
-  /**
-   * TODO: Requests are doubling, figure out if a subscription is duplicating or something.
-   * @param event
-   * @private
-   */
-  private async handleAuthRequestNotificationClicked(
-    event: SystemNotificationEvent,
-  ): Promise<void> {
-    // This is the approval event. WE WILL NOT BE USING 0 or 1!
-    if (event.buttonIdentifier === ButtonLocation.FirstOptionalButton) {
-      this.logService.info("Approve the request");
-    } else if (event.buttonIdentifier === ButtonLocation.SecondOptionalButton) {
-      // This is the deny event.
-      this.logService.info("Deny the request");
-    } else if (event.buttonIdentifier === ButtonLocation.NotificationButton) {
-      this.logService.info("Main button clicked, open popup");
-      await this.actionService.openPopup();
-    }
   }
 
   /**
