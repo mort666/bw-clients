@@ -17,6 +17,9 @@ export abstract class ActionsService {
    * Safari Extension Background Service Worker -> Safari Extension
    * Firefox Extension Background Service Worker -> Firefox Extension
    * Opera Extension Background Service Worker -> Opera Extension
+   *
+   * These are unknown conditions:
+   * Edge
    */
   abstract openPopup(): Promise<void>;
 }
