@@ -75,6 +75,44 @@ export class ManageClientsComponent {
   clientColumnHeader = this.i18nService.t("client");
   newClientButtonLabel = this.i18nService.t("newClient");
 
+  // Computed properties for provider suspension state
+  get isProviderDisabled(): boolean {
+    return !this.provider?.enabled;
+  }
+
+  get canAddClients(): boolean {
+    return this.isProviderAdmin && !this.isProviderDisabled;
+  }
+
+  get canManageClientNames(): boolean {
+    return this.isProviderAdmin && !this.isProviderDisabled;
+  }
+
+  get canManageClientSubscriptions(): boolean {
+    return this.isProviderAdmin && !this.isProviderDisabled;
+  }
+
+  get addClientTooltip(): string {
+    if (this.isProviderDisabled) {
+      return this.i18nService.t("providerIsDisabled");
+    }
+    return "";
+  }
+
+  get manageClientNameTooltip(): string {
+    if (this.isProviderDisabled) {
+      return this.i18nService.t("providerIsDisabled");
+    }
+    return "";
+  }
+
+  get manageSubscriptionTooltip(): string {
+    if (this.isProviderDisabled) {
+      return this.i18nService.t("providerIsDisabled");
+    }
+    return "";
+  }
+
   constructor(
     private billingApiService: BillingApiServiceAbstraction,
     private providerService: ProviderService,

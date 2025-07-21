@@ -4,13 +4,32 @@
     [formControl]="searchControl"
     [placeholder]="'search' | i18n"
   ></bit-search>
-  <a bitButton routerLink="create" *ngIf="manageOrganizations" buttonType="primary">
+  <a
+    bitButton
+    routerLink="create"
+    *ngIf="canAddClients"
+    buttonType="primary"
+    [title]="addClientTooltip"
+  >
     <i class="bwi bwi-plus bwi-fw" aria-hidden="true"></i>
     {{ "newClient" | i18n }}
   </a>
   <button
+    *ngIf="manageOrganizations && !canAddClients"
     type="button"
     bitButton
+    buttonType="primary"
+    [disabled]="true"
+    [title]="addClientTooltip"
+  >
+    <i class="bwi bwi-plus bwi-fw" aria-hidden="true"></i>
+    {{ "newClient" | i18n }}
+  </button>
+  <button
+    type="button"
+    bitButton
+    [disabled]="!canAddClients"
+    [title]="addClientTooltip"
     (click)="addExistingOrganization()"
     *ngIf="manageOrganizations && showAddExisting"
   >

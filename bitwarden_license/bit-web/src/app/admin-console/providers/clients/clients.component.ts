@@ -13,6 +13,7 @@ import { OrganizationService } from "@bitwarden/common/admin-console/abstraction
 import { ProviderService } from "@bitwarden/common/admin-console/abstractions/provider.service";
 import { ProviderStatusType, ProviderUserType } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
+import { Provider } from "@bitwarden/common/admin-console/models/domain/provider";
 import { ProviderOrganizationOrganizationDetailsResponse } from "@bitwarden/common/admin-console/models/response/provider/provider-organization.response";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
@@ -55,6 +56,7 @@ const DisallowedPlanTypes = [
 })
 export class ClientsComponent {
   providerId: string = "";
+  provider: Provider | undefined;
   addableOrganizations: Organization[] = [];
   loading = true;
   manageOrganizations = false;
@@ -62,6 +64,22 @@ export class ClientsComponent {
   dataSource: TableDataSource<ProviderOrganizationOrganizationDetailsResponse> =
     new TableDataSource();
   protected searchControl = new FormControl("", { nonNullable: true });
+
+  // Computed properties for provider suspension state
+  get isProviderDisabled(): boolean {
+    return !this.provider?.enabled;
+  }
+
+  get canAddClients(): boolean {
+    return this.manageOrganizations && !this.isProviderDisabled;
+  }
+
+  get addClientTooltip(): string {
+    if (this.isProviderDisabled) {
+      return this.i18nService.t("providerIsDisabled");
+    }
+    return "";
+  }
 
   constructor(
     private router: Router,
@@ -141,8 +159,11 @@ export class ClientsComponent {
     const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
     const clients = response.data != null && response.data.length > 0 ? response.data : [];
     this.dataSource.data = clients;
-    this.manageOrganizations =
-      (await this.providerService.get(this.providerId)).type === ProviderUserType.ProviderAdmin;
+
+    // Store the provider for disabled state checks
+    this.provider = await this.providerService.get(this.providerId);
+    this.manageOrganizations = this.provider.type === ProviderUserType.ProviderAdmin;
+
     const candidateOrgs = (
       await firstValueFrom(this.organizationService.organizations$(userId))
     ).filter((o) => o.isOwner && o.providerId == null);

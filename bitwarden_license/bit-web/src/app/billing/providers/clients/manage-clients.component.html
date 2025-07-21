@@ -5,17 +5,31 @@
     buttonType="primary"
     type="button"
     [bitMenuTriggerFor]="clientMenu"
-    appA11yTitle="{{ 'add' | i18n }}"
+    [disabled]="!canAddClients"
+    [title]="addClientTooltip"
+    appA11yTitle="{{ canAddClients ? ('add' | i18n) : addClientTooltip }}"
   >
     <i class="bwi bwi-plus bwi-fw" aria-hidden="true"></i>
     {{ "add" | i18n }}
   </button>
   <bit-menu #clientMenu>
-    <button type="button" bitMenuItem (click)="createClient()">
+    <button
+      type="button"
+      bitMenuItem
+      [disabled]="!canAddClients"
+      [title]="addClientTooltip"
+      (click)="createClient()"
+    >
       <i aria-hidden="true" class="bwi bwi-business"></i>
       {{ newClientButtonLabel }}
     </button>
-    <button type="button" bitMenuItem (click)="addExistingOrganization()">
+    <button
+      type="button"
+      bitMenuItem
+      [disabled]="!canAddClients"
+      [title]="addClientTooltip"
+      (click)="addExistingOrganization()"
+    >
       <i aria-hidden="true" class="bwi bwi-filter"></i>
       {{ "existingOrganization" | i18n }}
     </button>
@@ -73,14 +87,27 @@
           appA11yTitle="{{ 'options' | i18n }}"
         ></button>
         <bit-menu #rowMenu>
-          <button type="button" bitMenuItem (click)="manageClientName(row)">
+          <button
+            type="button"
+            bitMenuItem
+            [disabled]="!canManageClientNames"
+            [title]="manageClientNameTooltip"
+            (click)="manageClientName(row)"
+          >
             <i aria-hidden="true" class="bwi bwi-pencil-square"></i>
             {{ "updateName" | i18n }}
           </button>
-          <button type="button" bitMenuItem (click)="manageClientSubscription(row)">
+          <button
+            type="button"
+            bitMenuItem
+            [disabled]="!canManageClientSubscriptions"
+            [title]="manageSubscriptionTooltip"
+            (click)="manageClientSubscription(row)"
+          >
             <i aria-hidden="true" class="bwi bwi-family"></i>
             {{ "manageSubscription" | i18n }}
           </button>
+          <!-- Keep unlink enabled even when provider is suspended -->
           <button *ngIf="isProviderAdmin" type="button" bitMenuItem (click)="remove(row)">
             <span class="tw-text-danger">
               <i aria-hidden="true" class="bwi bwi-close"></i> {{ "unlinkOrganization" | i18n }}
@@ -92,7 +119,7 @@
   </bit-table-scroll>
   <div *ngIf="dataSource.data.length === 0" class="tw-mt-10">
     <app-no-clients
-      [showAddOrganizationButton]="isProviderAdmin"
+      [showAddOrganizationButton]="canAddClients"
       (addNewOrganizationClicked)="createClient()"
     />
   </div>
