@@ -15,30 +15,36 @@ export class BrowserActionsService implements ActionsService {
   async openPopup(): Promise<void> {
     const deviceType = this.platformUtilsService.getDevice();
 
-    switch (deviceType) {
-      case DeviceType.FirefoxExtension:
-      case DeviceType.ChromeExtension: {
-        const browserAction = BrowserApi.getBrowserAction();
+    try {
+      switch (deviceType) {
+        case DeviceType.FirefoxExtension:
+        case DeviceType.ChromeExtension: {
+          const browserAction = BrowserApi.getBrowserAction();
 
-        // We might get back mv2 or mv3 browserAction, only mv3 supports the openPopup function,
-        // so check for that function existing.
-        if ("openPopup" in browserAction && typeof browserAction.openPopup === "function") {
-          await browserAction.openPopup();
-          return;
-        } else {
-          this.logService.warning(
-            `No openPopup function found on browser actions. On browser: ${deviceType} and manifest version: ${BrowserApi.manifestVersion}`,
-          );
+          // We might get back mv2 or mv3 browserAction, only mv3 supports the openPopup function,
+          // so check for that function existing.
+          if ("openPopup" in browserAction && typeof browserAction.openPopup === "function") {
+            await browserAction.openPopup();
+            return;
+          } else {
+            this.logService.warning(
+              `No openPopup function found on browser actions. On browser: ${deviceType} and manifest version: ${BrowserApi.manifestVersion}`,
+            );
+          }
+          break;
         }
-        break;
+        case DeviceType.SafariExtension:
+          await SafariApp.sendMessageToApp("showPopover", null, true);
+          return;
+        default:
+          this.logService.warning(
+            `Tried to open the popup from an unsupported device type: ${deviceType}`,
+          );
       }
-      case DeviceType.SafariExtension:
-        await SafariApp.sendMessageToApp("showPopover", null, true);
-        return;
-      default:
-        this.logService.warning(
-          `Tried to open the popup from an unsupported device type: ${deviceType}`,
-        );
+    } catch (e) {
+      this.logService.error(
+        `Failed to open the popup on ${deviceType} with manifest ${BrowserApi.manifestVersion} and error: ${e}`,
+      );
     }
   }
 }

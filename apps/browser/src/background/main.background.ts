@@ -130,10 +130,7 @@ import {
   WebPushNotificationsApiService,
   WorkerWebPushConnectionService,
 } from "@bitwarden/common/platform/notifications/internal";
-import {
-  ButtonActions,
-  SystemNotificationsService,
-} from "@bitwarden/common/platform/notifications/system-notifications-service";
+import { SystemNotificationsService } from "@bitwarden/common/platform/notifications/system-notifications-service";
 import { UnsupportedSystemNotificationsService } from "@bitwarden/common/platform/notifications/unsupported-system-notifications.service";
 import { AppIdService } from "@bitwarden/common/platform/services/app-id.service";
 import { ConfigApiService } from "@bitwarden/common/platform/services/config/config-api.service";
@@ -453,7 +450,6 @@ export default class MainBackground {
   private webRequestBackground: WebRequestBackground;
 
   private syncTimeout: any;
-  private isSafari: boolean;
   private nativeMessagingBackground: NativeMessagingBackground;
 
   private popupViewCacheBackgroundService: PopupViewCacheBackgroundService;
@@ -1132,22 +1128,11 @@ export default class MainBackground {
       this.webPushConnectionService = new UnsupportedWebPushConnectionService();
     }
 
-    this.logService.info(
-      `The background service is registered as ${navigator.userAgent} with manifest version ${BrowserApi.manifestVersion}`,
-    );
-
     this.actionsService = new BrowserActionsService(this.logService, this.platformUtilsService);
 
-    setTimeout(async () => {
-      await this.actionsService.openPopup();
-    }, 1);
-
-    const userAgent = navigator.userAgent;
-
-    const isChrome =
-      userAgent.includes("Chrome") || userAgent.includes("Edge") || userAgent.includes("OPR");
-    const isSafari = userAgent.includes("Safari") && !userAgent.includes("Chrome");
-    const isFirefox = userAgent.includes("Firefox");
+    const isChrome = this.platformUtilsService.isChrome();
+    const isSafari = this.platformUtilsService.isSafari();
+    const isFirefox = this.platformUtilsService.isFirefox();
 
     if ((isChrome || isFirefox) && !isSafari) {
       this.systemNotificationService = new BrowserSystemNotificationService(
@@ -1157,18 +1142,6 @@ export default class MainBackground {
     } else {
       this.systemNotificationService = new UnsupportedSystemNotificationsService();
     }
-
-    setTimeout(async () => {
-      this.logService.info("CREATING NOTIFICATION");
-      await this.systemNotificationService.create({
-        id: Math.random() * 100000 + "",
-        type: ButtonActions.AuthRequestNotification,
-        title: "Test Notification",
-        body: "Body",
-        buttons: [],
-      });
-      this.logService.info("DONE CREATING NOTIFICATION");
-    }, 1);
 
     this.notificationsService = new DefaultNotificationsService(
       this.logService,
@@ -1225,9 +1198,6 @@ export default class MainBackground {
       this.accountService,
       this.logService,
     );
-
-    // Other fields
-    this.isSafari = this.platformUtilsService.isSafari();
 
     // Background
 
@@ -1753,7 +1723,7 @@ export default class MainBackground {
       return;
     }
 
-    if (this.isSafari) {
+    if (this.platformUtilsService.isSafari()) {
       await SafariApp.sendMessageToApp("showPopover", null, true);
     }
   }

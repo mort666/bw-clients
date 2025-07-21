@@ -23,68 +23,74 @@ export class BrowserSystemNotificationService implements SystemNotificationsServ
   }
 
   async create(createInfo: SystemNotificationCreateInfo): Promise<undefined> {
-    switch (this.platformUtilsService.getDevice()) {
-      case DeviceType.ChromeExtension:
-        chrome.notifications.create(createInfo.id, {
-          iconUrl: "https://avatars.githubusercontent.com/u/15990069?s=200",
-          message: createInfo.title,
-          type: "basic",
-          title: createInfo.title,
-          buttons: createInfo.buttons.map((value) => {
-            return { title: value.title };
-          }),
-        });
+    try {
+      switch (this.platformUtilsService.getDevice()) {
+        case DeviceType.ChromeExtension:
+          chrome.notifications.create(createInfo.id, {
+            iconUrl: "https://avatars.githubusercontent.com/u/15990069?s=200",
+            message: createInfo.title,
+            type: "basic",
+            title: createInfo.title,
+            buttons: createInfo.buttons.map((value) => {
+              return { title: value.title };
+            }),
+          });
 
-        // ESLint: Using addListener in the browser popup produces a memory leak in Safari,
-        // use `BrowserApi. addListener` instead (no-restricted-syntax)
-        // eslint-disable-next-line no-restricted-syntax
-        chrome.notifications.onButtonClicked.addListener(
-          (notificationId: string, buttonIndex: number) => {
+          // ESLint: Using addListener in the browser popup produces a memory leak in Safari,
+          // use `BrowserApi. addListener` instead (no-restricted-syntax)
+          // eslint-disable-next-line no-restricted-syntax
+          chrome.notifications.onButtonClicked.addListener(
+            (notificationId: string, buttonIndex: number) => {
+              this.systemNotificationClickedSubject.next({
+                id: notificationId,
+                type: createInfo.type,
+                buttonIdentifier: buttonIndex,
+              });
+            },
+          );
+
+          // eslint-disable-next-line no-restricted-syntax
+          chrome.notifications.onClicked.addListener((notificationId: string) => {
             this.systemNotificationClickedSubject.next({
               id: notificationId,
               type: createInfo.type,
-              buttonIdentifier: buttonIndex,
+              buttonIdentifier: ButtonLocation.NotificationButton,
             });
-          },
-        );
-
-        // eslint-disable-next-line no-restricted-syntax
-        chrome.notifications.onClicked.addListener((notificationId: string) => {
-          this.systemNotificationClickedSubject.next({
-            id: notificationId,
-            type: createInfo.type,
-            buttonIdentifier: ButtonLocation.NotificationButton,
           });
-        });
 
-        break;
-      case DeviceType.FirefoxExtension:
-        this.logService.info("Creating firefox notification");
+          break;
+        case DeviceType.FirefoxExtension:
+          this.logService.info("Creating firefox notification");
 
-        await browser.notifications.create(createInfo.id, {
-          iconUrl: "https://avatars.githubusercontent.com/u/15990069?s=200",
-          message: createInfo.title,
-          type: "basic",
-          title: createInfo.title,
-        });
+          await browser.notifications.create(createInfo.id, {
+            iconUrl: "https://avatars.githubusercontent.com/u/15990069?s=200",
+            message: createInfo.title,
+            type: "basic",
+            title: createInfo.title,
+          });
 
-        browser.notifications.onButtonClicked.addListener(
-          (notificationId: string, buttonIndex: number) => {
+          browser.notifications.onButtonClicked.addListener(
+            (notificationId: string, buttonIndex: number) => {
+              this.systemNotificationClickedSubject.next({
+                id: notificationId,
+                type: createInfo.type,
+                buttonIdentifier: buttonIndex,
+              });
+            },
+          );
+
+          browser.notifications.onClicked.addListener((notificationId: string) => {
             this.systemNotificationClickedSubject.next({
               id: notificationId,
               type: createInfo.type,
-              buttonIdentifier: buttonIndex,
+              buttonIdentifier: ButtonLocation.NotificationButton,
             });
-          },
-        );
-
-        browser.notifications.onClicked.addListener((notificationId: string) => {
-          this.systemNotificationClickedSubject.next({
-            id: notificationId,
-            type: createInfo.type,
-            buttonIdentifier: ButtonLocation.NotificationButton,
           });
-        });
+      }
+    } catch (e) {
+      this.logService.error(
+        `Failed to create notification on ${this.platformUtilsService.getDevice()} with error: ${e}`,
+      );
     }
   }
 
