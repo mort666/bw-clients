@@ -1,7 +1,7 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
 import { NgIf, NgClass } from "@angular/common";
-import { Component, ElementRef, Input, ViewChild, signal, computed } from "@angular/core";
+import { Component, ElementRef, ViewChild, input, model, signal, computed } from "@angular/core";
 import {
   ControlValueAccessor,
   NG_VALUE_ACCESSOR,
@@ -52,9 +52,9 @@ export class SearchComponent implements ControlValueAccessor, FocusableElement {
 
   protected showResetButton = computed(() => this.isInputFocused() || this.isFormHovered());
 
-  @Input() disabled: boolean;
-  @Input() placeholder: string;
-  @Input() autocomplete: string;
+  readonly disabled = model<boolean>();
+  readonly placeholder = input<string>();
+  readonly autocomplete = input<string>();
 
   getFocusTarget() {
     return this.input?.nativeElement;
@@ -94,6 +94,6 @@ export class SearchComponent implements ControlValueAccessor, FocusableElement {
   }
 
   setDisabledState(isDisabled: boolean) {
-    this.disabled = isDisabled;
+    this.disabled.set(isDisabled);
   }
 }

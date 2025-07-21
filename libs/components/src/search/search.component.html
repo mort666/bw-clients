@@ -17,15 +17,15 @@
     bitInput
     [type]="inputType"
     [id]="id"
-    [placeholder]="placeholder ?? ('search' | i18n)"
+    [placeholder]="placeholder() ?? ('search' | i18n)"
     class="tw-ps-9"
     name="searchText"
     [ngModel]="searchText"
     (ngModelChange)="onChange($event)"
     (focus)="isInputFocused.set(true)"
     (blur)="isInputFocused.set(false); onTouch()"
-    [disabled]="disabled"
-    [attr.autocomplete]="autocomplete"
+    [disabled]="disabled()"
+    [attr.autocomplete]="autocomplete()"
   />
   <button
     *ngIf="searchText && showResetButton()"
