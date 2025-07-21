@@ -21,8 +21,6 @@ export class BrowserActionsService implements ActionsService {
         case DeviceType.ChromeExtension: {
           const browserAction = BrowserApi.getBrowserAction();
 
-          // We might get back mv2 or mv3 browserAction, only mv3 supports the openPopup function,
-          // so check for that function existing.
           if ("openPopup" in browserAction && typeof browserAction.openPopup === "function") {
             await browserAction.openPopup();
             return;
