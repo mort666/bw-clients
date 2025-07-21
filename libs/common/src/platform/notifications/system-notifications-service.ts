@@ -39,6 +39,9 @@ export type SystemNotificationEvent = {
   buttonIdentifier: number;
 };
 
+/**
+ * A service responsible for displaying operating system level notifications.
+ */
 export abstract class SystemNotificationsService {
   abstract notificationClicked$: Observable<SystemNotificationEvent>;
   abstract create(createInfo: SystemNotificationCreateInfo): Promise<undefined>;
