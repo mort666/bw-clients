@@ -184,7 +184,7 @@ import { ForegroundTaskSchedulerService } from "../../platform/services/task-sch
 import { BrowserStorageServiceProvider } from "../../platform/storage/browser-storage-service.provider";
 import { ForegroundMemoryStorageService } from "../../platform/storage/foreground-memory-storage.service";
 import { ForegroundSyncService } from "../../platform/sync/foreground-sync.service";
-import { ChromeExtensionSystemNotificationService } from "../../platform/system-notifications/chrome-extension-system-notification.service";
+import { BrowserSystemNotificationService } from "../../platform/system-notifications/browser-system-notification.service";
 import { fromChromeRuntimeMessaging } from "../../platform/utils/from-chrome-runtime-messaging";
 import { FilePopoutUtilsService } from "../../tools/popup/services/file-popout-utils.service";
 import { Fido2UserVerificationService } from "../../vault/services/fido2-user-verification.service";
@@ -617,7 +617,7 @@ const safeProviders: SafeProvider[] = [
   }),
   safeProvider({
     provide: SystemNotificationsService,
-    useClass: ChromeExtensionSystemNotificationService,
+    useClass: BrowserSystemNotificationService,
     deps: [LogService, PlatformUtilsServiceAbstraction],
   }),
   safeProvider({

@@ -42,7 +42,7 @@ export type SystemNotificationEvent = {
 export abstract class SystemNotificationsService {
   abstract notificationClicked$: Observable<SystemNotificationEvent>;
   abstract create(createInfo: SystemNotificationCreateInfo): Promise<undefined>;
-  abstract clear(clearInfo: SystemNotificationClearInfo): undefined;
+  abstract clear(clearInfo: SystemNotificationClearInfo): Promise<void>;
 
   /**
    * Used to know if a given platform supports notifications.

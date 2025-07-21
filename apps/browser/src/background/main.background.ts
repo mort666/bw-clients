@@ -303,7 +303,7 @@ import { BackgroundMemoryStorageService } from "../platform/storage/background-m
 import { BrowserStorageServiceProvider } from "../platform/storage/browser-storage-service.provider";
 import { OffscreenStorageService } from "../platform/storage/offscreen-storage.service";
 import { SyncServiceListener } from "../platform/sync/sync-service.listener";
-import { ChromeExtensionSystemNotificationService } from "../platform/system-notifications/chrome-extension-system-notification.service";
+import { BrowserSystemNotificationService } from "../platform/system-notifications/browser-system-notification.service";
 import { fromChromeRuntimeMessaging } from "../platform/utils/from-chrome-runtime-messaging";
 import { VaultFilterService } from "../vault/services/vault-filter.service";
 
@@ -1132,9 +1132,15 @@ export default class MainBackground {
       this.webPushConnectionService = new UnsupportedWebPushConnectionService();
     }
 
-    this.logService.info(`The background service is registered as ${navigator.userAgent}`);
+    this.logService.info(
+      `The background service is registered as ${navigator.userAgent} with manifest version ${BrowserApi.manifestVersion}`,
+    );
 
     this.actionsService = new BrowserActionsService(this.logService, this.platformUtilsService);
+
+    setTimeout(async () => {
+      await this.actionsService.openPopup();
+    }, 1);
 
     const userAgent = navigator.userAgent;
 
@@ -1144,7 +1150,7 @@ export default class MainBackground {
     const isFirefox = userAgent.includes("Firefox");
 
     if ((isChrome || isFirefox) && !isSafari) {
-      this.systemNotificationService = new ChromeExtensionSystemNotificationService(
+      this.systemNotificationService = new BrowserSystemNotificationService(
         this.logService,
         this.platformUtilsService,
       );
@@ -1153,17 +1159,15 @@ export default class MainBackground {
     }
 
     setTimeout(async () => {
+      this.logService.info("CREATING NOTIFICATION");
       await this.systemNotificationService.create({
         id: Math.random() * 100000 + "",
         type: ButtonActions.AuthRequestNotification,
         title: "Test Notification",
         body: "Body",
-        buttons: [
-          {
-            title: "First Button",
-          },
-        ],
+        buttons: [],
       });
+      this.logService.info("DONE CREATING NOTIFICATION");
     }, 1);
 
     this.notificationsService = new DefaultNotificationsService(

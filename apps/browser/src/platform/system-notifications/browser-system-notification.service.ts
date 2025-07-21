@@ -11,7 +11,7 @@ import {
   SystemNotificationsService,
 } from "@bitwarden/common/platform/notifications/system-notifications-service";
 
-export class ChromeExtensionSystemNotificationService implements SystemNotificationsService {
+export class BrowserSystemNotificationService implements SystemNotificationsService {
   private systemNotificationClickedSubject = new Subject<SystemNotificationEvent>();
   notificationClicked$: Observable<SystemNotificationEvent>;
 
@@ -58,10 +58,37 @@ export class ChromeExtensionSystemNotificationService implements SystemNotificat
         });
 
         break;
+      case DeviceType.FirefoxExtension:
+        this.logService.info("Creating firefox notification");
+
+        await browser.notifications.create(createInfo.id, {
+          iconUrl: "https://avatars.githubusercontent.com/u/15990069?s=200",
+          message: createInfo.title,
+          type: "basic",
+          title: createInfo.title,
+        });
+
+        browser.notifications.onButtonClicked.addListener(
+          (notificationId: string, buttonIndex: number) => {
+            this.systemNotificationClickedSubject.next({
+              id: notificationId,
+              type: createInfo.type,
+              buttonIdentifier: buttonIndex,
+            });
+          },
+        );
+
+        browser.notifications.onClicked.addListener((notificationId: string) => {
+          this.systemNotificationClickedSubject.next({
+            id: notificationId,
+            type: createInfo.type,
+            buttonIdentifier: ButtonLocation.NotificationButton,
+          });
+        });
     }
   }
 
-  clear(clearInfo: SystemNotificationClearInfo): undefined {
+  async clear(clearInfo: SystemNotificationClearInfo): Promise<undefined> {
     chrome.notifications.clear(clearInfo.id);
   }
 
