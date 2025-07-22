@@ -669,8 +669,6 @@ export default class MainBackground {
       this.encryptService,
       this.logService,
       this.cryptoFunctionService,
-      this.kdfConfigService,
-      this.accountService,
     );
 
     this.i18nService = new I18nService(BrowserApi.getUILanguage(), this.globalStateProvider);
