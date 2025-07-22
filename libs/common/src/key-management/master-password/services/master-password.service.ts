@@ -227,6 +227,16 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     kdf: KdfConfig,
     salt: MasterPasswordSalt,
   ): Promise<MasterPasswordAuthenticationData> {
+    if (password == null) {
+      throw new Error("Password is required.");
+    }
+    if (kdf == null) {
+      throw new Error("KDF configuration is required.");
+    }
+    if (salt == null) {
+      throw new Error("Salt is required.");
+    }
+
     const SERVER_AUTHENTICATION_HASH_ITERATIONS = 1;
 
     const masterKey = (await this.keyGenerationService.deriveKeyFromPassword(
@@ -257,6 +267,19 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     salt: MasterPasswordSalt,
     userKey: UserKey,
   ): Promise<MasterPasswordUnlockData> {
+    if (password == null) {
+      throw new Error("Password is required.");
+    }
+    if (kdf == null) {
+      throw new Error("KDF configuration is required.");
+    }
+    if (salt == null) {
+      throw new Error("Salt is required.");
+    }
+    if (userKey == null) {
+      throw new Error("User key is required.");
+    }
+
     await SdkLoadService.Ready;
     const masterKeyWrappedUserKey = new EncString(
       PureCrypto.encrypt_user_key_with_master_password(
@@ -277,6 +300,13 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     password: string,
     masterPasswordUnlockData: MasterPasswordUnlockData,
   ): Promise<UserKey> {
+    if (password == null) {
+      throw new Error("Password is required.");
+    }
+    if (masterPasswordUnlockData == null) {
+      throw new Error("Master password unlock data is required.");
+    }
+
     await SdkLoadService.Ready;
     const userKey = new SymmetricCryptoKey(
       PureCrypto.decrypt_user_key_with_master_password(
