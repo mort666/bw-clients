@@ -60,8 +60,6 @@ export class BrowserSystemNotificationService implements SystemNotificationsServ
 
           break;
         case DeviceType.FirefoxExtension:
-          this.logService.info("Creating firefox notification");
-
           await browser.notifications.create(createInfo.id, {
             iconUrl: "https://avatars.githubusercontent.com/u/15990069?s=200",
             message: createInfo.title,
