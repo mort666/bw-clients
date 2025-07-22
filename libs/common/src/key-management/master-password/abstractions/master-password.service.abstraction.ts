@@ -63,7 +63,6 @@ export abstract class MasterPasswordServiceAbstraction {
     password: string,
     kdf: KdfConfig,
     salt: MasterPasswordSalt,
-    userId: UserId,
   ) => Promise<MasterPasswordAuthenticationData>;
 
   /**

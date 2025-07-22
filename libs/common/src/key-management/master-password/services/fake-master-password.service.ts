@@ -85,9 +85,8 @@ export class FakeMasterPasswordService implements InternalMasterPasswordServiceA
     password: string,
     kdf: KdfConfig,
     salt: MasterPasswordSalt,
-    userId: UserId,
   ): Promise<MasterPasswordAuthenticationData> {
-    return this.mock.makeMasterPasswordAuthenticationData(password, kdf, salt, userId);
+    return this.mock.makeMasterPasswordAuthenticationData(password, kdf, salt);
   }
 
   makeMasterPasswordUnlockData(

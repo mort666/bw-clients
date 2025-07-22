@@ -2,11 +2,10 @@
 // @ts-strict-ignore
 import { firstValueFrom, map, Observable } from "rxjs";
 
-import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 // eslint-disable-next-line no-restricted-imports
-import { KdfConfig, KdfConfigService } from "@bitwarden/key-management";
+import { KdfConfig } from "@bitwarden/key-management";
 import { PureCrypto } from "@bitwarden/sdk-internal";
 
 import { ForceSetPasswordReason } from "../../../auth/models/domain/force-set-password-reason";
@@ -75,8 +74,6 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     private encryptService: EncryptService,
     private logService: LogService,
     private cryptoFunctionService: CryptoFunctionService,
-    private kdfConfigService: KdfConfigService,
-    private accountService: AccountService,
   ) {}
 
   masterKey$(userId: UserId): Observable<MasterKey> {
