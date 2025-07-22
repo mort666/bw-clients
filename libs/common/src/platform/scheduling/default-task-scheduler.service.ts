@@ -5,6 +5,8 @@ import { ScheduledTaskName } from "../scheduling/scheduled-task-name.enum";
 import { TaskSchedulerService } from "../scheduling/task-scheduler.service";
 
 export class DefaultTaskSchedulerService extends TaskSchedulerService {
+  protected taskHandlers: Map<string, () => void>;
+
   constructor(protected logService: LogService) {
     super();
 

@@ -6,7 +6,7 @@ const { compilerOptions } = require("./tsconfig.base");
 module.exports = {
   reporters: ["default", "jest-junit"],
 
-  collectCoverage: true,
+  collectCoverage: false,
   // Ensure we collect coverage from files without tests
   collectCoverageFrom: ["src/**/*.ts"],
   coverageReporters: ["html", "lcov"],

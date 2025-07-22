@@ -64,7 +64,7 @@ class TaskSchedulerSheduler implements SchedulerLike {
 }
 
 export abstract class TaskSchedulerService {
-  protected taskHandlers: Map<string, () => void>;
+  protected abstract taskHandlers: Map<string, () => void>;
   abstract setTimeout(taskName: ScheduledTaskName, delayInMs: number): Subscription;
   abstract setInterval(
     taskName: ScheduledTaskName,
