@@ -5,13 +5,9 @@ import * as rxjs from "rxjs";
 import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 // eslint-disable-next-line no-restricted-imports
-import { KdfConfig, KdfConfigService, PBKDF2KdfConfig } from "@bitwarden/key-management";
+import { KdfConfig, PBKDF2KdfConfig } from "@bitwarden/key-management";
 
-import {
-  FakeAccountService,
-  makeSymmetricCryptoKey,
-  mockAccountServiceWith,
-} from "../../../../spec";
+import { makeSymmetricCryptoKey } from "../../../../spec";
 import { ForceSetPasswordReason } from "../../../auth/models/domain/force-set-password-reason";
 import { KeyGenerationService } from "../../../platform/abstractions/key-generation.service";
 import { LogService } from "../../../platform/abstractions/log.service";
@@ -36,8 +32,6 @@ describe("MasterPasswordService", () => {
   let encryptService: MockProxy<EncryptService>;
   let logService: MockProxy<LogService>;
   let cryptoFunctionService: MockProxy<CryptoFunctionService>;
-  let kdfConfigService: MockProxy<KdfConfigService>;
-  let accountService: FakeAccountService;
 
   const userId = "user-id" as UserId;
   const mockUserState = {
@@ -60,8 +54,6 @@ describe("MasterPasswordService", () => {
     encryptService = mock<EncryptService>();
     logService = mock<LogService>();
     cryptoFunctionService = mock<CryptoFunctionService>();
-    kdfConfigService = mock<KdfConfigService>();
-    accountService = mockAccountServiceWith(userId);
 
     stateProvider.getUser.mockReturnValue(mockUserState as any);
 
@@ -74,8 +66,6 @@ describe("MasterPasswordService", () => {
       encryptService,
       logService,
       cryptoFunctionService,
-      kdfConfigService,
-      accountService,
     );
 
     encryptService.unwrapSymmetricKey.mockResolvedValue(makeSymmetricCryptoKey(64, 1));

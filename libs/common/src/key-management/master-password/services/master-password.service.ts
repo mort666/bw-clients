@@ -310,7 +310,7 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     await SdkLoadService.Ready;
     const userKey = new SymmetricCryptoKey(
       PureCrypto.decrypt_user_key_with_master_password(
-        masterPasswordUnlockData.masterKeyWrappedUserKey!.encryptedString,
+        masterPasswordUnlockData.masterKeyWrappedUserKey.encryptedString,
         password,
         masterPasswordUnlockData.salt,
         masterPasswordUnlockData.kdf.toSdkConfig(),
