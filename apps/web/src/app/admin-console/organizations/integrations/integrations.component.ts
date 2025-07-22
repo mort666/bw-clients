@@ -228,6 +228,15 @@ export class AdminConsoleIntegrationsComponent implements OnInit {
         image: "../../../../../../../images/integrations/logo-microsoft-intune-color.svg",
         type: IntegrationType.DEVICE,
       },
+      {
+        name: "Crowdstrike",
+        linkURL: "",
+        image: "../../../../../../../images/integrations/logo-crowdstrike-black.svg",
+        type: IntegrationType.EVENT,
+        description: "crowdstrikeEventIntegrationDesc",
+        isConnected: false,
+        canSetupConnection: true,
+      },
     ];
   }
 
