@@ -245,8 +245,8 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     ) as MasterPasswordAuthenticationHash;
 
     return {
-      kdf,
       salt,
+      kdf,
       masterPasswordAuthenticationHash,
     } as MasterPasswordAuthenticationData;
   }
