@@ -22,7 +22,7 @@ export abstract class MasterPasswordServiceAbstraction {
   abstract forceSetPasswordReason$: (userId: UserId) => Observable<ForceSetPasswordReason>;
   /**
    * An observable that emits the master key for the user.
-   * @deprecated Interacting with the master-key directly is deprecated. Please use {@link makeMasterPasswordUnlockData} and {@link makeMasterPasswordAuthenticationData}, {@link unwrapUserKeyFromMasterPasswordUnlockData} instead.
+   * @deprecated Interacting with the master-key directly is deprecated. Please use {@link makeMasterPasswordUnlockData}, {@link makeMasterPasswordAuthenticationData} or {@link unwrapUserKeyFromMasterPasswordUnlockData} instead.
    * @param userId The user ID.
    * @throws If the user ID is missing.
    */
