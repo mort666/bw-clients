@@ -99,7 +99,7 @@ export abstract class InternalMasterPasswordServiceAbstraction extends MasterPas
   abstract setMasterKey: (masterKey: MasterKey, userId: UserId) => Promise<void>;
   /**
    * Clear the master key for the user.
-   * @deprecated
+   * @deprecated Interacting with the master-key directly is deprecated.
    * @param userId The user ID.
    * @throws If the user ID is missing.
    */
