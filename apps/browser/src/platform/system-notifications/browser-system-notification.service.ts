@@ -36,8 +36,6 @@ export class BrowserSystemNotificationService implements SystemNotificationsServ
             }),
           });
 
-          // ESLint: Using addListener in the browser popup produces a memory leak in Safari,
-          // use `BrowserApi. addListener` instead (no-restricted-syntax)
           // eslint-disable-next-line no-restricted-syntax
           chrome.notifications.onButtonClicked.addListener(
             (notificationId: string, buttonIndex: number) => {
