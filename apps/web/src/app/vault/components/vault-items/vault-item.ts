@@ -1,7 +1,7 @@
-import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
-import { CollectionView } from "@bitwarden/common/vault/models/view/collection.view";
+import { CollectionView } from "@bitwarden/admin-console/common";
+import { CipherViewLike } from "@bitwarden/common/vault/utils/cipher-view-like-utils";
 
-export interface VaultItem {
+export interface VaultItem<C extends CipherViewLike> {
   collection?: CollectionView;
-  cipher?: CipherView;
+  cipher?: C;
 }

@@ -1,28 +1,19 @@
-import { coerceBooleanProperty } from "@angular/cdk/coercion";
-import { Component, Input } from "@angular/core";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { Component, booleanAttribute, input } from "@angular/core";
 
-import { Option } from "./option";
+import { MappedOptionComponent } from "./option";
 
 @Component({
   selector: "bit-option",
   template: `<ng-template><ng-content></ng-content></ng-template>`,
 })
-export class OptionComponent<T = unknown> implements Option<T> {
-  @Input()
-  icon?: string;
+export class OptionComponent<T = unknown> implements MappedOptionComponent<T> {
+  readonly icon = input<string>();
 
-  @Input()
-  value?: T = undefined;
+  readonly value = input.required<T>();
 
-  @Input()
-  label?: string;
+  readonly label = input.required<string>();
 
-  private _disabled = false;
-  @Input()
-  get disabled() {
-    return this._disabled;
-  }
-  set disabled(value: boolean | "") {
-    this._disabled = coerceBooleanProperty(value);
-  }
+  readonly disabled = input(undefined, { transform: booleanAttribute });
 }

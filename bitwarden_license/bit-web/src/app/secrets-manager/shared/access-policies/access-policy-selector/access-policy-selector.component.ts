@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Component, forwardRef, Input, OnDestroy, OnInit } from "@angular/core";
 import {
   ControlValueAccessor,
@@ -28,12 +30,39 @@ import { ApPermissionEnum } from "./models/enums/ap-permission.enum";
       multi: true,
     },
   ],
+  standalone: false,
 })
 export class AccessPolicySelectorComponent implements ControlValueAccessor, OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private notifyOnChange: (v: unknown) => void;
   private notifyOnTouch: () => void;
   private pauseChangeNotification: boolean;
+
+  /**
+   * Updates the enabled/disabled state of provided row form group based on the item's readonly state.
+   * @param controlRow - The form group for the row to update
+   * @param item - The access item that is represented by the row
+   */
+  private updateRowControlDisableState = (
+    controlRow: FormGroup<ControlsOf<ApItemValueType>>,
+    item: ApItemViewType,
+  ) => {
+    // Disable entire row form group if readOnly
+    if (item.readOnly || this.disabled) {
+      controlRow.disable();
+    } else {
+      controlRow.enable();
+    }
+  };
+
+  /**
+   * Updates the enabled/disabled state of ALL row form groups based on each item's readonly state.
+   */
+  private updateAllRowControlDisableStates = () => {
+    this.selectionList.forEachControlItem((controlRow, item) => {
+      this.updateRowControlDisableState(controlRow as FormGroup<ControlsOf<ApItemValueType>>, item);
+    });
+  };
 
   /**
    * The internal selection list that tracks the value of this form control / component.
@@ -59,6 +88,9 @@ export class AccessPolicySelectorComponent implements ControlValueAccessor, OnIn
       currentUserInGroup: new FormControl(currentUserInGroup),
       currentUser: new FormControl(currentUser),
     });
+
+    this.updateRowControlDisableState(fg, item);
+
     return fg;
   }, this._itemComparator.bind(this));
 
@@ -100,7 +132,13 @@ export class AccessPolicySelectorComponent implements ControlValueAccessor, OnIn
 
   set items(val: ApItemViewType[]) {
     if (val != null) {
-      const selected = this.selectionList.formArray.getRawValue() ?? [];
+      let selected = this.selectionList.formArray.getRawValue() ?? [];
+      selected = selected.concat(
+        val
+          .filter((m) => m.readOnly)
+          .map((m) => ({ id: m.id, type: m.type, permission: m.permission })),
+      );
+
       this.selectionList.populateItems(
         val.map((m) => {
           m.icon = m.icon ?? ApItemEnumUtil.itemIcon(m.type);
@@ -137,6 +175,9 @@ export class AccessPolicySelectorComponent implements ControlValueAccessor, OnIn
     } else {
       this.formGroup.enable();
       this.multiSelectFormGroup.enable();
+      // The enable() above automatically enables all the row controls,
+      // so we need to disable the readonly ones again
+      this.updateAllRowControlDisableStates();
     }
   }
 
@@ -148,6 +189,9 @@ export class AccessPolicySelectorComponent implements ControlValueAccessor, OnIn
 
     // Always clear the internal selection list on a new value
     this.selectionList.deselectAll();
+
+    // We need to also select any read only items to appear in the table
+    this.selectionList.selectItems(this.items.filter((m) => m.readOnly).map((m) => m.id));
 
     // If the new value is null, then we're done
     if (selectedItems == null) {

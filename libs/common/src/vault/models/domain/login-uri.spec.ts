@@ -1,10 +1,12 @@
 import { MockProxy, mock } from "jest-mock-extended";
 import { Jsonify } from "type-fest";
 
+import { UriMatchType } from "@bitwarden/sdk-internal";
+
 import { mockEnc, mockFromJson } from "../../../../spec";
-import { EncryptService } from "../../../platform/abstractions/encrypt.service";
-import { EncString } from "../../../platform/models/domain/enc-string";
-import { UriMatchType } from "../../enums";
+import { EncryptService } from "../../../key-management/crypto/abstractions/encrypt.service";
+import { EncString } from "../../../key-management/crypto/models/enc-string";
+import { UriMatchStrategy } from "../../../models/domain/domain-service";
 import { LoginUriData } from "../data/login-uri.data";
 
 import { LoginUri } from "./login-uri";
@@ -16,7 +18,7 @@ describe("LoginUri", () => {
     data = {
       uri: "encUri",
       uriChecksum: "encUriChecksum",
-      match: UriMatchType.Domain,
+      match: UriMatchStrategy.Domain,
     };
   });
 
@@ -48,7 +50,7 @@ describe("LoginUri", () => {
 
   it("Decrypt", async () => {
     const loginUri = new LoginUri();
-    loginUri.match = UriMatchType.Exact;
+    loginUri.match = UriMatchStrategy.Exact;
     loginUri.uri = mockEnc("uri");
 
     const view = await loginUri.decrypt(null);
@@ -70,7 +72,7 @@ describe("LoginUri", () => {
       encryptService = mock();
       global.bitwardenContainerService = {
         getEncryptService: () => encryptService,
-        getCryptoService: () => null,
+        getKeyService: () => null,
       };
     });
 
@@ -103,19 +105,32 @@ describe("LoginUri", () => {
       const actual = LoginUri.fromJSON({
         uri: "myUri",
         uriChecksum: "myUriChecksum",
-        match: UriMatchType.Domain,
+        match: UriMatchStrategy.Domain,
       } as Jsonify<LoginUri>);
 
       expect(actual).toEqual({
         uri: "myUri_fromJSON",
         uriChecksum: "myUriChecksum_fromJSON",
-        match: UriMatchType.Domain,
+        match: UriMatchStrategy.Domain,
       });
       expect(actual).toBeInstanceOf(LoginUri);
     });
 
     it("returns null if object is null", () => {
       expect(LoginUri.fromJSON(null)).toBeNull();
+    });
+  });
+
+  describe("SDK Login Uri Mapping", () => {
+    it("should map to SDK login uri", () => {
+      const loginUri = new LoginUri(data);
+      const sdkLoginUri = loginUri.toSdkLoginUri();
+
+      expect(sdkLoginUri).toEqual({
+        uri: "encUri",
+        uriChecksum: "encUriChecksum",
+        match: UriMatchType.Domain,
+      });
     });
   });
 });

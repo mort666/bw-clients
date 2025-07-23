@@ -1,5 +1,7 @@
 import { mock } from "jest-mock-extended";
 
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
 import { LoginStrategyServiceAbstraction, WebAuthnLoginCredentials } from "@bitwarden/auth/common";
 
 import { LogService } from "../../../platform/abstractions/log.service";
@@ -7,7 +9,7 @@ import { Utils } from "../../../platform/misc/utils";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
 import { PrfKey } from "../../../types/key";
 import { WebAuthnLoginApiServiceAbstraction } from "../../abstractions/webauthn/webauthn-login-api.service.abstraction";
-import { WebAuthnLoginPrfCryptoServiceAbstraction } from "../../abstractions/webauthn/webauthn-login-prf-crypto.service.abstraction";
+import { WebAuthnLoginPrfKeyServiceAbstraction } from "../../abstractions/webauthn/webauthn-login-prf-key.service.abstraction";
 import { AuthResult } from "../../models/domain/auth-result";
 import { WebAuthnLoginCredentialAssertionOptionsView } from "../../models/view/webauthn-login/webauthn-login-credential-assertion-options.view";
 import { WebAuthnLoginCredentialAssertionView } from "../../models/view/webauthn-login/webauthn-login-credential-assertion.view";
@@ -21,7 +23,7 @@ describe("WebAuthnLoginService", () => {
 
   const webAuthnLoginApiService = mock<WebAuthnLoginApiServiceAbstraction>();
   const loginStrategyService = mock<LoginStrategyServiceAbstraction>();
-  const webAuthnLoginPrfCryptoService = mock<WebAuthnLoginPrfCryptoServiceAbstraction>();
+  const webAuthnLoginPrfKeyService = mock<WebAuthnLoginPrfKeyServiceAbstraction>();
   const navigatorCredentials = mock<CredentialsContainer>();
   const logService = mock<LogService>();
 
@@ -72,7 +74,7 @@ describe("WebAuthnLoginService", () => {
     return new WebAuthnLoginService(
       webAuthnLoginApiService,
       loginStrategyService,
-      webAuthnLoginPrfCryptoService,
+      webAuthnLoginPrfKeyService,
       window,
       logService,
     );
@@ -141,8 +143,8 @@ describe("WebAuthnLoginService", () => {
         publicKeyCredential.getClientExtensionResults().prf?.results?.first;
       const prfKey = new SymmetricCryptoKey(new Uint8Array(prfResult)) as PrfKey;
 
-      webAuthnLoginPrfCryptoService.getLoginWithPrfSalt.mockResolvedValue(saltArrayBuffer);
-      webAuthnLoginPrfCryptoService.createSymmetricKeyFromPrf.mockResolvedValue(prfKey);
+      webAuthnLoginPrfKeyService.getLoginWithPrfSalt.mockResolvedValue(saltArrayBuffer);
+      webAuthnLoginPrfKeyService.createSymmetricKeyFromPrf.mockResolvedValue(prfKey);
 
       // Mock implementations
       navigatorCredentials.get.mockResolvedValue(publicKeyCredential);
@@ -152,7 +154,7 @@ describe("WebAuthnLoginService", () => {
 
       // Assert
 
-      expect(webAuthnLoginPrfCryptoService.getLoginWithPrfSalt).toHaveBeenCalled();
+      expect(webAuthnLoginPrfKeyService.getLoginWithPrfSalt).toHaveBeenCalled();
 
       expect(navigatorCredentials.get).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -169,9 +171,7 @@ describe("WebAuthnLoginService", () => {
         }),
       );
 
-      expect(webAuthnLoginPrfCryptoService.createSymmetricKeyFromPrf).toHaveBeenCalledWith(
-        prfResult,
-      );
+      expect(webAuthnLoginPrfKeyService.createSymmetricKeyFromPrf).toHaveBeenCalledWith(prfResult);
 
       expect(result).toBeInstanceOf(WebAuthnLoginCredentialAssertionView);
       expect(result.token).toEqual(credentialAssertionOptions.token);

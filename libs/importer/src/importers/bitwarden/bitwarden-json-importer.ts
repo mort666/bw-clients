@@ -1,14 +1,25 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { firstValueFrom, map } from "rxjs";
+
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
+import { CollectionView } from "@bitwarden/admin-console/common";
+import { PinServiceAbstraction } from "@bitwarden/auth/common";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
+import { EncString } from "@bitwarden/common/key-management/crypto/models/enc-string";
 import {
   CipherWithIdExport,
   CollectionWithIdExport,
   FolderWithIdExport,
 } from "@bitwarden/common/models/export";
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
+import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
+import { OrganizationId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
-import { CollectionView } from "@bitwarden/common/vault/models/view/collection.view";
 import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
+import { KeyService } from "@bitwarden/key-management";
 import {
   BitwardenEncryptedIndividualJsonExport,
   BitwardenEncryptedOrgJsonExport,
@@ -25,9 +36,12 @@ export class BitwardenJsonImporter extends BaseImporter implements Importer {
   private result: ImportResult;
 
   protected constructor(
-    protected cryptoService: CryptoService,
+    protected keyService: KeyService,
+    protected encryptService: EncryptService,
     protected i18nService: I18nService,
     protected cipherService: CipherService,
+    protected pinService: PinServiceAbstraction,
+    protected accountService: AccountService,
   ) {
     super();
   }
@@ -53,13 +67,16 @@ export class BitwardenJsonImporter extends BaseImporter implements Importer {
     results: BitwardenEncryptedIndividualJsonExport | BitwardenEncryptedOrgJsonExport,
   ) {
     if (results.encKeyValidation_DO_NOT_EDIT != null) {
-      const orgKey = await this.cryptoService.getOrgKey(this.organizationId);
-      const encKeyValidation = new EncString(results.encKeyValidation_DO_NOT_EDIT);
-      const encKeyValidationDecrypt = await this.cryptoService.decryptToUtf8(
-        encKeyValidation,
-        orgKey,
+      let keyForDecryption: SymmetricCryptoKey = await this.keyService.getOrgKey(
+        this.organizationId,
       );
-      if (encKeyValidationDecrypt === null) {
+      if (keyForDecryption == null) {
+        keyForDecryption = await this.keyService.getUserKey();
+      }
+      const encKeyValidation = new EncString(results.encKeyValidation_DO_NOT_EDIT);
+      try {
+        await this.encryptService.decryptString(encKeyValidation, keyForDecryption);
+      } catch {
         this.result.success = false;
         this.result.errorMessage = this.i18nService.t("importEncKeyError");
         return;
@@ -98,9 +115,10 @@ export class BitwardenJsonImporter extends BaseImporter implements Importer {
         });
       }
 
-      const view = await cipher.decrypt(
-        await this.cipherService.getKeyForCipherKeyDecryption(cipher),
+      const activeUserId = await firstValueFrom(
+        this.accountService.activeAccount$.pipe(map((a) => a?.id)),
       );
+      const view = await this.cipherService.decrypt(cipher, activeUserId);
       this.cleanupCipher(view);
       this.result.ciphers.push(view);
     }
@@ -192,7 +210,9 @@ export class BitwardenJsonImporter extends BaseImporter implements Importer {
       if (data.encrypted) {
         const collection = CollectionWithIdExport.toDomain(c);
         collection.organizationId = this.organizationId;
-        collectionView = await collection.decrypt();
+        collectionView = await firstValueFrom(this.keyService.activeUserOrgKeys$).then((orgKeys) =>
+          collection.decrypt(orgKeys[c.organizationId as OrganizationId]),
+        );
       } else {
         collectionView = CollectionWithIdExport.toView(c);
         collectionView.organizationId = null;

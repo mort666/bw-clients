@@ -1,7 +1,7 @@
 import MainBackground from "../../background/main.background";
 
+import { OverlayBackground } from "./abstractions/overlay.background";
 import NotificationBackground from "./notification.background";
-import OverlayBackground from "./overlay.background";
 
 export default class TabsBackground {
   constructor(
@@ -10,7 +10,7 @@ export default class TabsBackground {
     private overlayBackground: OverlayBackground,
   ) {}
 
-  private focusedWindowId: number;
+  private focusedWindowId: number = -1;
 
   /**
    * Initializes the window and tab listeners.
@@ -86,11 +86,6 @@ export default class TabsBackground {
     changeInfo: chrome.tabs.TabChangeInfo,
     tab: chrome.tabs.Tab,
   ) => {
-    const removePageDetailsStatus = new Set(["loading", "unloaded"]);
-    if (removePageDetailsStatus.has(changeInfo.status)) {
-      this.overlayBackground.removePageDetails(tabId);
-    }
-
     if (this.focusedWindowId > 0 && tab.windowId !== this.focusedWindowId) {
       return;
     }
@@ -99,7 +94,7 @@ export default class TabsBackground {
       return;
     }
 
-    await this.overlayBackground.updateOverlayCiphers();
+    await this.overlayBackground.updateOverlayCiphers(false);
 
     if (this.main.onUpdatedRan) {
       return;
@@ -107,7 +102,6 @@ export default class TabsBackground {
     this.main.onUpdatedRan = true;
 
     await this.notificationBackground.checkNotificationQueue(tab);
-    await this.main.refreshBadge();
     await this.main.refreshMenu();
     this.main.messagingService.send("tabChanged");
   };
@@ -127,9 +121,8 @@ export default class TabsBackground {
    */
   private updateCurrentTabData = async () => {
     await Promise.all([
-      this.main.refreshBadge(),
       this.main.refreshMenu(),
-      this.overlayBackground.updateOverlayCiphers(),
+      this.overlayBackground.updateOverlayCiphers(false),
     ]);
   };
 }

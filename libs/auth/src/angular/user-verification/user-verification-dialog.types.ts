@@ -1,3 +1,6 @@
+import { VerificationWithSecret } from "@bitwarden/common/auth/types/verification";
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
 import { ButtonType } from "@bitwarden/components";
 
 /**
@@ -11,9 +14,9 @@ export type UserVerificationCalloutOptions = {
 
   /**
    * The type of the callout.
-   * Can be "warning", "danger", "error", or "tip".
+   * Can be "warning", "danger", "info", or "success".
    */
-  type: "warning" | "danger" | "error" | "tip";
+  type: "warning" | "danger" | "info" | "success";
 };
 
 /**
@@ -60,12 +63,27 @@ export type UserVerificationDialogOptions = {
    */
   confirmButtonOptions?: UserVerificationConfirmButtonOptions;
 
-  /**
-   * Indicates whether the verification is only performed client-side. Includes local MP verification, PIN, and Biometrics.
-   * Optional.
-   * **Important:** Only for use on desktop and browser platforms as when there are no client verification methods, the user is instructed to set a pin (which is not supported on web)
+  /** The validation method used to verify the secret.
+   *
+   * Possible values:
+   *
+   * - "default": Perform the default validation operation for the determined
+   *   secret type. This would, for example, validate master passwords
+   *   locally but OTPs on the server.
+   * - "client": Only do a client-side verification with no possible server
+   *   request. Includes local MP verification, PIN, and Biometrics.
+   *   **Important:** This option is only for use on desktop and browser
+   *   platforms. When there are no client verification methods the user is
+   *   instructed to set a pin, and this is not supported on web.
+   * - "custom": Custom validation is done to verify the secret. This is
+   *   passed in from callers when opening the dialog. The custom type is
+   *   meant to provide a mechanism where users can call a secured endpoint
+   *   that performs user verification server side.
    */
-  clientSideOnlyVerification?: boolean;
+  verificationType?:
+    | "default"
+    | "client"
+    | { type: "custom"; verificationFn: (secret: VerificationWithSecret) => Promise<boolean> };
 };
 
 /**

@@ -1,12 +1,25 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
-import { combineLatest, lastValueFrom, Observable, startWith, switchMap } from "rxjs";
+import {
+  combineLatest,
+  firstValueFrom,
+  lastValueFrom,
+  Observable,
+  startWith,
+  switchMap,
+} from "rxjs";
 
-import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
+import {
+  getOrganizationById,
+  OrganizationService,
+} from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { DialogService } from "@bitwarden/components";
 
 import { ProjectListView } from "../../models/view/project-list.view";
-import { AccessPolicyService } from "../../shared/access-policies/access-policy.service";
 import {
   BulkConfirmationDetails,
   BulkConfirmationDialogComponent,
@@ -27,6 +40,7 @@ import { ProjectService } from "../project.service";
 @Component({
   selector: "sm-projects",
   templateUrl: "./projects.component.html",
+  standalone: false,
 })
 export class ProjectsComponent implements OnInit {
   protected projects$: Observable<ProjectListView[]>;
@@ -38,20 +52,26 @@ export class ProjectsComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private projectService: ProjectService,
-    private accessPolicyService: AccessPolicyService,
     private dialogService: DialogService,
     private organizationService: OrganizationService,
+    private accountService: AccountService,
   ) {}
 
   ngOnInit() {
     this.projects$ = combineLatest([
       this.route.params,
       this.projectService.project$.pipe(startWith(null)),
-      this.accessPolicyService.projectAccessPolicyChanges$.pipe(startWith(null)),
     ]).pipe(
       switchMap(async ([params]) => {
         this.organizationId = params.organizationId;
-        this.organizationEnabled = this.organizationService.get(params.organizationId)?.enabled;
+        const userId = await firstValueFrom(getUserId(this.accountService.activeAccount$));
+        this.organizationEnabled = (
+          await firstValueFrom(
+            this.organizationService
+              .organizations$(userId)
+              .pipe(getOrganizationById(params.organizationId)),
+          )
+        )?.enabled;
 
         return await this.getProjects();
       }),

@@ -1,6 +1,8 @@
-import { firstValueFrom } from "rxjs";
+import { firstValueFrom, map, switchMap } from "rxjs";
 
 import { ApiService } from "../../../abstractions/api.service";
+import { AccountService } from "../../../auth/abstractions/account.service";
+import { getUserId } from "../../../auth/services/account.service";
 import { HttpStatusCode } from "../../../enums";
 import { ErrorResponse } from "../../../models/response/error.response";
 import { ListResponse } from "../../../models/response/list.response";
@@ -10,6 +12,7 @@ import { InternalPolicyService } from "../../abstractions/policy/policy.service.
 import { PolicyType } from "../../enums";
 import { PolicyData } from "../../models/data/policy.data";
 import { MasterPasswordPolicyOptions } from "../../models/domain/master-password-policy-options";
+import { Policy } from "../../models/domain/policy";
 import { PolicyRequest } from "../../models/request/policy.request";
 import { PolicyResponse } from "../../models/response/policy.response";
 
@@ -17,6 +20,7 @@ export class PolicyApiService implements PolicyApiServiceAbstraction {
   constructor(
     private policyService: InternalPolicyService,
     private apiService: ApiService,
+    private accountService: AccountService,
   ) {}
 
   async getPolicy(organizationId: string, type: PolicyType): Promise<PolicyResponse> {
@@ -46,7 +50,7 @@ export class PolicyApiService implements PolicyApiServiceAbstraction {
     token: string,
     email: string,
     organizationUserId: string,
-  ): Promise<ListResponse<PolicyResponse>> {
+  ): Promise<Policy[] | undefined> {
     const r = await this.apiService.send(
       "GET",
       "/organizations/" +
@@ -62,7 +66,7 @@ export class PolicyApiService implements PolicyApiServiceAbstraction {
       false,
       true,
     );
-    return new ListResponse(r, PolicyResponse);
+    return Policy.fromListResponse(new ListResponse(r, PolicyResponse));
   }
 
   private async getMasterPasswordPolicyResponseForOrgUser(
@@ -86,16 +90,20 @@ export class PolicyApiService implements PolicyApiServiceAbstraction {
       const masterPasswordPolicyResponse =
         await this.getMasterPasswordPolicyResponseForOrgUser(orgId);
 
-      const masterPasswordPolicy = this.policyService.mapPolicyFromResponse(
-        masterPasswordPolicyResponse,
-      );
+      const masterPasswordPolicy = Policy.fromResponse(masterPasswordPolicyResponse);
 
       if (!masterPasswordPolicy) {
         return null;
       }
 
-      return await firstValueFrom(
-        this.policyService.masterPasswordPolicyOptions$([masterPasswordPolicy]),
+      return firstValueFrom(
+        this.accountService.activeAccount$.pipe(
+          getUserId,
+          switchMap((userId) =>
+            this.policyService.masterPasswordPolicyOptions$(userId, [masterPasswordPolicy]),
+          ),
+          map((policy) => policy ?? null),
+        ),
       );
     } catch (error) {
       // If policy not found, return null
@@ -115,8 +123,9 @@ export class PolicyApiService implements PolicyApiServiceAbstraction {
       true,
       true,
     );
+    const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
     const response = new PolicyResponse(r);
     const data = new PolicyData(response);
-    await this.policyService.upsert(data);
+    await this.policyService.upsert(data, userId);
   }
 }

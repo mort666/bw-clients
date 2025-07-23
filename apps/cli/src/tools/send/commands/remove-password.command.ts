@@ -1,3 +1,7 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { firstValueFrom } from "rxjs";
+
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { SendService } from "@bitwarden/common/tools/send/services//send.service.abstraction";
 import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.service.abstraction";
@@ -16,9 +20,10 @@ export class SendRemovePasswordCommand {
     try {
       await this.sendApiService.removePassword(id);
 
-      const updatedSend = await this.sendService.get(id);
+      const updatedSend = await firstValueFrom(this.sendService.get$(id));
       const decSend = await updatedSend.decrypt();
-      const webVaultUrl = this.environmentService.getWebVaultUrl();
+      const env = await firstValueFrom(this.environmentService.environment$);
+      const webVaultUrl = env.getWebVaultUrl();
       const res = new SendResponse(decSend, webVaultUrl);
       return Response.success(res);
     } catch (e) {

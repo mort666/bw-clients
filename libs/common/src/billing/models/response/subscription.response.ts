@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { BaseResponse } from "../../../models/response/base.response";
 
 export class SubscriptionResponse extends BaseResponse {
@@ -36,6 +38,10 @@ export class BillingSubscriptionResponse extends BaseResponse {
   status: string;
   cancelled: boolean;
   items: BillingSubscriptionItemResponse[] = [];
+  collectionMethod: string;
+  suspensionDate?: string;
+  unpaidPeriodEndDate?: string;
+  gracePeriod?: number;
 
   constructor(response: any) {
     super(response);
@@ -51,6 +57,10 @@ export class BillingSubscriptionResponse extends BaseResponse {
     if (items != null) {
       this.items = items.map((i: any) => new BillingSubscriptionItemResponse(i));
     }
+    this.collectionMethod = this.getResponseProperty("CollectionMethod");
+    this.suspensionDate = this.getResponseProperty("SuspensionDate");
+    this.unpaidPeriodEndDate = this.getResponseProperty("unpaidPeriodEndDate");
+    this.gracePeriod = this.getResponseProperty("GracePeriod");
   }
 }
 

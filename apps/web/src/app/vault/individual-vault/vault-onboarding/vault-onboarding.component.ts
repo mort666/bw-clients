@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { CommonModule } from "@angular/common";
 import {
   Component,
@@ -9,62 +11,67 @@ import {
   SimpleChanges,
   OnChanges,
 } from "@angular/core";
-import { Subject, takeUntil, Observable, firstValueFrom, fromEvent } from "rxjs";
+import { Subject, takeUntil, Observable, firstValueFrom, fromEvent, switchMap } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
-import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
-import { ConfigServiceAbstraction } from "@bitwarden/common/platform/abstractions/config/config.service.abstraction";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { VaultOnboardingMessages } from "@bitwarden/common/vault/enums/vault-onboarding.enum";
-import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
+import { UserId } from "@bitwarden/common/types/guid";
+import { CipherType } from "@bitwarden/common/vault/enums/cipher-type";
+import { VaultMessages } from "@bitwarden/common/vault/enums/vault-messages.enum";
+import { CipherViewLike } from "@bitwarden/common/vault/utils/cipher-view-like-utils";
 import { LinkModule } from "@bitwarden/components";
 
 import { OnboardingModule } from "../../../shared/components/onboarding/onboarding.module";
 
 import { VaultOnboardingService as VaultOnboardingServiceAbstraction } from "./services/abstraction/vault-onboarding.service";
-import { VaultOnboardingTasks } from "./services/vault-onboarding.service";
+import { VaultOnboardingService, VaultOnboardingTasks } from "./services/vault-onboarding.service";
 
 @Component({
-  standalone: true,
   imports: [OnboardingModule, CommonModule, JslibModule, LinkModule],
+  providers: [
+    {
+      provide: VaultOnboardingServiceAbstraction,
+      useClass: VaultOnboardingService,
+    },
+  ],
   selector: "app-vault-onboarding",
   templateUrl: "vault-onboarding.component.html",
 })
 export class VaultOnboardingComponent implements OnInit, OnChanges, OnDestroy {
-  @Input() ciphers: CipherView[];
+  @Input() ciphers: CipherViewLike[];
   @Input() orgs: Organization[];
-  @Output() onAddCipher = new EventEmitter<void>();
+  @Output() onAddCipher = new EventEmitter<CipherType>();
 
   extensionUrl: string;
   isIndividualPolicyVault: boolean;
   private destroy$ = new Subject<void>();
   isNewAccount: boolean;
-  private readonly onboardingReleaseDate = new Date("2024-01-01");
-  showOnboardingAccess$: Observable<boolean>;
+  private readonly onboardingReleaseDate = new Date("2024-04-02");
 
   protected currentTasks: VaultOnboardingTasks;
 
   protected onboardingTasks$: Observable<VaultOnboardingTasks>;
   protected showOnboarding = false;
 
+  private activeId: UserId;
   constructor(
     protected platformUtilsService: PlatformUtilsService,
     protected policyService: PolicyService,
     private apiService: ApiService,
-    private configService: ConfigServiceAbstraction,
     private vaultOnboardingService: VaultOnboardingServiceAbstraction,
+    private accountService: AccountService,
   ) {}
 
   async ngOnInit() {
-    this.showOnboardingAccess$ = await this.configService.getFeatureFlag$<boolean>(
-      FeatureFlag.VaultOnboarding,
-      false,
-    );
-    this.onboardingTasks$ = this.vaultOnboardingService.vaultOnboardingState$;
+    this.activeId = await firstValueFrom(getUserId(this.accountService.activeAccount$));
+    this.onboardingTasks$ = this.vaultOnboardingService.vaultOnboardingState$(this.activeId);
+
     await this.setOnboardingTasks();
     this.setInstallExtLink();
     this.individualVaultPolicyCheck();
@@ -79,7 +86,7 @@ export class VaultOnboardingComponent implements OnInit, OnChanges, OnDestroy {
         importData: this.ciphers.length > 0,
         installExtension: currentTasks.installExtension,
       };
-      await this.vaultOnboardingService.setVaultOnboardingTasks(updatedTasks);
+      await this.vaultOnboardingService.setVaultOnboardingTasks(this.activeId, updatedTasks);
     }
   }
 
@@ -96,19 +103,19 @@ export class VaultOnboardingComponent implements OnInit, OnChanges, OnDestroy {
           void this.getMessages(event);
         });
 
-      window.postMessage({ command: VaultOnboardingMessages.checkBwInstalled });
+      window.postMessage({ command: VaultMessages.checkBwInstalled });
     }
   }
 
   async getMessages(event: any) {
-    if (event.data.command === VaultOnboardingMessages.HasBwInstalled && this.showOnboarding) {
+    if (event.data.command === VaultMessages.HasBwInstalled && this.showOnboarding) {
       const currentTasks = await firstValueFrom(this.onboardingTasks$);
       const updatedTasks = {
         createAccount: currentTasks.createAccount,
         importData: currentTasks.importData,
         installExtension: true,
       };
-      await this.vaultOnboardingService.setVaultOnboardingTasks(updatedTasks);
+      await this.vaultOnboardingService.setVaultOnboardingTasks(this.activeId, updatedTasks);
     }
   }
 
@@ -151,26 +158,31 @@ export class VaultOnboardingComponent implements OnInit, OnChanges, OnDestroy {
 
   private async saveCompletedTasks(vaultTasks: VaultOnboardingTasks) {
     this.showOnboarding = Object.values(vaultTasks).includes(false);
-    await this.vaultOnboardingService.setVaultOnboardingTasks(vaultTasks);
+    await this.vaultOnboardingService.setVaultOnboardingTasks(this.activeId, vaultTasks);
   }
 
   individualVaultPolicyCheck() {
-    this.policyService
-      .policyAppliesToActiveUser$(PolicyType.PersonalOwnership)
-      .pipe(takeUntil(this.destroy$))
+    this.accountService.activeAccount$
+      .pipe(
+        getUserId,
+        switchMap((userId) =>
+          this.policyService.policyAppliesToUser$(PolicyType.OrganizationDataOwnership, userId),
+        ),
+        takeUntil(this.destroy$),
+      )
       .subscribe((data) => {
         this.isIndividualPolicyVault = data;
       });
   }
 
   emitToAddCipher() {
-    this.onAddCipher.emit();
+    this.onAddCipher.emit(CipherType.Login);
   }
 
   setInstallExtLink() {
     if (this.platformUtilsService.isChrome()) {
       this.extensionUrl =
-        "https://chrome.google.com/webstore/detail/bitwarden-free-password-m/nngceckbapebfimnlniiiahkandclblb";
+        "https://chromewebstore.google.com/detail/bitwarden-password-manage/nngceckbapebfimnlniiiahkandclblb";
     } else if (this.platformUtilsService.isFirefox()) {
       this.extensionUrl =
         "https://addons.mozilla.org/en-US/firefox/addon/bitwarden-password-manager/";

@@ -1,21 +1,32 @@
 import { getQsParam } from "./common";
-
-require("./duo-redirect.scss");
+import { TranslationService } from "./translation.service";
 
 const mobileDesktopCallback = "bitwarden://duo-callback";
+let localeService: TranslationService | null = null;
 
-window.addEventListener("load", () => {
+window.addEventListener("load", async () => {
   const redirectUrl = getQsParam("duoFramelessUrl");
-  const handOffMessage = getQsParam("handOffMessage");
 
   if (redirectUrl) {
-    redirectToDuoFrameless(redirectUrl, handOffMessage);
+    redirectToDuoFrameless(redirectUrl);
     return;
   }
 
-  const client = getQsParam("client");
-  const code = getQsParam("code");
-  const state = getQsParam("state");
+  const client: string | null = getQsParam("client");
+  const code: string | null = getQsParam("code");
+  const state: string | null = getQsParam("state");
+  if (!client) {
+    throw new Error("client is null");
+  }
+  if (!code) {
+    throw new Error("code is null");
+  }
+  if (!state) {
+    throw new Error("state is null");
+  }
+
+  localeService = new TranslationService(navigator.language, "locales");
+  await localeService.init();
 
   if (client === "web") {
     const channel = new BroadcastChannel("duoResult");
@@ -23,13 +34,13 @@ window.addEventListener("load", () => {
     channel.postMessage({ code: code, state: state });
     channel.close();
 
-    processAndDisplayHandoffMessage();
+    displayHandoffMessage(client);
   } else if (client === "browser") {
-    window.postMessage({ command: "duoResult", code: code, state: state }, "*");
-    processAndDisplayHandoffMessage();
+    window.postMessage({ command: "duoResult", code, state }, window.location.origin);
+    displayHandoffMessage(client);
   } else if (client === "mobile" || client === "desktop") {
     if (client === "desktop") {
-      processAndDisplayHandoffMessage();
+      displayHandoffMessage(client);
     }
     document.location.replace(
       mobileDesktopCallback +
@@ -42,107 +53,108 @@ window.addEventListener("load", () => {
 });
 
 /**
- * In order to set a cookie with the hand off message, some clients need to use
- * this connector as a middleman to set the cookie before continuing to the duo url
+ * validate the Duo AuthUrl and redirect to it.
  * @param redirectUrl the duo auth url
- * @param handOffMessage message to save as cookie
  */
-function redirectToDuoFrameless(redirectUrl: string, handOffMessage: string) {
+export function redirectToDuoFrameless(redirectUrl: string) {
+  // Validation for Duo redirect URL to prevent open redirect or XSS vulnerabilities
+  // Only used for Duo 2FA redirects in the extension
+  /**
+   * This regex checks for the following:
+   * The hostname must start with a subdomain that begins with "api-" followed by a
+   * string that can contain letters or numbers of indeterminate length
+   * Followed by either "duosecurity.com" or "duofederal.com"
+   * This ensures that the redirect does not contain any malicious content
+   * and is a valid Duo URL.
+   * */
+  const duoRedirectUrlRegex = /^api-[a-zA-Z0-9]+\.(duosecurity|duofederal)\.com$/;
   const validateUrl = new URL(redirectUrl);
 
-  if (validateUrl.protocol !== "https:" || !validateUrl.hostname.endsWith("duosecurity.com")) {
+  // Check that no embedded credentials are present
+  if (validateUrl.username || validateUrl.password) {
+    throw new Error("Invalid redirect URL: embedded credentials not allowed");
+  }
+
+  // Check that the protocol is HTTPS
+  if (validateUrl.protocol !== "https:") {
+    throw new Error("Invalid redirect URL: invalid protocol");
+  }
+
+  // Check that the port is not specified
+  if (validateUrl.port && validateUrl.port !== "443") {
+    throw new Error("Invalid redirect URL: port not allowed");
+  }
+
+  if (validateUrl.pathname !== "/oauth/v1/authorize") {
+    throw new Error("Invalid redirect URL: invalid pathname");
+  }
+
+  // Check if the redirect hostname matches the regex
+  // Only check the hostname part of the URL to avoid over-zealous Regex expressions from matching
+  // and causing an Open Redirect vulnerability. Always use hostname instead of host, because host includes port if specified.
+  if (!duoRedirectUrlRegex.test(validateUrl.hostname)) {
     throw new Error("Invalid redirect URL");
   }
 
-  document.cookie = `duoHandOffMessage=${handOffMessage}; SameSite=strict;`;
-  window.location.href = decodeURIComponent(redirectUrl);
+  window.location.href = redirectUrl;
 }
 
 /**
- * The `duoHandOffMessage` must be set in the client via a cookie. This is so
- * we can make use of i18n translations.
- *
- * Format the message as an object and set is as a cookie. The following gives an
- * example (be sure to replace strings with i18n translated text):
- *
- * ```
- * const duoHandOffMessage = {
- *  title: "You successfully logged in",
- *  message: "This window will automatically close in 5 seconds",
- *  buttonText: "Close",
- *  isCountdown: true
- * };
- *
- * document.cookie = `duoHandOffMessage=${encodeURIComponent(JSON.stringify(duoHandOffMessage))};SameSite=strict`;
- *
- * ```
- *
- * The `title`, `message`, and `buttonText` properties will be used to create the
- * relevant DOM elements.
- *
- * Countdown timer:
- * The `isCountdown` signifies that you want to start a countdown timer that will
- * automatically close the tab when finished. The starting point for the timer will
- * be based upon the first number that can be parsed from the `message` property
- * (so be sure to add exactly one number to the `message`).
- *
- * This implementation makes it so the client does not have to split up the `message` into
- * three translations, such as:
- *    ['This window will automatically close in', '5', 'seconds']
- * ...which would cause bad translations in languages that swap the order of words.
- *
- * If `isCountdown` is undefined/false, there will be no countdown timer and the user
- * will simply have to close the tab manually.
- *
- * If `buttonText` is undefined, there will be no close button.
- *
- * Note: browsers won't let javascript close a tab that wasn't opened by javascript,
- * so some clients may not be able to take advantage of the countdown timer/close button.
+ * Note: browsers won't let javascript close a tab (button or otherwise) that wasn't opened by javascript,
+ * so browser, desktop, and mobile are not able to take advantage of the countdown timer or close button.
  */
-function processAndDisplayHandoffMessage() {
-  const handOffMessageCookie = ("; " + document.cookie)
-
-    .split("; duoHandOffMessage=")
-    .pop()
-    .split(";")
-    .shift();
-  const handOffMessage = JSON.parse(decodeURIComponent(handOffMessageCookie));
-
-  // Clear the cookie
-  document.cookie = "duoHandOffMessage=;SameSite=strict;max-age=0";
-
-  const content = document.getElementById("content");
-  content.className = "text-center";
+function displayHandoffMessage(client: string) {
+  const content: HTMLElement | null = document.getElementById("content");
+  if (!content) {
+    throw new Error("content element not found");
+  }
+  content.className = "tw-text-center";
   content.innerHTML = "";
 
   const h1 = document.createElement("h1");
-  const p = document.createElement("p");
-  const button = document.createElement("button");
+  const p: HTMLElement = document.createElement("p");
 
-  h1.textContent = handOffMessage.title;
-  p.textContent = handOffMessage.message;
-  button.textContent = handOffMessage.buttonText;
+  if (!localeService) {
+    throw new Error("localeService is not initialized");
+  }
+  h1.textContent = localeService.t("youSuccessfullyLoggedIn");
+  p.textContent =
+    client == "web"
+      ? localeService.t("thisWindowWillCloseIn5Seconds")
+      : localeService.t("youMayCloseThisWindow");
 
-  h1.className = "font-weight-semibold";
-  p.className = "mb-4";
-  button.className = "bg-primary text-white border-0 rounded py-2 px-3";
-
-  button.addEventListener("click", () => {
-    window.close();
-  });
+  h1.className = "tw-font-semibold";
+  p.className = "tw-mb-4";
 
   content.appendChild(h1);
   content.appendChild(p);
-  if (handOffMessage.buttonText) {
+
+  // Web client will have a close button as well as an auto close timer
+  if (client == "web") {
+    const button = document.createElement("button");
+    button.textContent = localeService.t("close");
+    button.className =
+      "tw-bg-primary-600 hover:tw-bg-primary-700 tw-text-contrast tw-px-4 tw-py-2 tw-rounded-md tw-transition tw-border-transparent tw-text-center focus:tw-outline-none";
+
+    button.addEventListener("click", () => {
+      window.close();
+    });
     content.appendChild(button);
-  }
 
-  // Countdown timer (closes tab upon completion)
-  if (handOffMessage.isCountdown) {
-    let num = Number(p.textContent.match(/\d+/)[0]);
+    if (p.textContent === null) {
+      throw new Error("count down container is null");
+    }
+    const counterString: string | null = p.textContent.match(/\d+/)?.[0] || null;
+    if (!counterString) {
+      throw new Error("count down time cannot be null");
+    }
 
+    let num: number = Number(counterString);
     const interval = setInterval(() => {
       if (num > 1) {
+        if (p.textContent === null) {
+          throw new Error("count down container is null");
+        }
         p.textContent = p.textContent.replace(String(num), String(num - 1));
         num--;
       } else {

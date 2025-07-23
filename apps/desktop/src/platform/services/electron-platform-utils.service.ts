@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { ClientType, DeviceType } from "@bitwarden/common/enums";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
@@ -7,6 +9,8 @@ import {
 } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 
 import { ClipboardWriteMessage } from "../types/clipboard";
+
+export const ELECTRON_SUPPORTS_SECURE_STORAGE = true;
 
 export class ElectronPlatformUtilsService implements PlatformUtilsService {
   constructor(
@@ -73,14 +77,21 @@ export class ElectronPlatformUtilsService implements PlatformUtilsService {
     return (await this.getApplicationVersion()).split(/[+|-]/)[0].trim();
   }
 
-  // Temporarily restricted to only Windows until https://github.com/electron/electron/pull/28349
-  // has been merged and an updated electron build is available.
+  // Linux and Mac are missing a ui to enter a pin, so this works for two-factor security keys, when always-uv is not active
   supportsWebAuthn(win: Window): boolean {
-    return this.getDevice() === DeviceType.WindowsDesktop;
+    return true;
   }
 
   supportsDuo(): boolean {
     return true;
+  }
+
+  supportsAutofill(): boolean {
+    return false;
+  }
+
+  supportsFileDownloads(): boolean {
+    return false;
   }
 
   showToast(
@@ -129,20 +140,8 @@ export class ElectronPlatformUtilsService implements PlatformUtilsService {
     return ipc.platform.clipboard.read();
   }
 
-  async supportsBiometric(): Promise<boolean> {
-    return await ipc.platform.biometric.osSupported();
-  }
-
-  /** This method is used to authenticate the user presence _only_.
-   * It should not be used in the process to retrieve
-   * biometric keys, which has a separate authentication mechanism.
-   * For biometric keys, invoke "keytar" with a biometric key suffix */
-  async authenticateBiometric(): Promise<boolean> {
-    return await ipc.platform.biometric.authenticate();
-  }
-
   supportsSecureStorage(): boolean {
-    return true;
+    return ELECTRON_SUPPORTS_SECURE_STORAGE;
   }
 
   getAutofillKeyboardShortcut(): Promise<string> {

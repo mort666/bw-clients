@@ -1,8 +1,10 @@
-import { DialogRef, DIALOG_DATA } from "@angular/cdk/dialog";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Component, Inject, OnInit } from "@angular/core";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { DialogRef, DIALOG_DATA, ToastService } from "@bitwarden/components";
 
 export interface AccessTokenDetails {
   subTitle: string;
@@ -12,16 +14,16 @@ export interface AccessTokenDetails {
 
 @Component({
   templateUrl: "./access-token-dialog.component.html",
+  standalone: false,
 })
 export class AccessTokenDialogComponent implements OnInit {
   constructor(
     public dialogRef: DialogRef,
     @Inject(DIALOG_DATA) public data: AccessTokenDetails,
     private platformUtilsService: PlatformUtilsService,
+    private toastService: ToastService,
     private i18nService: I18nService,
-  ) {
-    this.dialogRef.disableClose = true;
-  }
+  ) {}
 
   ngOnInit(): void {
     // TODO remove null checks once strictNullChecks in TypeScript is turned on.
@@ -33,11 +35,11 @@ export class AccessTokenDialogComponent implements OnInit {
 
   copyAccessToken(): void {
     this.platformUtilsService.copyToClipboard(this.data.accessToken);
-    this.platformUtilsService.showToast(
-      "success",
-      null,
-      this.i18nService.t("accessTokenCreatedAndCopied"),
-    );
+    this.toastService.showToast({
+      variant: "success",
+      title: null,
+      message: this.i18nService.t("accessTokenCreatedAndCopied"),
+    });
     this.dialogRef.close();
   }
 }

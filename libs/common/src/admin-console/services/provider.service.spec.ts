@@ -1,8 +1,15 @@
+import { firstValueFrom } from "rxjs";
+
 import { FakeAccountService, FakeStateProvider, mockAccountServiceWith } from "../../../spec";
-import { FakeActiveUserState } from "../../../spec/fake-state";
+import { FakeActiveUserState, FakeSingleUserState } from "../../../spec/fake-state";
 import { Utils } from "../../platform/misc/utils";
 import { UserId } from "../../types/guid";
-import { ProviderUserStatusType, ProviderUserType } from "../enums";
+import {
+  ProviderStatusType,
+  ProviderType,
+  ProviderUserStatusType,
+  ProviderUserType,
+} from "../enums";
 import { ProviderData } from "../models/data/provider.data";
 import { Provider } from "../models/domain/provider";
 
@@ -64,6 +71,8 @@ describe("PROVIDERS key definition", () => {
         enabled: true,
         userId: "string",
         useEvents: true,
+        providerStatus: ProviderStatusType.Pending,
+        providerType: ProviderType.Msp,
       },
     };
     const result = sut.deserializer(JSON.parse(JSON.stringify(expectedResult)));
@@ -77,19 +86,22 @@ describe("ProviderService", () => {
   const fakeUserId = Utils.newGuid() as UserId;
   let fakeAccountService: FakeAccountService;
   let fakeStateProvider: FakeStateProvider;
+  let fakeUserState: FakeSingleUserState<Record<string, ProviderData>>;
   let fakeActiveUserState: FakeActiveUserState<Record<string, ProviderData>>;
 
   beforeEach(async () => {
     fakeAccountService = mockAccountServiceWith(fakeUserId);
     fakeStateProvider = new FakeStateProvider(fakeAccountService);
+    fakeUserState = fakeStateProvider.singleUser.getFake(fakeUserId, PROVIDERS);
     fakeActiveUserState = fakeStateProvider.activeUser.getFake(PROVIDERS);
+
     providerService = new ProviderService(fakeStateProvider);
   });
 
   describe("getAll()", () => {
     it("Returns an array of all providers stored in state", async () => {
       const mockData: ProviderData[] = buildMockProviders(5);
-      fakeActiveUserState.nextState(arrayToRecord(mockData));
+      fakeUserState.nextState(arrayToRecord(mockData));
       const providers = await providerService.getAll();
       expect(providers).toHaveLength(5);
       expect(providers).toEqual(mockData.map((x) => new Provider(x)));
@@ -97,16 +109,32 @@ describe("ProviderService", () => {
 
     it("Returns an empty array if no providers are found in state", async () => {
       const mockData: ProviderData[] = undefined;
-      fakeActiveUserState.nextState(arrayToRecord(mockData));
+      fakeUserState.nextState(arrayToRecord(mockData));
       const result = await providerService.getAll();
       expect(result).toEqual([]);
+    });
+  });
+
+  describe("get$()", () => {
+    it("Returns an observable of a single provider from state that matches the specified id", async () => {
+      const mockData = buildMockProviders(5);
+      fakeUserState.nextState(arrayToRecord(mockData));
+      const result = providerService.get$(mockData[3].id);
+      const provider = await firstValueFrom(result);
+      expect(provider).toEqual(new Provider(mockData[3]));
+    });
+
+    it("Returns an observable of undefined if the specified provider is not found", async () => {
+      const result = providerService.get$("this-provider-does-not-exist");
+      const provider = await firstValueFrom(result);
+      expect(provider).toBe(undefined);
     });
   });
 
   describe("get()", () => {
     it("Returns a single provider from state that matches the specified id", async () => {
       const mockData = buildMockProviders(5);
-      fakeActiveUserState.nextState(arrayToRecord(mockData));
+      fakeUserState.nextState(arrayToRecord(mockData));
       const result = await providerService.get(mockData[3].id);
       expect(result).toEqual(new Provider(mockData[3]));
     });
@@ -120,15 +148,12 @@ describe("ProviderService", () => {
   describe("save()", () => {
     it("replaces the entire provider list in state for the active user", async () => {
       const originalData = buildMockProviders(10);
-      fakeActiveUserState.nextState(arrayToRecord(originalData));
+      fakeUserState.nextState(arrayToRecord(originalData));
 
-      const newData = buildMockProviders(10, "newData");
-      await providerService.save(arrayToRecord(newData));
+      const newData = arrayToRecord(buildMockProviders(10, "newData"));
+      await providerService.save(newData);
 
-      const result = await providerService.getAll();
-
-      expect(result).toEqual(newData);
-      expect(result).not.toEqual(originalData);
+      expect(fakeActiveUserState.nextMock).toHaveBeenCalledWith([fakeUserId, newData]);
     });
 
     // This is more or less a test for logouts
@@ -136,9 +161,8 @@ describe("ProviderService", () => {
       const originalData = buildMockProviders(2);
       fakeActiveUserState.nextState(arrayToRecord(originalData));
       await providerService.save(null);
-      const result = await providerService.getAll();
-      expect(result).toEqual([]);
-      expect(result).not.toEqual(originalData);
+
+      expect(fakeActiveUserState.nextMock).toHaveBeenCalledWith([fakeUserId, null]);
     });
   });
 });

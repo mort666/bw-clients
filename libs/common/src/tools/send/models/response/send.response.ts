@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { BaseResponse } from "../../../../models/response/base.response";
 import { SendType } from "../../enums/send-type";
 import { SendFileApi } from "../api/send-file.api";
@@ -18,6 +20,7 @@ export class SendResponse extends BaseResponse {
   expirationDate: string;
   deletionDate: string;
   password: string;
+  emails: string;
   disable: boolean;
   hideEmail: boolean;
 
@@ -35,6 +38,7 @@ export class SendResponse extends BaseResponse {
     this.expirationDate = this.getResponseProperty("ExpirationDate");
     this.deletionDate = this.getResponseProperty("DeletionDate");
     this.password = this.getResponseProperty("Password");
+    this.emails = this.getResponseProperty("Emails");
     this.disable = this.getResponseProperty("Disabled") || false;
     this.hideEmail = this.getResponseProperty("HideEmail") || false;
 

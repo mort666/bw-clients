@@ -1,14 +1,15 @@
-import { KdfConfig } from "../../auth/models/domain/kdf-config";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
+import { KdfConfig } from "@bitwarden/key-management";
+import { PureCrypto } from "@bitwarden/sdk-internal";
+
+import { CryptoFunctionService } from "../../key-management/crypto/abstractions/crypto-function.service";
 import { CsprngArray } from "../../types/csprng";
-import { CryptoFunctionService } from "../abstractions/crypto-function.service";
 import { KeyGenerationService as KeyGenerationServiceAbstraction } from "../abstractions/key-generation.service";
-import {
-  ARGON2_ITERATIONS,
-  ARGON2_MEMORY,
-  ARGON2_PARALLELISM,
-  KdfType,
-  PBKDF2_ITERATIONS,
-} from "../enums";
+import { SdkLoadService } from "../abstractions/sdk/sdk-load.service";
+import { EncryptionType } from "../enums";
 import { Utils } from "../misc/utils";
 import { SymmetricCryptoKey } from "../models/domain/symmetric-crypto-key";
 
@@ -46,40 +47,46 @@ export class KeyGenerationService implements KeyGenerationServiceAbstraction {
   async deriveKeyFromPassword(
     password: string | Uint8Array,
     salt: string | Uint8Array,
-    kdf: KdfType,
     kdfConfig: KdfConfig,
   ): Promise<SymmetricCryptoKey> {
-    let key: Uint8Array = null;
-    if (kdf == null || kdf === KdfType.PBKDF2_SHA256) {
-      if (kdfConfig.iterations == null) {
-        kdfConfig.iterations = PBKDF2_ITERATIONS.defaultValue;
-      }
-
-      key = await this.cryptoFunctionService.pbkdf2(password, salt, "sha256", kdfConfig.iterations);
-    } else if (kdf == KdfType.Argon2id) {
-      if (kdfConfig.iterations == null) {
-        kdfConfig.iterations = ARGON2_ITERATIONS.defaultValue;
-      }
-
-      if (kdfConfig.memory == null) {
-        kdfConfig.memory = ARGON2_MEMORY.defaultValue;
-      }
-
-      if (kdfConfig.parallelism == null) {
-        kdfConfig.parallelism = ARGON2_PARALLELISM.defaultValue;
-      }
-
-      const saltHash = await this.cryptoFunctionService.hash(salt, "sha256");
-      key = await this.cryptoFunctionService.argon2(
-        password,
-        saltHash,
-        kdfConfig.iterations,
-        kdfConfig.memory * 1024, // convert to KiB from MiB
-        kdfConfig.parallelism,
-      );
-    } else {
-      throw new Error("Unknown Kdf.");
+    if (typeof password === "string") {
+      password = new TextEncoder().encode(password);
     }
-    return new SymmetricCryptoKey(key);
+    if (typeof salt === "string") {
+      salt = new TextEncoder().encode(salt);
+    }
+
+    await SdkLoadService.Ready;
+    return new SymmetricCryptoKey(
+      PureCrypto.derive_kdf_material(password, salt, kdfConfig.toSdkConfig()),
+    );
+  }
+
+  async stretchKey(key: SymmetricCryptoKey): Promise<SymmetricCryptoKey> {
+    // The key to be stretched is actually usually the output of a KDF, and not actually meant for AesCbc256_B64 encryption,
+    // but has the same key length. Only 256-bit key materials should be stretched.
+    if (key.inner().type != EncryptionType.AesCbc256_B64) {
+      throw new Error("Key passed into stretchKey is not a 256-bit key.");
+    }
+
+    const newKey = new Uint8Array(64);
+    // Master key and pin key are always 32 bytes
+    const encKey = await this.cryptoFunctionService.hkdfExpand(
+      key.inner().encryptionKey,
+      "enc",
+      32,
+      "sha256",
+    );
+    const macKey = await this.cryptoFunctionService.hkdfExpand(
+      key.inner().encryptionKey,
+      "mac",
+      32,
+      "sha256",
+    );
+
+    newKey.set(new Uint8Array(encKey));
+    newKey.set(new Uint8Array(macKey), 32);
+
+    return new SymmetricCryptoKey(newKey);
   }
 }

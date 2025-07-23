@@ -1,43 +1,39 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { firstValueFrom } from "rxjs";
+
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
+import { getOptionalUserId } from "@bitwarden/common/auth/services/account.service";
+import { UriMatchStrategy } from "@bitwarden/common/models/domain/domain-service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
-import { UriMatchType } from "@bitwarden/common/vault/enums";
-
-import { BrowserApi } from "../../platform/browser/browser-api";
 
 export default class WebRequestBackground {
-  private pendingAuthRequests: any[] = [];
-  private webRequest: any;
+  private pendingAuthRequests: Set<string> = new Set<string>([]);
   private isFirefox: boolean;
 
   constructor(
     platformUtilsService: PlatformUtilsService,
     private cipherService: CipherService,
     private authService: AuthService,
+    private accountService: AccountService,
+    private readonly webRequest: typeof chrome.webRequest,
   ) {
-    if (BrowserApi.isManifestVersion(2)) {
-      this.webRequest = (window as any).chrome.webRequest;
-    }
     this.isFirefox = platformUtilsService.isFirefox();
   }
 
-  async init() {
-    if (!this.webRequest || !this.webRequest.onAuthRequired) {
-      return;
-    }
-
+  startListening() {
     this.webRequest.onAuthRequired.addListener(
-      async (details: any, callback: any) => {
-        if (!details.url || this.pendingAuthRequests.indexOf(details.requestId) !== -1) {
+      async (details, callback) => {
+        if (!details.url || this.pendingAuthRequests.has(details.requestId)) {
           if (callback) {
-            callback();
+            callback(null);
           }
           return;
         }
-
-        this.pendingAuthRequests.push(details.requestId);
-
+        this.pendingAuthRequests.add(details.requestId);
         if (this.isFirefox) {
           // eslint-disable-next-line
           return new Promise(async (resolve, reject) => {
@@ -51,7 +47,7 @@ export default class WebRequestBackground {
       [this.isFirefox ? "blocking" : "asyncBlocking"],
     );
 
-    this.webRequest.onCompleted.addListener((details: any) => this.completeAuthRequest(details), {
+    this.webRequest.onCompleted.addListener((details) => this.completeAuthRequest(details), {
       urls: ["http://*/*"],
     });
     this.webRequest.onErrorOccurred.addListener(
@@ -64,7 +60,16 @@ export default class WebRequestBackground {
 
   // eslint-disable-next-line
   private async resolveAuthCredentials(domain: string, success: Function, error: Function) {
-    if ((await this.authService.getAuthStatus()) < AuthenticationStatus.Unlocked) {
+    const activeUserId = await firstValueFrom(
+      this.accountService.activeAccount$.pipe(getOptionalUserId),
+    );
+    if (activeUserId == null) {
+      error();
+      return;
+    }
+
+    const authStatus = await firstValueFrom(this.authService.authStatusFor$(activeUserId));
+    if (authStatus < AuthenticationStatus.Unlocked) {
       error();
       return;
     }
@@ -72,8 +77,9 @@ export default class WebRequestBackground {
     try {
       const ciphers = await this.cipherService.getAllDecryptedForUrl(
         domain,
+        activeUserId,
         null,
-        UriMatchType.Host,
+        UriMatchStrategy.Host,
       );
       if (ciphers == null || ciphers.length !== 1) {
         error();
@@ -91,10 +97,7 @@ export default class WebRequestBackground {
     }
   }
 
-  private completeAuthRequest(details: any) {
-    const i = this.pendingAuthRequests.indexOf(details.requestId);
-    if (i > -1) {
-      this.pendingAuthRequests.splice(i, 1);
-    }
+  private completeAuthRequest(details: chrome.webRequest.WebResponseCacheDetails) {
+    this.pendingAuthRequests.delete(details.requestId);
   }
 }

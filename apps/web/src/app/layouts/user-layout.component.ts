@@ -1,94 +1,52 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { CommonModule } from "@angular/common";
-import { Component, NgZone, OnDestroy, OnInit } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import { RouterModule } from "@angular/router";
+import { Observable, switchMap } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
-import { ApiService } from "@bitwarden/common/abstractions/api.service";
-import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
-import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
-import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
-import { ConfigServiceAbstraction as ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service.abstraction";
-import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
-import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
-import { IconModule, LayoutComponent, NavigationModule } from "@bitwarden/components";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
+import { SyncService } from "@bitwarden/common/platform/sync";
+import { IconModule, PasswordManagerLogo } from "@bitwarden/components";
 
-import { PaymentMethodWarningsModule } from "../billing/shared";
+import { BillingFreeFamiliesNavItemComponent } from "../billing/shared/billing-free-families-nav-item.component";
 
-import { PasswordManagerLogo } from "./password-manager-logo";
-
-const BroadcasterSubscriptionId = "UserLayoutComponent";
+import { WebLayoutModule } from "./web-layout.module";
 
 @Component({
   selector: "app-user-layout",
   templateUrl: "user-layout.component.html",
-  standalone: true,
   imports: [
     CommonModule,
     RouterModule,
     JslibModule,
-    LayoutComponent,
+    WebLayoutModule,
     IconModule,
-    NavigationModule,
-    PaymentMethodWarningsModule,
+    BillingFreeFamiliesNavItemComponent,
   ],
 })
-export class UserLayoutComponent implements OnInit, OnDestroy {
+export class UserLayoutComponent implements OnInit {
   protected readonly logo = PasswordManagerLogo;
-  hasFamilySponsorshipAvailable: boolean;
-  hideSubscription: boolean;
-
-  protected showPaymentMethodWarningBanners$ = this.configService.getFeatureFlag$(
-    FeatureFlag.ShowPaymentMethodWarningBanners,
-    false,
-  );
+  protected hasFamilySponsorshipAvailable$: Observable<boolean>;
+  protected showSponsoredFamilies$: Observable<boolean>;
+  protected showSubscription$: Observable<boolean>;
 
   constructor(
-    private broadcasterService: BroadcasterService,
-    private ngZone: NgZone,
-    private platformUtilsService: PlatformUtilsService,
-    private organizationService: OrganizationService,
-    private stateService: StateService,
-    private apiService: ApiService,
     private syncService: SyncService,
-    private configService: ConfigService,
-  ) {}
+    private billingAccountProfileStateService: BillingAccountProfileStateService,
+    private accountService: AccountService,
+  ) {
+    this.showSubscription$ = this.accountService.activeAccount$.pipe(
+      switchMap((account) =>
+        this.billingAccountProfileStateService.canViewSubscription$(account.id),
+      ),
+    );
+  }
 
   async ngOnInit() {
     document.body.classList.remove("layout_frontend");
-
-    this.broadcasterService.subscribe(BroadcasterSubscriptionId, async (message: any) => {
-      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.ngZone.run(async () => {
-        switch (message.command) {
-          case "purchasedPremium":
-            await this.load();
-            break;
-          default:
-        }
-      });
-    });
-
     await this.syncService.fullSync(false);
-    await this.load();
-  }
-
-  ngOnDestroy() {
-    this.broadcasterService.unsubscribe(BroadcasterSubscriptionId);
-  }
-
-  async load() {
-    const premium = await this.stateService.getHasPremiumPersonally();
-    const selfHosted = this.platformUtilsService.isSelfHost();
-
-    this.hasFamilySponsorshipAvailable = await this.organizationService.canManageSponsorships();
-    const hasPremiumFromOrg = await this.stateService.getHasPremiumFromOrganization();
-    let billing = null;
-    if (!selfHosted) {
-      // TODO: We should remove the need to call this!
-      billing = await this.apiService.getUserBillingHistory();
-    }
-    this.hideSubscription = !premium && hasPremiumFromOrg && (selfHosted || billing?.hasNoHistory);
   }
 }

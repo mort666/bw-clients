@@ -1,32 +1,41 @@
-import { Component } from "@angular/core";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { Component, OnDestroy, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
+import { firstValueFrom, map } from "rxjs";
 
 import { ChangePasswordComponent as BaseChangePasswordComponent } from "@bitwarden/angular/auth/components/change-password.component";
-import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { MasterPasswordApiService } from "@bitwarden/common/auth/abstractions/master-password-api.service.abstraction";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { PasswordRequest } from "@bitwarden/common/auth/models/request/password.request";
-import { ConfigServiceAbstraction } from "@bitwarden/common/platform/abstractions/config/config.service.abstraction";
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
+import { getUserId } from "@bitwarden/common/auth/services/account.service";
+import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
-import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
-import { PasswordGenerationServiceAbstraction } from "@bitwarden/common/tools/generator/password";
-import { MasterKey, UserKey } from "@bitwarden/common/types/key";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
-import { DialogService } from "@bitwarden/components";
+import { DialogService, ToastService } from "@bitwarden/components";
+import { KdfConfigService, KeyService } from "@bitwarden/key-management";
 
-import { UserKeyRotationService } from "../key-rotation/user-key-rotation.service";
+import { UserKeyRotationService } from "../../key-management/key-rotation/user-key-rotation.service";
 
+/**
+ * @deprecated use the auth `PasswordSettingsComponent` instead
+ */
 @Component({
   selector: "app-change-password",
   templateUrl: "change-password.component.html",
+  standalone: false,
 })
-export class ChangePasswordComponent extends BaseChangePasswordComponent {
+export class ChangePasswordComponent
+  extends BaseChangePasswordComponent
+  implements OnInit, OnDestroy
+{
+  loading = false;
   rotateUserKey = false;
   currentMasterPassword: string;
   masterPasswordHint: string;
@@ -34,32 +43,35 @@ export class ChangePasswordComponent extends BaseChangePasswordComponent {
   characterMinimumMessage = "";
 
   constructor(
-    i18nService: I18nService,
-    cryptoService: CryptoService,
-    messagingService: MessagingService,
-    stateService: StateService,
-    passwordGenerationService: PasswordGenerationServiceAbstraction,
-    platformUtilsService: PlatformUtilsService,
-    policyService: PolicyService,
     private auditService: AuditService,
     private cipherService: CipherService,
-    private syncService: SyncService,
-    private apiService: ApiService,
-    private router: Router,
-    dialogService: DialogService,
-    private userVerificationService: UserVerificationService,
-    private configService: ConfigServiceAbstraction,
     private keyRotationService: UserKeyRotationService,
+    private masterPasswordApiService: MasterPasswordApiService,
+    private router: Router,
+    private syncService: SyncService,
+    private userVerificationService: UserVerificationService,
+    protected accountService: AccountService,
+    protected dialogService: DialogService,
+    protected i18nService: I18nService,
+    protected kdfConfigService: KdfConfigService,
+    protected keyService: KeyService,
+    protected masterPasswordService: InternalMasterPasswordServiceAbstraction,
+    protected messagingService: MessagingService,
+    protected platformUtilsService: PlatformUtilsService,
+    protected policyService: PolicyService,
+    protected toastService: ToastService,
   ) {
     super(
+      accountService,
+      dialogService,
       i18nService,
-      cryptoService,
+      kdfConfigService,
+      keyService,
+      masterPasswordService,
       messagingService,
-      passwordGenerationService,
       platformUtilsService,
       policyService,
-      stateService,
-      dialogService,
+      toastService,
     );
   }
 
@@ -70,7 +82,6 @@ export class ChangePasswordComponent extends BaseChangePasswordComponent {
       this.router.navigate(["/settings/security/two-factor"]);
     }
 
-    this.masterPasswordHint = (await this.apiService.getProfile()).masterPasswordHint;
     await super.ngOnInit();
 
     this.characterMinimumMessage = this.i18nService.t("characterMinimum", this.minimumLength);
@@ -78,7 +89,9 @@ export class ChangePasswordComponent extends BaseChangePasswordComponent {
 
   async rotateUserKeyClicked() {
     if (this.rotateUserKey) {
-      const ciphers = await this.cipherService.getAllDecrypted();
+      const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
+
+      const ciphers = await this.cipherService.getAllDecrypted(activeUserId);
       let hasOldAttachments = false;
       if (ciphers != null) {
         for (let i = 0; i < ciphers.length; i++) {
@@ -112,7 +125,7 @@ export class ChangePasswordComponent extends BaseChangePasswordComponent {
         content:
           this.i18nService.t("updateEncryptionKeyWarning") +
           " " +
-          this.i18nService.t("updateEncryptionKeyExportWarning") +
+          this.i18nService.t("updateEncryptionKeyAccountExportWarning") +
           " " +
           this.i18nService.t("rotateEncKeyConfirmation"),
         type: "warning",
@@ -125,12 +138,27 @@ export class ChangePasswordComponent extends BaseChangePasswordComponent {
   }
 
   async submit() {
-    if (this.masterPasswordHint != null && this.masterPasswordHint == this.masterPassword) {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("hintEqualsPassword"),
-      );
+    this.loading = true;
+    if (this.currentMasterPassword == null || this.currentMasterPassword === "") {
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("errorOccurred"),
+        message: this.i18nService.t("masterPasswordRequired"),
+      });
+      this.loading = false;
+      return;
+    }
+
+    if (
+      this.masterPasswordHint != null &&
+      this.masterPasswordHint.toLowerCase() === this.masterPassword.toLowerCase()
+    ) {
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("errorOccurred"),
+        message: this.i18nService.t("hintEqualsPassword"),
+      });
+      this.loading = false;
       return;
     }
 
@@ -139,64 +167,92 @@ export class ChangePasswordComponent extends BaseChangePasswordComponent {
       this.leakedPassword = (await this.auditService.passwordLeaked(this.masterPassword)) > 0;
     }
 
-    await super.submit();
-  }
-
-  async setupSubmitActions() {
-    if (this.currentMasterPassword == null || this.currentMasterPassword === "") {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("masterPasswordRequired"),
-      );
-      return false;
+    if (!(await this.strongPassword())) {
+      this.loading = false;
+      return;
     }
-
-    if (this.rotateUserKey) {
-      await this.syncService.fullSync(true);
-    }
-
-    return super.setupSubmitActions();
-  }
-
-  async performSubmitActions(
-    newMasterPasswordHash: string,
-    newMasterKey: MasterKey,
-    newUserKey: [UserKey, EncString],
-  ) {
-    const masterKey = await this.cryptoService.getOrDeriveMasterKey(this.currentMasterPassword);
-    const request = new PasswordRequest();
-    request.masterPasswordHash = await this.cryptoService.hashMasterKey(
-      this.currentMasterPassword,
-      masterKey,
-    );
-    request.masterPasswordHint = this.masterPasswordHint;
-    request.newMasterPasswordHash = newMasterPasswordHash;
-    request.key = newUserKey[1].encryptedString;
 
     try {
       if (this.rotateUserKey) {
-        this.formPromise = this.apiService.postPassword(request).then(() => {
-          return this.updateKey();
-        });
+        await this.syncService.fullSync(true);
+        const user = await firstValueFrom(this.accountService.activeAccount$);
+        await this.keyRotationService.rotateUserKeyMasterPasswordAndEncryptedData(
+          this.currentMasterPassword,
+          this.masterPassword,
+          user,
+          this.masterPasswordHint,
+        );
       } else {
-        this.formPromise = this.apiService.postPassword(request);
+        await this.updatePassword(this.masterPassword);
       }
-
-      await this.formPromise;
-
-      this.platformUtilsService.showToast(
-        "success",
-        this.i18nService.t("masterPasswordChanged"),
-        this.i18nService.t("logBackIn"),
-      );
-      this.messagingService.send("logout");
-    } catch {
-      this.platformUtilsService.showToast("error", null, this.i18nService.t("errorOccurred"));
+    } catch (e) {
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("errorOccurred"),
+        message: e.message,
+      });
+    } finally {
+      this.loading = false;
     }
   }
 
-  private async updateKey() {
-    await this.keyRotationService.rotateUserKeyAndEncryptedData(this.masterPassword);
+  // todo: move this to a service
+  // https://bitwarden.atlassian.net/browse/PM-17108
+  private async updatePassword(newMasterPassword: string) {
+    const currentMasterPassword = this.currentMasterPassword;
+    const { userId, email } = await firstValueFrom(
+      this.accountService.activeAccount$.pipe(map((a) => ({ userId: a?.id, email: a?.email }))),
+    );
+    const kdfConfig = await firstValueFrom(this.kdfConfigService.getKdfConfig$(userId));
+
+    const currentMasterKey = await this.keyService.makeMasterKey(
+      currentMasterPassword,
+      email,
+      kdfConfig,
+    );
+    const decryptedUserKey = await this.masterPasswordService.decryptUserKeyWithMasterKey(
+      currentMasterKey,
+      userId,
+    );
+    if (decryptedUserKey == null) {
+      this.toastService.showToast({
+        variant: "error",
+        title: null,
+        message: this.i18nService.t("invalidMasterPassword"),
+      });
+      return;
+    }
+
+    const newMasterKey = await this.keyService.makeMasterKey(newMasterPassword, email, kdfConfig);
+    const newMasterKeyEncryptedUserKey = await this.keyService.encryptUserKeyWithMasterKey(
+      newMasterKey,
+      decryptedUserKey,
+    );
+
+    const request = new PasswordRequest();
+    request.masterPasswordHash = await this.keyService.hashMasterKey(
+      this.currentMasterPassword,
+      currentMasterKey,
+    );
+    request.masterPasswordHint = this.masterPasswordHint;
+    request.newMasterPasswordHash = await this.keyService.hashMasterKey(
+      newMasterPassword,
+      newMasterKey,
+    );
+    request.key = newMasterKeyEncryptedUserKey[1].encryptedString;
+    try {
+      await this.masterPasswordApiService.postPassword(request);
+      this.toastService.showToast({
+        variant: "success",
+        message: this.i18nService.t("masterPasswordChanged"),
+      });
+      this.messagingService.send("logout");
+    } catch {
+      this.toastService.showToast({
+        variant: "error",
+        title: null,
+        message: this.i18nService.t("errorOccurred"),
+      });
+    }
   }
 }

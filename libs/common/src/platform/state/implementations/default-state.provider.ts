@@ -1,4 +1,6 @@
-import { Observable, switchMap, take } from "rxjs";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { Observable, filter, of, switchMap, take } from "rxjs";
 
 import { UserId } from "../../../types/guid";
 import { DerivedStateDependencies } from "../../../types/state";
@@ -6,7 +8,6 @@ import { DeriveDefinition } from "../derive-definition";
 import { DerivedState } from "../derived-state";
 import { DerivedStateProvider } from "../derived-state.provider";
 import { GlobalStateProvider } from "../global-state.provider";
-import { KeyDefinition } from "../key-definition";
 import { StateProvider } from "../state.provider";
 import { UserKeyDefinition } from "../user-key-definition";
 import { ActiveUserStateProvider, SingleUserStateProvider } from "../user-state.provider";
@@ -22,29 +23,44 @@ export class DefaultStateProvider implements StateProvider {
     this.activeUserId$ = this.activeUserStateProvider.activeUserId$;
   }
 
-  getUserState$<T>(
-    keyDefinition: KeyDefinition<T> | UserKeyDefinition<T>,
-    userId?: UserId,
-  ): Observable<T> {
+  getUserState$<T>(userKeyDefinition: UserKeyDefinition<T>, userId?: UserId): Observable<T> {
     if (userId) {
-      return this.getUser<T>(userId, keyDefinition).state$;
+      return this.getUser<T>(userId, userKeyDefinition).state$;
+    } else {
+      return this.activeUserId$.pipe(
+        filter((userId) => userId != null), // Filter out null-ish user ids since we can't get state for a null user id
+        take(1),
+        switchMap((userId) => this.getUser<T>(userId, userKeyDefinition).state$),
+      );
+    }
+  }
+
+  getUserStateOrDefault$<T>(
+    userKeyDefinition: UserKeyDefinition<T>,
+    config: { userId: UserId | undefined; defaultValue?: T },
+  ): Observable<T> {
+    const { userId, defaultValue = null } = config;
+    if (userId) {
+      return this.getUser<T>(userId, userKeyDefinition).state$;
     } else {
       return this.activeUserId$.pipe(
         take(1),
-        switchMap((userId) => this.getUser<T>(userId, keyDefinition).state$),
+        switchMap((userId) =>
+          userId != null ? this.getUser<T>(userId, userKeyDefinition).state$ : of(defaultValue),
+        ),
       );
     }
   }
 
   async setUserState<T>(
-    keyDefinition: KeyDefinition<T> | UserKeyDefinition<T>,
-    value: T,
+    userKeyDefinition: UserKeyDefinition<T>,
+    value: T | null,
     userId?: UserId,
-  ): Promise<[UserId, T]> {
+  ): Promise<[UserId, T | null]> {
     if (userId) {
-      return [userId, await this.getUser<T>(userId, keyDefinition).update(() => value)];
+      return [userId, await this.getUser<T>(userId, userKeyDefinition).update(() => value)];
     } else {
-      return await this.getActive<T>(keyDefinition).update(() => value);
+      return await this.getActive<T>(userKeyDefinition).update(() => value);
     }
   }
 

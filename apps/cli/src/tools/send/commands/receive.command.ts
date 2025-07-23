@@ -1,19 +1,24 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { OptionValues } from "commander";
 import * as inquirer from "inquirer";
+import { firstValueFrom } from "rxjs";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
+import { CryptoFunctionService } from "@bitwarden/common/key-management/crypto/abstractions/crypto-function.service";
+import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { ErrorResponse } from "@bitwarden/common/models/response/error.response";
-import { CryptoFunctionService } from "@bitwarden/common/platform/abstractions/crypto-function.service";
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { EncArrayBuffer } from "@bitwarden/common/platform/models/domain/enc-array-buffer";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { SendType } from "@bitwarden/common/tools/send/enums/send-type";
 import { SendAccess } from "@bitwarden/common/tools/send/models/domain/send-access";
 import { SendAccessRequest } from "@bitwarden/common/tools/send/models/request/send-access.request";
 import { SendAccessView } from "@bitwarden/common/tools/send/models/view/send-access.view";
 import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.service.abstraction";
+import { KeyService } from "@bitwarden/key-management";
 import { NodeUtils } from "@bitwarden/node/node-utils";
 
 import { DownloadCommand } from "../../../commands/download.command";
@@ -26,14 +31,15 @@ export class SendReceiveCommand extends DownloadCommand {
   private sendAccessRequest: SendAccessRequest;
 
   constructor(
-    private apiService: ApiService,
-    cryptoService: CryptoService,
+    private keyService: KeyService,
+    encryptService: EncryptService,
     private cryptoFunctionService: CryptoFunctionService,
     private platformUtilsService: PlatformUtilsService,
     private environmentService: EnvironmentService,
     private sendApiService: SendApiService,
+    apiService: ApiService,
   ) {
-    super(cryptoService);
+    super(encryptService, apiService);
   }
 
   async run(url: string, options: OptionValues): Promise<Response> {
@@ -42,11 +48,13 @@ export class SendReceiveCommand extends DownloadCommand {
     let urlObject: URL;
     try {
       urlObject = new URL(url);
+      // FIXME: Remove when updating file. Eslint update
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       return Response.badRequest("Failed to parse the provided Send url");
     }
 
-    const apiUrl = this.getApiUrl(urlObject);
+    const apiUrl = await this.getApiUrl(urlObject);
     const [id, key] = this.getIdAndKey(urlObject);
 
     if (Utils.isNullOrWhitespace(id) || Utils.isNullOrWhitespace(key)) {
@@ -91,10 +99,16 @@ export class SendReceiveCommand extends DownloadCommand {
           this.sendAccessRequest,
           apiUrl,
         );
+
+        const decryptBufferFn = async (resp: globalThis.Response) => {
+          const encBuf = await EncArrayBuffer.fromResponse(resp);
+          return this.encryptService.decryptFileData(encBuf, this.decKey);
+        };
+
         return await this.saveAttachmentToFile(
           downloadData.url,
-          this.decKey,
           response?.file?.fileName,
+          decryptBufferFn,
           options.output,
         );
       }
@@ -108,8 +122,9 @@ export class SendReceiveCommand extends DownloadCommand {
     return [result[0], result[1]];
   }
 
-  private getApiUrl(url: URL) {
-    const urls = this.environmentService.getUrls();
+  private async getApiUrl(url: URL) {
+    const env = await firstValueFrom(this.environmentService.environment$);
+    const urls = env.getUrls();
     if (url.origin === "https://send.bitwarden.com") {
       return "https://api.bitwarden.com";
     } else if (url.origin === urls.api) {
@@ -144,7 +159,7 @@ export class SendReceiveCommand extends DownloadCommand {
       );
 
       const sendAccess = new SendAccess(sendResponse);
-      this.decKey = await this.cryptoService.makeSendKey(key);
+      this.decKey = await this.keyService.makeSendKey(key);
       return await sendAccess.decrypt(this.decKey);
     } catch (e) {
       if (e instanceof ErrorResponse) {

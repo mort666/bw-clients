@@ -25,6 +25,8 @@ export interface VaultAttributes {
   type: string;
 }
 
+// FIXME: update to use a const object instead of a typescript enum
+// eslint-disable-next-line @bitwarden/platform/no-enums
 export enum CategoryEnum {
   Login = "001",
   CreditCard = "002",
@@ -53,7 +55,7 @@ export interface Item {
   favIndex: number;
   createdAt: number;
   updatedAt: number;
-  trashed?: boolean;
+  state: "active" | "archived";
   categoryUuid: string;
   details: Details;
   overview: Overview;
@@ -67,6 +69,8 @@ export interface Details {
   password?: string | null;
 }
 
+// FIXME: update to use a const object instead of a typescript enum
+// eslint-disable-next-line @bitwarden/platform/no-enums
 export enum LoginFieldTypeEnum {
   TextOrHtml = "T",
   EmailAddress = "E",
@@ -88,12 +92,12 @@ export interface SectionsEntity {
   title: string;
   name?: string | null;
   fields?: FieldsEntity[] | null;
+  hideAddAnotherField?: boolean | null;
 }
 export interface FieldsEntity {
   title: string;
   id: string;
   value: Value;
-  indexAtSource: number;
   guarded: boolean;
   multiline: boolean;
   dontGenerate: boolean;
@@ -120,7 +124,7 @@ export interface Value {
 
 export interface Email {
   email_address: string;
-  provider: string;
+  provider: string | null;
 }
 
 export interface Address {
@@ -153,6 +157,8 @@ export interface Overview {
   pbe?: number | null;
   pgrng?: boolean | null;
   tags?: string[] | null;
+  icons?: string | null;
+  watchtowerExclusions?: string | null;
 }
 export interface UrlsEntity {
   label: string;

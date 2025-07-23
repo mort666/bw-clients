@@ -1,13 +1,14 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Component, Input, OnInit } from "@angular/core";
 
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
+import { KeyService } from "@bitwarden/key-management";
 
 import { SharedModule } from "../../shared.module";
 
 @Component({
   selector: "app-account-fingerprint",
   templateUrl: "account-fingerprint.component.html",
-  standalone: true,
   imports: [SharedModule],
 })
 export class AccountFingerprintComponent implements OnInit {
@@ -17,11 +18,11 @@ export class AccountFingerprintComponent implements OnInit {
 
   protected fingerprint: string;
 
-  constructor(private cryptoService: CryptoService) {}
+  constructor(private keyService: KeyService) {}
 
   async ngOnInit() {
     // TODO - In the future, remove this code and use the fingerprint pipe once merged
-    const generatedFingerprint = await this.cryptoService.getFingerprint(
+    const generatedFingerprint = await this.keyService.getFingerprint(
       this.fingerprintMaterial,
       this.publicKeyBuffer,
     );

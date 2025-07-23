@@ -1,6 +1,18 @@
-import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angular/core";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnDestroy,
+  OnInit,
+  Output,
+  ViewChild,
+} from "@angular/core";
 import { FormBuilder, Validators } from "@angular/forms";
+import { from, Subject, switchMap, takeUntil } from "rxjs";
 
+import { ManageTaxInformationComponent } from "@bitwarden/angular/billing/components";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import {
   BillingInformation,
@@ -9,16 +21,23 @@ import {
   PaymentInformation,
   PlanInformation,
 } from "@bitwarden/common/billing/abstractions/organization-billing.service";
-import { PaymentMethodType, PlanType } from "@bitwarden/common/billing/enums";
+import { TaxServiceAbstraction } from "@bitwarden/common/billing/abstractions/tax.service.abstraction";
+import {
+  PaymentMethodType,
+  PlanType,
+  ProductTierType,
+  ProductType,
+} from "@bitwarden/common/billing/enums";
+import { PreviewTaxAmountForOrganizationTrialRequest } from "@bitwarden/common/billing/models/request/tax";
 import { PlanResponse } from "@bitwarden/common/billing/models/response/plan.response";
-import { ProductType } from "@bitwarden/common/enums";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
-import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { ToastService } from "@bitwarden/components";
 
-import { BillingSharedModule, PaymentComponent, TaxInfoComponent } from "../../shared";
+import { BillingSharedModule } from "../../shared";
+import { PaymentComponent } from "../../shared/payment/payment.component";
 
-export type TrialOrganizationType = Exclude<ProductType, ProductType.Free>;
+export type TrialOrganizationType = Exclude<ProductTierType, ProductTierType.Free>;
 
 export interface OrganizationInfo {
   name: string;
@@ -31,11 +50,15 @@ export interface OrganizationCreatedEvent {
   planDescription: string;
 }
 
+// FIXME: update to use a const object instead of a typescript enum
+// eslint-disable-next-line @bitwarden/platform/no-enums
 enum SubscriptionCadence {
   Annual,
   Monthly,
 }
 
+// FIXME: update to use a const object instead of a typescript enum
+// eslint-disable-next-line @bitwarden/platform/no-enums
 export enum SubscriptionProduct {
   PasswordManager,
   SecretsManager,
@@ -45,17 +68,18 @@ export enum SubscriptionProduct {
   selector: "app-trial-billing-step",
   templateUrl: "trial-billing-step.component.html",
   imports: [BillingSharedModule],
-  standalone: true,
 })
-export class TrialBillingStepComponent implements OnInit {
+export class TrialBillingStepComponent implements OnInit, OnDestroy {
   @ViewChild(PaymentComponent) paymentComponent: PaymentComponent;
-  @ViewChild(TaxInfoComponent) taxInfoComponent: TaxInfoComponent;
+  @ViewChild(ManageTaxInformationComponent) taxInfoComponent: ManageTaxInformationComponent;
   @Input() organizationInfo: OrganizationInfo;
   @Input() subscriptionProduct: SubscriptionProduct = SubscriptionProduct.PasswordManager;
+  @Input() trialLength: number;
   @Output() steppedBack = new EventEmitter();
   @Output() organizationCreated = new EventEmitter<OrganizationCreatedEvent>();
 
   loading = true;
+  fetchingTaxAmount = false;
 
   annualCadence = SubscriptionCadence.Annual;
   monthlyCadence = SubscriptionCadence.Monthly;
@@ -69,13 +93,20 @@ export class TrialBillingStepComponent implements OnInit {
   annualPlan?: PlanResponse;
   monthlyPlan?: PlanResponse;
 
+  taxAmount = 0;
+
+  private destroy$ = new Subject<void>();
+
+  protected readonly SubscriptionProduct = SubscriptionProduct;
+
   constructor(
     private apiService: ApiService,
     private i18nService: I18nService,
     private formBuilder: FormBuilder,
     private messagingService: MessagingService,
     private organizationBillingService: OrganizationBillingService,
-    private platformUtilsService: PlatformUtilsService,
+    private toastService: ToastService,
+    private taxService: TaxServiceAbstraction,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -83,37 +114,63 @@ export class TrialBillingStepComponent implements OnInit {
     this.applicablePlans = plans.data.filter(this.isApplicable);
     this.annualPlan = this.findPlanFor(SubscriptionCadence.Annual);
     this.monthlyPlan = this.findPlanFor(SubscriptionCadence.Monthly);
+
+    if (this.trialLength === 0) {
+      this.formGroup.controls.cadence.valueChanges
+        .pipe(
+          switchMap((cadence) => from(this.previewTaxAmount(cadence))),
+          takeUntil(this.destroy$),
+        )
+        .subscribe((taxAmount) => {
+          this.taxAmount = taxAmount;
+        });
+    }
+
     this.loading = false;
   }
 
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   async submit(): Promise<void> {
+    if (!this.taxInfoComponent.validate()) {
+      return;
+    }
+
     this.formPromise = this.createOrganization();
 
     const organizationId = await this.formPromise;
     const planDescription = this.getPlanDescription();
 
-    this.platformUtilsService.showToast(
-      "success",
-      this.i18nService.t("organizationCreated"),
-      this.i18nService.t("organizationReadyToGo"),
-    );
+    this.toastService.showToast({
+      variant: "success",
+      title: this.i18nService.t("organizationCreated"),
+      message: this.i18nService.t("organizationReadyToGo"),
+    });
 
     this.organizationCreated.emit({
       organizationId,
       planDescription,
     });
 
-    this.messagingService.send("organizationCreated", organizationId);
+    // TODO: No one actually listening to this?
+    this.messagingService.send("organizationCreated", { organizationId });
   }
 
-  protected changedCountry() {
-    this.paymentComponent.hideBank = this.taxInfoComponent.taxInfo.country !== "US";
+  async onTaxInformationChanged() {
+    if (this.trialLength === 0) {
+      this.taxAmount = await this.previewTaxAmount(this.formGroup.value.cadence);
+    }
+
+    this.paymentComponent.showBankAccount =
+      this.taxInfoComponent.getTaxInformation().country === "US";
     if (
-      this.paymentComponent.hideBank &&
-      this.paymentComponent.method === PaymentMethodType.BankAccount
+      !this.paymentComponent.showBankAccount &&
+      this.paymentComponent.selected === PaymentMethodType.BankAccount
     ) {
-      this.paymentComponent.method = PaymentMethodType.Card;
-      this.paymentComponent.changeMethod();
+      this.paymentComponent.select(PaymentMethodType.Card);
     }
   }
 
@@ -134,7 +191,9 @@ export class TrialBillingStepComponent implements OnInit {
 
   private async createOrganization(): Promise<string> {
     const planResponse = this.findPlanFor(this.formGroup.value.cadence);
-    const paymentMethod = await this.paymentComponent.createPaymentToken();
+
+    const { type, token } = await this.paymentComponent.tokenize();
+    const paymentMethod: [string, PaymentMethodType] = [token, type];
 
     const organization: OrganizationInformation = {
       name: this.organizationInfo.name,
@@ -159,6 +218,7 @@ export class TrialBillingStepComponent implements OnInit {
     const payment: PaymentInformation = {
       paymentMethod,
       billing: this.getBillingInformationFromTaxInfoComponent(),
+      skipTrial: this.trialLength === 0,
     };
 
     const response = await this.organizationBillingService.purchaseSubscription({
@@ -175,19 +235,19 @@ export class TrialBillingStepComponent implements OnInit {
       [cadence in SubscriptionCadence]?: PlanType;
     };
   } = {
-    [ProductType.Enterprise]: {
+    [ProductTierType.Enterprise]: {
       [SubscriptionCadence.Annual]: PlanType.EnterpriseAnnually,
       [SubscriptionCadence.Monthly]: PlanType.EnterpriseMonthly,
     },
-    [ProductType.Families]: {
+    [ProductTierType.Families]: {
       [SubscriptionCadence.Annual]: PlanType.FamiliesAnnually,
       // No monthly option for Families plan
     },
-    [ProductType.Teams]: {
+    [ProductTierType.Teams]: {
       [SubscriptionCadence.Annual]: PlanType.TeamsAnnually,
       [SubscriptionCadence.Monthly]: PlanType.TeamsMonthly,
     },
-    [ProductType.TeamsStarter]: {
+    [ProductTierType.TeamsStarter]: {
       // No annual option for Teams Starter plan
       [SubscriptionCadence.Monthly]: PlanType.TeamsStarter,
     },
@@ -201,13 +261,13 @@ export class TrialBillingStepComponent implements OnInit {
 
   private getBillingInformationFromTaxInfoComponent(): BillingInformation {
     return {
-      postalCode: this.taxInfoComponent.taxInfo.postalCode,
-      country: this.taxInfoComponent.taxInfo.country,
-      taxId: this.taxInfoComponent.taxInfo.taxId,
-      addressLine1: this.taxInfoComponent.taxInfo.line1,
-      addressLine2: this.taxInfoComponent.taxInfo.line2,
-      city: this.taxInfoComponent.taxInfo.city,
-      state: this.taxInfoComponent.taxInfo.state,
+      postalCode: this.taxInfoComponent.getTaxInformation()?.postalCode,
+      country: this.taxInfoComponent.getTaxInformation()?.country,
+      taxId: this.taxInfoComponent.getTaxInformation()?.taxId,
+      addressLine1: this.taxInfoComponent.getTaxInformation()?.line1,
+      addressLine2: this.taxInfoComponent.getTaxInformation()?.line2,
+      city: this.taxInfoComponent.getTaxInformation()?.city,
+      state: this.taxInfoComponent.getTaxInformation()?.state,
     };
   }
 
@@ -232,11 +292,52 @@ export class TrialBillingStepComponent implements OnInit {
 
   private isApplicable(plan: PlanResponse): boolean {
     const hasCorrectProductType =
-      plan.product === ProductType.Enterprise ||
-      plan.product === ProductType.Families ||
-      plan.product === ProductType.Teams ||
-      plan.product === ProductType.TeamsStarter;
+      plan.productTier === ProductTierType.Enterprise ||
+      plan.productTier === ProductTierType.Families ||
+      plan.productTier === ProductTierType.Teams ||
+      plan.productTier === ProductTierType.TeamsStarter;
     const notDisabledOrLegacy = !plan.disabled && !plan.legacyYear;
     return hasCorrectProductType && notDisabledOrLegacy;
+  }
+
+  private previewTaxAmount = async (cadence: SubscriptionCadence): Promise<number> => {
+    this.fetchingTaxAmount = true;
+
+    if (!this.taxInfoComponent.validate()) {
+      return 0;
+    }
+
+    const plan = this.findPlanFor(cadence);
+
+    const productType =
+      this.subscriptionProduct === SubscriptionProduct.PasswordManager
+        ? ProductType.PasswordManager
+        : ProductType.SecretsManager;
+
+    const taxInformation = this.taxInfoComponent.getTaxInformation();
+
+    const request: PreviewTaxAmountForOrganizationTrialRequest = {
+      planType: plan.type,
+      productType,
+      taxInformation: {
+        ...taxInformation,
+      },
+    };
+
+    const response = await this.taxService.previewTaxAmountForOrganizationTrial(request);
+    this.fetchingTaxAmount = false;
+    return response.taxAmount;
+  };
+
+  get price() {
+    return this.getPriceFor(this.formGroup.value.cadence);
+  }
+
+  get total() {
+    return this.price + this.taxAmount;
+  }
+
+  get interval() {
+    return this.formGroup.value.cadence === SubscriptionCadence.Annual ? "year" : "month";
   }
 }

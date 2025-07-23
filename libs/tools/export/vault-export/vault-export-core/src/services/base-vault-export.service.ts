@@ -1,41 +1,50 @@
-import { KdfConfig } from "@bitwarden/common/auth/models/domain/kdf-config";
-import { CryptoFunctionService } from "@bitwarden/common/platform/abstractions/crypto-function.service";
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
-import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
-import { KdfType } from "@bitwarden/common/platform/enums";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { PinServiceAbstraction } from "@bitwarden/auth/common";
+import { CryptoFunctionService } from "@bitwarden/common/key-management/crypto/abstractions/crypto-function.service";
+import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { UserId } from "@bitwarden/common/types/guid";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
+import { KdfConfig, KdfConfigService, KdfType } from "@bitwarden/key-management";
 
 import { BitwardenCsvExportType, BitwardenPasswordProtectedFileFormat } from "../types";
 export class BaseVaultExportService {
   constructor(
-    protected cryptoService: CryptoService,
+    protected pinService: PinServiceAbstraction,
+    protected encryptService: EncryptService,
     private cryptoFunctionService: CryptoFunctionService,
-    private stateService: StateService,
+    private kdfConfigService: KdfConfigService,
   ) {}
 
-  protected async buildPasswordExport(clearText: string, password: string): Promise<string> {
-    const kdfType: KdfType = await this.stateService.getKdfType();
-    const kdfConfig: KdfConfig = await this.stateService.getKdfConfig();
+  protected async buildPasswordExport(
+    userId: UserId,
+    clearText: string,
+    password: string,
+  ): Promise<string> {
+    const kdfConfig: KdfConfig = await this.kdfConfigService.getKdfConfig(userId);
 
     const salt = Utils.fromBufferToB64(await this.cryptoFunctionService.randomBytes(16));
-    const key = await this.cryptoService.makePinKey(password, salt, kdfType, kdfConfig);
+    const key = await this.pinService.makePinKey(password, salt, kdfConfig);
 
-    const encKeyValidation = await this.cryptoService.encrypt(Utils.newGuid(), key);
-    const encText = await this.cryptoService.encrypt(clearText, key);
+    const encKeyValidation = await this.encryptService.encryptString(Utils.newGuid(), key);
+    const encText = await this.encryptService.encryptString(clearText, key);
 
     const jsonDoc: BitwardenPasswordProtectedFileFormat = {
       encrypted: true,
       passwordProtected: true,
       salt: salt,
-      kdfType: kdfType,
+      kdfType: kdfConfig.kdfType,
       kdfIterations: kdfConfig.iterations,
-      kdfMemory: kdfConfig.memory,
-      kdfParallelism: kdfConfig.parallelism,
       encKeyValidation_DO_NOT_EDIT: encKeyValidation.encryptedString,
       data: encText.encryptedString,
     };
+
+    if (kdfConfig.kdfType === KdfType.Argon2id) {
+      jsonDoc.kdfMemory = kdfConfig.memory;
+      jsonDoc.kdfParallelism = kdfConfig.parallelism;
+    }
 
     return JSON.stringify(jsonDoc, null, "  ");
   }

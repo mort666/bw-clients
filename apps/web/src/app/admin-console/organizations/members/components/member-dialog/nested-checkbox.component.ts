@@ -1,5 +1,7 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { KeyValue } from "@angular/common";
-import { Component, EventEmitter, Input, Output, OnInit, OnDestroy } from "@angular/core";
+import { Component, Input, OnInit, OnDestroy } from "@angular/core";
 import { FormControl, FormGroup } from "@angular/forms";
 import { Subject, takeUntil } from "rxjs";
 
@@ -8,14 +10,13 @@ import { Utils } from "@bitwarden/common/platform/misc/utils";
 @Component({
   selector: "app-nested-checkbox",
   templateUrl: "nested-checkbox.component.html",
+  standalone: false,
 })
 export class NestedCheckboxComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   @Input() parentId: string;
   @Input() checkboxes: FormGroup<Record<string, FormControl<boolean>>>;
-  @Output() onSavedUser = new EventEmitter();
-  @Output() onDeletedUser = new EventEmitter();
 
   get parentIndeterminate() {
     return (

@@ -1,14 +1,17 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { map, Observable } from "rxjs";
 
 import {
   BADGE_SETTINGS_DISK,
   ActiveUserState,
-  KeyDefinition,
   StateProvider,
+  UserKeyDefinition,
 } from "../../platform/state";
 
-const ENABLE_BADGE_COUNTER = new KeyDefinition(BADGE_SETTINGS_DISK, "enableBadgeCounter", {
+const ENABLE_BADGE_COUNTER = new UserKeyDefinition(BADGE_SETTINGS_DISK, "enableBadgeCounter", {
   deserializer: (value: boolean) => value ?? true,
+  clearOn: [],
 });
 
 export abstract class BadgeSettingsServiceAbstraction {

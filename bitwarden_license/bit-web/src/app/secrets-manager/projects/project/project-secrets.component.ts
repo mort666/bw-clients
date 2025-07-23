@@ -1,9 +1,25 @@
-import { Component } from "@angular/core";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
-import { combineLatest, combineLatestWith, filter, Observable, startWith, switchMap } from "rxjs";
+import {
+  combineLatest,
+  combineLatestWith,
+  filter,
+  firstValueFrom,
+  Observable,
+  startWith,
+  switchMap,
+} from "rxjs";
 
-import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
+import {
+  getOrganizationById,
+  OrganizationService,
+} from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { DialogService } from "@bitwarden/components";
 
@@ -18,6 +34,10 @@ import {
   SecretDialogComponent,
   SecretOperation,
 } from "../../secrets/dialog/secret-dialog.component";
+import {
+  SecretViewDialogComponent,
+  SecretViewDialogParams,
+} from "../../secrets/dialog/secret-view-dialog.component";
 import { SecretService } from "../../secrets/secret.service";
 import { SecretsListComponent } from "../../shared/secrets-list.component";
 import { ProjectService } from "../project.service";
@@ -25,8 +45,9 @@ import { ProjectService } from "../project.service";
 @Component({
   selector: "sm-project-secrets",
   templateUrl: "./project-secrets.component.html",
+  standalone: false,
 })
-export class ProjectSecretsComponent {
+export class ProjectSecretsComponent implements OnInit {
   secrets$: Observable<SecretListView[]>;
 
   private organizationId: string;
@@ -42,6 +63,8 @@ export class ProjectSecretsComponent {
     private platformUtilsService: PlatformUtilsService,
     private i18nService: I18nService,
     private organizationService: OrganizationService,
+    private accountService: AccountService,
+    private logService: LogService,
   ) {}
 
   ngOnInit() {
@@ -63,7 +86,14 @@ export class ProjectSecretsComponent {
       switchMap(async ([_, params]) => {
         this.organizationId = params.organizationId;
         this.projectId = params.projectId;
-        this.organizationEnabled = this.organizationService.get(params.organizationId)?.enabled;
+        const userId = await firstValueFrom(getUserId(this.accountService.activeAccount$));
+        this.organizationEnabled = (
+          await firstValueFrom(
+            this.organizationService
+              .organizations$(userId)
+              .pipe(getOrganizationById(params.organizationId)),
+          )
+        )?.enabled;
         return await this.getSecretsByProject();
       }),
     );
@@ -80,6 +110,15 @@ export class ProjectSecretsComponent {
         operation: OperationType.Edit,
         secretId: secretId,
         organizationEnabled: this.organizationEnabled,
+      },
+    });
+  }
+
+  openViewSecret(secretId: string) {
+    this.dialogService.open<unknown, SecretViewDialogParams>(SecretViewDialogComponent, {
+      data: {
+        organizationId: this.organizationId,
+        secretId: secretId,
       },
     });
   }
@@ -107,12 +146,13 @@ export class ProjectSecretsComponent {
     SecretsListComponent.copySecretName(name, this.platformUtilsService, this.i18nService);
   }
 
-  copySecretValue(id: string) {
-    SecretsListComponent.copySecretValue(
+  async copySecretValue(id: string) {
+    await SecretsListComponent.copySecretValue(
       id,
       this.platformUtilsService,
       this.i18nService,
       this.secretService,
+      this.logService,
     );
   }
 

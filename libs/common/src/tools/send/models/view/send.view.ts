@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { View } from "../../../../models/view/view";
 import { Utils } from "../../../../platform/misc/utils";
 import { SymmetricCryptoKey } from "../../../../platform/models/domain/symmetric-crypto-key";
@@ -24,6 +26,7 @@ export class SendView implements View {
   deletionDate: Date = null;
   expirationDate: Date = null;
   password: string = null;
+  emails: string[] = [];
   disabled = false;
   hideEmail = false;
 

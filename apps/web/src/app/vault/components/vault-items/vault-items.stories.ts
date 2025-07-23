@@ -1,15 +1,32 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { importProvidersFrom } from "@angular/core";
 import { RouterModule } from "@angular/router";
-import { applicationConfig, Meta, moduleMetadata, Story } from "@storybook/angular";
-import { BehaviorSubject } from "rxjs";
+import {
+  applicationConfig,
+  componentWrapperDecorator,
+  Meta,
+  moduleMetadata,
+  StoryObj,
+} from "@storybook/angular";
+import { BehaviorSubject, of } from "rxjs";
 
-import { AvatarUpdateService } from "@bitwarden/common/abstractions/account/avatar-update.service";
-import { SettingsService } from "@bitwarden/common/abstractions/settings.service";
+import {
+  CollectionAccessSelectionView,
+  CollectionAdminView,
+  Unassigned,
+} from "@bitwarden/admin-console/common";
 import { OrganizationUserType } from "@bitwarden/common/admin-console/enums";
+import { PermissionsApi } from "@bitwarden/common/admin-console/models/api/permissions.api";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
+import { AvatarService } from "@bitwarden/common/auth/abstractions/avatar.service";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
-import { ConfigServiceAbstraction } from "@bitwarden/common/platform/abstractions/config/config.service.abstraction";
-import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
+import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
+import {
+  Environment,
+  EnvironmentService,
+} from "@bitwarden/common/platform/abstractions/environment.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { CipherType } from "@bitwarden/common/vault/enums";
@@ -17,14 +34,13 @@ import { AttachmentView } from "@bitwarden/common/vault/models/view/attachment.v
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { LoginUriView } from "@bitwarden/common/vault/models/view/login-uri.view";
 import { LoginView } from "@bitwarden/common/vault/models/view/login.view";
+import { CipherAuthorizationService } from "@bitwarden/common/vault/services/cipher-authorization.service";
+import { RestrictedItemTypesService } from "@bitwarden/common/vault/services/restricted-item-types.service";
+import { CipherViewLike } from "@bitwarden/common/vault/utils/cipher-view-like-utils";
+import { LayoutComponent } from "@bitwarden/components";
 
-import {
-  CollectionAccessSelectionView,
-  GroupView,
-} from "../../../admin-console/organizations/core";
+import { GroupView } from "../../../admin-console/organizations/core";
 import { PreloadedEnglishI18nModule } from "../../../core/tests";
-import { CollectionAdminView } from "../../core/views/collection-admin.view";
-import { Unassigned } from "../../individual-vault/vault-filter/shared/models/routed-vault-filter.model";
 
 import { VaultItemsComponent } from "./vault-items.component";
 import { VaultItemsModule } from "./vault-items.module";
@@ -41,8 +57,9 @@ export default {
   title: "Web/Vault/Items",
   component: VaultItemsComponent,
   decorators: [
+    componentWrapperDecorator((story) => `<bit-layout>${story}</bit-layout>`),
     moduleMetadata({
-      imports: [VaultItemsModule, RouterModule],
+      imports: [VaultItemsModule, RouterModule, LayoutComponent],
       providers: [
         {
           provide: EnvironmentService,
@@ -50,34 +67,36 @@ export default {
             getIconsUrl() {
               return "";
             },
+            environment$: new BehaviorSubject({
+              getIconsUrl() {
+                return "";
+              },
+            } as Environment).asObservable(),
           } as Partial<EnvironmentService>,
         },
         {
           provide: StateService,
           useValue: {
-            activeAccount$: new BehaviorSubject("1").asObservable(),
             accounts$: new BehaviorSubject({ "1": { profile: { name: "Foo" } } }).asObservable(),
-            async getDisableFavicon() {
-              return false;
+            async getShowFavicon() {
+              return true;
             },
           } as Partial<StateService>,
         },
         {
-          provide: SettingsService,
+          provide: DomainSettingsService,
           useValue: {
-            disableFavicon$: new BehaviorSubject(false).asObservable(),
-            getDisableFavicon() {
-              return false;
+            showFavicons$: new BehaviorSubject(true).asObservable(),
+            getShowFavicon() {
+              return true;
             },
-          } as Partial<SettingsService>,
+          } as Partial<DomainSettingsService>,
         },
         {
-          provide: AvatarUpdateService,
+          provide: AvatarService,
           useValue: {
-            async loadColorFromState() {
-              return "#FF0000";
-            },
-          } as Partial<AvatarUpdateService>,
+            avatarColor$: of("#FF0000"),
+          } as Partial<AvatarService>,
         },
         {
           provide: TokenService,
@@ -94,12 +113,33 @@ export default {
           } as Partial<TokenService>,
         },
         {
-          provide: ConfigServiceAbstraction,
+          provide: ConfigService,
           useValue: {
-            getFeatureFlag() {
+            getFeatureFlag$() {
               // does not currently affect any display logic, default all to OFF
               return false;
             },
+          },
+        },
+        {
+          provide: CipherAuthorizationService,
+          useValue: {
+            canDeleteCipher$() {
+              return of(true);
+            },
+            canRestoreCipher$() {
+              return of(true);
+            },
+            canCloneCipher$() {
+              return of(true);
+            },
+          },
+        },
+        {
+          provide: RestrictedItemTypesService,
+          useValue: {
+            restricted$: of([]), // No restricted item types for this story
+            isCipherRestricted: () => false, // No restrictions for this story
           },
         },
       ],
@@ -120,138 +160,136 @@ export default {
   argTypes: { onEvent: { action: "onEvent" } },
 } as Meta;
 
-const Template: Story<VaultItemsComponent> = (args: VaultItemsComponent) => ({
-  props: args,
-});
+type Story = StoryObj<VaultItemsComponent<CipherViewLike>>;
 
-export const Individual = Template.bind({});
-Individual.args = {
-  ciphers,
-  collections: [],
-  showOwner: true,
-  showCollections: false,
-  showGroups: false,
-  showPremiumFeatures: true,
-  showBulkMove: true,
-  showBulkTrashOptions: false,
-  useEvents: false,
-  cloneableOrganizationCiphers: false,
+export const Individual: Story = {
+  args: {
+    ciphers,
+    collections: [],
+    showOwner: true,
+    showCollections: false,
+    showGroups: false,
+    showPremiumFeatures: true,
+    showBulkMove: true,
+    showBulkTrashOptions: false,
+    useEvents: false,
+  },
 };
 
-export const IndividualDisabled = Template.bind({});
-IndividualDisabled.args = {
-  ciphers,
-  collections: [],
-  disabled: true,
-  showOwner: true,
-  showCollections: false,
-  showGroups: false,
-  showPremiumFeatures: true,
-  showBulkMove: true,
-  showBulkTrashOptions: false,
-  useEvents: false,
-  cloneableOrganizationCiphers: false,
+export const IndividualDisabled: Story = {
+  args: {
+    ciphers,
+    collections: [],
+    disabled: true,
+    showOwner: true,
+    showCollections: false,
+    showGroups: false,
+    showPremiumFeatures: true,
+    showBulkMove: true,
+    showBulkTrashOptions: false,
+    useEvents: false,
+  },
 };
 
-export const IndividualTrash = Template.bind({});
-IndividualTrash.args = {
-  ciphers: deletedCiphers,
-  collections: [],
-  showOwner: true,
-  showCollections: false,
-  showGroups: false,
-  showPremiumFeatures: true,
-  showBulkMove: false,
-  showBulkTrashOptions: true,
-  useEvents: false,
-  cloneableOrganizationCiphers: false,
+export const IndividualTrash: Story = {
+  args: {
+    ciphers: deletedCiphers,
+    collections: [],
+    showOwner: true,
+    showCollections: false,
+    showGroups: false,
+    showPremiumFeatures: true,
+    showBulkMove: false,
+    showBulkTrashOptions: true,
+    useEvents: false,
+  },
 };
 
-export const IndividualTopLevelCollection = Template.bind({});
-IndividualTopLevelCollection.args = {
-  ciphers: [],
-  collections,
-  showOwner: true,
-  showCollections: false,
-  showGroups: false,
-  showPremiumFeatures: true,
-  showBulkMove: false,
-  showBulkTrashOptions: false,
-  useEvents: false,
-  cloneableOrganizationCiphers: false,
+export const IndividualTopLevelCollection: Story = {
+  args: {
+    ciphers: [],
+    collections,
+    showOwner: true,
+    showCollections: false,
+    showGroups: false,
+    showPremiumFeatures: true,
+    showBulkMove: false,
+    showBulkTrashOptions: false,
+    useEvents: false,
+  },
 };
 
-export const IndividualSecondLevelCollection = Template.bind({});
-IndividualSecondLevelCollection.args = {
-  ciphers,
-  collections,
-  showOwner: true,
-  showCollections: false,
-  showGroups: false,
-  showPremiumFeatures: true,
-  showBulkMove: true,
-  showBulkTrashOptions: false,
-  useEvents: false,
-  cloneableOrganizationCiphers: false,
+export const IndividualSecondLevelCollection: Story = {
+  args: {
+    ciphers,
+    collections,
+    showOwner: true,
+    showCollections: false,
+    showGroups: false,
+    showPremiumFeatures: true,
+    showBulkMove: true,
+    showBulkTrashOptions: false,
+    useEvents: false,
+  },
 };
 
-export const OrganizationVault = Template.bind({});
-OrganizationVault.args = {
-  ciphers: organizationOnlyCiphers,
-  collections: [],
-  showOwner: false,
-  showCollections: true,
-  showGroups: false,
-  showPremiumFeatures: true,
-  showBulkMove: false,
-  showBulkTrashOptions: false,
-  useEvents: true,
-  cloneableOrganizationCiphers: true,
+export const OrganizationVault: Story = {
+  args: {
+    ciphers: organizationOnlyCiphers,
+    collections: [],
+    showOwner: false,
+    showCollections: true,
+    showGroups: false,
+    showPremiumFeatures: true,
+    showBulkMove: false,
+    showBulkTrashOptions: false,
+    useEvents: true,
+  },
 };
 
-export const OrganizationTrash = Template.bind({});
-OrganizationTrash.args = {
-  ciphers: deletedOrganizationOnlyCiphers,
-  collections: [],
-  showOwner: false,
-  showCollections: true,
-  showGroups: false,
-  showPremiumFeatures: true,
-  showBulkMove: false,
-  showBulkTrashOptions: true,
-  useEvents: true,
-  cloneableOrganizationCiphers: true,
+export const OrganizationTrash: Story = {
+  args: {
+    ciphers: deletedOrganizationOnlyCiphers,
+    collections: [],
+    showOwner: false,
+    showCollections: true,
+    showGroups: false,
+    showPremiumFeatures: true,
+    showBulkMove: false,
+    showBulkTrashOptions: true,
+    useEvents: true,
+  },
 };
 
 const unassignedCollection = new CollectionAdminView();
 unassignedCollection.id = Unassigned;
 unassignedCollection.name = "Unassigned";
-export const OrganizationTopLevelCollection = Template.bind({});
-OrganizationTopLevelCollection.args = {
-  ciphers: [],
-  collections: collections.concat(unassignedCollection),
-  showOwner: false,
-  showCollections: false,
-  showGroups: true,
-  showPremiumFeatures: true,
-  showBulkMove: false,
-  showBulkTrashOptions: false,
-  useEvents: true,
-  cloneableOrganizationCiphers: true,
+export const OrganizationTopLevelCollection: Story = {
+  args: {
+    ciphers: [],
+    collections: collections.concat(unassignedCollection),
+    showOwner: false,
+    showCollections: false,
+    showGroups: true,
+    showPremiumFeatures: true,
+    showBulkMove: false,
+    showBulkTrashOptions: false,
+    useEvents: true,
+  },
 };
 
-export const OrganizationSecondLevelCollection = Template.bind({});
-OrganizationSecondLevelCollection.args = {
-  ciphers: organizationOnlyCiphers,
-  collections,
-  showOwner: false,
-  showCollections: false,
-  showGroups: true,
-  showPremiumFeatures: true,
-  showBulkMove: false,
-  showBulkTrashOptions: false,
-  useEvents: true,
-  cloneableOrganizationCiphers: true,
+export const OrganizationSecondLevelCollection: Story = {
+  args: {
+    ciphers: organizationOnlyCiphers,
+    collections,
+    showOwner: false,
+    showCollections: false,
+    showGroups: true,
+    showPremiumFeatures: true,
+    showBulkMove: false,
+    showBulkTrashOptions: false,
+    useEvents: true,
+  },
 };
 
 function createCipherView(i: number, deleted = false): CipherView {
@@ -292,6 +330,7 @@ function createCollectionView(i: number): CollectionAdminView {
   view.id = `collection-${i}`;
   view.name = `Collection ${i}`;
   view.organizationId = organization?.id;
+  view.manage = true;
 
   if (group !== undefined) {
     view.groups = [
@@ -321,5 +360,6 @@ function createOrganization(i: number): Organization {
   organization.id = `organization-${i}`;
   organization.name = `Organization ${i}`;
   organization.type = OrganizationUserType.Owner;
+  organization.permissions = new PermissionsApi();
   return organization;
 }

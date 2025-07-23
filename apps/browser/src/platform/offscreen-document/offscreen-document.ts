@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
 
 import { BrowserApi } from "../browser/browser-api";
@@ -14,6 +16,9 @@ class OffscreenDocument implements OffscreenDocumentInterface {
   private readonly extensionMessageHandlers: OffscreenDocumentExtensionMessageHandlers = {
     offscreenCopyToClipboard: ({ message }) => this.handleOffscreenCopyToClipboard(message),
     offscreenReadFromClipboard: () => this.handleOffscreenReadFromClipboard(),
+    localStorageGet: ({ message }) => this.handleLocalStorageGet(message.key),
+    localStorageSave: ({ message }) => this.handleLocalStorageSave(message.key, message.value),
+    localStorageRemove: ({ message }) => this.handleLocalStorageRemove(message.key),
   };
 
   /**
@@ -29,14 +34,26 @@ class OffscreenDocument implements OffscreenDocumentInterface {
    * @param message - The extension message containing the text to copy
    */
   private async handleOffscreenCopyToClipboard(message: OffscreenDocumentExtensionMessage) {
-    await BrowserClipboardService.copy(window, message.text);
+    await BrowserClipboardService.copy(self, message.text);
   }
 
   /**
    * Reads the user's clipboard and returns the text.
    */
   private async handleOffscreenReadFromClipboard() {
-    return await BrowserClipboardService.read(window);
+    return await BrowserClipboardService.read(self);
+  }
+
+  private handleLocalStorageGet(key: string) {
+    return self.localStorage.getItem(key);
+  }
+
+  private handleLocalStorageSave(key: string, value: string) {
+    self.localStorage.setItem(key, value);
+  }
+
+  private handleLocalStorageRemove(key: string) {
+    self.localStorage.removeItem(key);
   }
 
   /**
@@ -71,7 +88,7 @@ class OffscreenDocument implements OffscreenDocumentInterface {
     Promise.resolve(messageResponse)
       .then((response) => sendResponse(response))
       .catch((error) =>
-        this.consoleLogService.error(`Error resolving extension message response: ${error}`),
+        this.consoleLogService.error("Error resolving extension message response", error),
       );
     return true;
   };

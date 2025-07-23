@@ -1,9 +1,12 @@
 import { mock, MockProxy } from "jest-mock-extended";
 
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
+import { KeyService } from "@bitwarden/key-management";
+
 import { makeStaticByteArray, mockEnc, mockFromJson } from "../../../../spec";
-import { CryptoService } from "../../../platform/abstractions/crypto.service";
-import { EncryptService } from "../../../platform/abstractions/encrypt.service";
-import { EncryptedString, EncString } from "../../../platform/models/domain/enc-string";
+import { EncryptService } from "../../../key-management/crypto/abstractions/encrypt.service";
+import { EncryptedString, EncString } from "../../../key-management/crypto/models/enc-string";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
 import { ContainerService } from "../../../platform/services/container.service";
 import { OrgKey, UserKey } from "../../../types/key";
@@ -57,17 +60,14 @@ describe("Attachment", () => {
   });
 
   describe("decrypt", () => {
-    let cryptoService: MockProxy<CryptoService>;
+    let keyService: MockProxy<KeyService>;
     let encryptService: MockProxy<EncryptService>;
 
     beforeEach(() => {
-      cryptoService = mock<CryptoService>();
+      keyService = mock<KeyService>();
       encryptService = mock<EncryptService>();
 
-      (window as any).bitwardenContainerService = new ContainerService(
-        cryptoService,
-        encryptService,
-      );
+      (window as any).bitwardenContainerService = new ContainerService(keyService, encryptService);
     });
 
     it("expected output", async () => {
@@ -79,7 +79,10 @@ describe("Attachment", () => {
       attachment.key = mockEnc("key");
       attachment.fileName = mockEnc("fileName");
 
-      encryptService.decryptToBytes.mockResolvedValue(makeStaticByteArray(32));
+      encryptService.decryptFileData.mockResolvedValue(makeStaticByteArray(32));
+      encryptService.unwrapSymmetricKey.mockResolvedValue(
+        new SymmetricCryptoKey(makeStaticByteArray(64)),
+      );
 
       const view = await attachment.decrypt(null);
 
@@ -90,6 +93,7 @@ describe("Attachment", () => {
         sizeName: "1.1 KB",
         fileName: "fileName",
         key: expect.any(SymmetricCryptoKey),
+        encryptedKey: attachment.key,
       });
     });
 
@@ -101,33 +105,33 @@ describe("Attachment", () => {
         attachment.key = mock<EncString>();
       });
 
-      it("uses the provided key without depending on CryptoService", async () => {
+      it("uses the provided key without depending on KeyService", async () => {
         const providedKey = mock<SymmetricCryptoKey>();
 
-        await attachment.decrypt(null, providedKey);
+        await attachment.decrypt(null, "", providedKey);
 
-        expect(cryptoService.getUserKeyWithLegacySupport).not.toHaveBeenCalled();
-        expect(encryptService.decryptToBytes).toHaveBeenCalledWith(attachment.key, providedKey);
+        expect(keyService.getUserKeyWithLegacySupport).not.toHaveBeenCalled();
+        expect(encryptService.unwrapSymmetricKey).toHaveBeenCalledWith(attachment.key, providedKey);
       });
 
       it("gets an organization key if required", async () => {
         const orgKey = mock<OrgKey>();
-        cryptoService.getOrgKey.calledWith("orgId").mockResolvedValue(orgKey);
+        keyService.getOrgKey.calledWith("orgId").mockResolvedValue(orgKey);
 
-        await attachment.decrypt("orgId", null);
+        await attachment.decrypt("orgId", "", null);
 
-        expect(cryptoService.getOrgKey).toHaveBeenCalledWith("orgId");
-        expect(encryptService.decryptToBytes).toHaveBeenCalledWith(attachment.key, orgKey);
+        expect(keyService.getOrgKey).toHaveBeenCalledWith("orgId");
+        expect(encryptService.unwrapSymmetricKey).toHaveBeenCalledWith(attachment.key, orgKey);
       });
 
       it("gets the user's decryption key if required", async () => {
         const userKey = mock<UserKey>();
-        cryptoService.getUserKeyWithLegacySupport.mockResolvedValue(userKey);
+        keyService.getUserKeyWithLegacySupport.mockResolvedValue(userKey);
 
-        await attachment.decrypt(null, null);
+        await attachment.decrypt(null, "", null);
 
-        expect(cryptoService.getUserKeyWithLegacySupport).toHaveBeenCalled();
-        expect(encryptService.decryptToBytes).toHaveBeenCalledWith(attachment.key, userKey);
+        expect(keyService.getUserKeyWithLegacySupport).toHaveBeenCalled();
+        expect(encryptService.unwrapSymmetricKey).toHaveBeenCalledWith(attachment.key, userKey);
       });
     });
   });
@@ -150,6 +154,23 @@ describe("Attachment", () => {
 
     it("returns null if object is null", () => {
       expect(Attachment.fromJSON(null)).toBeNull();
+    });
+  });
+
+  describe("toSdkAttachment", () => {
+    it("should map to SDK Attachment", () => {
+      const attachment = new Attachment(data);
+
+      const sdkAttachment = attachment.toSdkAttachment();
+
+      expect(sdkAttachment).toEqual({
+        id: "id",
+        url: "url",
+        size: "1100",
+        sizeName: "1.1 KB",
+        fileName: "fileName",
+        key: "key",
+      });
     });
   });
 });

@@ -2,6 +2,8 @@ import { mock } from "jest-mock-extended";
 
 import { BrowserApi } from "./browser-api";
 
+type ChromeSettingsGet = chrome.types.ChromeSetting<boolean>["get"];
+
 describe("BrowserApi", () => {
   const executeScriptResult = ["value"];
 
@@ -235,27 +237,49 @@ describe("BrowserApi", () => {
     });
   });
 
+  describe("getFrameDetails", () => {
+    it("returns the frame details of the specified frame", async () => {
+      const tabId = 1;
+      const frameId = 2;
+      const mockFrameDetails = mock<chrome.webNavigation.GetFrameResultDetails>();
+      chrome.webNavigation.getFrame = jest
+        .fn()
+        .mockImplementation((_details, callback) => callback(mockFrameDetails));
+
+      const returnFrame = await BrowserApi.getFrameDetails({ tabId, frameId });
+
+      expect(chrome.webNavigation.getFrame).toHaveBeenCalledWith(
+        { tabId, frameId },
+        expect.any(Function),
+      );
+      expect(returnFrame).toEqual(mockFrameDetails);
+    });
+  });
+
+  describe("getAllFrameDetails", () => {
+    it("returns all sub frame details of the specified tab", async () => {
+      const tabId = 1;
+      const mockFrameDetails1 = mock<chrome.webNavigation.GetAllFrameResultDetails>();
+      const mockFrameDetails2 = mock<chrome.webNavigation.GetAllFrameResultDetails>();
+      chrome.webNavigation.getAllFrames = jest
+        .fn()
+        .mockImplementation((_details, callback) =>
+          callback([mockFrameDetails1, mockFrameDetails2]),
+        );
+
+      const frames = await BrowserApi.getAllFrameDetails(tabId);
+
+      expect(chrome.webNavigation.getAllFrames).toHaveBeenCalledWith(
+        { tabId },
+        expect.any(Function),
+      );
+      expect(frames).toEqual([mockFrameDetails1, mockFrameDetails2]);
+    });
+  });
+
   describe("reloadExtension", () => {
-    it("reloads the window location if the passed globalContext is for the window", () => {
-      const windowMock = mock<Window>({
-        location: { reload: jest.fn() },
-      }) as unknown as Window & typeof globalThis;
-
-      BrowserApi.reloadExtension(windowMock);
-
-      expect(windowMock.location.reload).toHaveBeenCalled();
-    });
-
-    it("reloads the extension runtime if the passed globalContext is not for the window", () => {
-      const globalMock = mock<typeof globalThis>({}) as any;
-      BrowserApi.reloadExtension(globalMock);
-
-      expect(chrome.runtime.reload).toHaveBeenCalled();
-    });
-
-    it("reloads the extension runtime if a null value is passed as the globalContext", () => {
-      BrowserApi.reloadExtension(null);
-
+    it("forwards call to extension runtime", () => {
+      BrowserApi.reloadExtension();
       expect(chrome.runtime.reload).toHaveBeenCalled();
     });
   });
@@ -384,7 +408,6 @@ describe("BrowserApi", () => {
         target: {
           tabId: tabId,
           allFrames: injectDetails.allFrames,
-          frameIds: null,
         },
         files: [injectDetails.file],
         injectImmediately: true,
@@ -410,7 +433,6 @@ describe("BrowserApi", () => {
       expect(chrome.scripting.executeScript).toHaveBeenCalledWith({
         target: {
           tabId: tabId,
-          allFrames: injectDetails.allFrames,
           frameIds: [frameId],
         },
         files: [injectDetails.file],
@@ -437,7 +459,6 @@ describe("BrowserApi", () => {
         target: {
           tabId: tabId,
           allFrames: injectDetails.allFrames,
-          frameIds: null,
         },
         files: null,
         injectImmediately: true,
@@ -449,19 +470,23 @@ describe("BrowserApi", () => {
 
   describe("browserAutofillSettingsOverridden", () => {
     it("returns true if the browser autofill settings are overridden", async () => {
-      const expectedDetails = {
-        value: false,
-        levelOfControl: "controlled_by_this_extension",
-      } as chrome.types.ChromeSettingGetResultDetails;
-      chrome.privacy.services.autofillAddressEnabled.get = jest.fn((details, callback) =>
-        callback(expectedDetails),
-      );
-      chrome.privacy.services.autofillCreditCardEnabled.get = jest.fn((details, callback) =>
-        callback(expectedDetails),
-      );
-      chrome.privacy.services.passwordSavingEnabled.get = jest.fn((details, callback) =>
-        callback(expectedDetails),
-      );
+      const mockFn = jest.fn<
+        void,
+        [
+          details: chrome.types.ChromeSettingGetDetails,
+          callback: (details: chrome.types.ChromeSettingGetResult<boolean>) => void,
+        ],
+        never
+      >((details, callback) => {
+        callback({
+          value: false,
+          levelOfControl: "controlled_by_this_extension",
+        });
+      });
+      chrome.privacy.services.autofillAddressEnabled.get = mockFn as unknown as ChromeSettingsGet;
+      chrome.privacy.services.autofillCreditCardEnabled.get =
+        mockFn as unknown as ChromeSettingsGet;
+      chrome.privacy.services.passwordSavingEnabled.get = mockFn as unknown as ChromeSettingsGet;
 
       const result = await BrowserApi.browserAutofillSettingsOverridden();
 
@@ -469,19 +494,24 @@ describe("BrowserApi", () => {
     });
 
     it("returns false if the browser autofill settings are not overridden", async () => {
-      const expectedDetails = {
-        value: true,
-        levelOfControl: "controlled_by_this_extension",
-      } as chrome.types.ChromeSettingGetResultDetails;
-      chrome.privacy.services.autofillAddressEnabled.get = jest.fn((details, callback) =>
-        callback(expectedDetails),
-      );
-      chrome.privacy.services.autofillCreditCardEnabled.get = jest.fn((details, callback) =>
-        callback(expectedDetails),
-      );
-      chrome.privacy.services.passwordSavingEnabled.get = jest.fn((details, callback) =>
-        callback(expectedDetails),
-      );
+      const mockFn = jest.fn<
+        void,
+        [
+          details: chrome.types.ChromeSettingGetDetails,
+          callback: (details: chrome.types.ChromeSettingGetResult<boolean>) => void,
+        ],
+        never
+      >((details, callback) => {
+        callback({
+          value: true,
+          levelOfControl: "controlled_by_this_extension",
+        });
+      });
+
+      chrome.privacy.services.autofillAddressEnabled.get = mockFn as unknown as ChromeSettingsGet;
+      chrome.privacy.services.autofillCreditCardEnabled.get =
+        mockFn as unknown as ChromeSettingsGet;
+      chrome.privacy.services.passwordSavingEnabled.get = mockFn as unknown as ChromeSettingsGet;
 
       const result = await BrowserApi.browserAutofillSettingsOverridden();
 
@@ -489,19 +519,23 @@ describe("BrowserApi", () => {
     });
 
     it("returns false if the browser autofill settings are not controlled by the extension", async () => {
-      const expectedDetails = {
-        value: false,
-        levelOfControl: "controlled_by_other_extensions",
-      } as chrome.types.ChromeSettingGetResultDetails;
-      chrome.privacy.services.autofillAddressEnabled.get = jest.fn((details, callback) =>
-        callback(expectedDetails),
-      );
-      chrome.privacy.services.autofillCreditCardEnabled.get = jest.fn((details, callback) =>
-        callback(expectedDetails),
-      );
-      chrome.privacy.services.passwordSavingEnabled.get = jest.fn((details, callback) =>
-        callback(expectedDetails),
-      );
+      const mockFn = jest.fn<
+        void,
+        [
+          details: chrome.types.ChromeSettingGetDetails,
+          callback: (details: chrome.types.ChromeSettingGetResult<boolean>) => void,
+        ],
+        never
+      >((details, callback) => {
+        callback({
+          value: false,
+          levelOfControl: "controlled_by_other_extensions",
+        });
+      });
+      chrome.privacy.services.autofillAddressEnabled.get = mockFn as unknown as ChromeSettingsGet;
+      chrome.privacy.services.autofillCreditCardEnabled.get =
+        mockFn as unknown as ChromeSettingsGet;
+      chrome.privacy.services.passwordSavingEnabled.get = mockFn as unknown as ChromeSettingsGet;
 
       const result = await BrowserApi.browserAutofillSettingsOverridden();
 
@@ -525,29 +559,143 @@ describe("BrowserApi", () => {
     });
   });
 
-  describe("createOffscreenDocument", () => {
-    it("creates the offscreen document with the supplied reasons and justification", async () => {
-      const reasons = [chrome.offscreen.Reason.CLIPBOARD];
-      const justification = "justification";
+  describe("registerContentScriptsMv2", () => {
+    const details: browser.contentScripts.RegisteredContentScriptOptions = {
+      matches: ["<all_urls>"],
+      js: [{ file: "content/fido2/page-script.js" }],
+    };
 
-      await BrowserApi.createOffscreenDocument(reasons, justification);
-
-      expect(chrome.offscreen.createDocument).toHaveBeenCalledWith({
-        url: "offscreen-document/index.html",
-        reasons,
-        justification,
+    it("registers content scripts through the `browser.contentScripts` API when the API is available", async () => {
+      globalThis.browser = mock<typeof browser>({
+        contentScripts: { register: jest.fn() },
       });
+
+      await BrowserApi.registerContentScriptsMv2(details);
+
+      expect(browser.contentScripts.register).toHaveBeenCalledWith(details);
+    });
+
+    it("registers content scripts through the `registerContentScriptsPolyfill` when the `browser.contentScripts.register` API is not available", async () => {
+      globalThis.browser = mock<typeof browser>({
+        contentScripts: { register: undefined },
+      });
+      jest.spyOn(BrowserApi, "addListener");
+
+      await BrowserApi.registerContentScriptsMv2(details);
+
+      expect(BrowserApi.addListener).toHaveBeenCalledWith(
+        chrome.webNavigation.onCommitted,
+        expect.any(Function),
+      );
     });
   });
 
-  describe("closeOffscreenDocument", () => {
-    it("closes the offscreen document", () => {
-      const callbackMock = jest.fn();
+  /*
+   * Safari sometimes returns >1 tabs unexpectedly even when
+   * specificing a `windowId` or `currentWindow: true` query option.
+   *
+   * For example, when there are >=2 windows with an active pinned tab,
+   * the pinned tab will always be included as the first entry in the array,
+   * while the correct tab is included as the second entry.
+   *
+   * These tests can remain as verification when Safari fixes this bug.
+   */
+  describe.each([{ isSafariApi: true }, { isSafariApi: false }])(
+    "SafariTabsQuery %p",
+    ({ isSafariApi }) => {
+      let originalIsSafariApi = BrowserApi.isSafariApi;
+      const expectedWindowId = 10;
+      const wrongWindowId = expectedWindowId + 1;
+      const raceConditionWindowId = expectedWindowId + 2;
+      const mismatchedWindowId = expectedWindowId + 3;
 
-      BrowserApi.closeOffscreenDocument(callbackMock);
+      const resolvedTabsQueryResult = [
+        mock<chrome.tabs.Tab>({
+          title: "tab[0] is a pinned tab from another window",
+          pinned: true,
+          windowId: wrongWindowId,
+        }),
+        mock<chrome.tabs.Tab>({
+          title: "tab[1] is the tab with the correct foreground window",
+          windowId: expectedWindowId,
+        }),
+      ];
 
-      expect(chrome.offscreen.closeDocument).toHaveBeenCalled();
-      expect(callbackMock).toHaveBeenCalled();
-    });
-  });
+      function mockCurrentWindowId(id: number | null) {
+        jest
+          .spyOn(BrowserApi, "getCurrentWindow")
+          .mockResolvedValue(mock<chrome.windows.Window>({ id }));
+      }
+
+      beforeEach(() => {
+        originalIsSafariApi = BrowserApi.isSafariApi;
+        BrowserApi.isSafariApi = isSafariApi;
+        mockCurrentWindowId(expectedWindowId);
+        jest.spyOn(BrowserApi, "tabsQuery").mockResolvedValue(resolvedTabsQueryResult);
+      });
+
+      afterEach(() => {
+        BrowserApi.isSafariApi = originalIsSafariApi;
+        jest.restoreAllMocks();
+      });
+
+      describe.each([BrowserApi.getTabFromCurrentWindow, BrowserApi.getTabFromCurrentWindowId])(
+        "%p",
+        (getCurrTabFn) => {
+          it("returns the first tab when the query result has one tab", async () => {
+            const expectedSingleTab = resolvedTabsQueryResult[0];
+            jest.spyOn(BrowserApi, "tabsQuery").mockResolvedValue([expectedSingleTab]);
+            const actualTab = await getCurrTabFn();
+            expect(actualTab).toBe(expectedSingleTab);
+          });
+
+          it("returns the first tab when the current window ID is mismatched", async () => {
+            mockCurrentWindowId(mismatchedWindowId);
+            const actualTab = await getCurrTabFn();
+            expect(actualTab).toBe(resolvedTabsQueryResult[0]);
+          });
+
+          it("returns the first tab when the current window ID is unavailable", async () => {
+            mockCurrentWindowId(null);
+            const actualTab = await getCurrTabFn();
+            expect(actualTab).toBe(resolvedTabsQueryResult[0]);
+          });
+
+          if (isSafariApi) {
+            it("returns the tab with the current window ID", async () => {
+              const actualTab = await getCurrTabFn();
+              expect(actualTab.windowId).toBe(expectedWindowId);
+            });
+
+            it(`returns the tab with the current window ID at the time of calling [Function ${getCurrTabFn.name}]`, async () => {
+              jest.spyOn(BrowserApi, "tabsQuery").mockImplementation(() => {
+                /*
+                 * Simulate rapid clicking/switching between windows, e.g.
+                 * 1. From Window A, call `getCurrTabFn()`
+                 * 2. getCurrTabFn() calls `await BrowserApi.tabsQuery()`
+                 * 3. Users switches to Window B before the `await` returns
+                 * 4. getCurrTabFn() calls `await BrowserApi.getCurrentWindow()`
+                 * ^ This now returns Window B and filters the results erroneously
+                 */
+                mockCurrentWindowId(raceConditionWindowId);
+
+                return Promise.resolve(resolvedTabsQueryResult);
+              });
+
+              const actualTab = await getCurrTabFn();
+              expect(actualTab.windowId).toBe(expectedWindowId);
+            });
+          } /* !isSafariApi */ else {
+            it("falls back to tabsQueryFirst", async () => {
+              const tabsQueryFirstSpy = jest.spyOn(BrowserApi, "tabsQueryFirst");
+              const actualTab = await getCurrTabFn();
+
+              expect(tabsQueryFirstSpy).toHaveBeenCalled();
+              expect(actualTab).toBe(resolvedTabsQueryResult[0]);
+            });
+          }
+        },
+      );
+    },
+  );
 });

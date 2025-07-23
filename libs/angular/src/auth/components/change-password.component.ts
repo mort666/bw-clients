@@ -1,20 +1,21 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Directive, OnDestroy, OnInit } from "@angular/core";
-import { Subject, takeUntil } from "rxjs";
+import { Subject, firstValueFrom, map, switchMap, takeUntil } from "rxjs";
 
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/models/domain/master-password-policy-options";
-import { KdfConfig } from "@bitwarden/common/auth/models/domain/kdf-config";
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { getUserId } from "@bitwarden/common/auth/services/account.service";
+import { EncString } from "@bitwarden/common/key-management/crypto/models/enc-string";
+import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
-import { KdfType } from "@bitwarden/common/platform/enums";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
-import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
-import { PasswordGenerationServiceAbstraction } from "@bitwarden/common/tools/generator/password";
 import { UserKey, MasterKey } from "@bitwarden/common/types/key";
-import { DialogService } from "@bitwarden/components";
+import { DialogService, ToastService } from "@bitwarden/components";
+import { KdfConfig, KdfConfigService, KeyService } from "@bitwarden/key-management";
 
 import { PasswordColorText } from "../../tools/password-strength/password-strength.component";
 
@@ -31,31 +32,41 @@ export class ChangePasswordComponent implements OnInit, OnDestroy {
   minimumLength = Utils.minimumPasswordLength;
 
   protected email: string;
-  protected kdf: KdfType;
   protected kdfConfig: KdfConfig;
 
   protected destroy$ = new Subject<void>();
 
   constructor(
+    protected accountService: AccountService,
+    protected dialogService: DialogService,
     protected i18nService: I18nService,
-    protected cryptoService: CryptoService,
+    protected kdfConfigService: KdfConfigService,
+    protected keyService: KeyService,
+    protected masterPasswordService: InternalMasterPasswordServiceAbstraction,
     protected messagingService: MessagingService,
-    protected passwordGenerationService: PasswordGenerationServiceAbstraction,
     protected platformUtilsService: PlatformUtilsService,
     protected policyService: PolicyService,
-    protected stateService: StateService,
-    protected dialogService: DialogService,
+    protected toastService: ToastService,
   ) {}
 
   async ngOnInit() {
-    this.email = await this.stateService.getEmail();
-    this.policyService
-      .masterPasswordPolicyOptions$()
-      .pipe(takeUntil(this.destroy$))
+    this.email = await firstValueFrom(
+      this.accountService.activeAccount$.pipe(map((a) => a?.email)),
+    );
+    this.accountService.activeAccount$
+      .pipe(
+        getUserId,
+        switchMap((userId) => this.policyService.masterPasswordPolicyOptions$(userId)),
+        takeUntil(this.destroy$),
+      )
       .subscribe(
         (enforcedPasswordPolicyOptions) =>
           (this.enforcedPolicyOptions ??= enforcedPasswordPolicyOptions),
       );
+
+    if (this.enforcedPolicyOptions?.minLength) {
+      this.minimumLength = this.enforcedPolicyOptions.minLength;
+    }
   }
 
   ngOnDestroy(): void {
@@ -72,32 +83,28 @@ export class ChangePasswordComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const email = await this.stateService.getEmail();
-    if (this.kdf == null) {
-      this.kdf = await this.stateService.getKdfType();
-    }
+    const [userId, email] = await firstValueFrom(
+      this.accountService.activeAccount$.pipe(map((a) => [a?.id, a?.email])),
+    );
+
     if (this.kdfConfig == null) {
-      this.kdfConfig = await this.stateService.getKdfConfig();
+      this.kdfConfig = await this.kdfConfigService.getKdfConfig(userId);
     }
 
     // Create new master key
-    const newMasterKey = await this.cryptoService.makeMasterKey(
+    const newMasterKey = await this.keyService.makeMasterKey(
       this.masterPassword,
       email.trim().toLowerCase(),
-      this.kdf,
       this.kdfConfig,
     );
-    const newMasterKeyHash = await this.cryptoService.hashMasterKey(
-      this.masterPassword,
-      newMasterKey,
-    );
+    const newMasterKeyHash = await this.keyService.hashMasterKey(this.masterPassword, newMasterKey);
 
     let newProtectedUserKey: [UserKey, EncString] = null;
-    const userKey = await this.cryptoService.getUserKey();
+    const userKey = await this.keyService.getUserKey();
     if (userKey == null) {
-      newProtectedUserKey = await this.cryptoService.makeUserKey(newMasterKey);
+      newProtectedUserKey = await this.keyService.makeUserKey(newMasterKey);
     } else {
-      newProtectedUserKey = await this.cryptoService.encryptUserKeyWithMasterKey(newMasterKey);
+      newProtectedUserKey = await this.keyService.encryptUserKeyWithMasterKey(newMasterKey);
     }
 
     await this.performSubmitActions(newMasterKeyHash, newMasterKey, newProtectedUserKey);
@@ -119,27 +126,27 @@ export class ChangePasswordComponent implements OnInit, OnDestroy {
 
   async strongPassword(): Promise<boolean> {
     if (this.masterPassword == null || this.masterPassword === "") {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("masterPasswordRequired"),
-      );
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("errorOccurred"),
+        message: this.i18nService.t("masterPasswordRequired"),
+      });
       return false;
     }
     if (this.masterPassword.length < this.minimumLength) {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("masterPasswordMinimumlength", this.minimumLength),
-      );
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("errorOccurred"),
+        message: this.i18nService.t("masterPasswordMinimumlength", this.minimumLength),
+      });
       return false;
     }
     if (this.masterPassword !== this.masterPasswordRetype) {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("masterPassDoesntMatch"),
-      );
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("errorOccurred"),
+        message: this.i18nService.t("masterPassDoesntMatch"),
+      });
       return false;
     }
 
@@ -153,11 +160,11 @@ export class ChangePasswordComponent implements OnInit, OnDestroy {
         this.enforcedPolicyOptions,
       )
     ) {
-      this.platformUtilsService.showToast(
-        "error",
-        this.i18nService.t("errorOccurred"),
-        this.i18nService.t("masterPasswordPolicyRequirementsNotMet"),
-      );
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("errorOccurred"),
+        message: this.i18nService.t("masterPasswordPolicyRequirementsNotMet"),
+      });
       return false;
     }
 

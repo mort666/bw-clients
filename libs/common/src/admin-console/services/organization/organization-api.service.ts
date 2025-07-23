@@ -1,14 +1,19 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+
 import { ApiService } from "../../../abstractions/api.service";
 import { OrganizationApiKeyRequest } from "../../../admin-console/models/request/organization-api-key.request";
 import { OrganizationSsoRequest } from "../../../auth/models/request/organization-sso.request";
 import { SecretVerificationRequest } from "../../../auth/models/request/secret-verification.request";
 import { ApiKeyResponse } from "../../../auth/models/response/api-key.response";
 import { OrganizationSsoResponse } from "../../../auth/models/response/organization-sso.response";
+import { ExpandedTaxInfoUpdateRequest } from "../../../billing/models/request/expanded-tax-info-update.request";
+import { OrganizationNoPaymentMethodCreateRequest } from "../../../billing/models/request/organization-no-payment-method-create-request";
 import { OrganizationSmSubscriptionUpdateRequest } from "../../../billing/models/request/organization-sm-subscription-update.request";
 import { OrganizationSubscriptionUpdateRequest } from "../../../billing/models/request/organization-subscription-update.request";
-import { OrganizationTaxInfoUpdateRequest } from "../../../billing/models/request/organization-tax-info-update.request";
 import { PaymentRequest } from "../../../billing/models/request/payment.request";
 import { SecretsManagerSubscribeRequest } from "../../../billing/models/request/sm-subscribe.request";
+import { BillingHistoryResponse } from "../../../billing/models/response/billing-history.response";
 import { BillingResponse } from "../../../billing/models/response/billing.response";
 import { OrganizationSubscriptionResponse } from "../../../billing/models/response/organization-subscription.response";
 import { PaymentResponse } from "../../../billing/models/response/payment.response";
@@ -26,6 +31,7 @@ import { OrganizationCreateRequest } from "../../models/request/organization-cre
 import { OrganizationKeysRequest } from "../../models/request/organization-keys.request";
 import { OrganizationUpdateRequest } from "../../models/request/organization-update.request";
 import { OrganizationUpgradeRequest } from "../../models/request/organization-upgrade.request";
+import { OrganizationVerifyDeleteRecoverRequest } from "../../models/request/organization-verify-delete-recover.request";
 import { OrganizationApiKeyInformationResponse } from "../../models/response/organization-api-key-information.response";
 import { OrganizationAutoEnrollStatusResponse } from "../../models/response/organization-auto-enroll-status.response";
 import { OrganizationKeysResponse } from "../../models/response/organization-keys.response";
@@ -52,6 +58,17 @@ export class OrganizationApiService implements OrganizationApiServiceAbstraction
       true,
     );
     return new BillingResponse(r);
+  }
+
+  async getBillingHistory(id: string): Promise<BillingHistoryResponse> {
+    const r = await this.apiService.send(
+      "GET",
+      "/organizations/" + id + "/billing/history",
+      null,
+      true,
+      true,
+    );
+    return new BillingHistoryResponse(r);
   }
 
   async getSubscription(id: string): Promise<OrganizationSubscriptionResponse> {
@@ -93,6 +110,21 @@ export class OrganizationApiService implements OrganizationApiServiceAbstraction
     return new OrganizationResponse(r);
   }
 
+  async createWithoutPayment(
+    request: OrganizationNoPaymentMethodCreateRequest,
+  ): Promise<OrganizationResponse> {
+    const r = await this.apiService.send(
+      "POST",
+      "/organizations/create-without-payment",
+      request,
+      true,
+      true,
+    );
+    // Forcing a sync will notify organization service that they need to repull
+    await this.syncService.fullSync(true);
+    return new OrganizationResponse(r);
+  }
+
   async createLicense(data: FormData): Promise<OrganizationResponse> {
     const r = await this.apiService.send(
       "POST",
@@ -129,27 +161,29 @@ export class OrganizationApiService implements OrganizationApiServiceAbstraction
   async updatePasswordManagerSeats(
     id: string,
     request: OrganizationSubscriptionUpdateRequest,
-  ): Promise<void> {
-    return this.apiService.send(
+  ): Promise<ProfileOrganizationResponse> {
+    const r = await this.apiService.send(
       "POST",
       "/organizations/" + id + "/subscription",
       request,
       true,
-      false,
+      true,
     );
+    return new ProfileOrganizationResponse(r);
   }
 
   async updateSecretsManagerSubscription(
     id: string,
     request: OrganizationSmSubscriptionUpdateRequest,
-  ): Promise<void> {
-    return this.apiService.send(
+  ): Promise<ProfileOrganizationResponse> {
+    const r = await this.apiService.send(
       "POST",
       "/organizations/" + id + "/sm-subscription",
       request,
       true,
-      false,
+      true,
     );
+    return new ProfileOrganizationResponse(r);
   }
 
   async updateSeats(id: string, request: SeatRequest): Promise<PaymentResponse> {
@@ -184,10 +218,6 @@ export class OrganizationApiService implements OrganizationApiServiceAbstraction
     );
   }
 
-  async cancel(id: string): Promise<void> {
-    return this.apiService.send("POST", "/organizations/" + id + "/cancel", null, true, false);
-  }
-
   async reinstate(id: string): Promise<void> {
     return this.apiService.send("POST", "/organizations/" + id + "/reinstate", null, true, false);
   }
@@ -200,6 +230,19 @@ export class OrganizationApiService implements OrganizationApiServiceAbstraction
   async delete(id: string, request: SecretVerificationRequest): Promise<void> {
     await this.apiService.send("DELETE", "/organizations/" + id, request, true, false);
     await this.syncService.fullSync(true);
+  }
+
+  deleteUsingToken(
+    organizationId: string,
+    request: OrganizationVerifyDeleteRecoverRequest,
+  ): Promise<any> {
+    return this.apiService.send(
+      "POST",
+      "/organizations/" + organizationId + "/delete-recover-token",
+      request,
+      false,
+      false,
+    );
   }
 
   async updateLicense(id: string, data: FormData): Promise<void> {
@@ -261,7 +304,7 @@ export class OrganizationApiService implements OrganizationApiServiceAbstraction
     return new TaxInfoResponse(r);
   }
 
-  async updateTaxInfo(id: string, request: OrganizationTaxInfoUpdateRequest): Promise<void> {
+  async updateTaxInfo(id: string, request: ExpandedTaxInfoUpdateRequest): Promise<void> {
     // Can't broadcast anything because the response doesn't have content
     return this.apiService.send("PUT", "/organizations/" + id + "/tax", request, true, false);
   }
@@ -341,16 +384,5 @@ export class OrganizationApiService implements OrganizationApiServiceAbstraction
     const data = new OrganizationResponse(r);
     await this.syncService.fullSync(true);
     return data;
-  }
-
-  async enableCollectionEnhancements(id: string): Promise<void> {
-    await this.apiService.send(
-      "POST",
-      "/organizations/" + id + "/enable-collection-enhancements",
-      null,
-      true,
-      false,
-    );
-    await this.syncService.fullSync(true);
   }
 }

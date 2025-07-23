@@ -1,32 +1,45 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Injectable } from "@angular/core";
 import {
   BehaviorSubject,
   combineLatest,
   combineLatestWith,
+  filter,
   firstValueFrom,
   map,
   Observable,
   of,
-  ReplaySubject,
   switchMap,
 } from "rxjs";
 
+import {
+  CollectionAdminView,
+  CollectionService,
+  CollectionView,
+} from "@bitwarden/admin-console/common";
+import { sortDefaultCollections } from "@bitwarden/angular/vault/vault-filter/services/vault-filter.service";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { getUserId } from "@bitwarden/common/auth/services/account.service";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { ActiveUserState, StateProvider } from "@bitwarden/common/platform/state";
+import { SingleUserState, StateProvider } from "@bitwarden/common/platform/state";
+import { UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { TreeNode } from "@bitwarden/common/vault/models/domain/tree-node";
-import { CollectionView } from "@bitwarden/common/vault/models/view/collection.view";
+import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
 import { ServiceUtils } from "@bitwarden/common/vault/service-utils";
 import { COLLAPSED_GROUPINGS } from "@bitwarden/common/vault/services/key-state/collapsed-groupings.state";
+import { CipherListView } from "@bitwarden/sdk-internal";
 
-import { CollectionAdminView } from "../../../core/views/collection-admin.view";
 import {
   CipherTypeFilter,
   CollectionFilter,
@@ -40,45 +53,76 @@ const NestingDelimiter = "/";
 
 @Injectable()
 export class VaultFilterService implements VaultFilterServiceAbstraction {
-  organizationTree$: Observable<TreeNode<OrganizationFilter>> =
-    this.organizationService.memberOrganizations$.pipe(
-      switchMap((orgs) => this.buildOrganizationTree(orgs)),
-    );
+  protected activeUserId$ = this.accountService.activeAccount$.pipe(getUserId);
+
+  memberOrganizations$ = this.activeUserId$.pipe(
+    switchMap((id) => this.organizationService.memberOrganizations$(id)),
+  );
+
+  collapsedFilterNodes$ = this.activeUserId$.pipe(
+    switchMap((id) => this.collapsedGroupingsState(id).state$),
+    map((state) => new Set(state)),
+  );
+
+  organizationTree$: Observable<TreeNode<OrganizationFilter>> = combineLatest([
+    this.memberOrganizations$,
+    this.activeUserId$.pipe(
+      switchMap((userId) => this.policyService.policyAppliesToUser$(PolicyType.SingleOrg, userId)),
+    ),
+    this.activeUserId$.pipe(
+      switchMap((userId) =>
+        this.policyService.policyAppliesToUser$(PolicyType.OrganizationDataOwnership, userId),
+      ),
+    ),
+  ]).pipe(
+    switchMap(([orgs, singleOrgPolicy, organizationDataOwnershipPolicy]) =>
+      this.buildOrganizationTree(orgs, singleOrgPolicy, organizationDataOwnershipPolicy),
+    ),
+  );
 
   protected _organizationFilter = new BehaviorSubject<Organization>(null);
 
-  filteredFolders$: Observable<FolderView[]> = this.folderService.folderViews$.pipe(
-    combineLatestWith(this._organizationFilter),
-    switchMap(([folders, org]) => {
-      return this.filterFolders(folders, org);
+  filteredFolders$: Observable<FolderView[]> = this.activeUserId$.pipe(
+    switchMap((userId) =>
+      combineLatest([
+        this.folderService.folderViews$(userId),
+        this.cipherService.cipherListViews$(userId),
+        this._organizationFilter,
+      ]),
+    ),
+    filter(([folders, ciphers, org]) => !!ciphers), // ciphers may be null, meaning decryption is in progress. Ignore this emission
+    switchMap(([folders, ciphers, org]) => {
+      return this.filterFolders(folders, ciphers, org);
     }),
   );
+
   folderTree$: Observable<TreeNode<FolderFilter>> = this.filteredFolders$.pipe(
     map((folders) => this.buildFolderTree(folders)),
   );
 
-  // TODO: Remove once collections is refactored with observables
-  // replace with collection service observable
-  private collectionViews$ = new ReplaySubject<CollectionView[]>(1);
-  filteredCollections$: Observable<CollectionView[]> = combineLatest([
-    this.collectionViews$,
-    this._organizationFilter,
+  filteredCollections$: Observable<CollectionView[]> =
+    this.collectionService.decryptedCollections$.pipe(
+      combineLatestWith(this._organizationFilter),
+      switchMap(([collections, org]) => {
+        return this.filterCollections(collections, org);
+      }),
+    );
+
+  collectionTree$: Observable<TreeNode<CollectionFilter>> = combineLatest([
+    this.filteredCollections$,
+    this.memberOrganizations$,
+    this.configService.getFeatureFlag$(FeatureFlag.CreateDefaultLocation),
   ]).pipe(
-    switchMap(([collections, org]) => {
-      return this.filterCollections(collections, org);
-    }),
-  );
-  collectionTree$: Observable<TreeNode<CollectionFilter>> = this.filteredCollections$.pipe(
-    map((collections) => this.buildCollectionTree(collections)),
+    map(([collections, organizations, defaultCollectionsFlagEnabled]) =>
+      this.buildCollectionTree(collections, organizations, defaultCollectionsFlagEnabled),
+    ),
   );
 
   cipherTypeTree$: Observable<TreeNode<CipherTypeFilter>> = this.buildCipherTypeTree();
 
-  private collapsedGroupingsState: ActiveUserState<string[]> =
-    this.stateProvider.getActive(COLLAPSED_GROUPINGS);
-
-  readonly collapsedFilterNodes$: Observable<Set<string>> =
-    this.collapsedGroupingsState.state$.pipe(map((c) => new Set(c)));
+  private collapsedGroupingsState(userId: UserId): SingleUserState<string[]> {
+    return this.stateProvider.getUser(userId, COLLAPSED_GROUPINGS);
+  }
 
   constructor(
     protected organizationService: OrganizationService,
@@ -87,19 +131,18 @@ export class VaultFilterService implements VaultFilterServiceAbstraction {
     protected policyService: PolicyService,
     protected i18nService: I18nService,
     protected stateProvider: StateProvider,
+    protected collectionService: CollectionService,
+    protected accountService: AccountService,
+    protected configService: ConfigService,
   ) {}
-
-  async reloadCollections(collections: CollectionView[]) {
-    this.collectionViews$.next(collections);
-  }
 
   async getCollectionNodeFromTree(id: string) {
     const collections = await firstValueFrom(this.collectionTree$);
     return ServiceUtils.getTreeNodeObject(collections, id) as TreeNode<CollectionFilter>;
   }
 
-  async setCollapsedFilterNodes(collapsedFilterNodes: Set<string>): Promise<void> {
-    await this.collapsedGroupingsState.update(() => Array.from(collapsedFilterNodes));
+  async setCollapsedFilterNodes(collapsedFilterNodes: Set<string>, userId: UserId): Promise<void> {
+    await this.collapsedGroupingsState(userId).update(() => Array.from(collapsedFilterNodes));
   }
 
   protected async getCollapsedFilterNodes(): Promise<Set<string>> {
@@ -110,6 +153,10 @@ export class VaultFilterService implements VaultFilterServiceAbstraction {
     return this._organizationFilter;
   }
 
+  clearOrganizationFilter() {
+    this._organizationFilter.next(null);
+  }
+
   setOrganizationFilter(organization: Organization) {
     if (organization?.id != "AllVaults") {
       this._organizationFilter.next(organization);
@@ -118,24 +165,26 @@ export class VaultFilterService implements VaultFilterServiceAbstraction {
     }
   }
 
-  async expandOrgFilter() {
+  async expandOrgFilter(userId: UserId) {
     const collapsedFilterNodes = await firstValueFrom(this.collapsedFilterNodes$);
     if (!collapsedFilterNodes.has("AllVaults")) {
       return;
     }
     collapsedFilterNodes.delete("AllVaults");
-    await this.setCollapsedFilterNodes(collapsedFilterNodes);
+    await this.setCollapsedFilterNodes(collapsedFilterNodes, userId);
   }
 
   protected async buildOrganizationTree(
-    orgs?: Organization[],
+    orgs: Organization[],
+    singleOrgPolicy: boolean,
+    organizationDataOwnershipPolicy: boolean,
   ): Promise<TreeNode<OrganizationFilter>> {
     const headNode = this.getOrganizationFilterHead();
-    if (!(await this.policyService.policyAppliesToUser(PolicyType.PersonalOwnership))) {
+    if (!organizationDataOwnershipPolicy) {
       const myVaultNode = this.getOrganizationFilterMyVault();
       headNode.children.push(myVaultNode);
     }
-    if (await this.policyService.policyAppliesToUser(PolicyType.SingleOrg)) {
+    if (singleOrgPolicy) {
       orgs = orgs.slice(0, 1);
     }
     if (orgs) {
@@ -189,31 +238,39 @@ export class VaultFilterService implements VaultFilterServiceAbstraction {
       : storedCollections;
   }
 
-  protected buildCollectionTree(collections?: CollectionView[]): TreeNode<CollectionFilter> {
+  protected buildCollectionTree(
+    collections?: CollectionView[],
+    orgs?: Organization[],
+    defaultCollectionsFlagEnabled?: boolean,
+  ): TreeNode<CollectionFilter> {
     const headNode = this.getCollectionFilterHead();
     if (!collections) {
       return headNode;
     }
     const nodes: TreeNode<CollectionFilter>[] = [];
-    collections
-      .sort((a, b) => this.i18nService.collator.compare(a.name, b.name))
-      .forEach((c) => {
-        const collectionCopy = new CollectionView() as CollectionFilter;
-        collectionCopy.id = c.id;
-        collectionCopy.organizationId = c.organizationId;
-        collectionCopy.icon = "bwi-collection";
-        if (c instanceof CollectionAdminView) {
-          collectionCopy.groups = c.groups;
-          collectionCopy.assigned = c.assigned;
-        }
-        const parts =
-          c.name != null ? c.name.replace(/^\/+|\/+$/g, "").split(NestingDelimiter) : [];
-        ServiceUtils.nestedTraverse(nodes, 0, parts, collectionCopy, null, NestingDelimiter);
-      });
+
+    if (defaultCollectionsFlagEnabled) {
+      collections = sortDefaultCollections(collections, orgs, this.i18nService.collator);
+    }
+
+    collections.forEach((c) => {
+      const collectionCopy = new CollectionView() as CollectionFilter;
+      collectionCopy.id = c.id;
+      collectionCopy.organizationId = c.organizationId;
+      collectionCopy.icon = "bwi-collection-shared";
+      if (c instanceof CollectionAdminView) {
+        collectionCopy.groups = c.groups;
+        collectionCopy.assigned = c.assigned;
+      }
+      const parts = c.name != null ? c.name.replace(/^\/+|\/+$/g, "").split(NestingDelimiter) : [];
+      ServiceUtils.nestedTraverse(nodes, 0, parts, collectionCopy, null, NestingDelimiter);
+    });
+
     nodes.forEach((n) => {
       n.parent = headNode;
       headNode.children.push(n);
     });
+
     return headNode;
   }
 
@@ -224,6 +281,7 @@ export class VaultFilterService implements VaultFilterServiceAbstraction {
 
   protected async filterFolders(
     storedFolders: FolderView[],
+    ciphers: CipherView[] | CipherListView[],
     org?: Organization,
   ): Promise<FolderView[]> {
     // If no org or "My Vault" is selected, show all folders
@@ -232,7 +290,6 @@ export class VaultFilterService implements VaultFilterServiceAbstraction {
     }
 
     // Otherwise, show only folders that have ciphers from the selected org and the "no folder" folder
-    const ciphers = await this.cipherService.getAllDecrypted();
     const orgCiphers = ciphers.filter((c) => c.organizationId == org?.id);
     return storedFolders.filter(
       (f) => orgCiphers.some((oc) => oc.folderId == f.id) || f.id == null,
@@ -250,6 +307,7 @@ export class VaultFilterService implements VaultFilterServiceAbstraction {
       folderCopy.id = f.id;
       folderCopy.revisionDate = f.revisionDate;
       folderCopy.icon = "bwi-folder";
+      folderCopy.fullName = f.name; // save full folder name before separating it into parts
       const parts = f.name != null ? f.name.replace(/^\/+|\/+$/g, "").split(NestingDelimiter) : [];
       ServiceUtils.nestedTraverse(nodes, 0, parts, folderCopy, null, NestingDelimiter);
     });
@@ -297,6 +355,12 @@ export class VaultFilterService implements VaultFilterServiceAbstraction {
         name: this.i18nService.t("typeSecureNote"),
         type: CipherType.SecureNote,
         icon: "bwi-sticky-note",
+      },
+      {
+        id: "sshKey",
+        name: this.i18nService.t("typeSshKey"),
+        type: CipherType.SshKey,
+        icon: "bwi-key",
       },
     ];
 

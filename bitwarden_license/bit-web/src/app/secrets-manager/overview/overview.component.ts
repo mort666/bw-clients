@@ -1,5 +1,7 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Component, OnDestroy, OnInit } from "@angular/core";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import {
   map,
   Observable,
@@ -12,13 +14,32 @@ import {
   take,
   share,
   firstValueFrom,
+  of,
+  filter,
+  catchError,
+  from,
 } from "rxjs";
 
-import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
+import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
+import {
+  getOrganizationById,
+  OrganizationService,
+} from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
+import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { getUserId } from "@bitwarden/common/auth/services/account.service";
+import { OrganizationBillingServiceAbstraction } from "@bitwarden/common/billing/abstractions";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { DialogService } from "@bitwarden/components";
+import { BillingNotificationService } from "@bitwarden/web-vault/app/billing/services/billing-notification.service";
+import { TrialFlowService } from "@bitwarden/web-vault/app/billing/services/trial-flow.service";
+import { FreeTrial } from "@bitwarden/web-vault/app/billing/types/free-trial";
 
+import { OrganizationCounts } from "../models/view/counts.view";
 import { ProjectListView } from "../models/view/project-list.view";
 import { SecretListView } from "../models/view/secret-list.view";
 import {
@@ -39,12 +60,17 @@ import {
   SecretDialogComponent,
   SecretOperation,
 } from "../secrets/dialog/secret-dialog.component";
+import {
+  SecretViewDialogComponent,
+  SecretViewDialogParams,
+} from "../secrets/dialog/secret-view-dialog.component";
 import { SecretService } from "../secrets/secret.service";
 import {
   ServiceAccountDialogComponent,
   ServiceAccountOperation,
 } from "../service-accounts/dialog/service-account-dialog.component";
 import { ServiceAccountService } from "../service-accounts/service-account.service";
+import { CountService } from "../shared/counts/count.service";
 import { SecretsListComponent } from "../shared/secrets-list.component";
 
 import { SMOnboardingTasks, SMOnboardingTasksService } from "./sm-onboarding-tasks.service";
@@ -63,6 +89,7 @@ type OrganizationTasks = {
 @Component({
   selector: "sm-overview",
   templateUrl: "./overview.component.html",
+  standalone: false,
 })
 export class OverviewComponent implements OnInit, OnDestroy {
   private destroy$: Subject<void> = new Subject<void>();
@@ -73,6 +100,7 @@ export class OverviewComponent implements OnInit, OnDestroy {
   protected showOnboarding = false;
   protected loading = true;
   protected organizationEnabled = false;
+  protected organization: Organization;
   protected onboardingTasks$: Observable<SMOnboardingTasks>;
 
   protected view$: Observable<{
@@ -81,18 +109,29 @@ export class OverviewComponent implements OnInit, OnDestroy {
     latestProjects: ProjectListView[];
     latestSecrets: SecretListView[];
     tasks: OrganizationTasks;
+    counts: OrganizationCounts;
   }>;
+  protected freeTrial$: Observable<FreeTrial>;
 
   constructor(
     private route: ActivatedRoute,
     private projectService: ProjectService,
+    private countService: CountService,
     private secretService: SecretService,
     private serviceAccountService: ServiceAccountService,
     private dialogService: DialogService,
     private organizationService: OrganizationService,
+    private accountService: AccountService,
     private platformUtilsService: PlatformUtilsService,
     private i18nService: I18nService,
     private smOnboardingTasksService: SMOnboardingTasksService,
+    private logService: LogService,
+    private router: Router,
+    private organizationApiService: OrganizationApiServiceAbstraction,
+    private trialFlowService: TrialFlowService,
+    private organizationBillingService: OrganizationBillingServiceAbstraction,
+    private billingNotificationService: BillingNotificationService,
+    private configService: ConfigService,
   ) {}
 
   ngOnInit() {
@@ -103,18 +142,45 @@ export class OverviewComponent implements OnInit, OnDestroy {
       distinctUntilChanged(),
     );
 
-    orgId$
-      .pipe(
-        map((orgId) => this.organizationService.get(orgId)),
-        takeUntil(this.destroy$),
-      )
-      .subscribe((org) => {
-        this.organizationId = org.id;
-        this.organizationName = org.name;
-        this.userIsAdmin = org.isAdmin;
-        this.loading = true;
-        this.organizationEnabled = org.enabled;
-      });
+    const org$ = orgId$.pipe(
+      switchMap((orgId) =>
+        getUserId(this.accountService.activeAccount$).pipe(
+          switchMap((userId) =>
+            this.organizationService.organizations$(userId).pipe(getOrganizationById(orgId)),
+          ),
+        ),
+      ),
+    );
+
+    org$.pipe(takeUntil(this.destroy$)).subscribe((org) => {
+      this.organizationId = org.id;
+      this.organization = org;
+      this.organizationName = org.name;
+      this.userIsAdmin = org.isAdmin;
+      this.loading = true;
+      this.organizationEnabled = org.enabled;
+    });
+
+    this.freeTrial$ = org$.pipe(
+      filter((org) => org.isOwner && org.canViewBillingHistory && org.canViewSubscription),
+      switchMap((org) =>
+        combineLatest([
+          of(org),
+          this.organizationApiService.getSubscription(org.id),
+          from(this.organizationBillingService.getPaymentSource(org.id)).pipe(
+            catchError((error: unknown) => {
+              this.billingNotificationService.handleError(error);
+              return of(null);
+            }),
+          ),
+        ]),
+      ),
+      map(([org, sub, paymentSource]) => {
+        return this.trialFlowService.checkForOrgsWithUpcomingPaymentIssues(org, sub, paymentSource);
+      }),
+      filter((result) => result !== null),
+      takeUntil(this.destroy$),
+    );
 
     const projects$ = combineLatest([
       orgId$,
@@ -141,10 +207,19 @@ export class OverviewComponent implements OnInit, OnDestroy {
       share(),
     );
 
+    const counts$ = combineLatest([
+      orgId$,
+      this.secretService.secret$.pipe(startWith(null)),
+      this.projectService.project$.pipe(startWith(null)),
+    ]).pipe(
+      switchMap(([orgId]) => this.countService.getOrganizationCounts(orgId)),
+      share(),
+    );
+
     this.view$ = orgId$.pipe(
       switchMap((orgId) =>
-        combineLatest([projects$, secrets$, serviceAccounts$]).pipe(
-          switchMap(async ([projects, secrets, serviceAccounts]) => ({
+        combineLatest([projects$, secrets$, serviceAccounts$, counts$]).pipe(
+          switchMap(async ([projects, secrets, serviceAccounts, counts]) => ({
             latestProjects: this.getRecentItems(projects, this.tableSize),
             latestSecrets: this.getRecentItems(secrets, this.tableSize),
             allProjects: projects,
@@ -155,6 +230,11 @@ export class OverviewComponent implements OnInit, OnDestroy {
               createProject: projects.length > 0,
               createServiceAccount: serviceAccounts.length > 0,
             }),
+            counts: {
+              projects: counts.projects,
+              secrets: counts.secrets,
+              serviceAccounts: counts.serviceAccounts,
+            },
           })),
         ),
       ),
@@ -170,6 +250,16 @@ export class OverviewComponent implements OnInit, OnDestroy {
         this.showOnboarding = Object.values(view.tasks).includes(false);
         this.loading = false;
       });
+  }
+
+  async navigateToPaymentMethod() {
+    const managePaymentDetailsOutsideCheckout = await this.configService.getFeatureFlag(
+      FeatureFlag.PM21881_ManagePaymentDetailsOutsideCheckout,
+    );
+    const route = managePaymentDetailsOutsideCheckout ? "payment-details" : "payment-method";
+    await this.router.navigate(["organizations", `${this.organizationId}`, "billing", route], {
+      state: { launchPaymentModalAutomatically: true },
+    });
   }
 
   ngOnDestroy(): void {
@@ -274,6 +364,15 @@ export class OverviewComponent implements OnInit, OnDestroy {
     });
   }
 
+  openViewSecret(secretId: string) {
+    this.dialogService.open<unknown, SecretViewDialogParams>(SecretViewDialogComponent, {
+      data: {
+        organizationId: this.organizationId,
+        secretId: secretId,
+      },
+    });
+  }
+
   openDeleteSecret(event: SecretListView[]) {
     this.dialogService.open<unknown, SecretDeleteOperation>(SecretDeleteDialogComponent, {
       data: {
@@ -296,12 +395,13 @@ export class OverviewComponent implements OnInit, OnDestroy {
     SecretsListComponent.copySecretName(name, this.platformUtilsService, this.i18nService);
   }
 
-  copySecretValue(id: string) {
-    SecretsListComponent.copySecretValue(
+  async copySecretValue(id: string) {
+    await SecretsListComponent.copySecretValue(
       id,
       this.platformUtilsService,
       this.i18nService,
       this.secretService,
+      this.logService,
     );
   }
 
@@ -309,11 +409,9 @@ export class OverviewComponent implements OnInit, OnDestroy {
     SecretsListComponent.copySecretUuid(id, this.platformUtilsService, this.i18nService);
   }
 
-  protected hideOnboarding() {
+  protected async hideOnboarding() {
     this.showOnboarding = false;
-    // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    this.saveCompletedTasks(this.organizationId, {
+    await this.saveCompletedTasks(this.organizationId, {
       importSecrets: true,
       createSecret: true,
       createProject: true,

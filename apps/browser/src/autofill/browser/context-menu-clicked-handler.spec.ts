@@ -1,4 +1,5 @@
 import { mock, MockProxy } from "jest-mock-extended";
+import { of } from "rxjs";
 
 import { EventCollectionService } from "@bitwarden/common/abstractions/event/event-collection.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
@@ -11,7 +12,8 @@ import {
   GENERATE_PASSWORD_ID,
   NOOP_COMMAND_SUFFIX,
 } from "@bitwarden/common/autofill/constants";
-import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
+import { FakeAccountService, mockAccountServiceWith } from "@bitwarden/common/spec";
+import { UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { TotpService } from "@bitwarden/common/vault/abstractions/totp.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
@@ -60,12 +62,14 @@ describe("ContextMenuClickedHandler", () => {
     return cipherView;
   };
 
+  const mockUserId = "UserId" as UserId;
+
   let copyToClipboard: CopyToClipboardAction;
   let generatePasswordToClipboard: GeneratePasswordToClipboardAction;
   let autofill: AutofillAction;
   let authService: MockProxy<AuthService>;
   let cipherService: MockProxy<CipherService>;
-  let stateService: MockProxy<StateService>;
+  let accountService: FakeAccountService;
   let totpService: MockProxy<TotpService>;
   let eventCollectionService: MockProxy<EventCollectionService>;
   let userVerificationService: MockProxy<UserVerificationService>;
@@ -78,7 +82,7 @@ describe("ContextMenuClickedHandler", () => {
     autofill = jest.fn<Promise<void>, [tab: chrome.tabs.Tab, cipher: CipherView]>();
     authService = mock();
     cipherService = mock();
-    stateService = mock();
+    accountService = mockAccountServiceWith(mockUserId as UserId);
     totpService = mock();
     eventCollectionService = mock();
 
@@ -88,10 +92,10 @@ describe("ContextMenuClickedHandler", () => {
       autofill,
       authService,
       cipherService,
-      stateService,
       totpService,
       eventCollectionService,
       userVerificationService,
+      accountService,
     );
   });
 
@@ -156,19 +160,25 @@ describe("ContextMenuClickedHandler", () => {
     it("copies totp code to clipboard", async () => {
       cipherService.getAllDecrypted.mockResolvedValue([createCipher({ totp: "TEST_TOTP_SEED" })]);
 
-      totpService.getCode.mockImplementation((seed) => {
+      jest.spyOn(totpService, "getCode$").mockImplementation((seed: string) => {
         if (seed === "TEST_TOTP_SEED") {
-          return Promise.resolve("123456");
+          return of({
+            code: "123456",
+            period: 30,
+          });
         }
 
-        return Promise.resolve("654321");
+        return of({
+          code: "654321",
+          period: 30,
+        });
       });
 
       await sut.run(createData(`${COPY_VERIFICATION_CODE_ID}_1`, COPY_VERIFICATION_CODE_ID), {
         url: "https://test.com",
       } as any);
 
-      expect(totpService.getCode).toHaveBeenCalledTimes(1);
+      expect(totpService.getCode$).toHaveBeenCalledTimes(1);
 
       expect(copyToClipboard).toHaveBeenCalledWith({
         text: "123456",
@@ -190,7 +200,11 @@ describe("ContextMenuClickedHandler", () => {
 
       expect(cipherService.getAllDecryptedForUrl).toHaveBeenCalledTimes(1);
 
-      expect(cipherService.getAllDecryptedForUrl).toHaveBeenCalledWith("https://test.com", []);
+      expect(cipherService.getAllDecryptedForUrl).toHaveBeenCalledWith(
+        "https://test.com",
+        mockUserId,
+        [],
+      );
 
       expect(copyToClipboard).toHaveBeenCalledTimes(1);
 
@@ -214,7 +228,11 @@ describe("ContextMenuClickedHandler", () => {
 
       expect(cipherService.getAllDecryptedForUrl).toHaveBeenCalledTimes(1);
 
-      expect(cipherService.getAllDecryptedForUrl).toHaveBeenCalledWith("https://test.com", []);
+      expect(cipherService.getAllDecryptedForUrl).toHaveBeenCalledWith(
+        "https://test.com",
+        mockUserId,
+        [],
+      );
     });
   });
 });

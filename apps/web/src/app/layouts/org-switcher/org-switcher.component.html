@@ -4,13 +4,13 @@
   [ariaLabel]="['organization' | i18n, activeOrganization.name].join(' ')"
   icon="bwi-business"
   [route]="['../', activeOrganization.id]"
+  [routerLinkActiveOptions]="{ exact: true }"
   [(open)]="open"
-  [exactMatch]="true"
 >
   <i
     slot="end"
     *ngIf="!activeOrganization.enabled"
-    class="bwi bwi-exclamation-triangle tw-my-auto !text-alt-2"
+    class="bwi bwi-exclamation-triangle tw-my-auto"
     [attr.aria-label]="'organizationIsDisabled' | i18n"
     appA11yTitle="{{ 'organizationIsDisabled' | i18n }}"
   ></i>
@@ -21,12 +21,13 @@
       [ariaLabel]="['organization' | i18n, org.name].join(' ')"
       [route]="['../', org.id]"
       (mainContentClicked)="toggle()"
-      [exactMatch]="true"
+      [routerLinkActiveOptions]="{ exact: true }"
+      (click)="handleUnpaidSubscription(org)"
     >
       <i
         slot="end"
         *ngIf="org.enabled == false"
-        class="bwi bwi-exclamation-triangle !text-alt-2"
+        class="bwi bwi-exclamation-triangle"
         [attr.aria-label]="'organizationIsDisabled' | i18n"
         appA11yTitle="{{ 'organizationIsDisabled' | i18n }}"
       ></i>

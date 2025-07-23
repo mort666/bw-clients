@@ -1,10 +1,12 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { UriMatchStrategySetting } from "../../../models/domain/domain-service";
 import { BaseResponse } from "../../../models/response/base.response";
-import { UriMatchType } from "../../enums";
 
 export class LoginUriApi extends BaseResponse {
   uri: string;
   uriChecksum: string;
-  match: UriMatchType = null;
+  match: UriMatchStrategySetting = null;
 
   constructor(data: any = null) {
     super(data);

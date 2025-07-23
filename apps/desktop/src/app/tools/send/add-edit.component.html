@@ -2,12 +2,12 @@
   <div class="content">
     <div class="inner-content" *ngIf="send">
       <div class="box">
-        <app-callout *ngIf="disableSend">
+        <bit-callout *ngIf="disableSend">
           <span>{{ "sendDisabledWarning" | i18n }}</span>
-        </app-callout>
-        <app-callout type="info" *ngIf="disableHideEmail && !disableSend">
+        </bit-callout>
+        <bit-callout type="info" *ngIf="disableHideEmail && !disableSend">
           {{ "sendOptionsPolicyInEffect" | i18n }}
-        </app-callout>
+        </bit-callout>
       </div>
       <div class="box">
         <h2 class="box-header">
@@ -282,14 +282,9 @@
     </div>
   </div>
   <div class="footer">
-    <button
-      type="submit"
-      class="primary btn-submit"
-      appA11yTitle="{{ 'save' | i18n }}"
-      *ngIf="!disableSend"
-    >
+    <button type="submit" class="primary btn-submit" *ngIf="!disableSend">
       <i class="bwi bwi-spinner bwi-spin" title="{{ 'loading' | i18n }}" aria-hidden="true"></i>
-      <span><i class="bwi bwi-save-changes bwi-lg bwi-fw" aria-hidden="true"></i></span>
+      {{ "save" | i18n }}
     </button>
     <button type="button" (click)="cancel()">
       {{ "cancel" | i18n }}

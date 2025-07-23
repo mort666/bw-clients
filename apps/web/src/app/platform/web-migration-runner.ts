@@ -1,11 +1,11 @@
+import { ClientType } from "@bitwarden/common/enums";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { AbstractStorageService } from "@bitwarden/common/platform/abstractions/storage.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { MigrationBuilderService } from "@bitwarden/common/platform/services/migration-builder.service";
 import { MigrationRunner } from "@bitwarden/common/platform/services/migration-runner";
+import { WindowStorageService } from "@bitwarden/common/platform/storage/window-storage.service";
 import { MigrationHelper } from "@bitwarden/common/state-migrations/migration-helper";
-
-import { WindowStorageService } from "./window-storage.service";
 
 export class WebMigrationRunner extends MigrationRunner {
   constructor(
@@ -14,7 +14,7 @@ export class WebMigrationRunner extends MigrationRunner {
     migrationBuilderService: MigrationBuilderService,
     private diskLocalStorage: WindowStorageService,
   ) {
-    super(diskStorage, logService, migrationBuilderService);
+    super(diskStorage, logService, migrationBuilderService, ClientType.Web);
   }
 
   override async run(): Promise<void> {
@@ -46,7 +46,7 @@ class WebMigrationHelper extends MigrationHelper {
     storageService: WindowStorageService,
     logService: LogService,
   ) {
-    super(currentVersion, storageService, logService);
+    super(currentVersion, storageService, logService, "web-disk-local", ClientType.Web);
     this.diskLocalStorageService = storageService;
   }
 

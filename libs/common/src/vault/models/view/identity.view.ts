@@ -1,4 +1,8 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Jsonify } from "type-fest";
+
+import { IdentityView as SdkIdentityView } from "@bitwarden/sdk-internal";
 
 import { Utils } from "../../../platform/misc/utils";
 import { IdentityLinkedId as LinkedId } from "../../enums";
@@ -6,38 +10,38 @@ import { linkedFieldOption } from "../../linked-field-option.decorator";
 
 import { ItemView } from "./item.view";
 
-export class IdentityView extends ItemView {
-  @linkedFieldOption(LinkedId.Title)
+export class IdentityView extends ItemView implements SdkIdentityView {
+  @linkedFieldOption(LinkedId.Title, { sortPosition: 0 })
   title: string = null;
-  @linkedFieldOption(LinkedId.MiddleName)
+  @linkedFieldOption(LinkedId.MiddleName, { sortPosition: 2 })
   middleName: string = null;
-  @linkedFieldOption(LinkedId.Address1)
+  @linkedFieldOption(LinkedId.Address1, { sortPosition: 12 })
   address1: string = null;
-  @linkedFieldOption(LinkedId.Address2)
+  @linkedFieldOption(LinkedId.Address2, { sortPosition: 13 })
   address2: string = null;
-  @linkedFieldOption(LinkedId.Address3)
+  @linkedFieldOption(LinkedId.Address3, { sortPosition: 14 })
   address3: string = null;
-  @linkedFieldOption(LinkedId.City, "cityTown")
+  @linkedFieldOption(LinkedId.City, { sortPosition: 15, i18nKey: "cityTown" })
   city: string = null;
-  @linkedFieldOption(LinkedId.State, "stateProvince")
+  @linkedFieldOption(LinkedId.State, { sortPosition: 16, i18nKey: "stateProvince" })
   state: string = null;
-  @linkedFieldOption(LinkedId.PostalCode, "zipPostalCode")
+  @linkedFieldOption(LinkedId.PostalCode, { sortPosition: 17, i18nKey: "zipPostalCode" })
   postalCode: string = null;
-  @linkedFieldOption(LinkedId.Country)
+  @linkedFieldOption(LinkedId.Country, { sortPosition: 18 })
   country: string = null;
-  @linkedFieldOption(LinkedId.Company)
+  @linkedFieldOption(LinkedId.Company, { sortPosition: 6 })
   company: string = null;
-  @linkedFieldOption(LinkedId.Email)
+  @linkedFieldOption(LinkedId.Email, { sortPosition: 10 })
   email: string = null;
-  @linkedFieldOption(LinkedId.Phone)
+  @linkedFieldOption(LinkedId.Phone, { sortPosition: 11 })
   phone: string = null;
-  @linkedFieldOption(LinkedId.Ssn)
+  @linkedFieldOption(LinkedId.Ssn, { sortPosition: 7 })
   ssn: string = null;
-  @linkedFieldOption(LinkedId.Username)
+  @linkedFieldOption(LinkedId.Username, { sortPosition: 5 })
   username: string = null;
-  @linkedFieldOption(LinkedId.PassportNumber)
+  @linkedFieldOption(LinkedId.PassportNumber, { sortPosition: 8 })
   passportNumber: string = null;
-  @linkedFieldOption(LinkedId.LicenseNumber)
+  @linkedFieldOption(LinkedId.LicenseNumber, { sortPosition: 9 })
   licenseNumber: string = null;
 
   private _firstName: string = null;
@@ -48,7 +52,7 @@ export class IdentityView extends ItemView {
     super();
   }
 
-  @linkedFieldOption(LinkedId.FirstName)
+  @linkedFieldOption(LinkedId.FirstName, { sortPosition: 1 })
   get firstName(): string {
     return this._firstName;
   }
@@ -57,7 +61,7 @@ export class IdentityView extends ItemView {
     this._subTitle = null;
   }
 
-  @linkedFieldOption(LinkedId.LastName)
+  @linkedFieldOption(LinkedId.LastName, { sortPosition: 4 })
   get lastName(): string {
     return this._lastName;
   }
@@ -83,7 +87,7 @@ export class IdentityView extends ItemView {
     return this._subTitle;
   }
 
-  @linkedFieldOption(LinkedId.FullName)
+  @linkedFieldOption(LinkedId.FullName, { sortPosition: 3 })
   get fullName(): string {
     if (
       this.title != null ||
@@ -142,7 +146,58 @@ export class IdentityView extends ItemView {
     return addressPart2;
   }
 
+  get fullAddressForCopy(): string {
+    let address = this.fullAddress;
+    if (this.city != null || this.state != null || this.postalCode != null) {
+      address += "\n" + this.fullAddressPart2;
+    }
+    if (this.country != null) {
+      address += "\n" + this.country;
+    }
+    return address;
+  }
+
   static fromJSON(obj: Partial<Jsonify<IdentityView>>): IdentityView {
     return Object.assign(new IdentityView(), obj);
+  }
+
+  /**
+   * Converts the SDK IdentityView to an IdentityView.
+   */
+  static fromSdkIdentityView(obj: SdkIdentityView): IdentityView | undefined {
+    if (obj == null) {
+      return undefined;
+    }
+
+    const identityView = new IdentityView();
+
+    identityView.title = obj.title ?? null;
+    identityView.firstName = obj.firstName ?? null;
+    identityView.middleName = obj.middleName ?? null;
+    identityView.lastName = obj.lastName ?? null;
+    identityView.address1 = obj.address1 ?? null;
+    identityView.address2 = obj.address2 ?? null;
+    identityView.address3 = obj.address3 ?? null;
+    identityView.city = obj.city ?? null;
+    identityView.state = obj.state ?? null;
+    identityView.postalCode = obj.postalCode ?? null;
+    identityView.country = obj.country ?? null;
+    identityView.company = obj.company ?? null;
+    identityView.email = obj.email ?? null;
+    identityView.phone = obj.phone ?? null;
+    identityView.ssn = obj.ssn ?? null;
+    identityView.username = obj.username ?? null;
+    identityView.passportNumber = obj.passportNumber ?? null;
+    identityView.licenseNumber = obj.licenseNumber ?? null;
+
+    return identityView;
+  }
+
+  /**
+   * Converts the IdentityView to an SDK IdentityView.
+   * The view implements the SdkView so we can safely return `this`
+   */
+  toSdkIdentityView(): SdkIdentityView {
+    return this;
   }
 }

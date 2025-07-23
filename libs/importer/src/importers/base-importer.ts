@@ -1,11 +1,16 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import * as papa from "papaparse";
 
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
+import { CollectionView } from "@bitwarden/admin-console/common";
+import { normalizeExpiryYearFormat } from "@bitwarden/common/autofill/utils";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
 import { FieldType, SecureNoteType, CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
-import { CollectionView } from "@bitwarden/common/vault/models/view/collection.view";
 import { FieldView } from "@bitwarden/common/vault/models/view/field.view";
 import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
 import { LoginUriView } from "@bitwarden/common/vault/models/view/login-uri.view";
@@ -17,6 +22,7 @@ import { ImportResult } from "../models/import-result";
 export abstract class BaseImporter {
   organizationId: string = null;
 
+  // FIXME: This should be replaced by injecting the log service.
   protected logService: LogService = new ConsoleLogService(false);
 
   protected newLineRegex = /(?:\r\n|\r|\n)/;
@@ -263,7 +269,8 @@ export abstract class BaseImporter {
 
     cipher.card.expMonth = expiryMatch.groups.month;
     const year: string = expiryMatch.groups.year;
-    cipher.card.expYear = year.length === 2 ? "20" + year : year;
+    cipher.card.expYear = normalizeExpiryYearFormat(year);
+
     return true;
   }
 
@@ -272,7 +279,7 @@ export abstract class BaseImporter {
     result.collections = result.folders.map((f) => {
       const collection = new CollectionView();
       collection.name = f.name;
-      collection.id = f.id;
+      collection.id = f.id ?? undefined; // folder id may be null, which is not suitable for collections.
       return collection;
     });
     result.folderRelationships = [];
@@ -312,12 +319,6 @@ export abstract class BaseImporter {
       cipher.notes = null;
     } else {
       cipher.notes = cipher.notes.trim();
-    }
-    if (cipher.fields != null && cipher.fields.length === 0) {
-      cipher.fields = null;
-    }
-    if (cipher.passwordHistory != null && cipher.passwordHistory.length === 0) {
-      cipher.passwordHistory = null;
     }
   }
 
@@ -361,7 +362,7 @@ export abstract class BaseImporter {
 
     let folderIndex = result.folders.length;
     // Replace backslashes with forward slashes, ensuring we create sub-folders
-    folderName = folderName.replace("\\", "/");
+    folderName = folderName.replace(/\\/g, "/");
     let addFolder = true;
 
     for (let i = 0; i < result.folders.length; i++) {
@@ -381,6 +382,17 @@ export abstract class BaseImporter {
     //Some folders can have sub-folders but no ciphers directly, we should not add to the folderRelationships array
     if (addRelationship) {
       result.folderRelationships.push([result.ciphers.length, folderIndex]);
+    }
+
+    // if the folder name is a/b/c/d, we need to create a/b/c and a/b and a
+    const parts = folderName.split("/");
+    for (let i = parts.length - 1; i > 0; i--) {
+      const parentName = parts.slice(0, i).join("/") as string;
+      if (result.folders.find((c) => c.name === parentName) == null) {
+        const folder = new FolderView();
+        folder.name = parentName;
+        result.folders.push(folder);
+      }
     }
   }
 

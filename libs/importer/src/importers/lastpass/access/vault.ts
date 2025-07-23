@@ -1,8 +1,10 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import * as papa from "papaparse";
 
-import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
+import { decodeJwtTokenToJson } from "@bitwarden/auth/common";
 import { HttpStatusCode } from "@bitwarden/common/enums";
-import { CryptoFunctionService } from "@bitwarden/common/platform/abstractions/crypto-function.service";
+import { CryptoFunctionService } from "@bitwarden/common/key-management/crypto/abstractions/crypto-function.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 
 import { IdpProvider } from "./enums";
@@ -24,10 +26,7 @@ export class Vault {
   private client: Client;
   private cryptoUtils: CryptoUtils;
 
-  constructor(
-    private cryptoFunctionService: CryptoFunctionService,
-    private tokenService: TokenService,
-  ) {
+  constructor(private cryptoFunctionService: CryptoFunctionService) {
     this.cryptoUtils = new CryptoUtils(cryptoFunctionService);
     const parser = new Parser(cryptoFunctionService, this.cryptoUtils);
     this.client = new Client(parser, this.cryptoUtils);
@@ -212,7 +211,7 @@ export class Vault {
   }
 
   private async getK1FromAccessToken(federatedUser: FederatedUserContext, b64: boolean) {
-    const decodedAccessToken = await this.tokenService.decodeToken(federatedUser.accessToken);
+    const decodedAccessToken = decodeJwtTokenToJson(federatedUser.accessToken);
     const k1 = decodedAccessToken?.LastPassK1 as string;
     if (k1 != null) {
       return b64 ? Utils.fromB64ToArray(k1) : Utils.fromByteStringToArray(k1);

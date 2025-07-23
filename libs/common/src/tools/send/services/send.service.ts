@@ -1,14 +1,19 @@
-import { BehaviorSubject, Observable, concatMap, distinctUntilChanged, map } from "rxjs";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { Observable, concatMap, distinctUntilChanged, firstValueFrom, map } from "rxjs";
 
-import { CryptoService } from "../../../platform/abstractions/crypto.service";
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
+import { PBKDF2KdfConfig, KeyService } from "@bitwarden/key-management";
+
+import { EncryptService } from "../../../key-management/crypto/abstractions/encrypt.service";
+import { EncString } from "../../../key-management/crypto/models/enc-string";
 import { I18nService } from "../../../platform/abstractions/i18n.service";
 import { KeyGenerationService } from "../../../platform/abstractions/key-generation.service";
-import { StateService } from "../../../platform/abstractions/state.service";
-import { KdfType } from "../../../platform/enums";
 import { Utils } from "../../../platform/misc/utils";
 import { EncArrayBuffer } from "../../../platform/models/domain/enc-array-buffer";
-import { EncString } from "../../../platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
+import { UserId } from "../../../types/guid";
 import { UserKey } from "../../../types/key";
 import { SendType } from "../enums/send-type";
 import { SendData } from "../models/data/send.data";
@@ -19,54 +24,35 @@ import { SendWithIdRequest } from "../models/request/send-with-id.request";
 import { SendView } from "../models/view/send.view";
 import { SEND_KDF_ITERATIONS } from "../send-kdf";
 
+import { SendStateProvider } from "./send-state.provider.abstraction";
 import { InternalSendService as InternalSendServiceAbstraction } from "./send.service.abstraction";
 
 export class SendService implements InternalSendServiceAbstraction {
   readonly sendKeySalt = "bitwarden-send";
   readonly sendKeyPurpose = "send";
 
-  protected _sends: BehaviorSubject<Send[]> = new BehaviorSubject([]);
-  protected _sendViews: BehaviorSubject<SendView[]> = new BehaviorSubject([]);
-
-  sends$ = this._sends.asObservable();
-  sendViews$ = this._sendViews.asObservable();
+  sends$ = this.stateProvider.encryptedState$.pipe(
+    map(([, record]) => Object.values(record || {}).map((data) => new Send(data))),
+  );
+  sendViews$ = this.stateProvider.encryptedState$.pipe(
+    concatMap(([, record]) =>
+      this.decryptSends(Object.values(record || {}).map((data) => new Send(data))),
+    ),
+  );
 
   constructor(
-    private cryptoService: CryptoService,
+    private keyService: KeyService,
     private i18nService: I18nService,
     private keyGenerationService: KeyGenerationService,
-    private stateService: StateService,
-  ) {
-    this.stateService.activeAccountUnlocked$
-      .pipe(
-        concatMap(async (unlocked) => {
-          if (Utils.global.bitwardenContainerService == null) {
-            return;
-          }
-
-          if (!unlocked) {
-            this._sends.next([]);
-            this._sendViews.next([]);
-            return;
-          }
-
-          const data = await this.stateService.getEncryptedSends();
-
-          await this.updateObservables(data);
-        }),
-      )
-      .subscribe();
-  }
-
-  async clearCache(): Promise<void> {
-    await this._sendViews.next([]);
-  }
+    private stateProvider: SendStateProvider,
+    private encryptService: EncryptService,
+  ) {}
 
   async encrypt(
     model: SendView,
     file: File | ArrayBuffer,
     password: string,
-    key?: SymmetricCryptoKey,
+    userKey?: SymmetricCryptoKey,
   ): Promise<[Send, EncArrayBuffer]> {
     let fileData: EncArrayBuffer = null;
     const send = new Send();
@@ -75,30 +61,47 @@ export class SendService implements InternalSendServiceAbstraction {
     send.disabled = model.disabled;
     send.hideEmail = model.hideEmail;
     send.maxAccessCount = model.maxAccessCount;
+    send.deletionDate = model.deletionDate;
+    send.expirationDate = model.expirationDate;
     if (model.key == null) {
+      // Sends use a seed, stored in the URL fragment. This seed is used to derive the key that is used for encryption.
       const key = await this.keyGenerationService.createKeyWithPurpose(
         128,
         this.sendKeyPurpose,
         this.sendKeySalt,
       );
+      // key.material is the seed that can be used to re-derive the key
       model.key = key.material;
       model.cryptoKey = key.derivedKey;
     }
-    if (password != null) {
+
+    const hasEmails = (model.emails?.length ?? 0) > 0;
+    if (hasEmails) {
+      send.emails = model.emails.join(",");
+      send.password = null;
+    } else if (password != null) {
+      // Note: Despite being called key, the passwordKey is not used for encryption.
+      // It is used as a static proof that the client knows the password, and has the encryption key.
       const passwordKey = await this.keyGenerationService.deriveKeyFromPassword(
         password,
         model.key,
-        KdfType.PBKDF2_SHA256,
-        { iterations: SEND_KDF_ITERATIONS },
+        new PBKDF2KdfConfig(SEND_KDF_ITERATIONS),
       );
       send.password = passwordKey.keyB64;
     }
-    send.key = await this.cryptoService.encrypt(model.key, key);
-    send.name = await this.cryptoService.encrypt(model.name, model.cryptoKey);
-    send.notes = await this.cryptoService.encrypt(model.notes, model.cryptoKey);
+    if (userKey == null) {
+      userKey = await this.keyService.getUserKey();
+    }
+    // Key is not a SymmetricCryptoKey, but key material used to derive the cryptoKey
+    send.key = await this.encryptService.encryptBytes(model.key, userKey);
+    // FIXME: model.name can be null. encryptString should not be called with null values.
+    send.name = await this.encryptService.encryptString(model.name, model.cryptoKey);
+    // FIXME: model.notes can be null. encryptString should not be called with null values.
+    send.notes = await this.encryptService.encryptString(model.notes, model.cryptoKey);
     if (send.type === SendType.Text) {
       send.text = new SendText();
-      send.text.text = await this.cryptoService.encrypt(model.text.text, model.cryptoKey);
+      // FIXME: model.text.text can be null. encryptString should not be called with null values.
+      send.text.text = await this.encryptService.encryptString(model.text.text, model.cryptoKey);
       send.text.hidden = model.text.hidden;
     } else if (send.type === SendType.File) {
       send.file = new SendFile();
@@ -118,11 +121,6 @@ export class SendService implements InternalSendServiceAbstraction {
     }
 
     return [send, fileData];
-  }
-
-  get(id: string): Send {
-    const sends = this._sends.getValue();
-    return sends.find((send) => send.id === id);
   }
 
   get$(id: string): Observable<Send | undefined> {
@@ -188,7 +186,7 @@ export class SendService implements InternalSendServiceAbstraction {
   }
 
   async getFromState(id: string): Promise<Send> {
-    const sends = await this.stateService.getEncryptedSends();
+    const [, sends] = await this.stateProvider.getEncryptedSends();
     // eslint-disable-next-line
     if (sends == null || !sends.hasOwnProperty(id)) {
       return null;
@@ -198,7 +196,7 @@ export class SendService implements InternalSendServiceAbstraction {
   }
 
   async getAll(): Promise<Send[]> {
-    const sends = await this.stateService.getEncryptedSends();
+    const [, sends] = await this.stateProvider.getEncryptedSends();
     const response: Send[] = [];
     for (const id in sends) {
       // eslint-disable-next-line
@@ -209,14 +207,14 @@ export class SendService implements InternalSendServiceAbstraction {
     return response;
   }
 
-  async getAllDecryptedFromState(): Promise<SendView[]> {
-    let decSends = await this.stateService.getDecryptedSends();
+  async getAllDecryptedFromState(userId: UserId): Promise<SendView[]> {
+    let decSends = await this.stateProvider.getDecryptedSends();
     if (decSends != null) {
       return decSends;
     }
 
     decSends = [];
-    const hasKey = await this.cryptoService.hasUserKey();
+    const hasKey = await this.keyService.hasUserKey(userId);
     if (!hasKey) {
       throw new Error("No user key found.");
     }
@@ -230,12 +228,13 @@ export class SendService implements InternalSendServiceAbstraction {
     await Promise.all(promises);
     decSends.sort(Utils.getSortFunction(this.i18nService, "name"));
 
-    await this.stateService.setDecryptedSends(decSends);
+    await this.stateProvider.setDecryptedSends(decSends);
     return decSends;
   }
 
   async upsert(send: SendData | SendData[]): Promise<any> {
-    let sends = await this.stateService.getEncryptedSends();
+    const [userId, currentSends] = await this.stateProvider.getEncryptedSends();
+    let sends = currentSends;
     if (sends == null) {
       sends = {};
     }
@@ -248,20 +247,11 @@ export class SendService implements InternalSendServiceAbstraction {
       });
     }
 
-    await this.replace(sends);
-  }
-
-  async clear(userId?: string): Promise<any> {
-    if (userId == null || userId == (await this.stateService.getUserId())) {
-      this._sends.next([]);
-      this._sendViews.next([]);
-    }
-    await this.stateService.setDecryptedSends(null, { userId: userId });
-    await this.stateService.setEncryptedSends(null, { userId: userId });
+    await this.replace(sends, userId);
   }
 
   async delete(id: string | string[]): Promise<any> {
-    const sends = await this.stateService.getEncryptedSends();
+    const [userId, sends] = await this.stateProvider.getEncryptedSends();
     if (sends == null) {
       return;
     }
@@ -277,27 +267,47 @@ export class SendService implements InternalSendServiceAbstraction {
       });
     }
 
-    await this.replace(sends);
+    await this.replace(sends, userId);
   }
 
-  async replace(sends: { [id: string]: SendData }): Promise<any> {
-    await this.updateObservables(sends);
-    await this.stateService.setEncryptedSends(sends);
+  async replace(sends: { [id: string]: SendData }, userId: UserId): Promise<any> {
+    await this.stateProvider.setEncryptedSends(sends, userId);
   }
 
-  async getRotatedKeys(newUserKey: UserKey): Promise<SendWithIdRequest[]> {
+  async getRotatedData(
+    originalUserKey: UserKey,
+    newUserKey: UserKey,
+    userId: UserId,
+  ): Promise<SendWithIdRequest[]> {
     if (newUserKey == null) {
       throw new Error("New user key is required for rotation.");
     }
+    if (originalUserKey == null) {
+      throw new Error("Original user key is required for rotation.");
+    }
 
+    const req = await firstValueFrom(
+      this.sends$.pipe(
+        concatMap(async (sends) => this.toRotatedKeyRequestMap(sends, originalUserKey, newUserKey)),
+      ),
+    );
+    // separate return for easier debugging
+    return req;
+  }
+
+  private async toRotatedKeyRequestMap(
+    sends: Send[],
+    originalUserKey: UserKey,
+    rotateUserKey: UserKey,
+  ) {
     const requests = await Promise.all(
-      this._sends.value.map(async (send) => {
-        const sendKey = await this.cryptoService.decryptToBytes(send.key);
-        send.key = await this.cryptoService.encrypt(sendKey, newUserKey);
+      sends.map(async (send) => {
+        // Send key is not a key but a 16 byte seed used to derive the key
+        const sendKey = await this.encryptService.decryptBytes(send.key, originalUserKey);
+        send.key = await this.encryptService.encryptBytes(sendKey, rotateUserKey);
         return new SendWithIdRequest(send);
       }),
     );
-    // separate return for easier debugging
     return requests;
   }
 
@@ -329,18 +339,12 @@ export class SendService implements InternalSendServiceAbstraction {
     data: ArrayBuffer,
     key: SymmetricCryptoKey,
   ): Promise<[EncString, EncArrayBuffer]> {
-    const encFileName = await this.cryptoService.encrypt(fileName, key);
-    const encFileData = await this.cryptoService.encryptToBytes(new Uint8Array(data), key);
-    return [encFileName, encFileData];
-  }
-
-  private async updateObservables(sendsMap: { [id: string]: SendData }) {
-    const sends = Object.values(sendsMap || {}).map((f) => new Send(f));
-    this._sends.next(sends);
-
-    if (await this.cryptoService.hasUserKey()) {
-      this._sendViews.next(await this.decryptSends(sends));
+    if (key == null) {
+      key = await this.keyService.getUserKey();
     }
+    const encFileName = await this.encryptService.encryptString(fileName, key);
+    const encFileData = await this.encryptService.encryptFileData(new Uint8Array(data), key);
+    return [encFileName, encFileData];
   }
 
   private async decryptSends(sends: Send[]) {

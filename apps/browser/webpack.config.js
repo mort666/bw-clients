@@ -1,6 +1,5 @@
 const path = require("path");
 const webpack = require("webpack");
-const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
@@ -8,12 +7,15 @@ const { AngularWebpackPlugin } = require("@ngtools/webpack");
 const TerserPlugin = require("terser-webpack-plugin");
 const { TsconfigPathsPlugin } = require("tsconfig-paths-webpack-plugin");
 const configurator = require("./config/config");
+const manifest = require("./webpack/manifest");
+const AngularCheckPlugin = require("./webpack/angular-check");
 
 if (process.env.NODE_ENV == null) {
   process.env.NODE_ENV = "development";
 }
 const ENV = (process.env.ENV = process.env.NODE_ENV);
 const manifestVersion = process.env.MANIFEST_VERSION == 3 ? 3 : 2;
+const browser = process.env.BROWSER ?? "chrome";
 
 console.log(`Building Manifest Version ${manifestVersion} app`);
 
@@ -29,7 +31,7 @@ const moduleRules = [
     test: /.(ttf|otf|eot|svg|woff(2)?)(\?[a-z0-9]+)?$/,
     exclude: /loading.svg/,
     generator: {
-      filename: "popup/fonts/[name][ext]",
+      filename: "popup/fonts/[name].[contenthash][ext]",
     },
     type: "asset/resource",
   },
@@ -48,7 +50,13 @@ const moduleRules = [
         loader: MiniCssExtractPlugin.loader,
       },
       "css-loader",
-      "postcss-loader",
+      "resolve-url-loader",
+      {
+        loader: "postcss-loader",
+        options: {
+          sourceMap: true,
+        },
+      },
     ],
   },
   {
@@ -58,7 +66,13 @@ const moduleRules = [
         loader: MiniCssExtractPlugin.loader,
       },
       "css-loader",
-      "sass-loader",
+      "resolve-url-loader",
+      {
+        loader: "sass-loader",
+        options: {
+          sourceMap: true,
+        },
+      },
     ],
   },
   {
@@ -67,8 +81,9 @@ const moduleRules = [
       {
         loader: "babel-loader",
         options: {
-          configFile: false,
-          plugins: ["@angular/compiler-cli/linker/babel"],
+          configFile: "../../babel.config.json",
+          cacheDirectory: ENV === "development",
+          compact: ENV !== "development",
         },
       },
     ],
@@ -76,11 +91,6 @@ const moduleRules = [
   {
     test: /\.[jt]sx?$/,
     loader: "@ngtools/webpack",
-  },
-  {
-    test: /\.wasm$/,
-    loader: "base64-loader",
-    type: "javascript/auto",
   },
 ];
 
@@ -98,9 +108,10 @@ const requiredPlugins = [
 
 const plugins = [
   new HtmlWebpackPlugin({
-    template: "./src/popup/index.html",
+    template: "./src/popup/index.ejs",
     filename: "popup/index.html",
     chunks: ["popup/polyfills", "popup/vendor-angular", "popup/vendor", "popup/main"],
+    browser: browser,
   }),
   new HtmlWebpackPlugin({
     template: "./src/autofill/notification/bar.html",
@@ -108,20 +119,27 @@ const plugins = [
     chunks: ["notification/bar"],
   }),
   new HtmlWebpackPlugin({
-    template: "./src/autofill/overlay/pages/button/button.html",
-    filename: "overlay/button.html",
-    chunks: ["overlay/button"],
+    template: "./src/autofill/overlay/inline-menu/pages/button/button.html",
+    filename: "overlay/menu-button.html",
+    chunks: ["overlay/menu-button"],
   }),
   new HtmlWebpackPlugin({
-    template: "./src/autofill/overlay/pages/list/list.html",
-    filename: "overlay/list.html",
-    chunks: ["overlay/list"],
+    template: "./src/autofill/overlay/inline-menu/pages/list/list.html",
+    filename: "overlay/menu-list.html",
+    chunks: ["overlay/menu-list"],
+  }),
+  new HtmlWebpackPlugin({
+    template: "./src/autofill/overlay/inline-menu/pages/menu-container/menu-container.html",
+    filename: "overlay/menu.html",
+    chunks: ["overlay/menu"],
   }),
   new CopyWebpackPlugin({
     patterns: [
-      manifestVersion == 3
-        ? { from: "./src/manifest.v3.json", to: "manifest.json" }
-        : "./src/manifest.json",
+      {
+        from: manifestVersion == 3 ? "./src/manifest.v3.json" : "./src/manifest.json",
+        to: "manifest.json",
+        transform: manifest.transform(browser),
+      },
       { from: "./src/managed_schema.json", to: "managed_schema.json" },
       { from: "./src/_locales", to: "_locales" },
       { from: "./src/images", to: "images" },
@@ -137,9 +155,6 @@ const plugins = [
     tsConfigPath: "tsconfig.json",
     entryModule: "src/popup/app.module#AppModule",
     sourceMap: true,
-  }),
-  new CleanWebpackPlugin({
-    cleanAfterEveryBuildPatterns: ["!popup/fonts/**/*"],
   }),
   new webpack.ProvidePlugin({
     process: "process/browser.js",
@@ -166,21 +181,41 @@ const mainConfig = {
       "./src/autofill/content/trigger-autofill-script-injection.ts",
     "content/bootstrap-autofill": "./src/autofill/content/bootstrap-autofill.ts",
     "content/bootstrap-autofill-overlay": "./src/autofill/content/bootstrap-autofill-overlay.ts",
+    "content/bootstrap-autofill-overlay-menu":
+      "./src/autofill/content/bootstrap-autofill-overlay-menu.ts",
+    "content/bootstrap-autofill-overlay-notifications":
+      "./src/autofill/content/bootstrap-autofill-overlay-notifications.ts",
     "content/autofiller": "./src/autofill/content/autofiller.ts",
-    "content/notificationBar": "./src/autofill/content/notification-bar.ts",
+    "content/auto-submit-login": "./src/autofill/content/auto-submit-login.ts",
     "content/contextMenuHandler": "./src/autofill/content/context-menu-handler.ts",
     "content/content-message-handler": "./src/autofill/content/content-message-handler.ts",
-    "content/fido2/trigger-fido2-content-script-injection":
-      "./src/vault/fido2/content/trigger-fido2-content-script-injection.ts",
-    "content/fido2/content-script": "./src/vault/fido2/content/content-script.ts",
-    "content/fido2/page-script": "./src/vault/fido2/content/page-script.ts",
+    "content/fido2-content-script": "./src/autofill/fido2/content/fido2-content-script.ts",
+    "content/fido2-page-script": "./src/autofill/fido2/content/fido2-page-script.ts",
+    "content/ipc-content-script": "./src/platform/ipc/content/ipc-content-script.ts",
     "notification/bar": "./src/autofill/notification/bar.ts",
-    "overlay/button": "./src/autofill/overlay/pages/button/bootstrap-autofill-overlay-button.ts",
-    "overlay/list": "./src/autofill/overlay/pages/list/bootstrap-autofill-overlay-list.ts",
-    "encrypt-worker": "../../libs/common/src/platform/services/cryptography/encrypt.worker.ts",
-    "content/lp-fileless-importer": "./src/tools/content/lp-fileless-importer.ts",
+    "overlay/menu-button":
+      "./src/autofill/overlay/inline-menu/pages/button/bootstrap-autofill-inline-menu-button.ts",
+    "overlay/menu-list":
+      "./src/autofill/overlay/inline-menu/pages/list/bootstrap-autofill-inline-menu-list.ts",
+    "overlay/menu":
+      "./src/autofill/overlay/inline-menu/pages/menu-container/bootstrap-autofill-inline-menu-container.ts",
+    "encrypt-worker": "../../libs/common/src/key-management/crypto/services/encrypt.worker.ts",
     "content/send-on-installed-message": "./src/vault/content/send-on-installed-message.ts",
-    "content/lp-suppress-import-download": "./src/tools/content/lp-suppress-import-download.ts",
+    "content/send-popup-open-message": "./src/vault/content/send-popup-open-message.ts",
+  },
+  cache:
+    ENV !== "development"
+      ? false
+      : {
+          type: "filesystem",
+          name: "main-cache",
+          cacheDirectory: path.resolve(__dirname, "../../node_modules/.cache/webpack-browser-main"),
+          buildDependencies: {
+            config: [__filename],
+          },
+        },
+  snapshot: {
+    unmanagedPaths: [path.resolve(__dirname, "../../node_modules/@bitwarden/")],
   },
   optimization: {
     minimize: ENV !== "development",
@@ -240,14 +275,20 @@ const mainConfig = {
       fs: false,
       path: require.resolve("path-browserify"),
     },
+    cache: true,
   },
   output: {
     filename: "[name].js",
+    chunkFilename: "assets/[name].js",
+    webassemblyModuleFilename: "assets/[modulehash].wasm",
     path: path.resolve(__dirname, "build"),
+    clean: true,
   },
   module: {
-    noParse: /\.wasm$/,
     rules: moduleRules,
+  },
+  experiments: {
+    asyncWebAssembly: true,
   },
   plugins: plugins,
 };
@@ -278,24 +319,26 @@ if (manifestVersion == 2) {
   // Manifest V2 background pages can be run through the regular build pipeline.
   // Since it's a standard webpage.
   mainConfig.entry.background = "./src/platform/background.ts";
-  mainConfig.entry["content/lp-suppress-import-download-script-append-mv2"] =
-    "./src/tools/content/lp-suppress-import-download-script-append.mv2.ts";
+  mainConfig.entry["content/fido2-page-script-delay-append-mv2"] =
+    "./src/autofill/fido2/content/fido2-page-script-delay-append.mv2.ts";
 
   configs.push(mainConfig);
 } else {
-  // Manifest v3 needs an extra helper for utilities in the content script.
-  // The javascript output of this should be added to manifest.v3.json
-  mainConfig.entry["content/misc-utils"] = "./src/autofill/content/misc-utils.ts";
-  mainConfig.entry["offscreen-document/offscreen-document"] =
-    "./src/platform/offscreen-document/offscreen-document.ts";
+  // Firefox does not use the offscreen API
+  if (browser !== "firefox") {
+    mainConfig.entry["offscreen-document/offscreen-document"] =
+      "./src/platform/offscreen-document/offscreen-document.ts";
 
-  mainConfig.plugins.push(
-    new HtmlWebpackPlugin({
-      template: "./src/platform/offscreen-document/index.html",
-      filename: "offscreen-document/index.html",
-      chunks: ["offscreen-document/offscreen-document"],
-    }),
-  );
+    mainConfig.plugins.push(
+      new HtmlWebpackPlugin({
+        template: "./src/platform/offscreen-document/index.html",
+        filename: "offscreen-document/index.html",
+        chunks: ["offscreen-document/offscreen-document"],
+      }),
+    );
+  }
+
+  const target = browser === "firefox" ? "web" : "webworker";
 
   /**
    * @type {import("webpack").Configuration}
@@ -305,7 +348,7 @@ if (manifestVersion == 2) {
     mode: ENV,
     devtool: false,
     entry: "./src/platform/background.ts",
-    target: "webworker",
+    target: target,
     output: {
       filename: "background.js",
       path: path.resolve(__dirname, "build"),
@@ -316,13 +359,27 @@ if (manifestVersion == 2) {
           test: /\.tsx?$/,
           loader: "ts-loader",
         },
-        {
-          test: /\.wasm$/,
-          loader: "base64-loader",
-          type: "javascript/auto",
-        },
       ],
-      noParse: /\.wasm$/,
+    },
+    cache:
+      ENV !== "development"
+        ? false
+        : {
+            type: "filesystem",
+            name: "background-cache",
+            cacheDirectory: path.resolve(
+              __dirname,
+              "../../node_modules/.cache/webpack-browser-background",
+            ),
+            buildDependencies: {
+              config: [__filename],
+            },
+          },
+    snapshot: {
+      unmanagedPaths: [path.resolve(__dirname, "../../node_modules/@bitwarden/")],
+    },
+    experiments: {
+      asyncWebAssembly: true,
     },
     resolve: {
       extensions: [".ts", ".js"],
@@ -333,10 +390,25 @@ if (manifestVersion == 2) {
         fs: false,
         path: require.resolve("path-browserify"),
       },
+      cache: true,
     },
     dependencies: ["main"],
-    plugins: [...requiredPlugins],
+    plugins: [...requiredPlugins /*new AngularCheckPlugin()*/], // TODO (PM-22630): Re-enable this plugin when angular is removed from the background script.
   };
+
+  // Safari's desktop build process requires a background.html and vendor.js file to exist
+  // within the root of the extension. This is a workaround to allow us to build Safari
+  // for manifest v2 and v3 without modifying the desktop project structure.
+  if (browser === "safari") {
+    backgroundConfig.plugins.push(
+      new CopyWebpackPlugin({
+        patterns: [
+          { from: "./src/safari/mv3/fake-background.html", to: "background.html" },
+          { from: "./src/safari/mv3/fake-vendor.js", to: "vendor.js" },
+        ],
+      }),
+    );
+  }
 
   configs.push(mainConfig);
   configs.push(backgroundConfig);

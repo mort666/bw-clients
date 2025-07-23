@@ -1,7 +1,6 @@
 const path = require("path");
 const { merge } = require("webpack-merge");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
-const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 const configurator = require("./config/config");
 const { EnvironmentPlugin } = require("webpack");
@@ -66,6 +65,9 @@ const main = {
       },
     ],
   },
+  experiments: {
+    asyncWebAssembly: true,
+  },
   plugins: [
     new CopyWebpackPlugin({
       patterns: [
@@ -81,9 +83,7 @@ const main = {
   ],
   externals: {
     "electron-reload": "commonjs2 electron-reload",
-    "@bitwarden/desktop-native": "commonjs2 @bitwarden/desktop-native",
-
-    argon2: "commonjs2 argon2",
+    "@bitwarden/desktop-napi": "commonjs2 @bitwarden/desktop-napi",
   },
 };
 

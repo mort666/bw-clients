@@ -1,9 +1,11 @@
-import { Component, NgZone, ViewChild, ViewContainerRef } from "@angular/core";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { Component, NgZone, OnInit, OnDestroy } from "@angular/core";
 import { lastValueFrom } from "rxjs";
 
 import { SendComponent as BaseSendComponent } from "@bitwarden/angular/tools/send/send.component";
-import { SearchService } from "@bitwarden/common/abstractions/search.service";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -12,26 +14,40 @@ import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/pl
 import { SendView } from "@bitwarden/common/tools/send/models/view/send.view";
 import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.service.abstraction";
 import { SendService } from "@bitwarden/common/tools/send/services/send.service.abstraction";
-import { DialogService, NoItemsModule, SearchModule, TableDataSource } from "@bitwarden/components";
+import { SendId } from "@bitwarden/common/types/guid";
+import { SearchService } from "@bitwarden/common/vault/abstractions/search.service";
+import {
+  DialogRef,
+  DialogService,
+  NoItemsModule,
+  SearchModule,
+  TableDataSource,
+  ToastService,
+} from "@bitwarden/components";
+import {
+  DefaultSendFormConfigService,
+  NoSendsIcon,
+  SendFormConfig,
+  SendAddEditDialogComponent,
+  SendItemDialogResult,
+} from "@bitwarden/send-ui";
 
 import { HeaderModule } from "../../layouts/header/header.module";
 import { SharedModule } from "../../shared";
 
-import { AddEditComponent } from "./add-edit.component";
-import { NoSend } from "./icons/no-send.icon";
+import { NewSendDropdownComponent } from "./new-send/new-send-dropdown.component";
 
 const BroadcasterSubscriptionId = "SendComponent";
 
 @Component({
   selector: "app-send",
-  standalone: true,
-  imports: [SharedModule, SearchModule, NoItemsModule, HeaderModule],
+  imports: [SharedModule, SearchModule, NoItemsModule, HeaderModule, NewSendDropdownComponent],
   templateUrl: "send.component.html",
+  providers: [DefaultSendFormConfigService],
 })
-export class SendComponent extends BaseSendComponent {
-  @ViewChild("sendAddEdit", { read: ViewContainerRef, static: true })
-  sendAddEditModalRef: ViewContainerRef;
-  noItemIcon = NoSend;
+export class SendComponent extends BaseSendComponent implements OnInit, OnDestroy {
+  private sendItemDialogRef?: DialogRef<SendItemDialogResult> | undefined;
+  noItemIcon = NoSendsIcon;
 
   override set filteredSends(filteredSends: SendView[]) {
     super.filteredSends = filteredSends;
@@ -56,6 +72,9 @@ export class SendComponent extends BaseSendComponent {
     logService: LogService,
     sendApiService: SendApiService,
     dialogService: DialogService,
+    toastService: ToastService,
+    private addEditFormConfigService: DefaultSendFormConfigService,
+    accountService: AccountService,
   ) {
     super(
       sendService,
@@ -68,6 +87,8 @@ export class SendComponent extends BaseSendComponent {
       logService,
       sendApiService,
       dialogService,
+      toastService,
+      accountService,
     );
   }
 
@@ -92,6 +113,7 @@ export class SendComponent extends BaseSendComponent {
   }
 
   ngOnDestroy() {
+    this.dialogService.closeAll();
     this.broadcasterService.unsubscribe(BroadcasterSubscriptionId);
   }
 
@@ -100,17 +122,41 @@ export class SendComponent extends BaseSendComponent {
       return;
     }
 
-    await this.editSend(null);
+    const config = await this.addEditFormConfigService.buildConfig("add", null, 0);
+
+    await this.openSendItemDialog(config);
   }
 
   async editSend(send: SendView) {
-    const dialog = this.dialogService.open(AddEditComponent, {
-      data: {
-        sendId: send == null ? null : send.id,
-      },
+    const config = await this.addEditFormConfigService.buildConfig(
+      send == null ? "add" : "edit",
+      send == null ? null : (send.id as SendId),
+      send.type,
+    );
+
+    await this.openSendItemDialog(config);
+  }
+
+  /**
+   * Opens the send item dialog.
+   * @param formConfig The form configuration.
+   * */
+  async openSendItemDialog(formConfig: SendFormConfig) {
+    // Prevent multiple dialogs from being opened.
+    if (this.sendItemDialogRef) {
+      return;
+    }
+
+    this.sendItemDialogRef = SendAddEditDialogComponent.open(this.dialogService, {
+      formConfig,
     });
 
-    await lastValueFrom(dialog.closed);
-    await this.load();
+    const result = await lastValueFrom(this.sendItemDialogRef.closed);
+    this.sendItemDialogRef = undefined;
+
+    // If the dialog was closed by deleting the cipher, refresh the vault.
+    if (result === SendItemDialogResult.Deleted || result === SendItemDialogResult.Saved) {
+      await this.load();
+    }
   }
 }

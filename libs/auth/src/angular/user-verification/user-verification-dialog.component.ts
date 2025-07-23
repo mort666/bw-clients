@@ -1,4 +1,5 @@
-import { DIALOG_DATA, DialogRef } from "@angular/cdk/dialog";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { CommonModule } from "@angular/common";
 import { Component, Inject } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule } from "@angular/forms";
@@ -9,11 +10,17 @@ import { UserVerificationService } from "@bitwarden/common/auth/abstractions/use
 import { VerificationWithSecret } from "@bitwarden/common/auth/types/verification";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports
 import {
+  DIALOG_DATA,
+  DialogRef,
   AsyncActionsModule,
   ButtonModule,
+  CalloutModule,
   DialogModule,
   DialogService,
+  ToastService,
 } from "@bitwarden/components";
 
 import { ActiveClientVerificationOption } from "./active-client-verification-option.enum";
@@ -25,7 +32,6 @@ import { UserVerificationFormInputComponent } from "./user-verification-form-inp
 
 @Component({
   templateUrl: "user-verification-dialog.component.html",
-  standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -34,6 +40,7 @@ import { UserVerificationFormInputComponent } from "./user-verification-form-inp
     DialogModule,
     AsyncActionsModule,
     UserVerificationFormInputComponent,
+    CalloutModule,
   ],
 })
 export class UserVerificationDialogComponent {
@@ -56,6 +63,7 @@ export class UserVerificationDialogComponent {
     private userVerificationService: UserVerificationService,
     private platformUtilsService: PlatformUtilsService,
     private i18nService: I18nService,
+    private toastService: ToastService,
   ) {}
 
   /**
@@ -140,6 +148,31 @@ export class UserVerificationDialogComponent {
    *   return;
    * }
    *
+   * ----------------------------------------------------------
+   *
+   * @example
+   * // Example 4: Custom user verification validation
+   *
+   * const result = await UserVerificationDialogComponent.open(dialogService, {
+   *   verificationType: {
+   *     type: "custom",
+   *     // Pass in a function that will be used to validate the input of the
+   *     // verification dialog, returning true when finished.
+   *     verificationFn: async (secret: VerificationWithSecret) => {
+   *       const request = await userVerificationService.buildRequest<CustomRequestType>(secret);
+   *
+   *      // ... Do something with the custom request type
+   *
+   *       await someServicer.sendMyRequestThatVerfiesUserIdentity(
+   *         // ... Some other data
+   *         request,
+   *       );
+   *       return true;
+   *     },
+   *   },
+   * });
+   *
+   * // ... Evaluate the result as usual
    */
   static async open(
     dialogService: DialogService,
@@ -200,6 +233,18 @@ export class UserVerificationDialogComponent {
     }
 
     try {
+      if (
+        typeof this.dialogOptions.verificationType === "object" &&
+        this.dialogOptions.verificationType.type === "custom"
+      ) {
+        const success = await this.dialogOptions.verificationType.verificationFn(this.secret.value);
+        this.close({
+          userAction: "confirm",
+          verificationSuccess: success,
+        });
+        return;
+      }
+
       // TODO: once we migrate all user verification scenarios to use this new implementation,
       // we should consider refactoring the user verification service handling of the
       // OTP and MP flows to not throw errors on verification failure.
@@ -217,19 +262,27 @@ export class UserVerificationDialogComponent {
 
         // Only pin should ever get here, but added this check to be safe.
         if (this.activeClientVerificationOption === ActiveClientVerificationOption.Pin) {
-          this.platformUtilsService.showToast(
-            "error",
-            this.i18nService.t("error"),
-            this.i18nService.t("invalidPin"),
-          );
+          this.toastService.showToast({
+            variant: "error",
+            title: this.i18nService.t("error"),
+            message: this.i18nService.t("invalidPin"),
+          });
         } else {
-          this.platformUtilsService.showToast("error", null, this.i18nService.t("unexpectedError"));
+          this.toastService.showToast({
+            variant: "error",
+            title: null,
+            message: this.i18nService.t("unexpectedError"),
+          });
         }
       }
     } catch (e) {
       // Catch handles OTP and MP verification scenarios as those throw errors on verification failure instead of returning false like PIN and biometrics.
       this.invalidSecret = true;
-      this.platformUtilsService.showToast("error", this.i18nService.t("error"), e.message);
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("error"),
+        message: e.message,
+      });
       return;
     }
   };

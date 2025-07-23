@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 // eslint-disable-next-line import/no-restricted-paths -- Implementation for memory storage specifically for browser backgrounds
 import { MemoryStorageService } from "@bitwarden/common/platform/state/storage/memory-storage.service";
 
@@ -51,7 +53,6 @@ export class BackgroundMemoryStorageService extends MemoryStorageService {
 
     switch (message.action) {
       case "get":
-      case "getBypassCache":
       case "has": {
         result = await this[message.action](message.key);
         break;

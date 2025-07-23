@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Jsonify } from "type-fest";
 
 /**
@@ -21,7 +23,7 @@ export function array<T>(
  *
  * @param valueDeserializer
  */
-export function record<T, TKey extends string = string>(
+export function record<T, TKey extends string | number = string>(
   valueDeserializer: (value: Jsonify<T>) => T,
 ): (record: Jsonify<Record<TKey, T>>) => Record<TKey, T> {
   return (jsonValue: Jsonify<Record<TKey, T> | null>) => {
@@ -29,10 +31,10 @@ export function record<T, TKey extends string = string>(
       return null;
     }
 
-    const output: Record<string, T> = {};
-    for (const key in jsonValue) {
-      output[key] = valueDeserializer((jsonValue as Record<string, Jsonify<T>>)[key]);
-    }
+    const output: Record<TKey, T> = {} as any;
+    Object.entries(jsonValue).forEach(([key, value]) => {
+      output[key as TKey] = valueDeserializer(value);
+    });
     return output;
   };
 }

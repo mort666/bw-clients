@@ -5,11 +5,11 @@
 import { Subject, firstValueFrom } from "rxjs";
 
 import { awaitAsync, trackEmissions } from "../../../../spec";
-import { FakeStorageService } from "../../../../spec/fake-storage.service";
 import { DeriveDefinition } from "../derive-definition";
 import { StateDefinition } from "../state-definition";
 
 import { DefaultDerivedState } from "./default-derived-state";
+import { DefaultDerivedStateProvider } from "./default-derived-state.provider";
 
 let callCount = 0;
 const cleanupDelayMs = 10;
@@ -29,7 +29,6 @@ const deriveDefinition = new DeriveDefinition<string, Date, { date: Date }>(
 
 describe("DefaultDerivedState", () => {
   let parentState$: Subject<string>;
-  let memoryStorage: FakeStorageService;
   let sut: DefaultDerivedState<string, Date, { date: Date }>;
   const deps = {
     date: new Date(),
@@ -38,8 +37,7 @@ describe("DefaultDerivedState", () => {
   beforeEach(() => {
     callCount = 0;
     parentState$ = new Subject();
-    memoryStorage = new FakeStorageService();
-    sut = new DefaultDerivedState(parentState$, deriveDefinition, memoryStorage, deps);
+    sut = new DefaultDerivedState(parentState$, deriveDefinition, deps);
   });
 
   afterEach(() => {
@@ -66,71 +64,33 @@ describe("DefaultDerivedState", () => {
     expect(callCount).toBe(1);
   });
 
-  it("should store the derived state in memory", async () => {
-    const dateString = "2020-01-01";
-    trackEmissions(sut.state$);
-    parentState$.next(dateString);
-    await awaitAsync();
-
-    expect(memoryStorage.internalStore[deriveDefinition.buildCacheKey()]).toEqual(
-      derivedValue(new Date(dateString)),
-    );
-    const calls = memoryStorage.mock.save.mock.calls;
-    expect(calls.length).toBe(1);
-    expect(calls[0][0]).toBe(deriveDefinition.buildCacheKey());
-    expect(calls[0][1]).toEqual(derivedValue(new Date(dateString)));
-  });
-
   describe("forceValue", () => {
     const initialParentValue = "2020-01-01";
     const forced = new Date("2020-02-02");
     let emissions: Date[];
 
-    describe("without observers", () => {
-      beforeEach(async () => {
-        parentState$.next(initialParentValue);
-        await awaitAsync();
-      });
-
-      it("should store the forced value", async () => {
-        await sut.forceValue(forced);
-        expect(memoryStorage.internalStore[deriveDefinition.buildCacheKey()]).toEqual(
-          derivedValue(forced),
-        );
-      });
+    beforeEach(async () => {
+      emissions = trackEmissions(sut.state$);
+      parentState$.next(initialParentValue);
+      await awaitAsync();
     });
 
-    describe("with observers", () => {
-      beforeEach(async () => {
-        emissions = trackEmissions(sut.state$);
-        parentState$.next(initialParentValue);
-        await awaitAsync();
-      });
+    it("should force the value", async () => {
+      await sut.forceValue(forced);
+      expect(emissions).toEqual([new Date(initialParentValue), forced]);
+    });
 
-      it("should store the forced value", async () => {
-        await sut.forceValue(forced);
-        expect(memoryStorage.internalStore[deriveDefinition.buildCacheKey()]).toEqual(
-          derivedValue(forced),
-        );
-      });
+    it("should only force the value once", async () => {
+      await sut.forceValue(forced);
 
-      it("should force the value", async () => {
-        await sut.forceValue(forced);
-        expect(emissions).toEqual([new Date(initialParentValue), forced]);
-      });
+      parentState$.next(initialParentValue);
+      await awaitAsync();
 
-      it("should only force the value once", async () => {
-        await sut.forceValue(forced);
-
-        parentState$.next(initialParentValue);
-        await awaitAsync();
-
-        expect(emissions).toEqual([
-          new Date(initialParentValue),
-          forced,
-          new Date(initialParentValue),
-        ]);
-      });
+      expect(emissions).toEqual([
+        new Date(initialParentValue),
+        forced,
+        new Date(initialParentValue),
+      ]);
     });
   });
 
@@ -146,42 +106,6 @@ describe("DefaultDerivedState", () => {
       await awaitAsync(cleanupDelayMs * 2);
 
       expect(parentState$.observed).toBe(false);
-    });
-
-    it("should clear state after cleanup", async () => {
-      const subscription = sut.state$.subscribe();
-      parentState$.next(newDate);
-      await awaitAsync();
-
-      expect(memoryStorage.internalStore[deriveDefinition.buildCacheKey()]).toEqual(
-        derivedValue(new Date(newDate)),
-      );
-
-      subscription.unsubscribe();
-      // Wait for cleanup
-      await awaitAsync(cleanupDelayMs * 2);
-
-      expect(memoryStorage.internalStore[deriveDefinition.buildCacheKey()]).toBeUndefined();
-    });
-
-    it("should not clear state after cleanup if clearOnCleanup is false", async () => {
-      deriveDefinition.options.clearOnCleanup = false;
-
-      const subscription = sut.state$.subscribe();
-      parentState$.next(newDate);
-      await awaitAsync();
-
-      expect(memoryStorage.internalStore[deriveDefinition.buildCacheKey()]).toEqual(
-        derivedValue(new Date(newDate)),
-      );
-
-      subscription.unsubscribe();
-      // Wait for cleanup
-      await awaitAsync(cleanupDelayMs * 2);
-
-      expect(memoryStorage.internalStore[deriveDefinition.buildCacheKey()]).toEqual(
-        derivedValue(new Date(newDate)),
-      );
     });
 
     it("should not cleanup if there are still subscribers", async () => {
@@ -259,8 +183,29 @@ describe("DefaultDerivedState", () => {
       expect(await firstValueFrom(observable)).toEqual(new Date(newDate));
     });
   });
-});
 
-function derivedValue<T>(value: T) {
-  return { derived: true, value };
-}
+  describe("account switching", () => {
+    let provider: DefaultDerivedStateProvider;
+
+    beforeEach(() => {
+      provider = new DefaultDerivedStateProvider();
+    });
+
+    it("should provide a dedicated cache for each account", async () => {
+      const user1State$ = new Subject<string>();
+      const user1Derived = provider.get(user1State$, deriveDefinition, deps);
+      const user1Emissions = trackEmissions(user1Derived.state$);
+
+      const user2State$ = new Subject<string>();
+      const user2Derived = provider.get(user2State$, deriveDefinition, deps);
+      const user2Emissions = trackEmissions(user2Derived.state$);
+
+      user1State$.next("2015-12-30");
+      user2State$.next("2020-12-29");
+      await awaitAsync();
+
+      expect(user1Emissions).toEqual([new Date("2015-12-30")]);
+      expect(user2Emissions).toEqual([new Date("2020-12-29")]);
+    });
+  });
+});

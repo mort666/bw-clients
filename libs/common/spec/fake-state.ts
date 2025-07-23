@@ -1,4 +1,6 @@
-import { Observable, ReplaySubject, concatMap, firstValueFrom, map, timeout } from "rxjs";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { Observable, ReplaySubject, concatMap, filter, firstValueFrom, map, timeout } from "rxjs";
 
 import {
   DerivedState,
@@ -39,6 +41,10 @@ export class FakeGlobalState<T> implements GlobalState<T> {
 
   constructor(initialValue?: T) {
     this.stateSubject.next(initialValue ?? null);
+  }
+
+  nextState(state: T) {
+    this.stateSubject.next(state);
   }
 
   async update<TCombine>(
@@ -89,7 +95,10 @@ export class FakeGlobalState<T> implements GlobalState<T> {
 
 export class FakeSingleUserState<T> implements SingleUserState<T> {
   // eslint-disable-next-line rxjs/no-exposed-subjects -- exposed for testing setup
-  stateSubject = new ReplaySubject<CombinedState<T>>(1);
+  stateSubject = new ReplaySubject<{
+    syncValue: boolean;
+    combinedState: CombinedState<T>;
+  }>(1);
 
   state$: Observable<T>;
   combinedState$: Observable<CombinedState<T>>;
@@ -97,21 +106,34 @@ export class FakeSingleUserState<T> implements SingleUserState<T> {
   constructor(
     readonly userId: UserId,
     initialValue?: T,
+    updateSyncCallback?: (userId: UserId, newValue: T) => Promise<void>,
   ) {
-    this.stateSubject.next([userId, initialValue ?? null]);
+    // Inform the state provider of updates to keep active user states in sync
+    this.stateSubject
+      .pipe(
+        filter((next) => next.syncValue),
+        concatMap(async ({ combinedState }) => {
+          await updateSyncCallback?.(...combinedState);
+        }),
+      )
+      .subscribe();
+    this.nextState(initialValue ?? null, { syncValue: initialValue != null });
 
-    this.combinedState$ = this.stateSubject.asObservable();
+    this.combinedState$ = this.stateSubject.pipe(map((v) => v.combinedState));
     this.state$ = this.combinedState$.pipe(map(([_userId, state]) => state));
   }
 
-  nextState(state: T) {
-    this.stateSubject.next([this.userId, state]);
+  nextState(state: T | null, { syncValue }: { syncValue: boolean } = { syncValue: true }) {
+    this.stateSubject.next({
+      syncValue,
+      combinedState: [this.userId, state],
+    });
   }
 
   async update<TCombine>(
-    configureState: (state: T, dependency: TCombine) => T,
+    configureState: (state: T | null, dependency: TCombine) => T | null,
     options?: StateUpdateOptions<T, TCombine>,
-  ): Promise<T> {
+  ): Promise<T | null> {
     options = populateOptionsWithDefault(options);
     const current = await firstValueFrom(this.state$.pipe(timeout(options.msTimeout)));
     const combinedDependencies =
@@ -122,7 +144,7 @@ export class FakeSingleUserState<T> implements SingleUserState<T> {
       return current;
     }
     const newState = configureState(current, combinedDependencies);
-    this.stateSubject.next([this.userId, newState]);
+    this.nextState(newState);
     this.nextMock(newState);
     return newState;
   }
@@ -146,7 +168,10 @@ export class FakeActiveUserState<T> implements ActiveUserState<T> {
   [activeMarker]: true;
 
   // eslint-disable-next-line rxjs/no-exposed-subjects -- exposed for testing setup
-  stateSubject = new ReplaySubject<CombinedState<T>>(1);
+  stateSubject = new ReplaySubject<{
+    syncValue: boolean;
+    combinedState: CombinedState<T>;
+  }>(1);
 
   state$: Observable<T>;
   combinedState$: Observable<CombinedState<T>>;
@@ -154,10 +179,18 @@ export class FakeActiveUserState<T> implements ActiveUserState<T> {
   constructor(
     private accountService: FakeAccountService,
     initialValue?: T,
+    updateSyncCallback?: (userId: UserId, newValue: T) => Promise<void>,
   ) {
-    this.stateSubject.next([accountService.activeUserId, initialValue ?? null]);
+    // Inform the state provider of updates to keep single user states in sync
+    this.stateSubject.pipe(
+      filter((next) => next.syncValue),
+      concatMap(async ({ combinedState }) => {
+        await updateSyncCallback?.(...combinedState);
+      }),
+    );
+    this.nextState(initialValue ?? null, { syncValue: initialValue != null });
 
-    this.combinedState$ = this.stateSubject.asObservable();
+    this.combinedState$ = this.stateSubject.pipe(map((v) => v.combinedState));
     this.state$ = this.combinedState$.pipe(map(([_userId, state]) => state));
   }
 
@@ -165,14 +198,17 @@ export class FakeActiveUserState<T> implements ActiveUserState<T> {
     return this.accountService.activeUserId;
   }
 
-  nextState(state: T) {
-    this.stateSubject.next([this.userId, state]);
+  nextState(state: T | null, { syncValue }: { syncValue: boolean } = { syncValue: true }) {
+    this.stateSubject.next({
+      syncValue,
+      combinedState: [this.userId, state],
+    });
   }
 
   async update<TCombine>(
-    configureState: (state: T, dependency: TCombine) => T,
+    configureState: (state: T | null, dependency: TCombine) => T | null,
     options?: StateUpdateOptions<T, TCombine>,
-  ): Promise<[UserId, T]> {
+  ): Promise<[UserId, T | null]> {
     options = populateOptionsWithDefault(options);
     const current = await firstValueFrom(this.state$.pipe(timeout(options.msTimeout)));
     const combinedDependencies =
@@ -183,7 +219,7 @@ export class FakeActiveUserState<T> implements ActiveUserState<T> {
       return [this.userId, current];
     }
     const newState = configureState(current, combinedDependencies);
-    this.stateSubject.next([this.userId, newState]);
+    this.nextState(newState);
     this.nextMock([this.userId, newState]);
     return [this.userId, newState];
   }

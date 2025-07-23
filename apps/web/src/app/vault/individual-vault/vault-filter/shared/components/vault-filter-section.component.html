@@ -25,7 +25,7 @@
     >
       <h3
         [ngClass]="{
-          active: isAllVaultsSelected || isNodeSelected(headerNode)
+          active: isAllVaultsSelected || isNodeSelected(headerNode),
         }"
       >
         &nbsp;{{ headerNode.node.name | i18n }}
@@ -44,7 +44,7 @@
       <li
         *ngFor="let f of filters"
         [ngClass]="{
-          active: isNodeSelected(f)
+          active: isNodeSelected(f),
         }"
         class="filter-option"
       >
@@ -62,7 +62,7 @@
               class="bwi bwi-fw"
               [ngClass]="{
                 'bwi-angle-right': isCollapsed(f.node),
-                'bwi-angle-down': !isCollapsed(f.node)
+                'bwi-angle-down': !isCollapsed(f.node),
               }"
               aria-hidden="true"
             ></i>
@@ -89,7 +89,7 @@
               *ngIf="editInfo && f.node.id"
               class="edit-button"
               (click)="onEdit(f)"
-              appA11yTitle="{{ editInfo.text | i18n }}"
+              appA11yTitle="{{ 'editWithName' | i18n: editInfo.filterName : f.node.name }}"
             >
               <i class="bwi bwi-pencil bwi-fw" aria-hidden="true"></i>
             </button>
@@ -121,7 +121,7 @@
     ></ng-container>
     <li class="filter-option" *ngIf="showAddLink">
       <span class="filter-buttons">
-        <a href="#" routerLink="{{ addInfo.route }}" class="filter-button">
+        <a href="#" routerLink="{{ addInfo.route }}" class="filter-button tw-truncate">
           <i class="bwi bwi-plus bwi-fw" aria-hidden="true"></i>
           &nbsp;{{ addInfo.text | i18n }}
         </a>

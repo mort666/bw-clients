@@ -11,7 +11,7 @@ import {
 } from "../spec/testing-utils";
 
 import NotificationBackground from "./notification.background";
-import OverlayBackground from "./overlay.background";
+import { OverlayBackground } from "./overlay.background";
 import TabsBackground from "./tabs.background";
 
 describe("TabsBackground", () => {
@@ -73,7 +73,6 @@ describe("TabsBackground", () => {
         triggerWindowOnFocusedChangedEvent(10);
         await flushPromises();
 
-        expect(mainBackground.refreshBadge).toHaveBeenCalled();
         expect(mainBackground.refreshMenu).toHaveBeenCalled();
         expect(overlayBackground.updateOverlayCiphers).toHaveBeenCalled();
       });
@@ -91,7 +90,6 @@ describe("TabsBackground", () => {
         triggerTabOnActivatedEvent({ tabId: 10, windowId: 20 });
         await flushPromises();
 
-        expect(mainBackground.refreshBadge).toHaveBeenCalled();
         expect(mainBackground.refreshMenu).toHaveBeenCalled();
         expect(overlayBackground.updateOverlayCiphers).toHaveBeenCalled();
       });
@@ -127,7 +125,6 @@ describe("TabsBackground", () => {
         triggerTabOnReplacedEvent(10, 20);
         await flushPromises();
 
-        expect(mainBackground.refreshBadge).toHaveBeenCalled();
         expect(mainBackground.refreshMenu).toHaveBeenCalled();
         expect(overlayBackground.updateOverlayCiphers).toHaveBeenCalled();
       });
@@ -146,6 +143,7 @@ describe("TabsBackground", () => {
 
       beforeEach(() => {
         mainBackground.onUpdatedRan = false;
+        mainBackground.configService.getFeatureFlag = jest.fn().mockResolvedValue(true);
         tabsBackground["focusedWindowId"] = focusedWindowId;
         tab = mock<chrome.tabs.Tab>({
           windowId: focusedWindowId,
@@ -154,24 +152,11 @@ describe("TabsBackground", () => {
         });
       });
 
-      it("removes the cached page details from the overlay background if the tab status is `loading`", () => {
-        triggerTabOnUpdatedEvent(focusedWindowId, { status: "loading" }, tab);
-
-        expect(overlayBackground.removePageDetails).toHaveBeenCalledWith(focusedWindowId);
-      });
-
-      it("removes the cached page details from the overlay background if the tab status is `unloaded`", () => {
-        triggerTabOnUpdatedEvent(focusedWindowId, { status: "unloaded" }, tab);
-
-        expect(overlayBackground.removePageDetails).toHaveBeenCalledWith(focusedWindowId);
-      });
-
       it("skips updating the current tab data the focusedWindowId is set to a value less than zero", async () => {
         tab.windowId = -1;
         triggerTabOnUpdatedEvent(focusedWindowId, { status: "loading" }, tab);
         await flushPromises();
 
-        expect(mainBackground.refreshBadge).not.toHaveBeenCalled();
         expect(mainBackground.refreshMenu).not.toHaveBeenCalled();
         expect(overlayBackground.updateOverlayCiphers).not.toHaveBeenCalled();
       });
@@ -181,7 +166,6 @@ describe("TabsBackground", () => {
         triggerTabOnUpdatedEvent(focusedWindowId, { status: "loading" }, tab);
         await flushPromises();
 
-        expect(mainBackground.refreshBadge).not.toHaveBeenCalled();
         expect(mainBackground.refreshMenu).not.toHaveBeenCalled();
         expect(overlayBackground.updateOverlayCiphers).not.toHaveBeenCalled();
       });
@@ -191,7 +175,6 @@ describe("TabsBackground", () => {
         triggerTabOnUpdatedEvent(focusedWindowId, { status: "loading" }, tab);
         await flushPromises();
 
-        expect(mainBackground.refreshBadge).not.toHaveBeenCalled();
         expect(mainBackground.refreshMenu).not.toHaveBeenCalled();
         expect(overlayBackground.updateOverlayCiphers).not.toHaveBeenCalled();
       });
@@ -201,7 +184,6 @@ describe("TabsBackground", () => {
         triggerTabOnUpdatedEvent(focusedWindowId, { status: "loading" }, tab);
         await flushPromises();
 
-        expect(mainBackground.refreshBadge).not.toHaveBeenCalled();
         expect(mainBackground.refreshMenu).not.toHaveBeenCalled();
       });
 
@@ -216,7 +198,6 @@ describe("TabsBackground", () => {
         triggerTabOnUpdatedEvent(focusedWindowId, { status: "loading" }, tab);
         await flushPromises();
 
-        expect(mainBackground.refreshBadge).toHaveBeenCalled();
         expect(mainBackground.refreshMenu).toHaveBeenCalled();
         expect(overlayBackground.updateOverlayCiphers).toHaveBeenCalled();
       });

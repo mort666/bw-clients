@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { SendType } from "@bitwarden/common/tools/send/enums/send-type";
 import { SendView } from "@bitwarden/common/tools/send/models/view/send.view";
@@ -24,6 +26,7 @@ export class SendResponse implements BaseResponse {
     req.deletionDate = this.getStandardDeletionDate(deleteInDays);
     req.expirationDate = null;
     req.password = null;
+    req.emails = null;
     req.disabled = false;
     req.hideEmail = false;
     return req;
@@ -48,6 +51,7 @@ export class SendResponse implements BaseResponse {
     view.deletionDate = send.deletionDate;
     view.expirationDate = send.expirationDate;
     view.password = send.password;
+    view.emails = send.emails ?? [];
     view.disabled = send.disabled;
     view.hideEmail = send.hideEmail;
     return view;
@@ -85,6 +89,7 @@ export class SendResponse implements BaseResponse {
   expirationDate: Date;
   password: string;
   passwordSet: boolean;
+  emails?: Array<string>;
   disabled: boolean;
   hideEmail: boolean;
 

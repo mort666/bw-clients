@@ -5,7 +5,7 @@
       <small class="tw-text-muted" *ngIf="params.name">{{ params.name }}</small>
     </span>
     <div bitDialogContent>
-      <app-callout type="warning">{{ "loggedOutWarning" | i18n }}</app-callout>
+      <bit-callout type="warning">{{ "loggedOutWarning" | i18n }}</bit-callout>
       <auth-password-callout [policy]="enforcedPolicyOptions" *ngIf="enforcedPolicyOptions">
       </auth-password-callout>
       <div class="tw-w-full tw-flex tw-gap-4">
@@ -42,13 +42,13 @@
         </div>
       </div>
     </div>
-    <div bitDialogFooter>
+    <ng-container bitDialogFooter>
       <button type="submit" bitButton bitFormButton buttonType="primary">
         {{ "save" | i18n }}
       </button>
       <button bitButton bitFormButton type="button" buttonType="secondary" bitDialogClose>
         {{ "cancel" | i18n }}
       </button>
-    </div>
+    </ng-container>
   </bit-dialog>
 </form>

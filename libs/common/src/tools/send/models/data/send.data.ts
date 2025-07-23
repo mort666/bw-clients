@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { SendType } from "../../enums/send-type";
 import { SendResponse } from "../response/send.response";
 
@@ -19,6 +21,7 @@ export class SendData {
   expirationDate: string;
   deletionDate: string;
   password: string;
+  emails: string;
   disabled: boolean;
   hideEmail: boolean;
 
@@ -39,6 +42,7 @@ export class SendData {
     this.expirationDate = response.expirationDate;
     this.deletionDate = response.deletionDate;
     this.password = response.password;
+    this.emails = response.emails;
     this.disabled = response.disable;
     this.hideEmail = response.hideEmail;
 

@@ -1,16 +1,20 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Observable } from "rxjs";
 
+import { BrowserClientVendors } from "@bitwarden/common/autofill/constants";
+import { BrowserClientVendor } from "@bitwarden/common/autofill/types";
 import { DeviceType } from "@bitwarden/common/enums";
+import { isBrowserSafariApi } from "@bitwarden/platform";
 
 import { TabMessage } from "../../types/tab-messages";
-import BrowserPlatformUtilsService from "../services/browser-platform-utils.service";
+import { BrowserPlatformUtilsService } from "../services/platform-utils/browser-platform-utils.service";
+
+import { registerContentScriptsPolyfill } from "./browser-api.register-content-scripts-polyfill";
 
 export class BrowserApi {
   static isWebExtensionsApi: boolean = typeof browser !== "undefined";
-  static isSafariApi: boolean =
-    navigator.userAgent.indexOf(" Safari/") !== -1 &&
-    navigator.userAgent.indexOf(" Chrome/") === -1 &&
-    navigator.userAgent.indexOf(" Chromium/") === -1;
+  static isSafariApi: boolean = isBrowserSafariApi();
   static isChromeApi: boolean = !BrowserApi.isSafariApi && typeof chrome !== "undefined";
   static isFirefoxOnAndroid: boolean =
     navigator.userAgent.indexOf("Firefox/") !== -1 && navigator.userAgent.indexOf("Android") !== -1;
@@ -58,11 +62,33 @@ export class BrowserApi {
   }
 
   static async createWindow(options: chrome.windows.CreateData): Promise<chrome.windows.Window> {
-    return new Promise((resolve) =>
-      chrome.windows.create(options, (window) => {
-        resolve(window);
-      }),
-    );
+    return new Promise((resolve) => {
+      chrome.windows.create(options, async (newWindow) => {
+        if (!BrowserApi.isSafariApi) {
+          return resolve(newWindow);
+        }
+        // Safari doesn't close the default extension popup when a new window is created so we need to
+        // manually trigger the close by focusing the main window after the new window is created
+        const allWindows = await new Promise<chrome.windows.Window[]>((resolve) => {
+          chrome.windows.getAll({ windowTypes: ["normal"] }, (windows) => resolve(windows));
+        });
+
+        const mainWindow = allWindows.find((window) => window.id !== newWindow.id);
+
+        // No main window found, resolve the new window
+        if (mainWindow == null || !mainWindow.id) {
+          return resolve(newWindow);
+        }
+
+        // Focus the main window to close the extension popup
+        chrome.windows.update(mainWindow.id, { focused: true }, () => {
+          // Refocus the newly created window
+          chrome.windows.update(newWindow.id, { focused: true }, () => {
+            resolve(newWindow);
+          });
+        });
+      });
+    });
   }
 
   /**
@@ -101,10 +127,31 @@ export class BrowserApi {
   }
 
   static async getTabFromCurrentWindowId(): Promise<chrome.tabs.Tab> | null {
-    return await BrowserApi.tabsQueryFirst({
+    return await BrowserApi.tabsQueryFirstCurrentWindowForSafari({
       active: true,
       windowId: chrome.windows.WINDOW_ID_CURRENT,
     });
+  }
+
+  static getBrowserClientVendor(clientWindow: Window): BrowserClientVendor {
+    const device = BrowserPlatformUtilsService.getDevice(clientWindow);
+
+    switch (device) {
+      case DeviceType.ChromeExtension:
+      case DeviceType.ChromeBrowser:
+        return BrowserClientVendors.Chrome;
+      case DeviceType.OperaExtension:
+      case DeviceType.OperaBrowser:
+        return BrowserClientVendors.Opera;
+      case DeviceType.EdgeExtension:
+      case DeviceType.EdgeBrowser:
+        return BrowserClientVendors.Edge;
+      case DeviceType.VivaldiExtension:
+      case DeviceType.VivaldiBrowser:
+        return BrowserClientVendors.Vivaldi;
+      default:
+        return BrowserClientVendors.Unknown;
+    }
   }
 
   /**
@@ -129,7 +176,7 @@ export class BrowserApi {
   }
 
   static async getTabFromCurrentWindow(): Promise<chrome.tabs.Tab> | null {
-    return await BrowserApi.tabsQueryFirst({
+    return await BrowserApi.tabsQueryFirstCurrentWindowForSafari({
       active: true,
       currentWindow: true,
     });
@@ -139,6 +186,21 @@ export class BrowserApi {
     return await BrowserApi.tabsQuery({
       active: true,
     });
+  }
+
+  /**
+   * Fetch the currently open browser tab
+   */
+  static async getCurrentTab(): Promise<chrome.tabs.Tab> | null {
+    if (BrowserApi.isManifestVersion(3)) {
+      return await chrome.tabs.getCurrent();
+    }
+
+    return new Promise((resolve) =>
+      chrome.tabs.getCurrent((tab) => {
+        resolve(tab);
+      }),
+    );
   }
 
   static async tabsQuery(options: chrome.tabs.QueryInfo): Promise<chrome.tabs.Tab[]> {
@@ -158,6 +220,51 @@ export class BrowserApi {
     return null;
   }
 
+  /**
+   * Drop-in replacement for {@link BrowserApi.tabsQueryFirst}.
+   *
+   * Safari sometimes returns >1 tabs unexpectedly even when
+   * specificing a `windowId` or `currentWindow: true` query option.
+   *
+   * For all of these calls,
+   * ```
+   * await chrome.tabs.query({active: true, currentWindow: true})
+   * await chrome.tabs.query({active: true, windowId: chrome.windows.WINDOW_ID_CURRENT})
+   * await chrome.tabs.query({active: true, windowId: 10})
+   * ```
+   *
+   * Safari could return:
+   * ```
+   * [
+   *   {windowId: 2, pinned: true, title: "Incorrect tab in another window", …},
+   *   {windowId: 10, title: "Correct tab in foreground", …},
+   * ]
+   * ```
+   *
+   * This function captures the current window ID manually before running the query,
+   * then finds and returns the tab with the matching window ID.
+   *
+   * See the `SafariTabsQuery` tests in `browser-api.spec.ts`.
+   *
+   * This workaround can be removed when Safari fixes this bug.
+   */
+  static async tabsQueryFirstCurrentWindowForSafari(
+    options: chrome.tabs.QueryInfo,
+  ): Promise<chrome.tabs.Tab> | null {
+    if (!BrowserApi.isSafariApi) {
+      return await BrowserApi.tabsQueryFirst(options);
+    }
+
+    const currentWindowId = (await BrowserApi.getCurrentWindow()).id;
+    const tabs = await BrowserApi.tabsQuery(options);
+
+    if (tabs.length <= 1 || currentWindowId == null) {
+      return tabs[0];
+    }
+
+    return tabs.find((t) => t.windowId === currentWindowId) ?? tabs[0];
+  }
+
   static tabSendMessageData(
     tab: chrome.tabs.Tab,
     command: string,
@@ -174,21 +281,23 @@ export class BrowserApi {
     return BrowserApi.tabSendMessage(tab, obj);
   }
 
-  static async tabSendMessage<T>(
+  static async tabSendMessage<T, TResponse = unknown>(
     tab: chrome.tabs.Tab,
     obj: T,
     options: chrome.tabs.MessageSendOptions = null,
-  ): Promise<void> {
+    rejectOnError = false,
+  ): Promise<TResponse> {
     if (!tab || !tab.id) {
       return;
     }
 
-    return new Promise<void>((resolve) => {
-      chrome.tabs.sendMessage(tab.id, obj, options, () => {
-        if (chrome.runtime.lastError) {
+    return new Promise<TResponse>((resolve, reject) => {
+      chrome.tabs.sendMessage(tab.id, obj, options, (response) => {
+        if (chrome.runtime.lastError && rejectOnError) {
           // Some error happened
+          reject();
         }
-        resolve();
+        resolve(response);
       });
     });
   }
@@ -200,10 +309,6 @@ export class BrowserApi {
     responseCallback?: (response: T) => void,
   ) {
     chrome.tabs.sendMessage<TabMessage, T>(tabId, message, options, responseCallback);
-  }
-
-  static async getPrivateModeWindows(): Promise<browser.windows.Window[]> {
-    return (await browser.windows.getAll()).filter((win) => win.incognito);
   }
 
   static async onWindowCreated(callback: (win: chrome.windows.Window) => any) {
@@ -236,10 +341,6 @@ export class BrowserApi {
     return typeof window !== "undefined" && window === BrowserApi.getBackgroundPage();
   }
 
-  static getApplicationVersion(): string {
-    return chrome.runtime.getManifest().version;
-  }
-
   /**
    * Gets the extension views that match the given properties. This method is not
    * available within background service worker. As a result, it will return an
@@ -267,6 +368,28 @@ export class BrowserApi {
     return new Promise((resolve) =>
       chrome.tabs.create({ url: url, active: active }, (tab) => resolve(tab)),
     );
+  }
+
+  /**
+   * Gathers the details for a specified sub-frame of a tab.
+   *
+   * @param details - The details of the frame to get.
+   */
+  static async getFrameDetails(
+    details: chrome.webNavigation.GetFrameDetails,
+  ): Promise<chrome.webNavigation.GetFrameResultDetails> {
+    return new Promise((resolve) => chrome.webNavigation.getFrame(details, resolve));
+  }
+
+  /**
+   * Gets all frames associated with a tab.
+   *
+   * @param tabId - The id of the tab to get the frames for.
+   */
+  static async getAllFrameDetails(
+    tabId: chrome.tabs.Tab["id"],
+  ): Promise<chrome.webNavigation.GetAllFrameResultDetails[]> {
+    return new Promise((resolve) => chrome.webNavigation.getAllFrames({ tabId }, resolve));
   }
 
   // Keep track of all the events registered in a Safari popup so we can remove
@@ -314,7 +437,7 @@ export class BrowserApi {
    * @param event - The event in which to add the listener to.
    * @param callback - The callback you want registered onto the event.
    */
-  static addListener<T extends (...args: readonly unknown[]) => unknown>(
+  static addListener<T extends (...args: readonly any[]) => any>(
     event: chrome.events.Event<T>,
     callback: T,
   ) {
@@ -351,11 +474,11 @@ export class BrowserApi {
   private static setupUnloadListeners() {
     // The MDN recommend using 'visibilitychange' but that event is fired any time the popup window is obscured as well
     // 'pagehide' works just like 'unload' but is compatible with the back/forward cache, so we prefer using that one
-    window.onpagehide = () => {
+    self.addEventListener("pagehide", () => {
       for (const [event, callback] of BrowserApi.trackedChromeEventListeners) {
         event.removeListener(callback);
       }
-    };
+    });
   }
 
   static sendMessage(subscriber: string, arg: any = {}) {
@@ -396,18 +519,15 @@ export class BrowserApi {
   }
 
   /**
-   * Handles reloading the extension, either by calling the window location
-   * to reload or by calling the extension's runtime to reload.
-   *
-   * @param globalContext - The global context to use for the reload.
+   * Handles reloading the extension using the underlying functionality exposed by the browser API.
    */
-  static reloadExtension(globalContext: (Window & typeof globalThis) | null) {
-    // The passed globalContext might be a ServiceWorkerGlobalScope, as a result
-    // we need to check if the location object exists before calling reload on it.
-    if (typeof globalContext?.location?.reload === "function") {
-      return (globalContext as any).location.reload(true);
+  static reloadExtension() {
+    // If we do `chrome.runtime.reload` on safari they will send an onInstalled reason of install
+    // and that prompts us to show a new tab, this apparently doesn't happen on sideloaded
+    // extensions and only shows itself production scenarios. See: https://bitwarden.atlassian.net/browse/PM-12298
+    if (this.isSafariApi) {
+      return self.location.reload();
     }
-
     return chrome.runtime.reload();
   }
 
@@ -423,7 +543,7 @@ export class BrowserApi {
       return;
     }
 
-    const currentHref = window.location.href;
+    const currentHref = self.location.href;
     views
       .filter((w) => w.location.href != null && !w.location.href.includes("background.html"))
       .filter((w) => !exemptCurrentHref || w.location.href !== currentHref)
@@ -452,7 +572,9 @@ export class BrowserApi {
    *
    * @param permissions - The permissions to check.
    */
-  static async permissionsGranted(permissions: string[]): Promise<boolean> {
+  static async permissionsGranted(
+    permissions: chrome.runtime.ManifestPermissions[],
+  ): Promise<boolean> {
     return new Promise((resolve) =>
       chrome.permissions.contains({ permissions }, (result) => resolve(result)),
     );
@@ -478,10 +600,15 @@ export class BrowserApi {
     win: Window & typeof globalThis,
   ): OperaSidebarAction | FirefoxSidebarAction | null {
     const deviceType = BrowserPlatformUtilsService.getDevice(win);
-    if (deviceType !== DeviceType.FirefoxExtension && deviceType !== DeviceType.OperaExtension) {
-      return null;
+    if (deviceType === DeviceType.FirefoxExtension) {
+      return browser.sidebarAction;
     }
-    return win.opr?.sidebarAction || browser.sidebarAction;
+
+    if (deviceType === DeviceType.OperaExtension) {
+      return win.opr?.sidebarAction;
+    }
+
+    return null;
   }
 
   static captureVisibleTab(): Promise<string> {
@@ -506,12 +633,20 @@ export class BrowserApi {
     },
   ): Promise<unknown> {
     if (BrowserApi.isManifestVersion(3)) {
+      const target: chrome.scripting.InjectionTarget = {
+        tabId,
+      };
+
+      if (typeof details.frameId === "number") {
+        target.frameIds = [details.frameId];
+      }
+
+      if (!target.frameIds?.length && details.allFrames) {
+        target.allFrames = details.allFrames;
+      }
+
       return chrome.scripting.executeScript({
-        target: {
-          tabId: tabId,
-          allFrames: details.allFrames,
-          frameIds: details.frameId ? [details.frameId] : null,
-        },
+        target,
         files: details.file ? [details.file] : null,
         injectImmediately: details.runAt === "document_start",
         world: scriptingApiDetails?.world || "ISOLATED",
@@ -529,7 +664,11 @@ export class BrowserApi {
    * Identifies if the browser autofill settings are overridden by the extension.
    */
   static async browserAutofillSettingsOverridden(): Promise<boolean> {
-    const checkOverrideStatus = (details: chrome.types.ChromeSettingGetResultDetails) =>
+    if (!(await BrowserApi.permissionsGranted(["privacy"]))) {
+      return false;
+    }
+
+    const checkOverrideStatus = (details: chrome.types.ChromeSettingGetResult<boolean>) =>
       details.levelOfControl === "controlled_by_this_extension" && !details.value;
 
     const autofillAddressOverridden: boolean = await new Promise((resolve) =>
@@ -558,37 +697,46 @@ export class BrowserApi {
    *
    * @param value - Determines whether to enable or disable the autofill settings.
    */
-  static updateDefaultBrowserAutofillSettings(value: boolean) {
-    chrome.privacy.services.autofillAddressEnabled.set({ value });
-    chrome.privacy.services.autofillCreditCardEnabled.set({ value });
-    chrome.privacy.services.passwordSavingEnabled.set({ value });
+  static async updateDefaultBrowserAutofillSettings(value: boolean) {
+    await chrome.privacy.services.autofillAddressEnabled.set({ value });
+    await chrome.privacy.services.autofillCreditCardEnabled.set({ value });
+    await chrome.privacy.services.passwordSavingEnabled.set({ value });
   }
 
   /**
-   * Opens the offscreen document with the given reasons and justification.
+   * Handles registration of static content scripts within manifest v2.
    *
-   * @param reasons - List of reasons for opening the offscreen document.
-   * @see https://developer.chrome.com/docs/extensions/reference/api/offscreen#type-Reason
-   * @param justification - Custom written justification for opening the offscreen document.
+   * @param contentScriptOptions - Details of the registered content scripts
    */
-  static async createOffscreenDocument(reasons: chrome.offscreen.Reason[], justification: string) {
-    await chrome.offscreen.createDocument({
-      url: "offscreen-document/index.html",
-      reasons,
-      justification,
-    });
+  static async registerContentScriptsMv2(
+    contentScriptOptions: browser.contentScripts.RegisteredContentScriptOptions,
+  ): Promise<browser.contentScripts.RegisteredContentScript> {
+    if (typeof browser !== "undefined" && !!browser.contentScripts?.register) {
+      return await browser.contentScripts.register(contentScriptOptions);
+    }
+
+    return await registerContentScriptsPolyfill(contentScriptOptions);
   }
 
   /**
-   * Closes the offscreen document.
+   * Handles registration of static content scripts within manifest v3.
    *
-   * @param callback - Optional callback to execute after the offscreen document is closed.
+   * @param scripts - Details of the registered content scripts
    */
-  static closeOffscreenDocument(callback?: () => void) {
-    chrome.offscreen.closeDocument(() => {
-      if (callback) {
-        callback();
-      }
-    });
+  static async registerContentScriptsMv3(
+    scripts: chrome.scripting.RegisteredContentScript[],
+  ): Promise<void> {
+    await chrome.scripting.registerContentScripts(scripts);
+  }
+
+  /**
+   * Handles unregistering of static content scripts within manifest v3.
+   *
+   * @param filter - Optional filter to unregister content scripts. Passing an empty object will unregister all content scripts.
+   */
+  static async unregisterContentScriptsMv3(
+    filter?: chrome.scripting.ContentScriptFilter,
+  ): Promise<void> {
+    await chrome.scripting.unregisterContentScripts(filter);
   }
 }

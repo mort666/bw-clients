@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import * as path from "path";
 
 import { ipcMain } from "electron";
@@ -5,6 +7,7 @@ import log from "electron-log/main";
 
 import { LogLevelType } from "@bitwarden/common/platform/enums/log-level-type.enum";
 import { ConsoleLogService as BaseLogService } from "@bitwarden/common/platform/services/console-log.service";
+import { logging } from "@bitwarden/desktop-napi";
 
 import { isDev } from "../../utils";
 
@@ -25,28 +28,51 @@ export class ElectronLogMainService extends BaseLogService {
     }
     log.initialize();
 
-    ipcMain.handle("ipc.log", (_event, { level, message }) => {
-      this.write(level, message);
+    ipcMain.handle("ipc.log", (_event, { level, message, optionalParams }) => {
+      this.write(level, message, ...optionalParams);
     });
+
+    logging.initNapiLog((error, level, message) => this.writeNapiLog(level, message));
   }
 
-  write(level: LogLevelType, message: string) {
+  private writeNapiLog(level: logging.LogLevel, message: string) {
+    let levelType: LogLevelType;
+
+    switch (level) {
+      case logging.LogLevel.Debug:
+        levelType = LogLevelType.Debug;
+        break;
+      case logging.LogLevel.Warn:
+        levelType = LogLevelType.Warning;
+        break;
+      case logging.LogLevel.Error:
+        levelType = LogLevelType.Error;
+        break;
+      default:
+        levelType = LogLevelType.Info;
+        break;
+    }
+
+    this.write(levelType, "[NAPI] " + message);
+  }
+
+  write(level: LogLevelType, message?: any, ...optionalParams: any[]) {
     if (this.filter != null && this.filter(level)) {
       return;
     }
 
     switch (level) {
       case LogLevelType.Debug:
-        log.debug(message);
+        log.debug(message, ...optionalParams);
         break;
       case LogLevelType.Info:
-        log.info(message);
+        log.info(message, ...optionalParams);
         break;
       case LogLevelType.Warning:
-        log.warn(message);
+        log.warn(message, ...optionalParams);
         break;
       case LogLevelType.Error:
-        log.error(message);
+        log.error(message, ...optionalParams);
         break;
       default:
         break;

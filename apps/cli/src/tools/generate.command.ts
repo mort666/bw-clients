@@ -1,7 +1,14 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
-import { DefaultPassphraseGenerationOptions } from "@bitwarden/common/tools/generator/passphrase";
-import { PasswordGenerationServiceAbstraction } from "@bitwarden/common/tools/generator/password";
-import { PasswordGeneratorOptions } from "@bitwarden/common/tools/generator/password/password-generator-options";
+import {
+  DefaultPasswordGenerationOptions,
+  DefaultPassphraseGenerationOptions,
+} from "@bitwarden/generator-core";
+import {
+  PasswordGeneratorOptions,
+  PasswordGenerationServiceAbstraction,
+} from "@bitwarden/generator-legacy";
 
 import { Response } from "../models/response";
 import { StringResponse } from "../models/response/string.response";
@@ -28,7 +35,7 @@ export class GenerateCommand {
       includeNumber: normalizedOptions.includeNumber,
       minNumber: normalizedOptions.minNumber,
       minSpecial: normalizedOptions.minSpecial,
-      ambiguous: normalizedOptions.ambiguous,
+      ambiguous: !normalizedOptions.ambiguous,
     };
 
     const enforcedOptions = (await this.stateService.getIsAuthenticated())
@@ -64,7 +71,10 @@ class Options {
     this.capitalize = CliUtils.convertBooleanOption(passedOptions?.capitalize);
     this.includeNumber = CliUtils.convertBooleanOption(passedOptions?.includeNumber);
     this.ambiguous = CliUtils.convertBooleanOption(passedOptions?.ambiguous);
-    this.length = CliUtils.convertNumberOption(passedOptions?.length, 14);
+    this.length = CliUtils.convertNumberOption(
+      passedOptions?.length,
+      DefaultPasswordGenerationOptions.length,
+    );
     this.type = passedOptions?.passphrase ? "passphrase" : "password";
     this.separator = CliUtils.convertStringOption(
       passedOptions?.separator,
@@ -74,8 +84,14 @@ class Options {
       passedOptions?.words,
       DefaultPassphraseGenerationOptions.numWords,
     );
-    this.minNumber = CliUtils.convertNumberOption(passedOptions?.minNumber, 1);
-    this.minSpecial = CliUtils.convertNumberOption(passedOptions?.minSpecial, 1);
+    this.minNumber = CliUtils.convertNumberOption(
+      passedOptions?.minNumber,
+      DefaultPasswordGenerationOptions.minNumber,
+    );
+    this.minSpecial = CliUtils.convertNumberOption(
+      passedOptions?.minSpecial,
+      DefaultPasswordGenerationOptions.minSpecial,
+    );
 
     if (!this.uppercase && !this.lowercase && !this.special && !this.number) {
       this.lowercase = true;

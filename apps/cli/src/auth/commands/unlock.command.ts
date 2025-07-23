@@ -1,33 +1,40 @@
-import { ApiService } from "@bitwarden/common/abstractions/api.service";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { firstValueFrom, map } from "rxjs";
+
 import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
-import { KeyConnectorService } from "@bitwarden/common/auth/abstractions/key-connector.service";
-import { SecretVerificationRequest } from "@bitwarden/common/auth/models/request/secret-verification.request";
-import { CryptoFunctionService } from "@bitwarden/common/platform/abstractions/crypto-function.service";
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
+import { VerificationType } from "@bitwarden/common/auth/enums/verification-type";
+import { MasterPasswordVerification } from "@bitwarden/common/auth/types/verification";
+import { CryptoFunctionService } from "@bitwarden/common/key-management/crypto/abstractions/crypto-function.service";
+import { KeyConnectorService } from "@bitwarden/common/key-management/key-connector/abstractions/key-connector.service";
+import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
-import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
-import { HashPurpose } from "@bitwarden/common/platform/enums";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
-import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
+import { MasterKey } from "@bitwarden/common/types/key";
+import { KeyService } from "@bitwarden/key-management";
 
-import { ConvertToKeyConnectorCommand } from "../../commands/convert-to-key-connector.command";
+import { ConvertToKeyConnectorCommand } from "../../key-management/convert-to-key-connector.command";
 import { Response } from "../../models/response";
 import { MessageResponse } from "../../models/response/message.response";
+import { I18nService } from "../../platform/services/i18n.service";
 import { CliUtils } from "../../utils";
 
 export class UnlockCommand {
   constructor(
-    private cryptoService: CryptoService,
-    private stateService: StateService,
+    private accountService: AccountService,
+    private masterPasswordService: InternalMasterPasswordServiceAbstraction,
+    private keyService: KeyService,
+    private userVerificationService: UserVerificationService,
     private cryptoFunctionService: CryptoFunctionService,
-    private apiService: ApiService,
     private logService: ConsoleLogService,
     private keyConnectorService: KeyConnectorService,
     private environmentService: EnvironmentService,
-    private syncService: SyncService,
     private organizationApiService: OrganizationApiServiceAbstraction,
     private logout: () => Promise<void>,
+    private i18nService: I18nService,
   ) {}
 
   async run(password: string, cmdOptions: Record<string, any>) {
@@ -41,62 +48,47 @@ export class UnlockCommand {
     }
 
     await this.setNewSessionKey();
-    const email = await this.stateService.getEmail();
-    const kdf = await this.stateService.getKdfType();
-    const kdfConfig = await this.stateService.getKdfConfig();
-    const masterKey = await this.cryptoService.makeMasterKey(password, email, kdf, kdfConfig);
-    const storedKeyHash = await this.cryptoService.getMasterKeyHash();
+    const [userId, email] = await firstValueFrom(
+      this.accountService.activeAccount$.pipe(map((a) => [a?.id, a?.email])),
+    );
 
-    let passwordValid = false;
-    if (masterKey != null) {
-      if (storedKeyHash != null) {
-        passwordValid = await this.cryptoService.compareAndUpdateKeyHash(password, masterKey);
-      } else {
-        const serverKeyHash = await this.cryptoService.hashMasterKey(
-          password,
-          masterKey,
-          HashPurpose.ServerAuthorization,
-        );
-        const request = new SecretVerificationRequest();
-        request.masterPasswordHash = serverKeyHash;
-        try {
-          await this.apiService.postAccountVerifyPassword(request);
-          passwordValid = true;
-          const localKeyHash = await this.cryptoService.hashMasterKey(
-            password,
-            masterKey,
-            HashPurpose.LocalAuthorization,
-          );
-          await this.cryptoService.setMasterKeyHash(localKeyHash);
-        } catch {
-          // Ignore
-        }
+    const verification = {
+      type: VerificationType.MasterPassword,
+      secret: password,
+    } as MasterPasswordVerification;
+
+    let masterKey: MasterKey;
+    try {
+      const response = await this.userVerificationService.verifyUserByMasterPassword(
+        verification,
+        userId,
+        email,
+      );
+      masterKey = response.masterKey;
+    } catch (e) {
+      // verification failure throws
+      return Response.error(e.message);
+    }
+
+    const userKey = await this.masterPasswordService.decryptUserKeyWithMasterKey(masterKey, userId);
+    await this.keyService.setUserKey(userKey, userId);
+
+    if (await firstValueFrom(this.keyConnectorService.convertAccountRequired$)) {
+      const convertToKeyConnectorCommand = new ConvertToKeyConnectorCommand(
+        userId,
+        this.keyConnectorService,
+        this.environmentService,
+        this.organizationApiService,
+        this.logout,
+        this.i18nService,
+      );
+      const convertResponse = await convertToKeyConnectorCommand.run();
+      if (!convertResponse.success) {
+        return convertResponse;
       }
     }
 
-    if (passwordValid) {
-      await this.cryptoService.setMasterKey(masterKey);
-      const userKey = await this.cryptoService.decryptUserKeyWithMasterKey(masterKey);
-      await this.cryptoService.setUserKey(userKey);
-
-      if (await this.keyConnectorService.getConvertAccountRequired()) {
-        const convertToKeyConnectorCommand = new ConvertToKeyConnectorCommand(
-          this.keyConnectorService,
-          this.environmentService,
-          this.syncService,
-          this.organizationApiService,
-          this.logout,
-        );
-        const convertResponse = await convertToKeyConnectorCommand.run();
-        if (!convertResponse.success) {
-          return convertResponse;
-        }
-      }
-
-      return this.successResponse();
-    } else {
-      return Response.error("Invalid master password.");
-    }
+    return this.successResponse();
   }
 
   private async setNewSessionKey() {
