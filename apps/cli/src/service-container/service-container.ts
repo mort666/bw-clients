@@ -439,6 +439,7 @@ export class ServiceContainer {
       this.encryptService,
       this.logService,
       this.cryptoFunctionService,
+      this.accountService,
     );
 
     this.pinService = new PinService(
