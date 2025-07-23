@@ -96,6 +96,7 @@ export class BrowserSystemNotificationService implements SystemNotificationsServ
 
   isSupported(): boolean {
     switch (this.platformUtilsService.getDevice()) {
+      case DeviceType.FirefoxExtension:
       case DeviceType.EdgeExtension:
       case DeviceType.VivaldiExtension:
       case DeviceType.OperaExtension:
