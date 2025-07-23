@@ -181,6 +181,7 @@ export abstract class KeyService {
   /**
    * Encrypts the existing (or provided) user key with the
    * provided master key
+   * @deprecated
    * @param masterKey The user's master key
    * @param userKey The user key
    * @returns The user key and the master key protected version of it
