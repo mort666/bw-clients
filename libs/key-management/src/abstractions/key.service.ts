@@ -163,6 +163,7 @@ export abstract class KeyService {
    */
   abstract clearStoredUserKey(keySuffix: KeySuffixOptions, userId: string): Promise<void>;
   /**
+   * @deprecated
    * @throws Error when userId is null and no active user
    * @param password The user's master password that will be used to derive a master key if one isn't found
    * @param userId The desired user
@@ -170,6 +171,7 @@ export abstract class KeyService {
   abstract getOrDeriveMasterKey(password: string, userId?: string): Promise<MasterKey>;
   /**
    * Generates a master key from the provided password
+   * @deprecated
    * @param password The user's master password
    * @param email The user's email
    * @param KdfConfig The user's key derivation function configuration
@@ -191,6 +193,7 @@ export abstract class KeyService {
    * Creates a master password hash from the user's master password. Can
    * be used for local authentication or for server authentication depending
    * on the hashPurpose provided.
+   * @deprecated
    * @throws Error when password is null or key is null and no active user or active user have no master key
    * @param password The user's master password
    * @param key The user's master key or active's user master key.

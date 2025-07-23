@@ -2,6 +2,7 @@ import { mock, MockProxy } from "jest-mock-extended";
 import { of } from "rxjs";
 import * as rxjs from "rxjs";
 
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 // eslint-disable-next-line no-restricted-imports
@@ -32,6 +33,7 @@ describe("MasterPasswordService", () => {
   let encryptService: MockProxy<EncryptService>;
   let logService: MockProxy<LogService>;
   let cryptoFunctionService: MockProxy<CryptoFunctionService>;
+  let accountService: MockProxy<AccountService>;
 
   const userId = "user-id" as UserId;
   const mockUserState = {
@@ -54,6 +56,7 @@ describe("MasterPasswordService", () => {
     encryptService = mock<EncryptService>();
     logService = mock<LogService>();
     cryptoFunctionService = mock<CryptoFunctionService>();
+    accountService = mock<AccountService>();
 
     stateProvider.getUser.mockReturnValue(mockUserState as any);
 
@@ -66,6 +69,7 @@ describe("MasterPasswordService", () => {
       encryptService,
       logService,
       cryptoFunctionService,
+      accountService,
     );
 
     encryptService.unwrapSymmetricKey.mockResolvedValue(makeSymmetricCryptoKey(64, 1));
