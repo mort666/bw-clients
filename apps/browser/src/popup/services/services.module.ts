@@ -82,10 +82,7 @@ import { I18nService as I18nServiceAbstraction } from "@bitwarden/common/platfor
 import { KeyGenerationService } from "@bitwarden/common/platform/abstractions/key-generation.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService as MessagingServiceAbstraction } from "@bitwarden/common/platform/abstractions/messaging.service";
-import {
-  PlatformUtilsService as PlatformUtilsServiceAbstraction,
-  PlatformUtilsService,
-} from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { SdkClientFactory } from "@bitwarden/common/platform/abstractions/sdk/sdk-client-factory";
 import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
 import { SdkService } from "@bitwarden/common/platform/abstractions/sdk/sdk.service";
@@ -262,7 +259,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: ActionsService,
     useClass: BrowserActionsService,
-    deps: [LogService, PlatformUtilsServiceAbstraction],
+    deps: [LogService, PlatformUtilsService],
   }),
   safeProvider({
     provide: KeyService,
@@ -623,7 +620,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: SystemNotificationsService,
     useClass: BrowserSystemNotificationService,
-    deps: [LogService, PlatformUtilsServiceAbstraction],
+    deps: [LogService, PlatformUtilsService],
   }),
   safeProvider({
     provide: LoginComponentService,
