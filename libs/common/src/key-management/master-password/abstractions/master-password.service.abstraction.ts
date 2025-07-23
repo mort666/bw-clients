@@ -91,7 +91,7 @@ export abstract class InternalMasterPasswordServiceAbstraction extends MasterPas
   /**
    * Set the master key for the user.
    * Note: Use {@link clearMasterKey} to clear the master key.
-   * @deprecated
+   * @deprecated Interacting with the master-key directly is deprecated.
    * @param masterKey The master key.
    * @param userId The user ID.
    * @throws If the user ID or master key is missing.
