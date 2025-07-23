@@ -6,21 +6,19 @@
       [label]="'providerPortal' | i18n"
     ></bit-nav-logo>
 
-    <!-- Warning icon for suspended provider -->
-    <div *ngIf="!provider.enabled" class="tw-px-4 tw-py-2 tw-flex tw-items-center tw-text-danger">
-      <i
-        class="bwi bwi-exclamation-triangle tw-mr-2"
-        title="{{ 'providerIsDisabled' | i18n }}"
-        aria-hidden="true"
-      ></i>
-      <span class="tw-text-sm tw-font-medium">{{ "providerIsDisabled" | i18n }}</span>
-    </div>
-
     <bit-nav-item
       icon="bwi-provider"
       [text]="clientsTranslationKey$ | async | i18n"
       [route]="(isBillable | async) ? 'manage-client-organizations' : 'clients'"
-    ></bit-nav-item>
+    >
+      <i
+        *ngIf="!provider.enabled"
+        slot="end"
+        class="bwi bwi-exclamation-triangle tw-text-danger"
+        title="{{ 'providerIsDisabled' | i18n }}"
+        aria-hidden="true"
+      ></i>
+    </bit-nav-item>
     <bit-nav-group
       icon="bwi-sliders"
       [text]="'manage' | i18n"
