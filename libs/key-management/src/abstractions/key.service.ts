@@ -156,6 +156,10 @@ export abstract class KeyService {
    */
   abstract makeUserKey(masterKey: MasterKey | null): Promise<[UserKey, EncString]>;
   /**
+   * Generates a new v1 user key
+   */
+  abstract makeUserKeyV1(): Promise<UserKey>;
+  /**
    * Clears the user's stored version of the user key
    * @param keySuffix The desired version of the key to clear
    * @param userId The desired user
@@ -208,6 +212,7 @@ export abstract class KeyService {
   ): Promise<string>;
   /**
    * Compares the provided master password to the stored password hash.
+   * @deprecated
    * @param masterPassword The user's master password
    * @param key The user's master key
    * @param userId The id of the user to do the operation for.

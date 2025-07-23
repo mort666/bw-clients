@@ -222,11 +222,10 @@ export class SetInitialPasswordComponent implements OnInit {
 
     try {
       const credentials: SetInitialPasswordCredentials = {
-        newMasterKey: passwordInputResult.newMasterKey,
-        newServerMasterKeyHash: passwordInputResult.newServerMasterKeyHash,
-        newLocalMasterKeyHash: passwordInputResult.newLocalMasterKeyHash,
+        newPassword: passwordInputResult.newPassword,
         newPasswordHint: passwordInputResult.newPasswordHint,
         kdfConfig: passwordInputResult.kdfConfig,
+        salt: passwordInputResult.salt,
         orgSsoIdentifier: this.orgSsoIdentifier,
         orgId: this.orgId,
         resetPasswordAutoEnroll: this.resetPasswordAutoEnroll,

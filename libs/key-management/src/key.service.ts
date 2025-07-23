@@ -235,6 +235,11 @@ export class DefaultKeyService implements KeyServiceAbstraction {
     return this.buildProtectedSymmetricKey(masterKey, newUserKey);
   }
 
+  async makeUserKeyV1(): Promise<UserKey> {
+    const key = await this.keyGenerationService.createKey(512);
+    return key as UserKey;
+  }
+
   /**
    * Clears the user key. Clears all stored versions of the user keys as well, such as the biometrics key
    * @param userId The desired user
