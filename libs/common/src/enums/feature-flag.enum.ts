@@ -36,9 +36,6 @@ export enum FeatureFlag {
   PM21881_ManagePaymentDetailsOutsideCheckout = "pm-21881-manage-payment-details-outside-checkout",
   PM21821_ProviderPortalTakeover = "pm-21821-provider-portal-takeover",
 
-  /* Data Insights and Reporting */
-  EnableRiskInsightsNotifications = "enable-risk-insights-notifications",
-
   /* Key Management */
   PrivateKeyRegeneration = "pm-12241-private-key-regeneration",
   PM4154_BulkEncryptionService = "PM-4154-bulk-encryption-service",
@@ -55,6 +52,7 @@ export enum FeatureFlag {
   PM9111ExtensionPersistAddEditForm = "pm-9111-extension-persist-add-edit-form",
   PM19941MigrateCipherDomainToSdk = "pm-19941-migrate-cipher-domain-to-sdk",
   PM22134SdkCipherListView = "pm-22134-sdk-cipher-list-view",
+  PM22136_SdkCipherEncryption = "pm-22136-sdk-cipher-encryption",
   CipherKeyEncryption = "cipher-key-encryption",
   EndUserNotifications = "pm-10609-end-user-notifications",
   RemoveCardItemTypePolicy = "pm-16442-remove-card-item-type-policy",
@@ -89,9 +87,6 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.MacOsNativeCredentialSync]: FALSE,
   [FeatureFlag.WindowsDesktopAutotype]: FALSE,
 
-  /* Data Insights and Reporting */
-  [FeatureFlag.EnableRiskInsightsNotifications]: FALSE,
-
   /* Tools */
   [FeatureFlag.DesktopSendUIRefresh]: FALSE,
 
@@ -104,6 +99,7 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.RemoveCardItemTypePolicy]: FALSE,
   [FeatureFlag.PM22134SdkCipherListView]: FALSE,
   [FeatureFlag.PM19315EndUserActivationMvp]: FALSE,
+  [FeatureFlag.PM22136_SdkCipherEncryption]: FALSE,
 
   /* Auth */
   [FeatureFlag.PM16117_SetInitialPasswordRefactor]: FALSE,
