@@ -2,6 +2,7 @@
 // @ts-strict-ignore
 import { firstValueFrom, map, Observable } from "rxjs";
 
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 // eslint-disable-next-line no-restricted-imports
@@ -74,13 +75,21 @@ export class MasterPasswordService implements InternalMasterPasswordServiceAbstr
     private encryptService: EncryptService,
     private logService: LogService,
     private cryptoFunctionService: CryptoFunctionService,
-  ) {}
+    private accountService: AccountService,
+  ) { }
 
   masterKey$(userId: UserId): Observable<MasterKey> {
     if (userId == null) {
       throw new Error("User ID is required.");
     }
     return this.stateProvider.getUser(userId, MASTER_KEY).state$;
+  }
+
+  saltForAccount$(userId: UserId): Observable<MasterPasswordSalt> {
+    if (userId == null) {
+      throw new Error("User ID is required.");
+    }
+    return this.accountService.activeAccount$.pipe(map((a) => a?.email), map((email) => this.emailToSalt(email)));
   }
 
   masterKeyHash$(userId: UserId): Observable<string> {

@@ -8,6 +8,7 @@ import { DeviceResponse } from "../../../auth/abstractions/devices/responses/dev
 import { UserId } from "../../../types/guid";
 import { DeviceKey, UserKey } from "../../../types/key";
 import { EncString } from "../../crypto/models/enc-string";
+import { MasterPasswordAuthenticationData } from "../../master-password/types/master-password.types";
 
 export abstract class DeviceTrustServiceAbstraction {
   /**
@@ -50,7 +51,7 @@ export abstract class DeviceTrustServiceAbstraction {
   rotateDevicesTrust: (
     userId: UserId,
     newUserKey: UserKey,
-    masterPasswordHash: string,
+    masterPasswordAuthenticationData: MasterPasswordAuthenticationData,
   ) => Promise<void>;
   /**
    * Notifies the server that the device has a device key, but didn't receive any associated decryption keys.

@@ -61,7 +61,7 @@ describe("DefaultRegistrationFinishService", () => {
         newMasterKey: masterKey,
         newServerMasterKeyHash: "newServerMasterKeyHash",
         newLocalMasterKeyHash: "newLocalMasterKeyHash",
-        kdfConfig: DEFAULT_KDF_CONFIG,
+        kdf: DEFAULT_KDF_CONFIG,
         newPasswordHint: "newPasswordHint",
         newPassword: "newPassword",
       };
@@ -100,8 +100,8 @@ describe("DefaultRegistrationFinishService", () => {
             publicKey: userKeyPair[0],
             encryptedPrivateKey: userKeyPair[1].encryptedString,
           },
-          kdf: passwordInputResult.kdfConfig.kdfType,
-          kdfIterations: passwordInputResult.kdfConfig.iterations,
+          kdf: passwordInputResult.kdf.kdfType,
+          kdfIterations: passwordInputResult.kdf.iterations,
           kdfMemory: undefined,
           kdfParallelism: undefined,
           // Web only fields should be undefined

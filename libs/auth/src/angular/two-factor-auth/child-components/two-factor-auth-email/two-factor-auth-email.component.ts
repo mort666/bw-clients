@@ -8,6 +8,7 @@ import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { TwoFactorService } from "@bitwarden/common/auth/abstractions/two-factor.service";
 import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
 import { TwoFactorEmailRequest } from "@bitwarden/common/auth/models/request/two-factor-email.request";
+import { MasterPasswordAuthenticationHash } from "@bitwarden/common/key-management/master-password/types/master-password.types";
 import { AppIdService } from "@bitwarden/common/platform/abstractions/app-id.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
@@ -66,7 +67,7 @@ export class TwoFactorAuthEmailComponent implements OnInit {
     protected appIdService: AppIdService,
     private toastService: ToastService,
     private cacheService: TwoFactorAuthEmailComponentCacheService,
-  ) {}
+  ) { }
 
   async ngOnInit(): Promise<void> {
     // Check if email was already sent
@@ -125,7 +126,7 @@ export class TwoFactorAuthEmailComponent implements OnInit {
       const request = new TwoFactorEmailRequest();
       request.email = email;
 
-      request.masterPasswordHash = (await this.loginStrategyService.getMasterPasswordHash()) ?? "";
+      request.masterPasswordHash = ((await this.loginStrategyService.getMasterPasswordHash()) ?? "") as MasterPasswordAuthenticationHash;
       request.ssoEmail2FaSessionToken =
         (await this.loginStrategyService.getSsoEmail2FaSessionToken()) ?? "";
       request.deviceIdentifier = await this.appIdService.getAppId();

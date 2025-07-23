@@ -20,7 +20,7 @@ export class OrganizationAuthRequestService {
     private keyService: KeyService,
     private encryptService: EncryptService,
     private organizationUserApiService: OrganizationUserApiService,
-  ) {}
+  ) { }
 
   async listPendingRequests(organizationId: string): Promise<PendingAuthRequestView[]> {
     return await this.organizationAuthRequestApiService.listPendingRequests(organizationId);

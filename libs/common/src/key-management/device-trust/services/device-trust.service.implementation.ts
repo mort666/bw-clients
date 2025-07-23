@@ -33,6 +33,7 @@ import { UserKey, DeviceKey } from "../../../types/key";
 import { CryptoFunctionService } from "../../crypto/abstractions/crypto-function.service";
 import { EncryptService } from "../../crypto/abstractions/encrypt.service";
 import { EncString } from "../../crypto/models/enc-string";
+import { MasterPasswordAuthenticationData } from "../../master-password/types/master-password.types";
 import { DeviceTrustServiceAbstraction } from "../abstractions/device-trust.service.abstraction";
 
 /** Uses disk storage so that the device key can persist after log out and tab removal. */
@@ -256,7 +257,7 @@ export class DeviceTrustService implements DeviceTrustServiceAbstraction {
   async rotateDevicesTrust(
     userId: UserId,
     newUserKey: UserKey,
-    masterPasswordHash: string,
+    masterPasswordAuthenticationData: MasterPasswordAuthenticationData,
   ): Promise<void> {
     this.logService.info("[Device trust rotation] Rotating device trust...");
     if (!userId) {
@@ -279,7 +280,7 @@ export class DeviceTrustService implements DeviceTrustServiceAbstraction {
 
     const deviceIdentifier = await this.appIdService.getAppId();
     const secretVerificationRequest = new SecretVerificationRequest();
-    secretVerificationRequest.masterPasswordHash = masterPasswordHash;
+    secretVerificationRequest.masterPasswordHash = masterPasswordAuthenticationData.masterPasswordAuthenticationHash;
 
     // Get the keys that are used in rotating a devices keys from the server
     const currentDeviceKeys = await this.devicesApiService.getDeviceKeys(deviceIdentifier);
@@ -310,7 +311,7 @@ export class DeviceTrustService implements DeviceTrustServiceAbstraction {
     // then it can be added to trustRequest.otherDevices.
 
     const trustRequest = new UpdateDevicesTrustRequest();
-    trustRequest.masterPasswordHash = masterPasswordHash;
+    trustRequest.masterPasswordHash = masterPasswordAuthenticationData.masterPasswordAuthenticationHash;
     trustRequest.currentDevice = currentDeviceUpdateRequest;
     trustRequest.otherDevices = [];
 

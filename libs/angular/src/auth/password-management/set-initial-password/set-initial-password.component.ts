@@ -85,7 +85,7 @@ export class SetInitialPasswordComponent implements OnInit {
     private syncService: SyncService,
     private toastService: ToastService,
     private validationService: ValidationService,
-  ) {}
+  ) { }
 
   async ngOnInit() {
     await this.syncService.fullSync(true);
@@ -209,10 +209,9 @@ export class SetInitialPasswordComponent implements OnInit {
 
   private async setInitialPassword(passwordInputResult: PasswordInputResult) {
     const ctx = "Could not set initial password.";
-    assertTruthy(passwordInputResult.newMasterKey, "newMasterKey", ctx);
-    assertTruthy(passwordInputResult.newServerMasterKeyHash, "newServerMasterKeyHash", ctx);
-    assertTruthy(passwordInputResult.newLocalMasterKeyHash, "newLocalMasterKeyHash", ctx);
-    assertTruthy(passwordInputResult.kdfConfig, "kdfConfig", ctx);
+    assertTruthy(passwordInputResult.newPassword, "newPassword", ctx);
+    assertTruthy(passwordInputResult.kdf, "kdf", ctx);
+    assertTruthy(passwordInputResult.salt, "salt", ctx);
     assertTruthy(this.orgSsoIdentifier, "orgSsoIdentifier", ctx);
     assertTruthy(this.orgId, "orgId", ctx);
     assertTruthy(this.userType, "userType", ctx);
@@ -222,11 +221,10 @@ export class SetInitialPasswordComponent implements OnInit {
 
     try {
       const credentials: SetInitialPasswordCredentials = {
-        newMasterKey: passwordInputResult.newMasterKey,
-        newServerMasterKeyHash: passwordInputResult.newServerMasterKeyHash,
-        newLocalMasterKeyHash: passwordInputResult.newLocalMasterKeyHash,
+        initialPassword: passwordInputResult.newPassword,
+        kdf: passwordInputResult.kdf,
+        salt: passwordInputResult.salt,
         newPasswordHint: passwordInputResult.newPasswordHint,
-        kdfConfig: passwordInputResult.kdfConfig,
         orgSsoIdentifier: this.orgSsoIdentifier,
         orgId: this.orgId,
         resetPasswordAutoEnroll: this.resetPasswordAutoEnroll,
@@ -251,15 +249,17 @@ export class SetInitialPasswordComponent implements OnInit {
 
   private async setInitialPasswordTdeOffboarding(passwordInputResult: PasswordInputResult) {
     const ctx = "Could not set initial password.";
-    assertTruthy(passwordInputResult.newMasterKey, "newMasterKey", ctx);
-    assertTruthy(passwordInputResult.newServerMasterKeyHash, "newServerMasterKeyHash", ctx);
+    assertTruthy(passwordInputResult.newPassword, "newPassword", ctx);
+    assertTruthy(passwordInputResult.kdf, "kdf", ctx);
+    assertTruthy(passwordInputResult.salt, "salt", ctx);
     assertTruthy(this.userId, "userId", ctx);
     assertNonNullish(passwordInputResult.newPasswordHint, "newPasswordHint", ctx); // can have an empty string as a valid value, so check non-nullish
 
     try {
       const credentials: SetInitialPasswordTdeOffboardingCredentials = {
-        newMasterKey: passwordInputResult.newMasterKey,
-        newServerMasterKeyHash: passwordInputResult.newServerMasterKeyHash,
+        initialPassword: passwordInputResult.newPassword,
+        kdf: passwordInputResult.kdf,
+        salt: passwordInputResult.salt,
         newPasswordHint: passwordInputResult.newPasswordHint,
       };
 

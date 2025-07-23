@@ -8,6 +8,8 @@ import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-p
 import { EmailTokenRequest } from "@bitwarden/common/auth/models/request/email-token.request";
 import { EmailRequest } from "@bitwarden/common/auth/models/request/email.request";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
+import { MasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
+import { MasterPasswordSalt } from "@bitwarden/common/key-management/master-password/types/master-password.types";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { UserId } from "@bitwarden/common/types/guid";
@@ -43,7 +45,8 @@ export class ChangeEmailComponent implements OnInit {
     private formBuilder: FormBuilder,
     private kdfConfigService: KdfConfigService,
     private toastService: ToastService,
-  ) {}
+    private masterPasswordService: MasterPasswordServiceAbstraction,
+  ) { }
 
   async ngOnInit() {
     this.userId = await firstValueFrom(getUserId(this.accountService.activeAccount$));
@@ -79,15 +82,20 @@ export class ChangeEmailComponent implements OnInit {
       throw new Error("Missing email or password");
     }
 
-    const existingHash = await this.keyService.hashMasterKey(
-      masterPassword,
-      await this.keyService.getOrDeriveMasterKey(masterPassword, this.userId),
-    );
+    const kdfConfig = await firstValueFrom(this.kdfConfigService.getKdfConfig$(this.userId));
+    if (kdfConfig == null) {
+      throw new Error("Missing kdf config");
+    }
+    const salt = await firstValueFrom(this.masterPasswordService.saltForAccount$(this.userId));
+    if (salt == null) {
+      throw new Error("Missing salt");
+    }
+    const existingAuthenticationData = await this.masterPasswordService.makeMasterPasswordAuthenticationData(masterPassword, kdfConfig, salt);
 
     if (!this.tokenSent) {
       const request = new EmailTokenRequest();
       request.newEmail = newEmail;
-      request.masterPasswordHash = existingHash;
+      request.masterPasswordHash = existingAuthenticationData.masterPasswordAuthenticationHash;
       await this.apiService.postEmailToken(request);
       this.activateStep2();
     } else {
@@ -95,31 +103,29 @@ export class ChangeEmailComponent implements OnInit {
       if (token == null) {
         throw new Error("Missing token");
       }
-      const request = new EmailRequest();
-      request.token = token;
-      request.newEmail = newEmail;
-      request.masterPasswordHash = existingHash;
-
-      const kdfConfig = await firstValueFrom(this.kdfConfigService.getKdfConfig$(this.userId));
-      if (kdfConfig == null) {
-        throw new Error("Missing kdf config");
-      }
-      const newMasterKey = await this.keyService.makeMasterKey(masterPassword, newEmail, kdfConfig);
-      request.newMasterPasswordHash = await this.keyService.hashMasterKey(
-        masterPassword,
-        newMasterKey,
-      );
 
       const userKey = await firstValueFrom(this.keyService.userKey$(this.userId));
       if (userKey == null) {
         throw new Error("Can't find UserKey");
       }
-      const newUserKey = await this.keyService.encryptUserKeyWithMasterKey(newMasterKey, userKey);
-      const encryptedUserKey = newUserKey[1]?.encryptedString;
-      if (encryptedUserKey == null) {
-        throw new Error("Missing Encrypted User Key");
-      }
-      request.key = encryptedUserKey;
+
+      const newSalt = newEmail.toLowerCase().trim() as MasterPasswordSalt;
+      const newAuthenticationData = await this.masterPasswordService.makeMasterPasswordAuthenticationData(
+        masterPassword,
+        kdfConfig,
+        newSalt,
+      );
+      const newUnlockData = await this.masterPasswordService.makeMasterPasswordUnlockData(
+        masterPassword,
+        kdfConfig,
+        newSalt,
+        userKey
+      );
+
+      const request = new EmailRequest(newAuthenticationData, newUnlockData);
+      request.token = token;
+      request.newEmail = newEmail;
+      request.masterPasswordHash = existingAuthenticationData.masterPasswordAuthenticationHash;
 
       await this.apiService.postEmail(request);
       this.reset();

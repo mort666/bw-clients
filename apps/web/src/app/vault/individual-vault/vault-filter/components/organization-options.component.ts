@@ -16,6 +16,7 @@ import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
+import { MasterPasswordAuthenticationHash } from "@bitwarden/common/key-management/master-password/types/master-password.types";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
@@ -65,7 +66,7 @@ export class OrganizationOptionsComponent implements OnInit, OnDestroy {
     private keyService: KeyService,
     private accountService: AccountService,
     private linkSsoService: LinkSsoService,
-  ) {}
+  ) { }
 
   async ngOnInit() {
     const resetPasswordPolicies$ = this.accountService.activeAccount$.pipe(
@@ -215,7 +216,7 @@ export class OrganizationOptionsComponent implements OnInit, OnDestroy {
     } else {
       // Remove reset password
       const request = new OrganizationUserResetPasswordEnrollmentRequest();
-      request.masterPasswordHash = "ignored";
+      request.masterPasswordHash = "ignored" as MasterPasswordAuthenticationHash;
       request.resetPasswordKey = "";
       this.actionPromise =
         this.organizationUserApiService.putOrganizationUserResetPasswordEnrollment(

@@ -1,11 +1,14 @@
+// @ts-strict-ignore
+
 import {
   OrganizationUserStatusType,
   OrganizationUserType,
 } from "@bitwarden/common/admin-console/enums";
 import { PermissionsApi } from "@bitwarden/common/admin-console/models/api/permissions.api";
 import { SelectionReadOnlyResponse } from "@bitwarden/common/admin-console/models/response/selection-read-only.response";
+import { EncryptedString } from "@bitwarden/common/key-management/crypto/models/enc-string";
 import { BaseResponse } from "@bitwarden/common/models/response/base.response";
-import { KdfType } from "@bitwarden/key-management";
+import { Argon2KdfConfig, KdfConfig, KdfType, PBKDF2KdfConfig } from "@bitwarden/key-management";
 
 export class OrganizationUserResponse extends BaseResponse {
   id: string;
@@ -75,20 +78,31 @@ export class OrganizationUserDetailsResponse extends OrganizationUserResponse {
 
 export class OrganizationUserResetPasswordDetailsResponse extends BaseResponse {
   organizationUserId: string;
-  kdf: KdfType;
-  kdfIterations: number;
-  kdfMemory?: number;
-  kdfParallelism?: number;
-  resetPasswordKey: string;
-  encryptedPrivateKey: string;
+
+  kdf: KdfConfig;
+
+  // OrgPublicKeyEncapsulatedUnsignedSharedUserKey
+  resetPasswordKey: EncryptedString;
+  // UserKeyEncryptedPrivateKey
+  encryptedPrivateKey: EncryptedString;
 
   constructor(response: any) {
     super(response);
     this.organizationUserId = this.getResponseProperty("OrganizationUserId");
-    this.kdf = this.getResponseProperty("Kdf");
-    this.kdfIterations = this.getResponseProperty("KdfIterations");
-    this.kdfMemory = this.getResponseProperty("KdfMemory");
-    this.kdfParallelism = this.getResponseProperty("KdfParallelism");
+
+    const kdf = this.getResponseProperty("Kdf");
+    const kdfIterations = this.getResponseProperty("KdfIterations");
+    const kdfMemory = this.getResponseProperty("KdfMemory");
+    const kdfParallelism = this.getResponseProperty("KdfParallelism");
+    if (kdf === KdfType.PBKDF2_SHA256) {
+      this.kdf = new PBKDF2KdfConfig(kdfIterations);
+    } else if (kdf === KdfType.Argon2id) {
+      this.kdf = new Argon2KdfConfig(kdfIterations, kdfMemory, kdfParallelism);
+    } else {
+      throw new Error(`Unsupported KDF type: ${kdf}`);
+    }
+
+    // "ResetPasswordKey" is just the 
     this.resetPasswordKey = this.getResponseProperty("ResetPasswordKey");
     this.encryptedPrivateKey = this.getResponseProperty("EncryptedPrivateKey");
   }

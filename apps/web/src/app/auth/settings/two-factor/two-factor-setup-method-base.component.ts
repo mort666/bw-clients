@@ -7,6 +7,7 @@ import { VerificationType } from "@bitwarden/common/auth/enums/verification-type
 import { SecretVerificationRequest } from "@bitwarden/common/auth/models/request/secret-verification.request";
 import { TwoFactorProviderRequest } from "@bitwarden/common/auth/models/request/two-factor-provider.request";
 import { AuthResponseBase } from "@bitwarden/common/auth/types/auth-response";
+import { MasterPasswordAuthenticationHash } from "@bitwarden/common/key-management/master-password/types/master-password.types";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
@@ -37,7 +38,7 @@ export abstract class TwoFactorSetupMethodBaseComponent {
     protected userVerificationService: UserVerificationService,
     protected dialogService: DialogService,
     protected toastService: ToastService,
-  ) {}
+  ) { }
 
   protected auth(authResponse: AuthResponseBase) {
     this.hashedSecret = authResponse.secret;
@@ -132,7 +133,7 @@ export abstract class TwoFactorSetupMethodBaseComponent {
     }
     return this.userVerificationService.buildRequest(
       {
-        secret: this.hashedSecret,
+        secret: this.hashedSecret as MasterPasswordAuthenticationHash,
         type: this.verificationType,
       },
       requestClass,

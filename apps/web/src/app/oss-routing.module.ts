@@ -10,7 +10,6 @@ import {
   unauthGuardFn,
   activeAuthGuard,
 } from "@bitwarden/angular/auth/guards";
-import { ChangePasswordComponent } from "@bitwarden/angular/auth/password-management/change-password";
 import { SetInitialPasswordComponent } from "@bitwarden/angular/auth/password-management/set-initial-password/set-initial-password.component";
 import { canAccessFeature } from "@bitwarden/angular/platform/guard/feature-flag.guard";
 import {
@@ -19,7 +18,6 @@ import {
   RegistrationStartComponent,
   RegistrationStartSecondaryComponent,
   RegistrationStartSecondaryComponentData,
-  SetPasswordJitComponent,
   RegistrationLinkExpiredComponent,
   LoginComponent,
   LoginSecondaryContentComponent,
@@ -55,13 +53,10 @@ import { LoginViaWebAuthnComponent } from "./auth/login/login-via-webauthn/login
 import { AcceptOrganizationComponent } from "./auth/organization-invite/accept-organization.component";
 import { RecoverDeleteComponent } from "./auth/recover-delete.component";
 import { RecoverTwoFactorComponent } from "./auth/recover-two-factor.component";
-import { SetPasswordComponent } from "./auth/set-password.component";
 import { AccountComponent } from "./auth/settings/account/account.component";
 import { EmergencyAccessComponent } from "./auth/settings/emergency-access/emergency-access.component";
 import { EmergencyAccessViewComponent } from "./auth/settings/emergency-access/view/emergency-access-view.component";
 import { SecurityRoutingModule } from "./auth/settings/security/security-routing.module";
-import { UpdatePasswordComponent } from "./auth/update-password.component";
-import { UpdateTempPasswordComponent } from "./auth/update-temp-password.component";
 import { VerifyEmailTokenComponent } from "./auth/verify-email-token.component";
 import { VerifyRecoverDeleteComponent } from "./auth/verify-recover-delete.component";
 import { SponsoredFamiliesComponent } from "./billing/settings/sponsored-families.component";
@@ -114,11 +109,6 @@ const routes: Routes = [
         component: LoginViaWebAuthnComponent,
         data: { titleId: "logInWithPasskey" } satisfies RouteDataProperties,
       },
-      {
-        path: "set-password",
-        component: SetPasswordComponent,
-        data: { titleId: "setMasterPassword" } satisfies RouteDataProperties,
-      },
       { path: "verify-email", component: VerifyEmailTokenComponent },
       {
         path: "accept-organization",
@@ -141,34 +131,6 @@ const routes: Routes = [
         component: VerifyRecoverDeleteOrgComponent,
         canActivate: [unauthGuardFn()],
         data: { titleId: "deleteOrganization" },
-      },
-      {
-        path: "update-temp-password",
-        component: UpdateTempPasswordComponent,
-        canActivate: [
-          canAccessFeature(
-            FeatureFlag.PM16117_ChangeExistingPasswordRefactor,
-            false,
-            "change-password",
-            false,
-          ),
-          authGuard,
-        ],
-        data: { titleId: "updateTempPassword" } satisfies RouteDataProperties,
-      },
-      {
-        path: "update-password",
-        component: UpdatePasswordComponent,
-        canActivate: [
-          canAccessFeature(
-            FeatureFlag.PM16117_ChangeExistingPasswordRefactor,
-            false,
-            "change-password",
-            false,
-          ),
-          authGuard,
-        ],
-        data: { titleId: "updatePassword" } satisfies RouteDataProperties,
       },
     ],
   },
@@ -332,18 +294,6 @@ const routes: Routes = [
         component: SetInitialPasswordComponent,
         data: {
           maxWidth: "lg",
-        } satisfies AnonLayoutWrapperData,
-      },
-      {
-        path: "set-password-jit",
-        component: SetPasswordJitComponent,
-        data: {
-          pageTitle: {
-            key: "joinOrganization",
-          },
-          pageSubtitle: {
-            key: "finishJoiningThisOrganizationBySettingAMasterPassword",
-          },
         } satisfies AnonLayoutWrapperData,
       },
       {
@@ -598,14 +548,6 @@ const routes: Routes = [
         ],
       },
       {
-        path: "change-password",
-        component: ChangePasswordComponent,
-        canActivate: [
-          canAccessFeature(FeatureFlag.PM16117_ChangeExistingPasswordRefactor),
-          authGuard,
-        ],
-      },
-      {
         path: "setup-extension",
         data: {
           hideCardWrapper: true,
@@ -756,13 +698,13 @@ const routes: Routes = [
   ],
   exports: [RouterModule],
 })
-export class OssRoutingModule {}
+export class OssRoutingModule { }
 
 export function buildFlaggedRoute(flagName: keyof Flags, route: Route): Route {
   return flagEnabled(flagName)
     ? route
     : {
-        path: route.path,
-        redirectTo: "/",
-      };
+      path: route.path,
+      redirectTo: "/",
+    };
 }

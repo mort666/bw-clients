@@ -41,7 +41,7 @@ describe("DefaultChangePasswordService", () => {
     newServerMasterKeyHash: "newServerMasterKeyHash",
     newLocalMasterKeyHash: "newLocalMasterKeyHash",
 
-    kdfConfig: new PBKDF2KdfConfig(),
+    kdf: new PBKDF2KdfConfig(),
   };
 
   const decryptedUserKey = new SymmetricCryptoKey(new Uint8Array(64)) as UserKey;

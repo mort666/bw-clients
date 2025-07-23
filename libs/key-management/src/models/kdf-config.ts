@@ -145,4 +145,19 @@ export class Argon2KdfConfig {
   }
 }
 
+export function kdfConfigFromValues(
+  kdfType: KdfType,
+  iterations: number,
+  memory?: number,
+  parallelism?: number,
+): KdfConfig {
+  if (kdfType === KdfType.PBKDF2_SHA256) {
+    return new PBKDF2KdfConfig(iterations);
+  } else if (kdfType === KdfType.Argon2id) {
+    return new Argon2KdfConfig(iterations, memory, parallelism);
+  } else {
+    throw new Error(`Unsupported KDF type: ${kdfType}`);
+  }
+}
+
 export const DEFAULT_KDF_CONFIG = new PBKDF2KdfConfig(PBKDF2KdfConfig.ITERATIONS.defaultValue);

@@ -1,5 +1,5 @@
+import { MasterPasswordSalt } from "@bitwarden/common/key-management/master-password/types/master-password.types";
 import { UserId } from "@bitwarden/common/types/guid";
-import { MasterKey } from "@bitwarden/common/types/key";
 import { KdfConfig } from "@bitwarden/key-management";
 
 export const _SetInitialPasswordUserType = {
@@ -42,19 +42,21 @@ export const SetInitialPasswordUserType: Readonly<{
 }> = Object.freeze(_SetInitialPasswordUserType);
 
 export interface SetInitialPasswordCredentials {
-  newMasterKey: MasterKey;
-  newServerMasterKeyHash: string;
-  newLocalMasterKeyHash: string;
+  initialPassword: string,
+  kdf: KdfConfig,
+  salt: MasterPasswordSalt,
+
   newPasswordHint: string;
-  kdfConfig: KdfConfig;
   orgSsoIdentifier: string;
   orgId: string;
   resetPasswordAutoEnroll: boolean;
 }
 
 export interface SetInitialPasswordTdeOffboardingCredentials {
-  newMasterKey: MasterKey;
-  newServerMasterKeyHash: string;
+  initialPassword: string;
+  kdf: KdfConfig;
+  salt: MasterPasswordSalt;
+
   newPasswordHint: string;
 }
 

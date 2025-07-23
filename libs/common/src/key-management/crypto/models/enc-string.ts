@@ -2,11 +2,14 @@
 // @ts-strict-ignore
 import { Jsonify, Opaque } from "type-fest";
 
+import { EncString as SdkEncString } from "@bitwarden/sdk-internal";
+
 import { EncryptionType, EXPECTED_NUM_PARTS_BY_ENCRYPTION_TYPE } from "../../../platform/enums";
 import { Encrypted } from "../../../platform/interfaces/encrypted";
 import { Utils } from "../../../platform/misc/utils";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
 import { EncryptService } from "../abstractions/encrypt.service";
+
 
 export const DECRYPT_ERROR = "[error: cannot decrypt]";
 
@@ -52,6 +55,18 @@ export class EncString implements Encrypted {
       return null;
     }
 
+    return new EncString(obj);
+  }
+
+  static fromSdk(obj: SdkEncString): EncString {
+    return new EncString(obj);
+  }
+
+  toSdk(): SdkEncString {
+    return this.encryptedString as SdkEncString;
+  }
+
+  static fromEncryptedString(obj: EncryptedString): EncString {
     return new EncString(obj);
   }
 

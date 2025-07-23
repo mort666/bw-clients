@@ -40,10 +40,6 @@ import {
   EmergencyAccessTakeoverDialogComponent,
   EmergencyAccessTakeoverDialogResultType,
 } from "./takeover/emergency-access-takeover-dialog.component";
-import {
-  EmergencyAccessTakeoverComponent,
-  EmergencyAccessTakeoverResultType,
-} from "./takeover/emergency-access-takeover.component";
 
 @Component({
   selector: "emergency-access",

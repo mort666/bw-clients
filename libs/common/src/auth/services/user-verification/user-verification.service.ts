@@ -6,7 +6,8 @@ import { firstValueFrom, map } from "rxjs";
 // eslint-disable-next-line no-restricted-imports
 import { UserDecryptionOptionsServiceAbstraction } from "@bitwarden/auth/common";
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
-// eslint-disable-next-line no-restricted-imports
+
+import { MasterPasswordAuthenticationHash } from "@bitwarden/common/key-management/master-password/types/master-password.types";
 import {
   BiometricsService,
   BiometricsStatus,
@@ -55,7 +56,7 @@ export class UserVerificationService implements UserVerificationServiceAbstracti
     private pinService: PinServiceAbstraction,
     private kdfConfigService: KdfConfigService,
     private biometricsService: BiometricsService,
-  ) {}
+  ) { }
 
   async getAvailableVerificationOptions(
     verificationType: keyof UserVerificationOptions,
@@ -113,20 +114,15 @@ export class UserVerificationService implements UserVerificationServiceAbstracti
     if (verification.type === VerificationType.OTP) {
       request.otp = verification.secret;
     } else {
-      const [userId, email] = await firstValueFrom(
-        this.accountService.activeAccount$.pipe(map((a) => [a?.id, a?.email])),
+      const userId = await firstValueFrom(
+        this.accountService.activeAccount$.pipe(map((a) => a?.id)),
       );
-      let masterKey = await firstValueFrom(this.masterPasswordService.masterKey$(userId));
-      if (!masterKey && !alreadyHashed) {
-        masterKey = await this.keyService.makeMasterKey(
-          verification.secret,
-          email,
-          await this.kdfConfigService.getKdfConfig(userId),
-        );
-      }
+      const kdf = await this.kdfConfigService.getKdfConfig(userId);
+      const salt = await firstValueFrom(this.masterPasswordService.saltForAccount$(userId));
+
       request.masterPasswordHash = alreadyHashed
         ? verification.secret
-        : await this.keyService.hashMasterKey(verification.secret, masterKey);
+        : (await this.masterPasswordService.makeMasterPasswordAuthenticationData(verification.secret, kdf, salt)).masterPasswordAuthenticationHash;
     }
 
     return request;

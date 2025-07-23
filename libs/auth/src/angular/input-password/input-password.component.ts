@@ -14,7 +14,6 @@ import { MasterPasswordServiceAbstraction } from "@bitwarden/common/key-manageme
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { ValidationService } from "@bitwarden/common/platform/abstractions/validation.service";
-import { HashPurpose } from "@bitwarden/common/platform/enums";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
@@ -192,7 +191,7 @@ export class InputPasswordComponent implements OnInit {
     private policyService: PolicyService,
     private toastService: ToastService,
     private validationService: ValidationService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.addFormFieldsIfNecessary();
@@ -300,6 +299,7 @@ export class InputPasswordComponent implements OnInit {
       if (this.kdfConfig == null) {
         throw new Error("KdfConfig is required to create master key.");
       }
+      const salt = await firstValueFrom(this.masterPasswordService.saltForAccount$(this.userId));
 
       // 2. Verify current password is correct (if necessary)
       if (
@@ -326,60 +326,13 @@ export class InputPasswordComponent implements OnInit {
       }
 
       // 4. Create cryptographic keys and build a PasswordInputResult object
-      const newMasterKey = await this.keyService.makeMasterKey(
-        newPassword,
-        this.email,
-        this.kdfConfig,
-      );
-
-      const newServerMasterKeyHash = await this.keyService.hashMasterKey(
-        newPassword,
-        newMasterKey,
-        HashPurpose.ServerAuthorization,
-      );
-
-      const newLocalMasterKeyHash = await this.keyService.hashMasterKey(
-        newPassword,
-        newMasterKey,
-        HashPurpose.LocalAuthorization,
-      );
-
       const passwordInputResult: PasswordInputResult = {
+        currentPassword,
         newPassword,
-        newMasterKey,
-        newServerMasterKeyHash,
-        newLocalMasterKeyHash,
         newPasswordHint,
-        kdfConfig: this.kdfConfig,
+        kdf: this.kdfConfig,
+        salt,
       };
-
-      if (
-        this.flow === InputPasswordFlow.ChangePassword ||
-        this.flow === InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation
-      ) {
-        const currentMasterKey = await this.keyService.makeMasterKey(
-          currentPassword,
-          this.email,
-          this.kdfConfig,
-        );
-
-        const currentServerMasterKeyHash = await this.keyService.hashMasterKey(
-          currentPassword,
-          currentMasterKey,
-          HashPurpose.ServerAuthorization,
-        );
-
-        const currentLocalMasterKeyHash = await this.keyService.hashMasterKey(
-          currentPassword,
-          currentMasterKey,
-          HashPurpose.LocalAuthorization,
-        );
-
-        passwordInputResult.currentPassword = currentPassword;
-        passwordInputResult.currentMasterKey = currentMasterKey;
-        passwordInputResult.currentServerMasterKeyHash = currentServerMasterKeyHash;
-        passwordInputResult.currentLocalMasterKeyHash = currentLocalMasterKeyHash;
-      }
 
       if (this.flow === InputPasswordFlow.ChangePasswordWithOptionalUserKeyRotation) {
         passwordInputResult.rotateUserKey = this.formGroup.controls.rotateUserKey?.value;

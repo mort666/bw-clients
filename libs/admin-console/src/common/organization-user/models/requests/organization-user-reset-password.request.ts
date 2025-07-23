@@ -1,6 +1,14 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
+import { EncryptedString } from "@bitwarden/common/key-management/crypto/models/enc-string";
+import { MasterPasswordAuthenticationData, MasterPasswordAuthenticationHash, MasterPasswordUnlockData } from "@bitwarden/common/key-management/master-password/types/master-password.types";
+
 export class OrganizationUserResetPasswordRequest {
-  newMasterPasswordHash: string;
-  key: string;
+  /** @deprecated */
+  newMasterPasswordHash: MasterPasswordAuthenticationHash;
+  /** @deprecated */
+  key: EncryptedString;
+
+  constructor(masterPasswordAuthenticationData: MasterPasswordAuthenticationData, masterPasswordUnlockData: MasterPasswordUnlockData) {
+    this.newMasterPasswordHash = masterPasswordAuthenticationData.masterPasswordAuthenticationHash;
+    this.key = masterPasswordUnlockData.masterKeyWrappedUserKey.encryptedString;
+  }
 }

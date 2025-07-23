@@ -149,6 +149,12 @@ export abstract class KeyService {
   abstract hasUserKey(userId: UserId): Promise<boolean>;
 
   /**
+   * Makes a v1 user key, and does not wrap it.
+   * @deprecated Note: This is a place-holder until account registration is moved to a higher level
+   * / migrated to the SDK, and should not be used for new features.
+   */
+  abstract makeUserKeyV1Raw(): Promise<UserKey>;
+  /**
    * Generates a new user key
    * @throws Error when master key is null and there is no active user
    * @param masterKey The user's master key. When null, grabs master key from active user.
@@ -170,6 +176,7 @@ export abstract class KeyService {
   abstract getOrDeriveMasterKey(password: string, userId?: string): Promise<MasterKey>;
   /**
    * Generates a master key from the provided password
+   * @deprecated
    * @param password The user's master password
    * @param email The user's email
    * @param KdfConfig The user's key derivation function configuration
@@ -191,6 +198,7 @@ export abstract class KeyService {
    * Creates a master password hash from the user's master password. Can
    * be used for local authentication or for server authentication depending
    * on the hashPurpose provided.
+   * @deprecated
    * @throws Error when password is null or key is null and no active user or active user have no master key
    * @param password The user's master password
    * @param key The user's master key or active's user master key.

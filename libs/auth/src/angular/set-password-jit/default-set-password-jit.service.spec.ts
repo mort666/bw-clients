@@ -113,7 +113,7 @@ describe("DefaultSetPasswordJitService", () => {
         newServerMasterKeyHash: "newServerMasterKeyHash",
         newLocalMasterKeyHash: "newLocalMasterKeyHash",
         newPasswordHint: "newPasswordHint",
-        kdfConfig: DEFAULT_KDF_CONFIG,
+        kdf: DEFAULT_KDF_CONFIG,
         newPassword: "newPassword",
       };
 
@@ -122,7 +122,7 @@ describe("DefaultSetPasswordJitService", () => {
         newServerMasterKeyHash: passwordInputResult.newServerMasterKeyHash,
         newLocalMasterKeyHash: passwordInputResult.newLocalMasterKeyHash,
         newPasswordHint: passwordInputResult.newPasswordHint,
-        kdfConfig: passwordInputResult.kdfConfig,
+        kdfConfig: passwordInputResult.kdf,
         orgSsoIdentifier,
         orgId,
         resetPasswordAutoEnroll,
@@ -138,8 +138,8 @@ describe("DefaultSetPasswordJitService", () => {
         passwordInputResult.newPasswordHint,
         orgSsoIdentifier,
         keysRequest,
-        passwordInputResult.kdfConfig.kdfType,
-        passwordInputResult.kdfConfig.iterations,
+        passwordInputResult.kdf.kdfType,
+        passwordInputResult.kdf.iterations,
       );
     });
 

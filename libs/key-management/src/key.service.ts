@@ -209,6 +209,11 @@ export class DefaultKeyService implements KeyServiceAbstraction {
     return (await firstValueFrom(this.stateProvider.getUserState$(USER_KEY, userId))) != null;
   }
 
+  async makeUserKeyV1Raw(): Promise<UserKey> {
+    const newUserKey = await this.keyGenerationService.createKey(512);
+    return newUserKey as UserKey;
+  }
+
   /**
    * @deprecated Please use `makeMasterPasswordUnlockData` in {@link MasterPasswordService} instead.
    */

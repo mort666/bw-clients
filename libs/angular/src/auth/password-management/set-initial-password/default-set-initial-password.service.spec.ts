@@ -157,8 +157,6 @@ describe("DefaultSetInitialPasswordService", () => {
         credentials.newPasswordHint,
         credentials.orgSsoIdentifier,
         keysRequest,
-        credentials.kdfConfig.kdfType,
-        credentials.kdfConfig.iterations,
       );
 
       enrollmentRequest = new OrganizationUserResetPasswordEnrollmentRequest();

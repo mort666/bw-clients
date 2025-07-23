@@ -6,7 +6,6 @@ import { canAccessFeature } from "@bitwarden/angular/platform/guard/feature-flag
 import { featureFlaggedRoute } from "@bitwarden/angular/platform/utils/feature-flagged-route";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 
-import { ChangePasswordComponent } from "../change-password.component";
 import { TwoFactorSetupComponent } from "../two-factor/two-factor-setup.component";
 
 import { DeviceManagementOldComponent } from "./device-management-old.component";
@@ -21,19 +20,6 @@ const routes: Routes = [
     data: { titleId: "security" },
     children: [
       { path: "", pathMatch: "full", redirectTo: "password" },
-      {
-        path: "change-password",
-        component: ChangePasswordComponent,
-        canActivate: [
-          canAccessFeature(
-            FeatureFlag.PM16117_ChangeExistingPasswordRefactor,
-            false,
-            "/settings/security/password",
-            false,
-          ),
-        ],
-        data: { titleId: "masterPassword" },
-      },
       {
         path: "password",
         component: PasswordSettingsComponent,
@@ -74,4 +60,4 @@ const routes: Routes = [
   imports: [RouterModule.forChild(routes)],
   exports: [RouterModule],
 })
-export class SecurityRoutingModule {}
+export class SecurityRoutingModule { }

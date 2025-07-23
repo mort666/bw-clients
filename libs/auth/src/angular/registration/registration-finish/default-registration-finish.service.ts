@@ -4,9 +4,10 @@ import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/mod
 import { AccountApiService } from "@bitwarden/common/auth/abstractions/account-api.service";
 import { RegisterFinishRequest } from "@bitwarden/common/auth/models/request/registration/register-finish.request";
 import {
-  EncryptedString,
   EncString,
 } from "@bitwarden/common/key-management/crypto/models/enc-string";
+import { MasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
+import { MasterPasswordAuthenticationData, MasterPasswordUnlockData } from "@bitwarden/common/key-management/master-password/types/master-password.types";
 import { KeysRequest } from "@bitwarden/common/models/request/keys.request";
 import { KeyService } from "@bitwarden/key-management";
 
@@ -18,7 +19,8 @@ export class DefaultRegistrationFinishService implements RegistrationFinishServi
   constructor(
     protected keyService: KeyService,
     protected accountApiService: AccountApiService,
-  ) {}
+    protected masterPasswordService: MasterPasswordServiceAbstraction,
+  ) { }
 
   getOrgNameFromOrgInvite(): Promise<string | null> {
     return null;
@@ -42,19 +44,25 @@ export class DefaultRegistrationFinishService implements RegistrationFinishServi
     providerInviteToken?: string,
     providerUserId?: string,
   ): Promise<void> {
-    const [newUserKey, newEncUserKey] = await this.keyService.makeUserKey(
-      passwordInputResult.newMasterKey,
-    );
-
-    if (!newUserKey || !newEncUserKey) {
-      throw new Error("User key could not be created");
-    }
+    const newUserKey = await this.keyService.makeUserKeyV1Raw();
     const userAsymmetricKeys = await this.keyService.makeKeyPair(newUserKey);
+    const authenticationData = await this.masterPasswordService.makeMasterPasswordAuthenticationData(
+      passwordInputResult.newPassword,
+      passwordInputResult.kdf,
+      passwordInputResult.salt,
+    );
+    const unlockData = await this.masterPasswordService.makeMasterPasswordUnlockData(
+      passwordInputResult.newPassword,
+      passwordInputResult.kdf,
+      passwordInputResult.salt,
+      newUserKey,
+    );
 
     const registerRequest = await this.buildRegisterRequest(
       email,
       passwordInputResult,
-      newEncUserKey.encryptedString,
+      authenticationData,
+      unlockData,
       userAsymmetricKeys,
       emailVerificationToken,
       orgSponsoredFreeFamilyPlanToken,
@@ -70,7 +78,8 @@ export class DefaultRegistrationFinishService implements RegistrationFinishServi
   protected async buildRegisterRequest(
     email: string,
     passwordInputResult: PasswordInputResult,
-    encryptedUserKey: EncryptedString,
+    masterPasswordAuthenticationData: MasterPasswordAuthenticationData,
+    masterPasswordUnlockData: MasterPasswordUnlockData,
     userAsymmetricKeys: [string, EncString],
     emailVerificationToken?: string,
     orgSponsoredFreeFamilyPlanToken?: string, // web only
@@ -86,12 +95,10 @@ export class DefaultRegistrationFinishService implements RegistrationFinishServi
 
     const registerFinishRequest = new RegisterFinishRequest(
       email,
-      passwordInputResult.newServerMasterKeyHash,
       passwordInputResult.newPasswordHint,
-      encryptedUserKey,
+      masterPasswordAuthenticationData,
+      masterPasswordUnlockData,
       userAsymmetricKeysRequest,
-      passwordInputResult.kdfConfig.kdfType,
-      passwordInputResult.kdfConfig.iterations,
     );
 
     if (emailVerificationToken) {
