@@ -32,14 +32,14 @@ import { EnvironmentService } from "../../abstractions/environment.service";
 import { LogService } from "../../abstractions/log.service";
 import { MessagingService } from "../../abstractions/messaging.service";
 import { supportSwitch } from "../../misc/support-status";
-import { ServerNotificationsService as NotificationsServiceAbstraction } from "../server-notifications-service";
+import { ServerNotificationsService } from "../server-notifications-service";
 
 import { ReceiveMessage, SignalRConnectionService } from "./signalr-connection.service";
 import { WebPushConnectionService } from "./webpush-connection.service";
 
 export const DISABLED_NOTIFICATIONS_URL = "http://-";
 
-export class DefaultNotificationsService implements NotificationsServiceAbstraction {
+export class DefaultServerNotificationsService implements ServerNotificationsService {
   notifications$: Observable<readonly [NotificationResponse, UserId]>;
 
   private activitySubject = new BehaviorSubject<"active" | "inactive">("active");

@@ -210,7 +210,7 @@ import { GlobalState } from "@bitwarden/common/platform/models/domain/global-sta
 import { ServerNotificationsService } from "@bitwarden/common/platform/notifications";
 // eslint-disable-next-line no-restricted-imports -- Needed for service creation
 import {
-  DefaultNotificationsService,
+  DefaultServerNotificationsService,
   NoopNotificationsService,
   SignalRConnectionService,
   UnsupportedWebPushConnectionService,
@@ -955,7 +955,7 @@ const safeProviders: SafeProvider[] = [
     provide: ServerNotificationsService,
     useClass: devFlagEnabled("noopNotifications")
       ? NoopNotificationsService
-      : DefaultNotificationsService,
+      : DefaultServerNotificationsService,
     deps: [
       LogService,
       SyncService,

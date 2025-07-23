@@ -124,7 +124,7 @@ import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/sym
 import { ServerNotificationsService } from "@bitwarden/common/platform/notifications";
 // eslint-disable-next-line no-restricted-imports -- Needed for service creation
 import {
-  DefaultNotificationsService,
+  DefaultServerNotificationsService,
   SignalRConnectionService,
   UnsupportedWebPushConnectionService,
   WebPushNotificationsApiService,
@@ -1145,7 +1145,7 @@ export default class MainBackground {
       this.systemNotificationService = new UnsupportedSystemNotificationsService();
     }
 
-    this.notificationsService = new DefaultNotificationsService(
+    this.notificationsService = new DefaultServerNotificationsService(
       this.logService,
       this.syncService,
       this.appIdService,
