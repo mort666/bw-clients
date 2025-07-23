@@ -211,7 +211,7 @@ import { ServerNotificationsService } from "@bitwarden/common/platform/notificat
 // eslint-disable-next-line no-restricted-imports -- Needed for service creation
 import {
   DefaultServerNotificationsService,
-  NoopNotificationsService,
+  UnsupportedServerNotificationsService,
   SignalRConnectionService,
   UnsupportedWebPushConnectionService,
   WebPushConnectionService,
@@ -954,7 +954,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: ServerNotificationsService,
     useClass: devFlagEnabled("noopNotifications")
-      ? NoopNotificationsService
+      ? UnsupportedServerNotificationsService
       : DefaultServerNotificationsService,
     deps: [
       LogService,
