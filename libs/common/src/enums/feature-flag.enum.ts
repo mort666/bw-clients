@@ -99,7 +99,7 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.DesktopSendUIRefresh]: FALSE,
 
   /* DIRT */
-  [FeatureFlag.EventBasedOrganizationIntegrations]: true,
+  [FeatureFlag.EventBasedOrganizationIntegrations]: FALSE,
 
   /* Vault */
   [FeatureFlag.PM8851_BrowserOnboardingNudge]: FALSE,
