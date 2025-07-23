@@ -234,6 +234,26 @@ describe("MasterPasswordService", () => {
         masterPasswordAuthenticationHash: Utils.fromBufferToB64(masterKeyHash),
       });
     });
+
+    it("throws if password is null", async () => {
+      await expect(
+        sut.makeMasterPasswordAuthenticationData(null as unknown as string, kdf, salt),
+      ).rejects.toThrow();
+    });
+    it("throws if kdf is null", async () => {
+      await expect(
+        sut.makeMasterPasswordAuthenticationData(password, null as unknown as KdfConfig, salt),
+      ).rejects.toThrow();
+    });
+    it("throws if salt is null", async () => {
+      await expect(
+        sut.makeMasterPasswordAuthenticationData(
+          password,
+          kdf,
+          null as unknown as MasterPasswordSalt,
+        ),
+      ).rejects.toThrow();
+    });
   });
 
   describe("wrapUnwrapUserKeyWithPassword", () => {
@@ -249,6 +269,32 @@ describe("MasterPasswordService", () => {
         unlockData,
       );
       expect(unwrappedUserkey).toEqual(userKey);
+    });
+
+    it("throws if password is null", async () => {
+      await expect(
+        sut.makeMasterPasswordUnlockData(null as unknown as string, kdf, salt, userKey),
+      ).rejects.toThrow();
+    });
+    it("throws if kdf is null", async () => {
+      await expect(
+        sut.makeMasterPasswordUnlockData(password, null as unknown as KdfConfig, salt, userKey),
+      ).rejects.toThrow();
+    });
+    it("throws if salt is null", async () => {
+      await expect(
+        sut.makeMasterPasswordUnlockData(
+          password,
+          kdf,
+          null as unknown as MasterPasswordSalt,
+          userKey,
+        ),
+      ).rejects.toThrow();
+    });
+    it("throws if userKey is null", async () => {
+      await expect(
+        sut.makeMasterPasswordUnlockData(password, kdf, salt, null as unknown as UserKey),
+      ).rejects.toThrow();
     });
   });
 });
