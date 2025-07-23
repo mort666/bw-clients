@@ -7,20 +7,20 @@
   <a
     bitButton
     routerLink="create"
-    *ngIf="canAddClients"
+    *ngIf="manageOrganizations && isSuspensionActive"
     buttonType="primary"
-    [title]="addClientTooltip"
+    [title]="addSuspensionTooltip"
   >
     <i class="bwi bwi-plus bwi-fw" aria-hidden="true"></i>
     {{ "newClient" | i18n }}
   </a>
   <button
-    *ngIf="manageOrganizations && !canAddClients"
+    *ngIf="manageOrganizations && isSuspensionActive"
     type="button"
     bitButton
     buttonType="primary"
     [disabled]="true"
-    [title]="addClientTooltip"
+    [title]="addSuspensionTooltip"
   >
     <i class="bwi bwi-plus bwi-fw" aria-hidden="true"></i>
     {{ "newClient" | i18n }}
@@ -28,8 +28,8 @@
   <button
     type="button"
     bitButton
-    [disabled]="!canAddClients"
-    [title]="addClientTooltip"
+    [disabled]="isSuspensionActive"
+    [title]="addSuspensionTooltip"
     (click)="addExistingOrganization()"
     *ngIf="manageOrganizations && showAddExisting"
   >

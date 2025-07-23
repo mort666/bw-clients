@@ -12,7 +12,7 @@
       [route]="(isBillable | async) ? 'manage-client-organizations' : 'clients'"
     >
       <i
-        *ngIf="!provider.enabled"
+        *ngIf="!provider.enabled && (providerPortalTakeover$ | async)"
         slot="end"
         class="bwi bwi-exclamation-triangle tw-text-danger"
         title="{{ 'providerIsDisabled' | i18n }}"

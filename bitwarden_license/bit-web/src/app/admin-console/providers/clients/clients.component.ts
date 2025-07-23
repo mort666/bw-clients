@@ -18,6 +18,8 @@ import { ProviderOrganizationOrganizationDetailsResponse } from "@bitwarden/comm
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { PlanType } from "@bitwarden/common/billing/enums";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { ValidationService } from "@bitwarden/common/platform/abstractions/validation.service";
 import {
@@ -60,26 +62,15 @@ export class ClientsComponent {
   addableOrganizations: Organization[] = [];
   loading = true;
   manageOrganizations = false;
+  isAdminOrServiceUser = false;
   showAddExisting = false;
   dataSource: TableDataSource<ProviderOrganizationOrganizationDetailsResponse> =
     new TableDataSource();
   protected searchControl = new FormControl("", { nonNullable: true });
-
-  // Computed properties for provider suspension state
-  get isProviderDisabled(): boolean {
-    return !this.provider?.enabled;
-  }
-
-  get canAddClients(): boolean {
-    return this.manageOrganizations && !this.isProviderDisabled;
-  }
-
-  get addClientTooltip(): string {
-    if (this.isProviderDisabled) {
-      return this.i18nService.t("providerIsDisabled");
-    }
-    return "";
-  }
+  protected providerPortalTakeover$ = this.configService.getFeatureFlag$(
+    FeatureFlag.PM21821_ProviderPortalTakeover,
+  );
+  private providerPortalTakeoverEnabled = false;
 
   constructor(
     private router: Router,
@@ -94,9 +85,14 @@ export class ClientsComponent {
     private toastService: ToastService,
     private validationService: ValidationService,
     private webProviderService: WebProviderService,
+    private configService: ConfigService,
   ) {
     this.activatedRoute.queryParams.pipe(first(), takeUntilDestroyed()).subscribe((queryParams) => {
       this.searchControl.setValue(queryParams.search);
+    });
+
+    this.providerPortalTakeover$.pipe(takeUntilDestroyed()).subscribe((enabled) => {
+      this.providerPortalTakeoverEnabled = enabled;
     });
 
     this.activatedRoute.parent?.params
@@ -104,7 +100,13 @@ export class ClientsComponent {
         switchMap((params) => {
           this.providerId = params.providerId;
           return this.providerService.get$(this.providerId).pipe(
-            map((provider) => provider?.providerStatus === ProviderStatusType.Billable),
+            map((provider) => {
+              this.provider = provider;
+              this.isAdminOrServiceUser =
+                provider.type === ProviderUserType.ProviderAdmin ||
+                provider.type === ProviderUserType.ServiceUser;
+              return provider?.providerStatus === ProviderStatusType.Billable;
+            }),
             map((isBillable) => {
               if (isBillable) {
                 return from(
@@ -159,11 +161,6 @@ export class ClientsComponent {
     const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
     const clients = response.data != null && response.data.length > 0 ? response.data : [];
     this.dataSource.data = clients;
-
-    // Store the provider for disabled state checks
-    this.provider = await this.providerService.get(this.providerId);
-    this.manageOrganizations = this.provider.type === ProviderUserType.ProviderAdmin;
-
     const candidateOrgs = (
       await firstValueFrom(this.organizationService.organizations$(userId))
     ).filter((o) => o.isOwner && o.providerId == null);
@@ -187,5 +184,15 @@ export class ClientsComponent {
     if (await firstValueFrom(dialogRef.closed)) {
       await this.load();
     }
+  }
+
+  get isSuspensionActive(): boolean {
+    return (
+      this.isAdminOrServiceUser && this.providerPortalTakeoverEnabled && !this.provider?.enabled
+    );
+  }
+
+  get addSuspensionTooltip(): string {
+    return this.isSuspensionActive ? this.i18nService.t("providerIsDisabled") : "";
   }
 }

@@ -15,6 +15,8 @@ import { Provider } from "@bitwarden/common/admin-console/models/domain/provider
 import { ProviderOrganizationOrganizationDetailsResponse } from "@bitwarden/common/admin-console/models/response/provider/provider-organization.response";
 import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions";
 import { PlanResponse } from "@bitwarden/common/billing/models/response/plan.response";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { ValidationService } from "@bitwarden/common/platform/abstractions/validation.service";
 import {
@@ -65,6 +67,7 @@ export class ManageClientsComponent {
   provider: Provider | undefined;
   loading = true;
   isProviderAdmin = false;
+  isServiceUser = false;
   dataSource: TableDataSource<ProviderOrganizationOrganizationDetailsResponse> =
     new TableDataSource();
 
@@ -75,43 +78,10 @@ export class ManageClientsComponent {
   clientColumnHeader = this.i18nService.t("client");
   newClientButtonLabel = this.i18nService.t("newClient");
 
-  // Computed properties for provider suspension state
-  get isProviderDisabled(): boolean {
-    return !this.provider?.enabled;
-  }
-
-  get canAddClients(): boolean {
-    return this.isProviderAdmin && !this.isProviderDisabled;
-  }
-
-  get canManageClientNames(): boolean {
-    return this.isProviderAdmin && !this.isProviderDisabled;
-  }
-
-  get canManageClientSubscriptions(): boolean {
-    return this.isProviderAdmin && !this.isProviderDisabled;
-  }
-
-  get addClientTooltip(): string {
-    if (this.isProviderDisabled) {
-      return this.i18nService.t("providerIsDisabled");
-    }
-    return "";
-  }
-
-  get manageClientNameTooltip(): string {
-    if (this.isProviderDisabled) {
-      return this.i18nService.t("providerIsDisabled");
-    }
-    return "";
-  }
-
-  get manageSubscriptionTooltip(): string {
-    if (this.isProviderDisabled) {
-      return this.i18nService.t("providerIsDisabled");
-    }
-    return "";
-  }
+  protected providerPortalTakeover$ = this.configService.getFeatureFlag$(
+    FeatureFlag.PM21821_ProviderPortalTakeover,
+  );
+  private providerPortalTakeoverEnabled = false;
 
   constructor(
     private billingApiService: BillingApiServiceAbstraction,
@@ -124,9 +94,14 @@ export class ManageClientsComponent {
     private validationService: ValidationService,
     private webProviderService: WebProviderService,
     private billingNotificationService: BillingNotificationService,
+    private configService: ConfigService,
   ) {
     this.activatedRoute.queryParams.pipe(first(), takeUntilDestroyed()).subscribe((queryParams) => {
       this.searchControl.setValue(queryParams.search);
+    });
+
+    this.providerPortalTakeover$.pipe(takeUntilDestroyed()).subscribe((enabled) => {
+      this.providerPortalTakeoverEnabled = enabled;
     });
 
     this.activatedRoute.parent?.params
@@ -169,6 +144,7 @@ export class ManageClientsComponent {
         this.newClientButtonLabel = this.i18nService.t("newBusinessUnit");
       }
       this.isProviderAdmin = this.provider?.type === ProviderUserType.ProviderAdmin;
+      this.isServiceUser = this.provider?.type === ProviderUserType.ServiceUser;
       this.dataSource.data = (
         await this.billingApiService.getProviderClientOrganizations(this.providerId)
       ).data;
@@ -268,5 +244,17 @@ export class ManageClientsComponent {
     } catch (e) {
       this.validationService.showError(e);
     }
+  }
+
+  get isSuspensionActive(): boolean {
+    return (
+      (this.isProviderAdmin || this.isServiceUser) &&
+      this.providerPortalTakeoverEnabled &&
+      !this.provider?.enabled
+    );
+  }
+
+  get suspendedTooltip(): string {
+    return this.isSuspensionActive ? this.i18nService.t("providerIsDisabled") : "";
   }
 }
