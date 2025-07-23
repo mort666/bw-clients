@@ -209,10 +209,12 @@ export class SetInitialPasswordComponent implements OnInit {
 
   private async setInitialPassword(passwordInputResult: PasswordInputResult) {
     const ctx = "Could not set initial password.";
+    assertTruthy(passwordInputResult.newPassword, "newPassword", ctx);
     assertTruthy(passwordInputResult.newMasterKey, "newMasterKey", ctx);
     assertTruthy(passwordInputResult.newServerMasterKeyHash, "newServerMasterKeyHash", ctx);
     assertTruthy(passwordInputResult.newLocalMasterKeyHash, "newLocalMasterKeyHash", ctx);
     assertTruthy(passwordInputResult.kdfConfig, "kdfConfig", ctx);
+    assertTruthy(passwordInputResult.salt, "salt", ctx);
     assertTruthy(this.orgSsoIdentifier, "orgSsoIdentifier", ctx);
     assertTruthy(this.orgId, "orgId", ctx);
     assertTruthy(this.userType, "userType", ctx);
