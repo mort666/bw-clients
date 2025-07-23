@@ -215,9 +215,6 @@ export class DefaultKeyService implements KeyServiceAbstraction {
     return (await firstValueFrom(this.stateProvider.getUserState$(USER_KEY, userId))) != null;
   }
 
-  /**
-   * @deprecated Please use `makeMasterPasswordUnlockData` in {@link MasterPasswordService} instead.
-   */
   async makeUserKey(masterKey: MasterKey | null): Promise<[UserKey, EncString]> {
     if (masterKey == null) {
       const userId = await firstValueFrom(this.stateProvider.activeUserId$);
@@ -233,6 +230,11 @@ export class DefaultKeyService implements KeyServiceAbstraction {
 
     const newUserKey = await this.keyGenerationService.createKey(512);
     return this.buildProtectedSymmetricKey(masterKey, newUserKey);
+  }
+
+  async makeUserKeyV1(): Promise<UserKey> {
+    const newUserKey = await this.keyGenerationService.createKey(512);
+    return newUserKey as UserKey;
   }
 
   /**
