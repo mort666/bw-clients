@@ -217,6 +217,10 @@ export class VaultItemsComponent<C extends CipherViewLike> {
     return this.showBulkAddToCollections && this.ciphers.length > 0;
   }
 
+  clearSelection() {
+    this.selection.clear();
+  }
+
   protected canEditCollection(collection: CollectionView): boolean {
     // Only allow allow deletion if collection editing is enabled and not deleting "Unassigned"
     if (collection.id === Unassigned) {

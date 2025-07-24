@@ -108,6 +108,7 @@ import {
 } from "../components/vault-item-dialog/vault-item-dialog.component";
 import { VaultItem } from "../components/vault-items/vault-item";
 import { VaultItemEvent } from "../components/vault-items/vault-item-event";
+import { VaultItemsComponent } from "../components/vault-items/vault-items.component";
 import { VaultItemsModule } from "../components/vault-items/vault-items.module";
 
 import {
@@ -156,6 +157,7 @@ const SearchTextDebounceInterval = 200;
 })
 export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestroy {
   @ViewChild("vaultFilter", { static: true }) filterComponent: VaultFilterComponent;
+  @ViewChild(VaultItemsComponent) vaultItemsComponent: VaultItemsComponent<C>;
 
   trashCleanupWarning: string = null;
   kdfIterations: number;
@@ -1070,6 +1072,7 @@ export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestr
       message: this.i18nService.t("restoredItems"),
     });
     this.refresh();
+    this.vaultItemsComponent?.clearSelection();
   }
 
   private async handleDeleteEvent(items: VaultItem<C>[]) {
@@ -1162,6 +1165,7 @@ export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestr
 
     const result = await lastValueFrom(dialog.closed);
     if (result === BulkDeleteDialogResult.Deleted) {
+      this.vaultItemsComponent?.clearSelection();
       this.refresh();
     }
   }
@@ -1187,6 +1191,7 @@ export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestr
 
     const result = await lastValueFrom(dialog.closed);
     if (result === BulkMoveDialogResult.Moved) {
+      this.vaultItemsComponent?.clearSelection();
       this.refresh();
     }
   }
