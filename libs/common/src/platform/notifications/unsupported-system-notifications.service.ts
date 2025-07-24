@@ -1,14 +1,12 @@
-import { Subject, throwError } from "rxjs";
+import { throwError } from "rxjs";
 
 import {
   SystemNotificationClearInfo,
   SystemNotificationCreateInfo,
-  SystemNotificationEvent,
   SystemNotificationsService,
 } from "./system-notifications-service";
 
 export class UnsupportedSystemNotificationsService implements SystemNotificationsService {
-  private systemNotificationClickedSubject = new Subject<SystemNotificationEvent>();
   notificationClicked$ = throwError(() => new Error("Notification clicked is not supported."));
 
   async create(createInfo: SystemNotificationCreateInfo): Promise<undefined> {
