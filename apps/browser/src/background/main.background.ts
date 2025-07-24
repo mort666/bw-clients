@@ -1161,8 +1161,12 @@ export default class MainBackground {
     //   });
 
     this.authRequestAnsweringService = new AuthRequestAnsweringService(
-      this.systemNotificationService,
+      this.accountService,
       this.actionsService,
+      this.authService,
+      this.masterPasswordService,
+      this.platformUtilsService,
+      this.systemNotificationService,
     );
 
     this.serverNotificationsService = new DefaultServerNotificationsService(

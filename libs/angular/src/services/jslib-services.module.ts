@@ -111,6 +111,7 @@ import { WebAuthnLoginServiceAbstraction } from "@bitwarden/common/auth/abstract
 import { AccountApiServiceImplementation } from "@bitwarden/common/auth/services/account-api.service";
 import { AccountServiceImplementation } from "@bitwarden/common/auth/services/account.service";
 import { AnonymousHubService } from "@bitwarden/common/auth/services/anonymous-hub.service";
+import { AuthRequestAnsweringService } from "@bitwarden/common/auth/services/auth-request-answering/auth-request-answering.service";
 import { AuthService } from "@bitwarden/common/auth/services/auth.service";
 import { AvatarService } from "@bitwarden/common/auth/services/avatar.service";
 import { DevicesServiceImplementation } from "@bitwarden/common/auth/services/devices/devices.service.implementation";
@@ -218,6 +219,8 @@ import {
   WebPushConnectionService,
   WebPushNotificationsApiService,
 } from "@bitwarden/common/platform/notifications/internal";
+import { SystemNotificationsService } from "@bitwarden/common/platform/notifications/system-notifications-service";
+import { UnsupportedSystemNotificationsService } from "@bitwarden/common/platform/notifications/unsupported-system-notifications.service";
 import {
   DefaultTaskSchedulerService,
   TaskSchedulerService,
@@ -386,9 +389,6 @@ import {
   WINDOW,
 } from "./injection-tokens";
 import { ModalService } from "./modal.service";
-import { AuthRequestAnsweringService } from "@bitwarden/common/auth/services/auth-request-answering/auth-request-answering.service";
-import { SystemNotificationsService } from "@bitwarden/common/platform/notifications/system-notifications-service";
-import { UnsupportedSystemNotificationsService } from "@bitwarden/common/platform/notifications/unsupported-system-notifications.service";
 
 /**
  * Provider definitions used in the ngModule.
@@ -968,7 +968,14 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: AuthRequestAnsweringServiceAbstraction,
     useClass: AuthRequestAnsweringService,
-    deps: [SystemNotificationsService, ActionsService],
+    deps: [
+      AccountServiceAbstraction,
+      ActionsService,
+      AuthServiceAbstraction,
+      MasterPasswordServiceAbstraction,
+      PlatformUtilsServiceAbstraction,
+      SystemNotificationsService,
+    ],
   }),
   safeProvider({
     provide: ServerNotificationsService,

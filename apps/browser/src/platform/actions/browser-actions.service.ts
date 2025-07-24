@@ -41,7 +41,7 @@ export class BrowserActionsService implements ActionsService {
       }
     } catch (e) {
       this.logService.error(
-        `Failed to open the popup on ${deviceType} with manifest ${BrowserApi.manifestVersion} and error: ${e}`,
+        `Failed to open the popup on ${DeviceType[deviceType]} with manifest ${BrowserApi.manifestVersion} and error: ${e}`,
       );
     }
   }
