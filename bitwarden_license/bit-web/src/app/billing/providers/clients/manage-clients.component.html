@@ -118,7 +118,7 @@
   </bit-table-scroll>
   <div *ngIf="dataSource.data.length === 0" class="tw-mt-10">
     <app-no-clients
-      [showAddOrganizationButton]="isSuspensionActive"
+      [showAddOrganizationButton]="isProviderAdmin"
       (addNewOrganizationClicked)="createClient()"
     />
   </div>
