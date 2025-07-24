@@ -4,23 +4,27 @@
       {{ "connectIntegrationButtonDesc" | i18n: connectInfo.settings.name }}
     </span>
     <div bitDialogContent class="tw-flex tw-flex-col tw-gap-4">
-      <ng-container *ngIf="loading" #spinner>
-        <i class="bwi bwi-spinner bwi-lg bwi-spin" aria-hidden="true"></i>
-      </ng-container>
-      <ng-container *ngIf="!loading">
-        <bit-form-field>
-          <bit-label>{{ "url" | i18n }}</bit-label>
-          <input bitInput formControlName="url" />
-        </bit-form-field>
-        <bit-form-field>
-          <bit-label>{{ "bearerToken" | i18n }}</bit-label>
-          <input bitInput formControlName="bearerToken" />
-        </bit-form-field>
-        <bit-form-field>
-          <bit-label>{{ "index" | i18n }}</bit-label>
-          <input bitInput formControlName="index" />
-        </bit-form-field>
-      </ng-container>
+      @if (loading) {
+        <ng-container #spinner>
+          <i class="bwi bwi-spinner bwi-lg bwi-spin" aria-hidden="true"></i>
+        </ng-container>
+      }
+      @if (!loading) {
+        <ng-container>
+          <bit-form-field>
+            <bit-label>{{ "url" | i18n }}</bit-label>
+            <input bitInput formControlName="url" />
+          </bit-form-field>
+          <bit-form-field>
+            <bit-label>{{ "bearerToken" | i18n }}</bit-label>
+            <input bitInput formControlName="bearerToken" />
+          </bit-form-field>
+          <bit-form-field>
+            <bit-label>{{ "index" | i18n }}</bit-label>
+            <input bitInput formControlName="index" />
+          </bit-form-field>
+        </ng-container>
+      }
     </div>
     <ng-container bitDialogFooter>
       <button type="submit" bitButton bitFormButton buttonType="primary" [disabled]="loading">
