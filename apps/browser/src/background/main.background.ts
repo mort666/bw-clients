@@ -31,6 +31,7 @@ import { DefaultPolicyService } from "@bitwarden/common/admin-console/services/p
 import { PolicyApiService } from "@bitwarden/common/admin-console/services/policy/policy-api.service";
 import { ProviderService } from "@bitwarden/common/admin-console/services/provider.service";
 import { AccountService as AccountServiceAbstraction } from "@bitwarden/common/auth/abstractions/account.service";
+import { AuthRequestAnsweringServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth-request-answering/auth-request-answering.service.abstraction";
 import { AuthService as AuthServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth.service";
 import { AvatarService as AvatarServiceAbstraction } from "@bitwarden/common/auth/abstractions/avatar.service";
 import { DevicesServiceAbstraction } from "@bitwarden/common/auth/abstractions/devices/devices.service.abstraction";
@@ -41,6 +42,7 @@ import { UserVerificationApiServiceAbstraction } from "@bitwarden/common/auth/ab
 import { UserVerificationService as UserVerificationServiceAbstraction } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
 import { AccountServiceImplementation } from "@bitwarden/common/auth/services/account.service";
+import { AuthRequestAnsweringService } from "@bitwarden/common/auth/services/auth-request-answering/auth-request-answering.service";
 import { AuthService } from "@bitwarden/common/auth/services/auth.service";
 import { AvatarService } from "@bitwarden/common/auth/services/avatar.service";
 import { DevicesServiceImplementation } from "@bitwarden/common/auth/services/devices/devices.service.implementation";
@@ -124,7 +126,7 @@ import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/sym
 import { ServerNotificationsService } from "@bitwarden/common/platform/notifications";
 // eslint-disable-next-line no-restricted-imports -- Needed for service creation
 import {
-  DefaultNotificationsService,
+  DefaultServerNotificationsService,
   SignalRConnectionService,
   UnsupportedWebPushConnectionService,
   WebPushNotificationsApiService,
@@ -346,9 +348,10 @@ export default class MainBackground {
   importService: ImportServiceAbstraction;
   exportService: VaultExportServiceAbstraction;
   searchService: SearchServiceAbstraction;
-  notificationsService: ServerNotificationsService;
+  serverNotificationsService: ServerNotificationsService;
   systemNotificationService: SystemNotificationsService;
   actionsService: ActionsService;
+  authRequestAnsweringService: AuthRequestAnsweringServiceAbstraction;
   stateService: StateServiceAbstraction;
   userNotificationSettingsService: UserNotificationSettingsServiceAbstraction;
   autofillSettingsService: AutofillSettingsServiceAbstraction;
@@ -1145,7 +1148,24 @@ export default class MainBackground {
       this.systemNotificationService = new UnsupportedSystemNotificationsService();
     }
 
-    this.notificationsService = new DefaultNotificationsService(
+    // void Promise.all([this.configService.getFeatureFlag(FeatureFlag.PM14938_BrowserExtensionLoginApproval)])
+    //   .then((isBrowserExtensionLoginApprovalFFOn) => {
+    //     if (isBrowserExtensionLoginApprovalFFOn) {
+    //       this.authRequestAnsweringService = new AuthRequestAnsweringService(
+    //         this.systemNotificationService,
+    //         this.actionsService,
+    //       );
+    //     } else {
+    //       this.authRequestAnsweringService = new UnsupportedAuthRequestAnsweringService();
+    //     }
+    //   });
+
+    this.authRequestAnsweringService = new AuthRequestAnsweringService(
+      this.systemNotificationService,
+      this.actionsService,
+    );
+
+    this.serverNotificationsService = new DefaultServerNotificationsService(
       this.logService,
       this.syncService,
       this.appIdService,
@@ -1156,6 +1176,7 @@ export default class MainBackground {
       new SignalRConnectionService(this.apiService, this.logService),
       this.authService,
       this.webPushConnectionService,
+      this.authRequestAnsweringService,
     );
 
     this.fido2UserInterfaceService = new BrowserFido2UserInterfaceService(this.authService);
@@ -1216,7 +1237,7 @@ export default class MainBackground {
       this,
       this.autofillService,
       this.platformUtilsService as BrowserPlatformUtilsService,
-      this.notificationsService,
+      this.serverNotificationsService,
       this.autofillSettingsService,
       this.processReloadService,
       this.environmentService,
@@ -1255,7 +1276,7 @@ export default class MainBackground {
       this.apiService,
       this.organizationService,
       this.authService,
-      this.notificationsService,
+      this.serverNotificationsService,
       messageListener,
     );
 
@@ -1332,7 +1353,7 @@ export default class MainBackground {
 
     this.idleBackground = new IdleBackground(
       this.vaultTimeoutService,
-      this.notificationsService,
+      this.serverNotificationsService,
       this.accountService,
       this.vaultTimeoutSettingsService,
     );
@@ -1390,7 +1411,7 @@ export default class MainBackground {
     this.endUserNotificationService = new DefaultEndUserNotificationService(
       this.stateProvider,
       this.apiService,
-      this.notificationsService,
+      this.serverNotificationsService,
       this.authService,
       this.logService,
     );
@@ -1484,7 +1505,7 @@ export default class MainBackground {
       setTimeout(async () => {
         await this.fullSync(false);
         this.backgroundSyncService.init();
-        this.notificationsService.startListening();
+        this.serverNotificationsService.startListening();
 
         this.taskService.listenForTaskNotifications();
 

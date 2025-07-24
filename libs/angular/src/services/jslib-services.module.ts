@@ -93,6 +93,7 @@ import {
   InternalAccountService,
 } from "@bitwarden/common/auth/abstractions/account.service";
 import { AnonymousHubService as AnonymousHubServiceAbstraction } from "@bitwarden/common/auth/abstractions/anonymous-hub.service";
+import { AuthRequestAnsweringServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth-request-answering/auth-request-answering.service.abstraction";
 import { AuthService as AuthServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth.service";
 import { AvatarService as AvatarServiceAbstraction } from "@bitwarden/common/auth/abstractions/avatar.service";
 import { DevicesServiceAbstraction } from "@bitwarden/common/auth/abstractions/devices/devices.service.abstraction";
@@ -210,8 +211,8 @@ import { GlobalState } from "@bitwarden/common/platform/models/domain/global-sta
 import { ServerNotificationsService } from "@bitwarden/common/platform/notifications";
 // eslint-disable-next-line no-restricted-imports -- Needed for service creation
 import {
-  DefaultNotificationsService,
-  NoopNotificationsService,
+  DefaultServerNotificationsService,
+  UnsupportedServerNotificationsService,
   SignalRConnectionService,
   UnsupportedWebPushConnectionService,
   WebPushConnectionService,
@@ -385,6 +386,9 @@ import {
   WINDOW,
 } from "./injection-tokens";
 import { ModalService } from "./modal.service";
+import { AuthRequestAnsweringService } from "@bitwarden/common/auth/services/auth-request-answering/auth-request-answering.service";
+import { SystemNotificationsService } from "@bitwarden/common/platform/notifications/system-notifications-service";
+import { UnsupportedSystemNotificationsService } from "@bitwarden/common/platform/notifications/unsupported-system-notifications.service";
 
 /**
  * Provider definitions used in the ngModule.
@@ -952,10 +956,25 @@ const safeProviders: SafeProvider[] = [
     deps: [],
   }),
   safeProvider({
+    provide: ActionsService,
+    useClass: UnsupportedActionsService,
+    deps: [],
+  }),
+  safeProvider({
+    provide: SystemNotificationsService,
+    useClass: UnsupportedSystemNotificationsService,
+    deps: [],
+  }),
+  safeProvider({
+    provide: AuthRequestAnsweringServiceAbstraction,
+    useClass: AuthRequestAnsweringService,
+    deps: [SystemNotificationsService, ActionsService],
+  }),
+  safeProvider({
     provide: ServerNotificationsService,
     useClass: devFlagEnabled("noopNotifications")
-      ? NoopNotificationsService
-      : DefaultNotificationsService,
+      ? UnsupportedServerNotificationsService
+      : DefaultServerNotificationsService,
     deps: [
       LogService,
       SyncService,
@@ -967,6 +986,7 @@ const safeProviders: SafeProvider[] = [
       SignalRConnectionService,
       AuthServiceAbstraction,
       WebPushConnectionService,
+      AuthRequestAnsweringServiceAbstraction,
     ],
   }),
   safeProvider({

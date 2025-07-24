@@ -15,7 +15,7 @@ export class UnsupportedSystemNotificationsService implements SystemNotification
     throw new Error("Create OS Notification unsupported.");
   }
 
-  clear(clearInfo: SystemNotificationClearInfo): undefined {
+  clear(clearInfo: SystemNotificationClearInfo): Promise<undefined> {
     throw new Error("Clear OS Notification unsupported.");
   }
 

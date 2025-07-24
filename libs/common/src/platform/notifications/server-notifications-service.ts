@@ -4,7 +4,7 @@ import { NotificationResponse } from "@bitwarden/common/models/response/notifica
 import { UserId } from "@bitwarden/common/types/guid";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Needed to link to API
-import type { DefaultNotificationsService } from "./internal";
+import type { DefaultServerNotificationsService } from "./internal";
 
 /**
  * A service offering abilities to interact with push notifications from the server.
@@ -13,7 +13,7 @@ export abstract class ServerNotificationsService {
   /**
    * @deprecated This method should not be consumed, an observable to listen to server
    * notifications will be available one day but it is not ready to be consumed generally.
-   * Please add code reacting to notifications in {@link DefaultNotificationsService.processNotification}
+   * Please add code reacting to notifications in {@link DefaultServerNotificationsService.processNotification}
    */
   abstract notifications$: Observable<readonly [NotificationResponse, UserId]>;
   /**

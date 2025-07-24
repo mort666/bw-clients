@@ -14,6 +14,7 @@ import {
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
 import { LogoutReason } from "@bitwarden/auth/common";
+import { AuthRequestAnsweringServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth-request-answering/auth-request-answering.service.abstraction";
 
 import { AccountService } from "../../../auth/abstractions/account.service";
 import { AuthService } from "../../../auth/abstractions/auth.service";
@@ -32,14 +33,14 @@ import { EnvironmentService } from "../../abstractions/environment.service";
 import { LogService } from "../../abstractions/log.service";
 import { MessagingService } from "../../abstractions/messaging.service";
 import { supportSwitch } from "../../misc/support-status";
-import { ServerNotificationsService as NotificationsServiceAbstraction } from "../server-notifications-service";
+import { ServerNotificationsService } from "../server-notifications-service";
 
 import { ReceiveMessage, SignalRConnectionService } from "./signalr-connection.service";
 import { WebPushConnectionService } from "./webpush-connection.service";
 
 export const DISABLED_NOTIFICATIONS_URL = "http://-";
 
-export class DefaultNotificationsService implements NotificationsServiceAbstraction {
+export class DefaultServerNotificationsService implements ServerNotificationsService {
   notifications$: Observable<readonly [NotificationResponse, UserId]>;
 
   private activitySubject = new BehaviorSubject<"active" | "inactive">("active");
@@ -55,6 +56,7 @@ export class DefaultNotificationsService implements NotificationsServiceAbstract
     private readonly signalRConnectionService: SignalRConnectionService,
     private readonly authService: AuthService,
     private readonly webPushConnectionService: WebPushConnectionService,
+    private readonly authRequestAnsweringService: AuthRequestAnsweringServiceAbstraction,
   ) {
     this.notifications$ = this.accountService.activeAccount$.pipe(
       map((account) => account?.id),
@@ -213,6 +215,10 @@ export class DefaultNotificationsService implements NotificationsServiceAbstract
         await this.syncService.syncDeleteSend(notification.payload as SyncSendNotification);
         break;
       case NotificationType.AuthRequest:
+        await this.authRequestAnsweringService.receivedPendingAuthRequest(
+          notification.payload.userId,
+          notification.payload.id,
+        );
         this.messagingService.send("openLoginApproval", {
           notificationId: notification.payload.id,
         });

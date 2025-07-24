@@ -4,6 +4,7 @@ import { BehaviorSubject, bufferCount, firstValueFrom, ObservedValueOf, Subject 
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
 import { LogoutReason } from "@bitwarden/auth/common";
+import { SystemNotificationsService } from "@bitwarden/common/platform/notifications/system-notifications-service";
 
 import { awaitAsync } from "../../../../spec";
 import { Matrix } from "../../../../spec/matrix";
@@ -21,9 +22,9 @@ import { SupportStatus } from "../../misc/support-status";
 import { SyncService } from "../../sync";
 
 import {
-  DefaultNotificationsService,
+  DefaultServerNotificationsService,
   DISABLED_NOTIFICATIONS_URL,
-} from "./default-notifications.service";
+} from "./default-server-notifications.service";
 import { SignalRConnectionService, SignalRNotification } from "./signalr-connection.service";
 import { WebPushConnectionService, WebPushConnector } from "./webpush-connection.service";
 import { WorkerWebPushConnectionService } from "./worker-webpush-connection.service";
@@ -38,6 +39,7 @@ describe("NotificationsService", () => {
   let signalRNotificationConnectionService: MockProxy<SignalRConnectionService>;
   let authService: MockProxy<AuthService>;
   let webPushNotificationConnectionService: MockProxy<WebPushConnectionService>;
+  let systemNotificationService: MockProxy<SystemNotificationsService>;
 
   let activeAccount: BehaviorSubject<ObservedValueOf<AccountService["activeAccount$"]>>;
 
@@ -52,7 +54,7 @@ describe("NotificationsService", () => {
     notificationsUrl: string,
   ) => Subject<SignalRNotification>;
 
-  let sut: DefaultNotificationsService;
+  let sut: DefaultServerNotificationsService;
 
   beforeEach(() => {
     syncService = mock<SyncService>();
@@ -93,7 +95,7 @@ describe("NotificationsService", () => {
       () => new Subject<SignalRNotification>(),
     );
 
-    sut = new DefaultNotificationsService(
+    sut = new DefaultServerNotificationsService(
       mock<LogService>(),
       syncService,
       appIdService,
@@ -104,6 +106,7 @@ describe("NotificationsService", () => {
       signalRNotificationConnectionService,
       authService,
       webPushNotificationConnectionService,
+      systemNotificationService,
     );
   });
 
