@@ -116,6 +116,7 @@ export class IntegrationCardComponent implements AfterViewInit, OnDestroy {
 
     const result = await lastValueFrom(dialog.closed);
 
+    // for now we just log the result
     // eslint-disable-next-line no-console
     console.log(`Dialog closed with result: ${JSON.stringify(result)}`);
   }

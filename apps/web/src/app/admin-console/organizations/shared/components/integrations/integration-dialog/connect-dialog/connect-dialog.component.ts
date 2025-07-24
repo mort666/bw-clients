@@ -25,7 +25,7 @@ export interface ConnectDialogResult {
 })
 export class ConnectDialogComponent {
   loading = false;
-  protected formGroup = this.formBuilder.group({
+  formGroup = this.formBuilder.group({
     url: ["", [Validators.required, Validators.pattern("https?://.+")]],
     bearerToken: ["", Validators.required],
     index: ["", Validators.required],
@@ -37,7 +37,7 @@ export class ConnectDialogComponent {
     private dialogRef: DialogRef<ConnectDialogResult>,
   ) {}
 
-  protected submit = async (): Promise<void> => {
+  submit = async (): Promise<void> => {
     const formJson = this.formGroup.getRawValue();
 
     // eslint-disable-next-line no-console
@@ -52,6 +52,7 @@ export class ConnectDialogComponent {
       error: null,
     };
 
+    // for now, we just log the result
     // eslint-disable-next-line no-console
     console.log(`Dialog closed with result: ${JSON.stringify(result)}`);
 
