@@ -115,6 +115,7 @@ export class IntegrationCardComponent implements AfterViewInit, OnDestroy {
     });
 
     const result = await lastValueFrom(dialog.closed);
+    this.isConnected = result.success ? true : false;
 
     // for now we just log the result
     // eslint-disable-next-line no-console
