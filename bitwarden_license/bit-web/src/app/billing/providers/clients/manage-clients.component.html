@@ -119,6 +119,7 @@
   <div *ngIf="dataSource.data.length === 0" class="tw-mt-10">
     <app-no-clients
       [showAddOrganizationButton]="isProviderAdmin"
+      [disableAddOrganizationButton]="isSuspensionActive"
       (addNewOrganizationClicked)="createClient()"
     />
   </div>
