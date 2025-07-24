@@ -85,13 +85,13 @@ export class AppComponent implements OnDestroy, OnInit {
     private accountService: AccountService,
     private processReloadService: ProcessReloadServiceAbstraction,
     private deviceTrustToastService: DeviceTrustToastService,
-    private readonly destoryRef: DestroyRef,
+    private readonly destroy: DestroyRef,
     private readonly documentLangSetter: DocumentLangSetter,
   ) {
     this.deviceTrustToastService.setupListeners$.pipe(takeUntilDestroyed()).subscribe();
 
     const langSubscription = this.documentLangSetter.start();
-    this.destoryRef.onDestroy(() => langSubscription.unsubscribe());
+    this.destroy.onDestroy(() => langSubscription.unsubscribe());
   }
 
   ngOnInit() {
