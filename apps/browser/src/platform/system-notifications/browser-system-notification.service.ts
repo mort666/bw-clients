@@ -28,7 +28,7 @@ export class BrowserSystemNotificationService implements SystemNotificationsServ
         case DeviceType.ChromeExtension:
           chrome.notifications.create(createInfo.id, {
             iconUrl: "https://avatars.githubusercontent.com/u/15990069?s=200",
-            message: createInfo.title,
+            message: createInfo.body,
             type: "basic",
             title: createInfo.title,
             buttons: createInfo.buttons.map((value) => {
