@@ -346,7 +346,7 @@ export default class MainBackground {
   importService: ImportServiceAbstraction;
   exportService: VaultExportServiceAbstraction;
   searchService: SearchServiceAbstraction;
-  notificationsService: ServerNotificationsService;
+  serverNotificationsService: ServerNotificationsService;
   systemNotificationService: SystemNotificationsService;
   actionsService: ActionsService;
   stateService: StateServiceAbstraction;
@@ -1145,7 +1145,7 @@ export default class MainBackground {
       this.systemNotificationService = new UnsupportedSystemNotificationsService();
     }
 
-    this.notificationsService = new DefaultServerNotificationsService(
+    this.serverNotificationsService = new DefaultServerNotificationsService(
       this.logService,
       this.syncService,
       this.appIdService,
@@ -1216,7 +1216,6 @@ export default class MainBackground {
       this,
       this.autofillService,
       this.platformUtilsService as BrowserPlatformUtilsService,
-      this.notificationsService,
       this.autofillSettingsService,
       this.processReloadService,
       this.environmentService,
@@ -1255,7 +1254,7 @@ export default class MainBackground {
       this.apiService,
       this.organizationService,
       this.authService,
-      this.notificationsService,
+      this.serverNotificationsService,
       messageListener,
     );
 
@@ -1332,7 +1331,7 @@ export default class MainBackground {
 
     this.idleBackground = new IdleBackground(
       this.vaultTimeoutService,
-      this.notificationsService,
+      this.serverNotificationsService,
       this.accountService,
       this.vaultTimeoutSettingsService,
     );
@@ -1390,7 +1389,7 @@ export default class MainBackground {
     this.endUserNotificationService = new DefaultEndUserNotificationService(
       this.stateProvider,
       this.apiService,
-      this.notificationsService,
+      this.serverNotificationsService,
       this.authService,
       this.logService,
     );
@@ -1484,7 +1483,7 @@ export default class MainBackground {
       setTimeout(async () => {
         await this.fullSync(false);
         this.backgroundSyncService.init();
-        this.notificationsService.startListening();
+        this.serverNotificationsService.startListening();
 
         this.taskService.listenForTaskNotifications();
 

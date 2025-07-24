@@ -73,7 +73,7 @@ export class AppComponent implements OnDestroy, OnInit {
     private keyService: KeyService,
     private collectionService: CollectionService,
     private searchService: SearchService,
-    private notificationsService: ServerNotificationsService,
+    private serverNotificationsService: ServerNotificationsService,
     private stateService: StateService,
     private eventUploadService: EventUploadService,
     protected policyListService: PolicyListService,
@@ -341,9 +341,9 @@ export class AppComponent implements OnDestroy, OnInit {
 
   private idleStateChanged() {
     if (this.isIdle) {
-      this.notificationsService.disconnectFromInactivity();
+      this.serverNotificationsService.disconnectFromInactivity();
     } else {
-      this.notificationsService.reconnectFromActivity();
+      this.serverNotificationsService.reconnectFromActivity();
     }
   }
 }

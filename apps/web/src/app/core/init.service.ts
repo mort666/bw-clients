@@ -28,7 +28,7 @@ import { VersionService } from "../platform/version.service";
 export class InitService {
   constructor(
     @Inject(WINDOW) private win: Window,
-    private notificationsService: ServerNotificationsService,
+    private serverNotificationsService: ServerNotificationsService,
     private vaultTimeoutService: DefaultVaultTimeoutService,
     private i18nService: I18nServiceAbstraction,
     private eventUploadService: EventUploadServiceAbstraction,
@@ -67,7 +67,7 @@ export class InitService {
         await this.userAutoUnlockKeyService.setUserKeyInMemoryIfAutoUserKeySet(activeAccount.id);
       }
 
-      this.notificationsService.startListening();
+      this.serverNotificationsService.startListening();
       await this.vaultTimeoutService.init(true);
       await this.i18nService.init();
       (this.eventUploadService as EventUploadService).init(true);

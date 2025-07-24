@@ -20,7 +20,7 @@ export default class IdleBackground {
 
   constructor(
     private vaultTimeoutService: VaultTimeoutService,
-    private notificationsService: ServerNotificationsService,
+    private serverNotificationsService: ServerNotificationsService,
     private accountService: AccountService,
     private vaultTimeoutSettingsService: VaultTimeoutSettingsService,
   ) {
@@ -34,9 +34,9 @@ export default class IdleBackground {
 
     const idleHandler = (newState: string) => {
       if (newState === "active") {
-        this.notificationsService.reconnectFromActivity();
+        this.serverNotificationsService.reconnectFromActivity();
       } else {
-        this.notificationsService.disconnectFromInactivity();
+        this.serverNotificationsService.disconnectFromInactivity();
       }
     };
     if (this.idle.onStateChanged && this.idle.setDetectionInterval) {
