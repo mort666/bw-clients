@@ -45,9 +45,9 @@ export class ConnectDialogComponent {
 
     const result: ConnectDialogResult = {
       integrationSettings: this.connectInfo.settings,
-      url: this.formGroup.value.url,
-      bearerToken: this.formGroup.value.bearerToken,
-      index: this.formGroup.value.index,
+      url: this.formGroup.value.url ?? "",
+      bearerToken: this.formGroup.value.bearerToken ?? "",
+      index: this.formGroup.value.index ?? "",
       success: true,
       error: null,
     };
