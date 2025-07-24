@@ -44,7 +44,7 @@ const gearIcon = svgIcon`
 export class NoClientsComponent {
   icon = gearIcon;
   @Input() showAddOrganizationButton = true;
-  @Input() disableAddOrganizationButton = true;
+  @Input() disableAddOrganizationButton = false;
   @Output() addNewOrganizationClicked = new EventEmitter();
 
   addNewOrganization = () => this.addNewOrganizationClicked.emit();
