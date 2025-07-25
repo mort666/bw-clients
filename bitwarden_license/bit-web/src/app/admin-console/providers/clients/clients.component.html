@@ -1,37 +1,19 @@
-@let isSuspensionActive = suspensionActive$ | async;
+@let isAdminOrServiceUser = isAdminOrServiceUser$ | async;
 <app-header>
   <bit-search
     class="tw-grow"
     [formControl]="searchControl"
     [placeholder]="'search' | i18n"
   ></bit-search>
-  <a
-    bitButton
-    routerLink="create"
-    *ngIf="manageOrganizations && isSuspensionActive"
-    buttonType="primary"
-  >
+  <a bitButton routerLink="create" *ngIf="isAdminOrServiceUser" buttonType="primary">
     <i class="bwi bwi-plus bwi-fw" aria-hidden="true"></i>
     {{ "newClient" | i18n }}
   </a>
   <button
-    *ngIf="manageOrganizations && isSuspensionActive"
     type="button"
     bitButton
-    buttonType="primary"
-    [disabled]="true"
-    [title]="'providerIsDisabled' | i18n"
-  >
-    <i class="bwi bwi-plus bwi-fw" aria-hidden="true"></i>
-    {{ "newClient" | i18n }}
-  </button>
-  <button
-    type="button"
-    bitButton
-    [disabled]="isSuspensionActive"
-    [title]="isSuspensionActive ? ('providerIsDisabled' | i18n) : ''"
     (click)="addExistingOrganization()"
-    *ngIf="manageOrganizations && showAddExisting"
+    *ngIf="isAdminOrServiceUser && showAddExisting"
   >
     <i class="bwi bwi-plus bwi-fw" aria-hidden="true"></i>
     {{ "addExistingOrganization" | i18n }}
@@ -71,7 +53,7 @@
           <span>{{ row.plan }}</span>
           <div appListDropdown>
             <button
-              *ngIf="manageOrganizations"
+              *ngIf="isAdminOrServiceUser"
               [bitMenuTriggerFor]="removeMenu"
               bitMenuItem
               buttonType="secondary"

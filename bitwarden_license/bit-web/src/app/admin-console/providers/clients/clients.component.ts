@@ -3,7 +3,7 @@ import { Component } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
-import { firstValueFrom, from, map, combineLatest, switchMap, Observable } from "rxjs";
+import { firstValueFrom, from, map, Observable, switchMap, tap } from "rxjs";
 import { debounceTime, first } from "rxjs/operators";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
@@ -13,13 +13,10 @@ import { OrganizationService } from "@bitwarden/common/admin-console/abstraction
 import { ProviderService } from "@bitwarden/common/admin-console/abstractions/provider.service";
 import { ProviderStatusType, ProviderUserType } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
-import { Provider } from "@bitwarden/common/admin-console/models/domain/provider";
 import { ProviderOrganizationOrganizationDetailsResponse } from "@bitwarden/common/admin-console/models/response/provider/provider-organization.response";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { PlanType } from "@bitwarden/common/billing/enums";
-import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
-import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { ValidationService } from "@bitwarden/common/platform/abstractions/validation.service";
 import {
@@ -58,24 +55,21 @@ const DisallowedPlanTypes = [
 })
 export class ClientsComponent {
   providerId: string = "";
-  provider: Provider | undefined;
   addableOrganizations: Organization[] = [];
   loading = true;
-  manageOrganizations = false;
   showAddExisting = false;
   dataSource: TableDataSource<ProviderOrganizationOrganizationDetailsResponse> =
     new TableDataSource();
   protected searchControl = new FormControl("", { nonNullable: true });
 
   protected providerId$: Observable<string> =
-    this.activatedRoute.parent?.params.pipe(map((params) => params.providerId as string)) ??
-    new Observable();
+    this.activatedRoute.parent?.params.pipe(
+      map((params) => params.providerId as string),
+      tap((providerId) => (this.providerId = providerId)),
+    ) ?? new Observable();
 
   protected provider$ = this.providerId$.pipe(
-    switchMap((providerId) => {
-      this.providerId = providerId;
-      return this.providerService.get$(providerId);
-    }),
+    switchMap((providerId) => this.providerService.get$(providerId)),
   );
 
   protected isAdminOrServiceUser$ = this.provider$.pipe(
@@ -83,21 +77,6 @@ export class ClientsComponent {
       (provider) =>
         provider?.type === ProviderUserType.ProviderAdmin ||
         provider?.type === ProviderUserType.ServiceUser,
-    ),
-  );
-
-  protected providerPortalTakeover$ = this.configService.getFeatureFlag$(
-    FeatureFlag.PM21821_ProviderPortalTakeover,
-  );
-
-  protected suspensionActive$ = combineLatest([
-    this.isAdminOrServiceUser$,
-    this.providerPortalTakeover$,
-    this.provider$.pipe(map((provider) => provider?.enabled ?? false)),
-  ]).pipe(
-    map(
-      ([isAdminOrServiceUser, portalTakeoverEnabled, providerEnabled]) =>
-        isAdminOrServiceUser && portalTakeoverEnabled && !providerEnabled,
     ),
   );
 
@@ -114,7 +93,6 @@ export class ClientsComponent {
     private toastService: ToastService,
     private validationService: ValidationService,
     private webProviderService: WebProviderService,
-    private configService: ConfigService,
   ) {
     this.activatedRoute.queryParams.pipe(first(), takeUntilDestroyed()).subscribe((queryParams) => {
       this.searchControl.setValue(queryParams.search);
@@ -123,10 +101,6 @@ export class ClientsComponent {
     this.provider$
       .pipe(
         map((provider) => {
-          this.provider = provider;
-          this.manageOrganizations =
-            provider.type === ProviderUserType.ProviderAdmin ||
-            provider.type === ProviderUserType.ServiceUser;
           if (provider?.providerStatus === ProviderStatusType.Billable) {
             return from(
               this.router.navigate(["../manage-client-organizations"], {

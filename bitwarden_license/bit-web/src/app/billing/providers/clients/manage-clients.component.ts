@@ -10,6 +10,7 @@ import {
   combineLatest,
   switchMap,
   Observable,
+  tap,
 } from "rxjs";
 import { debounceTime, first } from "rxjs/operators";
 
@@ -72,29 +73,26 @@ import { ReplacePipe } from "./replace.pipe";
 })
 export class ManageClientsComponent {
   providerId: string = "";
-  provider: Provider | undefined;
   loading = true;
-  isProviderAdmin = false;
-  isServiceUser = false;
   dataSource: TableDataSource<ProviderOrganizationOrganizationDetailsResponse> =
     new TableDataSource();
 
   protected searchControl = new FormControl("", { nonNullable: true });
   protected plans: PlanResponse[] = [];
+  protected ProviderUserType = ProviderUserType;
 
   pageTitle = this.i18nService.t("clients");
   clientColumnHeader = this.i18nService.t("client");
   newClientButtonLabel = this.i18nService.t("newClient");
 
   protected providerId$: Observable<string> =
-    this.activatedRoute.parent?.params.pipe(map((params) => params.providerId as string)) ??
-    new Observable();
+    this.activatedRoute.parent?.params.pipe(
+      map((params) => params.providerId as string),
+      tap((providerId) => (this.providerId = providerId)),
+    ) ?? new Observable();
 
   protected provider$ = this.providerId$.pipe(
-    switchMap((providerId) => {
-      this.providerId = providerId;
-      return this.providerService.get$(providerId);
-    }),
+    switchMap((providerId) => this.providerService.get$(providerId)),
   );
 
   protected isAdminOrServiceUser$ = this.provider$.pipe(
@@ -146,9 +144,8 @@ export class ManageClientsComponent {
                 relativeTo: this.activatedRoute,
               }),
             );
-          } else {
-            return from(this.load());
           }
+          return from(this.load());
         }),
         takeUntilDestroyed(),
       )
@@ -164,14 +161,12 @@ export class ManageClientsComponent {
 
   async load() {
     try {
-      this.provider = await firstValueFrom(this.providerService.get$(this.providerId));
-      if (this.provider?.providerType === ProviderType.BusinessUnit) {
+      const provider = await firstValueFrom(this.providerService.get$(this.providerId));
+      if (provider?.providerType === ProviderType.BusinessUnit) {
         this.pageTitle = this.i18nService.t("businessUnits");
         this.clientColumnHeader = this.i18nService.t("businessUnit");
         this.newClientButtonLabel = this.i18nService.t("newBusinessUnit");
       }
-      this.isProviderAdmin = this.provider?.type === ProviderUserType.ProviderAdmin;
-      this.isServiceUser = this.provider?.type === ProviderUserType.ServiceUser;
       this.dataSource.data = (
         await this.billingApiService.getProviderClientOrganizations(this.providerId)
       ).data;
@@ -183,10 +178,11 @@ export class ManageClientsComponent {
   }
 
   addExistingOrganization = async () => {
-    if (this.provider) {
+    const provider = await firstValueFrom(this.provider$);
+    if (provider) {
       const reference = AddExistingOrganizationDialogComponent.open(this.dialogService, {
         data: {
-          provider: this.provider,
+          provider: provider,
         },
       });
 
@@ -235,10 +231,11 @@ export class ManageClientsComponent {
   manageClientSubscription = async (
     organization: ProviderOrganizationOrganizationDetailsResponse,
   ) => {
+    const provider = await firstValueFrom(this.provider$);
     const dialogRef = openManageClientSubscriptionDialog(this.dialogService, {
       data: {
         organization,
-        provider: this.provider!,
+        provider: provider!,
       },
     });
 
