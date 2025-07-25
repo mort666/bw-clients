@@ -1,3 +1,4 @@
+@let isSuspensionActive = suspensionActive$ | async;
 <app-header [title]="pageTitle">
   <bit-search [placeholder]="'search' | i18n" [formControl]="searchControl"></bit-search>
   <button
@@ -6,8 +7,10 @@
     type="button"
     [bitMenuTriggerFor]="clientMenu"
     [disabled]="isSuspensionActive"
-    [title]="suspendedTooltip"
-    appA11yTitle="{{ isSuspensionActive ? ('add' | i18n) : suspendedTooltip }}"
+    [title]="isSuspensionActive ? ('providerIsDisabled' | i18n) : ''"
+    appA11yTitle="{{
+      isSuspensionActive ? ('add' | i18n) : isSuspensionActive ? ('providerIsDisabled' | i18n) : ''
+    }}"
   >
     <i class="bwi bwi-plus bwi-fw" aria-hidden="true"></i>
     {{ "add" | i18n }}
@@ -17,7 +20,7 @@
       type="button"
       bitMenuItem
       [disabled]="isSuspensionActive"
-      [title]="suspendedTooltip"
+      [title]="isSuspensionActive ? ('providerIsDisabled' | i18n) : ''"
       (click)="createClient()"
     >
       <i aria-hidden="true" class="bwi bwi-business"></i>
@@ -27,7 +30,7 @@
       type="button"
       bitMenuItem
       [disabled]="isSuspensionActive"
-      [title]="suspendedTooltip"
+      [title]="isSuspensionActive ? ('providerIsDisabled' | i18n) : ''"
       (click)="addExistingOrganization()"
     >
       <i aria-hidden="true" class="bwi bwi-filter"></i>
@@ -91,7 +94,7 @@
             type="button"
             bitMenuItem
             [disabled]="isSuspensionActive"
-            [title]="suspendedTooltip"
+            [title]="isSuspensionActive ? ('providerIsDisabled' | i18n) : ''"
             (click)="manageClientName(row)"
           >
             <i aria-hidden="true" class="bwi bwi-pencil-square"></i>
@@ -101,7 +104,7 @@
             type="button"
             bitMenuItem
             [disabled]="isSuspensionActive"
-            [title]="suspendedTooltip"
+            [title]="isSuspensionActive ? ('providerIsDisabled' | i18n) : ''"
             (click)="manageClientSubscription(row)"
           >
             <i aria-hidden="true" class="bwi bwi-family"></i>

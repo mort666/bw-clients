@@ -2,8 +2,16 @@ import { Component } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
-import { firstValueFrom, from, lastValueFrom, map } from "rxjs";
-import { debounceTime, first, switchMap } from "rxjs/operators";
+import {
+  firstValueFrom,
+  from,
+  lastValueFrom,
+  map,
+  combineLatest,
+  switchMap,
+  Observable,
+} from "rxjs";
+import { debounceTime, first } from "rxjs/operators";
 
 import { ProviderService } from "@bitwarden/common/admin-console/abstractions/provider.service";
 import {
@@ -78,10 +86,39 @@ export class ManageClientsComponent {
   clientColumnHeader = this.i18nService.t("client");
   newClientButtonLabel = this.i18nService.t("newClient");
 
+  protected providerId$: Observable<string> =
+    this.activatedRoute.parent?.params.pipe(map((params) => params.providerId as string)) ??
+    new Observable();
+
+  protected provider$ = this.providerId$.pipe(
+    switchMap((providerId) => {
+      this.providerId = providerId;
+      return this.providerService.get$(providerId);
+    }),
+  );
+
+  protected isAdminOrServiceUser$ = this.provider$.pipe(
+    map(
+      (provider) =>
+        provider?.type === ProviderUserType.ProviderAdmin ||
+        provider?.type === ProviderUserType.ServiceUser,
+    ),
+  );
+
   protected providerPortalTakeover$ = this.configService.getFeatureFlag$(
     FeatureFlag.PM21821_ProviderPortalTakeover,
   );
-  private providerPortalTakeoverEnabled = false;
+
+  protected suspensionActive$ = combineLatest([
+    this.isAdminOrServiceUser$,
+    this.providerPortalTakeover$,
+    this.provider$.pipe(map((provider) => provider?.enabled ?? false)),
+  ]).pipe(
+    map(
+      ([isAdminOrServiceUser, portalTakeoverEnabled, providerEnabled]) =>
+        isAdminOrServiceUser && portalTakeoverEnabled && !providerEnabled,
+    ),
+  );
 
   constructor(
     private billingApiService: BillingApiServiceAbstraction,
@@ -100,28 +137,18 @@ export class ManageClientsComponent {
       this.searchControl.setValue(queryParams.search);
     });
 
-    this.providerPortalTakeover$.pipe(takeUntilDestroyed()).subscribe((enabled) => {
-      this.providerPortalTakeoverEnabled = enabled;
-    });
-
-    this.activatedRoute.parent?.params
-      ?.pipe(
-        switchMap((params) => {
-          this.providerId = params.providerId;
-          return this.providerService.get$(this.providerId).pipe(
-            map((provider: Provider) => provider?.providerStatus === ProviderStatusType.Billable),
-            map((isBillable) => {
-              if (!isBillable) {
-                return from(
-                  this.router.navigate(["../clients"], {
-                    relativeTo: this.activatedRoute,
-                  }),
-                );
-              } else {
-                return from(this.load());
-              }
-            }),
-          );
+    this.provider$
+      .pipe(
+        map((provider: Provider) => {
+          if (provider?.providerStatus !== ProviderStatusType.Billable) {
+            return from(
+              this.router.navigate(["../clients"], {
+                relativeTo: this.activatedRoute,
+              }),
+            );
+          } else {
+            return from(this.load());
+          }
         }),
         takeUntilDestroyed(),
       )
@@ -244,17 +271,5 @@ export class ManageClientsComponent {
     } catch (e) {
       this.validationService.showError(e);
     }
-  }
-
-  get isSuspensionActive(): boolean {
-    return (
-      (this.isProviderAdmin || this.isServiceUser) &&
-      this.providerPortalTakeoverEnabled &&
-      !this.provider?.enabled
-    );
-  }
-
-  get suspendedTooltip(): string {
-    return this.isSuspensionActive ? this.i18nService.t("providerIsDisabled") : "";
   }
 }
