@@ -415,10 +415,12 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
 
     cipher.id = sdkCipher.id ? uuidToString(sdkCipher.id) : undefined;
     cipher.organizationId = sdkCipher.organizationId
-      ? uuidToString(sdkCipher.organizationId)
+      ? (uuidToString(sdkCipher.organizationId) as OrganizationId)
       : undefined;
     cipher.folderId = sdkCipher.folderId ? uuidToString(sdkCipher.folderId) : undefined;
-    cipher.collectionIds = sdkCipher.collectionIds ? sdkCipher.collectionIds.map(uuidToString) : [];
+    cipher.collectionIds = sdkCipher.collectionIds
+      ? (sdkCipher.collectionIds.map(uuidToString) as CollectionId[])
+      : [];
     cipher.key = EncString.fromJSON(sdkCipher.key);
     cipher.name = EncString.fromJSON(sdkCipher.name);
     cipher.notes = EncString.fromJSON(sdkCipher.notes);
