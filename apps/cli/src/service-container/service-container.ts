@@ -132,7 +132,6 @@ import { DefaultSyncService } from "@bitwarden/common/platform/sync/internal";
 import { AuditService } from "@bitwarden/common/services/audit.service";
 import { EventCollectionService } from "@bitwarden/common/services/event/event-collection.service";
 import { EventUploadService } from "@bitwarden/common/services/event/event-upload.service";
-import { SearchService } from "@bitwarden/common/services/search.service";
 import {
   PasswordStrengthService,
   PasswordStrengthServiceAbstraction,
@@ -153,6 +152,7 @@ import { CipherFileUploadService } from "@bitwarden/common/vault/services/file-u
 import { FolderApiService } from "@bitwarden/common/vault/services/folder/folder-api.service";
 import { FolderService } from "@bitwarden/common/vault/services/folder/folder.service";
 import { RestrictedItemTypesService } from "@bitwarden/common/vault/services/restricted-item-types.service";
+import { SearchService } from "@bitwarden/common/vault/services/search.service";
 import { TotpService } from "@bitwarden/common/vault/services/totp.service";
 import {
   legacyPasswordGenerationServiceFactory,
@@ -682,6 +682,18 @@ export class ServiceContainer {
       this.vaultTimeoutSettingsService,
       this.kdfConfigService,
       this.taskSchedulerService,
+      this.configService,
+    );
+
+    this.restrictedItemTypesService = new RestrictedItemTypesService(
+      this.configService,
+      this.accountService,
+      this.organizationService,
+      this.policyService,
+    );
+
+    this.cliRestrictedItemTypesService = new CliRestrictedItemTypesService(
+      this.restrictedItemTypesService,
     );
 
     // FIXME: CLI does not support autofill
@@ -689,6 +701,7 @@ export class ServiceContainer {
       this.stateProvider,
       this.policyService,
       this.accountService,
+      this.restrictedItemTypesService,
     );
 
     this.cipherEncryptionService = new DefaultCipherEncryptionService(
@@ -808,6 +821,7 @@ export class ServiceContainer {
       this.pinService,
       this.accountService,
       this.sdkService,
+      this.restrictedItemTypesService,
     );
 
     this.individualExportService = new IndividualVaultExportService(
@@ -875,17 +889,6 @@ export class ServiceContainer {
     );
 
     this.masterPasswordApiService = new MasterPasswordApiService(this.apiService, this.logService);
-
-    this.restrictedItemTypesService = new RestrictedItemTypesService(
-      this.configService,
-      this.accountService,
-      this.organizationService,
-      this.policyService,
-    );
-
-    this.cliRestrictedItemTypesService = new CliRestrictedItemTypesService(
-      this.restrictedItemTypesService,
-    );
   }
 
   async logout() {
@@ -898,7 +901,6 @@ export class ServiceContainer {
       this.keyService.clearKeys(userId),
       this.cipherService.clear(userId),
       this.folderService.clear(userId),
-      this.collectionService.clear(userId),
     ]);
 
     await this.stateEventRunnerService.handleEvent("logout", userId as UserId);
