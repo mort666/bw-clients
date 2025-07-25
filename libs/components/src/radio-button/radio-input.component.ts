@@ -74,12 +74,7 @@ export class RadioInputComponent implements BitFormControlAbstraction {
     "checked:disabled:before:tw-bg-secondary-600",
   ];
 
-  constructor(
-    elementRef: ElementRef,
-    @Optional() @Self() private ngControl?: NgControl,
-  ) {
-    super(elementRef);
-  }
+  constructor(@Optional() @Self() private ngControl?: NgControl) {}
 
   // TODO: Skipped for signal migration because:
   //  Accessor inputs cannot be migrated as they are too complex.
@@ -91,7 +86,7 @@ export class RadioInputComponent implements BitFormControlAbstraction {
   set disabled(value: any) {
     this._disabled = value != null && value !== false;
   }
-  // private _disabled: boolean;
+  private _disabled: boolean;
 
   // TODO: Skipped for signal migration because:
   //  Accessor inputs cannot be migrated as they are too complex.
@@ -104,7 +99,7 @@ export class RadioInputComponent implements BitFormControlAbstraction {
   set required(value: any) {
     this._required = value != null && value !== false;
   }
-  // private _required: boolean;
+  private _required: boolean;
 
   get hasError() {
     return this.ngControl?.status === "INVALID" && this.ngControl?.touched;

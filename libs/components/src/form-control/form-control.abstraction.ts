@@ -33,7 +33,12 @@ export abstract class BitFormControlAbstraction {
   set error(value: [string, any]) {
     this._error = value;
   }
+
   _elementRef: ElementRef<HTMLElement>;
+
+  // get elementRef(): ElementRef<HTMLElement> {
+  //   return this._elementRef;
+  // }
 
   constructor(elementRef: ElementRef<HTMLElement>) {
     this._elementRef = elementRef;
