@@ -59,10 +59,26 @@ export class I18nComponent {
    */
   args = input<(string | number)[]>([]);
 
+  /**
+   * Escapes any <0></0> like tags that may be present in the arguments to
+   * prevent breaking the template rendering.
+   */
+  escapeArgs(args: (string | number)[]): (string | number)[] {
+    return args.map((arg) => {
+      if (typeof arg === "string") {
+        return arg.replace(/<\/?\d+>/g, (tag) => tag.replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+      }
+      return arg.toString();
+    });
+  }
+
   private tagTemplates = contentChildren(I18nPartDirective, { read: TemplateRef });
 
   private translatedText = computed(() => {
-    const translatedText = this.i18nService.t(this.translationKey(), ...this.args());
+    const translatedText = this.i18nService.t(
+      this.translationKey(),
+      ...this.escapeArgs(this.args()),
+    );
     return this.parseTranslatedString(translatedText);
   });
 
