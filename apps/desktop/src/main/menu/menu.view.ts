@@ -36,17 +36,29 @@ export class ViewMenu implements IMenubarMenu {
       items.push(this.toggleDevTools);
     }
 
+    // Desktop is considered self hosted argh.
+    // if (this._isProdOrSelfHost) {
+    items.push(this.featureFlags);
+    // }
+
     return items;
   }
 
   private readonly _i18nService: I18nService;
   private readonly _messagingService: MessagingService;
   private readonly _isLocked: boolean;
+  private readonly _isProdOrSelfHost: boolean;
 
-  constructor(i18nService: I18nService, messagingService: MessagingService, isLocked: boolean) {
+  constructor(
+    i18nService: I18nService,
+    messagingService: MessagingService,
+    isLocked: boolean,
+    isProdOrSelfHost: boolean,
+  ) {
     this._i18nService = i18nService;
     this._messagingService = messagingService;
     this._isLocked = isLocked;
+    this._isProdOrSelfHost = isProdOrSelfHost;
   }
 
   private get searchVault(): MenuItemConstructorOptions {
@@ -134,13 +146,13 @@ export class ViewMenu implements IMenubarMenu {
     };
   }
 
-  // private get viewFeatureFlags(): MenuItemConstructorOptions {
-  //   return {
-  //     id: "viewFeatureFlags",
-  //     label: this.localize("viewFeatureFlags"),
-  //     role: "viewFeatureFlags",
-  //   };
-  // }
+  private get featureFlags(): MenuItemConstructorOptions {
+    return {
+      id: "featureFlags",
+      label: this.localize("featureFlags"),
+      click: () => this.sendMessage("viewFeatureFlags"),
+    };
+  }
 
   private localize(s: string) {
     return this._i18nService.t(s);

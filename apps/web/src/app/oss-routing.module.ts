@@ -186,7 +186,7 @@ const routes: Routes = [
             key: "featureFlags",
           },
           maxWidth: "3xl",
-          hideIcon: true, // TODO: log bug with UIF or offer a PR to fix where this isn't reset to false upon navigation
+          hideIcon: true,
         } satisfies RouteDataProperties & AnonLayoutWrapperData,
         loadComponent: () =>
           import("@bitwarden/angular/platform/feature-flags").then((m) => m.FeatureFlagsComponent),
