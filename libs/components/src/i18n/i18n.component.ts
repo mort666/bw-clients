@@ -1,11 +1,4 @@
-import {
-  AfterContentInit,
-  Component,
-  ContentChildren,
-  Input,
-  QueryList,
-  TemplateRef,
-} from "@angular/core";
+import { Component, TemplateRef, input, computed, contentChildren } from "@angular/core";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
@@ -48,7 +41,7 @@ interface I18nStringPart {
   selector: "[bit-i18n]",
   imports: [SharedModule],
   template: `
-    <ng-container *ngFor="let part of translationParts">
+    <ng-container *ngFor="let part of translationParts()">
       <ng-container *ngIf="part.templateRef != undefined; else text">
         <ng-container
           *ngTemplateOutlet="part.templateRef; context: { $implicit: part.text }"
@@ -57,53 +50,46 @@ interface I18nStringPart {
       <ng-template #text>{{ part.text }}</ng-template>
     </ng-container>
   `,
-  standalone: true,
 })
-export class I18nComponent implements AfterContentInit {
-  @Input("bit-i18n")
-  translationKey: string;
+export class I18nComponent {
+  translationKey = input.required<string>({ alias: "bit-i18n" });
 
   /**
    * Optional arguments to pass to the translation function.
    */
-  @Input()
-  args: (string | number)[] = [];
+  args = input<(string | number)[]>([]);
 
-  @ContentChildren(I18nPartDirective)
-  templateTags: QueryList<I18nPartDirective>;
+  private tagTemplates = contentChildren(I18nPartDirective, { read: TemplateRef });
 
-  protected translationParts: I18nStringPart[] = [];
+  private translatedText = computed(() => {
+    const translatedText = this.i18nService.t(this.translationKey(), ...this.args());
+    return this.parseTranslatedString(translatedText);
+  });
+
+  protected translationParts = computed<I18nStringPart[]>(() => {
+    const [translationParts, tagCount] = this.translatedText();
+    const tagTemplates = this.tagTemplates();
+    const tagTemplateCount = tagTemplates.length;
+
+    if (tagCount !== tagTemplateCount) {
+      this.logService.warning(
+        `The translation for "${this.translationKey()}" has ${tagCount} template tag(s), but ${tagTemplateCount} bit-i18n-part directive(s) were found.`,
+      );
+    }
+
+    translationParts
+      .filter((part) => part.tagId !== undefined)
+      .forEach((part) => {
+        part.templateRef = tagTemplates[part.tagId!];
+      });
+
+    return translationParts;
+  });
 
   constructor(
     private i18nService: I18nService,
     private logService: LogService,
   ) {}
-
-  ngAfterContentInit() {
-    const translatedText = this.i18nService.t(
-      this.translationKey,
-      this.args[0],
-      this.args[1],
-      this.args[2],
-    );
-    const [translationParts, tagCount] = this.parseTranslatedString(translatedText);
-    this.translationParts = translationParts;
-
-    if (tagCount !== this.templateTags.length) {
-      this.logService.warning(
-        `The translation for "${this.translationKey}" has ${tagCount} template tag(s), but ${this.templateTags.length} bit-i18n-part directive(s) were found.`,
-      );
-    }
-
-    // Assign any templateRefs to the translation parts
-    this.templateTags.forEach((tag, index) => {
-      this.translationParts.forEach((part) => {
-        if (part.tagId === index) {
-          part.templateRef = tag.templateRef;
-        }
-      });
-    });
-  }
 
   /**
    * Parses a translated string into an array of parts separated by tag identifiers.
@@ -118,7 +104,7 @@ export class I18nComponent implements AfterContentInit {
   private parseTranslatedString(inputString: string): [I18nStringPart[], number] {
     const regex = /<(\d+)>(.*?)<\/\1>|([^<]+)/g;
     const parts: I18nStringPart[] = [];
-    let match: RegExpMatchArray;
+    let match: RegExpMatchArray | null;
     let tagCount = 0;
 
     while ((match = regex.exec(inputString)) !== null) {
