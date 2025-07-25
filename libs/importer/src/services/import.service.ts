@@ -27,6 +27,7 @@ import { CipherRequest } from "@bitwarden/common/vault/models/request/cipher.req
 import { FolderWithIdRequest } from "@bitwarden/common/vault/models/request/folder-with-id.request";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
+import { RestrictedItemTypesService } from "@bitwarden/common/vault/services/restricted-item-types.service";
 import { KeyService } from "@bitwarden/key-management";
 
 import {
@@ -120,6 +121,7 @@ export class ImportService implements ImportServiceAbstraction {
     private pinService: PinServiceAbstraction,
     private accountService: AccountService,
     private sdkService: SdkService,
+    private restrictedItemTypesService: RestrictedItemTypesService,
   ) {}
 
   getImportOptions(): ImportOption[] {
@@ -166,6 +168,17 @@ export class ImportService implements ImportServiceAbstraction {
         throw new Error(this.i18nService.t("importFormatError"));
       }
     }
+
+    const restrictedItemTypes = await firstValueFrom(
+      this.restrictedItemTypesService.restricted$.pipe(
+        map((restrictedItemTypes) => restrictedItemTypes.map((r) => r.cipherType)),
+      ),
+    );
+
+    // Filter out restricted item types from the import result
+    importResult.ciphers = importResult.ciphers.filter(
+      (cipher) => !restrictedItemTypes.includes(cipher.type),
+    );
 
     if (organizationId && !selectedImportTarget && !canAccessImportExport) {
       const hasUnassignedCollections =
@@ -397,7 +410,7 @@ export class ImportService implements ImportServiceAbstraction {
     if (importResult.collections != null) {
       for (let i = 0; i < importResult.collections.length; i++) {
         importResult.collections[i].organizationId = organizationId;
-        const c = await this.collectionService.encrypt(importResult.collections[i]);
+        const c = await this.collectionService.encrypt(importResult.collections[i], activeUserId);
         request.collections.push(new CollectionWithIdRequest(c));
       }
     }

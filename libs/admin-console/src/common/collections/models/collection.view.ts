@@ -11,9 +11,15 @@ import { CollectionAccessDetailsResponse } from "./collection.response";
 export const NestingDelimiter = "/";
 
 export class CollectionView implements View, ITreeNodeObject {
+<<<<<<< HEAD
   id: CollectionId | undefined;
   organizationId: OrganizationId | undefined;
   name: string | undefined;
+=======
+  id: string | undefined;
+  organizationId: string | undefined;
+  name: string = "";
+>>>>>>> origin/main
   externalId: string | undefined;
   // readOnly applies to the items within a collection
   readOnly: boolean = false;
