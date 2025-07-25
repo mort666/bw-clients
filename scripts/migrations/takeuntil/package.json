@@ -1,0 +1,10 @@
+{
+  "name": "@bitwarden/takeuntil-migrator",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "clean": "rimraf coverage temp"
+  }
+}
