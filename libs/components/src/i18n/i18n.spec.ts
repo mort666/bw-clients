@@ -4,11 +4,9 @@ import { mock } from "jest-mock-extended";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
+import { I18nModule } from "@bitwarden/components";
 
 import { I18nMockService } from "../utils/i18n-mock.service";
-
-import { I18nPartDirective } from "./i18n-part.directive";
-import { I18nComponent } from "./i18n.component";
 
 @Component({
   selector: "test",
@@ -24,9 +22,10 @@ import { I18nComponent } from "./i18n.component";
       </a>
     </p>
   `,
+  imports: [I18nModule],
 })
 class TestComponent {
-  translationKey: string;
+  translationKey: string = "basicExample";
   args: any[] = [];
 }
 
@@ -37,8 +36,7 @@ describe("I18nComponent", () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [TestComponent],
-      imports: [I18nComponent, I18nPartDirective],
+      imports: [TestComponent],
       providers: [
         {
           provide: I18nService,
