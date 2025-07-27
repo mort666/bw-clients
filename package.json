@@ -47,6 +47,7 @@
     "@angular-eslint/schematics": "19.6.0",
     "@angular/cli": "19.2.14",
     "@angular/compiler-cli": "19.2.14",
+    "@angular/localize": "19.2.14",
     "@babel/core": "7.24.9",
     "@babel/preset-env": "7.24.8",
     "@compodoc/compodoc": "1.1.26",
@@ -155,6 +156,7 @@
     "webpack-node-externals": "3.0.0"
   },
   "dependencies": {
+    "@angular-builders/custom-webpack": "19.0.1",
     "@angular/animations": "19.2.14",
     "@angular/cdk": "19.2.18",
     "@angular/common": "19.2.14",
