@@ -25,6 +25,7 @@ export * from "./login-decryption-options/default-login-decryption-options.servi
 
 // login via auth request
 export * from "./login-via-auth-request/login-via-auth-request.component";
+export * from "./debug/debug.component";
 
 // password callout
 export * from "./password-callout/password-callout.component";

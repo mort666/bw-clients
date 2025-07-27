@@ -2,10 +2,12 @@ import { CommonModule } from "@angular/common";
 import { Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild } from "@angular/core";
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angular/forms";
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
+import { QRCodeComponent } from 'angularx-qrcode';
 import { firstValueFrom, Subject, take, takeUntil } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import {
+  AuthRequestLoginCredentials,
   LoginEmailServiceAbstraction,
   LoginStrategyServiceAbstraction,
   LoginSuccessHandlerService,
@@ -25,15 +27,18 @@ import { AppIdService } from "@bitwarden/common/platform/abstractions/app-id.ser
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { KeyGenerationService } from "@bitwarden/common/platform/abstractions/key-generation.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { ValidationService } from "@bitwarden/common/platform/abstractions/validation.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { PasswordStrengthServiceAbstraction } from "@bitwarden/common/tools/password-strength";
 import { UserId } from "@bitwarden/common/types/guid";
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
-// eslint-disable-next-line no-restricted-imports
+
+import { UserKey } from "@bitwarden/common/types/key";
 import {
   AnonLayoutWrapperDataService,
   AsyncActionsModule,
@@ -44,10 +49,12 @@ import {
   LinkModule,
   ToastService,
 } from "@bitwarden/components";
+import { PureCrypto, ServerRelayInitiator, ServerRelayResponder, ServerRelayResponderPreHandshake } from "@bitwarden/sdk-internal";
 
 import { VaultIcon, WaveIcon } from "../icons";
 
 import { LoginComponentService, PasswordPolicies } from "./login-component.service";
+
 
 const BroadcasterSubscriptionId = "LoginComponent";
 
@@ -71,6 +78,7 @@ export enum LoginUiState {
     JslibModule,
     ReactiveFormsModule,
     RouterModule,
+    QRCodeComponent
   ],
 })
 export class LoginComponent implements OnInit, OnDestroy {
@@ -104,6 +112,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   // Desktop properties
   deferFocus: boolean | null = null;
 
+  connectString: string = "Connecting...";
+
   constructor(
     private activatedRoute: ActivatedRoute,
     private anonLayoutWrapperDataService: AnonLayoutWrapperDataService,
@@ -127,6 +137,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     private loginSuccessHandlerService: LoginSuccessHandlerService,
     private masterPasswordService: MasterPasswordServiceAbstraction,
     private configService: ConfigService,
+    private keyGenerationService: KeyGenerationService,
   ) {
     this.clientType = this.platformUtilsService.getClientType();
   }
@@ -136,6 +147,28 @@ export class LoginComponent implements OnInit, OnDestroy {
     window.addEventListener("popstate", this.handlePopState);
 
     await this.defaultOnInit();
+
+    this.logService.info("Connecting");
+
+    (async () => {
+      const responder = await ServerRelayResponderPreHandshake.listen();
+      const psk = (await this.keyGenerationService.createKey(256)).toEncoded();
+      this.connectString = `${await responder.get_id()},${Utils.fromBufferToB64(psk)}`;
+      const a = await responder.wait_for_handshake(psk);
+      const auth_request = await a.wait_for_auth_request();
+      const creds = new AuthRequestLoginCredentials(
+        auth_request.email(),
+        "ABCDEFGHIJKLMNOPQRSTUVWXY",
+        auth_request.auth_request_id(),
+        new SymmetricCryptoKey(auth_request.userkey()) as UserKey,
+        null, // no masterKey
+        null, // no masterKeyHash
+      );
+      const resp = await this.loginStrategyService.logIn(creds);
+      console.log("resp", resp)
+      await this.loginSuccessHandlerService.run(resp.userId);
+      await this.router.navigate(["vault"]);
+    })().then(() => { }).catch(() => { });
 
     if (this.clientType === ClientType.Desktop) {
       await this.desktopOnInit();
@@ -540,6 +573,19 @@ export class LoginComponent implements OnInit, OnDestroy {
     await this.loginComponentService.redirectToSsoLogin(email);
   }
 
+  /**
+   * Copy the connect string to clipboard when QR code is clicked.
+   */
+  async copyConnectString() {
+    if (this.connectString) {
+      await this.platformUtilsService.copyToClipboard(this.connectString);
+      this.toastService.showToast({
+        variant: "success",
+        title: null,
+        message: "Connect string copied to clipboard",
+      });
+    }
+  }
   /**
    * Call to check if the device is known.
    * Known means that the user has logged in with this device before.

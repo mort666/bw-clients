@@ -1,0 +1,19 @@
+<form [bitSubmit]="submit" [formGroup]="formGroup">
+  <div class="tw-grid tw-gap-3">
+    No QR scanning implemented :(
+
+    <!-- Connect String input -->
+    <bit-form-field>
+      <bit-label>Connect String</bit-label>
+      <input
+        type="text"
+        formControlName="connectString"
+        bitInput
+        placeholder="Enter connect string"
+      />
+    </bit-form-field>
+
+    <!-- Approve button -->
+    <button type="submit" bitButton block buttonType="primary">Approve</button>
+  </div>
+</form>

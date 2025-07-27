@@ -12,6 +12,17 @@
 
 <form [bitSubmit]="submit" [formGroup]="formGroup">
   <div [ngClass]="{ 'tw-hidden': loginUiState !== LoginUiState.EMAIL_ENTRY }">
+    <!-- Connect String section -->
+    <div class="tw-m-3 tw-flex tw-justify-center">
+      <qrcode
+        [qrdata]="connectString"
+        [errorCorrectionLevel]="'M'"
+        (click)="copyConnectString()"
+        class="tw-cursor-pointer"
+        title="Click to copy connect string"
+      ></qrcode>
+    </div>
+
     <!-- Email Address input -->
     <bit-form-field>
       <bit-label>{{ "emailAddress" | i18n }}</bit-label>
