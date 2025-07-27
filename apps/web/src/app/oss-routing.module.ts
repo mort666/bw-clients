@@ -38,6 +38,7 @@ import {
   TwoFactorAuthGuard,
   NewDeviceVerificationComponent,
   DeviceVerificationIcon,
+  DebugComponent,
 } from "@bitwarden/auth/angular";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { AnonLayoutWrapperComponent, AnonLayoutWrapperData, Icons } from "@bitwarden/components";
@@ -212,6 +213,21 @@ const routes: Routes = [
           {
             path: "",
             component: RegistrationFinishComponent,
+          },
+        ],
+      },
+      {
+        path: "auth-debug",
+        data: {
+          pageTitle: {
+            key: "logInToBitwarden",
+          },
+          pageIcon: VaultIcon,
+        } satisfies RouteDataProperties & AnonLayoutWrapperData,
+        children: [
+          {
+            path: "",
+            component: DebugComponent,
           },
         ],
       },

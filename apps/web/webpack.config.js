@@ -282,6 +282,7 @@ const devServer =
                   'self'
                   ${envConfig.dev.wsConnectSrc ?? ""}
                   wss://notifications.bitwarden.com
+                  ws://localhost:9002
                   https://notifications.bitwarden.com
                   https://cdn.bitwarden.net
                   https://api.pwnedpasswords.com
