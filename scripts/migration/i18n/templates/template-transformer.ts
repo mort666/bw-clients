@@ -27,13 +27,28 @@ export class TemplateTransformer {
     const errors: string[] = [];
 
     try {
+      // Use the parser to find all i18n pipe usages via AST
+      const usages = this.parser.findI18nPipeUsage(templateContent, filePath);
+
       let transformedContent = templateContent;
 
-      // Transform interpolations: {{ 'key' | i18n }} -> <span i18n="@@key">key</span>
-      transformedContent = this.transformInterpolations(transformedContent, changes);
+      // Process each usage found by the AST parser (reverse order to handle replacements from end to start)
+      for (const usage of usages.reverse()) {
+        if (!usage.context) {
+          continue; // Skip usages without context
+        }
 
-      // Transform attributes: [title]="'key' | i18n" -> [title]="'key'" i18n-title="@@key"
-      transformedContent = this.transformAttributes(transformedContent, changes);
+        const replacement = this.generateReplacement(usage);
+        transformedContent = this.replaceAtPosition(transformedContent, usage, replacement);
+
+        changes.push({
+          type: "replace",
+          location: { line: usage.line, column: usage.column },
+          original: usage.context,
+          replacement,
+          description: `Transformed ${usage.method} usage '${usage.key}' to i18n attribute`,
+        });
+      }
 
       return {
         success: true,
@@ -54,124 +69,42 @@ export class TemplateTransformer {
   }
 
   /**
-   * Transform interpolation usage: {{ 'key' | i18n }} -> <span i18n="@@key">key</span>
+   * Generate replacement text for a given i18n usage
    */
-  private transformInterpolations(
-    templateContent: string,
-    changes: TransformationChange[],
-  ): string {
-    let transformedContent = templateContent;
+  private generateReplacement(usage: I18nUsage): string {
+    const i18nId = this.generateI18nId(usage.key);
+    const context = usage.context || "";
 
-    // Pattern for string literal interpolations
-    const stringInterpolationPattern =
-      /\{\{\s*['"`]([^'"`]+)['"`]\s*\|\s*i18n(?::([^}]+))?\s*\}\}/g;
-
-    let match;
-    while ((match = stringInterpolationPattern.exec(templateContent)) !== null) {
-      const original = match[0];
-      const key = match[1];
-      const i18nId = this.generateI18nId(key);
-      const replacement = `<span i18n="@@${i18nId}">${key}</span>`;
-
-      transformedContent = transformedContent.replace(original, replacement);
-
-      const position = this.getPositionInfo(templateContent, match.index);
-      changes.push({
-        type: "replace",
-        location: position,
-        original,
-        replacement,
-        description: `Transformed interpolation '${key}' to i18n attribute`,
-      });
+    if (context.startsWith("{{") && context.endsWith("}}")) {
+      // Interpolation: {{ 'key' | i18n }} -> <span i18n="@@key">key</span>
+      return `<span i18n="@@${i18nId}">${usage.key}</span>`;
+    } else if (context.includes("[") && context.includes("]")) {
+      // Attribute binding: [title]="'key' | i18n" -> [title]="'key'" i18n-title="@@key"
+      const attrMatch = context.match(/\[([^\]]+)\]/);
+      if (attrMatch) {
+        const attrName = attrMatch[1];
+        return `[${attrName}]="${usage.key}" i18n-${attrName}="@@${i18nId}"`;
+      }
     }
 
-    // Pattern for variable interpolations
-    const variableInterpolationPattern =
-      /\{\{\s*([a-zA-Z_$][a-zA-Z0-9_$]*(?:\.[a-zA-Z_$][a-zA-Z0-9_$]*)*)\s*\|\s*i18n(?::([^}]+))?\s*\}\}/g;
-
-    while ((match = variableInterpolationPattern.exec(templateContent)) !== null) {
-      const original = match[0];
-      const variable = match[1];
-      const i18nId = this.generateI18nId(variable);
-      const replacement = `<span i18n="@@${i18nId}">{{${variable}}}</span>`;
-
-      transformedContent = transformedContent.replace(original, replacement);
-
-      const position = this.getPositionInfo(templateContent, match.index);
-      changes.push({
-        type: "replace",
-        location: position,
-        original,
-        replacement,
-        description: `Transformed variable interpolation '${variable}' to i18n attribute`,
-      });
-    }
-
-    return transformedContent;
+    return context; // fallback
   }
 
   /**
-   * Transform attribute usage: [attr]="'key' | i18n" -> [attr]="'key'" i18n-attr="@@key"
+   * Replace usage at specific position in template content
    */
-  private transformAttributes(templateContent: string, changes: TransformationChange[]): string {
-    let transformedContent = templateContent;
-
-    // Pattern for attributes with i18n pipe
-    const attributePattern = /(\[?[\w-]+\]?)\s*=\s*["']([^"']*\|\s*i18n[^"']*)["']/g;
-
-    let match;
-    while ((match = attributePattern.exec(templateContent)) !== null) {
-      const original = match[0];
-      const attrName = match[1];
-      const attrValue = match[2];
-
-      // Extract the key from the pipe expression
-      const keyMatch = attrValue.match(/['"`]([^'"`]+)['"`]\s*\|\s*i18n(?::([^"'|]+))?/);
-      if (keyMatch) {
-        const key = keyMatch[1];
-        const i18nId = this.generateI18nId(key);
-
-        // Remove brackets if present for i18n attribute
-        const baseAttrName = attrName.replace(/[\[\]]/g, "");
-        const replacement = `${attrName}="${key}" i18n-${baseAttrName}="@@${i18nId}"`;
-
-        transformedContent = transformedContent.replace(original, replacement);
-
-        const position = this.getPositionInfo(templateContent, match.index);
-        changes.push({
-          type: "replace",
-          location: position,
-          original,
-          replacement,
-          description: `Transformed attribute '${attrName}' with key '${key}' to i18n attribute`,
-        });
-      }
-
-      // Handle variable attributes
-      const variableMatch = attrValue.match(
-        /([a-zA-Z_$][a-zA-Z0-9_$]*(?:\.[a-zA-Z_$][a-zA-Z0-9_$]*)*)\s*\|\s*i18n(?::([^"'|]+))?/,
+  private replaceAtPosition(content: string, usage: I18nUsage, replacement: string): string {
+    // Find the exact position of the usage.context in the content and replace it
+    const context = usage.context || "";
+    const contextIndex = content.indexOf(context);
+    if (contextIndex !== -1) {
+      return (
+        content.substring(0, contextIndex) +
+        replacement +
+        content.substring(contextIndex + context.length)
       );
-      if (variableMatch && !keyMatch) {
-        const variable = variableMatch[1];
-        const i18nId = this.generateI18nId(variable);
-
-        const baseAttrName = attrName.replace(/[\[\]]/g, "");
-        const replacement = `${attrName}="${variable}" i18n-${baseAttrName}="@@${i18nId}"`;
-
-        transformedContent = transformedContent.replace(original, replacement);
-
-        const position = this.getPositionInfo(templateContent, match.index);
-        changes.push({
-          type: "replace",
-          location: position,
-          original,
-          replacement,
-          description: `Transformed variable attribute '${attrName}' with variable '${variable}' to i18n attribute`,
-        });
-      }
     }
-
-    return transformedContent;
+    return content;
   }
 
   /**
@@ -211,7 +144,7 @@ export class TemplateTransformer {
       const hasNoRemainingPipes = !this.parser.hasI18nPipeUsage(transformed);
 
       return hasMatchingBrackets && hasValidI18nAttributes && hasNoRemainingPipes;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -229,7 +162,10 @@ export class TemplateTransformer {
    * Validate that i18n attributes are properly formatted
    */
   private validateI18nAttributes(content: string): boolean {
-    const i18nAttrs = content.match(/i18n(-[\w-]+)?="@@[\w-]+"/g) || [];
-    return i18nAttrs.every((attr) => attr.includes("@@"));
+    const i18nAttrs = content.match(/i18n(-[\w-]+)?="[^"]*"/g) || [];
+    return i18nAttrs.every((attr) => {
+      const valueMatch = attr.match(/="([^"]*)"/);
+      return valueMatch && valueMatch[1].startsWith("@@");
+    });
   }
 }

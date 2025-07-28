@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { parseTemplate, TmplAstNode, TmplAstElement, TmplAstBoundText } from "@angular/compiler";
 
 import { I18nUsage } from "../shared/types";
@@ -13,22 +12,11 @@ export class TemplateParser {
   findI18nPipeUsage(templateContent: string, filePath: string): I18nUsage[] {
     const usages: I18nUsage[] = [];
 
-    try {
-      // Parse template using Angular compiler
-      const parseResult = parseTemplate(templateContent, filePath);
+    // Parse template using Angular compiler
+    const parseResult = parseTemplate(templateContent, filePath);
 
-      if (parseResult.nodes) {
-        this.traverseNodes(parseResult.nodes, usages, filePath);
-      }
-
-      // Also use regex as fallback for edge cases
-      this.findWithRegex(templateContent, filePath, usages);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.warn(`Warning: Could not parse template ${filePath}:`, errorMessage);
-
-      // Fallback to regex parsing
-      this.findWithRegex(templateContent, filePath, usages);
+    if (parseResult.nodes) {
+      this.traverseNodes(parseResult.nodes, usages, filePath);
     }
 
     return usages;
@@ -55,7 +43,8 @@ export class TemplateParser {
     // Handle bound text nodes (interpolations)
     if (this.isBoundText(node)) {
       const expression = node.value;
-      if (expression && "source" in expression) {
+
+      if (expression && typeof expression == "object" && "source" in expression) {
         const expressionText = (expression.source as string) || "";
 
         if (this.containsI18nPipe(expressionText)) {
@@ -77,7 +66,7 @@ export class TemplateParser {
 
     // Handle element nodes with attributes
     if (this.isElement(node)) {
-      // Check bound attributes (property bindinxgs)
+      // Check bound attributes (property bindings)
       for (const input of node.inputs || []) {
         if (input.value && "source" in input.value) {
           const inputValue = (input.value.source as string) || "";
@@ -113,170 +102,6 @@ export class TemplateParser {
               context: `${attr.name}="${attr.value}"`,
             });
           }
-        }
-      }
-    }
-  }
-
-  /**
-   * Fallback regex-based parsing for edge cases
-   */
-  private findWithRegex(templateContent: string, filePath: string, usages: I18nUsage[]): void {
-    // Find interpolation usage: {{ 'key' | i18n }}
-    this.findInterpolationUsage(templateContent, filePath, usages);
-
-    // Find attribute usage: [attr]="'key' | i18n"
-    this.findAttributeUsage(templateContent, filePath, usages);
-  }
-
-  /**
-   * Find i18n pipe usage in interpolations {{ }}
-   */
-  private findInterpolationUsage(
-    templateContent: string,
-    filePath: string,
-    usages: I18nUsage[],
-  ): void {
-    // Pattern to match {{ 'key' | i18n }} or {{ "key" | i18n }} with optional parameters
-    const interpolationPattern = /\{\{\s*['"`]([^'"`]+)['"`]\s*\|\s*i18n(?::([^}]+))?\s*\}\}/g;
-
-    let match;
-    while ((match = interpolationPattern.exec(templateContent)) !== null) {
-      const key = match[1];
-      const paramString = match[2];
-      const parameters = paramString
-        ? paramString
-            .split(":")
-            .map((p) => p.trim())
-            .filter((p) => p)
-        : undefined;
-
-      // Check if we already found this usage via AST parsing
-      const position = this.getPositionInfo(templateContent, match.index);
-      const alreadyFound = usages.some(
-        (usage) =>
-          usage.line === position.line && usage.column === position.column && usage.key === key,
-      );
-
-      if (!alreadyFound) {
-        usages.push({
-          filePath,
-          line: position.line,
-          column: position.column,
-          method: "pipe",
-          key,
-          parameters,
-          context: match[0],
-        });
-      }
-    }
-
-    // Also handle variable interpolations: {{ variable | i18n }}
-    const variableInterpolationPattern =
-      /\{\{\s*([a-zA-Z_$][a-zA-Z0-9_$]*(?:\.[a-zA-Z_$][a-zA-Z0-9_$]*)*)\s*\|\s*i18n(?::([^}]+))?\s*\}\}/g;
-
-    while ((match = variableInterpolationPattern.exec(templateContent)) !== null) {
-      const key = match[1];
-      const paramString = match[2];
-      const parameters = paramString
-        ? paramString
-            .split(":")
-            .map((p) => p.trim())
-            .filter((p) => p)
-        : undefined;
-
-      const position = this.getPositionInfo(templateContent, match.index);
-      const alreadyFound = usages.some(
-        (usage) =>
-          usage.line === position.line && usage.column === position.column && usage.key === key,
-      );
-
-      if (!alreadyFound) {
-        usages.push({
-          filePath,
-          line: position.line,
-          column: position.column,
-          method: "pipe",
-          key,
-          parameters,
-          context: match[0],
-        });
-      }
-    }
-  }
-
-  /**
-   * Find i18n pipe usage in attributes
-   */
-  private findAttributeUsage(templateContent: string, filePath: string, usages: I18nUsage[]): void {
-    // Pattern to match [attr]="'key' | i18n" or attr="{{ 'key' | i18n }}"
-    const attributePattern = /(\[?[\w-]+\]?)\s*=\s*["']([^"']*\|\s*i18n[^"']*)["']/g;
-
-    let match;
-    while ((match = attributePattern.exec(templateContent)) !== null) {
-      const attrValue = match[2];
-
-      // Extract the key from the pipe expression
-      const keyMatch = attrValue.match(/['"`]([^'"`]+)['"`]\s*\|\s*i18n(?::([^"'|]+))?/);
-      if (keyMatch) {
-        const key = keyMatch[1];
-        const paramString = keyMatch[2];
-        const parameters = paramString
-          ? paramString
-              .split(":")
-              .map((p) => p.trim())
-              .filter((p) => p)
-          : undefined;
-
-        const position = this.getPositionInfo(templateContent, match.index);
-        const alreadyFound = usages.some(
-          (usage) =>
-            usage.line === position.line && usage.column === position.column && usage.key === key,
-        );
-
-        if (!alreadyFound) {
-          usages.push({
-            filePath,
-            line: position.line,
-            column: position.column,
-            method: "pipe",
-            key,
-            parameters,
-            context: match[0],
-          });
-        }
-      }
-
-      // Also handle variable attributes
-      const variableMatch = attrValue.match(
-        /([a-zA-Z_$][a-zA-Z0-9_$]*(?:\.[a-zA-Z_$][a-zA-Z0-9_$]*)*)\s*\|\s*i18n(?::([^"'|]+))?/,
-      );
-      if (variableMatch && !keyMatch) {
-        const key = variableMatch[1];
-        const paramString = variableMatch[2];
-        const parameters = paramString
-          ? paramString
-              .split(":")
-              .map((p) => p.trim())
-              .filter((p) => p)
-          : undefined;
-
-        const position = this.getPositionInfo(templateContent, match.index);
-        const alreadyFound = usages.some(
-          (usage) =>
-            usage.line === position.line && usage.column === position.column && usage.key === key,
-        );
-
-        if (!alreadyFound) {
-          usages.push({
-            filePath,
-            line: position.line,
-            column: position.column,
-            method: "pipe",
-            key,
-            parameters,
-            context: match[0],
-          });
         }
       }
     }
