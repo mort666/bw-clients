@@ -46,7 +46,7 @@ workspace "Bitwarden Server System" {
       include *
     }
 
-    container server "Bitwarden_Server" {
+    container clients "bitwarden_js_clients" {
       include *
     }
 

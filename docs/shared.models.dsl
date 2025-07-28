@@ -23,39 +23,10 @@ bw_controlled = group "Bitwarden Controlled" {
       tags "Events"
     }
     notifications = container "Notifications"
-    portal = container "Bitwarden Portal" {
-      tags "Web"
-    }
-    events_processor = container "Events Processor" {
-      tags "Events"
-    }
-
-    # Data stores
-    database = container "Database" {
-      tags "Database"
-    }
-    events_queue = container "Events Queue" {
-      tags "Queue"
-      tags "Azure"
-    }
-    mail_queue = container "Mail Queue" {
-      tags "Queue"
-      tags "Azure"
-    }
-    notifications_queue = container "Notifications Queue" {
-      tags "Queue"
-      tags "Azure"
-    }
   }
   clients = softwareSystem "Clients" {
     web = container "Web Application" {
       tags "Web"
-    }
-    ios = container "iOS Application" {
-      tags "Mobile"
-    }
-    android = container "Android Application" {
-      tags "Mobile"
     }
     browser_extension = container "Browser Extension" {
       tags "Browser"
@@ -67,11 +38,6 @@ bw_controlled = group "Bitwarden Controlled" {
       tags "Desktop"
     }
   }
-  directory_connector = softwareSystem "Directory Connector" {
-    tags "Directory"
-    tags "LDAP"
-    tags "Self-Hosted"
-  }
   key_connector = softwareSystem "Key Connector" 
 }
 
@@ -79,4 +45,9 @@ self_hosted_instances = softwareSystem "Self-Hosted Instances" {
   tags "Self-Hosted"
   tags "External"
   description "Self-hosted instances of Bitwarden servers"
+}
+
+external_websites = softwareSystem "External Websites" {
+  tags "External"
+  tags "Icons"
 }
