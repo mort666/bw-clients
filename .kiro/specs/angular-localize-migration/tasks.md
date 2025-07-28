@@ -49,27 +49,38 @@
 
 - [ ] 4. Implement template migration system
 
-  - [ ] 4.1 Create i18n pipe detection and parsing
+  - [x] 4.1 Create i18n pipe detection and parsing
 
     - Parse Angular templates to find | i18n pipe usage
     - Extract translation keys and parameters
     - Identify complex cases like nested expressions and pluralization
     - _Requirements: 3.1, 3.3_
 
-  - [ ] 4.2 Implement i18n attribute transformation
+  - [x] 4.2 Implement i18n attribute transformation
 
     - Transform | i18n pipes to i18n attributes with proper IDs
     - Handle parameter interpolation and ICU expressions
     - Generate proper i18n descriptions and meanings
-    - Write unit tests for template transformation
+    - Write unit tests for template transformation that verify actual output content
+    - Test that transformTemplate produces correct HTML with i18n attributes
+    - Validate that transformed templates maintain proper structure and syntax
     - _Requirements: 3.1, 3.2, 3.3_
 
-  - [ ] 4.3 Create automated template migration tool
+  - [x] 4.3 Create automated template migration tool
+
     - Build CLI tool to process HTML template files
     - Add validation for transformation accuracy
     - Generate before/after comparison reports
     - Test tool on sample template files
     - _Requirements: 3.1, 3.2_
+
+  - [x] 4.4 Create translation lookup system for accurate transformations
+    - Combine all applications' en/messages.json files into a single lookup file
+    - Create translation lookup service that maps keys to actual translated strings
+    - Update template transformer to use real translation values instead of keys
+    - Preserve original translation keys as i18n IDs while using actual text content
+    - Write unit tests for translation lookup and enhanced transformations
+    - _Requirements: 3.1, 3.2, 3.3_
 
 - [ ] 5. Create runtime locale management service
 

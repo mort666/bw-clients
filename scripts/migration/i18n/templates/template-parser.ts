@@ -50,6 +50,11 @@ export class TemplateParser {
         if (this.containsI18nPipe(expressionText)) {
           const pipeUsage = this.extractI18nPipeUsage(expressionText);
           if (pipeUsage) {
+            // Get the actual text from the source span instead of reconstructing it
+            const actualContext = node.sourceSpan.start.file.content.substring(
+              node.sourceSpan.start.offset,
+              node.sourceSpan.end.offset,
+            );
             usages.push({
               filePath,
               line: node.sourceSpan.start.line + 1,
@@ -57,7 +62,7 @@ export class TemplateParser {
               method: "pipe",
               key: pipeUsage.key,
               parameters: pipeUsage.parameters,
-              context: `{{ ${expressionText} }}`,
+              context: actualContext,
             });
           }
         }

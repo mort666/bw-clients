@@ -1,15 +1,25 @@
 import { TransformationResult, TransformationChange, I18nUsage } from "../shared/types";
+import { TranslationLookup } from "../shared/translation-lookup";
 
 import { TemplateParser } from "./template-parser";
 
 /**
- * Template transformation utilities for migrating i18n pipes to i18n attributes
+ * Enhanced template transformation utilities that use real translation values
  */
-export class TemplateTransformer {
+export class EnhancedTemplateTransformer {
   private parser: TemplateParser;
+  private translationLookup: TranslationLookup;
 
-  constructor() {
+  constructor(translationLookup?: TranslationLookup) {
     this.parser = new TemplateParser();
+    this.translationLookup = translationLookup || new TranslationLookup();
+  }
+
+  /**
+   * Initialize the transformer with translation data
+   */
+  async initialize(combinedTranslationsPath?: string): Promise<void> {
+    await this.translationLookup.loadTranslations(combinedTranslationsPath);
   }
 
   /**
@@ -20,11 +30,12 @@ export class TemplateTransformer {
   }
 
   /**
-   * Transform i18n pipes to i18n attributes in a template
+   * Transform i18n pipes to i18n attributes in a template using real translation values
    */
   transformTemplate(templateContent: string, filePath: string): TransformationResult {
     const changes: TransformationChange[] = [];
     const errors: string[] = [];
+    const warnings: string[] = [];
 
     try {
       // Use the parser to find all i18n pipe usages via AST
@@ -38,7 +49,7 @@ export class TemplateTransformer {
           continue; // Skip usages without context
         }
 
-        const replacement = this.generateReplacement(usage);
+        const replacement = this.generateEnhancedReplacement(usage, warnings);
         transformedContent = this.replaceAtPosition(transformedContent, usage, replacement);
 
         changes.push({
@@ -46,7 +57,7 @@ export class TemplateTransformer {
           location: { line: usage.line, column: usage.column },
           original: usage.context,
           replacement,
-          description: `Transformed ${usage.method} usage '${usage.key}' to i18n attribute`,
+          description: `Transformed ${usage.method} usage '${usage.key}' to i18n attribute with real translation`,
         });
       }
 
@@ -54,7 +65,7 @@ export class TemplateTransformer {
         success: true,
         filePath,
         changes,
-        errors,
+        errors: [...errors, ...warnings],
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -69,21 +80,31 @@ export class TemplateTransformer {
   }
 
   /**
-   * Generate replacement text for a given i18n usage
+   * Generate enhanced replacement text using real translation values
    */
-  private generateReplacement(usage: I18nUsage): string {
+  private generateEnhancedReplacement(usage: I18nUsage, warnings: string[]): string {
     const i18nId = this.generateI18nId(usage.key);
     const context = usage.context || "";
 
+    // Get the real translation value
+    const translationValue = this.translationLookup.getTranslation(usage.key);
+
+    if (!translationValue) {
+      warnings.push(`Translation not found for key: ${usage.key}`);
+    }
+
+    // Use translation value if available, otherwise fall back to key
+    const displayText = translationValue || usage.key;
+
     if (context.startsWith("{{") && context.endsWith("}}")) {
-      // Interpolation: {{ 'key' | i18n }} -> <span i18n="@@key">key</span>
-      return `<span i18n="@@${i18nId}">${usage.key}</span>`;
+      // Interpolation: {{ 'key' | i18n }} -> <span i18n="@@key">Actual Translation</span>
+      return `<span i18n="@@${i18nId}">${displayText}</span>`;
     } else if (context.includes("[") && context.includes("]")) {
-      // Attribute binding: [title]="'key' | i18n" -> [title]="key" i18n-title="@@key"
+      // Attribute binding: [title]="'key' | i18n" -> [title]="'Actual Translation'" i18n-title="@@key"
       const attrMatch = context.match(/\[([^\]]+)\]/);
       if (attrMatch) {
         const attrName = attrMatch[1];
-        return `[${attrName}]="${usage.key}" i18n-${attrName}="@@${i18nId}"`;
+        return `[${attrName}]="${displayText}" i18n-${attrName}="@@${i18nId}"`;
       }
     }
 
@@ -120,20 +141,6 @@ export class TemplateTransformer {
   }
 
   /**
-   * Get line and column information for a position in the template
-   */
-  private getPositionInfo(
-    templateContent: string,
-    position: number,
-  ): { line: number; column: number } {
-    const lines = templateContent.substring(0, position).split("\n");
-    return {
-      line: lines.length,
-      column: lines[lines.length - 1].length + 1,
-    };
-  }
-
-  /**
    * Validate that a transformation is correct
    */
   validateTransformation(original: string, transformed: string): boolean {
@@ -167,5 +174,76 @@ export class TemplateTransformer {
       const valueMatch = attr.match(/="([^"]*)"/);
       return valueMatch && valueMatch[1].startsWith("@@");
     });
+  }
+
+  /**
+   * Generate a report of missing translations
+   */
+  generateMissingTranslationsReport(templateFiles: string[]): string {
+    const allUsages: I18nUsage[] = [];
+    const missingKeys = new Set<string>();
+    const foundKeys = new Set<string>();
+
+    // Collect all i18n usage from template files
+    for (const filePath of templateFiles) {
+      try {
+        const content = require("fs").readFileSync(filePath, "utf-8");
+        const usages = this.findI18nPipeUsage(content, filePath);
+        allUsages.push(...usages);
+      } catch (error) {
+        console.warn(`Could not read template file: ${filePath}`);
+      }
+    }
+
+    // Check which keys have translations
+    for (const usage of allUsages) {
+      if (this.translationLookup.hasTranslation(usage.key)) {
+        foundKeys.add(usage.key);
+      } else {
+        missingKeys.add(usage.key);
+      }
+    }
+
+    let report = `# Missing Translations Report\n\n`;
+    report += `## Summary\n`;
+    report += `- **Total unique keys found**: ${foundKeys.size + missingKeys.size}\n`;
+    report += `- **Keys with translations**: ${foundKeys.size}\n`;
+    report += `- **Missing translations**: ${missingKeys.size}\n`;
+    report += `- **Coverage**: ${((foundKeys.size / (foundKeys.size + missingKeys.size)) * 100).toFixed(1)}%\n\n`;
+
+    if (missingKeys.size > 0) {
+      report += `## Missing Translation Keys\n`;
+      const sortedMissing = Array.from(missingKeys).sort();
+
+      for (const key of sortedMissing) {
+        report += `- \`${key}\`\n`;
+
+        // Get suggestions for missing keys
+        const suggestions = this.translationLookup.getSuggestions(key, 3);
+        if (suggestions.length > 0) {
+          report += `  - Suggestions: ${suggestions.map((s) => `\`${s.key}\``).join(", ")}\n`;
+        }
+      }
+      report += `\n`;
+    }
+
+    if (foundKeys.size > 0) {
+      report += `## Keys with Translations\n`;
+      const sortedFound = Array.from(foundKeys).sort();
+
+      for (const key of sortedFound) {
+        const translation = this.translationLookup.getTranslation(key);
+        report += `- \`${key}\`: "${translation}"\n`;
+      }
+    }
+
+    return report;
+  }
+
+  /**
+   * Get translation lookup service
+   */
+  getTranslationLookup(): TranslationLookup {
+    return this.translationLookup;
   }
 }

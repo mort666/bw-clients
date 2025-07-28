@@ -206,4 +206,135 @@ describe("Template Migration Tools", () => {
       expect(transformedContent).toContain("After:");
     });
   });
+
+  describe("Template Output Validation", () => {
+    let transformer: TemplateTransformer;
+
+    beforeEach(() => {
+      transformer = new TemplateTransformer();
+    });
+
+    // Helper function to apply transformations to template content
+    function applyTransformations(template: string, changes: any[]): string {
+      let transformedContent = template;
+      // Apply changes in reverse order to handle position shifts correctly
+      for (const change of changes.reverse()) {
+        if (change.original && change.replacement) {
+          transformedContent = transformedContent.replace(change.original, change.replacement);
+        }
+      }
+      return transformedContent;
+    }
+
+    it("should produce correct HTML output for simple interpolation", () => {
+      const template = `<h1>{{ 'welcome' | i18n }}</h1>`;
+      const result = transformer.transformTemplate(template, "test.html");
+
+      expect(result.success).toBe(true);
+      expect(result.changes).toHaveLength(1);
+
+      const transformedContent = applyTransformations(template, result.changes);
+      expect(transformedContent).toBe(`<h1><span i18n="@@welcome">welcome</span></h1>`);
+    });
+
+    it("should produce correct HTML output for attribute binding", () => {
+      const template = `<button [title]="'clickMe' | i18n">Click</button>`;
+      const result = transformer.transformTemplate(template, "test.html");
+
+      expect(result.success).toBe(true);
+      expect(result.changes).toHaveLength(1);
+
+      const transformedContent = applyTransformations(template, result.changes);
+      expect(transformedContent).toBe(
+        `<button [title]="clickMe" i18n-title="@@click-me">Click</button>`,
+      );
+    });
+
+    it("should produce correct HTML output for multiple transformations", () => {
+      const template = `
+        <div>
+          <h1>{{ 'title' | i18n }}</h1>
+          <p>{{ 'description' | i18n }}</p>
+          <button [title]="'buttonTitle' | i18n">{{ 'buttonText' | i18n }}</button>
+        </div>
+      `;
+      const result = transformer.transformTemplate(template, "test.html");
+
+      expect(result.success).toBe(true);
+      expect(result.changes.length).toBeGreaterThan(0);
+
+      const transformedContent = applyTransformations(template, result.changes);
+
+      const expectedOutput = `
+        <div>
+          <h1><span i18n="@@title">title</span></h1>
+          <p><span i18n="@@description">description</span></p>
+          <button [title]="buttonTitle" i18n-title="@@button-title"><span i18n="@@button-text">buttonText</span></button>
+        </div>
+      `;
+
+      expect(transformedContent.trim()).toBe(expectedOutput.trim());
+    });
+
+    it("should produce correct HTML output for camelCase key conversion", () => {
+      const template = `{{ 'camelCaseKey' | i18n }}`;
+      const result = transformer.transformTemplate(template, "test.html");
+
+      expect(result.success).toBe(true);
+      expect(result.changes).toHaveLength(1);
+
+      const transformedContent = applyTransformations(template, result.changes);
+      expect(transformedContent).toBe(`<span i18n="@@camel-case-key">camelCaseKey</span>`);
+    });
+
+    it("should produce correct HTML output for snake_case key conversion", () => {
+      const template = `{{ 'snake_case_key' | i18n }}`;
+      const result = transformer.transformTemplate(template, "test.html");
+
+      expect(result.success).toBe(true);
+      expect(result.changes).toHaveLength(1);
+
+      const transformedContent = applyTransformations(template, result.changes);
+      expect(transformedContent).toBe(`<span i18n="@@snake-case-key">snake_case_key</span>`);
+    });
+
+    it("should produce correct HTML output for dotted key conversion", () => {
+      const template = `{{ 'dotted.key.name' | i18n }}`;
+      const result = transformer.transformTemplate(template, "test.html");
+
+      expect(result.success).toBe(true);
+      expect(result.changes).toHaveLength(1);
+
+      const transformedContent = applyTransformations(template, result.changes);
+      expect(transformedContent).toBe(`<span i18n="@@dotted-key-name">dotted.key.name</span>`);
+    });
+
+    it("should produce valid HTML that passes validation", () => {
+      const template = `
+        <div class="container">
+          <header>
+            <h1>{{ 'appTitle' | i18n }}</h1>
+            <nav>
+              <a [title]="'homeLink' | i18n" href="/">{{ 'home' | i18n }}</a>
+            </nav>
+          </header>
+        </div>
+      `;
+      const result = transformer.transformTemplate(template, "validation-test.html");
+
+      expect(result.success).toBe(true);
+      expect(result.changes.length).toBeGreaterThan(0);
+
+      const transformedContent = applyTransformations(template, result.changes);
+
+      // Verify the transformation is valid according to the transformer's own validation
+      expect(transformer.validateTransformation(template, transformedContent)).toBe(true);
+
+      // Verify specific output characteristics
+      expect(transformedContent).toContain('i18n="@@app-title"');
+      expect(transformedContent).toContain('i18n-title="@@home-link"');
+      expect(transformedContent).toContain('i18n="@@home"');
+      expect(transformedContent).not.toContain("| i18n");
+    });
+  });
 });
