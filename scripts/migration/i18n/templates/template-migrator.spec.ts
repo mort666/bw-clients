@@ -1,5 +1,5 @@
-import { TemplateParser } from "../templates/template-parser";
-import { TemplateTransformer } from "../templates/template-transformer";
+import { TemplateParser } from "./template-parser";
+import { TemplateTransformer } from "./template-transformer";
 
 describe("Template Migration Tools", () => {
   describe("TemplateParser", () => {

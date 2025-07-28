@@ -1,6 +1,6 @@
 import { Project, SourceFile } from "ts-morph";
 
-import { ASTTransformer } from "../typescript/ast-transformer";
+import { ASTTransformer } from "./ast-transformer";
 
 describe("TypeScript Migration Tools", () => {
   let project: Project;

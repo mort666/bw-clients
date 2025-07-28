@@ -16,6 +16,12 @@ module.exports = {
   preset: "../../../jest.preset.js",
   moduleFileExtensions: ["ts", "js", "html"],
   coverageDirectory: "../../../coverage/scripts/migration/i18n",
-  testMatch: ["<rootDir>/tests/**/*.test.ts"],
-  collectCoverageFrom: ["typescript/**/*.ts", "templates/**/*.ts", "shared/**/*.ts", "!**/*.d.ts"],
+  testMatch: ["<rootDir>/**/*.spec.ts"],
+  collectCoverageFrom: [
+    "typescript/**/*.ts",
+    "templates/**/*.ts",
+    "shared/**/*.ts",
+    "!**/*.d.ts",
+    "!**/*.spec.ts",
+  ],
 };

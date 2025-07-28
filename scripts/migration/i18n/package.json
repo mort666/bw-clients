@@ -1,0 +1,21 @@
+{
+  "name": "@bitwarden/i18n-migration-tools",
+  "version": "1.0.0",
+  "description": "TypeScript and template migration tools for Angular i18n localization",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "cli": "ts-node typescript/cli.ts",
+    "sample-test": "ts-node typescript/sample-test.ts",
+    "analyze": "ts-node typescript/cli.ts analyze",
+    "migrate": "ts-node typescript/cli.ts migrate",
+    "validate": "ts-node typescript/cli.ts validate",
+    "rollback": "ts-node typescript/cli.ts rollback"
+  },
+  "bin": {
+    "i18n-migrate": "./typescript/cli.ts"
+  },
+  "author": "Bitwarden Inc."
+}
