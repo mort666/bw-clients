@@ -65,8 +65,10 @@ import {
 import { KeyService } from "@bitwarden/key-management";
 
 import { BillingNotificationService } from "../services/billing-notification.service";
+import { PricingSummaryService } from "../services/pricing-summary.service";
 import { BillingSharedModule } from "../shared/billing-shared.module";
 import { PaymentComponent } from "../shared/payment/payment.component";
+import { PricingSummaryData } from "../shared/pricing-summary/pricing-summary.component";
 
 type ChangePlanDialogParams = {
   organizationId: string;
@@ -130,7 +132,6 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
     this.formGroup?.controls?.productTier?.setValue(product);
   }
 
-  protected estimatedTax: number = 0;
   private _productTier = ProductTierType.Free;
 
   @Input()
@@ -186,7 +187,6 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
   dialogHeaderName: string;
   currentPlanName: string;
   showPayment: boolean = false;
-  totalOpened: boolean = false;
   currentPlan: PlanResponse;
   isCardStateDisabled = false;
   focusedIndex: number | null = null;
@@ -195,6 +195,7 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
   plans: ListResponse<PlanResponse>;
   isSubscriptionCanceled: boolean = false;
   secretsManagerTotal: number;
+  pricingSummaryData: PricingSummaryData;
 
   private destroy$ = new Subject<void>();
 
@@ -219,6 +220,7 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
     private accountService: AccountService,
     private organizationBillingService: OrganizationBillingService,
     private billingNotificationService: BillingNotificationService,
+    private pricingSummaryService: PricingSummaryService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -312,6 +314,9 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
     const taxInfo = await this.organizationApiService.getTaxInfo(this.organizationId);
     this.taxInformation = TaxInformation.from(taxInfo);
 
+    // Initialize pricing summary data
+    await this.updatePricingSummaryData();
+
     if (!this.isSubscriptionCanceled) {
       this.refreshSalesTax();
     }
@@ -335,7 +340,12 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
   setInitialPlanSelection() {
     this.focusedIndex = this.selectableProducts.length - 1;
     if (!this.isSubscriptionCanceled) {
-      this.selectPlan(this.getPlanByType(ProductTierType.Enterprise));
+      const enterprisePlan = this.getPlanByType(ProductTierType.Enterprise);
+      const planToSelect =
+        enterprisePlan || this.selectableProducts[this.selectableProducts.length - 1];
+      if (planToSelect) {
+        this.selectPlan(planToSelect);
+      }
     }
   }
 
@@ -362,6 +372,7 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
   updateInterval(event: number) {
     this.selectedInterval = event;
     this.planTypeChanged();
+    void this.updatePricingSummaryData();
   }
 
   protected getPlanIntervals() {
@@ -460,6 +471,10 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
   }
 
   protected selectPlan(plan: PlanResponse) {
+    if (!plan) {
+      return;
+    }
+
     if (
       this.selectedInterval === PlanInterval.Monthly &&
       plan.productTier == ProductTierType.Families
@@ -476,7 +491,7 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
     try {
       this.refreshSalesTax();
     } catch {
-      this.estimatedTax = 0;
+      void this.updatePricingSummaryData();
     }
   }
 
@@ -585,83 +600,6 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
     return this.sub?.maxStorageGb ? this.sub?.maxStorageGb - 1 : 0;
   }
 
-  passwordManagerSeatTotal(plan: PlanResponse): number {
-    if (!plan.PasswordManager.hasAdditionalSeatsOption || this.isSecretsManagerTrial()) {
-      return 0;
-    }
-
-    const result = plan.PasswordManager.seatPrice * Math.abs(this.sub?.seats || 0);
-    return result;
-  }
-
-  secretsManagerSeatTotal(plan: PlanResponse, seats: number): number {
-    if (!plan.SecretsManager.hasAdditionalSeatsOption) {
-      return 0;
-    }
-
-    return plan.SecretsManager.seatPrice * Math.abs(seats || 0);
-  }
-
-  additionalStorageTotal(plan: PlanResponse): number {
-    if (!plan.PasswordManager.hasAdditionalStorageOption) {
-      return 0;
-    }
-
-    return (
-      plan.PasswordManager.additionalStoragePricePerGb *
-      // TODO: Eslint upgrade. Please resolve this  since the null check does nothing
-      // eslint-disable-next-line no-constant-binary-expression
-      Math.abs(this.sub?.maxStorageGb ? this.sub?.maxStorageGb - 1 : 0 || 0)
-    );
-  }
-
-  additionalStoragePriceMonthly(selectedPlan: PlanResponse) {
-    return selectedPlan.PasswordManager.additionalStoragePricePerGb;
-  }
-
-  additionalServiceAccountTotal(plan: PlanResponse): number {
-    if (
-      !plan.SecretsManager.hasAdditionalServiceAccountOption ||
-      this.additionalServiceAccount == 0
-    ) {
-      return 0;
-    }
-
-    return plan.SecretsManager.additionalPricePerServiceAccount * this.additionalServiceAccount;
-  }
-
-  get passwordManagerSubtotal() {
-    if (!this.selectedPlan || !this.selectedPlan.PasswordManager) {
-      return 0;
-    }
-
-    let subTotal = this.selectedPlan.PasswordManager.basePrice;
-    if (this.selectedPlan.PasswordManager.hasAdditionalSeatsOption) {
-      subTotal += this.passwordManagerSeatTotal(this.selectedPlan);
-    }
-    if (this.selectedPlan.PasswordManager.hasPremiumAccessOption) {
-      subTotal += this.selectedPlan.PasswordManager.premiumAccessOptionPrice;
-    }
-    return subTotal - this.discount;
-  }
-
-  secretsManagerSubtotal() {
-    const plan = this.selectedPlan;
-    if (!plan || !plan.SecretsManager) {
-      return this.secretsManagerTotal || 0;
-    }
-
-    if (this.secretsManagerTotal) {
-      return this.secretsManagerTotal;
-    }
-
-    this.secretsManagerTotal =
-      plan.SecretsManager.basePrice +
-      this.secretsManagerSeatTotal(plan, this.sub?.smSeats) +
-      this.additionalServiceAccountTotal(plan);
-    return this.secretsManagerTotal;
-  }
-
   get passwordManagerSeats() {
     if (!this.selectedPlan) {
       return 0;
@@ -671,26 +609,6 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
       return this.selectedPlan.PasswordManager.baseSeats;
     }
     return this.sub?.seats;
-  }
-
-  get total() {
-    if (!this.organization || !this.selectedPlan) {
-      return 0;
-    }
-
-    if (this.organization.useSecretsManager) {
-      return (
-        this.passwordManagerSubtotal +
-        this.additionalStorageTotal(this.selectedPlan) +
-        this.secretsManagerSubtotal() +
-        this.estimatedTax
-      );
-    }
-    return (
-      this.passwordManagerSubtotal +
-      this.additionalStorageTotal(this.selectedPlan) +
-      this.estimatedTax
-    );
   }
 
   get teamsStarterPlanIsAvailable() {
@@ -984,15 +902,6 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
     this.showPayment = true;
   }
 
-  toggleTotalOpened() {
-    this.totalOpened = !this.totalOpened;
-  }
-
-  calculateTotalAppliedDiscount(total: number) {
-    const discountedTotal = total * (this.discountPercentageFromSub / 100);
-    return discountedTotal;
-  }
-
   get paymentSourceClasses() {
     if (this.paymentSource == null) {
       return [];
@@ -1099,7 +1008,7 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
     this.taxService
       .previewOrganizationInvoice(request)
       .then((invoice) => {
-        this.estimatedTax = invoice.taxAmount;
+        void this.updatePricingSummaryData();
       })
       .catch((error) => {
         const translatedMessage = this.i18nService.t(error.message);
@@ -1110,6 +1019,21 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
             !translatedMessage || translatedMessage === "" ? error.message : translatedMessage,
         });
       });
+  }
+
+  private async updatePricingSummaryData(): Promise<void> {
+    if (!this.selectedPlan || !this.organization || !this.taxInformation) {
+      return;
+    }
+
+    this.pricingSummaryData = await this.pricingSummaryService.getPricingSummaryData(
+      this.selectedPlan,
+      this.sub,
+      this.organization,
+      this.selectedInterval,
+      this.taxInformation,
+      this.isSecretsManagerTrial(),
+    );
   }
 
   protected canUpdatePaymentInformation(): boolean {
