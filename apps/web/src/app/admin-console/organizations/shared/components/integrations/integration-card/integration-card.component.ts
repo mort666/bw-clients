@@ -9,15 +9,25 @@ import {
   OnDestroy,
   ViewChild,
 } from "@angular/core";
+import { ActivatedRoute } from "@angular/router";
 import { Observable, Subject, combineLatest, lastValueFrom, takeUntil } from "rxjs";
 
 import { SYSTEM_THEME_OBSERVABLE } from "@bitwarden/angular/services/injection-tokens";
+// eslint-disable-next-line no-restricted-imports
+import {
+  OrganizationIntegrationType,
+  OrganizationIntegrationRequest,
+  OrganizationIntegrationResponse,
+  OrganizationIntegrationApiService,
+} from "@bitwarden/bit-common/dirt/integrations/index";
+import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { ThemeType } from "@bitwarden/common/platform/enums";
 import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
-import { DialogService } from "@bitwarden/components";
+import { OrganizationId } from "@bitwarden/common/types/guid";
+import { DialogService, ToastService } from "@bitwarden/components";
 
 import { SharedModule } from "../../../../../../shared/shared.module";
-import { openCrowdstrikeConnectDialog } from "../integration-dialog/index";
+import { openHecConnectDialog } from "../integration-dialog/index";
 import { Integration } from "../models";
 
 @Component({
@@ -54,6 +64,10 @@ export class IntegrationCardComponent implements AfterViewInit, OnDestroy {
     @Inject(SYSTEM_THEME_OBSERVABLE)
     private systemTheme$: Observable<ThemeType>,
     private dialogService: DialogService,
+    private activatedRoute: ActivatedRoute,
+    private apiService: OrganizationIntegrationApiService,
+    private toastService: ToastService,
+    private i18nService: I18nService,
   ) {}
 
   ngAfterViewInit() {
@@ -108,17 +122,56 @@ export class IntegrationCardComponent implements AfterViewInit, OnDestroy {
 
   async setupConnection() {
     // invoke the dialog to connect the integration
-    const dialog = openCrowdstrikeConnectDialog(this.dialogService, {
+    const dialog = openHecConnectDialog(this.dialogService, {
       data: {
         settings: this.integrationSettings,
       },
     });
 
     const result = await lastValueFrom(dialog.closed);
-    this.isConnected = result.success ? true : false;
 
-    // for now we just log the result
-    // eslint-disable-next-line no-console
-    console.log(`Dialog closed with result: ${JSON.stringify(result)}`);
+    // the dialog was cancelled
+    if (!result || !result.success) {
+      return;
+    }
+
+    // save the integration
+    try {
+      const dbResponse = await this.saveHecIntegration(result.configuration);
+      this.isConnected = !!dbResponse.id;
+    } catch {
+      this.toastService.showToast({
+        variant: "error",
+        title: null,
+        message: this.i18nService.t("failedToSaveIntegration"),
+      });
+      return;
+    }
+  }
+
+  async saveHecIntegration(configuration: string): Promise<OrganizationIntegrationResponse> {
+    const organizationId = this.activatedRoute.snapshot.paramMap.get(
+      "organizationId",
+    ) as OrganizationId;
+
+    const request = new OrganizationIntegrationRequest(
+      OrganizationIntegrationType.Hec,
+      configuration,
+    );
+
+    const integrations = await this.apiService.getOrganizationIntegrations(organizationId);
+    const existingIntegration = integrations.find(
+      (i) => i.type === OrganizationIntegrationType.Hec,
+    );
+
+    if (existingIntegration) {
+      return await this.apiService.updateOrganizationIntegration(
+        organizationId,
+        existingIntegration.id,
+        request,
+      );
+    } else {
+      return await this.apiService.createOrganizationIntegration(organizationId, request);
+    }
   }
 }

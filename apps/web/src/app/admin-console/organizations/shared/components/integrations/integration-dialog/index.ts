@@ -1,1 +1,1 @@
-export * from "../integration-dialog/connect-dialog/connect-dialog.component";
+export * from "./connect-dialog/connect-dialog-hec.component";

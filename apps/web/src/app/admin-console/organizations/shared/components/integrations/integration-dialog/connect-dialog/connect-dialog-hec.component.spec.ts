@@ -12,11 +12,11 @@ import { SharedModule } from "@bitwarden/web-vault/app/shared";
 import { Integration } from "../../models";
 
 import {
-  ConnectDialogComponent,
-  ConnectDialogParams,
-  ConnectDialogResult,
-  openCrowdstrikeConnectDialog,
-} from "./connect-dialog.component";
+  ConnectHecDialogComponent,
+  HecConnectDialogParams,
+  HecConnectDialogResult,
+  openHecConnectDialog,
+} from "./connect-dialog-hec.component";
 
 beforeAll(() => {
   // Mock element.animate for jsdom
@@ -53,10 +53,10 @@ beforeAll(() => {
   }
 });
 
-describe("ConnectDialogComponent", () => {
-  let component: ConnectDialogComponent;
-  let fixture: ComponentFixture<ConnectDialogComponent>;
-  let dialogRefMock = mock<DialogRef<ConnectDialogResult>>();
+describe("ConnectDialogHecComponent", () => {
+  let component: ConnectHecDialogComponent;
+  let fixture: ComponentFixture<ConnectHecDialogComponent>;
+  let dialogRefMock = mock<DialogRef<HecConnectDialogResult>>();
   const mockI18nService = mock<I18nService>();
 
   const integrationMock: Integration = {
@@ -70,10 +70,10 @@ describe("ConnectDialogComponent", () => {
     canSetupConnection: true,
     type: IntegrationType.EVENT,
   } as Integration;
-  const connectInfo: ConnectDialogParams = { settings: integrationMock };
+  const connectInfo: HecConnectDialogParams = { settings: integrationMock };
 
   beforeEach(async () => {
-    dialogRefMock = mock<DialogRef<ConnectDialogResult>>();
+    dialogRefMock = mock<DialogRef<HecConnectDialogResult>>();
 
     await TestBed.configureTestingModule({
       imports: [ReactiveFormsModule, SharedModule, BrowserAnimationsModule],
@@ -88,7 +88,7 @@ describe("ConnectDialogComponent", () => {
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(ConnectDialogComponent);
+    fixture = TestBed.createComponent(ConnectHecDialogComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
     mockI18nService.t.mockImplementation((key) => key);
@@ -103,22 +103,38 @@ describe("ConnectDialogComponent", () => {
       url: "",
       bearerToken: "",
       index: "",
+      service: "Test Integration",
     });
   });
 
   it("should have required validators for all fields", () => {
-    component.formGroup.setValue({ url: "", bearerToken: "", index: "" });
+    component.formGroup.setValue({ url: "", bearerToken: "", index: "", service: "" });
     expect(component.formGroup.valid).toBeFalsy();
 
-    component.formGroup.setValue({ url: "https://test.com", bearerToken: "token", index: "1" });
+    component.formGroup.setValue({
+      url: "https://test.com",
+      bearerToken: "token",
+      index: "1",
+      service: "Test Service",
+    });
     expect(component.formGroup.valid).toBeTruthy();
   });
 
   it("should invalidate url if not matching pattern", () => {
-    component.formGroup.setValue({ url: "ftp://test.com", bearerToken: "token", index: "1" });
+    component.formGroup.setValue({
+      url: "ftp://test.com",
+      bearerToken: "token",
+      index: "1",
+      service: "Test Service",
+    });
     expect(component.formGroup.valid).toBeFalsy();
 
-    component.formGroup.setValue({ url: "https://test.com", bearerToken: "token", index: "1" });
+    component.formGroup.setValue({
+      url: "https://test.com",
+      bearerToken: "token",
+      index: "1",
+      service: "Test Service",
+    });
     expect(component.formGroup.valid).toBeTruthy();
   });
 
@@ -127,15 +143,19 @@ describe("ConnectDialogComponent", () => {
       url: "https://test.com",
       bearerToken: "token",
       index: "1",
+      service: "Test Service",
     });
 
     await component.submit();
 
     expect(dialogRefMock.close).toHaveBeenCalledWith({
       integrationSettings: integrationMock,
-      url: "https://test.com",
-      bearerToken: "token",
-      index: "1",
+      configuration: JSON.stringify({
+        url: "https://test.com",
+        bearerToken: "token",
+        index: "1",
+        service: "Test Service",
+      }),
       success: true,
       error: null,
     });
@@ -145,12 +165,12 @@ describe("ConnectDialogComponent", () => {
 describe("openCrowdstrikeConnectDialog", () => {
   it("should call dialogService.open with correct params", () => {
     const dialogServiceMock = mock<DialogService>();
-    const config: DialogConfig<ConnectDialogParams, DialogRef<ConnectDialogResult>> = {
+    const config: DialogConfig<HecConnectDialogParams, DialogRef<HecConnectDialogResult>> = {
       data: { settings: { name: "Test" } as Integration },
     } as any;
 
-    openCrowdstrikeConnectDialog(dialogServiceMock, config);
+    openHecConnectDialog(dialogServiceMock, config);
 
-    expect(dialogServiceMock.open).toHaveBeenCalledWith(ConnectDialogComponent, config);
+    expect(dialogServiceMock.open).toHaveBeenCalledWith(ConnectHecDialogComponent, config);
   });
 });
