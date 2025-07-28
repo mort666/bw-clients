@@ -3,7 +3,7 @@ import { Component } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
-import { firstValueFrom, from, map, Observable, switchMap, tap } from "rxjs";
+import { firstValueFrom, from, map, Observable, switchMap } from "rxjs";
 import { debounceTime, first } from "rxjs/operators";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
@@ -54,7 +54,6 @@ const DisallowedPlanTypes = [
   ],
 })
 export class ClientsComponent {
-  providerId: string = "";
   addableOrganizations: Organization[] = [];
   loading = true;
   showAddExisting = false;
@@ -63,10 +62,8 @@ export class ClientsComponent {
   protected searchControl = new FormControl("", { nonNullable: true });
 
   protected providerId$: Observable<string> =
-    this.activatedRoute.parent?.params.pipe(
-      map((params) => params.providerId as string),
-      tap((providerId) => (this.providerId = providerId)),
-    ) ?? new Observable();
+    this.activatedRoute.parent?.params.pipe(map((params) => params.providerId as string)) ??
+    new Observable();
 
   protected provider$ = this.providerId$.pipe(
     switchMap((providerId) => this.providerService.get$(providerId)),
@@ -134,7 +131,8 @@ export class ClientsComponent {
     }
 
     try {
-      await this.webProviderService.detachOrganization(this.providerId, organization.id);
+      const providerId = await firstValueFrom(this.providerId$);
+      await this.webProviderService.detachOrganization(providerId, organization.id);
       this.toastService.showToast({
         variant: "success",
         title: "",
@@ -147,7 +145,8 @@ export class ClientsComponent {
   }
 
   async load() {
-    const response = await this.apiService.getProviderClients(this.providerId);
+    const providerId = await firstValueFrom(this.providerId$);
+    const response = await this.apiService.getProviderClients(providerId);
     const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
     const clients = response.data != null && response.data.length > 0 ? response.data : [];
     this.dataSource.data = clients;
@@ -166,8 +165,9 @@ export class ClientsComponent {
   }
 
   async addExistingOrganization() {
+    const providerId = await firstValueFrom(this.providerId$);
     const dialogRef = AddOrganizationComponent.open(this.dialogService, {
-      providerId: this.providerId,
+      providerId: providerId,
       organizations: this.addableOrganizations,
     });
 

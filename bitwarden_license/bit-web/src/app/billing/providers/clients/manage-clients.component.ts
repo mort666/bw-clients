@@ -10,7 +10,6 @@ import {
   combineLatest,
   switchMap,
   Observable,
-  tap,
 } from "rxjs";
 import { debounceTime, first } from "rxjs/operators";
 
@@ -72,7 +71,6 @@ import { ReplacePipe } from "./replace.pipe";
   ],
 })
 export class ManageClientsComponent {
-  providerId: string = "";
   loading = true;
   dataSource: TableDataSource<ProviderOrganizationOrganizationDetailsResponse> =
     new TableDataSource();
@@ -86,10 +84,8 @@ export class ManageClientsComponent {
   newClientButtonLabel = this.i18nService.t("newClient");
 
   protected providerId$: Observable<string> =
-    this.activatedRoute.parent?.params.pipe(
-      map((params) => params.providerId as string),
-      tap((providerId) => (this.providerId = providerId)),
-    ) ?? new Observable();
+    this.activatedRoute.parent?.params.pipe(map((params) => params.providerId as string)) ??
+    new Observable();
 
   protected provider$ = this.providerId$.pipe(
     switchMap((providerId) => this.providerService.get$(providerId)),
@@ -161,14 +157,15 @@ export class ManageClientsComponent {
 
   async load() {
     try {
-      const provider = await firstValueFrom(this.providerService.get$(this.providerId));
+      const providerId = await firstValueFrom(this.providerId$);
+      const provider = await firstValueFrom(this.providerService.get$(providerId));
       if (provider?.providerType === ProviderType.BusinessUnit) {
         this.pageTitle = this.i18nService.t("businessUnits");
         this.clientColumnHeader = this.i18nService.t("businessUnit");
         this.newClientButtonLabel = this.i18nService.t("newBusinessUnit");
       }
       this.dataSource.data = (
-        await this.billingApiService.getProviderClientOrganizations(this.providerId)
+        await this.billingApiService.getProviderClientOrganizations(providerId)
       ).data;
       this.plans = (await this.billingApiService.getPlans()).data;
       this.loading = false;
@@ -195,9 +192,10 @@ export class ManageClientsComponent {
   };
 
   createClient = async () => {
+    const providerId = await firstValueFrom(this.providerId$);
     const reference = openCreateClientDialog(this.dialogService, {
       data: {
-        providerId: this.providerId,
+        providerId: providerId,
         plans: this.plans,
       },
     });
@@ -210,9 +208,10 @@ export class ManageClientsComponent {
   };
 
   manageClientName = async (organization: ProviderOrganizationOrganizationDetailsResponse) => {
+    const providerId = await firstValueFrom(this.providerId$);
     const dialogRef = openManageClientNameDialog(this.dialogService, {
       data: {
-        providerId: this.providerId,
+        providerId: providerId,
         organization: {
           id: organization.id,
           name: organization.organizationName,
@@ -258,7 +257,8 @@ export class ManageClientsComponent {
     }
 
     try {
-      await this.webProviderService.detachOrganization(this.providerId, organization.id);
+      const providerId = await firstValueFrom(this.providerId$);
+      await this.webProviderService.detachOrganization(providerId, organization.id);
       this.toastService.showToast({
         variant: "success",
         title: "",
