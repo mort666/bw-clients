@@ -189,12 +189,23 @@ program
     try {
       console.log(chalk.blue("🔄 Rolling back migration..."));
 
-      const backupDir = options.backup_dir;
+      const backupDir = options.backupDir;
       if (!fs.existsSync(backupDir)) {
         console.error(chalk.red(`❌ Backup directory not found: ${backupDir}`));
         process.exit(1);
       }
 
+      // Check for path mapping file
+      const mappingPath = path.join(backupDir, "path-mapping.json");
+      if (!fs.existsSync(mappingPath)) {
+        console.error(chalk.red("❌ Path mapping file not found. Cannot restore files safely."));
+        console.log(
+          chalk.gray("This backup was created with an older version that doesn't preserve paths."),
+        );
+        process.exit(1);
+      }
+
+      const pathMapping = JSON.parse(fs.readFileSync(mappingPath, "utf-8"));
       const backupFiles = fs.readdirSync(backupDir).filter((f) => f.endsWith(".backup"));
 
       if (backupFiles.length === 0) {
@@ -205,15 +216,24 @@ program
       let restoredCount = 0;
       for (const backupFile of backupFiles) {
         const backupPath = path.join(backupDir, backupFile);
-        const originalPath = backupFile.replace(".backup", "");
+        const originalPath = pathMapping[backupFile];
 
-        if (fs.existsSync(originalPath)) {
-          fs.copyFileSync(backupPath, originalPath);
-          restoredCount++;
+        if (!originalPath) {
+          console.warn(chalk.yellow(`⚠️  No mapping found for backup file: ${backupFile}`));
+          continue;
+        }
 
-          if (options.verbose) {
-            console.log(chalk.gray(`Restored: ${originalPath}`));
-          }
+        // Ensure the directory exists
+        const originalDir = path.dirname(originalPath);
+        if (!fs.existsSync(originalDir)) {
+          fs.mkdirSync(originalDir, { recursive: true });
+        }
+
+        fs.copyFileSync(backupPath, originalPath);
+        restoredCount++;
+
+        if (options.verbose) {
+          console.log(chalk.gray(`Restored: ${originalPath}`));
         }
       }
 
@@ -234,12 +254,24 @@ async function createBackups(migrator: TypeScriptMigrator, outputDir: string): P
   const usages = migrator.analyzeUsage();
   const filesToBackup = new Set(usages.map((u) => u.filePath));
 
+  // Create a mapping file to track original paths
+  const pathMapping: Record<string, string> = {};
+
   for (const filePath of filesToBackup) {
     if (fs.existsSync(filePath)) {
-      const backupPath = path.join(backupDir, path.basename(filePath) + ".backup");
+      // Create a unique backup filename that preserves path info
+      const relativePath = path.relative(process.cwd(), filePath);
+      const backupFileName = relativePath.replace(/[/\\]/g, "_") + ".backup";
+      const backupPath = path.join(backupDir, backupFileName);
+
       fs.copyFileSync(filePath, backupPath);
+      pathMapping[backupFileName] = filePath;
     }
   }
+
+  // Save the path mapping for restoration
+  const mappingPath = path.join(backupDir, "path-mapping.json");
+  fs.writeFileSync(mappingPath, JSON.stringify(pathMapping, null, 2));
 
   console.log(chalk.green(`📦 Created backups for ${filesToBackup.size} files`));
 }
