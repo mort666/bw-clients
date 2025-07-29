@@ -11,7 +11,10 @@ export class TypeScriptMigrator {
   private parser: ProjectParser;
   private transformer: ASTTransformer;
 
-  constructor(private config: MigrationConfig) {
+  constructor(
+    private config: MigrationConfig,
+    private translationsPath?: string,
+  ) {
     this.parser = new ProjectParser(config);
     this.transformer = new ASTTransformer();
   }
@@ -91,6 +94,8 @@ export class TypeScriptMigrator {
    * Migrate all TypeScript files in the project
    */
   async migrateAll(): Promise<TransformationResult[]> {
+    await this.transformer.initialize(this.translationsPath);
+
     const sourceFiles = this.parser.findI18nServiceImports();
     const results: TransformationResult[] = [];
 
@@ -123,6 +128,8 @@ export class TypeScriptMigrator {
    * Migrate a specific file
    */
   async migrateFile(filePath: string): Promise<TransformationResult> {
+    await this.transformer.initialize(this.translationsPath);
+
     const sourceFile = this.parser.getSourceFile(filePath);
 
     if (!sourceFile) {

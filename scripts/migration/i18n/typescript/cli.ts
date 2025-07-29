@@ -57,6 +57,7 @@ program
   .option("-f, --file <path>", "Migrate specific file only")
   .option("-d, --dry-run", "Preview changes without applying them")
   .option("-o, --output <path>", "Output directory for migration reports")
+  .option("-t, --translations <path>", "Path to combined translations file")
   .option("-v, --verbose", "Enable verbose logging")
   .option("--backup", "Create backup files before migration")
   .action(async (options) => {
@@ -68,7 +69,7 @@ program
         verbose: options.verbose || false,
       };
 
-      const migrator = new TypeScriptMigrator(config);
+      const migrator = new TypeScriptMigrator(config, options.translations);
 
       if (options.backup && !options.dryRun) {
         console.log(chalk.yellow("📦 Creating backups..."));

@@ -15,8 +15,53 @@ describe("TypeScript Migration Tools", () => {
     let transformer: ASTTransformer;
     let sourceFile: SourceFile;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       transformer = new ASTTransformer();
+      await transformer.initialize();
+
+      // Mock the translation lookup to return predictable results for tests
+      const mockTranslationEntries: Record<string, any> = {
+        loginWithDevice: { message: "loginWithDevice" },
+        itemsCount: {
+          message: "itemsCount $COUNT$",
+          placeholders: {
+            count: { content: "$1" },
+          },
+        },
+        testMessage: { message: "testMessage" },
+        simpleMessage: { message: "simpleMessage" },
+        itemCount: {
+          message: "itemCount $COUNT$",
+          placeholders: {
+            count: { content: "$1" },
+          },
+        },
+        message1: { message: "message1" },
+        message2: {
+          message: "message2 $PARAM$",
+          placeholders: {
+            param: { content: "$1" },
+          },
+        },
+      };
+
+      jest
+        .spyOn(transformer["translationLookup"], "getTranslation")
+        .mockImplementation((key: string) => {
+          return mockTranslationEntries[key]?.message || null;
+        });
+
+      jest
+        .spyOn(transformer["translationLookup"], "getTranslationEntry")
+        .mockImplementation((key: string) => {
+          return mockTranslationEntries[key] || null;
+        });
+
+      jest
+        .spyOn(transformer["translationLookup"], "hasTranslation")
+        .mockImplementation((key: string) => {
+          return key in mockTranslationEntries;
+        });
     });
 
     it("should find I18nService.t() calls", () => {
@@ -63,7 +108,7 @@ describe("TypeScript Migration Tools", () => {
           constructor(private i18nService: I18nService) {}
 
           test() {
-            const message = $localize\`loginWithDevice\`;
+            const message = $localize\`:@@loginWithDevice:loginWithDevice\`;
           }
         }
       `;
@@ -86,7 +131,7 @@ describe("TypeScript Migration Tools", () => {
       const expected = `
         class TestComponent {
           test() {
-            const message = $localize\`itemsCount\${count.toString()}:param0:\`;
+            const message = $localize\`:@@itemsCount:itemsCount \${count.toString()}:count:\`;
           }
         }
       `;
@@ -145,7 +190,7 @@ describe("TypeScript Migration Tools", () => {
         @Component({})
         class TestComponent {
           test() {
-            const message = $localize\`loginWithDevice\`;
+            const message = $localize\`:@@loginWithDevice:loginWithDevice\`;
           }
         }
       `;
@@ -158,8 +203,55 @@ describe("TypeScript Migration Tools", () => {
   });
 
   describe("Integration Tests", () => {
-    it("should handle complex transformation scenarios", () => {
+    function setupMocks(transformer: ASTTransformer) {
+      const mockTranslationEntries: Record<string, any> = {
+        loginWithDevice: { message: "loginWithDevice" },
+        itemsCount: {
+          message: "itemsCount $COUNT$",
+          placeholders: {
+            count: { content: "$1" },
+          },
+        },
+        testMessage: { message: "testMessage" },
+        simpleMessage: { message: "simpleMessage" },
+        itemCount: {
+          message: "itemCount $COUNT$",
+          placeholders: {
+            count: { content: "$1" },
+          },
+        },
+        message1: { message: "message1" },
+        message2: {
+          message: "message2 $PARAM$",
+          placeholders: {
+            param: { content: "$1" },
+          },
+        },
+      };
+
+      jest
+        .spyOn(transformer["translationLookup"], "getTranslation")
+        .mockImplementation((key: string) => {
+          return mockTranslationEntries[key]?.message || null;
+        });
+
+      jest
+        .spyOn(transformer["translationLookup"], "getTranslationEntry")
+        .mockImplementation((key: string) => {
+          return mockTranslationEntries[key] || null;
+        });
+
+      jest
+        .spyOn(transformer["translationLookup"], "hasTranslation")
+        .mockImplementation((key: string) => {
+          return key in mockTranslationEntries;
+        });
+    }
+
+    it("should handle complex transformation scenarios", async () => {
       const transformer = new ASTTransformer();
+      await transformer.initialize();
+      setupMocks(transformer);
       const code = `
         import { I18nService } from '@bitwarden/common/platform/services/i18n.service';
         import { Component } from '@angular/core';
@@ -193,16 +285,16 @@ describe("TypeScript Migration Tools", () => {
           constructor(private i18nService: I18nService) {}
 
           getMessage() {
-            return $localize\`simpleMessage\`;
+            return $localize\`:@@simpleMessage:simpleMessage\`;
           }
 
           getParameterizedMessage(count: number) {
-            return $localize\`itemCount\${count.toString()}:param0:\`;
+            return $localize\`:@@itemCount:itemCount \${count.toString()}:count:\`;
           }
 
           getMultipleMessages() {
-            const msg1 = $localize\`message1\`;
-            const msg2 = $localize\`message2\${'param'}:param0:\`;
+            const msg1 = $localize\`:@@message1:message1\`;
+            const msg2 = $localize\`:@@message2:message2 \${'param'}:param:\`;
             return [msg1, msg2];
           }
         }
@@ -214,8 +306,10 @@ describe("TypeScript Migration Tools", () => {
       expect(sourceFile.getFullText().trim()).toBe(expected.trim());
     });
 
-    it("should remove import when only method calls are used (no constructor)", () => {
+    it("should remove import when only method calls are used (no constructor)", async () => {
       const transformer = new ASTTransformer();
+      await transformer.initialize();
+      setupMocks(transformer);
       const code = `
         import { I18nService } from '@bitwarden/common/platform/services/i18n.service';
 
@@ -229,7 +323,7 @@ describe("TypeScript Migration Tools", () => {
       const expected = `
         class TestComponent {
           test() {
-            const message = $localize\`testMessage\`;
+            const message = $localize\`:@@testMessage:testMessage\`;
           }
         }
       `;

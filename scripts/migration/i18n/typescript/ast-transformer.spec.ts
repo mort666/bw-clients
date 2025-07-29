@@ -7,11 +7,58 @@ describe("ASTTransformer", () => {
   let transformer: ASTTransformer;
   let sourceFile: SourceFile;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     project = new Project({
       useInMemoryFileSystem: true,
     });
     transformer = new ASTTransformer();
+
+    // Initialize with mock translations for testing
+    await transformer.initialize();
+
+    // Mock the translation lookup to return predictable results for tests
+    const mockTranslationEntries: Record<string, any> = {
+      loginWithDevice: { message: "loginWithDevice" },
+      itemsCount: {
+        message: "itemsCount $COUNT$",
+        placeholders: {
+          count: { content: "$1" },
+        },
+      },
+      testMessage: { message: "testMessage" },
+      simpleMessage: { message: "simpleMessage" },
+      itemCount: {
+        message: "itemCount $COUNT$",
+        placeholders: {
+          count: { content: "$1" },
+        },
+      },
+      message1: { message: "message1" },
+      message2: {
+        message: "message2 $PARAM$",
+        placeholders: {
+          param: { content: "$1" },
+        },
+      },
+    };
+
+    jest
+      .spyOn(transformer["translationLookup"], "getTranslation")
+      .mockImplementation((key: string) => {
+        return mockTranslationEntries[key]?.message || null;
+      });
+
+    jest
+      .spyOn(transformer["translationLookup"], "getTranslationEntry")
+      .mockImplementation((key: string) => {
+        return mockTranslationEntries[key] || null;
+      });
+
+    jest
+      .spyOn(transformer["translationLookup"], "hasTranslation")
+      .mockImplementation((key: string) => {
+        return key in mockTranslationEntries;
+      });
   });
 
   it("should find I18nService.t() calls", () => {
@@ -58,7 +105,7 @@ describe("ASTTransformer", () => {
         constructor(private i18nService: I18nService) {}
 
         test() {
-          const message = $localize\`loginWithDevice\`;
+          const message = $localize\`:@@loginWithDevice:loginWithDevice\`;
         }
       }
     `;
@@ -81,7 +128,7 @@ describe("ASTTransformer", () => {
     const expected = `
       class TestComponent {
         test() {
-          const message = $localize\`itemsCount\${count.toString()}:param0:\`;
+          const message = $localize\`:@@itemsCount:itemsCount \${count.toString()}:count:\`;
         }
       }
     `;
@@ -140,7 +187,7 @@ describe("ASTTransformer", () => {
       @Component({})
       class TestComponent {
         test() {
-          const message = $localize\`loginWithDevice\`;
+          const message = $localize\`:@@loginWithDevice:loginWithDevice\`;
         }
       }
     `;
@@ -185,16 +232,16 @@ describe("ASTTransformer", () => {
         constructor(private i18nService: I18nService) {}
 
         getMessage() {
-          return $localize\`simpleMessage\`;
+          return $localize\`:@@simpleMessage:simpleMessage\`;
         }
 
         getParameterizedMessage(count: number) {
-          return $localize\`itemCount\${count.toString()}:param0:\`;
+          return $localize\`:@@itemCount:itemCount \${count.toString()}:count:\`;
         }
 
         getMultipleMessages() {
-          const msg1 = $localize\`message1\`;
-          const msg2 = $localize\`message2\${'param'}:param0:\`;
+          const msg1 = $localize\`:@@message1:message1\`;
+          const msg2 = $localize\`:@@message2:message2 \${'param'}:param:\`;
           return [msg1, msg2];
         }
       }
@@ -220,7 +267,7 @@ describe("ASTTransformer", () => {
     const expected = `
       class TestComponent {
         test() {
-          const message = $localize\`testMessage\`;
+          const message = $localize\`:@@testMessage:testMessage\`;
         }
       }
     `;
@@ -229,5 +276,87 @@ describe("ASTTransformer", () => {
     transformer.transformI18nServiceCalls(sourceFile);
 
     expect(sourceFile.getFullText().trim()).toBe(expected.trim());
+  });
+
+  it("should use translation lookup to generate proper $localize calls with actual text", () => {
+    const code = `
+      class TestComponent {
+        test() {
+          const message = this.i18nService.t('loginWithDevice');
+        }
+      }
+    `;
+
+    const expected = `
+      class TestComponent {
+        test() {
+          const message = $localize\`:@@loginWithDevice:loginWithDevice\`;
+        }
+      }
+    `;
+
+    sourceFile = project.createSourceFile("translation-lookup-test.ts", code);
+    transformer.transformI18nServiceCalls(sourceFile);
+
+    expect(sourceFile.getFullText().trim()).toBe(expected.trim());
+  });
+
+  it("should handle parameter substitution with translation lookup", () => {
+    // Mock translation with parameter placeholder in $VAR$ format
+    const mockTranslationEntry = {
+      message: "Items: $COUNT$",
+      placeholders: {
+        count: { content: "$1" },
+      },
+    };
+    jest
+      .spyOn(transformer["translationLookup"], "getTranslationEntry")
+      .mockReturnValue(mockTranslationEntry);
+    jest.spyOn(transformer["translationLookup"], "hasTranslation").mockReturnValue(true);
+
+    const code = `
+      class TestComponent {
+        test() {
+          const message = this.i18nService.t('itemsCount', count.toString());
+        }
+      }
+    `;
+
+    const expected = `
+      class TestComponent {
+        test() {
+          const message = $localize\`:@@itemsCount:Items: \${count.toString()}:count:\`;
+        }
+      }
+    `;
+
+    sourceFile = project.createSourceFile("param-translation-test.ts", code);
+    transformer.transformI18nServiceCalls(sourceFile);
+
+    expect(sourceFile.getFullText().trim()).toBe(expected.trim());
+  });
+
+  it("should fallback to key when translation is not found", () => {
+    const code = `
+      class TestComponent {
+        test() {
+          const message = this.i18nService.t('unknownKey');
+        }
+      }
+    `;
+
+    const expected = `
+      class TestComponent {
+        test() {
+          const message = $localize\`:@@unknownKey:unknownKey\`;
+        }
+      }
+    `;
+
+    sourceFile = project.createSourceFile("fallback-test.ts", code);
+    const result = transformer.transformI18nServiceCalls(sourceFile);
+
+    expect(sourceFile.getFullText().trim()).toBe(expected.trim());
+    expect(result.errors).toContain("Warning: No translation found for key 'unknownKey' at line 4");
   });
 });

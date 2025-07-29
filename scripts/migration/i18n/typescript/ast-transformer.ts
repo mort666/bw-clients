@@ -1,11 +1,25 @@
 import { SourceFile, Node } from "ts-morph";
 
+import { TranslationLookup } from "../shared/translation-lookup";
 import { TransformationResult, TransformationChange, I18nUsage } from "../shared/types";
 
 /**
  * AST transformation utilities for TypeScript code migration
  */
 export class ASTTransformer {
+  private translationLookup: TranslationLookup;
+
+  constructor(rootPath?: string) {
+    this.translationLookup = new TranslationLookup(rootPath);
+  }
+
+  /**
+   * Initialize the translation lookup system
+   */
+  async initialize(combinedFilePath?: string): Promise<void> {
+    await this.translationLookup.loadTranslations(combinedFilePath);
+  }
+
   /**
    * Find all I18nService.t() method calls in a source file
    */
@@ -79,6 +93,12 @@ export class ASTTransformer {
                   // Generate $localize replacement
                   const replacement = this.generateLocalizeCall(key, args.slice(1));
 
+                  // Check if translation was found
+                  const hasTranslation = this.translationLookup.hasTranslation(key);
+                  if (!hasTranslation) {
+                    errors.push(`Warning: No translation found for key '${key}' at line ${line}`);
+                  }
+
                   // Replace the node
                   node.replaceWithText(replacement);
 
@@ -87,7 +107,7 @@ export class ASTTransformer {
                     location: { line, column },
                     original,
                     replacement,
-                    description: `Replaced i18nService.t('${key}') with $localize`,
+                    description: `Replaced i18nService.t('${key}') with $localize${hasTranslation ? "" : " (translation not found)"}`,
                   });
                 }
               }
@@ -139,17 +159,77 @@ export class ASTTransformer {
   }
 
   /**
-   * Generate $localize call with parameters
+   * Generate $localize call with parameters using actual translation text
    */
   private generateLocalizeCall(key: string, paramArgs: Node[]): string {
+    // Get the full translation entry from the lookup
+    const translationEntry = this.translationLookup.getTranslationEntry(key);
+    const messageText = translationEntry?.message || key; // Fallback to key if translation not found
+
     if (paramArgs.length === 0) {
-      return `$localize\`${key}\``;
+      // Simple case: no parameters
+      return `$localize\`:@@${key}:${this.escapeForTemplate(messageText)}\``;
     }
 
-    // For now, handle simple parameter substitution
-    // This will need to be enhanced for complex cases
-    const params = paramArgs.map((arg, index) => `\${${arg.getText()}}:param${index}:`);
-    return `$localize\`${key}${params.join("")}\``;
+    // Handle parameter substitution using the placeholders object
+    let processedMessage = messageText;
+    const placeholders = translationEntry?.placeholders || {};
+
+    // Create a map of parameter positions to arguments based on placeholders
+    const paramMap = new Map<string, { arg: string; paramName: string }>();
+
+    // Map placeholders to parameter arguments
+    Object.entries(placeholders).forEach(([placeholderName, placeholderInfo]) => {
+      const content = placeholderInfo.content;
+      if (content && content.startsWith("$") && content.length > 1) {
+        // Extract parameter number from content like "$1", "$2", etc.
+        const paramNumber = parseInt(content.substring(1));
+        if (!isNaN(paramNumber) && paramNumber > 0 && paramNumber <= paramArgs.length) {
+          const argIndex = paramNumber - 1;
+          paramMap.set(placeholderName.toUpperCase(), {
+            arg: paramArgs[argIndex].getText(),
+            paramName: placeholderName,
+          });
+        }
+      }
+    });
+
+    // Replace $VAR$ placeholders in the message with $localize parameter syntax
+    paramMap.forEach(({ arg, paramName }, placeholderName) => {
+      const placeholder = `$${placeholderName}$`;
+      if (processedMessage.includes(placeholder)) {
+        processedMessage = processedMessage.replace(placeholder, `\${${arg}}:${paramName}:`);
+      }
+    });
+
+    // Handle any remaining parameters that weren't mapped through placeholders
+    // This is a fallback for cases where placeholders might not be properly defined
+    paramArgs.forEach((arg, index) => {
+      const paramName = `param${index}`;
+      const genericPlaceholder = `$${index + 1}$`;
+      if (processedMessage.includes(genericPlaceholder)) {
+        processedMessage = processedMessage.replace(
+          genericPlaceholder,
+          `\${${arg.getText()}}:${paramName}:`,
+        );
+      }
+    });
+
+    return `$localize\`:@@${key}:${this.escapeForTemplate(processedMessage)}\``;
+  }
+
+  /**
+   * Escape special characters for template literal usage
+   * Preserves $localize parameter syntax like ${param}:name:
+   */
+  private escapeForTemplate(text: string): string {
+    return (
+      text
+        .replace(/\\/g, "\\\\") // Escape backslashes
+        .replace(/`/g, "\\`") // Escape backticks
+        // Don't escape $ that are part of ${...}: parameter syntax
+        .replace(/\$(?!\{[^}]+\}:[^:]*:)/g, "\\$")
+    );
   }
 
   /**

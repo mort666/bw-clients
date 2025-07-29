@@ -1,6 +1,10 @@
 import * as fs from "fs";
 
-import { CombinedTranslations, TranslationCombiner } from "./translation-combiner";
+import {
+  CombinedTranslations,
+  TranslationCombiner,
+  TranslationEntry,
+} from "./translation-combiner";
 
 /**
  * Service for looking up translations during template migration
@@ -47,6 +51,17 @@ export class TranslationLookup {
 
     const entry = this.translations[key];
     return entry ? entry.message : null;
+  }
+
+  /**
+   * Get the full translation entry for a key
+   */
+  getTranslationEntry(key: string): TranslationEntry | null {
+    if (!this.isLoaded) {
+      throw new Error("Translations not loaded. Call loadTranslations() first.");
+    }
+
+    return this.translations[key] || null;
   }
 
   /**

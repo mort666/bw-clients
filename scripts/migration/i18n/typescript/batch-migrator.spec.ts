@@ -152,11 +152,11 @@ describe("BatchMigrator", () => {
 
     // Verify files were transformed
     const transformedFile1 = fs.readFileSync(testFiles[0].path, "utf8");
-    expect(transformedFile1).toContain("$localize`message1`");
+    expect(transformedFile1).toContain("$localize`:@@message1:message1`");
     expect(transformedFile1).not.toContain("i18nService.t(");
 
     const transformedFile2 = fs.readFileSync(testFiles[1].path, "utf8");
-    expect(transformedFile2).toContain("$localize`message2${");
+    expect(transformedFile2).toContain("$localize`:@@message2:message2");
     expect(transformedFile2).not.toContain("I18nService");
   });
 
@@ -211,7 +211,7 @@ describe("BatchMigrator", () => {
 
     // Valid file should be processed
     const validContent = fs.readFileSync(validFile, "utf8");
-    expect(validContent).toContain("$localize`valid`");
+    expect(validContent).toContain("$localize`:@@valid:valid`");
   });
 
   it("should validate migration results", async () => {
@@ -338,14 +338,14 @@ describe("BatchMigrator", () => {
 
     // Step 3: Verify transformed content
     const authContent = fs.readFileSync(files[0].path, "utf8");
-    expect(authContent).toContain("$localize`loginRequired`");
-    expect(authContent).toContain("$localize`errorCount${count.toString()}:param0:`");
+    expect(authContent).toContain("$localize`:@@loginRequired:loginRequired`");
+    expect(authContent).toContain("$localize`:@@errorCount:errorCount");
     expect(authContent).not.toContain("i18nService.t(");
 
     const vaultContent = fs.readFileSync(files[1].path, "utf8");
-    expect(vaultContent).toContain("$localize`vaultLocked`");
-    expect(vaultContent).toContain("$localize`vaultUnlocked`");
-    expect(vaultContent).toContain("$localize`unknownStatus${status}:param0:`");
+    expect(vaultContent).toContain("$localize`:@@vaultLocked:vaultLocked`");
+    expect(vaultContent).toContain("$localize`:@@vaultUnlocked:vaultUnlocked`");
+    expect(vaultContent).toContain("$localize`:@@unknownStatus:unknownStatus");
     expect(vaultContent).not.toContain("i18n.t(");
 
     // Step 4: Verify reports were generated
