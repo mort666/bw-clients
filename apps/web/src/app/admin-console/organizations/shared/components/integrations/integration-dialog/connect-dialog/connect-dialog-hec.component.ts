@@ -37,7 +37,7 @@ export class ConnectHecDialogComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const settings = this.getSettingsAsJson(this.connectInfo.settings.configuration);
+    const settings = this.getSettingsAsJson(this.connectInfo.settings.configuration ?? "");
 
     if (settings) {
       this.formGroup.patchValue({
