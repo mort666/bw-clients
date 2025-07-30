@@ -102,6 +102,7 @@ export class InitService {
       containerService.attachToGlobal(this.win);
 
       await this.autofillService.init();
+      await this.autotypeService.init();
     };
   }
 }
