@@ -48,14 +48,13 @@ export class DesktopAutotypeService {
 
   async init() {
     if (this.platformUtilsService.getDevice() === DeviceType.WindowsDesktop) {
-      const userId = await firstValueFrom(
-        this.accountService.activeAccount$.pipe(map((a) => a?.id)),
-      );
-
       this.autotypeEnabled$ = combineLatest([
         this.autotypeEnabledState.state$,
         this.configService.getFeatureFlag$(FeatureFlag.WindowsDesktopAutotype),
-        this.authService.authStatusFor$(userId),
+        this.accountService.activeAccount$.pipe(
+          map((account) => account?.id),
+          switchMap((userId) => this.authService.authStatusFor$(userId)),
+        ),
       ]).pipe(
         map(
           ([autotypeEnabled, windowsDesktopAutotypeFeatureFlag, authStatus]) =>
