@@ -27,8 +27,7 @@
     ]
   },
   "id": 1,
-  "lastModifiedAgent": "structurizr-ui",
-  "lastModifiedDate": "2025-07-28T21:38:09Z",
+  "lastModifiedDate": "2025-07-30T16:45:56Z",
   "model": {
     "people": [
       {
@@ -43,35 +42,35 @@
           {
             "description": "Uses",
             "destinationId": "10",
-            "id": "42",
+            "id": "58",
             "sourceId": "1",
             "tags": "Relationship"
           },
           {
             "description": "Uses",
             "destinationId": "9",
-            "id": "43",
-            "linkedRelationshipId": "42",
+            "id": "59",
+            "linkedRelationshipId": "58",
             "sourceId": "1"
           },
           {
             "description": "Uses",
             "destinationId": "11",
-            "id": "44",
+            "id": "60",
             "sourceId": "1",
             "tags": "Relationship"
           },
           {
             "description": "Uses",
             "destinationId": "12",
-            "id": "45",
+            "id": "61",
             "sourceId": "1",
             "tags": "Relationship"
           },
           {
             "description": "Uses",
             "destinationId": "13",
-            "id": "46",
+            "id": "62",
             "sourceId": "1",
             "tags": "Relationship"
           }
@@ -111,15 +110,15 @@
           {
             "description": "Administers Organizations",
             "destinationId": "10",
-            "id": "47",
+            "id": "63",
             "sourceId": "17",
             "tags": "Relationship"
           },
           {
             "description": "Administers Organizations",
             "destinationId": "9",
-            "id": "48",
-            "linkedRelationshipId": "47",
+            "id": "64",
+            "linkedRelationshipId": "63",
             "sourceId": "17"
           }
         ],
@@ -137,15 +136,15 @@
           {
             "description": "Administers Providers and Organizations",
             "destinationId": "10",
-            "id": "49",
+            "id": "65",
             "sourceId": "18",
             "tags": "Relationship"
           },
           {
             "description": "Administers Providers and Organizations",
             "destinationId": "9",
-            "id": "50",
-            "linkedRelationshipId": "49",
+            "id": "66",
+            "linkedRelationshipId": "65",
             "sourceId": "18"
           }
         ],
@@ -180,7 +179,7 @@
               {
                 "description": "Validates JWTs with",
                 "destinationId": "19",
-                "id": "65",
+                "id": "81",
                 "sourceId": "5",
                 "tags": "Relationship",
                 "url": "https://bitwarden.com"
@@ -218,7 +217,7 @@
           {
             "description": "The Icons service provides favicons for websites.",
             "documentation": {},
-            "id": "38",
+            "id": "54",
             "name": "Icons",
             "properties": {
               "structurizr.dsl.identifier": "server.icons"
@@ -249,21 +248,21 @@
               {
                 "description": "Makes requests to",
                 "destinationId": "5",
-                "id": "51",
+                "id": "67",
                 "sourceId": "10",
                 "tags": "Relationship"
               },
               {
                 "description": "Makes requests to",
                 "destinationId": "4",
-                "id": "52",
-                "linkedRelationshipId": "51",
+                "id": "68",
+                "linkedRelationshipId": "67",
                 "sourceId": "10"
               },
               {
                 "description": "Authenticates with",
                 "destinationId": "19",
-                "id": "60",
+                "id": "76",
                 "sourceId": "10",
                 "tags": "Relationship"
               }
@@ -280,36 +279,36 @@
             "relationships": [
               {
                 "description": "Connects to IPC to request biometric authentication",
-                "destinationId": "24",
-                "id": "28",
+                "destinationId": "32",
+                "id": "40",
                 "sourceId": "11",
                 "tags": "Relationship"
               },
               {
                 "description": "Connects to IPC to request biometric authentication",
                 "destinationId": "13",
-                "id": "29",
-                "linkedRelationshipId": "28",
+                "id": "41",
+                "linkedRelationshipId": "40",
                 "sourceId": "11"
               },
               {
                 "description": "Makes requests to",
                 "destinationId": "5",
-                "id": "54",
+                "id": "70",
                 "sourceId": "11",
                 "tags": "Relationship"
               },
               {
                 "description": "Makes requests to",
                 "destinationId": "4",
-                "id": "55",
-                "linkedRelationshipId": "54",
+                "id": "71",
+                "linkedRelationshipId": "70",
                 "sourceId": "11"
               },
               {
                 "description": "Authenticates With",
                 "destinationId": "19",
-                "id": "62",
+                "id": "78",
                 "sourceId": "11",
                 "tags": "Relationship"
               }
@@ -327,21 +326,21 @@
               {
                 "description": "Makes requests to",
                 "destinationId": "5",
-                "id": "56",
+                "id": "72",
                 "sourceId": "12",
                 "tags": "Relationship"
               },
               {
                 "description": "Makes requests to",
                 "destinationId": "4",
-                "id": "57",
-                "linkedRelationshipId": "56",
+                "id": "73",
+                "linkedRelationshipId": "72",
                 "sourceId": "12"
               },
               {
                 "description": "Authenticates With",
                 "destinationId": "19",
-                "id": "63",
+                "id": "79",
                 "sourceId": "12",
                 "tags": "Relationship"
               }
@@ -351,36 +350,173 @@
           {
             "components": [
               {
-                "description": "Handles biometric authentication for the Bitwarden desktop application.",
+                "description": "Service that handles encryption and decryption of sensitive data in the Bitwarden desktop application.",
                 "documentation": {},
                 "id": "22",
-                "name": "Biometric Authentication",
+                "name": "Encrypt Service",
                 "properties": {
-                  "structurizr.dsl.identifier": "clients.desktop.biometric"
+                  "structurizr.dsl.identifier": "clients.desktop.encrypt_service"
+                },
+                "tags": "Element,Component"
+              },
+              {
+                "description": "Service that handles biometric authentication for the Bitwarden desktop application.",
+                "documentation": {},
+                "id": "23",
+                "name": "Biometric Renderer Service",
+                "properties": {
+                  "structurizr.dsl.identifier": "clients.desktop.biometric_renderer_service"
                 },
                 "relationships": [
                   {
-                    "description": "Read/Write user keys",
-                    "destinationId": "23",
-                    "id": "31",
-                    "sourceId": "22",
-                    "tags": "Relationship",
-                    "technology": "Napi Rust FFI"
+                    "description": "Requests biometric authentication",
+                    "destinationId": "33",
+                    "id": "34",
+                    "sourceId": "23",
+                    "tags": "Relationship,MacOS,Windows,Linux"
+                  }
+                ],
+                "tags": "Element,Component",
+                "technology": "Electron"
+              },
+              {
+                "description": "Main service for biometric authentication in the Bitwarden desktop application.",
+                "documentation": {},
+                "id": "24",
+                "name": "Biometric Main Service",
+                "properties": {
+                  "structurizr.dsl.identifier": "clients.desktop.biometric_main_service"
+                },
+                "relationships": [
+                  {
+                    "description": "Handles macOS biometric unlock requests",
+                    "destinationId": "25",
+                    "id": "28",
+                    "sourceId": "24",
+                    "tags": "Relationship,MacOS"
+                  },
+                  {
+                    "description": "Handles Windows biometric unlock requests",
+                    "destinationId": "26",
+                    "id": "29",
+                    "sourceId": "24",
+                    "tags": "Relationship,Windows"
+                  },
+                  {
+                    "description": "Handles Linux biometric unlock requests",
+                    "destinationId": "27",
+                    "id": "30",
+                    "sourceId": "24",
+                    "tags": "Relationship,Linux"
+                  }
+                ],
+                "tags": "Element,Component",
+                "technology": "Electron"
+              },
+              {
+                "description": "Service that handles MacOS-specific biometric authentication.",
+                "documentation": {},
+                "id": "25",
+                "name": "MacOS Biometric Service",
+                "properties": {
+                  "structurizr.dsl.identifier": "clients.desktop.macos_biometric_service"
+                },
+                "relationships": [
+                  {
+                    "description": "Requests user verification for biometric authentication",
+                    "destinationId": "39",
+                    "id": "46",
+                    "sourceId": "25",
+                    "tags": "Relationship,MacOS",
+                    "technology": "Electron Integration with TouchId"
+                  },
+                  {
+                    "description": "Saves the user key directly",
+                    "destinationId": "31",
+                    "id": "51",
+                    "sourceId": "25",
+                    "tags": "Relationship,MacOS"
+                  }
+                ],
+                "tags": "Element,Component,MacOS",
+                "technology": "Electron"
+              },
+              {
+                "description": "Service that handles Windows-specific biometric authentication.",
+                "documentation": {},
+                "id": "26",
+                "name": "Windows Biometric Service",
+                "properties": {
+                  "structurizr.dsl.identifier": "clients.desktop.windows_biometric_service"
+                },
+                "relationships": [
+                  {
+                    "description": "Encrypts/Decrypts user key with client key half",
+                    "destinationId": "22",
+                    "id": "37",
+                    "sourceId": "26",
+                    "tags": "Relationship,Windows"
                   },
                   {
                     "description": "Requests user verification for biometric authentication",
-                    "destinationId": "26",
-                    "id": "35",
-                    "sourceId": "22",
-                    "tags": "Relationship"
+                    "destinationId": "39",
+                    "id": "50",
+                    "sourceId": "26",
+                    "tags": "Relationship,Windows",
+                    "technology": "Windows Hello"
+                  },
+                  {
+                    "description": "Saves the user key encrypted with the client key half",
+                    "destinationId": "31",
+                    "id": "53",
+                    "sourceId": "26",
+                    "tags": "Relationship,Windows",
+                    "technology": "Windows Hello"
                   }
                 ],
-                "tags": "Element,Component"
+                "tags": "Element,Component,Windows",
+                "technology": "Electron"
+              },
+              {
+                "description": "Service that handles Linux-specific biometric authentication.",
+                "documentation": {},
+                "id": "27",
+                "name": "Linux Biometric Service",
+                "properties": {
+                  "structurizr.dsl.identifier": "clients.desktop.linux_biometric_service"
+                },
+                "relationships": [
+                  {
+                    "description": "Encrypts/Decrypts user key with client key half",
+                    "destinationId": "22",
+                    "id": "36",
+                    "sourceId": "27",
+                    "tags": "Relationship,Linux"
+                  },
+                  {
+                    "description": "Requests user verification for biometric authentication",
+                    "destinationId": "39",
+                    "id": "49",
+                    "sourceId": "27",
+                    "tags": "Relationship,Linux",
+                    "technology": "Custom Polkit policy"
+                  },
+                  {
+                    "description": "Saves the user key encrypted with the client key half",
+                    "destinationId": "31",
+                    "id": "52",
+                    "sourceId": "27",
+                    "tags": "Relationship,Linux",
+                    "technology": "Custom Polkit policy"
+                  }
+                ],
+                "tags": "Element,Component,Linux",
+                "technology": "Electron"
               },
               {
                 "description": "CRUD operations on keys-values stored by the OS.",
                 "documentation": {},
-                "id": "23",
+                "id": "31",
                 "name": "OS Password Management Native Module",
                 "properties": {
                   "structurizr.dsl.identifier": "clients.desktop.password"
@@ -388,9 +524,9 @@
                 "relationships": [
                   {
                     "description": "CRUD operations on keys stored in the OS secure storage",
-                    "destinationId": "25",
-                    "id": "32",
-                    "sourceId": "23",
+                    "destinationId": "38",
+                    "id": "43",
+                    "sourceId": "31",
                     "tags": "Relationship"
                   }
                 ],
@@ -398,24 +534,46 @@
                 "technology": "rust module"
               },
               {
-                "description": "Inter-process communication between the desktop application and the browser extension.",
+                "description": "External IPC for communication with the desktop application.",
                 "documentation": {},
-                "id": "24",
+                "group": "ipc",
+                "id": "32",
                 "name": "IPC",
                 "properties": {
-                  "structurizr.dsl.identifier": "clients.desktop.ipc"
+                  "structurizr.dsl.identifier": "clients.desktop.ipc_external"
                 },
                 "relationships": [
                   {
                     "description": "Relays biometric authentication requests to",
-                    "destinationId": "22",
-                    "id": "30",
-                    "sourceId": "24",
+                    "destinationId": "23",
+                    "id": "42",
+                    "sourceId": "32",
                     "tags": "Relationship"
                   }
                 ],
                 "tags": "Element,Component",
                 "technology": "Sockets"
+              },
+              {
+                "description": "Communication between renderer and main electron processes.",
+                "documentation": {},
+                "group": "ipc",
+                "id": "33",
+                "name": "Electron IPC",
+                "properties": {
+                  "structurizr.dsl.identifier": "clients.desktop.electron_ipc"
+                },
+                "relationships": [
+                  {
+                    "description": "Relays biometric authentication requests to",
+                    "destinationId": "24",
+                    "id": "35",
+                    "sourceId": "33",
+                    "tags": "Relationship,MacOS,Windows,Linux"
+                  }
+                ],
+                "tags": "Element,Component",
+                "technology": "Electron"
               }
             ],
             "documentation": {},
@@ -427,36 +585,37 @@
             "relationships": [
               {
                 "description": "CRUD operations on keys stored in the OS secure storage",
-                "destinationId": "25",
-                "id": "33",
-                "linkedRelationshipId": "32",
+                "destinationId": "38",
+                "id": "44",
+                "linkedRelationshipId": "43",
                 "sourceId": "13"
               },
               {
                 "description": "Requests user verification for biometric authentication",
-                "destinationId": "26",
-                "id": "36",
-                "linkedRelationshipId": "35",
-                "sourceId": "13"
+                "destinationId": "39",
+                "id": "47",
+                "linkedRelationshipId": "46",
+                "sourceId": "13",
+                "technology": "Electron Integration with TouchId"
               },
               {
                 "description": "Makes requests to",
                 "destinationId": "5",
-                "id": "58",
+                "id": "74",
                 "sourceId": "13",
                 "tags": "Relationship"
               },
               {
                 "description": "Makes requests to",
                 "destinationId": "4",
-                "id": "59",
-                "linkedRelationshipId": "58",
+                "id": "75",
+                "linkedRelationshipId": "74",
                 "sourceId": "13"
               },
               {
                 "description": "Authenticates With",
                 "destinationId": "19",
-                "id": "64",
+                "id": "80",
                 "sourceId": "13",
                 "tags": "Relationship"
               }
@@ -475,50 +634,51 @@
         "relationships": [
           {
             "description": "CRUD operations on keys stored in the OS secure storage",
-            "destinationId": "25",
-            "id": "34",
-            "linkedRelationshipId": "32",
+            "destinationId": "38",
+            "id": "45",
+            "linkedRelationshipId": "43",
             "sourceId": "9"
           },
           {
             "description": "Requests user verification for biometric authentication",
-            "destinationId": "26",
-            "id": "37",
-            "linkedRelationshipId": "35",
-            "sourceId": "9"
+            "destinationId": "39",
+            "id": "48",
+            "linkedRelationshipId": "46",
+            "sourceId": "9",
+            "technology": "Electron Integration with TouchId"
           },
           {
             "description": "Requests icons for cleartext urls from",
-            "destinationId": "38",
-            "id": "39",
+            "destinationId": "54",
+            "id": "55",
             "sourceId": "9",
             "tags": "Relationship"
           },
           {
             "description": "Requests icons for cleartext urls from",
             "destinationId": "4",
-            "id": "40",
-            "linkedRelationshipId": "39",
+            "id": "56",
+            "linkedRelationshipId": "55",
             "sourceId": "9"
           },
           {
             "description": "Makes requests to",
             "destinationId": "5",
-            "id": "53",
-            "linkedRelationshipId": "51",
+            "id": "69",
+            "linkedRelationshipId": "67",
             "sourceId": "9"
           },
           {
             "description": "Authenticates with",
             "destinationId": "19",
-            "id": "61",
-            "linkedRelationshipId": "60",
+            "id": "77",
+            "linkedRelationshipId": "76",
             "sourceId": "9"
           },
           {
             "description": "Posts local usage events to",
             "destinationId": "7",
-            "id": "66",
+            "id": "82",
             "sourceId": "9",
             "tags": "Relationship"
           }
@@ -538,15 +698,15 @@
           {
             "description": "Validates JWTs with",
             "destinationId": "19",
-            "id": "69",
+            "id": "85",
             "sourceId": "14",
             "tags": "Relationship"
           },
           {
             "description": "Validates JWTs with",
             "destinationId": "4",
-            "id": "70",
-            "linkedRelationshipId": "69",
+            "id": "86",
+            "linkedRelationshipId": "85",
             "sourceId": "14"
           }
         ],
@@ -565,15 +725,15 @@
           {
             "description": "Sends push notification proxy requests to",
             "destinationId": "8",
-            "id": "67",
+            "id": "83",
             "sourceId": "15",
             "tags": "Relationship"
           },
           {
             "description": "Sends push notification proxy requests to",
             "destinationId": "4",
-            "id": "68",
-            "linkedRelationshipId": "67",
+            "id": "84",
+            "linkedRelationshipId": "83",
             "sourceId": "15"
           }
         ],
@@ -616,7 +776,7 @@
       {
         "description": "The operating system's secure storage for sensitive data, such as Windows Credential Locker or macOS Keychain.",
         "documentation": {},
-        "id": "25",
+        "id": "38",
         "location": "Unspecified",
         "name": "OS Secure Storage",
         "properties": {
@@ -627,7 +787,7 @@
       {
         "description": "The operating system's user verification system, such as Windows Hello or macOS Touch ID.",
         "documentation": {},
-        "id": "26",
+        "id": "39",
         "location": "Unspecified",
         "name": "OS User Verification",
         "properties": {
@@ -636,19 +796,8 @@
         "tags": "Element,Software System,External"
       },
       {
-        "description": "A Windows Hello signer that can be used to sign requests for the Bitwarden desktop application.",
         "documentation": {},
-        "id": "27",
-        "location": "Unspecified",
-        "name": "Windows Hello Signer",
-        "properties": {
-          "structurizr.dsl.identifier": "windows_hello_signer"
-        },
-        "tags": "Element,Software System,External,Windows-Biometric"
-      },
-      {
-        "documentation": {},
-        "id": "41",
+        "id": "57",
         "location": "Unspecified",
         "name": "DNS",
         "properties": {
@@ -658,85 +807,432 @@
       }
     ]
   },
-  "name": "Bitwarden Server System",
+  "name": "Bitwarden Clients System",
   "properties": {
-    "structurizr.dsl": "d29ya3NwYWNlICJCaXR3YXJkZW4gU2VydmVyIFN5c3RlbSIgewoKICAhaWRlbnRpZmllcnMgaGllcmFyY2hpY2FsCgogICFkb2NzICJ1c2FnZV9kb2NzIgogIG1vZGVsIHsKICAgIHByb3BlcnRpZXMgewogICAgICAic3RydWN0dXJpenIuZ3JvdXBTZXBhcmF0b3IiICIvIgogICAgfQoKICAgICMgSW5jbHVkZSBzaGFyZWQgbGV2ZWwgbW9kZWxzCiAgICAjIFBlcnNvbiB0eXBlcwogICAgdXNlciA9IHBlcnNvbiAiQml0d2FyZGVuIFVzZXIiICJBbiBlbmQgdXNlciBvZiB0aGUgQml0d2FyZGVuIFN5c3RlbSIKICAgIHN5c3RlbV9hZG1pbiA9IHBlcnNvbiAiU3lzdGVtIEFkbWluIiAiRWl0aGVyIGEgQml0d2FyZGVuIHNpdGUtcmVsaWFiaWxpdHkgZW5naW5lZXIgb3IgYWRtaW5pc3RyYXRvciBvZiBhIHNlbGYtaG9zdGVkIGluc3RhbmNlIiB7CiAgICAgIHRhZ3MgIkJpdHdhcmRlbiBFbXBsb3llZSIgIlNlbGYtSG9zdCBBZG1pbiIKICAgIH0KICAgIAogICAgCiAgICBid19jb250cm9sbGVkID0gZ3JvdXAgIkJpdHdhcmRlbiBDb250cm9sbGVkIiB7CiAgICAgICMgQml0d2FyZGVuIHN0YWZmCiAgICAgIGN1c3RvbWVyX3N1Y2Nlc3MgPSBwZXJzb24gIkN1c3RvbWVyIFN1Y2Nlc3MiICJBIGN1c3RvbWVyIHN1Y2Nlc3MgZW5naW5lZXIuIEluc3BlY3RzIGJpdHdhcmRlbiBzdGF0ZSB0aHJvdWdoIHRoZSBhZG1pbiBwb3J0YWwgYW5kIGludGVybmFsIHRvb2xzIiB7CiAgICAgICAgdGFncyAiQml0d2FyZGVuIEVtcGxveWVlIgogICAgICB9CiAgICAgIAogICAgICAjIFJvb3Qgc3lzdGVtcwogICAgICBzZXJ2ZXIgPSBzb2Z0d2FyZVN5c3RlbSAiQml0d2FyZGVuIFNlcnZlciIgewogICAgICAgIGFwaSA9IGNvbnRhaW5lciAiQVBJIiB7CiAgICAgICAgICBiaWxsaW5nID0gY29tcG9uZW50ICJCaWxsaW5nIiB7CiAgICAgICAgICAgIHRhZ3MgIkJpbGxpbmciCiAgICAgICAgICB9CiAgICAgICAgICB0YWdzICJBUEkiCiAgICAgICAgfQogICAgICAgIGV2ZW50cyA9IGNvbnRhaW5lciAiRXZlbnRzIiB7CiAgICAgICAgICB0YWdzICJFdmVudHMiCiAgICAgICAgfQogICAgICAgIG5vdGlmaWNhdGlvbnMgPSBjb250YWluZXIgIk5vdGlmaWNhdGlvbnMiCiAgICAgIH0KICAgICAgY2xpZW50cyA9IHNvZnR3YXJlU3lzdGVtICJDbGllbnRzIiB7CiAgICAgICAgd2ViID0gY29udGFpbmVyICJXZWIgQXBwbGljYXRpb24iIHsKICAgICAgICAgIHRhZ3MgIldlYiIKICAgICAgICB9CiAgICAgICAgYnJvd3Nlcl9leHRlbnNpb24gPSBjb250YWluZXIgIkJyb3dzZXIgRXh0ZW5zaW9uIiB7CiAgICAgICAgICB0YWdzICJCcm93c2VyIgogICAgICAgIH0KICAgICAgICBjbGkgPSBjb250YWluZXIgIkNMSSIgewogICAgICAgICAgdGFncyAiQ0xJIgogICAgICAgIH0KICAgICAgICBkZXNrdG9wID0gY29udGFpbmVyICJEZXNrdG9wIEFwcGxpY2F0aW9uIiB7CiAgICAgICAgICB0YWdzICJEZXNrdG9wIgogICAgICAgIH0KICAgICAgfQogICAgICBrZXlfY29ubmVjdG9yID0gc29mdHdhcmVTeXN0ZW0gIktleSBDb25uZWN0b3IiIAogICAgfQogICAgCiAgICBzZWxmX2hvc3RlZF9pbnN0YW5jZXMgPSBzb2Z0d2FyZVN5c3RlbSAiU2VsZi1Ib3N0ZWQgSW5zdGFuY2VzIiB7CiAgICAgIHRhZ3MgIlNlbGYtSG9zdGVkIgogICAgICB0YWdzICJFeHRlcm5hbCIKICAgICAgZGVzY3JpcHRpb24gIlNlbGYtaG9zdGVkIGluc3RhbmNlcyBvZiBCaXR3YXJkZW4gc2VydmVycyIKICAgIH0KICAgIAogICAgZXh0ZXJuYWxfd2Vic2l0ZXMgPSBzb2Z0d2FyZVN5c3RlbSAiRXh0ZXJuYWwgV2Vic2l0ZXMiIHsKICAgICAgdGFncyAiRXh0ZXJuYWwiCiAgICAgIHRhZ3MgIkljb25zIgogICAgfQoKICAgICMgSW5jbHVkZSB0ZWFtIGxldmVsIG1vZGVscwogICAgYWRtaW4gPSBwZXJzb24gIk9yZ2FuaXphdGlvbiBBZG1pbiIgIkFuIGFkbWluaXN0cmF0b3Igb2YgYW4gb3JnYW5pemF0aW9uIiB7CiAgICAgIHRhZ3MgIkFkbWluIgogICAgfQogICAgcHJvdmlkZXIgPSBwZXJzb24gIk1TUCIgIkFuZCBlbXBsb3llZSBvZiBhIG1hbmFnZWQgc2VydmljZSBwcm92aWRlciIgewogICAgICB0YWdzICJNU1AiCiAgICB9CiAgICAKICAgICFlbGVtZW50IHNlcnZlciB7CiAgICAgIGlkZW50aXR5ID0gY29udGFpbmVyICJJZGVudGl0eSIgewogICAgICAgIHRhZ3MgIkF1dGgiCiAgICAgIH0KICAgIH0KICAgICMgRXh0ZXJuYWwgdmVuZG9ycwogICAgZ3JvdXAgIlBheW1lbnQgU3lzdGVtcyIgewogICAgICBzdHJpcGUgPSBzb2Z0d2FyZVN5c3RlbSAiU3RyaXBlIiB7CiAgICAgICAgdGFncyAiRXh0ZXJuYWwiCiAgICAgICAgdGFncyAiQmlsbGluZyIKICAgICAgICBkZXNjcmlwdGlvbiAiSGFuZGxlcyBjcmVkaXQgY2FyZHMgYW5kIHN1YnNjcmlwdGlvbnMuIgogICAgICB9CiAgICAgIGJyYWludHJlZSA9IHNvZnR3YXJlU3lzdGVtICJCcmFpbnRyZWUiIHsKICAgICAgICB0YWdzICJFeHRlcm5hbCIKICAgICAgICB0YWdzICJCaWxsaW5nIgogICAgICAgIGRlc2NyaXB0aW9uICJIYW5kbGVzIFBheVBhbCBhbmQgY3J5cHRvY3VycmVuY3kuIgogICAgICB9CiAgICB9CiAgICAKICAgICFlbGVtZW50IGNsaWVudHMuZGVza3RvcCB7CiAgICAgIGJpb21ldHJpYyA9IGNvbXBvbmVudCAiQmlvbWV0cmljIEF1dGhlbnRpY2F0aW9uIiB7CiAgICAgICAgZGVzY3JpcHRpb24gIkhhbmRsZXMgYmlvbWV0cmljIGF1dGhlbnRpY2F0aW9uIGZvciB0aGUgQml0d2FyZGVuIGRlc2t0b3AgYXBwbGljYXRpb24uIgogICAgICB9CiAgICAKICAgICAgcGFzc3dvcmQgPSBjb21wb25lbnQgIk9TIFBhc3N3b3JkIE1hbmFnZW1lbnQgTmF0aXZlIE1vZHVsZSIgewogICAgICAgIGRlc2NyaXB0aW9uICJDUlVEIG9wZXJhdGlvbnMgb24ga2V5cy12YWx1ZXMgc3RvcmVkIGJ5IHRoZSBPUy4iCiAgICAgICAgdGVjaG5vbG9neSAicnVzdCBtb2R1bGUiCiAgICAgIH0KICAgIAogICAgICBpcGMgPSBjb21wb25lbnQgIklQQyIgewogICAgICAgIGRlc2NyaXB0aW9uICJJbnRlci1wcm9jZXNzIGNvbW11bmljYXRpb24gYmV0d2VlbiB0aGUgZGVza3RvcCBhcHBsaWNhdGlvbiBhbmQgdGhlIGJyb3dzZXIgZXh0ZW5zaW9uLiIKICAgICAgICB0ZWNobm9sb2d5ICJTb2NrZXRzIgogICAgICB9CiAgICB9CiAgICAKICAgIG9zX3NlY3VyZV9zdG9yYWdlID0gc29mdHdhcmVTeXN0ZW0gIk9TIFNlY3VyZSBTdG9yYWdlIiB7CiAgICAgIHRhZ3MgIkV4dGVybmFsIgogICAgICBkZXNjcmlwdGlvbiAiVGhlIG9wZXJhdGluZyBzeXN0ZW0ncyBzZWN1cmUgc3RvcmFnZSBmb3Igc2Vuc2l0aXZlIGRhdGEsIHN1Y2ggYXMgV2luZG93cyBDcmVkZW50aWFsIExvY2tlciBvciBtYWNPUyBLZXljaGFpbi4iCiAgICB9CiAgICAKICAgIG9zX3VzZXJfdmVyaWZpY2F0aW9uID0gc29mdHdhcmVTeXN0ZW0gIk9TIFVzZXIgVmVyaWZpY2F0aW9uIiB7CiAgICAgIHRhZ3MgIkV4dGVybmFsIgogICAgICBkZXNjcmlwdGlvbiAiVGhlIG9wZXJhdGluZyBzeXN0ZW0ncyB1c2VyIHZlcmlmaWNhdGlvbiBzeXN0ZW0sIHN1Y2ggYXMgV2luZG93cyBIZWxsbyBvciBtYWNPUyBUb3VjaCBJRC4iCiAgICB9CiAgICAKICAgIHdpbmRvd3NfaGVsbG9fc2lnbmVyID0gc29mdHdhcmVTeXN0ZW0gIldpbmRvd3MgSGVsbG8gU2lnbmVyIiB7CiAgICAgIHRhZ3MgIkV4dGVybmFsIiAiV2luZG93cy1CaW9tZXRyaWMiCiAgICAgIGRlc2NyaXB0aW9uICJBIFdpbmRvd3MgSGVsbG8gc2lnbmVyIHRoYXQgY2FuIGJlIHVzZWQgdG8gc2lnbiByZXF1ZXN0cyBmb3IgdGhlIEJpdHdhcmRlbiBkZXNrdG9wIGFwcGxpY2F0aW9uLiIKICAgIH0KICAgIAogICAgY2xpZW50cy5icm93c2VyX2V4dGVuc2lvbiAtPiBjbGllbnRzLmRlc2t0b3AuaXBjICJDb25uZWN0cyB0byBJUEMgdG8gcmVxdWVzdCBiaW9tZXRyaWMgYXV0aGVudGljYXRpb24iCiAgICBjbGllbnRzLmRlc2t0b3AuaXBjIC0+IGNsaWVudHMuZGVza3RvcC5iaW9tZXRyaWMgIlJlbGF5cyBiaW9tZXRyaWMgYXV0aGVudGljYXRpb24gcmVxdWVzdHMgdG8iCiAgICAKICAgIGNsaWVudHMuZGVza3RvcC5iaW9tZXRyaWMgLT4gY2xpZW50cy5kZXNrdG9wLnBhc3N3b3JkICJSZWFkL1dyaXRlIHVzZXIga2V5cyIgIk5hcGkgUnVzdCBGRkkiCiAgICBjbGllbnRzLmRlc2t0b3AucGFzc3dvcmQgLT4gb3Nfc2VjdXJlX3N0b3JhZ2UgIkNSVUQgb3BlcmF0aW9ucyBvbiBrZXlzIHN0b3JlZCBpbiB0aGUgT1Mgc2VjdXJlIHN0b3JhZ2UiCiAgICBjbGllbnRzLmRlc2t0b3AuYmlvbWV0cmljIC0+IG9zX3VzZXJfdmVyaWZpY2F0aW9uICJSZXF1ZXN0cyB1c2VyIHZlcmlmaWNhdGlvbiBmb3IgYmlvbWV0cmljIGF1dGhlbnRpY2F0aW9uIgogICAgIWVsZW1lbnQgc2VydmVyIHsKICAgICAgaWNvbnMgPSBjb250YWluZXIgIkljb25zIiB7CiAgICAgICAgZGVzY3JpcHRpb24gIlRoZSBJY29ucyBzZXJ2aWNlIHByb3ZpZGVzIGZhdmljb25zIGZvciB3ZWJzaXRlcy4iCiAgICAgICAgY2xpZW50cyAtPiBzZXJ2ZXIuaWNvbnMgIlJlcXVlc3RzIGljb25zIGZvciBjbGVhcnRleHQgdXJscyBmcm9tIiAKICAgICAgfQogICAgfQogICAgCiAgICBkbnMgPSBzb2Z0d2FyZVN5c3RlbSAiRE5TIiB7CiAgICAgIHRhZ3MgIkV4dGVybmFsIgogICAgICB0YWdzICJJY29ucyIKICAgIH0KCiAgICAjIEluY2x1ZGUgc2hhcmVkIGxldmVsIHJlbGF0aW9uc2hpcHMKICAgICMgVXNlciBSZWxhdGlvbnNoaXBzCiAgICB1c2VyIC0+IGNsaWVudHMud2ViICJVc2VzIgogICAgdXNlciAtPiBjbGllbnRzLmJyb3dzZXJfZXh0ZW5zaW9uICJVc2VzIgogICAgdXNlciAtPiBjbGllbnRzLmNsaSAiVXNlcyIKICAgIHVzZXIgLT4gY2xpZW50cy5kZXNrdG9wICJVc2VzIgogICAgYWRtaW4gLT4gY2xpZW50cy53ZWIgIkFkbWluaXN0ZXJzIE9yZ2FuaXphdGlvbnMiCiAgICBwcm92aWRlciAtPiBjbGllbnRzLndlYiAiQWRtaW5pc3RlcnMgUHJvdmlkZXJzIGFuZCBPcmdhbml6YXRpb25zIgogICAgCiAgICAjIEhpZ2gtbGV2ZWwgQ2xpZW50IFJlbGF0aW9uc2hpcHMKICAgIGNsaWVudHMud2ViIC0+IHNlcnZlci5hcGkgIk1ha2VzIHJlcXVlc3RzIHRvIgogICAgY2xpZW50cy5icm93c2VyX2V4dGVuc2lvbiAtPiBzZXJ2ZXIuYXBpICJNYWtlcyByZXF1ZXN0cyB0byIKICAgIGNsaWVudHMuY2xpIC0+IHNlcnZlci5hcGkgIk1ha2VzIHJlcXVlc3RzIHRvIgogICAgY2xpZW50cy5kZXNrdG9wIC0+IHNlcnZlci5hcGkgIk1ha2VzIHJlcXVlc3RzIHRvIgogICAgY2xpZW50cy53ZWIgLT4gc2VydmVyLmlkZW50aXR5ICJBdXRoZW50aWNhdGVzIHdpdGgiCiAgICBjbGllbnRzLmJyb3dzZXJfZXh0ZW5zaW9uIC0+IHNlcnZlci5pZGVudGl0eSAiQXV0aGVudGljYXRlcyBXaXRoIgogICAgY2xpZW50cy5jbGkgLT4gc2VydmVyLmlkZW50aXR5ICJBdXRoZW50aWNhdGVzIFdpdGgiCiAgICBjbGllbnRzLmRlc2t0b3AgLT4gc2VydmVyLmlkZW50aXR5ICJBdXRoZW50aWNhdGVzIFdpdGgiCiAgICBzZXJ2ZXIuYXBpIC0+IHNlcnZlci5pZGVudGl0eSAiVmFsaWRhdGVzIEpXVHMgd2l0aCIgewogICAgICB1cmwgImh0dHBzOi8vYml0d2FyZGVuLmNvbSIKICAgIH0KICAgIGNsaWVudHMgLT4gc2VydmVyLmV2ZW50cyAiUG9zdHMgbG9jYWwgdXNhZ2UgZXZlbnRzIHRvIgogICAgCiAgICAjIHNlbGYgaG9zdCBwaG9uZSBob21lCiAgICBzZWxmX2hvc3RlZF9pbnN0YW5jZXMgLT4gc2VydmVyLm5vdGlmaWNhdGlvbnMgIlNlbmRzIHB1c2ggbm90aWZpY2F0aW9uIHByb3h5IHJlcXVlc3RzIHRvIgoKCiAgICBrZXlfY29ubmVjdG9yIC0+IHNlcnZlci5pZGVudGl0eSAiVmFsaWRhdGVzIEpXVHMgd2l0aCIKICB9CgogIHZpZXdzIHsKICAgIHN0eWxlcyB7CiAgICAgIGVsZW1lbnQgIlBlcnNvbiIgewogICAgICAgIGJhY2tncm91bmQgIzMxMDdkMwogICAgICAgIHNoYXBlIHBlcnNvbgogICAgICB9CiAgICAgIGVsZW1lbnQgIk1TUCIgewogICAgICAgIGJhY2tncm91bmQgIzMxMDdkMwogICAgICAgIHNoYXBlIHBlcnNvbgogICAgICB9CiAgICB9CiAgICBjb21wb25lbnQgY2xpZW50cy5kZXNrdG9wICJkZXNrdG9wX2Jpb21ldHJpY3NfbWFjb3MiIHsKICAgICAgaW5jbHVkZSAqCiAgICAgIGluY2x1ZGUgb3NfdXNlcl92ZXJpZmljYXRpb24KICAgICAgYXV0b0xheW91dCB0YgogICAgfQogICAgLy8gVE9ETzogQWRkIFdpbmRvd3MgYW5kIExpbnV4LCBleGNsdWRpbmcgcmVsZXZhbnQgVGFncwoKICAgIHN5c3RlbUxhbmRzY2FwZSAiQml0d2FyZGVuIiB7CiAgICAgIGluY2x1ZGUgKgogICAgfQoKICAgIGNvbnRhaW5lciBjbGllbnRzICJiaXR3YXJkZW5fanNfY2xpZW50cyIgewogICAgICBpbmNsdWRlICoKICAgIH0KCiAgICAvLyBUaGlzIGlzIGxhc3QgdG8gb3ZlcnJpZGUgdGVhbSBzdHlsZXMgd2l0aCBjb21tb24gc3R5bGVzCiAgICBzdHlsZXMgewogICAgICB0aGVtZSBkZWZhdWx0CiAgICAgIGVsZW1lbnQgIkVsZW1lbnQiIHsKICAgICAgICBjb2xvciAjM2MzYjNiCiAgICAgIH0KICAgICAgZWxlbWVudCAiUGVyc29uIiB7CiAgICAgICAgYmFja2dyb3VuZCAjZDM0NDA3CiAgICAgICAgc2hhcGUgcGVyc29uCiAgICAgIH0KICAgICAgZWxlbWVudCAiQ29udGFpbmVyIiB7CiAgICAgICAgYmFja2dyb3VuZCAjZjg4NzI4CiAgICAgIH0KICAgICAgZWxlbWVudCAiTVNQIiB7CiAgICAgICAgYmFja2dyb3VuZCAjMzEwN2QzCiAgICAgIH0KICAgICAgZWxlbWVudCAiUXVldWUiIHsKICAgICAgICBzaGFwZSBwaXBlCiAgICAgIH0KICAgICAgZWxlbWVudCAiTW9iaWxlIiB7CiAgICAgICAgc2hhcGUgbW9iaWxlRGV2aWNlUG9ydHJhaXQKICAgICAgfQogICAgICBlbGVtZW50ICJXZWIiIHsKICAgICAgICBzaGFwZSB3ZWJCcm93c2VyCiAgICAgIH0KICAgICAgZWxlbWVudCAiRGF0YWJhc2UiIHsKICAgICAgICBzaGFwZSBjeWxpbmRlcgogICAgICB9CiAgICAgIGVsZW1lbnQgIkV4dGVybmFsIiB7CiAgICAgICAgY29sb3IgIzAwMDAwMAogICAgICAgIGJhY2tncm91bmQgI2I1YjViNQogICAgICB9CiAgICB9CiAgfQp9"
+    "structurizr.dsl": "d29ya3NwYWNlICJCaXR3YXJkZW4gQ2xpZW50cyBTeXN0ZW0iIHsKCiAgIWlkZW50aWZpZXJzIGhpZXJhcmNoaWNhbAoKICAhZG9jcyAidXNhZ2VfZG9jcyIKICBtb2RlbCB7CiAgICBwcm9wZXJ0aWVzIHsKICAgICAgInN0cnVjdHVyaXpyLmdyb3VwU2VwYXJhdG9yIiAiLyIKICAgIH0KCiAgICAjIEluY2x1ZGUgc2hhcmVkIGxldmVsIG1vZGVscwogICAgIyBQZXJzb24gdHlwZXMKICAgIHVzZXIgPSBwZXJzb24gIkJpdHdhcmRlbiBVc2VyIiAiQW4gZW5kIHVzZXIgb2YgdGhlIEJpdHdhcmRlbiBTeXN0ZW0iCiAgICBzeXN0ZW1fYWRtaW4gPSBwZXJzb24gIlN5c3RlbSBBZG1pbiIgIkVpdGhlciBhIEJpdHdhcmRlbiBzaXRlLXJlbGlhYmlsaXR5IGVuZ2luZWVyIG9yIGFkbWluaXN0cmF0b3Igb2YgYSBzZWxmLWhvc3RlZCBpbnN0YW5jZSIgewogICAgICB0YWdzICJCaXR3YXJkZW4gRW1wbG95ZWUiICJTZWxmLUhvc3QgQWRtaW4iCiAgICB9CiAgICAKICAgIAogICAgYndfY29udHJvbGxlZCA9IGdyb3VwICJCaXR3YXJkZW4gQ29udHJvbGxlZCIgewogICAgICAjIEJpdHdhcmRlbiBzdGFmZgogICAgICBjdXN0b21lcl9zdWNjZXNzID0gcGVyc29uICJDdXN0b21lciBTdWNjZXNzIiAiQSBjdXN0b21lciBzdWNjZXNzIGVuZ2luZWVyLiBJbnNwZWN0cyBiaXR3YXJkZW4gc3RhdGUgdGhyb3VnaCB0aGUgYWRtaW4gcG9ydGFsIGFuZCBpbnRlcm5hbCB0b29scyIgewogICAgICAgIHRhZ3MgIkJpdHdhcmRlbiBFbXBsb3llZSIKICAgICAgfQogICAgICAKICAgICAgIyBSb290IHN5c3RlbXMKICAgICAgc2VydmVyID0gc29mdHdhcmVTeXN0ZW0gIkJpdHdhcmRlbiBTZXJ2ZXIiIHsKICAgICAgICBhcGkgPSBjb250YWluZXIgIkFQSSIgewogICAgICAgICAgYmlsbGluZyA9IGNvbXBvbmVudCAiQmlsbGluZyIgewogICAgICAgICAgICB0YWdzICJCaWxsaW5nIgogICAgICAgICAgfQogICAgICAgICAgdGFncyAiQVBJIgogICAgICAgIH0KICAgICAgICBldmVudHMgPSBjb250YWluZXIgIkV2ZW50cyIgewogICAgICAgICAgdGFncyAiRXZlbnRzIgogICAgICAgIH0KICAgICAgICBub3RpZmljYXRpb25zID0gY29udGFpbmVyICJOb3RpZmljYXRpb25zIgogICAgICB9CiAgICAgIGNsaWVudHMgPSBzb2Z0d2FyZVN5c3RlbSAiQ2xpZW50cyIgewogICAgICAgIHdlYiA9IGNvbnRhaW5lciAiV2ViIEFwcGxpY2F0aW9uIiB7CiAgICAgICAgICB0YWdzICJXZWIiCiAgICAgICAgfQogICAgICAgIGJyb3dzZXJfZXh0ZW5zaW9uID0gY29udGFpbmVyICJCcm93c2VyIEV4dGVuc2lvbiIgewogICAgICAgICAgdGFncyAiQnJvd3NlciIKICAgICAgICB9CiAgICAgICAgY2xpID0gY29udGFpbmVyICJDTEkiIHsKICAgICAgICAgIHRhZ3MgIkNMSSIKICAgICAgICB9CiAgICAgICAgZGVza3RvcCA9IGNvbnRhaW5lciAiRGVza3RvcCBBcHBsaWNhdGlvbiIgewogICAgICAgICAgdGFncyAiRGVza3RvcCIKICAgICAgICB9CiAgICAgIH0KICAgICAga2V5X2Nvbm5lY3RvciA9IHNvZnR3YXJlU3lzdGVtICJLZXkgQ29ubmVjdG9yIiAKICAgIH0KICAgIAogICAgc2VsZl9ob3N0ZWRfaW5zdGFuY2VzID0gc29mdHdhcmVTeXN0ZW0gIlNlbGYtSG9zdGVkIEluc3RhbmNlcyIgewogICAgICB0YWdzICJTZWxmLUhvc3RlZCIKICAgICAgdGFncyAiRXh0ZXJuYWwiCiAgICAgIGRlc2NyaXB0aW9uICJTZWxmLWhvc3RlZCBpbnN0YW5jZXMgb2YgQml0d2FyZGVuIHNlcnZlcnMiCiAgICB9CiAgICAKICAgIGV4dGVybmFsX3dlYnNpdGVzID0gc29mdHdhcmVTeXN0ZW0gIkV4dGVybmFsIFdlYnNpdGVzIiB7CiAgICAgIHRhZ3MgIkV4dGVybmFsIgogICAgICB0YWdzICJJY29ucyIKICAgIH0KCiAgICAjIEluY2x1ZGUgdGVhbSBsZXZlbCBtb2RlbHMKICAgIGFkbWluID0gcGVyc29uICJPcmdhbml6YXRpb24gQWRtaW4iICJBbiBhZG1pbmlzdHJhdG9yIG9mIGFuIG9yZ2FuaXphdGlvbiIgewogICAgICB0YWdzICJBZG1pbiIKICAgIH0KICAgIHByb3ZpZGVyID0gcGVyc29uICJNU1AiICJBbmQgZW1wbG95ZWUgb2YgYSBtYW5hZ2VkIHNlcnZpY2UgcHJvdmlkZXIiIHsKICAgICAgdGFncyAiTVNQIgogICAgfQogICAgCiAgICAhZWxlbWVudCBzZXJ2ZXIgewogICAgICBpZGVudGl0eSA9IGNvbnRhaW5lciAiSWRlbnRpdHkiIHsKICAgICAgICB0YWdzICJBdXRoIgogICAgICB9CiAgICB9CiAgICAjIEV4dGVybmFsIHZlbmRvcnMKICAgIGdyb3VwICJQYXltZW50IFN5c3RlbXMiIHsKICAgICAgc3RyaXBlID0gc29mdHdhcmVTeXN0ZW0gIlN0cmlwZSIgewogICAgICAgIHRhZ3MgIkV4dGVybmFsIgogICAgICAgIHRhZ3MgIkJpbGxpbmciCiAgICAgICAgZGVzY3JpcHRpb24gIkhhbmRsZXMgY3JlZGl0IGNhcmRzIGFuZCBzdWJzY3JpcHRpb25zLiIKICAgICAgfQogICAgICBicmFpbnRyZWUgPSBzb2Z0d2FyZVN5c3RlbSAiQnJhaW50cmVlIiB7CiAgICAgICAgdGFncyAiRXh0ZXJuYWwiCiAgICAgICAgdGFncyAiQmlsbGluZyIKICAgICAgICBkZXNjcmlwdGlvbiAiSGFuZGxlcyBQYXlQYWwgYW5kIGNyeXB0b2N1cnJlbmN5LiIKICAgICAgfQogICAgfQogICAgCiAgICAhZWxlbWVudCBjbGllbnRzLmRlc2t0b3AgewogICAgICBlbmNyeXB0X3NlcnZpY2UgPSBjb21wb25lbnQgIkVuY3J5cHQgU2VydmljZSIgewogICAgICAgIGRlc2NyaXB0aW9uICJTZXJ2aWNlIHRoYXQgaGFuZGxlcyBlbmNyeXB0aW9uIGFuZCBkZWNyeXB0aW9uIG9mIHNlbnNpdGl2ZSBkYXRhIGluIHRoZSBCaXR3YXJkZW4gZGVza3RvcCBhcHBsaWNhdGlvbi4iCiAgICAgIH0KICAgIAogICAgICBiaW9tZXRyaWNfcmVuZGVyZXJfc2VydmljZSA9IGNvbXBvbmVudCAiQmlvbWV0cmljIFJlbmRlcmVyIFNlcnZpY2UiIHsKICAgICAgICBkZXNjcmlwdGlvbiAiU2VydmljZSB0aGF0IGhhbmRsZXMgYmlvbWV0cmljIGF1dGhlbnRpY2F0aW9uIGZvciB0aGUgQml0d2FyZGVuIGRlc2t0b3AgYXBwbGljYXRpb24uIgogICAgICAgIHRlY2hub2xvZ3kgIkVsZWN0cm9uIgogICAgICB9CiAgICAKICAgICAgYmlvbWV0cmljX21haW5fc2VydmljZSA9IGNvbXBvbmVudCAiQmlvbWV0cmljIE1haW4gU2VydmljZSIgewogICAgICAgIGRlc2NyaXB0aW9uICJNYWluIHNlcnZpY2UgZm9yIGJpb21ldHJpYyBhdXRoZW50aWNhdGlvbiBpbiB0aGUgQml0d2FyZGVuIGRlc2t0b3AgYXBwbGljYXRpb24uIgogICAgICAgIHRlY2hub2xvZ3kgIkVsZWN0cm9uIgogICAgICB9CiAgICAKICAgICAgbWFjb3NfYmlvbWV0cmljX3NlcnZpY2UgPSBjb21wb25lbnQgIk1hY09TIEJpb21ldHJpYyBTZXJ2aWNlIiB7CiAgICAgICAgZGVzY3JpcHRpb24gIlNlcnZpY2UgdGhhdCBoYW5kbGVzIE1hY09TLXNwZWNpZmljIGJpb21ldHJpYyBhdXRoZW50aWNhdGlvbi4iCiAgICAgICAgdGFncyAiTWFjT1MiCiAgICAgICAgdGVjaG5vbG9neSAiRWxlY3Ryb24iCiAgICAgIH0KICAgIAogICAgICB3aW5kb3dzX2Jpb21ldHJpY19zZXJ2aWNlID0gY29tcG9uZW50ICJXaW5kb3dzIEJpb21ldHJpYyBTZXJ2aWNlIiB7CiAgICAgICAgZGVzY3JpcHRpb24gIlNlcnZpY2UgdGhhdCBoYW5kbGVzIFdpbmRvd3Mtc3BlY2lmaWMgYmlvbWV0cmljIGF1dGhlbnRpY2F0aW9uLiIKICAgICAgICB0YWdzICJXaW5kb3dzIgogICAgICAgIHRlY2hub2xvZ3kgIkVsZWN0cm9uIgogICAgICB9CiAgICAKICAgICAgbGludXhfYmlvbWV0cmljX3NlcnZpY2UgPSBjb21wb25lbnQgIkxpbnV4IEJpb21ldHJpYyBTZXJ2aWNlIiB7CiAgICAgICAgZGVzY3JpcHRpb24gIlNlcnZpY2UgdGhhdCBoYW5kbGVzIExpbnV4LXNwZWNpZmljIGJpb21ldHJpYyBhdXRoZW50aWNhdGlvbi4iCiAgICAgICAgdGFncyAiTGludXgiCiAgICAgICAgdGVjaG5vbG9neSAiRWxlY3Ryb24iCiAgICAgIH0KICAgIAogICAgCiAgICAgIGJpb21ldHJpY19tYWluX3NlcnZpY2UgLT4gbWFjb3NfYmlvbWV0cmljX3NlcnZpY2UgIkhhbmRsZXMgbWFjT1MgYmlvbWV0cmljIHVubG9jayByZXF1ZXN0cyIgewogICAgICAgIHRhZ3MgIk1hY09TIgogICAgICB9CiAgICAKICAgICAgYmlvbWV0cmljX21haW5fc2VydmljZSAtPiB3aW5kb3dzX2Jpb21ldHJpY19zZXJ2aWNlICJIYW5kbGVzIFdpbmRvd3MgYmlvbWV0cmljIHVubG9jayByZXF1ZXN0cyIgewogICAgICAgIHRhZ3MgIldpbmRvd3MiCiAgICAgIH0KICAgIAogICAgICBiaW9tZXRyaWNfbWFpbl9zZXJ2aWNlIC0+IGxpbnV4X2Jpb21ldHJpY19zZXJ2aWNlICJIYW5kbGVzIExpbnV4IGJpb21ldHJpYyB1bmxvY2sgcmVxdWVzdHMiIHsKICAgICAgICB0YWdzICJMaW51eCIKICAgICAgfQogICAgICAKICAgICAgcGFzc3dvcmQgPSBjb21wb25lbnQgIk9TIFBhc3N3b3JkIE1hbmFnZW1lbnQgTmF0aXZlIE1vZHVsZSIgewogICAgICAgIGRlc2NyaXB0aW9uICJDUlVEIG9wZXJhdGlvbnMgb24ga2V5cy12YWx1ZXMgc3RvcmVkIGJ5IHRoZSBPUy4iCiAgICAgICAgdGVjaG5vbG9neSAicnVzdCBtb2R1bGUiCiAgICAgIH0KICAgIAogICAgICBncm91cCBpcGMgewogICAgICAgIGlwY19leHRlcm5hbCA9IGNvbXBvbmVudCAiSVBDIiB7CiAgICAgICAgICBkZXNjcmlwdGlvbiAiRXh0ZXJuYWwgSVBDIGZvciBjb21tdW5pY2F0aW9uIHdpdGggdGhlIGRlc2t0b3AgYXBwbGljYXRpb24uIgogICAgICAgICAgdGVjaG5vbG9neSAiU29ja2V0cyIKICAgICAgICB9CiAgICAKICAgICAgICBlbGVjdHJvbl9pcGMgPSBjb21wb25lbnQgIkVsZWN0cm9uIElQQyIgewogICAgICAgICAgZGVzY3JpcHRpb24gIkNvbW11bmljYXRpb24gYmV0d2VlbiByZW5kZXJlciBhbmQgbWFpbiBlbGVjdHJvbiBwcm9jZXNzZXMuIgogICAgICAgICAgdGVjaG5vbG9neSAiRWxlY3Ryb24iCiAgICAgICAgfQogICAgICB9CiAgICAKICAgICAgYmlvbWV0cmljX3JlbmRlcmVyX3NlcnZpY2UgLT4gZWxlY3Ryb25faXBjICJSZXF1ZXN0cyBiaW9tZXRyaWMgYXV0aGVudGljYXRpb24iIHsKICAgICAgICB0YWdzICJNYWNPUyIsICJXaW5kb3dzIiwgIkxpbnV4IgogICAgICB9CiAgICAKICAgICAgZWxlY3Ryb25faXBjIC0+IGJpb21ldHJpY19tYWluX3NlcnZpY2UgIlJlbGF5cyBiaW9tZXRyaWMgYXV0aGVudGljYXRpb24gcmVxdWVzdHMgdG8iIHsKICAgICAgICB0YWdzICJNYWNPUyIsICJXaW5kb3dzIiwgIkxpbnV4IgogICAgICB9CiAgICAKICAgICAgbGludXhfYmlvbWV0cmljX3NlcnZpY2UgLT4gZW5jcnlwdF9zZXJ2aWNlICJFbmNyeXB0cy9EZWNyeXB0cyB1c2VyIGtleSB3aXRoIGNsaWVudCBrZXkgaGFsZiIgewogICAgICAgIHRhZ3MgIkxpbnV4IgogICAgICB9CiAgICAKICAgICAgd2luZG93c19iaW9tZXRyaWNfc2VydmljZSAtPiBlbmNyeXB0X3NlcnZpY2UgIkVuY3J5cHRzL0RlY3J5cHRzIHVzZXIga2V5IHdpdGggY2xpZW50IGtleSBoYWxmIiB7CiAgICAgICAgdGFncyAiV2luZG93cyIKICAgICAgfQogICAgfQogICAgCiAgICBvc19zZWN1cmVfc3RvcmFnZSA9IHNvZnR3YXJlU3lzdGVtICJPUyBTZWN1cmUgU3RvcmFnZSIgewogICAgICB0YWdzICJFeHRlcm5hbCIKICAgICAgZGVzY3JpcHRpb24gIlRoZSBvcGVyYXRpbmcgc3lzdGVtJ3Mgc2VjdXJlIHN0b3JhZ2UgZm9yIHNlbnNpdGl2ZSBkYXRhLCBzdWNoIGFzIFdpbmRvd3MgQ3JlZGVudGlhbCBMb2NrZXIgb3IgbWFjT1MgS2V5Y2hhaW4uIgogICAgfQogICAgCiAgICAvLyB3aW5kb3dzX2hlbGxvID0gc29mdHdhcmVTeXN0ZW0gIldpbmRvd3MgSGVsbG8iIHsKICAgIC8vICAgdGFncyAiRXh0ZXJuYWwiICJ3aW5kb3dzIgogICAgLy8gICBkZXNjcmlwdGlvbiAiV2luZG93cyBIZWxsbyBpcyBhIGJpb21ldHJpYyBhdXRoZW50aWNhdGlvbiBmZWF0dXJlIGluIFdpbmRvd3MgMTAgYW5kIGxhdGVyIHRoYXQgYWxsb3dzIHVzZXJzIHRvIGxvZyBpbiB1c2luZyBmYWNpYWwgcmVjb2duaXRpb24sIGZpbmdlcnByaW50IHNjYW5uaW5nLCBvciBhIFBJTi4iCiAgICAvLyB9CiAgICAKICAgIC8vIG1hY29zX3RvdWNoX2lkID0gc29mdHdhcmVTeXN0ZW0gIm1hY09TIFRvdWNoIElEIiB7CiAgICAvLyAgIHRhZ3MgIkV4dGVybmFsIiAibWFjb3MiCiAgICAvLyAgIGRlc2NyaXB0aW9uICJUb3VjaCBJRCBpcyBhIGZpbmdlcnByaW50IHJlY29nbml0aW9uIGZlYXR1cmUgb24gQXBwbGUgZGV2aWNlcyB0aGF0IGFsbG93cyB1c2VycyB0byB1bmxvY2sgdGhlaXIgZGV2aWNlcyBhbmQgbWFrZSBwdXJjaGFzZXMgdXNpbmcgdGhlaXIgZmluZ2VycHJpbnQuIgogICAgLy8gfQogICAgCiAgICAvLyBsaW51eF9wb2xraXQgPSBzb2Z0d2FyZVN5c3RlbSAiTGludXggUG9sa2l0IiB7CiAgICAvLyAgIHRhZ3MgIkV4dGVybmFsIiAibGludXgiCiAgICAvLyAgIGRlc2NyaXB0aW9uICJQb2xraXQgaXMgYSBzeXN0ZW0gc2VydmljZSB0aGF0IGFsbG93cyBub24tcHJpdmlsZWdlZCBwcm9jZXNzZXMgdG8gY29tbXVuaWNhdGUgd2l0aCBwcml2aWxlZ2VkIHByb2Nlc3NlcyBpbiBMaW51eCwgb2Z0ZW4gdXNlZCBmb3IgdXNlciBhdXRoZW50aWNhdGlvbi4iCiAgICAvLyB9CiAgICAKICAgIG9zX3VzZXJfdmVyaWZpY2F0aW9uID0gc29mdHdhcmVTeXN0ZW0gIk9TIFVzZXIgVmVyaWZpY2F0aW9uIiB7CiAgICAgIHRhZ3MgIkV4dGVybmFsIgogICAgICBkZXNjcmlwdGlvbiAiVGhlIG9wZXJhdGluZyBzeXN0ZW0ncyB1c2VyIHZlcmlmaWNhdGlvbiBzeXN0ZW0sIHN1Y2ggYXMgV2luZG93cyBIZWxsbyBvciBtYWNPUyBUb3VjaCBJRC4iCiAgICB9CiAgICAKICAgIAogICAgY2xpZW50cy5icm93c2VyX2V4dGVuc2lvbiAtPiBjbGllbnRzLmRlc2t0b3AuaXBjX2V4dGVybmFsICJDb25uZWN0cyB0byBJUEMgdG8gcmVxdWVzdCBiaW9tZXRyaWMgYXV0aGVudGljYXRpb24iIAogICAgCiAgICBjbGllbnRzLmRlc2t0b3AuaXBjX2V4dGVybmFsIC0+IGNsaWVudHMuZGVza3RvcC5iaW9tZXRyaWNfcmVuZGVyZXJfc2VydmljZSAiUmVsYXlzIGJpb21ldHJpYyBhdXRoZW50aWNhdGlvbiByZXF1ZXN0cyB0byIKICAgIAogICAgY2xpZW50cy5kZXNrdG9wLnBhc3N3b3JkIC0+IG9zX3NlY3VyZV9zdG9yYWdlICJDUlVEIG9wZXJhdGlvbnMgb24ga2V5cyBzdG9yZWQgaW4gdGhlIE9TIHNlY3VyZSBzdG9yYWdlIgogICAgCiAgICBjbGllbnRzLmRlc2t0b3AubWFjb3NfYmlvbWV0cmljX3NlcnZpY2UgLT4gb3NfdXNlcl92ZXJpZmljYXRpb24gIlJlcXVlc3RzIHVzZXIgdmVyaWZpY2F0aW9uIGZvciBiaW9tZXRyaWMgYXV0aGVudGljYXRpb24iICJFbGVjdHJvbiBJbnRlZ3JhdGlvbiB3aXRoIFRvdWNoSWQiIHsKICAgICAgdGFncyAiTWFjT1MiCiAgICB9CiAgICBjbGllbnRzLmRlc2t0b3AubGludXhfYmlvbWV0cmljX3NlcnZpY2UgLT4gb3NfdXNlcl92ZXJpZmljYXRpb24gIlJlcXVlc3RzIHVzZXIgdmVyaWZpY2F0aW9uIGZvciBiaW9tZXRyaWMgYXV0aGVudGljYXRpb24iICJDdXN0b20gUG9sa2l0IHBvbGljeSIgewogICAgICB0YWdzICJMaW51eCIKICAgIH0KICAgIGNsaWVudHMuZGVza3RvcC53aW5kb3dzX2Jpb21ldHJpY19zZXJ2aWNlIC0+IG9zX3VzZXJfdmVyaWZpY2F0aW9uICJSZXF1ZXN0cyB1c2VyIHZlcmlmaWNhdGlvbiBmb3IgYmlvbWV0cmljIGF1dGhlbnRpY2F0aW9uIiAiV2luZG93cyBIZWxsbyIgewogICAgICB0YWdzICJXaW5kb3dzIgogICAgfQogICAgCiAgICBjbGllbnRzLmRlc2t0b3AubWFjb3NfYmlvbWV0cmljX3NlcnZpY2UgLT4gY2xpZW50cy5kZXNrdG9wLnBhc3N3b3JkICJTYXZlcyB0aGUgdXNlciBrZXkgZGlyZWN0bHkiICIiIHsKICAgICAgdGFncyAiTWFjT1MiCiAgICB9CiAgICBjbGllbnRzLmRlc2t0b3AubGludXhfYmlvbWV0cmljX3NlcnZpY2UgLT4gY2xpZW50cy5kZXNrdG9wLnBhc3N3b3JkICJTYXZlcyB0aGUgdXNlciBrZXkgZW5jcnlwdGVkIHdpdGggdGhlIGNsaWVudCBrZXkgaGFsZiIgIkN1c3RvbSBQb2xraXQgcG9saWN5IiB7CiAgICAgIHRhZ3MgIkxpbnV4IgogICAgfQogICAgY2xpZW50cy5kZXNrdG9wLndpbmRvd3NfYmlvbWV0cmljX3NlcnZpY2UgLT4gY2xpZW50cy5kZXNrdG9wLnBhc3N3b3JkICJTYXZlcyB0aGUgdXNlciBrZXkgZW5jcnlwdGVkIHdpdGggdGhlIGNsaWVudCBrZXkgaGFsZiIgIldpbmRvd3MgSGVsbG8iIHsKICAgICAgdGFncyAiV2luZG93cyIKICAgIH0KICAgIAogICAgIWVsZW1lbnQgc2VydmVyIHsKICAgICAgaWNvbnMgPSBjb250YWluZXIgIkljb25zIiB7CiAgICAgICAgZGVzY3JpcHRpb24gIlRoZSBJY29ucyBzZXJ2aWNlIHByb3ZpZGVzIGZhdmljb25zIGZvciB3ZWJzaXRlcy4iCiAgICAgICAgY2xpZW50cyAtPiBzZXJ2ZXIuaWNvbnMgIlJlcXVlc3RzIGljb25zIGZvciBjbGVhcnRleHQgdXJscyBmcm9tIiAKICAgICAgfQogICAgfQogICAgCiAgICBkbnMgPSBzb2Z0d2FyZVN5c3RlbSAiRE5TIiB7CiAgICAgIHRhZ3MgIkV4dGVybmFsIgogICAgICB0YWdzICJJY29ucyIKICAgIH0KCiAgICAjIEluY2x1ZGUgc2hhcmVkIGxldmVsIHJlbGF0aW9uc2hpcHMKICAgICMgVXNlciBSZWxhdGlvbnNoaXBzCiAgICB1c2VyIC0+IGNsaWVudHMud2ViICJVc2VzIgogICAgdXNlciAtPiBjbGllbnRzLmJyb3dzZXJfZXh0ZW5zaW9uICJVc2VzIgogICAgdXNlciAtPiBjbGllbnRzLmNsaSAiVXNlcyIKICAgIHVzZXIgLT4gY2xpZW50cy5kZXNrdG9wICJVc2VzIgogICAgYWRtaW4gLT4gY2xpZW50cy53ZWIgIkFkbWluaXN0ZXJzIE9yZ2FuaXphdGlvbnMiCiAgICBwcm92aWRlciAtPiBjbGllbnRzLndlYiAiQWRtaW5pc3RlcnMgUHJvdmlkZXJzIGFuZCBPcmdhbml6YXRpb25zIgogICAgCiAgICAjIEhpZ2gtbGV2ZWwgQ2xpZW50IFJlbGF0aW9uc2hpcHMKICAgIGNsaWVudHMud2ViIC0+IHNlcnZlci5hcGkgIk1ha2VzIHJlcXVlc3RzIHRvIgogICAgY2xpZW50cy5icm93c2VyX2V4dGVuc2lvbiAtPiBzZXJ2ZXIuYXBpICJNYWtlcyByZXF1ZXN0cyB0byIKICAgIGNsaWVudHMuY2xpIC0+IHNlcnZlci5hcGkgIk1ha2VzIHJlcXVlc3RzIHRvIgogICAgY2xpZW50cy5kZXNrdG9wIC0+IHNlcnZlci5hcGkgIk1ha2VzIHJlcXVlc3RzIHRvIgogICAgY2xpZW50cy53ZWIgLT4gc2VydmVyLmlkZW50aXR5ICJBdXRoZW50aWNhdGVzIHdpdGgiCiAgICBjbGllbnRzLmJyb3dzZXJfZXh0ZW5zaW9uIC0+IHNlcnZlci5pZGVudGl0eSAiQXV0aGVudGljYXRlcyBXaXRoIgogICAgY2xpZW50cy5jbGkgLT4gc2VydmVyLmlkZW50aXR5ICJBdXRoZW50aWNhdGVzIFdpdGgiCiAgICBjbGllbnRzLmRlc2t0b3AgLT4gc2VydmVyLmlkZW50aXR5ICJBdXRoZW50aWNhdGVzIFdpdGgiCiAgICBzZXJ2ZXIuYXBpIC0+IHNlcnZlci5pZGVudGl0eSAiVmFsaWRhdGVzIEpXVHMgd2l0aCIgewogICAgICB1cmwgImh0dHBzOi8vYml0d2FyZGVuLmNvbSIKICAgIH0KICAgIGNsaWVudHMgLT4gc2VydmVyLmV2ZW50cyAiUG9zdHMgbG9jYWwgdXNhZ2UgZXZlbnRzIHRvIgogICAgCiAgICAjIHNlbGYgaG9zdCBwaG9uZSBob21lCiAgICBzZWxmX2hvc3RlZF9pbnN0YW5jZXMgLT4gc2VydmVyLm5vdGlmaWNhdGlvbnMgIlNlbmRzIHB1c2ggbm90aWZpY2F0aW9uIHByb3h5IHJlcXVlc3RzIHRvIgoKCiAgICBrZXlfY29ubmVjdG9yIC0+IHNlcnZlci5pZGVudGl0eSAiVmFsaWRhdGVzIEpXVHMgd2l0aCIKICB9CgogIHZpZXdzIHsKICAgIHN0eWxlcyB7CiAgICAgIGVsZW1lbnQgIlBlcnNvbiIgewogICAgICAgIGJhY2tncm91bmQgIzMxMDdkMwogICAgICAgIHNoYXBlIHBlcnNvbgogICAgICB9CiAgICAgIGVsZW1lbnQgIk1TUCIgewogICAgICAgIGJhY2tncm91bmQgIzMxMDdkMwogICAgICAgIHNoYXBlIHBlcnNvbgogICAgICB9CiAgICB9CiAgICBjb21wb25lbnQgY2xpZW50cy5kZXNrdG9wICJkZXNrdG9wX2Jpb21ldHJpY3MiIHsKICAgICAgaW5jbHVkZSAqCiAgICAgIC8vIGF1dG9MYXlvdXQgdGIKICAgIH0KICAgIAogICAgY29tcG9uZW50IGNsaWVudHMuZGVza3RvcCAiZGVza3RvcF9iaW9tZXRyaWNzX21hY29zIiB7CiAgICAgIGluY2x1ZGUgKgogICAgICBleGNsdWRlICJlbGVtZW50LnRhZz09V2luZG93cyIKICAgICAgZXhjbHVkZSAiZWxlbWVudC50YWc9PUxpbnV4IgogICAgCiAgICB9CiAgICAKICAgIGNvbXBvbmVudCBjbGllbnRzLmRlc2t0b3AgImRlc2t0b3BfYmlvbWV0cmljc193aW5kb3dzIiB7CiAgICAgIGluY2x1ZGUgKgogICAgICBleGNsdWRlICJlbGVtZW50LnRhZz09TWFjT1MiCiAgICAgIGV4Y2x1ZGUgImVsZW1lbnQudGFnPT1MaW51eCIKICAgIAogICAgfQogICAgCiAgICBjb21wb25lbnQgY2xpZW50cy5kZXNrdG9wICJkZXNrdG9wX2Jpb21ldHJpY3NfbGludXgiIHsKICAgICAgaW5jbHVkZSAqCiAgICAgIGV4Y2x1ZGUgImVsZW1lbnQudGFnPT1XaW5kb3dzIgogICAgICBleGNsdWRlICJlbGVtZW50LnRhZz09TWFjT1MiCiAgICAKICAgIH0KCiAgICBzeXN0ZW1MYW5kc2NhcGUgIkJpdHdhcmRlbiIgewogICAgICBpbmNsdWRlICoKICAgIH0KCiAgICBjb250YWluZXIgY2xpZW50cyAiYml0d2FyZGVuX2pzX2NsaWVudHMiIHsKICAgICAgaW5jbHVkZSAqCiAgICB9CgogICAgLy8gVGhpcyBpcyBsYXN0IHRvIG92ZXJyaWRlIHRlYW0gc3R5bGVzIHdpdGggY29tbW9uIHN0eWxlcwogICAgc3R5bGVzIHsKICAgICAgdGhlbWUgZGVmYXVsdAogICAgICBlbGVtZW50ICJFbGVtZW50IiB7CiAgICAgICAgY29sb3IgIzNjM2IzYgogICAgICB9CiAgICAgIGVsZW1lbnQgIlBlcnNvbiIgewogICAgICAgIGJhY2tncm91bmQgI2QzNDQwNwogICAgICAgIHNoYXBlIHBlcnNvbgogICAgICB9CiAgICAgIGVsZW1lbnQgIkNvbnRhaW5lciIgewogICAgICAgIGJhY2tncm91bmQgI2Y4ODcyOAogICAgICB9CiAgICAgIGVsZW1lbnQgIk1TUCIgewogICAgICAgIGJhY2tncm91bmQgIzMxMDdkMwogICAgICB9CiAgICAgIGVsZW1lbnQgIlF1ZXVlIiB7CiAgICAgICAgc2hhcGUgcGlwZQogICAgICB9CiAgICAgIGVsZW1lbnQgIk1vYmlsZSIgewogICAgICAgIHNoYXBlIG1vYmlsZURldmljZVBvcnRyYWl0CiAgICAgIH0KICAgICAgZWxlbWVudCAiV2ViIiB7CiAgICAgICAgc2hhcGUgd2ViQnJvd3NlcgogICAgICB9CiAgICAgIGVsZW1lbnQgIkRhdGFiYXNlIiB7CiAgICAgICAgc2hhcGUgY3lsaW5kZXIKICAgICAgfQogICAgICBlbGVtZW50ICJFeHRlcm5hbCIgewogICAgICAgIGNvbG9yICMwMDAwMDAKICAgICAgICBiYWNrZ3JvdW5kICNiNWI1YjUKICAgICAgfQogICAgfQogIH0KfQ=="
   },
   "views": {
     "componentViews": [
       {
-        "automaticLayout": {
-          "applied": true,
-          "edgeSeparation": 0,
-          "implementation": "Graphviz",
-          "nodeSeparation": 300,
-          "rankDirection": "TopBottom",
-          "rankSeparation": 300,
-          "vertices": false
-        },
         "containerId": "13",
         "dimensions": {
-          "height": 3100,
-          "width": 1620
+          "height": 3700,
+          "width": 3028
         },
         "elements": [
           {
             "id": "11",
-            "x": 220,
+            "x": 324,
             "y": 165
           },
           {
             "id": "22",
             "x": 220,
-            "y": 1365
+            "y": 2565
           },
           {
             "id": "23",
-            "x": 220,
-            "y": 1965
+            "x": 324,
+            "y": 1365
           },
           {
             "id": "24",
-            "x": 220,
-            "y": 765
+            "x": 1074,
+            "y": 1365
           },
           {
             "id": "25",
-            "x": 220,
-            "y": 2565
+            "x": 1720,
+            "y": 1965
           },
           {
             "id": "26",
             "x": 970,
             "y": 1965
+          },
+          {
+            "id": "27",
+            "x": 220,
+            "y": 1965
+          },
+          {
+            "id": "31",
+            "x": 970,
+            "y": 2565
+          },
+          {
+            "id": "32",
+            "x": 324,
+            "y": 765
+          },
+          {
+            "id": "33",
+            "x": 1074,
+            "y": 765
+          },
+          {
+            "id": "38",
+            "x": 970,
+            "y": 3165
+          },
+          {
+            "id": "39",
+            "x": 2378,
+            "y": 2565
           }
         ],
         "externalContainerBoundariesVisible": false,
-        "key": "desktop_biometrics_macos",
+        "key": "desktop_biometrics",
         "order": 1,
         "relationships": [
           {
             "id": "28"
           },
           {
+            "id": "29"
+          },
+          {
             "id": "30"
           },
           {
-            "id": "31"
-          },
-          {
-            "id": "32"
+            "id": "34"
           },
           {
             "id": "35"
+          },
+          {
+            "id": "36"
+          },
+          {
+            "id": "37"
+          },
+          {
+            "id": "40"
+          },
+          {
+            "id": "42"
+          },
+          {
+            "id": "43"
+          },
+          {
+            "id": "46"
+          },
+          {
+            "id": "49",
+            "vertices": [
+              {
+                "x": 820,
+                "y": 2265
+              }
+            ]
+          },
+          {
+            "id": "50",
+            "vertices": [
+              {
+                "x": 1570,
+                "y": 2265
+              }
+            ]
+          },
+          {
+            "id": "51"
+          },
+          {
+            "id": "52"
+          },
+          {
+            "id": "53"
+          }
+        ]
+      },
+      {
+        "containerId": "13",
+        "dimensions": {
+          "height": 3700,
+          "width": 3028
+        },
+        "elements": [
+          {
+            "id": "11",
+            "x": 324,
+            "y": 165
+          },
+          {
+            "id": "22",
+            "x": 220,
+            "y": 2565
+          },
+          {
+            "id": "23",
+            "x": 324,
+            "y": 1365
+          },
+          {
+            "id": "24",
+            "x": 1074,
+            "y": 1365
+          },
+          {
+            "id": "25",
+            "x": 1720,
+            "y": 1965
+          },
+          {
+            "id": "31",
+            "x": 970,
+            "y": 2565
+          },
+          {
+            "id": "32",
+            "x": 324,
+            "y": 765
+          },
+          {
+            "id": "33",
+            "x": 1074,
+            "y": 765
+          },
+          {
+            "id": "38",
+            "x": 970,
+            "y": 3165
+          },
+          {
+            "id": "39",
+            "x": 2378,
+            "y": 2565
+          }
+        ],
+        "externalContainerBoundariesVisible": false,
+        "key": "desktop_biometrics_macos",
+        "order": 2,
+        "relationships": [
+          {
+            "id": "28"
+          },
+          {
+            "id": "34"
+          },
+          {
+            "id": "35"
+          },
+          {
+            "id": "40"
+          },
+          {
+            "id": "42"
+          },
+          {
+            "id": "43"
+          },
+          {
+            "id": "46"
+          },
+          {
+            "id": "51"
+          }
+        ]
+      },
+      {
+        "containerId": "13",
+        "dimensions": {
+          "height": 3700,
+          "width": 3028
+        },
+        "elements": [
+          {
+            "id": "11",
+            "x": 324,
+            "y": 165
+          },
+          {
+            "id": "22",
+            "x": 220,
+            "y": 2565
+          },
+          {
+            "id": "23",
+            "x": 324,
+            "y": 1365
+          },
+          {
+            "id": "24",
+            "x": 1074,
+            "y": 1365
+          },
+          {
+            "id": "26",
+            "x": 970,
+            "y": 1965
+          },
+          {
+            "id": "31",
+            "x": 970,
+            "y": 2565
+          },
+          {
+            "id": "32",
+            "x": 324,
+            "y": 765
+          },
+          {
+            "id": "33",
+            "x": 1074,
+            "y": 765
+          },
+          {
+            "id": "38",
+            "x": 970,
+            "y": 3165
+          },
+          {
+            "id": "39",
+            "x": 2378,
+            "y": 2565
+          }
+        ],
+        "externalContainerBoundariesVisible": false,
+        "key": "desktop_biometrics_windows",
+        "order": 3,
+        "relationships": [
+          {
+            "id": "29"
+          },
+          {
+            "id": "34"
+          },
+          {
+            "id": "35"
+          },
+          {
+            "id": "37"
+          },
+          {
+            "id": "40"
+          },
+          {
+            "id": "42"
+          },
+          {
+            "id": "43"
+          },
+          {
+            "id": "50",
+            "vertices": [
+              {
+                "x": 1570,
+                "y": 2265
+              }
+            ]
+          },
+          {
+            "id": "53"
+          }
+        ]
+      },
+      {
+        "containerId": "13",
+        "dimensions": {
+          "height": 3700,
+          "width": 3028
+        },
+        "elements": [
+          {
+            "id": "11",
+            "x": 324,
+            "y": 165
+          },
+          {
+            "id": "22",
+            "x": 220,
+            "y": 2565
+          },
+          {
+            "id": "23",
+            "x": 324,
+            "y": 1365
+          },
+          {
+            "id": "24",
+            "x": 1074,
+            "y": 1365
+          },
+          {
+            "id": "27",
+            "x": 220,
+            "y": 1965
+          },
+          {
+            "id": "31",
+            "x": 970,
+            "y": 2565
+          },
+          {
+            "id": "32",
+            "x": 324,
+            "y": 765
+          },
+          {
+            "id": "33",
+            "x": 1074,
+            "y": 765
+          },
+          {
+            "id": "38",
+            "x": 970,
+            "y": 3165
+          },
+          {
+            "id": "39",
+            "x": 2378,
+            "y": 2565
+          }
+        ],
+        "externalContainerBoundariesVisible": false,
+        "key": "desktop_biometrics_linux",
+        "order": 4,
+        "relationships": [
+          {
+            "id": "30"
+          },
+          {
+            "id": "34"
+          },
+          {
+            "id": "35"
+          },
+          {
+            "id": "36"
+          },
+          {
+            "id": "40"
+          },
+          {
+            "id": "42"
+          },
+          {
+            "id": "43"
+          },
+          {
+            "id": "49",
+            "vertices": [
+              {
+                "x": 820,
+                "y": 2265
+              }
+            ]
+          },
+          {
+            "id": "52"
           }
         ]
       }
     ],
     "configuration": {
       "branding": {},
-      "lastSavedView": "desktop_biometrics_macos",
-      "metadataSymbols": "SquareBrackets",
+      "lastSavedView": "desktop_biometrics",
       "styles": {
         "elements": [
           {
@@ -831,32 +1327,38 @@
             "y": 208
           },
           {
-            "id": "25",
+            "id": "38",
             "x": 1896,
             "y": 2108
           },
           {
-            "id": "26",
+            "id": "39",
             "x": 2646,
             "y": 2108
           }
         ],
         "externalSoftwareSystemBoundariesVisible": false,
         "key": "bitwarden_js_clients",
-        "order": 3,
+        "order": 6,
         "paperSize": "A3_Landscape",
         "relationships": [
           {
-            "id": "29"
+            "id": "41",
+            "vertices": [
+              {
+                "x": 2108,
+                "y": 1358
+              }
+            ]
           },
           {
-            "id": "33"
+            "id": "44"
           },
           {
-            "id": "36"
+            "id": "47"
           },
           {
-            "id": "42",
+            "id": "58",
             "vertices": [
               {
                 "x": 1133,
@@ -865,13 +1367,13 @@
             ]
           },
           {
-            "id": "44"
+            "id": "60"
           },
           {
-            "id": "45"
+            "id": "61"
           },
           {
-            "id": "46",
+            "id": "62",
             "vertices": [
               {
                 "x": 2633,
@@ -884,19 +1386,19 @@
             ]
           },
           {
-            "id": "47"
+            "id": "63"
           },
           {
-            "id": "49"
+            "id": "65"
           },
           {
-            "id": "52"
+            "id": "68"
           },
           {
-            "id": "55"
+            "id": "71"
           },
           {
-            "id": "57",
+            "id": "73",
             "vertices": [
               {
                 "x": 1350,
@@ -905,7 +1407,7 @@
             ]
           },
           {
-            "id": "59"
+            "id": "75"
           }
         ],
         "softwareSystemId": "9"
@@ -979,39 +1481,34 @@
             "y": 329
           },
           {
-            "id": "25",
+            "id": "38",
             "x": 3067,
             "y": 1679
           },
           {
-            "id": "26",
+            "id": "39",
             "x": 3817,
             "y": 1679
           },
           {
-            "id": "27",
-            "x": 6783,
-            "y": 329
-          },
-          {
-            "id": "41",
+            "id": "57",
             "x": 7533,
             "y": 329
           }
         ],
         "enterpriseBoundaryVisible": true,
         "key": "Bitwarden",
-        "order": 2,
+        "order": 5,
         "paperSize": "A1_Landscape",
         "relationships": [
           {
-            "id": "34"
+            "id": "45"
           },
           {
-            "id": "37"
+            "id": "48"
           },
           {
-            "id": "40",
+            "id": "56",
             "vertices": [
               {
                 "x": 2258,
@@ -1020,19 +1517,19 @@
             ]
           },
           {
-            "id": "43"
+            "id": "59"
           },
           {
-            "id": "48"
+            "id": "64"
           },
           {
-            "id": "50"
+            "id": "66"
           },
           {
-            "id": "68"
+            "id": "84"
           },
           {
-            "id": "70"
+            "id": "86"
           }
         ]
       }

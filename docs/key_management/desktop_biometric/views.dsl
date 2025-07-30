@@ -1,6 +1,21 @@
+component clients.desktop "desktop_biometrics" {
+  include *
+}
+
 component clients.desktop "desktop_biometrics_macos" {
   include *
-  include os_user_verification
-  autoLayout tb
+  exclude "element.tag==Windows"
+  exclude "element.tag==Linux"
 }
-// TODO: Add Windows and Linux, excluding relevant Tags
+
+component clients.desktop "desktop_biometrics_windows" {
+  include *
+  exclude "element.tag==MacOS"
+  exclude "element.tag==Linux"
+}
+
+component clients.desktop "desktop_biometrics_linux" {
+  include *
+  exclude "element.tag==Windows"
+  exclude "element.tag==MacOS"
+}

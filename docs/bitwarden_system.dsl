@@ -1,4 +1,4 @@
-workspace "Bitwarden Server System" {
+workspace "Bitwarden Clients System" {
 
   !identifiers hierarchical
 
