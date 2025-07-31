@@ -147,6 +147,9 @@ export class IntegrationCardComponent implements AfterViewInit, OnDestroy {
       });
       return;
     }
+
+    // update the configuration
+    this.integrationSettings.configuration = result.configuration;
   }
 
   async saveHecIntegration(configuration: string): Promise<OrganizationIntegrationResponse> {
