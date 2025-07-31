@@ -4,6 +4,7 @@ import { autotype } from "@bitwarden/desktop-napi";
 import { LogService } from "@bitwarden/logging";
 
 import { WindowMain } from "../../main/window.main";
+import { stringIsNotUndefinedNullAndEmpty } from "../../utils";
 
 export class MainDesktopAutotypeService {
   keySequence: string = "Alt+CommandOrControl+I";
@@ -26,12 +27,8 @@ export class MainDesktopAutotypeService {
       const { response } = data;
 
       if (
-        response.username != undefined &&
-        response.username != null &&
-        response.username.length > 0 &&
-        response.password != undefined &&
-        response.password != null &&
-        response.password.length > 0
+        stringIsNotUndefinedNullAndEmpty(response.username) &&
+        stringIsNotUndefinedNullAndEmpty(response.password)
       ) {
         this.doAutotype(response.username, response.password);
       }
@@ -62,10 +59,10 @@ export class MainDesktopAutotypeService {
 
   private doAutotype(username: string, password: string) {
     const inputPattern = username + "\t" + password;
-    const inputArray = new Array<number>();
+    const inputArray = new Array<number>(inputPattern.length);
 
     for (let i = 0; i < inputPattern.length; i++) {
-      inputArray.push(inputPattern.charCodeAt(i));
+      inputArray[i] = inputPattern.charCodeAt(i);
     }
 
     autotype.typeInput(inputArray);
