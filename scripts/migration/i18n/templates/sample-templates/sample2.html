@@ -1,0 +1,9 @@
+<nav>
+  <a [title]="'homeLink' | i18n" href="/">{{ 'home' | i18n }}</a>
+  <a [title]="'aboutLink' | i18n" href="/about">{{ 'about' | i18n }}</a>
+</nav>
+<main>
+  <p>{{ 'itemCount' | i18n:count }}</p>
+  <span>{{ 'camelCaseKey' | i18n }}</span>
+  <div>{{ 'snake_case_key' | i18n }}</div>
+</main>

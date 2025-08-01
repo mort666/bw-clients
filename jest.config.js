@@ -6,7 +6,7 @@ const { compilerOptions } = require("./tsconfig.base");
 module.exports = {
   reporters: ["default", "jest-junit"],
 
-  collectCoverage: true,
+  collectCoverage: false,
   // Ensure we collect coverage from files without tests
   collectCoverageFrom: ["src/**/*.ts"],
   coverageReporters: ["html", "lcov"],
@@ -44,6 +44,8 @@ module.exports = {
     "<rootDir>/libs/vault/jest.config.js",
     "<rootDir>/libs/key-management/jest.config.js",
     "<rootDir>/libs/key-management-ui/jest.config.js",
+
+    "<rootDir>/scripts/migration/i18n/jest.config.js",
   ],
 
   // Workaround for a memory leak that crashes tests in CI:
