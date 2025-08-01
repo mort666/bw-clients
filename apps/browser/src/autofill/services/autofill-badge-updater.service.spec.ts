@@ -8,6 +8,7 @@ import { LogService } from "@bitwarden/logging";
 import { UserId } from "@bitwarden/user-core";
 
 import { BadgeService } from "../../platform/badge/badge.service";
+import { BadgeIcon } from "../../platform/badge/icon";
 import { BadgeStatePriority } from "../../platform/badge/priority";
 
 import { AutofillBadgeUpdaterService } from "./autofill-badge-updater.service";
@@ -71,7 +72,7 @@ describe("AutofillBadgeUpdaterService", () => {
       expect(setState).toHaveBeenCalledWith(
         "autofill-badge-3",
         BadgeStatePriority.High,
-        { backgroundColor: "#cb263a", text: "!" },
+        { icon: BadgeIcon.Berry },
         3,
       );
     });
@@ -86,7 +87,7 @@ describe("AutofillBadgeUpdaterService", () => {
       expect(setState).toHaveBeenCalledWith(
         "autofill-badge-4",
         BadgeStatePriority.High,
-        { backgroundColor: "#cb263a", text: "!" },
+        { icon: BadgeIcon.Berry },
         4,
       );
     });

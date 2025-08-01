@@ -9,6 +9,7 @@ import { SecurityTask, SecurityTaskType, TaskService } from "@bitwarden/common/v
 import { filterOutNullish } from "@bitwarden/common/vault/utils/observable-utilities";
 
 import { BadgeService } from "../../platform/badge/badge.service";
+import { BadgeIcon } from "../../platform/badge/icon";
 import { BadgeStatePriority } from "../../platform/badge/priority";
 import { BrowserApi } from "../../platform/browser/browser-api";
 
@@ -182,8 +183,7 @@ export class AutofillBadgeUpdaterService {
         StateName(tab.id),
         BadgeStatePriority.High,
         {
-          text: "!",
-          backgroundColor: "#cb263a", // equivalent to danger-600
+          icon: BadgeIcon.Berry,
         },
         tab.id,
       );
