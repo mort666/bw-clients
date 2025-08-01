@@ -33,6 +33,7 @@ export enum FeatureFlag {
   AllowTrialLengthZero = "pm-20322-allow-trial-length-0",
   PM21881_ManagePaymentDetailsOutsideCheckout = "pm-21881-manage-payment-details-outside-checkout",
   PM21821_ProviderPortalTakeover = "pm-21821-provider-portal-takeover",
+  ShowProviderSuspendedModal = "show-provider-suspended-modal",
 
   /* Key Management */
   PrivateKeyRegeneration = "pm-12241-private-key-regeneration",
@@ -116,6 +117,7 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.AllowTrialLengthZero]: FALSE,
   [FeatureFlag.PM21881_ManagePaymentDetailsOutsideCheckout]: FALSE,
   [FeatureFlag.PM21821_ProviderPortalTakeover]: FALSE,
+  [FeatureFlag.ShowProviderSuspendedModal]: FALSE,
 
   /* Key Management */
   [FeatureFlag.PrivateKeyRegeneration]: FALSE,

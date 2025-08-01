@@ -28,10 +28,11 @@ export class ProviderWarningsService {
   showProviderSuspendedDialog$ = (providerId: string): Observable<void> =>
     combineLatest([
       this.configService.getFeatureFlag$(FeatureFlag.PM21821_ProviderPortalTakeover),
+      this.configService.getFeatureFlag$(FeatureFlag.ShowProviderSuspendedModal),
       this.providerService.get$(providerId),
       from(this.billingApiService.getProviderSubscription(providerId)),
     ]).pipe(
-      switchMap(async ([providerPortalTakeover, provider, subscription]) => {
+      switchMap(async ([providerPortalTakeover, showSuspendedModal, provider, subscription]) => {
         if (!providerPortalTakeover || provider.enabled) {
           return;
         }
@@ -85,7 +86,7 @@ export class ProviderWarningsService {
               break;
             }
           }
-        } else {
+        } else if (showSuspendedModal) {
           await this.dialogService.openSimpleDialog({
             type: "danger",
             title: this.i18nService.t("providerSuspended", provider.name),
