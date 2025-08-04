@@ -97,7 +97,7 @@ import { Message, MessageListener, MessageSender } from "@bitwarden/common/platf
 import { SubjectMessageSender } from "@bitwarden/common/platform/messaging/internal";
 import { flagEnabled } from "@bitwarden/common/platform/misc/flags";
 import { ServerNotificationsService } from "@bitwarden/common/platform/notifications";
-import { SystemNotificationsService } from "@bitwarden/common/platform/notifications/system-notifications-service";
+import { SystemNotificationsService } from "@bitwarden/common/platform/notifications/system-notifications.service";
 import { TaskSchedulerService } from "@bitwarden/common/platform/scheduling";
 import { ConsoleLogService } from "@bitwarden/common/platform/services/console-log.service";
 import { ContainerService } from "@bitwarden/common/platform/services/container.service";

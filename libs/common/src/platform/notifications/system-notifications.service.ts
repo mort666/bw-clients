@@ -1,11 +1,5 @@
 import { Observable } from "rxjs";
 
-export const ButtonActions = {
-  AuthRequestNotification: "authRequestNotification",
-};
-
-export type ButtonActionsKeys = (typeof ButtonActions)[keyof typeof ButtonActions];
-
 // This is currently tailored for chrome extension's api, if safari works
 // differently where clicking a notification button produces a different
 // identifier we need to reconcile that here.
@@ -22,8 +16,7 @@ export type SystemNotificationsButton = {
 };
 
 export type SystemNotificationCreateInfo = {
-  id: string;
-  type: ButtonActionsKeys;
+  id?: string;
   title: string;
   body: string;
   buttons: SystemNotificationsButton[];
@@ -35,7 +28,6 @@ export type SystemNotificationClearInfo = {
 
 export type SystemNotificationEvent = {
   id: string;
-  type: ButtonActionsKeys;
   buttonIdentifier: number;
 };
 
@@ -44,7 +36,19 @@ export type SystemNotificationEvent = {
  */
 export abstract class SystemNotificationsService {
   abstract notificationClicked$: Observable<SystemNotificationEvent>;
-  abstract create(createInfo: SystemNotificationCreateInfo): Promise<undefined>;
+
+  /**
+   * Creates a notification.
+   * @param createInfo
+   * @returns If a notification is successfully created it will respond back with an
+   *          id that refers to a notification.
+   */
+  abstract create(createInfo: SystemNotificationCreateInfo): Promise<string | undefined>;
+
+  /**
+   * Clears a notification.
+   * @param clearInfo Any info needed required to clear a notification.
+   */
   abstract clear(clearInfo: SystemNotificationClearInfo): Promise<void>;
 
   /**

@@ -130,7 +130,7 @@ import {
   WebPushNotificationsApiService,
   WorkerWebPushConnectionService,
 } from "@bitwarden/common/platform/notifications/internal";
-import { SystemNotificationsService } from "@bitwarden/common/platform/notifications/system-notifications-service";
+import { SystemNotificationsService } from "@bitwarden/common/platform/notifications/system-notifications.service";
 import { UnsupportedSystemNotificationsService } from "@bitwarden/common/platform/notifications/unsupported-system-notifications.service";
 import { AppIdService } from "@bitwarden/common/platform/services/app-id.service";
 import { ConfigApiService } from "@bitwarden/common/platform/services/config/config-api.service";
@@ -1132,11 +1132,7 @@ export default class MainBackground {
 
     this.actionsService = new BrowserActionsService(this.logService, this.platformUtilsService);
 
-    const isChrome = this.platformUtilsService.isChrome();
-    const isSafari = this.platformUtilsService.isSafari();
-    const isFirefox = this.platformUtilsService.isFirefox();
-
-    if ((isChrome || isFirefox) && !isSafari) {
+    if ("notifications" in chrome || Notification) {
       this.systemNotificationService = new BrowserSystemNotificationService(
         this.logService,
         this.platformUtilsService,
