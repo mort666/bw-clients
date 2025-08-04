@@ -38,9 +38,9 @@ pub fn type_input(input: Vec<u16>) -> Result<(), ()> {
         keyboard_inputs.push(next_up_input);
     }
 
-    let _ = block_input(true);
+    //let _ = block_input(true);
     let result = send_input(keyboard_inputs);
-    let _ = block_input(false);
+    //let _ = block_input(false);
 
     result
 }
