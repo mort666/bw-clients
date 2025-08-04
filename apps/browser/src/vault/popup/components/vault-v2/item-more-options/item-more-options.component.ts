@@ -78,7 +78,7 @@ export class ItemMoreOptionsComponent {
     switchMap(([c, restrictedTypes]) => {
       // This will check for restrictions from org policies before allowing cloning.
       const isItemRestricted = restrictedTypes.some(
-        (restrictType) => restrictType.cipherType === c.type,
+        (restrictType) => restrictType.cipherType === CipherViewLikeUtils.getType(c),
       );
       if (!isItemRestricted) {
         return this.cipherAuthorizationService.canCloneCipher$(c);
@@ -93,7 +93,7 @@ export class ItemMoreOptionsComponent {
     switchMap((userId) => {
       return combineLatest([
         this.organizationService.hasOrganizations(userId),
-        this.collectionService.decryptedCollections$,
+        this.collectionService.decryptedCollections$(userId),
       ]).pipe(
         map(([hasOrgs, collections]) => {
           const canEditCollections = collections.some((c) => !c.readOnly);
