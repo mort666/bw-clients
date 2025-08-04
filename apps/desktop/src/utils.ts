@@ -104,5 +104,5 @@ export function cleanUserAgent(userAgent: string): string {
  * Otherwise, returns `false`.
  */
 export function stringIsNotUndefinedNullAndEmpty(str: string): boolean {
-  return str != undefined && str != null && str.length > 0;
+  return str?.length > 0;
 }
