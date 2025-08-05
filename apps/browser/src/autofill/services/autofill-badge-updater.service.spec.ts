@@ -71,7 +71,7 @@ describe("AutofillBadgeUpdaterService", () => {
 
       expect(setState).toHaveBeenCalledWith(
         "autofill-badge-3",
-        BadgeStatePriority.High,
+        BadgeStatePriority.Default,
         { icon: BadgeIcon.Berry },
         3,
       );
@@ -86,7 +86,7 @@ describe("AutofillBadgeUpdaterService", () => {
 
       expect(setState).toHaveBeenCalledWith(
         "autofill-badge-4",
-        BadgeStatePriority.High,
+        BadgeStatePriority.Default,
         { icon: BadgeIcon.Berry },
         4,
       );

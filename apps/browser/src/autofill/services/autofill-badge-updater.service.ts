@@ -181,7 +181,7 @@ export class AutofillBadgeUpdaterService {
     if (hasPendingTasksForTab) {
       await this.badgeService.setState(
         StateName(tab.id),
-        BadgeStatePriority.High,
+        BadgeStatePriority.Default,
         {
           icon: BadgeIcon.Berry,
         },
