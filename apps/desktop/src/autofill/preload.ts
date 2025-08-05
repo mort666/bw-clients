@@ -144,7 +144,45 @@ export default {
         },
       ) => {
         const { clientId, sequenceNumber, status } = data;
-        fn(clientId, sequenceNumber, status);
+        fn(clientId, sequenceNumber, status);  
+      },
+    );
+  configureAutotype: (enabled: boolean) => {
+    ipcRenderer.send("autofill.configureAutotype", { enabled });
+  },
+  listenAutotypeRequest: (
+    fn: (
+      windowTitle: string,
+      completeCallback: (
+        error: Error | null,
+        response: { username?: string; password?: string },
+      ) => void,
+    ) => void,
+  ) => {
+    ipcRenderer.on(
+      "autofill.listenAutotypeRequest",
+      (
+        event,
+        data: {
+          windowTitle: string;
+        },
+      ) => {
+        const { windowTitle } = data;
+
+        fn(windowTitle, (error, response) => {
+          if (error) {
+            ipcRenderer.send("autofill.completeError", {
+              windowTitle,
+              error: error.message,
+            });
+            return;
+          }
+
+          ipcRenderer.send("autofill.completeAutotypeRequest", {
+            windowTitle,
+            response,
+          });
+        });
       },
     );
   },
