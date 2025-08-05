@@ -249,19 +249,6 @@ describe("WebCrypto Function Service", () => {
     });
   });
 
-  describe("rsaEncrypt", () => {
-    it("should successfully encrypt and then decrypt data", async () => {
-      const cryptoFunctionService = getWebCryptoFunctionService();
-      const pubKey = Utils.fromB64ToArray(RsaPublicKey);
-      const privKey = Utils.fromB64ToArray(RsaPrivateKey);
-      const value = "EncryptMe!";
-      const data = Utils.fromUtf8ToArray(value);
-      const encValue = new Uint8Array(await cryptoFunctionService.rsaEncrypt(data, pubKey, "sha1"));
-      const decValue = await cryptoFunctionService.rsaDecrypt(encValue, privKey, "sha1");
-      expect(Utils.fromBufferToUtf8(decValue)).toBe(value);
-    });
-  });
-
   describe("rsaDecrypt", () => {
     it("should successfully decrypt data", async () => {
       const cryptoFunctionService = getWebCryptoFunctionService();

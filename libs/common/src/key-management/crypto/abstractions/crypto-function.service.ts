@@ -88,15 +88,6 @@ export abstract class CryptoFunctionService {
    * @deprecated HAZMAT WARNING: DO NOT USE THIS FOR NEW CODE. Implement low-level crypto operations
    * in the SDK instead. Further, you should probably never find yourself using this low-level crypto function.
    */
-  abstract rsaEncrypt(
-    data: Uint8Array,
-    publicKey: Uint8Array,
-    algorithm: "sha1" | "sha256",
-  ): Promise<Uint8Array>;
-  /**
-   * @deprecated HAZMAT WARNING: DO NOT USE THIS FOR NEW CODE. Implement low-level crypto operations
-   * in the SDK instead. Further, you should probably never find yourself using this low-level crypto function.
-   */
   abstract rsaDecrypt(
     data: Uint8Array,
     privateKey: Uint8Array,

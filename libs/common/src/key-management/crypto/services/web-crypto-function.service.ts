@@ -256,22 +256,6 @@ export class WebCryptoFunctionService implements CryptoFunctionService {
     return new Uint8Array(buffer);
   }
 
-  async rsaEncrypt(
-    data: Uint8Array,
-    publicKey: Uint8Array,
-    algorithm: "sha1" | "sha256",
-  ): Promise<Uint8Array> {
-    // Note: Edge browser requires that we specify name and hash for both key import and decrypt.
-    // We cannot use the proper types here.
-    const rsaParams = {
-      name: "RSA-OAEP",
-      hash: { name: this.toWebCryptoAlgorithm(algorithm) },
-    };
-    const impKey = await this.subtle.importKey("spki", publicKey, rsaParams, false, ["encrypt"]);
-    const buffer = await this.subtle.encrypt(rsaParams, impKey, data);
-    return new Uint8Array(buffer);
-  }
-
   async rsaDecrypt(
     data: Uint8Array,
     privateKey: Uint8Array,
