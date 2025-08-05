@@ -147,6 +147,7 @@ export default {
         fn(clientId, sequenceNumber, status);  
       },
     );
+  },
   configureAutotype: (enabled: boolean) => {
     ipcRenderer.send("autofill.configureAutotype", { enabled });
   },
