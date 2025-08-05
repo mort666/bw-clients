@@ -144,7 +144,7 @@ export default {
         },
       ) => {
         const { clientId, sequenceNumber, status } = data;
-        fn(clientId, sequenceNumber, status);  
+        fn(clientId, sequenceNumber, status);
       },
     );
   },
