@@ -150,12 +150,10 @@ describe("ConnectDialogHecComponent", () => {
 
     expect(dialogRefMock.close).toHaveBeenCalledWith({
       integrationSettings: integrationMock,
-      configuration: JSON.stringify({
-        url: "https://test.com",
-        bearerToken: "token",
-        index: "1",
-        service: "Test Service",
-      }),
+      url: "https://test.com",
+      bearerToken: "token",
+      index: "1",
+      service: "Test Service",
       success: true,
       error: null,
     });
