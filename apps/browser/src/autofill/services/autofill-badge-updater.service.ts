@@ -157,7 +157,7 @@ export class AutofillBadgeUpdaterService {
     tab: chrome.tabs.Tab,
     userId: UserId,
     enableBadgeCounter: boolean,
-    pendingTasks?: SecurityTask[],
+    pendingTasks: SecurityTask[],
   ) {
     if (!tab.id) {
       this.logService.warning("Tab event received but tab id is undefined");
