@@ -150,6 +150,7 @@ fn build_unicode_input(key_press: InputKeyPress, character: u16) -> INPUT {
 ///
 /// Before modifying this function, make sure you read the SendInput() documentation:
 /// https://learn.microsoft.com/en-in/windows/win32/api/winuser/nf-winuser-sendinput
+/// https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
 fn build_virtual_key_input(key_press: InputKeyPress, virtual_key: u8) -> INPUT {
     match key_press {
         InputKeyPress::Down => INPUT {
