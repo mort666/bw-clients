@@ -16,7 +16,7 @@ export class OrganizationIntegrationRequest {
  */
 export class HecConfiguration {
   uri: string;
-  scheme = "bearer";
+  scheme = "Bearer";
   token: string;
   service: string;
 
