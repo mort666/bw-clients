@@ -68,10 +68,10 @@ export class ConnectHecDialogComponent implements OnInit {
 
     const result: HecConnectDialogResult = {
       integrationSettings: this.connectInfo.settings,
-      url: formJson.url,
-      bearerToken: formJson.bearerToken,
-      index: formJson.index,
-      service: formJson.service,
+      url: formJson.url || "",
+      bearerToken: formJson.bearerToken || "",
+      index: formJson.index || "",
+      service: formJson.service || "",
       success: true,
       error: null,
     };
