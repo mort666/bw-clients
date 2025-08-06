@@ -7412,6 +7412,9 @@
   "off": {
     "message": "Off"
   },
+  "connected": {
+    "message": "Connected"
+  },
   "members": {
     "message": "Members"
   },

@@ -22,7 +22,7 @@
       @if (showConnectedBadge()) {
         <span class="tw-ml-3">
           @if (isConnected) {
-            <span bitBadge variant="success">{{ "on" | i18n }}</span>
+            <span bitBadge variant="success">{{ "connected" | i18n }}</span>
           }
           @if (!isConnected) {
             <span bitBadge>{{ "off" | i18n }}</span>
