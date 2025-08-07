@@ -42,8 +42,6 @@ export class BrowserSystemNotificationService implements SystemNotificationsServ
       const notificationId = createInfo.id || uuidv4();
       const deviceType = this.platformUtilsService.getDevice();
 
-      this.logService.error(DeviceType[deviceType]);
-
       const notificationOptions: chrome.notifications.NotificationOptions<true> = {
         iconUrl: "https://avatars.githubusercontent.com/u/15990069?s=200",
         message: createInfo.body,
