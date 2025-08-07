@@ -162,17 +162,15 @@ export class SelfHostedEnvConfigDialogComponent implements OnInit, OnDestroy {
 
   @HostListener("document:keydown.control.b", ["$event"])
   onCtrlB(event: KeyboardEvent) {
-    if (process.env.ENV === "development") {
-      event.preventDefault();
-      this.formGroup.patchValue({
-        baseUrl: "",
-        webVaultUrl: "https://localhost:8080",
-        apiUrl: "http://localhost:4000",
-        identityUrl: "http://localhost:33656",
-        iconsUrl: "http://localhost:50024",
-        notificationsUrl: "http://localhost:61840",
-      });
-    }
+    event.preventDefault();
+    this.formGroup.patchValue({
+      baseUrl: "",
+      webVaultUrl: "https://localhost:8080",
+      apiUrl: "http://localhost:4000",
+      identityUrl: "http://localhost:33656",
+      iconsUrl: "http://localhost:50024",
+      notificationsUrl: "http://localhost:61840",
+    });
   }
 
   submit = async () => {

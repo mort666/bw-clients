@@ -4,7 +4,7 @@ import { NotificationResponse } from "@bitwarden/common/models/response/notifica
 import { UserId } from "@bitwarden/common/types/guid";
 
 import { LogService } from "../../abstractions/log.service";
-import { ServerNotificationsService } from "../server-notifications-service";
+import { ServerNotificationsService } from "../server-notifications.service";
 
 export class UnsupportedServerNotificationsService implements ServerNotificationsService {
   notifications$: Observable<readonly [NotificationResponse, UserId]> = new Subject();

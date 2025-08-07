@@ -4,7 +4,7 @@ import {
   SystemNotificationClearInfo,
   SystemNotificationCreateInfo,
   SystemNotificationsService,
-} from "./system-notifications-service";
+} from "./system-notifications.service";
 
 export class UnsupportedSystemNotificationsService implements SystemNotificationsService {
   notificationClicked$ = throwError(() => new Error("Notification clicked is not supported."));

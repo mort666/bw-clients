@@ -1,4 +1,4 @@
-import { filter, firstValueFrom, mergeMap } from "rxjs";
+import { filter, firstValueFrom, map, switchMap } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
@@ -9,11 +9,10 @@ import { MasterPasswordServiceAbstraction } from "@bitwarden/common/key-manageme
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { ActionsService } from "@bitwarden/common/platform/actions";
 import {
-  ButtonActions,
   ButtonLocation,
   SystemNotificationEvent,
   SystemNotificationsService,
-} from "@bitwarden/common/platform/notifications/system-notifications-service";
+} from "@bitwarden/common/platform/notifications/system-notifications.service";
 import { UserId } from "@bitwarden/user-core";
 
 import { AuthRequestAnsweringServiceAbstraction } from "../../abstractions/auth-request-answering/auth-request-answering.service.abstraction";
@@ -29,26 +28,22 @@ export class AuthRequestAnsweringService implements AuthRequestAnsweringServiceA
   ) {
     this.systemNotificationsService.notificationClicked$
       .pipe(
-        filter(
-          (event: SystemNotificationEvent) => event.type === ButtonActions.AuthRequestNotification,
-        ),
-        mergeMap((event: SystemNotificationEvent) =>
-          this.handleAuthRequestNotificationClicked(event),
-        ),
+        filter((n) => n.id.startsWith("authRequest_")),
+        map((n) => ({ event: n, authRequestId: n.id.split("_")[1] })),
+        switchMap(({ event }) => this.handleAuthRequestNotificationClicked(event)),
       )
       .subscribe();
   }
   async handleAuthRequestNotificationClicked(event: SystemNotificationEvent): Promise<void> {
     if (event.buttonIdentifier === ButtonLocation.NotificationButton) {
-      // TODO: Uncomment this before going into review
       // await this.systemNotificationsService.clear({
-      //   id: event.id,
-      // })
+      //   id: `authRequest_${event.id}`,
+      // });
       await this.actionService.openPopup();
     }
   }
 
-  async receivedPendingAuthRequest(userId: UserId, notificationId: string): Promise<void> {
+  async receivedPendingAuthRequest(userId: UserId, authRequestId: string): Promise<void> {
     const authStatus = await firstValueFrom(this.authService.activeAccountStatus$);
     const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
     const forceSetPasswordReason = await firstValueFrom(
@@ -65,8 +60,7 @@ export class AuthRequestAnsweringService implements AuthRequestAnsweringServiceA
       // TODO: Handled in 14934
     } else {
       await this.systemNotificationsService.create({
-        id: notificationId,
-        type: ButtonActions.AuthRequestNotification,
+        id: `authRequest_${authRequestId}`,
         title: "Test (i18n)",
         body: "Pending Auth Request to Approve (i18n)",
         buttons: [],
