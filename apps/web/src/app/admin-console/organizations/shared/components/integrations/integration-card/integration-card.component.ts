@@ -125,6 +125,10 @@ export class IntegrationCardComponent implements AfterViewInit, OnDestroy {
     return this.isConnected !== undefined;
   }
 
+  IsUpdateAvailable(): boolean {
+    return !!this.integrationSettings.configuration;
+  }
+
   async setupConnection() {
     // invoke the dialog to connect the integration
     const dialog = openHecConnectDialog(this.dialogService, {

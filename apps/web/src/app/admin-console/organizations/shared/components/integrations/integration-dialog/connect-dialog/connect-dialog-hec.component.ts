@@ -55,6 +55,10 @@ export class ConnectHecDialogComponent implements OnInit {
     });
   }
 
+  isUpdateAvailable(): boolean {
+    return !!this.connectInfo.configuration;
+  }
+
   getSettingsAsJson(configuration: string) {
     try {
       return JSON.parse(configuration);
