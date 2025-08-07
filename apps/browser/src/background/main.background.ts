@@ -2,7 +2,7 @@
 // @ts-strict-ignore
 import "core-js/proposals/explicit-resource-management";
 
-import { filter, firstValueFrom, map, merge, Subject, timeout } from "rxjs";
+import { filter, firstValueFrom, map, merge, Subject, switchMap, timeout } from "rxjs";
 
 import { CollectionService, DefaultCollectionService } from "@bitwarden/admin-console/common";
 import {
@@ -1147,6 +1147,16 @@ export default class MainBackground {
       this.platformUtilsService,
       this.systemNotificationService,
     );
+
+    this.systemNotificationService.notificationClicked$
+      .pipe(
+        filter((n) => n.id.startsWith("authRequest_")),
+        map((n) => ({ event: n, authRequestId: n.id.split("_")[1] })),
+        switchMap(({ event }) =>
+          this.authRequestAnsweringService.handleAuthRequestNotificationClicked(event),
+        ),
+      )
+      .subscribe();
 
     this.serverNotificationsService = new DefaultServerNotificationsService(
       this.logService,

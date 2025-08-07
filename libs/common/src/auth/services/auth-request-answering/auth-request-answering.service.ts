@@ -1,4 +1,4 @@
-import { filter, firstValueFrom, map, switchMap } from "rxjs";
+import { firstValueFrom } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
@@ -25,15 +25,8 @@ export class AuthRequestAnsweringService implements AuthRequestAnsweringServiceA
     private readonly masterPasswordService: MasterPasswordServiceAbstraction,
     private readonly platformUtilsService: PlatformUtilsService,
     private readonly systemNotificationsService: SystemNotificationsService,
-  ) {
-    this.systemNotificationsService.notificationClicked$
-      .pipe(
-        filter((n) => n.id.startsWith("authRequest_")),
-        map((n) => ({ event: n, authRequestId: n.id.split("_")[1] })),
-        switchMap(({ event }) => this.handleAuthRequestNotificationClicked(event)),
-      )
-      .subscribe();
-  }
+  ) {}
+
   async handleAuthRequestNotificationClicked(event: SystemNotificationEvent): Promise<void> {
     if (event.buttonIdentifier === ButtonLocation.NotificationButton) {
       // await this.systemNotificationsService.clear({
