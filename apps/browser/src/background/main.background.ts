@@ -1127,7 +1127,7 @@ export default class MainBackground {
 
     this.actionsService = new BrowserActionsService(this.logService, this.platformUtilsService);
 
-    if ("notifications" in chrome || Notification) {
+    if ("notifications" in chrome) {
       this.systemNotificationService = new BrowserSystemNotificationService(
         this.logService,
         this.platformUtilsService,
@@ -1723,6 +1723,7 @@ export default class MainBackground {
 
   /**
    * Opens the popup to the given page
+   *
    * @default ExtensionPageUrls.Index
    * @deprecated Migrating to the browser actions service.
    */

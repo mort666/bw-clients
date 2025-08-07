@@ -213,6 +213,8 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
         await this.syncService.syncDeleteSend(notification.payload as SyncSendNotification);
         break;
       case NotificationType.AuthRequest:
+        // create notification
+
         this.messagingService.send("openLoginApproval", {
           notificationId: notification.payload.id,
         });
