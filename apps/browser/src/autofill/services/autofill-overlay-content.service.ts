@@ -643,7 +643,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
   };
 
   /**
-   * Returns the form field data used for add login and change password server notifications.
+   * Returns the form field data used for add login and change password notifications.
    */
   private getFormFieldData = (): ModifyLoginCipherFormData => {
     return {

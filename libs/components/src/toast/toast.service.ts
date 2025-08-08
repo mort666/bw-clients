@@ -17,7 +17,7 @@ export type ToastOptions = {
 };
 
 /**
- * Presents toast server notifications
+ * Presents toast notifications
  **/
 @Injectable({ providedIn: "root" })
 export class ToastService {

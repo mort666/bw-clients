@@ -1115,7 +1115,7 @@ const safeProviders: SafeProvider[] = [
     // This is a slightly odd dependency tree for a specialized api service
     // it depends on SyncService so that new data can be retrieved through the sync
     // rather than updating the OrganizationService directly. Instead OrganizationService
-    // subscribes to sync server notifications and will update itself based on that.
+    // subscribes to sync notifications and will update itself based on that.
     deps: [ApiServiceAbstraction, SyncService],
   }),
   safeProvider({

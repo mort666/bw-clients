@@ -19,7 +19,7 @@ import { NotificationView, NotificationViewData, NotificationViewResponse } from
 import { NOTIFICATIONS } from "../state/end-user-notification.state";
 
 /**
- * The default number of server notifications to fetch from the API.
+ * The default number of notifications to fetch from the API.
  */
 export const DEFAULT_NOTIFICATION_PAGE_SIZE = 50;
 
@@ -30,7 +30,7 @@ const getLoggedInUserIds = map<Record<UserId, AuthenticationStatus>, UserId[]>((
 );
 
 /**
- * A service for retrieving and managing server notifications for end users.
+ * A service for retrieving and managing notifications for end users.
  */
 export class DefaultEndUserNotificationService implements EndUserNotificationService {
   constructor(
@@ -100,7 +100,7 @@ export class DefaultEndUserNotificationService implements EndUserNotificationSer
   }
 
   /**
-   * Helper observable to filter server notifications by the notification type and user ids
+   * Helper observable to filter notifications by the notification type and user ids
    * Returns EMPTY if no user ids are provided
    * @param userIds
    * @private
@@ -121,7 +121,7 @@ export class DefaultEndUserNotificationService implements EndUserNotificationSer
   }
 
   /**
-   * Creates a subscription to listen for end user push server notifications and notification status updates.
+   * Creates a subscription to listen for end user push notifications and notification status updates.
    */
   listenForEndUserNotifications(): Subscription {
     return this.authService.authStatuses$
@@ -139,7 +139,7 @@ export class DefaultEndUserNotificationService implements EndUserNotificationSer
   }
 
   /**
-   * Fetches the server notifications from the API and updates the local state
+   * Fetches the notifications from the API and updates the local state
    * @param userId
    * @private
    */
@@ -164,7 +164,7 @@ export class DefaultEndUserNotificationService implements EndUserNotificationSer
   }
 
   /**
-   * Replaces the local state with server notifications and returns the updated state
+   * Replaces the local state with notifications and returns the updated state
    * @param userId
    * @param notifications
    * @private
@@ -178,7 +178,7 @@ export class DefaultEndUserNotificationService implements EndUserNotificationSer
 
   /**
    * Updates the local state adding the new notification or updates an existing one with the same id
-   * Returns the entire updated server notifications state
+   * Returns the entire updated notifications state
    * @param userId
    * @param notification
    * @private
@@ -203,7 +203,7 @@ export class DefaultEndUserNotificationService implements EndUserNotificationSer
   }
 
   /**
-   * Returns the local state for server notifications
+   * Returns the local state for notifications
    * @param userId
    * @private
    */

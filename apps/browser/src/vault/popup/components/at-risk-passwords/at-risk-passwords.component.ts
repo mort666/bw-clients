@@ -218,7 +218,7 @@ export class AtRiskPasswordsComponent implements OnInit {
               });
             }),
             concatMap((unreadTaskNotifications) => {
-              // TODO: Investigate creating a bulk endpoint to mark server notifications as read
+              // TODO: Investigate creating a bulk endpoint to mark notifications as read
               return concat(
                 ...unreadTaskNotifications.map((n) =>
                   this.endUserNotificationService.markAsRead(n.id, userId),

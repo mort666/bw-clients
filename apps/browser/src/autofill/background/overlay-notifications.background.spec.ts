@@ -451,7 +451,7 @@ describe("OverlayNotificationsBackground", () => {
       });
     });
 
-    describe("web requests that trigger server notifications", () => {
+    describe("web requests that trigger notifications", () => {
       const requestId = "123345";
       const pageDetails = mock<AutofillPageDetails>({ fields: [mock<AutofillField>()] });
 
