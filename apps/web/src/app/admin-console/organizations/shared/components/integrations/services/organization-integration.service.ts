@@ -14,7 +14,6 @@ import {
   HecConfigurationTemplate,
   OrganizationIntegrationConfigurationResponseWithIntegrationId,
 } from "@bitwarden/bit-common/dirt/integrations";
-import { EventType } from "@bitwarden/common/enums";
 import { OrganizationId, OrganizationIntegrationId } from "@bitwarden/common/types/guid";
 
 @Injectable({
@@ -175,7 +174,7 @@ export class OrganizationIntegrationService {
     configurationTemplate: HecConfigurationTemplate,
   ): Promise<OrganizationIntegrationConfigurationResponse> {
     const request = new OrganizationIntegrationConfigurationRequest(
-      EventType.Organization_Updated,
+      null,
       null,
       null,
       configurationTemplate.toString(),
