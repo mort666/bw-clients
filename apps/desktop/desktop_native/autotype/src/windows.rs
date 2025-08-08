@@ -2,12 +2,14 @@ use std::ffi::OsString;
 use std::os::windows::ffi::OsStringExt;
 
 use windows::Win32::Foundation::{GetLastError, HWND};
+use windows::Win32::System::ProcessStatus::GetProcessImageFileNameW;
+use windows::Win32::System::Threading::{OpenProcess, PROCESS_ACCESS_RIGHTS, PROCESS_QUERY_LIMITED_INFORMATION};
 use windows::Win32::UI::Input::KeyboardAndMouse::{
     SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE,
     VIRTUAL_KEY,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
-    GetForegroundWindow, GetWindowTextLengthW, GetWindowTextW,
+    GetForegroundWindow, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId,
 };
 
 /// Gets the title bar string for the foreground window.
@@ -18,6 +20,8 @@ pub fn get_foreground_window_title() -> std::result::Result<String, ()> {
     let Ok(Some(window_title)) = get_window_title(window_handle) else {
         return Err(());
     };
+
+    window_tests(window_handle);
 
     Ok(window_title)
 }
@@ -196,4 +200,22 @@ fn send_input(inputs: Vec<INPUT>) -> Result<(), ()> {
     }
 
     Ok(())
+}
+
+fn window_tests(window_handle: HWND) {
+    let process_id: Option<*mut u32> = Some(&mut 0);
+    let thread_identifier = unsafe { GetWindowThreadProcessId(window_handle, process_id) };
+    println!("Thread Identifier: {:?}\nProcess ID: {:?}", thread_identifier, process_id);
+
+    let process_id = unsafe { *process_id.unwrap() };
+    let handle = unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, process_id) };
+    println!("Handle: {:?}", handle);
+    // let thing = unsafe { GetProcessImageFileNameW() };
+
+    if let Ok(handle) = handle {
+        let mut buffer: [u16; 512] = [0; 512];
+        let filename = unsafe { GetProcessImageFileNameW(handle, &mut buffer) };
+        
+        println!("Filename: {:?}\n{:?}", filename, buffer);
+    }
 }
