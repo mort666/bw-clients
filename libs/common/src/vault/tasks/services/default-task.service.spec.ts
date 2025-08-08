@@ -8,7 +8,7 @@ import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authenticatio
 import { NotificationType } from "@bitwarden/common/enums";
 import { NotificationResponse } from "@bitwarden/common/models/response/notification.response";
 import { Message, MessageListener } from "@bitwarden/common/platform/messaging";
-import { ServerNotificationsService } from "@bitwarden/common/platform/notifications";
+import { ServerNotificationsService } from "@bitwarden/common/platform/server-notifications";
 import { SecurityTaskId, UserId } from "@bitwarden/common/types/guid";
 
 import { FakeStateProvider, mockAccountServiceWith } from "../../../../spec";
@@ -304,7 +304,7 @@ describe("Default task service", () => {
   });
 
   describe("listenForTaskNotifications()", () => {
-    it("should not subscribe to notifications when there are no unlocked users", () => {
+    it("should not subscribe to server notifications when there are no unlocked users", () => {
       mockAuthStatuses$.next({
         [userId]: AuthenticationStatus.Locked,
       });
@@ -320,7 +320,7 @@ describe("Default task service", () => {
       subscription.unsubscribe();
     });
 
-    it("should not subscribe to notifications when no users have tasks enabled", () => {
+    it("should not subscribe to server notifications when no users have tasks enabled", () => {
       mockAuthStatuses$.next({
         [userId]: AuthenticationStatus.Unlocked,
       });
@@ -336,7 +336,7 @@ describe("Default task service", () => {
       subscription.unsubscribe();
     });
 
-    it("should subscribe to notifications when there are unlocked users with tasks enabled", () => {
+    it("should subscribe to server notifications when there are unlocked users with tasks enabled", () => {
       mockAuthStatuses$.next({
         [userId]: AuthenticationStatus.Unlocked,
       });
@@ -378,7 +378,7 @@ describe("Default task service", () => {
         subscription.unsubscribe();
       });
 
-      it("should ignore notifications for other users", async () => {
+      it("should ignore server notifications for other users", async () => {
         mockAuthStatuses$.next({
           [userId]: AuthenticationStatus.Unlocked,
         });
@@ -403,7 +403,7 @@ describe("Default task service", () => {
         subscription.unsubscribe();
       });
 
-      it("should ignore other notifications types", async () => {
+      it("should ignore other server notifications types", async () => {
         mockAuthStatuses$.next({
           [userId]: AuthenticationStatus.Unlocked,
         });

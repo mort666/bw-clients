@@ -5,17 +5,17 @@ import { NotificationId, UserId } from "@bitwarden/common/types/guid";
 import { NotificationView } from "../models";
 
 /**
- * A service for retrieving and managing notifications for end users.
+ * A service for retrieving and managing server notifications for end users.
  */
 export abstract class EndUserNotificationService {
   /**
-   * Observable of all notifications for the given user.
+   * Observable of all server notifications for the given user.
    * @param userId
    */
   abstract notifications$(userId: UserId): Observable<NotificationView[]>;
 
   /**
-   * Observable of all unread notifications for the given user.
+   * Observable of all unread server notifications for the given user.
    * @param userId
    */
   abstract unreadNotifications$(userId: UserId): Observable<NotificationView[]>;
@@ -35,13 +35,13 @@ export abstract class EndUserNotificationService {
   abstract markAsDeleted(notificationId: NotificationId, userId: UserId): Promise<void>;
 
   /**
-   * Clear all notifications from state for the given user.
+   * Clear all server notifications from state for the given user.
    * @param userId
    */
   abstract clearState(userId: UserId): Promise<void>;
 
   /**
-   * Creates a subscription to listen for end user push notifications and notification status updates.
+   * Creates a subscription to listen for end user push server notifications and notification status updates.
    */
   abstract listenForEndUserNotifications(): Subscription;
 }

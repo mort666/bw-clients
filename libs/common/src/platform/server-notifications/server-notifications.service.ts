@@ -13,11 +13,11 @@ export abstract class ServerNotificationsService {
   /**
    * @deprecated This method should not be consumed, an observable to listen to server
    * notifications will be available one day but it is not ready to be consumed generally.
-   * Please add code reacting to notifications in {@link DefaultServerNotificationsService.processNotification}
+   * Please add code reacting to server notifications in {@link DefaultServerNotificationsService.processNotification}
    */
   abstract notifications$: Observable<readonly [NotificationResponse, UserId]>;
   /**
-   * Starts automatic listening and processing of notifications, should only be called once per application,
+   * Starts automatic listening and processing of server notifications, should only be called once per application,
    * or you will risk notifications being processed multiple times.
    */
   abstract startListening(): Subscription;

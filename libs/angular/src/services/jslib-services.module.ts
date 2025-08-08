@@ -202,20 +202,20 @@ import { SubjectMessageSender } from "@bitwarden/common/platform/messaging/inter
 import { devFlagEnabled } from "@bitwarden/common/platform/misc/flags";
 import { Account } from "@bitwarden/common/platform/models/domain/account";
 import { GlobalState } from "@bitwarden/common/platform/models/domain/global-state";
-import { ServerNotificationsService } from "@bitwarden/common/platform/notifications";
-// eslint-disable-next-line no-restricted-imports -- Needed for service creation
-import {
-  DefaultServerNotificationsService,
-  UnsupportedServerNotificationsService,
-  SignalRConnectionService,
-  UnsupportedWebPushConnectionService,
-  WebPushConnectionService,
-  WebPushNotificationsApiService,
-} from "@bitwarden/common/platform/notifications/internal";
 import {
   DefaultTaskSchedulerService,
   TaskSchedulerService,
 } from "@bitwarden/common/platform/scheduling";
+import { ServerNotificationsService } from "@bitwarden/common/platform/server-notifications";
+// eslint-disable-next-line no-restricted-imports -- Needed for service creation
+import {
+  DefaultServerNotificationsService,
+  NoopServerNotificationsService,
+  SignalRConnectionService,
+  UnsupportedWebPushConnectionService,
+  WebPushConnectionService,
+  WebPushNotificationsApiService,
+} from "@bitwarden/common/platform/server-notifications/internal";
 import { AppIdService } from "@bitwarden/common/platform/services/app-id.service";
 import { ConfigApiService } from "@bitwarden/common/platform/services/config/config-api.service";
 import { DefaultConfigService } from "@bitwarden/common/platform/services/config/default-config.service";
@@ -952,7 +952,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: ServerNotificationsService,
     useClass: devFlagEnabled("noopNotifications")
-      ? UnsupportedServerNotificationsService
+      ? NoopServerNotificationsService
       : DefaultServerNotificationsService,
     deps: [
       LogService,
@@ -1115,7 +1115,7 @@ const safeProviders: SafeProvider[] = [
     // This is a slightly odd dependency tree for a specialized api service
     // it depends on SyncService so that new data can be retrieved through the sync
     // rather than updating the OrganizationService directly. Instead OrganizationService
-    // subscribes to sync notifications and will update itself based on that.
+    // subscribes to sync server notifications and will update itself based on that.
     deps: [ApiServiceAbstraction, SyncService],
   }),
   safeProvider({

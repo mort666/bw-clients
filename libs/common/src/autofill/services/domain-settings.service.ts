@@ -25,7 +25,7 @@ const SHOW_FAVICONS = new KeyDefinition(DOMAIN_SETTINGS_DISK, "showFavicons", {
   deserializer: (value: boolean) => value ?? true,
 });
 
-// Domain exclusion list for notifications
+// Domain exclusion list for server notifications
 const NEVER_DOMAINS = new KeyDefinition(DOMAIN_SETTINGS_DISK, "neverDomains", {
   deserializer: (value: NeverDomains) => value ?? null,
 });
@@ -64,7 +64,7 @@ export abstract class DomainSettingsService {
   setShowFavicons: (newValue: boolean) => Promise<void>;
 
   /**
-   * User-specified URIs for which the client notifications should not appear
+   * User-specified URIs for which the client server notifications should not appear
    */
   neverDomains$: Observable<NeverDomains>;
   setNeverDomains: (newValue: NeverDomains) => Promise<void>;

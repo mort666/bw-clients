@@ -1,5 +1,4 @@
 import { map, merge, Observable } from "rxjs";
-import { v4 as uuidv4 } from "uuid";
 
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
@@ -9,7 +8,7 @@ import {
   SystemNotificationCreateInfo,
   SystemNotificationEvent,
   SystemNotificationsService,
-} from "@bitwarden/common/platform/notifications/system-notifications.service";
+} from "@bitwarden/common/platform/system-notifications/system-notifications.service";
 
 import { fromChromeEvent } from "../browser/from-chrome-event";
 
@@ -36,48 +35,19 @@ export class BrowserSystemNotificationService implements SystemNotificationsServ
     );
   }
 
-  async create(createInfo: SystemNotificationCreateInfo): Promise<string | undefined> {
-    try {
-      const notificationId = createInfo.id || uuidv4();
-
-      chrome.notifications.create(notificationId, {
-        iconUrl: "https://avatars.githubusercontent.com/u/15990069?s=200",
-        message: createInfo.body,
-        type: "basic",
-        title: createInfo.title,
-        buttons: createInfo.buttons.map((value) => {
-          return { title: value.title };
-        }),
-      });
-
-      // eslint-disable-next-line no-restricted-syntax
-      chrome.notifications.onButtonClicked.addListener(
-        (notificationId: string, buttonIndex: number) => {
-          this.notificationClicked$.subscribe({
-            next: () => ({
-              id: notificationId,
-              buttonIdentifier: buttonIndex,
-            }),
-          });
+  async create(createInfo: SystemNotificationCreateInfo): Promise<string> {
+    return new Promise<string>((resolve) => {
+      chrome.notifications.create(
+        {
+          iconUrl: chrome.runtime.getURL("images/icon128.png"),
+          message: createInfo.body,
+          type: "basic",
+          title: createInfo.title,
+          buttons: createInfo.buttons.map((value) => ({ title: value.title })),
         },
+        (notificationId) => resolve(notificationId),
       );
-
-      // eslint-disable-next-line no-restricted-syntax
-      chrome.notifications.onClicked.addListener((notificationId: string) => {
-        this.notificationClicked$.subscribe({
-          next: () => ({
-            id: notificationId,
-            buttonIdentifier: ButtonLocation.NotificationButton,
-          }),
-        });
-      });
-
-      return notificationId;
-    } catch (e) {
-      this.logService.error(
-        `Failed to create notification on ${this.platformUtilsService.getDevice()} with error: ${e}`,
-      );
-    }
+    });
   }
 
   async clear(clearInfo: SystemNotificationClearInfo): Promise<undefined> {

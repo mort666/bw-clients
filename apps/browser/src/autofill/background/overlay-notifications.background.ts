@@ -41,7 +41,7 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
   ) {}
 
   /**
-   * Initialize the overlay notifications background service.
+   * Initialize the overlay server notifications background service.
    */
   async init() {
     this.setupExtensionListeners();
@@ -395,7 +395,7 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
   };
 
   /**
-   * This method attempts to trigger the add login, change password, or at-risk password notifications
+   * This method attempts to trigger the add login, change password, or at-risk password server notifications
    * based on the modified login data and the tab details.
    *
    * @param requestId - The details of the web response
@@ -462,7 +462,7 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
       case NotificationTypes.AtRiskPassword:
         return !modifyLoginData.newPassword;
       case NotificationTypes.Unlock:
-        // Unlock notifications are handled separately and do not require form data
+        // Unlock server notifications are handled separately and do not require form data
         return false;
       default:
         this.logService.error(`Unknown notification type: ${notificationType}`);
