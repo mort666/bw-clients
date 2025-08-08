@@ -3,8 +3,7 @@
 import { Jsonify } from "type-fest";
 
 import { DeviceType } from "@bitwarden/device-type";
-
-import { PlatformUtilsService } from "../../../../platform/abstractions/platform-utils.service";
+import { PlatformUtilsService } from "@bitwarden/platform-utils";
 
 export class DeviceRequest {
   type: DeviceType;
