@@ -106,6 +106,8 @@ libs/state-test-utils @bitwarden/team-platform-dev
 libs/device-type @bitwarden/team-platform-dev
 libs/encoding @bitwarden/team-platform-dev
 libs/platform-utils @bitwarden/team-platform-dev
+libs/api @bitwarden/team-platform-dev
+libs/legacy-api @bitwarden/team-platform-dev
 # Web utils used across app and connectors
 apps/web/src/utils/ @bitwarden/team-platform-dev
 # Web core and shared files
