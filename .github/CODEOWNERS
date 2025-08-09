@@ -102,6 +102,7 @@ libs/client-type @bitwarden/team-platform-dev
 libs/core-test-utils @bitwarden/team-platform-dev
 libs/state @bitwarden/team-platform-dev
 libs/state-test-utils @bitwarden/team-platform-dev
+libs/device-type @bitwarden/team-platform-dev
 # Web utils used across app and connectors
 apps/web/src/utils/ @bitwarden/team-platform-dev
 # Web core and shared files
