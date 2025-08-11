@@ -278,7 +278,6 @@ describe("DefaultSendAccessService", () => {
     }));
 
     it("emits timeout error when context is invalid", fakeAsync(async () => {
-      // Set context missing required properties
       await stateProvider.getGlobal(SEND_CONTEXT_KEY).update(() => ({ missingId: "test" }) as any);
 
       const result$ = service.authenticate$(sendId, password);
@@ -302,7 +301,6 @@ describe("DefaultSendAccessService", () => {
       const errorResponse = new ErrorResponse([], 500);
       await stateProvider.getGlobal(SEND_CONTEXT_KEY).update(() => ({ id: sendId, key }));
 
-      // Mock crypto and API
       cryptoFunctionService.pbkdf2.mockResolvedValue(hashedArray);
       sendApiService.postSendAccess.mockRejectedValue(errorResponse);
 
@@ -335,7 +333,7 @@ describe("DefaultSendAccessService", () => {
       const hashedArray = new Uint8Array([10, 20, 30, 40]);
       await stateProvider.getGlobal(SEND_CONTEXT_KEY).update(() => ({ id: sendId, key }));
 
-      // Mock API to never resolve (simulating a hung request)
+      // simulate a hung request
       sendApiService.postSendAccess.mockReturnValue(firstValueFrom(NEVER));
       cryptoFunctionService.pbkdf2.mockResolvedValue(hashedArray);
 
