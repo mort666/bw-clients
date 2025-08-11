@@ -216,7 +216,9 @@ export default class NotificationBackground {
         cipherQueueMessage.type === NotificationQueueMessageType.ChangePassword
           ? await this.getDecryptedCipherById(cipherQueueMessage.cipherId, activeUserId)
           : this.convertAddLoginQueueMessageToCipherView(cipherQueueMessage);
-
+      if (!cipherView) {
+        return [];
+      }
       const organizationType = getOrganizationType(cipherView.organizationId);
       return [
         this.convertToNotificationCipherData(
@@ -340,7 +342,7 @@ export default class NotificationBackground {
   /**
    * Gets the active user server config from the config service.
    */
-  async getActiveUserServerConfig(): Promise<ServerConfig> {
+  async getActiveUserServerConfig(): Promise<ServerConfig | null> {
     return await firstValueFrom(this.configService.serverConfig$);
   }
 
@@ -367,12 +369,12 @@ export default class NotificationBackground {
    *
    * @param tab - The tab to check the notification queue for
    */
-  async checkNotificationQueue(tab: chrome.tabs.Tab = null): Promise<void> {
+  async checkNotificationQueue(tab?: chrome.tabs.Tab): Promise<void> {
     if (this.notificationQueue.length === 0) {
       return;
     }
 
-    if (tab != null) {
+    if (typeof tab !== "undefined") {
       await this.doNotificationQueueCheck(tab);
       return;
     }
@@ -467,7 +469,7 @@ export default class NotificationBackground {
       this.accountService.activeAccount$.pipe(getOptionalUserId),
     );
 
-    if (!activeUserId) {
+    if (!activeUserId || !tab.url) {
       return false;
     }
     const loginSecurityTaskInfo = await this.getSecurityTaskAndCipherForLoginData(
@@ -493,6 +495,10 @@ export default class NotificationBackground {
         .organizations$(activeUserId)
         .pipe(getOrganizationById(securityTask.organizationId)),
     );
+
+    if (!organization || !passwordChangeUri || !domain) {
+      return false;
+    }
 
     this.removeTabFromNotificationQueue(tab);
     const launchTimestamp = new Date().getTime();
@@ -626,11 +632,11 @@ export default class NotificationBackground {
     }
 
     if ((await this.getAuthStatus()) < AuthenticationStatus.Unlocked) {
-      await this.pushChangePasswordToQueue(null, loginDomain, changeData.newPassword, tab, true);
+      await this.pushChangePasswordToQueue("", loginDomain, changeData.newPassword, tab, true);
       return true;
     }
 
-    let id: string = null;
+    let id: string | null = null;
     const activeUserId = await firstValueFrom(
       this.accountService.activeAccount$.pipe(getOptionalUserId),
     );
@@ -649,7 +655,7 @@ export default class NotificationBackground {
     } else if (ciphers.length === 1) {
       id = ciphers[0].id;
     }
-    if (id != null) {
+    if (id && !Utils.isNullOrEmpty(id)) {
       await this.pushChangePasswordToQueue(id, loginDomain, changeData.newPassword, tab);
       return true;
     }
@@ -668,8 +674,8 @@ export default class NotificationBackground {
     if (message.sender !== "notificationBar") {
       return;
     }
-
-    const forms = this.autofillService.getFormsWithPasswordFields(message.details);
+    // @AFTODO Why can details or tab be undefined on NotificationBackgroundExtensionMessage
+    const forms = this.autofillService.getFormsWithPasswordFields(message.details!);
     await BrowserApi.tabSendMessageData(message.tab!, "notificationBarPageDetails", {
       details: message.details,
       forms: forms,
@@ -698,7 +704,7 @@ export default class NotificationBackground {
       return;
     }
 
-    const loginDomain = Utils.getDomain(tab.url);
+    const loginDomain = Utils.getDomain(tab.url!);
     if (loginDomain) {
       await this.pushUnlockVaultToQueue(loginDomain, tab);
     }
@@ -716,7 +722,7 @@ export default class NotificationBackground {
     const launchTimestamp = new Date().getTime();
     const message: AddChangePasswordQueueMessage = {
       type: NotificationQueueMessageType.ChangePassword,
-      cipherId: cipherId,
+      cipherId,
       newPassword: newPassword,
       domain: loginDomain,
       tab: tab,
@@ -770,7 +776,7 @@ export default class NotificationBackground {
       return;
     }
 
-    await this.saveOrUpdateCredentials(sender.tab!, message.edit, message.folder);
+    await this.saveOrUpdateCredentials(sender.tab!, !!message.edit, message.folder);
   }
 
   async handleCipherUpdateRepromptResponse(message: NotificationBackgroundExtensionMessage) {
@@ -816,7 +822,9 @@ export default class NotificationBackground {
 
       if (queueMessage.type === NotificationQueueMessageType.ChangePassword) {
         const cipherView = await this.getDecryptedCipherById(queueMessage.cipherId, activeUserId);
-
+        if (!cipherView) {
+          return;
+        }
         await this.updatePassword(
           cipherView,
           queueMessage.newPassword,
@@ -847,7 +855,7 @@ export default class NotificationBackground {
         }
       }
 
-      folderId = (await this.folderExists(folderId, activeUserId)) ? folderId : null;
+      folderId = (await this.folderExists(folderId!, activeUserId)) ? folderId : undefined;
       const newCipher = this.convertAddLoginQueueMessageToCipherView(queueMessage, folderId);
 
       if (edit) {
@@ -1035,8 +1043,8 @@ export default class NotificationBackground {
     ]);
   }
 
-  private async folderExists(folderId: string, userId: UserId) {
-    if (Utils.isNullOrWhitespace(folderId) || folderId === "null") {
+  private async folderExists(folderId: string | null | undefined, userId: UserId) {
+    if (Utils.isNullOrWhitespace(folderId!) || folderId === "null") {
       return false;
     }
     const folders = await firstValueFrom(this.folderService.folderViews$(userId));
