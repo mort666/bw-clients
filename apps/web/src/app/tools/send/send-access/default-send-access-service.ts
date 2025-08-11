@@ -12,9 +12,9 @@ import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.s
 import { SYSTEM_SERVICE_PROVIDER } from "@bitwarden/generator-components";
 
 import { keyToSendAccessRequest } from "./rx";
-import { SEND_RESPONSE_KEY, SEND_CONTEXT_KEY, isSendContext } from "./send-access-memory";
+import { SEND_RESPONSE_KEY, SEND_CONTEXT_KEY } from "./send-access-memory";
 import { SendAccessService } from "./send-access-service.abstraction";
-import { isErrorResponse } from "./util";
+import { isErrorResponse, isSendContext } from "./util";
 
 const TEN_SECONDS = 10_000;
 
