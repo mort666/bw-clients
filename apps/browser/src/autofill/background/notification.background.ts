@@ -399,7 +399,10 @@ export default class NotificationBackground {
 
   private async doNotificationQueueCheck(tab: chrome.tabs.Tab): Promise<void> {
     const queueMessage = this.notificationQueue.find(
-      (message) => message.tab!.id === tab.id && this.queueMessageIsFromTabOrigin(message, tab),
+      (message) =>
+        typeof message.tab !== "undefined" &&
+        message.tab.id === tab.id &&
+        this.queueMessageIsFromTabOrigin(message, tab),
     );
     if (queueMessage) {
       await this.sendNotificationQueueMessage(tab, queueMessage);
@@ -671,12 +674,16 @@ export default class NotificationBackground {
   private async handleCollectPageDetailsResponseMessage(
     message: NotificationBackgroundExtensionMessage,
   ) {
-    if (message.sender !== "notificationBar") {
+    if (
+      message.sender !== "notificationBar" ||
+      typeof message.tab === "undefined" ||
+      typeof message.details === "undefined"
+    ) {
       return;
     }
-    // @AFTODO Why can details or tab be undefined on NotificationBackgroundExtensionMessage
-    const forms = this.autofillService.getFormsWithPasswordFields(message.details!);
-    await BrowserApi.tabSendMessageData(message.tab!, "notificationBarPageDetails", {
+
+    const forms = this.autofillService.getFormsWithPasswordFields(message.details);
+    await BrowserApi.tabSendMessageData(message.tab, "notificationBarPageDetails", {
       details: message.details,
       forms: forms,
     });
@@ -703,8 +710,11 @@ export default class NotificationBackground {
     if (currentAuthStatus !== AuthenticationStatus.Locked || this.notificationQueue.length) {
       return;
     }
+    if (typeof tab.url === "undefined") {
+      return;
+    }
 
-    const loginDomain = Utils.getDomain(tab.url!);
+    const loginDomain = Utils.getDomain(tab.url);
     if (loginDomain) {
       await this.pushUnlockVaultToQueue(loginDomain, tab);
     }
@@ -760,8 +770,12 @@ export default class NotificationBackground {
     message: NotificationBackgroundExtensionMessage,
     sender: chrome.runtime.MessageSender,
   ) {
+    if (typeof sender.tab === "undefined") {
+      return;
+    }
+
     if ((await this.getAuthStatus()) < AuthenticationStatus.Unlocked) {
-      await BrowserApi.tabSendMessageData(sender.tab!, "addToLockedVaultPendingNotifications", {
+      await BrowserApi.tabSendMessageData(sender.tab, "addToLockedVaultPendingNotifications", {
         commandToRetry: {
           message: {
             command: message.command,
@@ -772,18 +786,21 @@ export default class NotificationBackground {
         },
         target: "notification.background",
       } as LockedVaultPendingNotificationsData);
-      await this.openUnlockPopout(sender.tab!);
+      await this.openUnlockPopout(sender.tab);
       return;
     }
 
-    await this.saveOrUpdateCredentials(sender.tab!, !!message.edit, message.folder);
+    await this.saveOrUpdateCredentials(sender.tab, !!message.edit, message.folder);
   }
 
   async handleCipherUpdateRepromptResponse(message: NotificationBackgroundExtensionMessage) {
+    if (typeof message.tab === "undefined") {
+      return;
+    }
     if (message.success) {
-      await this.saveOrUpdateCredentials(message.tab!, false, undefined, true);
+      await this.saveOrUpdateCredentials(message.tab, false, undefined, true);
     } else {
-      await BrowserApi.tabSendMessageData(message.tab!, "saveCipherAttemptCompleted", {
+      await BrowserApi.tabSendMessageData(message.tab, "saveCipherAttemptCompleted", {
         error: "Password reprompt failed",
       });
       return;
@@ -855,7 +872,8 @@ export default class NotificationBackground {
         }
       }
 
-      folderId = (await this.folderExists(folderId!, activeUserId)) ? folderId : undefined;
+      folderId =
+        (await this.folderExists(folderId, activeUserId)) && !!folderId ? folderId : undefined;
       const newCipher = this.convertAddLoginQueueMessageToCipherView(queueMessage, folderId);
 
       if (edit) {
@@ -1044,7 +1062,11 @@ export default class NotificationBackground {
   }
 
   private async folderExists(folderId: string | null | undefined, userId: UserId) {
-    if (Utils.isNullOrWhitespace(folderId!) || folderId === "null") {
+    if (
+      (typeof folderId === "string" && Utils.isNullOrWhitespace(folderId)) ||
+      folderId === "null" ||
+      folderId === null
+    ) {
       return false;
     }
     const folders = await firstValueFrom(this.folderService.folderViews$(userId));
@@ -1201,8 +1223,8 @@ export default class NotificationBackground {
   ): Promise<void> {
     const messageData = message.data as LockedVaultPendingNotificationsData;
     const retryCommand = messageData.commandToRetry.message.command as ExtensionCommandType;
-    if (this.allowedRetryCommands.has(retryCommand)) {
-      await BrowserApi.tabSendMessageData(sender.tab!, "closeNotificationBar");
+    if (typeof sender.tab !== "undefined" && this.allowedRetryCommands.has(retryCommand)) {
+      await BrowserApi.tabSendMessageData(sender.tab, "closeNotificationBar");
     }
 
     if (messageData.target !== "notification.background") {
@@ -1229,9 +1251,11 @@ export default class NotificationBackground {
     message: NotificationBackgroundExtensionMessage,
     sender: chrome.runtime.MessageSender,
   ) {
-    await BrowserApi.tabSendMessageData(sender.tab!, "closeNotificationBar", {
-      fadeOutNotification: !!message.fadeOutNotification,
-    });
+    if (typeof sender.tab !== "undefined") {
+      await BrowserApi.tabSendMessageData(sender.tab, "closeNotificationBar", {
+        fadeOutNotification: !!message.fadeOutNotification,
+      });
+    }
   }
 
   /**
@@ -1255,7 +1279,7 @@ export default class NotificationBackground {
       await browserAction.setPopup({ popup: "popup/index.html#/at-risk-passwords" });
 
       await Promise.all([
-        this.messagingService.send(VaultMessages.OpenAtRiskPasswords),
+        this.messagingService.send(VaultMessages.OpenBrowserExtensionToUrl),
         BrowserApi.tabSendMessageData(sender.tab!, "closeNotificationBar", {
           fadeOutNotification: !!message.fadeOutNotification,
         }),
@@ -1280,7 +1304,9 @@ export default class NotificationBackground {
     message: NotificationBackgroundExtensionMessage,
     sender: chrome.runtime.MessageSender,
   ) {
-    await BrowserApi.tabSendMessageData(sender.tab!, "adjustNotificationBar", message.data);
+    if (typeof sender.tab !== "undefined") {
+      await BrowserApi.tabSendMessageData(sender.tab, "adjustNotificationBar", message.data);
+    }
   }
 
   /**
