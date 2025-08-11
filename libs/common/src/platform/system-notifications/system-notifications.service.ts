@@ -32,7 +32,7 @@ export type SystemNotificationEvent = {
 };
 
 /**
- * A service responsible for displaying operating system level notifications.
+ * A service responsible for displaying operating system level server notifications.
  */
 export abstract class SystemNotificationsService {
   abstract notificationClicked$: Observable<SystemNotificationEvent>;
@@ -43,7 +43,7 @@ export abstract class SystemNotificationsService {
    * @returns If a notification is successfully created it will respond back with an
    *          id that refers to a notification.
    */
-  abstract create(createInfo: SystemNotificationCreateInfo): Promise<string | undefined>;
+  abstract create(createInfo: SystemNotificationCreateInfo): Promise<string>;
 
   /**
    * Clears a notification.
@@ -52,7 +52,7 @@ export abstract class SystemNotificationsService {
   abstract clear(clearInfo: SystemNotificationClearInfo): Promise<void>;
 
   /**
-   * Used to know if a given platform supports notifications.
+   * Used to know if a given platform supports server notifications.
    */
   abstract isSupported(): boolean;
 }

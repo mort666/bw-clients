@@ -8,7 +8,7 @@ import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authenticatio
 import { NotificationType } from "@bitwarden/common/enums";
 import { NotificationResponse } from "@bitwarden/common/models/response/notification.response";
 import { Message, MessageListener } from "@bitwarden/common/platform/messaging";
-import { ServerNotificationsService } from "@bitwarden/common/platform/notifications";
+import { ServerNotificationsService } from "@bitwarden/common/platform/server-notifications";
 import { SecurityTaskId, UserId } from "@bitwarden/common/types/guid";
 
 import { FakeStateProvider, mockAccountServiceWith } from "../../../../spec";

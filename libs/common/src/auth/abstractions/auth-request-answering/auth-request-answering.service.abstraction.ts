@@ -1,4 +1,4 @@
-import { SystemNotificationEvent } from "@bitwarden/common/platform/notifications/system-notifications.service";
+import { SystemNotificationEvent } from "@bitwarden/common/platform/system-notifications/system-notifications.service";
 import { UserId } from "@bitwarden/user-core";
 
 export abstract class AuthRequestAnsweringServiceAbstraction {

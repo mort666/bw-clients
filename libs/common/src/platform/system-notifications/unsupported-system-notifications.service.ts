@@ -9,7 +9,7 @@ import {
 export class UnsupportedSystemNotificationsService implements SystemNotificationsService {
   notificationClicked$ = throwError(() => new Error("Notification clicked is not supported."));
 
-  async create(createInfo: SystemNotificationCreateInfo): Promise<undefined> {
+  async create(createInfo: SystemNotificationCreateInfo): Promise<string> {
     throw new Error("Create OS Notification unsupported.");
   }
 

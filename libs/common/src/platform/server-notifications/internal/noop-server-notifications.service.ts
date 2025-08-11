@@ -6,14 +6,14 @@ import { UserId } from "@bitwarden/common/types/guid";
 import { LogService } from "../../abstractions/log.service";
 import { ServerNotificationsService } from "../server-notifications.service";
 
-export class UnsupportedServerNotificationsService implements ServerNotificationsService {
+export class NoopServerNotificationsService implements ServerNotificationsService {
   notifications$: Observable<readonly [NotificationResponse, UserId]> = new Subject();
 
   constructor(private logService: LogService) {}
 
   startListening(): Subscription {
     this.logService.info(
-      "Initializing no-op notification service, no push notifications will be received",
+      "Initializing no-op notification service, no push server notifications will be received",
     );
     return Subscription.EMPTY;
   }

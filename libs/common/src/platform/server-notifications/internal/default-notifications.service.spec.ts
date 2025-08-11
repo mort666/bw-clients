@@ -137,7 +137,7 @@ describe("NotificationsService", () => {
     expect(actualNotification.type).toBe(expectedType);
   };
 
-  it("emits notifications through WebPush when supported", async () => {
+  it("emits server notifications through WebPush when supported", async () => {
     const notificationsPromise = firstValueFrom(sut.notifications$.pipe(bufferCount(2)));
 
     emitActiveUser(mockUser1);
@@ -230,7 +230,7 @@ describe("NotificationsService", () => {
   });
 
   it.each([
-    // Temporarily rolling back notifications being connected while locked
+    // Temporarily rolling back server notifications being connected while locked
     // { initialStatus: AuthenticationStatus.Locked, updatedStatus: AuthenticationStatus.Unlocked },
     // { initialStatus: AuthenticationStatus.Unlocked, updatedStatus: AuthenticationStatus.Locked },
     // { initialStatus: AuthenticationStatus.Locked, updatedStatus: AuthenticationStatus.Locked },
@@ -259,7 +259,7 @@ describe("NotificationsService", () => {
   );
 
   it.each([
-    // Temporarily disabling notifications connecting while in a locked state
+    // Temporarily disabling server notifications connecting while in a locked state
     // AuthenticationStatus.Locked,
     AuthenticationStatus.Unlocked,
   ])(
@@ -285,7 +285,7 @@ describe("NotificationsService", () => {
     },
   );
 
-  it("does not connect to any notification stream when notifications are disabled through special url", () => {
+  it("does not connect to any notification stream when server notifications are disabled through special url", () => {
     const subscription = sut.notifications$.subscribe();
     emitActiveUser(mockUser1);
     emitNotificationUrl(DISABLED_NOTIFICATIONS_URL);

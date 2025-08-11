@@ -204,22 +204,20 @@ import { SubjectMessageSender } from "@bitwarden/common/platform/messaging/inter
 import { devFlagEnabled } from "@bitwarden/common/platform/misc/flags";
 import { Account } from "@bitwarden/common/platform/models/domain/account";
 import { GlobalState } from "@bitwarden/common/platform/models/domain/global-state";
-import { ServerNotificationsService } from "@bitwarden/common/platform/notifications";
-// eslint-disable-next-line no-restricted-imports -- Needed for service creation
-import {
-  DefaultServerNotificationsService,
-  UnsupportedServerNotificationsService,
-  SignalRConnectionService,
-  UnsupportedWebPushConnectionService,
-  WebPushConnectionService,
-  WebPushNotificationsApiService,
-} from "@bitwarden/common/platform/notifications/internal";
-import { SystemNotificationsService } from "@bitwarden/common/platform/notifications/system-notifications.service";
-import { UnsupportedSystemNotificationsService } from "@bitwarden/common/platform/notifications/unsupported-system-notifications.service";
 import {
   DefaultTaskSchedulerService,
   TaskSchedulerService,
 } from "@bitwarden/common/platform/scheduling";
+import { ServerNotificationsService } from "@bitwarden/common/platform/server-notifications";
+// eslint-disable-next-line no-restricted-imports -- Needed for service creation
+import {
+  DefaultServerNotificationsService,
+  NoopServerNotificationsService,
+  SignalRConnectionService,
+  UnsupportedWebPushConnectionService,
+  WebPushConnectionService,
+  WebPushNotificationsApiService,
+} from "@bitwarden/common/platform/server-notifications/internal";
 import { AppIdService } from "@bitwarden/common/platform/services/app-id.service";
 import { ConfigApiService } from "@bitwarden/common/platform/services/config/config-api.service";
 import { DefaultConfigService } from "@bitwarden/common/platform/services/config/default-config.service";
@@ -256,6 +254,8 @@ import { StateEventRunnerService } from "@bitwarden/common/platform/state/state-
 import { SyncService } from "@bitwarden/common/platform/sync";
 // eslint-disable-next-line no-restricted-imports -- Needed for DI
 import { DefaultSyncService } from "@bitwarden/common/platform/sync/internal";
+import { SystemNotificationsService } from "@bitwarden/common/platform/system-notifications/system-notifications.service";
+import { UnsupportedSystemNotificationsService } from "@bitwarden/common/platform/system-notifications/unsupported-system-notifications.service";
 import {
   DefaultThemeStateService,
   ThemeStateService,
@@ -978,7 +978,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: ServerNotificationsService,
     useClass: devFlagEnabled("noopNotifications")
-      ? UnsupportedServerNotificationsService
+      ? NoopServerNotificationsService
       : DefaultServerNotificationsService,
     deps: [
       LogService,

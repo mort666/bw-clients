@@ -28,7 +28,7 @@ The `openPopup()` method has limitations in some environments due to browser-spe
 
 - **Safari**: Only works when `openPopup()` is triggered from a window context. Attempts from background service workers fail.
 - **Firefox**: Does not appear to support `openPopup()` in either context.
-- **Chrome**: Fully functional in both contexts.
+- **Chrome**: Fully functional in both contexts, but only on Mac. Windows it does not work in.
 - **Edge**: Behavior has not been tested.
 - **Vivaldi**: `openPopup()` results in an error that _might_ be related to running in a background context, but the cause is currently unclear.
 - **Opera**: Works from window context. Background calls fail silently with no error message.

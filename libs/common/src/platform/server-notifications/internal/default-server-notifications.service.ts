@@ -63,7 +63,7 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
       distinctUntilChanged(),
       switchMap((activeAccountId) => {
         if (activeAccountId == null) {
-          // We don't emit notifications for inactive accounts currently
+          // We don't emit server-notifications for inactive accounts currently
           return EMPTY;
         }
 
@@ -76,8 +76,8 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
   }
 
   /**
-   * Retrieves a stream of push notifications for the given user.
-   * @param userId The user id of the user to get the push notifications for.
+   * Retrieves a stream of push server notifications for the given user.
+   * @param userId The user id of the user to get the push server notifications for.
    */
   private userNotifications$(userId: UserId) {
     return this.environmentService.environment$.pipe(
@@ -111,7 +111,7 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
       }),
       supportSwitch({
         supported: (service) => {
-          this.logService.info("Using WebPush for notifications");
+          this.logService.info("Using WebPush for server notifications");
           return service.notifications$.pipe(
             catchError((err: unknown) => {
               this.logService.warning("Issue with web push, falling back to SignalR", err);
@@ -120,7 +120,7 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
           );
         },
         notSupported: () => {
-          this.logService.info("Using SignalR for notifications");
+          this.logService.info("Using SignalR for server notifications");
           return this.connectSignalR$(userId, notificationsUrl);
         },
       }),
@@ -240,7 +240,8 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
         mergeMap(async ([notification, userId]) => this.processNotification(notification, userId)),
       )
       .subscribe({
-        error: (e: unknown) => this.logService.warning("Error in notifications$ observable", e),
+        error: (e: unknown) =>
+          this.logService.warning("Error in server notifications$ observable", e),
       });
   }
 
