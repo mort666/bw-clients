@@ -812,9 +812,7 @@ export default class NotificationBackground {
         continue;
       }
 
-      const activeUserId = await firstValueFrom(
-        this.accountService.activeAccount$.pipe(getOptionalUserId),
-      );
+      const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
 
       if (queueMessage.type === NotificationQueueMessageType.ChangePassword) {
         const cipherView = await this.getDecryptedCipherById(queueMessage.cipherId, activeUserId);
@@ -868,8 +866,14 @@ export default class NotificationBackground {
         });
         await BrowserApi.tabSendMessage(tab, { command: "addedCipher" });
       } catch (error) {
+        let message;
+        if (error instanceof Error) {
+          message = error.message;
+        } else {
+          message = String(error);
+        }
         await BrowserApi.tabSendMessageData(tab, "saveCipherAttemptCompleted", {
-          error: (error as Error)?.message && String(error.message),
+          error: message,
         });
       }
     }
@@ -952,8 +956,14 @@ export default class NotificationBackground {
         );
       }
     } catch (error) {
+      let message;
+      if (error instanceof Error) {
+        message = error.message;
+      } else {
+        message = String(error);
+      }
       await BrowserApi.tabSendMessageData(tab, "saveCipherAttemptCompleted", {
-        error: (error as Error)?.message && String(error.message),
+        error: message,
       });
     }
   }
@@ -1033,7 +1043,10 @@ export default class NotificationBackground {
     return folders.some((x) => x.id === folderId);
   }
 
-  private async getDecryptedCipherById(cipherId: string, userId: UserId) {
+  private async getDecryptedCipherById(
+    cipherId: string,
+    userId: UserId,
+  ): Promise<CipherView | null> {
     const cipher = await this.cipherService.get(cipherId, userId);
     if (cipher != null && cipher.type === CipherType.Login) {
       return await this.cipherService.decrypt(cipher, userId);
