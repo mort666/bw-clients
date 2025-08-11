@@ -29,13 +29,13 @@ describe("DefaultSendAccessService", () => {
   beforeEach(() => {
     jest.resetAllMocks();
 
-    cryptoFunctionService = mock<CryptoFunctionService>();
     const accountService = mockAccountServiceWith("user-id" as UserId);
     stateProvider = new FakeStateProvider(accountService);
     sendApiService = mock<SendApiService>();
     router = mock<Router>();
     logger = mock<SemanticLogger>();
     systemServiceProvider = mock<SystemServiceProvider>();
+    cryptoFunctionService = mock<CryptoFunctionService>();
 
     systemServiceProvider.log.mockReturnValue(logger);
 
@@ -134,6 +134,7 @@ describe("DefaultSendAccessService", () => {
     });
 
     it("emits timeout error when API response exceeds 10 seconds", fakeAsync(() => {
+      // simulate a hung request
       sendApiService.postSendAccess.mockReturnValue(firstValueFrom(NEVER));
 
       const result$ = service.redirect$(sendId);
