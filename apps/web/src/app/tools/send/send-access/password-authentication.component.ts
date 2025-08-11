@@ -67,7 +67,8 @@ export class PasswordAuthenticationComponent {
         withLatestFrom(sendId$, this.formGroup.valueChanges),
         map(([, sendId, { password }]) => [sendId, password ?? ""] as const),
         concatMap((params) => this.access.authenticate$(...params)),
-        map((success) => (success ? "success" : "failed")),
+        // FIXME: remove type assertion once we're on a typescript version that properly infers the type
+        map((success) => (success ? "success" : "failed") as "success" | "failed"),
         takeUntilDestroyed(destroyRef),
       )
       .subscribe({
