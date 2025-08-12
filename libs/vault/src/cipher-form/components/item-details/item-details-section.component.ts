@@ -311,7 +311,6 @@ export class ItemDetailsSectionComponent implements OnInit {
     });
 
     const orgId = this.itemDetailsForm.controls.organizationId.value as OrganizationId;
-    const organization = this.organizations.find((o) => o.id === orgId);
     const initializedWithCachedCipher = this.cipherFormContainer.initializedWithCachedCipher();
 
     // Configure form for clone mode.
@@ -333,9 +332,7 @@ export class ItemDetailsSectionComponent implements OnInit {
 
     await this.updateCollectionOptions(prefillCollections);
 
-    if (!organization?.canEditAllCiphers && !prefillCipher.canAssignToCollections) {
-      this.itemDetailsForm.controls.collectionIds.disable();
-    }
+    this.setCollectionControlState();
 
     if (this.partialEdit) {
       this.itemDetailsForm.disable();
@@ -350,15 +347,17 @@ export class ItemDetailsSectionComponent implements OnInit {
             c.readOnly &&
             this.originalCipherView.collectionIds.includes(c.id as CollectionId),
         );
-        this.setCollectionControlState();
       }
     }
   }
 
   private setCollectionControlState() {
-    const prefillCipher = this.cipherFormContainer.getInitialCipherView();
+    const initialCipherView = this.cipherFormContainer.getInitialCipherView();
     const orgId = this.itemDetailsForm.controls.organizationId.value as OrganizationId;
     const organization = this.organizations.find((o) => o.id === orgId);
+    if (!organization || !initialCipherView) {
+      return;
+    }
     // Disable the collection control if either of the following apply:
     // 1. The organization does not allow editing all ciphers and the existing cipher cannot be assigned to
     // collections
@@ -367,10 +366,10 @@ export class ItemDetailsSectionComponent implements OnInit {
     //   a. Disable Collections Options if Owner/Admin does not have Edit/Manage permissions on item
     //   b. Disable Collections Options if Custom user does not have Edit/Manage permissions on item
     if (
-      (!organization?.canEditAllCiphers && !prefillCipher.canAssignToCollections) ||
-      (organization?.allowAdminAccessToAllCollectionItems &&
-        (!this.originalCipherView.viewPassword || !this.originalCipherView.edit)) ||
-      (organization?.type === OrganizationUserType.Custom && !this.originalCipherView.viewPassword)
+      (!organization.canEditAllCiphers && !initialCipherView.canAssignToCollections) ||
+      (organization.allowAdminAccessToAllCollectionItems &&
+        (!initialCipherView.viewPassword || !initialCipherView.edit)) ||
+      (organization.type === OrganizationUserType.Custom && !initialCipherView.viewPassword)
     ) {
       this.itemDetailsForm.controls.collectionIds.disable();
     }
