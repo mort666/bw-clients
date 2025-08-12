@@ -6,6 +6,7 @@ import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authenticatio
 import { ForceSetPasswordReason } from "@bitwarden/common/auth/models/domain/force-set-password-reason";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { MasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
+import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { ActionsService } from "@bitwarden/common/platform/actions";
 import {
@@ -22,6 +23,7 @@ export class AuthRequestAnsweringService implements AuthRequestAnsweringServiceA
     private readonly accountService: AccountService,
     private readonly actionService: ActionsService,
     private readonly authService: AuthService,
+    private readonly i18nService: I18nService,
     private readonly masterPasswordService: MasterPasswordServiceAbstraction,
     private readonly platformUtilsService: PlatformUtilsService,
     private readonly systemNotificationsService: SystemNotificationsService,
@@ -54,7 +56,7 @@ export class AuthRequestAnsweringService implements AuthRequestAnsweringServiceA
     } else {
       await this.systemNotificationsService.create({
         id: `authRequest_${authRequestId}`,
-        title: "Test (i18n)",
+        title: this.i18nService.t("accountAccessRequested"),
         body: "Pending Auth Request to Approve (i18n)",
         buttons: [],
       });

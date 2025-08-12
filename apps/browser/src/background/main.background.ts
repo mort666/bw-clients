@@ -1131,10 +1131,7 @@ export default class MainBackground {
     this.actionsService = new BrowserActionsService(this.logService, this.platformUtilsService);
 
     if ("notifications" in chrome) {
-      this.systemNotificationService = new BrowserSystemNotificationService(
-        this.logService,
-        this.platformUtilsService,
-      );
+      this.systemNotificationService = new BrowserSystemNotificationService();
     } else {
       this.systemNotificationService = new UnsupportedSystemNotificationsService();
     }
@@ -1143,6 +1140,7 @@ export default class MainBackground {
       this.accountService,
       this.actionsService,
       this.authService,
+      this.i18nService,
       this.masterPasswordService,
       this.platformUtilsService,
       this.systemNotificationService,

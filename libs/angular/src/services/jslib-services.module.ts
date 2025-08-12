@@ -970,6 +970,7 @@ const safeProviders: SafeProvider[] = [
       AccountServiceAbstraction,
       ActionsService,
       AuthServiceAbstraction,
+      I18nServiceAbstraction,
       MasterPasswordServiceAbstraction,
       PlatformUtilsServiceAbstraction,
       SystemNotificationsService,

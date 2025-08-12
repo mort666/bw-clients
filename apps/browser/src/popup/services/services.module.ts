@@ -596,7 +596,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: SystemNotificationsService,
     useClass: BrowserSystemNotificationService,
-    deps: [LogService, PlatformUtilsService],
+    deps: [],
   }),
   safeProvider({
     provide: Fido2UserVerificationService,
@@ -630,7 +630,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: SystemNotificationsService,
     useClass: BrowserSystemNotificationService,
-    deps: [LogService, PlatformUtilsService],
+    deps: [],
   }),
   safeProvider({
     provide: LoginComponentService,

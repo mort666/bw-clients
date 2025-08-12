@@ -1,7 +1,5 @@
 import { map, merge, Observable } from "rxjs";
 
-import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
-import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import {
   ButtonLocation,
   SystemNotificationClearInfo,
@@ -15,10 +13,7 @@ import { fromChromeEvent } from "../browser/from-chrome-event";
 export class BrowserSystemNotificationService implements SystemNotificationsService {
   notificationClicked$: Observable<SystemNotificationEvent>;
 
-  constructor(
-    private logService: LogService,
-    private platformUtilsService: PlatformUtilsService,
-  ) {
+  constructor() {
     this.notificationClicked$ = merge(
       fromChromeEvent(chrome.notifications.onButtonClicked).pipe(
         map(([notificationId, buttonIndex]) => ({
