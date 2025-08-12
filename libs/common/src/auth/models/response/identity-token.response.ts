@@ -12,7 +12,7 @@ import { UserDecryptionOptionsResponse } from "./user-decryption-options/user-de
 
 export class IdentityTokenResponse extends BaseResponse {
   // Authentication Information
-  accessToken: string;
+  accessToken: string; // a JWT with claims about the user
   expiresIn: number;
   refreshToken: string;
   tokenType: string;
