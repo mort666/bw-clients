@@ -308,6 +308,7 @@ import CommandsBackground from "./commands.background";
 import IdleBackground from "./idle.background";
 import { NativeMessagingBackground } from "./nativeMessaging.background";
 import RuntimeBackground from "./runtime.background";
+import { SystemNotificationPrefixes } from "@bitwarden/common/platform/system-notifications/system-notifications.service";
 
 export default class MainBackground {
   messagingService: MessageSender;
@@ -1131,7 +1132,9 @@ export default class MainBackground {
     this.actionsService = new BrowserActionsService(this.logService, this.platformUtilsService);
 
     if ("notifications" in chrome) {
-      this.systemNotificationService = new BrowserSystemNotificationService();
+      this.systemNotificationService = new BrowserSystemNotificationService(
+        this.platformUtilsService,
+      );
     } else {
       this.systemNotificationService = new UnsupportedSystemNotificationsService();
     }
@@ -1145,16 +1148,6 @@ export default class MainBackground {
       this.platformUtilsService,
       this.systemNotificationService,
     );
-
-    this.systemNotificationService.notificationClicked$
-      .pipe(
-        filter((n) => n.id.startsWith("authRequest_")),
-        map((n) => ({ event: n, authRequestId: n.id.split("_")[1] })),
-        switchMap(({ event }) =>
-          this.authRequestAnsweringService.handleAuthRequestNotificationClicked(event),
-        ),
-      )
-      .subscribe();
 
     this.serverNotificationsService = new DefaultServerNotificationsService(
       this.logService,
@@ -1413,6 +1406,10 @@ export default class MainBackground {
       this.accountService,
       this.authService,
     );
+
+    // Putting this here so that all other services are initialized prior to trying to hook up
+    // subscriptions to the notification chrome events.
+    this.initNotificationSubscriptions();
   }
 
   async bootstrap() {
@@ -1802,6 +1799,23 @@ export default class MainBackground {
     if (override || lastSyncAgo >= syncInternal) {
       await this.syncService.fullSync(override);
     }
+  }
+
+  /**
+   * This function is for creating any subscriptions for the background service worker. We do this
+   * here because it's important to run this during the evaluation period of the browser extension
+   * service worker.
+   */
+  initNotificationSubscriptions() {
+    this.systemNotificationService.notificationClicked$
+      .pipe(
+        filter((n) => n.id.startsWith(SystemNotificationPrefixes.AuthRequest + "_")),
+        map((n) => ({ event: n, authRequestId: n.id.split("_")[1] })),
+        switchMap(({ event }) =>
+          this.authRequestAnsweringService.handleAuthRequestNotificationClicked(event),
+        ),
+      )
+      .subscribe();
   }
 
   /**

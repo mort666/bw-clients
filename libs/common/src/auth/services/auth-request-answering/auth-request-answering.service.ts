@@ -12,6 +12,7 @@ import { ActionsService } from "@bitwarden/common/platform/actions";
 import {
   ButtonLocation,
   SystemNotificationEvent,
+  SystemNotificationPrefixes,
   SystemNotificationsService,
 } from "@bitwarden/common/platform/system-notifications/system-notifications.service";
 import { UserId } from "@bitwarden/user-core";
@@ -31,9 +32,9 @@ export class AuthRequestAnsweringService implements AuthRequestAnsweringServiceA
 
   async handleAuthRequestNotificationClicked(event: SystemNotificationEvent): Promise<void> {
     if (event.buttonIdentifier === ButtonLocation.NotificationButton) {
-      // await this.systemNotificationsService.clear({
-      //   id: `authRequest_${event.id}`,
-      // });
+      await this.systemNotificationsService.clear({
+        id: `${event.id}`,
+      });
       await this.actionService.openPopup();
     }
   }
@@ -54,10 +55,14 @@ export class AuthRequestAnsweringService implements AuthRequestAnsweringServiceA
     ) {
       // TODO: Handled in 14934
     } else {
+      // Get the user's email to include in the system notification
+      const accounts = await firstValueFrom(this.accountService.accounts$);
+      const emailForUser = accounts?.[userId]?.email;
+
       await this.systemNotificationsService.create({
-        id: `authRequest_${authRequestId}`,
+        id: `${SystemNotificationPrefixes.AuthRequest}_${authRequestId}`,
         title: this.i18nService.t("accountAccessRequested"),
-        body: "Pending Auth Request to Approve (i18n)",
+        body: this.i18nService.t("confirmAccessAttempt", emailForUser),
         buttons: [],
       });
     }
