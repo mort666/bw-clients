@@ -71,6 +71,7 @@ export class Utils {
     }
   }
 
+  /** @deprecated Moved to @bitwarden/encoding as a directly exported function*/
   static fromB64ToArray(str: string): Uint8Array {
     if (str == null) {
       return null;
@@ -88,10 +89,12 @@ export class Utils {
     }
   }
 
+  /** @deprecated Moved to @bitwarden/encoding as a directly exported function*/
   static fromUrlB64ToArray(str: string): Uint8Array {
     return Utils.fromB64ToArray(Utils.fromUrlB64ToB64(str));
   }
 
+  /** @deprecated Moved to @bitwarden/encoding as a directly exported function*/
   static fromHexToArray(str: string): Uint8Array {
     if (Utils.isNode) {
       return new Uint8Array(Buffer.from(str, "hex"));
@@ -104,6 +107,7 @@ export class Utils {
     }
   }
 
+  /** @deprecated Moved to @bitwarden/encoding as a directly exported function*/
   static fromUtf8ToArray(str: string): Uint8Array {
     if (Utils.isNode) {
       return new Uint8Array(Buffer.from(str, "utf8"));
@@ -117,6 +121,7 @@ export class Utils {
     }
   }
 
+  /** @deprecated Moved to @bitwarden/encoding as a directly exported function*/
   static fromByteStringToArray(str: string): Uint8Array {
     if (str == null) {
       return null;
@@ -128,6 +133,7 @@ export class Utils {
     return arr;
   }
 
+  /** @deprecated Moved to @bitwarden/encoding as a directly exported function*/
   static fromBufferToB64(buffer: ArrayBuffer): string {
     if (buffer == null) {
       return null;
@@ -144,23 +150,28 @@ export class Utils {
     }
   }
 
+  /** @deprecated Moved to @bitwarden/encoding as a directly exported function*/
   static fromBufferToUrlB64(buffer: ArrayBuffer): string {
     return Utils.fromB64toUrlB64(Utils.fromBufferToB64(buffer));
   }
 
+  /** @deprecated Moved to @bitwarden/encoding as a directly exported function*/
   static fromB64toUrlB64(b64Str: string) {
     return b64Str.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
   }
 
+  /** @deprecated Moved to @bitwarden/encoding as a directly exported function*/
   static fromBufferToUtf8(buffer: ArrayBuffer): string {
     return BufferLib.from(buffer).toString("utf8");
   }
 
+  /** @deprecated Moved to @bitwarden/encoding as a directly exported function*/
   static fromBufferToByteString(buffer: ArrayBuffer): string {
     return String.fromCharCode.apply(null, new Uint8Array(buffer));
   }
 
   // ref: https://stackoverflow.com/a/40031979/1090359
+  /** @deprecated Moved to @bitwarden/encoding as a directly exported function*/
   static fromBufferToHex(buffer: ArrayBuffer): string {
     if (Utils.isNode) {
       return Buffer.from(buffer).toString("hex");
@@ -179,6 +190,7 @@ export class Utils {
    * @param {string} hexString - A string of hexadecimal characters.
    * @returns {ArrayBuffer} The ArrayBuffer representation of the hex string.
    */
+  /** @deprecated Moved to @bitwarden/encoding as a directly exported function*/
   static hexStringToArrayBuffer(hexString: string): ArrayBuffer {
     // Check if the hexString has an even length, as each hex digit represents half a byte (4 bits),
     // and it takes two hex digits to represent a full byte (8 bits).
@@ -209,6 +221,7 @@ export class Utils {
     return arrayBuffer;
   }
 
+  /** @deprecated Moved to @bitwarden/encoding as a directly exported function*/
   static fromUrlB64ToB64(urlB64Str: string): string {
     let output = urlB64Str.replace(/-/g, "+").replace(/_/g, "/");
     switch (output.length % 4) {
@@ -227,10 +240,12 @@ export class Utils {
     return output;
   }
 
+  /** @deprecated Moved to @bitwarden/encoding as a directly exported function*/
   static fromUrlB64ToUtf8(urlB64Str: string): string {
     return Utils.fromB64ToUtf8(Utils.fromUrlB64ToB64(urlB64Str));
   }
 
+  /** @deprecated Moved to @bitwarden/encoding as a directly exported function*/
   static fromUtf8ToB64(utfStr: string): string {
     if (Utils.isNode) {
       return Buffer.from(utfStr, "utf8").toString("base64");
@@ -239,10 +254,12 @@ export class Utils {
     }
   }
 
+  /** @deprecated Moved to @bitwarden/encoding as a directly exported function*/
   static fromUtf8ToUrlB64(utfStr: string): string {
     return Utils.fromBufferToUrlB64(Utils.fromUtf8ToArray(utfStr));
   }
 
+  /** @deprecated Moved to @bitwarden/encoding as a directly exported function*/
   static fromB64ToUtf8(b64Str: string): string {
     if (Utils.isNode) {
       return Buffer.from(b64Str, "base64").toString("utf8");
