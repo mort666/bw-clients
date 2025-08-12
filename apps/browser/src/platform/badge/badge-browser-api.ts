@@ -1,4 +1,4 @@
-import { map, Observable } from "rxjs";
+import { concat, defer, distinctUntilChanged, map, Observable } from "rxjs";
 
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
@@ -26,9 +26,20 @@ export class DefaultBadgeBrowserApi implements BadgeBrowserApi {
   private badgeAction = BrowserApi.getBrowserAction();
   private sidebarAction = BrowserApi.getSidebarAction(self);
 
-  activeTab$ = fromChromeEvent(chrome.tabs.onActivated).pipe(
-    map(([tabActiveInfo]) => tabActiveInfo),
-  );
+  activeTab$ = concat(
+    defer(async () => {
+      const currentTab = await BrowserApi.getTabFromCurrentWindow();
+      if (currentTab == null || currentTab.id === undefined) {
+        return undefined;
+      }
+
+      return {
+        tabId: currentTab.id,
+        windowId: currentTab.windowId,
+      } satisfies chrome.tabs.TabActiveInfo;
+    }),
+    fromChromeEvent(chrome.tabs.onActivated).pipe(map(([activeInfo]) => activeInfo)),
+  ).pipe(distinctUntilChanged((a, b) => a?.tabId === b?.tabId && a?.windowId === b?.windowId));
 
   constructor(private platformUtilsService: PlatformUtilsService) {}
 
