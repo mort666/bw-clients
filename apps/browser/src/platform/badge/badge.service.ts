@@ -1,4 +1,15 @@
-import { concatMap, firstValueFrom, Subscription, withLatestFrom } from "rxjs";
+import {
+  BehaviorSubject,
+  combineLatest,
+  concatMap,
+  EMPTY,
+  firstValueFrom,
+  map,
+  Observable,
+  Subscription,
+  switchMap,
+  withLatestFrom,
+} from "rxjs";
 
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import {
@@ -8,23 +19,28 @@ import {
   StateProvider,
 } from "@bitwarden/common/platform/state";
 
+import { BrowserApi } from "../browser/browser-api";
+
 import { BadgeBrowserApi, RawBadgeState } from "./badge-browser-api";
 import { DefaultBadgeState } from "./consts";
 import { BadgeStatePriority } from "./priority";
 import { BadgeState, Unset } from "./state";
 
-interface StateSetting {
+export interface StateSetting {
   priority: BadgeStatePriority;
   state: BadgeState;
   tabId?: number;
 }
 
 const BADGE_STATES = new KeyDefinition(BADGE_MEMORY, "badgeStates", {
-  deserializer: (value: Record<string, StateSetting>) => value ?? { states: {} },
+  deserializer: (value: Record<string, StateSetting>) => value ?? {},
 });
 
 export class BadgeService {
   private serviceState: GlobalState<Record<string, StateSetting>>;
+  private stateCalculators = new BehaviorSubject<
+    Record<string, (tab: chrome.tabs.Tab) => Observable<StateSetting>>
+  >({});
 
   constructor(
     private stateProvider: StateProvider,
@@ -40,11 +56,32 @@ export class BadgeService {
    */
   startListening(): Subscription {
     // React to tab changes
-    return this.badgeApi.activeTab$
+    return combineLatest([this.badgeApi.activeTab$, this.stateCalculators])
       .pipe(
+        concatMap(async ([activeTab, stateCalculators]) => {
+          if (activeTab == undefined) {
+            return { tab: undefined, stateCalculators };
+          }
+
+          return { activeTab: await BrowserApi.getTab(activeTab.tabId), stateCalculators };
+        }),
+        switchMap(({ activeTab, stateCalculators }) => {
+          if (activeTab == undefined) {
+            return EMPTY;
+          }
+
+          return combineLatest(
+            Object.values(stateCalculators).map((calculator) => calculator(activeTab)),
+          ).pipe(map((states) => ({ activeTab, states })));
+        }),
         withLatestFrom(this.serviceState.state$),
-        concatMap(async ([activeTab, serviceState]) => {
-          await this.updateBadge(activeTab, serviceState, activeTab?.tabId);
+        concatMap(async ([{ activeTab, states }, serviceState]) => {
+          const allStates = [...Object.values(serviceState ?? {}), ...states];
+          await this.updateBadge(
+            { tabId: activeTab.id ?? 0, windowId: activeTab.windowId },
+            allStates,
+            activeTab?.id,
+          );
         }),
       )
       .subscribe();
@@ -73,6 +110,16 @@ export class BadgeService {
 
     const activeTab = await firstValueFrom(this.badgeApi.activeTab$);
     await this.updateBadge(activeTab, newServiceState, tabId);
+  }
+
+  setDynamicState(
+    name: string,
+    calculatorFactory: (tab: chrome.tabs.Tab) => Observable<StateSetting>,
+  ) {
+    this.stateCalculators.next({
+      ...this.stateCalculators.value,
+      [name]: calculatorFactory,
+    });
   }
 
   /**
@@ -145,7 +192,7 @@ export class BadgeService {
    */
   private async updateBadge(
     activeTab: chrome.tabs.TabActiveInfo | null | undefined,
-    serviceState: Record<string, StateSetting> | null | undefined,
+    serviceState: Record<string, StateSetting> | null | undefined | Array<StateSetting>,
     tabId: number | undefined,
   ) {
     if (activeTab === undefined) {

@@ -1,4 +1,4 @@
-import { combineLatest, distinctUntilChanged, mergeMap, of, Subject, switchMap } from "rxjs";
+import { combineLatest, distinctUntilChanged, mergeMap, Subject } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { BadgeSettingsServiceAbstraction } from "@bitwarden/common/autofill/services/badge-settings.service";
@@ -6,7 +6,7 @@ import { LogService } from "@bitwarden/common/platform/abstractions/log.service"
 import { UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 
-import { BadgeService } from "../../platform/badge/badge.service";
+import { BadgeService, StateSetting } from "../../platform/badge/badge.service";
 import { BadgeStatePriority } from "../../platform/badge/priority";
 import { BrowserApi } from "../../platform/browser/browser-api";
 
@@ -24,89 +24,129 @@ export class AutofillBadgeUpdaterService {
     private badgeSettingsService: BadgeSettingsServiceAbstraction,
     private logService: LogService,
   ) {
-    const cipherViews$ = this.accountService.activeAccount$.pipe(
-      switchMap((account) => (account?.id ? this.cipherService.cipherViews$(account?.id) : of([]))),
-    );
-
-    combineLatest({
-      account: this.accountService.activeAccount$,
-      enableBadgeCounter:
-        this.badgeSettingsService.enableBadgeCounter$.pipe(distinctUntilChanged()),
-      ciphers: cipherViews$,
-    })
-      .pipe(
-        mergeMap(async ({ account, enableBadgeCounter, ciphers }) => {
-          if (!account) {
-            return;
-          }
-
-          const tabs = await BrowserApi.tabsQuery({});
-          for (const tab of tabs) {
-            if (!tab.id) {
-              continue;
-            }
-
-            if (enableBadgeCounter) {
-              await this.setTabState(tab, account.id);
-            } else {
-              await this.clearTabState(tab.id);
-            }
-          }
-        }),
-      )
-      .subscribe();
-
-    combineLatest({
-      account: this.accountService.activeAccount$,
-      enableBadgeCounter: this.badgeSettingsService.enableBadgeCounter$,
-      replaced: this.tabReplaced$,
-      ciphers: cipherViews$,
-    })
-      .pipe(
-        mergeMap(async ({ account, enableBadgeCounter, replaced }) => {
+    this.badgeService.setDynamicState("autofill-state", (tab) => {
+      return combineLatest({
+        account: this.accountService.activeAccount$,
+        enableBadgeCounter:
+          this.badgeSettingsService.enableBadgeCounter$.pipe(distinctUntilChanged()),
+      }).pipe(
+        mergeMap(async ({ account, enableBadgeCounter }) => {
           if (!account || !enableBadgeCounter) {
-            return;
+            return {
+              priority: BadgeStatePriority.Default,
+              state: {},
+              tabId: tab.id,
+            } satisfies StateSetting;
           }
 
-          await this.clearTabState(replaced.removedTabId);
-          await this.setTabState(replaced.addedTab, account.id);
-        }),
-      )
-      .subscribe();
+          const ciphers = tab.url
+            ? await this.cipherService.getAllDecryptedForUrl(tab.url, account.id)
+            : [];
+          const cipherCount = ciphers.length;
 
-    combineLatest({
-      account: this.accountService.activeAccount$,
-      enableBadgeCounter: this.badgeSettingsService.enableBadgeCounter$,
-      tab: this.tabUpdated$,
-      ciphers: cipherViews$,
-    })
-      .pipe(
-        mergeMap(async ({ account, enableBadgeCounter, tab }) => {
-          if (!account || !enableBadgeCounter) {
-            return;
+          if (cipherCount === 0) {
+            return {
+              priority: BadgeStatePriority.Default,
+              state: { text: "0" },
+              tabId: tab.id,
+            };
           }
 
-          await this.setTabState(tab, account.id);
+          const countText = cipherCount > 9 ? "9+" : cipherCount.toString();
+          return {
+            priority: BadgeStatePriority.Default,
+            state: {
+              text: countText,
+            },
+            tabId: tab.id,
+          };
         }),
-      )
-      .subscribe();
+      );
+    });
 
-    combineLatest({
-      account: this.accountService.activeAccount$,
-      enableBadgeCounter: this.badgeSettingsService.enableBadgeCounter$,
-      tabId: this.tabRemoved$,
-      ciphers: cipherViews$,
-    })
-      .pipe(
-        mergeMap(async ({ account, enableBadgeCounter, tabId }) => {
-          if (!account || !enableBadgeCounter) {
-            return;
-          }
+    // const cipherViews$ = this.accountService.activeAccount$.pipe(
+    //   switchMap((account) => (account?.id ? this.cipherService.cipherViews$(account?.id) : of([]))),
+    // );
 
-          await this.clearTabState(tabId);
-        }),
-      )
-      .subscribe();
+    // combineLatest({
+    //   account: this.accountService.activeAccount$,
+    //   enableBadgeCounter:
+    //     this.badgeSettingsService.enableBadgeCounter$.pipe(distinctUntilChanged()),
+    //   ciphers: cipherViews$,
+    // })
+    //   .pipe(
+    //     mergeMap(async ({ account, enableBadgeCounter, ciphers }) => {
+    //       if (!account) {
+    //         return;
+    //       }
+
+    //       const tabs = await BrowserApi.tabsQuery({});
+    //       for (const tab of tabs) {
+    //         if (!tab.id) {
+    //           continue;
+    //         }
+
+    //         if (enableBadgeCounter) {
+    //           await this.setTabState(tab, account.id);
+    //         } else {
+    //           await this.clearTabState(tab.id);
+    //         }
+    //       }
+    //     }),
+    //   )
+    //   .subscribe();
+
+    // combineLatest({
+    //   account: this.accountService.activeAccount$,
+    //   enableBadgeCounter: this.badgeSettingsService.enableBadgeCounter$,
+    //   replaced: this.tabReplaced$,
+    //   ciphers: cipherViews$,
+    // })
+    //   .pipe(
+    //     mergeMap(async ({ account, enableBadgeCounter, replaced }) => {
+    //       if (!account || !enableBadgeCounter) {
+    //         return;
+    //       }
+
+    //       await this.clearTabState(replaced.removedTabId);
+    //       await this.setTabState(replaced.addedTab, account.id);
+    //     }),
+    //   )
+    //   .subscribe();
+
+    // combineLatest({
+    //   account: this.accountService.activeAccount$,
+    //   enableBadgeCounter: this.badgeSettingsService.enableBadgeCounter$,
+    //   tab: this.tabUpdated$,
+    //   ciphers: cipherViews$,
+    // })
+    //   .pipe(
+    //     mergeMap(async ({ account, enableBadgeCounter, tab }) => {
+    //       if (!account || !enableBadgeCounter) {
+    //         return;
+    //       }
+
+    //       await this.setTabState(tab, account.id);
+    //     }),
+    //   )
+    //   .subscribe();
+
+    // combineLatest({
+    //   account: this.accountService.activeAccount$,
+    //   enableBadgeCounter: this.badgeSettingsService.enableBadgeCounter$,
+    //   tabId: this.tabRemoved$,
+    //   ciphers: cipherViews$,
+    // })
+    //   .pipe(
+    //     mergeMap(async ({ account, enableBadgeCounter, tabId }) => {
+    //       if (!account || !enableBadgeCounter) {
+    //         return;
+    //       }
+
+    //       await this.clearTabState(tabId);
+    //     }),
+    //   )
+    //   .subscribe();
   }
 
   init() {
