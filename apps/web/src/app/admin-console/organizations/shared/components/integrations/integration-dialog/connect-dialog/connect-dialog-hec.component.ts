@@ -1,11 +1,6 @@
 import { Component, Inject, OnInit } from "@angular/core";
 import { FormBuilder, Validators } from "@angular/forms";
 
-// eslint-disable-next-line no-restricted-imports
-import {
-  HecConfiguration,
-  HecConfigurationTemplate,
-} from "@bitwarden/bit-common/dirt/integrations";
 import { DIALOG_DATA, DialogConfig, DialogRef, DialogService } from "@bitwarden/components";
 import { SharedModule } from "@bitwarden/web-vault/app/shared";
 
@@ -13,8 +8,6 @@ import { Integration } from "../../models";
 
 export type HecConnectDialogParams = {
   settings: Integration;
-  configuration: HecConfiguration | null;
-  template: HecConfigurationTemplate | null;
 };
 
 export interface HecConnectDialogResult {
@@ -48,15 +41,15 @@ export class ConnectHecDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.formGroup.patchValue({
-      url: this.connectInfo.configuration?.uri || "",
-      bearerToken: this.connectInfo.configuration?.token || "",
-      index: this.connectInfo.template?.index || "",
+      url: this.connectInfo.settings.HecConfiguration?.uri || "",
+      bearerToken: this.connectInfo.settings.HecConfiguration?.token || "",
+      index: this.connectInfo.settings.HecConfigurationTemplate?.index || "",
       service: this.connectInfo.settings.name,
     });
   }
 
   isUpdateAvailable(): boolean {
-    return !!this.connectInfo.configuration;
+    return !!this.connectInfo.settings.HecConfiguration;
   }
 
   getSettingsAsJson(configuration: string) {

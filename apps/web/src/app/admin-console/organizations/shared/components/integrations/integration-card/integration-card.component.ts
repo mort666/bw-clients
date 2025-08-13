@@ -1,5 +1,3 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
 import {
   AfterViewInit,
   Component,
@@ -13,11 +11,6 @@ import { ActivatedRoute } from "@angular/router";
 import { Observable, Subject, combineLatest, lastValueFrom, takeUntil } from "rxjs";
 
 import { SYSTEM_THEME_OBSERVABLE } from "@bitwarden/angular/services/injection-tokens";
-// eslint-disable-next-line no-restricted-imports
-import {
-  HecConfiguration,
-  HecConfigurationTemplate,
-} from "@bitwarden/bit-common/dirt/integrations";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { ThemeType } from "@bitwarden/common/platform/enums";
 import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
@@ -26,7 +19,7 @@ import { DialogService, ToastService } from "@bitwarden/components";
 
 import { SharedModule } from "../../../../../../shared/shared.module";
 import { openHecConnectDialog } from "../integration-dialog/index";
-import { Integration } from "../models";
+import { HecConfiguration, HecConfigurationTemplate, Integration } from "../models";
 import { OrganizationIntegrationService } from "../services/organization-integration.service";
 
 @Component({
@@ -36,13 +29,13 @@ import { OrganizationIntegrationService } from "../services/organization-integra
 })
 export class IntegrationCardComponent implements AfterViewInit, OnDestroy {
   private destroyed$: Subject<void> = new Subject();
-  @ViewChild("imageEle") imageEle: ElementRef<HTMLImageElement>;
+  @ViewChild("imageEle") imageEle!: ElementRef<HTMLImageElement>;
 
-  @Input() name: string;
-  @Input() image: string;
-  @Input() imageDarkMode?: string;
-  @Input() linkURL: string;
-  @Input() integrationSettings: Integration;
+  @Input() name: string = "";
+  @Input() image: string = "";
+  @Input() imageDarkMode: string = "";
+  @Input() linkURL: string = "";
+  @Input() integrationSettings!: Integration;
 
   /** Adds relevant `rel` attribute to external links */
   @Input() externalURL?: boolean;
@@ -69,13 +62,13 @@ export class IntegrationCardComponent implements AfterViewInit, OnDestroy {
     private organizationIntegrationService: OrganizationIntegrationService,
     private toastService: ToastService,
     private i18nService: I18nService,
-  ) {}
-
-  ngAfterViewInit() {
+  ) {
     this.organizationId = this.activatedRoute.snapshot.paramMap.get(
       "organizationId",
     ) as OrganizationId;
+  }
 
+  ngAfterViewInit() {
     combineLatest([this.themeStateService.selectedTheme$, this.systemTheme$])
       .pipe(takeUntil(this.destroyed$))
       .subscribe(([theme, systemTheme]) => {
@@ -134,12 +127,6 @@ export class IntegrationCardComponent implements AfterViewInit, OnDestroy {
     const dialog = openHecConnectDialog(this.dialogService, {
       data: {
         settings: this.integrationSettings,
-        configuration: this.organizationIntegrationService.convertToJson<HecConfiguration>(
-          this.integrationSettings.configuration,
-        ),
-        template: this.organizationIntegrationService.convertToJson<HecConfigurationTemplate>(
-          this.integrationSettings.template,
-        ),
       },
     });
 
@@ -156,26 +143,16 @@ export class IntegrationCardComponent implements AfterViewInit, OnDestroy {
 
     // save the integration
     try {
-      const dbResponse = await this.organizationIntegrationService.saveHec(
+      await this.organizationIntegrationService.saveHec(
         this.organizationId,
         this.integrationSettings.name,
         integration,
         configurationTemplate,
       );
-
-      if (!!dbResponse.integration && !!dbResponse.configuration) {
-        this.isConnected = true;
-        this.integrationSettings.configuration = dbResponse.integration.configuration;
-        this.integrationSettings.template = dbResponse.configuration.template;
-      }
-    } catch (err) {
-      this.isConnected = false;
-      // eslint-disable-next-line no-console
-      console.error("Failed to save integration", err);
-
+    } catch {
       this.toastService.showToast({
         variant: "error",
-        title: null,
+        title: "",
         message: this.i18nService.t("failedToSaveIntegration"),
       });
       return;
