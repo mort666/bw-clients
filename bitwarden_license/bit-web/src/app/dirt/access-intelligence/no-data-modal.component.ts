@@ -1,0 +1,117 @@
+import { DialogRef, DIALOG_DATA } from "@angular/cdk/dialog";
+import { Component, Inject } from "@angular/core";
+
+import { ButtonModule } from "@bitwarden/components";
+
+@Component({
+  selector: "tools-no-data-modal",
+  template: `
+    <section
+      class="tw-flex tw-w-full tw-flex-col tw-self-center tw-overflow-hidden tw-border tw-border-solid tw-border-secondary-300 tw-bg-background tw-text-main tw-rounded-xl tw-p-4 tw-max-h-[90vh] md:tw-max-w-3xl"
+    >
+      <div class="tw-flex tw-justify-center tw-items-center tw-p-4">
+        <i class="bwi bwi-passkey bwi-filter tw-text-4xl"></i>
+      </div>
+      <!-- Header -->
+      <header
+        class="tw-flex tw-justify-center tw-items-center tw-gap-4 tw-border-0 tw-border-b tw-border-solid tw-border-secondary-300 tw-p-4"
+      >
+        <h2
+          class="tw-text-main tw-mb-0 tw-text-xl tw-font-semibold tw-flex tw-items-center tw-gap-3"
+        >
+          Welcome to Risk insights
+        </h2>
+      </header>
+
+      <!-- Content -->
+      <div class="tw-relative tw-flex-1 tw-flex tw-flex-col tw-overflow-hidden tw-bg-background">
+        <div class="tw-p-4 tw-overflow-y-auto">
+          <!-- Introduction -->
+          <p class="tw-text-muted tw-mb-6 tw-text-center">
+            To get started, follow these steps to find potential security risks.
+          </p>
+
+          <!-- Steps -->
+          <div class="tw-space-y-4">
+            <!-- Step 1 -->
+            <div
+              class="tw-bg-background-alt tw-p-4 tw-rounded-lg tw-border tw-border-solid tw-border-secondary-100"
+            >
+              <div class="tw-flex tw-items-start tw-gap-3">
+                <div
+                  class="tw-flex-shrink-0 tw-size-8 tw-bg-primary-600 tw-text-contrast tw-rounded-full tw-flex tw-items-center tw-justify-center tw-font-semibold tw-text-sm"
+                >
+                  1
+                </div>
+                <div class="tw-flex-1">
+                  <h3 class="tw-font-semibold tw-text-main tw-mb-2">
+                    Remove individual vaults
+                    <span class="tw-text-muted tw-font-normal">(recommended)</span>
+                  </h3>
+                  <p class="tw-text-muted tw-leading-relaxed">
+                    Turn on the
+                    <a
+                      href="#"
+                      class="tw-text-primary-600 tw-underline hover:tw-text-primary-700 tw-cursor-pointer"
+                      (click)="navigateToPolicy()"
+                    >
+                      Remove individual vault policy
+                    </a>
+                    to get complete visibility of all organization vault data. This setting can be
+                    enabled at any time.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div
+              class="tw-bg-background-alt tw-p-4 tw-rounded-lg tw-border tw-border-solid tw-border-secondary-100"
+            >
+              <div class="tw-flex tw-items-start tw-gap-3">
+                <div
+                  class="tw-flex-shrink-0 tw-size-8 tw-bg-primary-600 tw-text-contrast tw-rounded-full tw-flex tw-items-center tw-justify-center tw-font-semibold tw-text-sm"
+                >
+                  2
+                </div>
+                <div class="tw-flex-1">
+                  <h3 class="tw-font-semibold tw-text-main tw-mb-2">Run the report</h3>
+                  <p class="tw-text-muted tw-leading-relaxed">
+                    Run the report to see a detailed view of potential at-risk passwords across your
+                    most critical applications.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer
+        class="tw-flex tw-flex-row tw-items-center tw-justify-center tw-gap-2 tw-border-0 tw-border-t tw-border-solid tw-border-secondary-300 tw-bg-background tw-p-4"
+      >
+        <button bitButton buttonType="primary" type="button" (click)="runReport()">
+          Run Report
+        </button>
+      </footer>
+    </section>
+  `,
+  standalone: true,
+  imports: [ButtonModule],
+})
+export class NoDataModalComponent {
+  constructor(
+    public dialogRef: DialogRef<boolean>,
+    @Inject(DIALOG_DATA) public data: any,
+  ) {}
+
+  navigateToPolicy(): void {
+    // TODO: Navigate to the policy page
+    // Navigate to policy page when implemented
+  }
+
+  runReport(): void {
+    this.dialogRef.close(true);
+  }
+}
