@@ -5426,18 +5426,6 @@
       }
     }
   },
-  "accountAccessRequested": {
-    "message": "Account access requested"
-  },
-  "confirmAccessAttempt": {
-    "message": "Confirm access attempt for $EMAIL$",
-    "placeholders": {
-      "email": {
-        "content": "$1",
-        "example": "name@example.com"
-      }
-    }
-  },
   "organizationDataOwnership": {
     "message": "Enforce organization data ownership"
   },
