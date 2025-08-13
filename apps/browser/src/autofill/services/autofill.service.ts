@@ -49,6 +49,8 @@ import { IdentityView } from "@bitwarden/common/vault/models/view/identity.view"
 
 import { BrowserApi } from "../../platform/browser/browser-api";
 import { ScriptInjectorService } from "../../platform/services/abstractions/script-injector.service";
+// FIXME (PM-22628): Popup imports are forbidden in background
+// eslint-disable-next-line no-restricted-imports
 import { openVaultItemPasswordRepromptPopout } from "../../vault/popup/utils/vault-popout-window";
 import { AutofillMessageCommand, AutofillMessageSender } from "../enums/autofill-message.enums";
 import { AutofillPort } from "../enums/autofill-port.enum";
@@ -211,9 +213,7 @@ export default class AutofillService implements AutofillServiceInterface {
       this.autofillScriptPortsSet.delete(port);
     });
 
-    // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    this.injectAutofillScriptsInAllTabs();
+    void this.injectAutofillScriptsInAllTabs();
   }
 
   /**
@@ -468,9 +468,7 @@ export default class AutofillService implements AutofillServiceInterface {
           await this.cipherService.updateLastUsedDate(options.cipher.id, activeAccount.id);
         }
 
-        // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        BrowserApi.tabSendMessage(
+        void BrowserApi.tabSendMessage(
           tab,
           {
             command: options.autoSubmitLogin ? "triggerAutoSubmitLogin" : "fillForm",
@@ -500,9 +498,10 @@ export default class AutofillService implements AutofillServiceInterface {
     );
 
     if (didAutofill) {
-      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.eventCollectionService.collect(EventType.Cipher_ClientAutofilled, options.cipher.id);
+      await this.eventCollectionService.collect(
+        EventType.Cipher_ClientAutofilled,
+        options.cipher.id,
+      );
       if (totp !== null) {
         return totp;
       } else {

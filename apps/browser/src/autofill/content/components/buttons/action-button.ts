@@ -4,10 +4,13 @@ import { html, TemplateResult } from "lit";
 import { Theme } from "@bitwarden/common/platform/enums";
 
 import { border, themes, typography, spacing } from "../constants/styles";
+import { Spinner } from "../icons";
 
 export type ActionButtonProps = {
   buttonText: string | TemplateResult;
+  dataTestId?: string;
   disabled?: boolean;
+  isLoading?: boolean;
   theme: Theme;
   handleClick: (e: Event) => void;
   fullWidth?: boolean;
@@ -15,13 +18,15 @@ export type ActionButtonProps = {
 
 export function ActionButton({
   buttonText,
+  dataTestId,
   disabled = false,
+  isLoading = false,
   theme,
   handleClick,
   fullWidth = true,
 }: ActionButtonProps) {
   const handleButtonClick = (event: Event) => {
-    if (!disabled) {
+    if (!disabled && !isLoading) {
       handleClick(event);
     }
   };
@@ -33,7 +38,7 @@ export function ActionButton({
       type="button"
       @click=${handleButtonClick}
     >
-      ${buttonText}
+      ${isLoading ? Spinner({ theme, color: themes[theme].text.muted }) : buttonText}
     </button>
   `;
 }
@@ -50,6 +55,9 @@ const actionButtonStyles = ({
   ${typography.body2}
 
   user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid transparent;
   border-radius: ${border.radius.full};
   padding: ${spacing["1"]} ${spacing["3"]};
@@ -59,7 +67,7 @@ const actionButtonStyles = ({
   text-overflow: ellipsis;
   font-weight: 700;
 
-  ${disabled
+  ${disabled || isLoading
     ? `
     background-color: ${themes[theme].secondary["300"]};
     color: ${themes[theme].text.muted};
@@ -81,7 +89,8 @@ const actionButtonStyles = ({
   `}
 
   svg {
-    width: fit-content;
+    padding: 2px 0; /* Match line-height of button body2 typography */
+    width: auto;
     height: 16px;
   }
 `;

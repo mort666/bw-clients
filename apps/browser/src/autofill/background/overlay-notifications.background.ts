@@ -12,6 +12,7 @@ import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { SecurityTask, SecurityTaskStatus, TaskService } from "@bitwarden/common/vault/tasks";
 
 import { BrowserApi } from "../../platform/browser/browser-api";
+import { NotificationType, NotificationTypes } from "../notification/abstractions/notification-bar";
 import { generateDomainMatchPatterns, isInvalidResponseStatusCode } from "../utils";
 
 import {
@@ -39,6 +40,8 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
   private notificationFallbackTimeout: number | NodeJS.Timeout | null;
   private readonly formSubmissionRequestMethods: Set<string> = new Set(["POST", "PUT", "PATCH"]);
   private readonly extensionMessageHandlers: OverlayNotificationsExtensionMessageHandlers = {
+    generatedPasswordFilled: ({ message, sender }) =>
+      this.storeModifiedLoginFormData(message, sender),
     formFieldSubmitted: ({ message, sender }) => this.storeModifiedLoginFormData(message, sender),
     collectPageDetailsResponse: ({ message, sender }) =>
       this.handleCollectPageDetailsResponse(message, sender),
@@ -392,7 +395,7 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
       return;
     }
 
-    await this.triggerNotificationInit(requestId, modifyLoginData, tab);
+    await this.processNotifications(requestId, modifyLoginData, tab);
   };
 
   /**
@@ -412,23 +415,24 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
     const handleWebNavigationOnCompleted = async () => {
       chrome.webNavigation.onCompleted.removeListener(handleWebNavigationOnCompleted);
       const tab = await BrowserApi.getTab(tabId);
-      await this.triggerNotificationInit(requestId, modifyLoginData, tab);
+      await this.processNotifications(requestId, modifyLoginData, tab);
     };
     chrome.webNavigation.onCompleted.addListener(handleWebNavigationOnCompleted);
   };
 
   /**
-   * Initializes the add login or change password notification based on the modified login form data
-   * and the tab details. This will trigger the notification to be displayed to the user.
+   * This method attempts to trigger the add login, change password, or at-risk password notifications
+   * based on the modified login data and the tab details.
    *
    * @param requestId - The details of the web response
    * @param modifyLoginData  - The modified login form data
    * @param tab - The tab details
    */
-  private triggerNotificationInit = async (
+  private processNotifications = async (
     requestId: chrome.webRequest.ResourceRequest["requestId"],
     modifyLoginData: ModifyLoginCipherFormData,
     tab: chrome.tabs.Tab,
+    config: { skippable: NotificationType[] } = { skippable: [] },
   ) => {
     let result: string;
     if (this.shouldAttemptChangedPasswordNotification(modifyLoginData)) {
@@ -514,9 +518,10 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
   };
 
   /**
-   * Determines if the add login notification should be triggered.
-   *
-   * @param modifyLoginData - The modified login form data
+   * Determines if the add login notification should be attempted based on the modified login form data.
+   * @param modifyLoginData modified login form data
+   * @param notificationType The type of notification to be triggered
+   * @returns true if the notification should be attempted, false otherwise
    */
   private shouldAttemptAddLoginNotification = (modifyLoginData: ModifyLoginCipherFormData) => {
     return modifyLoginData?.username && (modifyLoginData.password || modifyLoginData.newPassword);
@@ -586,11 +591,11 @@ export class OverlayNotificationsBackground implements OverlayNotificationsBackg
    */
   private clearCompletedWebRequest = (
     requestId: chrome.webRequest.ResourceRequest["requestId"],
-    tab: chrome.tabs.Tab,
+    tabId: chrome.tabs.Tab["id"],
   ) => {
     this.activeFormSubmissionRequests.delete(requestId);
-    this.modifyLoginCipherFormData.delete(tab.id);
-    this.websiteOriginsWithFields.delete(tab.id);
+    this.modifyLoginCipherFormData.delete(tabId);
+    this.websiteOriginsWithFields.delete(tabId);
     this.setupWebRequestsListeners();
   };
 

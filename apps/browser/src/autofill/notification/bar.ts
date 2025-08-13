@@ -249,22 +249,47 @@ async function initNotificationBar(message: NotificationBarWindowMessage) {
     document.head.querySelectorAll('link[rel="stylesheet"]').forEach((node) => node.remove());
 
     if (isVaultLocked) {
-      return render(
-        NotificationContainer({
-          ...notificationBarIframeInitData,
-          headerMessage,
-          type: resolvedType,
-          notificationTestId,
-          theme: resolvedTheme,
-          personalVaultIsAllowed: !personalVaultDisallowed,
-          handleCloseNotification,
-          handleSaveAction: (e) => {
-            sendSaveCipherMessage(true);
+      const notificationConfig = {
+        ...notificationBarIframeInitData,
+        headerMessage,
+        type: resolvedType,
+        notificationTestId,
+        theme: resolvedTheme,
+        personalVaultIsAllowed: !personalVaultDisallowed,
+        handleCloseNotification,
+        handleEditOrUpdateAction,
+        i18n,
+      };
 
-            // @TODO can't close before vault has finished decrypting, but can't leave open during long decrypt because it looks like the experience has failed
-          },
-          handleEditOrUpdateAction,
+      const handleSaveAction = () => {
+        sendSaveCipherMessage(true);
+
+        render(
+          NotificationContainer({
+            ...notificationConfig,
+            handleSaveAction: () => {},
+            isLoading: true,
+          }),
+          document.body,
+        );
+      };
+
+      const UnlockNotification = NotificationContainer({ ...notificationConfig, handleSaveAction });
+
+      return render(UnlockNotification, document.body);
+    }
+
+    // Handle AtRiskPasswordNotification render
+    if (notificationBarIframeInitData.type === NotificationTypes.AtRiskPassword) {
+      return render(
+        AtRiskNotification({
+          ...notificationBarIframeInitData,
+          type: notificationBarIframeInitData.type as NotificationType,
+          theme: resolvedTheme,
           i18n,
+          notificationTestId,
+          params: initData.params,
+          handleCloseNotification,
         }),
         document.body,
       );
@@ -549,6 +574,7 @@ function handleSaveCipherConfirmation(message: NotificationBarWindowMessage) {
   const resolvedType = resolveNotificationType(notificationBarIframeInitData);
   const headerMessage = getConfirmationHeaderMessage(i18n, resolvedType, error);
   const notificationTestId = getNotificationTestId(resolvedType, true);
+  appendHeaderMessageToTitle(headerMessage);
 
   globalThis.setTimeout(() => sendPlatformMessage({ command: "bgCloseNotificationBar" }), 5000);
 
@@ -557,7 +583,7 @@ function handleSaveCipherConfirmation(message: NotificationBarWindowMessage) {
       ...notificationBarIframeInitData,
       error,
       handleCloseNotification,
-      handleOpenTasks: () => sendPlatformMessage({ command: "bgOpenAtRisksPasswords" }),
+      handleOpenTasks: () => sendPlatformMessage({ command: "bgOpenAtRiskPasswords" }),
       handleOpenVault: (e: Event) =>
         cipherId ? openViewVaultItemPopout(cipherId) : openAddEditVaultItemPopout(e, {}),
       headerMessage,

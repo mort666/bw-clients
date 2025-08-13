@@ -40,7 +40,7 @@ export interface TempNotificationQueueMessage<T, D> {
 
 interface AddChangePasswordQueueMessage extends NotificationQueueMessage {
   type: "change";
-  cipherId: string;
+  cipherId: CipherView["id"];
   newPassword: string;
 }
 
@@ -98,12 +98,6 @@ type AtRiskPasswordNotificationsData = {
 
 type AdjustNotificationBarMessageData = {
   height: number;
-};
-
-type ChangePasswordMessageData = {
-  currentPassword: string;
-  newPassword: string;
-  url: string;
 };
 
 type AddLoginMessageData = {
