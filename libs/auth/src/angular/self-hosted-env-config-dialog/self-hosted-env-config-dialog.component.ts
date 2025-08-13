@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, HostListener, OnDestroy, OnInit } from "@angular/core";
+import { Component, OnDestroy, OnInit } from "@angular/core";
 import {
   AbstractControl,
   FormBuilder,
@@ -158,19 +158,6 @@ export class SelfHostedEnvConfigDialogComponent implements OnInit, OnDestroy {
           });
         },
       });
-  }
-
-  @HostListener("document:keydown.control.b", ["$event"])
-  onCtrlB(event: KeyboardEvent) {
-    event.preventDefault();
-    this.formGroup.patchValue({
-      baseUrl: "",
-      webVaultUrl: "https://localhost:8080",
-      apiUrl: "http://localhost:4000",
-      identityUrl: "http://localhost:33656",
-      iconsUrl: "http://localhost:50024",
-      notificationsUrl: "http://localhost:61840",
-    });
   }
 
   submit = async () => {
