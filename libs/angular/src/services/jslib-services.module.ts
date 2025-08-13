@@ -993,6 +993,7 @@ const safeProviders: SafeProvider[] = [
       AuthServiceAbstraction,
       WebPushConnectionService,
       AuthRequestAnsweringServiceAbstraction,
+      ConfigService,
     ],
   }),
   safeProvider({

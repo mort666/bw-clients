@@ -170,6 +170,7 @@ import { SyncService } from "@bitwarden/common/platform/sync";
 // eslint-disable-next-line no-restricted-imports -- Needed for service creation
 import { DefaultSyncService } from "@bitwarden/common/platform/sync/internal";
 import { SystemNotificationsService } from "@bitwarden/common/platform/system-notifications/";
+import { SystemNotificationPrefixes } from "@bitwarden/common/platform/system-notifications/system-notifications.service";
 import { UnsupportedSystemNotificationsService } from "@bitwarden/common/platform/system-notifications/unsupported-system-notifications.service";
 import { DefaultThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
 import { ApiService } from "@bitwarden/common/services/api.service";
@@ -308,7 +309,6 @@ import CommandsBackground from "./commands.background";
 import IdleBackground from "./idle.background";
 import { NativeMessagingBackground } from "./nativeMessaging.background";
 import RuntimeBackground from "./runtime.background";
-import { SystemNotificationPrefixes } from "@bitwarden/common/platform/system-notifications/system-notifications.service";
 
 export default class MainBackground {
   messagingService: MessageSender;
@@ -1161,6 +1161,7 @@ export default class MainBackground {
       this.authService,
       this.webPushConnectionService,
       this.authRequestAnsweringService,
+      this.configService,
     );
 
     this.fido2UserInterfaceService = new BrowserFido2UserInterfaceService(this.authService);
