@@ -55,7 +55,7 @@ export class HecConfiguration {
  * from OrganizationIntegrationConfiguration
  */
 export class HecConfigurationTemplate {
-  event = "#EventMessage";
+  event = "#EventMessage#";
   source = "Bitwarden";
   index: string;
   service: OrganizationIntegrationServiceType;
