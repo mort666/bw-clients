@@ -43,13 +43,12 @@ describe("LoginDetailsSectionComponent", () => {
 
   const collect = jest.fn().mockResolvedValue(null);
   const getInitialCipherView = jest.fn(() => null);
-  const formStatusChange$ = new BehaviorSubject<"enabled" | "disabled">("enabled");
 
   beforeEach(async () => {
     getInitialCipherView.mockClear();
     cipherFormContainer = mock<CipherFormContainer>({
       getInitialCipherView,
-      formStatusChange$,
+      formStatusChange$: new BehaviorSubject<"enabled" | "disabled">("enabled"),
       website: "example.com",
     });
 
