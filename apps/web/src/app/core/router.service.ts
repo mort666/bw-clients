@@ -1,5 +1,3 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
 import { Injectable } from "@angular/core";
 import { Title } from "@angular/platform-browser";
 import { ActivatedRoute, NavigationEnd, Router } from "@angular/router";
@@ -42,8 +40,8 @@ export class RouterService {
    */
   private deepLinkRedirectUrlState: GlobalState<string>;
 
-  private previousUrl: string = undefined;
-  private currentUrl: string = undefined;
+  private previousUrl: string | undefined = undefined;
+  private currentUrl: string | undefined = undefined;
 
   constructor(
     private router: Router,
@@ -67,17 +65,15 @@ export class RouterService {
           title = i18nService.t("bitSecretsManager");
         }
 
-        let child = this.activatedRoute.firstChild;
+        let child = this.activatedRoute.firstChild!;
         while (child.firstChild) {
-          child = child.firstChild;
+          child = child.firstChild!;
         }
 
         const titleId: string = child?.snapshot?.data?.titleId;
         const rawTitle: string = child?.snapshot?.data?.title;
 
-        // TODO: Eslint upgrade. Please resolve this since the ?? does nothing
-        // eslint-disable-next-line no-constant-binary-expression
-        const updateUrl = !child?.snapshot?.data?.doNotSaveUrl ?? true;
+        const updateUrl = !(child?.snapshot?.data?.doNotSaveUrl ?? true);
 
         if (titleId != null || rawTitle != null) {
           const newTitle = rawTitle != null ? rawTitle : i18nService.t(titleId);
@@ -104,14 +100,14 @@ export class RouterService {
    * Save URL to Global State. This service is used during the login process
    * @param url URL being saved to the Global State
    */
-  async persistLoginRedirectUrl(url: string): Promise<void> {
+  async persistLoginRedirectUrl(url: string | null): Promise<void> {
     await this.deepLinkRedirectUrlState.update(() => url);
   }
 
   /**
    * Fetch and clear persisted LoginRedirectUrl if present in state
    */
-  async getAndClearLoginRedirectUrl(): Promise<string | undefined> {
+  async getAndClearLoginRedirectUrl(): Promise<string | null> {
     const persistedPreLoginUrl = await firstValueFrom(this.deepLinkRedirectUrlState.state$);
 
     if (!Utils.isNullOrEmpty(persistedPreLoginUrl)) {
@@ -119,6 +115,6 @@ export class RouterService {
       return persistedPreLoginUrl;
     }
 
-    return;
+    return null;
   }
 }

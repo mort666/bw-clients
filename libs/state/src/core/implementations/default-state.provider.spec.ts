@@ -222,17 +222,21 @@ describe("DefaultStateProvider", () => {
 
   it("should bind the singleUserStateProvider", () => {
     const userId = "user" as UserId;
-    const keyDefinition = new UserKeyDefinition(new StateDefinition("test", "disk"), "test", {
-      deserializer: () => null,
-      clearOn: [],
-    });
+    const keyDefinition = new UserKeyDefinition<boolean>(
+      new StateDefinition("test", "disk"),
+      "test",
+      {
+        deserializer: () => null,
+        clearOn: [],
+      },
+    );
     const existing = singleUserStateProvider.get(userId, keyDefinition);
     const actual = sut.getUser(userId, keyDefinition);
     expect(actual).toBe(existing);
   });
 
   it("should bind the globalStateProvider", () => {
-    const keyDefinition = new KeyDefinition(new StateDefinition("test", "disk"), "test", {
+    const keyDefinition = new KeyDefinition<boolean>(new StateDefinition("test", "disk"), "test", {
       deserializer: () => null,
     });
     const existing = globalStateProvider.get(keyDefinition);
@@ -241,10 +245,14 @@ describe("DefaultStateProvider", () => {
   });
 
   it("should bind the derivedStateProvider", () => {
-    const derivedDefinition = new DeriveDefinition(new StateDefinition("test", "disk"), "test", {
-      derive: () => null,
-      deserializer: () => null,
-    });
+    const derivedDefinition = new DeriveDefinition<boolean>(
+      new StateDefinition("test", "disk"),
+      "test",
+      {
+        derive: () => null,
+        deserializer: () => null,
+      },
+    );
     const parentState$ = of(null);
     const existing = derivedStateProvider.get(parentState$, derivedDefinition, {});
     const actual = sut.getDerived(parentState$, derivedDefinition, {});

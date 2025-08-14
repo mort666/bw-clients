@@ -27,16 +27,11 @@ export function deepLinkGuard(): CanActivateFn {
     // Evaluate State
     /** before anything else, check if the user is already unlocked. */
     if (authStatus === AuthenticationStatus.Unlocked) {
-      const persistedPreLoginUrl: string | undefined =
-        await routerService.getAndClearLoginRedirectUrl();
-      if (persistedPreLoginUrl === undefined) {
-        // Url us undefined, so there is nothing to navigate to.
-        return true;
-      }
+      const persistedPreLoginUrl = await routerService.getAndClearLoginRedirectUrl();
       // Check if the url is empty or null
       if (!Utils.isNullOrEmpty(persistedPreLoginUrl)) {
         // const urlTree: string | UrlTree = persistedPreLoginUrl;
-        return router.navigateByUrl(persistedPreLoginUrl);
+        return router.navigateByUrl(persistedPreLoginUrl as string);
       }
       return true;
     }
