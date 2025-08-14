@@ -7,6 +7,14 @@ use crate::make_credential::experimental_plugin_make_credential;
 use crate::util::debug_log;
 use crate::webauthn::WEBAUTHN_CREDENTIAL_LIST;
 
+/// Plugin lock status enum as defined in the IDL
+#[repr(u32)]
+#[derive(Debug, Copy, Clone)]
+pub enum PluginLockStatus {
+    PluginLocked = 0,
+    PluginUnlocked = 1,
+}
+
 /// Used when creating and asserting credentials.
 /// Header File Name: _EXPERIMENTAL_WEBAUTHN_PLUGIN_OPERATION_REQUEST
 /// Header File Usage: EXPERIMENTAL_PluginMakeCredential()
@@ -21,6 +29,7 @@ pub struct ExperimentalWebAuthnPluginOperationRequest {
     pub encoded_request_byte_count: u32,
     pub encoded_request_pointer: *mut u8,
 }
+
 
 /// Used as a response when creating and asserting credentials.
 /// Header File Name: _EXPERIMENTAL_WEBAUTHN_PLUGIN_OPERATION_RESPONSE
@@ -60,7 +69,12 @@ pub unsafe trait EXPERIMENTAL_IPluginAuthenticator: windows_core::IUnknown {
         &self,
         request: *const ExperimentalWebAuthnPluginCancelOperationRequest,
     ) -> HRESULT;
+    fn EXPERIMENTAL_GetLockStatus(
+        &self,
+        lock_status: *mut PluginLockStatus,
+    ) -> HRESULT;
 }
+
 
 pub unsafe fn parse_credential_list(credential_list: &WEBAUTHN_CREDENTIAL_LIST) -> Vec<Vec<u8>> {
     let mut allowed_credentials = Vec::new();
@@ -145,7 +159,21 @@ impl EXPERIMENTAL_IPluginAuthenticator_Impl for PluginAuthenticatorComObject_Imp
         debug_log("EXPERIMENTAL_PluginCancelOperation() called");
         HRESULT(0)
     }
+
+    unsafe fn EXPERIMENTAL_GetLockStatus(
+        &self,
+        lock_status: *mut PluginLockStatus,
+    ) -> HRESULT {
+        debug_log("EXPERIMENTAL_GetLockStatus() called");
+        if lock_status.is_null() {
+            return HRESULT(-2147024809); // E_INVALIDARG
+        }
+        // For now, always return unlocked
+        *lock_status = PluginLockStatus::PluginUnlocked;
+        HRESULT(0)
+    }
 }
+
 
 impl IClassFactory_Impl for Factory_Impl {
     fn CreateInstance(
