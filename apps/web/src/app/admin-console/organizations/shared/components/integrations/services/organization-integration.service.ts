@@ -68,6 +68,15 @@ export class OrganizationIntegrationService {
     .subscribe(([integrations, configurations]) => {
       const existingIntegrations = [...this.masterIntegrationList$.value];
 
+      // reset - to original values
+      existingIntegrations.forEach((integration) => {
+        integration.isConnected = false;
+        integration.configuration = "";
+        integration.template = "";
+        integration.HecConfiguration = null;
+        integration.HecConfigurationTemplate = null;
+      });
+
       // Update the integrations list with the fetched integrations
       if (integrations && integrations.length > 0) {
         integrations.forEach((integration) => {
@@ -81,7 +90,7 @@ export class OrganizationIntegrationService {
             existingIntegration.configuration = integration.configuration || "";
             existingIntegration.HecConfiguration = hecConfigJson;
 
-            const template = this.getIntegrationConfiguration(
+            const { template } = this.getIntegrationConfiguration(
               integration.id,
               serviceName,
               configurations,
@@ -199,9 +208,7 @@ export class OrganizationIntegrationService {
     );
 
     // find the existing integration
-    const existingIntegration = this.integrations$.value.find(
-      (i) => i.type === OrganizationIntegrationType.Hec,
-    );
+    const existingIntegration = this.getIntegration(OrganizationIntegrationType.Hec);
 
     if (existingIntegration) {
       // existing integration record found, invoke update API endpoint
@@ -261,20 +268,12 @@ export class OrganizationIntegrationService {
     // check if we have an existing configuration for this integration
     const integrationConfigurations = this.integrationConfigurations$.value;
 
-    // find the existing configuration by integrationId
-    const existingConfigurations = integrationConfigurations
-      .filter((config) => config.integrationId === integrationId)
-      .flatMap((config) => config.configurationResponses || []);
-
-    // find the configuration by service
-    const existingConfiguration =
-      existingConfigurations.length > 0
-        ? existingConfigurations.find(
-            (config) =>
-              config.template &&
-              this.convertToJson<HecConfigurationTemplate>(config.template)?.service === service,
-          )
-        : null;
+    const { config } = this.getIntegrationConfiguration(
+      integrationId,
+      service,
+      integrationConfigurations,
+    );
+    const existingConfiguration = config;
 
     if (existingConfiguration) {
       // existing configuration found, invoke update API endpoint
@@ -328,13 +327,95 @@ export class OrganizationIntegrationService {
     }
   }
 
+  async deleteHec(
+    organizationId: OrganizationId,
+    integration: HecConfiguration,
+    template: HecConfigurationTemplate,
+  ) {
+    // find the existing integration
+    const existingIntegration = this.getIntegration(OrganizationIntegrationType.Hec);
+
+    if (existingIntegration === null) {
+      // couldn't find existing integration for Hec and Service name
+      return;
+    }
+
+    // drop HEC Integration Configuration first
+    await this.deleteHecIntegrationConfiguration(
+      organizationId,
+      existingIntegration.id,
+      template.service,
+    );
+
+    // drop HEC Integration
+    await this.deleteHecIntegration(organizationId, existingIntegration.id);
+  }
+
+  async deleteHecIntegration(
+    organizationId: OrganizationId,
+    integrationId: OrganizationIntegrationId,
+  ) {
+    // drop HEC Integration
+    await this.integrationApiService.deleteOrganizationIntegration(organizationId, integrationId);
+
+    const updatedIntegrations = this.integrations$.value.filter((i) => i.id !== integrationId);
+
+    this.integrations$.next(updatedIntegrations);
+  }
+
+  async deleteHecIntegrationConfiguration(
+    organizationId: OrganizationId,
+    integrationId: OrganizationIntegrationId,
+    service: string,
+  ) {
+    const integrationConfigurations = this.integrationConfigurations$.value;
+
+    const { config, template } = this.getIntegrationConfiguration(
+      integrationId,
+      service,
+      integrationConfigurations,
+    );
+
+    if (!config || !template) {
+      return;
+    }
+
+    // drop HEC Integration Configuration first
+    await this.integrationConfigurationApiService.deleteOrganizationIntegrationConfiguration(
+      organizationId,
+      integrationId,
+      config.id,
+    );
+
+    // remove the configuration from the local store
+    integrationConfigurations.forEach((integrationConfig) => {
+      if (integrationConfig.integrationId === integrationId) {
+        integrationConfig.configurationResponses = integrationConfig.configurationResponses.filter(
+          (config) => config.id !== config.id,
+        );
+      }
+    });
+
+    this.integrationConfigurations$.next(integrationConfigurations);
+  }
+
+  private getIntegration(
+    integrationType: OrganizationIntegrationType,
+  ): OrganizationIntegrationResponse | null {
+    const integrations = this.integrations$.value;
+    return integrations.find((i) => i.type === integrationType) ?? null;
+  }
+
   private getIntegrationConfiguration(
     integrationId: OrganizationIntegrationId,
     service: string,
     integrationConfigurations: OrganizationIntegrationConfigurationResponseWithIntegrationId[],
-  ): HecConfigurationTemplate | null {
+  ): {
+    config: OrganizationIntegrationConfigurationResponse | null;
+    template: HecConfigurationTemplate | null;
+  } {
     if (integrationConfigurations.length === 0) {
-      return null;
+      return { config: null, template: null };
     }
 
     const integrationConfigs = integrationConfigurations.find(
@@ -342,17 +423,17 @@ export class OrganizationIntegrationService {
     );
 
     if (!integrationConfigs) {
-      return null;
+      return { config: null, template: null };
     }
 
     for (const config of integrationConfigs.configurationResponses) {
       const template = this.convertToJson<HecConfigurationTemplate>(config.template || "");
       if (template && template.service === service) {
-        return template;
+        return { config, template };
       }
     }
 
-    return null;
+    return { config: null, template: null };
   }
 
   convertToJson<T>(jsonString?: string): T | null {

@@ -18,7 +18,7 @@ import { OrganizationId } from "@bitwarden/common/types/guid";
 import { DialogService, ToastService } from "@bitwarden/components";
 
 import { SharedModule } from "../../../../../../shared/shared.module";
-import { openHecConnectDialog } from "../integration-dialog/index";
+import { HecConnectDialogResultStatus, openHecConnectDialog } from "../integration-dialog/index";
 import { HecConfiguration, HecConfigurationTemplate, Integration } from "../models";
 import { OrganizationIntegrationService } from "../services/organization-integration.service";
 
@@ -141,6 +141,19 @@ export class IntegrationCardComponent implements AfterViewInit, OnDestroy {
     const integration = new HecConfiguration(result.url, result.bearerToken, result.service);
     const configurationTemplate = new HecConfigurationTemplate(result.index, result.service);
 
+    if (result.success === HecConnectDialogResultStatus.Edited) {
+      await this.saveIntegration(integration, configurationTemplate);
+    }
+
+    if (result.success === HecConnectDialogResultStatus.Delete) {
+      await this.deleteIntegration(integration, configurationTemplate);
+    }
+  }
+
+  async saveIntegration(
+    integration: HecConfiguration,
+    configurationTemplate: HecConfigurationTemplate,
+  ) {
     // save the integration
     try {
       await this.organizationIntegrationService.saveHec(
@@ -154,6 +167,27 @@ export class IntegrationCardComponent implements AfterViewInit, OnDestroy {
         variant: "error",
         title: "",
         message: this.i18nService.t("failedToSaveIntegration"),
+      });
+      return;
+    }
+  }
+
+  async deleteIntegration(
+    integration: HecConfiguration,
+    configurationTemplate: HecConfigurationTemplate,
+  ) {
+    // delete the integration
+    try {
+      await this.organizationIntegrationService.deleteHec(
+        this.organizationId,
+        integration,
+        configurationTemplate,
+      );
+    } catch {
+      this.toastService.showToast({
+        variant: "error",
+        title: "",
+        message: this.i18nService.t("failedToDeleteIntegration"),
       });
       return;
     }

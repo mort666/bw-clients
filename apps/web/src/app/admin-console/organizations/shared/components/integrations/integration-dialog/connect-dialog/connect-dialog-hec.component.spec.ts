@@ -16,6 +16,7 @@ import {
   HecConnectDialogParams,
   HecConnectDialogResult,
   openHecConnectDialog,
+  HecConnectDialogResultStatus,
 } from "./connect-dialog-hec.component";
 
 beforeAll(() => {
@@ -57,6 +58,7 @@ describe("ConnectDialogHecComponent", () => {
   let component: ConnectHecDialogComponent;
   let fixture: ComponentFixture<ConnectHecDialogComponent>;
   let dialogRefMock = mock<DialogRef<HecConnectDialogResult>>();
+  const dialogService = mock<DialogService>();
   const mockI18nService = mock<I18nService>();
 
   const integrationMock: Integration = {
@@ -72,13 +74,6 @@ describe("ConnectDialogHecComponent", () => {
   } as Integration;
   const connectInfo: HecConnectDialogParams = {
     settings: integrationMock,
-    configuration: {
-      uri: "",
-      scheme: "https",
-      token: "",
-      service: "mock-service",
-    }, // Provide appropriate mock configuration if needed
-    template: null, // Provide appropriate mock template if needed
   };
 
   beforeEach(async () => {
@@ -92,8 +87,18 @@ describe("ConnectDialogHecComponent", () => {
         { provide: DialogRef, useValue: dialogRefMock },
         { provide: I18nPipe, useValue: mock<I18nPipe>() },
         { provide: I18nService, useValue: mockI18nService },
+        { provide: DialogService, useValue: dialogService },
       ],
     }).compileComponents();
+
+    TestBed.overrideComponent(ConnectHecDialogComponent, {
+      add: {
+        providers: [{ provide: DialogService, useValue: dialogService }],
+      },
+      remove: {
+        providers: [DialogService],
+      },
+    });
   });
 
   beforeEach(() => {
@@ -163,8 +168,48 @@ describe("ConnectDialogHecComponent", () => {
       bearerToken: "token",
       index: "1",
       service: "Test Service",
-      success: true,
-      error: null,
+      success: HecConnectDialogResultStatus.Edited,
+    });
+  });
+
+  describe("ConnectHecDialogComponent.delete", () => {
+    it("should call dialogService.openSimpleDialog and close dialog with delete result if confirmed", async () => {
+      // Arrange
+      const confirmed = true;
+      dialogService.openSimpleDialog.mockResolvedValue(confirmed);
+      component.formGroup.setValue({
+        url: "https://test.com",
+        bearerToken: "token",
+        index: "1",
+        service: "Test Service",
+      });
+
+      // Act
+      await component.delete();
+
+      // Assert
+      expect(dialogService.openSimpleDialog).toHaveBeenCalledWith({
+        title: { key: "deleteItem" },
+        content: { key: "deleteItemConfirmation" },
+        type: "warning",
+      });
+      expect(dialogRefMock.close).toHaveBeenCalledWith({
+        integrationSettings: integrationMock,
+        url: "https://test.com",
+        bearerToken: "token",
+        index: "1",
+        service: "Test Service",
+        success: HecConnectDialogResultStatus.Delete,
+      });
+    });
+
+    it("should not close dialog if not confirmed", async () => {
+      dialogService.openSimpleDialog.mockResolvedValue(false);
+
+      await component.delete();
+
+      expect(dialogService.openSimpleDialog).toHaveBeenCalled();
+      expect(dialogRefMock.close).not.toHaveBeenCalled();
     });
   });
 });

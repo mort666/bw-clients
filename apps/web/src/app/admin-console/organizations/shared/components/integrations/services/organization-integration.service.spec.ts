@@ -5,7 +5,9 @@ import { mock } from "jest-mock-extended";
 import {
   OrganizationIntegrationApiService,
   OrganizationIntegrationConfigurationApiService,
+  OrganizationIntegrationConfigurationResponse,
 } from "@bitwarden/bit-common/dirt/integrations";
+import { EventType } from "@bitwarden/common/enums";
 
 import { OrganizationIntegrationService } from "./organization-integration.service";
 
@@ -137,6 +139,204 @@ describe("OrganizationIntegrationService", () => {
       const jsonString = "null";
       const result = service.convertToJson<any>(jsonString);
       expect(result).toBeNull();
+    });
+  });
+
+  describe("deleteHecIntegrationConfiguration", () => {
+    const organizationId = "org-123" as any;
+    const integrationId = "int-1" as any;
+    const serviceName = "splunk";
+
+    let mockConfig: any;
+
+    beforeEach(() => {
+      mockConfig = { id: "conf-1", template: '{"service":"splunk"}' };
+
+      jest.resetAllMocks();
+
+      // Set up integrationConfigurations$ with a matching config/template
+      service["integrationConfigurations$"].next([
+        {
+          integrationId,
+          configurationResponses: [mockConfig],
+        },
+      ]);
+
+      jest.spyOn(service, "convertToJson").mockImplementation((json: string) => {
+        try {
+          return JSON.parse(json);
+        } catch {
+          return null;
+        }
+      });
+    });
+
+    it("should delete configuration when config and template exist", async () => {
+      mockOrgIntegrationConfigurationApiService.deleteOrganizationIntegrationConfiguration.mockResolvedValue(
+        undefined,
+      );
+
+      await service.deleteHecIntegrationConfiguration(organizationId, integrationId, serviceName);
+
+      expect(
+        mockOrgIntegrationConfigurationApiService.deleteOrganizationIntegrationConfiguration,
+      ).toHaveBeenCalledWith(organizationId, integrationId, mockConfig.id);
+
+      // The configurationResponses should be filtered (removed)
+      const updatedConfigs = service["integrationConfigurations$"].value.find(
+        (c) => c.integrationId === integrationId,
+      );
+      expect(updatedConfigs?.configurationResponses).toEqual([]);
+    });
+
+    it("should do nothing if config or template is missing", async () => {
+      // Set up with no matching config/template
+      service["integrationConfigurations$"].next([
+        {
+          integrationId,
+          configurationResponses: [
+            {
+              id: "conf-2",
+              eventType: EventType.Cipher_AttachmentCreated,
+              configuration: "",
+              template: '{"service":"other"}',
+            } as OrganizationIntegrationConfigurationResponse,
+          ],
+        },
+      ]);
+
+      await service.deleteHecIntegrationConfiguration(organizationId, integrationId, serviceName);
+
+      expect(
+        mockOrgIntegrationConfigurationApiService.deleteOrganizationIntegrationConfiguration,
+      ).not.toHaveBeenCalled();
+
+      // configurationResponses should remain unchanged
+      const configs = service["integrationConfigurations$"].value.find(
+        (c) => c.integrationId === integrationId,
+      );
+      expect(configs?.configurationResponses.length).toBe(1);
+    });
+
+    it("should do nothing if integrationConfigurations is empty", async () => {
+      service["integrationConfigurations$"].next([]);
+
+      await service.deleteHecIntegrationConfiguration(organizationId, integrationId, serviceName);
+
+      expect(
+        mockOrgIntegrationConfigurationApiService.deleteOrganizationIntegrationConfiguration,
+      ).not.toHaveBeenCalled();
+      expect(service["integrationConfigurations$"].value).toEqual([]);
+    });
+  });
+
+  describe("deleteHecIntegration", () => {
+    const organizationId = "org-123" as any;
+    const integrationId = "int-1" as any;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      service["integrations$"].next([
+        { id: integrationId, type: "Hec", configuration: "{}", service: "splunk" } as any,
+        { id: "int-2", type: "Other", configuration: "{}" } as any,
+      ]);
+    });
+
+    it("should call deleteOrganizationIntegration and remove integration from store", async () => {
+      mockOrgIntegrationApiService.deleteOrganizationIntegration.mockResolvedValue(undefined);
+
+      await service.deleteHecIntegration(organizationId, integrationId);
+
+      expect(mockOrgIntegrationApiService.deleteOrganizationIntegration).toHaveBeenCalledWith(
+        organizationId,
+        integrationId,
+      );
+      const remainingIntegrations = service["integrations$"].value;
+      expect(remainingIntegrations).toEqual([{ id: "int-2", type: "Other", configuration: "{}" }]);
+    });
+
+    it("should not throw if integration does not exist", async () => {
+      mockOrgIntegrationApiService.deleteOrganizationIntegration.mockResolvedValue(undefined);
+      service["integrations$"].next([{ id: "int-2", type: "Other", configuration: "{}" } as any]);
+
+      await expect(
+        service.deleteHecIntegration(organizationId, integrationId),
+      ).resolves.not.toThrow();
+      expect(service["integrations$"].value).toEqual([
+        { id: "int-2", type: "Other", configuration: "{}" },
+      ]);
+    });
+
+    it("should handle empty integrations list", async () => {
+      mockOrgIntegrationApiService.deleteOrganizationIntegration.mockResolvedValue(undefined);
+      service["integrations$"].next([]);
+
+      await expect(
+        service.deleteHecIntegration(organizationId, integrationId),
+      ).resolves.not.toThrow();
+      expect(service["integrations$"].value).toEqual([]);
+    });
+  });
+
+  describe("deleteHec", () => {
+    const organizationId = "org-123" as any;
+    const hecConfiguration = { service: "splunk", toString: () => '{"service":"splunk"}' } as any;
+    const hecConfigurationTemplate = {
+      service: "splunk",
+      toString: () => '{"service":"splunk"}',
+    } as any;
+    const integrationId = "int-1";
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+      // Set up integrations$ with a matching Hec integration
+      service["integrations$"].next([
+        { id: integrationId, type: "Hec", configuration: '{"service":"splunk"}' } as any,
+      ]);
+      // Spy on getIntegration to return the expected integration
+      jest.spyOn(service as any, "getIntegration").mockReturnValue({
+        id: integrationId,
+        type: "Hec",
+        configuration: '{"service":"splunk"}',
+      });
+    });
+
+    it("should delete HEC integration configuration and then integration", async () => {
+      const deleteConfigSpy = jest
+        .spyOn(service, "deleteHecIntegrationConfiguration")
+        .mockResolvedValue(undefined);
+      const deleteIntegrationSpy = jest
+        .spyOn(service, "deleteHecIntegration")
+        .mockResolvedValue(undefined);
+
+      await service.deleteHec(organizationId, hecConfiguration, hecConfigurationTemplate);
+
+      expect(deleteConfigSpy).toHaveBeenCalledWith(
+        organizationId,
+        integrationId,
+        hecConfigurationTemplate.service,
+      );
+      expect(deleteIntegrationSpy).toHaveBeenCalledWith(organizationId, integrationId);
+    });
+
+    it("should handle errors thrown by deleteHecIntegrationConfiguration", async () => {
+      jest
+        .spyOn(service, "deleteHecIntegrationConfiguration")
+        .mockRejectedValue(new Error("Config error"));
+      jest.spyOn(service, "deleteHecIntegration").mockResolvedValue(undefined);
+
+      await expect(
+        service.deleteHec(organizationId, hecConfiguration, hecConfigurationTemplate),
+      ).rejects.toThrow("Config error");
+    });
+
+    it("should handle errors thrown by deleteHecIntegration", async () => {
+      jest.spyOn(service, "deleteHecIntegrationConfiguration").mockResolvedValue(undefined);
+      jest.spyOn(service, "deleteHecIntegration").mockRejectedValue(new Error("Integration error"));
+
+      await expect(
+        service.deleteHec(organizationId, hecConfiguration, hecConfigurationTemplate),
+      ).rejects.toThrow("Integration error");
     });
   });
 });

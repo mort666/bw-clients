@@ -16,9 +16,16 @@ export interface HecConnectDialogResult {
   bearerToken: string;
   index: string;
   service: string;
-  success: boolean;
-  error: string | null;
+  success: HecConnectDialogResultStatusType | null;
 }
+
+export const HecConnectDialogResultStatus = {
+  Edited: "edit",
+  Delete: "delete",
+} as const;
+
+export type HecConnectDialogResultStatusType =
+  (typeof HecConnectDialogResultStatus)[keyof typeof HecConnectDialogResultStatus];
 
 @Component({
   templateUrl: "./connect-dialog-hec.component.html",
@@ -37,6 +44,7 @@ export class ConnectHecDialogComponent implements OnInit {
     @Inject(DIALOG_DATA) protected connectInfo: HecConnectDialogParams,
     protected formBuilder: FormBuilder,
     private dialogRef: DialogRef<HecConnectDialogResult>,
+    private dialogService: DialogService,
   ) {}
 
   ngOnInit(): void {
@@ -52,6 +60,10 @@ export class ConnectHecDialogComponent implements OnInit {
     return !!this.connectInfo.settings.HecConfiguration;
   }
 
+  canDelete(): boolean {
+    return !!this.connectInfo.settings.HecConfiguration;
+  }
+
   getSettingsAsJson(configuration: string) {
     try {
       return JSON.parse(configuration);
@@ -61,22 +73,43 @@ export class ConnectHecDialogComponent implements OnInit {
   }
 
   submit = async (): Promise<void> => {
-    const formJson = this.formGroup.getRawValue();
-
-    const result: HecConnectDialogResult = {
-      integrationSettings: this.connectInfo.settings,
-      url: formJson.url || "",
-      bearerToken: formJson.bearerToken || "",
-      index: formJson.index || "",
-      service: formJson.service || "",
-      success: true,
-      error: null,
-    };
+    const result = this.getHecConnectDialogResult(HecConnectDialogResultStatus.Edited);
 
     this.dialogRef.close(result);
 
     return;
   };
+
+  delete = async (): Promise<void> => {
+    const confirmed = await this.dialogService.openSimpleDialog({
+      title: { key: "deleteItem" },
+      content: {
+        key: "deleteItemConfirmation",
+      },
+      type: "warning",
+    });
+
+    if (confirmed) {
+      // Perform the deletion logic here
+      const result = this.getHecConnectDialogResult(HecConnectDialogResultStatus.Delete);
+      this.dialogRef.close(result);
+    }
+  };
+
+  private getHecConnectDialogResult(
+    status: HecConnectDialogResultStatusType,
+  ): HecConnectDialogResult {
+    const formJson = this.formGroup.getRawValue();
+
+    return {
+      integrationSettings: this.connectInfo.settings,
+      url: formJson.url || "",
+      bearerToken: formJson.bearerToken || "",
+      index: formJson.index || "",
+      service: formJson.service || "",
+      success: status,
+    };
+  }
 }
 
 export function openHecConnectDialog(
