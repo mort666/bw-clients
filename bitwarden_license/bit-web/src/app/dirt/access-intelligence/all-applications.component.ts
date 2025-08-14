@@ -117,9 +117,8 @@ export class AllApplicationsComponent implements OnInit {
     });
 
     if (result) {
-      // User clicked "Run Report" - you can implement the report running logic here
-      // TODO: Implement report running functionality
-      // For example: this.dataService.runReport() or navigate to report page
+      // User clicked "Run Report" - trigger the report
+      this.dataService.triggerReport();
     }
   }
 
