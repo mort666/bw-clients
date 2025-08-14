@@ -65,6 +65,7 @@ export class AllApplicationsComponent implements OnInit {
   };
 
   private hasShownNoDataModal = false; // Flag to prevent multiple modals
+  private organizationId: string | null = null;
   destroyRef = inject(DestroyRef);
 
   constructor(
@@ -86,9 +87,9 @@ export class AllApplicationsComponent implements OnInit {
   }
 
   async ngOnInit() {
-    const organizationId = this.activatedRoute.snapshot.paramMap.get("organizationId");
+    this.organizationId = this.activatedRoute.snapshot.paramMap.get("organizationId");
 
-    if (organizationId) {
+    if (this.organizationId) {
       this.dataService.reportResults$
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe((report) => {
@@ -111,15 +112,13 @@ export class AllApplicationsComponent implements OnInit {
     // Set flag to prevent multiple modals
     this.hasShownNoDataModal = true;
 
-    const result = this.dialogService.open(NoDataModalComponent, {
-      data: {},
+    this.dialogService.open(NoDataModalComponent, {
+      data: {
+        organizationId: this.organizationId,
+        riskInsightsDataService: this.dataService,
+      },
       disableClose: false,
     });
-
-    if (result) {
-      // User clicked "Run Report" - trigger the report
-      this.dataService.triggerReport();
-    }
   }
 
   /**
