@@ -93,6 +93,12 @@ export class AllApplicationsComponent implements OnInit {
       this.dataService.reportResults$
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe((report) => {
+          // Check if we already have data in the dataSource (from previous session)
+          if (this.dataSource.data.length > 0) {
+            this.hasShownNoDataModal = false; // Reset flag since we have data
+            return;
+          }
+
           if (report && report.data && report.data.length > 0) {
             this.dataSource.data = report.data;
             // this.applicationSummary = this.reportService.generateApplicationsSummary(report.data);
@@ -119,13 +125,6 @@ export class AllApplicationsComponent implements OnInit {
       },
       disableClose: false,
     });
-  }
-
-  /**
-   * Checks if the modal should be shown based on current data state
-   */
-  private shouldShowNoDataModal(): boolean {
-    return !this.dataSource.data || this.dataSource.data.length === 0;
   }
 
   goToCreateNewLoginItem = async () => {
