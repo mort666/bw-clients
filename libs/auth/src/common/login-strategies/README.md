@@ -81,7 +81,7 @@ The credentials object gets passed to our [`LoginStrategyService`](https://githu
 > - `WebAuthnLoginStrategy`
 > - `UserApiLoginStrategy`
 >
-> Each of those strategies extend the base `LoginStrategy`, which houses common login logic.
+> Each of those strategies extend the base [`LoginStrategy`](https://github.com/bitwarden/clients/blob/main/libs/auth/src/common/login-strategies/login.strategy.ts), which houses common login logic.
 
 The `LoginStrategyService` uses the `type` property on the credentials object to determine which of the specific login strategies should be used for the login process.
 
@@ -95,47 +95,74 @@ Here is what all of this looks like so far:
 
 ## The `logIn()` and `startLogin()` Methods
 
-Each login strategy has it's own implementation of the `logIn()` method, which takes the credentials object as its sole argument and triggers a process that does the following _at minimum_:
+Each login strategy has it's own implementation of the `logIn()` method. This method takes the credentials object as its sole argument and triggers a process that does the following at minimum:
 
-<details>
-  <summary><strong>1 - Builds a <code>LoginStrategyData</code> and <code>TokenRequest</code> object</strong></summary>
+1. **Build a `LoginStrategyData` Object**
 
-- Each login strategy uses the credentials object to help build a type of the `LoginStrategyData` object, which contains data needed throughout the lifetime of the login strategy. Each login strategy has it's own class that implements the `LoginStrategyData` interface:
-  - `PasswordLoginStrategyData`
-  - `AuthRequestLoginStrategyData`
-  - `SsoLoginStrategyData`
-  - `WebAuthnLoginStrategyData`
-  - `UserApiLoginStrategyData`
+   Each login strategy uses the credentials object to help build a type of `LoginStrategyData` object, which contains the data needed throughout the lifetime of the particular login strategy. Each login strategy has it's own class that implements the `LoginStrategyData` interface:
+   - `PasswordLoginStrategyData`
+   - `AuthRequestLoginStrategyData`
+   - `SsoLoginStrategyData`
+   - `WebAuthnLoginStrategyData`
+   - `UserApiLoginStrategyData`
 
-- Each `LoginStrategyData` object has different properties, but the most important property common to all `LoginStrategyData` objects is the `tokenRequest` property, which holds some type of the `TokenRequest` object, and is formed based on the specific login strategy:
-  - `PasswordTokenRequest` &mdash; used by both Password and Auth Request login strategies
-  - `SsoTokenRequest`
-  - `WebAuthnTokenRequest`
-  - `UserApiTokenRequest`
+   So in our ongoing example that uses the "Login with Master Password" method, we would call `PasswordLoginStrategy.logIn(passwordLoginCredentials)`, which in turn would build a `PasswordLoginStrategyData` object that contains the data needed throughout the lifetime of the `PasswordLoginStrategy`. That object is defined like so:
 
-</details>
+   ```typescript
+   export class PasswordLoginStrategyData implements LoginStrategyData {
+     tokenRequest: PasswordTokenRequest;
+
+     forcePasswordResetReason: ForceSetPasswordReason = ForceSetPasswordReason.None;
+     localMasterKeyHash: string;
+     masterKey: MasterKey;
+     userEnteredEmail: string;
+   }
+   ```
+
+   Each of the `LoginStrategyData` types have varying properties, but one property common to all is the `tokenRequest` property. The `tokenRequest` property holds some type of `TokenRequest` object based on the login strategy:
+   - `PasswordTokenRequest` &mdash; used by both Password and Auth Request login strategies
+   - `SsoTokenRequest`
+   - `WebAuthnTokenRequest`
+   - `UserApiTokenRequest`
+
+   This `TokenRequest` object is built during the `logIn()` call and is added to the `LoginStrategyData` object, as seen in the example above.
+
+2. **Call the base `startLogin()` Method**
+
+   After building the `LoginStrategyData` object with its `tokenRequest` property, we call the `startLogin()` method, which exists on the base `LoginStrategy` and is therefore common to all login strategies. The `startLogin()` method does the following:
+   1. **Makes a `POST` request to the `/connect/token` endpoint on our Identity Server**
+      - `REQUEST`
+
+        The exact payload for this request is determined by the `TokenRequest` object. More specifically, the base `TokenRequest` object contains a `toIdentityToken()` method which can be overridden by the sub-classes (`PasswordTokenRequest`, etc.). This `toIdentityToken()` method translates the information in the `TokenRequest` object into the payload that will be sent to the `/connect/token` endpoint.
+
+      - `RESPONSE`
+
+        The Identity Server validates the request and then generates some type of `IdentityResponse`, which can be one of three types:
+        - [`IdentityTokenResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-token.response.ts)
+          - This response means the user has been authenticated
+          - The response contains:
+            - Authentication information for the user (access token, refresh token)
+            - Decryption information for the user
+
+        - [`IdentityTwoFactorResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-two-factor.response.ts)
+          - This response means the user will need to complete two-factor authentication
+          - The response contains information about the user's 2FA requirements, such as which 2FA providers they have available to them, etc.
+
+        - [`IdentityDeviceVerificationResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-device-verification.response.ts)
+          - This response means the user will need to verify their new device
+
+   2. **Calls one of the `process*Response()` methods based on the type of `IdentityResponse`**
+
+3. **Return an `AuthResult` Object**
+
+<br>
+
+## OLD - The `logIn()` and `startLogin()` Methods
 
 <details>
   <summary><strong>2 - Calls the base <code>startLogin()</code> method</strong></summary>
   
   - After building the `LoginStrategyData` object, we call the `startLogin()` method, which exists on the base `LoginStrategy` and is therefore common to all of the login strategies. The `startLogin()` method does two main things:
-
-    [1] - <em>Makes a `POST` request to the `/connect/token` endpoint on our Identity Server</em>
-
-      - `REQUEST` &mdash; The contents of the payload for this request are determined by the `toIdentityToken()` method that exists on the base `TokenRequest` object (which can be overridden by the sub-classes). This method translates the information in the `TokenRequest` into the payload that will be sent to the `/connect/token` endpoint on our Identity Server.
-
-      - `RESPONSE` &mdash; The Identity Server validates the request based on the grant type, and then generates a response that will be some form of `IdentityResponse`. There are three possibilities:
-        - [`IdentityTokenResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-token.response.ts)
-
-          - This response contains means the user has been authenticated. The response contains:
-            - Authentication information for the user (access token, refresh token)
-            - Decryption information for the user
-
-        - [`IdentityTwoFactorResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-two-factor.response.ts)
-          - This response means that the user will need to complete Two Factor Authentication, and the response contains information about the user's 2FA requirements (i.e. which 2FA providers they have available to them, etc.)
-
-        - [`IdentityDeviceVerificationResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-device-verification.response.ts)
-          - This reponse means that the user will need to verify their new device.
 
     [2] - <em>Calls one of the `process*Response()` methods based on the type of `IdentityResponse`, each of which returns an `AuthResult`</em>
 
