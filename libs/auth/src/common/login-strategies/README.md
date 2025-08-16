@@ -17,16 +17,16 @@
 
 Bitwarden provides 5 methods for logging in to Bitwarden, as defined in our [`AuthenticationType`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/enums/authentication-type.ts) enum. They are:
 
-1. [Login with Master Password](https://bitwarden.com/help/bitwarden-security-white-paper/#authentication-and-decryption) &mdash; authentication with an email address and master password
-2. [Login with Device](https://bitwarden.com/help/log-in-with-device/) (aka Login with Auth Request) &mdash; authentication with a one-time access code
-3. [Login with SSO](https://bitwarden.com/help/about-sso/) &mdash; authentication with an SSO Identity Provider (IdP) through SAML or OpenID Connect (OIDC)
-4. [Login with Passkey](https://bitwarden.com/help/login-with-passkeys/) (aka Login with WebAuthn) &mdash; authentication with a passkey
-5. [Login with User API Key](https://bitwarden.com/help/personal-api-key/) &mdash; authentication with an API key and secret.
+1. [Login with Master Password](https://bitwarden.com/help/bitwarden-security-white-paper/#authentication-and-decryption) &mdash; authenticate with an email address and master password
+2. [Login with Device](https://bitwarden.com/help/log-in-with-device/) (aka Login with Auth Request) &mdash; authenticate with a one-time access code
+3. [Login with SSO](https://bitwarden.com/help/about-sso/) &mdash; authenticate with an SSO Identity Provider (IdP) through SAML or OpenID Connect (OIDC)
+4. [Login with Passkey](https://bitwarden.com/help/login-with-passkeys/) (aka Login with WebAuthn) &mdash; authenticate with a passkey
+5. [Login with User API Key](https://bitwarden.com/help/personal-api-key/) &mdash; authenticate with an API key and secret
 
 <br>
 
 - Methods 1-4
-  - Can be initiated from the `LoginComponent` on our Angular clients (route `/login`)
+  - Can be initiated from the `LoginComponent` on our Angular clients (at route `/login`)
   - Can be initiated from our CLI client
 - Method 5
   - Can be initiated _only_ from our CLI client
@@ -39,7 +39,7 @@ While each login method relies on its own unique logic, this `README` discusses 
 
 ## The Credentials Object
 
-When the user clicks the "submit" action for their specific login method, we build a **credentials object**. This object gathers the core credentials needed to initiate the specific login method.
+When the user clicks the "submit" action for their specific login method, we first build a **credentials object**. This object gathers the core credentials needed to initiate the specific login method.
 
 For example, when the user clicks "Log in with master password", we build a `PasswordLoginCredentials` object, which is defined as follows:
 
@@ -58,7 +58,7 @@ export class PasswordLoginCredentials {
 
 Notice that the `type` is automatically set to `AuthenticationType.Password`, and that the `PasswordLoginCredentials` object simply requires an `email` and `masterPassword` to initiate the login process.
 
-Each authentication method builds it's respective credentials object, as defined in [login-credentials.ts](https://github.com/bitwarden/clients/blob/main/libs/auth/src/common/models/domain/login-credentials.ts).
+Each authentication method builds it's respective credentials object, all of which are defined in [`login-credentials.ts`](https://github.com/bitwarden/clients/blob/main/libs/auth/src/common/models/domain/login-credentials.ts).
 
 - `PasswordLoginCredentials`
 - `AuthRequestLoginCredentials`
@@ -70,7 +70,7 @@ Each authentication method builds it's respective credentials object, as defined
 
 ## The Login Strategy
 
-The credentials object gets forwarded to our `LoginStrategyService`, which acts as an orchestrator to determine which specific **login strategy** should be used for the login process.
+The credentials object gets passed to our [`LoginStrategyService`](https://github.com/bitwarden/clients/blob/main/libs/auth/src/common/services/login-strategies/login-strategy.service.ts), which acts as an orchestrator that determines which specific **login strategy** should be used for the login process.
 
 > [!IMPORTANT]
 > Our authentication methods are handled by different [login strategies](https://github.com/bitwarden/clients/tree/main/libs/auth/src/common/login-strategies) in our code, making use of the [Strategy Pattern](https://refactoring.guru/design-patterns/strategy). Those strategies are:
@@ -89,77 +89,7 @@ For example, the `PasswordLoginCredentials` object has `type = 0` (which is `Aut
 
 Here is what all of this looks like so far:
 
-```mermaid
-flowchart TD
-    %% Top row: Login methods
-    A1[Login with Master Password]
-    A2[Login with Device / Auth Request]
-    A3[Login with SSO]
-    A4[Login with Passkey / WebAuthn]
-    A5[Login with User API Key - CLI only]
-
-    %% Second row: Credentials objects
-    B1[PasswordLoginCredentials]
-    B2[AuthRequestLoginCredentials]
-    B3[SsoLoginCredentials]
-    B4[WebAuthnLoginCredentials]
-    B5[UserApiLoginCredentials]
-
-    %% Third row: Banner-wide LoginStrategyService
-    C["""────────────────────────────────────────────
-    LoginStrategyService
-    ────────────────────────────────────────────"""]
-
-    %% Fourth row: Login Strategies
-    D1[PasswordLoginStrategy]
-    D2[AuthRequestLoginStrategy]
-    D3[SsoLoginStrategy]
-    D4[WebAuthnLoginStrategy]
-    D5[UserApiLoginStrategy]
-
-    %% Align rows and arrows
-    A1 --> B1
-    A2 --> B2
-    A3 --> B3
-    A4 --> B4
-    A5 --> B5
-
-    B1 --> C
-    B2 --> C
-    B3 --> C
-    B4 --> C
-    B5 --> C
-
-    C --> D1
-    C --> D2
-    C --> D3
-    C --> D4
-    C --> D5
-
-    %% Style login method boxes (#634E53 deep plum, white text)
-    style A1 fill:#634E53,stroke:#634E53,color:#FFFFFF
-    style A2 fill:#634E53,stroke:#634E53,color:#FFFFFF
-    style A3 fill:#634E53,stroke:#634E53,color:#FFFFFF
-    style A4 fill:#634E53,stroke:#634E53,color:#FFFFFF
-    style A5 fill:#634E53,stroke:#634E53,color:#FFFFFF
-
-    %% Style credentials boxes (#DDDAC5 cream, black text)
-    style B1 fill:#DDDAC5,stroke:#B8B29A,color:#000000
-    style B2 fill:#DDDAC5,stroke:#B8B29A,color:#000000
-    style B3 fill:#DDDAC5,stroke:#B8B29A,color:#000000
-    style B4 fill:#DDDAC5,stroke:#B8B29A,color:#000000
-    style B5 fill:#DDDAC5,stroke:#B8B29A,color:#000000
-
-    %% Style LoginStrategyService banner (#6C7E68 muted forest green, white text)
-    style C fill:#6C7E68,stroke:#6C7E68,color:#FFFFFF
-
-    %% Style login strategy boxes (#B2C29B soft sage green, black text)
-    style D1 fill:#B2C29B,stroke:#6C7E68,color:#000000
-    style D2 fill:#B2C29B,stroke:#6C7E68,color:#000000
-    style D3 fill:#B2C29B,stroke:#6C7E68,color:#000000
-    style D4 fill:#B2C29B,stroke:#6C7E68,color:#000000
-    style D5 fill:#B2C29B,stroke:#6C7E68,color:#000000
-```
+[INSERT IMAGE]
 
 <br>
 
@@ -256,169 +186,4 @@ For example, if the `AuthResult` contains:
 
 Here is a high-level overview of what all of this looks like in the end:
 
-```mermaid
-flowchart TD
-    %% Top row: Login methods
-    A1[Login with Master Password]
-    A2[Login with Device / Auth Request]
-    A3[Login with SSO]
-    A4[Login with Passkey / WebAuthn]
-    A5[Login with User API Key - CLI only]
-
-    %% Second row: Credentials objects
-    B1[PasswordLoginCredentials]
-    B2[AuthRequestLoginCredentials]
-    B3[SsoLoginCredentials]
-    B4[WebAuthnLoginCredentials]
-    B5[UserApiLoginCredentials]
-
-    %% Third row: Banner-wide LoginStrategyService
-    C["""────────────────────────────────────────────
-    LoginStrategyService
-    ────────────────────────────────────────────"""]
-
-    %% Fourth row: Login Strategies
-    D1[PasswordLoginStrategy]
-    D2[AuthRequestLoginStrategy]
-    D3[SsoLoginStrategy]
-    D4[WebAuthnLoginStrategy]
-    D5[UserApiLoginStrategy]
-
-    %% Fifth row: Token Request objects
-    E1[PasswordTokenRequest]
-    E2[PasswordTokenRequest]
-    E3[SsoTokenRequest]
-    E4[WebAuthnTokenRequest]
-    E5[UserApiTokenRequest]
-
-    %% Sixth row: POST identity token
-    F["""────────────────────────────────────────────
-    POST identity token to /connect/token
-    ────────────────────────────────────────────"""]
-
-    %% Seventh row: Server validates and responds
-    G["""────────────────────────────────────────────
-    Server validates request and sends a response
-    ────────────────────────────────────────────"""]
-
-    %% Eighth row: Response types
-    H1[Response 1: IdentityTokenResponse]
-    H2[Response 2: IdentityTwoFactorResponse]
-    H3[Response 3: IdentityDeviceVerificationResponse]
-
-    %% Ninth row: Process response functions
-    I1[Call processTokenResponse]
-    I2[Call processTwoFactorResponse]
-    I3[Call processDeviceVerificationResponse]
-
-    %% Tenth row: AuthResult
-    J["""────────────────────────────────────────────
-    AuthResult
-    We use this object to determine how to direct the user
-    ────────────────────────────────────────────"""]
-
-    %% Eleventh row: Routing decisions
-    K1[If authResult has no special requirements, route to /vault]
-    K2[If authResult.requiresTwoFactor, route to /2fa]
-    K3[If authResult.requiresDeviceVerification, route to /device-verification]
-
-    %% Align rows and arrows
-    A1 --> B1
-    A2 --> B2
-    A3 --> B3
-    A4 --> B4
-    A5 --> B5
-
-    B1 --> C
-    B2 --> C
-    B3 --> C
-    B4 --> C
-    B5 --> C
-
-    C --> D1
-    C --> D2
-    C --> D3
-    C --> D4
-    C --> D5
-
-    D1 --> E1
-    D2 --> E2
-    D3 --> E3
-    D4 --> E4
-    D5 --> E5
-
-    E1 --> F
-    E2 --> F
-    E3 --> F
-    E4 --> F
-    E5 --> F
-
-    F --> G
-
-    G --> H1
-    G --> H2
-    G --> H3
-
-    H1 --> I1
-    H2 --> I2
-    H3 --> I3
-
-    I1 --> J
-    I2 --> J
-    I3 --> J
-
-    J --> K1
-    J --> K2
-    J --> K3
-
-    %% Style login method boxes (#634E53 deep plum, white text)
-    style A1 fill:#634E53,stroke:#634E53,color:#FFFFFF
-    style A2 fill:#634E53,stroke:#634E53,color:#FFFFFF
-    style A3 fill:#634E53,stroke:#634E53,color:#FFFFFF
-    style A4 fill:#634E53,stroke:#634E53,color:#FFFFFF
-    style A5 fill:#634E53,stroke:#634E53,color:#FFFFFF
-
-    %% Style credentials, token request, and AuthResult boxes (#DDDAC5 cream, black text)
-    style B1 fill:#DDDAC5,stroke:#B8B29A,color:#000000
-    style B2 fill:#DDDAC5,stroke:#B8B29A,color:#000000
-    style B3 fill:#DDDAC5,stroke:#B8B29A,color:#000000
-    style B4 fill:#DDDAC5,stroke:#B8B29A,color:#000000
-    style B5 fill:#DDDAC5,stroke:#B8B29A,color:#000000
-
-    style E1 fill:#DDDAC5,stroke:#B8B29A,color:#000000
-    style E2 fill:#DDDAC5,stroke:#B8B29A,color:#000000
-    style E3 fill:#DDDAC5,stroke:#B8B29A,color:#000000
-    style E4 fill:#DDDAC5,stroke:#B8B29A,color:#000000
-    style E5 fill:#DDDAC5,stroke:#B8B29A,color:#000000
-
-    style J fill:#DDDAC5,stroke:#B8B29A,color:#000000
-
-    %% Style LoginStrategyService banner (#6C7E68 muted forest green, white text)
-    style C fill:#6C7E68,stroke:#6C7E68,color:#FFFFFF
-
-    %% Style login strategy boxes (#B2C29B soft sage green, black text)
-    style D1 fill:#B2C29B,stroke:#6C7E68,color:#000000
-    style D2 fill:#B2C29B,stroke:#6C7E68,color:#000000
-    style D3 fill:#B2C29B,stroke:#6C7E68,color:#000000
-    style D4 fill:#B2C29B,stroke:#6C7E68,color:#000000
-    style D5 fill:#B2C29B,stroke:#6C7E68,color:#000000
-
-    %% Style POST and server validation boxes (#5F6E75 slate gray, white text)
-    style F fill:#5F6E75,stroke:#5F6E75,color:#FFFFFF
-    style G fill:#5F6E75,stroke:#5F6E75,color:#FFFFFF
-
-    %% Style Identity*Response boxes (#133C55 deep navy blue, white text)
-    style H1 fill:#133C55,stroke:#133C55,color:#FFFFFF
-    style H2 fill:#133C55,stroke:#133C55,color:#FFFFFF
-    style H3 fill:#133C55,stroke:#133C55,color:#FFFFFF
-
-    %% Style process response boxes (#386FA4 medium blue, white text)
-    style I1 fill:#386FA4,stroke:#386FA4,color:#FFFFFF
-    style I2 fill:#386FA4,stroke:#386FA4,color:#FFFFFF
-    style I3 fill:#386FA4,stroke:#386FA4,color:#FFFFFF
-
-    %% Style routing boxes (#59A5D8 soft blue, white text)
-    style K1 fill:#59A5D8,stroke:#59A5D8,color:#FFFFFF
-    style K2 fill:#59A5D8,stroke:#59A5D8,color:#FFFFFF
-    style K3 fill:#59A5D8,stroke:#59A5D8,color:#FFFFFF
-```
+[INSERT IMAGE]
