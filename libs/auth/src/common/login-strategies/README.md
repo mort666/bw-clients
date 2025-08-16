@@ -119,7 +119,7 @@ Each login strategy has it's own implementation of the `logIn()` method. This me
    }
    ```
 
-   Each of the `LoginStrategyData` types have varying properties, but one property common to all is the `tokenRequest` property. The `tokenRequest` property holds some type of `TokenRequest` object based on the login strategy:
+   Each of the `LoginStrategyData` types have varying properties, but one property common to all is the `tokenRequest` property. The `tokenRequest` property holds some type of [`TokenRequest`](https://github.com/bitwarden/clients/tree/main/libs/common/src/auth/models/request/identity-token) object based on the login strategy:
    - `PasswordTokenRequest` &mdash; used by both Password and Auth Request login strategies
    - `SsoTokenRequest`
    - `WebAuthnTokenRequest`
@@ -145,33 +145,16 @@ Each login strategy has it's own implementation of the `logIn()` method. This me
             - Decryption information for the user
 
         - [`IdentityTwoFactorResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-two-factor.response.ts)
-          - This response means the user will need to complete two-factor authentication
+          - This response means the user needs to complete two-factor authentication
           - The response contains information about the user's 2FA requirements, such as which 2FA providers they have available to them, etc.
 
         - [`IdentityDeviceVerificationResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-device-verification.response.ts)
-          - This response means the user will need to verify their new device
+          - This response means the user needs to verify their new device via [new device verification](https://bitwarden.com/help/new-device-verification/)
 
    2. **Calls one of the `process*Response()` methods based on the type of `IdentityResponse`**
-
-3. **Return an `AuthResult` Object**
-
-<br>
-
-## OLD - The `logIn()` and `startLogin()` Methods
-
-<details>
-  <summary><strong>2 - Calls the base <code>startLogin()</code> method</strong></summary>
-  
-  - After building the `LoginStrategyData` object, we call the `startLogin()` method, which exists on the base `LoginStrategy` and is therefore common to all of the login strategies. The `startLogin()` method does two main things:
-
-    [2] - <em>Calls one of the `process*Response()` methods based on the type of `IdentityResponse`, each of which returns an `AuthResult`</em>
-
       - If `IdentityTokenResponse`, call `processTokenResponse()`
-
         - This method uses information from the `IdentityTokenResponse` object to set Authentication and Decryption information about the user into state.
-
           - `saveAccountInformation()` - initializes the account with information from the `IdentityTokenResponse` after successful login.
-
             - Adds the account to the `AccountService` and sets up the account profile in `StateService`
             - Sets the access token and refresh token to state
             - Sets the `userDecryptionOptions` to state
@@ -186,14 +169,9 @@ Each login strategy has it's own implementation of the `logIn()` method. This me
       - If `IdentityDeviceVerificationResponse`, call `processDeviceVerificationResponse()`
         - This method simply sets `requiresDeviceVerification` to `true` on the `AuthResult`
 
-</details>
+3. **Return an `AuthResult` Object**
 
-<details>
-  <summary><strong>3 - Returns an <code>AuthResult</code> object</strong></summary>
-  
-  - The `AuthResult` object contains information that will be used to determine how to navigate the user after authentication.
-
-</details>
+   The `AuthResult` object contains information that will be used to determine how to navigate the user after authentication.
 
 <br>
 
