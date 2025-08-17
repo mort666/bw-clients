@@ -159,9 +159,9 @@ Each login strategy has it's own implementation of the `logIn()` method. This me
             - Sets the access token and refresh token to state
             - Sets the `userDecryptionOptions` to state
 
-          - Sets the user's cryptographic properties to state via `setMasterKey()`, `setUserKey()`, and `setPrivateKey()`
+          - Sets cryptographic properties to state via `setMasterKey()`, `setUserKey()`, and `setPrivateKey()`
 
-          - Sets a `forceSetPasswordReason` in state, if necessary.
+          - Sets a `forceSetPasswordReason` to state, if necessary
 
       - If `IdentityTwoFactorResponse`, call `processTwoFactorResponse()`
         - This method adds the necessary data for the 2FA process to the `AuthResult`
