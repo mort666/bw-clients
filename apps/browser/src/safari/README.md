@@ -20,7 +20,7 @@ sequenceDiagram
     participant SE as Safari Extension<br/>(Browser Context)
     participant SH as Safari Extension Handler<br/>(SafariWebExtensionHandler.swift)
     participant KC as Keychain<br/>(macOS)
-    participant BA as LocalAuthentication<br/>(TouchID/FaceID)
+    participant BA as LocalAuthentication<br/>(TouchID)
     participant FS as File System<br/>(Downloads)
 
     Note over SE, FS: Safari Native Messaging Flow
@@ -48,7 +48,7 @@ sequenceDiagram
         LA-->>SH: Authentication result
         alt Success
             SH->>KC: SecKeychainFindGenericPassword()
-            KC-->>SH: User key (encrypted)
+            KC-->>SH: User key (unencrypted)
             SH->>SE: Return user key + auth success
         else Failure
             SH->>SE: Return auth failure
@@ -77,7 +77,7 @@ sequenceDiagram
 - **`sleep`** - Provide async delay functionality
 
 #### Biometric Authentication
-- **`authenticateWithBiometrics`** - Perform TouchID/FaceID authentication
+- **`authenticateWithBiometrics`** - Perform TouchID authentication
 - **`getBiometricsStatus`** - Check if biometrics are available on device
 - **`unlockWithBiometricsForUser`** - Unlock vault with biometrics for specific user
 - **`getBiometricsStatusForUser`** - Check biometric availability for specific user
@@ -101,5 +101,5 @@ npm run dist:safari
 
 This uses the `package-safari.ps1` script to:
 1. Build the Safari extension Xcode project
-2. Code sign the extension for different distribution types (mas, masdev, dmg)
+2. Code sign the extension for different distribution types (`mas`, `masdev`, `dmg`)
 3. Package the extension for integration with the desktop app
