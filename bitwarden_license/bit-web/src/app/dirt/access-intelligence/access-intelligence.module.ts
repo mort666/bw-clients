@@ -14,12 +14,13 @@ import { EncryptService } from "@bitwarden/common/key-management/crypto/abstract
 import { PasswordStrengthServiceAbstraction } from "@bitwarden/common/tools/password-strength/password-strength.service.abstraction";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { KeyService } from "@bitwarden/key-management";
+import { OrganizationWarningsModule } from "@bitwarden/web-vault/app/billing/organizations/warnings/organization-warnings.module";
 
 import { AccessIntelligenceRoutingModule } from "./access-intelligence-routing.module";
 import { RiskInsightsComponent } from "./risk-insights.component";
 
 @NgModule({
-  imports: [RiskInsightsComponent, AccessIntelligenceRoutingModule],
+  imports: [RiskInsightsComponent, AccessIntelligenceRoutingModule, OrganizationWarningsModule],
   providers: [
     {
       provide: MemberCipherDetailsApiService,
