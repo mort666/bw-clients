@@ -540,7 +540,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
    * @param requestId
    * @private
    */
-  private async retrieveAuthRequest(requestId: string): Promise<AuthRequestResponse> {
+  private async retrieveAuthRequest(requestId: string): Promise<AuthRequestResponse | undefined> {
     let authRequestResponse: AuthRequestResponse | undefined = undefined;
     try {
       // There are two cases here, the first being
@@ -565,13 +565,11 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
       // If the request no longer exists, we treat it as if it's been answered (and denied).
       if (error instanceof ErrorResponse && error.statusCode === HttpStatusCode.NotFound) {
         authRequestResponse = undefined;
+        this.logService.error("Auth request response not generated");
       } else {
         this.logService.error(error);
       }
-    }
-
-    if (authRequestResponse === undefined) {
-      throw new Error("Auth request response not generated");
+      this.loading = false;
     }
 
     return authRequestResponse;
