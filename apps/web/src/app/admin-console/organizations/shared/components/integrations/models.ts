@@ -1,5 +1,7 @@
 // eslint-disable-next-line no-restricted-imports
-import { OrganizationIntegrationServiceType } from "@bitwarden/bit-common/dirt/integrations";
+
+import { OrganizationIntegration } from "@bitwarden/common/dirt/integrations/models/organization-integration";
+import { OrganizationIntegrationServiceType } from "@bitwarden/common/dirt/integrations/models/organization-integration-service-type";
 import { IntegrationType } from "@bitwarden/common/enums";
 
 /** Integration or SDK */
@@ -25,6 +27,10 @@ export type Integration = {
   configuration?: string;
   template?: string;
 
+  // OrganizationIntegration
+  organizationIntegration?: OrganizationIntegration | null;
+
+  // Remove
   HecConfiguration?: HecConfiguration | null;
   HecConfigurationTemplate?: HecConfigurationTemplate | null;
 };

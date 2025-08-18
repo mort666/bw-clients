@@ -11,6 +11,8 @@ import { ActivatedRoute } from "@angular/router";
 import { Observable, Subject, combineLatest, lastValueFrom, takeUntil } from "rxjs";
 
 import { SYSTEM_THEME_OBSERVABLE } from "@bitwarden/angular/services/injection-tokens";
+import { OrganizationIntegrationServiceType } from "@bitwarden/common/dirt/integrations/models/organization-integration-service-type";
+import { HecOrganizationIntegrationService } from "@bitwarden/common/dirt/integrations/services/hec-organization-integration-service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { ThemeType } from "@bitwarden/common/platform/enums";
 import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
@@ -19,8 +21,7 @@ import { DialogService, ToastService } from "@bitwarden/components";
 
 import { SharedModule } from "../../../../../../shared/shared.module";
 import { openHecConnectDialog } from "../integration-dialog/index";
-import { HecConfiguration, HecConfigurationTemplate, Integration } from "../models";
-import { OrganizationIntegrationService } from "../services/organization-integration.service";
+import { Integration } from "../models";
 
 @Component({
   selector: "app-integration-card",
@@ -59,7 +60,7 @@ export class IntegrationCardComponent implements AfterViewInit, OnDestroy {
     private systemTheme$: Observable<ThemeType>,
     private dialogService: DialogService,
     private activatedRoute: ActivatedRoute,
-    private organizationIntegrationService: OrganizationIntegrationService,
+    private hecOrganizationIntegrationService: HecOrganizationIntegrationService,
     private toastService: ToastService,
     private i18nService: I18nService,
   ) {
@@ -119,7 +120,7 @@ export class IntegrationCardComponent implements AfterViewInit, OnDestroy {
   }
 
   IsUpdateAvailable(): boolean {
-    return !!this.integrationSettings.configuration;
+    return !!this.integrationSettings.organizationIntegration;
   }
 
   async setupConnection() {
@@ -137,18 +138,26 @@ export class IntegrationCardComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    // create integration and configuration objects
-    const integration = new HecConfiguration(result.url, result.bearerToken, result.service);
-    const configurationTemplate = new HecConfigurationTemplate(result.index, result.service);
-
-    // save the integration
     try {
-      await this.organizationIntegrationService.saveHec(
-        this.organizationId,
-        this.integrationSettings.name,
-        integration,
-        configurationTemplate,
-      );
+      if (this.IsUpdateAvailable) {
+        await this.hecOrganizationIntegrationService.saveHec(
+          this.organizationId,
+          this.integrationSettings.name as OrganizationIntegrationServiceType,
+          result.url,
+          result.bearerToken,
+          result.index,
+        );
+      } else {
+        await this.hecOrganizationIntegrationService.updateHec(
+          this.organizationId,
+          this.integrationSettings.organizationIntegration.id,
+          this.integrationSettings.organizationIntegration.integrationConfiguration[0].id,
+          this.integrationSettings.name as OrganizationIntegrationServiceType,
+          result.url,
+          result.bearerToken,
+          result.index,
+        );
+      }
     } catch {
       this.toastService.showToast({
         variant: "error",

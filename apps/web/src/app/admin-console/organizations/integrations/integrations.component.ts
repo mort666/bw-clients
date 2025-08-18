@@ -2,10 +2,8 @@
 // @ts-strict-ignore
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
-import { Observable, Subject, switchMap, takeUntil } from "rxjs";
+import { firstValueFrom, Observable, Subject, switchMap, takeUntil } from "rxjs";
 
-// eslint-disable-next-line no-restricted-imports
-import { OrganizationIntegrationServiceType } from "@bitwarden/bit-common/dirt/integrations";
 import {
   getOrganizationById,
   OrganizationService,
@@ -22,7 +20,8 @@ import { SharedOrganizationModule } from "../shared";
 import { IntegrationGridComponent } from "../shared/components/integrations/integration-grid/integration-grid.component";
 import { FilterIntegrationsPipe } from "../shared/components/integrations/integrations.pipe";
 import { Integration } from "../shared/components/integrations/models";
-import { OrganizationIntegrationService } from "../shared/components/integrations/services/organization-integration.service";
+import { OrganizationIntegrationServiceType } from "@bitwarden/common/dirt/integrations/models/organization-integration-service-type";
+import { HecOrganizationIntegrationService } from "@bitwarden/common/dirt/integrations/services/hec-organization-integration-service";
 
 @Component({
   selector: "ac-integrations",
@@ -219,9 +218,9 @@ export class AdminConsoleIntegrationsComponent implements OnInit, OnDestroy {
   ];
 
   async ngOnInit(): Promise<void> {
-    const orgId = this.route.snapshot.params.organizationId;
+    // const orgId = this.route.snapshot.params.organizationId;
 
-    await this.organizationIntegrationService.setOrganizationId(orgId, this.integrationsList);
+    // await this.hecOrganizationIntegrationService.setOrganizationId(orgId, this.integrationsList);
 
     this.organization$ = this.route.params.pipe(
       switchMap((params) =>
@@ -235,11 +234,16 @@ export class AdminConsoleIntegrationsComponent implements OnInit, OnDestroy {
       ),
     );
 
-    this.organizationIntegrationService.integrationList$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((integrations) => {
-        this.integrationsList = integrations;
-      });
+    const org = await firstValueFrom(this.organization$);
+
+    // Sets the organization ID which also loads the integrations$
+    await this.hecOrganizationIntegrationService.setOrganizationIntegrations(org.id);
+
+    // this.organizationIntegrationService.integrationList$
+    //   .pipe(takeUntil(this.destroy$))
+    //   .subscribe((integrations) => {
+    //     this.integrationsList = integrations;
+    //   });
   }
 
   constructor(
@@ -247,7 +251,8 @@ export class AdminConsoleIntegrationsComponent implements OnInit, OnDestroy {
     private organizationService: OrganizationService,
     private accountService: AccountService,
     private configService: ConfigService,
-    private organizationIntegrationService: OrganizationIntegrationService,
+    // private organizationIntegrationService: OrganizationIntegrationService,
+    private hecOrganizationIntegrationService: HecOrganizationIntegrationService,
   ) {
     this.configService
       .getFeatureFlag$(FeatureFlag.EventBasedOrganizationIntegrations)
@@ -256,17 +261,30 @@ export class AdminConsoleIntegrationsComponent implements OnInit, OnDestroy {
         this.isEventBasedIntegrationsEnabled = isEnabled;
       });
 
+    // Add the new event based items to the list
     if (this.isEventBasedIntegrationsEnabled) {
-      this.integrationsList.push({
+      const crowdstrikeIntegration: Integration = {
         name: OrganizationIntegrationServiceType.CrowdStrike,
         linkURL: "",
         image: "../../../../../../../images/integrations/logo-crowdstrike-black.svg",
         type: IntegrationType.EVENT,
         description: "crowdstrikeEventIntegrationDesc",
         isConnected: false,
-        canSetupConnection: true,
-      });
+      };
+
+      this.integrationsList.push(crowdstrikeIntegration);
     }
+
+    // For all existing event based configurations loop through and assign the
+    // organizationIntegration for the correct services.
+    this.hecOrganizationIntegrationService.integrations$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((integrations) => {
+        integrations.map((integration) => {
+          const item = this.integrationsList.find((i) => i.name === integration.serviceType);
+          item.organizationIntegration = integration;
+        });
+      });
   }
   ngOnDestroy(): void {
     this.destroy$.next();
