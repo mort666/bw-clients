@@ -49,8 +49,9 @@ import {
 import { MasterPasswordApiService } from "@bitwarden/common/auth/abstractions/master-password-api.service.abstraction";
 import { SsoLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/sso-login.service.abstraction";
 import { AutofillSettingsServiceAbstraction } from "@bitwarden/common/autofill/services/autofill-settings.service";
-import { ClientType, DeviceType } from "@bitwarden/common/enums";
+import { ClientType } from "@bitwarden/common/enums";
 import { ProcessReloadServiceAbstraction } from "@bitwarden/common/key-management/abstractions/process-reload.service";
+import { KeyGenerationService } from "@bitwarden/common/key-management/crypto";
 import { CryptoFunctionService as CryptoFunctionServiceAbstraction } from "@bitwarden/common/key-management/crypto/abstractions/crypto-function.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { WebCryptoFunctionService } from "@bitwarden/common/key-management/crypto/services/web-crypto-function.service";
@@ -67,7 +68,6 @@ import { Fido2AuthenticatorService as Fido2AuthenticatorServiceAbstraction } fro
 import { Fido2UserInterfaceService as Fido2UserInterfaceServiceAbstraction } from "@bitwarden/common/platform/abstractions/fido2/fido2-user-interface.service.abstraction";
 import { FileDownloadService } from "@bitwarden/common/platform/abstractions/file-download/file-download.service";
 import { I18nService as I18nServiceAbstraction } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { KeyGenerationService as KeyGenerationServiceAbstraction } from "@bitwarden/common/platform/abstractions/key-generation.service";
 import {
   LogService,
   LogService as LogServiceAbstraction,
@@ -304,7 +304,7 @@ const safeProviders: SafeProvider[] = [
     deps: [
       PinServiceAbstraction,
       InternalMasterPasswordServiceAbstraction,
-      KeyGenerationServiceAbstraction,
+      KeyGenerationService,
       CryptoFunctionServiceAbstraction,
       EncryptService,
       PlatformUtilsServiceAbstraction,
@@ -455,17 +455,15 @@ const safeProviders: SafeProvider[] = [
   }),
   safeProvider({
     provide: DesktopAutotypeService,
-    useFactory: (
-      configService: ConfigService,
-      globalStateProvider: GlobalStateProvider,
-      platformUtilsService: PlatformUtilsServiceAbstraction,
-    ) =>
-      new DesktopAutotypeService(
-        configService,
-        globalStateProvider,
-        platformUtilsService.getDevice() === DeviceType.WindowsDesktop,
-      ),
-    deps: [ConfigService, GlobalStateProvider, PlatformUtilsServiceAbstraction],
+    useClass: DesktopAutotypeService,
+    deps: [
+      AccountService,
+      AuthService,
+      CipherServiceAbstraction,
+      ConfigService,
+      GlobalStateProvider,
+      PlatformUtilsServiceAbstraction,
+    ],
   }),
 ];
 
