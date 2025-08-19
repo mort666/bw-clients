@@ -1,6 +1,7 @@
 import { Injectable } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 
+import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
@@ -11,7 +12,6 @@ import {
   DuplicateReviewDialogComponent,
   DuplicateReviewDialogResult,
 } from "../../tools/de-duplicate/duplicate-review-dialog.component";
-// Success dialog replaced by callout shown in the de-duplicate component
 
 export interface DuplicateOperationResult {
   setsFound: number;
@@ -22,6 +22,19 @@ export interface DuplicateOperationResult {
 interface DuplicateSet {
   key: string;
   ciphers: CipherView[];
+}
+
+type UriMatchStrategy = "Base" | "Hostname" | "Host" | "Exact";
+
+interface ParsedUri {
+  original: string;
+  androidPackage?: string;
+  scheme?: string;
+  hostname?: string;
+  port?: string;
+  path?: string;
+  query?: string;
+  fragment?: string;
 }
 
 @Injectable({
@@ -35,13 +48,27 @@ export class DeDuplicateService {
   ) {}
 
   /**
+   * Strategies for URI matching/normalization. The current implementation defaults to Base.
+   *
+   * Base: matches on second-level and top-level domain only
+   * Hostname: matches on subdomain, second-level domain, and top-level domain
+   * Host: matches on the above but also includes port, when available
+   * Exact: exact match between URI and current browser page
+   */
+  private static readonly DEFAULT_URI_STRATEGY: UriMatchStrategy = "Base";
+
+  /**
    * Main entry point to find and handle duplicate ciphers for a given user.
    * @param userId The ID of the current user.
    * @returns A promise that resolves to the number of duplicate sets found.
    */
-  async findAndHandleDuplicates(userId: UserId): Promise<DuplicateOperationResult> {
+  async findAndHandleDuplicates(
+    userId: UserId,
+    options?: { uriStrategy?: UriMatchStrategy },
+  ): Promise<DuplicateOperationResult> {
+    const uriStrategy = options?.uriStrategy ?? DeDuplicateService.DEFAULT_URI_STRATEGY;
     const allCiphers = await this.cipherService.getAllDecrypted(userId);
-    const duplicateSets = this.findDuplicateSets(allCiphers);
+    const duplicateSets = this.findDuplicateSets(allCiphers, uriStrategy);
 
     if (duplicateSets.length > 0) {
       const { trashed, permanentlyDeleted } = await this.handleDuplicates(duplicateSets, userId);
@@ -52,13 +79,17 @@ export class DeDuplicateService {
 
   /**
    * Finds groups of ciphers (clusters) that are considered duplicates.
-   * A "group" or cluster is defined by ciphers sharing login.username and a normalized login.uri,
+   * A "group" or cluster is defined by ciphers sharing login.username and a matched login.uri
+   * (where match behavior is determined by DEFAULT_URI_STRATEGY)
    * OR a matching login.username and normalized cipher.name,
    * OR when no username is present, on matching normalized cipher.name only.
    * @param ciphers A list of all the user's ciphers.
    * @returns An array of DuplicateSet objects, each representing a group of duplicates.
    */
-  private findDuplicateSets(ciphers: CipherView[]): DuplicateSet[] {
+  private findDuplicateSets(
+    ciphers: CipherView[],
+    uriStrategy: UriMatchStrategy = DeDuplicateService.DEFAULT_URI_STRATEGY,
+  ): DuplicateSet[] {
     const uriBuckets = new Map<string, CipherView[]>();
     const nameBuckets = new Map<string, CipherView[]>();
     const nameOnlyBuckets = new Map<string, CipherView[]>(); // used in edge cases when no useername is present for a login
@@ -94,24 +125,18 @@ export class DeDuplicateService {
       if (username) {
         const uris = this.extractUriStrings(cipher);
         if (uris.length > 0) {
-          // Collect unique normalized hosts to avoid adding the same cipher twice to the same bucket
-          const hosts = new Set<string>();
-          for (const uri of uris) {
-            const normHost = this.normalizeUri(uri);
-            if (normHost) {
-              hosts.add(normHost);
-            }
-          }
-          for (const normHost of hosts) {
-            const key = `${username}||${normHost}`;
+          // Collect unique normalized keys to avoid adding the same cipher twice to the same bucket
+          const keys = this.getUriKeysForStrategy(uris, uriStrategy);
+          for (const k of keys) {
+            const key = `${username}||${k}`;
             let bucket = uriBuckets.get(key);
             if (!bucket) {
               bucket = [];
               uriBuckets.set(key, bucket);
             }
             bucket.push(cipher);
-            const displayKey = `username+uri: ${username} @ ${normHost}`;
-            ensureSetForBucket(bucket, displayKey); // Create/extend duplicate set when bucket reaches size 2
+            const displayKey = `username+uri: ${username} @ ${k}`;
+            ensureSetForBucket(bucket, displayKey);
           }
         }
       }
@@ -131,7 +156,7 @@ export class DeDuplicateService {
             bucket.push(cipher);
             const displayName = bucket[0].name?.trim() || "";
             const displayKey = `username+name: ${username} & ${displayName}`;
-            ensureSetForBucket(bucket, displayKey); // Create/extend duplicate set when bucket reaches size 2
+            ensureSetForBucket(bucket, displayKey);
           } else {
             // match on cipher.name only when username is absent
             // to prevent false positive duplicates in a situation where a user has multiple accounts on the same site - among others
@@ -144,7 +169,7 @@ export class DeDuplicateService {
             const displayName = bucket[0].name?.trim() || "";
             // Reuse existing display format so UI logic extracts the name without introducing new labels
             const displayKey = `username+name:  & ${displayName}`;
-            ensureSetForBucket(bucket, displayKey); // Create/extend duplicate set when bucket reaches size 2
+            ensureSetForBucket(bucket, displayKey);
           }
         }
       }
@@ -152,14 +177,14 @@ export class DeDuplicateService {
 
     // Collapse groups that contain the exact same cipher IDs
     // Prefer the stronger username+uri grouping over username+name
-    const weightedDuplicateSets = new Map<string, DuplicateSet>(); // used to prioritize username+uri ses
+    const weightedDuplicateSets = new Map<string, DuplicateSet>();
     const groupingPriority = (key: string): number => (key.startsWith("username+uri:") ? 2 : 1);
 
     for (const set of duplicateSets) {
       const signature = set.ciphers
         .map((c) => c.id)
         .sort()
-        .join("|"); // string representing ciphr IDs in a reproducible way
+        .join("|");
       const existing = weightedDuplicateSets.get(signature);
       if (!existing || groupingPriority(set.key) > groupingPriority(existing.key)) {
         weightedDuplicateSets.set(signature, set);
@@ -210,65 +235,226 @@ export class DeDuplicateService {
   }
 
   /**
-   * Extracts the host portion (subdomains.domain.tld OR IPv4 OR IPv6) from an input string.
-   * Behavior:
-   *  - Prepends "https://" if the string lacks a scheme so standard parsing works.
-   *  - Uses the node's URL parser when available (new URL). That yields punycoded ASCII for IDNs.
-   *  - Falls back to a lightweight regex authority parse if URL parsing fails or isn't available.
-   *  - Strips userinfo, port, enclosing IPv6 brackets, and a trailing dot; lowercases result.
-   *  - Returns "" if a host can't be derived.
-   * @param raw Input possibly containing a host.
-   * @returns Host string or empty string.
+   * Get normalized keys for the given URIs according to a strategy.
    */
-  private normalizeUri(raw: string): string {
+  private getUriKeysForStrategy(uris: string[], strategy: UriMatchStrategy): Set<string> {
+    const keys = new Set<string>();
+    for (const raw of uris) {
+      const parsed = this.parseUri(raw);
+      if (!parsed) {
+        continue;
+      }
+      switch (strategy) {
+        case "Base": {
+          const base = this.getBaseUri(parsed);
+          if (base) {
+            keys.add(base);
+          }
+          break;
+        }
+        case "Hostname": {
+          const hostName = this.getHostname(parsed);
+          if (hostName) {
+            keys.add(hostName);
+          }
+          break;
+        }
+        case "Host": {
+          const host = this.getHost(parsed);
+          if (host) {
+            keys.add(host);
+          }
+          break;
+        }
+        case "Exact": {
+          const exact = this.getExactUrlKey(parsed);
+          if (exact) {
+            keys.add(exact);
+          }
+          break;
+        }
+      }
+    }
+    return keys;
+  }
+
+  /**
+   * Parse a URI/host-like string into components for strategy matching.
+   * - Supports androidapp:// and androidapp: scheme, normalizing to androidPackage.
+   * - Adds http:// scheme if missing for URL parsing.
+   */
+  private parseUri(raw: string): ParsedUri | null {
     if (!raw) {
-      return "";
+      return null;
     }
-    let input = raw.trim();
+    const input = raw.trim();
     if (!input) {
-      return "";
+      return null;
     }
-    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(input)) {
-      input = "https://" + input;
+
+    // Android package
+    const m1 = input.match(/^androidapp:\/\/([^/?#]+)(?:[/?#].*)?$/i);
+    if (m1?.[1]) {
+      const pkg = m1[1].trim().replace(/\.$/, "").toLowerCase();
+      return { original: input, androidPackage: pkg };
     }
-    // Attempt extraction using node's URL lib
+    const m2 = input.match(/^androidapp:([^\s/?#]+).*$/i);
+    if (m2?.[1]) {
+      const pkg = m2[1].trim().replace(/\.$/, "").toLowerCase();
+      return { original: input, androidPackage: pkg };
+    }
+
+    let toParse = input;
+    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(toParse)) {
+      // Align with convention when lacking scheme
+      // https://bitwarden.com/help/uri-match-detection/#uri-schemes
+      toParse = "http://" + toParse;
+    }
     try {
-      const url = new URL(input);
-      let host = url.hostname || ""; // hostname excludes port already
-      if (!host) {
-        return "";
+      const url = new URL(toParse);
+      let hostname = url.hostname || "";
+      if (hostname.startsWith("[") && hostname.endsWith("]")) {
+        hostname = hostname.slice(1, -1);
       }
-      // Strip IPv6 brackets
-      if (host.startsWith("[") && host.endsWith("]")) {
-        host = host.slice(1, -1);
-      }
-      host = host.replace(/\.$/, "").toLowerCase();
-      return host;
+      hostname = hostname.replace(/\.$/, "").toLowerCase();
+      const port = url.port || "";
+      const scheme = (url.protocol || "").replace(/:$/, "").toLowerCase();
+      const path = url.pathname || "";
+      const query = url.search || "";
+      const fragment = url.hash || "";
+      return {
+        original: input,
+        scheme,
+        hostname,
+        port,
+        path,
+        query,
+        fragment,
+      };
     } catch {
-      // Fallback: manual authority extraction
-      const authorityMatch = input.match(/^[a-z][a-z0-9+.-]*:\/\/([^/?#]+)/i);
+      // Fallback manual authority extraction sufficient for host, hostname, and base strategies
+      // TODO if exact strategy is being used, the user should be notified URI matching won't be exact
+      const authorityMatch = toParse.match(/^[a-z][a-z0-9+.-]*:\/\/([^/?#]+)/i);
       if (!authorityMatch) {
-        return "";
+        // TODO the user should be informed that this URI couldn't be matched
+        return { original: input };
       }
       let authority = authorityMatch[1];
-      // Strip userinfo if present (user:pass@host)
       const atIndex = authority.lastIndexOf("@");
       if (atIndex !== -1) {
         authority = authority.slice(atIndex + 1);
       }
-      // IPv6 brackets
-      if (authority.startsWith("[") && authority.includes("]")) {
-        authority = authority.slice(1, authority.indexOf("]"));
+      let host = authority;
+      let port = "";
+      if (authority.startsWith("[")) {
+        const end = authority.indexOf("]");
+        if (end !== -1) {
+          host = authority.slice(1, end);
+          const rest = authority.slice(end + 1);
+          if (rest.startsWith(":")) {
+            const p = rest.slice(1);
+            if (/^[0-9]+$/.test(p)) {
+              port = p;
+            }
+          }
+        }
       } else {
-        // Port (last colon, numeric part)
         const c = authority.lastIndexOf(":");
-        if (c !== -1 && /^[0-9]+$/.test(authority.slice(c + 1))) {
-          authority = authority.slice(0, c);
+        if (c !== -1) {
+          const p = authority.slice(c + 1);
+          if (/^[0-9]+$/.test(p)) {
+            host = authority.slice(0, c);
+            port = p;
+          } else {
+            // Non-numeric suffix after colon isn't a valid port -> treat as part of path/opaque
+            // Strip it from the host for host-based strategies.
+            host = authority.slice(0, c);
+          }
         }
       }
-      authority = authority.replace(/\.$/, "").toLowerCase();
-      return authority;
+      host = host.replace(/\.$/, "").toLowerCase();
+      return { original: input, hostname: host, port };
     }
+  }
+
+  private getBaseUri(p: ParsedUri): string {
+    if (p.androidPackage) {
+      return p.androidPackage;
+    }
+    const host = (p.hostname || "").toLowerCase();
+    if (!host) {
+      return "";
+    }
+    // IP addresses or localhost-like
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(host) || host.includes(":")) {
+      return host; // IPv4 or IPv6 literal
+    }
+    // Prefer PSL-aware registrable domain via shared Utils (tldts under the hood)
+    // Try with a normalized URL string first; fall back to heuristic if unavailable
+    try {
+      const scheme = p.scheme || "http";
+      const urlLike = `${scheme}://${host}`;
+      const domain = Utils.getDomain(urlLike);
+      if (domain) {
+        return domain.toLowerCase();
+      }
+    } catch {
+      // ignore and fall back
+    }
+    const parts = host.split(".").filter(Boolean);
+    if (parts.length <= 2) {
+      return host;
+    }
+    return parts.slice(-2).join(".");
+  }
+
+  private getHostname(p: ParsedUri): string {
+    if (p.androidPackage) {
+      return p.androidPackage;
+    }
+    return (p.hostname || "").toLowerCase();
+  }
+
+  private getHost(p: ParsedUri): string {
+    const host = this.getHostname(p);
+    if (!host) {
+      return "";
+    }
+    const port = p.port?.trim();
+    return port ? `${host}:${port}` : host;
+  }
+
+  private getExactUrlKey(p: ParsedUri): string {
+    if (p.androidPackage) {
+      return `androidapp:${p.androidPackage}`;
+    }
+    const host = p.hostname || "";
+    const scheme = p.scheme || "http"; // if absent, we assumed http when parsing
+    const port = p.port ? `:${p.port}` : "";
+    const path = p.path || "";
+    const query = p.query || "";
+    const fragment = p.fragment || "";
+    if (!host) {
+      return p.original.toLowerCase();
+    }
+    return `${scheme}://${host}${port}${path}${query}${fragment}`.toLowerCase();
+  }
+
+  /**
+   * Backward-compatible helper retained for tests: returns normalized host from a URI-like string.
+   * - Lowercases
+   * - Strips userinfo, port, path, query, fragment
+   * - Supports IPv4, IPv6, androidapp package IDs
+   */
+  private normalizeUri(raw: string): string {
+    const p = this.parseUri(raw);
+    if (!p) {
+      return "";
+    }
+    if (p.androidPackage) {
+      return p.androidPackage;
+    }
+    return (p.hostname || "").toLowerCase();
   }
 
   /**

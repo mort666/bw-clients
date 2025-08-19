@@ -10,6 +10,7 @@ import {
   DIALOG_DATA,
   TableDataSource,
   TableModule,
+  CardComponent,
 } from "@bitwarden/components";
 import { I18nPipe } from "@bitwarden/ui-common";
 
@@ -21,7 +22,15 @@ export interface DuplicateReviewDialogResult {
 @Component({
   selector: "app-duplicate-review-dialog",
   standalone: true,
-  imports: [CommonModule, DialogModule, ButtonModule, FormsModule, I18nPipe, TableModule],
+  imports: [
+    CommonModule,
+    DialogModule,
+    ButtonModule,
+    FormsModule,
+    I18nPipe,
+    TableModule,
+    CardComponent,
+  ],
   templateUrl: "./duplicate-review-dialog.component.html",
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -138,6 +147,10 @@ export class DuplicateReviewDialogComponent {
 
   trackBySet(_index: number, set: { key: string }): string {
     return set.key;
+  }
+
+  trackByCipher(_index: number, c: { id: string }): string {
+    return c?.id;
   }
 
   confirm(): void {
