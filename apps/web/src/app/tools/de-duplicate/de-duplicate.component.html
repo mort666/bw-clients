@@ -12,6 +12,22 @@
     </bit-callout>
 
     <div class="tw-flex tw-flex-col tw-gap-4">
+      <bit-form-field class="tw-max-w-[28rem]">
+        <bit-label>{{ "uriMatchingStrategy" | i18n }}</bit-label>
+        <bit-select [items]="strategyOptions" [(ngModel)]="selectedStrategy"></bit-select>
+        <bit-hint>
+          {{ "uriMatchingStrategyHelp" | i18n }}
+          <a
+            class="tw-ml-1"
+            href="https://bitwarden.com/help/uri-match-detection/#match-detection-options"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {{ "learnMoreAboutMatchDetection" | i18n }}
+          </a>
+        </bit-hint>
+      </bit-form-field>
+
       <div class="tw-flex tw-gap-2">
         <button
           id="de-duplicate__button__find-duplicates"

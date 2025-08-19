@@ -24,7 +24,7 @@ interface DuplicateSet {
   ciphers: CipherView[];
 }
 
-type UriMatchStrategy = "Base" | "Hostname" | "Host" | "Exact";
+export type UriMatchStrategy = "Base" | "Hostname" | "Host" | "Exact";
 
 interface ParsedUri {
   original: string;
@@ -81,8 +81,9 @@ export class DeDuplicateService {
    * Finds groups of ciphers (clusters) that are considered duplicates.
    * A "group" or cluster is defined by ciphers sharing login.username and a matched login.uri
    * (where match behavior is determined by DEFAULT_URI_STRATEGY)
-   * OR a matching login.username and normalized cipher.name,
-   * OR when no username is present, on matching normalized cipher.name only.
+   * OR a exact matching login.username and exact matching normalized cipher.name,
+   * OR when no username is present, on exact matching normalized cipher.name only
+   * where cipher name normalization involves stripping internal and external whitespace and lowercasing all characters.
    * @param ciphers A list of all the user's ciphers.
    * @returns An array of DuplicateSet objects, each representing a group of duplicates.
    */
@@ -94,7 +95,7 @@ export class DeDuplicateService {
     const nameBuckets = new Map<string, CipherView[]>();
     const nameOnlyBuckets = new Map<string, CipherView[]>(); // used in edge cases when no useername is present for a login
 
-    // DuplicateSet will be created to hold duplicate login ciphers as soon as two matching ci\hers appear in a bucket
+    // DuplicateSet will be created to hold duplicate login ciphers once two matching ci\hers appear in a bucket
     const duplicateSets: DuplicateSet[] = [];
 
     // Used to prevent redundant groupings for a given display key ['username+uri', 'username+name']
@@ -158,8 +159,9 @@ export class DeDuplicateService {
             const displayKey = `username+name: ${username} & ${displayName}`;
             ensureSetForBucket(bucket, displayKey);
           } else {
-            // match on cipher.name only when username is absent
+            // match on cipher.name only when login.username is absent
             // to prevent false positive duplicates in a situation where a user has multiple accounts on the same site - among others
+            // this logic will apply to all cipher types, not only logins
             let bucket = nameOnlyBuckets.get(canonical);
             if (!bucket) {
               bucket = [];
@@ -377,6 +379,17 @@ export class DeDuplicateService {
     }
   }
 
+  /**
+   * Compute the "Base" key for a URI (registrable domain when possible).
+   *
+   * Order of operations:
+   * 1) androidapp -> package id.
+   * 2) IP/IPv6 -> return literal host (no domain logic).
+   * 3) Use PSL via Utils.getDomain(scheme://host) to resolve registrable domain for public suffixes.
+   * 4) Guard against over-grouping on likely private TLDs (e.g., .local, .internal, .lan, .corp, .home):
+   *    when PSL returns only two labels but the original host has more labels, prefer the full host.
+   * 5) If PSL returns nothing (true miss), return the full host (do NOT fall back to last-two-label).
+   */
   private getBaseUri(p: ParsedUri): string {
     if (p.androidPackage) {
       return p.androidPackage;
@@ -385,27 +398,30 @@ export class DeDuplicateService {
     if (!host) {
       return "";
     }
-    // IP addresses or localhost-like
+    // IP addresses or IPv6 literals: never reduce further
     if (/^\d+\.\d+\.\d+\.\d+$/.test(host) || host.includes(":")) {
       return host; // IPv4 or IPv6 literal
     }
-    // Prefer PSL-aware registrable domain via shared Utils (tldts under the hood)
-    // Try with a normalized URL string first; fall back to heuristic if unavailable
-    try {
-      const scheme = p.scheme || "http";
-      const urlLike = `${scheme}://${host}`;
-      const domain = Utils.getDomain(urlLike);
-      if (domain) {
-        return domain.toLowerCase();
+
+    const scheme = p.scheme || "http";
+    const urlLike = `${scheme}://${host}`;
+    // Try PSL to get the registrable domain for public suffixes.
+    const domain = Utils.getDomain(urlLike)?.toLowerCase();
+    if (domain) {
+      // Avoid over-grouping for likely private TLDs where getDomain effectively collapses to last-two-label.
+      // Example: grafana.monitoring.svc.cluster.local would otherwise collapse to cluster.local.
+      const parts = host.split(".").filter(Boolean);
+      const dparts = domain.split(".").filter(Boolean);
+      const tld = dparts[dparts.length - 1];
+      const PRIVATE_SUFFIX_TLDS = new Set(["local", "internal", "lan", "corp", "home"]);
+      if (dparts.length === 2 && parts.length > 2 && PRIVATE_SUFFIX_TLDS.has(tld)) {
+        return host;
       }
-    } catch {
-      // ignore and fall back
+      return domain;
     }
-    const parts = host.split(".").filter(Boolean);
-    if (parts.length <= 2) {
-      return host;
-    }
-    return parts.slice(-2).join(".");
+    // PSL miss (no registrable domain): prefer full host to avoid over-grouping on private/internal DNS.
+    // Previous behavior used last-two-label; we intentionally avoid that here.
+    return host;
   }
 
   private getHostname(p: ParsedUri): string {
@@ -429,7 +445,7 @@ export class DeDuplicateService {
       return `androidapp:${p.androidPackage}`;
     }
     const host = p.hostname || "";
-    const scheme = p.scheme || "http"; // if absent, we assumed http when parsing
+    const scheme = p.scheme || "http"; // Bitwarden convention assumes http when missing
     const port = p.port ? `:${p.port}` : "";
     const path = p.path || "";
     const query = p.query || "";
@@ -438,23 +454,6 @@ export class DeDuplicateService {
       return p.original.toLowerCase();
     }
     return `${scheme}://${host}${port}${path}${query}${fragment}`.toLowerCase();
-  }
-
-  /**
-   * Backward-compatible helper retained for tests: returns normalized host from a URI-like string.
-   * - Lowercases
-   * - Strips userinfo, port, path, query, fragment
-   * - Supports IPv4, IPv6, androidapp package IDs
-   */
-  private normalizeUri(raw: string): string {
-    const p = this.parseUri(raw);
-    if (!p) {
-      return "";
-    }
-    if (p.androidPackage) {
-      return p.androidPackage;
-    }
-    return (p.hostname || "").toLowerCase();
   }
 
   /**

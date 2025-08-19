@@ -2,7 +2,6 @@ import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 
 import { DeDuplicateService } from "./de-duplicate.service";
 
-// Minimal stubs (we directly exercise private logic; no need for full implementations)
 const cipherServiceStub = { getAllDecrypted: jest.fn() };
 const dialogServiceStub = { open: jest.fn() };
 const cipherAuthorizationServiceStub = {};
@@ -55,8 +54,14 @@ describe("DeDuplicateService core duplicate detection", () => {
     (service as any).findDuplicateSets(ciphers) as {
       key: string;
       ciphers: CipherView[];
-    }[]; // uses service default (Base)
-  const normalize = (s: string) => (service as any).normalizeUri(s) as string;
+    }[];
+  // Legacy normalizeUri tests now validate Hostname strategy normalization.
+  // Return the single Hostname key for a given input, or empty string when none.
+  const normalize = (s: string) => {
+    const set = (service as any).getUriKeysForStrategy([s], "Hostname") as Set<string>;
+    const first = Array.from(set)[0];
+    return first ?? "";
+  };
   const extract = (c: CipherView) => (service as any).extractUriStrings(c) as string[];
   const keysFor = (uris: string[], strat: string) =>
     Array.from((service as any).getUriKeysForStrategy(uris, strat)).sort();
@@ -70,8 +75,7 @@ describe("DeDuplicateService core duplicate detection", () => {
     );
   });
 
-  // Default strategy check (Base)
-  describe("default strategy (Base)", () => {
+  describe("matching strategy default to Base", () => {
     it("uses Base when not specified: subdomains group by registrable domain", () => {
       const c1 = buildCipher({
         id: "1",
@@ -92,7 +96,6 @@ describe("DeDuplicateService core duplicate detection", () => {
     });
   });
 
-  // Strategy-specific username+URI grouping tests — identical coverage across strategies
   describe("username + URI bucket (Hostname strategy)", () => {
     it("groups items with same username and host (ignores path/query/fragment)", () => {
       const c1 = buildCipher({
@@ -272,7 +275,7 @@ describe("DeDuplicateService core duplicate detection", () => {
       });
       const badNoUris = buildCipher({ id: "4", name: "D", username: "u", uris: [] });
       const sets = findSetsHostname([good1, badNoUsername, badWhitespaceUsername, badNoUris]);
-      expect(sets).toHaveLength(0); // only one valid item -> no duplicate set
+      expect(sets).toHaveLength(0);
     });
 
     it("does not create a duplicate set when a single cipher has multiple URIs that normalize to the same host", () => {
@@ -286,7 +289,6 @@ describe("DeDuplicateService core duplicate detection", () => {
           "HTTP://FORUM.TEST.DOMAIN.ORG",
         ],
       });
-      // Only one cipher overall; previously this could push the same cipher twice into the same bucket.
       const sets = findSetsHostname([c1]);
       expect(sets).toHaveLength(0);
     });
@@ -323,7 +325,6 @@ describe("DeDuplicateService core duplicate detection", () => {
       const forumSet = setsByKey.get(forumKey)!;
       const testSet = setsByKey.get(testKey)!;
 
-      // Each set should contain each cipher at most once
       expect(forumSet.ciphers.map((c) => c.id).sort()).toEqual(["1", "3"]);
       expect(testSet.ciphers.map((c) => c.id).sort()).toEqual(["1", "2"]);
     });
@@ -550,7 +551,7 @@ describe("DeDuplicateService core duplicate detection", () => {
       });
       const badNoUris = buildCipher({ id: "4", name: "D", username: "u", uris: [] });
       const sets = findSetsBase([good1, badNoUsername, badWhitespaceUsername, badNoUris]);
-      expect(sets).toHaveLength(0); // only one valid item -> no duplicate set
+      expect(sets).toHaveLength(0);
     });
 
     it("does not create a duplicate set when a single cipher has multiple URIs that normalize to the same base", () => {
@@ -629,7 +630,6 @@ describe("DeDuplicateService core duplicate detection", () => {
       expect(sets).toHaveLength(1);
     });
 
-    // PSL-aware grouping
     it("PSL: subdomains under example.co.uk group to example.co.uk", () => {
       const c1 = buildCipher({
         id: "1",
@@ -712,6 +712,40 @@ describe("DeDuplicateService core duplicate detection", () => {
       const subSets = findSetsBase([s1, s2]);
       expect(subSets).toHaveLength(1);
       expect(subSets[0].key).toBe("username+uri: u @ foo.appspot.com");
+    });
+
+    it("PSL miss: internal/private zones use full host (no last-two-label collapse)", () => {
+      const c1 = buildCipher({
+        id: "1",
+        name: "A",
+        username: "u",
+        uris: ["https://a.b.internal/"],
+      });
+      const c2 = buildCipher({
+        id: "2",
+        name: "B",
+        username: "u",
+        uris: ["https://c.b.internal/"],
+      });
+      const sets = findSetsBase([c1, c2]);
+      expect(sets).toHaveLength(0);
+    });
+
+    it("PSL miss: cluster.local style names remain distinct", () => {
+      const c1 = buildCipher({
+        id: "1",
+        name: "G",
+        username: "u",
+        uris: ["http://service-a.monitoring.svc.cluster.local/login"],
+      });
+      const c2 = buildCipher({
+        id: "2",
+        name: "P",
+        username: "u",
+        uris: ["http://service-b.monitoring.svc.cluster.local/"],
+      });
+      const sets = findSetsBase([c1, c2]);
+      expect(sets).toHaveLength(0);
     });
   });
 
@@ -986,7 +1020,6 @@ describe("DeDuplicateService core duplicate detection", () => {
         username: "u",
         uris: ["https://two.example"],
       });
-      // Hosts differ so no URI duplicate; should produce exactly one name-based set
       const sets = findSetsHostname([c1, c2]);
       expect(sets).toHaveLength(1);
       expect(sets[0].key).toBe("username+name: u & Shared Name");
@@ -1078,7 +1111,6 @@ describe("DeDuplicateService core duplicate detection", () => {
       const c1 = buildCipher({ id: "1", name: "Same", username: "u", uris: ["a.example"] });
       const c2 = buildCipher({ id: "2", name: "Same", username: "u", uris: ["A.EXAMPLE"] });
       const sets = findSetsHostname([c1, c2]);
-      // both groupings would include [1,2], but the implementation prefers the URI set
       expect(sets).toHaveLength(1);
       expect(sets[0].key).toBe("username+uri: u @ a.example");
       expect(new Set(sets[0].ciphers.map((c) => c.id))).toEqual(new Set(["1", "2"]));
@@ -1123,7 +1155,6 @@ describe("DeDuplicateService core duplicate detection", () => {
 
     it("returns empty array when login.uris is not an array", () => {
       const c = buildCipher({ id: "1", name: "X", username: "u", uris: [] });
-      // Force a non-array value
       (c as any).login.uris = "not-an-array" as any;
       expect(extract(c)).toEqual([]);
     });
@@ -1165,9 +1196,8 @@ describe("DeDuplicateService core duplicate detection", () => {
     });
 
     it("supports internationalized domains via punycode", () => {
-      // The URL parser returns punycoded hostname for IDN.
       const host = normalize("https://münich.example/secure");
-      expect(host).toMatch(/^xn--mnich-kva\.example$/); // Punycode of münich.example
+      expect(host).toMatch(/^xn--mnich-kva\.example$/);
     });
 
     describe("fallback regex path (forced URL parse failure)", () => {
@@ -1223,7 +1253,6 @@ describe("DeDuplicateService core duplicate detection", () => {
       const u1 = buildCipher({ id: "2", name: "Same", username: "u", uris: [] });
       const u2 = buildCipher({ id: "3", name: "Same", username: "u", uris: [] });
       const sets = findSetsHostname([noUser, u1, u2]);
-      // Should only produce the username+name set for user "u"
       const keys = sets.map((s) => s.key).sort();
       expect(keys).toEqual(["username+name: u & Same"]);
       const unameSet = sets[0];
@@ -1292,7 +1321,6 @@ describe("DeDuplicateService core duplicate detection", () => {
         expect(keys).toEqual(["com.pkg"]);
       });
 
-      // PSL-specific behavior
       it("PSL: co.uk groups to example.co.uk across subdomains", () => {
         const keys = keysFor(["https://a.b.example.co.uk", "http://example.co.uk"], "Base");
         expect(keys).toEqual(["example.co.uk"]);

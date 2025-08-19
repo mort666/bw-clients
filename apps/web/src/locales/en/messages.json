@@ -515,6 +515,10 @@
     "message": "Domain name",
     "description": "Domain name. Example: website.com"
   },
+  "hostName" : {
+    "message": "Host name",
+    "description": "Host name includes subdomain but excludes port. Example: subdomain.website.com"
+  },
   "host": {
     "message": "Host",
     "description": "A URL's host value. For example, the host of https://sub.domain.com:443 is 'sub.domain.com:443'."
@@ -11050,9 +11054,17 @@
     "description": "Displayed in a header element and bit-callout to convey the purpose of the de-duplication tool."
   },
   "deDuplicationToolDescription": {
-    "message": "Login items that have matching usernames and websites will be made available for review and optional deletion. Deleting duplicate items not in the trash will move these items to the trash, and deleting items already in the trash will permanently remove them from your vault.",
+    "message": "This tool searches your vault and will present any logins with matching usernames, URIs (websites), and names. Duplicate items will be presented for review and optional deletion. Items selected for deletion will be moved to the vault trash; duplicates already in the trash will be permanently deleted.",
     "description": "A message explaining what the de-duplication tool will do."
   }, 
+  "uriMatchingStrategy": {
+    "message": "URI matching strategy",
+    "description": "Label for the selector controlling how URIs are compared when finding duplicates."
+  },
+  "uriMatchingStrategyHelp": {
+    "message": "Choose how URIs are compared when finding duplicates.",
+    "description": "Helper text explaining the URI matching strategy selector."
+  },
   "findDuplicates": {
     "message": "Find duplicates", 
     "description": "Displayed inside of a button to indicate that clicking the button will initiate a search for duplicate login items."
