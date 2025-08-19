@@ -3,7 +3,7 @@
 import { LiveAnnouncer } from "@angular/cdk/a11y";
 import { CdkDragDrop, DragDropModule, moveItemInArray } from "@angular/cdk/drag-drop";
 import { AsyncPipe, NgForOf, NgIf } from "@angular/common";
-import { Component, DestroyRef, inject, OnInit, QueryList, ViewChildren } from "@angular/core";
+import { Component, OnInit, QueryList, ViewChildren } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormBuilder, ReactiveFormsModule } from "@angular/forms";
 import { filter, Subject, switchMap, take } from "rxjs";
@@ -72,6 +72,10 @@ export class AutofillOptionsComponent implements OnInit {
     return this.autofillOptionsForm.controls.uris.controls;
   }
 
+  protected get isPartialEdit() {
+    return this.cipherFormContainer.config.mode === "partial-edit";
+  }
+
   protected defaultMatchDetection$ = this.domainSettingsService.defaultUriMatchStrategy$.pipe(
     // The default match detection should only be shown when used on the browser
     filter(() => this.platformUtilsService.getClientType() == ClientType.Browser),
@@ -88,7 +92,6 @@ export class AutofillOptionsComponent implements OnInit {
    * Emits when a new URI input is added to the form and should be focused.
    */
   private focusOnNewInput$ = new Subject<void>();
-  private destroyRef = inject(DestroyRef);
 
   constructor(
     private cipherFormContainer: CipherFormContainer,
@@ -127,6 +130,15 @@ export class AutofillOptionsComponent implements OnInit {
       .subscribe(() => {
         this.uriOptions?.last?.focusInput();
       });
+
+    this.cipherFormContainer.formStatusChange$.pipe(takeUntilDestroyed()).subscribe((status) => {
+      // Disable adding new URIs when the cipher form is disabled
+      if (status === "disabled") {
+        this.autofillOptionsForm.disable();
+      } else if (!this.isPartialEdit) {
+        this.autofillOptionsForm.enable();
+      }
+    });
   }
 
   ngOnInit() {
@@ -137,18 +149,9 @@ export class AutofillOptionsComponent implements OnInit {
       this.initNewCipher();
     }
 
-    if (this.cipherFormContainer.config.mode === "partial-edit") {
+    if (this.isPartialEdit) {
       this.autofillOptionsForm.disable();
     }
-
-    // Disable adding new URIs when the cipher form is disabled
-    this.cipherFormContainer.formStatusChange$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((status) => {
-        if (status === "disabled") {
-          this.autofillOptionsForm.disable();
-        }
-      });
   }
 
   private initFromExistingCipher(existingLogin: LoginView) {
