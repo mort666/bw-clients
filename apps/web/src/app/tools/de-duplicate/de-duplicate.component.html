@@ -11,10 +11,34 @@
       {{ callout.message }}
     </bit-callout>
 
+    <bit-callout
+      *ngIf="warningsCallout"
+      [type]="warningsCallout.type"
+      [title]="warningsCallout.title"
+    >
+      <div class="tw-flex tw-items-start tw-justify-between tw-gap-2">
+        <div class="tw-flex-1">{{ warningsCallout.message }}</div>
+        <button
+          *ngIf="warningsCallout.detailsButtonText"
+          type="button"
+          id="de-duplicate_button_view-warnings-details"
+          bitButton
+          buttonType="secondary"
+          (click)="openWarningsDetails()"
+        >
+          {{ warningsCallout.detailsButtonText }}
+        </button>
+      </div>
+    </bit-callout>
+
     <div class="tw-flex tw-flex-col tw-gap-4">
       <bit-form-field class="tw-max-w-[28rem]">
         <bit-label>{{ "uriMatchingStrategy" | i18n }}</bit-label>
-        <bit-select [items]="strategyOptions" [(ngModel)]="selectedStrategy"></bit-select>
+        <bit-select
+          id="de-duplicate_select_uri-matching-strategy"
+          [items]="strategyOptions"
+          [(ngModel)]="selectedStrategy"
+        ></bit-select>
         <bit-hint>
           {{ "uriMatchingStrategyHelp" | i18n }}
           <a

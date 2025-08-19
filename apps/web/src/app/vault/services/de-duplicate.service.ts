@@ -17,6 +17,16 @@ export interface DuplicateOperationResult {
   setsFound: number;
   trashed: number;
   permanentlyDeleted: number;
+  warnings?: DuplicateOperationWarnings;
+}
+
+export interface DuplicateOperationWarnings {
+  exactFallbackCount: number;
+  unparseableUriCount: number;
+  permissionDeniedCount: number;
+  unparseableUris?: string[];
+  exactFallbackSamples?: string[];
+  permissionDeniedNames?: string[];
 }
 
 interface DuplicateSet {
@@ -35,6 +45,10 @@ interface ParsedUri {
   path?: string;
   query?: string;
   fragment?: string;
+  /** True when URL parsing fell back to a best-effort/manual parse (not fully exact). */
+  approximate?: boolean;
+  /** True when the input could not be parsed into a host/authority at all. */
+  unparseable?: boolean;
 }
 
 @Injectable({
@@ -68,13 +82,28 @@ export class DeDuplicateService {
   ): Promise<DuplicateOperationResult> {
     const uriStrategy = options?.uriStrategy ?? DeDuplicateService.DEFAULT_URI_STRATEGY;
     const allCiphers = await this.cipherService.getAllDecrypted(userId);
-    const duplicateSets = this.findDuplicateSets(allCiphers, uriStrategy);
+    const warningAccumulator = this.createWarningAccumulator();
+    const duplicateSets = this.findDuplicateSets(allCiphers, uriStrategy, warningAccumulator);
 
     if (duplicateSets.length > 0) {
-      const { trashed, permanentlyDeleted } = await this.handleDuplicates(duplicateSets, userId);
-      return { setsFound: duplicateSets.length, trashed, permanentlyDeleted };
+      const { trashed, permanentlyDeleted } = await this.handleDuplicates(
+        duplicateSets,
+        userId,
+        warningAccumulator,
+      );
+      return {
+        setsFound: duplicateSets.length,
+        trashed,
+        permanentlyDeleted,
+        warnings: this.toWarningsResult(warningAccumulator),
+      };
     }
-    return { setsFound: 0, trashed: 0, permanentlyDeleted: 0 };
+    return {
+      setsFound: 0,
+      trashed: 0,
+      permanentlyDeleted: 0,
+      warnings: this.toWarningsResult(warningAccumulator),
+    };
   }
 
   /**
@@ -90,6 +119,7 @@ export class DeDuplicateService {
   private findDuplicateSets(
     ciphers: CipherView[],
     uriStrategy: UriMatchStrategy = DeDuplicateService.DEFAULT_URI_STRATEGY,
+    warningAccumulator?: WarningAccumulator,
   ): DuplicateSet[] {
     const uriBuckets = new Map<string, CipherView[]>();
     const nameBuckets = new Map<string, CipherView[]>();
@@ -127,7 +157,7 @@ export class DeDuplicateService {
         const uris = this.extractUriStrings(cipher);
         if (uris.length > 0) {
           // Collect unique normalized keys to avoid adding the same cipher twice to the same bucket
-          const keys = this.getUriKeysForStrategy(uris, uriStrategy);
+          const keys = this.getUriKeysForStrategy(uris, uriStrategy, warningAccumulator);
           for (const k of keys) {
             const key = `${username}||${k}`;
             let bucket = uriBuckets.get(key);
@@ -239,11 +269,23 @@ export class DeDuplicateService {
   /**
    * Get normalized keys for the given URIs according to a strategy.
    */
-  private getUriKeysForStrategy(uris: string[], strategy: UriMatchStrategy): Set<string> {
+  private getUriKeysForStrategy(
+    uris: string[],
+    strategy: UriMatchStrategy,
+    warningAccumulator?: WarningAccumulator,
+  ): Set<string> {
     const keys = new Set<string>();
     for (const raw of uris) {
       const parsed = this.parseUri(raw);
       if (!parsed) {
+        continue;
+      }
+      // Count unparseable URIs and skip them
+      if (parsed.unparseable) {
+        if (warningAccumulator) {
+          warningAccumulator.unparseableUriCount++;
+          warningAccumulator.unparseableUris.push(parsed.original);
+        }
         continue;
       }
       switch (strategy) {
@@ -269,6 +311,12 @@ export class DeDuplicateService {
           break;
         }
         case "Exact": {
+          if (parsed.approximate && warningAccumulator) {
+            warningAccumulator.exactFallbackCount++;
+            if (warningAccumulator.exactFallbackSamples.length < 10) {
+              warningAccumulator.exactFallbackSamples.push(parsed.original);
+            }
+          }
           const exact = this.getExactUrlKey(parsed);
           if (exact) {
             keys.add(exact);
@@ -334,12 +382,13 @@ export class DeDuplicateService {
         fragment,
       };
     } catch {
-      // Fallback manual authority extraction sufficient for host, hostname, and base strategies
-      // TODO if exact strategy is being used, the user should be notified URI matching won't be exact
+      // Fallback manual authority extraction sufficient for Hostname/Base/Host strategies.
+      // We mark the result as `approximate`; getUriKeysForStrategy counts a fallback warning
+      // only when the selected strategy is "Exact". Other strategies continue normally.
       const authorityMatch = toParse.match(/^[a-z][a-z0-9+.-]*:\/\/([^/?#]+)/i);
       if (!authorityMatch) {
-        // TODO the user should be informed that this URI couldn't be matched
-        return { original: input };
+        // Mark as unparseable so the caller can report and skip safely
+        return { original: input, unparseable: true };
       }
       let authority = authorityMatch[1];
       const atIndex = authority.lastIndexOf("@");
@@ -375,7 +424,7 @@ export class DeDuplicateService {
         }
       }
       host = host.replace(/\.$/, "").toLowerCase();
-      return { original: input, hostname: host, port };
+      return { original: input, hostname: host, port, approximate: true };
     }
   }
 
@@ -465,6 +514,7 @@ export class DeDuplicateService {
   private async handleDuplicates(
     duplicateSets: DuplicateSet[],
     userId: UserId,
+    warningAccumulator?: WarningAccumulator,
   ): Promise<{ trashed: number; permanentlyDeleted: number }> {
     // 1. Open the dialog to let the user review and select duplicates to delete.
     const dialogRef = DuplicateReviewDialogComponent.open(this.dialogService, {
@@ -488,20 +538,40 @@ export class DeDuplicateService {
     }
 
     // 3. Filter the user's selected deletions based on their permissions.
-    // TODO: Determine why a user may not have permission to delete a cipher and explore ways of notifying them of this situation
+    // When users lack permission to delete an item (e.g., org-owned or restricted by collection permissions),
+    // record this so the UI can notify them.
     const permissionChecks = uniqueDeleteIds.map(async (id) => {
       const cipher = cipherIndex.get(id);
       if (!cipher) {
-        return null;
+        return { cipher: null as CipherView | null, canDelete: false };
       }
       const canDelete = await firstValueFrom(
         this.cipherAuthorizationService.canDeleteCipher$(cipher),
       );
-      return canDelete ? cipher : null;
+      return { cipher, canDelete };
     });
-    const permitted = (await Promise.all(permissionChecks)).filter(
-      (c): c is CipherView => c != null,
-    );
+    const permissionResults = await Promise.all(permissionChecks);
+    const permitted: CipherView[] = [];
+    const denied: CipherView[] = [];
+    for (const r of permissionResults) {
+      if (!r.cipher) {
+        continue;
+      }
+      if (r.canDelete) {
+        permitted.push(r.cipher);
+      } else {
+        denied.push(r.cipher);
+      }
+    }
+    if (warningAccumulator && denied.length > 0) {
+      warningAccumulator.permissionDeniedCount += denied.length;
+      for (const d of denied) {
+        const name = d.name?.trim();
+        if (name && warningAccumulator.permissionDeniedNames.length < 10) {
+          warningAccumulator.permissionDeniedNames.push(name);
+        }
+      }
+    }
     if (permitted.length === 0) {
       return { trashed: 0, permanentlyDeleted: 0 };
     }
@@ -545,4 +615,40 @@ export class DeDuplicateService {
     // 6. Return summary to display in a callout by the caller.
     return { trashed: toSoftDelete.length, permanentlyDeleted: toPermanentlyDelete.length };
   }
+
+  // ------------------------
+  // Warnings accumulator helpers
+  // ------------------------
+  private createWarningAccumulator(): WarningAccumulator {
+    return {
+      exactFallbackCount: 0,
+      unparseableUriCount: 0,
+      permissionDeniedCount: 0,
+      unparseableUris: [],
+      exactFallbackSamples: [],
+      permissionDeniedNames: [],
+    };
+  }
+
+  private toWarningsResult(acc: WarningAccumulator): DuplicateOperationWarnings {
+    return {
+      exactFallbackCount: acc.exactFallbackCount,
+      unparseableUriCount: acc.unparseableUriCount,
+      permissionDeniedCount: acc.permissionDeniedCount,
+      unparseableUris: acc.unparseableUris.length ? acc.unparseableUris : undefined,
+      exactFallbackSamples: acc.exactFallbackSamples.length ? acc.exactFallbackSamples : undefined,
+      permissionDeniedNames: acc.permissionDeniedNames.length
+        ? acc.permissionDeniedNames
+        : undefined,
+    };
+  }
+}
+
+interface WarningAccumulator {
+  exactFallbackCount: number;
+  unparseableUriCount: number;
+  permissionDeniedCount: number;
+  unparseableUris: string[];
+  exactFallbackSamples: string[];
+  permissionDeniedNames: string[];
 }
