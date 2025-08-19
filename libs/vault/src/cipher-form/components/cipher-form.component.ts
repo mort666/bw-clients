@@ -112,13 +112,11 @@ export class CipherFormComponent implements AfterViewInit, OnInit, OnChanges, Ci
 
   @Output() formReady = this.formReadySubject.asObservable();
 
-  @Output() onFormStatusChange = new EventEmitter<"enabled" | "disabled">();
-
   /**
    * Emitted when the form is enabled
    */
   private formStatusChangeSubject = new Subject<"enabled" | "disabled">();
-  formStatusChange$ = this.formStatusChangeSubject.asObservable();
+  @Output() formStatusChange$ = this.formStatusChangeSubject.asObservable();
 
   /**
    * The original cipher being edited or cloned. Null for add mode.
@@ -161,13 +159,11 @@ export class CipherFormComponent implements AfterViewInit, OnInit, OnChanges, Ci
   disableFormFields(): void {
     this.cipherForm.disable({ emitEvent: false });
     this.formStatusChangeSubject.next("disabled");
-    this.onFormStatusChange.emit("disabled");
   }
 
   enableFormFields(): void {
     this.cipherForm.enable({ emitEvent: false });
     this.formStatusChangeSubject.next("enabled");
-    this.onFormStatusChange.emit("enabled");
   }
 
   /**
