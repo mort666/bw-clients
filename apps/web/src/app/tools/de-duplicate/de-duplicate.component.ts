@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { ChangeDetectorRef, Component, Inject } from "@angular/core";
+import { ChangeDetectorRef, Component, Inject, LOCALE_ID } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { firstValueFrom } from "rxjs";
 
@@ -23,6 +23,8 @@ import {
   UriMatchStrategy,
   type DuplicateOperationWarnings,
 } from "../../vault/services/de-duplicate.service";
+
+import { DeDuplicateWarningsDialogComponent } from "./de-duplicate-warnings-dialog.component";
 
 @Component({
   selector: "app-de-duplicate",
@@ -62,6 +64,7 @@ export class DeDuplicateComponent {
 
   constructor(
     @Inject(DeDuplicateService) private deDuplicateService: DeDuplicateService,
+    @Inject(LOCALE_ID) private locale: string,
     private i18nService: I18nService,
     private accountService: AccountService,
     private cdr: ChangeDetectorRef,
@@ -124,14 +127,19 @@ export class DeDuplicateComponent {
           warningParts.push(this.i18nService.t(key, w.permissionDeniedCount));
         }
         const title = this.i18nService.t("duplicateWarningsTitle");
+        const message = (Intl as any).ListFormat
+          ? new Intl.ListFormat(this.locale, { style: "long", type: "conjunction" }).format(
+              warningParts,
+            )
+          : warningParts.join(", ");
         this.warnings = w;
         this.warningsCallout = {
           type: "warning",
           title,
-          message: warningParts.join(" \u2022 "),
+          message,
           detailsButtonText:
             (w.unparseableUris?.length || 0) > 0 ||
-            (w.exactFallbackSamples?.length || 0) > 0 ||
+            (w.exactFallbackUris?.length || 0) > 0 ||
             (w.permissionDeniedNames?.length || 0) > 0
               ? this.i18nService.t("duplicateWarningsDetailsButton")
               : undefined,
@@ -152,29 +160,32 @@ export class DeDuplicateComponent {
 
   async openWarningsDetails() {
     const w = this.warnings;
-    const bodyLines: string[] = [];
+    const sections: { title: string; items: string[]; help?: string }[] = [];
     if (w?.unparseableUris?.length) {
-      bodyLines.push(this.i18nService.t("duplicateWarningsDialogUnparseableTitle"));
-      bodyLines.push(...w.unparseableUris.slice(0, 10).map((d) => `• ${d}`));
-      bodyLines.push("");
+      sections.push({
+        title: this.i18nService.t("duplicateWarningsDialogUnparseableTitle"),
+        items: w.unparseableUris.slice(0, 10),
+      });
     }
-    if (w?.exactFallbackSamples?.length) {
-      bodyLines.push(this.i18nService.t("duplicateWarningsDialogExactSamplesTitle"));
-      bodyLines.push(...w.exactFallbackSamples.slice(0, 10).map((d) => `• ${d}`));
-      bodyLines.push("");
+    if (w?.exactFallbackUris?.length) {
+      sections.push({
+        title: this.i18nService.t("duplicateWarningsDialogExactSamplesTitle"),
+        items: w.exactFallbackUris.slice(0, 10),
+        help: this.i18nService.t("duplicateWarningsDialogExactHelp"),
+      });
     }
     if (w?.permissionDeniedNames?.length) {
-      bodyLines.push(this.i18nService.t("duplicateWarningsDialogPermissionDeniedTitle"));
-      bodyLines.push(...w.permissionDeniedNames.slice(0, 10).map((n) => `• ${n}`));
-      bodyLines.push("");
+      sections.push({
+        title: this.i18nService.t("duplicateWarningsDialogPermissionDeniedTitle"),
+        items: w.permissionDeniedNames.slice(0, 10),
+        help: this.i18nService.t("duplicateWarningsDialogPermHelp"),
+      });
     }
-    bodyLines.push(this.i18nService.t("duplicateWarningsDialogExactHelp"));
-    bodyLines.push(this.i18nService.t("duplicateWarningsDialogPermHelp"));
-    await this.dialogService.openSimpleDialog({
+
+    const ref = DeDuplicateWarningsDialogComponent.open(this.dialogService, {
       title: this.i18nService.t("duplicateWarningsDialogTitle"),
-      content: bodyLines.join("\n"),
-      type: "info",
-      acceptButtonText: { key: "ok" },
+      sections,
     });
+    await firstValueFrom(ref.closed);
   }
 }

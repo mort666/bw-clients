@@ -55,9 +55,8 @@
               >
                 <div class="tw-flex tw-items-start tw-gap-2">
                   <input
-                    id="duplicate-review-dialog__checkbox__select-{{ row.id }}"
+                    id="duplicate-review-dialog_input_select-{{ row.id }}"
                     type="checkbox"
-                    [disabled]="row.id === set.ciphers[0]?.id"
                     [ngModel]="selection[row.id]"
                     (ngModelChange)="onSelectChange(row.id, $event)"
                     [ngModelOptions]="{ standalone: true }"
@@ -101,7 +100,7 @@
   </div>
   <ng-container bitDialogFooter>
     <button
-      id="duplicate-review-dialog__button__cancel"
+      id="duplicate-review-dialog_button_cancel"
       bitButton
       buttonType="secondary"
       type="button"
@@ -110,7 +109,7 @@
       {{ "cancel" | i18n }}
     </button>
     <button
-      id="duplicate-review-dialog__button__delete-selected"
+      id="duplicate-review-dialog_button_delete-selected"
       bitButton
       buttonType="danger"
       type="button"

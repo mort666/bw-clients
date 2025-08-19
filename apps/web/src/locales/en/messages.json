@@ -516,7 +516,7 @@
     "description": "Domain name. Example: website.com"
   },
   "hostName" : {
-    "message": "Host name",
+    "message": "Hostname (include subdomain)",
     "description": "Host name includes subdomain but excludes port. Example: subdomain.website.com"
   },
   "host": {
@@ -11101,9 +11101,9 @@
     "description": "Warning indicating that due to parsing limitations, exact URI matching could not be guaranteed for some items."
   },
   "duplicateExactFallbackPlural": {
-    "message": "Exact matching for for $COUNT$ URIs.",
-    "placeholders": {
-      "count": { "content": "$1", "example": "3" }
+    "message": "Exact matching failed for $COUNT$ URIs.",
+      "placeholders": {
+        "count": { "content": "$1", "example": "3" }
     },
     "description": "Plural form of duplicateExactFallback."
   },
@@ -11140,7 +11140,7 @@
     "description": "Title of the dialog showing details for de-duplication warnings."
   },
   "duplicateWarningsDialogExactHelp": {
-    "message": "Fix invalid URIs or try a less strict match strategy (Host/Hostname/Base).",
+    "message": "Fix invalid URIs or try a less strict match strategy (Base/Hostname/Host).",
     "description": "Helper sentence shown in the warnings details dialog to guide users about URI-related issues."
   },
   "duplicateWarningsDialogPermHelp": {
@@ -11152,15 +11152,15 @@
     "description": "Label for a button that opens a dialog with more information about de-duplication warnings."
   },
   "duplicateWarningsDialogUnparseableTitle": {
-    "message": "Unparseable URIs",
+    "message": "Unparseable URIs (limit ten)",
     "description": "Section title above the list of unparseable URIs."
   },
   "duplicateWarningsDialogExactSamplesTitle": {
-    "message": "Exact matching fallbacks (sample)",
+    "message": "Exact matching fallbacks (limit ten)",
     "description": "Section title above the sample of URIs where exact matching could not be guaranteed."
   },
   "duplicateWarningsDialogPermissionDeniedTitle": {
-    "message": "Items not deleted (permission denied)",
+    "message": "Items not deleted (permission denied - limit ten)",
     "description": "Section title above the list of cipher names that could not be deleted due to permissions."
   }
 }

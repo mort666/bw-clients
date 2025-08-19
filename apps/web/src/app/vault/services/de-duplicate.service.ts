@@ -25,13 +25,22 @@ export interface DuplicateOperationWarnings {
   unparseableUriCount: number;
   permissionDeniedCount: number;
   unparseableUris?: string[];
-  exactFallbackSamples?: string[];
+  exactFallbackUris?: string[];
   permissionDeniedNames?: string[];
 }
 
 interface DuplicateSet {
   key: string;
   ciphers: CipherView[];
+}
+
+interface WarningAccumulator {
+  exactFallbackCount: number;
+  unparseableUriCount: number;
+  permissionDeniedCount: number;
+  unparseableUris: string[];
+  exactFallbackUris: string[];
+  permissionDeniedNames: string[];
 }
 
 export type UriMatchStrategy = "Base" | "Hostname" | "Host" | "Exact";
@@ -70,6 +79,30 @@ export class DeDuplicateService {
    * Exact: exact match between URI and current browser page
    */
   private static readonly DEFAULT_URI_STRATEGY: UriMatchStrategy = "Base";
+
+  private createWarningAccumulator(): WarningAccumulator {
+    return {
+      exactFallbackCount: 0,
+      unparseableUriCount: 0,
+      permissionDeniedCount: 0,
+      unparseableUris: [],
+      exactFallbackUris: [],
+      permissionDeniedNames: [],
+    };
+  }
+
+  private toWarningsResult(acc: WarningAccumulator): DuplicateOperationWarnings {
+    return {
+      exactFallbackCount: acc.exactFallbackCount,
+      unparseableUriCount: acc.unparseableUriCount,
+      permissionDeniedCount: acc.permissionDeniedCount,
+      unparseableUris: acc.unparseableUris.length ? acc.unparseableUris : undefined,
+      exactFallbackUris: acc.exactFallbackUris.length ? acc.exactFallbackUris : undefined,
+      permissionDeniedNames: acc.permissionDeniedNames.length
+        ? acc.permissionDeniedNames
+        : undefined,
+    };
+  }
 
   /**
    * Main entry point to find and handle duplicate ciphers for a given user.
@@ -123,13 +156,13 @@ export class DeDuplicateService {
   ): DuplicateSet[] {
     const uriBuckets = new Map<string, CipherView[]>();
     const nameBuckets = new Map<string, CipherView[]>();
-    const nameOnlyBuckets = new Map<string, CipherView[]>(); // used in edge cases when no useername is present for a login
+    const nameOnlyBuckets = new Map<string, CipherView[]>(); // used in edge cases when no username is present for a login
 
-    // DuplicateSet will be created to hold duplicate login ciphers once two matching ci\hers appear in a bucket
+    // DuplicateSet will be created to hold duplicate login ciphers once two matching ciphers appear in a bucket
     const duplicateSets: DuplicateSet[] = [];
 
     // Used to prevent redundant groupings for a given display key ['username+uri', 'username+name']
-    // Note that matchings based solely on name (no username for login) will share the 'username+name' display key
+    // Note that matches based solely on name (no username for login) will share the 'username+name' display key
     const setByDisplayKey = new Map<string, DuplicateSet>();
 
     /**
@@ -152,7 +185,7 @@ export class DeDuplicateService {
       const username = cipher.login?.username?.trim() || "";
 
       // Match URIs when username is present
-      // Almost all dudplicates can be identified by matching username and URI - other cases handled in next block
+      // Almost all duplicates can be identified by matching username and URI - other cases handled in next block
       if (username) {
         const uris = this.extractUriStrings(cipher);
         if (uris.length > 0) {
@@ -280,7 +313,6 @@ export class DeDuplicateService {
       if (!parsed) {
         continue;
       }
-      // Count unparseable URIs and skip them
       if (parsed.unparseable) {
         if (warningAccumulator) {
           warningAccumulator.unparseableUriCount++;
@@ -313,8 +345,8 @@ export class DeDuplicateService {
         case "Exact": {
           if (parsed.approximate && warningAccumulator) {
             warningAccumulator.exactFallbackCount++;
-            if (warningAccumulator.exactFallbackSamples.length < 10) {
-              warningAccumulator.exactFallbackSamples.push(parsed.original);
+            if (warningAccumulator.exactFallbackUris.length < 10) {
+              warningAccumulator.exactFallbackUris.push(parsed.original);
             }
           }
           const exact = this.getExactUrlKey(parsed);
@@ -383,7 +415,7 @@ export class DeDuplicateService {
       };
     } catch {
       // Fallback manual authority extraction sufficient for Hostname/Base/Host strategies.
-      // We mark the result as `approximate`; getUriKeysForStrategy counts a fallback warning
+      // Mark the result as `approximate`; getUriKeysForStrategy counts a fallback warning
       // only when the selected strategy is "Exact". Other strategies continue normally.
       const authorityMatch = toParse.match(/^[a-z][a-z0-9+.-]*:\/\/([^/?#]+)/i);
       if (!authorityMatch) {
@@ -615,40 +647,4 @@ export class DeDuplicateService {
     // 6. Return summary to display in a callout by the caller.
     return { trashed: toSoftDelete.length, permanentlyDeleted: toPermanentlyDelete.length };
   }
-
-  // ------------------------
-  // Warnings accumulator helpers
-  // ------------------------
-  private createWarningAccumulator(): WarningAccumulator {
-    return {
-      exactFallbackCount: 0,
-      unparseableUriCount: 0,
-      permissionDeniedCount: 0,
-      unparseableUris: [],
-      exactFallbackSamples: [],
-      permissionDeniedNames: [],
-    };
-  }
-
-  private toWarningsResult(acc: WarningAccumulator): DuplicateOperationWarnings {
-    return {
-      exactFallbackCount: acc.exactFallbackCount,
-      unparseableUriCount: acc.unparseableUriCount,
-      permissionDeniedCount: acc.permissionDeniedCount,
-      unparseableUris: acc.unparseableUris.length ? acc.unparseableUris : undefined,
-      exactFallbackSamples: acc.exactFallbackSamples.length ? acc.exactFallbackSamples : undefined,
-      permissionDeniedNames: acc.permissionDeniedNames.length
-        ? acc.permissionDeniedNames
-        : undefined,
-    };
-  }
-}
-
-interface WarningAccumulator {
-  exactFallbackCount: number;
-  unparseableUriCount: number;
-  permissionDeniedCount: number;
-  unparseableUris: string[];
-  exactFallbackSamples: string[];
-  permissionDeniedNames: string[];
 }
