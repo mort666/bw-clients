@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, ElementRef, HostBinding, Input } from "@angular/core";
+import { Component, ElementRef, HostBinding, input } from "@angular/core";
 
 import { FocusableElement } from "../shared/focusable-element";
 
@@ -51,16 +51,15 @@ const hoverStyles: Record<BadgeVariant, string[]> = {
   * The Badge directive can be used on a `<span>` (non clickable events), or an `<a>` or `<button>` tag
 
   * > `NOTE:` The Focus and Hover states only apply to badges used for interactive events.
-  * 
+  *
   * > `NOTE:` The `disabled` state only applies to buttons.
-  * 
+  *
 */
 @Component({
   selector: "span[bitBadge], a[bitBadge], button[bitBadge]",
   providers: [{ provide: FocusableElement, useExisting: BadgeComponent }],
   imports: [CommonModule],
   templateUrl: "badge.component.html",
-  standalone: true,
 })
 export class BadgeComponent implements FocusableElement {
   @HostBinding("class") get classList() {
@@ -90,33 +89,34 @@ export class BadgeComponent implements FocusableElement {
       "disabled:hover:!tw-text-muted",
       "disabled:tw-cursor-not-allowed",
     ]
-      .concat(styles[this.variant])
-      .concat(this.hasHoverEffects ? [...hoverStyles[this.variant], "tw-min-w-10"] : [])
-      .concat(this.truncate ? this.maxWidthClass : []);
+      .concat(styles[this.variant()])
+      .concat(this.hasHoverEffects ? [...hoverStyles[this.variant()], "tw-min-w-10"] : [])
+      .concat(this.truncate() ? this.maxWidthClass() : []);
   }
   @HostBinding("attr.title") get titleAttr() {
-    if (this.title !== undefined) {
-      return this.title;
+    const title = this.title();
+    if (title !== undefined) {
+      return title;
     }
-    return this.truncate ? this?.el?.nativeElement?.textContent?.trim() : null;
+    return this.truncate() ? this?.el?.nativeElement?.textContent?.trim() : null;
   }
 
   /**
    * Optional override for the automatic badge title when truncating.
    */
-  @Input() title?: string;
+  readonly title = input<string>();
 
   /**
    * Variant, sets the background color of the badge.
    */
-  @Input() variant: BadgeVariant = "primary";
+  readonly variant = input<BadgeVariant>("primary");
 
   /**
    * Truncate long text
    */
-  @Input() truncate = true;
+  readonly truncate = input(true);
 
-  @Input() maxWidthClass: `tw-max-w-${string}` = "tw-max-w-40";
+  readonly maxWidthClass = input<`tw-max-w-${string}`>("tw-max-w-40");
 
   getFocusTarget() {
     return this.el.nativeElement;
