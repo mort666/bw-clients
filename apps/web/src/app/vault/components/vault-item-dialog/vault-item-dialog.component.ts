@@ -273,7 +273,7 @@ export class VaultItemDialogComponent implements OnInit, OnDestroy {
 
   protected canDelete = false;
 
-  protected isAttachmentsButtonDisabled = false;
+  protected attachmentsButtonDisabled = false;
 
   constructor(
     @Inject(DIALOG_DATA) protected params: VaultItemDialogParams,
@@ -344,7 +344,7 @@ export class VaultItemDialogComponent implements OnInit, OnDestroy {
   }
 
   formStatusChanged(status: "disabled" | "enabled") {
-    this.isAttachmentsButtonDisabled = status === "disabled";
+    this.attachmentsButtonDisabled = status === "disabled";
   }
 
   /**

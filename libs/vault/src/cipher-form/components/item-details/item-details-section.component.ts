@@ -82,7 +82,7 @@ export class ItemDetailsSectionComponent implements OnInit {
 
   protected userId: UserId;
 
-  protected isFavoriteButtonDisabled = false;
+  protected favoriteButtonDisabled = false;
 
   @Input({ required: true })
   config: CipherFormConfig;
@@ -251,10 +251,10 @@ export class ItemDetailsSectionComponent implements OnInit {
       if (this.itemDetailsForm.controls.organizationId.value === null) {
         this.cipherFormContainer.disableFormFields();
         this.itemDetailsForm.controls.organizationId.enable();
-        this.isFavoriteButtonDisabled = true;
+        this.favoriteButtonDisabled = true;
       } else {
         this.cipherFormContainer.enableFormFields();
-        this.isFavoriteButtonDisabled = false;
+        this.favoriteButtonDisabled = false;
         this.setCollectionControlState();
       }
     }
