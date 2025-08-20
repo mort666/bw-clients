@@ -1,6 +1,9 @@
 import { DeviceType } from "@bitwarden/common/enums";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { ButtonLocation } from "@bitwarden/common/platform/system-notifications/system-notifications.service";
+import {
+  ButtonLocation,
+  SystemNotificationCreateInfo,
+} from "@bitwarden/common/platform/system-notifications/system-notifications.service";
 
 import { BrowserSystemNotificationService } from "./browser-system-notification.service";
 
@@ -126,7 +129,7 @@ describe("BrowserSystemNotificationService", () => {
     });
 
     it("supports creating without an id", async () => {
-      const createInfo = {
+      const createInfo: SystemNotificationCreateInfo = {
         title: "No Id",
         body: "Body",
         buttons: [],
@@ -140,7 +143,7 @@ describe("BrowserSystemNotificationService", () => {
         },
       );
 
-      const id = await service.create(createInfo as any);
+      const id = await service.create(createInfo);
       expect(id).toBe("generated-id");
       expect(calledWithOptionsOnly).toBe(true);
     });
