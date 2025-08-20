@@ -4,7 +4,8 @@ import { BehaviorSubject, bufferCount, firstValueFrom, ObservedValueOf, Subject 
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
 import { LogoutReason } from "@bitwarden/auth/common";
-import { SystemNotificationsService } from "@bitwarden/common/platform/notifications/system-notifications-service";
+import { AuthRequestAnsweringServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth-request-answering/auth-request-answering.service.abstraction";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 
 import { awaitAsync } from "../../../../spec";
 import { Matrix } from "../../../../spec/matrix";
@@ -39,7 +40,8 @@ describe("NotificationsService", () => {
   let signalRNotificationConnectionService: MockProxy<SignalRConnectionService>;
   let authService: MockProxy<AuthService>;
   let webPushNotificationConnectionService: MockProxy<WebPushConnectionService>;
-  let systemNotificationService: MockProxy<SystemNotificationsService>;
+  let authRequestAnsweringService: MockProxy<AuthRequestAnsweringServiceAbstraction>;
+  let configService: MockProxy<ConfigService>;
 
   let activeAccount: BehaviorSubject<ObservedValueOf<AccountService["activeAccount$"]>>;
 
@@ -66,6 +68,8 @@ describe("NotificationsService", () => {
     signalRNotificationConnectionService = mock<SignalRConnectionService>();
     authService = mock<AuthService>();
     webPushNotificationConnectionService = mock<WorkerWebPushConnectionService>();
+    authRequestAnsweringService = mock<AuthRequestAnsweringServiceAbstraction>();
+    configService = mock<ConfigService>();
 
     activeAccount = new BehaviorSubject<ObservedValueOf<AccountService["activeAccount$"]>>(null);
     accountService.activeAccount$ = activeAccount.asObservable();
@@ -106,14 +110,15 @@ describe("NotificationsService", () => {
       signalRNotificationConnectionService,
       authService,
       webPushNotificationConnectionService,
-      systemNotificationService,
+      authRequestAnsweringService,
+      configService,
     );
   });
 
   const mockUser1 = "user1" as UserId;
   const mockUser2 = "user2" as UserId;
 
-  function emitActiveUser(userId: UserId) {
+  function emitActiveUser(userId: UserId | null) {
     if (userId == null) {
       activeAccount.next(null);
     } else {
