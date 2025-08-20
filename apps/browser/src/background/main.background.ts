@@ -71,7 +71,10 @@ import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abs
 import { DefaultBillingAccountProfileStateService } from "@bitwarden/common/billing/services/account/billing-account-profile-state.service";
 import { ClientType } from "@bitwarden/common/enums";
 import { ProcessReloadServiceAbstraction } from "@bitwarden/common/key-management/abstractions/process-reload.service";
-import { DefaultKeyGenerationService } from "@bitwarden/common/key-management/crypto";
+import {
+  DefaultKeyGenerationService,
+  KeyGenerationService,
+} from "@bitwarden/common/key-management/crypto";
 import { CryptoFunctionService as CryptoFunctionServiceAbstraction } from "@bitwarden/common/key-management/crypto/abstractions/crypto-function.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { EncryptServiceImplementation } from "@bitwarden/common/key-management/crypto/services/encrypt.service.implementation";
@@ -135,7 +138,6 @@ import { Fido2ActiveRequestManager } from "@bitwarden/common/platform/services/f
 import { Fido2AuthenticatorService } from "@bitwarden/common/platform/services/fido2/fido2-authenticator.service";
 import { Fido2ClientService } from "@bitwarden/common/platform/services/fido2/fido2-client.service";
 import { FileUploadService } from "@bitwarden/common/platform/services/file-upload/file-upload.service";
-import { KeyGenerationService } from "@bitwarden/common/platform/services/key-generation.service";
 import { MigrationBuilderService } from "@bitwarden/common/platform/services/migration-builder.service";
 import { MigrationRunner } from "@bitwarden/common/platform/services/migration-runner";
 import { DefaultSdkClientFactory } from "@bitwarden/common/platform/services/sdk/default-sdk-client-factory";
