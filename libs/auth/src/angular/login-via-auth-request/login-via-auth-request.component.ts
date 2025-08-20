@@ -562,13 +562,7 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
         );
       }
     } catch (error) {
-      // If the request no longer exists, we treat it as if it's been answered (and denied).
-      if (error instanceof ErrorResponse && error.statusCode === HttpStatusCode.NotFound) {
-        authRequestResponse = undefined;
-        this.logService.error("Auth request response not generated");
-      } else {
-        this.logService.error(error);
-      }
+      this.logService.error(error);
       this.loading = false;
     }
 
@@ -589,6 +583,10 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
 
       // Request doesn't exist anymore, so we'll clear the cache and start a new request.
       if (!authRequestResponse) {
+        this.toastService.showToast({
+          variant: "info",
+          message: this.i18nService.t("thatRequestIsNoLongerValidStartingNewRequest"),
+        });
         return await this.clearExistingStandardAuthRequestAndStartNewRequest();
       }
 
@@ -639,11 +637,21 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
       return;
     }
 
-    await this.decryptViaApprovedAuthRequest(
-      authRequestResponse,
-      this.authRequestKeyPair.privateKey,
-      userId,
-    );
+    try {
+      await this.decryptViaApprovedAuthRequest(
+        authRequestResponse,
+        this.authRequestKeyPair.privateKey,
+        userId,
+      );
+    } catch (error) {
+      this.logService.error(error);
+      this.toastService.showToast({
+        variant: "info",
+        message: this.i18nService.t("thatRequestIsNoLongerValidStartingNewRequest"),
+      });
+      await this.clearExistingStandardAuthRequestAndStartNewRequest();
+      this.loading = false;
+    }
   }
 
   private async handleUnauthenticatedFlows(
