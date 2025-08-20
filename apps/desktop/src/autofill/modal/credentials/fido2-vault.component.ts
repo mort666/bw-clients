@@ -1,7 +1,16 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit, OnDestroy } from "@angular/core";
 import { RouterModule, Router } from "@angular/router";
-import { firstValueFrom, map, BehaviorSubject, Observable, Subject, takeUntil } from "rxjs";
+import {
+  firstValueFrom,
+  map,
+  combineLatest,
+  of,
+  BehaviorSubject,
+  Observable,
+  Subject,
+  takeUntil,
+} from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
