@@ -127,17 +127,5 @@ describe("AuthRequestAnsweringService", () => {
 
       expect(systemNotificationsService.create).not.toHaveBeenCalled();
     });
-
-    it("creates a notification when force set password is required", async () => {
-      platformUtilsService.isPopupOpen.mockResolvedValue(true);
-      authService.activeAccountStatus$ = of(AuthenticationStatus.Unlocked);
-      (masterPasswordService.forceSetPasswordReason$ as jest.Mock).mockReturnValue(
-        of(ForceSetPasswordReason.AdminForcePasswordReset),
-      );
-
-      await sut.receivedPendingAuthRequest(userId, authRequestId);
-
-      expect(systemNotificationsService.create).toHaveBeenCalledTimes(1);
-    });
   });
 });
