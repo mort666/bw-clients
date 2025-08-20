@@ -631,7 +631,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: SystemNotificationsService,
     useClass: BrowserSystemNotificationService,
-    deps: [LogService, PlatformUtilsService],
+    deps: [PlatformUtilsService],
   }),
   safeProvider({
     provide: LoginComponentService,
