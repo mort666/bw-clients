@@ -79,7 +79,7 @@ export class Fido2VaultComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     this.session = this.fido2UserInterfaceService.getCurrentSession();
-    this.cipherIds$ = this.session.availableCipherIds$;
+    this.cipherIds$ = this.session?.availableCipherIds$;
     await this.loadCiphers();
   }
 

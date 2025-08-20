@@ -50,7 +50,7 @@ describe("Fido2VaultComponent", () => {
     mockAccountService.activeAccount$ = of(mockActiveAccount as Account);
     mockFido2UserInterfaceService.getCurrentSession.mockReturnValue(mockSession);
     mockSession.availableCipherIds$ = of(mockCipherIds);
-    mockCipherService.getAllDecryptedForIds.mockResolvedValue([]);
+    mockCipherService.cipherListViews$ = jest.fn().mockReturnValue(of([]));
 
     await TestBed.configureTestingModule({
       imports: [Fido2VaultComponent],
@@ -106,24 +106,31 @@ describe("Fido2VaultComponent", () => {
 
   describe("ngOnInit", () => {
     it("should initialize session and load ciphers successfully", async () => {
-      mockCipherService.getAllDecryptedForIds.mockResolvedValue(mockCiphers);
+      mockCipherService.cipherListViews$ = jest.fn().mockReturnValue(of(mockCiphers));
 
       await component.ngOnInit();
 
       expect(mockFido2UserInterfaceService.getCurrentSession).toHaveBeenCalled();
       expect(component.session).toBe(mockSession);
       expect(component.cipherIds$).toBe(mockSession.availableCipherIds$);
+      expect(mockCipherService.cipherListViews$).toHaveBeenCalledWith(mockActiveAccount.id);
     });
 
-    it("should handle error when no active session found", async () => {
+    it("should handle when no active session found", async () => {
       mockFido2UserInterfaceService.getCurrentSession.mockReturnValue(null);
 
-      await expect(component.ngOnInit()).rejects.toThrow();
+      await component.ngOnInit();
+
+      expect(component.session).toBeNull();
     });
 
     it("should filter out deleted ciphers", async () => {
-      mockCiphers[1].deletedDate = new Date();
-      mockCipherService.getAllDecryptedForIds.mockResolvedValue(mockCiphers);
+      const ciphersWithDeleted = [
+        ...mockCiphers.slice(0, 1),
+        { ...mockCiphers[1], deletedDate: new Date() },
+        ...mockCiphers.slice(2),
+      ];
+      mockCipherService.cipherListViews$ = jest.fn().mockReturnValue(of(ciphersWithDeleted));
 
       await component.ngOnInit();
       await new Promise((resolve) => setTimeout(resolve, 0));
