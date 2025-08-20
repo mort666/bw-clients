@@ -57,7 +57,7 @@ export class AuthRequestAnsweringService implements AuthRequestAnsweringServiceA
     } else {
       // Get the user's email to include in the system notification
       const accounts = await firstValueFrom(this.accountService.accounts$);
-      const emailForUser = accounts?.[userId]?.email;
+      const emailForUser = accounts[userId].email;
 
       await this.systemNotificationsService.create({
         id: `${SystemNotificationPrefixes.AuthRequest}_${authRequestId}`,
