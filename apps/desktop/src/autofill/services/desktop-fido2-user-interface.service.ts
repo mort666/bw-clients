@@ -157,12 +157,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
   }
 
   async getRpId(): Promise<string> {
-    return lastValueFrom(
-      this.rpId.pipe(
-        filter((id) => id != null),
-        take(1),
-      ),
-    );
+    return firstValueFrom(this.rpId.pipe(filter((id) => id != null)));
   }
 
   confirmChosenCipher(cipherId: string, userVerified: boolean = false): void {

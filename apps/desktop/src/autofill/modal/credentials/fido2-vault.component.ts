@@ -120,16 +120,26 @@ export class Fido2VaultComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.cipherIds$.pipe(takeUntil(this.destroy$)).subscribe((cipherIds) => {
-      this.cipherService
-        .getAllDecryptedForIds(activeUserId, cipherIds || [])
-        .then((ciphers) => {
-          this.ciphersSubject.next(ciphers.filter((cipher) => !cipher.deletedDate));
-        })
-        .catch((error) => {
-          this.logService.error("Failed to load ciphers", error);
-        });
-    });
+    // Combine cipher list with optional cipher IDs filter
+    combineLatest([this.cipherService.cipherListViews$(activeUserId), this.cipherIds$ || of(null)])
+      .pipe(
+        map(([ciphers, cipherIds]) => {
+          // Filter out deleted ciphers
+          const activeCiphers = ciphers.filter((cipher) => !cipher.deletedDate);
+
+          // If specific IDs provided, filter by them
+          if (cipherIds?.length > 0) {
+            return activeCiphers.filter((cipher) => cipherIds.includes(cipher.id));
+          }
+
+          return activeCiphers;
+        }),
+        takeUntil(this.destroy$),
+      )
+      .subscribe({
+        next: (ciphers) => this.ciphersSubject.next(ciphers as CipherView[]),
+        error: (error: unknown) => this.logService.error("Failed to load ciphers", error),
+      });
   }
 
   private async validateCipherAccess(cipher: CipherView): Promise<boolean> {
