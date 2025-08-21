@@ -88,6 +88,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
    * @public
    */
   async getPageDetails(): Promise<AutofillPageDetails> {
+    console.log("getPageDetails");
     if (!this.mutationObserver) {
       this.setupMutationObserver();
     }
@@ -437,6 +438,20 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
     const url = this.getSafeDocumentUrl();
     const domain = Utils.getDomain(url);
     const matchers = [
+      {
+        domain: "hbomax.com",
+        xpathQualifiers: [
+          {
+            qualifierType: AutofillFieldQualifier.identityEmail,
+            fullxpath:
+              "/html/body/div[1]/div[2]/div[1]/div/main/div[2]/gi-login//gi-sign-in-flow/gi-sign-in-email//gi-track-analytics-events/div/gi-form/div/form/div[2]/div/gi-form-input/div/input",
+          },
+          {
+            qualifierType: AutofillFieldQualifier.password,
+            fullxpath: "",
+          },
+        ],
+      },
       {
         domain: "cnn.com",
         xpathQualifiers: [
@@ -1471,8 +1486,11 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
    * @param pageDetails - The page details to use for the inline menu listeners
    */
   private setupOverlayListeners(pageDetails: AutofillPageDetails) {
+    console.log("setupOverlayListeners");
     if (this.autofillOverlayContentService) {
+      console.log("autofillOverlayContentService exists");
       this.autofillFieldElements.forEach((autofillField, formFieldElement) => {
+        console.log("loop for setupOverlayOnField", autofillField);
         this.setupOverlayOnField(formFieldElement, autofillField, pageDetails);
       });
     }
@@ -1490,6 +1508,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
     autofillField: AutofillField,
     pageDetails?: AutofillPageDetails,
   ) {
+    console.log("setupOverlayOnField");
     if (this.autofillOverlayContentService) {
       const autofillPageDetails =
         pageDetails ||
