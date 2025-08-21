@@ -314,7 +314,7 @@ export class TrialBillingStepComponent implements OnInit, OnDestroy {
 
     if (!this.taxInfoComponent.validate()) {
       this.fetchingTaxAmount = false;
-      return 0;
+      return this.taxAmount;
     }
 
     const plan = this.findPlanFor(cadence);
