@@ -653,6 +653,9 @@ export class LockComponent implements OnInit, OnDestroy {
     }
 
     // determine success route based on client type
+    // The disable-redirect parameter allows callers to prevent automatic navigation after unlock,
+    // useful when the lock component is used in contexts where custom post-unlock behavior is needed
+    // such as passkey modals.
     if (
       this.clientType != null &&
       this.activatedRoute.snapshot.paramMap.get("disable-redirect") === null
