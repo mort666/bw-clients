@@ -17,10 +17,13 @@ import {
   firstValueFrom,
   concatMap,
   filter,
+  pairwise,
   tap,
   catchError,
   of,
   map,
+  skip,
+  take,
 } from "rxjs";
 
 import { LoginApprovalDialogComponent } from "@bitwarden/angular/auth/login-approval/login-approval-dialog.component";
@@ -149,11 +152,18 @@ export class AppComponent implements OnInit, OnDestroy {
     // Clear them aggressively to make sure this doesn't occur
     await this.clearComponentStates();
 
-    this.accountService.activeAccount$.pipe(takeUntil(this.destroy$)).subscribe((account) => {
-      this.activeUserId = account?.id;
-      // Re-evaluate pending auth requests when switching users while popup is open
-      void this.authRequestAnsweringService.processPendingAuthRequests();
-    });
+    this.accountService.activeAccount$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((account) => {
+        this.activeUserId = account?.id;
+      });
+
+    // Separate subscription: only trigger processing on subsequent user switches while popup is open
+    this.accountService.activeAccount$
+      .pipe(skip(1), takeUntil(this.destroy$))
+      .subscribe(() => {
+        void this.authRequestAnsweringService.processPendingAuthRequests();
+      });
 
     this.authService.activeAccountStatus$
       .pipe(
@@ -164,6 +174,28 @@ export class AppComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
       )
       .subscribe();
+
+    // On initial load, if already Unlocked and popup is open, process any pending auth requests once
+    this.authService.activeAccountStatus$
+      .pipe(take(1), filter((status) => status === AuthenticationStatus.Unlocked), takeUntil(this.destroy$))
+      .subscribe(() => {
+        void this.authRequestAnsweringService.processPendingAuthRequests();
+      });
+
+    // When the popup is already open and the active account transitions to Unlocked,
+    // process any pending auth requests for the active user.
+    this.authService.activeAccountStatus$
+      .pipe(
+        pairwise(),
+        filter(
+          ([prev, curr]) =>
+            prev !== AuthenticationStatus.Unlocked && curr === AuthenticationStatus.Unlocked,
+        ),
+        takeUntil(this.destroy$),
+      )
+      .subscribe(() => {
+        void this.authRequestAnsweringService.processPendingAuthRequests();
+      });
 
     this.ngZone.runOutsideAngular(() => {
       window.onmousedown = () => this.recordActivity();
