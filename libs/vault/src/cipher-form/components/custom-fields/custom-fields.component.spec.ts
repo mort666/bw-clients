@@ -4,6 +4,7 @@ import { DebugElement } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { By } from "@angular/platform-browser";
 import { mock } from "jest-mock-extended";
+import { BehaviorSubject } from "rxjs";
 
 import { EventCollectionService } from "@bitwarden/common/abstractions/event/event-collection.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -39,6 +40,7 @@ describe("CustomFieldsComponent", () => {
   let announce: jest.Mock;
   let patchCipher: jest.Mock;
   let config: CipherFormConfig;
+  const formStatusChange$ = new BehaviorSubject<"disabled" | "enabled">("enabled");
 
   beforeEach(async () => {
     open = jest.fn();
@@ -65,6 +67,7 @@ describe("CustomFieldsComponent", () => {
             registerChildForm: jest.fn(),
             config,
             getInitialCipherView: jest.fn(() => originalCipherView),
+            formStatusChange$,
           },
         },
         {
@@ -550,6 +553,56 @@ describe("CustomFieldsComponent", () => {
         By.css('button[data-testid="edit-custom-field-button"]'),
       );
       expect(editButtons).toHaveLength(3);
+    });
+  });
+
+  describe("parent form disabled", () => {
+    beforeEach(() => {
+      originalCipherView.fields = mockFieldViews;
+      formStatusChange$.next("disabled");
+      component.ngOnInit();
+
+      fixture.detectChanges();
+    });
+
+    afterEach(() => {
+      formStatusChange$.next("enabled");
+      fixture.detectChanges();
+    });
+
+    it("disables edit and reorder buttons", () => {
+      const reorderButtonQuery = By.css('button[data-testid="reorder-toggle-button"]');
+      const editButtonQuery = By.css('button[data-testid="edit-custom-field-button"]');
+
+      let reorderButton = fixture.debugElement.query(reorderButtonQuery);
+      let editButton = fixture.debugElement.query(editButtonQuery);
+
+      expect(reorderButton.nativeElement.disabled).toBe(true);
+      expect(editButton.nativeElement.disabled).toBe(true);
+
+      formStatusChange$.next("enabled");
+      fixture.detectChanges();
+
+      reorderButton = fixture.debugElement.query(reorderButtonQuery);
+      editButton = fixture.debugElement.query(editButtonQuery);
+
+      expect(reorderButton.nativeElement.disabled).toBe(false);
+      expect(editButton.nativeElement.disabled).toBe(false);
+    });
+
+    it("hides add field button", () => {
+      const query = By.css('button[data-testid="add-field-button"]');
+
+      let addFieldButton = fixture.debugElement.query(query);
+
+      expect(addFieldButton).toBeNull();
+
+      formStatusChange$.next("enabled");
+      fixture.detectChanges();
+
+      addFieldButton = fixture.debugElement.query(query);
+
+      expect(addFieldButton).not.toBeNull();
     });
   });
 });
