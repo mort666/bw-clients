@@ -644,11 +644,15 @@ export class LoginViaAuthRequestComponent implements OnInit, OnDestroy {
         userId,
       );
     } catch (error) {
+      // If the component privateKey cannot decrypt the authRequestPublicKeyEncryptedUserKey on an auth request response,
+      // it means that auth request is no longer valid (i.e. the newer component privateKey does not belong to the same key pair
+      // as the older publicKey that encrypted the user key). Clear and start a new request.
       this.logService.error(error);
       this.toastService.showToast({
         variant: "info",
         message: this.i18nService.t("thatRequestIsNoLongerValidStartingNewRequest"),
       });
+
       await this.clearExistingStandardAuthRequestAndStartNewRequest();
       this.loading = false;
     }
