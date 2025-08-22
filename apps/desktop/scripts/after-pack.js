@@ -186,9 +186,7 @@ async function addElectronFuses(context) {
     [FuseV1Options.GrantFileProtocolExtraPrivileges]: true,
   });
   if (platform === "darwin") {
-    // run electron-hardener
-    // sleep=
-    await new Promise((resolve) => setTimeout(resolve, 1000000));
+    // run electron-hardeners
     console.log("## Running electron-hardener on the Electron Framework");
     child_process.execSync(
       'electron-hardener "' +
