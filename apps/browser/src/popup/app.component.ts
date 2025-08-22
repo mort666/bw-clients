@@ -24,6 +24,9 @@ import {
   map,
   skip,
   take,
+  distinctUntilChanged,
+  switchMap,
+  startWith,
 } from "rxjs";
 
 import { LoginApprovalDialogComponent } from "@bitwarden/angular/auth/login-approval/login-approval-dialog.component";
@@ -99,6 +102,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private lastActivity: Date;
   private activeUserId: UserId;
   private routerAnimations = false;
+  private processingPendingAuth = false;
 
   private destroy$ = new Subject<void>();
 
@@ -160,38 +164,43 @@ export class AppComponent implements OnInit, OnDestroy {
 
     // Separate subscription: only trigger processing on subsequent user switches while popup is open
     this.accountService.activeAccount$
-      .pipe(skip(1), takeUntil(this.destroy$))
-      .subscribe(() => {
-        void this.authRequestAnsweringService.processPendingAuthRequests();
-      });
-
-    this.authService.activeAccountStatus$
       .pipe(
-        filter((status) => status === AuthenticationStatus.Unlocked),
-        concatMap(async () => {
-          await this.recordActivity();
+        map((a) => a?.id), // Extract active userId
+        distinctUntilChanged(), // Only when userId actually changes
+        skip(1), // Ignore initial emission (popup open)
+        filter((userId) => userId != null), // Require a valid userId
+        switchMap((userId) => this.authService.authStatusFor$(userId).pipe(take(1))), // Get current auth status once for new user
+        filter((status) => status === AuthenticationStatus.Unlocked), // Only when the new user is Unlocked
+        tap(() => {
+          // Trigger processing when switching users while popup is open
+          void this.authRequestAnsweringService.processPendingAuthRequests();
         }),
-        takeUntil(this.destroy$),
+        takeUntil(this.destroy$), // Cleanup on destroy
       )
       .subscribe();
 
-    // On initial load, if already Unlocked and popup is open, process any pending auth requests once
     this.authService.activeAccountStatus$
-      .pipe(take(1), filter((status) => status === AuthenticationStatus.Unlocked), takeUntil(this.destroy$))
-      .subscribe(() => {
-        void this.authRequestAnsweringService.processPendingAuthRequests();
-      });
+      .pipe(
+        filter((status) => status === AuthenticationStatus.Unlocked), // Only track activity when unlocked
+        concatMap(async () => {
+          // Queue side-effects to maintain order
+          await this.recordActivity();
+        }),
+        takeUntil(this.destroy$), // Cleanup on destroy
+      )
+      .subscribe();
 
     // When the popup is already open and the active account transitions to Unlocked,
     // process any pending auth requests for the active user.
     this.authService.activeAccountStatus$
       .pipe(
-        pairwise(),
+        startWith(null as unknown as AuthenticationStatus), // Seed previous value to handle initial emission
+        pairwise(), // Compare previous and current statuses
         filter(
           ([prev, curr]) =>
-            prev !== AuthenticationStatus.Unlocked && curr === AuthenticationStatus.Unlocked,
+            prev !== AuthenticationStatus.Unlocked && curr === AuthenticationStatus.Unlocked, // Fire on transitions into Unlocked (incl. initial)
         ),
-        takeUntil(this.destroy$),
+        takeUntil(this.destroy$), // Cleanup on destroy
       )
       .subscribe(() => {
         void this.authRequestAnsweringService.processPendingAuthRequests();
@@ -251,41 +260,47 @@ export class AppComponent implements OnInit, OnDestroy {
 
             await this.router.navigate(["lock"]);
           } else if (msg.command === "openLoginApproval") {
-            // Always query server for all pending requests and open a dialog for each
-            const pendingList = await firstValueFrom(this.authRequestService.getPendingAuthRequests$());
-            if (Array.isArray(pendingList) && pendingList.length > 0) {
-              const respondedIds = new Set<string>();
-              for (const req of pendingList) {
-                if (req?.id == null) {continue;}
-                console.debug(
-                  "[Popup AppComponent] Opening LoginApprovalDialogComponent",
-                  req.id,
-                );
-                const dialogRef = LoginApprovalDialogComponent.open(this.dialogService, {
-                  notificationId: req.id,
-                });
+            if (this.processingPendingAuth) {return;}
+            this.processingPendingAuth = true;
+            try {
+              // Always query server for all pending requests and open a dialog for each
+              const pendingList = await firstValueFrom(this.authRequestService.getPendingAuthRequests$());
+              if (Array.isArray(pendingList) && pendingList.length > 0) {
+                const respondedIds = new Set<string>();
+                for (const req of pendingList) {
+                  if (req?.id == null) {continue;}
+                  console.debug(
+                    "[Popup AppComponent] Opening LoginApprovalDialogComponent",
+                    req.id,
+                  );
+                  const dialogRef = LoginApprovalDialogComponent.open(this.dialogService, {
+                    notificationId: req.id,
+                  });
 
-                const result = await firstValueFrom(dialogRef.closed);
+                  const result = await firstValueFrom(dialogRef.closed);
 
-                if (result !== undefined && typeof result === "boolean") {
-                  respondedIds.add(req.id);
-                  if (
-                    respondedIds.size === pendingList.length &&
-                    this.activeUserId != null
-                  ) {
-                    console.debug(
-                      "[Popup AppComponent] All pending auth requests responded; clearing marker for user",
-                      this.activeUserId,
-                    );
-                    await this.pendingAuthRequestsState.clearByUserId(this.activeUserId);
+                  if (result !== undefined && typeof result === "boolean") {
+                    respondedIds.add(req.id);
+                    if (
+                      respondedIds.size === pendingList.length &&
+                      this.activeUserId != null
+                    ) {
+                      console.debug(
+                        "[Popup AppComponent] All pending auth requests responded; clearing marker for user",
+                        this.activeUserId,
+                      );
+                      await this.pendingAuthRequestsState.clearByUserId(this.activeUserId);
+                    }
                   }
-                }
 
-                console.debug(
-                  "[Popup AppComponent] LoginApprovalDialogComponent closed",
-                  req.id,
-                );
+                  console.debug(
+                    "[Popup AppComponent] LoginApprovalDialogComponent closed",
+                    req.id,
+                  );
+                }
               }
+            } finally {
+              this.processingPendingAuth = false;
             }
           } else if (msg.command === "showDialog") {
             // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
