@@ -175,7 +175,7 @@ export class AppComponent implements OnInit, OnDestroy {
           // Trigger processing when switching users while popup is open
           void this.authRequestAnsweringService.processPendingAuthRequests();
         }),
-        takeUntil(this.destroy$), // Cleanup on destroy
+        takeUntil(this.destroy$),
       )
       .subscribe();
 
@@ -186,7 +186,7 @@ export class AppComponent implements OnInit, OnDestroy {
           // Queue side-effects to maintain order
           await this.recordActivity();
         }),
-        takeUntil(this.destroy$), // Cleanup on destroy
+        takeUntil(this.destroy$),
       )
       .subscribe();
 
@@ -200,7 +200,7 @@ export class AppComponent implements OnInit, OnDestroy {
           ([prev, curr]) =>
             prev !== AuthenticationStatus.Unlocked && curr === AuthenticationStatus.Unlocked, // Fire on transitions into Unlocked (incl. initial)
         ),
-        takeUntil(this.destroy$), // Cleanup on destroy
+        takeUntil(this.destroy$),
       )
       .subscribe(() => {
         void this.authRequestAnsweringService.processPendingAuthRequests();
