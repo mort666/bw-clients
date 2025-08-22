@@ -185,4 +185,15 @@ async function addElectronFuses(context) {
     // but then any requests to the server will be blocked by CORS policy
     [FuseV1Options.GrantFileProtocolExtraPrivileges]: true,
   });
+  if (platform === "darwin") {
+    // run electron-hardener
+    // sleep=
+    await new Promise((resolve) => setTimeout(resolve, 1000000));
+    console.log("## Running electron-hardener on the Electron Framework");
+    child_process.execSync(
+      'electron-hardener "' +
+        electronBinaryPath +
+        '/Contents/Frameworks/Electron Framework.framework/Electron Framework"',
+    );
+  }
 }

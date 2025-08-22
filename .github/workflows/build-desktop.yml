@@ -688,6 +688,9 @@ jobs:
       - name: Set up Node-gyp
         run: python3 -m pip install setuptools
 
+      - name: Install electron-hardener
+        run: cargo install electron-hardener
+
       - name: Print environment
         run: |
           node --version
@@ -913,6 +916,9 @@ jobs:
 
       - name: Set up Node-gyp
         run: python3 -m pip install setuptools
+
+      - name: Install electron-hardener
+        run: cargo install electron-hardener
 
       - name: Print environment
         run: |
@@ -1171,6 +1177,9 @@ jobs:
 
       - name: Set up Node-gyp
         run: python3 -m pip install setuptools
+
+      - name: Install electron-hardener
+        run: cargo install electron-hardener
 
       - name: Print environment
         run: |
