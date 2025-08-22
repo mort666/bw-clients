@@ -184,12 +184,7 @@ export default tseslint.config(
         {
           // uses negative lookahead to whitelist any class that doesn't start with "tw-"
           // in other words: classnames that start with tw- must be valid TailwindCSS classes
-          whitelist: [
-            "(?!(tw)\\-).*",
-            "tw-app-region-drag",
-            "tw-app-region-no-drag",
-            "tw-app-region-header-sticky",
-          ],
+          whitelist: ["(?!(tw)\\-).*", "tw-app-region-drag", "tw-app-region-no-drag"],
         },
       ],
       "tailwindcss/enforces-negative-arbitrary-values": "error",

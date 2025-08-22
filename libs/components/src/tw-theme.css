@@ -184,12 +184,6 @@
     -webkit-app-region: no-drag;
   }
 
-  .tw-app-region-header-sticky {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-  }
-
   /**
   * Bootstrap uses z-index: 1050 for modals, dialogs and drag-and-drop previews should appear above them.
   * When bootstrap is removed, test if these styles are still needed and that overlays display properly over other content.
