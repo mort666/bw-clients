@@ -3,7 +3,7 @@ import { Observable } from "rxjs";
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
 import { UserKeyRotationDataProvider } from "@bitwarden/key-management";
-import { CipherListView } from "@bitwarden/sdk-internal";
+import { CipherListView, JsCipherIterator } from "@bitwarden/sdk-internal";
 
 import { UriMatchStrategySetting } from "../../models/domain/domain-service";
 import { SymmetricCryptoKey } from "../../platform/models/domain/symmetric-crypto-key";
@@ -28,6 +28,8 @@ export type EncryptionContext = {
 };
 
 export abstract class CipherService implements UserKeyRotationDataProvider<CipherWithIdRequest> {
+  abstract cipherStream(userId: UserId): Promise<JsCipherIterator>;
+
   abstract cipherViews$(userId: UserId): Observable<CipherView[]>;
   abstract cipherListViews$(userId: UserId): Observable<CipherListView[] | CipherView[]>;
   abstract ciphers$(userId: UserId): Observable<Record<CipherId, CipherData>>;

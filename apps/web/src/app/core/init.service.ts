@@ -21,6 +21,7 @@ import { TaskService } from "@bitwarden/common/vault/tasks";
 import { KeyService as KeyServiceAbstraction } from "@bitwarden/key-management";
 
 import { VersionService } from "../platform/version.service";
+import { WebIteratorTestService } from "../platform/web-iterator-test.service";
 
 @Injectable()
 export class InitService {
@@ -41,6 +42,7 @@ export class InitService {
     private ipcService: IpcService,
     private sdkLoadService: SdkLoadService,
     private taskService: TaskService,
+    private iteratorTestService: WebIteratorTestService,
     @Inject(DOCUMENT) private document: Document,
   ) {}
 
@@ -48,6 +50,7 @@ export class InitService {
     return async () => {
       await this.sdkLoadService.loadAndInit();
       await this.stateService.init();
+      await this.iteratorTestService.init();
 
       const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
       if (activeAccount) {

@@ -17,6 +17,7 @@ import { MessageSender } from "@bitwarden/common/platform/messaging";
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
 import { KeyService } from "@bitwarden/key-management";
+import { JsCipherIterator } from "@bitwarden/sdk-internal";
 
 import { ApiService } from "../../abstractions/api.service";
 import { AccountService } from "../../auth/abstractions/account.service";
@@ -121,6 +122,20 @@ export class CipherService implements CipherServiceAbstraction {
     private cipherEncryptionService: CipherEncryptionService,
     private messageSender: MessageSender,
   ) {}
+
+  async cipherStream(userId: UserId): Promise<JsCipherIterator> {
+    const ciphers = Object.values(await firstValueFrom(this.ciphers$(userId)));
+    const iterator = ciphers[Symbol.iterator]();
+    return {
+      next() {
+        const result = iterator.next();
+        if (result.done || result.value == null) {
+          return undefined;
+        }
+        return result.value;
+      },
+    };
+  }
 
   localData$(userId: UserId): Observable<Record<CipherId, LocalData>> {
     return this.localDataState(userId).state$.pipe(map((data) => data ?? {}));
