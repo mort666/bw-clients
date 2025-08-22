@@ -17,7 +17,12 @@ import {
 } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { FieldView } from "@bitwarden/common/vault/models/view/field.view";
-import { DialogRef, BitPasswordInputToggleDirective, DialogService } from "@bitwarden/components";
+import {
+  DialogRef,
+  BitPasswordInputToggleDirective,
+  DialogService,
+  BitIconButtonComponent,
+} from "@bitwarden/components";
 
 import { CipherFormConfig } from "../../abstractions/cipher-form-config.service";
 import { CipherFormContainer } from "../../cipher-form-container";
@@ -558,7 +563,7 @@ describe("CustomFieldsComponent", () => {
 
   describe("parent form disabled", () => {
     beforeEach(() => {
-      originalCipherView.fields = mockFieldViews;
+      originalCipherView!.fields = mockFieldViews;
       formStatusChange$.next("disabled");
       component.ngOnInit();
 
@@ -571,14 +576,14 @@ describe("CustomFieldsComponent", () => {
     });
 
     it("disables edit and reorder buttons", () => {
-      const reorderButtonQuery = By.css('button[data-testid="reorder-toggle-button"]');
-      const editButtonQuery = By.css('button[data-testid="edit-custom-field-button"]');
+      const reorderButtonQuery = By.directive(BitIconButtonComponent);
+      const editButtonQuery = By.directive(BitIconButtonComponent);
 
       let reorderButton = fixture.debugElement.query(reorderButtonQuery);
       let editButton = fixture.debugElement.query(editButtonQuery);
 
-      expect(reorderButton.nativeElement.disabled).toBe(true);
-      expect(editButton.nativeElement.disabled).toBe(true);
+      expect(reorderButton.componentInstance.disabled()).toBe(true);
+      expect(editButton.componentInstance.disabled()).toBe(true);
 
       formStatusChange$.next("enabled");
       fixture.detectChanges();
@@ -586,8 +591,8 @@ describe("CustomFieldsComponent", () => {
       reorderButton = fixture.debugElement.query(reorderButtonQuery);
       editButton = fixture.debugElement.query(editButtonQuery);
 
-      expect(reorderButton.nativeElement.disabled).toBe(false);
-      expect(editButton.nativeElement.disabled).toBe(false);
+      expect(reorderButton.componentInstance.disabled()).toBe(false);
+      expect(editButton.componentInstance.disabled()).toBe(false);
     });
 
     it("hides add field button", () => {
