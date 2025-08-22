@@ -23,13 +23,20 @@ import {
   map,
 } from "rxjs";
 
+import { LoginApprovalDialogComponent } from "@bitwarden/angular/auth/login-approval/login-approval-dialog.component";
 import { DeviceTrustToastService } from "@bitwarden/angular/auth/services/device-trust-toast.service.abstraction";
 import { DocumentLangSetter } from "@bitwarden/angular/platform/i18n";
-import { LogoutReason, UserDecryptionOptionsServiceAbstraction } from "@bitwarden/auth/common";
+import {
+  LogoutReason,
+  AuthRequestServiceAbstraction,
+  UserDecryptionOptionsServiceAbstraction,
+} from "@bitwarden/auth/common";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { AuthRequestAnsweringServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth-request-answering/auth-request-answering.service.abstraction";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
+import { PendingAuthRequestsStateService } from "@bitwarden/common/auth/services/auth-request-answering/pending-auth-requests.state";
 import { AnimationControlService } from "@bitwarden/common/platform/abstractions/animation-control.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
@@ -122,6 +129,9 @@ export class AppComponent implements OnInit, OnDestroy {
     private readonly documentLangSetter: DocumentLangSetter,
     private popupSizeService: PopupSizeService,
     private logService: LogService,
+    private authRequestService: AuthRequestServiceAbstraction,
+    private pendingAuthRequestsState: PendingAuthRequestsStateService,
+    private authRequestAnsweringService: AuthRequestAnsweringServiceAbstraction,
   ) {
     this.deviceTrustToastService.setupListeners$.pipe(takeUntilDestroyed()).subscribe();
 
@@ -141,6 +151,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.accountService.activeAccount$.pipe(takeUntil(this.destroy$)).subscribe((account) => {
       this.activeUserId = account?.id;
+      // Re-evaluate pending auth requests when switching users while popup is open
+      void this.authRequestAnsweringService.processPendingAuthRequests();
     });
 
     this.authService.activeAccountStatus$
@@ -206,6 +218,43 @@ export class AppComponent implements OnInit, OnDestroy {
             }
 
             await this.router.navigate(["lock"]);
+          } else if (msg.command === "openLoginApproval") {
+            // Always query server for all pending requests and open a dialog for each
+            const pendingList = await firstValueFrom(this.authRequestService.getPendingAuthRequests$());
+            if (Array.isArray(pendingList) && pendingList.length > 0) {
+              const respondedIds = new Set<string>();
+              for (const req of pendingList) {
+                if (req?.id == null) {continue;}
+                console.debug(
+                  "[Popup AppComponent] Opening LoginApprovalDialogComponent",
+                  req.id,
+                );
+                const dialogRef = LoginApprovalDialogComponent.open(this.dialogService, {
+                  notificationId: req.id,
+                });
+
+                const result = await firstValueFrom(dialogRef.closed);
+
+                if (result !== undefined && typeof result === "boolean") {
+                  respondedIds.add(req.id);
+                  if (
+                    respondedIds.size === pendingList.length &&
+                    this.activeUserId != null
+                  ) {
+                    console.debug(
+                      "[Popup AppComponent] All pending auth requests responded; clearing marker for user",
+                      this.activeUserId,
+                    );
+                    await this.pendingAuthRequestsState.clearByUserId(this.activeUserId);
+                  }
+                }
+
+                console.debug(
+                  "[Popup AppComponent] LoginApprovalDialogComponent closed",
+                  req.id,
+                );
+              }
+            }
           } else if (msg.command === "showDialog") {
             // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -321,6 +370,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private async clearComponentStates() {
+    if (this.activeUserId == null) {return;}
     if (!(await firstValueFrom(this.tokenService.hasAccessToken$(this.activeUserId)))) {
       return;
     }
