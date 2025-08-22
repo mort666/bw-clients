@@ -163,7 +163,7 @@ export class VaultV2Component<C extends CipherViewLike>
   config: CipherFormConfig | null = null;
   isSubmitting = false;
 
-  /** Tracks the status of the edit cipher form */
+  /** Tracks the disabled status of the edit cipher form */
   protected formDisabled: boolean = false;
 
   private organizations$: Observable<Organization[]> = this.accountService.activeAccount$.pipe(
