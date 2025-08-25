@@ -3,6 +3,7 @@ import { BehaviorSubject, bufferCount, firstValueFrom, Subject, ObservedValueOf 
 
 // eslint-disable-next-line no-restricted-imports
 import { LogoutReason } from "@bitwarden/auth/common";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 // TODO: When PM-14943 goes in, uncomment
 // import { AuthRequestAnsweringServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth-request-answering/auth-request-answering.service.abstraction";
 
@@ -34,7 +35,7 @@ describe("DefaultServerNotificationsService (multi-user)", () => {
   let webPushNotificationConnectionService: MockProxy<WebPushConnectionService>;
   // TODO: When PM-14943 goes in, uncomment
   // let authRequestAnsweringService: MockProxy<AuthRequestAnsweringServiceAbstraction>;
-  let configurationService: MockProxy<ConfigService>;
+  let configService: MockProxy<ConfigService>;
 
   let activeUserAccount$: BehaviorSubject<ObservedValueOf<AccountService["activeAccount$"]>>;
   let userAccounts$: BehaviorSubject<ObservedValueOf<AccountService["accounts$"]>>;
@@ -89,7 +90,7 @@ describe("DefaultServerNotificationsService (multi-user)", () => {
 
     signalRNotificationConnectionService = mock<SignalRConnectionService>();
     connectionSubjectByUser = new Map();
-    (signalRNotificationConnectionService.connect$ as unknown as jest.Mock).mockImplementation(
+    signalRNotificationConnectionService.connect$.mockImplementation(
       (userId: UserId, _url: string) => {
         if (!connectionSubjectByUser.has(userId)) {
           connectionSubjectByUser.set(userId, new Subject<any>());
@@ -100,7 +101,7 @@ describe("DefaultServerNotificationsService (multi-user)", () => {
 
     authService = mock<AuthService>();
     authenticationStatusByUser = new Map();
-    (authService.authStatusFor$ as unknown as jest.Mock).mockImplementation((userId: UserId) => {
+    authService.authStatusFor$.mockImplementation((userId: UserId) => {
       if (!authenticationStatusByUser.has(userId)) {
         authenticationStatusByUser.set(
           userId,
@@ -112,9 +113,7 @@ describe("DefaultServerNotificationsService (multi-user)", () => {
 
     webPushNotificationConnectionService = mock<WebPushConnectionService>();
     webPushSupportStatusByUser = new Map();
-    (
-      webPushNotificationConnectionService.supportStatus$ as unknown as jest.Mock
-    ).mockImplementation((userId: UserId) => {
+    webPushNotificationConnectionService.supportStatus$.mockImplementation((userId: UserId) => {
       if (!webPushSupportStatusByUser.has(userId)) {
         webPushSupportStatusByUser.set(
           userId,
@@ -127,8 +126,13 @@ describe("DefaultServerNotificationsService (multi-user)", () => {
     // TODO: When PM-14943 goes in, uncomment
     // authRequestAnsweringService = mock<AuthRequestAnsweringServiceAbstraction>();
 
-    configurationService = mock<ConfigService>();
-    configurationService.getFeatureFlag$.mockReturnValue(new BehaviorSubject(true) as any);
+    configService = mock<ConfigService>();
+    configService.getFeatureFlag$.mockImplementation((flag: FeatureFlag) => {
+      const flagValueByFlag: Partial<Record<FeatureFlag, boolean>> = {
+        [FeatureFlag.InactiveUserServerNotification]: true,
+      };
+      return new BehaviorSubject(flagValueByFlag[flag] ?? false) as any;
+    });
 
     defaultServerNotificationsService = new DefaultServerNotificationsService(
       mock<LogService>(),
@@ -142,7 +146,7 @@ describe("DefaultServerNotificationsService (multi-user)", () => {
       authService,
       webPushNotificationConnectionService,
       // authRequestAnsweringService,
-      // configurationService,
+      configService,
     );
   });
 
@@ -254,15 +258,13 @@ describe("DefaultServerNotificationsService (multi-user)", () => {
     const subscription = defaultServerNotificationsService.startListening();
 
     // Emit via SignalR connect$ for user2
-    connectionSubjectByUser
-      .get(mockUserId2)!
-      .next({
-        type: "ReceiveMessage",
-        message: new NotificationResponse({
-          type: NotificationType.AuthRequest,
-          payload: { id: "auth-id-2", userId: mockUserId2 },
-        }),
-      });
+    connectionSubjectByUser.get(mockUserId2)!.next({
+      type: "ReceiveMessage",
+      message: new NotificationResponse({
+        type: NotificationType.AuthRequest,
+        payload: { id: "auth-id-2", userId: mockUserId2 },
+      }),
+    });
 
     // allow async queue to drain
     await new Promise((resolve) => setTimeout(resolve, 0));

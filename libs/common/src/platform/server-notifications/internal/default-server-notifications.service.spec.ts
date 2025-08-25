@@ -4,6 +4,7 @@ import { BehaviorSubject, bufferCount, firstValueFrom, ObservedValueOf, Subject 
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
 import { LogoutReason } from "@bitwarden/auth/common";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 
 import { awaitAsync } from "../../../../spec";
 import { Matrix } from "../../../../spec/matrix";
@@ -14,6 +15,7 @@ import { NotificationType } from "../../../enums";
 import { NotificationResponse } from "../../../models/response/notification.response";
 import { UserId } from "../../../types/guid";
 import { AppIdService } from "../../abstractions/app-id.service";
+import { ConfigService } from "../../abstractions/config/config.service";
 import { Environment, EnvironmentService } from "../../abstractions/environment.service";
 import { LogService } from "../../abstractions/log.service";
 import { MessageSender } from "../../messaging";
@@ -38,6 +40,7 @@ describe("NotificationsService", () => {
   let signalRNotificationConnectionService: MockProxy<SignalRConnectionService>;
   let authService: MockProxy<AuthService>;
   let webPushNotificationConnectionService: MockProxy<WebPushConnectionService>;
+  let configService: MockProxy<ConfigService>;
 
   let activeAccount: BehaviorSubject<ObservedValueOf<AccountService["activeAccount$"]>>;
   let accounts: BehaviorSubject<ObservedValueOf<AccountService["accounts$"]>>;
@@ -65,6 +68,14 @@ describe("NotificationsService", () => {
     signalRNotificationConnectionService = mock<SignalRConnectionService>();
     authService = mock<AuthService>();
     webPushNotificationConnectionService = mock<WorkerWebPushConnectionService>();
+    configService = mock<ConfigService>();
+    // For these tests, use the active-user implementation (feature flag disabled)
+    configService.getFeatureFlag$.mockImplementation((flag: FeatureFlag) => {
+      const flagValueByFlag: Partial<Record<FeatureFlag, boolean>> = {
+        [FeatureFlag.InactiveUserServerNotification]: false,
+      };
+      return new BehaviorSubject(flagValueByFlag[flag] ?? false) as any;
+    });
 
     activeAccount = new BehaviorSubject<ObservedValueOf<AccountService["activeAccount$"]>>(null);
     accountService.activeAccount$ = activeAccount.asObservable();
@@ -108,6 +119,7 @@ describe("NotificationsService", () => {
       signalRNotificationConnectionService,
       authService,
       webPushNotificationConnectionService,
+      configService,
     );
   });
 

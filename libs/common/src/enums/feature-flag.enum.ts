@@ -53,6 +53,7 @@ export enum FeatureFlag {
 
   /* Platform */
   IpcChannelFramework = "ipc-channel-framework",
+  InactiveUserServerNotification = "pm-25130-receive-push-notifications-for-inactive-users",
 }
 
 export type AllowedFeatureFlagTypes = boolean | number | string;
@@ -112,6 +113,7 @@ export const DefaultFeatureFlagValue = {
 
   /* Platform */
   [FeatureFlag.IpcChannelFramework]: FALSE,
+  [FeatureFlag.InactiveUserServerNotification]: FALSE,
 } satisfies Record<FeatureFlag, AllowedFeatureFlagTypes>;
 
 export type DefaultFeatureFlagValueType = typeof DefaultFeatureFlagValue;

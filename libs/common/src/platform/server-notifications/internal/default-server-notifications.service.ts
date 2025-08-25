@@ -16,6 +16,8 @@ import {
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
 import { LogoutReason } from "@bitwarden/auth/common";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 
 import { AccountService } from "../../../auth/abstractions/account.service";
 import { AuthService } from "../../../auth/abstractions/auth.service";
@@ -57,22 +59,48 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
     private readonly signalRConnectionService: SignalRConnectionService,
     private readonly authService: AuthService,
     private readonly webPushConnectionService: WebPushConnectionService,
+    private readonly configService: ConfigService,
   ) {
-    this.notifications$ = this.accountService.accounts$.pipe(
-      map((accounts) => Object.keys(accounts) as UserId[]),
-      switchMap((userIds) => {
-        if (userIds.length === 0) {
-          return EMPTY;
-        }
+    this.notifications$ = this.configService
+      .getFeatureFlag$(FeatureFlag.InactiveUserServerNotification)
+      .pipe(
+        switchMap((inactiveUserServerNotificationEnabled) => {
+          if (inactiveUserServerNotificationEnabled) {
+            return this.accountService.accounts$.pipe(
+              map((accounts) => Object.keys(accounts) as UserId[]),
+              switchMap((userIds) => {
+                if (userIds.length === 0) {
+                  return EMPTY;
+                }
 
-        const streams = userIds.map((id) =>
-          this.userNotifications$(id).pipe(map((notification) => [notification, id] as const)),
-        );
+                const streams = userIds.map((id) =>
+                  this.userNotifications$(id).pipe(
+                    map((notification) => [notification, id] as const),
+                  ),
+                );
 
-        return merge(...streams);
-      }),
-      share(), // Multiple subscribers should only create a single connection to the server per subscriber
-    );
+                return merge(...streams);
+              }),
+            );
+          }
+
+          return this.accountService.activeAccount$.pipe(
+            map((account) => account?.id),
+            distinctUntilChanged(),
+            switchMap((activeAccountId) => {
+              if (activeAccountId == null) {
+                // We don't emit server-notifications for inactive accounts currently
+                return EMPTY;
+              }
+
+              return this.userNotifications$(activeAccountId).pipe(
+                map((notification) => [notification, activeAccountId] as const),
+              );
+            }),
+          );
+        }),
+        share(), // Multiple subscribers should only create a single connection to the server
+      );
   }
 
   /**
