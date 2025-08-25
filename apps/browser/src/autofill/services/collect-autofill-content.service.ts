@@ -1,6 +1,7 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
 import { Utils } from "@bitwarden/common/platform/misc/utils";
+
 import { AutofillFieldQualifier } from "../enums/autofill-field.enums";
 import AutofillField, { DomainMatch } from "../models/autofill-field";
 import AutofillForm from "../models/autofill-form";
@@ -36,7 +37,6 @@ import {
 } from "./abstractions/collect-autofill-content.service";
 import { DomElementVisibilityService } from "./abstractions/dom-element-visibility.service";
 import { DomQueryService } from "./abstractions/dom-query.service";
-import { P } from "@angular/cdk/portal-directives.d-BoG39gYN";
 
 export class CollectAutofillContentService implements CollectAutofillContentServiceInterface {
   private readonly sendExtensionMessage = sendExtensionMessage;
@@ -88,7 +88,6 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
    * @public
    */
   async getPageDetails(): Promise<AutofillPageDetails> {
-    console.log("getPageDetails");
     if (!this.mutationObserver) {
       this.setupMutationObserver();
     }
@@ -1486,11 +1485,8 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
    * @param pageDetails - The page details to use for the inline menu listeners
    */
   private setupOverlayListeners(pageDetails: AutofillPageDetails) {
-    console.log("setupOverlayListeners");
     if (this.autofillOverlayContentService) {
-      console.log("autofillOverlayContentService exists");
       this.autofillFieldElements.forEach((autofillField, formFieldElement) => {
-        console.log("loop for setupOverlayOnField", autofillField);
         this.setupOverlayOnField(formFieldElement, autofillField, pageDetails);
       });
     }
@@ -1508,7 +1504,6 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
     autofillField: AutofillField,
     pageDetails?: AutofillPageDetails,
   ) {
-    console.log("setupOverlayOnField");
     if (this.autofillOverlayContentService) {
       const autofillPageDetails =
         pageDetails ||
