@@ -184,16 +184,22 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
       return;
     }
 
-    // Allow-list of notification types that are safe to process for non-active users
-    const multiUserNotificationTypes = new Set<NotificationType>([NotificationType.AuthRequest]);
+    if (
+      await firstValueFrom(
+        this.configService.getFeatureFlag$(FeatureFlag.InactiveUserServerNotification),
+      )
+    ) {
+      // Allow-list of notification types that are safe to process for non-active users
+      const multiUserNotificationTypes = new Set<NotificationType>([NotificationType.AuthRequest]);
 
-    const activeAccountId = await firstValueFrom(
-      this.accountService.activeAccount$.pipe(map((a) => a?.id)),
-    );
+      const activeAccountId = await firstValueFrom(
+        this.accountService.activeAccount$.pipe(map((a) => a?.id)),
+      );
 
-    const isActiveUser = activeAccountId === userId;
-    if (!isActiveUser && !multiUserNotificationTypes.has(notification.type)) {
-      return;
+      const isActiveUser = activeAccountId === userId;
+      if (!isActiveUser && !multiUserNotificationTypes.has(notification.type)) {
+        return;
+      }
     }
 
     switch (notification.type) {
