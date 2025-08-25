@@ -7,7 +7,7 @@ MacOS has native APIs (similar to iOS) to allow Credential Managers to provide c
 
 We’ve written a Swift-based native autofill-extension. It’s bundled in the app-bundle in PlugIns, similar to the safari-extension.
 
-This swift extension currently communicates with our Electron app through IPC based on a unix socket. The IPC implementation is done in Rust and utilized through RustFFI + NAPI bindings.
+This swift extension currently communicates with our Electron app through IPC based on a unix socket. The IPC implementation is done in Rust and utilized through UniFFI + NAPI bindings.
 
 Footnotes:
 

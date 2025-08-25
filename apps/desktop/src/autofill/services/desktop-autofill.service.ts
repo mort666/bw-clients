@@ -155,7 +155,7 @@ export class DesktopAutofillService implements OnDestroy {
       }));
     }
 
-    this.logService.warning("Syncing autofill credentials", {
+    this.logService.info("Syncing autofill credentials", {
       fido2Credentials,
       passwordCredentials,
     });

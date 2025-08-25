@@ -313,7 +313,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
   }
 
   async updateCredential(cipher: CipherView): Promise<void> {
-    this.logService.warning("updateCredential");
+    this.logService.info("updateCredential");
     await firstValueFrom(
       this.accountService.activeAccount$.pipe(
         map(async (a) => {
