@@ -40,6 +40,7 @@ describe("NotificationsService", () => {
   let webPushNotificationConnectionService: MockProxy<WebPushConnectionService>;
 
   let activeAccount: BehaviorSubject<ObservedValueOf<AccountService["activeAccount$"]>>;
+  let accounts: BehaviorSubject<ObservedValueOf<AccountService["accounts$"]>>;
 
   let environment: BehaviorSubject<ObservedValueOf<EnvironmentService["environment$"]>>;
 
@@ -67,6 +68,9 @@ describe("NotificationsService", () => {
 
     activeAccount = new BehaviorSubject<ObservedValueOf<AccountService["activeAccount$"]>>(null);
     accountService.activeAccount$ = activeAccount.asObservable();
+
+    accounts = new BehaviorSubject<ObservedValueOf<AccountService["accounts$"]>>({} as any);
+    accountService.accounts$ = accounts.asObservable();
 
     environment = new BehaviorSubject<ObservedValueOf<EnvironmentService["environment$"]>>({
       getNotificationsUrl: () => "https://notifications.bitwarden.com",
@@ -113,8 +117,14 @@ describe("NotificationsService", () => {
   function emitActiveUser(userId: UserId) {
     if (userId == null) {
       activeAccount.next(null);
+      accounts.next({} as any);
     } else {
       activeAccount.next({ id: userId, email: "email", name: "Test Name", emailVerified: true });
+      const current = (accounts.getValue() as Record<string, any>) ?? {};
+      accounts.next({
+        ...current,
+        [userId]: { email: "email", name: "Test Name", emailVerified: true },
+      } as any);
     }
   }
 

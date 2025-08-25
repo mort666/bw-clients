@@ -4,7 +4,9 @@ import {
   distinctUntilChanged,
   EMPTY,
   filter,
+  firstValueFrom,
   map,
+  merge,
   mergeMap,
   Observable,
   share,
@@ -56,20 +58,20 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
     private readonly authService: AuthService,
     private readonly webPushConnectionService: WebPushConnectionService,
   ) {
-    this.notifications$ = this.accountService.activeAccount$.pipe(
-      map((account) => account?.id),
-      distinctUntilChanged(),
-      switchMap((activeAccountId) => {
-        if (activeAccountId == null) {
-          // We don't emit server-notifications for inactive accounts currently
+    this.notifications$ = this.accountService.accounts$.pipe(
+      map((accounts) => Object.keys(accounts) as UserId[]),
+      switchMap((userIds) => {
+        if (userIds.length === 0) {
           return EMPTY;
         }
 
-        return this.userNotifications$(activeAccountId).pipe(
-          map((notification) => [notification, activeAccountId] as const),
+        const streams = userIds.map((id) =>
+          this.userNotifications$(id).pipe(map((notification) => [notification, id] as const)),
         );
+
+        return merge(...streams);
       }),
-      share(), // Multiple subscribers should only create a single connection to the server
+      share(), // Multiple subscribers should only create a single connection to the server per subscriber
     );
   }
 
@@ -151,6 +153,18 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
 
     const payloadUserId = notification.payload?.userId || notification.payload?.UserId;
     if (payloadUserId != null && payloadUserId !== userId) {
+      return;
+    }
+
+    // Allow-list of notification types that are safe to process for non-active users
+    const multiUserNotificationTypes = new Set<NotificationType>([NotificationType.AuthRequest]);
+
+    const activeAccountId = await firstValueFrom(
+      this.accountService.activeAccount$.pipe(map((a) => a?.id)),
+    );
+
+    const isActiveUser = activeAccountId === userId;
+    if (!isActiveUser && !multiUserNotificationTypes.has(notification.type)) {
       return;
     }
 
