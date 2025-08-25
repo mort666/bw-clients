@@ -199,18 +199,6 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     autofillFieldData: AutofillField,
     pageDetails: AutofillPageDetails,
   ) {
-    console.log("SETUP OVERLAY LISTENERS");
-
-    console.log("currentlyInSandboxedIframe()", currentlyInSandboxedIframe());
-    console.log(
-      "this.formFieldElements.has(formFieldElement)",
-      this.formFieldElements.has(formFieldElement),
-    );
-    console.log(
-      "this.isIgnoredField(autofillFieldData, pageDetails)",
-      this.isIgnoredField(autofillFieldData, pageDetails),
-    );
-
     if (
       currentlyInSandboxedIframe() ||
       this.formFieldElements.has(formFieldElement) ||
@@ -218,11 +206,11 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
     ) {
       return;
     }
-    console.log("IS IT HIDDEN");
+
     if (this.isHiddenField(formFieldElement, autofillFieldData)) {
       return;
     }
-    console.log("SETUP ON QUALIFIED FIELD");
+
     await this.setupOverlayListenersOnQualifiedField(formFieldElement, autofillFieldData);
   }
 
@@ -1063,8 +1051,6 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
   ): { result: boolean; message: string } {
     const message = "isIgnoredField";
 
-    console.log(message, { autofillFieldData });
-
     const ignoredTypeResult = Array.from(this.ignoredFieldTypes).find(
       (v) => v === autofillFieldData.type,
     );
@@ -1132,7 +1118,6 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
    * @param autofillFieldData - Autofill field data captured from the form field element.
    */
   private async setQualifiedLoginFillType(autofillFieldData: AutofillField) {
-    console.log("setQualifiedLoginFillType");
     autofillFieldData.inlineMenuFillType = CipherType.Login;
     autofillFieldData.showPasskeys = autofillFieldData.autoCompleteType.includes("webauthn");
 
