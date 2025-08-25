@@ -3,6 +3,7 @@ import { of } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
+import { AuthServerNotificationTags } from "@bitwarden/common/auth/enums/auth-server-notification-tags";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
 import { ForceSetPasswordReason } from "@bitwarden/common/auth/models/domain/force-set-password-reason";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -11,7 +12,6 @@ import { ActionsService } from "@bitwarden/common/platform/actions";
 import {
   ButtonLocation,
   SystemNotificationEvent,
-  SystemNotificationPrefixes,
   SystemNotificationsService,
 } from "@bitwarden/common/platform/system-notifications/system-notifications.service";
 import { UserId } from "@bitwarden/user-core";
@@ -109,7 +109,7 @@ describe("AuthRequestAnsweringService", () => {
       expect(i18nService.t).toHaveBeenCalledWith("accountAccessRequested");
       expect(i18nService.t).toHaveBeenCalledWith("confirmAccessAttempt", "user@example.com");
       expect(systemNotificationsService.create).toHaveBeenCalledWith({
-        id: `${SystemNotificationPrefixes.AuthRequest}_${authRequestId}`,
+        id: `${AuthServerNotificationTags.AuthRequest}_${authRequestId}`,
         title: "accountAccessRequested",
         body: "confirmAccessAttempt:user@example.com",
         buttons: [],
