@@ -226,7 +226,6 @@ export class InlineMenuFieldQualificationService
    * @param pageDetails - The details of the page that the field is on.
    */
   isFieldForLoginForm(field: AutofillField, pageDetails: AutofillPageDetails): boolean {
-    console.log("isFieldForLoginForm", field);
     /**
      * Totp inline menu is available only for premium users.
      */
@@ -238,14 +237,9 @@ export class InlineMenuFieldQualificationService
         return true;
       }
     }
-    console.log("isFieldForLoginForm // premium disabled or not totp field w password type");
 
     const isCurrentPasswordField = this.isCurrentPasswordField(field);
     if (isCurrentPasswordField) {
-      console.log(
-        "isFieldForLoginForm // current password delegated to isPasswordFieldForLoginForm",
-        this.isPasswordFieldForLoginForm(field, pageDetails),
-      );
       return this.isPasswordFieldForLoginForm(field, pageDetails).result;
     }
 
@@ -253,7 +247,6 @@ export class InlineMenuFieldQualificationService
     if (!isUsernameField) {
       return false;
     }
-    console.log("// was username field, delegated to isUsernameFieldForLoginForm");
     return this.isUsernameFieldForLoginForm(field, pageDetails);
   }
 
@@ -360,21 +353,10 @@ export class InlineMenuFieldQualificationService
    * @param _pageDetails - Currently unused, will likely be required in the future
    */
   isFieldForIdentityForm(field: AutofillField, _pageDetails: AutofillPageDetails): boolean {
-    console.log(
-      "isFieldForIdentityForm // isExcludedFieldType // ",
-      this.isExcludedFieldType(field, this.excludedAutofillFieldTypesSet),
-    );
-
     if (this.isExcludedFieldType(field, this.excludedAutofillFieldTypesSet)) {
       return false;
     }
-    console.log({
-      isFieldForIdentityEmail: this.isFieldForIdentityEmail(field),
-      fieldContainsAutocompleteValues: this.fieldContainsAutocompleteValues(
-        field,
-        this.identityAutocompleteValues,
-      ),
-    });
+
     return (
       // Recognize explicit identity email fields (like id="new-email")
       this.isFieldForIdentityEmail(field) ||
@@ -392,7 +374,6 @@ export class InlineMenuFieldQualificationService
     field: AutofillField,
     pageDetails: AutofillPageDetails,
   ): { result: boolean; message: string } {
-    console.log({ field });
     const ns = "isPasswordFieldForLoginForm //";
 
     if (field.domainMatch && field.domainMatch.fieldType === AutofillFieldQualifier.password) {
@@ -499,8 +480,6 @@ export class InlineMenuFieldQualificationService
     field: AutofillField,
     pageDetails: AutofillPageDetails,
   ): boolean {
-    console.log({ field });
-
     if (field.domainMatch && field.domainMatch.fieldType === "identityEmail") {
       return true;
     }
