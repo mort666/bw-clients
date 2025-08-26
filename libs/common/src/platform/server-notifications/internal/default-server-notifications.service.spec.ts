@@ -73,6 +73,7 @@ describe("NotificationsService", () => {
     configService.getFeatureFlag$.mockImplementation((flag: FeatureFlag) => {
       const flagValueByFlag: Partial<Record<FeatureFlag, boolean>> = {
         [FeatureFlag.InactiveUserServerNotification]: false,
+        [FeatureFlag.PushNotificationsWhenLocked]: true,
       };
       return new BehaviorSubject(flagValueByFlag[flag] ?? false) as any;
     });
@@ -249,10 +250,9 @@ describe("NotificationsService", () => {
   });
 
   it.each([
-    // Temporarily rolling back server notifications being connected while locked
-    // { initialStatus: AuthenticationStatus.Locked, updatedStatus: AuthenticationStatus.Unlocked },
-    // { initialStatus: AuthenticationStatus.Unlocked, updatedStatus: AuthenticationStatus.Locked },
-    // { initialStatus: AuthenticationStatus.Locked, updatedStatus: AuthenticationStatus.Locked },
+    { initialStatus: AuthenticationStatus.Locked, updatedStatus: AuthenticationStatus.Unlocked },
+    { initialStatus: AuthenticationStatus.Unlocked, updatedStatus: AuthenticationStatus.Locked },
+    { initialStatus: AuthenticationStatus.Locked, updatedStatus: AuthenticationStatus.Locked },
     { initialStatus: AuthenticationStatus.Unlocked, updatedStatus: AuthenticationStatus.Unlocked },
   ])(
     "does not re-connect when the user transitions from $initialStatus to $updatedStatus",
@@ -277,11 +277,7 @@ describe("NotificationsService", () => {
     },
   );
 
-  it.each([
-    // Temporarily disabling server notifications connecting while in a locked state
-    // AuthenticationStatus.Locked,
-    AuthenticationStatus.Unlocked,
-  ])(
+  it.each([AuthenticationStatus.Locked, AuthenticationStatus.Unlocked])(
     "connects when a user transitions from logged out to %s",
     async (newStatus: AuthenticationStatus) => {
       emitActiveUser(mockUser1);

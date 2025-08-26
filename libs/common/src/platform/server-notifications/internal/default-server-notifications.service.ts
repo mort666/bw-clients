@@ -17,7 +17,6 @@ import {
 // eslint-disable-next-line no-restricted-imports
 import { LogoutReason } from "@bitwarden/auth/common";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
-import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 
 import { AccountService } from "../../../auth/abstractions/account.service";
 import { AuthService } from "../../../auth/abstractions/auth.service";
@@ -32,6 +31,7 @@ import {
 import { UserId } from "../../../types/guid";
 import { SyncService } from "../../../vault/abstractions/sync/sync.service.abstraction";
 import { AppIdService } from "../../abstractions/app-id.service";
+import { ConfigService } from "../../abstractions/config/config.service";
 import { EnvironmentService } from "../../abstractions/environment.service";
 import { LogService } from "../../abstractions/log.service";
 import { MessagingService } from "../../abstractions/messaging.service";
@@ -162,14 +162,25 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
     );
   }
 
-  // This method name is a lie currently as we also have an access token
-  // when locked, this is eventually where we want to be but it increases load
-  // on signalR so we are rolling back until we can move the load of browser to
-  // web push.
   private hasAccessToken$(userId: UserId) {
-    return this.authService.authStatusFor$(userId).pipe(
-      map((authStatus) => authStatus === AuthenticationStatus.Unlocked),
-      distinctUntilChanged(),
+    return this.configService.getFeatureFlag$(FeatureFlag.PushNotificationsWhenLocked).pipe(
+      switchMap((featureFlagEnabled) => {
+        if (featureFlagEnabled) {
+          return this.authService.authStatusFor$(userId).pipe(
+            map(
+              (authStatus) =>
+                authStatus === AuthenticationStatus.Locked ||
+                authStatus === AuthenticationStatus.Unlocked,
+            ),
+            distinctUntilChanged(),
+          );
+        } else {
+          return this.authService.authStatusFor$(userId).pipe(
+            map((authStatus) => authStatus === AuthenticationStatus.Unlocked),
+            distinctUntilChanged(),
+          );
+        }
+      }),
     );
   }
 
