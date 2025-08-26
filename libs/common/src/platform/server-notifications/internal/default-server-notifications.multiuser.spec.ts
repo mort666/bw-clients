@@ -4,6 +4,9 @@ import { BehaviorSubject, bufferCount, firstValueFrom, Subject, ObservedValueOf 
 // eslint-disable-next-line no-restricted-imports
 import { LogoutReason } from "@bitwarden/auth/common";
 import { AuthRequestAnsweringServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth-request-answering/auth-request-answering.service.abstraction";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+// TODO: When PM-14943 goes in, uncomment
+// import { AuthRequestAnsweringServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth-request-answering/auth-request-answering.service.abstraction";
 
 import { AccountService } from "../../../auth/abstractions/account.service";
 import { AuthService } from "../../../auth/abstractions/auth.service";
@@ -17,9 +20,7 @@ import { Environment, EnvironmentService } from "../../abstractions/environment.
 import { LogService } from "../../abstractions/log.service";
 import { MessagingService } from "../../abstractions/messaging.service";
 
-import {
-  DefaultServerNotificationsService,
-} from "./default-server-notifications.service";
+import { DefaultServerNotificationsService } from "./default-server-notifications.service";
 import { SignalRConnectionService } from "./signalr-connection.service";
 import { WebPushConnectionService, WebPushConnector } from "./webpush-connection.service";
 
@@ -34,7 +35,7 @@ describe("DefaultServerNotificationsService (multi-user)", () => {
   let authService: MockProxy<AuthService>;
   let webPushNotificationConnectionService: MockProxy<WebPushConnectionService>;
   let authRequestAnsweringService: MockProxy<AuthRequestAnsweringServiceAbstraction>;
-  let configurationService: MockProxy<ConfigService>;
+  let configService: MockProxy<ConfigService>;
 
   let activeUserAccount$: BehaviorSubject<ObservedValueOf<AccountService["activeAccount$"]>>;
   let userAccounts$: BehaviorSubject<ObservedValueOf<AccountService["accounts$"]>>;
@@ -82,7 +83,7 @@ describe("DefaultServerNotificationsService (multi-user)", () => {
 
     signalRNotificationConnectionService = mock<SignalRConnectionService>();
     connectionSubjectByUser = new Map();
-    (signalRNotificationConnectionService.connect$ as unknown as jest.Mock).mockImplementation(
+    signalRNotificationConnectionService.connect$.mockImplementation(
       (userId: UserId, _url: string) => {
         if (!connectionSubjectByUser.has(userId)) {
           connectionSubjectByUser.set(userId, new Subject<any>());
@@ -93,16 +94,19 @@ describe("DefaultServerNotificationsService (multi-user)", () => {
 
     authService = mock<AuthService>();
     authenticationStatusByUser = new Map();
-    (authService.authStatusFor$ as unknown as jest.Mock).mockImplementation((userId: UserId) => {
+    authService.authStatusFor$.mockImplementation((userId: UserId) => {
       if (!authenticationStatusByUser.has(userId)) {
-        authenticationStatusByUser.set(userId, new BehaviorSubject<AuthenticationStatus>(AuthenticationStatus.LoggedOut));
+        authenticationStatusByUser.set(
+          userId,
+          new BehaviorSubject<AuthenticationStatus>(AuthenticationStatus.LoggedOut),
+        );
       }
       return authenticationStatusByUser.get(userId)!.asObservable();
     });
 
     webPushNotificationConnectionService = mock<WebPushConnectionService>();
     webPushSupportStatusByUser = new Map();
-    (webPushNotificationConnectionService.supportStatus$ as unknown as jest.Mock).mockImplementation(
+    (webPushNotificationConnectionService.supportStatus$).mockImplementation(
       (userId: UserId) => {
         if (!webPushSupportStatusByUser.has(userId)) {
           webPushSupportStatusByUser.set(userId, new BehaviorSubject({ type: "not-supported", reason: "init" } as any));
@@ -113,8 +117,14 @@ describe("DefaultServerNotificationsService (multi-user)", () => {
 
     authRequestAnsweringService = mock<AuthRequestAnsweringServiceAbstraction>();
 
-    configurationService = mock<ConfigService>();
-    configurationService.getFeatureFlag$.mockReturnValue(new BehaviorSubject(true) as any);
+    configService = mock<ConfigService>();
+    configService.getFeatureFlag$.mockImplementation((flag: FeatureFlag) => {
+      const flagValueByFlag: Partial<Record<FeatureFlag, boolean>> = {
+        [FeatureFlag.InactiveUserServerNotification]: true,
+        [FeatureFlag.PushNotificationsWhenLocked]: true,
+      };
+      return new BehaviorSubject(flagValueByFlag[flag] ?? false) as any;
+    });
 
     defaultServerNotificationsService = new DefaultServerNotificationsService(
       mock<LogService>(),
@@ -128,7 +138,7 @@ describe("DefaultServerNotificationsService (multi-user)", () => {
       authService,
       webPushNotificationConnectionService,
       authRequestAnsweringService,
-      configurationService,
+      configService,
     );
   });
 
@@ -210,9 +220,13 @@ describe("DefaultServerNotificationsService (multi-user)", () => {
     const subscription = defaultServerNotificationsService.startListening();
 
     // Emit via SignalR connect$ for user2
-    connectionSubjectByUser
-      .get(mockUserId2)!
-      .next({ type: "ReceiveMessage", message: new NotificationResponse({ type: NotificationType.AuthRequest, payload: { id: "auth-id-2", userId: mockUserId2 } }) });
+    connectionSubjectByUser.get(mockUserId2)!.next({
+      type: "ReceiveMessage",
+      message: new NotificationResponse({
+        type: NotificationType.AuthRequest,
+        payload: { id: "auth-id-2", userId: mockUserId2 },
+      }),
+    });
 
     // allow async queue to drain
     await new Promise((resolve) => setTimeout(resolve, 0));

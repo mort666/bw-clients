@@ -18,7 +18,6 @@ import {
 import { LogoutReason } from "@bitwarden/auth/common";
 import { AuthRequestAnsweringServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth-request-answering/auth-request-answering.service.abstraction";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
-import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 
 import { AccountService } from "../../../auth/abstractions/account.service";
 import { AuthService } from "../../../auth/abstractions/auth.service";
@@ -33,6 +32,7 @@ import {
 import { UserId } from "../../../types/guid";
 import { SyncService } from "../../../vault/abstractions/sync/sync.service.abstraction";
 import { AppIdService } from "../../abstractions/app-id.service";
+import { ConfigService } from "../../abstractions/config/config.service";
 import { EnvironmentService } from "../../abstractions/environment.service";
 import { LogService } from "../../abstractions/log.service";
 import { MessagingService } from "../../abstractions/messaging.service";
@@ -63,21 +63,46 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
     private readonly authRequestAnsweringService: AuthRequestAnsweringServiceAbstraction,
     private readonly configService: ConfigService,
   ) {
-    this.notifications$ = this.accountService.accounts$.pipe(
-      map((accounts) => Object.keys(accounts) as UserId[]),
-      switchMap((userIds) => {
-        if (userIds.length === 0) {
-          return EMPTY;
-        }
+    this.notifications$ = this.configService
+      .getFeatureFlag$(FeatureFlag.InactiveUserServerNotification)
+      .pipe(
+        switchMap((inactiveUserServerNotificationEnabled) => {
+          if (inactiveUserServerNotificationEnabled) {
+            return this.accountService.accounts$.pipe(
+              map((accounts) => Object.keys(accounts) as UserId[]),
+              switchMap((userIds) => {
+                if (userIds.length === 0) {
+                  return EMPTY;
+                }
 
-        const streams = userIds.map((id) =>
-          this.userNotifications$(id).pipe(map((notification) => [notification, id] as const)),
-        );
+                const streams = userIds.map((id) =>
+                  this.userNotifications$(id).pipe(
+                    map((notification) => [notification, id] as const),
+                  ),
+                );
 
-        return merge(...streams);
-      }),
-      share(), // Multiple subscribers should only create a single connection to the server per subscriber
-    );
+                return merge(...streams);
+              }),
+            );
+          }
+
+          return this.accountService.activeAccount$.pipe(
+            map((account) => account?.id),
+            distinctUntilChanged(),
+            switchMap((activeAccountId) => {
+              if (activeAccountId == null) {
+                // We don't emit server-notifications for inactive accounts currently
+                return EMPTY;
+              }
+
+              return this.userNotifications$(activeAccountId).pipe(
+                map((notification) => [notification, activeAccountId] as const),
+              );
+            }),
+          );
+        }),
+        share(), // Multiple subscribers should only create a single connection to the server
+      );
   }
 
   /**
@@ -139,14 +164,25 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
     );
   }
 
-  // This method name is a lie currently as we also have an access token
-  // when locked, this is eventually where we want to be but it increases load
-  // on signalR so we are rolling back until we can move the load of browser to
-  // web push.
   private hasAccessToken$(userId: UserId) {
-    return this.authService.authStatusFor$(userId).pipe(
-      map((authStatus) => authStatus === AuthenticationStatus.Unlocked),
-      distinctUntilChanged(),
+    return this.configService.getFeatureFlag$(FeatureFlag.PushNotificationsWhenLocked).pipe(
+      switchMap((featureFlagEnabled) => {
+        if (featureFlagEnabled) {
+          return this.authService.authStatusFor$(userId).pipe(
+            map(
+              (authStatus) =>
+                authStatus === AuthenticationStatus.Locked ||
+                authStatus === AuthenticationStatus.Unlocked,
+            ),
+            distinctUntilChanged(),
+          );
+        } else {
+          return this.authService.authStatusFor$(userId).pipe(
+            map((authStatus) => authStatus === AuthenticationStatus.Unlocked),
+            distinctUntilChanged(),
+          );
+        }
+      }),
     );
   }
 
@@ -159,6 +195,24 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
     const payloadUserId = notification.payload?.userId || notification.payload?.UserId;
     if (payloadUserId != null && payloadUserId !== userId) {
       return;
+    }
+
+    if (
+      await firstValueFrom(
+        this.configService.getFeatureFlag$(FeatureFlag.InactiveUserServerNotification),
+      )
+    ) {
+      // Allow-list of notification types that are safe to process for non-active users
+      const multiUserNotificationTypes = new Set<NotificationType>([NotificationType.AuthRequest]);
+
+      const activeAccountId = await firstValueFrom(
+        this.accountService.activeAccount$.pipe(map((a) => a?.id)),
+      );
+
+      const isActiveUser = activeAccountId === userId;
+      if (!isActiveUser && !multiUserNotificationTypes.has(notification.type)) {
+        return;
+      }
     }
 
     // Allow-list of notification types that are safe to process for non-active users
