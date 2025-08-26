@@ -5,7 +5,7 @@ import { BehaviorSubject, bufferCount, firstValueFrom, ObservedValueOf, Subject 
 // eslint-disable-next-line no-restricted-imports
 import { LogoutReason } from "@bitwarden/auth/common";
 import { AuthRequestAnsweringServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth-request-answering/auth-request-answering.service.abstraction";
-import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 
 import { awaitAsync } from "../../../../spec";
 import { Matrix } from "../../../../spec/matrix";
@@ -16,6 +16,7 @@ import { NotificationType } from "../../../enums";
 import { NotificationResponse } from "../../../models/response/notification.response";
 import { UserId } from "../../../types/guid";
 import { AppIdService } from "../../abstractions/app-id.service";
+import { ConfigService } from "../../abstractions/config/config.service";
 import { Environment, EnvironmentService } from "../../abstractions/environment.service";
 import { LogService } from "../../abstractions/log.service";
 import { MessageSender } from "../../messaging";
@@ -70,6 +71,14 @@ describe("NotificationsService", () => {
     webPushNotificationConnectionService = mock<WorkerWebPushConnectionService>();
     authRequestAnsweringService = mock<AuthRequestAnsweringServiceAbstraction>();
     configService = mock<ConfigService>();
+
+    // For these tests, use the active-user implementation (feature flag disabled)
+    configService.getFeatureFlag$.mockImplementation((flag: FeatureFlag) => {
+      const flagValueByFlag: Partial<Record<FeatureFlag, boolean>> = {
+        [FeatureFlag.PushNotificationsWhenLocked]: true,
+      };
+      return new BehaviorSubject(flagValueByFlag[flag] ?? false) as any;
+    });
 
     activeAccount = new BehaviorSubject<ObservedValueOf<AccountService["activeAccount$"]>>(null);
     accountService.activeAccount$ = activeAccount.asObservable();
@@ -235,10 +244,9 @@ describe("NotificationsService", () => {
   });
 
   it.each([
-    // Temporarily rolling back server notifications being connected while locked
-    // { initialStatus: AuthenticationStatus.Locked, updatedStatus: AuthenticationStatus.Unlocked },
-    // { initialStatus: AuthenticationStatus.Unlocked, updatedStatus: AuthenticationStatus.Locked },
-    // { initialStatus: AuthenticationStatus.Locked, updatedStatus: AuthenticationStatus.Locked },
+    { initialStatus: AuthenticationStatus.Locked, updatedStatus: AuthenticationStatus.Unlocked },
+    { initialStatus: AuthenticationStatus.Unlocked, updatedStatus: AuthenticationStatus.Locked },
+    { initialStatus: AuthenticationStatus.Locked, updatedStatus: AuthenticationStatus.Locked },
     { initialStatus: AuthenticationStatus.Unlocked, updatedStatus: AuthenticationStatus.Unlocked },
   ])(
     "does not re-connect when the user transitions from $initialStatus to $updatedStatus",
@@ -263,11 +271,7 @@ describe("NotificationsService", () => {
     },
   );
 
-  it.each([
-    // Temporarily disabling server notifications connecting while in a locked state
-    // AuthenticationStatus.Locked,
-    AuthenticationStatus.Unlocked,
-  ])(
+  it.each([AuthenticationStatus.Locked, AuthenticationStatus.Unlocked])(
     "connects when a user transitions from logged out to %s",
     async (newStatus: AuthenticationStatus) => {
       emitActiveUser(mockUser1);
