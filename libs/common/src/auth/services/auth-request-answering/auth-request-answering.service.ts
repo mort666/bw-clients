@@ -2,6 +2,7 @@ import { firstValueFrom } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
+import { AuthServerNotificationTags } from "@bitwarden/common/auth/enums/auth-server-notification-tags";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
 import { ForceSetPasswordReason } from "@bitwarden/common/auth/models/domain/force-set-password-reason";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
@@ -13,7 +14,6 @@ import { ActionsService } from "@bitwarden/common/platform/actions";
 import {
   ButtonLocation,
   SystemNotificationEvent,
-  SystemNotificationPrefixes,
   SystemNotificationsService,
 } from "@bitwarden/common/platform/system-notifications/system-notifications.service";
 import { UserId } from "@bitwarden/user-core";
@@ -112,7 +112,7 @@ export class AuthRequestAnsweringService implements AuthRequestAnsweringServiceA
       const emailForUser = accounts[userId].email;
 
       await this.systemNotificationsService.create({
-        id: `${SystemNotificationPrefixes.AuthRequest}_${authRequestId}`,
+        id: `${AuthServerNotificationTags.AuthRequest}_${authRequestId}`,
         title: this.i18nService.t("accountAccessRequested"),
         body: this.i18nService.t("confirmAccessAttempt", emailForUser),
         buttons: [],

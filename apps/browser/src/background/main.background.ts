@@ -38,6 +38,7 @@ import { SsoLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/
 import { TokenService as TokenServiceAbstraction } from "@bitwarden/common/auth/abstractions/token.service";
 import { UserVerificationApiServiceAbstraction } from "@bitwarden/common/auth/abstractions/user-verification/user-verification-api.service.abstraction";
 import { UserVerificationService as UserVerificationServiceAbstraction } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
+import { AuthServerNotificationTags } from "@bitwarden/common/auth/enums/auth-server-notification-tags";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
 import { AccountServiceImplementation } from "@bitwarden/common/auth/services/account.service";
 import { AuthRequestAnsweringService } from "@bitwarden/common/auth/services/auth-request-answering/auth-request-answering.service";
@@ -154,7 +155,6 @@ import { SyncService } from "@bitwarden/common/platform/sync";
 // eslint-disable-next-line no-restricted-imports -- Needed for service creation
 import { DefaultSyncService } from "@bitwarden/common/platform/sync/internal";
 import { SystemNotificationsService } from "@bitwarden/common/platform/system-notifications/";
-import { SystemNotificationPrefixes } from "@bitwarden/common/platform/system-notifications/system-notifications.service";
 import { UnsupportedSystemNotificationsService } from "@bitwarden/common/platform/system-notifications/unsupported-system-notifications.service";
 import { DefaultThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
 import { ApiService } from "@bitwarden/common/services/api.service";
@@ -1798,7 +1798,7 @@ export default class MainBackground {
   initNotificationSubscriptions() {
     this.systemNotificationService.notificationClicked$
       .pipe(
-        filter((n) => n.id.startsWith(SystemNotificationPrefixes.AuthRequest + "_")),
+        filter((n) => n.id.startsWith(AuthServerNotificationTags.AuthRequest + "_")),
         map((n) => ({ event: n, authRequestId: n.id.split("_")[1] })),
         switchMap(({ event }) =>
           this.authRequestAnsweringService.handleAuthRequestNotificationClicked(event),
