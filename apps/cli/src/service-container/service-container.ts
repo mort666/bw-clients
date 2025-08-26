@@ -88,10 +88,7 @@ import {
 import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
 import { SdkService } from "@bitwarden/common/platform/abstractions/sdk/sdk.service";
 import { KeySuffixOptions, LogLevelType } from "@bitwarden/common/platform/enums";
-import { StateFactory } from "@bitwarden/common/platform/factories/state-factory";
 import { MessageSender } from "@bitwarden/common/platform/messaging";
-import { Account } from "@bitwarden/common/platform/models/domain/account";
-import { GlobalState } from "@bitwarden/common/platform/models/domain/global-state";
 import {
   TaskSchedulerService,
   DefaultTaskSchedulerService,
@@ -108,26 +105,8 @@ import { MigrationRunner } from "@bitwarden/common/platform/services/migration-r
 import { DefaultSdkClientFactory } from "@bitwarden/common/platform/services/sdk/default-sdk-client-factory";
 import { DefaultSdkService } from "@bitwarden/common/platform/services/sdk/default-sdk.service";
 import { NoopSdkClientFactory } from "@bitwarden/common/platform/services/sdk/noop-sdk-client-factory";
-import { StateService } from "@bitwarden/common/platform/services/state.service";
 import { StorageServiceProvider } from "@bitwarden/common/platform/services/storage-service.provider";
 import { UserAutoUnlockKeyService } from "@bitwarden/common/platform/services/user-auto-unlock-key.service";
-import {
-  ActiveUserStateProvider,
-  DerivedStateProvider,
-  GlobalStateProvider,
-  SingleUserStateProvider,
-  StateEventRunnerService,
-  StateProvider,
-} from "@bitwarden/common/platform/state";
-/* eslint-disable import/no-restricted-paths -- We need the implementation to inject, but generally these should not be accessed */
-import { DefaultActiveUserStateProvider } from "@bitwarden/common/platform/state/implementations/default-active-user-state.provider";
-import { DefaultDerivedStateProvider } from "@bitwarden/common/platform/state/implementations/default-derived-state.provider";
-import { DefaultGlobalStateProvider } from "@bitwarden/common/platform/state/implementations/default-global-state.provider";
-import { DefaultSingleUserStateProvider } from "@bitwarden/common/platform/state/implementations/default-single-user-state.provider";
-import { DefaultStateProvider } from "@bitwarden/common/platform/state/implementations/default-state.provider";
-import { StateEventRegistrarService } from "@bitwarden/common/platform/state/state-event-registrar.service";
-import { MemoryStorageService as MemoryStorageServiceForStateProviders } from "@bitwarden/common/platform/state/storage/memory-storage.service";
-/* eslint-enable import/no-restricted-paths */
 import { SyncService } from "@bitwarden/common/platform/sync";
 // eslint-disable-next-line no-restricted-imports -- Needed for service construction
 import { DefaultSyncService } from "@bitwarden/common/platform/sync/internal";
@@ -175,6 +154,26 @@ import {
 } from "@bitwarden/key-management";
 import { NodeCryptoFunctionService } from "@bitwarden/node/services/node-crypto-function.service";
 import {
+  ActiveUserStateProvider,
+  DerivedStateProvider,
+  GlobalStateProvider,
+  SingleUserStateProvider,
+  StateEventRunnerService,
+  StateProvider,
+  StateService,
+} from "@bitwarden/state";
+import {
+  DefaultActiveUserStateProvider,
+  DefaultDerivedStateProvider,
+  DefaultGlobalStateProvider,
+  DefaultSingleUserStateProvider,
+  DefaultStateEventRegistrarService,
+  DefaultStateEventRunnerService,
+  DefaultStateProvider,
+  DefaultStateService,
+} from "@bitwarden/state-internal";
+import { SerializedMemoryStorageService } from "@bitwarden/storage-core";
+import {
   IndividualVaultExportService,
   IndividualVaultExportServiceAbstraction,
   OrganizationVaultExportService,
@@ -211,7 +210,8 @@ export class ServiceContainer {
   storageService: LowdbStorageService;
   secureStorageService: NodeEnvSecureStorageService;
   memoryStorageService: MemoryStorageService;
-  memoryStorageForStateProviders: MemoryStorageServiceForStateProviders;
+  memoryStorageForStateProviders: SerializedMemoryStorageService;
+  migrationRunner: MigrationRunner;
   i18nService: I18nService;
   platformUtilsService: CliPlatformUtilsService;
   keyService: KeyService;
@@ -340,7 +340,7 @@ export class ServiceContainer {
     );
 
     this.memoryStorageService = new MemoryStorageService();
-    this.memoryStorageForStateProviders = new MemoryStorageServiceForStateProviders();
+    this.memoryStorageForStateProviders = new SerializedMemoryStorageService();
 
     const storageServiceProvider = new StorageServiceProvider(
       this.storageService,
@@ -352,12 +352,12 @@ export class ServiceContainer {
       this.logService,
     );
 
-    const stateEventRegistrarService = new StateEventRegistrarService(
+    const stateEventRegistrarService = new DefaultStateEventRegistrarService(
       this.globalStateProvider,
       storageServiceProvider,
     );
 
-    this.stateEventRunnerService = new StateEventRunnerService(
+    this.stateEventRunnerService = new DefaultStateEventRunnerService(
       this.globalStateProvider,
       storageServiceProvider,
     );
@@ -379,8 +379,10 @@ export class ServiceContainer {
       this.singleUserStateProvider,
     );
 
+    const activeUserAccessor = new DefaultActiveUserAccessor(this.accountService);
+
     this.activeUserStateProvider = new DefaultActiveUserStateProvider(
-      new DefaultActiveUserAccessor(this.accountService),
+      activeUserAccessor,
       this.singleUserStateProvider,
     );
 
@@ -412,23 +414,17 @@ export class ServiceContainer {
       logoutCallback,
     );
 
-    const migrationRunner = new MigrationRunner(
+    this.migrationRunner = new MigrationRunner(
       this.storageService,
       this.logService,
       new MigrationBuilderService(),
       ClientType.Cli,
     );
 
-    this.stateService = new StateService(
+    this.stateService = new DefaultStateService(
       this.storageService,
       this.secureStorageService,
-      this.memoryStorageService,
-      this.logService,
-      new StateFactory(GlobalState, Account),
-      this.accountService,
-      this.environmentService,
-      this.tokenService,
-      migrationRunner,
+      activeUserAccessor,
     );
 
     this.kdfConfigService = new DefaultKdfConfigService(this.stateProvider);
@@ -604,6 +600,7 @@ export class ServiceContainer {
       this.accountService,
       this.kdfConfigService,
       this.keyService,
+      this.stateProvider,
       customUserAgent,
     );
 
@@ -713,7 +710,6 @@ export class ServiceContainer {
       this.apiService,
       this.i18nService,
       this.searchService,
-      this.stateService,
       this.autofillSettingsService,
       this.encryptService,
       this.cipherFileUploadService,
@@ -764,6 +760,7 @@ export class ServiceContainer {
       this.messagingService,
       this.searchService,
       this.stateService,
+      this.tokenService,
       this.authService,
       this.vaultTimeoutSettingsService,
       this.stateEventRunnerService,
@@ -790,7 +787,6 @@ export class ServiceContainer {
       this.sendService,
       this.logService,
       this.keyConnectorService,
-      this.stateService,
       this.providerService,
       this.folderApiService,
       this.organizationService,
@@ -903,7 +899,8 @@ export class ServiceContainer {
 
     await this.stateEventRunnerService.handleEvent("logout", userId as UserId);
 
-    await this.stateService.clean();
+    await this.stateService.clean({ userId: userId });
+    await this.tokenService.clearAccessToken(userId);
     await this.accountService.clean(userId as UserId);
     await this.accountService.switchAccount(null);
     process.env.BW_SESSION = undefined;
@@ -917,7 +914,8 @@ export class ServiceContainer {
 
     await this.sdkLoadService.loadAndInit();
     await this.storageService.init();
-    await this.stateService.init();
+
+    await this.migrationRunner.run();
     this.containerService.attachToGlobal(global);
     await this.i18nService.init();
     this.twoFactorService.init();
