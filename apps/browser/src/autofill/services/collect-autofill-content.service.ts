@@ -2,7 +2,7 @@
 // @ts-strict-ignore
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 
-import { AutofillFieldQualifier } from "../enums/autofill-field.enums";
+import { AutofillFieldQualifier, AutofillFieldQualifierType } from "../enums/autofill-field.enums";
 import AutofillField, { DomainMatch } from "../models/autofill-field";
 import AutofillForm from "../models/autofill-form";
 import AutofillPageDetails from "../models/autofill-page-details";
@@ -27,6 +27,17 @@ import {
   cancelIdleCallbackPolyfill,
   debounce,
 } from "../utils";
+
+type XPathQualifier = {
+  qualifierType: AutofillFieldQualifierType;
+  fullxpath: string;
+  xpath?: string;
+};
+
+type DomainMatcher = {
+  domain: string;
+  xpathQualifiers: XPathQualifier[];
+};
 
 import { AutofillOverlayContentService } from "./abstractions/autofill-overlay-content.service";
 import {
@@ -436,7 +447,7 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
   matchesXPathForDomain(element: ElementWithOpId<FormFieldElement>): DomainMatch {
     const url = this.getSafeDocumentUrl();
     const domain = Utils.getDomain(url);
-    const matchers = [
+    const matchers: DomainMatcher[] = [
       {
         domain: "hbomax.com",
         xpathQualifiers: [
@@ -506,6 +517,19 @@ export class CollectAutofillContentService implements CollectAutofillContentServ
           {
             qualifierType: AutofillFieldQualifier.password,
             fullxpath: "/html/body/div[1]/div/div[2]/div[1]/div[3]/div[1]/form/div/div/input",
+          },
+        ],
+      },
+      {
+        domain: "westelm.com",
+        xpathQualifiers: [
+          {
+            qualifierType: AutofillFieldQualifier.identityEmail,
+            fullxpath: "/html/body/div[1]/div/div/div/div/div[1]/div/form/div[1]/div/input",
+          },
+          {
+            qualifierType: AutofillFieldQualifier.password,
+            fullxpath: "/html/body/div[1]/div/div/div/div/div[1]/div/form/div[2]/div[1]/input[2]",
           },
         ],
       },
