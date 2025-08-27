@@ -202,7 +202,7 @@ export class CipherViewLikeUtils {
     );
   };
 
-  /** @returns true when the `copyField` is populated on the given cipher. */
+  /** @returns whether the given field is copyable for the given cipher. */
   static hasCopyableValue = (cipher: CipherViewLike, copyField: string): boolean => {
     // `CipherListView` instances do not contain the values to be copied, but rather a list of copyable fields.
     // When the copy action is performed on a `CipherListView`, the full cipher will need to be decrypted.
@@ -217,35 +217,39 @@ export class CipherViewLikeUtils {
 
       return cipher.copyableFields.includes(copyActionToCopyableFieldMap[_copyField]);
     }
+    return !!this.copyableValue(cipher, copyField);
+  };
 
+  /** @returns the value of the given field if it's available on the given CipherView **/
+  static copyableValue = (cipher: CipherView, copyField: string): string | null => {
     // When the full cipher is available, check the specific field
     switch (copyField) {
       case "username":
-        return !!cipher.login?.username || !!cipher.identity?.username;
+        return cipher.login?.username || cipher.identity?.username;
       case "password":
-        return !!cipher.login?.password;
+        return cipher.login?.password;
       case "totp":
-        return !!cipher.login?.totp;
+        return cipher.login?.totp;
       case "cardNumber":
-        return !!cipher.card?.number;
+        return cipher.card?.number;
       case "securityCode":
-        return !!cipher.card?.code;
+        return cipher.card?.code;
       case "email":
-        return !!cipher.identity?.email;
+        return cipher.identity?.email;
       case "phone":
-        return !!cipher.identity?.phone;
+        return cipher.identity?.phone;
       case "address":
-        return !!cipher.identity?.fullAddressForCopy;
+        return cipher.identity?.fullAddressForCopy;
       case "secureNote":
-        return !!cipher.notes;
+        return cipher.notes;
       case "privateKey":
-        return !!cipher.sshKey?.privateKey;
+        return cipher.sshKey?.privateKey;
       case "publicKey":
-        return !!cipher.sshKey?.publicKey;
+        return cipher.sshKey?.publicKey;
       case "keyFingerprint":
-        return !!cipher.sshKey?.keyFingerprint;
+        return cipher.sshKey?.keyFingerprint;
       default:
-        return false;
+        return null;
     }
   };
 

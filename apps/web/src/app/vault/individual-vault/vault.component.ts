@@ -109,7 +109,7 @@ import {
   VaultItemDialogResult,
 } from "../components/vault-item-dialog/vault-item-dialog.component";
 import { VaultItem } from "../components/vault-items/vault-item";
-import { VaultItemEvent } from "../components/vault-items/vault-item-event";
+import { CopiableFieldTypes, VaultItemEvent } from "../components/vault-items/vault-item-event";
 import { VaultItemsComponent } from "../components/vault-items/vault-items.component";
 import { VaultItemsModule } from "../components/vault-items/vault-items.module";
 
@@ -1205,41 +1205,24 @@ export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestr
     }
   }
 
-  async copy(cipher: C, field: "username" | "password" | "totp") {
+  async copy(cipher: C, field: CopiableFieldTypes) {
     let aType;
     let value;
-    let typeI18nKey;
 
-    const login = CipherViewLikeUtils.getLogin(cipher);
+    let cipherView: CipherView;
 
-    if (!login) {
-      this.toastService.showToast({
-        variant: "error",
-        title: null,
-        message: this.i18nService.t("unexpectedError"),
-      });
+    if (CipherViewLikeUtils.isCipherListView(cipher)) {
+      const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
+      const _cipher = await this.cipherService.get(cipher.id, activeUserId);
+      cipherView = await this.cipherService.decrypt(_cipher, activeUserId);
     }
 
-    if (field === "username") {
-      aType = "Username";
-      value = login.username;
-      typeI18nKey = "username";
-    } else if (field === "password") {
-      aType = "Password";
-      value = await this.getPasswordFromCipherViewLike(cipher);
-      typeI18nKey = "password";
-    } else if (field === "totp") {
+    if (field === "totp" && cipherView.login) {
       aType = "TOTP";
-      const totpResponse = await firstValueFrom(this.totpService.getCode$(login.totp));
+      const totpResponse = await firstValueFrom(this.totpService.getCode$(cipherView.login.totp));
       value = totpResponse.code;
-      typeI18nKey = "verificationCodeTotp";
     } else {
-      this.toastService.showToast({
-        variant: "error",
-        title: null,
-        message: this.i18nService.t("unexpectedError"),
-      });
-      return;
+      value = CipherViewLikeUtils.copyableValue(cipherView, field);
     }
 
     if (
@@ -1257,7 +1240,7 @@ export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestr
     this.toastService.showToast({
       variant: "info",
       title: null,
-      message: this.i18nService.t("valueCopied", this.i18nService.t(typeI18nKey)),
+      message: this.i18nService.t("valueCopied", this.i18nService.t(field)),
     });
 
     if (field === "password") {

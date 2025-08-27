@@ -104,19 +104,13 @@
       label="{{ 'options' | i18n }}"
     ></button>
     <bit-menu #cipherOptions>
-      <ng-container *ngIf="isNotDeletedLoginCipher">
-        <button bitMenuItem type="button" (click)="copy('username')" *ngIf="hasUsernameToCopy">
-          <i class="bwi bwi-fw bwi-clone" aria-hidden="true"></i>
-          {{ "copyUsername" | i18n }}
-        </button>
-        <button bitMenuItem type="button" (click)="copy('password')" *ngIf="hasPasswordToCopy">
-          <i class="bwi bwi-fw bwi-clone" aria-hidden="true"></i>
-          {{ "copyPassword" | i18n }}
-        </button>
-        <button bitMenuItem type="button" (click)="copy('totp')" *ngIf="showTotpCopyButton">
-          <i class="bwi bwi-fw bwi-clone" aria-hidden="true"></i>
-          {{ "copyVerificationCode" | i18n }}
-        </button>
+      <ng-container *ngIf="isNotDeletedCipher">
+        <ng-container *ngFor="let field of copiableFields">
+          <button bitMenuItem type="button" (click)="copy(field.type)" *ngIf="field.canCopy">
+            <i class="bwi bwi-fw bwi-clone" aria-hidden="true"></i>
+            {{ field.labelKey | i18n }}
+          </button>
+        </ng-container>
         <a
           bitMenuItem
           *ngIf="canLaunch"

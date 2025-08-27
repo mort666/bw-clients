@@ -227,7 +227,7 @@ export class ItemDetailsSectionComponent implements OnInit {
     }
     this.setFormState();
     if (!this.allowOwnershipChange) {
-      this.itemDetailsForm.controls.organizationId.disable();
+      // this.itemDetailsForm.controls.organizationId.disable();
     }
     this.itemDetailsForm.controls.organizationId.valueChanges
       .pipe(
@@ -251,10 +251,10 @@ export class ItemDetailsSectionComponent implements OnInit {
       if (this.itemDetailsForm.controls.organizationId.value === null) {
         this.cipherFormContainer.disableFormFields();
         this.itemDetailsForm.controls.organizationId.enable();
-        this.favoriteButtonDisabled = true;
+        // this.favoriteButtonDisabled = true;
       } else {
         this.cipherFormContainer.enableFormFields();
-        this.favoriteButtonDisabled = false;
+        // this.favoriteButtonDisabled = false;
         this.setCollectionControlState();
       }
     }

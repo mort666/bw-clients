@@ -100,7 +100,10 @@ import {
   VaultItemDialogMode,
   VaultItemDialogResult,
 } from "../../../vault/components/vault-item-dialog/vault-item-dialog.component";
-import { VaultItemEvent } from "../../../vault/components/vault-items/vault-item-event";
+import {
+  CopiableFieldTypes,
+  VaultItemEvent,
+} from "../../../vault/components/vault-items/vault-item-event";
 import { VaultItemsModule } from "../../../vault/components/vault-items/vault-items.module";
 import {
   BulkDeleteDialogResult,
@@ -1247,7 +1250,7 @@ export class VaultComponent implements OnInit, OnDestroy {
     }
   }
 
-  async copy(cipher: CipherView, field: "username" | "password" | "totp") {
+  async copy(cipher: CipherView, field: CopiableFieldTypes) {
     let aType;
     let value;
     let typeI18nKey;

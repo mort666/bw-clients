@@ -3,6 +3,16 @@ import { CipherViewLike } from "@bitwarden/common/vault/utils/cipher-view-like-u
 
 import { VaultItem } from "./vault-item";
 
+export type CopiableFieldTypes =
+  | "username"
+  | "password"
+  | "totp"
+  | "address"
+  | "cardNumber"
+  | "email"
+  | "phone"
+  | "securityCode";
+
 export type VaultItemEvent<C extends CipherViewLike> =
   | { type: "viewAttachments"; item: C }
   | { type: "bulkEditCollectionAccess"; items: CollectionView[] }
@@ -12,6 +22,6 @@ export type VaultItemEvent<C extends CipherViewLike> =
   | { type: "clone"; item: C }
   | { type: "restore"; items: C[] }
   | { type: "delete"; items: VaultItem<C>[] }
-  | { type: "copyField"; item: C; field: "username" | "password" | "totp" }
+  | { type: "copyField"; item: C; field: CopiableFieldTypes }
   | { type: "moveToFolder"; items: C[] }
   | { type: "assignToCollections"; items: C[] };

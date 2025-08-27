@@ -157,13 +157,15 @@ export class CipherFormComponent implements AfterViewInit, OnInit, OnChanges, Ci
   }
 
   disableFormFields(): void {
-    this.cipherForm.disable({ emitEvent: false });
-    this.formStatusChangeSubject.next("disabled");
+    this.cipherForm.disable();
+    // this.cipherForm.disable({ emitEvent: false });
+    // this.formStatusChangeSubject.next("disabled");
   }
 
   enableFormFields(): void {
-    this.cipherForm.enable({ emitEvent: false });
-    this.formStatusChangeSubject.next("enabled");
+    this.cipherForm.enable();
+    // this.cipherForm.enable({ emitEvent: false });
+    // this.formStatusChangeSubject.next("enabled");
   }
 
   /**

@@ -15,7 +15,7 @@ import {
   convertToPermission,
   getPermissionList,
 } from "./../../../admin-console/organizations/shared/components/access-selector/access-selector.models";
-import { VaultItemEvent } from "./vault-item-event";
+import { CopiableFieldTypes, VaultItemEvent } from "./vault-item-event";
 import { RowHeightClass } from "./vault-items.component";
 
 @Component({
@@ -65,6 +65,8 @@ export class VaultCipherRowComponent<C extends CipherViewLike> implements OnInit
   ];
   protected organization?: Organization;
 
+  copiableFields: { type: CopiableFieldTypes; canCopy: boolean; labelKey: string }[] = [];
+
   constructor(private i18nService: I18nService) {}
 
   /**
@@ -74,6 +76,22 @@ export class VaultCipherRowComponent<C extends CipherViewLike> implements OnInit
     if (this.cipher.organizationId != null) {
       this.organization = this.organizations.find((o) => o.id === this.cipher.organizationId);
     }
+    const canCopy = (t: CopiableFieldTypes) => CipherViewLikeUtils.hasCopyableValue(this.cipher, t);
+    const canCopyTotp = (() => {
+      const login = CipherViewLikeUtils.getLogin(this.cipher);
+      return !!login?.totp && (this.cipher.organizationUseTotp || this.showPremiumFeatures);
+    })();
+
+    this.copiableFields = [
+      { type: "cardNumber", canCopy: canCopy("cardNumber"), labelKey: "copyCardNumber" },
+      { type: "securityCode", canCopy: canCopy("securityCode"), labelKey: "copySecurityCode" },
+      { type: "address", canCopy: canCopy("address"), labelKey: "copyAddress" },
+      { type: "email", canCopy: canCopy("email"), labelKey: "copyEmail" },
+      { type: "phone", canCopy: canCopy("phone"), labelKey: "copyPhone" },
+      { type: "username", canCopy: canCopy("username"), labelKey: "copyUsername" },
+      { type: "password", canCopy: canCopy("password"), labelKey: "copyPassword" },
+      { type: "totp", canCopy: canCopyTotp, labelKey: "copyTotp" },
+    ];
   }
 
   protected get clickAction() {
@@ -82,14 +100,6 @@ export class VaultCipherRowComponent<C extends CipherViewLike> implements OnInit
     }
 
     return "view";
-  }
-
-  protected get showTotpCopyButton() {
-    const login = CipherViewLikeUtils.getLogin(this.cipher);
-
-    const hasTotp = login?.totp ?? false;
-
-    return hasTotp && (this.cipher.organizationUseTotp || this.showPremiumFeatures);
   }
 
   protected get showFixOldAttachments() {
@@ -140,19 +150,8 @@ export class VaultCipherRowComponent<C extends CipherViewLike> implements OnInit
     return this.useEvents && this.cipher.organizationId;
   }
 
-  protected get isNotDeletedLoginCipher() {
-    return (
-      CipherViewLikeUtils.getType(this.cipher) === this.CipherType.Login &&
-      !CipherViewLikeUtils.isDeleted(this.cipher)
-    );
-  }
-
-  protected get hasPasswordToCopy() {
-    return CipherViewLikeUtils.hasCopyableValue(this.cipher, "password");
-  }
-
-  protected get hasUsernameToCopy() {
-    return CipherViewLikeUtils.hasCopyableValue(this.cipher, "username");
+  protected get isNotDeletedCipher() {
+    return !CipherViewLikeUtils.isDeleted(this.cipher);
   }
 
   protected get permissionText() {
@@ -189,22 +188,8 @@ export class VaultCipherRowComponent<C extends CipherViewLike> implements OnInit
     return this.i18nService.t("noAccess");
   }
 
-  protected get showCopyUsername(): boolean {
-    const usernameCopy = CipherViewLikeUtils.hasCopyableValue(this.cipher, "username");
-    return this.isNotDeletedLoginCipher && usernameCopy;
-  }
-
-  protected get showCopyPassword(): boolean {
-    const passwordCopy = CipherViewLikeUtils.hasCopyableValue(this.cipher, "password");
-    return this.isNotDeletedLoginCipher && this.cipher.viewPassword && passwordCopy;
-  }
-
-  protected get showCopyTotp(): boolean {
-    return this.isNotDeletedLoginCipher && this.showTotpCopyButton;
-  }
-
   protected get showLaunchUri(): boolean {
-    return this.isNotDeletedLoginCipher && this.canLaunch;
+    return this.isNotDeletedCipher && this.canLaunch;
   }
 
   protected get isDeletedCanRestore(): boolean {
@@ -214,9 +199,7 @@ export class VaultCipherRowComponent<C extends CipherViewLike> implements OnInit
   protected get hideMenu() {
     return !(
       this.isDeletedCanRestore ||
-      this.showCopyUsername ||
-      this.showCopyPassword ||
-      this.showCopyTotp ||
+      this.copiableFields.length === 0 ||
       this.showLaunchUri ||
       this.showAttachments ||
       this.showClone ||
@@ -224,7 +207,7 @@ export class VaultCipherRowComponent<C extends CipherViewLike> implements OnInit
     );
   }
 
-  protected copy(field: "username" | "password" | "totp") {
+  protected copy(field: CopiableFieldTypes) {
     this.onEvent.emit({ type: "copyField", item: this.cipher, field });
   }
 

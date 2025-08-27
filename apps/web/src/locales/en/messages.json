@@ -210,6 +210,9 @@
   "password": {
     "message": "Password"
   },
+  "totp": {
+    "message": "TOTP"
+  },
   "newPassword": {
     "message": "New password"
   },
