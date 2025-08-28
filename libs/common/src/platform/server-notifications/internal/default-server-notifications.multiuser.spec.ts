@@ -3,9 +3,8 @@ import { BehaviorSubject, bufferCount, firstValueFrom, Subject, ObservedValueOf 
 
 // eslint-disable-next-line no-restricted-imports
 import { LogoutReason } from "@bitwarden/auth/common";
+import { AuthRequestAnsweringServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth-request-answering/auth-request-answering.service.abstraction";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
-// TODO: When PM-14943 goes in, uncomment
-// import { AuthRequestAnsweringServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth-request-answering/auth-request-answering.service.abstraction";
 
 import { AccountService } from "../../../auth/abstractions/account.service";
 import { AuthService } from "../../../auth/abstractions/auth.service";
@@ -33,8 +32,7 @@ describe("DefaultServerNotificationsService (multi-user)", () => {
   let signalRNotificationConnectionService: MockProxy<SignalRConnectionService>;
   let authService: MockProxy<AuthService>;
   let webPushNotificationConnectionService: MockProxy<WebPushConnectionService>;
-  // TODO: When PM-14943 goes in, uncomment
-  // let authRequestAnsweringService: MockProxy<AuthRequestAnsweringServiceAbstraction>;
+  let authRequestAnsweringService: MockProxy<AuthRequestAnsweringServiceAbstraction>;
   let configService: MockProxy<ConfigService>;
 
   let activeUserAccount$: BehaviorSubject<ObservedValueOf<AccountService["activeAccount$"]>>;
@@ -75,6 +73,10 @@ describe("DefaultServerNotificationsService (multi-user)", () => {
       getNotificationsUrl: () => "http://test.example.com",
     } as Environment);
     environmentConfigurationService.environment$ = environmentConfiguration$ as any;
+    // Ensure user-scoped environment lookups return the same test environment stream
+    environmentConfigurationService.getEnvironment$.mockImplementation(
+      (_userId: UserId) => environmentConfiguration$.asObservable() as any,
+    );
 
     userLogoutCallback = jest.fn<Promise<void>, [LogoutReason, UserId]>();
 
@@ -123,8 +125,7 @@ describe("DefaultServerNotificationsService (multi-user)", () => {
       return webPushSupportStatusByUser.get(userId)!.asObservable();
     });
 
-    // TODO: When PM-14943 goes in, uncomment
-    // authRequestAnsweringService = mock<AuthRequestAnsweringServiceAbstraction>();
+    authRequestAnsweringService = mock<AuthRequestAnsweringServiceAbstraction>();
 
     configService = mock<ConfigService>();
     configService.getFeatureFlag$.mockImplementation((flag: FeatureFlag) => {
@@ -145,7 +146,7 @@ describe("DefaultServerNotificationsService (multi-user)", () => {
       signalRNotificationConnectionService,
       authService,
       webPushNotificationConnectionService,
-      // authRequestAnsweringService,
+      authRequestAnsweringService,
       configService,
     );
   });

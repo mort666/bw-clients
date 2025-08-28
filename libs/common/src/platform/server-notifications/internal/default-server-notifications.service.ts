@@ -18,6 +18,7 @@ import {
 import { LogoutReason } from "@bitwarden/auth/common";
 import { AuthRequestAnsweringServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth-request-answering/auth-request-answering.service.abstraction";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { AllowedMultiUserNotificationTypes } from "@bitwarden/common/platform/enums/multiUserAllowList.enum";
 
 import { AccountService } from "../../../auth/abstractions/account.service";
 import { AuthService } from "../../../auth/abstractions/auth.service";
@@ -66,10 +67,12 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
     this.notifications$ = this.configService
       .getFeatureFlag$(FeatureFlag.InactiveUserServerNotification)
       .pipe(
+        distinctUntilChanged(),
         switchMap((inactiveUserServerNotificationEnabled) => {
           if (inactiveUserServerNotificationEnabled) {
             return this.accountService.accounts$.pipe(
               map((accounts) => Object.keys(accounts) as UserId[]),
+              distinctUntilChanged(),
               switchMap((userIds) => {
                 if (userIds.length === 0) {
                   return EMPTY;
@@ -110,7 +113,7 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
    * @param userId The user id of the user to get the push server notifications for.
    */
   private userNotifications$(userId: UserId) {
-    return this.environmentService.environment$.pipe(
+    return this.environmentService.getEnvironment$(userId).pipe(
       map((env) => env.getNotificationsUrl()),
       distinctUntilChanged(),
       switchMap((notificationsUrl) => {
@@ -202,15 +205,12 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
         this.configService.getFeatureFlag$(FeatureFlag.InactiveUserServerNotification),
       )
     ) {
-      // Allow-list of notification types that are safe to process for non-active users
-      const multiUserNotificationTypes = new Set<NotificationType>([NotificationType.AuthRequest]);
-
       const activeAccountId = await firstValueFrom(
         this.accountService.activeAccount$.pipe(map((a) => a?.id)),
       );
 
       const isActiveUser = activeAccountId === userId;
-      if (!isActiveUser && !multiUserNotificationTypes.has(notification.type)) {
+      if (!isActiveUser && !AllowedMultiUserNotificationTypes.has(notification.type)) {
         return;
       }
     }
