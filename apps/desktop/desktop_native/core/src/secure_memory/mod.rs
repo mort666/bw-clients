@@ -2,13 +2,12 @@
 pub(crate) mod dpapi;
 #[cfg(target_os = "linux")]
 pub(crate) mod memfd_secret;
-#[cfg(target_os = "macos")]
-mod unimplemented;
 
 /// The secure memory store provides an ephemeral key-value store for sensitive data.
 /// Data stored in this store is prevented from being swapped to disk and zeroed out. Additionally,
 /// platform-specific protections are applied to prevent memory dumps or debugger access from
 /// reading the stored values.
+#[allow(unused)]
 pub(crate) trait SecureMemoryStore {
     /// Stores a copy of the provided value in secure memory.
     fn put(&mut self, key: String, value: &[u8]);
@@ -22,20 +21,4 @@ pub(crate) trait SecureMemoryStore {
     fn remove(&mut self, key: &str);
     /// Clears all values stored in secure memory.
     fn clear(&mut self);
-}
-
-/// Creates a new secure memory store based on the platform.
-pub fn create_secure_memory_store() -> Box<dyn SecureMemoryStore> {
-    #[cfg(target_os = "linux")]
-    {
-        unimplemented!()
-    }
-    #[cfg(target_os = "windows")]
-    {
-        Box::new(dpapi::DpapiSecretKVStore::new())
-    }
-    #[cfg(target_os = "macos")]
-    {
-        unimplemented!()
-    }
 }

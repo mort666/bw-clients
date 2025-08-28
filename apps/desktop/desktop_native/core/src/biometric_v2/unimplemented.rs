@@ -1,37 +1,35 @@
-pub struct Biometric {}
+pub struct BiometricLockSystem {}
 
-impl super::BiometricV2Trait for Biometric {
-    async fn authorize(_hwnd: Vec<u8>, _message: String) -> Result<bool> {
+impl BiometricLockSystem {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl super::BiometricV2Trait for BiometricLockSystem {
+    async fn authenticate(&self, _hwnd: Vec<u8>, _message: String) -> Result<bool, anyhow::Error> {
+        return Ok(false);
+    }
+
+    async fn authenticate_available(&self) -> Result<bool, anyhow::Error> {
+        return Ok(false);
+    }
+
+    async fn enroll_persistent(&self, _user_id: &str, _key: &[u8]) -> Result<(), anyhow::Error> {
+        Ok(())
+    }
+
+    async fn provide_key(&self, _user_id: &str, _key: &[u8]) {}
+
+    async fn unlock(&self, _user_id: &str, _hwnd: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
         unimplemented!()
     }
 
-    async fn available_available() -> Result<bool> {
-        Ok(false)
-    }
-
-    async fn enroll_persistent(
-        user_id: &str,
-        key: &[u8]
-    ) -> Result<String> {
+    async fn unlock_available(&self, _user_id: &str) -> Result<bool, anyhow::Error> {
         unimplemented!()
     }
 
-    async fn provide_userkey(
-        user_id: &str,
-        key: &[u8]
-    ) -> Result<String> {
+    async fn has_persistent(&self, _user_id: &str) -> Result<bool, anyhow::Error> {
         unimplemented!()
-    }
-
-    async fn unlock(
-        user_id: &str
-    ) -> Result<String> {
-        unimplemented!()
-    }
-
-    async fn unlock_available(
-        user_id: &str,
-    ) -> Result<bool> {
-        Ok(false)
     }
 }
