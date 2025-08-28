@@ -1,0 +1,100 @@
+//! This file implements Polkit based system unlock.
+//! 
+//! # Security
+//! This section describes the assumed security model and security guarantees achieved. In the required security
+//! guarantee is that a locked vault - a running app - cannot be unlocked when the device (user-space)
+//! is compromised in this state.
+//! 
+//! When first unlocking the app, the app sends the user-key to this module, which holds it in secure memory,
+//! protected by memfd_secret. This makes it inaccessible to other processes, even if they compromise root, a kernel compromise 
+//! has circumventable best-effort protections. While the app is running this key is held in memory, even if locked. 
+//! When unlocking, the app will prompt the user via `polkit` to get a yes/no decision on whether to release the key to the app.
+
+use anyhow::{anyhow, Result};
+use tokio::sync::Mutex;
+use zbus::Connection;
+use zbus_polkit::policykit1::{AuthorityProxy, CheckAuthorizationFlags, Subject};
+use std::sync::Arc;
+
+use crate::{
+    secure_memory::*
+};
+
+pub struct BiometricLockSystem {
+    // The userkeys that are held in memory MUST be protected from memory dumping attacks, to ensure
+    // locked vaults cannot be unlocked
+    secure_memory: Arc<Mutex<crate::secure_memory::memfd_secret::MemfdSecretKVStore>>
+}
+
+impl BiometricLockSystem {
+    pub fn new() -> Self {
+        Self {
+            secure_memory: Arc::new(Mutex::new(crate::secure_memory::memfd_secret::MemfdSecretKVStore::new()))
+        }
+    }
+}
+
+impl super::BiometricV2Trait for BiometricLockSystem {
+    async fn authenticate(&self, _hwnd: Vec<u8>, _message: String) -> Result<bool> {
+        let connection = Connection::system().await?;
+        let proxy = AuthorityProxy::new(&connection).await?;
+        let subject = Subject::new_for_owner(std::process::id(), None, None)?;
+        let details = std::collections::HashMap::new();
+        let result = proxy
+            .check_authorization(
+                &subject,
+                "com.bitwarden.Bitwarden.unlock",
+                &details,
+                CheckAuthorizationFlags::AllowUserInteraction.into(),
+                "",
+            )
+            .await;
+
+        match result {
+            Ok(result) => Ok(result.is_authorized),
+            Err(e) => {
+                println!("polkit biometric error: {:?}", e);
+                Ok(false)
+            }
+        }
+    }
+
+    async fn authenticate_available(&self) -> Result<bool> {
+        let connection = Connection::system().await?;
+        let proxy = AuthorityProxy::new(&connection).await?;
+        let actions = proxy.enumerate_actions("en").await?;
+        for action in actions {
+            if action.action_id == "com.bitwarden.Bitwarden.unlock" {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
+    async fn enroll_persistent(&self, _user_id: &str, _key: &[u8]) -> Result<()> {
+        Ok(())
+    }
+
+    async fn provide_key(&self, user_id: &str, key: &[u8]) {
+        let mut secure_memory = self.secure_memory.lock().await;
+        secure_memory.put(user_id.to_string(), key);
+    }
+
+    async fn unlock(&self, user_id: &str, _hwnd: Vec<u8>) -> Result<Vec<u8>> {
+        if self.authenticate(Vec::new(), "".to_string()).await? == false {
+            return Err(anyhow!("Authentication failed"));
+        }
+
+        let secure_memory = self.secure_memory.lock().await;
+        secure_memory.get(user_id).ok_or(anyhow!("No key found"))
+    }
+
+    async fn unlock_available(&self, user_id: &str) -> Result<bool> {
+        let secure_memory = self.secure_memory.lock().await;
+        return Ok(secure_memory.has(user_id));
+    }
+    
+    async fn has_persistent(&self, _user_id: &str) -> Result<bool> {
+        return Ok(false);
+    }
+}

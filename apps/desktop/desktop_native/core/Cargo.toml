@@ -35,7 +35,6 @@ log = { workspace = true }
 rand = { workspace = true }
 russh-cryptovec = { workspace = true }
 scopeguard = { workspace = true }
-secmem-proc = { workspace = true }
 sha2 = { workspace = true }
 ssh-encoding = { workspace = true }
 ssh-key = { workspace = true, features = [
@@ -60,7 +59,7 @@ chacha20 = "0.9.1"
 chacha20poly1305 = "0.10.1"
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
-windows = { workspace = true, features = ["UI_Accessibility"] }
+memsec = { version = "0.7.0", features = ["alloc_ext"] }
 
 [target.'cfg(windows)'.dependencies]
 widestring = { workspace = true, optional = true }

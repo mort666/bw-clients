@@ -20,6 +20,7 @@
 //! Since the keychain can be accessed by all user-space processes, the challenge is known to all userspace processes.
 //! Therefore, to circumvent the security measure, the attacker would need to create a fake Windows-Hello prompt, and
 //! get the user to confirm it.
+
 use std::{ffi::c_void, sync::{atomic::AtomicBool, Arc}};
 
 use aes::cipher::KeyInit;

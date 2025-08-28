@@ -1,7 +1,7 @@
 #[cfg(target_os = "windows")]
 pub(crate) mod dpapi;
 #[cfg(target_os = "linux")]
-mod unimplemented;
+pub(crate) mod memfd_secret;
 #[cfg(target_os = "macos")]
 mod unimplemented;
 
