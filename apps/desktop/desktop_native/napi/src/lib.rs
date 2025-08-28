@@ -112,6 +112,11 @@ pub mod biometrics_v2 {
         biometric_lock_system.inner.has_persistent(&user_id).await.map_err(|e| napi::Error::from_reason(e.to_string()))
     }
 
+    #[napi]
+    pub async fn unenroll(biometric_lock_system: &BiometricLockSystem, user_id: String) -> napi::Result<()> {
+        biometric_lock_system.inner.unenroll(&user_id).await.map_err(|e| napi::Error::from_reason(e.to_string()))
+    }
+
 }
 
 #[napi]

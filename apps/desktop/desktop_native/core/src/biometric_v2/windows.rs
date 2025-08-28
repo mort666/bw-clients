@@ -82,6 +82,13 @@ impl super::BiometricV2Trait for BiometricLockSystem {
         }
     }
 
+    async fn unenroll(&self, user_id: &str) -> Result<()> {
+        let mut secure_memory = self.secure_memory.lock().await;
+        secure_memory.remove(user_id);
+        delete_keychain_entry(user_id).await?;
+        Ok(())
+    }
+
     async fn enroll_persistent(&self, user_id: &str, key: &[u8]) -> Result<()> {
         // Enrollment works by first generating a random challenge unique to the user / enrollment. Then,
         // with the challenge and a Windows-Hello prompt, the "windows hello key" is derived. The windows
@@ -250,6 +257,11 @@ async fn get_keychain_entry(user_id: &str) -> Result<WindowsHelloKeychainEntry> 
     let entry_str = password::get_password(KEYCHAIN_SERVICE_NAME, user_id).await?;
     let entry: WindowsHelloKeychainEntry = serde_json::from_str(&entry_str)?;
     Ok(entry)
+}
+
+async fn delete_keychain_entry(user_id: &str) -> Result<()> {
+    password::delete_password(KEYCHAIN_SERVICE_NAME, user_id).await?;
+    Ok(())
 }
 
 async fn has_keychain_entry(user_id: &str) -> Result<bool> {

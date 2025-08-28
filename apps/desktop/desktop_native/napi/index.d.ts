@@ -30,6 +30,7 @@ export declare namespace biometrics_v2 {
   export function unlock(biometricLockSystem: BiometricLockSystem, userId: string, hwnd: Buffer): Promise<Buffer>
   export function unlockAvailable(biometricLockSystem: BiometricLockSystem, userId: string): Promise<boolean>
   export function hasPersistent(biometricLockSystem: BiometricLockSystem, userId: string): Promise<boolean>
+  export function unenroll(biometricLockSystem: BiometricLockSystem, userId: string): Promise<void>
   export class BiometricLockSystem {   }
 }
 export declare namespace biometrics {

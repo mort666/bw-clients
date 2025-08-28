@@ -42,32 +42,30 @@ pub(crate) fn set_focus(window: HWND) {
         // Attach to the foreground thread once attached, we can foregroud, even if in the background
         // Update the foreground lock timeout temporarily
         let mut old_timeout = 0;
-        SystemParametersInfoW(
+        let _ = SystemParametersInfoW(
             SPI_GETFOREGROUNDLOCKTIMEOUT,
             0,
             Some(&mut old_timeout as *mut _ as *mut std::ffi::c_void),
             windows::Win32::UI::WindowsAndMessaging::SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
         );
-        SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, None, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
+        let _ = SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, None, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
         let _scopeguard = scopeguard::guard((), |_| {
-            SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, old_timeout, None, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
+            let _ = SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, old_timeout, None, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
         });
 
         // Attach to the active window's thread
-        let dwCurrentThread = GetCurrentThreadId();
-        let dwFGThread = GetWindowThreadProcessId(GetForegroundWindow(), None);
+        let dw_current_thread = GetCurrentThreadId();
+        let dw_fg_thread = GetWindowThreadProcessId(GetForegroundWindow(), None);
         
-        AttachThreadInput(dwCurrentThread, dwFGThread, true);
-
+        let _ = AttachThreadInput(dw_current_thread, dw_fg_thread, true);
         let hwnd = window;
-        SetForegroundWindow(hwnd);
+        let _ = SetForegroundWindow(hwnd);
         SetCapture(hwnd);
-        SetFocus(Some(hwnd));
-        SetActiveWindow(hwnd);
-        EnableWindow(hwnd, true);
-        BringWindowToTop(hwnd);
+        let _ = SetFocus(Some(hwnd));
+        let _ = SetActiveWindow(hwnd);
+        let _ = EnableWindow(hwnd, true);
+        let _ = BringWindowToTop(hwnd);
         SwitchToThisWindow(hwnd, true);
-
-        AttachThreadInput(dwCurrentThread, dwFGThread, false);
+        let _ = AttachThreadInput(dw_current_thread, dw_fg_thread, false);
     }
 }

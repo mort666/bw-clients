@@ -19,6 +19,8 @@ pub trait BiometricV2Trait {
     async fn authenticate_available(&self) -> Result<bool>;
     /// Enroll a key for persistent unlock
     async fn enroll_persistent(&self, user_id: &str, key: &[u8]) -> Result<()>;
+    /// Clear the persistent and ephemeral keys
+    async fn unenroll(&self, user_id: &str) -> Result<()>;
     async fn has_persistent(&self, user_id: &str) -> Result<bool>;
     /// On every unlock, the client provides a key to be held for subsequent biometric unlock
     async fn provide_key(
