@@ -87,7 +87,7 @@ impl super::BiometricTrait for BiometricLockSystem {
     }
 
     async fn unlock(&self, user_id: &str, _hwnd: Vec<u8>) -> Result<Vec<u8>> {
-        if self.authenticate(Vec::new(), "".to_string()).await? == false {
+        if !(self.authenticate(Vec::new(), "".to_string()).await?) {
             return Err(anyhow!("Authentication failed"));
         }
 
@@ -97,11 +97,11 @@ impl super::BiometricTrait for BiometricLockSystem {
 
     async fn unlock_available(&self, user_id: &str) -> Result<bool> {
         let secure_memory = self.secure_memory.lock().await;
-        return Ok(secure_memory.has(user_id));
+        Ok(secure_memory.has(user_id))
     }
 
     async fn has_persistent(&self, _user_id: &str) -> Result<bool> {
-        return Ok(false);
+        Ok(false)
     }
 
     async fn unenroll(&self, user_id: &str) -> Result<(), anyhow::Error> {

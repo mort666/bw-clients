@@ -67,6 +67,7 @@ impl Drop for MemfdSecretKVStore {
     }
 }
 
+#[allow(unused)]
 pub(super) fn is_supported() -> bool {
     // To test if memfd_secret is supported, we try to allocate a 1 byte and see if that
     // succeeds.
