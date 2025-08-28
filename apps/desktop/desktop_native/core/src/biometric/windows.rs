@@ -170,10 +170,7 @@ impl super::BiometricTrait for BiometricLockSystem {
                 windows_hello_authenticate_with_crypto(&keychain_entry.challenge)?;
             let decrypted_key = XChaCha20Poly1305::new(&windows_hello_key.into())
                 .decrypt(
-                    keychain_entry
-                        .nonce
-                        .as_slice()
-                        .into(),
+                    keychain_entry.nonce.as_slice().into(),
                     keychain_entry.wrapped_key.as_slice(),
                 )
                 .map_err(|e| anyhow!(e))?;
