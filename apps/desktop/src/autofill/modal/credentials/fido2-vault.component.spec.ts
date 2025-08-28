@@ -18,6 +18,10 @@ import {
   DesktopFido2UserInterfaceSession,
 } from "../../services/desktop-fido2-user-interface.service";
 
+jest.mock("./bitwarden-shield.icon", () => ({
+  BitwardenShield: {},
+}));
+
 import { Fido2VaultComponent } from "./fido2-vault.component";
 
 describe("Fido2VaultComponent", () => {
