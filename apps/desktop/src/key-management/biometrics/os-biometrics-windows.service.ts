@@ -1,7 +1,7 @@
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { UserId } from "@bitwarden/common/types/guid";
-import { biometrics, biometrics_v2 } from "@bitwarden/desktop-napi";
+import { biometrics } from "@bitwarden/desktop-napi";
 import { BiometricsStatus } from "@bitwarden/key-management";
 
 import { WindowMain } from "../../main/window.main";
@@ -9,7 +9,7 @@ import { WindowMain } from "../../main/window.main";
 import { OsBiometricService } from "./os-biometrics.service";
 
 export default class OsBiometricsServiceWindows implements OsBiometricService {
-  private biometricsSystem = biometrics_v2.initBiometricSystem();
+  private biometricsSystem = biometrics.initBiometricSystem();
 
   constructor(
     private i18nService: I18nService,
@@ -17,11 +17,11 @@ export default class OsBiometricsServiceWindows implements OsBiometricService {
   ) {}
 
   async supportsBiometrics(): Promise<boolean> {
-    return await biometrics_v2.authenticateAvailable(this.biometricsSystem);
+    return await biometrics.authenticateAvailable(this.biometricsSystem);
   }
 
   async getBiometricKey(userId: UserId): Promise<SymmetricCryptoKey | null> {
-    const key = await biometrics_v2.unlock(
+    const key = await biometrics.unlock(
       this.biometricsSystem,
       userId,
       this.windowMain.win.getNativeWindowHandle(),
@@ -30,20 +30,16 @@ export default class OsBiometricsServiceWindows implements OsBiometricService {
   }
 
   async setBiometricKey(userId: UserId, key: SymmetricCryptoKey): Promise<void> {
-    await biometrics_v2.provideKey(
-      this.biometricsSystem,
-      userId,
-      Buffer.from(key.toEncoded().buffer),
-    );
+    await biometrics.provideKey(this.biometricsSystem, userId, Buffer.from(key.toEncoded().buffer));
   }
 
   async deleteBiometricKey(userId: UserId): Promise<void> {
-    await biometrics_v2.unenroll(this.biometricsSystem, userId);
+    await biometrics.unenroll(this.biometricsSystem, userId);
   }
 
   async authenticateBiometric(): Promise<boolean> {
     const hwnd = this.windowMain.win.getNativeWindowHandle();
-    return await biometrics_v2.authenticate(
+    return await biometrics.authenticate(
       this.biometricsSystem,
       hwnd,
       this.i18nService.t("windowsHelloConsentMessage"),
@@ -61,6 +57,9 @@ export default class OsBiometricsServiceWindows implements OsBiometricService {
   async runSetup(): Promise<void> {}
 
   async getBiometricsFirstUnlockStatusForUser(userId: UserId): Promise<BiometricsStatus> {
-    return (await biometrics_v2.hasPersistent(this.biometricsSystem, userId) || await biometrics_v2.unlockAvailable(this.biometricsSystem, userId)) ? BiometricsStatus.Available : BiometricsStatus.UnlockNeeded;
+    return (await biometrics.hasPersistent(this.biometricsSystem, userId)) ||
+      (await biometrics.unlockAvailable(this.biometricsSystem, userId))
+      ? BiometricsStatus.Available
+      : BiometricsStatus.UnlockNeeded;
   }
 }
