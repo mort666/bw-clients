@@ -35,46 +35,6 @@ export class AuthRequestAnsweringService implements AuthRequestAnsweringServiceA
     private readonly systemNotificationsService: SystemNotificationsService,
   ) {}
 
-  async processPendingAuthRequests(): Promise<void> {
-    // Prune any stale pending requests (older than 15 minutes)
-    // This comes from GlobalSettings.cs
-    //    public TimeSpan UserRequestExpiration { get; set; } = TimeSpan.FromMinutes(15);
-    const fifteenMinutesMs = 15 * 60 * 1000;
-
-    await this.pendingAuthRequestsState.pruneOlderThan(fifteenMinutesMs);
-
-    const pending = (await firstValueFrom(this.pendingAuthRequestsState.getAll$())) ?? [];
-
-    if (pending.length > 0) {
-      const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
-      const pendingForActive = pending.some((e) => e.userId === activeUserId);
-
-      if (pendingForActive) {
-        const isUnlocked =
-          (await firstValueFrom(this.authService.authStatusFor$(activeUserId))) ===
-          AuthenticationStatus.Unlocked;
-
-        const forceSetPasswordReason = await firstValueFrom(
-          this.masterPasswordService.forceSetPasswordReason$(activeUserId),
-        );
-
-        if (isUnlocked && forceSetPasswordReason === ForceSetPasswordReason.None) {
-          console.debug("[AuthRequestAnsweringService] popupOpened - Opening popup.");
-          this.messagingService.send("openLoginApproval");
-        }
-      }
-    }
-  }
-
-  async handleAuthRequestNotificationClicked(event: SystemNotificationEvent): Promise<void> {
-    if (event.buttonIdentifier === ButtonLocation.NotificationButton) {
-      await this.systemNotificationsService.clear({
-        id: `${event.id}`,
-      });
-      await this.actionService.openPopup();
-    }
-  }
-
   async receivedPendingAuthRequest(userId: UserId, authRequestId: string): Promise<void> {
     console.debug(
       "[AuthRequestAnsweringService] receivedPendingAuthRequest",
@@ -112,7 +72,7 @@ export class AuthRequestAnsweringService implements AuthRequestAnsweringServiceA
       const emailForUser = accounts[userId].email;
 
       await this.systemNotificationsService.create({
-        id: `${AuthServerNotificationTags.AuthRequest}_${authRequestId}`,
+        id: `${AuthServerNotificationTags.AuthRequest}_${authRequestId}`, // the underscore is an important delimiter.
         title: this.i18nService.t("accountAccessRequested"),
         body: this.i18nService.t("confirmAccessAttempt", emailForUser),
         buttons: [],
@@ -123,5 +83,45 @@ export class AuthRequestAnsweringService implements AuthRequestAnsweringServiceA
     // Popup is open and conditions are met; open dialog immediately for this request
     console.debug("[AuthRequestAnsweringService] receivedPendingAuthRequest - Opening popup.");
     this.messagingService.send("openLoginApproval");
+  }
+
+  async handleAuthRequestNotificationClicked(event: SystemNotificationEvent): Promise<void> {
+    if (event.buttonIdentifier === ButtonLocation.NotificationButton) {
+      await this.systemNotificationsService.clear({
+        id: `${event.id}`,
+      });
+      await this.actionService.openPopup();
+    }
+  }
+
+  async processPendingAuthRequests(): Promise<void> {
+    // Prune any stale pending requests (older than 15 minutes)
+    // This comes from GlobalSettings.cs
+    //    public TimeSpan UserRequestExpiration { get; set; } = TimeSpan.FromMinutes(15);
+    const fifteenMinutesMs = 15 * 60 * 1000;
+
+    await this.pendingAuthRequestsState.pruneOlderThan(fifteenMinutesMs);
+
+    const pending = (await firstValueFrom(this.pendingAuthRequestsState.getAll$())) ?? [];
+
+    if (pending.length > 0) {
+      const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
+      const pendingForActive = pending.some((e) => e.userId === activeUserId);
+
+      if (pendingForActive) {
+        const isUnlocked =
+          (await firstValueFrom(this.authService.authStatusFor$(activeUserId))) ===
+          AuthenticationStatus.Unlocked;
+
+        const forceSetPasswordReason = await firstValueFrom(
+          this.masterPasswordService.forceSetPasswordReason$(activeUserId),
+        );
+
+        if (isUnlocked && forceSetPasswordReason === ForceSetPasswordReason.None) {
+          console.debug("[AuthRequestAnsweringService] popupOpened - Opening popup.");
+          this.messagingService.send("openLoginApproval");
+        }
+      }
+    }
   }
 }
