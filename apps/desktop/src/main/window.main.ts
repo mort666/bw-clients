@@ -85,7 +85,7 @@ export class WindowMain {
     });
 
     ipcMain.on("window-hide", () => {
-      if (this.win != null) { 
+      if (this.win != null) {
         if (isWindows()) {
           // On windows, to return focus we need minimize
           this.win.minimize();
