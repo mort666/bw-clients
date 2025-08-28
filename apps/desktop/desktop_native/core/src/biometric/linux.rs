@@ -97,4 +97,10 @@ impl super::BiometricTrait for BiometricLockSystem {
     async fn has_persistent(&self, _user_id: &str) -> Result<bool> {
         return Ok(false);
     }
+
+    async fn unenroll(&self, user_id: &str) -> Result<(), anyhow::Error> {
+        let mut secure_memory = self.secure_memory.lock().await;
+        secure_memory.remove(user_id);
+        Ok(())
+    }
 }
