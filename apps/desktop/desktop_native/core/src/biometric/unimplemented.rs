@@ -8,11 +8,11 @@ impl BiometricLockSystem {
 
 impl super::BiometricTrait for BiometricLockSystem {
     async fn authenticate(&self, _hwnd: Vec<u8>, _message: String) -> Result<bool, anyhow::Error> {
-        return Ok(false);
+        Ok(false)
     }
 
     async fn authenticate_available(&self) -> Result<bool, anyhow::Error> {
-        return Ok(false);
+        Ok(false)
     }
 
     async fn enroll_persistent(&self, _user_id: &str, _key: &[u8]) -> Result<(), anyhow::Error> {
