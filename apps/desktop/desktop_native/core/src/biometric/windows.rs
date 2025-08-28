@@ -78,6 +78,12 @@ impl BiometricLockSystem {
     }
 }
 
+impl Default for BiometricLockSystem {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl super::BiometricTrait for BiometricLockSystem {
     async fn authenticate(&self, hwnd: Vec<u8>, message: String) -> Result<bool> {
         windows_hello_authenticate(hwnd, message)

@@ -6,6 +6,12 @@ impl BiometricLockSystem {
     }
 }
 
+impl Default for BiometricLockSystem {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl super::BiometricTrait for BiometricLockSystem {
     async fn authenticate(&self, _hwnd: Vec<u8>, _message: String) -> Result<bool, anyhow::Error> {
         Ok(false)
