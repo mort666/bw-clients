@@ -32,10 +32,6 @@ export class MainBiometricsService extends DesktopBiometricsService {
       this.osBiometricsService = new OsBiometricsServiceWindows(
         this.i18nService,
         this.windowMain,
-        this.logService,
-        this.biometricStateService,
-        this.encryptService,
-        this.cryptoFunctionService,
       );
     } else if (platform === "darwin") {
       // eslint-disable-next-line
@@ -43,9 +39,8 @@ export class MainBiometricsService extends DesktopBiometricsService {
       this.osBiometricsService = new OsBiometricsServiceMac(this.i18nService, this.logService);
     } else if (platform === "linux") {
       // eslint-disable-next-line
-      const OsBiometricsServiceLinux = require("./os-biometrics-linux-v2.service").default;
-      this.osBiometricsService = new OsBiometricsServiceLinux(
-      );
+      const OsBiometricsServiceLinux = require("./os-biometrics-linux.service").default;
+      this.osBiometricsService = new OsBiometricsServiceLinux();
     } else {
       throw new Error("Unsupported platform");
     }

@@ -17,7 +17,7 @@ export default class OsBiometricsServiceWindows implements OsBiometricService {
   ) {}
 
   async supportsBiometrics(): Promise<boolean> {
-    return await biometrics.available();
+    return await biometrics_v2.authenticateAvailable(this.biometricsSystem);
   }
 
   async getBiometricKey(userId: UserId): Promise<SymmetricCryptoKey | null> {
@@ -61,6 +61,6 @@ export default class OsBiometricsServiceWindows implements OsBiometricService {
   async runSetup(): Promise<void> {}
 
   async getBiometricsFirstUnlockStatusForUser(userId: UserId): Promise<BiometricsStatus> {
-    return BiometricsStatus.Available;
+    return (await biometrics_v2.hasPersistent(this.biometricsSystem, userId) || await biometrics_v2.unlockAvailable(this.biometricsSystem, userId)) ? BiometricsStatus.Available : BiometricsStatus.UnlockNeeded;
   }
 }
