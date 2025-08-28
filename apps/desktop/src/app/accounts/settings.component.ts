@@ -134,6 +134,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     vaultTimeoutAction: [VaultTimeoutAction.Lock],
     pin: [null as boolean | null],
     biometric: false,
+    allowBiometricUnlockOnAppRestart: false,
     autoPromptBiometrics: false,
     // Account Preferences
     clearClipboard: [null],
@@ -348,6 +349,9 @@ export class SettingsComponent implements OnInit, OnDestroy {
       ),
       pin: this.userHasPinSet,
       biometric: await this.vaultTimeoutSettingsService.isBiometricLockSet(),
+      allowBiometricUnlockOnAppRestart: await this.biometricsService.hasPersistentKey(
+        activeAccount.id,
+      ),
       autoPromptBiometrics: await firstValueFrom(this.biometricStateService.promptAutomatically$),
       clearClipboard: await firstValueFrom(this.autofillSettingsService.clearClipboardDelay$),
       minimizeOnCopyToClipboard: await firstValueFrom(this.desktopSettingsService.minimizeOnCopy$),
@@ -436,6 +440,25 @@ export class SettingsComponent implements OnInit, OnDestroy {
         concatMap(async (enabled) => {
           await this.updateBiometricHandler(enabled);
           this.refreshTimeoutSettings$.next();
+        }),
+        takeUntil(this.destroy$),
+      )
+      .subscribe();
+    this.form.controls.allowBiometricUnlockOnAppRestart.valueChanges
+      .pipe(
+        concatMap(async (enabled) => {
+          const userKey = await firstValueFrom(this.keyService.userKey$(activeAccount.id));
+          if (enabled) {
+            if (!(await this.biometricsService.hasPersistentKey(activeAccount.id))) {
+              await this.biometricsService.enrollPersistent(activeAccount.id, userKey);
+            }
+          } else {
+            await this.biometricsService.deleteBiometricUnlockKeyForUser(activeAccount.id);
+            await this.biometricsService.setBiometricProtectedUnlockKeyForUser(
+              activeAccount.id,
+              userKey,
+            );
+          }
         }),
         takeUntil(this.destroy$),
       )

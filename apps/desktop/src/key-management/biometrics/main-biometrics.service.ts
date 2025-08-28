@@ -128,4 +128,12 @@ export class MainBiometricsService extends DesktopBiometricsService {
   async canEnableBiometricUnlock(): Promise<boolean> {
     return true;
   }
+
+  async enrollPersistent(userId: UserId, key: SymmetricCryptoKey): Promise<void> {
+    return await this.osBiometricsService.enrollPersistent(userId, key);
+  }
+
+  async hasPersistentKey(userId: UserId): Promise<boolean> {
+    return await this.osBiometricsService.hasPersistentKey(userId);
+  }
 }
