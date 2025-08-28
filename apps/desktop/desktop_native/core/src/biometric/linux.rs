@@ -34,7 +34,7 @@ impl BiometricLockSystem {
     }
 }
 
-impl super::BiometricV2Trait for BiometricLockSystem {
+impl super::BiometricTrait for BiometricLockSystem {
     async fn authenticate(&self, _hwnd: Vec<u8>, _message: String) -> Result<bool> {
         let connection = Connection::system().await?;
         let proxy = AuthorityProxy::new(&connection).await?;
