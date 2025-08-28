@@ -6,7 +6,7 @@ import { LogService } from "@bitwarden/common/platform/abstractions/log.service"
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { UserId } from "@bitwarden/common/types/guid";
-import { biometrics, passwords } from "@bitwarden/desktop-napi";
+import { biometrics, passwords, biometrics_v2 } from "@bitwarden/desktop-napi";
 import { BiometricsStatus, BiometricStateService } from "@bitwarden/key-management";
 
 import { WindowMain } from "../../main/window.main";
@@ -26,6 +26,8 @@ export default class OsBiometricsServiceWindows implements OsBiometricService {
   private _osKeyHalf: string | null = null;
   private clientKeyHalves = new Map<UserId, Uint8Array>();
 
+  private biometricsSystem = biometrics_v2.initBiometricSystem();
+
   constructor(
     private i18nService: I18nService,
     private windowMain: WindowMain,
@@ -40,64 +42,16 @@ export default class OsBiometricsServiceWindows implements OsBiometricService {
   }
 
   async getBiometricKey(userId: UserId): Promise<SymmetricCryptoKey | null> {
-    const success = await this.authenticateBiometric();
-    if (!success) {
-      return null;
-    }
-
-    const value = await passwords.getPassword(SERVICE, getLookupKeyForUser(userId));
-    if (value == null || value == "") {
-      throw new Error("Biometric key not found for user");
-    }
-
-    let clientKeyHalfB64: string | null = null;
-    if (this.clientKeyHalves.has(userId)) {
-      clientKeyHalfB64 = Utils.fromBufferToB64(this.clientKeyHalves.get(userId)!);
-    }
-
-    if (!EncString.isSerializedEncString(value)) {
-      // Update to format encrypted with client key half
-      const storageDetails = await this.getStorageDetails({
-        clientKeyHalfB64: clientKeyHalfB64 ?? undefined,
-      });
-
-      await biometrics.setBiometricSecret(
-        SERVICE,
-        getLookupKeyForUser(userId),
-        value,
-        storageDetails.key_material,
-        storageDetails.ivB64,
-      );
-      return SymmetricCryptoKey.fromString(value);
-    } else {
-      const encValue = new EncString(value);
-      this.setIv(encValue.iv);
-      const storageDetails = await this.getStorageDetails({
-        clientKeyHalfB64: clientKeyHalfB64 ?? undefined,
-      });
-      return SymmetricCryptoKey.fromString(
-        await biometrics.getBiometricSecret(
-          SERVICE,
-          getLookupKeyForUser(userId),
-          storageDetails.key_material,
-        ),
-      );
-    }
+    const key = await biometrics_v2.unlock(
+      this.biometricsSystem,
+      userId,
+      this.windowMain.win.getNativeWindowHandle(),
+    );
+    return new SymmetricCryptoKey(Uint8Array.from(key));
   }
 
   async setBiometricKey(userId: UserId, key: SymmetricCryptoKey): Promise<void> {
-    const clientKeyHalf = await this.getOrCreateBiometricEncryptionClientKeyHalf(userId, key);
-
-    const storageDetails = await this.getStorageDetails({
-      clientKeyHalfB64: Utils.fromBufferToB64(clientKeyHalf),
-    });
-    await biometrics.setBiometricSecret(
-      SERVICE,
-      getLookupKeyForUser(userId),
-      key.toBase64(),
-      storageDetails.key_material,
-      storageDetails.ivB64,
-    );
+    return;
   }
 
   async deleteBiometricKey(userId: UserId): Promise<void> {
@@ -199,10 +153,6 @@ export default class OsBiometricsServiceWindows implements OsBiometricService {
   }
 
   async getBiometricsFirstUnlockStatusForUser(userId: UserId): Promise<BiometricsStatus> {
-    if (this.clientKeyHalves.has(userId)) {
-      return BiometricsStatus.Available;
-    } else {
-      return BiometricsStatus.UnlockNeeded;
-    }
+    return BiometricsStatus.Available;
   }
 }

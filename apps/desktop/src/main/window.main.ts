@@ -74,15 +74,24 @@ export class WindowMain {
     });
 
     ipcMain.on("window-focus", () => {
+      this.logService.info("Focusing window");
       if (this.win != null) {
-        this.win.show();
-        this.win.focus();
+        this.logService.info("Showing window");
+        this.win.minimize();
+        this.show();
+        this.win.setSize(this.defaultWidth, this.defaultHeight);
+        this.win.center();
       }
     });
 
     ipcMain.on("window-hide", () => {
-      if (this.win != null) {
-        this.win.hide();
+      if (this.win != null) { 
+        if (isWindows()) {
+          // On windows, to return focus we need minimize
+          this.win.minimize();
+        } else {
+          this.win.hide();
+        }
       }
     });
 

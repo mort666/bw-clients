@@ -25,6 +25,9 @@ import {
 import { BrowserSyncVerificationDialogComponent } from "../app/components/browser-sync-verification-dialog.component";
 import { LegacyMessage, LegacyMessageWrapper } from "../models/native-messaging";
 import { DesktopSettingsService } from "../platform/services/desktop-settings.service";
+import { isWindows } from "../utils";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { DeviceType } from "@bitwarden/common/enums";
 
 const MessageValidTimeout = 10 * 1000;
 const HashAlgorithmForAsymmetricEncryption = "sha1";
@@ -89,6 +92,7 @@ export class BiometricMessageHandlerService {
     private authService: AuthService,
     private ngZone: NgZone,
     private i18nService: I18nService,
+    private platformUtilsService: PlatformUtilsService
   ) {
     combineLatest([
       this.desktopSettingService.browserIntegrationEnabled$,
@@ -350,6 +354,7 @@ export class BiometricMessageHandlerService {
       // FIXME: Remove when updating file. Eslint update
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
+      this.logService.error("[Native Messaging IPC] Biometric unlock failed", e);
       await this.send(
         { command: BiometricsCommands.UnlockWithBiometricsForUser, messageId, response: false },
         appId,
