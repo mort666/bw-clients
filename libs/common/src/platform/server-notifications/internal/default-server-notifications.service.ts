@@ -165,9 +165,24 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
   }
 
   private hasAccessToken$(userId: UserId) {
-    return this.authService.authStatusFor$(userId).pipe(
-      map((authStatus) => authStatus === AuthenticationStatus.Unlocked),
-      distinctUntilChanged(),
+    return this.configService.getFeatureFlag$(FeatureFlag.PushNotificationsWhenLocked).pipe(
+      switchMap((featureFlagEnabled) => {
+        if (featureFlagEnabled) {
+          return this.authService.authStatusFor$(userId).pipe(
+            map(
+              (authStatus) =>
+                authStatus === AuthenticationStatus.Locked ||
+                authStatus === AuthenticationStatus.Unlocked,
+            ),
+            distinctUntilChanged(),
+          );
+        } else {
+          return this.authService.authStatusFor$(userId).pipe(
+            map((authStatus) => authStatus === AuthenticationStatus.Unlocked),
+            distinctUntilChanged(),
+          );
+        }
+      }),
     );
   }
 
