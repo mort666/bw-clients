@@ -18,7 +18,7 @@ import {
 import { LogoutReason } from "@bitwarden/auth/common";
 import { AuthRequestAnsweringServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth-request-answering/auth-request-answering.service.abstraction";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
-import { AllowedMultiUserNotificationTypes } from "@bitwarden/common/platform/enums/multiUserAllowList.enum";
+import { AllowedMultiUserNotificationTypes } from "@bitwarden/common/platform/enums/multi-user-allow-list.enum";
 
 import { AccountService } from "../../../auth/abstractions/account.service";
 import { AuthService } from "../../../auth/abstractions/auth.service";
