@@ -1,10 +1,16 @@
 use windows::{
     core::s,
     Win32::{
-        Foundation::HWND, System::Threading::{AttachThreadInput, GetCurrentThreadId}, UI::{
+        Foundation::HWND,
+        System::Threading::{AttachThreadInput, GetCurrentThreadId},
+        UI::{
             Input::KeyboardAndMouse::{EnableWindow, SetActiveWindow, SetCapture, SetFocus},
-            WindowsAndMessaging::{BringWindowToTop, FindWindowA, GetForegroundWindow, GetWindowThreadProcessId, SetForegroundWindow, SwitchToThisWindow, SystemParametersInfoW, SPIF_SENDCHANGE, SPIF_UPDATEINIFILE, SPI_GETFOREGROUNDLOCKTIMEOUT, SPI_SETFOREGROUNDLOCKTIMEOUT},
-        }
+            WindowsAndMessaging::{
+                BringWindowToTop, FindWindowA, GetForegroundWindow, GetWindowThreadProcessId,
+                SetForegroundWindow, SwitchToThisWindow, SystemParametersInfoW, SPIF_SENDCHANGE,
+                SPIF_UPDATEINIFILE, SPI_GETFOREGROUNDLOCKTIMEOUT, SPI_SETFOREGROUNDLOCKTIMEOUT,
+            },
+        },
     },
 };
 
@@ -48,15 +54,25 @@ pub(crate) fn set_focus(window: HWND) {
             Some(&mut old_timeout as *mut _ as *mut std::ffi::c_void),
             windows::Win32::UI::WindowsAndMessaging::SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
         );
-        let _ = SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, None, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
+        let _ = SystemParametersInfoW(
+            SPI_SETFOREGROUNDLOCKTIMEOUT,
+            0,
+            None,
+            SPIF_UPDATEINIFILE | SPIF_SENDCHANGE,
+        );
         let _scopeguard = scopeguard::guard((), |_| {
-            let _ = SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, old_timeout, None, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
+            let _ = SystemParametersInfoW(
+                SPI_SETFOREGROUNDLOCKTIMEOUT,
+                old_timeout,
+                None,
+                SPIF_UPDATEINIFILE | SPIF_SENDCHANGE,
+            );
         });
 
         // Attach to the active window's thread
         let dw_current_thread = GetCurrentThreadId();
         let dw_fg_thread = GetWindowThreadProcessId(GetForegroundWindow(), None);
-        
+
         let _ = AttachThreadInput(dw_current_thread, dw_fg_thread, true);
         let hwnd = window;
         let _ = SetForegroundWindow(hwnd);

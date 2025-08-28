@@ -1,27 +1,30 @@
 //! This file implements Windows-Hello based biometric unlock.
-//! 
+//!
 //! # Security
 //! Note: There are two scenarios to consider, with different security implications. This section
 //! describes the assumed security model and security guarantees achieved. In the required security
 //! guarantee is that a locked vault - a running app - cannot be unlocked when the device (user-space)
 //! is compromised in this state.
-//! 
+//!
 //! 1. Require master password on app restart
 //! In this scenario, when first unlocking the app, the app sends the user-key to this module, which holds it in secure memory,
 //! protected by DPAPI. This makes it inaccessible to other processes, unless they compromise the system administrator, or kernel.
 //! While the app is running this key is held in memory, even if locked. When unlocking, the app will prompt the user via
 //! `windows_hello_authenticate` to get a yes/no decision on whether to release the key to the app.
-//! 
+//!
 //! 2. Do not require master password on app restart
-//! In this scenario, when enrolling, the app sends the user-key to this module, which derives the windows hello key 
-//! with the Windows Hello prompt. This is done by signing a per-user challenge, which produces a deterministic 
+//! In this scenario, when enrolling, the app sends the user-key to this module, which derives the windows hello key
+//! with the Windows Hello prompt. This is done by signing a per-user challenge, which produces a deterministic
 //! signature which is hashed to obtain a key. This key is used to encrypt and persist the vault unlock key (user key).
-//! 
+//!
 //! Since the keychain can be accessed by all user-space processes, the challenge is known to all userspace processes.
 //! Therefore, to circumvent the security measure, the attacker would need to create a fake Windows-Hello prompt, and
 //! get the user to confirm it.
 
-use std::{ffi::c_void, sync::{atomic::AtomicBool, Arc}};
+use std::{
+    ffi::c_void,
+    sync::{atomic::AtomicBool, Arc},
+};
 
 use aes::cipher::KeyInit;
 use anyhow::{anyhow, Result};
@@ -30,9 +33,15 @@ use sha2::{Digest, Sha256};
 use tokio::sync::Mutex;
 use windows::{
     core::{factory, h, HSTRING},
-    Security::{Credentials::{KeyCredentialCreationOption, KeyCredentialManager, KeyCredentialStatus, UI::{
-        UserConsentVerificationResult, UserConsentVerifier, UserConsentVerifierAvailability,
-    }}, Cryptography::CryptographicBuffer},
+    Security::{
+        Credentials::{
+            KeyCredentialCreationOption, KeyCredentialManager, KeyCredentialStatus,
+            UI::{
+                UserConsentVerificationResult, UserConsentVerifier, UserConsentVerifierAvailability,
+            },
+        },
+        Cryptography::CryptographicBuffer,
+    },
     Win32::{
         Foundation::HWND, System::WinRT::IUserConsentVerifierInterop,
         UI::WindowsAndMessaging::GetForegroundWindow,
@@ -41,9 +50,7 @@ use windows::{
 use windows_future::IAsyncOperation;
 
 use super::windows_focus::{focus_security_prompt, set_focus};
-use crate::{
-    password, secure_memory::*
-};
+use crate::{password, secure_memory::*};
 
 const KEYCHAIN_SERVICE_NAME: &str = "BitwardenBiometricsV2";
 
@@ -58,13 +65,15 @@ struct WindowsHelloKeychainEntry {
 pub struct BiometricLockSystem {
     // The userkeys that are held in memory MUST be protected from memory dumping attacks, to ensure
     // locked vaults cannot be unlocked
-    secure_memory: Arc<Mutex<crate::secure_memory::dpapi::DpapiSecretKVStore>>
+    secure_memory: Arc<Mutex<crate::secure_memory::dpapi::DpapiSecretKVStore>>,
 }
 
 impl BiometricLockSystem {
     pub fn new() -> Self {
         Self {
-            secure_memory: Arc::new(Mutex::new(crate::secure_memory::dpapi::DpapiSecretKVStore::new())),
+            secure_memory: Arc::new(Mutex::new(
+                crate::secure_memory::dpapi::DpapiSecretKVStore::new(),
+            )),
         }
     }
 }
@@ -108,12 +117,21 @@ impl super::BiometricTrait for BiometricLockSystem {
             XNonce::clone_from_slice(&nonce_bytes)
         };
 
-        let wrapped_key = XChaCha20Poly1305::new(&windows_hello_key.into()).encrypt(&nonce, key).map_err(|e| anyhow!(e))?;
-        set_keychain_entry(user_id, &WindowsHelloKeychainEntry {
-            nonce: nonce.as_slice().try_into().map_err(|_| anyhow!("Invalid nonce length"))?,
-            challenge,
-            wrapped_key,
-        }).await?;
+        let wrapped_key = XChaCha20Poly1305::new(&windows_hello_key.into())
+            .encrypt(&nonce, key)
+            .map_err(|e| anyhow!(e))?;
+        set_keychain_entry(
+            user_id,
+            &WindowsHelloKeychainEntry {
+                nonce: nonce
+                    .as_slice()
+                    .try_into()
+                    .map_err(|_| anyhow!("Invalid nonce length"))?,
+                challenge,
+                wrapped_key,
+            },
+        )
+        .await?;
         Ok(())
     }
 
@@ -126,18 +144,34 @@ impl super::BiometricTrait for BiometricLockSystem {
         let mut secure_memory = self.secure_memory.lock().await;
         if secure_memory.has(user_id) {
             println!("[Windows Hello] Key is in secure memory, using UV API");
-            
-            if self.authenticate(hwnd, "Unlock your vault".to_owned()).await? {
+
+            if self
+                .authenticate(hwnd, "Unlock your vault".to_owned())
+                .await?
+            {
                 println!("[Windows Hello] Authentication successful");
-                return secure_memory.get(user_id).clone().ok_or_else(|| anyhow!("No key found for user"));
+                return secure_memory
+                    .get(user_id)
+                    .clone()
+                    .ok_or_else(|| anyhow!("No key found for user"));
             }
             Err(anyhow!("Authentication failed"))
         } else {
             println!("[Windows Hello] Key not in secure memory, using Signing API");
 
             let keychain_entry = get_keychain_entry(user_id).await?;
-            let windows_hello_key = windows_hello_authenticate_with_crypto(&keychain_entry.challenge)?;
-            let decrypted_key = XChaCha20Poly1305::new(&windows_hello_key.into()).decrypt(keychain_entry.nonce.as_slice().try_into().map_err(|_| anyhow!("Invalid nonce length"))?, keychain_entry.wrapped_key.as_slice()).map_err(|e| anyhow!(e))?;
+            let windows_hello_key =
+                windows_hello_authenticate_with_crypto(&keychain_entry.challenge)?;
+            let decrypted_key = XChaCha20Poly1305::new(&windows_hello_key.into())
+                .decrypt(
+                    keychain_entry
+                        .nonce
+                        .as_slice()
+                        .try_into()
+                        .map_err(|_| anyhow!("Invalid nonce length"))?,
+                    keychain_entry.wrapped_key.as_slice(),
+                )
+                .map_err(|e| anyhow!(e))?;
             secure_memory.put(user_id.to_string(), &decrypted_key.clone());
             Ok(decrypted_key)
         }
@@ -145,10 +179,11 @@ impl super::BiometricTrait for BiometricLockSystem {
 
     async fn unlock_available(&self, user_id: &str) -> Result<bool> {
         let secure_memory = self.secure_memory.lock().await;
-        let has_key = secure_memory.has(user_id) || has_keychain_entry(user_id).await.unwrap_or(false);
+        let has_key =
+            secure_memory.has(user_id) || has_keychain_entry(user_id).await.unwrap_or(false);
         Ok(has_key && self.authenticate_available().await.unwrap_or(false))
     }
-    
+
     async fn has_persistent(&self, user_id: &str) -> Result<bool> {
         Ok(get_keychain_entry(user_id).await.is_ok())
     }
@@ -190,7 +225,7 @@ fn windows_hello_authenticate(hwnd: Vec<u8>, message: String) -> Result<bool> {
 ///
 /// Windows will only sign the challenge if the user has successfully authenticated with Windows,
 /// ensuring user presence.
-/// 
+///
 /// Note: This API has inconsistent focusing behavior when called from another window
 fn windows_hello_authenticate_with_crypto(challenge: &[u8; 16]) -> Result<[u8; 32]> {
     // Ugly hack: We need to focus the window via window focusing APIs until Microsoft releases a new API.
@@ -225,7 +260,12 @@ fn windows_hello_authenticate_with_crypto(challenge: &[u8; 16]) -> Result<[u8; 3
         _ => return Err(anyhow!("Failed to create key credential")),
     };
 
-    let signature = result.Credential()?.RequestSignAsync(&CryptographicBuffer::CreateFromByteArray(challenge.as_slice())?)?.get()?;
+    let signature = result
+        .Credential()?
+        .RequestSignAsync(&CryptographicBuffer::CreateFromByteArray(
+            challenge.as_slice(),
+        )?)?
+        .get()?;
 
     if signature.Status()? == KeyCredentialStatus::Success {
         let signature_buffer = signature.Result()?;
@@ -244,11 +284,7 @@ fn windows_hello_authenticate_with_crypto(challenge: &[u8; 16]) -> Result<[u8; 3
 async fn set_keychain_entry(user_id: &str, entry: &WindowsHelloKeychainEntry) -> Result<()> {
     let serialized_entry = serde_json::to_string(entry)?;
 
-    password::set_password(
-        KEYCHAIN_SERVICE_NAME,
-        user_id,
-        &serialized_entry,
-    ).await?;
+    password::set_password(KEYCHAIN_SERVICE_NAME, user_id, &serialized_entry).await?;
 
     Ok(())
 }

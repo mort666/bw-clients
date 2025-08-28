@@ -1,4 +1,4 @@
-use anyhow::{Result};
+use anyhow::Result;
 
 #[allow(clippy::module_inception)]
 #[cfg_attr(target_os = "linux", path = "linux.rs")]
@@ -23,20 +23,9 @@ pub trait BiometricTrait {
     async fn unenroll(&self, user_id: &str) -> Result<()>;
     async fn has_persistent(&self, user_id: &str) -> Result<bool>;
     /// On every unlock, the client provides a key to be held for subsequent biometric unlock
-    async fn provide_key(
-        &self,
-        user_id: &str,
-        key: &[u8]
-    );
+    async fn provide_key(&self, user_id: &str, key: &[u8]);
     /// Perform biometric unlock and return the key
-    async fn unlock(
-        &self,
-        user_id: &str,
-        hwnd: Vec<u8>,
-    ) -> Result<Vec<u8>>;
+    async fn unlock(&self, user_id: &str, hwnd: Vec<u8>) -> Result<Vec<u8>>;
     /// Check if biometric unlock is available based on whether a key is present and whether authentication is possible
-    async fn unlock_available(
-        &self,
-        user_id: &str,
-    ) -> Result<bool>;
+    async fn unlock_available(&self, user_id: &str) -> Result<bool>;
 }
