@@ -33,6 +33,12 @@ export default class OsBiometricsServiceLinux implements OsBiometricService {
 
   constructor() {}
 
+  async enrollPersistent(userId: UserId, key: SymmetricCryptoKey): Promise<void> {}
+
+  async hasPersistentKey(userId: UserId): Promise<boolean> {
+    return false;
+  }
+
   async setBiometricKey(userId: UserId, key: SymmetricCryptoKey): Promise<void> {
     await biometrics.provideKey(this.biometricsSystem, userId, Buffer.from(key.toEncoded().buffer));
   }
