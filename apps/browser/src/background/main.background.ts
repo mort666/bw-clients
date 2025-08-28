@@ -1405,9 +1405,6 @@ export default class MainBackground {
   }
 
   async bootstrap() {
-    if (this.webPushConnectionService instanceof WorkerWebPushConnectionService) {
-      this.webPushConnectionService.start();
-    }
     this.containerService.attachToGlobal(self);
 
     await this.sdkLoadService.loadAndInit();
