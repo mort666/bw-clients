@@ -32,4 +32,8 @@ impl super::BiometricTrait for BiometricLockSystem {
     async fn has_persistent(&self, _user_id: &str) -> Result<bool, anyhow::Error> {
         unimplemented!()
     }
+
+    async fn unenroll(&self, _user_id: &str) -> Result<(), anyhow::Error> {
+        Ok(())
+    }
 }
