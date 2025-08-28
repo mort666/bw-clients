@@ -6,13 +6,13 @@
 //! guarantee is that a locked vault - a running app - cannot be unlocked when the device (user-space)
 //! is compromised in this state.
 //!
-//! 1. Require master password on app restart
+//! ## Require master password on app restart
 //! In this scenario, when first unlocking the app, the app sends the user-key to this module, which holds it in secure memory,
 //! protected by DPAPI. This makes it inaccessible to other processes, unless they compromise the system administrator, or kernel.
 //! While the app is running this key is held in memory, even if locked. When unlocking, the app will prompt the user via
 //! `windows_hello_authenticate` to get a yes/no decision on whether to release the key to the app.
 //!
-//! 2. Do not require master password on app restart
+//! ## Do not require master password on app restart
 //! In this scenario, when enrolling, the app sends the user-key to this module, which derives the windows hello key
 //! with the Windows Hello prompt. This is done by signing a per-user challenge, which produces a deterministic
 //! signature which is hashed to obtain a key. This key is used to encrypt and persist the vault unlock key (user key).
@@ -173,8 +173,7 @@ impl super::BiometricTrait for BiometricLockSystem {
                     keychain_entry
                         .nonce
                         .as_slice()
-                        .try_into()
-                        .map_err(|_| anyhow!("Invalid nonce length"))?,
+                        .into(),
                     keychain_entry.wrapped_key.as_slice(),
                 )
                 .map_err(|e| anyhow!(e))?;
