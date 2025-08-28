@@ -1522,10 +1522,20 @@ export class ApiService implements ApiServiceAbstraction {
   // Helpers
 
   async getActiveBearerToken(): Promise<string> {
+    console.debug("[ApiService] getActiveBearerToken called");
     let accessToken = await this.tokenService.getAccessToken();
-    if (await this.tokenService.tokenNeedsRefresh()) {
+    const needsRefresh = await this.tokenService.tokenNeedsRefresh();
+    if (needsRefresh) {
+      console.debug("[ApiService] access token needs refresh; refreshing now");
       accessToken = await this.refreshToken();
+    } else {
+      console.debug("[ApiService] access token does not need refresh");
     }
+    try {
+      const decoded = await this.tokenService.decodeAccessToken();
+      const subject = (decoded as any)?.sub ?? "unknown";
+      console.debug(`[ApiService] active token subject: ${subject}`);
+    } catch {}
     return accessToken;
   }
 
