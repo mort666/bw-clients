@@ -1,5 +1,3 @@
-import { CryptoFunctionService } from "@bitwarden/common/key-management/crypto/abstractions/crypto-function.service";
-import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
@@ -22,17 +20,12 @@ export class MainBiometricsService extends DesktopBiometricsService {
     private logService: LogService,
     platform: NodeJS.Platform,
     private biometricStateService: BiometricStateService,
-    private encryptService: EncryptService,
-    private cryptoFunctionService: CryptoFunctionService,
   ) {
     super();
     if (platform === "win32") {
       // eslint-disable-next-line
       const OsBiometricsServiceWindows = require("./os-biometrics-windows.service").default;
-      this.osBiometricsService = new OsBiometricsServiceWindows(
-        this.i18nService,
-        this.windowMain,
-      );
+      this.osBiometricsService = new OsBiometricsServiceWindows(this.i18nService, this.windowMain);
     } else if (platform === "darwin") {
       // eslint-disable-next-line
       const OsBiometricsServiceMac = require("./os-biometrics-mac.service").default;
