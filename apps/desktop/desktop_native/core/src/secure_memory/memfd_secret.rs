@@ -1,5 +1,7 @@
 use std::{collections::HashMap, ptr::NonNull, sync::LazyLock};
 
+use std::marker::Send;
+
 use crate::secure_memory::SecureMemoryStore;
 
 /// https://man.archlinux.org/man/memfd_secret.2.en
@@ -10,6 +12,8 @@ use crate::secure_memory::SecureMemoryStore;
 pub(crate) struct MemfdSecretKVStore {
     map: HashMap<String, std::ptr::NonNull<[u8]>>,
 }
+
+unsafe impl Send for MemfdSecretKVStore {}
 
 impl MemfdSecretKVStore {
     pub(crate) fn new() -> Self {
