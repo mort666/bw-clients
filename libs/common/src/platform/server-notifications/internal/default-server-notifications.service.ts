@@ -165,24 +165,9 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
   }
 
   private hasAccessToken$(userId: UserId) {
-    return this.configService.getFeatureFlag$(FeatureFlag.PushNotificationsWhenLocked).pipe(
-      switchMap((featureFlagEnabled) => {
-        if (featureFlagEnabled) {
-          return this.authService.authStatusFor$(userId).pipe(
-            map(
-              (authStatus) =>
-                authStatus === AuthenticationStatus.Locked ||
-                authStatus === AuthenticationStatus.Unlocked,
-            ),
-            distinctUntilChanged(),
-          );
-        } else {
-          return this.authService.authStatusFor$(userId).pipe(
-            map((authStatus) => authStatus === AuthenticationStatus.Unlocked),
-            distinctUntilChanged(),
-          );
-        }
-      }),
+    return this.authService.authStatusFor$(userId).pipe(
+      map((authStatus) => authStatus === AuthenticationStatus.Unlocked),
+      distinctUntilChanged(),
     );
   }
 
@@ -213,20 +198,6 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
       if (!isActiveUser && !multiUserNotificationTypes.has(notification.type)) {
         return;
       }
-    }
-
-    // Allow-list of notification types that are safe to process for non-active users
-    const multiUserNotificationTypes = new Set<NotificationType>([
-      NotificationType.AuthRequest,
-    ]);
-
-    const activeAccountId = await firstValueFrom(
-      this.accountService.activeAccount$.pipe(map((a) => a?.id)),
-    );
-
-    const isActiveUser = activeAccountId === userId;
-    if (!isActiveUser && !multiUserNotificationTypes.has(notification.type)) {
-      return;
     }
 
     switch (notification.type) {
