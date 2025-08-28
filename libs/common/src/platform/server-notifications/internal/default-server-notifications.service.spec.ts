@@ -70,6 +70,7 @@ describe("NotificationsService", () => {
     signalRNotificationConnectionService = mock<SignalRConnectionService>();
     authService = mock<AuthService>();
     webPushNotificationConnectionService = mock<WorkerWebPushConnectionService>();
+    authRequestAnsweringService = mock<AuthRequestAnsweringServiceAbstraction>();
     configService = mock<ConfigService>();
     // For these tests, use the active-user implementation (feature flag disabled)
     configService.getFeatureFlag$.mockImplementation((flag: FeatureFlag) => {
