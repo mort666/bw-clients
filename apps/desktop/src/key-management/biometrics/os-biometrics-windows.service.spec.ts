@@ -14,6 +14,7 @@ jest.mock("@bitwarden/desktop-napi", () => ({
   biometrics: {
     initBiometricSystem: jest.fn(() => "mockSystem"),
     provideKey: jest.fn(),
+    enrollPersistent: jest.fn(),
     unenroll: jest.fn(),
     unlock: jest.fn(),
     authenticate: jest.fn(),
@@ -46,6 +47,11 @@ describe("OsBiometricsServiceWindows", () => {
     windowMain = mock<WindowMain>();
     windowMain.win.getNativeWindowHandle = jest.fn().mockReturnValue(Buffer.from([1, 2, 3, 4]));
     service = new OsBiometricsServiceWindows(i18nService, windowMain);
+  });
+
+  it("should enroll persistent biometric key", async () => {
+    await service.enrollPersistent("user-id" as UserId, new SymmetricCryptoKey(mockKey));
+    expect(biometrics.enrollPersistent).toHaveBeenCalled();
   });
 
   it("should set biometric key", async () => {
