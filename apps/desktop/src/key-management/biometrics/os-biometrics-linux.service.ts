@@ -33,12 +33,6 @@ export default class OsBiometricsServiceLinux implements OsBiometricService {
 
   constructor() {}
 
-  async enrollPersistent(userId: UserId, key: SymmetricCryptoKey): Promise<void> {}
-
-  async hasPersistentKey(userId: UserId): Promise<boolean> {
-    return false;
-  }
-
   async setBiometricKey(userId: UserId, key: SymmetricCryptoKey): Promise<void> {
     await biometrics.provideKey(this.biometricsSystem, userId, Buffer.from(key.toEncoded().buffer));
   }
@@ -109,5 +103,11 @@ export default class OsBiometricsServiceLinux implements OsBiometricService {
     return (await biometrics.unlockAvailable(this.biometricsSystem, userId))
       ? BiometricsStatus.Available
       : BiometricsStatus.UnlockNeeded;
+  }
+
+  async enrollPersistent(userId: UserId, key: SymmetricCryptoKey): Promise<void> {}
+
+  async hasPersistentKey(userId: UserId): Promise<boolean> {
+    return false;
   }
 }
