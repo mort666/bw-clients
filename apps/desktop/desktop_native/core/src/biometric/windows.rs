@@ -115,7 +115,6 @@ impl super::BiometricTrait for BiometricLockSystem {
 
         // This key is unique to the challenge
         let windows_hello_key = windows_hello_authenticate_with_crypto(&challenge)?;
-
         let (wrapped_key, nonce) = encrypt_data(&windows_hello_key, key).unwrap();
 
         set_keychain_entry(
@@ -152,21 +151,15 @@ impl super::BiometricTrait for BiometricLockSystem {
         // If the key is held ephemerally, always use UV API. Only use signing API if the key is not held
         // ephemerally but the keychain holds it persistently.
         if secure_memory.has(user_id) {
-            println!("[Windows Hello] Key is in secure memory, using UV API");
-
-            if self
-                .authenticate(hwnd, "Unlock your vault".to_owned())
-                .await?
-            {
-                println!("[Windows Hello] Authentication successful");
-                return secure_memory
+            if windows_hello_authenticate("Unlock your vault".to_string())? {
+                secure_memory
                     .get(user_id)
                     .clone()
-                    .ok_or_else(|| anyhow!("No key found for user"));
+                    .ok_or_else(|| anyhow!("No key found for user"))
+            } else {
+                Err(anyhow!("Authentication failed"))
             }
-            Err(anyhow!("Authentication failed"))
         } else {
-            println!("[Windows Hello] Key not in secure memory, using Signing API");
             let keychain_entry = get_keychain_entry(user_id).await?;
             let windows_hello_key =
                 windows_hello_authenticate_with_crypto(&keychain_entry.challenge)?;
@@ -196,6 +189,7 @@ impl super::BiometricTrait for BiometricLockSystem {
 /// Get a yes/no authorization without any cryptographic backing.
 /// This API has better focusing behavior
 fn windows_hello_authenticate(message: String) -> Result<bool> {
+    println!("[Windows Hello] Authenticating to perform UV with message: {}", message);
     // Windows Hello prompt must be in foreground, focused, otherwise the face or fingerprint
     // unlock will not work. We get the current foreground window, which will either be the
     // Bitwarden desktop app or the browser extension.
@@ -224,6 +218,7 @@ fn windows_hello_authenticate(message: String) -> Result<bool> {
 ///
 /// Note: This API has inconsistent focusing behavior when called from another window
 fn windows_hello_authenticate_with_crypto(challenge: &[u8; 16]) -> Result<[u8; 32]> {
+    println!("[Windows Hello] Authenticating to sign challenge: {:?}", challenge);
     // Ugly hack: We need to focus the window via window focusing APIs until Microsoft releases a new API.
     // This is unreliable, and if it does not work, the operation may fail
     let stop_focusing = Arc::new(AtomicBool::new(false));
