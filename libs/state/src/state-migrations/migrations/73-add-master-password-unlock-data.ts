@@ -23,19 +23,6 @@ export const KDF_CONFIG_DISK: KeyDefinitionLike = {
   stateDefinition: { name: "kdfConfig" },
 };
 
-type KdfConfig = {
-  iterations: number;
-  kdfType: 0 | 1;
-  memory?: number;
-  parallelism?: number;
-};
-
-export type AccountType = {
-  profile?: {
-    email?: string;
-  };
-};
-
 type AccountsMap = Record<string, Account>;
 type Account = {
   email: string;
@@ -44,9 +31,9 @@ type Account = {
 
 export class AddMasterPasswordUnlockData extends Migrator<72, 73> {
   async migrate(helper: MigrationHelper): Promise<void> {
-    async function migrateAccount(userId: string, accounts: AccountsMap) {
-      const email = accounts[userId]?.email;
-      const kdfConfig: KdfConfig = await helper.getFromUser(userId, KDF_CONFIG_DISK);
+    async function migrateAccount(userId: string, account: Account) {
+      const email = account.email;
+      const kdfConfig = await helper.getFromUser(userId, KDF_CONFIG_DISK);
       const masterKeyEncryptedUserKey = await helper.getFromUser(
         userId,
         MASTER_KEY_ENCRYPTED_USER_KEY,
@@ -67,7 +54,9 @@ export class AddMasterPasswordUnlockData extends Migrator<72, 73> {
 
     const accountDictionary = await helper.getFromGlobal<AccountsMap>(ACCOUNT_ACCOUNTS);
     const accounts = await helper.getAccounts();
-    await Promise.all(accounts.map(({ userId }) => migrateAccount(userId, accountDictionary)));
+    await Promise.all(
+      accounts.map(({ userId }) => migrateAccount(userId, accountDictionary[userId])),
+    );
   }
 
   async rollback(helper: MigrationHelper): Promise<void> {
