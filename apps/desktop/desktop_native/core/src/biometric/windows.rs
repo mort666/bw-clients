@@ -54,11 +54,14 @@ use super::windows_focus::{focus_security_prompt, set_focus};
 use crate::{password, secure_memory::*};
 
 const KEYCHAIN_SERVICE_NAME: &str = "BitwardenBiometricsV2";
+const CHALLENGE_LENGTH: usize = 16;
+const XCHACHA20POLY1305_NONCE_LENGTH: usize = 24;
+const XCHACHA20POLY1305_KEY_LENGTH: usize = 32;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 struct WindowsHelloKeychainEntry {
-    nonce: [u8; 24],
-    challenge: [u8; 16],
+    nonce: [u8; XCHACHA20POLY1305_NONCE_LENGTH],
+    challenge: [u8; CHALLENGE_LENGTH],
     wrapped_key: Vec<u8>,
 }
 
@@ -110,7 +113,7 @@ impl super::BiometricTrait for BiometricLockSystem {
         // challenge and wrapped-key are stored to the keychain
 
         // Each enrollment (per user) has a unique challenge, so that the windows-hello key is unique
-        let mut challenge = [0u8; 16];
+        let mut challenge = [0u8; CHALLENGE_LENGTH];
         rand::fill(&mut challenge);
 
         // This key is unique to the challenge
@@ -220,7 +223,9 @@ fn windows_hello_authenticate(message: String) -> Result<bool> {
 /// ensuring user presence.
 ///
 /// Note: This API has inconsistent focusing behavior when called from another window
-fn windows_hello_authenticate_with_crypto(challenge: &[u8; 16]) -> Result<[u8; 32]> {
+fn windows_hello_authenticate_with_crypto(
+    challenge: &[u8; CHALLENGE_LENGTH],
+) -> Result<[u8; XCHACHA20POLY1305_KEY_LENGTH]> {
     println!(
         "[Windows Hello] Authenticating to sign challenge: {:?}",
         challenge
@@ -305,9 +310,12 @@ async fn has_keychain_entry(user_id: &str) -> Result<bool> {
 }
 
 /// Encrypt data with XChaCha20Poly1305
-fn encrypt_data(key: &[u8; 32], plaintext: &[u8]) -> Result<(Vec<u8>, [u8; 24])> {
+fn encrypt_data(
+    key: &[u8; XCHACHA20POLY1305_KEY_LENGTH],
+    plaintext: &[u8],
+) -> Result<(Vec<u8>, [u8; XCHACHA20POLY1305_NONCE_LENGTH])> {
     let cipher = XChaCha20Poly1305::new(key.into());
-    let mut nonce = [0u8; 24];
+    let mut nonce = [0u8; XCHACHA20POLY1305_NONCE_LENGTH];
     rand::fill(&mut nonce);
     let ciphertext = cipher
         .encrypt(XNonce::from_slice(&nonce), plaintext)
@@ -316,7 +324,11 @@ fn encrypt_data(key: &[u8; 32], plaintext: &[u8]) -> Result<(Vec<u8>, [u8; 24])>
 }
 
 /// Decrypt data with XChaCha20Poly1305
-fn decrypt_data(key: &[u8; 32], ciphertext: &[u8], nonce: &[u8; 24]) -> Result<Vec<u8>> {
+fn decrypt_data(
+    key: &[u8; XCHACHA20POLY1305_KEY_LENGTH],
+    ciphertext: &[u8],
+    nonce: &[u8; XCHACHA20POLY1305_NONCE_LENGTH],
+) -> Result<Vec<u8>> {
     let cipher = XChaCha20Poly1305::new(key.into());
     let plaintext = cipher
         .decrypt(XNonce::from_slice(nonce), ciphertext)
@@ -348,7 +360,7 @@ mod tests {
     #[test]
     #[ignore]
     fn test_windows_hello_authenticate_with_crypto_manual() {
-        let challenge = [0u8; 16];
+        let challenge = [0u8; CHALLENGE_LENGTH];
         let windows_hello_key = windows_hello_authenticate_with_crypto(&challenge);
         println!(
             "Windows hello key {:?} for challenge {:?}",
@@ -368,7 +380,7 @@ mod tests {
     #[ignore]
     async fn test_enroll_unlock_unenroll() {
         let user_id = "test_user";
-        let mut key = [0u8; 32];
+        let mut key = [0u8; XCHACHA20POLY1305_KEY_LENGTH];
         rand::fill(&mut key);
 
         let windows_hello_lock_system = BiometricLockSystem::new();
