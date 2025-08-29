@@ -117,15 +117,16 @@ impl super::BiometricTrait for BiometricLockSystem {
         // This key is unique to the challenge
         let windows_hello_key = windows_hello_authenticate_with_crypto(&challenge)?;
 
+        // Wrap key with xchacha20-poly1305
         let nonce = {
             let mut nonce_bytes = [0u8; 24];
             rand::fill(&mut nonce_bytes);
             XNonce::clone_from_slice(&nonce_bytes)
         };
-
         let wrapped_key = XChaCha20Poly1305::new(&windows_hello_key.into())
             .encrypt(&nonce, key)
             .map_err(|e| anyhow!(e))?;
+
         set_keychain_entry(
             user_id,
             &WindowsHelloKeychainEntry {
@@ -147,7 +148,17 @@ impl super::BiometricTrait for BiometricLockSystem {
     }
 
     async fn unlock(&self, user_id: &str, hwnd: Vec<u8>) -> Result<Vec<u8>> {
+        // Allow restoring focus to the previous window (broweser)
+        let previous_active_window = super::windows_focus::get_active_window();
+        let _focus_scopeguard = scopeguard::guard((), |_| {
+            if let Some(hwnd) = previous_active_window {
+                set_focus(hwnd.0);
+            }
+        });
+        
         let mut secure_memory = self.secure_memory.lock().await;
+        // If the key is held ephemerally, always use UV API. Only use signing API if the key is not held
+        // ephemerally but the keychain holds it persistently.
         if secure_memory.has(user_id) {
             println!("[Windows Hello] Key is in secure memory, using UV API");
 
@@ -164,7 +175,6 @@ impl super::BiometricTrait for BiometricLockSystem {
             Err(anyhow!("Authentication failed"))
         } else {
             println!("[Windows Hello] Key not in secure memory, using Signing API");
-
             let keychain_entry = get_keychain_entry(user_id).await?;
             let windows_hello_key =
                 windows_hello_authenticate_with_crypto(&keychain_entry.challenge)?;
@@ -174,6 +184,7 @@ impl super::BiometricTrait for BiometricLockSystem {
                     keychain_entry.wrapped_key.as_slice(),
                 )
                 .map_err(|e| anyhow!(e))?;
+            // The first unlock already sets the key for subsequent unlocks. The key may again be set externally after unlock finishes.
             secure_memory.put(user_id.to_string(), &decrypted_key.clone());
             Ok(decrypted_key)
         }
@@ -194,26 +205,23 @@ impl super::BiometricTrait for BiometricLockSystem {
 /// Get a yes/no authorization without any cryptographic backing.
 /// This API has better focusing behavior
 fn windows_hello_authenticate(hwnd: Vec<u8>, message: String) -> Result<bool> {
-    let h = isize::from_le_bytes(hwnd.clone().try_into().unwrap());
-    let h = h as *mut c_void;
-    let window = HWND(h);
+    let window = HWND(isize::from_le_bytes(hwnd.clone().try_into().unwrap()) as *mut c_void);
 
     // The Windows Hello prompt is displayed inside the application window. For best result we
-    //  should set the window to the foreground and focus it.
+    // should set the window to the foreground and focus it.
     set_focus(window);
 
     // Windows Hello prompt must be in foreground, focused, otherwise the face or fingerprint
-    //  unlock will not work. We get the current foreground window, which will either be the
-    //  Bitwarden desktop app or the browser extension.
+    // unlock will not work. We get the current foreground window, which will either be the
+    // Bitwarden desktop app or the browser extension.
     let foreground_window = unsafe { GetForegroundWindow() };
 
-    let interop = factory::<UserConsentVerifier, IUserConsentVerifierInterop>()?;
-    let operation: IAsyncOperation<UserConsentVerificationResult> = unsafe {
-        interop.RequestVerificationForWindowAsync(foreground_window, &HSTRING::from(message))?
+    let userconsent_verifier = factory::<UserConsentVerifier, IUserConsentVerifierInterop>()?;
+    let userconsent_result: IAsyncOperation<UserConsentVerificationResult> = unsafe {
+        userconsent_verifier.RequestVerificationForWindowAsync(foreground_window, &HSTRING::from(message))?
     };
-    let result = operation.get()?;
 
-    match result {
+    match userconsent_result.get()? {
         UserConsentVerificationResult::Verified => Ok(true),
         _ => Ok(false),
     }
@@ -248,61 +256,54 @@ fn windows_hello_authenticate_with_crypto(challenge: &[u8; 16]) -> Result<[u8; 3
         stop_focusing.store(true, std::sync::atomic::Ordering::Relaxed);
     });
 
-    // First create or replace the Bitwarden signing key
-    let result = KeyCredentialManager::RequestCreateAsync(
-        h!("BitwardenBiometricsV2"),
-        KeyCredentialCreationOption::FailIfExists,
-    )?
-    .get()?;
-    let result = match result.Status()? {
-        KeyCredentialStatus::CredentialAlreadyExists => {
-            KeyCredentialManager::OpenAsync(h!("BitwardenBiometricsV2"))?.get()?
+    // First create or replace the Bitwarden Biometrics signing key
+    let credential = {
+        let key_credential_creation_result = KeyCredentialManager::RequestCreateAsync(
+            h!("BitwardenBiometricsV2"),
+            KeyCredentialCreationOption::FailIfExists,
+        )?
+        .get()?;
+        match key_credential_creation_result.Status()? {
+            KeyCredentialStatus::CredentialAlreadyExists => {
+                KeyCredentialManager::OpenAsync(h!("BitwardenBiometricsV2"))?.get()?
+            }
+            KeyCredentialStatus::Success => key_credential_creation_result,
+            _ => return Err(anyhow!("Failed to create key credential")),
         }
-        KeyCredentialStatus::Success => result,
-        _ => return Err(anyhow!("Failed to create key credential")),
-    };
+    }.Credential()?;
 
-    let signature = result
-        .Credential()?
+    let signature = credential
         .RequestSignAsync(&CryptographicBuffer::CreateFromByteArray(
             challenge.as_slice(),
         )?)?
         .get()?;
-
-    if signature.Status()? == KeyCredentialStatus::Success {
-        let signature_buffer = signature.Result()?;
-        let mut signature_value =
-            windows::core::Array::<u8>::with_len(signature_buffer.Length().unwrap() as usize);
-        CryptographicBuffer::CopyToByteArray(&signature_buffer, &mut signature_value)?;
-
-        // The signature is deterministic based on the challenge and keychain key. Thus, it can be hashed to a key.
-        // It is unclear what entropy this key provides.
-        Ok(Sha256::digest(signature_value.as_slice()).into())
-    } else {
-        Err(anyhow!("Failed to sign data"))
+    if signature.Status()? != KeyCredentialStatus::Success {
+        return Err(anyhow!("Failed to sign data"));
     }
+
+    let signature_buffer = signature.Result()?;
+    let mut signature_value =
+        windows::core::Array::<u8>::with_len(signature_buffer.Length().unwrap() as usize);
+    CryptographicBuffer::CopyToByteArray(&signature_buffer, &mut signature_value)?;
+    // The signature is deterministic based on the challenge and keychain key. Thus, it can be hashed to a key.
+    // It is unclear what entropy this key provides.
+    let windows_hello_key = Sha256::digest(signature_value.as_slice()).into();
+    Ok(windows_hello_key)
 }
 
 async fn set_keychain_entry(user_id: &str, entry: &WindowsHelloKeychainEntry) -> Result<()> {
-    let serialized_entry = serde_json::to_string(entry)?;
-
-    password::set_password(KEYCHAIN_SERVICE_NAME, user_id, &serialized_entry).await?;
-
-    Ok(())
+    password::set_password(KEYCHAIN_SERVICE_NAME, user_id, &serde_json::to_string(entry)?).await
 }
 
 async fn get_keychain_entry(user_id: &str) -> Result<WindowsHelloKeychainEntry> {
-    let entry_str = password::get_password(KEYCHAIN_SERVICE_NAME, user_id).await?;
-    let entry: WindowsHelloKeychainEntry = serde_json::from_str(&entry_str)?;
-    Ok(entry)
+    serde_json::from_str(&password::get_password(KEYCHAIN_SERVICE_NAME, user_id).await?)
+        .map_err(|e| anyhow!(e))
 }
 
 async fn delete_keychain_entry(user_id: &str) -> Result<()> {
-    password::delete_password(KEYCHAIN_SERVICE_NAME, user_id).await?;
-    Ok(())
+    password::delete_password(KEYCHAIN_SERVICE_NAME, user_id).await
 }
 
 async fn has_keychain_entry(user_id: &str) -> Result<bool> {
-    let entry = password::get_password(KEYCHAIN_SERVICE_NAME, user_id).await?;
-    Ok(!entry.is_empty())
+    Ok(!password::get_password(KEYCHAIN_SERVICE_NAME, user_id).await?.is_empty())
 }

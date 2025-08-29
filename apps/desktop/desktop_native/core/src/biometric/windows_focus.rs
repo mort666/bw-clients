@@ -14,6 +14,13 @@ use windows::{
     },
 };
 
+pub(crate) struct HwndHolder(pub(crate) HWND);
+unsafe impl Send for HwndHolder {}
+
+pub(crate) fn get_active_window() -> Option<HwndHolder> {
+    unsafe { Some(HwndHolder(GetForegroundWindow())) }
+}
+
 /// Searches for a window that looks like a security prompt and set it as focused.
 /// Only works when the process has permission to foreground, either by being in foreground
 /// Or by being given foreground permission https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setforegroundwindow#remarks
