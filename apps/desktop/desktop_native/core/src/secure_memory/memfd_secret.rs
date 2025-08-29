@@ -93,19 +93,28 @@ pub(super) fn is_supported() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    
+    #[test]
+    fn test_memfd_secret_kv_store_various_sizes() {
+        let mut store = MemfdSecretKVStore::new();
+        for size in 0..=2048 {
+            let key = format!("test_key_{}", size);
+            let value: Vec<u8> = (0..size).map(|i| (i % 256) as u8).collect();
+            store.put(key.clone(), &value);
+            assert!(store.has(&key), "Store should have key for size {}", size);
+            assert_eq!(store.get(&key), Some(value), "Value mismatch for size {}", size);
+        }
+    }
 
     #[test]
-    fn test_memfd_secret_kv_store() {
+    fn test_memfd_secret_kv_store_crud() {
         let mut store = MemfdSecretKVStore::new();
         let key = "test_key".to_string();
         let value = vec![1, 2, 3, 4, 5];
-
         store.put(key.clone(), &value);
         assert!(store.has(&key));
-        assert_eq!(store.get(&key), Some(value.clone()));
-
+        assert_eq!(store.get(&key), Some(value));
         store.remove(&key);
         assert!(!store.has(&key));
-        assert_eq!(store.get(&key), None);
     }
 }

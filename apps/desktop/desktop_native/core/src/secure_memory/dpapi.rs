@@ -109,9 +109,8 @@ impl Drop for DpapiSecretKVStore {
 
 #[cfg(test)]
 mod tests {
-    
     use super::*;
-    
+
     #[test]
     fn test_dpapi_secret_kv_store_various_sizes() {
         let mut store = DpapiSecretKVStore::new();
