@@ -55,7 +55,10 @@ impl super::BiometricTrait for BiometricLockSystem {
     }
 
     async fn provide_key(&self, user_id: &str, key: &[u8]) {
-        self.secure_memory.lock().await.put(user_id.to_string(), key);
+        self.secure_memory
+            .lock()
+            .await
+            .put(user_id.to_string(), key);
     }
 
     async fn unlock(&self, user_id: &str, _hwnd: Vec<u8>) -> Result<Vec<u8>> {
@@ -63,7 +66,11 @@ impl super::BiometricTrait for BiometricLockSystem {
             return Err(anyhow!("Authentication failed"));
         }
 
-        self.secure_memory.lock().await.get(user_id).ok_or(anyhow!("No key found"))
+        self.secure_memory
+            .lock()
+            .await
+            .get(user_id)
+            .ok_or(anyhow!("No key found"))
     }
 
     async fn unlock_available(&self, user_id: &str) -> Result<bool> {

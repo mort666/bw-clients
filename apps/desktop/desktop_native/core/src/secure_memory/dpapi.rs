@@ -119,7 +119,12 @@ mod tests {
             let value: Vec<u8> = (0..size).map(|i| (i % 256) as u8).collect();
             store.put(key.clone(), &value);
             assert!(store.has(&key), "Store should have key for size {}", size);
-            assert_eq!(store.get(&key), Some(value), "Value mismatch for size {}", size);
+            assert_eq!(
+                store.get(&key),
+                Some(value),
+                "Value mismatch for size {}",
+                size
+            );
         }
     }
 

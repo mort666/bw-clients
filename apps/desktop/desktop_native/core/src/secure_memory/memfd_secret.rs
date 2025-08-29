@@ -9,7 +9,7 @@ use crate::secure_memory::SecureMemoryStore;
 /// data is inaccessible to other user-mode processes, and even to root in most cases.
 /// If arbitrary data can be executed in the kernel, the data can still be retrieved:
 /// https://github.com/JonathonReinhart/nosecmem
-/// 
+///
 /// Warning: There is a maximum amount of concurrent memfd_secret protected items. Only
 /// use this sparingly, or extend the implementation to use one secret + in-memory encryption,
 /// or to reserve a large protected area in which we allocate our items.
@@ -97,7 +97,7 @@ pub(super) fn is_supported() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_memfd_secret_kv_store_various_sizes() {
         let mut store = MemfdSecretKVStore::new();
@@ -106,7 +106,12 @@ mod tests {
             let value: Vec<u8> = (0..size).map(|i| (i % 256) as u8).collect();
             store.put(key.clone(), &value);
             assert!(store.has(&key), "Store should have key for size {}", size);
-            assert_eq!(store.get(&key), Some(value), "Value mismatch for size {}", size);
+            assert_eq!(
+                store.get(&key),
+                Some(value),
+                "Value mismatch for size {}",
+                size
+            );
             // The test will not pass when we don't remove the keys, because there is a limit of concurrent memfd_secret memory spaces.
             store.remove(&key);
         }
