@@ -155,7 +155,7 @@ impl super::BiometricTrait for BiometricLockSystem {
                 set_focus(hwnd.0);
             }
         });
-        
+
         let mut secure_memory = self.secure_memory.lock().await;
         // If the key is held ephemerally, always use UV API. Only use signing API if the key is not held
         // ephemerally but the keychain holds it persistently.
@@ -212,7 +212,8 @@ fn windows_hello_authenticate(_hwnd: Vec<u8>, message: String) -> Result<bool> {
 
     let userconsent_verifier = factory::<UserConsentVerifier, IUserConsentVerifierInterop>()?;
     let userconsent_result: IAsyncOperation<UserConsentVerificationResult> = unsafe {
-        userconsent_verifier.RequestVerificationForWindowAsync(foreground_window, &HSTRING::from(message))?
+        userconsent_verifier
+            .RequestVerificationForWindowAsync(foreground_window, &HSTRING::from(message))?
     };
 
     match userconsent_result.get()? {
@@ -264,7 +265,8 @@ fn windows_hello_authenticate_with_crypto(challenge: &[u8; 16]) -> Result<[u8; 3
             KeyCredentialStatus::Success => key_credential_creation_result,
             _ => return Err(anyhow!("Failed to create key credential")),
         }
-    }.Credential()?;
+    }
+    .Credential()?;
 
     let signature = credential
         .RequestSignAsync(&CryptographicBuffer::CreateFromByteArray(
@@ -286,7 +288,12 @@ fn windows_hello_authenticate_with_crypto(challenge: &[u8; 16]) -> Result<[u8; 3
 }
 
 async fn set_keychain_entry(user_id: &str, entry: &WindowsHelloKeychainEntry) -> Result<()> {
-    password::set_password(KEYCHAIN_SERVICE_NAME, user_id, &serde_json::to_string(entry)?).await
+    password::set_password(
+        KEYCHAIN_SERVICE_NAME,
+        user_id,
+        &serde_json::to_string(entry)?,
+    )
+    .await
 }
 
 async fn get_keychain_entry(user_id: &str) -> Result<WindowsHelloKeychainEntry> {
@@ -299,5 +306,7 @@ async fn delete_keychain_entry(user_id: &str) -> Result<()> {
 }
 
 async fn has_keychain_entry(user_id: &str) -> Result<bool> {
-    Ok(!password::get_password(KEYCHAIN_SERVICE_NAME, user_id).await?.is_empty())
+    Ok(!password::get_password(KEYCHAIN_SERVICE_NAME, user_id)
+        .await?
+        .is_empty())
 }
