@@ -33,12 +33,16 @@ export default class OsBiometricsServiceWindows implements OsBiometricService {
   }
 
   async getBiometricKey(userId: UserId): Promise<SymmetricCryptoKey | null> {
-    const key = await biometrics.unlock(
-      this.biometricsSystem,
-      userId,
-      this.windowMain.win.getNativeWindowHandle(),
-    );
-    return new SymmetricCryptoKey(Uint8Array.from(key));
+    try {
+      const key = await biometrics.unlock(
+        this.biometricsSystem,
+        userId,
+        this.windowMain.win.getNativeWindowHandle(),
+      );
+      return new SymmetricCryptoKey(Uint8Array.from(key));
+    } catch {
+      return null;
+    }
   }
 
   async setBiometricKey(userId: UserId, key: SymmetricCryptoKey): Promise<void> {
