@@ -168,11 +168,13 @@ pub mod biometrics {
 
 #[napi]
 pub mod clipboards {
+    #[allow(clippy::unused_async)] // FIXME: Remove unused async!
     #[napi]
     pub async fn read() -> napi::Result<String> {
         desktop_core::clipboard::read().map_err(|e| napi::Error::from_reason(e.to_string()))
     }
 
+    #[allow(clippy::unused_async)] // FIXME: Remove unused async!
     #[napi]
     pub async fn write(text: String, password: bool) -> napi::Result<()> {
         desktop_core::clipboard::write(&text, password)
@@ -219,6 +221,7 @@ pub mod sshagent {
         pub namespace: Option<String>,
     }
 
+    #[allow(clippy::unused_async)] // FIXME: Remove unused async!
     #[napi]
     pub async fn serve(
         callback: ThreadsafeFunction<SshUIRequest, CalleeHandled>,
@@ -280,9 +283,7 @@ pub mod sshagent {
         match desktop_core::ssh_agent::BitwardenDesktopAgent::start_server(
             auth_request_tx,
             Arc::new(Mutex::new(auth_response_rx)),
-        )
-        .await
-        {
+        ) {
             Ok(state) => Ok(SshAgentState { state }),
             Err(e) => Err(napi::Error::from_reason(e.to_string())),
         }
@@ -337,16 +338,21 @@ pub mod sshagent {
 
 #[napi]
 pub mod processisolations {
+    #[allow(clippy::unused_async)] // FIXME: Remove unused async!
     #[napi]
     pub async fn disable_coredumps() -> napi::Result<()> {
         desktop_core::process_isolation::disable_coredumps()
             .map_err(|e| napi::Error::from_reason(e.to_string()))
     }
+
+    #[allow(clippy::unused_async)] // FIXME: Remove unused async!
     #[napi]
     pub async fn is_core_dumping_disabled() -> napi::Result<bool> {
         desktop_core::process_isolation::is_core_dumping_disabled()
             .map_err(|e| napi::Error::from_reason(e.to_string()))
     }
+
+    #[allow(clippy::unused_async)] // FIXME: Remove unused async!
     #[napi]
     pub async fn disable_memory_access() -> napi::Result<()> {
         desktop_core::process_isolation::disable_memory_access()
@@ -385,12 +391,14 @@ pub mod powermonitors {
 
 #[napi]
 pub mod windows_registry {
+    #[allow(clippy::unused_async)] // FIXME: Remove unused async!
     #[napi]
     pub async fn create_key(key: String, subkey: String, value: String) -> napi::Result<()> {
         crate::registry::create_key(&key, &subkey, &value)
             .map_err(|e| napi::Error::from_reason(e.to_string()))
     }
 
+    #[allow(clippy::unused_async)] // FIXME: Remove unused async!
     #[napi]
     pub async fn delete_key(key: String, subkey: String) -> napi::Result<()> {
         crate::registry::delete_key(&key, &subkey)
@@ -450,6 +458,7 @@ pub mod ipc {
         ///
         /// @param name The endpoint name to listen on. This name uniquely identifies the IPC connection and must be the same for both the server and client.
         /// @param callback This function will be called whenever a message is received from a client.
+        #[allow(clippy::unused_async)] // FIXME: Remove unused async!
         #[napi(factory)]
         pub async fn listen(
             name: String,
@@ -627,12 +636,15 @@ pub mod autofill {
         server: desktop_core::ipc::server::Server,
     }
 
+    // FIXME: Remove unwraps! They panic and terminate the whole application.
+    #[allow(clippy::unwrap_used)]
     #[napi]
     impl IpcServer {
         /// Create and start the IPC server without blocking.
         ///
         /// @param name The endpoint name to listen on. This name uniquely identifies the IPC connection and must be the same for both the server and client.
         /// @param callback This function will be called whenever a message is received from a client.
+        #[allow(clippy::unused_async)] // FIXME: Remove unused async!
         #[napi(factory)]
         pub async fn listen(
             name: String,
