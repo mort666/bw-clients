@@ -5,8 +5,6 @@ import { BehaviorSubject, bufferCount, firstValueFrom, Subject, ObservedValueOf 
 import { LogoutReason } from "@bitwarden/auth/common";
 import { AuthRequestAnsweringServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth-request-answering/auth-request-answering.service.abstraction";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
-// TODO: When PM-14943 goes in, uncomment
-// import { AuthRequestAnsweringServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth-request-answering/auth-request-answering.service.abstraction";
 
 import { AccountService } from "../../../auth/abstractions/account.service";
 import { AuthService } from "../../../auth/abstractions/auth.service";
@@ -70,6 +68,10 @@ describe("DefaultServerNotificationsService (multi-user)", () => {
       getNotificationsUrl: () => "http://test.example.com",
     } as Environment);
     environmentConfigurationService.environment$ = environmentConfiguration$ as any;
+    // Ensure user-scoped environment lookups return the same test environment stream
+    environmentConfigurationService.getEnvironment$.mockImplementation(
+      (_userId: UserId) => environmentConfiguration$.asObservable() as any,
+    );
 
     userLogoutCallback = jest.fn<Promise<void>, [LogoutReason, UserId]>();
 
