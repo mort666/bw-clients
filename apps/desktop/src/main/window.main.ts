@@ -74,13 +74,9 @@ export class WindowMain {
     });
 
     ipcMain.on("window-focus", () => {
-      this.logService.info("Focusing window");
       if (this.win != null) {
-        this.logService.info("Showing window");
-        this.win.minimize();
-        this.show();
-        this.win.setSize(this.defaultWidth, this.defaultHeight);
-        this.win.center();
+        this.win.show();
+        this.win.focus();
       }
     });
 

@@ -204,13 +204,7 @@ impl super::BiometricTrait for BiometricLockSystem {
 
 /// Get a yes/no authorization without any cryptographic backing.
 /// This API has better focusing behavior
-fn windows_hello_authenticate(hwnd: Vec<u8>, message: String) -> Result<bool> {
-    let window = HWND(isize::from_le_bytes(hwnd.clone().try_into().unwrap()) as *mut c_void);
-
-    // The Windows Hello prompt is displayed inside the application window. For best result we
-    // should set the window to the foreground and focus it.
-    set_focus(window);
-
+fn windows_hello_authenticate(_hwnd: Vec<u8>, message: String) -> Result<bool> {
     // Windows Hello prompt must be in foreground, focused, otherwise the face or fingerprint
     // unlock will not work. We get the current foreground window, which will either be the
     // Bitwarden desktop app or the browser extension.
