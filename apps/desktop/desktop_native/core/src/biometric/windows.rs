@@ -270,8 +270,9 @@ fn windows_hello_authenticate_with_crypto(challenge: &[u8; 16]) -> Result<[u8; 3
     }
 
     let signature_buffer = signature.Result()?;
-    let mut signature_value =
-        windows::core::Array::<u8>::with_len(signature_buffer.Length().map_err(|e| anyhow!(e))? as usize);
+    let mut signature_value = windows::core::Array::<u8>::with_len(
+        signature_buffer.Length().map_err(|e| anyhow!(e))? as usize,
+    );
     CryptographicBuffer::CopyToByteArray(&signature_buffer, &mut signature_value)?;
     // The signature is deterministic based on the challenge and keychain key. Thus, it can be hashed to a key.
     // It is unclear what entropy this key provides.
