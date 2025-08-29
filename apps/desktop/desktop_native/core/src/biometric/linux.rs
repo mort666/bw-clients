@@ -42,62 +42,32 @@ impl Default for BiometricLockSystem {
 
 impl super::BiometricTrait for BiometricLockSystem {
     async fn authenticate(&self, _hwnd: Vec<u8>, _message: String) -> Result<bool> {
-        let connection = Connection::system().await?;
-        let proxy = AuthorityProxy::new(&connection).await?;
-        let subject = Subject::new_for_owner(std::process::id(), None, None)?;
-        let details = std::collections::HashMap::new();
-        let result = proxy
-            .check_authorization(
-                &subject,
-                "com.bitwarden.Bitwarden.unlock",
-                &details,
-                CheckAuthorizationFlags::AllowUserInteraction.into(),
-                "",
-            )
-            .await;
-
-        match result {
-            Ok(result) => Ok(result.is_authorized),
-            Err(e) => {
-                println!("polkit biometric error: {:?}", e);
-                Ok(false)
-            }
-        }
+        polkit_authenticate_bitwarden_policy().await
     }
 
     async fn authenticate_available(&self) -> Result<bool> {
-        let connection = Connection::system().await?;
-        let proxy = AuthorityProxy::new(&connection).await?;
-        let actions = proxy.enumerate_actions("en").await?;
-        for action in actions {
-            if action.action_id == "com.bitwarden.Bitwarden.unlock" {
-                return Ok(true);
-            }
-        }
-        Ok(false)
+        polkit_is_bitwarden_policy_available().await
     }
 
     async fn enroll_persistent(&self, _user_id: &str, _key: &[u8]) -> Result<()> {
+        // Not implemented
         Ok(())
     }
 
     async fn provide_key(&self, user_id: &str, key: &[u8]) {
-        let mut secure_memory = self.secure_memory.lock().await;
-        secure_memory.put(user_id.to_string(), key);
+        self.secure_memory.lock().await.put(user_id.to_string(), key);
     }
 
     async fn unlock(&self, user_id: &str, _hwnd: Vec<u8>) -> Result<Vec<u8>> {
-        if !(self.authenticate(Vec::new(), "".to_string()).await?) {
+        if !polkit_authenticate_bitwarden_policy().await? {
             return Err(anyhow!("Authentication failed"));
         }
 
-        let secure_memory = self.secure_memory.lock().await;
-        secure_memory.get(user_id).ok_or(anyhow!("No key found"))
+        self.secure_memory.lock().await.get(user_id).ok_or(anyhow!("No key found"))
     }
 
     async fn unlock_available(&self, user_id: &str) -> Result<bool> {
-        let secure_memory = self.secure_memory.lock().await;
-        Ok(secure_memory.has(user_id))
+        Ok(self.secure_memory.lock().await.has(user_id))
     }
 
     async fn has_persistent(&self, _user_id: &str) -> Result<bool> {
@@ -105,8 +75,59 @@ impl super::BiometricTrait for BiometricLockSystem {
     }
 
     async fn unenroll(&self, user_id: &str) -> Result<(), anyhow::Error> {
-        let mut secure_memory = self.secure_memory.lock().await;
-        secure_memory.remove(user_id);
+        self.secure_memory.lock().await.remove(user_id);
         Ok(())
+    }
+}
+
+/// Perform a polkit authorization against the bitwarden unlock policy. Note: This relies on no custom
+/// rules in the system skipping the authorization check, in which case this counts as UV / authentication.
+async fn polkit_authenticate_bitwarden_policy() -> Result<bool> {
+    println!("[Polkit] Authenticating / performing UV");
+
+    let connection = Connection::system().await?;
+    let proxy = AuthorityProxy::new(&connection).await?;
+    let subject = Subject::new_for_owner(std::process::id(), None, None)?;
+    let details = std::collections::HashMap::new();
+    let authorization_result = proxy
+        .check_authorization(
+            &subject,
+            "com.bitwarden.Bitwarden.unlock",
+            &details,
+            CheckAuthorizationFlags::AllowUserInteraction.into(),
+            "",
+        )
+        .await;
+
+    match authorization_result {
+        Ok(result) => Ok(result.is_authorized),
+        Err(e) => {
+            eprintln!("[Polkit] Error performing authentication: {:?}", e);
+            Ok(false)
+        }
+    }
+}
+
+async fn polkit_is_bitwarden_policy_available() -> Result<bool> {
+    let connection = Connection::system().await?;
+    let proxy = AuthorityProxy::new(&connection).await?;
+    let actions = proxy.enumerate_actions("en").await?;
+    for action in actions {
+        if action.action_id == "com.bitwarden.Bitwarden.unlock" {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_polkit_authenticate() {
+        let result = polkit_authenticate_bitwarden_policy().await;
+        assert!(result.is_ok());
     }
 }
