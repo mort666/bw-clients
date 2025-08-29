@@ -6,11 +6,9 @@ import { UserId } from "@bitwarden/common/types/guid";
 import { biometrics } from "@bitwarden/desktop-napi";
 import { BiometricsStatus } from "@bitwarden/key-management";
 
-
 import { WindowMain } from "../../main/window.main";
 
 import OsBiometricsServiceWindows from "./os-biometrics-windows.service";
-
 
 jest.mock("@bitwarden/desktop-napi", () => ({
   biometrics: {
