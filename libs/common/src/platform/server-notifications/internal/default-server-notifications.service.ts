@@ -69,6 +69,9 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
     this.notifications$ = this.configService
       .getFeatureFlag$(FeatureFlag.InactiveUserServerNotification)
       .pipe(
+        tap((value) => {
+          console.debug(`[DefaultServerNotificationsService] feature flag value for inactive user server notifications: ${value}`);
+        }),
         distinctUntilChanged(),
         switchMap((inactiveUserServerNotificationEnabled) => {
           if (inactiveUserServerNotificationEnabled) {
@@ -76,6 +79,9 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
             return this.accountService.accounts$.pipe(
               map((accounts) => Object.keys(accounts) as UserId[]),
               distinctUntilChanged(),
+              tap((value) => {
+                console.debug(`[DefaultServerNotificationsService] new accounts: ${value}`);
+              }),
               switchMap((userIds) => {
                 if (userIds.length === 0) {
                   return EMPTY;
@@ -119,7 +125,13 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
   private userNotifications$(userId: UserId) {
     return this.environmentService.getEnvironment$(userId).pipe(
       map((env) => env.getNotificationsUrl()),
+      tap((value) => {
+        console.debug(`[DefaultServerNotificationsService] userNotifications$ before: ${value}`);
+      }),
       distinctUntilChanged(),
+      tap((value) => {
+        console.debug(`[DefaultServerNotificationsService] userNotifications$ after: ${value}`);
+      }),
       switchMap((notificationsUrl) => {
         if (notificationsUrl === DISABLED_NOTIFICATIONS_URL) {
           console.debug(
@@ -135,6 +147,7 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
 
   private userNotificationsHelper$(userId: UserId, notificationsUrl: string) {
     return this.hasAccessToken$(userId).pipe(
+      distinctUntilChanged(),
       switchMap((hasAccessToken) => {
         if (!hasAccessToken) {
           console.debug(
