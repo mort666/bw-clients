@@ -341,7 +341,7 @@ mod tests {
     use crate::biometric::{
         biometric::{
             decrypt_data, encrypt_data, windows_hello_authenticate,
-            windows_hello_authenticate_with_crypto,
+            windows_hello_authenticate_with_crypto, CHALLENGE_LENGTH, XCHACHA20POLY1305_KEY_LENGTH,
         },
         BiometricLockSystem, BiometricTrait,
     };
