@@ -4,11 +4,11 @@
 //! The former via UV + ephemerally (but protected) keys. This only works after first unlock.
 //! The latter via a signing API, that deterministically signs a challenge, from which a windows hello key is derived. This key
 //! is used to encrypt the protected key.
-//! 
+//!
 //! # Security
 //! The security goal is that a locked vault - a running app - cannot be unlocked when the device (user-space)
 //! is compromised in this state.
-//! 
+//!
 //! ## UV path
 //! When first unlocking the app, the app sends the user-key to this module, which holds it in secure memory,
 //! protected by DPAPI. This makes it inaccessible to other processes, unless they compromise the system administrator, or kernel.
@@ -16,7 +16,7 @@
 //! `windows_hello_authenticate` to get a yes/no decision on whether to release the key to the app.
 //! Note: Further process isolation is needed here so that code cannot be injected into the running process, which may
 //! circumvent DPAPI.
-//! 
+//!
 //! ## Sign path
 //! In this scenario, when enrolling, the app sends the user-key to this module, which derives the windows hello key
 //! with the Windows Hello prompt. This is done by signing a per-user challenge, which produces a deterministic
@@ -26,9 +26,7 @@
 //! Therefore, to circumvent the security measure, the attacker would need to create a fake Windows-Hello prompt, and
 //! get the user to confirm it.
 
-use std::{
-    sync::{atomic::AtomicBool, Arc},
-};
+use std::sync::{atomic::AtomicBool, Arc};
 
 use aes::cipher::KeyInit;
 use anyhow::{anyhow, Result};
@@ -47,8 +45,7 @@ use windows::{
         Cryptography::CryptographicBuffer,
     },
     Win32::{
-        System::WinRT::IUserConsentVerifierInterop,
-        UI::WindowsAndMessaging::GetForegroundWindow,
+        System::WinRT::IUserConsentVerifierInterop, UI::WindowsAndMessaging::GetForegroundWindow,
     },
 };
 use windows_future::IAsyncOperation;
@@ -136,7 +133,10 @@ impl super::BiometricTrait for BiometricLockSystem {
     }
 
     async fn provide_key(&self, user_id: &str, key: &[u8]) {
-        self.secure_memory.lock().await.put(user_id.to_string(), key);
+        self.secure_memory
+            .lock()
+            .await
+            .put(user_id.to_string(), key);
     }
 
     async fn unlock(&self, user_id: &str, hwnd: Vec<u8>) -> Result<Vec<u8>> {
@@ -324,7 +324,13 @@ fn decrypt_data(key: &[u8; 32], ciphertext: &[u8], nonce: &[u8; 24]) -> Result<V
 
 #[cfg(test)]
 mod tests {
-    use crate::biometric::{biometric::{decrypt_data, encrypt_data, windows_hello_authenticate, windows_hello_authenticate_with_crypto}, BiometricLockSystem, BiometricTrait};
+    use crate::biometric::{
+        biometric::{
+            decrypt_data, encrypt_data, windows_hello_authenticate,
+            windows_hello_authenticate_with_crypto,
+        },
+        BiometricLockSystem, BiometricTrait,
+    };
 
     #[test]
     fn test_encrypt_decrypt() {
@@ -342,15 +348,17 @@ mod tests {
     fn test_windows_hello_authenticate_with_crypto_manual() {
         let challenge = [0u8; 16];
         let windows_hello_key = windows_hello_authenticate_with_crypto(&challenge);
-        println!("Windows hello key {:?} for challenge {:?}", windows_hello_key, challenge);
+        println!(
+            "Windows hello key {:?} for challenge {:?}",
+            windows_hello_key, challenge
+        );
     }
 
     #[test]
     #[ignore]
     fn test_windows_hello_authenticate() {
-        let authenticated = windows_hello_authenticate(
-            "Test Windows Hello authentication".to_string(),
-        );
+        let authenticated =
+            windows_hello_authenticate("Test Windows Hello authentication".to_string());
         println!("Windows Hello authentication result: {:?}", authenticated);
     }
 
@@ -362,17 +370,29 @@ mod tests {
         rand::fill(&mut key);
 
         let windows_hello_lock_system = BiometricLockSystem::new();
-        
+
         println!("Enrolling user");
-        windows_hello_lock_system.enroll_persistent(user_id, &key).await.unwrap();
-        assert!(windows_hello_lock_system.has_persistent(user_id).await.unwrap());
+        windows_hello_lock_system
+            .enroll_persistent(user_id, &key)
+            .await
+            .unwrap();
+        assert!(windows_hello_lock_system
+            .has_persistent(user_id)
+            .await
+            .unwrap());
 
         println!("Unlocking user");
-        let key_after_unlock = windows_hello_lock_system.unlock(user_id, Vec::new()).await.unwrap();
+        let key_after_unlock = windows_hello_lock_system
+            .unlock(user_id, Vec::new())
+            .await
+            .unwrap();
         assert_eq!(key_after_unlock, key);
 
         println!("Unenrolling user");
         windows_hello_lock_system.unenroll(user_id).await.unwrap();
-        assert!(!windows_hello_lock_system.has_persistent(user_id).await.unwrap());
+        assert!(!windows_hello_lock_system
+            .has_persistent(user_id)
+            .await
+            .unwrap());
     }
 }
