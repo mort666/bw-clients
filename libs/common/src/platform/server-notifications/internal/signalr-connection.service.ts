@@ -85,7 +85,7 @@ export class SignalRConnectionService {
             console.debug(
               `[SignalRConnectionService] accessTokenFactory called for user ${userId}`,
             );
-            return this.apiService.getActiveBearerToken();
+            return this.apiService.getActiveBearerToken(userId);
           },
           skipNegotiation: true,
           transport: HttpTransportType.WebSockets,
