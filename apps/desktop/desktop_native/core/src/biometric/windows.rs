@@ -1,18 +1,23 @@
 //! This file implements Windows-Hello based biometric unlock.
 //!
+//! There are two paths implemented here.
+//! The former via UV + ephemerally (but protected) keys. This only works after first unlock.
+//! The latter via a signing API, that deterministically signs a challenge, from which a windows hello key is derived. This key
+//! is used to encrypt the protected key.
+//! 
 //! # Security
-//! Note: There are two scenarios to consider, with different security implications. This section
-//! describes the assumed security model and security guarantees achieved. In the required security
-//! guarantee is that a locked vault - a running app - cannot be unlocked when the device (user-space)
+//! The security goal is that a locked vault - a running app - cannot be unlocked when the device (user-space)
 //! is compromised in this state.
-//!
-//! ## Require master password on app restart
-//! In this scenario, when first unlocking the app, the app sends the user-key to this module, which holds it in secure memory,
+//! 
+//! ## UV path
+//! When first unlocking the app, the app sends the user-key to this module, which holds it in secure memory,
 //! protected by DPAPI. This makes it inaccessible to other processes, unless they compromise the system administrator, or kernel.
 //! While the app is running this key is held in memory, even if locked. When unlocking, the app will prompt the user via
 //! `windows_hello_authenticate` to get a yes/no decision on whether to release the key to the app.
-//!
-//! ## Do not require master password on app restart
+//! Note: Further process isolation is needed here so that code cannot be injected into the running process, which may
+//! circumvent DPAPI.
+//! 
+//! ## Sign path
 //! In this scenario, when enrolling, the app sends the user-key to this module, which derives the windows hello key
 //! with the Windows Hello prompt. This is done by signing a per-user challenge, which produces a deterministic
 //! signature which is hashed to obtain a key. This key is used to encrypt and persist the vault unlock key (user key).
@@ -97,10 +102,8 @@ impl super::BiometricTrait for BiometricLockSystem {
     }
 
     async fn unenroll(&self, user_id: &str) -> Result<()> {
-        let mut secure_memory = self.secure_memory.lock().await;
-        secure_memory.remove(user_id);
-        delete_keychain_entry(user_id).await?;
-        Ok(())
+        self.secure_memory.lock().await.remove(user_id);
+        delete_keychain_entry(user_id).await
     }
 
     async fn enroll_persistent(&self, user_id: &str, key: &[u8]) -> Result<()> {
@@ -116,15 +119,7 @@ impl super::BiometricTrait for BiometricLockSystem {
         // This key is unique to the challenge
         let windows_hello_key = windows_hello_authenticate_with_crypto(&challenge)?;
 
-        // Wrap key with xchacha20-poly1305
-        let nonce = {
-            let mut nonce_bytes = [0u8; 24];
-            rand::fill(&mut nonce_bytes);
-            XNonce::clone_from_slice(&nonce_bytes)
-        };
-        let wrapped_key = XChaCha20Poly1305::new(&windows_hello_key.into())
-            .encrypt(&nonce, key)
-            .map_err(|e| anyhow!(e))?;
+        let (wrapped_key, nonce) = encrypt_data(&windows_hello_key, key).unwrap();
 
         set_keychain_entry(
             user_id,
@@ -137,13 +132,11 @@ impl super::BiometricTrait for BiometricLockSystem {
                 wrapped_key,
             },
         )
-        .await?;
-        Ok(())
+        .await
     }
 
     async fn provide_key(&self, user_id: &str, key: &[u8]) {
-        let mut secure_memory = self.secure_memory.lock().await;
-        secure_memory.put(user_id.to_string(), key);
+        self.secure_memory.lock().await.put(user_id.to_string(), key);
     }
 
     async fn unlock(&self, user_id: &str, hwnd: Vec<u8>) -> Result<Vec<u8>> {
@@ -177,12 +170,11 @@ impl super::BiometricTrait for BiometricLockSystem {
             let keychain_entry = get_keychain_entry(user_id).await?;
             let windows_hello_key =
                 windows_hello_authenticate_with_crypto(&keychain_entry.challenge)?;
-            let decrypted_key = XChaCha20Poly1305::new(&windows_hello_key.into())
-                .decrypt(
-                    keychain_entry.nonce.as_slice().into(),
-                    keychain_entry.wrapped_key.as_slice(),
-                )
-                .map_err(|e| anyhow!(e))?;
+            let decrypted_key = decrypt_data(
+                &windows_hello_key,
+                &keychain_entry.wrapped_key,
+                &keychain_entry.nonce,
+            )?;
             // The first unlock already sets the key for subsequent unlocks. The key may again be set externally after unlock finishes.
             secure_memory.put(user_id.to_string(), &decrypted_key.clone());
             Ok(decrypted_key)
@@ -310,9 +302,38 @@ async fn has_keychain_entry(user_id: &str) -> Result<bool> {
         .is_empty())
 }
 
+/// Encrypt data with XChaCha20Poly1305
+fn encrypt_data(key: &[u8; 32], plaintext: &[u8]) -> Result<(Vec<u8>, [u8; 24])> {
+    let cipher = XChaCha20Poly1305::new(key.into());
+    let mut nonce = [0u8; 24];
+    rand::fill(&mut nonce);
+    let ciphertext = cipher
+        .encrypt(&XNonce::from_slice(&nonce), plaintext)
+        .map_err(|e| anyhow!(e))?;
+    Ok((ciphertext, nonce))
+}
+
+/// Decrypt data with XChaCha20Poly1305
+fn decrypt_data(key: &[u8; 32], ciphertext: &[u8], nonce: &[u8; 24]) -> Result<Vec<u8>> {
+    let cipher = XChaCha20Poly1305::new(key.into());
+    let plaintext = cipher
+        .decrypt(&XNonce::from_slice(nonce), ciphertext)
+        .map_err(|e| anyhow!(e))?;
+    Ok(plaintext)
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::biometric::{biometric::{windows_hello_authenticate, windows_hello_authenticate_with_crypto}, BiometricLockSystem, BiometricTrait};
+    use crate::biometric::{biometric::{decrypt_data, encrypt_data, windows_hello_authenticate, windows_hello_authenticate_with_crypto}, BiometricLockSystem, BiometricTrait};
+
+    #[test]
+    fn test_encrypt_decrypt() {
+        let key = [0u8; 32];
+        let plaintext = b"Test data";
+        let (ciphertext, nonce) = encrypt_data(&key, plaintext).unwrap();
+        let decrypted = decrypt_data(&key, &ciphertext, &nonce).unwrap();
+        assert_eq!(plaintext.to_vec(), decrypted);
+    }
 
     // Note: These tests are ignored because they require manual intervention to run
 

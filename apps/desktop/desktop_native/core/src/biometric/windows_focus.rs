@@ -25,14 +25,14 @@ pub(crate) fn get_active_window() -> Option<HwndHolder> {
 /// Only works when the process has permission to foreground, either by being in foreground
 /// Or by being given foreground permission https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setforegroundwindow#remarks
 pub fn focus_security_prompt() {
-    let class_name = s!("Credential Dialog Xaml Host");
-    let hwnd = unsafe { FindWindowA(class_name, None) };
-    if let Ok(hwnd) = hwnd {
+    let hwnd_result = unsafe { FindWindowA(s!("Credential Dialog Xaml Host"), None) };
+    if let Ok(hwnd) = hwnd_result {
         set_focus(hwnd);
     }
 }
 
-pub(crate) fn set_focus(window: HWND) {
+/// Sets focus to a window using a few unstable methods
+pub(crate) fn set_focus(hwnd: HWND) {
     unsafe {
         // Windows REALLY does not like apps stealing focus, even if it is for fixing Windows-Hello bugs.
         // The windows hello signing prompt NEEDS to be focused instantly, or it will error, but it does
@@ -52,7 +52,6 @@ pub(crate) fn set_focus(window: HWND) {
         //   The calling process received the last input event.
         //   Either the foreground process or the calling process is being debugged.
 
-        // Attach to the foreground thread once attached, we can foregroud, even if in the background
         // Update the foreground lock timeout temporarily
         let mut old_timeout = 0;
         let _ = SystemParametersInfoW(
@@ -76,12 +75,11 @@ pub(crate) fn set_focus(window: HWND) {
             );
         });
 
-        // Attach to the active window's thread
+        // Attach to the foreground thread once attached, we can foregroud, even if in the background
         let dw_current_thread = GetCurrentThreadId();
         let dw_fg_thread = GetWindowThreadProcessId(GetForegroundWindow(), None);
 
         let _ = AttachThreadInput(dw_current_thread, dw_fg_thread, true);
-        let hwnd = window;
         let _ = SetForegroundWindow(hwnd);
         SetCapture(hwnd);
         let _ = SetFocus(Some(hwnd));
