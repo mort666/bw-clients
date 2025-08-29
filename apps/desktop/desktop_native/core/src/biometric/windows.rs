@@ -22,7 +22,6 @@
 //! get the user to confirm it.
 
 use std::{
-    ffi::c_void,
     sync::{atomic::AtomicBool, Arc},
 };
 
@@ -43,7 +42,7 @@ use windows::{
         Cryptography::CryptographicBuffer,
     },
     Win32::{
-        Foundation::HWND, System::WinRT::IUserConsentVerifierInterop,
+        System::WinRT::IUserConsentVerifierInterop,
         UI::WindowsAndMessaging::GetForegroundWindow,
     },
 };
@@ -85,8 +84,8 @@ impl Default for BiometricLockSystem {
 }
 
 impl super::BiometricTrait for BiometricLockSystem {
-    async fn authenticate(&self, hwnd: Vec<u8>, message: String) -> Result<bool> {
-        windows_hello_authenticate(hwnd, message)
+    async fn authenticate(&self, _hwnd: Vec<u8>, message: String) -> Result<bool> {
+        windows_hello_authenticate(message)
     }
 
     async fn authenticate_available(&self) -> Result<bool> {
@@ -204,7 +203,7 @@ impl super::BiometricTrait for BiometricLockSystem {
 
 /// Get a yes/no authorization without any cryptographic backing.
 /// This API has better focusing behavior
-fn windows_hello_authenticate(_hwnd: Vec<u8>, message: String) -> Result<bool> {
+fn windows_hello_authenticate(message: String) -> Result<bool> {
     // Windows Hello prompt must be in foreground, focused, otherwise the face or fingerprint
     // unlock will not work. We get the current foreground window, which will either be the
     // Bitwarden desktop app or the browser extension.
@@ -309,4 +308,50 @@ async fn has_keychain_entry(user_id: &str) -> Result<bool> {
     Ok(!password::get_password(KEYCHAIN_SERVICE_NAME, user_id)
         .await?
         .is_empty())
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::biometric::{biometric::{windows_hello_authenticate, windows_hello_authenticate_with_crypto}, BiometricLockSystem, BiometricTrait};
+
+    // Note: These tests are ignored because they require manual intervention to run
+
+    #[test]
+    #[ignore]
+    fn test_windows_hello_authenticate_with_crypto_manual() {
+        let challenge = [0u8; 16];
+        let windows_hello_key = windows_hello_authenticate_with_crypto(&challenge);
+        println!("Windows hello key {:?} for challenge {:?}", windows_hello_key, challenge);
+    }
+
+    #[test]
+    #[ignore]
+    fn test_windows_hello_authenticate() {
+        let authenticated = windows_hello_authenticate(
+            "Test Windows Hello authentication".to_string(),
+        );
+        println!("Windows Hello authentication result: {:?}", authenticated);
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_enroll_unlock_unenroll() {
+        let user_id = "test_user";
+        let mut key = [0u8; 32];
+        rand::fill(&mut key);
+
+        let windows_hello_lock_system = BiometricLockSystem::new();
+        
+        println!("Enrolling user");
+        windows_hello_lock_system.enroll_persistent(user_id, &key).await.unwrap();
+        assert!(windows_hello_lock_system.has_persistent(user_id).await.unwrap());
+
+        println!("Unlocking user");
+        let key_after_unlock = windows_hello_lock_system.unlock(user_id, Vec::new()).await.unwrap();
+        assert_eq!(key_after_unlock, key);
+
+        println!("Unenrolling user");
+        windows_hello_lock_system.unenroll(user_id).await.unwrap();
+        assert!(!windows_hello_lock_system.has_persistent(user_id).await.unwrap());
+    }
 }
