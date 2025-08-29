@@ -21,7 +21,16 @@ import { OsBiometricService } from "./os-biometrics.service";
 
 jest.mock("@bitwarden/desktop-napi", () => {
   return {
-    biometrics: jest.fn(),
+    biometrics: {
+      authenticate: jest.fn(),
+      authenticate_available: jest.fn(),
+      enroll_persistent: jest.fn(),
+      provide_key: jest.fn(),
+      unlock: jest.fn(),
+      unlock_available: jest.fn(),
+      has_persistent: jest.fn(),
+      initBiometricSystem: jest.fn(),
+    },
     passwords: jest.fn(),
   };
 });
