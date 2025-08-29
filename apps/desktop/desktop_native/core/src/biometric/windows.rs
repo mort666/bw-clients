@@ -115,7 +115,7 @@ impl super::BiometricTrait for BiometricLockSystem {
 
         // This key is unique to the challenge
         let windows_hello_key = windows_hello_authenticate_with_crypto(&challenge)?;
-        let (wrapped_key, nonce) = encrypt_data(&windows_hello_key, key).unwrap();
+        let (wrapped_key, nonce) = encrypt_data(&windows_hello_key, key)?;
 
         set_keychain_entry(
             user_id,
@@ -138,7 +138,7 @@ impl super::BiometricTrait for BiometricLockSystem {
             .put(user_id.to_string(), key);
     }
 
-    async fn unlock(&self, user_id: &str, hwnd: Vec<u8>) -> Result<Vec<u8>> {
+    async fn unlock(&self, user_id: &str, _hwnd: Vec<u8>) -> Result<Vec<u8>> {
         // Allow restoring focus to the previous window (broweser)
         let previous_active_window = super::windows_focus::get_active_window();
         let _focus_scopeguard = scopeguard::guard((), |_| {
@@ -270,8 +270,9 @@ fn windows_hello_authenticate_with_crypto(challenge: &[u8; 16]) -> Result<[u8; 3
     }
 
     let signature_buffer = signature.Result()?;
-    let mut signature_value =
-        windows::core::Array::<u8>::with_len(signature_buffer.Length().unwrap() as usize);
+    let mut signature_value = windows::core::Array::<u8>::with_len(
+        signature_buffer.Length().map_err(|e| anyhow!(e))? as usize,
+    );
     CryptographicBuffer::CopyToByteArray(&signature_buffer, &mut signature_value)?;
     // The signature is deterministic based on the challenge and keychain key. Thus, it can be hashed to a key.
     // It is unclear what entropy this key provides.
@@ -309,7 +310,7 @@ fn encrypt_data(key: &[u8; 32], plaintext: &[u8]) -> Result<(Vec<u8>, [u8; 24])>
     let mut nonce = [0u8; 24];
     rand::fill(&mut nonce);
     let ciphertext = cipher
-        .encrypt(&XNonce::from_slice(&nonce), plaintext)
+        .encrypt(XNonce::from_slice(&nonce), plaintext)
         .map_err(|e| anyhow!(e))?;
     Ok((ciphertext, nonce))
 }
@@ -318,7 +319,7 @@ fn encrypt_data(key: &[u8; 32], plaintext: &[u8]) -> Result<(Vec<u8>, [u8; 24])>
 fn decrypt_data(key: &[u8; 32], ciphertext: &[u8], nonce: &[u8; 24]) -> Result<Vec<u8>> {
     let cipher = XChaCha20Poly1305::new(key.into());
     let plaintext = cipher
-        .decrypt(&XNonce::from_slice(nonce), ciphertext)
+        .decrypt(XNonce::from_slice(nonce), ciphertext)
         .map_err(|e| anyhow!(e))?;
     Ok(plaintext)
 }
