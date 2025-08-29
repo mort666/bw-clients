@@ -80,23 +80,27 @@
                 <small class="help-block" *ngIf="this.form.value.biometric && this.isMac">{{
                   "additionalTouchIdSettings" | i18n
                 }}</small>
-                <!-- Textbox for biometric app start -->
-                <div class="form-group tw-mt-2" *ngIf="this.form.value.biometric && this.isWindows">
-                  <div class="checkbox">
-                    <label for="allowBiometricUnlockOnAppRestart">
-                      <input
-                        id="allowBiometricUnlockOnAppRestart"
-                        type="checkbox"
-                        formControlName="allowBiometricUnlockOnAppRestart"
-                      />
-                      {{ "allowBiometricUnlockOnAppRestart" | i18n }}
-                    </label>
-                  </div>
+              </div>
+              <div class="form-group" *ngIf="this.form.value.biometric && this.isWindows">
+                <div class="checkbox form-group-child">
+                  <label for="allowBiometricUnlockOnAppRestart">
+                    <input
+                      id="allowBiometricUnlockOnAppRestart"
+                      type="checkbox"
+                      formControlName="allowBiometricUnlockOnAppRestart"
+                    />
+                    {{ "allowBiometricUnlockOnAppRestart" | i18n }}
+                  </label>
                 </div>
               </div>
               <div
                 class="form-group"
-                *ngIf="supportsBiometric && this.form.value.biometric && this.isMac"
+                *ngIf="
+                  supportsBiometric &&
+                  this.form.value.biometric &&
+                  (this.isMac ||
+                    (this.isWindows && this.form.value.allowBiometricUnlockOnAppRestart))
+                "
               >
                 <div class="checkbox form-group-child">
                   <label for="autoPromptBiometrics">
