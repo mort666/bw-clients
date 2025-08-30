@@ -87,10 +87,6 @@ The `LoginStrategyService` uses the `type` property on the credentials object to
 
 For example, the `PasswordLoginCredentials` object has `type = 0` (which is `AuthenticationType.Password`). This tells the `LoginStrategyService` to use the `PasswordLoginStrategy` for the login process.
 
-Here is what all of this looks like so far:
-
-[INSERT IMAGE]
-
 <br>
 
 ## The `logIn()` and `startLogin()` Methods
@@ -133,7 +129,7 @@ Each login strategy has it's own implementation of the `logIn()` method. This me
    1. **Makes a `POST` request to the `/connect/token` endpoint on our Identity Server**
       - `REQUEST`
 
-        The exact payload for this request is determined by the `TokenRequest` object. More specifically, the base `TokenRequest` object contains a `toIdentityToken()` method which can be overridden by the sub-classes (`PasswordTokenRequest`, etc.). This `toIdentityToken()` method translates the information in the `TokenRequest` object into the payload that will be sent to the `/connect/token` endpoint.
+        The exact payload for this request is determined by the `TokenRequest` object. More specifically, the base `TokenRequest` object contains a `toIdentityToken()` method which can be overridden by the sub-classes (`PasswordTokenRequest`, etc.). This `toIdentityToken()` method takes the information in the `TokenRequest` object and turns it into the payload that gets sent to our `/connect/token` endpoint.
 
       - `RESPONSE`
 
@@ -141,8 +137,12 @@ Each login strategy has it's own implementation of the `logIn()` method. This me
         - [`IdentityTokenResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-token.response.ts)
           - This response means the user has been authenticated
           - The response contains:
-            - Authentication information for the user (access token, refresh token)
+            - Authentication information for the user
+              - An access token, which is a JWT with claims about the user
+              - A refresh token
             - Decryption information for the user
+              - Includes the user's master-key-encrypted user key, along with their KDF settings
+              - Includes an object that contains information about which decryption options the user has available to them
 
         - [`IdentityTwoFactorResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-two-factor.response.ts)
           - This response means the user needs to complete two-factor authentication
@@ -150,8 +150,9 @@ Each login strategy has it's own implementation of the `logIn()` method. This me
 
         - [`IdentityDeviceVerificationResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-device-verification.response.ts)
           - This response means the user needs to verify their new device via [new device verification](https://bitwarden.com/help/new-device-verification/)
+          - The response contains a boolean property that simply states whether or not the device has been verified
 
-   2. **Calls one of the `process*Response()` methods based on the type of `IdentityResponse`**
+   2. **Calls one of the `process*Response()` methods, each of which returns an [`AuthResult`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/domain/auth-result.ts) object**
       - If `IdentityTokenResponse`, call `processTokenResponse()`
         - This method uses information from the `IdentityTokenResponse` object to set Authentication and Decryption information about the user into state.
           - `saveAccountInformation()` - initializes the account with information from the `IdentityTokenResponse` after successful login.
@@ -164,14 +165,10 @@ Each login strategy has it's own implementation of the `logIn()` method. This me
           - Sets a `forceSetPasswordReason` to state, if necessary
 
       - If `IdentityTwoFactorResponse`, call `processTwoFactorResponse()`
-        - This method adds the necessary data for the 2FA process to the `AuthResult`
+        - This method sets 2FA data to state for later processing at the `/2fa` route, and also adds the necessary data for the 2FA process to the `AuthResult`
 
       - If `IdentityDeviceVerificationResponse`, call `processDeviceVerificationResponse()`
         - This method simply sets `requiresDeviceVerification` to `true` on the `AuthResult`
-
-3. **Return an `AuthResult` Object**
-
-   The `AuthResult` object contains information that will be used to determine how to navigate the user after authentication.
 
 <br>
 
@@ -187,8 +184,10 @@ For example, if the `AuthResult` contains:
 
 <br>
 
-## Final Diagram
+## Diagram of Authentication Flows
 
-Here is a high-level overview of what all of this looks like in the end:
+Here is a high-level overview of what all of this looks like in the end.
 
-[INSERT IMAGE]
+<br>
+
+![A Diagram of our Authentication Flows](./overview-of-authentication.svg)
