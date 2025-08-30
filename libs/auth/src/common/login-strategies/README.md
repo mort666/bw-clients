@@ -9,7 +9,7 @@
 > - [The Login Strategy](#the-login-strategy)
 > - [The `logIn()` and `startLogin()` Methods](#the-login-and-startlogin-methods)
 > - [Handling the `AuthResult`](#handling-the-authresult)
-> - [Final Diagram](#final-diagram)
+> - [Diagram of Authentication Flows](#diagram-of-authentication-flows)
 
 <br>
 
