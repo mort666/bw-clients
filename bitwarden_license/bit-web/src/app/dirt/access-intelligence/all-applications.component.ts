@@ -1,3 +1,4 @@
+import { CdkTrapFocus } from "@angular/cdk/a11y";
 import { Component, DestroyRef, inject, OnInit } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl } from "@angular/forms";
@@ -26,6 +27,8 @@ import {
   TableDataSource,
   ToastService,
   DialogService,
+  ButtonModule,
+  DialogModule,
 } from "@bitwarden/components";
 import { CardComponent } from "@bitwarden/dirt-card";
 import { HeaderModule } from "@bitwarden/web-vault/app/layouts/header/header.module";
@@ -33,12 +36,14 @@ import { SharedModule } from "@bitwarden/web-vault/app/shared";
 import { PipesModule } from "@bitwarden/web-vault/app/vault/individual-vault/pipes/pipes.module";
 
 import { AppTableRowScrollableComponent } from "./app-table-row-scrollable.component";
-import { NoDataModalComponent } from "./no-data-modal.component";
 import { ApplicationsLoadingComponent } from "./risk-insights-loading.component";
 
 @Component({
   selector: "tools-all-applications",
   templateUrl: "./all-applications.component.html",
+  host: {
+    "(keydown.escape)": "handleEscape($event)", // escape dialog with keyboard
+  },
   imports: [
     ApplicationsLoadingComponent,
     HeaderModule,
@@ -49,6 +54,9 @@ import { ApplicationsLoadingComponent } from "./risk-insights-loading.component"
     SharedModule,
     AppTableRowScrollableComponent,
     IconButtonModule,
+    ButtonModule,
+    DialogModule,
+    CdkTrapFocus,
   ],
 })
 export class AllApplicationsComponent implements OnInit {
@@ -64,8 +72,9 @@ export class AllApplicationsComponent implements OnInit {
     totalAtRiskApplicationCount: 0,
   };
 
-  private hasShownNoDataModal = false; // Flag to prevent multiple modals
+  private hasShownFirstReportPrompt = false; // Flag to prevent multiple prompts
   private organizationId: string | null = null;
+  protected showFirstReportPromptDialog = false; // Controls visibility of the simple dialog
   destroyRef = inject(DestroyRef);
 
   constructor(
@@ -95,36 +104,70 @@ export class AllApplicationsComponent implements OnInit {
         .subscribe((report) => {
           // Check if we already have data in the dataSource (from previous session)
           if (this.dataSource.data.length > 0) {
-            this.hasShownNoDataModal = false; // Reset flag since we have data
+            this.hasShownFirstReportPrompt = false; // Reset flag since we have data
             return;
           }
 
           if (report && report.data && report.data.length > 0) {
             this.dataSource.data = report.data;
             // this.applicationSummary = this.reportService.generateApplicationsSummary(report.data);
-            this.hasShownNoDataModal = false; // Reset flag when data is available
-          } else if (!this.hasShownNoDataModal) {
-            // Show modal only once when no report data is available
-            void this.showNoDataModal();
+            this.hasShownFirstReportPrompt = false; // Reset flag when data is available
+            if (this.showFirstReportPromptDialog) {
+              this.closePrompt(); // Use closePrompt method to properly restore scroll
+            }
+          } else if (!this.hasShownFirstReportPrompt) {
+            // Show prompt only once when no report data is available
+            void this.showFirstReportPrompt();
           }
         });
     }
   }
 
   /**
-   * Shows a modal prompting users to run a report when no data is available
+   * Shows a prompt encouraging users to run their first report
    */
-  private async showNoDataModal(): Promise<void> {
-    // Set flag to prevent multiple modals
-    this.hasShownNoDataModal = true;
+  private async showFirstReportPrompt(): Promise<void> {
+    // Set flag to prevent multiple prompts
+    this.hasShownFirstReportPrompt = true;
 
-    this.dialogService.open(NoDataModalComponent, {
-      data: {
-        organizationId: this.organizationId,
-        riskInsightsDataService: this.dataService,
-      },
-      disableClose: false,
-    });
+    // Show the simple dialog and prevent body scroll
+    this.showFirstReportPromptDialog = true;
+    document.body.classList.add("tw-overflow-hidden");
+  }
+
+  /**
+   * Runs the report and closes the prompt
+   */
+  async runReport(): Promise<void> {
+    // Close the prompt first
+    this.closePrompt();
+
+    // Add a small delay to ensure prompt closes before triggering the report
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Trigger the report generation
+    if (this.dataService) {
+      this.dataService.triggerReport();
+    }
+  }
+
+  /**
+   * Closes the prompt (called when clicking backdrop or pressing Escape)
+   */
+  closePrompt(): void {
+    this.showFirstReportPromptDialog = false;
+    // Restore body scroll
+    document.body.classList.remove("tw-overflow-hidden");
+  }
+
+  /**
+   * Handles Escape key press to close prompt
+   */
+  handleEscape(event: KeyboardEvent): void {
+    if (this.showFirstReportPromptDialog) {
+      this.closePrompt();
+      event.stopPropagation();
+    }
   }
 
   goToCreateNewLoginItem = async () => {
