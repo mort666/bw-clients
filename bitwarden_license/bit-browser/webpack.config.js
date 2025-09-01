@@ -1,6 +1,7 @@
 const { buildConfig } = require("../../apps/browser/webpack.base");
 
 module.exports = buildConfig({
+  configName: "Commercial",
   popup: {
     entry: "../../bitwarden_license/bit-browser/src/popup/main.ts",
     entryModule: "../../bitwarden_license/bit-browser/src/popup/app.module#AppModule",

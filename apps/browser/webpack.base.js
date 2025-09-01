@@ -10,8 +10,17 @@ const configurator = require("./config/config");
 const manifest = require("./webpack/manifest");
 const AngularCheckPlugin = require("./webpack/angular-check");
 
+module.exports.getEnv = function getEnv() {
+  const ENV = (process.env.ENV = process.env.NODE_ENV);
+  const manifestVersion = process.env.MANIFEST_VERSION == 3 ? 3 : 2;
+  const browser = process.env.BROWSER ?? "chrome";
+
+  return { ENV, manifestVersion, browser };
+};
+
 /**
  * @param {{
+ *  configName: string;
  *  popup: {
  *    entry: string;
  *    entryModule: string;
@@ -21,17 +30,16 @@ const AngularCheckPlugin = require("./webpack/angular-check");
  *  };
  *  tsConfig: string;
  *  additionalEntries?: { [outputPath: string]: string }
- * }} params - The parameters for building the config.
+ * }} params - The input parameters for building the config.
  */
-function buildConfig(params) {
+module.exports.buildConfig = function buildConfig(params) {
   if (process.env.NODE_ENV == null) {
     process.env.NODE_ENV = "development";
   }
-  const ENV = (process.env.ENV = process.env.NODE_ENV);
-  const manifestVersion = process.env.MANIFEST_VERSION == 3 ? 3 : 2;
-  const browser = process.env.BROWSER ?? "chrome";
 
-  console.log(`Building Manifest Version ${manifestVersion} app`);
+  const { ENV, manifestVersion, browser } = module.exports.getEnv();
+
+  console.log(`Building Manifest Version ${manifestVersion} app - ${params.configName} version`);
 
   const envConfig = configurator.load(ENV);
   configurator.log(envConfig);
@@ -335,7 +343,7 @@ function buildConfig(params) {
 
     // Manifest V2 background pages can be run through the regular build pipeline.
     // Since it's a standard webpage.
-    mainConfig.entry.background = "./src/platform/background.ts";
+    mainConfig.entry.background = params.background.entry;
     mainConfig.entry["content/fido2-page-script-delay-append-mv2"] =
       "./src/autofill/fido2/content/fido2-page-script-delay-append.mv2.ts";
 
@@ -432,6 +440,4 @@ function buildConfig(params) {
   }
 
   return configs;
-}
-
-module.exports.buildConfig = buildConfig;
+};
