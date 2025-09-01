@@ -151,11 +151,6 @@ const plugins = [
     filename: "[name].css",
     chunkFilename: "chunk-[id].css",
   }),
-  new AngularWebpackPlugin({
-    tsConfigPath: "tsconfig.json",
-    entryModule: "src/popup/app.module#AppModule",
-    sourceMap: true,
-  }),
   new webpack.ProvidePlugin({
     process: "process/browser.js",
   }),
@@ -164,6 +159,11 @@ const plugins = [
     filename: "[file].map",
   }),
   ...requiredPlugins,
+  new AngularWebpackPlugin({
+    tsConfigPath: "tsconfig.json",
+    entryModule: "src/popup/app.module#AppModule",
+    sourceMap: true,
+  }),
 ];
 
 /**
