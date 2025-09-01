@@ -83,13 +83,13 @@
               </div>
               <div class="form-group" *ngIf="this.form.value.biometric && this.isWindows">
                 <div class="checkbox form-group-child">
-                  <label for="allowBiometricUnlockOnAppRestart">
+                  <label for="requireMasterPasswordOnAppRestart">
                     <input
-                      id="allowBiometricUnlockOnAppRestart"
+                      id="requireMasterPasswordOnAppRestart"
                       type="checkbox"
-                      formControlName="allowBiometricUnlockOnAppRestart"
+                      formControlName="requireMasterPasswordOnAppRestart"
                     />
-                    {{ "allowBiometricUnlockOnAppRestart" | i18n }}
+                    {{ "requireMasterPasswordOnAppRestart" | i18n }}
                   </label>
                 </div>
               </div>

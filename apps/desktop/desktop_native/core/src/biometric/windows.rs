@@ -142,7 +142,7 @@ impl super::BiometricTrait for BiometricLockSystem {
     }
 
     async fn unlock(&self, user_id: &str, _hwnd: Vec<u8>) -> Result<Vec<u8>> {
-        // Allow restoring focus to the previous window (broweser)
+        // Allow restoring focus to the previous window (browser)
         let previous_active_window = super::windows_focus::get_active_window();
         let _focus_scopeguard = scopeguard::guard((), |_| {
             if let Some(hwnd) = previous_active_window {

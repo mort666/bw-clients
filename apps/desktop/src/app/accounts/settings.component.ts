@@ -136,7 +136,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     vaultTimeoutAction: [VaultTimeoutAction.Lock],
     pin: [null as boolean | null],
     biometric: false,
-    allowBiometricUnlockOnAppRestart: false,
+    requireMasterPasswordOnAppRestart: true,
     autoPromptBiometrics: false,
     // Account Preferences
     clearClipboard: [null],
@@ -351,9 +351,9 @@ export class SettingsComponent implements OnInit, OnDestroy {
       ),
       pin: this.userHasPinSet,
       biometric: await this.vaultTimeoutSettingsService.isBiometricLockSet(),
-      allowBiometricUnlockOnAppRestart: await this.biometricsService.hasPersistentKey(
+      requireMasterPasswordOnAppRestart: !(await this.biometricsService.hasPersistentKey(
         activeAccount.id,
-      ),
+      )),
       autoPromptBiometrics: await firstValueFrom(this.biometricStateService.promptAutomatically$),
       clearClipboard: await firstValueFrom(this.autofillSettingsService.clearClipboardDelay$),
       minimizeOnCopyToClipboard: await firstValueFrom(this.desktopSettingsService.minimizeOnCopy$),
@@ -446,15 +446,17 @@ export class SettingsComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
       )
       .subscribe();
-    this.form.controls.allowBiometricUnlockOnAppRestart.valueChanges
+    this.form.controls.requireMasterPasswordOnAppRestart.valueChanges
       .pipe(
-        concatMap(async (enabled) => {
+        concatMap(async (requireMasterPassword) => {
           const userKey = await firstValueFrom(this.keyService.userKey$(activeAccount.id));
-          if (enabled) {
+          if (!requireMasterPassword) {
+            // Allow biometric unlock on app restart
             if (!(await this.biometricsService.hasPersistentKey(activeAccount.id))) {
               await this.biometricsService.enrollPersistent(activeAccount.id, userKey);
             }
           } else {
+            // Require master password on app restart
             await this.biometricsService.deleteBiometricUnlockKeyForUser(activeAccount.id);
             await this.biometricsService.setBiometricProtectedUnlockKeyForUser(
               activeAccount.id,
