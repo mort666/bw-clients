@@ -916,7 +916,6 @@ export class ServiceContainer {
     await this.storageService.init();
 
     await this.migrationRunner.run();
-    this.containerService.attachToGlobal(global);
     await this.i18nService.init();
     this.twoFactorService.init();
 

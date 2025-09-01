@@ -13,7 +13,6 @@ import { I18nService as I18nServiceAbstraction } from "@bitwarden/common/platfor
 import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
 import { IpcService } from "@bitwarden/common/platform/ipc";
 import { ServerNotificationsService } from "@bitwarden/common/platform/server-notifications";
-import { ContainerService } from "@bitwarden/common/platform/services/container.service";
 import { MigrationRunner } from "@bitwarden/common/platform/services/migration-runner";
 import { UserAutoUnlockKeyService } from "@bitwarden/common/platform/services/user-auto-unlock-key.service";
 import { EventUploadService } from "@bitwarden/common/services/event/event-upload.service";
@@ -67,9 +66,6 @@ export class InitService {
       this.versionService.applyVersionToWindow();
       void this.ipcService.init();
       this.taskService.listenForTaskNotifications();
-
-      const containerService = new ContainerService(this.keyService, this.encryptService);
-      containerService.attachToGlobal(this.win);
     };
   }
 }
