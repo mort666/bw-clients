@@ -76,15 +76,9 @@ export class SignalRConnectionService {
 
   connect$(userId: UserId, notificationsUrl: string) {
     return new Observable<SignalRNotification>((subsciber) => {
-      console.debug(
-        `[SignalRConnectionService] creating connection for user ${userId} to ${notificationsUrl}`,
-      );
       const connection = this.hubConnectionBuilderFactory()
         .withUrl(notificationsUrl + "/hub", {
           accessTokenFactory: async () => {
-            console.debug(
-              `[SignalRConnectionService] accessTokenFactory called for user ${userId}`,
-            );
             return this.apiService.getActiveBearerToken(userId);
           },
           skipNegotiation: true,
@@ -95,16 +89,10 @@ export class SignalRConnectionService {
         .build();
 
       connection.on("ReceiveMessage", (data: any) => {
-        console.debug(
-          `[SignalRConnectionService] ReceiveMessage for user ${userId}: ${JSON.stringify(
-            data?.Type ?? data?.type ?? "unknown",
-          )}`,
-        );
         subsciber.next({ type: "ReceiveMessage", message: new NotificationResponse(data) });
       });
 
       connection.on("Heartbeat", () => {
-        console.debug(`[SignalRConnectionService] Heartbeat for user ${userId}`);
         subsciber.next({ type: "Heartbeat" });
       });
 
@@ -129,22 +117,13 @@ export class SignalRConnectionService {
         }
 
         const randomTime = this.randomReconnectTime();
-        console.debug(
-          `[SignalRConnectionService] scheduling reconnect for user ${userId} in ${randomTime}ms`,
-        );
         const timeoutHandler = this.timeoutManager.setTimeout(() => {
           connection
             .start()
             .then(() => {
-              console.debug(
-                `[SignalRConnectionService] reconnected for user ${userId}`,
-              );
               reconnectSubscription = null;
             })
             .catch(() => {
-              console.debug(
-                `[SignalRConnectionService] reconnect failed for user ${userId}, rescheduling`,
-              );
               scheduleReconnect();
             });
         }, randomTime);
@@ -155,26 +134,20 @@ export class SignalRConnectionService {
       };
 
       connection.onclose((error) => {
-        console.debug(
-          `[SignalRConnectionService] onclose for user ${userId}: ${error?.toString?.() ?? "unknown"}`,
-        );
         scheduleReconnect();
       });
 
       // Start connection
-      connection.start().then(() => {
-        console.debug(`[SignalRConnectionService] connected for user ${userId}`);
-      }).catch(() => {
-        console.debug(
-          `[SignalRConnectionService] initial connect failed for user ${userId}, scheduling reconnect`,
-        );
-        scheduleReconnect();
-      });
+      connection
+        .start()
+        .then(() => {})
+        .catch(() => {
+          scheduleReconnect();
+        });
 
       return () => {
         // Cancel any possible scheduled reconnects
         reconnectSubscription?.unsubscribe();
-        console.debug(`[SignalRConnectionService] stopping connection for user ${userId}`);
         connection?.stop().catch((error) => {
           this.logService.error("Error while stopping SignalR connection", error);
         });

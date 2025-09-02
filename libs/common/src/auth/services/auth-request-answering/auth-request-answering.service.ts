@@ -36,21 +36,14 @@ export class AuthRequestAnsweringService implements AuthRequestAnsweringServiceA
   ) {}
 
   async receivedPendingAuthRequest(userId: UserId, authRequestId: string): Promise<void> {
-    console.debug(
-      "[AuthRequestAnsweringService] receivedPendingAuthRequest",
-      { userId, authRequestId },
-    );
     const authStatus = await firstValueFrom(this.authService.activeAccountStatus$);
-    const activeUserId: UserId | null = await firstValueFrom(this.accountService.activeAccount$.pipe(getOptionalUserId));
+    const activeUserId: UserId | null = await firstValueFrom(
+      this.accountService.activeAccount$.pipe(getOptionalUserId),
+    );
     const forceSetPasswordReason = await firstValueFrom(
       this.masterPasswordService.forceSetPasswordReason$(userId),
     );
     const popupOpen = await this.platformUtilsService.isPopupOpen();
-
-    console.debug(
-      "[AuthRequestAnsweringService] current state",
-      { popupOpen, authStatus, activeUserId, forceSetPasswordReason },
-    );
 
     // Always persist the pending marker for this user to global state.
     await this.pendingAuthRequestsState.add(userId);
@@ -64,9 +57,6 @@ export class AuthRequestAnsweringService implements AuthRequestAnsweringServiceA
       forceSetPasswordReason === ForceSetPasswordReason.None;
 
     if (!conditionsMet) {
-      console.debug(
-        "[AuthRequestAnsweringService] receivedPendingAuthRequest - Conditions not met, creating system notification",
-      );
       // Get the user's email to include in the system notification
       const accounts = await firstValueFrom(this.accountService.accounts$);
       const emailForUser = accounts[userId].email;
@@ -81,7 +71,6 @@ export class AuthRequestAnsweringService implements AuthRequestAnsweringServiceA
     }
 
     // Popup is open and conditions are met; open dialog immediately for this request
-    console.debug("[AuthRequestAnsweringService] receivedPendingAuthRequest - Opening popup.");
     this.messagingService.send("openLoginApproval");
   }
 
@@ -118,7 +107,6 @@ export class AuthRequestAnsweringService implements AuthRequestAnsweringServiceA
         );
 
         if (isUnlocked && forceSetPasswordReason === ForceSetPasswordReason.None) {
-          console.debug("[AuthRequestAnsweringService] popupOpened - Opening popup.");
           this.messagingService.send("openLoginApproval");
         }
       }

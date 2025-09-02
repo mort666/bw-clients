@@ -11,8 +11,6 @@ import {
   Observable,
   share,
   switchMap,
-  tap,
-  finalize,
 } from "rxjs";
 
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
@@ -69,19 +67,12 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
     this.notifications$ = this.configService
       .getFeatureFlag$(FeatureFlag.InactiveUserServerNotification)
       .pipe(
-        tap((value) => {
-          console.debug(`[DefaultServerNotificationsService] feature flag value for inactive user server notifications: ${value}`);
-        }),
         distinctUntilChanged(),
         switchMap((inactiveUserServerNotificationEnabled) => {
           if (inactiveUserServerNotificationEnabled) {
-            console.debug("[DefaultServerNotificationsService] inactive notification processing");
             return this.accountService.accounts$.pipe(
               map((accounts) => Object.keys(accounts) as UserId[]),
               distinctUntilChanged(),
-              tap((value) => {
-                console.debug(`[DefaultServerNotificationsService] new accounts: ${value}`);
-              }),
               switchMap((userIds) => {
                 if (userIds.length === 0) {
                   return EMPTY;
@@ -98,7 +89,6 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
             );
           }
 
-          console.debug("[DefaultServerNotificationsService] NOT inactive notification processing");
           return this.accountService.activeAccount$.pipe(
             map((account) => account?.id),
             distinctUntilChanged(),
@@ -125,18 +115,9 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
   private userNotifications$(userId: UserId) {
     return this.environmentService.getEnvironment$(userId).pipe(
       map((env) => env.getNotificationsUrl()),
-      tap((value) => {
-        console.debug(`[DefaultServerNotificationsService] userNotifications$ before: ${value}`);
-      }),
       distinctUntilChanged(),
-      tap((value) => {
-        console.debug(`[DefaultServerNotificationsService] userNotifications$ after: ${value}`);
-      }),
       switchMap((notificationsUrl) => {
         if (notificationsUrl === DISABLED_NOTIFICATIONS_URL) {
-          console.debug(
-            `[DefaultServerNotificationsService] notifications disabled via URL for user ${userId}`,
-          );
           return EMPTY;
         }
 
@@ -150,18 +131,12 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
       distinctUntilChanged(),
       switchMap((hasAccessToken) => {
         if (!hasAccessToken) {
-          console.debug(
-            `[DefaultServerNotificationsService] no access token for user ${userId}, skipping notifications`,
-          );
           return EMPTY;
         }
 
         return this.activitySubject;
       }),
       switchMap((activityStatus) => {
-        console.debug(
-          `[DefaultServerNotificationsService] activity status for user ${userId}: ${activityStatus}`,
-        );
         if (activityStatus === "inactive") {
           return EMPTY;
         }
@@ -171,24 +146,15 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
       supportSwitch({
         supported: (service) => {
           this.logService.info("Using WebPush for server notifications");
-          console.debug(
-            `[DefaultServerNotificationsService] WebPush supported for user ${userId}`,
-          );
           return service.notifications$.pipe(
             catchError((err: unknown) => {
               this.logService.warning("Issue with web push, falling back to SignalR", err);
-              console.debug(
-                `[DefaultServerNotificationsService] WebPush error for user ${userId}, falling back to SignalR`,
-              );
               return this.connectSignalR$(userId, notificationsUrl);
             }),
           );
         },
         notSupported: () => {
           this.logService.info("Using SignalR for server notifications");
-          console.debug(
-            `[DefaultServerNotificationsService] WebPush not supported for user ${userId}, using SignalR`,
-          );
           return this.connectSignalR$(userId, notificationsUrl);
         },
       }),
@@ -196,17 +162,9 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
   }
 
   private connectSignalR$(userId: UserId, notificationsUrl: string) {
-    console.debug(
-      `[DefaultServerNotificationsService] Connecting SignalR for user ${userId} to ${notificationsUrl}`,
-    );
     return this.signalRConnectionService.connect$(userId, notificationsUrl).pipe(
       filter((n) => n.type === "ReceiveMessage"),
       map((n) => (n as ReceiveMessage).message),
-      finalize(() =>
-        console.debug(
-          `[DefaultServerNotificationsService] SignalR stream finalized for user ${userId}`,
-        ),
-      ),
     );
   }
 
@@ -319,7 +277,7 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
       case NotificationType.AuthRequest:
         if (
           await firstValueFrom(
-            this.configService.getFeatureFlag$(FeatureFlag.PM14938_BrowserExtensionLoginApproval)
+            this.configService.getFeatureFlag$(FeatureFlag.PM14938_BrowserExtensionLoginApproval),
           )
         ) {
           await this.authRequestAnsweringService.receivedPendingAuthRequest(
@@ -343,14 +301,8 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
   }
 
   startListening() {
-    console.debug("[DefaultServerNotificationsService] startListening subscribe");
     return this.notifications$
       .pipe(
-        tap(([notification, userId]) =>
-          console.debug(
-            `[DefaultServerNotificationsService] received notification type ${notification.type} for user ${userId}`,
-          ),
-        ),
         mergeMap(async ([notification, userId]) => this.processNotification(notification, userId)),
       )
       .subscribe({
@@ -360,12 +312,10 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
   }
 
   reconnectFromActivity(): void {
-    console.debug("[DefaultServerNotificationsService] reconnectFromActivity called");
     this.activitySubject.next("active");
   }
 
   disconnectFromInactivity(): void {
-    console.debug("[DefaultServerNotificationsService] disconnectFromInactivity called");
     this.activitySubject.next("inactive");
   }
 }
