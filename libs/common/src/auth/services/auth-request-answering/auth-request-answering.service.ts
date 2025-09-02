@@ -5,7 +5,7 @@ import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { AuthServerNotificationTags } from "@bitwarden/common/auth/enums/auth-server-notification-tags";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
 import { ForceSetPasswordReason } from "@bitwarden/common/auth/models/domain/force-set-password-reason";
-import { getUserId } from "@bitwarden/common/auth/services/account.service";
+import { getOptionalUserId, getUserId } from "@bitwarden/common/auth/services/account.service";
 import { MasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
@@ -41,7 +41,7 @@ export class AuthRequestAnsweringService implements AuthRequestAnsweringServiceA
       { userId, authRequestId },
     );
     const authStatus = await firstValueFrom(this.authService.activeAccountStatus$);
-    const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
+    const activeUserId: UserId | null = await firstValueFrom(this.accountService.activeAccount$.pipe(getOptionalUserId));
     const forceSetPasswordReason = await firstValueFrom(
       this.masterPasswordService.forceSetPasswordReason$(userId),
     );
