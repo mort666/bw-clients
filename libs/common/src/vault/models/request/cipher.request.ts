@@ -37,6 +37,7 @@ export class CipherRequest {
   lastKnownRevisionDate: Date;
   reprompt: CipherRepromptType;
   key: string;
+  data: string;
 
   constructor({ cipher, encryptedFor }: EncryptionContext) {
     this.type = cipher.type;

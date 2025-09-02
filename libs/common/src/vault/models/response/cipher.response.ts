@@ -40,6 +40,7 @@ export class CipherResponse extends BaseResponse {
   deletedDate: string;
   reprompt: CipherRepromptType;
   key: string;
+  data: string;
 
   constructor(response: any) {
     super(response);
@@ -105,5 +106,6 @@ export class CipherResponse extends BaseResponse {
 
     this.reprompt = this.getResponseProperty("Reprompt") || CipherRepromptType.None;
     this.key = this.getResponseProperty("Key") || null;
+    this.data = this.getResponseProperty("Data") || null;
   }
 }
