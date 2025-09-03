@@ -209,7 +209,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
     userHandle,
     userVerification,
     rpId,
-  }: NewCredentialParams): Promise<{ cipherId?: string; userVerified: boolean }> {
+  }: NewCredentialParams): Promise<{ cipherId: string; userVerified: boolean }> {
     this.logService.warning(
       "confirmNewCredential",
       credentialName,
