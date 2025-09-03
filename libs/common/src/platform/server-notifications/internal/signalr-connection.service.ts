@@ -78,9 +78,7 @@ export class SignalRConnectionService {
     return new Observable<SignalRNotification>((subsciber) => {
       const connection = this.hubConnectionBuilderFactory()
         .withUrl(notificationsUrl + "/hub", {
-          accessTokenFactory: async () => {
-            return this.apiService.getActiveBearerToken(userId);
-          },
+          accessTokenFactory: () => this.apiService.getActiveBearerToken(userId),
           skipNegotiation: true,
           transport: HttpTransportType.WebSockets,
         })
@@ -138,12 +136,9 @@ export class SignalRConnectionService {
       });
 
       // Start connection
-      connection
-        .start()
-        .then(() => {})
-        .catch(() => {
-          scheduleReconnect();
-        });
+      connection.start().catch(() => {
+        scheduleReconnect();
+      });
 
       return () => {
         // Cancel any possible scheduled reconnects
