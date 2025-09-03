@@ -150,11 +150,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.compactModeService.init();
     await this.popupSizeService.setHeight();
 
-    this.accountService.activeAccount$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((account) => {
-        this.activeUserId = account?.id;
-      });
+    this.accountService.activeAccount$.pipe(takeUntil(this.destroy$)).subscribe((account) => {
+      this.activeUserId = account?.id;
+    });
 
     // Separate subscription: only trigger processing on subsequent user switches while popup is open
     this.accountService.activeAccount$
@@ -254,19 +252,21 @@ export class AppComponent implements OnInit, OnDestroy {
 
             await this.router.navigate(["lock"]);
           } else if (msg.command === "openLoginApproval") {
-            if (this.processingPendingAuth) {return;}
+            if (this.processingPendingAuth) {
+              return;
+            }
             this.processingPendingAuth = true;
             try {
               // Always query server for all pending requests and open a dialog for each
-              const pendingList = await firstValueFrom(this.authRequestService.getPendingAuthRequests$());
+              const pendingList = await firstValueFrom(
+                this.authRequestService.getPendingAuthRequests$(),
+              );
               if (Array.isArray(pendingList) && pendingList.length > 0) {
                 const respondedIds = new Set<string>();
                 for (const req of pendingList) {
-                  if (req?.id == null) {continue;}
-                  console.debug(
-                    "[Popup AppComponent] Opening LoginApprovalDialogComponent",
-                    req.id,
-                  );
+                  if (req?.id == null) {
+                    continue;
+                  }
                   const dialogRef = LoginApprovalDialogComponent.open(this.dialogService, {
                     notificationId: req.id,
                   });
@@ -275,22 +275,10 @@ export class AppComponent implements OnInit, OnDestroy {
 
                   if (result !== undefined && typeof result === "boolean") {
                     respondedIds.add(req.id);
-                    if (
-                      respondedIds.size === pendingList.length &&
-                      this.activeUserId != null
-                    ) {
-                      console.debug(
-                        "[Popup AppComponent] All pending auth requests responded; clearing marker for user",
-                        this.activeUserId,
-                      );
+                    if (respondedIds.size === pendingList.length && this.activeUserId != null) {
                       await this.pendingAuthRequestsState.clearByUserId(this.activeUserId);
                     }
                   }
-
-                  console.debug(
-                    "[Popup AppComponent] LoginApprovalDialogComponent closed",
-                    req.id,
-                  );
                 }
               }
             } finally {
