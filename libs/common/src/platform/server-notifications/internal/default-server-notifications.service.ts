@@ -20,7 +20,6 @@ import {
 import { LogoutReason } from "@bitwarden/auth/common";
 import { AuthRequestAnsweringServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth-request-answering/auth-request-answering.service.abstraction";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
-import { AllowedMultiUserNotificationTypes } from "@bitwarden/common/platform/enums/multi-user-allow-list.enum";
 
 import { AccountService } from "../../../auth/abstractions/account.service";
 import { AuthService } from "../../../auth/abstractions/auth.service";
@@ -46,6 +45,10 @@ import { ReceiveMessage, SignalRConnectionService } from "./signalr-connection.s
 import { WebPushConnectionService } from "./webpush-connection.service";
 
 export const DISABLED_NOTIFICATIONS_URL = "http://-";
+
+export const AllowedMultiUserNotificationTypes = new Set<NotificationType>([
+  NotificationType.AuthRequest,
+]);
 
 export class DefaultServerNotificationsService implements ServerNotificationsService {
   notifications$: Observable<readonly [NotificationResponse, UserId]>;
