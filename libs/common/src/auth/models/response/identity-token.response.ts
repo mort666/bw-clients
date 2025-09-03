@@ -2,7 +2,7 @@
 // @ts-strict-ignore
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
-import { KdfType } from "@bitwarden/key-management";
+import { Argon2KdfConfig, KdfConfig, KdfType, PBKDF2KdfConfig } from "@bitwarden/key-management";
 
 import { EncString } from "../../../key-management/crypto/models/enc-string";
 import { BaseResponse } from "../../../models/response/base.response";
@@ -12,7 +12,7 @@ import { UserDecryptionOptionsResponse } from "./user-decryption-options/user-de
 
 export class IdentityTokenResponse extends BaseResponse {
   // Authentication Information
-  accessToken: string; // a JWT with claims about the user
+  accessToken: string;
   expiresIn: number;
   refreshToken: string;
   tokenType: string;
@@ -21,14 +21,10 @@ export class IdentityTokenResponse extends BaseResponse {
   resetMasterPassword: boolean;
   privateKey: string; // userKeyEncryptedPrivateKey
   key?: EncString; // masterKeyEncryptedUserKey
-  twoFactorToken: string; // a token that can be used to bypass 2FA. Generated when a user chooses to "remember" their 2FA response.
-  kdf: KdfType;
-  kdfIterations: number;
-  kdfMemory?: number;
-  kdfParallelism?: number;
-  forcePasswordReset: boolean; // whether the user must immediately set/change their password
-  masterPasswordPolicy: MasterPasswordPolicyResponse; // the combined master password policies for any organizations of which the user is a member
-
+  twoFactorToken: string;
+  kdfConfig: KdfConfig;
+  forcePasswordReset: boolean;
+  masterPasswordPolicy: MasterPasswordPolicyResponse;
   apiUseKeyConnector: boolean;
   keyConnectorUrl: string;
 
@@ -48,10 +44,14 @@ export class IdentityTokenResponse extends BaseResponse {
       this.key = new EncString(key);
     }
     this.twoFactorToken = this.getResponseProperty("TwoFactorToken");
-    this.kdf = this.getResponseProperty("Kdf");
-    this.kdfIterations = this.getResponseProperty("KdfIterations");
-    this.kdfMemory = this.getResponseProperty("KdfMemory");
-    this.kdfParallelism = this.getResponseProperty("KdfParallelism");
+    const kdf = this.getResponseProperty("Kdf");
+    const kdfIterations = this.getResponseProperty("KdfIterations");
+    const kdfMemory = this.getResponseProperty("KdfMemory");
+    const kdfParallelism = this.getResponseProperty("KdfParallelism");
+    this.kdfConfig =
+      kdf == KdfType.PBKDF2_SHA256
+        ? new PBKDF2KdfConfig(kdfIterations)
+        : new Argon2KdfConfig(kdfIterations, kdfMemory, kdfParallelism);
     this.forcePasswordReset = this.getResponseProperty("ForcePasswordReset");
     this.apiUseKeyConnector = this.getResponseProperty("ApiUseKeyConnector");
     this.keyConnectorUrl = this.getResponseProperty("KeyConnectorUrl");
