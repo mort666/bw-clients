@@ -42,7 +42,7 @@ russh-cryptovec = { workspace = true }
 scopeguard = { workspace = true }
 secmem-proc = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
-serde_json { workspace = true }
+serde_json = { workspace = true }
 sha2 = { workspace = true }
 ssh-encoding = { workspace = true }
 ssh-key = { workspace = true, features = [
