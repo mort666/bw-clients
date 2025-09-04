@@ -8,9 +8,8 @@ import { BiometricsStatus, BiometricStateService } from "@bitwarden/key-manageme
 import { WindowMain } from "../../main/window.main";
 
 import { DesktopBiometricsService } from "./desktop.biometrics.service";
-import { OsBiometricService } from "./native-v2/os-biometrics.service";
-
 import { LinuxBiometricsSystem, MacBiometricsSystem, WindowsBiometricsSystem } from "./native-v2";
+import { OsBiometricService } from "./native-v2/os-biometrics.service";
 
 export class MainBiometricsService extends DesktopBiometricsService {
   private osBiometricsService: OsBiometricService;
