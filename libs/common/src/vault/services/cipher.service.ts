@@ -598,7 +598,7 @@ export class CipherService implements CipherServiceAbstraction {
 
   async getAllDecryptedForUrl(
     url: string,
-    userId?: UserId,
+    userId: UserId,
     includeOtherTypes?: CipherType[],
     defaultMatch: UriMatchStrategySetting = null,
   ): Promise<CipherView[]> {
@@ -619,10 +619,12 @@ export class CipherService implements CipherServiceAbstraction {
   }
 
   async getAllDecryptedForIds(userId: UserId, ids: string[]): Promise<CipherView[]> {
-    if (userId) {
-      const ciphers = await this.getAllDecrypted(userId);
-      return ciphers.filter((cipher) => ids.includes(cipher.id));
-    }
+    return firstValueFrom(
+      this.cipherViews$(userId).pipe(
+        filter((ciphers) => ciphers != null),
+        map((ciphers) => ciphers.filter((cipher) => ids.includes(cipher.id))),
+      ),
+    );
   }
 
   async filterCiphersForUrl<C extends CipherViewLike>(
