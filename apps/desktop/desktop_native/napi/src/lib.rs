@@ -152,17 +152,17 @@ pub mod biometrics {
 
 #[napi]
 pub mod biometrics_v2 {
-    use desktop_core::biometric_v2::BiometricTrait;
+    use desktop_core::biometric::BiometricTrait;
 
     #[napi]
     pub struct BiometricLockSystem {
-        inner: desktop_core::biometric_v2::BiometricLockSystem,
+        inner: desktop_core::biometric::BiometricLockSystem,
     }
 
     #[napi]
     pub fn init_biometric_system() -> napi::Result<BiometricLockSystem> {
         Ok(BiometricLockSystem {
-            inner: desktop_core::biometric_v2::BiometricLockSystem::new(),
+            inner: desktop_core::biometric::BiometricLockSystem::new(),
         })
     }
 

@@ -86,22 +86,14 @@ export class BiometricMessageHandlerService {
     private ngZone: NgZone,
   ) {
     // This will be removed after the flag is rolled out
-    this.configService
-      .getFeatureFlag(FeatureFlag.SystemBiometricsV2)
-      .then(async (enabled) => {
-        this.logService.info(
-          "[Native Messaging IPC] SystemBiometricsV2 feature flag is " + enabled,
-        );
-        if (enabled) {
-          await this.biometricsService.enableV2BiometricsBackend();
-        }
-      })
-      .catch((e) => {
-        this.logService.error(
-          "[Native Messaging IPC] Failed to get SystemBiometricsV2 feature flag",
-          e,
-        );
-      });
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    (async () => {
+      const enabled = awaithis.configService.getFeatureFlag(FeatureFlag.SystemBiometricsV2);
+      this.logService.info("[Native Messaging IPC] SystemBiometricsV2 feature flag is " + enabled);
+      if (enabled) {
+        await this.biometricsService.enableV2BiometricsBackend();
+      }
+    })();
 
     combineLatest([
       this.desktopSettingService.browserIntegrationEnabled$,
