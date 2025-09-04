@@ -4,26 +4,21 @@ import { combineLatest, concatMap, firstValueFrom } from "rxjs";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { CryptoFunctionService } from "@bitwarden/common/key-management/crypto/abstractions/crypto-function.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { EncString } from "@bitwarden/common/key-management/crypto/models/enc-string";
-import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
-import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { UserId } from "@bitwarden/common/types/guid";
 import { DialogService } from "@bitwarden/components";
-import {
-  BiometricStateService,
-  BiometricsCommands,
-  BiometricsService,
-  BiometricsStatus,
-  KeyService,
-} from "@bitwarden/key-management";
+import { BiometricsCommands, BiometricsStatus, KeyService } from "@bitwarden/key-management";
 
 import { BrowserSyncVerificationDialogComponent } from "../app/components/browser-sync-verification-dialog.component";
+import { DesktopBiometricsService } from "../key-management/biometrics/desktop.biometrics.service";
 import { LegacyMessage, LegacyMessageWrapper } from "../models/native-messaging";
 import { DesktopSettingsService } from "../platform/services/desktop-settings.service";
 
@@ -83,15 +78,31 @@ export class BiometricMessageHandlerService {
     private logService: LogService,
     private messagingService: MessagingService,
     private desktopSettingService: DesktopSettingsService,
-    private biometricStateService: BiometricStateService,
-    private biometricsService: BiometricsService,
+    private biometricsService: DesktopBiometricsService,
+    private configService: ConfigService,
     private dialogService: DialogService,
     private accountService: AccountService,
     private authService: AuthService,
     private ngZone: NgZone,
-    private i18nService: I18nService,
-    private platformUtilsService: PlatformUtilsService,
   ) {
+    // This will be removed after the flag is rolled out
+    this.configService
+      .getFeatureFlag(FeatureFlag.SystemBiometricsV2)
+      .then(async (enabled) => {
+        this.logService.info(
+          "[Native Messaging IPC] SystemBiometricsV2 feature flag is " + enabled,
+        );
+        if (enabled) {
+          await this.biometricsService.enableV2BiometricsBackend();
+        }
+      })
+      .catch((e) => {
+        this.logService.error(
+          "[Native Messaging IPC] Failed to get SystemBiometricsV2 feature flag",
+          e,
+        );
+      });
+
     combineLatest([
       this.desktopSettingService.browserIntegrationEnabled$,
       this.desktopSettingService.browserIntegrationFingerprintEnabled$,

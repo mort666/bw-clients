@@ -8,7 +8,9 @@ import { BiometricsStatus, BiometricStateService } from "@bitwarden/key-manageme
 import { WindowMain } from "../../main/window.main";
 
 import { DesktopBiometricsService } from "./desktop.biometrics.service";
-import { OsBiometricService } from "./os-biometrics.service";
+import { OsBiometricService } from "./native-v2/os-biometrics.service";
+
+import { LinuxBiometricsSystem, MacBiometricsSystem, WindowsBiometricsSystem } from "./native-v2";
 
 export class MainBiometricsService extends DesktopBiometricsService {
   private osBiometricsService: OsBiometricService;
@@ -18,22 +20,44 @@ export class MainBiometricsService extends DesktopBiometricsService {
     private i18nService: I18nService,
     private windowMain: WindowMain,
     private logService: LogService,
-    platform: NodeJS.Platform,
+    private platform: NodeJS.Platform,
     private biometricStateService: BiometricStateService,
   ) {
     super();
-    if (platform === "win32") {
+    this.loadNativeBiometricsModuleV1();
+  }
+
+  /**
+   * @deprecated
+   */
+  private loadNativeBiometricsModuleV1() {
+    this.logService.info("[BiometricsMain] Loading native biometrics module v1");
+    if (this.platform === "win32") {
       // eslint-disable-next-line
-      const OsBiometricsServiceWindows = require("./os-biometrics-windows.service").default;
+      const OsBiometricsServiceWindows =
+        require("./native-v1/os-biometrics-windows.service").default;
       this.osBiometricsService = new OsBiometricsServiceWindows(this.i18nService, this.windowMain);
-    } else if (platform === "darwin") {
+    } else if (this.platform === "darwin") {
       // eslint-disable-next-line
-      const OsBiometricsServiceMac = require("./os-biometrics-mac.service").default;
+      const OsBiometricsServiceMac = require("./native-v1/os-biometrics-mac.service").default;
       this.osBiometricsService = new OsBiometricsServiceMac(this.i18nService, this.logService);
-    } else if (platform === "linux") {
+    } else if (this.platform === "linux") {
       // eslint-disable-next-line
-      const OsBiometricsServiceLinux = require("./os-biometrics-linux.service").default;
+      const OsBiometricsServiceLinux = require("./native-v1/os-biometrics-linux.service").default;
       this.osBiometricsService = new OsBiometricsServiceLinux();
+    } else {
+      throw new Error("Unsupported platform");
+    }
+  }
+
+  private loadNativeBiometricsModuleV2() {
+    this.logService.info("[BiometricsMain] Loading native biometrics module v2");
+    if (this.platform === "win32") {
+      this.osBiometricsService = new WindowsBiometricsSystem(this.i18nService, this.windowMain);
+    } else if (this.platform === "darwin") {
+      this.osBiometricsService = new MacBiometricsSystem(this.i18nService, this.logService);
+    } else if (this.platform === "linux") {
+      this.osBiometricsService = new LinuxBiometricsSystem();
     } else {
       throw new Error("Unsupported platform");
     }
@@ -135,5 +159,9 @@ export class MainBiometricsService extends DesktopBiometricsService {
 
   async hasPersistentKey(userId: UserId): Promise<boolean> {
     return await this.osBiometricsService.hasPersistentKey(userId);
+  }
+
+  async enableV2BiometricsBackend(): Promise<void> {
+    this.loadNativeBiometricsModuleV2();
   }
 }

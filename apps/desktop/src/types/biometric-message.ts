@@ -16,6 +16,8 @@ export enum BiometricAction {
 
   EnrollPersistent = "enrollPersistent",
   HasPersistentKey = "hasPersistentKey",
+
+  EnableV2 = "enableV2",
 }
 
 export type BiometricMessage =

@@ -76,4 +76,8 @@ export class RendererBiometricsService extends DesktopBiometricsService {
   async hasPersistentKey(userId: UserId): Promise<boolean> {
     return await ipc.keyManagement.biometric.hasPersistentKey(userId);
   }
+
+  async enableV2BiometricsBackend(): Promise<void> {
+    return await ipc.keyManagement.biometric.enableBiometricsV2();
+  }
 }

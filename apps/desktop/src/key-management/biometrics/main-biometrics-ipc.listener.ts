@@ -58,6 +58,8 @@ export class MainBiometricsIPCListener {
               message.userId as UserId,
               SymmetricCryptoKey.fromString(message.key as string),
             );
+          case BiometricAction.EnableV2:
+            return await this.biometricService.enableV2BiometricsBackend();
           default:
             return;
         }

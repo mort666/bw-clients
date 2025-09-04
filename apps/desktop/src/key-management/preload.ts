@@ -61,6 +61,10 @@ const biometric = {
       action: BiometricAction.HasPersistentKey,
       userId: userId,
     } satisfies BiometricMessage),
+  enableBiometricsV2: (): Promise<void> =>
+    ipcRenderer.invoke("biometric", {
+      action: BiometricAction.EnableV2,
+    } satisfies BiometricMessage),
 };
 
 export default {

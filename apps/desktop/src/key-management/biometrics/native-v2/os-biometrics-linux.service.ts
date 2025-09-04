@@ -2,10 +2,10 @@ import { spawn } from "child_process";
 
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { UserId } from "@bitwarden/common/types/guid";
-import { biometrics, passwords } from "@bitwarden/desktop-napi";
+import { biometrics_v2, passwords } from "@bitwarden/desktop-napi";
 import { BiometricsStatus } from "@bitwarden/key-management";
 
-import { isFlatpak, isLinux, isSnapStore } from "../../utils";
+import { isSnapStore, isFlatpak, isLinux } from "../../../utils";
 
 import { OsBiometricService } from "./os-biometrics.service";
 
@@ -29,25 +29,31 @@ const policyFileName = "com.bitwarden.Bitwarden.policy";
 const policyPath = "/usr/share/polkit-1/actions/";
 
 export default class OsBiometricsServiceLinux implements OsBiometricService {
-  private biometricsSystem = biometrics.initBiometricSystem();
+  private biometricsSystem;
 
-  constructor() {}
+  constructor() {
+    this.biometricsSystem = biometrics_v2.initBiometricSystem();
+  }
 
   async setBiometricKey(userId: UserId, key: SymmetricCryptoKey): Promise<void> {
-    await biometrics.provideKey(this.biometricsSystem, userId, Buffer.from(key.toEncoded().buffer));
+    await biometrics_v2.provideKey(
+      this.biometricsSystem,
+      userId,
+      Buffer.from(key.toEncoded().buffer),
+    );
   }
 
   async deleteBiometricKey(userId: UserId): Promise<void> {
-    await biometrics.unenroll(this.biometricsSystem, userId);
+    await biometrics_v2.unenroll(this.biometricsSystem, userId);
   }
 
   async getBiometricKey(userId: UserId): Promise<SymmetricCryptoKey | null> {
-    const result = await biometrics.unlock(this.biometricsSystem, userId, Buffer.from(""));
+    const result = await biometrics_v2.unlock(this.biometricsSystem, userId, Buffer.from(""));
     return result ? new SymmetricCryptoKey(Uint8Array.from(result)) : null;
   }
 
   async authenticateBiometric(): Promise<boolean> {
-    return await biometrics.authenticate(
+    return await biometrics_v2.authenticate(
       this.biometricsSystem,
       Buffer.from(""),
       "Authenticate to unlock",
@@ -70,7 +76,7 @@ export default class OsBiometricsServiceLinux implements OsBiometricService {
     }
 
     // check whether the polkit policy is loaded via dbus call to polkit
-    return !(await biometrics.authenticateAvailable(this.biometricsSystem));
+    return !(await biometrics_v2.authenticateAvailable(this.biometricsSystem));
   }
 
   async canAutoSetup(): Promise<boolean> {
@@ -100,7 +106,7 @@ export default class OsBiometricsServiceLinux implements OsBiometricService {
   }
 
   async getBiometricsFirstUnlockStatusForUser(userId: UserId): Promise<BiometricsStatus> {
-    return (await biometrics.unlockAvailable(this.biometricsSystem, userId))
+    return (await biometrics_v2.unlockAvailable(this.biometricsSystem, userId))
       ? BiometricsStatus.Available
       : BiometricsStatus.UnlockNeeded;
   }

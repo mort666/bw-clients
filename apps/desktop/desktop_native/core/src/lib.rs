@@ -1,6 +1,8 @@
 pub mod autofill;
 pub mod autostart;
 pub mod biometric;
+pub mod biometric_v2;
+pub(crate) mod crypto;
 pub mod clipboard;
 pub mod error;
 pub mod ipc;
