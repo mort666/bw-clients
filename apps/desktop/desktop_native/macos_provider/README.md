@@ -1,9 +1,9 @@
 # Explainer: Mac OS Native Passkey Provider
 
-This explainer explains the changes introduced in https://github.com/bitwarden/clients/pull/13963, where we introduce the MacOS Native Passkey Provider. It gives the high level explanation of the architecture and some of the quirks and additional good to know context.
+This document describes the changes introduced in https://github.com/bitwarden/clients/pull/13963, where we introduce the MacOS Native Passkey Provider. It gives the high level explanation of the architecture and some of the quirks and additional good to know context.
 
 ## The high level
-MacOS has native APIs (similar to iOS) to allow Credential Managers to provide credentials to the MacOS autofill system (in this PR, we only provide passkeys).
+MacOS has native APIs (similar to iOS) to allow Credential Managers to provide credentials to the MacOS autofill system (in the PR referenced above, we only provide passkeys).
 
 We’ve written a Swift-based native autofill-extension. It’s bundled in the app-bundle in PlugIns, similar to the safari-extension.
 
@@ -16,8 +16,8 @@ Footnotes:
 
 Electron receives the messages and passes it to Angular (through the electron-renderer event system).
 
-Our existing fido2 services in the renderer respond to events, displaying UI as necessary, and returns the signature back through the same mechanism, allowing people to authenticate with passkeys through the native system + UI. See 
-[Mac OS Native Passkey Workflows](https://bitwarden.atlassian.net/wiki/spaces/EN/pages/1828356098/Mac+OS+Native+Passkey+Workflows) for demo videos.
+Our existing fido2 services in the renderer respond to events, displaying UI as necessary, and returns the signature back through the same mechanism, allowing people to authenticate with passkeys through the native system + UI. See [Mac OS Native Passkey Workflows](https://bitwarden.atlassian.net/wiki/spaces/EN/pages/1828356098/Mac+OS+Native+Passkey+Workflows) for demo videos.
+
 
 ## Typescript + UI implementations
 
