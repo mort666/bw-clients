@@ -27,37 +27,9 @@ impl BitwardenDesktopAgent {
         auth_request_tx: tokio::sync::mpsc::Sender<SshAgentUIRequest>,
         auth_response_rx: Arc<Mutex<tokio::sync::broadcast::Receiver<(u32, bool)>>>,
     ) -> Result<Self, anyhow::Error> {
-        // socket_paths are one of the following:
-        //   - only the env var socket path if it is defined
-        //   - or use the legacy $HOME path if flatpak build
-        //   - or use both legacy and forward looking default paths.
-        // TODO: in PM<create ticket>, remove the legacy path logic and the for loop below.
-        let socket_paths = if let Ok(path) = std::env::var(ENV_BITWARDEN_SSH_AUTH_SOCK) {
-            vec![PathBuf::from(path)]
-        } else {
-            println!("[SSH Agent Native Module] {ENV_BITWARDEN_SSH_AUTH_SOCK} not set, using default path");
-
-            let mut paths = vec![get_legacy_default_socket_path()?];
-
-            // TODO: handle flatpak/snap
-            if !is_flatpak() {
-                let basedir = get_socket_basedir()?;
-                let socket_path = get_default_socket_path(basedir);
-
-                // create the bitwarden subdir if needed
-                fs::create_dir_all(
-                    socket_path
-                        .parent()
-                        .ok_or(anyhow!("Malformed default socket path."))?,
-                )
-                .map_err(|e| anyhow!(format!("Error creating {socket_path:?}: {e}")))?;
-
-                paths.push(socket_path);
-            }
-            paths
-        };
-
         let agent_state = BitwardenDesktopAgent::new(auth_request_tx, auth_response_rx);
+
+        let socket_paths = get_socket_paths()?;
 
         for sock_path in &socket_paths {
             // if the socket is already present and wasn't cleanly removed during a previous
@@ -107,6 +79,40 @@ impl BitwardenDesktopAgent {
         }
 
         Ok(agent_state)
+    }
+}
+
+// socket_paths are one of the following:
+//   - only the env var socket path if it is defined
+//   - or use the legacy $HOME path if flatpak build
+//   - or use both legacy and forward looking default paths.
+// TODO: in PM<create ticket>, remove the legacy path logic and the for loop below.
+fn get_socket_paths() -> Result<Vec<PathBuf>, anyhow::Error> {
+    if let Ok(path) = std::env::var(ENV_BITWARDEN_SSH_AUTH_SOCK) {
+        Ok(vec![PathBuf::from(path)])
+    } else {
+        println!(
+            "[SSH Agent Native Module] {ENV_BITWARDEN_SSH_AUTH_SOCK} not set, using default path"
+        );
+
+        let mut paths = vec![get_legacy_default_socket_path()?];
+
+        // TODO: handle flatpak/snap
+        if !is_flatpak() {
+            let basedir = get_socket_basedir()?;
+            let socket_path = get_default_socket_path(basedir);
+
+            // create the bitwarden subdir if needed
+            fs::create_dir_all(
+                socket_path
+                    .parent()
+                    .ok_or(anyhow!("Malformed default socket path."))?,
+            )
+            .map_err(|e| anyhow!(format!("Error creating {socket_path:?}: {e}")))?;
+
+            paths.push(socket_path);
+        }
+        Ok(paths)
     }
 }
 
