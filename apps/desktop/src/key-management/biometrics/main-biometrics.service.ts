@@ -33,9 +33,10 @@ export class MainBiometricsService extends DesktopBiometricsService {
   private loadNativeBiometricsModuleV1() {
     this.logService.info("[BiometricsMain] Loading native biometrics module v1");
     if (this.platform === "win32") {
-      // eslint-disable-next-line
+      /* eslint-disable */
       const OsBiometricsServiceWindows =
         require("./native-v1/os-biometrics-windows.service").default;
+      /* eslint-enable */
       this.osBiometricsService = new OsBiometricsServiceWindows(this.i18nService, this.windowMain);
     } else if (this.platform === "darwin") {
       // eslint-disable-next-line
