@@ -23,30 +23,31 @@ or if you only want to handle the notifications of the currently active user.
 
 ## Implementation
 
-There are three server notification service implementations available for our clients, with specific use cases detailed below.
+There are three server notification service implementations available for our clients, with specific
+use cases detailed below.
 
 ### Default
 
 The default implementation is the main implementation that actually does the actions people expect
 it to do. This service manages the logic for when we should connect, ensuring we always have a
 connection during those times, and trying to limit reconnection events to only when necessary.
-The service establishes a connection for the active user if they have an available access token and a
-notification URL other than `http://-`, which is used as a special value to say that notifications
+The service establishes a connection for the active user if they have an available access token and
+a notification URL other than `http://-`, which is used as a special value to say that notifications
 should not be used. Then the service will reach out to the injected `WebPushConnectionService` for
-its support status on if it supports Web Push. If it does support web push it will give us an object
+its support status on if it supports web push. If it does support web push it will give us an object
 to use to connect to web push notifications. If that service tells us web push is not supported or
 any exceptions happen in the web push stream we fall back to connecting to SignalR notifications. We
 are sure to use the `rxjs` operator `distinctUntilChanged` on a lot of these events to help avoid
 doing unnecessary reconnects.
 
-This structure allows us to inject a different implementation of `WebPushConnectionService` based on the client,
-depending on the best way to use web push in that client's ecosystem. For now it is only using the Service Worker of our
-Chrome MV3 extension. Possible future implementation of this service could be a `Worker` in our web
-app. This would require that we request the `Notification` permission and that browsers start
-allowing `userVisibleOnly: false`. Another possible implementation that could apply to web and
-desktop would be using our `autopush-manager` package. That package uses web sockets under the hood
-but implements the cryptography layer of web push on top of it so that we can offload the socket
-connection to another party.
+This structure allows us to inject a different implementation of `WebPushConnectionService` based on
+the client, depending on the best way to use web push in that client's ecosystem. For now it is only
+using the Service Worker of our Chrome MV3 extension. Possible future implementation of this service
+could be a `Worker` in our web app. This would require that we request the `Notification` permission
+and that browsers start allowing `userVisibleOnly: false`. Another possible implementation that
+could apply to web and desktop would be using our `autopush-manager` package. That package uses web
+sockets under the hood but implements the cryptography layer of web push on top of it so that we can
+offload the socket connection to another party.
 
 The injected `SignalRConnectionService` is another service that we can utilize to make the below
 foreground service not needed anymore. Instead of having a whole different
