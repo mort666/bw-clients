@@ -172,7 +172,6 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
 
   private hasAccessToken$(userId: UserId) {
     return this.configService.getFeatureFlag$(FeatureFlag.PushNotificationsWhenLocked).pipe(
-      distinctUntilChanged(),
       switchMap((featureFlagEnabled) => {
         if (featureFlagEnabled) {
           return this.authService.authStatusFor$(userId).pipe(
@@ -306,23 +305,11 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
   startListening() {
     return this.notifications$
       .pipe(
-        mergeMap(async ([notification, userId]) => {
-          try {
-            await this.processNotification(notification, userId);
-          } catch (err: unknown) {
-            this.logService.error(
-              `Problem processing notification of type ${notification.type}`,
-              err,
-            );
-          }
-        }),
+        mergeMap(async ([notification, userId]) => this.processNotification(notification, userId)),
       )
       .subscribe({
-        error: (err: unknown) =>
-          this.logService.error(
-            "Fatal error in server notifications$ observable, notifications won't be recieved anymore.",
-            err,
-          ),
+        error: (e: unknown) =>
+          this.logService.warning("Error in server notifications$ observable", e),
       });
   }
 
