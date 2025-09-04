@@ -121,7 +121,7 @@ fn get_legacy_default_socket_path() -> Result<PathBuf, anyhow::Error> {
         return Err(anyhow!("Could not determine home directory."));
     };
 
-    if std::env::var("container") == Ok("flatpak".to_string()) {
+    if is_flatpak() {
         ssh_agent_directory = ssh_agent_directory.join(FLATPACK_DATA_DIR);
     }
 
