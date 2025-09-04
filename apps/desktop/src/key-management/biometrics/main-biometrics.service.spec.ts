@@ -14,10 +14,10 @@ import {
 import { WindowMain } from "../../main/window.main";
 
 import { MainBiometricsService } from "./main-biometrics.service";
-import OsBiometricsServiceLinux from "./os-biometrics-linux.service";
-import OsBiometricsServiceMac from "./os-biometrics-mac.service";
-import OsBiometricsServiceWindows from "./os-biometrics-windows.service";
-import { OsBiometricService } from "./os-biometrics.service";
+import { default as OsBiometricsServiceLinux } from "./native-v1/os-biometrics-linux.service";
+import { default as OsBiometricsServiceMac } from "./native-v1/os-biometrics-mac.service";
+import { default as OsBiometricsServiceWindows } from "./native-v1/os-biometrics-windows.service";
+import { OsBiometricService } from "./native-v2/os-biometrics.service";
 
 jest.mock("@bitwarden/desktop-napi", () => {
   return {
