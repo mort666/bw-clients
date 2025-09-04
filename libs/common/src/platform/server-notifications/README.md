@@ -14,7 +14,7 @@ to the switch statement in the `processNotification` method of
 to put as much of your logic in your own service and inject and call a method on that service in
 response to your notification type being processed.
 
-In the future notifications will be able to be handled in response to the `notifications$`
+In the future, notifications will be able to be handled in response to the `notifications$`
 observable. This stream will contain all notifications that come from our server and it will be
 your responsibility to filter out for only the notifications you care about and to parse the payload
 into your expected type. Through this stream you will also be required to filter out if the
@@ -23,15 +23,15 @@ or if you only want to handle the notifications of the currently active user.
 
 ## Implementation
 
-There are three server notification service implementation that could be used.
+There are three server notification service implementations available for our clients, with specific use cases detailed below.
 
 ### Default
 
 The default implementation is the main implementation that actually does the actions people expect
 it to do. This service manages the logic for when we should connect, ensuring we always have a
-connection during those times, and trying to keep reconnection events to only when necessary.
-Notifications should be connected for the active user has an available access token and they have a
-notification url other than `http://-` which is used as a special value to say that notifications
+connection during those times, and trying to limit reconnection events to only when necessary.
+The service establishes a connection for the active user if they have an available access token and a
+notification URL other than `http://-`, which is used as a special value to say that notifications
 should not be used. Then the service will reach out to the injected `WebPushConnectionService` for
 its support status on if it supports Web Push. If it does support web push it will give us an object
 to use to connect to web push notifications. If that service tells us web push is not supported or
@@ -39,8 +39,8 @@ any exceptions happen in the web push stream we fall back to connecting to Signa
 are sure to use the `rxjs` operator `distinctUntilChanged` on a lot of these events to help avoid
 doing unnecessary reconnects.
 
-Based on the client this allows us to inject different implementation of `WebPushConnectionService`
-depending on the best way to use web push there. For now it is only using the Service Worker of our
+This structure allows us to inject a different implementation of `WebPushConnectionService` based on the client,
+depending on the best way to use web push in that client's ecosystem. For now it is only using the Service Worker of our
 Chrome MV3 extension. Possible future implementation of this service could be a `Worker` in our web
 app. This would require that we request the `Notification` permission and that browsers start
 allowing `userVisibleOnly: false`. Another possible implementation that could apply to web and
