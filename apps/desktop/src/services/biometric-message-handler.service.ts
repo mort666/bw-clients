@@ -88,7 +88,7 @@ export class BiometricMessageHandlerService {
     // This will be removed after the flag is rolled out
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     (async () => {
-      const enabled = awaithis.configService.getFeatureFlag(FeatureFlag.SystemBiometricsV2);
+      const enabled = await this.configService.getFeatureFlag(FeatureFlag.SystemBiometricsV2);
       this.logService.info("[Native Messaging IPC] SystemBiometricsV2 feature flag is " + enabled);
       if (enabled) {
         await this.biometricsService.enableV2BiometricsBackend();
