@@ -65,6 +65,10 @@ const biometric = {
     ipcRenderer.invoke("biometric", {
       action: BiometricAction.EnableV2,
     } satisfies BiometricMessage),
+  isBiometricsV2Enabled: (): Promise<boolean> =>
+    ipcRenderer.invoke("biometric", {
+      action: BiometricAction.IsV2Enabled,
+    } satisfies BiometricMessage),
 };
 
 export default {

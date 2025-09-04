@@ -60,6 +60,8 @@ export class MainBiometricsIPCListener {
             );
           case BiometricAction.EnableV2:
             return await this.biometricService.enableV2BiometricsBackend();
+          case BiometricAction.IsV2Enabled:
+            return await this.biometricService.isV2BiometricsBackendEnabled();
           default:
             return;
         }

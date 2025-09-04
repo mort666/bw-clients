@@ -80,4 +80,8 @@ export class RendererBiometricsService extends DesktopBiometricsService {
   async enableV2BiometricsBackend(): Promise<void> {
     return await ipc.keyManagement.biometric.enableBiometricsV2();
   }
+
+  async isV2BiometricsBackendEnabled(): Promise<boolean> {
+    return await ipc.keyManagement.biometric.isBiometricsV2Enabled();
+  }
 }

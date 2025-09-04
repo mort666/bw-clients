@@ -17,4 +17,5 @@ export abstract class DesktopBiometricsService extends BiometricsService {
   abstract hasPersistentKey(userId: UserId): Promise<boolean>;
   /* Enables the v2 biometrics re-write. This will stay enabled until the application is restarted. */
   abstract enableV2BiometricsBackend(): Promise<void>;
+  abstract isV2BiometricsBackendEnabled(): Promise<boolean>;
 }

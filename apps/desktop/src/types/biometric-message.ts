@@ -18,6 +18,7 @@ export enum BiometricAction {
   HasPersistentKey = "hasPersistentKey",
 
   EnableV2 = "enableV2",
+  IsV2Enabled = "isV2Enabled",
 }
 
 export type BiometricMessage =

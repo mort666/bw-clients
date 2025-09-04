@@ -15,6 +15,7 @@ import { LinuxBiometricsSystem, MacBiometricsSystem, WindowsBiometricsSystem } f
 export class MainBiometricsService extends DesktopBiometricsService {
   private osBiometricsService: OsBiometricService;
   private shouldAutoPrompt = true;
+  private v2BiometricsEnabled = false;
 
   constructor(
     private i18nService: I18nService,
@@ -61,6 +62,8 @@ export class MainBiometricsService extends DesktopBiometricsService {
     } else {
       throw new Error("Unsupported platform");
     }
+
+    this.v2BiometricsEnabled = true;
   }
 
   /**
@@ -162,6 +165,12 @@ export class MainBiometricsService extends DesktopBiometricsService {
   }
 
   async enableV2BiometricsBackend(): Promise<void> {
-    this.loadNativeBiometricsModuleV2();
+    if (this.v2BiometricsEnabled == false) {
+      this.loadNativeBiometricsModuleV2();
+    }
+  }
+
+  async isV2BiometricsBackendEnabled(): Promise<boolean> {
+    return this.v2BiometricsEnabled;
   }
 }

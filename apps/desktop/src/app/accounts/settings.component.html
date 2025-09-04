@@ -81,7 +81,10 @@
                   "additionalTouchIdSettings" | i18n
                 }}</small>
               </div>
-              <div class="form-group" *ngIf="this.form.value.biometric && this.isWindows">
+              <div
+                class="form-group"
+                *ngIf="this.form.value.biometric && this.isWindows && isBiometricV2Enabled"
+              >
                 <div class="checkbox form-group-child">
                   <label for="requireMasterPasswordOnAppRestart">
                     <input

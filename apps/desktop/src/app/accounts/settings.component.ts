@@ -135,6 +135,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   pinEnabled$: Observable<boolean> = of(true);
 
   hasPremium: boolean = false;
+  isBiometricV2Enabled: boolean = false;
 
   form = this.formBuilder.group({
     // Security
@@ -274,6 +275,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit() {
+    this.isBiometricV2Enabled = await this.biometricsService.isV2BiometricsBackendEnabled();
+
     this.vaultTimeoutOptions = await this.generateVaultTimeoutOptions();
     const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
 
@@ -477,7 +480,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       .pipe(
         concatMap(async (requireMasterPassword) => {
           const userKey = await firstValueFrom(this.keyService.userKey$(activeAccount.id));
-          if (!requireMasterPassword) {
+          if (!requireMasterPassword && this.isBiometricV2Enabled) {
             // Allow biometric unlock on app restart
             if (!(await this.biometricsService.hasPersistentKey(activeAccount.id))) {
               await this.biometricsService.enrollPersistent(activeAccount.id, userKey);
