@@ -144,7 +144,7 @@ fn get_socket_basedir() -> Result<PathBuf, anyhow::Error> {
     cfg_if::cfg_if! {
         if #[cfg(target_os = "linux")] {
             std::env::var("XDG_RUNTIME_DIR")
-                .map(|path| PathBuf::from(path))
+                .map(PathBuf::from)
                 .map_err(|_| { anyhow!("$XDG_RUNTIME_DIR is not defined.") })
 
         } else if #[cfg(target_os = "macos")]{
