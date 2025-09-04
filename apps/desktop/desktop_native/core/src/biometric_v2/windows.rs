@@ -338,7 +338,7 @@ fn decrypt_data(
 
 #[cfg(test)]
 mod tests {
-    use crate::biometric_v2::
+    use crate::biometric_v2::{
         biometric_v2::{
             decrypt_data, encrypt_data, windows_hello_authenticate,
             windows_hello_authenticate_with_crypto, CHALLENGE_LENGTH, XCHACHA20POLY1305_KEY_LENGTH,
