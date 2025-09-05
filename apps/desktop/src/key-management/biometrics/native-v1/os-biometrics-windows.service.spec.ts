@@ -15,7 +15,7 @@ import { BiometricsStatus, BiometricStateService } from "@bitwarden/key-manageme
 
 import { WindowMain } from "../../../main/window.main";
 
-import OsBiometricsServiceWindows from "./os-biometrics-windows.service";
+import { default as OsBiometricsServiceWindows } from "./os-biometrics-windows.service";
 
 import OsDerivedKey = biometrics.OsDerivedKey;
 

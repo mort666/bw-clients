@@ -5,7 +5,7 @@ import { LogService } from "@bitwarden/common/platform/abstractions/log.service"
 import { UserId } from "@bitwarden/common/types/guid";
 import { passwords } from "@bitwarden/desktop-napi";
 
-import OsBiometricsServiceMac from "./os-biometrics-mac.service";
+import { default as OsBiometricsServiceMac } from "./os-biometrics-mac.service";
 
 jest.mock("@bitwarden/desktop-napi", () => ({
   biometrics: {

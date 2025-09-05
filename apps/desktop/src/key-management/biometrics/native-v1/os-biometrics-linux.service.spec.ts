@@ -7,7 +7,7 @@ import { UserId } from "@bitwarden/common/types/guid";
 import { passwords } from "@bitwarden/desktop-napi";
 import { BiometricStateService } from "@bitwarden/key-management";
 
-import OsBiometricsServiceLinux from "../os-biometrics-linux.service";
+import { default as OsBiometricsServiceLinux } from "./os-biometrics-linux.service";
 
 jest.mock("@bitwarden/desktop-napi", () => ({
   biometrics: {

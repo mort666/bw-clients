@@ -8,7 +8,7 @@ import { passwords } from "@bitwarden/desktop-napi";
 import OsBiometricsServiceMac from "./os-biometrics-mac.service";
 
 jest.mock("@bitwarden/desktop-napi", () => ({
-  biometrics: {
+  biometrics_v2: {
     setBiometricSecret: jest.fn(),
     getBiometricSecret: jest.fn(),
     deleteBiometricSecret: jest.fn(),
