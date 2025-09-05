@@ -31,8 +31,7 @@ export const Profile = Object.freeze({
    *  @remarks these are the options displayed on the generator tab
    */
   account: "account",
-
-  // FIXME: consider adding a profile for bitwarden's master password
+  masterPassword: "masterPassword",
 });
 
 /** Credential generation algorithms grouped by purpose. */

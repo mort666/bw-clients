@@ -86,8 +86,15 @@ export class GeneratorProfileProvider {
           "initializing constraints$",
         );
 
+        // The problem is here, this just gets applicable policies to the current user, which the owner/admin may be exempt from if generating a pw for another user via account recovery.
+        //const policies$ = profile.constraints.type
+        //  ? this.policyService.policiesByType$(profile.constraints.type, account.id)
+        //  : of([]);
+
         const policies$ = profile.constraints.type
-          ? this.policyService.policiesByType$(profile.constraints.type, account.id)
+          ? this.policyService
+              .policies$(account.id)
+              .pipe(map((policies) => policies.filter((p) => p.type === profile.constraints.type)))
           : of([]);
 
         const context: ProfileContext<Settings> = {

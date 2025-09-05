@@ -1,6 +1,15 @@
-import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from "@angular/core";
+import {
+  Component,
+  DestroyRef,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  ViewChild,
+} from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ReactiveFormsModule, FormBuilder, Validators, FormControl } from "@angular/forms";
-import { firstValueFrom } from "rxjs";
+import { filter, firstValueFrom, Subject } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import {
@@ -10,6 +19,7 @@ import {
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { MasterPasswordPolicyOptions } from "@bitwarden/common/admin-console/models/domain/master-password-policy-options";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { MasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
@@ -32,6 +42,13 @@ import {
   ToastService,
   Translation,
 } from "@bitwarden/components";
+import { GeneratorServicesModule } from "@bitwarden/generator-components";
+import {
+  CredentialGeneratorService,
+  GenerateRequest,
+  Profile,
+  Type,
+} from "@bitwarden/generator-core";
 import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
 import {
   DEFAULT_KDF_CONFIG,
@@ -107,6 +124,7 @@ interface InputPasswordForm {
     ButtonModule,
     CheckboxModule,
     FormFieldModule,
+    GeneratorServicesModule,
     IconButtonModule,
     InputModule,
     JslibModule,
@@ -148,6 +166,9 @@ export class InputPasswordComponent implements OnInit {
   protected passwordStrengthScore: PasswordStrengthScore = 0;
   protected showErrorSummary = false;
   protected showPassword = false;
+
+  private generate$: Subject<GenerateRequest> = new Subject();
+  private account$ = this.accountService.activeAccount$.pipe(filter((acc) => acc != null));
 
   protected formGroup = this.formBuilder.nonNullable.group<InputPasswordForm>(
     {
@@ -194,11 +215,22 @@ export class InputPasswordComponent implements OnInit {
     private policyService: PolicyService,
     private toastService: ToastService,
     private validationService: ValidationService,
+    private credentialGeneratorService: CredentialGeneratorService,
+    private accountService: AccountService,
+    private destroy$: DestroyRef,
   ) {}
 
   ngOnInit(): void {
     this.addFormFieldsIfNecessary();
     this.setButtonText();
+    this.credentialGeneratorService
+      .generate$({ on$: this.generate$, account$: this.account$ })
+      .pipe(takeUntilDestroyed(this.destroy$))
+      .subscribe((generated) => {
+        this.formGroup.patchValue({
+          newPassword: generated.credential,
+        });
+      });
   }
 
   private addFormFieldsIfNecessary() {
@@ -634,10 +666,13 @@ export class InputPasswordComponent implements OnInit {
   }
 
   protected async generatePassword() {
-    const options = (await this.passwordGenerationService.getOptions())?.[0] ?? {};
-    this.formGroup.patchValue({
-      newPassword: await this.passwordGenerationService.generatePassword(options),
-    });
+    const request: GenerateRequest = {
+      type: Type.password,
+      profile: Profile.masterPassword,
+      source: "master-password",
+    };
+
+    this.generate$.next(request);
 
     if (!this.passwordStrengthComponent) {
       throw new Error("PasswordStrengthComponent is not initialized");
