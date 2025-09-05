@@ -39,13 +39,12 @@ function positionWindow(window: BrowserWindow, position?: Position) {
     const centeredY = position.y - popupHeight / 2;
     window.setPosition(centeredX, centeredY);
   } else {
-    this.logService.warning("No position provided, centering window");
     window.center();
   }
 }
 
 export function applyMainWindowStyles(window: BrowserWindow, existingWindowState: WindowState) {
-  window.setMinimumSize(600, 500);
+  window.setMinimumSize(popupWidth, popupHeight);
 
   // need to guard against null/undefined values
 

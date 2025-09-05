@@ -37,9 +37,6 @@ export class NativeAutofillMain {
     if (this.listenerReady && this.windowMain.win?.webContents) {
       this.windowMain.win.webContents.send(channel, data);
     } else {
-      this.logService.info(
-        `Buffering message to ${channel} until server is ready. Call .listenerReady() to flush.`,
-      );
       this.messageBuffer.push({ channel, data });
     }
   }
