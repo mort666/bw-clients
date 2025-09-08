@@ -1,9 +1,9 @@
 import { map } from "rxjs";
 
+import { CommercialBitwardenClient } from "@bitwarden/bit-sdk-internal";
 import { SdkService } from "@bitwarden/common/platform/abstractions/sdk/sdk.service";
 import { Rc } from "@bitwarden/common/platform/misc/reference-counting/rc";
 import { UserId } from "@bitwarden/common/types/guid";
-import { CommercialBitwardenClient } from "@bitwarden/sdk-internal";
 
 export class BitSdkService {
   constructor(private sdkService: SdkService) {}
