@@ -75,6 +75,7 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
   private focusedFieldData: FocusedFieldData;
   private closeInlineMenuOnRedirectTimeout: number | NodeJS.Timeout;
   private focusInlineMenuListTimeout: number | NodeJS.Timeout;
+  private blurFieldTimeout: number | NodeJS.Timeout;
   private eventHandlersMemo: { [key: string]: EventListener } = {};
   private readonly extensionMessageHandlers: AutofillOverlayContentExtensionMessageHandlers = {
     addNewVaultItemFromOverlay: ({ message }) => this.addNewVaultItem(message),
@@ -687,11 +688,27 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
   /**
    * Form Field blur event handler. Updates the value identifying whether
    * the field is focused and sends a message to check if the inline menu itself
-   * is currently focused.
+   * is currently focused. Uses a timeout to allow checking if another form field
+   * is being focused to avoid premature overlay closure during field transitions.
    */
   private handleFormFieldBlurEvent = () => {
-    void this.updateIsFieldCurrentlyFocused(false);
-    void this.sendExtensionMessage("checkAutofillInlineMenuFocused");
+    if (this.blurFieldTimeout) {
+      clearTimeout(this.blurFieldTimeout);
+    }
+
+    this.blurFieldTimeout = globalThis.setTimeout(() => {
+      const activeElement = this.getRootNodeActiveElement(this.mostRecentlyFocusedField);
+      const isFormFieldFocused =
+        activeElement &&
+        this.formFieldElements.has(activeElement as ElementWithOpId<FormFieldElement>);
+
+      if (!isFormFieldFocused) {
+        void this.updateIsFieldCurrentlyFocused(false);
+        void this.sendExtensionMessage("checkAutofillInlineMenuFocused");
+      }
+
+      this.blurFieldTimeout = null;
+    }, 100);
   };
 
   /**
@@ -913,6 +930,8 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
    * @param formFieldElement - The form field element that triggered the focus event.
    */
   private async triggerFormFieldFocusedAction(formFieldElement: ElementWithOpId<FormFieldElement>) {
+    this.clearBlurFieldTimeout();
+
     if (await this.isFieldCurrentlyFilling()) {
       return;
     }
@@ -1788,12 +1807,23 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
   }
 
   /**
+   * Clears the timeout that handles blur event transitions between fields.
+   */
+  private clearBlurFieldTimeout() {
+    if (this.blurFieldTimeout) {
+      globalThis.clearTimeout(this.blurFieldTimeout);
+      this.blurFieldTimeout = null;
+    }
+  }
+
+  /**
    * Destroys the autofill overlay content service. This method will
    * disconnect the mutation observers and remove all event listeners.
    */
   destroy() {
     this.clearFocusInlineMenuListTimeout();
     this.clearCloseInlineMenuOnRedirectTimeout();
+    this.clearBlurFieldTimeout();
     this.formFieldElements.forEach((_autofillField, formFieldElement) => {
       this.removeCachedFormFieldEventListeners(formFieldElement);
       formFieldElement.removeEventListener(EVENTS.BLUR, this.handleFormFieldBlurEvent);
