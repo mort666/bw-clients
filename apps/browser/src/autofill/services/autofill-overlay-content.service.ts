@@ -917,11 +917,13 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
       return;
     }
 
+    // Collect page details in the background without blocking autofill overlay
     if (this.pageDetailsUpdateRequired) {
-      await this.sendExtensionMessage("bgCollectPageDetails", {
+      void this.sendExtensionMessage("bgCollectPageDetails", {
         sender: "autofillOverlayContentService",
+      }).then(() => {
+        this.pageDetailsUpdateRequired = false;
       });
-      this.pageDetailsUpdateRequired = false;
     }
 
     if (elementIsSelectElement(formFieldElement)) {
