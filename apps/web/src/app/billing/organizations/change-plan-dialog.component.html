@@ -50,279 +50,42 @@
         </div>
       </div>
       <!-- Plan Selection Cards -->
-      <ng-container *ngIf="!loading && !selfHosted && this.passwordManagerPlans">
+      <ng-container
+        *ngIf="!loading && !selfHosted && this.passwordManagerPlans && upgradePlanCards.length > 0"
+      >
         <div
           class="tw-grid tw-grid-flow-col tw-gap-4 tw-mb-4"
-          [class]="'tw-grid-cols-' + selectableProducts.length"
+          [class]="'tw-grid-cols-' + upgradePlanCards.length"
         >
-          <bit-card
+          <div
             *ngFor="
-              let selectableProduct of selectableProducts;
-              trackBy: manageSelectableProduct;
+              let upgradePlanCard of upgradePlanCards;
+              trackBy: manageUpgradePlanCard;
               let i = index
             "
-            [ngClass]="getPlanCardContainerClasses(selectableProduct, i)"
-            (click)="selectPlan(selectableProduct)"
-            [attr.tabindex]="focusedIndex !== i || isCardDisabled(i) ? '-1' : '0'"
+            [attr.tabindex]="
+              focusedIndex !== i || isUpgradeCardDisabled(upgradePlanCard) ? '-1' : '0'
+            "
             (keyup)="onKeydown($event, i)"
             (focus)="onFocus(i)"
-            [attr.aria-disabled]="isCardDisabled(i)"
+            [attr.aria-disabled]="isUpgradeCardDisabled(upgradePlanCard)"
             [id]="i + 'a_plan_card'"
           >
-            <div class="tw-relative">
-              <div
-                *ngIf="
-                  selectableProduct.productTier === productTypes.Enterprise &&
-                  !isSubscriptionCanceled
-                "
-                class="tw-bg-secondary-100 tw-text-center !tw-border-0 tw-text-sm tw-font-bold tw-py-1"
-                [ngClass]="{
-                  'tw-bg-primary-700 !tw-text-contrast': selectableProduct === selectedPlan,
-                  'tw-bg-secondary-100': !(selectableProduct === selectedPlan),
-                }"
-              >
-                {{ "recommended" | i18n }}
-              </div>
-              <div
-                class="tw-px-2 tw-pb-[4px]"
-                [ngClass]="{
-                  'tw-py-1': !(selectableProduct === selectedPlan),
-                  'tw-py-0': selectableProduct === selectedPlan,
-                }"
-              >
-                <h3
-                  class="tw-text-[1.25rem] tw-mt-[6px] tw-font-bold tw-mb-0 tw-leading-[2rem] tw-flex tw-items-center"
-                >
-                  <span class="tw-capitalize tw-whitespace-nowrap">{{
-                    selectableProduct.nameLocalizationKey | i18n
-                  }}</span>
-                  <span
-                    bitBadge
-                    variant="secondary"
-                    *ngIf="selectableProduct === currentPlan"
-                    class="tw-ml-2 tw-align-middle"
-                  >
-                    {{ "current" | i18n }}</span
-                  >
-                </h3>
-                <span *ngIf="selectableProduct.productTier != productTypes.Free">
-                  <ng-container
-                    *ngIf="selectableProduct.PasswordManager.basePrice && !acceptingSponsorship"
-                  >
-                    <b class="tw-text-lg tw-font-semibold">
-                      {{
-                        (selectableProduct.isAnnual
-                          ? selectableProduct.PasswordManager.basePrice / 12
-                          : selectableProduct.PasswordManager.basePrice
-                        ) | currency: "$"
-                      }}
-                    </b>
-                    <span class="tw-text-xs tw-px-0">
-                      /{{
-                        selectableProduct.productTier === productTypes.Families
-                          ? "month"
-                          : ("monthPerMember" | i18n)
-                      }}</span
-                    >
-                    <b class="tw-text-sm tw-font-semibold">
-                      <ng-container
-                        *ngIf="selectableProduct.PasswordManager.hasAdditionalSeatsOption"
-                      >
-                        {{ ("additionalUsers" | i18n).toLowerCase() }}
-                        {{
-                          (selectableProduct.isAnnual
-                            ? selectableProduct.PasswordManager.seatPrice / 12
-                            : selectableProduct.PasswordManager.seatPrice
-                          ) | currency: "$"
-                        }}
-                        /{{ selectedPlanInterval | i18n }}
-                      </ng-container>
-                    </b>
-                  </ng-container>
-                </span>
-                <span
-                  *ngIf="
-                    !selectableProduct.PasswordManager.basePrice &&
-                    selectableProduct.PasswordManager.hasAdditionalSeatsOption
-                  "
-                >
-                  <b class="tw-text-lg tw-font-semibold"
-                    >{{
-                      "costPerMember"
-                        | i18n
-                          : (((this.sub.useSecretsManager
-                              ? selectableProduct.SecretsManager.seatPrice
-                              : 0) +
-                              selectableProduct.PasswordManager.seatPrice) /
-                              (selectableProduct.isAnnual ? 12 : 1)
-                              | currency: "$")
-                    }}
-                  </b>
-                  <span class="tw-text-xs tw-px-0"> /{{ "monthPerMember" | i18n }}</span>
-                </span>
-                <span *ngIf="selectableProduct.productTier == productTypes.Free"
-                  >{{ "freeForever" | i18n }}
-                </span>
-              </div>
-            </div>
-
-            <ng-container
-              *ngIf="
-                selectableProduct.productTier === productTypes.Enterprise;
-                else nonEnterprisePlans
-              "
-            >
-              <p
-                class="tw-text-xs tw-px-2 tw-font-semibold tw-mb-1"
-                *ngIf="organization.useSecretsManager"
-              >
-                {{ "bitwardenPasswordManager" | i18n }}
-              </p>
-              <p class="tw-text-xs tw-px-2 tw-mb-1">{{ "enterprisePlanUpgradeMessage" | i18n }}</p>
-
-              <ul class="bwi-ul tw-text-xs">
-                <li>
-                  <i class="bwi bwi-check tw-text-success bwi-li" aria-hidden="true"></i>
-                  {{ "includeEnterprisePolicies" | i18n }}
-                </li>
-                <li>
-                  <i class="bwi bwi-check tw-text-success bwi-li" aria-hidden="true"></i>
-                  {{ "passwordLessSso" | i18n }}
-                </li>
-                <li>
-                  <i class="bwi bwi-check tw-text-success bwi-li" aria-hidden="true"></i>
-                  {{ "accountRecovery" | i18n }}
-                </li>
-                <li>
-                  <i class="bwi bwi-check tw-text-success bwi-li" aria-hidden="true"></i>
-                  {{ "customRoles" | i18n }}
-                </li>
-              </ul>
-
-              <p
-                class="tw-text-xs tw-px-2 tw-font-semibold tw-mb-1"
-                *ngIf="organization.useSecretsManager"
-              >
-                {{ "bitwardenSecretsManager" | i18n }}
-              </p>
-              <ul class="bwi-ul tw-text-xs" *ngIf="organization.useSecretsManager">
-                <li>
-                  <i class="bwi bwi-check tw-text-success bwi-li" aria-hidden="true"></i>
-                  {{ "unlimitedSecretsStorage" | i18n }}
-                </li>
-                <li>
-                  <i class="bwi bwi-check tw-text-success bwi-li" aria-hidden="true"></i>
-                  {{ "unlimitedUsers" | i18n }}
-                </li>
-                <li>
-                  <i class="bwi bwi-check tw-text-success bwi-li" aria-hidden="true"></i>
-                  {{ "unlimitedProjects" | i18n }}
-                </li>
-                <li>
-                  <i class="bwi bwi-check tw-text-success bwi-li" aria-hidden="true"></i>
-                  {{ "UpTo50MachineAccounts" | i18n }}
-                </li>
-              </ul>
-            </ng-container>
-            <ng-template #nonEnterprisePlans>
-              <ng-container
-                *ngIf="
-                  selectableProduct.productTier === productTypes.Teams &&
-                    teamsStarterPlanIsAvailable;
-                  else fullFeatureList
-                "
-              >
-                <ul class="tw-px-2 tw-pb-2 tw-list-inside tw-mb-0 tw-text-xs">
-                  <li>{{ "includeAllTeamsStarterFeatures" | i18n }}</li>
-                  <li>{{ "chooseMonthlyOrAnnualBilling" | i18n }}</li>
-                  <li>{{ "abilityToAddMoreThanNMembers" | i18n: 10 }}</li>
-                </ul>
-              </ng-container>
-              <ng-template #fullFeatureList>
-                <p
-                  class="tw-text-xs tw-px-2 tw-font-semibold tw-mb-1"
-                  *ngIf="organization.useSecretsManager"
-                >
-                  {{ "bitwardenPasswordManager" | i18n }}
-                </p>
-                <p
-                  *ngIf="selectableProduct.productTier === productTypes.Teams"
-                  class="tw-text-xs tw-px-2 tw-mb-1"
-                >
-                  {{ "teamsPlanUpgradeMessage" | i18n }}
-                </p>
-                <p
-                  *ngIf="selectableProduct.productTier === productTypes.Families"
-                  class="tw-text-xs tw-px-2 tw-mb-1"
-                >
-                  {{ "familyPlanUpgradeMessage" | i18n }}
-                </p>
-                <ul
-                  class="bwi-ul tw-text-xs tw-mb-1"
-                  *ngIf="selectableProduct.productTier == productTypes.Families"
-                >
-                  <li>
-                    <i class="bwi bwi-check tw-text-success bwi-li" aria-hidden="true"></i>
-                    {{ "premiumAccounts" | i18n }}
-                  </li>
-                  <li>
-                    <i class="bwi bwi-check tw-text-success bwi-li" aria-hidden="true"></i>
-                    {{ "unlimitedSharing" | i18n }}
-                  </li>
-                  <li>
-                    <i class="bwi bwi-check tw-text-success bwi-li" aria-hidden="true"></i>
-                    {{ "unlimitedCollections" | i18n }}
-                  </li>
-                </ul>
-                <ul
-                  class="bwi-ul tw-text-xs"
-                  *ngIf="selectableProduct.productTier == productTypes.Teams"
-                >
-                  <li>
-                    <i class="bwi bwi-check tw-text-success bwi-li" aria-hidden="true"></i>
-                    {{ "secureDataSharing" | i18n }}
-                  </li>
-                  <li>
-                    <i class="bwi bwi-check tw-text-success bwi-li" aria-hidden="true"></i>
-                    {{ "eventLogMonitoring" | i18n }}
-                  </li>
-                  <li>
-                    <i class="bwi bwi-check tw-text-success bwi-li" aria-hidden="true"></i>
-                    {{ "directoryIntegration" | i18n }}
-                  </li>
-                </ul>
-                <p
-                  class="tw-text-xs tw-px-2 tw-font-semibold tw-mb-1"
-                  *ngIf="
-                    organization.useSecretsManager &&
-                    selectableProduct.productTier !== productTypes.Families
-                  "
-                >
-                  {{ "bitwardenSecretsManager" | i18n }}
-                </p>
-                <ul
-                  class="bwi-ul tw-text-xs"
-                  *ngIf="
-                    organization.useSecretsManager &&
-                    selectableProduct.productTier == productTypes.Teams
-                  "
-                >
-                  <li>
-                    <i class="bwi bwi-check tw-text-success bwi-li" aria-hidden="true"></i>
-                    {{ "unlimitedSecretsStorage" | i18n }}
-                  </li>
-                  <li>
-                    <i class="bwi bwi-check tw-text-success bwi-li" aria-hidden="true"></i>
-                    {{ "unlimitedProjects" | i18n }}
-                  </li>
-                  <li>
-                    <i class="bwi bwi-check tw-text-success bwi-li" aria-hidden="true"></i>
-                    {{ "UpTo20MachineAccounts" | i18n }}
-                  </li>
-                </ul>
-              </ng-template>
-            </ng-template>
-          </bit-card>
+            <app-plan-card
+              [plan]="upgradePlanCard"
+              [upgradeData]="{
+                organization: organization,
+                subscription: sub,
+                currentPlan: currentPlan,
+                selectedPlan: selectedPlan,
+                selectedPlanInterval: selectedPlanInterval,
+                acceptingSponsorship: acceptingSponsorship,
+                isSubscriptionCanceled: isSubscriptionCanceled,
+                teamsStarterPlanIsAvailable: teamsStarterPlanIsAvailable,
+              }"
+              (cardClicked)="selectUpgradePlan(upgradePlanCard)"
+            ></app-plan-card>
+          </div>
         </div>
         <br />
         <bit-callout

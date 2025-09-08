@@ -65,9 +65,11 @@ import {
 import { KeyService } from "@bitwarden/key-management";
 
 import { BillingNotificationService } from "../services/billing-notification.service";
+import { PlanCardService } from "../services/plan-card.service";
 import { PricingSummaryService } from "../services/pricing-summary.service";
 import { BillingSharedModule } from "../shared/billing-shared.module";
 import { PaymentComponent } from "../shared/payment/payment.component";
+import { PlanCard } from "../shared/plan-card/plan-card.component";
 import { PricingSummaryData } from "../shared/pricing-summary/pricing-summary.component";
 
 type ChangePlanDialogParams = {
@@ -83,13 +85,7 @@ export enum ChangePlanDialogResultType {
   Submitted = "submitted",
 }
 
-// FIXME: update to use a const object instead of a typescript enum
-// eslint-disable-next-line @bitwarden/platform/no-enums
-export enum PlanCardState {
-  Selected = "selected",
-  NotSelected = "not_selected",
-  Disabled = "disabled",
-}
+// PlanCardState enum removed - plan card styling is now handled by app-plan-card component
 
 export const openChangePlanDialog = (
   dialogService: DialogService,
@@ -100,7 +96,7 @@ export const openChangePlanDialog = (
     dialogConfig,
   );
 
-type PlanCard = {
+type PlanCardLegacy = {
   name: string;
   selected: boolean;
 };
@@ -153,7 +149,8 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
   protected discountPercentage: number = 20;
   protected discountPercentageFromSub: number;
   protected loading = true;
-  protected planCards: PlanCard[];
+  protected planCards: PlanCardLegacy[];
+  protected upgradePlanCards: PlanCard[] = [];
   protected ResultType = ChangePlanDialogResultType;
 
   selfHosted = false;
@@ -198,6 +195,7 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
   pricingSummaryData: PricingSummaryData;
 
   private destroy$ = new Subject<void>();
+  private planSelectionDebounceTimer: any;
 
   protected taxInformation: TaxInformation;
 
@@ -221,6 +219,7 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
     private organizationBillingService: OrganizationBillingService,
     private billingNotificationService: BillingNotificationService,
     private pricingSummaryService: PricingSummaryService,
+    private planCardService: PlanCardService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -232,7 +231,7 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
       this.dialogHeaderName = this.resolveHeaderName(this.sub);
       this.organizationId = this.dialogParams.organizationId;
       this.currentPlan = this.sub?.plan;
-      this.selectedPlan = this.sub?.plan;
+      // Don't set selectedPlan here - let the upgrade card logic choose Enterprise by default
       const userId = await firstValueFrom(
         this.accountService.activeAccount$.pipe(map((a) => a?.id)),
       );
@@ -308,7 +307,12 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
       ? 0
       : (this.sub?.customerDiscount?.percentOff ?? 0);
 
-    this.setInitialPlanSelection();
+    // Initialize upgrade plan cards first
+    await this.initializeUpgradePlanCards();
+
+    // Initial plan selection is now handled in initializeUpgradePlanCards()
+    // No need for additional logic here
+
     this.loading = false;
 
     const taxInfo = await this.organizationApiService.getTaxInfo(this.organizationId);
@@ -337,21 +341,8 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
     );
   }
 
-  setInitialPlanSelection() {
-    this.focusedIndex = this.selectableProducts.length - 1;
-    if (!this.isSubscriptionCanceled) {
-      const enterprisePlan = this.getPlanByType(ProductTierType.Enterprise);
-      const planToSelect =
-        enterprisePlan || this.selectableProducts[this.selectableProducts.length - 1];
-      if (planToSelect) {
-        this.selectPlan(planToSelect);
-      }
-    }
-  }
-
-  getPlanByType(productTier: ProductTierType) {
-    return this.selectableProducts.find((product) => product.productTier === productTier);
-  }
+  // These methods are no longer needed since we use upgradePlanCards from the service
+  // The Enterprise plan selection is now handled in initializeUpgradePlanCards()
 
   isPaymentSourceEmpty() {
     return this.paymentSource === null || this.paymentSource === undefined;
@@ -366,13 +357,22 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
   }
 
   planTypeChanged() {
-    this.selectPlan(this.getPlanByType(ProductTierType.Enterprise));
+    // Find Enterprise plan from upgradePlanCards instead
+    const enterprisePlan = this.upgradePlanCards.find(
+      (card) => card.planResponse?.productTier === ProductTierType.Enterprise,
+    );
+    if (enterprisePlan?.planResponse) {
+      this.selectPlan(enterprisePlan.planResponse);
+    }
   }
 
   updateInterval(event: number) {
     this.selectedInterval = event;
     this.planTypeChanged();
-    void this.updatePricingSummaryData();
+
+    // Debounce API calls when changing intervals too
+    this.debouncePlanSelection();
+    void this.updateUpgradePlanCardsOnIntervalChange();
   }
 
   protected getPlanIntervals() {
@@ -392,83 +392,7 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
     return index;
   }
 
-  protected getPlanCardContainerClasses(plan: PlanResponse, index: number) {
-    let cardState: PlanCardState;
-
-    if (plan == this.currentPlan) {
-      cardState = PlanCardState.Disabled;
-      this.isCardStateDisabled = true;
-      this.focusedIndex = index;
-    } else if (plan == this.selectedPlan) {
-      cardState = PlanCardState.Selected;
-      this.isCardStateDisabled = false;
-      this.focusedIndex = index;
-    } else if (
-      this.selectedInterval === PlanInterval.Monthly &&
-      plan.productTier == ProductTierType.Families
-    ) {
-      cardState = PlanCardState.Disabled;
-      this.isCardStateDisabled = true;
-      this.focusedIndex = this.selectableProducts.length - 1;
-    } else {
-      cardState = PlanCardState.NotSelected;
-      this.isCardStateDisabled = false;
-    }
-
-    switch (cardState) {
-      case PlanCardState.Selected: {
-        return [
-          "tw-cursor-pointer",
-          "tw-block",
-          "tw-rounded",
-          "tw-border",
-          "tw-border-solid",
-          "tw-border-primary-600",
-          "hover:tw-border-primary-700",
-          "focus:tw-border-2",
-          "focus:tw-border-primary-700",
-          "focus:tw-rounded-lg",
-        ];
-      }
-      case PlanCardState.NotSelected: {
-        return [
-          "tw-cursor-pointer",
-          "tw-block",
-          "tw-rounded",
-          "tw-border",
-          "tw-border-solid",
-          "tw-border-secondary-300",
-          "hover:tw-border-text-main",
-          "focus:tw-border-2",
-          "focus:tw-border-primary-700",
-        ];
-      }
-      case PlanCardState.Disabled: {
-        if (this.isSubscriptionCanceled) {
-          return [
-            "tw-cursor-not-allowed",
-            "tw-bg-secondary-100",
-            "tw-font-normal",
-            "tw-bg-blur",
-            "tw-text-muted",
-            "tw-block",
-            "tw-rounded",
-            "tw-w-80",
-          ];
-        }
-
-        return [
-          "tw-cursor-not-allowed",
-          "tw-bg-secondary-100",
-          "tw-font-normal",
-          "tw-bg-blur",
-          "tw-text-muted",
-          "tw-block",
-          "tw-rounded",
-        ];
-      }
-    }
-  }
+  // getPlanCardContainerClasses method removed - plan card styling is now handled by app-plan-card component
 
   protected selectPlan(plan: PlanResponse) {
     if (!plan) {
@@ -485,19 +409,38 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
     if (plan === this.currentPlan && !this.isSubscriptionCanceled) {
       return;
     }
+
     this.selectedPlan = plan;
     this.formGroup.patchValue({ productTier: plan.productTier });
 
-    try {
-      this.refreshSalesTax();
-    } catch {
-      void this.updatePricingSummaryData();
+    // Debounce the API calls to prevent rate limiting
+    this.debouncePlanSelection();
+  }
+
+  private debouncePlanSelection(): void {
+    // Clear any existing timer
+    if (this.planSelectionDebounceTimer) {
+      clearTimeout(this.planSelectionDebounceTimer);
     }
+
+    // Set a new timer to delay API calls
+    this.planSelectionDebounceTimer = setTimeout(() => {
+      try {
+        this.refreshSalesTax();
+      } catch {
+        void this.updatePricingSummaryData();
+      }
+    }, 500); // 500ms delay to prevent rapid API calls
   }
 
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+
+    // Clean up any pending debounce timer
+    if (this.planSelectionDebounceTimer) {
+      clearTimeout(this.planSelectionDebounceTimer);
+    }
   }
 
   get upgradeRequiresPaymentMethod() {
@@ -518,83 +461,13 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
 
   get selectedPlanInterval() {
     if (this.isSubscriptionCanceled) {
-      return this.currentPlan.isAnnual ? "year" : "month";
+      return this.currentPlan?.isAnnual ? "year" : "month";
     }
-    return this.selectedPlan.isAnnual ? "year" : "month";
+    return this.selectedPlan?.isAnnual ? "year" : "month";
   }
 
-  get selectableProducts() {
-    if (this.isSubscriptionCanceled) {
-      // Return only the current plan if the subscription is canceled
-      return [this.currentPlan];
-    }
-
-    if (this.acceptingSponsorship) {
-      const familyPlan = this.passwordManagerPlans.find(
-        (plan) => plan.type === PlanType.FamiliesAnnually,
-      );
-      this.discount = familyPlan.PasswordManager.basePrice;
-      return [familyPlan];
-    }
-
-    const businessOwnedIsChecked = this.formGroup.controls.businessOwned.value;
-
-    const result = this.passwordManagerPlans.filter(
-      (plan) =>
-        plan.type !== PlanType.Custom &&
-        (!businessOwnedIsChecked || plan.canBeUsedByBusiness) &&
-        (this.showFree || plan.productTier !== ProductTierType.Free) &&
-        (plan.productTier === ProductTierType.Free ||
-          plan.productTier === ProductTierType.TeamsStarter ||
-          (this.selectedInterval === PlanInterval.Annually && plan.isAnnual) ||
-          (this.selectedInterval === PlanInterval.Monthly && !plan.isAnnual)) &&
-        (!this.currentPlan || this.currentPlan.upgradeSortOrder < plan.upgradeSortOrder) &&
-        this.planIsEnabled(plan),
-    );
-
-    if (
-      this.currentPlan.productTier === ProductTierType.Free &&
-      this.selectedInterval === PlanInterval.Monthly &&
-      !this.organization.useSecretsManager
-    ) {
-      const familyPlan = this.passwordManagerPlans.find(
-        (plan) => plan.productTier == ProductTierType.Families,
-      );
-      result.push(familyPlan);
-    }
-
-    if (
-      this.organization.useSecretsManager &&
-      this.currentPlan.productTier === ProductTierType.Free
-    ) {
-      const familyPlanIndex = result.findIndex(
-        (plan) => plan.productTier === ProductTierType.Families,
-      );
-
-      if (familyPlanIndex !== -1) {
-        result.splice(familyPlanIndex, 1);
-      }
-    }
-
-    if (this.currentPlan.productTier !== ProductTierType.Free) {
-      result.push(this.currentPlan);
-    }
-
-    result.sort((planA, planB) => planA.displaySortOrder - planB.displaySortOrder);
-
-    return result;
-  }
-
-  get selectablePlans() {
-    const selectedProductTierType = this.formGroup.controls.productTier.value;
-    const result =
-      this.passwordManagerPlans?.filter(
-        (plan) => plan.productTier === selectedProductTierType && this.planIsEnabled(plan),
-      ) || [];
-
-    result.sort((planA, planB) => planA.displaySortOrder - planB.displaySortOrder);
-    return result;
-  }
+  // selectableProducts and selectablePlans getters removed -
+  // This logic is now handled by PlanCardService.getUpgradePlanCards()
 
   get storageGb() {
     return this.sub?.maxStorageGb ? this.sub?.maxStorageGb - 1 : 0;
@@ -612,7 +485,7 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
   }
 
   get teamsStarterPlanIsAvailable() {
-    return this.selectablePlans.some((plan) => plan.type === PlanType.TeamsStarter);
+    return this.passwordManagerPlans?.some((plan) => plan.type === PlanType.TeamsStarter) || false;
   }
 
   get additionalServiceAccount() {
@@ -629,11 +502,12 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
   }
 
   changedProduct() {
-    const selectedPlan = this.selectablePlans[0];
-
-    this.setPlanType(selectedPlan.type);
-    this.handlePremiumAddonAccess(selectedPlan.PasswordManager.hasPremiumAccessOption);
-    this.handleAdditionalSeats(selectedPlan.PasswordManager.hasAdditionalSeatsOption);
+    // Use the currently selected plan instead of selectablePlans[0]
+    if (this.selectedPlan) {
+      this.setPlanType(this.selectedPlan.type);
+      this.handlePremiumAddonAccess(this.selectedPlan.PasswordManager.hasPremiumAccessOption);
+      this.handleAdditionalSeats(this.selectedPlan.PasswordManager.hasAdditionalSeatsOption);
+    }
   }
 
   setPlanType(planType: PlanType) {
@@ -942,7 +816,7 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
     if (["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp"].includes(event.key)) {
       do {
         newIndex = (newIndex + direction + cardElements.length) % cardElements.length;
-      } while (this.isCardDisabled(newIndex) && newIndex !== index);
+      } while (this.isUpgradeCardDisabled(this.upgradePlanCards[newIndex]) && newIndex !== index);
 
       event.preventDefault();
 
@@ -962,17 +836,12 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
 
   onFocus(index: number) {
     this.focusedIndex = index;
-    this.selectPlan(this.selectableProducts[index]);
+    // Plan selection is now handled by the app-plan-card component click events
   }
 
-  isCardDisabled(index: number): boolean {
-    const card = this.selectableProducts[index];
-    return card === (this.currentPlan || this.isCardStateDisabled);
-  }
+  // isCardDisabled removed - this logic is now in the app-plan-card component
 
-  manageSelectableProduct(index: number) {
-    return index;
-  }
+  // manageSelectableProduct removed - now using manageUpgradePlanCard for tracking
 
   private refreshSalesTax(): void {
     if (
@@ -1055,6 +924,104 @@ export class ChangePlanDialogComponent implements OnInit, OnDestroy {
       return this.i18nService.t("restart");
     } else {
       return this.i18nService.t("upgrade");
+    }
+  }
+
+  /**
+   * Initialize upgrade plan cards using the new PlanCardService method
+   */
+  async initializeUpgradePlanCards(): Promise<void> {
+    if (this.currentPlan && this.sub && this.organization) {
+      const businessOwned = this.formGroup.controls.businessOwned.value;
+      this.upgradePlanCards = await this.planCardService.getUpgradePlanCards(
+        this.currentPlan,
+        this.sub,
+        this.organization,
+        this.selectedInterval,
+        this.showFree,
+        this.acceptingSponsorship,
+        businessOwned,
+      );
+
+      // Ensure Enterprise plan (recommended) is selected by default
+      if (!this.isSubscriptionCanceled && this.upgradePlanCards.length > 0) {
+        const enterprisePlan = this.upgradePlanCards.find(
+          (card) => card.planResponse?.productTier === ProductTierType.Enterprise,
+        );
+        if (enterprisePlan?.planResponse) {
+          this.selectPlan(enterprisePlan.planResponse);
+        } else {
+          // Fallback to last plan if Enterprise not available
+          const lastPlan = this.upgradePlanCards[this.upgradePlanCards.length - 1];
+          if (lastPlan?.planResponse) {
+            this.selectPlan(lastPlan.planResponse);
+          }
+        }
+      }
+
+      // Set selected state for the plan cards based on current selected plan
+      this.updateUpgradePlanCardSelection();
+    }
+  }
+
+  /**
+   * Update the selected state of upgrade plan cards
+   */
+  updateUpgradePlanCardSelection(): void {
+    this.upgradePlanCards.forEach((card) => {
+      card.isSelected = card.planResponse === this.selectedPlan;
+    });
+  }
+
+  /**
+   * Handle plan selection from upgrade plan cards
+   */
+  selectUpgradePlan(planCard: PlanCard): void {
+    if (planCard.planResponse) {
+      this.selectPlan(planCard.planResponse);
+      this.updateUpgradePlanCardSelection();
+    }
+  }
+
+  /**
+   * Check if an upgrade plan card is disabled
+   */
+  isUpgradeCardDisabled(planCard: PlanCard): boolean {
+    if (!planCard.planResponse) {
+      return true;
+    }
+
+    return (
+      this.selectedInterval === PlanInterval.Monthly &&
+      planCard.planResponse.productTier === ProductTierType.Families
+    );
+  }
+
+  /**
+   * Track by function for upgrade plan cards
+   */
+  manageUpgradePlanCard(index: number, planCard: PlanCard): any {
+    return planCard.planResponse
+      ? `${planCard.planResponse.type}_${planCard.planResponse.productTier}_${planCard.planResponse.isAnnual}`
+      : index;
+  }
+
+  /**
+   * Update upgrade plan cards when interval changes
+   */
+  async updateUpgradePlanCardsOnIntervalChange(): Promise<void> {
+    const previousSelectedTier = this.selectedPlan?.productTier;
+    await this.initializeUpgradePlanCards();
+
+    // Try to maintain the same tier selection after interval change
+    if (previousSelectedTier && this.upgradePlanCards.length > 0) {
+      const sameTierPlan = this.upgradePlanCards.find(
+        (card) => card.planResponse?.productTier === previousSelectedTier,
+      );
+      if (sameTierPlan?.planResponse) {
+        this.selectPlan(sameTierPlan.planResponse);
+        this.updateUpgradePlanCardSelection();
+      }
     }
   }
 }
