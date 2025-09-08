@@ -64,12 +64,18 @@ export class BitwardenJsonImporter extends BaseImporter implements Importer {
   private async parseEncrypted(
     results: BitwardenEncryptedIndividualJsonExport | BitwardenEncryptedOrgJsonExport,
   ) {
+    const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(map((a) => a?.id)));
+    if (!userId) {
+      this.result.success = false;
+      // TODO: explore more appropriate error message specific to no user id being found
+      this.result.errorMessage = this.i18nService.t("importEncKeyError");
+      return;
+    }
     if (results.encKeyValidation_DO_NOT_EDIT != null) {
-      let keyForDecryption: SymmetricCryptoKey = await this.keyService.getOrgKey(
-        this.organizationId,
-      );
+      const orgKeys = await firstValueFrom(this.keyService.orgKeys$(userId));
+      let keyForDecryption: SymmetricCryptoKey = orgKeys?.[this.organizationId];
       if (keyForDecryption == null) {
-        keyForDecryption = await this.keyService.getUserKey();
+        keyForDecryption = await firstValueFrom(this.keyService.userKey$(userId));
       }
       const encKeyValidation = new EncString(results.encKeyValidation_DO_NOT_EDIT);
       try {
