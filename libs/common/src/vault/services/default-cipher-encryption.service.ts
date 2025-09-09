@@ -283,6 +283,43 @@ export class DefaultCipherEncryptionService implements CipherEncryptionService {
     );
   }
 
+  migrateCiphers(ciphers: Cipher[], userId: UserId): Promise<Cipher[]> {
+    return firstValueFrom(
+      this.sdkService.userClient$(userId).pipe(
+        map((sdk) => {
+          if (!sdk) {
+            this.logService.warning(
+              "SDK not available for cipher migration, returning original ciphers",
+            );
+            return ciphers;
+          }
+
+          try {
+            using ref = sdk.take();
+            const migratedSdkCiphers = ref.value
+              .vault()
+              .ciphers()
+              .migrate(ciphers.map((cipher) => cipher.toSdkCipher()));
+
+            const migratedCiphers = migratedSdkCiphers.map(
+              (sdkCipher) => Cipher.fromSdkCipher(sdkCipher)!,
+            );
+
+            this.logService.info(`Successfully migrated ${ciphers.length} ciphers`);
+            return migratedCiphers;
+          } catch (error) {
+            this.logService.error(`Cipher migration failed: ${error}`);
+            return ciphers;
+          }
+        }),
+        catchError((error: unknown) => {
+          this.logService.error(`Failed to access SDK for cipher migration: ${error}`);
+          // Return original ciphers as fallback
+          return [ciphers];
+        }),
+      ),
+    );
+  }
   /**
    * Helper method to convert a CipherView model to an SDK CipherView. Has special handling for Fido2 credentials
    * that need to be encrypted before being sent to the SDK.

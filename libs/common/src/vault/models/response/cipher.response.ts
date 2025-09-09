@@ -40,6 +40,9 @@ export class CipherResponse extends BaseResponse {
   deletedDate: string;
   reprompt: CipherRepromptType;
   key: string;
+  // Cipher versioning POC
+  data: string;
+  // version: number;
 
   constructor(response: any) {
     super(response);
@@ -105,5 +108,8 @@ export class CipherResponse extends BaseResponse {
 
     this.reprompt = this.getResponseProperty("Reprompt") || CipherRepromptType.None;
     this.key = this.getResponseProperty("Key") || null;
+    // Cipher versioning POC
+    // this.version = this.getResponseProperty("Version") || 1;
+    this.data = this.getResponseProperty("Data") || null;
   }
 }

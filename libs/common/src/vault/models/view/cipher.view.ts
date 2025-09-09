@@ -340,6 +340,7 @@ export class CipherView implements View, InitializerMetadata {
       identity: undefined,
       secureNote: undefined,
       sshKey: undefined,
+      // version: undefined,
     };
 
     switch (this.type) {

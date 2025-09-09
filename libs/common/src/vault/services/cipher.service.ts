@@ -1125,6 +1125,14 @@ export class CipherService implements CipherServiceAbstraction {
   }
 
   async replace(ciphers: { [id: string]: CipherData }, userId: UserId): Promise<any> {
+    // use cipher from the sdk and convert to cipher data to store in the state
+    // uncomment to test migration
+    // const cipherObjects = Object.values(ciphers).map((cipherData) => new Cipher(cipherData));
+    // const migratedCiphers = await this.cipherEncryptionService.migrateCiphers(
+    //   cipherObjects,
+    //   userId,
+    // );
+
     await this.updateEncryptedCipherState(() => ciphers, userId);
   }
 

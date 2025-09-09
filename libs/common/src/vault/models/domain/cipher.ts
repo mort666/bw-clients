@@ -59,6 +59,8 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
   deletedDate: Date;
   reprompt: CipherRepromptType;
   key: EncString;
+  // version: number;
+  data: string;
 
   constructor(obj?: CipherData, localData: LocalData = null) {
     super();
@@ -96,6 +98,8 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
     this.creationDate = obj.creationDate != null ? new Date(obj.creationDate) : null;
     this.deletedDate = obj.deletedDate != null ? new Date(obj.deletedDate) : null;
     this.reprompt = obj.reprompt;
+    // this.version = obj.version || 1;
+    this.data = obj.data;
 
     switch (this.type) {
       case CipherType.Login:
@@ -376,6 +380,8 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
       card: undefined,
       secureNote: undefined,
       sshKey: undefined,
+      // version: 1,
+      data: typeof this.data === "string" ? this.data : JSON.stringify(this.data),
     };
 
     switch (this.type) {
@@ -443,6 +449,8 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
     cipher.card = Card.fromSdkCard(sdkCipher.card);
     cipher.identity = Identity.fromSdkIdentity(sdkCipher.identity);
     cipher.sshKey = SshKey.fromSdkSshKey(sdkCipher.sshKey);
+
+    cipher.data = sdkCipher.data;
 
     return cipher;
   }

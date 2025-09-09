@@ -93,4 +93,6 @@ export abstract class CipherEncryptionService {
     encryptedContent: Uint8Array,
     userId: UserId,
   ): Promise<Uint8Array>;
+
+  abstract migrateCiphers(ciphers: Cipher[], userId: UserId): Promise<Cipher[]>;
 }
