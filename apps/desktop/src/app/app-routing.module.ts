@@ -12,30 +12,34 @@ import {
   unauthGuardFn,
 } from "@bitwarden/angular/auth/guards";
 import { ChangePasswordComponent } from "@bitwarden/angular/auth/password-management/change-password";
+import { SetInitialPasswordComponent } from "@bitwarden/angular/auth/password-management/set-initial-password/set-initial-password.component";
+import {
+  DevicesIcon,
+  RegistrationLockAltIcon,
+  RegistrationUserAddIcon,
+  TwoFactorTimeoutIcon,
+  DeviceVerificationIcon,
+  UserLockIcon,
+  VaultIcon,
+  LockIcon,
+} from "@bitwarden/assets/svg";
 import {
   LoginComponent,
   LoginSecondaryContentComponent,
   LoginViaAuthRequestComponent,
   PasswordHintComponent,
   RegistrationFinishComponent,
-  RegistrationLockAltIcon,
   RegistrationStartComponent,
   RegistrationStartSecondaryComponent,
   RegistrationStartSecondaryComponentData,
-  RegistrationUserAddIcon,
-  UserLockIcon,
-  VaultIcon,
   LoginDecryptionOptionsComponent,
-  DevicesIcon,
   SsoComponent,
-  TwoFactorTimeoutIcon,
   TwoFactorAuthComponent,
   TwoFactorAuthGuard,
   NewDeviceVerificationComponent,
-  DeviceVerificationIcon,
 } from "@bitwarden/auth/angular";
-import { AnonLayoutWrapperComponent, AnonLayoutWrapperData, Icons } from "@bitwarden/components";
-import { LockComponent } from "@bitwarden/key-management-ui";
+import { AnonLayoutWrapperComponent, AnonLayoutWrapperData } from "@bitwarden/components";
+import { LockComponent, ConfirmKeyConnectorDomainComponent } from "@bitwarden/key-management-ui";
 
 import { maxAccountsGuardFn } from "../auth/guards/max-accounts.guard";
 import { reactiveUnlockVaultGuard } from "../autofill/guards/reactive-vault-guard";
@@ -267,7 +271,7 @@ const routes: Routes = [
         path: "lock",
         canActivate: [lockGuard(), reactiveUnlockVaultGuard],
         data: {
-          pageIcon: Icons.LockIcon,
+          pageIcon: LockIcon,
           pageTitle: {
             key: "yourVaultIsLockedV2",
           },
@@ -296,9 +300,27 @@ const routes: Routes = [
         } satisfies RouteDataProperties & AnonLayoutWrapperData,
       },
       {
+        path: "set-initial-password",
+        canActivate: [authGuard],
+        component: SetInitialPasswordComponent,
+        data: {
+          maxWidth: "lg",
+        } satisfies AnonLayoutWrapperData,
+      },
+      {
         path: "change-password",
         component: ChangePasswordComponent,
         canActivate: [authGuard],
+      },
+      {
+        path: "confirm-key-connector-domain",
+        component: ConfirmKeyConnectorDomainComponent,
+        canActivate: [],
+        data: {
+          pageTitle: {
+            key: "confirmKeyConnectorDomain",
+          },
+        } satisfies RouteDataProperties & AnonLayoutWrapperData,
       },
     ],
   },

@@ -65,6 +65,8 @@ export abstract class CipherService implements UserKeyRotationDataProvider<Ciphe
     userId: UserId,
     includeOtherTypes?: CipherType[],
     defaultMatch?: UriMatchStrategySetting,
+    /** When true, will override the match strategy for the cipher if it is Never. */
+    overrideNeverMatchStrategy?: true,
   ): Promise<CipherView[]>;
   abstract getAllDecryptedForIds(userId: UserId, ids: string[]): Promise<CipherView[]>;
   abstract filterCiphersForUrl<C extends CipherViewLike = CipherView>(
@@ -72,6 +74,8 @@ export abstract class CipherService implements UserKeyRotationDataProvider<Ciphe
     url: string,
     includeOtherTypes?: CipherType[],
     defaultMatch?: UriMatchStrategySetting,
+    /** When true, will override the match strategy for the cipher if it is Never. */
+    overrideNeverMatchStrategy?: true,
   ): Promise<C[]>;
   abstract getAllFromApiForOrganization(organizationId: string): Promise<CipherView[]>;
   /**
@@ -254,6 +258,10 @@ export abstract class CipherService implements UserKeyRotationDataProvider<Ciphe
    * @param attachment The attachment view object
    * @param response The response object containing the encrypted content
    * @param userId The user ID whose key will be used for decryption
+   * @param useLegacyDecryption When true, forces the use of the legacy decryption method
+   * even when the SDK feature is enabled. This is helpful for domains of
+   * the application that have yet to be moved into the SDK, i.e. emergency access.
+   * TODO: PM-25469 - this should be obsolete once emergency access is moved to the SDK.
    *
    * @returns A promise that resolves to the decrypted content
    */
@@ -262,6 +270,7 @@ export abstract class CipherService implements UserKeyRotationDataProvider<Ciphe
     attachment: AttachmentView,
     response: Response,
     userId: UserId,
+    useLegacyDecryption?: boolean,
   ): Promise<Uint8Array | null>;
 
   /**

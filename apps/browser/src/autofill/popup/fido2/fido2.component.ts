@@ -18,6 +18,7 @@ import {
 } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { NoResults } from "@bitwarden/assets/svg";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
@@ -37,7 +38,6 @@ import { SecureNoteView } from "@bitwarden/common/vault/models/view/secure-note.
 import {
   ButtonModule,
   DialogService,
-  Icons,
   ItemModule,
   NoItemsModule,
   SearchModule,
@@ -103,7 +103,7 @@ export class Fido2Component implements OnInit, OnDestroy {
   protected equivalentDomainsURL: string;
   protected hostname: string;
   protected loading = false;
-  protected noResultsIcon = Icons.NoResults;
+  protected noResultsIcon = NoResults;
   protected passkeyAction: PasskeyActionValue = PasskeyActions.Register;
   protected PasskeyActions = PasskeyActions;
   protected hasSearched = false;
