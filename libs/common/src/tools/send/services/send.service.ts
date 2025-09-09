@@ -2,6 +2,7 @@
 // @ts-strict-ignore
 import { Observable, concatMap, distinctUntilChanged, firstValueFrom, map } from "rxjs";
 
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
 import { PBKDF2KdfConfig, KeyService } from "@bitwarden/key-management";
@@ -41,6 +42,7 @@ export class SendService implements InternalSendServiceAbstraction {
   );
 
   constructor(
+    private accountService: AccountService,
     private keyService: KeyService,
     private i18nService: I18nService,
     private keyGenerationService: KeyGenerationService,
@@ -90,7 +92,13 @@ export class SendService implements InternalSendServiceAbstraction {
       send.password = passwordKey.keyB64;
     }
     if (userKey == null) {
-      userKey = await this.keyService.getUserKey();
+      const userId = await firstValueFrom(
+        this.accountService.activeAccount$.pipe(map((a) => a?.id)),
+      );
+      if (!userId) {
+        throw new Error("User ID must not be null or undefined");
+      }
+      userKey = await firstValueFrom(this.keyService.userKey$(userId));
     }
     // Key is not a SymmetricCryptoKey, but key material used to derive the cryptoKey
     send.key = await this.encryptService.encryptBytes(model.key, userKey);

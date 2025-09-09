@@ -83,10 +83,7 @@ export class Send extends Domain {
 
     const userId = await firstValueFrom(accountService.activeAccount$.pipe(map((a) => a?.id)));
     if (!userId) {
-      // Is this possible?
-      // Error handling can be added, but caller needs to use i18n
-      // i18n doesn't seem appropriate here
-      return;
+      throw new Error("User ID must not be null or undefined");
     }
     const sendKeyEncryptionKey = await firstValueFrom(keyService.userKey$(userId));
     // model.key is a seed used to derive a key, not a SymmetricCryptoKey
