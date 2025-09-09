@@ -1,6 +1,5 @@
 import { Component, inject } from "@angular/core";
 
-import { RiskInsightsDataService } from "@bitwarden/bit-common/dirt/reports/risk-insights";
 import {
   ButtonModule,
   DialogModule,
@@ -16,22 +15,13 @@ import { I18nPipe } from "@bitwarden/ui-common";
 })
 export class FirstReportPromptDialogComponent {
   private dialogRef = inject(DialogRef);
-  private dataService = inject(RiskInsightsDataService);
 
   static open(dialogService: DialogService) {
     return dialogService.open<boolean>(FirstReportPromptDialogComponent);
   }
 
-  async runReport(): Promise<void> {
-    // Close the dialog first
+  runReport(): void {
+    // Simply close the dialog with 'true' to indicate user wants to run report
     this.dialogRef.close(true);
-
-    // Add a small delay to ensure dialog closes before triggering the report
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    // Trigger the report generation
-    if (this.dataService) {
-      this.dataService.triggerReport();
-    }
   }
 }

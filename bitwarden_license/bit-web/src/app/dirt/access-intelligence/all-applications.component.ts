@@ -2,7 +2,7 @@ import { Component, DestroyRef, inject, OnInit } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
-import { catchError, debounceTime, exhaustMap, finalize, of, tap } from "rxjs";
+import { catchError, debounceTime, exhaustMap, finalize, firstValueFrom, of, tap } from "rxjs";
 
 import {
   CriticalAppsService,
@@ -119,7 +119,16 @@ export class AllApplicationsComponent implements OnInit {
     this.hasShownFirstReportPrompt = true;
 
     // Open the dialog using the dialog service
-    FirstReportPromptDialogComponent.open(this.dialogService);
+    const dialogRef = FirstReportPromptDialogComponent.open(this.dialogService);
+
+    const result = await firstValueFrom(dialogRef.closed);
+
+    // Dialog is now closed, check what the user chose
+    if (result === true) {
+      // User clicked "Run Report" - trigger the report generation
+      this.dataService.triggerReport();
+    }
+    // If result is false/undefined, user dismissed dialog without running report
   }
 
   goToCreateNewLoginItem = async () => {
