@@ -67,8 +67,7 @@ export class BitwardenJsonImporter extends BaseImporter implements Importer {
     const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(map((a) => a?.id)));
     if (!userId) {
       this.result.success = false;
-      // TODO: explore more appropriate error message specific to no user id being found
-      this.result.errorMessage = this.i18nService.t("importEncKeyError");
+      this.result.errorMessage = this.i18nService.t("userIdNotFound");
       return;
     }
     if (results.encKeyValidation_DO_NOT_EDIT != null) {

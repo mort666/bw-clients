@@ -312,8 +312,7 @@ export class OrganizationVaultExportService
   ): Promise<string> {
     const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(map((a) => a?.id)));
     if (!userId) {
-      // TODO: explore error handling strategies here, userId must not be null or undefined
-      return;
+      throw new Error("User ID must not be null or undefined");
     }
 
     const orgKeys = await firstValueFrom(this.keyService.orgKeys$(userId));
