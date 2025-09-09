@@ -1458,7 +1458,7 @@ export class vNextVaultComponent implements OnInit, OnDestroy {
         ciphers: items,
         organizationId: organization.id,
         availableCollections,
-        activeCollection: this.activeFilter.selectedCollectionNode.node,
+        activeCollection: this.activeFilter?.selectedCollectionNode?.node,
         isSingleCipherAdmin:
           items.length === 1 && (organization.canEditAllCiphers || items[0].isUnassigned),
       },
