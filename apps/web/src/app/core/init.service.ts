@@ -68,7 +68,11 @@ export class InitService {
       void this.ipcService.init();
       this.taskService.listenForTaskNotifications();
 
-      const containerService = new ContainerService(this.keyService, this.encryptService);
+      const containerService = new ContainerService(
+        this.keyService,
+        this.encryptService,
+        this.accountService,
+      );
       containerService.attachToGlobal(this.win);
     };
   }

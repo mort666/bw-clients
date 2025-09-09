@@ -38,6 +38,9 @@ export class ContainerService {
     return this.encryptService;
   }
 
+  /**
+   * @throws Will throw if AccountService was not instantiated and provided to the ContainerService constructor
+   */
   getAccountService(): AccountService {
     if (this.accountService == null) {
       throw new Error("ContainerService.accountService not initialized.");
