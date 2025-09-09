@@ -125,7 +125,7 @@ describe("Send", () => {
       .calledWith(send.key, userKey)
       .mockResolvedValue(makeStaticByteArray(32));
     keyService.makeSendKey.mockResolvedValue("cryptoKey" as any);
-    keyService.getUserKey.mockResolvedValue(userKey);
+    keyService.userKey$.mockImplementation(() => of(userKey));
 
     (window as any).bitwardenContainerService = new ContainerService(
       keyService,

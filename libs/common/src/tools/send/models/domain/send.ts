@@ -81,24 +81,17 @@ export class Send extends Domain {
     const keyService = Utils.getContainerService().getKeyService();
     const encryptService = Utils.getContainerService().getEncryptService();
 
-    try {
-      // refactor this deprecated call
-      const sendKeyEncryptionKey = await keyService.getUserKey();
-
-      // to this way instead, but how to get userId?
-      const userId = await firstValueFrom(accountService.activeAccount$.pipe(map((a) => a?.id)));
-      if (!userId) {
-        throw new Error("User ID must not be null or undefined");
-      }
-
-      // model.key is a seed used to derive a key, not a SymmetricCryptoKey
-      model.key = await encryptService.decryptBytes(this.key, sendKeyEncryptionKey);
-      model.cryptoKey = await keyService.makeSendKey(model.key);
-      // FIXME: Remove when updating file. Eslint update
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
-      // TODO: error?
+    const userId = await firstValueFrom(accountService.activeAccount$.pipe(map((a) => a?.id)));
+    if (!userId) {
+      // Is this possible?
+      // Error handling can be added, but caller needs to use i18n
+      // i18n doesn't seem appropriate here
+      return;
     }
+    const sendKeyEncryptionKey = await firstValueFrom(keyService.userKey$(userId));
+    // model.key is a seed used to derive a key, not a SymmetricCryptoKey
+    model.key = await encryptService.decryptBytes(this.key, sendKeyEncryptionKey);
+    model.cryptoKey = await keyService.makeSendKey(model.key);
 
     await this.decryptObj<Send, SendView>(this, model, ["name", "notes"], null, model.cryptoKey);
 
