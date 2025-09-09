@@ -4,6 +4,7 @@ import { RouterModule, Router } from "@angular/router";
 import { combineLatest, map, Observable, switchMap } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { BitwardenShield, NoResults } from "@bitwarden/assets/svg";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { Fido2Utils } from "@bitwarden/common/platform/services/fido2/fido2-utils";
@@ -32,9 +33,6 @@ import {
   DesktopFido2UserInterfaceSession,
 } from "../../services/desktop-fido2-user-interface.service";
 
-import { BitwardenShield } from "./bitwarden-shield.icon";
-import { Fido2PasskeyExistsIcon } from "./fido2-passkey-exists-icon";
-
 @Component({
   standalone: true,
   imports: [
@@ -56,8 +54,7 @@ import { Fido2PasskeyExistsIcon } from "./fido2-passkey-exists-icon";
 export class Fido2CreateComponent implements OnInit, OnDestroy {
   session?: DesktopFido2UserInterfaceSession = null;
   ciphers$: Observable<CipherView[]>;
-  readonly Icons = { BitwardenShield };
-  protected fido2PasskeyExistsIcon = Fido2PasskeyExistsIcon;
+  readonly Icons = { BitwardenShield, NoResults };
 
   private get DIALOG_MESSAGES() {
     return {

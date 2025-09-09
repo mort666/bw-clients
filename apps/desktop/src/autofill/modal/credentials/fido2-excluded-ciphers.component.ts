@@ -3,6 +3,7 @@ import { Component, OnInit, OnDestroy } from "@angular/core";
 import { RouterModule, Router } from "@angular/router";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { BitwardenShield, NoResults } from "@bitwarden/assets/svg";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import {
   BadgeModule,
@@ -21,9 +22,6 @@ import {
   DesktopFido2UserInterfaceService,
   DesktopFido2UserInterfaceSession,
 } from "../../services/desktop-fido2-user-interface.service";
-
-import { BitwardenShield } from "./bitwarden-shield.icon";
-import { Fido2PasskeyExistsIcon } from "./fido2-passkey-exists-icon";
 
 @Component({
   standalone: true,
@@ -45,8 +43,7 @@ import { Fido2PasskeyExistsIcon } from "./fido2-passkey-exists-icon";
 })
 export class Fido2ExcludedCiphersComponent implements OnInit, OnDestroy {
   session?: DesktopFido2UserInterfaceSession = null;
-  readonly Icons = { BitwardenShield };
-  protected fido2PasskeyExistsIcon = Fido2PasskeyExistsIcon;
+  readonly Icons = { BitwardenShield, NoResults };
 
   constructor(
     private readonly desktopSettingsService: DesktopSettingsService,

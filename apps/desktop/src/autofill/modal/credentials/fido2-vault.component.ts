@@ -13,6 +13,7 @@ import {
 } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { BitwardenShield } from "@bitwarden/assets/svg";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
@@ -37,8 +38,6 @@ import {
   DesktopFido2UserInterfaceService,
   DesktopFido2UserInterfaceSession,
 } from "../../services/desktop-fido2-user-interface.service";
-
-import { BitwardenShield } from "./bitwarden-shield.icon";
 
 @Component({
   standalone: true,
@@ -138,7 +137,7 @@ export class Fido2VaultComponent implements OnInit, OnDestroy {
 
           // If specific IDs provided, filter by them
           if (cipherIds?.length > 0) {
-            return activeCiphers.filter((cipher) => cipherIds.includes(cipher.id));
+            return activeCiphers.filter((cipher) => cipherIds.includes(cipher.id as string));
           }
 
           return activeCiphers;
