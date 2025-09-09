@@ -18,6 +18,7 @@ import { EncryptService } from "@bitwarden/common/key-management/crypto/abstract
 import { PinServiceAbstraction } from "@bitwarden/common/key-management/pin/pin.service.abstraction";
 import { CipherWithIdExport, CollectionWithIdExport } from "@bitwarden/common/models/export";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { OrganizationId, UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
@@ -309,8 +310,20 @@ export class OrganizationVaultExportService
     collections: Collection[],
     ciphers: Cipher[],
   ): Promise<string> {
-    const orgKey = await this.keyService.getOrgKey(organizationId);
-    const encKeyValidation = await this.encryptService.encryptString(Utils.newGuid(), orgKey);
+    const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(map((a) => a?.id)));
+    if (!userId) {
+      throw new Error("User ID must not be null or undefined");
+    }
+
+    const orgKeys = await firstValueFrom(this.keyService.orgKeys$(userId));
+    let keyForEncryption: SymmetricCryptoKey = orgKeys?.[organizationId as OrganizationId];
+    if (keyForEncryption == null) {
+      keyForEncryption = await firstValueFrom(this.keyService.userKey$(userId));
+    }
+    const encKeyValidation = await this.encryptService.encryptString(
+      Utils.newGuid(),
+      keyForEncryption,
+    );
 
     const jsonDoc: BitwardenEncryptedOrgJsonExport = {
       encrypted: true,
