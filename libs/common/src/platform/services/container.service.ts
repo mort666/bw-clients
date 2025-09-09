@@ -1,3 +1,4 @@
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
 import { KeyService } from "@bitwarden/key-management";
@@ -8,6 +9,7 @@ export class ContainerService {
   constructor(
     private keyService: KeyService,
     private encryptService: EncryptService,
+    private accountService?: AccountService,
   ) {}
 
   attachToGlobal(global: any) {
@@ -34,5 +36,12 @@ export class ContainerService {
       throw new Error("ContainerService.encryptService not initialized.");
     }
     return this.encryptService;
+  }
+
+  getAccountService(): AccountService {
+    if (this.accountService == null) {
+      throw new Error("ContainerService.accountService not initialized.");
+    }
+    return this.accountService;
   }
 }

@@ -1,5 +1,6 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
+import { firstValueFrom, map } from "rxjs";
 import { Jsonify } from "type-fest";
 
 import { EncString } from "../../../../key-management/crypto/models/enc-string";
@@ -76,11 +77,20 @@ export class Send extends Domain {
   async decrypt(): Promise<SendView> {
     const model = new SendView(this);
 
+    const accountService = Utils.getContainerService().getAccountService();
     const keyService = Utils.getContainerService().getKeyService();
     const encryptService = Utils.getContainerService().getEncryptService();
 
     try {
+      // refactor this deprecated call
       const sendKeyEncryptionKey = await keyService.getUserKey();
+
+      // to this way instead, but how to get userId?
+      const userId = await firstValueFrom(accountService.activeAccount$.pipe(map((a) => a?.id)));
+      if (!userId) {
+        throw new Error("User ID must not be null or undefined");
+      }
+
       // model.key is a seed used to derive a key, not a SymmetricCryptoKey
       model.key = await encryptService.decryptBytes(this.key, sendKeyEncryptionKey);
       model.cryptoKey = await keyService.makeSendKey(model.key);

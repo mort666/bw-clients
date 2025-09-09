@@ -1,5 +1,8 @@
 import { mock } from "jest-mock-extended";
+import { of } from "rxjs";
 
+import { Account, AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { newGuid } from "@bitwarden/guid";
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
 import { KeyService } from "@bitwarden/key-management";
@@ -114,15 +117,21 @@ describe("Send", () => {
     send.disabled = false;
     send.hideEmail = true;
 
+    const accountService = mock<AccountService>();
     const encryptService = mock<EncryptService>();
     const keyService = mock<KeyService>();
+    (accountService as AccountService).activeAccount$ = of({ id: newGuid() } as Account);
     encryptService.decryptBytes
       .calledWith(send.key, userKey)
       .mockResolvedValue(makeStaticByteArray(32));
     keyService.makeSendKey.mockResolvedValue("cryptoKey" as any);
     keyService.getUserKey.mockResolvedValue(userKey);
 
-    (window as any).bitwardenContainerService = new ContainerService(keyService, encryptService);
+    (window as any).bitwardenContainerService = new ContainerService(
+      keyService,
+      encryptService,
+      accountService,
+    );
 
     const view = await send.decrypt();
 
