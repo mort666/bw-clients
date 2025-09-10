@@ -1091,6 +1091,7 @@ export class CipherService implements CipherServiceAbstraction {
 
     await this.apiService.send("POST", "/ciphers/bulk-collections", request, true, false);
 
+    console.log("Replacing all ciphers for user", userId);
     // Update the local state
     const ciphers = await firstValueFrom(this.ciphers$(userId));
 
@@ -1127,11 +1128,15 @@ export class CipherService implements CipherServiceAbstraction {
   async replace(ciphers: { [id: string]: CipherData }, userId: UserId): Promise<any> {
     // use cipher from the sdk and convert to cipher data to store in the state
     // uncomment to test migration
-    // const cipherObjects = Object.values(ciphers).map((cipherData) => new Cipher(cipherData));
-    // const migratedCiphers = await this.cipherEncryptionService.migrateCiphers(
-    //   cipherObjects,
-    //   userId,
-    // );
+    const cipherObjects = Object.values(ciphers).map((cipherData) => new Cipher(cipherData));
+    const migratedCiphers = (await this.cipherEncryptionService.migrateCiphers(
+      cipherObjects,
+      userId,
+    ));
+    // migratedCiphers.forEach((c) => (ciphers[c.id] = c.toCipherData()));
+    migratedCiphers.forEach((c) => (ciphers[c.id] = ciphers[c.id]));
+
+    console.log("REPLAZCE: Replacing all ciphers for user", userId);
 
     await this.updateEncryptedCipherState(() => ciphers, userId);
   }

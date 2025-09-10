@@ -29,6 +29,7 @@ import { Login } from "./login";
 import { Password } from "./password";
 import { SecureNote } from "./secure-note";
 import { SshKey } from "./ssh-key";
+import { CipherEncryptionService } from "../../abstractions/cipher-encryption.service";
 
 export class Cipher extends Domain implements Decryptable<CipherView> {
   readonly initializerKey = InitializerKey.Cipher;
@@ -384,25 +385,26 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
       data: typeof this.data === "string" ? this.data : JSON.stringify(this.data),
     };
 
-    switch (this.type) {
-      case CipherType.Login:
-        sdkCipher.login = this.login.toSdkLogin();
-        break;
-      case CipherType.SecureNote:
-        sdkCipher.secureNote = this.secureNote.toSdkSecureNote();
-        break;
-      case CipherType.Card:
-        sdkCipher.card = this.card.toSdkCard();
-        break;
-      case CipherType.Identity:
-        sdkCipher.identity = this.identity.toSdkIdentity();
-        break;
-      case CipherType.SshKey:
-        sdkCipher.sshKey = this.sshKey.toSdkSshKey();
-        break;
-      default:
-        break;
-    }
+
+    // switch (this.type) {
+    //   case CipherType.Login:
+    //     sdkCipher.login = this.login.toSdkLogin();
+    //     break;
+    //   case CipherType.SecureNote:
+    //     sdkCipher.secureNote = this.secureNote.toSdkSecureNote();
+    //     break;
+    //   case CipherType.Card:
+    //     sdkCipher.card = this.card.toSdkCard();
+    //     break;
+    //   case CipherType.Identity:
+    //     sdkCipher.identity = this.identity.toSdkIdentity();
+    //     break;
+    //   case CipherType.SshKey:
+    //     sdkCipher.sshKey = this.sshKey.toSdkSshKey();
+    //     break;
+    //   default:
+    //     break;
+    // }
 
     return sdkCipher;
   }
