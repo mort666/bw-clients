@@ -1,6 +1,6 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { combineLatest, firstValueFrom, map, Observable } from "rxjs";
+import { combineLatest, firstValueFrom, map, Observable, filter, take } from "rxjs";
 
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
@@ -21,7 +21,7 @@ import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.servic
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { SemanticLogger } from "@bitwarden/common/tools/log";
 import { SystemServiceProvider } from "@bitwarden/common/tools/providers";
-import { OrganizationId } from "@bitwarden/common/types/guid";
+import { OrganizationId, UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { CipherType, toCipherTypeName } from "@bitwarden/common/vault/enums";
@@ -130,6 +130,16 @@ export class ImportService implements ImportServiceAbstraction {
     private system: SystemServiceProvider,
   ) {
     this.logger = system.log({ type: "ImportService" });
+  }
+
+  private async getActiveUserId(): Promise<UserId> {
+    return await firstValueFrom(
+      this.accountService.activeAccount$.pipe(
+        map((a) => (a?.id as UserId) ?? null),
+        filter((id): id is UserId => id != null),
+        take(1),
+      ),
+    );
   }
 
   getImportOptions(): ImportOption[] {
@@ -407,12 +417,7 @@ export class ImportService implements ImportServiceAbstraction {
 
   private async handleIndividualImport(importResult: ImportResult) {
     const request = new ImportCiphersRequest();
-    const activeUserId = await firstValueFrom(
-      this.accountService.activeAccount$.pipe(map((a) => a?.id)),
-    );
-    if (!activeUserId) {
-      throw new Error("User ID must not be null or undefined");
-    }
+    const activeUserId = await this.getActiveUserId();
     for (let i = 0; i < importResult.ciphers.length; i++) {
       const c = await this.cipherService.encrypt(importResult.ciphers[i], activeUserId);
       request.ciphers.push(new CipherRequest(c));
@@ -438,9 +443,7 @@ export class ImportService implements ImportServiceAbstraction {
     organizationId: OrganizationId,
   ) {
     const request = new ImportOrganizationCiphersRequest();
-    const activeUserId = await firstValueFrom(
-      this.accountService.activeAccount$.pipe(map((a) => a?.id)),
-    );
+    const activeUserId = await this.getActiveUserId();
     for (let i = 0; i < importResult.ciphers.length; i++) {
       importResult.ciphers[i].organizationId = organizationId;
       const c = await this.cipherService.encrypt(importResult.ciphers[i], activeUserId);

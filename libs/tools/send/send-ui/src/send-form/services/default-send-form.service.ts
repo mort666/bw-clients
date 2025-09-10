@@ -1,13 +1,14 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
 import { inject, Injectable } from "@angular/core";
-import { firstValueFrom, map } from "rxjs";
+import { firstValueFrom, map, filter, take } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { Send } from "@bitwarden/common/tools/send/models/domain/send";
 import { SendView } from "@bitwarden/common/tools/send/models/view/send.view";
 import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.service.abstraction";
 import { SendService } from "@bitwarden/common/tools/send/services/send.service.abstraction";
+import { UserId } from "@bitwarden/common/types/guid";
 
 import { SendFormConfig } from "../abstractions/send-form-config.service";
 import { SendFormService } from "../abstractions/send-form.service";
@@ -19,10 +20,13 @@ export class DefaultSendFormService implements SendFormService {
   private sendService = inject(SendService);
 
   async decryptSend(send: Send): Promise<SendView> {
-    const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(map((a) => a?.id)));
-    if (!userId) {
-      throw new Error("User ID must not be null or undefined");
-    }
+    const userId = await firstValueFrom(
+      this.accountService.activeAccount$.pipe(
+        map((a) => (a?.id as UserId) ?? null),
+        filter((id): id is UserId => id != null),
+        take(1),
+      ),
+    );
     return await send.decrypt(userId);
   }
 

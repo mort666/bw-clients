@@ -310,10 +310,7 @@ export class OrganizationVaultExportService
     collections: Collection[],
     ciphers: Cipher[],
   ): Promise<string> {
-    const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(map((a) => a?.id)));
-    if (!userId) {
-      throw new Error("User ID must not be null or undefined");
-    }
+    const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
 
     const orgKeys = await firstValueFrom(this.keyService.orgKeys$(userId));
     let keyForEncryption: SymmetricCryptoKey = orgKeys?.[organizationId as OrganizationId];
