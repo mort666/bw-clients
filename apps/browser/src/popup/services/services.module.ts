@@ -292,7 +292,7 @@ const safeProviders: SafeProvider[] = [
         stateProvider,
         kdfConfigService,
       );
-      new ContainerService(keyService, encryptService, accountService).attachToGlobal(self);
+      new ContainerService(keyService, encryptService).attachToGlobal(self);
       return keyService;
     },
     deps: [

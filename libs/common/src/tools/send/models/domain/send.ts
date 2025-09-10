@@ -1,7 +1,9 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { firstValueFrom, map } from "rxjs";
+import { firstValueFrom } from "rxjs";
 import { Jsonify } from "type-fest";
+
+import { UserId } from "@bitwarden/common/types/guid";
 
 import { EncString } from "../../../../key-management/crypto/models/enc-string";
 import { Utils } from "../../../../platform/misc/utils";
@@ -74,14 +76,12 @@ export class Send extends Domain {
     }
   }
 
-  async decrypt(): Promise<SendView> {
+  async decrypt(userId: UserId): Promise<SendView> {
     const model = new SendView(this);
 
-    const accountService = Utils.getContainerService().getAccountService();
     const keyService = Utils.getContainerService().getKeyService();
     const encryptService = Utils.getContainerService().getEncryptService();
 
-    const userId = await firstValueFrom(accountService.activeAccount$.pipe(map((a) => a?.id)));
     if (!userId) {
       throw new Error("User ID must not be null or undefined");
     }

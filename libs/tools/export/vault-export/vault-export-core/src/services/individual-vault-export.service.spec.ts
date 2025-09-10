@@ -181,7 +181,7 @@ describe("VaultExportService", () => {
   let restrictedItemTypesService: Partial<RestrictedItemTypesService>;
   let fetchMock: jest.Mock;
 
-  const userId = "" as UserId;
+  const userId = "test-user-id" as UserId;
 
   beforeEach(() => {
     cryptoFunctionService = mock<CryptoFunctionService>();

@@ -8,7 +8,6 @@ import { Observable, of, switchMap } from "rxjs";
 import { getHostname, parse } from "tldts";
 import { Merge } from "type-fest";
 
-import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
 import { KeyService } from "@bitwarden/key-management";
@@ -28,7 +27,6 @@ declare global {
 interface BitwardenContainerService {
   getKeyService: () => KeyService;
   getEncryptService: () => EncryptService;
-  getAccountService: () => AccountService;
 }
 
 export class Utils {

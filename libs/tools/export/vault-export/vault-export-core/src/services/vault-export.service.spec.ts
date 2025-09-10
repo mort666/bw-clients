@@ -185,7 +185,7 @@ describe("VaultExportService", () => {
     kdfConfigService.getKdfConfig.mockResolvedValue(DEFAULT_KDF_CONFIG);
     encryptService.encryptString.mockResolvedValue(new EncString("encrypted"));
     keyService.userKey$.mockReturnValue(new BehaviorSubject("mockOriginalUserKey" as any));
-    const userId = "" as UserId;
+    const userId = "test-user-id" as UserId;
     const accountInfo: AccountInfo = {
       email: "",
       emailVerified: true,

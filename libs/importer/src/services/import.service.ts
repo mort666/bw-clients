@@ -410,15 +410,14 @@ export class ImportService implements ImportServiceAbstraction {
     const activeUserId = await firstValueFrom(
       this.accountService.activeAccount$.pipe(map((a) => a?.id)),
     );
+    if (!activeUserId) {
+      throw new Error("User ID must not be null or undefined");
+    }
     for (let i = 0; i < importResult.ciphers.length; i++) {
       const c = await this.cipherService.encrypt(importResult.ciphers[i], activeUserId);
       request.ciphers.push(new CipherRequest(c));
     }
-    const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(map((a) => a?.id)));
-    if (!userId) {
-      throw new Error("User ID must not be null or undefined");
-    }
-    const userKey = await firstValueFrom(this.keyService.userKey$(userId));
+    const userKey = await firstValueFrom(this.keyService.userKey$(activeUserId));
 
     if (importResult.folders != null) {
       for (let i = 0; i < importResult.folders.length; i++) {

@@ -89,11 +89,7 @@ export class InitService {
 
       this.versionService.init();
 
-      const containerService = new ContainerService(
-        this.keyService,
-        this.encryptService,
-        this.accountService,
-      );
+      const containerService = new ContainerService(this.keyService, this.encryptService);
       containerService.attachToGlobal(this.win);
 
       await this.autofillService.init();

@@ -511,11 +511,7 @@ export class ServiceContainer {
       customUserAgent,
     );
 
-    this.containerService = new ContainerService(
-      this.keyService,
-      this.encryptService,
-      this.accountService,
-    );
+    this.containerService = new ContainerService(this.keyService, this.encryptService);
 
     this.configApiService = new ConfigApiService(this.apiService);
 

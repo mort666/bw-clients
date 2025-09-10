@@ -969,11 +969,7 @@ export default class MainBackground {
       lockedCallback,
       logoutCallback,
     );
-    this.containerService = new ContainerService(
-      this.keyService,
-      this.encryptService,
-      this.accountService,
-    );
+    this.containerService = new ContainerService(this.keyService, this.encryptService);
 
     this.sendStateProvider = new SendStateProvider(this.stateProvider);
     this.sendService = new SendService(
