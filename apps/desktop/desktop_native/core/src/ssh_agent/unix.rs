@@ -97,21 +97,19 @@ fn get_socket_paths() -> Result<Vec<PathBuf>, anyhow::Error> {
 
         let mut paths = vec![get_legacy_default_socket_path()?];
 
-        // TODO: handle flatpak/snap
-        if !is_flatpak() {
-            let basedir = get_socket_basedir()?;
-            let socket_path = get_default_socket_path(basedir);
+        let basedir = get_socket_basedir()?;
+        let socket_path = get_default_socket_path(basedir);
 
-            // create the bitwarden subdir if needed
-            fs::create_dir_all(
-                socket_path
-                    .parent()
-                    .ok_or(anyhow!("Malformed default socket path."))?,
-            )
-            .map_err(|e| anyhow!(format!("Error creating {socket_path:?}: {e}")))?;
+        // create the bitwarden subdir if needed
+        fs::create_dir_all(
+            socket_path
+                .parent()
+                .ok_or(anyhow!("Malformed default socket path."))?,
+        )
+        .map_err(|e| anyhow!(format!("Error creating {socket_path:?}: {e}")))?;
 
-            paths.push(socket_path);
-        }
+        paths.push(socket_path);
+
         Ok(paths)
     }
 }
