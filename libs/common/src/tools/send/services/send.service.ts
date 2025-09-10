@@ -219,6 +219,9 @@ export class SendService implements InternalSendServiceAbstraction {
   }
 
   async getAllDecryptedFromState(userId: UserId): Promise<SendView[]> {
+    if (!userId) {
+      throw new Error("User ID must not be null or undefined");
+    }
     let decSends = await this.stateProvider.getDecryptedSends();
     if (decSends != null) {
       return decSends;
@@ -233,7 +236,7 @@ export class SendService implements InternalSendServiceAbstraction {
     const promises: Promise<any>[] = [];
     const sends = await this.getAll();
     sends.forEach((send) => {
-      promises.push(send.decrypt(this.userId).then((f) => decSends.push(f)));
+      promises.push(send.decrypt(userId).then((f) => decSends.push(f)));
     });
 
     await Promise.all(promises);
@@ -362,6 +365,9 @@ export class SendService implements InternalSendServiceAbstraction {
   }
 
   private async decryptSends(sends: Send[]) {
+    if (!this.userId) {
+      throw new Error("User ID must not be null or undefined");
+    }
     const decryptSendPromises = sends.map((s) => s.decrypt(this.userId));
     const decryptedSends = await Promise.all(decryptSendPromises);
 
