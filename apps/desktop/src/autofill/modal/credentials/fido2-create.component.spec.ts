@@ -23,13 +23,6 @@ import {
 
 import { Fido2CreateComponent } from "./fido2-create.component";
 
-jest.mock("./bitwarden-shield.icon", () => ({
-  BitwardenShield: {},
-}));
-jest.mock("./fido2-passkey-exists-icon", () => ({
-  Fido2PasskeyExistsIcon: {},
-}));
-
 describe("Fido2CreateComponent", () => {
   let component: Fido2CreateComponent;
   let mockDesktopSettingsService: MockProxy<DesktopSettingsService>;

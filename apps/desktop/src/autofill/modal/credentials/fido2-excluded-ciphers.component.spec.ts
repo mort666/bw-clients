@@ -14,13 +14,6 @@ import {
 
 import { Fido2ExcludedCiphersComponent } from "./fido2-excluded-ciphers.component";
 
-jest.mock("./bitwarden-shield.icon", () => ({
-  BitwardenShield: {},
-}));
-jest.mock("./fido2-passkey-exists-icon", () => ({
-  Fido2PasskeyExistsIcon: {},
-}));
-
 describe("Fido2ExcludedCiphersComponent", () => {
   let component: Fido2ExcludedCiphersComponent;
   let fixture: ComponentFixture<Fido2ExcludedCiphersComponent>;
