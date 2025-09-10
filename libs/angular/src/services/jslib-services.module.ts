@@ -765,6 +765,7 @@ const safeProviders: SafeProvider[] = [
     provide: InternalSendService,
     useClass: SendService,
     deps: [
+      AccountServiceAbstraction,
       KeyService,
       I18nServiceAbstraction,
       KeyGenerationService,
