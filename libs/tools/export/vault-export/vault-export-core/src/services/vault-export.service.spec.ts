@@ -26,6 +26,7 @@ import {
   RestrictedCipherType,
   RestrictedItemTypesService,
 } from "@bitwarden/common/vault/services/restricted-item-types.service";
+import { newGuid } from "@bitwarden/guid";
 import {
   DEFAULT_KDF_CONFIG,
   PBKDF2KdfConfig,
@@ -185,7 +186,7 @@ describe("VaultExportService", () => {
     kdfConfigService.getKdfConfig.mockResolvedValue(DEFAULT_KDF_CONFIG);
     encryptService.encryptString.mockResolvedValue(new EncString("encrypted"));
     keyService.userKey$.mockReturnValue(new BehaviorSubject("mockOriginalUserKey" as any));
-    const userId = "test-user-id" as UserId;
+    const userId = newGuid() as UserId;
     const accountInfo: AccountInfo = {
       email: "",
       emailVerified: true,

@@ -32,6 +32,7 @@ import {
   RestrictedCipherType,
   RestrictedItemTypesService,
 } from "@bitwarden/common/vault/services/restricted-item-types.service";
+import { newGuid } from "@bitwarden/guid";
 import {
   DEFAULT_KDF_CONFIG,
   PBKDF2KdfConfig,
@@ -181,7 +182,7 @@ describe("VaultExportService", () => {
   let restrictedItemTypesService: Partial<RestrictedItemTypesService>;
   let fetchMock: jest.Mock;
 
-  const userId = "test-user-id" as UserId;
+  const userId = newGuid() as UserId;
 
   beforeEach(() => {
     cryptoFunctionService = mock<CryptoFunctionService>();

@@ -98,13 +98,10 @@ export class SendService implements InternalSendServiceAbstraction {
       send.password = passwordKey.keyB64;
     }
     if (userKey == null) {
-      const userId = await firstValueFrom(
-        this.accountService.activeAccount$.pipe(map((a) => a?.id)),
-      );
-      if (!userId) {
+      if (!this.userId) {
         throw new Error("User ID must not be null or undefined");
       }
-      userKey = await firstValueFrom(this.keyService.userKey$(userId));
+      userKey = await firstValueFrom(this.keyService.userKey$(this.userId));
     }
     // Key is not a SymmetricCryptoKey, but key material used to derive the cryptoKey
     send.key = await this.encryptService.encryptBytes(model.key, userKey);
@@ -354,6 +351,9 @@ export class SendService implements InternalSendServiceAbstraction {
     key: SymmetricCryptoKey,
   ): Promise<[EncString, EncArrayBuffer]> {
     if (key == null) {
+      if (!this.userId) {
+        throw new Error("User ID must not be null or undefined");
+      }
       key = await firstValueFrom(this.keyService.userKey$(this.userId));
     }
     const encFileName = await this.encryptService.encryptString(fileName, key);
