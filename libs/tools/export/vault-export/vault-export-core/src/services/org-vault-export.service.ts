@@ -1,7 +1,7 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
 import * as papa from "papaparse";
-import { firstValueFrom, map } from "rxjs";
+import { filter, firstValueFrom, map, take } from "rxjs";
 
 import {
   CollectionService,
@@ -12,7 +12,6 @@ import {
 } from "@bitwarden/admin-console/common";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
-import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { CryptoFunctionService } from "@bitwarden/common/key-management/crypto/abstractions/crypto-function.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { PinServiceAbstraction } from "@bitwarden/common/key-management/pin/pin.service.abstraction";
@@ -70,7 +69,7 @@ export class OrganizationVaultExportService
     password: string,
     onlyManagedCollections: boolean,
   ): Promise<ExportedVaultAsString> {
-    const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
+    const userId = await this.getActiveUserId();
     const exportVault = await this.getOrganizationExport(
       organizationId,
       "json",
@@ -106,7 +105,7 @@ export class OrganizationVaultExportService
     if (format === "zip") {
       throw new Error("Zip export not supported for organization");
     }
-    const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
+    const userId = await this.getActiveUserId();
 
     if (format === "encrypted_json") {
       return {
@@ -125,6 +124,17 @@ export class OrganizationVaultExportService
         : await this.getOrganizationDecryptedExport(userId, organizationId, format),
       fileName: ExportHelper.getFileName("org", format),
     } as ExportedVaultAsString;
+  }
+
+  private async getActiveUserId(): Promise<UserId> {
+    const userId = await firstValueFrom(
+      this.accountService.activeAccount$.pipe(
+        map((a) => (a?.id as UserId) ?? null),
+        filter((id): id is UserId => id != null),
+        take(1),
+      ),
+    );
+    return userId;
   }
 
   private async getOrganizationDecryptedExport(
@@ -310,10 +320,7 @@ export class OrganizationVaultExportService
     collections: Collection[],
     ciphers: Cipher[],
   ): Promise<string> {
-    const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(map((a) => a?.id)));
-    if (!userId) {
-      throw new Error("User ID must not be null or undefined");
-    }
+    const userId = await this.getActiveUserId();
 
     const orgKeys = await firstValueFrom(this.keyService.orgKeys$(userId));
     let keyForEncryption: SymmetricCryptoKey = orgKeys?.[organizationId as OrganizationId];
