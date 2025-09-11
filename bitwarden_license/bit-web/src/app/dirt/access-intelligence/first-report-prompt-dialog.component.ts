@@ -1,12 +1,6 @@
-import { Component, inject } from "@angular/core";
+import { Component } from "@angular/core";
 
-import {
-  ButtonModule,
-  DialogModule,
-  DialogRef,
-  DialogService,
-  TypographyModule,
-} from "@bitwarden/components";
+import { ButtonModule, DialogModule, DialogService, TypographyModule } from "@bitwarden/components";
 import { I18nPipe } from "@bitwarden/ui-common";
 
 @Component({
@@ -14,14 +8,7 @@ import { I18nPipe } from "@bitwarden/ui-common";
   imports: [ButtonModule, DialogModule, TypographyModule, I18nPipe],
 })
 export class FirstReportPromptDialogComponent {
-  private dialogRef = inject(DialogRef);
-
   static open(dialogService: DialogService) {
     return dialogService.open<boolean>(FirstReportPromptDialogComponent);
-  }
-
-  runReport(): void {
-    // Simply close the dialog with 'true' to indicate user wants to run report
-    this.dialogRef.close(true);
   }
 }

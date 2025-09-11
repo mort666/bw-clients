@@ -42,7 +42,7 @@
     </div>
   </span>
   <ng-container bitDialogFooter>
-    <button bitButton buttonType="primary" type="button" (click)="runReport()">
+    <button bitButton buttonType="primary" type="button" [bitDialogClose]="true">
       {{ "riskInsightsInitPromptRunReport" | i18n }}
     </button>
   </ng-container>
