@@ -1133,12 +1133,14 @@ export class CipherService implements CipherServiceAbstraction {
       cipherObjects,
       userId,
     ));
-    // migratedCiphers.forEach((c) => (ciphers[c.id] = c.toCipherData()));
-    migratedCiphers.forEach((c) => (ciphers[c.id] = ciphers[c.id]));
+    // TODO: Something here broke loading my ciphers... need to investigate.
+    const res = await this.updateEncryptedCipherState((current) => {
+      migratedCiphers.forEach((c) => (current[c.id as CipherId] = c.toCipherData()));
+      return current;
+    }, userId);
 
-    console.log("REPLAZCE: Replacing all ciphers for user", userId);
+    console.log("== Replacing all ciphers for user", userId);
 
-    await this.updateEncryptedCipherState(() => ciphers, userId);
   }
 
   /**

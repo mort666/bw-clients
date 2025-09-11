@@ -384,27 +384,28 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
       // version: 1,
       data: typeof this.data === "string" ? this.data : JSON.stringify(this.data),
     };
+    console.log("Cipher toSdkCipher data:", sdkCipher.data, ". \n\n\nIt is of type ", typeof this.data);
 
 
-    // switch (this.type) {
-    //   case CipherType.Login:
-    //     sdkCipher.login = this.login.toSdkLogin();
-    //     break;
-    //   case CipherType.SecureNote:
-    //     sdkCipher.secureNote = this.secureNote.toSdkSecureNote();
-    //     break;
-    //   case CipherType.Card:
-    //     sdkCipher.card = this.card.toSdkCard();
-    //     break;
-    //   case CipherType.Identity:
-    //     sdkCipher.identity = this.identity.toSdkIdentity();
-    //     break;
-    //   case CipherType.SshKey:
-    //     sdkCipher.sshKey = this.sshKey.toSdkSshKey();
-    //     break;
-    //   default:
-    //     break;
-    // }
+    switch (this.type) {
+      case CipherType.Login:
+        sdkCipher.login = this.login.toSdkLogin();
+        break;
+      case CipherType.SecureNote:
+        sdkCipher.secureNote = this.secureNote.toSdkSecureNote();
+        break;
+      case CipherType.Card:
+        sdkCipher.card = this.card.toSdkCard();
+        break;
+      case CipherType.Identity:
+        sdkCipher.identity = this.identity.toSdkIdentity();
+        break;
+      case CipherType.SshKey:
+        sdkCipher.sshKey = this.sshKey.toSdkSshKey();
+        break;
+      default:
+        break;
+    }
 
     return sdkCipher;
   }
