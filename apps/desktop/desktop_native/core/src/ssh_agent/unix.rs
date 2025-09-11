@@ -27,10 +27,8 @@ impl BitwardenDesktopAgent {
     ) -> Result<Self, anyhow::Error> {
         let agent_state = BitwardenDesktopAgent::new(auth_request_tx, auth_response_rx);
 
-        // let socket_paths = get_socket_paths()?;
         let socket_path = get_socket_path()?;
 
-        // for sock_path in &socket_paths {
         // if the socket is already present and wasn't cleanly removed during a previous
         // runtime, remove it before beginning anew.
         remove_path(&socket_path)?;
@@ -75,7 +73,6 @@ impl BitwardenDesktopAgent {
                 return Err(e.into());
             }
         }
-        // }
 
         Ok(agent_state)
     }
