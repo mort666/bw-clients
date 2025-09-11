@@ -77,7 +77,10 @@ export class SendGetCommand extends DownloadCommand {
     if (Utils.isGuid(id)) {
       const send = await this.sendService.getFromState(id);
       if (send != null) {
-        return await send.decrypt();
+        const activeUserId = await firstValueFrom(
+          this.accountService.activeAccount$.pipe(getUserId),
+        );
+        return await send.decrypt(activeUserId);
       }
     } else if (id.trim() !== "") {
       const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
