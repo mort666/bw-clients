@@ -35,19 +35,23 @@ import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.s
 import { SendService } from "@bitwarden/common/tools/send/services/send.service.abstraction";
 import { DialogService, ToastService } from "@bitwarden/components";
 
-// Value = hours
-// FIXME: update to use a const object instead of a typescript enum
-// eslint-disable-next-line @bitwarden/platform/no-enums
-enum DatePreset {
-  OneHour = 1,
-  OneDay = 24,
-  TwoDays = 48,
-  ThreeDays = 72,
-  SevenDays = 168,
-  ThirtyDays = 720,
-  Custom = 0,
-  Never = null,
-}
+const DatePreset = {
+  OneHour: 1,
+  OneDay: 24,
+  TwoDays: 48,
+  ThreeDays: 72,
+  SevenDays: 168,
+  ThirtyDays: 720,
+  Custom: 0,
+  /*
+    Statement below results in an error:
+    selectedDeletionDatePreset: this.editMode ? DatePreset.Custom : DatePreset.SevenDays,
+    ERROR: Type '0 | 168' is not assignable to type '168'.
+  */
+  Never: -1, // TODO: Type '0 | 168' is not assignable to type '168'.
+} as const;
+
+type DatePreset = (typeof DatePreset)[keyof typeof DatePreset];
 
 interface DatePresetSelectOption {
   name: string;
@@ -114,7 +118,7 @@ export class AddEditComponent implements OnInit, OnDestroy {
     type: [],
     defaultExpirationDateTime: [],
     defaultDeletionDateTime: ["", Validators.required],
-    selectedDeletionDatePreset: [DatePreset.SevenDays, Validators.required],
+    selectedDeletionDatePreset: [DatePreset.SevenDays as DatePreset, Validators.required],
     selectedExpirationDatePreset: [],
   });
 
