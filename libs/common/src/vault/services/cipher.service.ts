@@ -1091,7 +1091,6 @@ export class CipherService implements CipherServiceAbstraction {
 
     await this.apiService.send("POST", "/ciphers/bulk-collections", request, true, false);
 
-    console.log("Replacing all ciphers for user", userId);
     // Update the local state
     const ciphers = await firstValueFrom(this.ciphers$(userId));
 
@@ -1125,22 +1124,22 @@ export class CipherService implements CipherServiceAbstraction {
     return res;
   }
 
-  async replace(ciphers: { [id: string]: CipherData }, userId: UserId): Promise<any> {
+  async replace(ciphers: { [id: string]: CipherData }, userId: UserId): Promise<void> {
     // use cipher from the sdk and convert to cipher data to store in the state
     // uncomment to test migration
     const cipherObjects = Object.values(ciphers).map((cipherData) => new Cipher(cipherData));
-    const migratedCiphers = (await this.cipherEncryptionService.migrateCiphers(
+
+    const migratedCiphers = await this.cipherEncryptionService.migrateCiphers(
       cipherObjects,
       userId,
-    ));
-    // TODO: Something here broke loading my ciphers... need to investigate.
-    const res = await this.updateEncryptedCipherState((current) => {
-      migratedCiphers.forEach((c) => (current[c.id as CipherId] = c.toCipherData()));
-      return current;
-    }, userId);
+    );
 
-    console.log("== Replacing all ciphers for user", userId);
+    const resultCiphers: Record<CipherId, CipherData> = migratedCiphers.reduce(
+      (acc, c) => ({ ...acc, [c.id as CipherId]: c.toCipherData() }),
+      {} as Record<CipherId, CipherData>,
+    );
 
+    await this.updateEncryptedCipherState(() => resultCiphers, userId);
   }
 
   /**

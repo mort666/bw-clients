@@ -384,8 +384,6 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
       // version: 1,
       data: typeof this.data === "string" ? this.data : JSON.stringify(this.data),
     };
-    console.log("Cipher toSdkCipher data:", sdkCipher.data, ". \n\n\nIt is of type ", typeof this.data);
-
 
     switch (this.type) {
       case CipherType.Login:
