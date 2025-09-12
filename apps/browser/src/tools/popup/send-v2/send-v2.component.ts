@@ -30,13 +30,12 @@ import { PopOutComponent } from "../../../platform/popup/components/pop-out.comp
 import { PopupHeaderComponent } from "../../../platform/popup/layout/popup-header.component";
 import { PopupPageComponent } from "../../../platform/popup/layout/popup-page.component";
 
-const SendState = {
+export const SendState = Object.freeze({
   Empty: "Empty",
   NoResults: "NoResults",
-} as const;
+} as const);
 
-// Could this lead to surprises?
-type SendState = (typeof SendState)[keyof typeof SendState];
+export type SendState = (typeof SendState)[keyof typeof SendState];
 
 @Component({
   templateUrl: "send-v2.component.html",
@@ -84,7 +83,7 @@ export class SendV2Component implements OnDestroy {
       .pipe(takeUntilDestroyed())
       .subscribe(([emptyList, noFilteredResults, currentFilter]) => {
         if (currentFilter?.sendType !== null) {
-          this.title = `${this.sendType[currentFilter.sendType].toLowerCase()}Sends`;
+          this.title = `${currentFilter.sendType === SendType.File ? "file" : "text"}Sends`;
         } else {
           this.title = "allSends";
         }

@@ -25,16 +25,13 @@ import { SearchBarService } from "../../layout/search/search-bar.service";
 
 import { AddEditComponent } from "./add-edit.component";
 
-const Action = {
+export const Action = Object.freeze({
   None: "",
   Add: "add",
   Edit: "edit",
-} as const;
+} as const);
 
-// Examples linked in Jira use `ActionType` or `ActionKey` instead
-// Shadowing the const object avoids needing to rename enum type references
-// Could this lead to surprises?
-type Action = (typeof Action)[keyof typeof Action];
+export type Action = (typeof Action)[keyof typeof Action];
 
 const BroadcasterSubscriptionId = "SendComponent";
 

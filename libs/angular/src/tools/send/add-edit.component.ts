@@ -35,7 +35,7 @@ import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.s
 import { SendService } from "@bitwarden/common/tools/send/services/send.service.abstraction";
 import { DialogService, ToastService } from "@bitwarden/components";
 
-const DatePreset = {
+export const DatePreset = Object.freeze({
   OneHour: 1,
   OneDay: 24,
   TwoDays: 48,
@@ -43,15 +43,10 @@ const DatePreset = {
   SevenDays: 168,
   ThirtyDays: 720,
   Custom: 0,
-  /*
-    Statement below results in an error:
-    selectedDeletionDatePreset: this.editMode ? DatePreset.Custom : DatePreset.SevenDays,
-    ERROR: Type '0 | 168' is not assignable to type '168'.
-  */
-  Never: -1, // TODO: Type '0 | 168' is not assignable to type '168'.
-} as const;
+  Never: -1,
+} as const);
 
-type DatePreset = (typeof DatePreset)[keyof typeof DatePreset];
+export type DatePreset = (typeof DatePreset)[keyof typeof DatePreset];
 
 interface DatePresetSelectOption {
   name: string;
