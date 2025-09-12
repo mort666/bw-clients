@@ -29,7 +29,6 @@ import { Login } from "./login";
 import { Password } from "./password";
 import { SecureNote } from "./secure-note";
 import { SshKey } from "./ssh-key";
-import { CipherEncryptionService } from "../../abstractions/cipher-encryption.service";
 
 export class Cipher extends Domain implements Decryptable<CipherView> {
   readonly initializerKey = InitializerKey.Cipher;
