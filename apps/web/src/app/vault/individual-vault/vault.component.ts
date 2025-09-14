@@ -1227,10 +1227,10 @@ export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestr
     let aType;
     let value;
     let typeI18nKey;
-
+    const login = CipherViewLikeUtils.getLogin(cipher);
     if (field === "username") {
       aType = "Username";
-      value = CipherViewLikeUtils.getLogin(cipher)?.username;
+      value = login?.username;
       typeI18nKey = "username";
     } else if (field === "password") {
       aType = "Password";
@@ -1238,7 +1238,6 @@ export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestr
       typeI18nKey = "password";
     } else if (field === "totp") {
       aType = "TOTP";
-      const login = CipherViewLikeUtils.getLogin(cipher);
       const totpResponse = await firstValueFrom(this.totpService.getCode$(login?.totp));
       value = totpResponse.code;
       typeI18nKey = "verificationCodeTotp";
@@ -1293,7 +1292,7 @@ export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestr
       return;
     }
 
-        if (
+    if (
       this.passwordRepromptService.protectedFields().includes(aType) &&
       !(await this.repromptCipher([cipher]))
     ) {
@@ -1303,7 +1302,7 @@ export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestr
     if (!cipher.viewPassword) {
       return;
     }
-    
+
     this.platformUtilsService.copyToClipboard(value, { window: window });
     this.toastService.showToast({
       variant: "info",
@@ -1372,7 +1371,6 @@ export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestr
   }
 
   async toggleFavorite(cipher: C) {
-    // Toggle the favorite property and persist the change
     cipher.favorite = !cipher.favorite;
     await this.cipherService.updateFavorite(uuidAsString(cipher.id), cipher.favorite);
     this.toastService.showToast({
