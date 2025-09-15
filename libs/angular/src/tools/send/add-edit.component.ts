@@ -35,6 +35,12 @@ import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.s
 import { SendService } from "@bitwarden/common/tools/send/services/send.service.abstraction";
 import { DialogService, ToastService } from "@bitwarden/components";
 
+/**
+ * DatePreset defines preset options for expiration/deletion durations in hours.
+ * - Custom: 0 (user-specified date)
+ * - Never: -1 (no expiration)
+ * - Other values: number of hours for preset durations
+ */
 export const DatePreset = Object.freeze({
   OneHour: 1,
   OneDay: 24,
@@ -46,6 +52,9 @@ export const DatePreset = Object.freeze({
   Never: -1,
 } as const);
 
+/**
+ * Type representing all possible DatePreset values.
+ */
 export type DatePreset = (typeof DatePreset)[keyof typeof DatePreset];
 
 interface DatePresetSelectOption {
@@ -113,7 +122,10 @@ export class AddEditComponent implements OnInit, OnDestroy {
     type: [],
     defaultExpirationDateTime: [],
     defaultDeletionDateTime: ["", Validators.required],
-    selectedDeletionDatePreset: [DatePreset.SevenDays as DatePreset, Validators.required],
+    selectedDeletionDatePreset: this.formBuilder.nonNullable.control<DatePreset>(
+      DatePreset.SevenDays,
+      { validators: [Validators.required] },
+    ),
     selectedExpirationDatePreset: [],
   });
 

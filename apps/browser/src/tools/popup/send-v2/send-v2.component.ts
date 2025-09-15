@@ -30,11 +30,19 @@ import { PopOutComponent } from "../../../platform/popup/components/pop-out.comp
 import { PopupHeaderComponent } from "../../../platform/popup/layout/popup-header.component";
 import { PopupPageComponent } from "../../../platform/popup/layout/popup-page.component";
 
+/**
+ * Represents the possible states of the Send list UI.
+ * - "Empty": No sends exist for the current filter (file or text).
+ * - "NoResults": Sends exist, but none match the current filter/search.
+ */
 export const SendState = Object.freeze({
   Empty: "Empty",
   NoResults: "NoResults",
 } as const);
 
+/**
+ * Type representing all possible values of SendState.
+ */
 export type SendState = (typeof SendState)[keyof typeof SendState];
 
 @Component({
@@ -83,7 +91,11 @@ export class SendV2Component implements OnDestroy {
       .pipe(takeUntilDestroyed())
       .subscribe(([emptyList, noFilteredResults, currentFilter]) => {
         if (currentFilter?.sendType !== null) {
-          this.title = `${currentFilter.sendType === SendType.File ? "file" : "text"}Sends`;
+          if (currentFilter.sendType === SendType.File) {
+            this.title = "fileSends";
+          } else if (currentFilter.sendType === SendType.Text) {
+            this.title = "textSends";
+          }
         } else {
           this.title = "allSends";
         }

@@ -316,7 +316,7 @@ export class SendProgram extends BaseProgram {
 
       sendFile = SendFileResponse.template(data);
       name = path.basename(data);
-      type = SendType.File as SendType;
+      type = SendType.File;
     } else {
       sendText = SendTextResponse.template(data, options.hidden);
     }

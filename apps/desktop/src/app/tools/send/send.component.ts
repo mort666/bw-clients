@@ -25,12 +25,21 @@ import { SearchBarService } from "../../layout/search/search-bar.service";
 
 import { AddEditComponent } from "./add-edit.component";
 
+/**
+ * Represents the possible actions that can be performed in the Send UI.
+ * - "None": No action is currently active.
+ * - "Add": The user is adding a new Send.
+ * - "Edit": The user is editing an existing Send.
+ */
 export const Action = Object.freeze({
   None: "",
   Add: "add",
   Edit: "edit",
 } as const);
 
+/**
+ * Type representing all possible values of Action.
+ */
 export type Action = (typeof Action)[keyof typeof Action];
 
 const BroadcasterSubscriptionId = "SendComponent";

@@ -35,11 +35,19 @@ export interface SendItemDialogParams {
   disableForm?: boolean;
 }
 
+/**
+ * SendItemDialogResult defines possible outcomes for the send add/edit dialog.
+ * - Saved: The send item was created or updated.
+ * - Deleted: The send item was deleted.
+ */
 export const SendItemDialogResult = Object.freeze({
   Saved: "saved",
   Deleted: "deleted",
 } as const);
 
+/**
+ * Type representing all possible SendItemDialogResult values.
+ */
 export type SendItemDialogResult = (typeof SendItemDialogResult)[keyof typeof SendItemDialogResult];
 
 /**

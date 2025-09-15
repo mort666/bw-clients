@@ -29,6 +29,16 @@ import { SendOptionsComponent } from "../options/send-options.component";
 import { SendFileDetailsComponent } from "./send-file-details.component";
 import { SendTextDetailsComponent } from "./send-text-details.component";
 
+/**
+ * DatePreset defines preset options for deletion durations in hours.
+ * - OneHour: 1 hour
+ * - OneDay: 24 hours
+ * - TwoDays: 48 hours
+ * - ThreeDays: 72 hours
+ * - SevenDays: 168 hours
+ * - FourteenDays: 336 hours
+ * - ThirtyDays: 720 hours
+ */
 export const DatePreset = Object.freeze({
   OneHour: 1,
   OneDay: 24,
@@ -39,6 +49,9 @@ export const DatePreset = Object.freeze({
   ThirtyDays: 720,
 } as const);
 
+/**
+ * Type representing all possible DatePreset values.
+ */
 export type DatePreset = (typeof DatePreset)[keyof typeof DatePreset];
 
 export interface DatePresetSelectOption {

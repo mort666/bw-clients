@@ -41,7 +41,12 @@ import { SendFilePopoutDialogContainerComponent } from "../send-file-popout-dial
 class QueryParams {
   constructor(params: Params) {
     this.sendId = params.sendId;
-    this.type = parseInt(params.type, 10) as SendType;
+    const sendTypeValue = parseInt(params.type, 10);
+    if (sendTypeValue === SendType.Text || sendTypeValue === SendType.File) {
+      this.type = sendTypeValue;
+    } else {
+      throw new Error(`Invalid SendType: ${params.type}`);
+    }
   }
 
   /**
