@@ -38,8 +38,17 @@ import { DialogService, ToastService } from "@bitwarden/components";
 /**
  * DatePreset defines preset options for expiration/deletion durations in hours.
  * - Custom: 0 (user-specified date)
- * - Never: -1 (no expiration)
+ * - Never: "never" (no expiration)
  * - Other values: number of hours for preset durations
+ *
+ * @property OneHour - 1 hour
+ * @property OneDay - 24 hours
+ * @property TwoDays - 48 hours
+ * @property ThreeDays - 72 hours
+ * @property SevenDays - 168 hours
+ * @property ThirtyDays - 720 hours
+ * @property Custom - 0 (user-specified date)
+ * @property Never - "never" (no expiration)
  */
 export const DatePreset = Object.freeze({
   OneHour: 1,
@@ -49,17 +58,48 @@ export const DatePreset = Object.freeze({
   SevenDays: 168,
   ThirtyDays: 720,
   Custom: 0,
-  Never: -1,
+  Never: "never",
 } as const);
 
 /**
  * Type representing all possible DatePreset values.
  */
-export type DatePreset = (typeof DatePreset)[keyof typeof DatePreset];
+export type DatePreset = (typeof DatePreset)[Exclude<keyof typeof DatePreset, "Never">] | "never";
 
 interface DatePresetSelectOption {
   name: string;
   value: DatePreset;
+}
+
+const namesByDatePreset = new Map<DatePreset, keyof typeof DatePreset>(
+  Object.entries(DatePreset).map(([k, v]) => [v, k as keyof typeof DatePreset]),
+);
+
+/**
+ * Checks if a value is a valid DatePreset.
+ * @param value - The value to check.
+ * @returns True if the value is a valid DatePreset, false otherwise.
+ */
+export function isDatePreset(value: unknown): value is DatePreset {
+  return namesByDatePreset.has(value as DatePreset);
+}
+
+/**
+ * Converts a value to a DatePreset if it is valid.
+ * @param value - The value to convert.
+ * @returns  The value as a DatePreset if valid, otherwise undefined.
+ */
+export function asDatePreset(value: unknown): DatePreset | undefined {
+  return isDatePreset(value) ? (value as DatePreset) : undefined;
+}
+
+/**
+ * Gets the name of a DatePreset value.
+ * @param value - The DatePreset value to get the name for.
+ * @returns The name of the DatePreset value, or undefined if not found.
+ */
+export function nameOfDatePreset(value: DatePreset): keyof typeof DatePreset | undefined {
+  return namesByDatePreset.get(value);
 }
 
 @Directive()
@@ -82,7 +122,7 @@ export class AddEditComponent implements OnInit, OnDestroy {
   ];
 
   expirationDatePresets: DatePresetSelectOption[] = [
-    { name: this.i18nService.t("never"), value: DatePreset.Never },
+    { name: this.i18nService.t("never"), value: "never" },
     ...this.deletionDatePresets,
   ];
 
@@ -525,40 +565,46 @@ export class AddEditComponent implements OnInit, OnDestroy {
   }
 
   get formattedExpirationDate(): string {
-    switch (this.formGroup.controls.selectedExpirationDatePreset.value as DatePreset) {
-      case DatePreset.Never:
-        return null;
-      case DatePreset.Custom:
-        if (!this.formGroup.controls.defaultExpirationDateTime.value) {
-          return null;
-        }
-        return this.formGroup.controls.defaultExpirationDateTime.value;
-      default: {
-        const now = new Date();
-        const milliseconds = now.setTime(
-          now.getTime() +
-            (this.formGroup.controls.selectedExpirationDatePreset.value as number) * 60 * 60 * 1000,
-        );
-        return new Date(milliseconds).toString();
-      }
+    const rawPreset = this.formGroup.controls.selectedExpirationDatePreset.value;
+    const preset = asDatePreset(rawPreset);
+    if (!isDatePreset(preset)) {
+      return null;
     }
+    if (preset === "never") {
+      return null;
+    }
+    if (preset === DatePreset.Custom) {
+      if (!this.formGroup.controls.defaultExpirationDateTime.value) {
+        return null;
+      }
+      return this.formGroup.controls.defaultExpirationDateTime.value;
+    }
+    if (typeof preset === "number") {
+      const now = new Date();
+      const milliseconds = now.setTime(now.getTime() + preset * 60 * 60 * 1000);
+      return new Date(milliseconds).toString();
+    }
+    return null;
   }
 
   get formattedDeletionDate(): string {
-    switch (this.formGroup.controls.selectedDeletionDatePreset.value as DatePreset) {
-      case DatePreset.Never:
-        this.formGroup.controls.selectedDeletionDatePreset.patchValue(DatePreset.SevenDays);
-        return this.formattedDeletionDate;
-      case DatePreset.Custom:
-        return this.formGroup.controls.defaultDeletionDateTime.value;
-      default: {
-        const now = new Date();
-        const milliseconds = now.setTime(
-          now.getTime() +
-            (this.formGroup.controls.selectedDeletionDatePreset.value as number) * 60 * 60 * 1000,
-        );
-        return new Date(milliseconds).toString();
-      }
+    const rawPreset = this.formGroup.controls.selectedDeletionDatePreset.value;
+    const preset = asDatePreset(rawPreset);
+    if (!isDatePreset(preset)) {
+      return null;
     }
+    if (preset === "never") {
+      this.formGroup.controls.selectedDeletionDatePreset.patchValue(DatePreset.SevenDays);
+      return this.formattedDeletionDate;
+    }
+    if (preset === DatePreset.Custom) {
+      return this.formGroup.controls.defaultDeletionDateTime.value;
+    }
+    if (typeof preset === "number") {
+      const now = new Date();
+      const milliseconds = now.setTime(now.getTime() + preset * 60 * 60 * 1000);
+      return new Date(milliseconds).toString();
+    }
+    return null;
   }
 }

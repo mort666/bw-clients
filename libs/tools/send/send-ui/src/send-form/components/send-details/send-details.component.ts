@@ -59,6 +59,31 @@ export interface DatePresetSelectOption {
   value: DatePreset | string;
 }
 
+const namesByDatePreset = new Map<DatePreset, keyof typeof DatePreset>(
+  Object.entries(DatePreset).map(([k, v]) => [v as DatePreset, k as keyof typeof DatePreset]),
+);
+
+/**
+ * Runtime type guard to verify a value is a valid DatePreset.
+ */
+export function isDatePreset(value: unknown): value is DatePreset {
+  return namesByDatePreset.has(value as DatePreset);
+}
+
+/**
+ * Safe converter to DatePreset (numeric preset), returns undefined for invalid inputs.
+ */
+export function asDatePreset(value: unknown): DatePreset | undefined {
+  return isDatePreset(value) ? (value as DatePreset) : undefined;
+}
+
+/**
+ * Retrieves the symbolic name for a DatePreset value.
+ */
+export function nameOfDatePreset(value: DatePreset): keyof typeof DatePreset | undefined {
+  return namesByDatePreset.get(value);
+}
+
 @Component({
   selector: "tools-send-details",
   templateUrl: "./send-details.component.html",
@@ -159,11 +184,18 @@ export class SendDetailsComponent implements OnInit {
     const now = new Date();
     const selectedValue = this.sendDetailsForm.controls.selectedDeletionDatePreset.value;
 
+    // The form allows for custom date strings, if such is used, return it without worrying about DatePreset validation
     if (typeof selectedValue === "string") {
       return selectedValue;
     }
 
-    const milliseconds = now.setTime(now.getTime() + (selectedValue as number) * 60 * 60 * 1000);
+    // Otherwise, treat it as a preset and validate at runtime
+    const preset = asDatePreset(selectedValue);
+    if (!isDatePreset(preset)) {
+      return new Date(now).toString();
+    }
+
+    const milliseconds = now.setTime(now.getTime() + preset * 60 * 60 * 1000);
     return new Date(milliseconds).toString();
   }
 }

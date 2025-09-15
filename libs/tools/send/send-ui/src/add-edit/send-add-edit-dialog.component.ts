@@ -50,6 +50,39 @@ export const SendItemDialogResult = Object.freeze({
  */
 export type SendItemDialogResult = (typeof SendItemDialogResult)[keyof typeof SendItemDialogResult];
 
+const namesBySendItemDialogResult = new Map<
+  SendItemDialogResult,
+  keyof typeof SendItemDialogResult
+>(
+  Object.entries(SendItemDialogResult).map(([k, v]) => [
+    v as SendItemDialogResult,
+    k as keyof typeof SendItemDialogResult,
+  ]),
+);
+
+/**
+ * Runtime type guard for SendItemDialogResult values.
+ */
+export function isSendItemDialogResult(value: unknown): value is SendItemDialogResult {
+  return namesBySendItemDialogResult.has(value as SendItemDialogResult);
+}
+
+/**
+ * Safe converter for SendItemDialogResult.
+ */
+export function asSendItemDialogResult(value: unknown): SendItemDialogResult | undefined {
+  return isSendItemDialogResult(value) ? (value as SendItemDialogResult) : undefined;
+}
+
+/**
+ * Retrieves the symbolic key name for a SendItemDialogResult value.
+ */
+export function nameOfSendItemDialogResult(
+  value: SendItemDialogResult,
+): keyof typeof SendItemDialogResult | undefined {
+  return namesBySendItemDialogResult.get(value);
+}
+
 /**
  * Component for adding or editing a send item.
  */
