@@ -1,7 +1,7 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
 import * as papa from "papaparse";
-import { filter, firstValueFrom, map, take } from "rxjs";
+import { firstValueFrom, map } from "rxjs";
 
 import {
   CollectionService,
@@ -18,6 +18,7 @@ import { PinServiceAbstraction } from "@bitwarden/common/key-management/pin/pin.
 import { CipherWithIdExport, CollectionWithIdExport } from "@bitwarden/common/models/export";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
+import { getActiveUserId } from "@bitwarden/common/tools/util";
 import { OrganizationId, UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
@@ -25,6 +26,7 @@ import { CipherData } from "@bitwarden/common/vault/models/data/cipher.data";
 import { Cipher } from "@bitwarden/common/vault/models/domain/cipher";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { RestrictedItemTypesService } from "@bitwarden/common/vault/services/restricted-item-types.service";
+import { newGuid } from "@bitwarden/guid";
 import { KdfConfigService, KeyService } from "@bitwarden/key-management";
 
 import {
@@ -65,11 +67,11 @@ export class OrganizationVaultExportService
    * @returns The exported vault
    */
   async getPasswordProtectedExport(
-    organizationId: string,
+    organizationId: OrganizationId,
     password: string,
     onlyManagedCollections: boolean,
   ): Promise<ExportedVaultAsString> {
-    const userId = await this.getActiveUserId();
+    const userId = await getActiveUserId(this.accountService);
     const exportVault = await this.getOrganizationExport(
       organizationId,
       "json",
@@ -94,7 +96,7 @@ export class OrganizationVaultExportService
    * @throws Error if the organization policies prevent the export
    */
   async getOrganizationExport(
-    organizationId: string,
+    organizationId: OrganizationId,
     format: ExportFormat = "csv",
     onlyManagedCollections: boolean,
   ): Promise<ExportedVaultAsString> {
@@ -105,7 +107,7 @@ export class OrganizationVaultExportService
     if (format === "zip") {
       throw new Error("Zip export not supported for organization");
     }
-    const userId = await this.getActiveUserId();
+    const userId = await getActiveUserId(this.accountService);
 
     if (format === "encrypted_json") {
       return {
@@ -124,17 +126,6 @@ export class OrganizationVaultExportService
         : await this.getOrganizationDecryptedExport(userId, organizationId, format),
       fileName: ExportHelper.getFileName("org", format),
     } as ExportedVaultAsString;
-  }
-
-  private async getActiveUserId(): Promise<UserId> {
-    const userId = await firstValueFrom(
-      this.accountService.activeAccount$.pipe(
-        map((a) => (a?.id as UserId) ?? null),
-        filter((id): id is UserId => id != null),
-        take(1),
-      ),
-    );
-    return userId;
   }
 
   private async getOrganizationDecryptedExport(
@@ -197,7 +188,7 @@ export class OrganizationVaultExportService
     return this.buildJsonExport(decCollections, decCiphers);
   }
 
-  private async getOrganizationEncryptedExport(organizationId: string): Promise<string> {
+  private async getOrganizationEncryptedExport(organizationId: OrganizationId): Promise<string> {
     const collections: Collection[] = [];
     let ciphers: Cipher[] = [];
     const promises = [];
@@ -279,7 +270,7 @@ export class OrganizationVaultExportService
 
   private async getEncryptedManagedExport(
     activeUserId: UserId,
-    organizationId: string,
+    organizationId: OrganizationId,
   ): Promise<string> {
     let encCiphers: Cipher[] = [];
     let allCiphers: Cipher[] = [];
@@ -316,21 +307,18 @@ export class OrganizationVaultExportService
   }
 
   private async BuildEncryptedExport(
-    organizationId: string,
+    organizationId: OrganizationId,
     collections: Collection[],
     ciphers: Cipher[],
   ): Promise<string> {
-    const userId = await this.getActiveUserId();
+    const userId = await getActiveUserId(this.accountService);
 
     const orgKeys = await firstValueFrom(this.keyService.orgKeys$(userId));
-    let keyForEncryption: SymmetricCryptoKey = orgKeys?.[organizationId as OrganizationId];
+    let keyForEncryption: SymmetricCryptoKey = orgKeys?.[organizationId];
     if (keyForEncryption == null) {
       keyForEncryption = await firstValueFrom(this.keyService.userKey$(userId));
     }
-    const encKeyValidation = await this.encryptService.encryptString(
-      Utils.newGuid(),
-      keyForEncryption,
-    );
+    const encKeyValidation = await this.encryptService.encryptString(newGuid(), keyForEncryption);
 
     const jsonDoc: BitwardenEncryptedOrgJsonExport = {
       encrypted: true,

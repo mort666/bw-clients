@@ -233,5 +233,8 @@
   },
   "confirm": {
     "message": "Confirm"
+  }, 
+  "userIdNotFound": {
+    "message": "Your user ID could not be determined."
   }
 }
