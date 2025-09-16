@@ -34,7 +34,9 @@ use chacha20poly1305::{aead::Aead, XChaCha20Poly1305, XNonce};
 use sha2::{Digest, Sha256};
 use tokio::sync::Mutex;
 use windows::{
-    core::{factory, h, HSTRING}, core::Interface, Security::{
+    core::Interface,
+    core::{factory, h, HSTRING},
+    Security::{
         Credentials::{
             KeyCredentialCreationOption, KeyCredentialManager, KeyCredentialStatus,
             UI::{
@@ -42,9 +44,12 @@ use windows::{
             },
         },
         Cryptography::CryptographicBuffer,
-    }, Storage::Streams::IBuffer, Win32::{
-        System::WinRT::{IBufferByteAccess, IUserConsentVerifierInterop}, UI::WindowsAndMessaging::GetForegroundWindow,
-    }
+    },
+    Storage::Streams::IBuffer,
+    Win32::{
+        System::WinRT::{IBufferByteAccess, IUserConsentVerifierInterop},
+        UI::WindowsAndMessaging::GetForegroundWindow,
+    },
 };
 use windows_future::IAsyncOperation;
 
