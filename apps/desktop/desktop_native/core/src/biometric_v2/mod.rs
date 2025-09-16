@@ -12,7 +12,7 @@ pub mod windows_focus;
 pub use biometric_v2::BiometricLockSystem;
 
 #[allow(async_fn_in_trait)]
-pub trait BiometricTrait {
+pub trait BiometricTrait: Send + Sync {
     /// Authenticate the user
     async fn authenticate(&self, hwnd: Vec<u8>, message: String) -> Result<bool>;
     /// Check if biometric authentication is available

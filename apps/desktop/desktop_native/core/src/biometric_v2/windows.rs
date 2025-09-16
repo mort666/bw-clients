@@ -34,8 +34,7 @@ use chacha20poly1305::{aead::Aead, XChaCha20Poly1305, XNonce};
 use sha2::{Digest, Sha256};
 use tokio::sync::Mutex;
 use windows::{
-    core::{factory, h, HSTRING},
-    Security::{
+    core::{factory, h, HSTRING}, core::Interface, Security::{
         Credentials::{
             KeyCredentialCreationOption, KeyCredentialManager, KeyCredentialStatus,
             UI::{
@@ -43,10 +42,9 @@ use windows::{
             },
         },
         Cryptography::CryptographicBuffer,
-    },
-    Win32::{
-        System::WinRT::IUserConsentVerifierInterop, UI::WindowsAndMessaging::GetForegroundWindow,
-    },
+    }, Storage::Streams::IBuffer, Win32::{
+        System::WinRT::{IBufferByteAccess, IUserConsentVerifierInterop}, UI::WindowsAndMessaging::GetForegroundWindow,
+    }
 };
 use windows_future::IAsyncOperation;
 
@@ -54,6 +52,7 @@ use super::windows_focus::{focus_security_prompt, set_focus};
 use crate::{password, secure_memory::*};
 
 const KEYCHAIN_SERVICE_NAME: &str = "BitwardenBiometricsV2";
+const CREDENTIAL_NAME: &HSTRING = h!("BitwardenBiometricsV2");
 const CHALLENGE_LENGTH: usize = 16;
 const XCHACHA20POLY1305_NONCE_LENGTH: usize = 24;
 const XCHACHA20POLY1305_KEY_LENGTH: usize = 32;
@@ -94,9 +93,9 @@ impl super::BiometricTrait for BiometricLockSystem {
     }
 
     async fn authenticate_available(&self) -> Result<bool> {
-        match UserConsentVerifier::CheckAvailabilityAsync()?.get()? {
-            UserConsentVerifierAvailability::Available => Ok(true),
-            UserConsentVerifierAvailability::DeviceBusy => Ok(true),
+        match UserConsentVerifier::CheckAvailabilityAsync()?.await? {
+            UserConsentVerifierAvailability::Available
+            | UserConsentVerifierAvailability::DeviceBusy => Ok(true),
             _ => Ok(false),
         }
     }
@@ -113,20 +112,16 @@ impl super::BiometricTrait for BiometricLockSystem {
         // challenge and wrapped-key are stored to the keychain
 
         // Each enrollment (per user) has a unique challenge, so that the windows-hello key is unique
-        let mut challenge = [0u8; CHALLENGE_LENGTH];
-        rand::fill(&mut challenge);
+        let challenge: [u8; CHALLENGE_LENGTH] = rand::random();
 
         // This key is unique to the challenge
-        let windows_hello_key = windows_hello_authenticate_with_crypto(&challenge)?;
+        let windows_hello_key = windows_hello_authenticate_with_crypto(&challenge).await?;
         let (wrapped_key, nonce) = encrypt_data(&windows_hello_key, key)?;
 
         set_keychain_entry(
             user_id,
             &WindowsHelloKeychainEntry {
-                nonce: nonce
-                    .as_slice()
-                    .try_into()
-                    .map_err(|_| anyhow!("Invalid nonce length"))?,
+                nonce,
                 challenge,
                 wrapped_key,
             },
@@ -165,7 +160,7 @@ impl super::BiometricTrait for BiometricLockSystem {
         } else {
             let keychain_entry = get_keychain_entry(user_id).await?;
             let windows_hello_key =
-                windows_hello_authenticate_with_crypto(&keychain_entry.challenge)?;
+                windows_hello_authenticate_with_crypto(&keychain_entry.challenge).await?;
             let decrypted_key = decrypt_data(
                 &windows_hello_key,
                 &keychain_entry.wrapped_key,
@@ -223,10 +218,10 @@ fn windows_hello_authenticate(message: String) -> Result<bool> {
 /// ensuring user presence.
 ///
 /// Note: This API has inconsistent focusing behavior when called from another window
-fn windows_hello_authenticate_with_crypto(
+async fn windows_hello_authenticate_with_crypto(
     challenge: &[u8; CHALLENGE_LENGTH],
 ) -> Result<[u8; XCHACHA20POLY1305_KEY_LENGTH]> {
-    println!(
+    log::info!(
         "[Windows Hello] Authenticating to sign challenge: {:?}",
         challenge
     );
@@ -251,13 +246,13 @@ fn windows_hello_authenticate_with_crypto(
     // First create or replace the Bitwarden Biometrics signing key
     let credential = {
         let key_credential_creation_result = KeyCredentialManager::RequestCreateAsync(
-            h!("BitwardenBiometricsV2"),
+            CREDENTIAL_NAME,
             KeyCredentialCreationOption::FailIfExists,
         )?
         .get()?;
         match key_credential_creation_result.Status()? {
             KeyCredentialStatus::CredentialAlreadyExists => {
-                KeyCredentialManager::OpenAsync(h!("BitwardenBiometricsV2"))?.get()?
+                KeyCredentialManager::OpenAsync(CREDENTIAL_NAME)?.await?
             }
             KeyCredentialStatus::Success => key_credential_creation_result,
             _ => return Err(anyhow!("Failed to create key credential")),
@@ -275,13 +270,11 @@ fn windows_hello_authenticate_with_crypto(
     }
 
     let signature_buffer = signature.Result()?;
-    let mut signature_value = windows::core::Array::<u8>::with_len(
-        signature_buffer.Length().map_err(|e| anyhow!(e))? as usize,
-    );
-    CryptographicBuffer::CopyToByteArray(&signature_buffer, &mut signature_value)?;
+    let signature_value = unsafe { as_mut_bytes(&signature_buffer)? };
+
     // The signature is deterministic based on the challenge and keychain key. Thus, it can be hashed to a key.
     // It is unclear what entropy this key provides.
-    let windows_hello_key = Sha256::digest(signature_value.as_slice()).into();
+    let windows_hello_key = Sha256::digest(signature_value).into();
     Ok(windows_hello_key)
 }
 
@@ -336,6 +329,18 @@ fn decrypt_data(
     Ok(plaintext)
 }
 
+unsafe fn as_mut_bytes(buffer: &IBuffer) -> Result<&mut [u8]> {
+    let interop = buffer.cast::<IBufferByteAccess>()?;
+
+    unsafe {
+        let data = interop.Buffer()?;
+        Ok(std::slice::from_raw_parts_mut(
+            data,
+            buffer.Length()? as usize,
+        ))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::biometric_v2::{
@@ -357,11 +362,11 @@ mod tests {
 
     // Note: These tests are ignored because they require manual intervention to run
 
-    #[test]
+    #[tokio::test]
     #[ignore]
-    fn test_windows_hello_authenticate_with_crypto_manual() {
+    async fn test_windows_hello_authenticate_with_crypto_manual() {
         let challenge = [0u8; CHALLENGE_LENGTH];
-        let windows_hello_key = windows_hello_authenticate_with_crypto(&challenge);
+        let windows_hello_key = windows_hello_authenticate_with_crypto(&challenge).await;
         println!(
             "Windows hello key {:?} for challenge {:?}",
             windows_hello_key, challenge
