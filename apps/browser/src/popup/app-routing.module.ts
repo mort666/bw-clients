@@ -12,6 +12,7 @@ import {
   tdeDecryptionRequiredGuard,
   unauthGuardFn,
 } from "@bitwarden/angular/auth/guards";
+import { LoginViaWebAuthnComponent } from "@bitwarden/angular/auth/login-via-webauthn/login-via-webauthn.component";
 import { ChangePasswordComponent } from "@bitwarden/angular/auth/password-management/change-password";
 import { SetInitialPasswordComponent } from "@bitwarden/angular/auth/password-management/set-initial-password/set-initial-password.component";
 import { canAccessFeature } from "@bitwarden/angular/platform/guard/feature-flag.guard";
@@ -23,6 +24,7 @@ import {
   UserLockIcon,
   VaultIcon,
   LockIcon,
+  TwoFactorAuthSecurityKeyIcon,
 } from "@bitwarden/assets/svg";
 import {
   LoginComponent,
@@ -45,7 +47,6 @@ import { LockComponent, ConfirmKeyConnectorDomainComponent } from "@bitwarden/ke
 
 import { AccountSwitcherComponent } from "../auth/popup/account-switching/account-switcher.component";
 import { fido2AuthGuard } from "../auth/popup/guards/fido2-auth.guard";
-import { LoginViaWebAuthnComponent } from "../auth/popup/login/login-via-webauthn/login-via-webauthn.component";
 import { AccountSecurityComponent } from "../auth/popup/settings/account-security.component";
 import { ExtensionDeviceManagementComponent } from "../auth/popup/settings/extension-device-management.component";
 import { Fido2Component } from "../autofill/popup/fido2/fido2.component";
@@ -406,7 +407,7 @@ const routes: Routes = [
         path: "login-with-passkey",
         canActivate: [unauthGuardFn(unauthRouteOverrides)],
         data: {
-          pageIcon: VaultIcon,
+          pageIcon: TwoFactorAuthSecurityKeyIcon,
           pageTitle: {
             key: "logInWithPasskey",
           },

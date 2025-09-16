@@ -26,7 +26,7 @@ import {
 
 import { AccountComponent } from "../auth/popup/account-switching/account.component";
 import { CurrentAccountComponent } from "../auth/popup/account-switching/current-account.component";
-import { LoginViaWebAuthnComponent } from "../auth/popup/login/login-via-webauthn/login-via-webauthn.component";
+import { LoginViaWebAuthnComponent } from "@bitwarden/angular/auth/login-via-webauthn/login-via-webauthn.component";
 import { AccountSecurityComponent } from "../auth/popup/settings/account-security.component";
 import { AutofillComponent } from "../autofill/popup/settings/autofill.component";
 import { NotificationsSettingsComponent } from "../autofill/popup/settings/notifications.component";
@@ -90,6 +90,7 @@ import "../platform/popup/locales";
     CalloutModule,
     LinkModule,
     IconModule,
+    LoginViaWebAuthnComponent,
   ],
   declarations: [
     AppComponent,
@@ -98,7 +99,6 @@ import "../platform/popup/locales";
     TabsV2Component,
     UserVerificationComponent,
     RemovePasswordComponent,
-    LoginViaWebAuthnComponent,
   ],
   exports: [],
   providers: [CurrencyPipe, DatePipe],
