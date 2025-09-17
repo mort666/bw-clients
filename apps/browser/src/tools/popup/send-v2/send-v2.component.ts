@@ -30,19 +30,15 @@ import { PopOutComponent } from "../../../platform/popup/components/pop-out.comp
 import { PopupHeaderComponent } from "../../../platform/popup/layout/popup-header.component";
 import { PopupPageComponent } from "../../../platform/popup/layout/popup-page.component";
 
-/**
- * Represents the possible states of the Send list UI.
- * - "Empty": No sends exist for the current filter (file or text).
- * - "NoResults": Sends exist, but none match the current filter/search.
- */
+/** A state of the Send list UI. */
 export const SendState = Object.freeze({
+  /** No sends exist for the current filter (file or text). */
   Empty: "Empty",
+  /** Sends exist, but none match the current filter/search. */
   NoResults: "NoResults",
 } as const);
 
-/**
- * Type representing all possible values of SendState.
- */
+/** A state of the Send list UI. */
 export type SendState = (typeof SendState)[keyof typeof SendState];
 
 @Component({

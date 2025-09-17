@@ -1,7 +1,8 @@
 import { DatePreset, isDatePreset, asDatePreset, nameOfDatePreset } from "./add-edit.component";
 
-describe("DatePreset utilities", () => {
-  it("should validate all valid DatePreset values", () => {
+// Organized by unit: each describe block focuses on a single utility's behavior.
+describe("isDatePreset", () => {
+  it("returns true for all valid DatePreset values (numbers, 'never', and Custom)", () => {
     const validPresets: Array<any> = [
       DatePreset.OneHour,
       DatePreset.OneDay,
@@ -14,23 +15,53 @@ describe("DatePreset utilities", () => {
     ];
     validPresets.forEach((preset) => {
       expect(isDatePreset(preset)).toBe(true);
-      expect(asDatePreset(preset)).toBe(preset);
-      expect(nameOfDatePreset(preset)).toBeDefined();
     });
   });
 
-  it("should reject invalid DatePreset values", () => {
+  it("returns false for invalid values", () => {
     const invalidPresets: Array<any> = [5, -1, 999, null, undefined, "foo", {}, []];
     invalidPresets.forEach((preset) => {
       expect(isDatePreset(preset)).toBe(false);
-      expect(asDatePreset(preset)).toBeUndefined();
-      expect(nameOfDatePreset(preset)).toBeUndefined();
+    });
+  });
+});
+
+describe("asDatePreset", () => {
+  it("returns the same value for valid DatePreset inputs", () => {
+    const validPresets: Array<any> = [
+      DatePreset.OneHour,
+      DatePreset.OneDay,
+      DatePreset.TwoDays,
+      DatePreset.ThreeDays,
+      DatePreset.SevenDays,
+      DatePreset.ThirtyDays,
+      DatePreset.Custom,
+      "never",
+    ];
+    validPresets.forEach((preset) => {
+      expect(asDatePreset(preset)).toBe(preset);
     });
   });
 
-  it("should return correct names for valid presets", () => {
+  it("returns undefined for invalid inputs", () => {
+    const invalidPresets: Array<any> = [5, -1, 999, null, undefined, "foo", {}, []];
+    invalidPresets.forEach((preset) => {
+      expect(asDatePreset(preset)).toBeUndefined();
+    });
+  });
+});
+
+describe("nameOfDatePreset", () => {
+  it("returns the correct key for valid DatePreset values", () => {
     expect(nameOfDatePreset(DatePreset.OneHour)).toBe("OneHour");
     expect(nameOfDatePreset(DatePreset.Custom)).toBe("Custom");
     expect(nameOfDatePreset("never")).toBe("Never");
+  });
+
+  it("returns undefined for invalid inputs", () => {
+    const invalidPresets: Array<any> = [5, -1, 999, null, undefined, "foo", {}, []];
+    invalidPresets.forEach((preset) => {
+      expect(nameOfDatePreset(preset)).toBeUndefined();
+    });
   });
 });

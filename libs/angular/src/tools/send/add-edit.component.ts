@@ -35,35 +35,27 @@ import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.s
 import { SendService } from "@bitwarden/common/tools/send/services/send.service.abstraction";
 import { DialogService, ToastService } from "@bitwarden/components";
 
-/**
- * DatePreset defines preset options for expiration/deletion durations in hours.
- * - Custom: 0 (user-specified date)
- * - Never: "never" (no expiration)
- * - Other values: number of hours for preset durations
- *
- * @property OneHour - 1 hour
- * @property OneDay - 24 hours
- * @property TwoDays - 48 hours
- * @property ThreeDays - 72 hours
- * @property SevenDays - 168 hours
- * @property ThirtyDays - 720 hours
- * @property Custom - 0 (user-specified date)
- * @property Never - "never" (no expiration)
- */
+/** A preset duration (in hours) for expiration/deletion. */
 export const DatePreset = Object.freeze({
+  /** One-hour duration. */
   OneHour: 1,
+  /** One-day duration (24 hours). */
   OneDay: 24,
+  /** Two-day duration (48 hours). */
   TwoDays: 48,
+  /** Three-day duration (72 hours). */
   ThreeDays: 72,
+  /** Seven-day duration (168 hours). */
   SevenDays: 168,
+  /** Thirty-day duration (720 hours). */
   ThirtyDays: 720,
+  /** Custom date/time, provided by the user. */
   Custom: 0,
+  /** No expiration. */
   Never: "never",
 } as const);
 
-/**
- * Type representing all possible DatePreset values.
- */
+/** A preset duration (in hours) for expiration/deletion. */
 export type DatePreset = (typeof DatePreset)[Exclude<keyof typeof DatePreset, "Never">] | "never";
 
 interface DatePresetSelectOption {
@@ -570,9 +562,6 @@ export class AddEditComponent implements OnInit, OnDestroy {
     if (!isDatePreset(preset)) {
       return null;
     }
-    if (preset === "never") {
-      return null;
-    }
     if (preset === DatePreset.Custom) {
       if (!this.formGroup.controls.defaultExpirationDateTime.value) {
         return null;
@@ -589,22 +578,21 @@ export class AddEditComponent implements OnInit, OnDestroy {
 
   get formattedDeletionDate(): string {
     const rawPreset = this.formGroup.controls.selectedDeletionDatePreset.value;
-    const preset = asDatePreset(rawPreset);
+    const preset = asDatePreset(rawPreset); // what if this fails?
     if (!isDatePreset(preset)) {
+      // is this reasonable as a safeguard? values come from a select control which should be trusted
       return null;
     }
     if (preset === "never") {
+      //FIXME Getters should not have side effects
       this.formGroup.controls.selectedDeletionDatePreset.patchValue(DatePreset.SevenDays);
       return this.formattedDeletionDate;
     }
     if (preset === DatePreset.Custom) {
       return this.formGroup.controls.defaultDeletionDateTime.value;
     }
-    if (typeof preset === "number") {
-      const now = new Date();
-      const milliseconds = now.setTime(now.getTime() + preset * 60 * 60 * 1000);
-      return new Date(milliseconds).toString();
-    }
-    return null;
+    const now = new Date();
+    const milliseconds = now.setTime(now.getTime() + preset * 60 * 60 * 1000);
+    return new Date(milliseconds).toString();
   }
 }
