@@ -4101,8 +4101,5 @@
   },
   "editShortcut": {
     "message": "Edit shortcut"
-  }, 
-  "userIdNotFound": {
-    "message": "Your user ID could not be determined."
   }
 }

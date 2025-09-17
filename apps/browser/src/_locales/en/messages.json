@@ -5606,8 +5606,5 @@
   },
   "confirmKeyConnectorDomain": {
     "message": "Confirm Key Connector domain"
-  },
-  "userIdNotFound": {
-    "message": "Your user ID could not be determined."
   }
 }

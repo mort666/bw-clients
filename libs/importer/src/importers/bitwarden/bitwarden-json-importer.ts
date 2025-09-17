@@ -15,7 +15,6 @@ import {
 } from "@bitwarden/common/models/export";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
-import { getActiveUserId } from "@bitwarden/common/tools/util";
 import { OrganizationId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
@@ -65,17 +64,13 @@ export class BitwardenJsonImporter extends BaseImporter implements Importer {
   private async parseEncrypted(
     results: BitwardenEncryptedIndividualJsonExport | BitwardenEncryptedOrgJsonExport,
   ) {
-    const userId = await getActiveUserId(this.accountService);
-    if (!userId) {
-      this.result.success = false;
-      this.result.errorMessage = this.i18nService.t("userIdNotFound");
-      return;
-    }
+    const account = await firstValueFrom(this.accountService.activeAccount$);
+
     if (results.encKeyValidation_DO_NOT_EDIT != null) {
-      const orgKeys = await firstValueFrom(this.keyService.orgKeys$(userId));
+      const orgKeys = await firstValueFrom(this.keyService.orgKeys$(account.id));
       let keyForDecryption: SymmetricCryptoKey = orgKeys?.[this.organizationId];
       if (keyForDecryption == null) {
-        keyForDecryption = await firstValueFrom(this.keyService.userKey$(userId));
+        keyForDecryption = await firstValueFrom(this.keyService.userKey$(account.id));
       }
       const encKeyValidation = new EncString(results.encKeyValidation_DO_NOT_EDIT);
       try {
@@ -119,8 +114,8 @@ export class BitwardenJsonImporter extends BaseImporter implements Importer {
         });
       }
 
-      const activeUserId = await getActiveUserId(this.accountService);
-      const view = await this.cipherService.decrypt(cipher, activeUserId);
+      const account = await firstValueFrom(this.accountService.activeAccount$);
+      const view = await this.cipherService.decrypt(cipher, account.id);
       this.cleanupCipher(view);
       this.result.ciphers.push(view);
     }
