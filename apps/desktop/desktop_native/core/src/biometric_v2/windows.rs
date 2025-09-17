@@ -242,7 +242,7 @@ async fn windows_hello_authenticate_with_crypto(
             break;
         }
     });
-    // Only stop focusing once this function exists. The focus MUST run both during the initial creation
+    // Only stop focusing once this function exits. The focus MUST run both during the initial creation
     // with RequestCreateAsync, and also with the subsequent use with RequestSignAsync.
     let _guard = scopeguard::guard((), |_| {
         stop_focusing.store(true, std::sync::atomic::Ordering::Relaxed);
