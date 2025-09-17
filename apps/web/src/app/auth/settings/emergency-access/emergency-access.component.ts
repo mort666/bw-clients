@@ -18,7 +18,6 @@ import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/pl
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { DialogService, ToastService } from "@bitwarden/components";
-import { UserId } from "@bitwarden/user-core";
 
 import { HeaderModule } from "../../../layouts/header/header.module";
 import { SharedModule } from "../../../shared/shared.module";
@@ -56,7 +55,6 @@ export class EmergencyAccessComponent implements OnInit {
   emergencyAccessStatusType = EmergencyAccessStatusType;
   actionPromise: Promise<any>;
   isOrganizationOwner: boolean;
-  userId: UserId;
 
   constructor(
     private emergencyAccessService: EmergencyAccessService,
@@ -82,8 +80,8 @@ export class EmergencyAccessComponent implements OnInit {
   }
 
   async ngOnInit() {
-    this.userId = await firstValueFrom(getUserId(this.accountService.activeAccount$));
-    const orgs = await firstValueFrom(this.organizationService.organizations$(this.userId));
+    const userId = await firstValueFrom(getUserId(this.accountService.activeAccount$));
+    const orgs = await firstValueFrom(this.organizationService.organizations$(userId));
     this.isOrganizationOwner = orgs.some((o) => o.isOwner);
     // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -167,12 +165,8 @@ export class EmergencyAccessComponent implements OnInit {
       });
       const result = await lastValueFrom(dialogRef.closed);
       if (result === EmergencyAccessConfirmDialogResult.Confirmed) {
-        await this.emergencyAccessService.confirm(
-          contact.id,
-          contact.granteeId,
-          publicKey,
-          this.userId,
-        );
+        const userId = await firstValueFrom(getUserId(this.accountService.activeAccount$));
+        await this.emergencyAccessService.confirm(contact.id, contact.granteeId, publicKey, userId);
         updateUser();
         this.toastService.showToast({
           variant: "success",
@@ -183,11 +177,12 @@ export class EmergencyAccessComponent implements OnInit {
       return;
     }
 
+    const userId = await firstValueFrom(getUserId(this.accountService.activeAccount$));
     this.actionPromise = this.emergencyAccessService.confirm(
       contact.id,
       contact.granteeId,
       publicKey,
-      this.userId,
+      userId,
     );
     await this.actionPromise;
     updateUser();
