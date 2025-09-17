@@ -32,7 +32,7 @@ pub fn focus_security_prompt() {
 }
 
 /// Sets focus to a window using a few unstable methods
-pub(crate) fn set_focus(hwnd: HWND) {
+fn set_focus(hwnd: HWND) {
     unsafe {
         // Windows REALLY does not like apps stealing focus, even if it is for fixing Windows-Hello bugs.
         // The windows hello signing prompt NEEDS to be focused instantly, or it will error, but it does
@@ -75,7 +75,7 @@ pub(crate) fn set_focus(hwnd: HWND) {
             );
         });
 
-        // Attach to the foreground thread once attached, we can foregroud, even if in the background
+        // Attach to the foreground thread once attached, we can foreground, even if in the background
         let dw_current_thread = GetCurrentThreadId();
         let dw_fg_thread = GetWindowThreadProcessId(GetForegroundWindow(), None);
 
@@ -88,5 +88,14 @@ pub(crate) fn set_focus(hwnd: HWND) {
         let _ = BringWindowToTop(hwnd);
         SwitchToThisWindow(hwnd, true);
         let _ = AttachThreadInput(dw_current_thread, dw_fg_thread, false);
+    }
+}
+
+
+/// When restoring focus to the application window, we need a less aggressive method so the electron window doesn't get frozen.
+pub(crate) fn restore_focus(hwnd: HWND) {
+      unsafe {
+        let _ = SetForegroundWindow(hwnd);
+        let _ = SetFocus(Some(hwnd));
     }
 }

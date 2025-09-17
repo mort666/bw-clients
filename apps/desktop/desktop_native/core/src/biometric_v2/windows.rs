@@ -53,7 +53,7 @@ use windows::{
 };
 use windows_future::IAsyncOperation;
 
-use super::windows_focus::{focus_security_prompt, set_focus};
+use super::windows_focus::{focus_security_prompt, restore_focus};
 use crate::{password, secure_memory::*};
 
 const KEYCHAIN_SERVICE_NAME: &str = "BitwardenBiometricsV2";
@@ -94,7 +94,7 @@ impl Default for BiometricLockSystem {
 
 impl super::BiometricTrait for BiometricLockSystem {
     async fn authenticate(&self, _hwnd: Vec<u8>, message: String) -> Result<bool> {
-        windows_hello_authenticate(message)
+        windows_hello_authenticate(message).await
     }
 
     async fn authenticate_available(&self) -> Result<bool> {
@@ -146,7 +146,8 @@ impl super::BiometricTrait for BiometricLockSystem {
         let previous_active_window = super::windows_focus::get_active_window();
         let _focus_scopeguard = scopeguard::guard((), |_| {
             if let Some(hwnd) = previous_active_window {
-                set_focus(hwnd.0);
+                log::debug!("Restoring focus to previous window");
+                restore_focus(hwnd.0);
             }
         });
 
@@ -154,7 +155,7 @@ impl super::BiometricTrait for BiometricLockSystem {
         // If the key is held ephemerally, always use UV API. Only use signing API if the key is not held
         // ephemerally but the keychain holds it persistently.
         if secure_memory.has(user_id) {
-            if windows_hello_authenticate("Unlock your vault".to_string())? {
+            if windows_hello_authenticate("Unlock your vault".to_string()).await? {
                 secure_memory
                     .get(user_id)
                     .clone()
@@ -191,23 +192,22 @@ impl super::BiometricTrait for BiometricLockSystem {
 
 /// Get a yes/no authorization without any cryptographic backing.
 /// This API has better focusing behavior
-fn windows_hello_authenticate(message: String) -> Result<bool> {
+async fn windows_hello_authenticate(message: String) -> Result<bool> {
     println!(
         "[Windows Hello] Authenticating to perform UV with message: {}",
         message
     );
-    // Windows Hello prompt must be in foreground, focused, otherwise the face or fingerprint
-    // unlock will not work. We get the current foreground window, which will either be the
-    // Bitwarden desktop app or the browser extension.
-    let foreground_window = unsafe { GetForegroundWindow() };
 
-    let userconsent_verifier = factory::<UserConsentVerifier, IUserConsentVerifierInterop>()?;
     let userconsent_result: IAsyncOperation<UserConsentVerificationResult> = unsafe {
-        userconsent_verifier
+        // Windows Hello prompt must be in foreground, focused, otherwise the face or fingerprint
+        // unlock will not work. We get the current foreground window, which will either be the
+        // Bitwarden desktop app or the browser extension.
+        let foreground_window = GetForegroundWindow();
+        factory::<UserConsentVerifier, IUserConsentVerifierInterop>()?
             .RequestVerificationForWindowAsync(foreground_window, &HSTRING::from(message))?
     };
 
-    match userconsent_result.get()? {
+    match userconsent_result.await? {
         UserConsentVerificationResult::Verified => Ok(true),
         _ => Ok(false),
     }
@@ -254,7 +254,7 @@ async fn windows_hello_authenticate_with_crypto(
             CREDENTIAL_NAME,
             KeyCredentialCreationOption::FailIfExists,
         )?
-        .get()?;
+        .await?;
         match key_credential_creation_result.Status()? {
             KeyCredentialStatus::CredentialAlreadyExists => {
                 KeyCredentialManager::OpenAsync(CREDENTIAL_NAME)?.await?
@@ -265,11 +265,16 @@ async fn windows_hello_authenticate_with_crypto(
     }
     .Credential()?;
 
-    let signature = credential
-        .RequestSignAsync(&CryptographicBuffer::CreateFromByteArray(
-            challenge.as_slice(),
-        )?)?
-        .get()?;
+    let signature = {
+        let sign_operation = credential.RequestSignAsync(
+            &CryptographicBuffer::CreateFromByteArray(challenge.as_slice())?,
+        )?;
+
+        // We need to drop the credential here to avoid holding it across an await point.
+        drop(credential);
+        sign_operation.await?
+    };
+
     if signature.Status()? != KeyCredentialStatus::Success {
         return Err(anyhow!("Failed to sign data"));
     }
@@ -371,18 +376,22 @@ mod tests {
     #[ignore]
     async fn test_windows_hello_authenticate_with_crypto_manual() {
         let challenge = [0u8; CHALLENGE_LENGTH];
-        let windows_hello_key = windows_hello_authenticate_with_crypto(&challenge).await;
+        let windows_hello_key = windows_hello_authenticate_with_crypto(&challenge)
+            .await
+            .unwrap();
         println!(
             "Windows hello key {:?} for challenge {:?}",
             windows_hello_key, challenge
         );
     }
 
-    #[test]
+    #[tokio::test]
     #[ignore]
-    fn test_windows_hello_authenticate() {
+    async fn test_windows_hello_authenticate() {
         let authenticated =
-            windows_hello_authenticate("Test Windows Hello authentication".to_string());
+            windows_hello_authenticate("Test Windows Hello authentication".to_string())
+                .await
+                .unwrap();
         println!("Windows Hello authentication result: {:?}", authenticated);
     }
 
