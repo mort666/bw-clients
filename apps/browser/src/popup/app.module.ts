@@ -9,7 +9,6 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 
-import { LoginViaWebAuthnComponent } from "@bitwarden/angular/auth/login-via-webauthn/login-via-webauthn.component";
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { ColorPasswordCountPipe } from "@bitwarden/angular/pipes/color-password-count.pipe";
 import { ColorPasswordPipe } from "@bitwarden/angular/pipes/color-password.pipe";
@@ -22,7 +21,6 @@ import {
   ToastModule,
   CalloutModule,
   LinkModule,
-  IconModule,
 } from "@bitwarden/components";
 
 import { AccountComponent } from "../auth/popup/account-switching/account.component";
@@ -89,8 +87,6 @@ import "../platform/popup/locales";
     ExtensionAnonLayoutWrapperComponent,
     CalloutModule,
     LinkModule,
-    IconModule,
-    LoginViaWebAuthnComponent,
   ],
   declarations: [
     AppComponent,
