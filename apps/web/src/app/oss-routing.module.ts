@@ -139,7 +139,6 @@ const routes: Routes = [
       {
         path: "login-with-passkey",
         canActivate: [unauthGuardFn()],
-        component: LoginViaWebAuthnComponent,
         data: {
           pageIcon: TwoFactorAuthSecurityKeyIcon,
           titleId: "logInWithPasskey",
@@ -150,6 +149,14 @@ const routes: Routes = [
             key: "readingPasskeyLoadingInfo",
           },
         } satisfies RouteDataProperties & AnonLayoutWrapperData,
+        children: [
+          { path: "", component: LoginViaWebAuthnComponent },
+          {
+            path: "",
+            component: EnvironmentSelectorComponent,
+            outlet: "environment-selector",
+          },
+        ],
       },
       {
         path: "signup",
