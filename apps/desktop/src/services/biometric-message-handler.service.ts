@@ -115,7 +115,9 @@ export class BiometricMessageHandlerService {
   private connectedApps: ConnectedApps = new ConnectedApps();
 
   async init() {
-    this.logService.info("[BiometricMessageHandlerService] Initializing biometric message handler");
+    this.logService.debug(
+      "[BiometricMessageHandlerService] Initializing biometric message handler",
+    );
 
     const windowsV2Enabled = await this.configService.getFeatureFlag(
       FeatureFlag.WindowsBiometricsV2,

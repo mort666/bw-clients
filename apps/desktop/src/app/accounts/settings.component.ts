@@ -480,14 +480,12 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.form.controls.requireMasterPasswordOnAppRestart.valueChanges
       .pipe(
         concatMap(async (requireMasterPassword) => {
-          const userKey = await firstValueFrom(this.keyService.userKey$(activeAccount.id));
           if (!requireMasterPassword && this.isWindowsV2BiometricsEnabled) {
             // Allow biometric unlock on app restart
-            if (!(await this.biometricsService.hasPersistentKey(activeAccount.id))) {
-              await this.biometricsService.enrollPersistent(activeAccount.id, userKey);
-            }
+            await this.enrollPersistentBiometricIfNeeded(activeAccount.id);
           } else {
             // Require master password on app restart
+            const userKey = await firstValueFrom(this.keyService.userKey$(activeAccount.id));
             await this.biometricsService.deleteBiometricUnlockKeyForUser(activeAccount.id);
             await this.biometricsService.setBiometricProtectedUnlockKeyForUser(
               activeAccount.id,
@@ -613,6 +611,16 @@ export class SettingsComponent implements OnInit, OnDestroy {
       this.form.controls.pin.setValue(this.userHasPinSet, { emitEvent: false });
     } else {
       const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
+
+      // If user turned off PIN without having a MP and has biometrics + require MP/PIN on restart enabled.
+      if (
+        this.isWindowsV2BiometricsEnabled &&
+        this.form.value.requireMasterPasswordOnAppRestart &&
+        !this.userHasMasterPassword
+      ) {
+        // Allow biometric unlock on app restart so the user doesn't get into a bad state.
+        await this.enrollPersistentBiometricIfNeeded(userId);
+      }
       await this.vaultTimeoutSettingsService.clear(userId);
     }
   }
@@ -664,6 +672,12 @@ export class SettingsComponent implements OnInit, OnDestroy {
       // Recommended settings for Windows Hello
       this.form.controls.autoPromptBiometrics.setValue(false);
       await this.biometricStateService.setPromptAutomatically(false);
+
+      // If the user doesn't have a MP or PIN then they have to use biometrics on app restart.
+      if (this.isWindowsV2BiometricsEnabled && !this.userHasMasterPassword && !this.userHasPinSet) {
+        // Allow biometric unlock on app restart so the user doesn't get into a bad state.
+        await this.enrollPersistentBiometricIfNeeded(activeUserId);
+      }
     } else if (this.isLinux) {
       // Similar to Windows
       this.form.controls.autoPromptBiometrics.setValue(false);
@@ -954,6 +968,16 @@ export class SettingsComponent implements OnInit, OnDestroy {
     ]);
 
     return vaultTimeoutOptions;
+  }
+
+  private async enrollPersistentBiometricIfNeeded(userId: UserId): Promise<void> {
+    if (!(await this.biometricsService.hasPersistentKey(userId))) {
+      const userKey = await firstValueFrom(this.keyService.userKey$(userId));
+      await this.biometricsService.enrollPersistent(userId, userKey);
+      this.form.controls.requireMasterPasswordOnAppRestart.setValue(false, {
+        emitEvent: false,
+      });
+    }
   }
 
   ngOnDestroy() {

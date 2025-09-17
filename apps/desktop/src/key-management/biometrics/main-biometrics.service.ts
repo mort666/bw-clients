@@ -156,7 +156,6 @@ export class MainBiometricsService extends DesktopBiometricsService {
   }
 
   async enableWindowsV2Biometrics(): Promise<void> {
-    this.logService.info("[BiometricsMain] enableWindowsV2Biometrics called.");
     if (this.platform === "win32" && this.windowsV2BiometricsEnabled == false) {
       this.logService.info("[BiometricsMain] Loading native biometrics module v2 for windows");
       this.osBiometricsService = new WindowsBiometricsSystem(this.i18nService, this.windowMain);
