@@ -38,7 +38,7 @@
         [ngClass]="{ 'tw-bg-primary-100': isDrawerIsOpenForThisRecord(row.applicationName) }"
         bitCell
       >
-        <button type="button" (click)="showAppAtRiskMembers(row.applicationName)">
+        <button type="button" tabindex="0" (click)="showAppAtRiskMembers(row.applicationName)">
           <span>{{ row.applicationName }}</span>
         </button>
       </td>
