@@ -91,10 +91,9 @@ fn set_focus(hwnd: HWND) {
     }
 }
 
-
 /// When restoring focus to the application window, we need a less aggressive method so the electron window doesn't get frozen.
 pub(crate) fn restore_focus(hwnd: HWND) {
-      unsafe {
+    unsafe {
         let _ = SetForegroundWindow(hwnd);
         let _ = SetFocus(Some(hwnd));
     }
