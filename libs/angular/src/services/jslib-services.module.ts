@@ -315,6 +315,8 @@ import {
   KeyService,
   UserAsymmetricKeysRegenerationApiService,
   UserAsymmetricKeysRegenerationService,
+  WebAuthnPrfUnlockService,
+  WebAuthnPrfUnlockServiceAbstraction,
 } from "@bitwarden/key-management";
 import {
   ActiveUserStateProvider,
@@ -803,7 +805,7 @@ const safeProviders: SafeProvider[] = [
       FolderApiServiceAbstraction,
       InternalOrganizationServiceAbstraction,
       SendApiServiceAbstraction,
-      UserDecryptionOptionsServiceAbstraction,
+      InternalUserDecryptionOptionsServiceAbstraction,
       AvatarServiceAbstraction,
       LOGOUT_CALLBACK,
       BillingAccountProfileStateService,
@@ -926,11 +928,6 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: WebPushConnectionService,
     useClass: UnsupportedWebPushConnectionService,
-    deps: [],
-  }),
-  safeProvider({
-    provide: ActionsService,
-    useClass: UnsupportedActionsService,
     deps: [],
   }),
   safeProvider({
@@ -1257,6 +1254,19 @@ const safeProviders: SafeProvider[] = [
     provide: WebAuthnLoginApiServiceAbstraction,
     useClass: WebAuthnLoginApiService,
     deps: [ApiServiceAbstraction, EnvironmentService],
+  }),
+  safeProvider({
+    provide: WebAuthnPrfUnlockServiceAbstraction,
+    useClass: WebAuthnPrfUnlockService,
+    deps: [
+      WebAuthnLoginPrfKeyServiceAbstraction,
+      KeyService,
+      UserDecryptionOptionsServiceAbstraction,
+      EncryptService,
+      EnvironmentService,
+      WINDOW,
+      LogService,
+    ],
   }),
   safeProvider({
     provide: WebAuthnLoginServiceAbstraction,

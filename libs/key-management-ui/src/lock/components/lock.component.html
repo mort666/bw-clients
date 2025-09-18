@@ -47,6 +47,20 @@
         </button>
       </ng-container>
 
+      <ng-container *ngIf="unlockOptions.prf.enabled">
+        <button
+          type="button"
+          bitButton
+          buttonType="secondary"
+          block
+          (click)="unlockViaPrf()"
+          [disabled]="unlockingViaPrf"
+          [loading]="unlockingViaPrf"
+        >
+          {{ "unlockWithPasskey" | i18n }}
+        </button>
+      </ng-container>
+
       <button type="button" bitButton block (click)="logOut()">
         {{ "logOut" | i18n }}
       </button>
@@ -108,6 +122,21 @@
             (click)="activeUnlockOption = UnlockOption.MasterPassword"
           >
             {{ "unlockWithMasterPassword" | i18n }}
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="unlockOptions.prf.enabled">
+          <button
+            type="button"
+            bitButton
+            bitFormButton
+            buttonType="secondary"
+            block
+            (click)="unlockViaPrf()"
+            [disabled]="unlockingViaPrf"
+            [loading]="unlockingViaPrf"
+          >
+            {{ "unlockWithPasskey" | i18n }}
           </button>
         </ng-container>
 
@@ -179,6 +208,21 @@
             (click)="activeUnlockOption = UnlockOption.Pin"
           >
             {{ "unlockWithPin" | i18n }}
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="unlockOptions.prf.enabled">
+          <button
+            type="button"
+            bitButton
+            bitFormButton
+            buttonType="secondary"
+            block
+            (click)="unlockViaPrf()"
+            [disabled]="unlockingViaPrf"
+            [loading]="unlockingViaPrf"
+          >
+            {{ "unlockWithPasskey" | i18n }}
           </button>
         </ng-container>
 
