@@ -3,8 +3,7 @@ use async_trait::async_trait;
 use security_framework::passwords::get_generic_password;
 
 use crate::chromium::{BrowserConfig, CryptoService, LocalState};
-
-mod util;
+use crate::util;
 
 //
 // Public API

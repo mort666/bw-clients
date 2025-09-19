@@ -1,62 +1,49 @@
 use serde::Serialize;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+
+use crate::PLATFORM_SUPPORTED_BROWSERS;
 
 #[derive(Serialize)]
+/// Mechanisms that load data into the importer
 pub struct ImporterMetadata {
+    /// Identifies the importer
     pub id: String,
+    /// Describes the strategies used to obtain imported data
     pub loaders: Vec<&'static str>,
+    /// Identifies the instructions for the importer
     pub instructions: &'static str,
 }
 
-#[cfg(target_os = "windows")]
-fn chrome_loaders() -> Vec<&'static str> {
-    vec!["file"]
-}
-
-#[cfg(any(target_os = "macos", target_os = "linux"))]
-fn chrome_loaders() -> Vec<&'static str> {
-    vec!["file", "chromium"]
-}
-
-#[cfg(target_os = "windows")]
-fn brave_loaders() -> Vec<&'static str> {
-    vec!["file"]
-}
-
-#[cfg(any(target_os = "macos", target_os = "linux"))]
-fn brave_loaders() -> Vec<&'static str> {
-    vec!["file", "chromium"]
-}
-
+/// Returns a map of supported importers based on the current platform.
+///
+/// Only browsers listed in PLATFORM_SUPPORTED_BROWSERS will have the "chromium" loader.
+/// All importers will have the "file" loader.
 pub fn get_supported_importers() -> HashMap<String, ImporterMetadata> {
     let mut map = HashMap::new();
 
-    // force chrome to use target_os dependent loaders
-    map.insert(
-        "chromecsv".to_string(),
-        ImporterMetadata {
-            id: "chromecsv".to_string(),
-            loaders: chrome_loaders(),
-            instructions: "chromium",
-        },
-    );
-    // force brave to use target_os dependent loaders
-    map.insert(
-        "bravecsv".to_string(),
-        ImporterMetadata {
-            id: "bravecsv".to_string(),
-            loaders: brave_loaders(),
-            instructions: "chromium",
-        },
-    );
+    const IMPORTERS: [(&str, &str); 6] = [
+        ("chromecsv", "Chrome"),
+        ("chromiumcsv", "Chromium"),
+        ("bravecsv", "Brave"),
+        ("operacsv", "Opera"),
+        ("vivaldicsv", "Vivaldi"),
+        ("edgecsv", "Microsoft Edge"),
+    ];
 
-    // all other chromium based browsers support file & chromium loaders on all platforms
-    for id in ["operacsv", "vivaldicsv", "edgecsv"] {
+    let supported: HashSet<&'static str> =
+        PLATFORM_SUPPORTED_BROWSERS.iter().map(|b| b.name).collect();
+
+    for (id, browser_name) in IMPORTERS {
+        let mut loaders: Vec<&'static str> = vec!["file"];
+        if supported.contains(browser_name) {
+            loaders.push("chromium");
+        }
+
         map.insert(
             id.to_string(),
             ImporterMetadata {
                 id: id.to_string(),
-                loaders: vec!["file", "chromium"],
+                loaders,
                 instructions: "chromium",
             },
         );
