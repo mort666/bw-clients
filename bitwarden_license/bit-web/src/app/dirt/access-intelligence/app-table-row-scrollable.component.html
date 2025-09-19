@@ -4,7 +4,9 @@
       <th></th>
       <th bitCell></th>
       <th bitSortable="applicationName" bitCell>{{ "application" | i18n }}</th>
-      <th bitSortable="atRiskPasswordCount" bitCell>{{ "atRiskPasswords" | i18n }}</th>
+      <th bitSortable="atRiskPasswordCount" bitCell default="desc">
+        {{ "atRiskPasswords" | i18n }}
+      </th>
       <th bitSortable="passwordCount" bitCell>{{ "totalPasswords" | i18n }}</th>
       <th bitSortable="atRiskMemberCount" bitCell>{{ "atRiskMembers" | i18n }}</th>
       <th bitSortable="memberCount" bitCell>{{ "totalMembers" | i18n }}</th>
@@ -14,6 +16,7 @@
         bitCell
         *ngIf="showRowCheckBox"
         [ngClass]="{ 'tw-bg-primary-100': isDrawerIsOpenForThisRecord(row.applicationName) }"
+        appStopProp
       >
         <input
           bitCheckbox
@@ -31,10 +34,22 @@
       >
         <i class="bwi bwi-star-f" *ngIf="row.isMarkedAsCritical"></i>
       </td>
-      <td bitCell>
+      <td
+        bitCell
+        class="tw-cursor-pointer"
+        [ngClass]="{ 'tw-bg-primary-100': isDrawerIsOpenForThisRecord(row.applicationName) }"
+        (click)="showAppAtRiskMembers(row.applicationName)"
+        (keydown.enter)="showAppAtRiskMembers(row.applicationName)"
+        (keydown.space)="showAppAtRiskMembers(row.applicationName)"
+        role="button"
+        tabindex="0"
+        [attr.aria-label]="'viewItem' | i18n"
+      >
         <app-vault-icon *ngIf="row.ciphers.length > 0" [cipher]="row.ciphers[0]"></app-vault-icon>
       </td>
       <td
+        class="tw-cursor-pointer"
+        [attr.aria-label]="'viewItem' | i18n"
         [ngClass]="{ 'tw-bg-primary-100': isDrawerIsOpenForThisRecord(row.applicationName) }"
         bitCell
       >
@@ -44,7 +59,14 @@
       </td>
       <td
         bitCell
+        class="tw-cursor-pointer"
         [ngClass]="{ 'tw-bg-primary-100': isDrawerIsOpenForThisRecord(row.applicationName) }"
+        (click)="showAppAtRiskMembers(row.applicationName)"
+        (keydown.enter)="showAppAtRiskMembers(row.applicationName)"
+        (keydown.space)="showAppAtRiskMembers(row.applicationName)"
+        role="button"
+        tabindex="0"
+        [attr.aria-label]="'viewItem' | i18n"
       >
         <span>
           {{ row.atRiskPasswordCount }}
@@ -52,7 +74,14 @@
       </td>
       <td
         bitCell
+        class="tw-cursor-pointer"
         [ngClass]="{ 'tw-bg-primary-100': isDrawerIsOpenForThisRecord(row.applicationName) }"
+        (click)="showAppAtRiskMembers(row.applicationName)"
+        (keydown.enter)="showAppAtRiskMembers(row.applicationName)"
+        (keydown.space)="showAppAtRiskMembers(row.applicationName)"
+        role="button"
+        tabindex="0"
+        [attr.aria-label]="'viewItem' | i18n"
       >
         <span>
           {{ row.passwordCount }}
@@ -60,7 +89,14 @@
       </td>
       <td
         bitCell
+        class="tw-cursor-pointer"
         [ngClass]="{ 'tw-bg-primary-100': isDrawerIsOpenForThisRecord(row.applicationName) }"
+        (click)="showAppAtRiskMembers(row.applicationName)"
+        (keydown.enter)="showAppAtRiskMembers(row.applicationName)"
+        (keydown.space)="showAppAtRiskMembers(row.applicationName)"
+        role="button"
+        tabindex="0"
+        [attr.aria-label]="'viewItem' | i18n"
       >
         <span>
           {{ row.atRiskMemberCount }}
@@ -69,7 +105,14 @@
       <td
         bitCell
         data-testid="total-membership"
+        class="tw-cursor-pointer"
         [ngClass]="{ 'tw-bg-primary-100': isDrawerIsOpenForThisRecord(row.applicationName) }"
+        (click)="showAppAtRiskMembers(row.applicationName)"
+        (keydown.enter)="showAppAtRiskMembers(row.applicationName)"
+        (keydown.space)="showAppAtRiskMembers(row.applicationName)"
+        role="button"
+        tabindex="0"
+        [attr.aria-label]="'viewItem' | i18n"
       >
         {{ row.memberCount }}
       </td>
@@ -77,6 +120,7 @@
         bitCell
         *ngIf="showRowMenuForCriticalApps"
         [ngClass]="{ 'tw-bg-primary-100': isDrawerIsOpenForThisRecord(row.applicationName) }"
+        appStopProp
       >
         <button
           [bitMenuTriggerFor]="rowMenu"
