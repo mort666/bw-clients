@@ -451,6 +451,8 @@ describe("SettingsComponent", () => {
             component.isWindows = true;
             component.form.value.requireMasterPasswordOnAppRestart = true;
             component.userHasMasterPassword = false;
+            component.supportsBiometric = true;
+            component.form.value.biometric = true;
 
             await component.updatePinHandler(false);
 
@@ -467,6 +469,107 @@ describe("SettingsComponent", () => {
                 mockUserKey,
               );
             }
+          },
+        );
+
+        test.each([
+          {
+            userHasMasterPassword: true,
+            supportsBiometric: false,
+            biometric: false,
+            requireMasterPasswordOnAppRestart: false,
+          },
+          {
+            userHasMasterPassword: true,
+            supportsBiometric: false,
+            biometric: false,
+            requireMasterPasswordOnAppRestart: true,
+          },
+          {
+            userHasMasterPassword: true,
+            supportsBiometric: false,
+            biometric: true,
+            requireMasterPasswordOnAppRestart: false,
+          },
+          {
+            userHasMasterPassword: true,
+            supportsBiometric: false,
+            biometric: true,
+            requireMasterPasswordOnAppRestart: true,
+          },
+          {
+            userHasMasterPassword: true,
+            supportsBiometric: true,
+            biometric: false,
+            requireMasterPasswordOnAppRestart: false,
+          },
+          {
+            userHasMasterPassword: true,
+            supportsBiometric: true,
+            biometric: false,
+            requireMasterPasswordOnAppRestart: true,
+          },
+          {
+            userHasMasterPassword: false,
+            supportsBiometric: false,
+            biometric: false,
+            requireMasterPasswordOnAppRestart: false,
+          },
+          {
+            userHasMasterPassword: false,
+            supportsBiometric: false,
+            biometric: false,
+            requireMasterPasswordOnAppRestart: true,
+          },
+          {
+            userHasMasterPassword: false,
+            supportsBiometric: false,
+            biometric: true,
+            requireMasterPasswordOnAppRestart: false,
+          },
+          {
+            userHasMasterPassword: false,
+            supportsBiometric: false,
+            biometric: true,
+            requireMasterPasswordOnAppRestart: true,
+          },
+          {
+            userHasMasterPassword: false,
+            supportsBiometric: true,
+            biometric: false,
+            requireMasterPasswordOnAppRestart: false,
+          },
+          {
+            userHasMasterPassword: false,
+            supportsBiometric: true,
+            biometric: false,
+            requireMasterPasswordOnAppRestart: true,
+          },
+        ])(
+          "does not enroll persistent biometric when conditions are not met: userHasMasterPassword=$userHasMasterPassword, supportsBiometric=$supportsBiometric, biometric=$biometric, requireMasterPasswordOnAppRestart=$requireMasterPasswordOnAppRestart",
+          async ({
+            userHasMasterPassword,
+            supportsBiometric,
+            biometric,
+            requireMasterPasswordOnAppRestart,
+          }) => {
+            desktopBiometricsService.hasPersistentKey.mockResolvedValue(false);
+
+            await component.ngOnInit();
+            component.isWindowsV2BiometricsEnabled = true;
+            component.isWindows = true;
+            component.form.value.requireMasterPasswordOnAppRestart =
+              requireMasterPasswordOnAppRestart;
+            component.userHasMasterPassword = userHasMasterPassword;
+            component.supportsBiometric = supportsBiometric;
+            component.form.value.biometric = biometric;
+
+            await component.updatePinHandler(false);
+
+            expect(component.form.controls.pin.value).toBe(false);
+            expect(vaultTimeoutSettingsService.clear).toHaveBeenCalled();
+            expect(messagingService.send).toHaveBeenCalledWith("redrawMenu");
+            expect(desktopBiometricsService.enrollPersistent).not.toHaveBeenCalled();
           },
         );
       });

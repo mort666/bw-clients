@@ -605,7 +605,9 @@ export class SettingsComponent implements OnInit, OnDestroy {
       if (
         this.isWindows &&
         this.isWindowsV2BiometricsEnabled &&
+        this.supportsBiometric &&
         this.form.value.requireMasterPasswordOnAppRestart &&
+        this.form.value.biometric &&
         !this.userHasMasterPassword
       ) {
         // Allow biometric unlock on app restart so the user doesn't get into a bad state.
