@@ -85,9 +85,9 @@
                 class="form-group"
                 *ngIf="
                   supportsBiometric &&
-                  this.form.value.biometric &&
-                  this.isWindows &&
-                  (userHasMasterPassword || (this.form.value.pin && userHasPinSet)) &&
+                  form.value.biometric &&
+                  isWindows &&
+                  (userHasMasterPassword || (form.value.pin && userHasPinSet)) &&
                   isWindowsV2BiometricsEnabled
                 "
               >

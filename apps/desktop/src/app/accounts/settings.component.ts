@@ -479,19 +479,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
     this.form.controls.requireMasterPasswordOnAppRestart.valueChanges
       .pipe(
-        concatMap(async (requireMasterPassword) => {
-          if (!requireMasterPassword && this.isWindowsV2BiometricsEnabled) {
-            // Allow biometric unlock on app restart
-            await this.enrollPersistentBiometricIfNeeded(activeAccount.id);
-          } else {
-            // Require master password on app restart
-            const userKey = await firstValueFrom(this.keyService.userKey$(activeAccount.id));
-            await this.biometricsService.deleteBiometricUnlockKeyForUser(activeAccount.id);
-            await this.biometricsService.setBiometricProtectedUnlockKeyForUser(
-              activeAccount.id,
-              userKey,
-            );
-          }
+        concatMap(async (value) => {
+          await this.updateRequireMasterPasswordOnAppRestartHandler(value, activeAccount.id);
         }),
         takeUntil(this.destroy$),
       )
@@ -612,8 +601,9 @@ export class SettingsComponent implements OnInit, OnDestroy {
     } else {
       const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
 
-      // If user turned off PIN without having a MP and has biometrics + require MP/PIN on restart enabled.
+      // On Windows if a user turned off PIN without having a MP and has biometrics + require MP/PIN on restart enabled.
       if (
+        this.isWindows &&
         this.isWindowsV2BiometricsEnabled &&
         this.form.value.requireMasterPasswordOnAppRestart &&
         !this.userHasMasterPassword
@@ -696,6 +686,37 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.form.controls.biometric.setValue(biometricSet, { emitEvent: false });
     if (!biometricSet) {
       await this.biometricStateService.setBiometricUnlockEnabled(false);
+    }
+  }
+
+  async updateRequireMasterPasswordOnAppRestartHandler(enabled: boolean, userId: UserId) {
+    try {
+      await this.updateRequireMasterPasswordOnAppRestart(enabled, userId);
+    } catch (error) {
+      this.logService.error("Error updating require master password on app restart: ", error);
+      this.validationService.showError(error);
+    }
+  }
+
+  async updateRequireMasterPasswordOnAppRestart(enabled: boolean, userId: UserId) {
+    if (enabled) {
+      // Require master password or PIN on app restart
+      const userKey = await firstValueFrom(this.keyService.userKey$(userId));
+      await this.biometricsService.deleteBiometricUnlockKeyForUser(userId);
+      await this.biometricsService.setBiometricProtectedUnlockKeyForUser(userId, userKey);
+    } else {
+      // Allow biometric unlock on app restart
+      await this.enrollPersistentBiometricIfNeeded(userId);
+    }
+  }
+
+  private async enrollPersistentBiometricIfNeeded(userId: UserId): Promise<void> {
+    if (!(await this.biometricsService.hasPersistentKey(userId))) {
+      const userKey = await firstValueFrom(this.keyService.userKey$(userId));
+      await this.biometricsService.enrollPersistent(userId, userKey);
+      this.form.controls.requireMasterPasswordOnAppRestart.setValue(false, {
+        emitEvent: false,
+      });
     }
   }
 
@@ -972,16 +993,6 @@ export class SettingsComponent implements OnInit, OnDestroy {
     ]);
 
     return vaultTimeoutOptions;
-  }
-
-  private async enrollPersistentBiometricIfNeeded(userId: UserId): Promise<void> {
-    if (!(await this.biometricsService.hasPersistentKey(userId))) {
-      const userKey = await firstValueFrom(this.keyService.userKey$(userId));
-      await this.biometricsService.enrollPersistent(userId, userKey);
-      this.form.controls.requireMasterPasswordOnAppRestart.setValue(false, {
-        emitEvent: false,
-      });
-    }
   }
 
   ngOnDestroy() {
