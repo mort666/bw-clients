@@ -32,6 +32,41 @@ import { ImportResult } from "../models/import-result";
 import { ImportApiServiceAbstraction } from "./import-api.service.abstraction";
 import { ImportService } from "./import.service";
 
+/* TODO add Rust unit tests to cover source of truth used on Desktop and then consider removing these tests entirely
+    since they rely on mocks that are not used in desktop code */
+jest.mock("@bitwarden/desktop-napi", () => ({
+  chromium_importer_metadata: {
+    json: () =>
+      JSON.stringify({
+        chromecsv: {
+          id: "chromecsv",
+          loaders: ["file"],
+          instructions: "chromium",
+        },
+        operacsv: {
+          id: "operacsv",
+          loaders: ["file", "chromium"],
+          instructions: "chromium",
+        },
+        vivaldicsv: {
+          id: "vivaldicsv",
+          loaders: ["file", "chromium"],
+          instructions: "chromium",
+        },
+        bravecsv: {
+          id: "bravecsv",
+          loaders: ["file", "chromium"],
+          instructions: "chromium",
+        },
+        edgecsv: {
+          id: "edgecsv",
+          loaders: ["file", "chromium"],
+          instructions: "chromium",
+        },
+      }),
+  },
+}));
+
 describe("ImportService", () => {
   let importService: ImportService;
   let cipherService: MockProxy<CipherService>;

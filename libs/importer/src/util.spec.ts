@@ -1,5 +1,41 @@
 import { ClientType } from "@bitwarden/client-type";
 
+/* TODO add Rust unit tests to cover source of truth used on Desktop and then consider removing these tests entirely
+    since they rely on mocks that are not used in desktop code */
+
+jest.mock("@bitwarden/desktop-napi", () => ({
+  chromium_importer_metadata: {
+    json: () =>
+      JSON.stringify({
+        chromecsv: {
+          id: "chromecsv",
+          loaders: ["file"], // Windows would be ["file"]; macOS/Linux tests could be extended
+          instructions: "chromium",
+        },
+        operacsv: {
+          id: "operacsv",
+          loaders: ["file", "chromium"],
+          instructions: "chromium",
+        },
+        vivaldicsv: {
+          id: "vivaldicsv",
+          loaders: ["file", "chromium"],
+          instructions: "chromium",
+        },
+        bravecsv: {
+          id: "bravecsv",
+          loaders: ["file", "chromium"],
+          instructions: "chromium",
+        },
+        edgecsv: {
+          id: "edgecsv",
+          loaders: ["file", "chromium"],
+          instructions: "chromium",
+        },
+      }),
+  },
+}));
+
 import { Loader } from "./metadata";
 import { availableLoaders } from "./util";
 
