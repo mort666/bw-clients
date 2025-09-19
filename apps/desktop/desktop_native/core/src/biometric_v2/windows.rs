@@ -26,6 +26,7 @@
 //! Therefore, to circumvent the security measure, the attacker would need to create a fake Windows-Hello prompt, and
 //! get the user to confirm it.
 
+use log::{debug, info};
 use std::sync::{atomic::AtomicBool, Arc};
 
 use aes::cipher::KeyInit;
@@ -146,7 +147,7 @@ impl super::BiometricTrait for BiometricLockSystem {
         let previous_active_window = super::windows_focus::get_active_window();
         let _focus_scopeguard = scopeguard::guard((), |_| {
             if let Some(hwnd) = previous_active_window {
-                log::debug!("Restoring focus to previous window");
+                debug!("Restoring focus to previous window");
                 restore_focus(hwnd.0);
             }
         });
@@ -193,7 +194,7 @@ impl super::BiometricTrait for BiometricLockSystem {
 /// Get a yes/no authorization without any cryptographic backing.
 /// This API has better focusing behavior
 async fn windows_hello_authenticate(message: String) -> Result<bool> {
-    println!(
+    info!(
         "[Windows Hello] Authenticating to perform UV with message: {}",
         message
     );
@@ -226,7 +227,7 @@ async fn windows_hello_authenticate(message: String) -> Result<bool> {
 async fn windows_hello_authenticate_with_crypto(
     challenge: &[u8; CHALLENGE_LENGTH],
 ) -> Result<[u8; XCHACHA20POLY1305_KEY_LENGTH]> {
-    log::info!(
+    info!(
         "[Windows Hello] Authenticating to sign challenge: {:?}",
         challenge
     );
