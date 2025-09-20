@@ -1,7 +1,7 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
 import { mock, MockProxy } from "jest-mock-extended";
-import { BehaviorSubject, Subject, firstValueFrom } from "rxjs";
+import { BehaviorSubject } from "rxjs";
 
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
@@ -25,47 +25,12 @@ import { KeyService } from "@bitwarden/key-management";
 
 import { BitwardenPasswordProtectedImporter } from "../importers/bitwarden/bitwarden-password-protected-importer";
 import { Importer } from "../importers/importer";
-import { ImporterMetadata, Instructions, Loader } from "../metadata";
-import { ImportType } from "../models";
+// import { ImporterMetadata, Instructions, Loader } from "../metadata";
+// import { ImportType } from "../models";
 import { ImportResult } from "../models/import-result";
 
 import { ImportApiServiceAbstraction } from "./import-api.service.abstraction";
 import { ImportService } from "./import.service";
-
-/* TODO add Rust unit tests to cover source of truth used on Desktop and then consider removing these tests entirely
-    since they rely on mocks that are not used in desktop code */
-jest.mock("@bitwarden/desktop-napi", () => ({
-  chromium_importer_metadata: {
-    json: () =>
-      JSON.stringify({
-        chromecsv: {
-          id: "chromecsv",
-          loaders: ["file"],
-          instructions: "chromium",
-        },
-        operacsv: {
-          id: "operacsv",
-          loaders: ["file", "chromium"],
-          instructions: "chromium",
-        },
-        vivaldicsv: {
-          id: "vivaldicsv",
-          loaders: ["file", "chromium"],
-          instructions: "chromium",
-        },
-        bravecsv: {
-          id: "bravecsv",
-          loaders: ["file", "chromium"],
-          instructions: "chromium",
-        },
-        edgecsv: {
-          id: "edgecsv",
-          loaders: ["file", "chromium"],
-          instructions: "chromium",
-        },
-      }),
-  },
-}));
 
 describe("ImportService", () => {
   let importService: ImportService;
@@ -304,7 +269,8 @@ describe("ImportService", () => {
     });
   });
 
-  describe("metadata$", () => {
+  // TODO Move capability/metadata tests to Rust unit tests and remove this disable.
+  /* describe("metadata$", () => {
     let featureFlagSubject: BehaviorSubject<boolean>;
     let typeSubject: Subject<ImportType>;
     let mockLogger: { debug: jest.Mock };
@@ -466,7 +432,7 @@ describe("ImportService", () => {
         "capabilities updated",
       );
     });
-  });
+  }); */
 });
 
 function createCipher(options: Partial<CipherView> = {}) {

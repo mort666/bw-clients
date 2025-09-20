@@ -1,5 +1,3 @@
-import { createRequire } from "module";
-
 import { deepFreeze } from "@bitwarden/common/tools/util";
 
 import { ImportType } from "../models";
@@ -9,16 +7,21 @@ import { DataLoader, ImporterMetadata, InstructionLink } from "./types";
 
 // Attempt to load metadata from desktop-napi, guaranteed to fail on web and in tests, expected to succeed on desktop
 let chromium_importer_metadata: { json: () => string } | undefined;
+type ChromiumImporterMetadata = {
+  chromium_importer_metadata?: { json: () => string };
+};
 try {
-  // __filename should be defined on desktop but will never resolve in tests or web
-  const nodeRequire = createRequire(typeof __filename !== "undefined" ? __filename : "");
-  const native = nodeRequire("@bitwarden/desktop-napi");
-  if (
-    native &&
-    native.chromium_importer_metadata &&
-    typeof native.chromium_importer_metadata.json === "function"
-  ) {
-    chromium_importer_metadata = native.chromium_importer_metadata as { json: () => string };
+  // __filename is defined for desktop only
+  if (typeof __filename !== "undefined") {
+    const nodeRequire = (0, eval)("require") as (id: string) => unknown;
+    const native = nodeRequire("@bitwarden/desktop-napi") as ChromiumImporterMetadata;
+    if (
+      native &&
+      native.chromium_importer_metadata &&
+      typeof native.chromium_importer_metadata.json === "function"
+    ) {
+      chromium_importer_metadata = native.chromium_importer_metadata as { json: () => string };
+    }
   }
 } catch {
   // guaranteed to occur in import.service.ts and util.spec.ts, mocks have been added there
