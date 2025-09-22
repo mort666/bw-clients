@@ -11,7 +11,7 @@ import { concatMap, firstValueFrom, map } from "rxjs";
 import { CollectionTypes, CollectionView } from "@bitwarden/admin-console/common";
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
-import { OrganizationUserType, PolicyType } from "@bitwarden/common/admin-console/enums";
+import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
@@ -361,26 +361,27 @@ export class ItemDetailsSectionComponent implements OnInit {
     }
   }
 
-  private setCollectionControlState() {
+  /**
+   * Determines whether the user can manage collections based on organization policies and their permissions
+   * - The organization allows this user to edit/manage all collections
+   * OR
+   * - The user has explicit edit permission for the item
+   */
+  private get canManageCollections() {
     const initialCipherView = this.cipherFormContainer.getInitialCipherView();
     const orgId = this.itemDetailsForm.controls.organizationId.value as OrganizationId;
     const organization = this.organizations.find((o) => o.id === orgId);
     if (!organization || !initialCipherView) {
-      return;
+      return false;
     }
-    // Disable the collection control if either of the following apply:
-    // 1. The organization does not allow editing all ciphers and the existing cipher cannot be assigned to
-    // collections
-    // 2. When Owners/Admins access setting is turned on.
-    // AND either:
-    //   a. Disable Collections Options if Owner/Admin does not have Edit/Manage permissions on item
-    //   b. Disable Collections Options if Custom user does not have Edit/Manage permissions on item
-    if (
-      (!organization.canEditAllCiphers && !initialCipherView.canAssignToCollections) ||
-      (organization.allowAdminAccessToAllCollectionItems &&
-        (!initialCipherView.viewPassword || !initialCipherView.edit)) ||
-      (organization.type === OrganizationUserType.Custom && !initialCipherView.viewPassword)
-    ) {
+    return (
+      organization.allowAdminAccessToAllCollectionItems || initialCipherView.canAssignToCollections
+    );
+  }
+
+  /** Disables the collection control if the user cannot manage collections. */
+  private setCollectionControlState() {
+    if (!this.canManageCollections) {
       this.itemDetailsForm.controls.collectionIds.disable();
     }
   }
@@ -408,6 +409,11 @@ export class ItemDetailsSectionComponent implements OnInit {
 
     this.collectionOptions = this.collections
       .filter((c) => {
+        // The item is part of the users default collection
+        if (c.type === CollectionTypes.DefaultUserCollection && c.organizationId === orgId) {
+          return true;
+        }
+
         // The collection belongs to the organization
         if (c.organizationId !== orgId) {
           return false;
