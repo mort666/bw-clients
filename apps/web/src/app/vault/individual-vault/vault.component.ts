@@ -1323,12 +1323,25 @@ export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestr
     return cipherView.login?.password;
   }
 
-  async toggleFavorite(cipher: C) {
-    cipher.favorite = !cipher.favorite;
-    await this.cipherService.updateFavorite(uuidAsString(cipher.id), cipher.favorite);
+  /** Toggles the favorite status of the cipher and updates it on the server. */
+  async toggleFavorite(cipherViewLike: C) {
+    const cipherView = await this.cipherService.getFullCipherView(cipherViewLike);
+
+    cipherView.favorite = !cipherView.favorite;
+
+    const activeUserId = await firstValueFrom(
+      this.accountService.activeAccount$.pipe(map((a) => a?.id)),
+    );
+
+    const encryptedCipher = await this.cipherService.encrypt(cipherView, activeUserId);
+    await this.cipherService.updateWithServer(encryptedCipher);
+
     this.toastService.showToast({
-      variant: "info",
-      message: this.i18nService.t(cipher.favorite ? "addedToFavorites" : "removedFromFavorites"),
+      variant: "success",
+      title: null,
+      message: this.i18nService.t(
+        cipherView.favorite ? "itemAddedToFavorites" : "itemRemovedFromFavorites",
+      ),
     });
   }
 }

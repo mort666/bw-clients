@@ -613,11 +613,11 @@
   "unfavorite": {
     "message": "Unfavorite"
   },
-  "addedToFavorites": {
-    "message":"Added to favorites"
+   "itemAddedToFavorites": {
+    "message": "Item added to favorites"
   },
-  "removedFromFavorites": {
-    "message": "Removed from favorites"
+  "itemRemovedFromFavorites": {
+    "message": "Item removed from favorites"
   },
   "edit": {
     "message": "Edit"
