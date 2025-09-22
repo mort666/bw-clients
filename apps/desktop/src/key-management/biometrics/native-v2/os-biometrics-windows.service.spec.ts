@@ -5,6 +5,7 @@ import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/sym
 import { UserId } from "@bitwarden/common/types/guid";
 import { biometrics_v2 } from "@bitwarden/desktop-napi";
 import { BiometricsStatus } from "@bitwarden/key-management";
+import { LogService } from "@bitwarden/logging";
 
 import { WindowMain } from "../../main/window.main";
 
@@ -41,12 +42,15 @@ describe("OsBiometricsServiceWindows", () => {
   let service: OsBiometricsServiceWindows;
   let i18nService: I18nService;
   let windowMain: WindowMain;
+  let logService: LogService;
 
   beforeEach(() => {
     i18nService = mock<I18nService>();
     windowMain = mock<WindowMain>();
+    logService = mock<LogService>();
+
     windowMain.win.getNativeWindowHandle = jest.fn().mockReturnValue(Buffer.from([1, 2, 3, 4]));
-    service = new OsBiometricsServiceWindows(i18nService, windowMain);
+    service = new OsBiometricsServiceWindows(i18nService, windowMain, logService);
   });
 
   it("should enroll persistent biometric key", async () => {
@@ -71,9 +75,13 @@ describe("OsBiometricsServiceWindows", () => {
   });
 
   it("should return null if no biometric key", async () => {
-    (biometrics_v2.unlock as jest.Mock).mockRejectedValue(new Error("No key found"));
+    const error = new Error("No key found");
+    (biometrics_v2.unlock as jest.Mock).mockRejectedValue(error);
     const result = await service.getBiometricKey(userId);
     expect(result).toBeNull();
+    expect(logService.warning).toHaveBeenCalledWith(
+      `[OsBiometricsServiceWindows] Fetching the biometric key failed: ${error} returning null`,
+    );
   });
 
   it("should authenticate biometric", async () => {
