@@ -20,3 +20,7 @@ pub fn get_foreground_window_title() -> std::result::Result<String, ()> {
 pub fn type_input(input: Vec<u16>) -> std::result::Result<(), ()> {
     windowing::type_input(input)
 }
+
+pub fn foo_bar() -> std::result::Result<(), ()> {
+    Ok(())
+}

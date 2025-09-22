@@ -1049,4 +1049,8 @@ pub mod autotype {
             napi::Error::from_reason("Autotype Error: failed to type input".to_string())
         })
     }
+    #[napi]
+    pub fn foo_bar() -> napi::Result<(), napi::Status> {
+        Ok(())
+    }
 }
