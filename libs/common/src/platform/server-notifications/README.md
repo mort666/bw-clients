@@ -31,8 +31,8 @@ use cases detailed below.
 The default implementation is the main implementation that actually does the actions people expect
 it to do. This service manages the logic for when we should connect, ensuring we always have a
 connection during those times, and trying to limit reconnection events to only when necessary.
-The service establishes a connection for the active user if they have an available access token and
-a notification URL other than `http://-`, which is used as a special value to say that notifications
+The service establishes a connection for the all users if they have an available access token and a
+notification URL other than `http://-`, which is used as a special value to say that notifications
 should not be used. Then the service will reach out to the injected `WebPushConnectionService` for
 its support status on if it supports web push. If it does support web push it will give us an object
 to use to connect to web push notifications. If that service tells us web push is not supported or
@@ -43,8 +43,11 @@ doing unnecessary reconnects.
 This structure allows us to inject a different implementation of `WebPushConnectionService` based on
 the client, depending on the best way to use web push in that client's ecosystem. For now it is only
 using the Service Worker of our Chrome MV3 extension. Possible future implementation of this service
-could be a `Worker` in our web app. This would require that we request the `Notification` permission
-and that browsers start allowing `userVisibleOnly: false`. Another possible implementation that
+could be a `Worker` in our web app. This would require that we request the
+[`Notification` permission][notification-permission] and that browsers start allowing
+`userVisibleOnly: false`. Right now browsers require `true` and that a notification is shown to the
+user after push notification is received. If one isn't shown then browser will automatically show
+one stating "The website has refreshed in the background". Another possible implementation that
 could apply to web and desktop would be using our `autopush-manager` package. That package uses web
 sockets under the hood but implements the cryptography layer of web push on top of it so that we can
 offload the socket connection to another party.
@@ -53,8 +56,8 @@ The injected `SignalRConnectionService` is another service that we can utilize t
 foreground service not needed anymore. Instead of having a whole different
 `ServerNotificationService` implementation we can have a new implementation of this and it can defer
 to the service worker for the more persistent connection but send SignalR messages through
-`MessageSender`. Since web push shouldn't have any problem of creating multiple connection per
-browser context this brings the solution closer to the actual problem.
+`MessageSender`. Since the browser handles the underlying connection in web push there is should be
+no adverse effects from just adding another `push` event listener in each context.
 
 ### Noop
 
@@ -65,6 +68,15 @@ default implementation. We could, in the future decide to depracate this impleme
 of instructing users to use `http://-` as their notifications url in the `local.json` configuration.
 That should largely have the same behavior and would allow us to maintain one fewer implementation.
 
+```jsonc
+// apps/[browser|desktop|web]/local.json
+{
+  "devFlags": {
+    "noopNotifications": true,
+  },
+}
+```
+
 ### Foreground
 
 The foreground implementation is specially for browser foreground instances. At the moment this
@@ -74,3 +86,5 @@ would be a web socket connection made in each. With this special instance we avo
 nothing at the moment. Once we begin to fully support the `notifications$` observable we can make
 a choice whether or not keep not supporting it in the browser foreground or we can decide to support
 it through messaging the background.
+
+[notification-permission]:[https://developer.mozilla.org/en-US/docs/Web/API/Notification/permission_static]
