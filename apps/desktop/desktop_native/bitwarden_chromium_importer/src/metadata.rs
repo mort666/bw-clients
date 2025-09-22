@@ -53,7 +53,7 @@ pub fn get_supported_importers() -> HashMap<String, ImporterMetadata> {
 }
 
 /*
-    Tests are cfg-gated based upon OS, and must be compiled/run on each OS for full coverage 
+    Tests are cfg-gated based upon OS, and must be compiled/run on each OS for full coverage
 */
 #[cfg(test)]
 mod tests {
@@ -127,7 +127,10 @@ mod tests {
         for id in without_chromium {
             let loaders = get_loaders(&map, id);
             assert!(loaders.contains("file"));
-            assert!(!loaders.contains("chromium"), "unexpected chromium support for {id}");
+            assert!(
+                !loaders.contains("chromium"),
+                "unexpected chromium support for {id}"
+            );
         }
     }
 
@@ -147,8 +150,10 @@ mod tests {
         for id in without_chromium {
             let loaders = get_loaders(&map, id);
             assert!(loaders.contains("file"));
-            assert!(!loaders.contains("chromium"), "unexpected chromium support for {id}");
+            assert!(
+                !loaders.contains("chromium"),
+                "unexpected chromium support for {id}"
+            );
         }
     }
 }
-
