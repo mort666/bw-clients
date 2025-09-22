@@ -79,7 +79,7 @@ export class OrganizationVaultExportService
 
     return {
       type: "text/plain",
-      data: await this.buildPasswordExport(account.id, exportVault.data, password),
+      data: await this.buildPasswordExport(userId, exportVault.data, password),
       fileName: ExportHelper.getFileName("org", "encrypted_json"),
     } as ExportedVaultAsString;
   }
@@ -113,8 +113,8 @@ export class OrganizationVaultExportService
       return {
         type: "text/plain",
         data: onlyManagedCollections
-          ? await this.getEncryptedManagedExport(account.id, organizationId)
-          : await this.getOrganizationEncryptedExport(organizationId),
+          ? await this.getEncryptedManagedExport(userId, organizationId)
+          : await this.getOrganizationEncryptedExport(userId, organizationId),
         fileName: ExportHelper.getFileName("org", "encrypted_json"),
       } as ExportedVaultAsString;
     }
@@ -122,8 +122,8 @@ export class OrganizationVaultExportService
     return {
       type: "text/plain",
       data: onlyManagedCollections
-        ? await this.getDecryptedManagedExport(account.id, organizationId, format)
-        : await this.getOrganizationDecryptedExport(account.id, organizationId, format),
+        ? await this.getDecryptedManagedExport(userId, organizationId, format)
+        : await this.getOrganizationDecryptedExport(userId, organizationId, format),
       fileName: ExportHelper.getFileName("org", format),
     } as ExportedVaultAsString;
   }
@@ -186,7 +186,10 @@ export class OrganizationVaultExportService
     return this.buildJsonExport(decCollections, decCiphers);
   }
 
-  private async getOrganizationEncryptedExport(organizationId: OrganizationId): Promise<string> {
+  private async getOrganizationEncryptedExport(
+    userId: UserId,
+    organizationId: OrganizationId,
+  ): Promise<string> {
     const collections: Collection[] = [];
     const ciphers: Cipher[] = [];
 
@@ -217,7 +220,7 @@ export class OrganizationVaultExportService
           }
         });
     }
-    return this.BuildEncryptedExport(organizationId, collections, ciphers);
+    return this.BuildEncryptedExport(userId, organizationId, collections, ciphers);
   }
 
   private async getDecryptedManagedExport(
@@ -297,20 +300,19 @@ export class OrganizationVaultExportService
         !this.restrictedItemTypesService.isCipherRestricted(f, restrictions),
     );
 
-    return this.BuildEncryptedExport(organizationId, encCollections, encCiphers);
+    return this.BuildEncryptedExport(activeUserId, organizationId, encCollections, encCiphers);
   }
 
   private async BuildEncryptedExport(
+    activeUserId: UserId,
     organizationId: OrganizationId,
     collections: Collection[],
     ciphers: Cipher[],
   ): Promise<string> {
-    const account = await firstValueFrom(this.accountService.activeAccount$);
-
-    const orgKeys = await firstValueFrom(this.keyService.orgKeys$(account.id));
+    const orgKeys = await firstValueFrom(this.keyService.orgKeys$(activeUserId));
     let keyForEncryption: SymmetricCryptoKey = orgKeys?.[organizationId];
     if (keyForEncryption == null) {
-      keyForEncryption = await firstValueFrom(this.keyService.userKey$(account.id));
+      keyForEncryption = await firstValueFrom(this.keyService.userKey$(activeUserId));
     }
     const encKeyValidation = await this.encryptService.encryptString(newGuid(), keyForEncryption);
 
