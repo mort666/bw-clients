@@ -1170,7 +1170,7 @@ export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestr
     let typeI18nKey;
     const cipherView = await this.cipherService.getFullCipherView(cipher);
 
-    if (field === "username") {
+    if (field === "username" && cipherView.type === CipherType.Login) {
       aType = "Username";
       value = cipherView.login.username;
       typeI18nKey = "username";
@@ -1191,17 +1191,21 @@ export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestr
       aType = "SecurityCode";
       value = cipherView.card.code;
       typeI18nKey = "securityCode";
+    } else if (field === "username" && cipherView.type === CipherType.Identity) {
+      aType = "Username";
+      value = cipherView.identity.username;
+      typeI18nKey = "username";
     } else if (field === "email") {
       aType = "Email";
-      value = cipherView.identity?.email;
+      value = cipherView.identity.email;
       typeI18nKey = "email";
     } else if (field === "phone") {
       aType = "Phone";
-      value = cipherView.identity?.phone;
+      value = cipherView.identity.phone;
       typeI18nKey = "phone";
     } else if (field === "address") {
       aType = "Address";
-      value = cipherView.identity?.address1;
+      value = cipherView.identity.fullAddressForCopy;
       typeI18nKey = "address";
     } else if (field === "notes") {
       aType = "Note";
@@ -1218,7 +1222,7 @@ export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestr
 
     // The UI should prevent this from happening, but double check that
     // the user isn't attempting to copy a field they cannot visually see.
-    const hiddenFields = ["password", "totp", "cardNumber", "securityCode"];
+    const hiddenFields = ["password", "totp"];
 
     if (!value || (!cipherView.viewPassword && hiddenFields.includes(field))) {
       this.toastService.showToast({
