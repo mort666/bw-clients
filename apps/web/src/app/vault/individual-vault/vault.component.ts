@@ -1168,52 +1168,44 @@ export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestr
     let aType;
     let value;
     let typeI18nKey;
-    const login = CipherViewLikeUtils.getLogin(cipher);
+    const cipherView = await this.cipherService.getFullCipherView(cipher);
+
     if (field === "username") {
       aType = "Username";
-      value = login?.username;
+      value = cipherView.login.username;
       typeI18nKey = "username";
     } else if (field === "password") {
       aType = "Password";
-      value = await this.getPasswordFromCipherViewLike(cipher);
+      value = cipherView.login.password;
       typeI18nKey = "password";
     } else if (field === "totp") {
       aType = "TOTP";
-      const totpResponse = await firstValueFrom(this.totpService.getCode$(login?.totp));
+      const totpResponse = await firstValueFrom(this.totpService.getCode$(cipherView.login.totp));
       value = totpResponse.code;
       typeI18nKey = "verificationCodeTotp";
     } else if (field === "cardNumber") {
       aType = "CardNumber";
-      value = (cipher as any).card?.number;
+      value = cipherView.card.number;
       typeI18nKey = "cardNumber";
     } else if (field === "securityCode") {
       aType = "SecurityCode";
-      value = (cipher as any).card?.code;
+      value = cipherView.card.code;
       typeI18nKey = "securityCode";
     } else if (field === "email") {
       aType = "Email";
-      value = (cipher as any).identity?.email;
+      value = cipherView.identity?.email;
       typeI18nKey = "email";
     } else if (field === "phone") {
       aType = "Phone";
-      value = (cipher as any).identity?.phone;
+      value = cipherView.identity?.phone;
       typeI18nKey = "phone";
     } else if (field === "address") {
       aType = "Address";
-      value = (cipher as any).identity?.address1;
+      value = cipherView.identity?.address1;
       typeI18nKey = "address";
     } else if (field === "notes") {
       aType = "Note";
-      if (CipherViewLikeUtils.isCipherListView(cipher)) {
-        const activeUserId = await firstValueFrom(
-          this.accountService.activeAccount$.pipe(getUserId),
-        );
-        const _cipher = await this.cipherService.get(uuidAsString(cipher.id), activeUserId);
-        const cipherView = await this.cipherService.decrypt(_cipher, activeUserId);
-        value = cipherView.notes;
-      } else {
-        value = cipher.notes;
-      }
+      value = cipherView.notes;
       typeI18nKey = "notes";
     } else {
       this.toastService.showToast({
@@ -1224,7 +1216,11 @@ export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestr
       return;
     }
 
-    if (!value) {
+    // The UI should prevent this from happening, but double check that
+    // the user isn't attempting to copy a field they cannot visually see.
+    const hiddenFields = ["password", "totp", "cardNumber", "securityCode"];
+
+    if (!value || (!cipherView.viewPassword && hiddenFields.includes(field))) {
       this.toastService.showToast({
         variant: "error",
         title: null,
@@ -1237,10 +1233,6 @@ export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestr
       this.passwordRepromptService.protectedFields().includes(aType) &&
       !(await this.repromptCipher([cipher]))
     ) {
-      return;
-    }
-
-    if (!cipher.viewPassword) {
       return;
     }
 
@@ -1306,21 +1298,6 @@ export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestr
       title: null,
       message: this.i18nService.t("missingPermissions"),
     });
-  }
-
-  /**
-   * Returns the password for a `CipherViewLike` object.
-   * `CipherListView` does not contain the password, the full `CipherView` needs to be fetched.
-   */
-  private async getPasswordFromCipherViewLike(cipher: C): Promise<string | undefined> {
-    if (!CipherViewLikeUtils.isCipherListView(cipher)) {
-      return Promise.resolve(cipher.login?.password);
-    }
-
-    const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
-    const _cipher = await this.cipherService.get(uuidAsString(cipher.id), activeUserId);
-    const cipherView = await this.cipherService.decrypt(_cipher, activeUserId);
-    return cipherView.login?.password;
   }
 
   /** Toggles the favorite status of the cipher and updates it on the server. */
