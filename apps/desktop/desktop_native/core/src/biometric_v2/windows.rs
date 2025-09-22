@@ -26,8 +26,8 @@
 //! Therefore, to circumvent the security measure, the attacker would need to create a fake Windows-Hello prompt, and
 //! get the user to confirm it.
 
-use log::{debug, info};
 use std::sync::{atomic::AtomicBool, Arc};
+use tracing::debug;
 
 use aes::cipher::KeyInit;
 use anyhow::{anyhow, Result};
@@ -35,8 +35,7 @@ use chacha20poly1305::{aead::Aead, XChaCha20Poly1305, XNonce};
 use sha2::{Digest, Sha256};
 use tokio::sync::Mutex;
 use windows::{
-    core::Interface,
-    core::{factory, h, HSTRING},
+    core::{factory, h, Interface, HSTRING},
     Security::{
         Credentials::{
             KeyCredentialCreationOption, KeyCredentialManager, KeyCredentialStatus,
@@ -55,7 +54,10 @@ use windows::{
 use windows_future::IAsyncOperation;
 
 use super::windows_focus::{focus_security_prompt, restore_focus};
-use crate::{password, secure_memory::*};
+use crate::{
+    password::{self, PASSWORD_NOT_FOUND},
+    secure_memory::*,
+};
 
 const KEYCHAIN_SERVICE_NAME: &str = "BitwardenBiometricsV2";
 const CREDENTIAL_NAME: &HSTRING = h!("BitwardenBiometricsV2");
@@ -194,7 +196,7 @@ impl super::BiometricTrait for BiometricLockSystem {
 /// Get a yes/no authorization without any cryptographic backing.
 /// This API has better focusing behavior
 async fn windows_hello_authenticate(message: String) -> Result<bool> {
-    info!(
+    debug!(
         "[Windows Hello] Authenticating to perform UV with message: {}",
         message
     );
@@ -227,10 +229,8 @@ async fn windows_hello_authenticate(message: String) -> Result<bool> {
 async fn windows_hello_authenticate_with_crypto(
     challenge: &[u8; CHALLENGE_LENGTH],
 ) -> Result<[u8; XCHACHA20POLY1305_KEY_LENGTH]> {
-    info!(
-        "[Windows Hello] Authenticating to sign challenge: {:?}",
-        challenge
-    );
+    debug!("[Windows Hello] Authenticating to sign challenge");
+
     // Ugly hack: We need to focus the window via window focusing APIs until Microsoft releases a new API.
     // This is unreliable, and if it does not work, the operation may fail
     let stop_focusing = Arc::new(AtomicBool::new(false));
@@ -304,7 +304,19 @@ async fn get_keychain_entry(user_id: &str) -> Result<WindowsHelloKeychainEntry> 
 }
 
 async fn delete_keychain_entry(user_id: &str) -> Result<()> {
-    password::delete_password(KEYCHAIN_SERVICE_NAME, user_id).await
+    password::delete_password(KEYCHAIN_SERVICE_NAME, user_id)
+        .await
+        .or_else(|e| {
+            if e.to_string() == PASSWORD_NOT_FOUND {
+                debug!(
+                    "[Windows Hello] No keychain entry found for user {}, nothing to delete",
+                    user_id
+                );
+                Ok(())
+            } else {
+                Err(e)
+            }
+        })
 }
 
 async fn has_keychain_entry(user_id: &str) -> Result<bool> {
@@ -394,6 +406,49 @@ mod tests {
                 .await
                 .unwrap();
         println!("Windows Hello authentication result: {:?}", authenticated);
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_double_unenroll() {
+        let user_id = "test_user";
+        let mut key = [0u8; XCHACHA20POLY1305_KEY_LENGTH];
+        rand::fill(&mut key);
+
+        let windows_hello_lock_system = BiometricLockSystem::new();
+
+        println!("Enrolling user");
+        windows_hello_lock_system
+            .enroll_persistent(user_id, &key)
+            .await
+            .unwrap();
+        assert!(windows_hello_lock_system
+            .has_persistent(user_id)
+            .await
+            .unwrap());
+
+        println!("Unlocking user");
+        let key_after_unlock = windows_hello_lock_system
+            .unlock(user_id, Vec::new())
+            .await
+            .unwrap();
+        assert_eq!(key_after_unlock, key);
+
+        println!("Unenrolling user");
+        windows_hello_lock_system.unenroll(user_id).await.unwrap();
+        assert!(!windows_hello_lock_system
+            .has_persistent(user_id)
+            .await
+            .unwrap());
+
+        println!("Unenrolling user again");
+
+        // This throws PASSWORD_NOT_FOUND but our code should handle that and not throw.
+        windows_hello_lock_system.unenroll(user_id).await.unwrap();
+        assert!(!windows_hello_lock_system
+            .has_persistent(user_id)
+            .await
+            .unwrap());
     }
 
     #[tokio::test]

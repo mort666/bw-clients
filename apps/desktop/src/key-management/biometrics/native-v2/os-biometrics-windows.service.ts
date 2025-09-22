@@ -3,16 +3,18 @@ import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/sym
 import { UserId } from "@bitwarden/common/types/guid";
 import { biometrics_v2 } from "@bitwarden/desktop-napi";
 import { BiometricsStatus } from "@bitwarden/key-management";
+import { LogService } from "@bitwarden/logging";
 
 import { WindowMain } from "../../../main/window.main";
 import { OsBiometricService } from "../os-biometrics.service";
 
 export default class OsBiometricsServiceWindows implements OsBiometricService {
-  private biometricsSystem;
+  private biometricsSystem: biometrics_v2.BiometricLockSystem;
 
   constructor(
     private i18nService: I18nService,
     private windowMain: WindowMain,
+    private logService: LogService,
   ) {
     this.biometricsSystem = biometrics_v2.initBiometricSystem();
   }
@@ -41,7 +43,10 @@ export default class OsBiometricsServiceWindows implements OsBiometricService {
         this.windowMain.win.getNativeWindowHandle(),
       );
       return key ? new SymmetricCryptoKey(Uint8Array.from(key)) : null;
-    } catch {
+    } catch (error) {
+      this.logService.warning(
+        `[OsBiometricsServiceWindows] Fetching the biometric key failed: ${error} returning null`,
+      );
       return null;
     }
   }
