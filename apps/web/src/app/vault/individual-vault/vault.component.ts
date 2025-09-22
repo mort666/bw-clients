@@ -44,6 +44,7 @@ import { AccountService } from "@bitwarden/common/auth/abstractions/account.serv
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions/billing-api.service.abstraction";
+import { EventType } from "@bitwarden/common/enums";
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
@@ -1249,6 +1250,18 @@ export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestr
       title: null,
       message: this.i18nService.t("valueCopied", this.i18nService.t(typeI18nKey)),
     });
+
+    if (field === "password") {
+      await this.eventCollectionService.collect(
+        EventType.Cipher_ClientCopiedPassword,
+        uuidAsString(cipher.id),
+      );
+    } else if (field === "totp") {
+      await this.eventCollectionService.collect(
+        EventType.Cipher_ClientCopiedHiddenField,
+        uuidAsString(cipher.id),
+      );
+    }
   }
 
   protected deleteCipherWithServer(id: string, userId: UserId, permanent: boolean) {
