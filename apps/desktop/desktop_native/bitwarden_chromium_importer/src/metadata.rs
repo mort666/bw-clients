@@ -51,3 +51,104 @@ pub fn get_supported_importers() -> HashMap<String, ImporterMetadata> {
 
     map
 }
+
+/*
+    Tests are cfg-gated based upon OS, and must be compiled/run on each OS for full coverage 
+*/
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashSet;
+
+    fn map_keys(map: &HashMap<String, ImporterMetadata>) -> HashSet<String> {
+        map.keys().cloned().collect()
+    }
+
+    fn get_loaders(map: &HashMap<String, ImporterMetadata>, id: &str) -> HashSet<&'static str> {
+        map.get(id)
+            .map(|m| m.loaders.iter().copied().collect::<HashSet<_>>())
+            .unwrap_or_default()
+    }
+
+    #[test]
+    fn returns_all_known_importers() {
+        let map = get_supported_importers();
+
+        let expected: HashSet<String> = HashSet::from([
+            "chromecsv".to_string(),
+            "chromiumcsv".to_string(),
+            "bravecsv".to_string(),
+            "operacsv".to_string(),
+            "vivaldicsv".to_string(),
+            "edgecsv".to_string(),
+        ]);
+        assert_eq!(map.len(), expected.len());
+        assert_eq!(map_keys(&map), expected);
+
+        for (key, meta) in map.iter() {
+            assert_eq!(&meta.id, key);
+            assert_eq!(meta.instructions, "chromium");
+            assert!(meta.loaders.iter().any(|l| *l == "file"));
+        }
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn macos_specific_loaders_match_const_array() {
+        let map = get_supported_importers();
+        let ids = [
+            "chromecsv",
+            "chromiumcsv",
+            "bravecsv",
+            "operacsv",
+            "vivaldicsv",
+            "edgecsv",
+        ];
+        for id in ids {
+            let loaders = get_loaders(&map, id);
+            assert!(loaders.contains("file"));
+            assert!(loaders.contains("chromium"), "missing chromium for {id}");
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn linux_specific_loaders_match_const_array() {
+        let map = get_supported_importers();
+        let with_chromium = ["chromecsv", "chromiumcsv", "bravecsv", "operacsv"];
+        let without_chromium = ["vivaldicsv", "edgecsv"];
+
+        for id in with_chromium {
+            let loaders = get_loaders(&map, id);
+            assert!(loaders.contains("file"));
+            assert!(loaders.contains("chromium"), "missing chromium for {id}");
+        }
+
+        for id in without_chromium {
+            let loaders = get_loaders(&map, id);
+            assert!(loaders.contains("file"));
+            assert!(!loaders.contains("chromium"), "unexpected chromium support for {id}");
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn windows_specific_loaders_match_const_array() {
+        let map = get_supported_importers();
+        let with_chromium = ["chromiumcsv", "edgecsv", "operacsv", "vivaldicsv"];
+        let without_chromium = ["chromecsv", "bravecsv"];
+
+        for id in with_chromium {
+            let loaders = get_loaders(&map, id);
+            assert!(loaders.contains("file"));
+            assert!(loaders.contains("chromium"), "missing chromium for {id}");
+        }
+
+        for id in without_chromium {
+            let loaders = get_loaders(&map, id);
+            assert!(loaders.contains("file"));
+            assert!(!loaders.contains("chromium"), "unexpected chromium support for {id}");
+        }
+    }
+}
+
