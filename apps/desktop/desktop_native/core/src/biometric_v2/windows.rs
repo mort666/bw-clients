@@ -27,7 +27,7 @@
 //! get the user to confirm it.
 
 use std::sync::{atomic::AtomicBool, Arc};
-use tracing::debug;
+use tracing::{debug, warn};
 
 use aes::cipher::KeyInit;
 use anyhow::{anyhow, Result};
@@ -320,9 +320,20 @@ async fn delete_keychain_entry(user_id: &str) -> Result<()> {
 }
 
 async fn has_keychain_entry(user_id: &str) -> Result<bool> {
-    Ok(!password::get_password(KEYCHAIN_SERVICE_NAME, user_id)
-        .await?
-        .is_empty())
+    password::get_password(KEYCHAIN_SERVICE_NAME, user_id)
+        .await
+        .map(|entry| !entry.is_empty())
+        .or_else(|e| {
+            if e.to_string() == PASSWORD_NOT_FOUND {
+                Ok(false)
+            } else {
+                warn!(
+                    "[Windows Hello] Error checking keychain entry for user {}: {}",
+                    user_id, e
+                );
+                Err(e)
+            }
+        })
 }
 
 /// Encrypt data with XChaCha20Poly1305
@@ -368,7 +379,7 @@ unsafe fn as_mut_bytes(buffer: &IBuffer) -> Result<&mut [u8]> {
 mod tests {
     use crate::biometric_v2::{
         biometric_v2::{
-            decrypt_data, encrypt_data, windows_hello_authenticate,
+            decrypt_data, encrypt_data, has_keychain_entry, windows_hello_authenticate,
             windows_hello_authenticate_with_crypto, CHALLENGE_LENGTH, XCHACHA20POLY1305_KEY_LENGTH,
         },
         BiometricLockSystem, BiometricTrait,
@@ -381,6 +392,13 @@ mod tests {
         let (ciphertext, nonce) = encrypt_data(&key, plaintext).unwrap();
         let decrypted = decrypt_data(&key, &ciphertext, &nonce).unwrap();
         assert_eq!(plaintext.to_vec(), decrypted);
+    }
+
+    #[tokio::test]
+    async fn test_has_keychain_entry_no_entry() {
+        let user_id = "test_user";
+        let has_entry = has_keychain_entry(user_id).await.unwrap();
+        assert!(has_entry == false);
     }
 
     // Note: These tests are ignored because they require manual intervention to run
