@@ -6,16 +6,14 @@ import { Router } from "@angular/router";
 import { firstValueFrom, map } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
-import {
-  getOrganizationById,
-  OrganizationService,
-} from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
+import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { ClientType } from "@bitwarden/common/enums";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { getById } from "@bitwarden/common/platform/misc/rxjs-operators";
 import { CalloutModule } from "@bitwarden/components";
 
 @Component({
@@ -78,7 +76,9 @@ export class ExportScopeCalloutComponent {
     if (organizationId != null) {
       // exporting from organizational vault
       const org = await firstValueFrom(
-        this.organizationService.organizations$(userId).pipe(getOrganizationById(organizationId)),
+        // TODO remove this after testing
+        //this.organizationService.organizations$(userId).pipe(getOrganizationById(organizationId)),
+        this.organizationService.organizations$(userId).pipe(getById(organizationId)),
       );
 
       this.scopeConfig = {
