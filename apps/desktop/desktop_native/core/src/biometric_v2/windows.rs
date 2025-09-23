@@ -398,7 +398,7 @@ mod tests {
     async fn test_has_keychain_entry_no_entry() {
         let user_id = "test_user";
         let has_entry = has_keychain_entry(user_id).await.unwrap();
-        assert!(has_entry == false);
+        assert!(!has_entry);
     }
 
     // Note: These tests are ignored because they require manual intervention to run
