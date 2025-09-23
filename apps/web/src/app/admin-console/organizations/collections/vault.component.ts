@@ -1219,7 +1219,7 @@ export class vNextVaultComponent implements OnInit, OnDestroy {
     let value;
     let typeI18nKey;
 
-    if (field === "username") {
+    if (field === "username" && cipher.type === CipherType.Login) {
       aType = "Username";
       value = cipher.login.username;
       typeI18nKey = "username";
@@ -1238,19 +1238,23 @@ export class vNextVaultComponent implements OnInit, OnDestroy {
       typeI18nKey = "cardNumber";
     } else if (field === "securityCode") {
       aType = "SecurityCode";
-      value = cipher.card?.code;
+      value = cipher.card.code;
       typeI18nKey = "securityCode";
+    } else if (field === "username" && cipher.type === CipherType.Identity) {
+      aType = "Username";
+      value = cipher.identity.username;
+      typeI18nKey = "username";
     } else if (field === "email") {
       aType = "Email";
-      value = cipher.identity?.email;
+      value = cipher.identity.email;
       typeI18nKey = "email";
     } else if (field === "phone") {
       aType = "Phone";
-      value = cipher.identity?.phone;
+      value = cipher.identity.phone;
       typeI18nKey = "phone";
     } else if (field === "address") {
       aType = "Address";
-      value = cipher.identity?.address1;
+      value = cipher.identity.fullAddressForCopy;
       typeI18nKey = "address";
     } else if (field === "notes") {
       aType = "Notes";
