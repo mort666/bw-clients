@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from "@angular/core";
+import { Component, OnDestroy, OnInit } from "@angular/core";
 import { FormBuilder, FormControl, Validators } from "@angular/forms";
 import { concatMap, firstValueFrom, pairwise, Subject, takeUntil } from "rxjs";
 
@@ -28,13 +28,16 @@ export class SessionTimeoutPolicy extends BasePolicyEditDefinition {
   templateUrl: "session-timeout.component.html",
   imports: [SharedModule],
 })
-export class SessionTimeoutPolicyComponent extends BasePolicyEditComponent implements OnDestroy {
+export class SessionTimeoutPolicyComponent
+  extends BasePolicyEditComponent
+  implements OnInit, OnDestroy
+{
   private destroy$ = new Subject<void>();
 
   actionOptions: { name: string; value: SessionTimeoutAction }[];
   typeOptions: { name: string; value: SessionTimeoutType }[];
   data = this.formBuilder.group({
-    type: new FormControl<SessionTimeoutType>("never", [Validators.required]),
+    type: new FormControl<SessionTimeoutType | null>(null, [Validators.required]),
     hours: new FormControl<number | null>(
       {
         value: null,
@@ -93,6 +96,12 @@ export class SessionTimeoutPolicyComponent extends BasePolicyEditComponent imple
         takeUntil(this.destroy$),
       )
       .subscribe();
+  }
+
+  ngOnInit() {
+    super.ngOnInit();
+    this.data.markAllAsTouched();
+    this.data.updateValueAndValidity();
   }
 
   ngOnDestroy() {
