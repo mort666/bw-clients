@@ -1,4 +1,4 @@
-import { Component, Inject, signal, viewChild } from "@angular/core";
+import { Component, Inject, signal, viewChild, AfterViewInit } from "@angular/core";
 import { FormBuilder, Validators } from "@angular/forms";
 import { firstValueFrom } from "rxjs";
 
@@ -11,7 +11,7 @@ import { ProviderOrganizationCreateRequest } from "@bitwarden/common/admin-conso
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { TaxServiceAbstraction } from "@bitwarden/common/billing/abstractions/tax.service.abstraction";
-import { PlanType, PlanInterval } from "@bitwarden/common/billing/enums";
+import { PlanType } from "@bitwarden/common/billing/enums";
 import { TaxInformation } from "@bitwarden/common/billing/models/domain/tax-information";
 import { PreviewIndividualInvoiceRequest } from "@bitwarden/common/billing/models/request/preview-individual-invoice.request";
 import { PreviewOrganizationInvoiceRequest } from "@bitwarden/common/billing/models/request/preview-organization-invoice.request";
@@ -21,10 +21,10 @@ import { SyncService } from "@bitwarden/common/platform/sync";
 import { OrgKey } from "@bitwarden/common/types/key";
 import { DIALOG_DATA, DialogRef, ToastService } from "@bitwarden/components";
 import { KeyService } from "@bitwarden/key-management";
+import { LineItem, CartSummaryComponent } from "@bitwarden/pricing";
 
 import { SubscriptionPricingService } from "../../services/subscription-pricing.service";
 import { PaymentComponent } from "../../shared/payment/payment.component";
-import { PricingSummaryData } from "../../shared/pricing-summary/pricing-summary.component";
 import { PersonalSubscriptionPricingTierIds } from "../../types/subscription-pricing-tier";
 
 export interface UpgradeDialogResult {
@@ -36,14 +36,13 @@ export interface UpgradeDialogResult {
   templateUrl: "./upgrade-dialog.component.html",
   standalone: false,
 })
-export class UpgradeDialogComponent {
+export class UpgradeDialogComponent implements AfterViewInit {
   paymentComponent = viewChild(PaymentComponent);
   taxInfoComponent = viewChild(ManageTaxInformationComponent);
+  cartSummaryComponent = viewChild(CartSummaryComponent);
 
-  protected totalOpened = signal(false);
-  protected pricingSummaryData = signal<PricingSummaryData | null>(null);
-
-  protected estimatedTax: number = 0;
+  protected passwordManagerItem = signal<LineItem | null>(null);
+  protected estimatedTax = signal<number>(0);
   protected taxInformation: TaxInformation;
 
   upgradeForm = this.formBuilder.group({
@@ -66,8 +65,16 @@ export class UpgradeDialogComponent {
     private accountService: AccountService,
     private subscriptionPricingService: SubscriptionPricingService,
   ) {
-    // Initialize pricing summary for both Premium and Families plans
-    void this.initializePricingSummary();
+    // Initialize cart summary for both Premium and Families plans
+    void this.initializeCartSummary();
+  }
+
+  ngAfterViewInit(): void {
+    // Set cart summary to collapsed by default
+    const cartSummary = this.cartSummaryComponent();
+    if (cartSummary) {
+      cartSummary.isExpanded.set(false);
+    }
   }
 
   submit = async () => {
@@ -177,17 +184,13 @@ export class UpgradeDialogComponent {
   }
 
   protected get total(): number {
-    return this.data.price + this.estimatedTax;
-  }
-
-  protected get dialogTitle(): string {
-    return this.data.type === "Premium" ? "upgradeToPremium" : "upgradeToFamilies";
+    return this.data.price + this.estimatedTax();
   }
 
   /**
-   * Initialize pricing summary for both Premium and Families plans using real data
+   * Initialize cart summary for both Premium and Families plans using real data
    */
-  private async initializePricingSummary(): Promise<void> {
+  private async initializeCartSummary(): Promise<void> {
     const personalTiers = await firstValueFrom(
       this.subscriptionPricingService.getPersonalSubscriptionPricingTiers$(),
     );
@@ -204,86 +207,36 @@ export class UpgradeDialogComponent {
     const isPremium = this.data.type === "Premium";
     const isFamilies = this.data.type === "Families";
 
-    const pricingSummaryData: PricingSummaryData = {
-      selectedPlanInterval: "year",
-      selectedInterval: PlanInterval.Annually,
-
-      passwordManagerSeats:
+    // Create password manager line item
+    const passwordManagerItem: LineItem = {
+      quantity:
         isFamilies && tier.passwordManager.type === "packaged" ? tier.passwordManager.users : 1,
-      passwordManagerSeatTotal: tier.passwordManager.annualPrice,
-      passwordManagerSubtotal: tier.passwordManager.annualPrice,
-
-      secretsManagerSeatTotal: 0,
-      additionalStorageTotal: 0,
-      additionalStoragePriceMonthly: tier.passwordManager.annualPricePerAdditionalStorageGB || 0,
-      additionalServiceAccountTotal: 0,
-      totalAppliedDiscount: 0,
-      secretsManagerSubtotal: 0,
-
-      total: this.data.price,
-      estimatedTax: this.estimatedTax,
-      totalOpened: this.totalOpened(),
-
-      selectedPlan: {
-        isAnnual: true,
-        PasswordManager: isPremium
-          ? {
-              basePrice: tier.passwordManager.annualPrice,
-              baseSeats: 1,
-              seatPrice: 0,
-              hasAdditionalSeatsOption: false,
-              additionalStoragePricePerGb:
-                tier.passwordManager.annualPricePerAdditionalStorageGB || 0,
-              hasAdditionalStorageOption: true,
-            }
-          : {
-              basePrice: 0,
-              baseSeats: 0,
-              seatPrice:
-                tier.passwordManager.type === "packaged"
-                  ? tier.passwordManager.annualPrice / tier.passwordManager.users
-                  : tier.passwordManager.annualPrice,
-              hasAdditionalSeatsOption: true,
-              additionalStoragePricePerGb:
-                tier.passwordManager.annualPricePerAdditionalStorageGB || 0,
-              hasAdditionalStorageOption: true,
-            },
-      } as any,
-
-      organization: { useSecretsManager: false } as any,
-
-      customPasswordManagerTitle: isPremium ? "Premium" : undefined,
+      name: isPremium ? "premiumMembership" : "familiesMembership",
+      cost:
+        isFamilies && tier.passwordManager.type === "packaged"
+          ? tier.passwordManager.annualPrice / tier.passwordManager.users
+          : tier.passwordManager.annualPrice,
+      cadence: "year",
     };
 
-    this.pricingSummaryData.set(pricingSummaryData);
+    this.passwordManagerItem.set(passwordManagerItem);
   }
 
   /**
-   * Update tax information in pricing summary
+   * Update tax information in cart summary
    */
-  private updatePricingSummaryTax(): void {
-    const currentData = this.pricingSummaryData();
-    if (currentData) {
-      const updatedData: PricingSummaryData = {
-        ...currentData,
-        estimatedTax: this.estimatedTax,
-        total: this.data.price + this.estimatedTax,
-        totalOpened: this.totalOpened(),
-      };
-      this.pricingSummaryData.set(updatedData);
-    }
+  private updateCartSummaryTax(taxAmount: number): void {
+    this.estimatedTax.set(taxAmount);
   }
 
   private refreshSalesTax(): void {
-    const { country, postalCode } = this.taxInfoComponent().getTaxInformation();
+    const { country, postalCode, taxId } = this.taxInfoComponent().getTaxInformation();
     if (!country || !postalCode) {
       return;
     }
 
-    let request: PreviewIndividualInvoiceRequest | PreviewOrganizationInvoiceRequest;
-
     if (this.data.type === "Premium") {
-      request = {
+      const request: PreviewIndividualInvoiceRequest = {
         passwordManager: {
           additionalStorage: 0,
         },
@@ -292,8 +245,23 @@ export class UpgradeDialogComponent {
           country,
         },
       };
+
+      this.taxService
+        .previewIndividualInvoice(request)
+        .then((invoice) => {
+          this.updateCartSummaryTax(invoice.taxAmount);
+        })
+        .catch((error) => {
+          this.toastService.showToast({
+            title: this.i18nService.t("errorOccurred"),
+            variant: "error",
+            message:
+              this.i18nService.t("taxCalculationError") || this.i18nService.t("unexpectedError"),
+          });
+        });
     } else {
-      request = {
+      // For Families, we need to use the organization preview since it's actually an organization plan
+      const request: PreviewOrganizationInvoiceRequest = {
         passwordManager: {
           additionalStorage: 0,
           plan: PlanType.FamiliesAnnually,
@@ -302,24 +270,24 @@ export class UpgradeDialogComponent {
         taxInformation: {
           postalCode,
           country,
+          taxId: taxId || "",
         },
       };
-    }
 
-    this.taxService
-      .previewIndividualInvoice(request)
-      .then((invoice) => {
-        this.estimatedTax = invoice.taxAmount;
-        this.updatePricingSummaryTax();
-      })
-      .catch((error) => {
-        this.toastService.showToast({
-          title: this.i18nService.t("errorOccurred"),
-          variant: "error",
-          message:
-            this.i18nService.t("taxCalculationError") || this.i18nService.t("unexpectedError"),
+      this.taxService
+        .previewOrganizationInvoice(request)
+        .then((invoice) => {
+          this.updateCartSummaryTax(invoice.taxAmount);
+        })
+        .catch((error) => {
+          this.toastService.showToast({
+            title: this.i18nService.t("errorOccurred"),
+            variant: "error",
+            message:
+              this.i18nService.t("taxCalculationError") || this.i18nService.t("unexpectedError"),
+          });
         });
-      });
+    }
   }
 
   protected taxInformationChanged(event: TaxInformation): void {
