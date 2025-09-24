@@ -11518,5 +11518,8 @@
   },
   "individualUpgradeTaxInformationMessage": {
     "message": "Prices exclude tax and are billed annually."
+  },
+  "organizationNameDescription": {
+    "message": "Your organization name will appear in invitations you send to members."
   }
 }

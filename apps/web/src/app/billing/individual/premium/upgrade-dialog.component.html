@@ -6,9 +6,9 @@
       @if (data.type === "Families") {
         <bit-form-field>
           <bit-label>{{ "organizationName" | i18n }}</bit-label>
-          <input bitInput type="text" formControlName="organisationName" required />
+          <input bitInput type="text" formControlName="organisationName" />
         </bit-form-field>
-        <p bitTypography="helper" class="tw-text-muted -tw-mt-3">
+        <p bitTypography="helper" class="tw-text-muted -tw-mt-3 tw-mb-6">
           {{ "organizationNameDescription" | i18n }}
         </p>
       }
