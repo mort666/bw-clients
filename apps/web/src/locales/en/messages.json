@@ -11494,5 +11494,8 @@
   },
   "seamlessIntegration": {
     "message": "Seamless integration"
+  },
+  "organizationNameDescription": {
+    "message": "Your organization name will appear in invitations you send to members."
   }
 }

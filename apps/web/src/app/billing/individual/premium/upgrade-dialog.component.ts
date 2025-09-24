@@ -46,7 +46,7 @@ export class UpgradeDialogComponent implements AfterViewInit {
   protected taxInformation: TaxInformation;
 
   upgradeForm = this.formBuilder.group({
-    organisationName: ["", [Validators.required]],
+    organisationName: [""],
   });
 
   constructor(
@@ -65,6 +65,12 @@ export class UpgradeDialogComponent implements AfterViewInit {
     private accountService: AccountService,
     private subscriptionPricingService: SubscriptionPricingService,
   ) {
+    // Set organization name as required only for Families upgrade
+    if (this.data.type === "Families") {
+      this.upgradeForm.get("organisationName")?.setValidators([Validators.required]);
+      this.upgradeForm.get("organisationName")?.updateValueAndValidity();
+    }
+
     // Initialize cart summary for both Premium and Families plans
     void this.initializeCartSummary();
   }
@@ -78,6 +84,24 @@ export class UpgradeDialogComponent implements AfterViewInit {
   }
 
   submit = async () => {
+    // Validate organization name for Families upgrade
+    if (this.data.type === "Families") {
+      if (this.upgradeForm.invalid) {
+        this.upgradeForm.markAllAsTouched();
+        return;
+      }
+    }
+
+    // Validate payment method for both Premium and Families
+    if (this.paymentComponent() !== undefined && !this.paymentComponent().validate()) {
+      return;
+    }
+
+    // Validate billing address (country and postal code) for both Premium and Families
+    if (this.taxInfoComponent() !== undefined && !this.taxInfoComponent().validate()) {
+      return;
+    }
+
     if (this.data.type === "Premium") {
       await this.upgradeToPremium();
     } else {
@@ -86,11 +110,7 @@ export class UpgradeDialogComponent implements AfterViewInit {
   };
 
   private upgradeToPremium = async (): Promise<void> => {
-    if (this.taxInfoComponent() !== undefined && !this.taxInfoComponent().validate()) {
-      this.taxInfoComponent().markAllAsTouched();
-      return;
-    }
-
+    // Validation is now handled in the main submit method
     try {
       const { type, token } = await this.paymentComponent().tokenize();
 
