@@ -30,8 +30,11 @@
 
       <!-- Summary Section -->
       <bit-section>
-        @if (pricingSummaryData(); as summaryData) {
-          <app-pricing-summary [summaryData]="summaryData"></app-pricing-summary>
+        @if (passwordManagerItem(); as pmItem) {
+          <billing-cart-summary
+            [passwordManager]="pmItem"
+            [estimatedTax]="estimatedTax()"
+          ></billing-cart-summary>
         }
         <p bitTypography="helper" class="tw-italic tw-text-muted tw-mt-2">
           {{ "paymentChargedWithTrial" | i18n }}

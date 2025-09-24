@@ -1,6 +1,6 @@
 import { NgModule } from "@angular/core";
 
-import { PricingCardComponent } from "@bitwarden/pricing";
+import { PricingCardComponent, CartSummaryComponent } from "@bitwarden/pricing";
 
 import { HeaderModule } from "../../layouts/header/header.module";
 import { BillingSharedModule } from "../shared";
@@ -18,6 +18,7 @@ import { UserSubscriptionComponent } from "./user-subscription.component";
     BillingSharedModule,
     HeaderModule,
     PricingCardComponent,
+    CartSummaryComponent,
   ],
   declarations: [
     SubscriptionComponent,
