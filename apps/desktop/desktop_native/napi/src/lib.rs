@@ -1050,7 +1050,7 @@ pub mod autotype {
         })
     }
     #[napi]
-    pub fn foo_bar() -> napi::Result<(), napi::Status> {
+    pub fn foo_bar_baz() -> napi::Result<(), napi::Status> {
         Ok(())
     }
 }
