@@ -49,7 +49,7 @@ export class SessionTimeoutPolicyComponent extends BasePolicyEditComponent imple
       },
       [Validators.required],
     ),
-    action: new FormControl<SessionTimeoutAction>(null, [Validators.required]),
+    action: new FormControl<SessionTimeoutAction>(null),
   });
 
   constructor(
@@ -74,10 +74,21 @@ export class SessionTimeoutPolicyComponent extends BasePolicyEditComponent imple
     this.data
       .get("type")!
       .valueChanges.pipe(
+        concatMap(async (type) => {
+          this.updateFormControls(type!);
+
+          if (type === "custom") {
+            this.data.patchValue({
+              hours: 8,
+              minutes: 0,
+            });
+          }
+
+          return type!;
+        }),
         pairwise(),
         concatMap(async ([previousType, newType]) => {
-          this.updateFormControls(newType!);
-          await this.saveVaultTimeout(previousType!, newType!);
+          await this.confirmTypeChange(previousType, newType);
         }),
         takeUntil(this.destroy$),
       )
@@ -90,7 +101,7 @@ export class SessionTimeoutPolicyComponent extends BasePolicyEditComponent imple
   }
 
   protected override loadData() {
-    const minutes = this.policyResponse?.data?.minutes;
+    const minutes: number | null = this.policyResponse?.data?.minutes ?? null;
     const action: SessionTimeoutAction =
       this.policyResponse?.data?.action ?? (null satisfies SessionTimeoutAction);
     // For backward compatibility, the "type" field might not exist, hence we initialize it based on the presence of "minutes"
@@ -129,7 +140,7 @@ export class SessionTimeoutPolicyComponent extends BasePolicyEditComponent imple
     };
   }
 
-  private async saveVaultTimeout(previousType: SessionTimeoutType, newType: SessionTimeoutType) {
+  private async confirmTypeChange(previousType: SessionTimeoutType, newType: SessionTimeoutType) {
     let confirmed = true;
     if (newType === "never") {
       const dialogRef = this.dialogService.open<boolean>(SessionTimeoutConfirmationNeverComponent, {
