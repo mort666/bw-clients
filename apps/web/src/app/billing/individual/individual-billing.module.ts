@@ -1,21 +1,30 @@
 import { NgModule } from "@angular/core";
 
+import { PricingCardComponent } from "@bitwarden/pricing";
+
 import { HeaderModule } from "../../layouts/header/header.module";
 import { BillingSharedModule } from "../shared";
 
 import { BillingHistoryViewComponent } from "./billing-history-view.component";
 import { IndividualBillingRoutingModule } from "./individual-billing-routing.module";
 import { PremiumComponent } from "./premium/premium.component";
+import { UpgradeDialogComponent } from "./premium/upgrade-dialog.component";
 import { SubscriptionComponent } from "./subscription.component";
 import { UserSubscriptionComponent } from "./user-subscription.component";
 
 @NgModule({
-  imports: [IndividualBillingRoutingModule, BillingSharedModule, HeaderModule],
+  imports: [
+    IndividualBillingRoutingModule,
+    BillingSharedModule,
+    HeaderModule,
+    PricingCardComponent,
+  ],
   declarations: [
     SubscriptionComponent,
     BillingHistoryViewComponent,
     UserSubscriptionComponent,
     PremiumComponent,
+    UpgradeDialogComponent,
   ],
 })
 export class IndividualBillingModule {}

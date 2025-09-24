@@ -1,37 +1,48 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { Component, ViewChild } from "@angular/core";
+import { Component } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl, FormGroup, Validators } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
-import { combineLatest, concatMap, from, Observable, of, switchMap } from "rxjs";
-import { debounceTime } from "rxjs/operators";
+import { combineLatest, concatMap, firstValueFrom, from, Observable, of, switchMap } from "rxjs";
+import { map, shareReplay } from "rxjs/operators";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions";
 import { TaxServiceAbstraction } from "@bitwarden/common/billing/abstractions/tax.service.abstraction";
-import { PreviewIndividualInvoiceRequest } from "@bitwarden/common/billing/models/request/preview-individual-invoice.request";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { SyncService } from "@bitwarden/common/platform/sync";
-import { ToastService } from "@bitwarden/components";
+import { DialogService, ToastService } from "@bitwarden/components";
 
-import { PaymentComponent } from "../../shared/payment/payment.component";
-import { TaxInfoComponent } from "../../shared/tax-info.component";
+import { SubscriptionPricingService } from "../../services/subscription-pricing.service";
+import { PersonalSubscriptionPricingTier } from "../../types/subscription-pricing-tier";
+
+import { UpgradeDialogComponent, UpgradeDialogResult } from "./upgrade-dialog.component";
 
 @Component({
   templateUrl: "./premium.component.html",
   standalone: false,
 })
 export class PremiumComponent {
-  @ViewChild(PaymentComponent) paymentComponent: PaymentComponent;
-  @ViewChild(TaxInfoComponent) taxInfoComponent: TaxInfoComponent;
-
   protected hasPremiumFromAnyOrganization$: Observable<boolean>;
+  protected hasPremiumPersonally$: Observable<boolean>;
+  protected shouldShowNewDesign$: Observable<boolean>;
+  protected personalPricingTiers$: Observable<PersonalSubscriptionPricingTier[]>;
+  protected premiumCardData$: Observable<{
+    tier: PersonalSubscriptionPricingTier | undefined;
+    price: number;
+    features: string[];
+  }>;
+  protected familiesCardData$: Observable<{
+    tier: PersonalSubscriptionPricingTier | undefined;
+    price: number;
+    features: string[];
+  }>;
 
   protected addOnFormGroup = new FormGroup({
     additionalStorage: new FormControl<number>(0, [Validators.min(0), Validators.max(99)]),
@@ -43,11 +54,10 @@ export class PremiumComponent {
 
   protected cloudWebVaultURL: string;
   protected isSelfHost = false;
+  protected providerId: string;
 
   protected estimatedTax: number = 0;
   protected readonly familyPlanMaxUserCount = 6;
-  protected readonly premiumPrice = 10;
-  protected readonly storageGBPrice = 4;
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -63,6 +73,8 @@ export class PremiumComponent {
     private tokenService: TokenService,
     private taxService: TaxServiceAbstraction,
     private accountService: AccountService,
+    private dialogService: DialogService,
+    private subscriptionPricingService: SubscriptionPricingService,
   ) {
     this.isSelfHost = this.platformUtilsService.isSelfHost();
 
@@ -70,6 +82,53 @@ export class PremiumComponent {
       switchMap((account) =>
         this.billingAccountProfileStateService.hasPremiumFromAnyOrganization$(account.id),
       ),
+    );
+
+    this.hasPremiumPersonally$ = this.accountService.activeAccount$.pipe(
+      switchMap((account) =>
+        this.billingAccountProfileStateService.hasPremiumPersonally$(account.id),
+      ),
+    );
+
+    // Show new design when user doesn't have premium from any source
+    this.shouldShowNewDesign$ = combineLatest([
+      this.hasPremiumFromAnyOrganization$,
+      this.hasPremiumPersonally$,
+    ]).pipe(map(([hasOrgPremium, hasPersonalPremium]) => !hasOrgPremium && !hasPersonalPremium));
+
+    // Load personal subscription pricing tiers
+    this.personalPricingTiers$ =
+      this.subscriptionPricingService.getPersonalSubscriptionPricingTiers$();
+
+    // Initialize combined observables for pricing cards
+    this.premiumCardData$ = this.personalPricingTiers$.pipe(
+      map((tiers) => {
+        const tier = tiers.find((t) => t.id === "premium");
+        return {
+          tier,
+          price:
+            tier?.passwordManager.type === "standalone"
+              ? Number((tier.passwordManager.annualPrice / 12).toFixed(2))
+              : 0,
+          features: tier?.passwordManager.features.map((f) => f.value) || [],
+        };
+      }),
+      shareReplay({ bufferSize: 1, refCount: true }),
+    );
+
+    this.familiesCardData$ = this.personalPricingTiers$.pipe(
+      map((tiers) => {
+        const tier = tiers.find((t) => t.id === "families");
+        return {
+          tier,
+          price:
+            tier?.passwordManager.type === "packaged"
+              ? Number((tier.passwordManager.annualPrice / 12).toFixed(2))
+              : 0,
+          features: tier?.passwordManager.features.map((f) => f.value) || [],
+        };
+      }),
+      shareReplay({ bufferSize: 1, refCount: true }),
     );
 
     combineLatest([
@@ -93,10 +152,10 @@ export class PremiumComponent {
       )
       .subscribe();
 
-    this.addOnFormGroup.controls.additionalStorage.valueChanges
-      .pipe(debounceTime(1000), takeUntilDestroyed())
-      .subscribe(() => {
-        this.refreshSalesTax();
+    this.activatedRoute.parent.parent.parent.params
+      .pipe(takeUntilDestroyed())
+      .subscribe((params) => {
+        this.providerId = params.providerId;
       });
   }
 
@@ -150,75 +209,95 @@ export class PremiumComponent {
     await this.postFinalizeUpgrade();
   };
 
-  submitPayment = async (): Promise<void> => {
-    this.taxInfoComponent.taxFormGroup.markAllAsTouched();
-    if (this.taxInfoComponent.taxFormGroup.invalid) {
-      return;
-    }
-
-    const { type, token } = await this.paymentComponent.tokenize();
-
-    const formData = new FormData();
-    formData.append("paymentMethodType", type.toString());
-    formData.append("paymentToken", token);
-    formData.append("additionalStorageGb", this.addOnFormGroup.value.additionalStorage.toString());
-    formData.append("country", this.taxInfoComponent.country);
-    formData.append("postalCode", this.taxInfoComponent.postalCode);
-
-    await this.apiService.postPremium(formData);
-    await this.finalizeUpgrade();
-    await this.postFinalizeUpgrade();
-  };
-
-  protected get additionalStorageCost(): number {
-    return this.storageGBPrice * this.addOnFormGroup.value.additionalStorage;
-  }
-
   protected get premiumURL(): string {
     return `${this.cloudWebVaultURL}/#/settings/subscription/premium`;
-  }
-
-  protected get subtotal(): number {
-    return this.premiumPrice + this.additionalStorageCost;
-  }
-
-  protected get total(): number {
-    return this.subtotal + this.estimatedTax;
   }
 
   protected async onLicenseFileSelectedChanged(): Promise<void> {
     await this.postFinalizeUpgrade();
   }
 
-  private refreshSalesTax(): void {
-    if (!this.taxInfoComponent.country || !this.taxInfoComponent.postalCode) {
-      return;
-    }
-    const request: PreviewIndividualInvoiceRequest = {
-      passwordManager: {
-        additionalStorage: this.addOnFormGroup.value.additionalStorage,
-      },
-      taxInformation: {
-        postalCode: this.taxInfoComponent.postalCode,
-        country: this.taxInfoComponent.country,
-      },
-    };
-
-    this.taxService
-      .previewIndividualInvoice(request)
-      .then((invoice) => {
-        this.estimatedTax = invoice.taxAmount;
-      })
-      .catch((error) => {
-        this.toastService.showToast({
-          title: "",
-          variant: "error",
-          message: this.i18nService.t(error.message),
-        });
+  protected async openUpgradeDialog(type: "Premium" | "Families"): Promise<void> {
+    try {
+      const dialogData = await this.getPricingForUpgrade(type);
+      const dialogRef = this.dialogService.open<UpgradeDialogResult>(UpgradeDialogComponent, {
+        data: dialogData,
       });
+
+      const result = await firstValueFrom(dialogRef.closed);
+      await this.handleUpgradeResult(result, type);
+    } catch {
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("errorOccurred"),
+        message: this.i18nService.t("unexpectedError"),
+      });
+    }
   }
 
-  protected onTaxInformationChanged(): void {
-    this.refreshSalesTax();
+  private async getPricingForUpgrade(type: "Premium" | "Families") {
+    const pricingTiers = await firstValueFrom(this.personalPricingTiers$);
+    const tier =
+      type === "Premium"
+        ? pricingTiers.find((t) => t.id === "premium")
+        : pricingTiers.find((t) => t.id === "families");
+
+    const price =
+      tier?.passwordManager.type === "standalone"
+        ? tier.passwordManager.annualPrice
+        : tier?.passwordManager.type === "packaged"
+          ? tier.passwordManager.annualPrice
+          : 0;
+
+    return {
+      type,
+      price,
+      providerId: this.providerId,
+    };
+  }
+
+  private async handleUpgradeResult(
+    result: UpgradeDialogResult | null,
+    type: "Premium" | "Families",
+  ): Promise<void> {
+    if (!result?.success) {
+      return;
+    }
+
+    if (type === "Premium") {
+      await this.navigateToSubscriptionPage();
+    } else if (type === "Families" && result.orgId) {
+      await this.router.navigate(["/organizations/" + result.orgId]);
+      this.toastService.showToast({
+        variant: "success",
+        title: null,
+        message: this.i18nService.t("familiesUpgradeSuccess"),
+      });
+    }
+  }
+
+  // Helper methods for backward compatibility (if needed elsewhere)
+  protected getPremiumTier(): Observable<PersonalSubscriptionPricingTier | undefined> {
+    return this.premiumCardData$.pipe(map((data) => data.tier));
+  }
+
+  protected getFamiliesTier(): Observable<PersonalSubscriptionPricingTier | undefined> {
+    return this.familiesCardData$.pipe(map((data) => data.tier));
+  }
+
+  protected getPremiumPrice(): Observable<number> {
+    return this.premiumCardData$.pipe(map((data) => data.price));
+  }
+
+  protected getFamiliesPrice(): Observable<number> {
+    return this.familiesCardData$.pipe(map((data) => data.price));
+  }
+
+  protected getPremiumFeatures(): Observable<string[]> {
+    return this.premiumCardData$.pipe(map((data) => data.features));
+  }
+
+  protected getFamiliesFeatures(): Observable<string[]> {
+    return this.familiesCardData$.pipe(map((data) => data.features));
   }
 }
