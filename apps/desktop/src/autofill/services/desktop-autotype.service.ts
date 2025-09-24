@@ -17,17 +17,34 @@ import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.servi
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { UserId } from "@bitwarden/user-core";
 
+// Represents the user's set autotypeEnabled setting
 export const AUTOTYPE_ENABLED = new KeyDefinition<boolean>(
   AUTOTYPE_SETTINGS_DISK,
   "autotypeEnabled",
   { deserializer: (b) => b },
 );
 
+/*
+  Valid windows shortcut keys: Control, Alt, Super, Shift, letters A - Z
+  Valid macOS shortcut keys: Control, Alt, Command, Shift, letters A - Z
+
+  See Electron keyboard shorcut docs for more info:
+  https://www.electronjs.org/docs/latest/tutorial/keyboard-shortcuts
+*/
+export const AUTOTYPE_KEYBOARD_SHORTCUT = new KeyDefinition<string[]>(
+  AUTOTYPE_SETTINGS_DISK,
+  "autotypeKeyboardShortcut",
+  { deserializer: (b) => b },
+);
+
 export class DesktopAutotypeService {
+  private readonly defaultWindowsAutotypeKeyboardShorcut: string[] = ["Control", "Shift", "B"];
   private readonly autotypeEnabledState = this.globalStateProvider.get(AUTOTYPE_ENABLED);
+  private readonly autotypeKeyboardShortcut = this.globalStateProvider.get(AUTOTYPE_KEYBOARD_SHORTCUT);
 
   autotypeEnabledUserSetting$: Observable<boolean> = of(false);
   resolvedAutotypeEnabled$: Observable<boolean> = of(false);
+  autotypeKeyboardShortcut$: Observable<string[]> = of([]);
 
   constructor(
     private accountService: AccountService,
@@ -51,6 +68,7 @@ export class DesktopAutotypeService {
 
   async init() {
     this.autotypeEnabledUserSetting$ = this.autotypeEnabledState.state$;
+    this.autotypeKeyboardShortcut$ = this.autotypeKeyboardShortcut.state$;
 
     if (this.platformUtilsService.getDevice() === DeviceType.WindowsDesktop) {
       this.resolvedAutotypeEnabled$ = combineLatest([
@@ -76,16 +94,40 @@ export class DesktopAutotypeService {
         ),
       );
 
-      this.resolvedAutotypeEnabled$.subscribe((enabled) => {
-        ipc.autofill.configureAutotype(enabled);
+      combineLatest([this.resolvedAutotypeEnabled$, this.autotypeKeyboardShortcut$]).subscribe(([resolvedAutotypeEnabled, autotypeKeyboaardShortcut]) => {
+        ipc.autofill.configureAutotype(resolvedAutotypeEnabled, autotypeKeyboaardShortcut);
       });
     }
   }
 
   async setAutotypeEnabledState(enabled: boolean): Promise<void> {
+
+    /////
+    // let's make sure the storage works
+    console.log("----- setAutotypeEnabledState() -----");
+    let currentValue = await firstValueFrom(this.autotypeKeyboardShortcut.state$);
+    console.log("autotypeKeyboardShortcut current value: " + currentValue);
+
+    if (currentValue != undefined && currentValue != null && currentValue.length > 0) {
+      //console.log("clearing the value");
+      //await this.setAutotypeKeyboardShortcutState([]);
+      //let newValue = await firstValueFrom(this.autotypeKeyboardShortcut.state$);
+      //console.log("autotypeKeyboardShortcut new value: " + newValue);
+    } else {
+      console.log("setting the value");
+      await this.setAutotypeKeyboardShortcutState(this.defaultWindowsAutotypeKeyboardShorcut);
+      let newValue = await firstValueFrom(this.autotypeKeyboardShortcut.state$);
+      console.log("autotypeKeyboardShortcut new value: " + newValue);
+    }
+    /////
+
     await this.autotypeEnabledState.update(() => enabled, {
       shouldUpdate: (currentlyEnabled) => currentlyEnabled !== enabled,
     });
+  }
+
+  async setAutotypeKeyboardShortcutState(keyboardShortcut: string[]): Promise<void> {
+    await this.autotypeKeyboardShortcut.update(() => keyboardShortcut);
   }
 
   async matchCiphersToWindowTitle(windowTitle: string): Promise<CipherView[]> {

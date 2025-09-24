@@ -7,18 +7,26 @@ import { WindowMain } from "../../main/window.main";
 import { stringIsNotUndefinedNullAndEmpty } from "../../utils";
 
 export class MainDesktopAutotypeService {
-  keySequence: string = "CommandOrControl+Shift+B";
+  autotypeKeyboardShortcut: AutotypeKeyboardShortcut;
 
   constructor(
     private logService: LogService,
     private windowMain: WindowMain,
-  ) {}
+  ) {
+    this.autotypeKeyboardShortcut = new AutotypeKeyboardShortcut();
+  }
 
   init() {
     ipcMain.on("autofill.configureAutotype", (event, data) => {
-      if (data.enabled === true && !globalShortcut.isRegistered(this.keySequence)) {
+      const { response } = data;
+
+      let setCorrectly = this.autotypeKeyboardShortcut.set(response.keyboardShortcut);
+      console.log("Was autotypeKeyboardShortcut set correctly from within the main process? " + setCorrectly);
+      // TODO: What do we do if it wasn't? The value won't change but we need to send a failure message back
+
+      if (response.enabled === true && !globalShortcut.isRegistered(this.autotypeKeyboardShortcut.getElectronFormat())) {
         this.enableAutotype();
-      } else if (data.enabled === false && globalShortcut.isRegistered(this.keySequence)) {
+      } else if (response.enabled === false && globalShortcut.isRegistered(this.autotypeKeyboardShortcut.getElectronFormat())) {
         this.disableAutotype();
       }
     });
@@ -30,21 +38,21 @@ export class MainDesktopAutotypeService {
         stringIsNotUndefinedNullAndEmpty(response.username) &&
         stringIsNotUndefinedNullAndEmpty(response.password)
       ) {
-        this.doAutotype(response.username, response.password);
+        this.doAutotype(response.username, response.password, this.autotypeKeyboardShortcut.getArrayFormat());
       }
     });
   }
 
   disableAutotype() {
-    if (globalShortcut.isRegistered(this.keySequence)) {
-      globalShortcut.unregister(this.keySequence);
+    if (globalShortcut.isRegistered(this.autotypeKeyboardShortcut.getElectronFormat())) {
+      globalShortcut.unregister(this.autotypeKeyboardShortcut.getElectronFormat());
     }
 
     this.logService.info("Autotype disabled.");
   }
 
   private enableAutotype() {
-    const result = globalShortcut.register(this.keySequence, () => {
+    const result = globalShortcut.register(this.autotypeKeyboardShortcut.getElectronFormat(), () => {
       const windowTitle = autotype.getForegroundWindowTitle();
 
       this.windowMain.win.webContents.send("autofill.listenAutotypeRequest", {
@@ -57,7 +65,7 @@ export class MainDesktopAutotypeService {
       : this.logService.info("Enabling autotype failed.");
   }
 
-  private doAutotype(username: string, password: string) {
+  private doAutotype(username: string, password: string, keyboardShortcut: string[]) {
     const inputPattern = username + "\t" + password;
     const inputArray = new Array<number>(inputPattern.length);
 
@@ -65,6 +73,6 @@ export class MainDesktopAutotypeService {
       inputArray[i] = inputPattern.charCodeAt(i);
     }
 
-    autotype.typeInput(inputArray);
+    autotype.typeInput(inputArray, keyboardShortcut);
   }
 }

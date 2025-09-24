@@ -28,7 +28,9 @@ pub fn get_foreground_window_title() -> std::result::Result<String, ()> {
 /// `input` must be an array of utf-16 encoded characters to insert.
 ///
 /// https://learn.microsoft.com/en-in/windows/win32/api/winuser/nf-winuser-sendinput
-pub fn type_input(input: Vec<u16>) -> Result<(), ()> {
+pub fn type_input(input: Vec<u16>, keyboard_input: Vec<String>) -> Result<(), ()> {
+    println!("type_input() hit, keyboardInput is: {:?}", keyboard_input);
+
     const TAB_KEY: u16 = 9;
     let mut keyboard_inputs: Vec<INPUT> = Vec::new();
 
