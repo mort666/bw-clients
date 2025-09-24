@@ -1,12 +1,23 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
 import { CommonModule } from "@angular/common";
-import { Component, Optional, effect, input } from "@angular/core";
+import { Component, Optional, input } from "@angular/core";
+import { toObservable, takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { Router } from "@angular/router";
-import { firstValueFrom, map } from "rxjs";
+import {
+  combineLatest,
+  defer,
+  distinctUntilChanged,
+  from,
+  map,
+  of,
+  shareReplay,
+  filter,
+  switchMap,
+} from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
+import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
+import { PolicyType } from "@bitwarden/common/admin-console/enums/policy-type.enum";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { ClientType } from "@bitwarden/common/enums";
@@ -23,7 +34,7 @@ import { CalloutModule } from "@bitwarden/components";
 })
 export class ExportScopeCalloutComponent {
   show = false;
-  scopeConfig: {
+  scopeConfig!: {
     title: string;
     description: string;
     scopeIdentifier: string;
@@ -39,13 +50,90 @@ export class ExportScopeCalloutComponent {
     protected accountService: AccountService,
     private configService: ConfigService,
     private platformUtilsService: PlatformUtilsService,
+    private policyService: PolicyService,
     @Optional() private router?: Router,
   ) {
-    effect(async () => {
-      this.show = false;
-      await this.getScopeMessage(this.organizationId(), this.exportFormat());
-      this.show = true;
-    });
+    const organizationId$ = toObservable(this.organizationId).pipe(distinctUntilChanged());
+    const exportFormat$ = toObservable(this.exportFormat).pipe(distinctUntilChanged());
+
+    const activeAccount$ = this.accountService.activeAccount$;
+    const userId$ = activeAccount$.pipe(getUserId);
+    const email$ = activeAccount$.pipe(
+      map((a) => a?.email ?? ""),
+      distinctUntilChanged(),
+    );
+
+    const defaultLocationFlag$ = defer(() =>
+      from(this.configService.getFeatureFlag(FeatureFlag.CreateDefaultLocation)),
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+
+    const orgDataOwnershipEnforced$ = userId$.pipe(
+      switchMap((userId) =>
+        userId == null
+          ? of(false)
+          : this.policyService.policyAppliesToUser$(PolicyType.OrganizationDataOwnership, userId),
+      ),
+    );
+
+    combineLatest({
+      organizationId: organizationId$,
+      exportFormat: exportFormat$,
+      userId: userId$,
+      email: email$,
+      defaultLocationFlagEnabled: defaultLocationFlag$,
+      hasOwnership: orgDataOwnershipEnforced$,
+    })
+      .pipe(
+        // organizationId is null for an individual vault export which actually doesn't require a userId (in the code below)
+        // if organizationId is set, userId is required to get the org name for the organizational export
+        filter(({ organizationId, userId }) => organizationId == null || userId != null),
+        switchMap(
+          ({
+            organizationId,
+            exportFormat,
+            userId,
+            email,
+            defaultLocationFlagEnabled,
+            hasOwnership,
+          }) => {
+            const orgExportDescription =
+              defaultLocationFlagEnabled && hasOwnership
+                ? this.isAdminConsoleContext
+                  ? "exportingOrganizationVaultFromAdminConsoleWithDataOwnershipDesc"
+                  : "exportingOrganizationVaultFromPasswordManagerWithDataOwnershipDesc"
+                : "exportingOrganizationVaultDesc";
+
+            if (organizationId != null) {
+              // exporting from organizational vault
+              return this.organizationService.organizations$(userId).pipe(
+                getById(organizationId),
+                map((org) => ({
+                  title: "exportingOrganizationVaultTitle",
+                  description: orgExportDescription,
+                  scopeIdentifier: org?.name ?? "",
+                })),
+              );
+            }
+
+            // exporting from individual vault
+            const description =
+              exportFormat === "zip"
+                ? "exportingIndividualVaultWithAttachmentsDescription"
+                : "exportingIndividualVaultDescription";
+
+            return of({
+              title: "exportingPersonalVaultTitle",
+              description,
+              scopeIdentifier: email,
+            });
+          },
+        ),
+        takeUntilDestroyed(),
+      )
+      .subscribe((cfg) => {
+        this.scopeConfig = cfg;
+        this.show = true;
+      });
   }
 
   private get isAdminConsoleContext(): boolean {
@@ -58,46 +146,6 @@ export class ExportScopeCalloutComponent {
       return url.includes("/organizations/");
     } catch {
       return false;
-    }
-  }
-
-  private async getScopeMessage(organizationId: string, exportFormat: string): Promise<void> {
-    const userId = await firstValueFrom(getUserId(this.accountService.activeAccount$));
-    const enforceOrgDataOwnershipPolicyEnabled = await this.configService.getFeatureFlag(
-      FeatureFlag.CreateDefaultLocation,
-    );
-
-    const orgExportDescription = enforceOrgDataOwnershipPolicyEnabled
-      ? this.isAdminConsoleContext
-        ? "exportingOrganizationVaultFromAdminConsoleWithDataOwnershipDesc"
-        : "exportingOrganizationVaultFromPasswordManagerWithDataOwnershipDesc"
-      : "exportingOrganizationVaultDesc";
-
-    if (organizationId != null) {
-      // exporting from organizational vault
-      const org = await firstValueFrom(
-        // TODO remove this after testing
-        //this.organizationService.organizations$(userId).pipe(getOrganizationById(organizationId)),
-        this.organizationService.organizations$(userId).pipe(getById(organizationId)),
-      );
-
-      this.scopeConfig = {
-        title: "exportingOrganizationVaultTitle",
-        description: orgExportDescription,
-        scopeIdentifier: org?.name ?? "",
-      };
-    } else {
-      this.scopeConfig = {
-        // exporting from individual vault
-        title: "exportingPersonalVaultTitle",
-        description:
-          exportFormat === "zip"
-            ? "exportingIndividualVaultWithAttachmentsDescription"
-            : "exportingIndividualVaultDescription",
-        scopeIdentifier:
-          (await firstValueFrom(this.accountService.activeAccount$.pipe(map((a) => a?.email)))) ??
-          "",
-      };
     }
   }
 }
