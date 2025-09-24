@@ -1,0 +1,51 @@
+<form [formGroup]="upgradeForm" [bitSubmit]="submit">
+  <bit-dialog dialogSize="large">
+    <span bitDialogTitle class="tw-font-semibold"> Upgrade to {{ data.type }} </span>
+
+    <div bitDialogContent>
+      @if (data.type === "Families") {
+        <bit-form-field>
+          <bit-label>{{ "organizationName" | i18n }}</bit-label>
+          <input bitInput type="text" formControlName="organisationName" required />
+        </bit-form-field>
+        <p bitTypography="helper" class="tw-text-muted -tw-mt-3">
+          {{ "organizationNameDescription" | i18n }}
+        </p>
+      }
+
+      <!-- Payment Information Section -->
+      <bit-section>
+        <h3 bitTypography="h3">{{ "paymentMethod" | i18n }}</h3>
+        <app-payment [showAccountCredit]="false"></app-payment>
+      </bit-section>
+
+      <!-- Billing Address Section -->
+      <bit-section>
+        <h3 bitTypography="h3">{{ "billingAddress" | i18n }}</h3>
+        <app-manage-tax-information
+          [startWith]="taxInformation"
+          (taxInformationChanged)="taxInformationChanged($event)"
+        ></app-manage-tax-information>
+      </bit-section>
+
+      <!-- Summary Section -->
+      <bit-section>
+        @if (pricingSummaryData(); as summaryData) {
+          <app-pricing-summary [summaryData]="summaryData"></app-pricing-summary>
+        }
+        <p bitTypography="helper" class="tw-italic tw-text-muted tw-mt-2">
+          {{ "paymentChargedWithTrial" | i18n }}
+        </p>
+      </bit-section>
+    </div>
+
+    <ng-container bitDialogFooter>
+      <button bitButton buttonType="primary" type="submit" bitFormButton>
+        {{ "upgrade" | i18n }}
+      </button>
+      <button bitButton buttonType="secondary" type="button" (click)="close()">
+        {{ "back" | i18n }}
+      </button>
+    </ng-container>
+  </bit-dialog>
+</form>
