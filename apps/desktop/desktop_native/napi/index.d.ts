@@ -235,4 +235,5 @@ export declare namespace chromium_importer {
 export declare namespace autotype {
   export function getForegroundWindowTitle(): string
   export function typeInput(input: Array<number>): void
+  export function fooBar(): void
 }
