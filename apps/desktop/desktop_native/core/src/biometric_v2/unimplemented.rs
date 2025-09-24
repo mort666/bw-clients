@@ -14,18 +14,20 @@ impl Default for BiometricLockSystem {
 
 impl super::BiometricTrait for BiometricLockSystem {
     async fn authenticate(&self, _hwnd: Vec<u8>, _message: String) -> Result<bool, anyhow::Error> {
-        Ok(false)
+        unimplemented!()
     }
 
     async fn authenticate_available(&self) -> Result<bool, anyhow::Error> {
-        Ok(false)
+        unimplemented!()
     }
 
     async fn enroll_persistent(&self, _user_id: &str, _key: &[u8]) -> Result<(), anyhow::Error> {
-        Ok(())
+        unimplemented!()
     }
 
-    async fn provide_key(&self, _user_id: &str, _key: &[u8]) {}
+    async fn provide_key(&self, _user_id: &str, _key: &[u8]) {
+        unimplemented!()
+    }
 
     async fn unlock(&self, _user_id: &str, _hwnd: Vec<u8>) -> Result<Vec<u8>, anyhow::Error> {
         unimplemented!()
@@ -40,6 +42,6 @@ impl super::BiometricTrait for BiometricLockSystem {
     }
 
     async fn unenroll(&self, _user_id: &str) -> Result<(), anyhow::Error> {
-        Ok(())
+        unimplemented!()
     }
 }
