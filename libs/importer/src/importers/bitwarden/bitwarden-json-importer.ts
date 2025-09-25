@@ -114,7 +114,6 @@ export class BitwardenJsonImporter extends BaseImporter implements Importer {
         });
       }
 
-      const account = await firstValueFrom(this.accountService.activeAccount$);
       const view = await this.cipherService.decrypt(cipher, account.id);
       this.cleanupCipher(view);
       this.result.ciphers.push(view);
