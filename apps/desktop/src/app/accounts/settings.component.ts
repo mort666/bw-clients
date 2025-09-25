@@ -58,6 +58,7 @@ import { KeyService, BiometricStateService, BiometricsStatus } from "@bitwarden/
 import { PermitCipherDetailsPopoverComponent } from "@bitwarden/vault";
 
 import { SetPinComponent } from "../../auth/components/set-pin.component";
+import { SetAutotypeShortcutComponent } from "../../autofill/components/set-autotype-shortcut.component";
 import { SshAgentPromptType } from "../../autofill/models/ssh-agent-setting";
 import { DesktopAutofillSettingsService } from "../../autofill/services/desktop-autofill-settings.service";
 import { DesktopAutotypeService } from "../../autofill/services/desktop-autotype.service";
@@ -138,6 +139,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   userHasMasterPassword: boolean;
   userHasPinSet: boolean;
+  
+  userHasAutotypeShortcutSet: boolean;
 
   pinEnabled$: Observable<boolean> = of(true);
 
@@ -283,14 +286,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
     // Autotype is for Windows initially
     const isWindows = this.platformUtilsService.getDevice() === DeviceType.WindowsDesktop;
-    if (isWindows) {
-      this.configService
-        .getFeatureFlag$(FeatureFlag.WindowsDesktopAutotype)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe((enabled) => {
-          this.showEnableAutotype = enabled;
-        });
-    }
+    const windowsDesktopAutotypeFeatureFlag = true;
+    this.showEnableAutotype = windowsDesktopAutotypeFeatureFlag;
 
     this.userHasMasterPassword = await this.userVerificationService.hasMasterPassword();
 
@@ -421,12 +418,12 @@ export class SettingsComponent implements OnInit, OnDestroy {
         this.form.controls.vaultTimeoutAction.setValue(action, { emitEvent: false });
       });
 
-    if (isWindows) {
+    if (true) {
       this.billingAccountProfileStateService
         .hasPremiumFromAnySource$(activeAccount.id)
         .pipe(takeUntil(this.destroy$))
         .subscribe((hasPremium) => {
-          if (hasPremium) {
+          if (true) {
             this.form.controls.enableAutotype.enable();
           }
         });
@@ -897,6 +894,18 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   async saveEnableAutotype() {
     await this.desktopAutotypeService.setAutotypeEnabledState(this.form.value.enableAutotype);
+  }
+
+  async updateAutotypeShortcut() {
+      const dialogRef = SetAutotypeShortcutComponent.open(this.dialogService);
+
+      if (dialogRef == null) {
+        this.form.controls.pin.setValue(false, { emitEvent: false });
+        return;
+      }
+
+      this.userHasAutotypeShortcutSet = await firstValueFrom(dialogRef.closed);
+      this.form.controls.pin.setValue(this.userHasAutotypeShortcutSet, { emitEvent: false });
   }
 
   private async generateVaultTimeoutOptions(): Promise<VaultTimeoutOption[]> {
