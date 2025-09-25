@@ -310,9 +310,9 @@ export class OrganizationVaultExportService
     ciphers: Cipher[],
   ): Promise<string> {
     const orgKeys = await firstValueFrom(this.keyService.orgKeys$(activeUserId));
-    let keyForEncryption: SymmetricCryptoKey = orgKeys?.[organizationId];
+    const keyForEncryption: SymmetricCryptoKey = orgKeys?.[organizationId];
     if (keyForEncryption == null) {
-      keyForEncryption = await firstValueFrom(this.keyService.userKey$(activeUserId));
+      throw new Error("No encryption key found for organization");
     }
     const encKeyValidation = await this.encryptService.encryptString(newGuid(), keyForEncryption);
 
