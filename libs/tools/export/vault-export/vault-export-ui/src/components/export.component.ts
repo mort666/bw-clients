@@ -13,11 +13,14 @@ import {
 } from "@angular/core";
 import { ReactiveFormsModule, UntypedFormBuilder, Validators } from "@angular/forms";
 import {
+  BehaviorSubject,
   combineLatest,
   firstValueFrom,
+  from,
   map,
   merge,
   Observable,
+  shareReplay,
   startWith,
   Subject,
   switchMap,
@@ -37,6 +40,8 @@ import { Organization } from "@bitwarden/common/admin-console/models/domain/orga
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { EventType } from "@bitwarden/common/enums";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { FileDownloadService } from "@bitwarden/common/platform/abstractions/file-download/file-download.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
@@ -85,6 +90,8 @@ import { ExportScopeCalloutComponent } from "./export-scope-callout.component";
 })
 export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
   private _organizationId: OrganizationId | undefined;
+  private createDefaultLocationFlagEnabled$: Observable<boolean>;
+  private organizationExport$ = new BehaviorSubject<boolean>(false);
 
   get organizationId(): OrganizationId | undefined {
     return this._organizationId;
@@ -117,6 +124,33 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
       .subscribe((organization) => {
         this._organizationId = organization?.id;
       });
+  }
+
+  private _showExcludeMyItems = false;
+
+  get showExcludeMyItems(): boolean {
+    return this._showExcludeMyItems;
+  }
+
+  /**
+   * When true, the callout will render a translation value specific to org data ownership policy
+   * Default: false
+   *
+   * In order for this to be true, the CreateDefaultLocation feature flag must be enabled,
+   * the Enforce Organization Data Ownership policy must be enabled,
+   * and an organization must be selected as input (if organizationId is undefined, it's an individual export).
+   */
+  @Input() set showExcludeMyItems(organizationId: OrganizationId) {
+    // if organizationId is undefined or invalid, treat as an individual vault export, which is unaffected by policy/flag
+    const validOrgId = !Utils.isNullOrEmpty(organizationId) && isId<OrganizationId>(organizationId);
+    if (!validOrgId) {
+      this._showExcludeMyItems = false;
+      this.organizationExport$.next(false);
+      return;
+    }
+
+    // this._organizationId = organizationId;  // already assigned via the organizationId input setter
+    this.organizationExport$.next(true);
   }
 
   /**
@@ -203,9 +237,14 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
     protected organizationService: OrganizationService,
     private accountService: AccountService,
     private collectionService: CollectionService,
+    private configService: ConfigService,
   ) {}
 
   async ngOnInit() {
+    this.createDefaultLocationFlagEnabled$ = from(
+      this.configService.getFeatureFlag(FeatureFlag.CreateDefaultLocation),
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+
     // Setup subscription to emit when this form is enabled/disabled
     this.exportForm.statusChanges.pipe(takeUntil(this.destroy$)).subscribe((c) => {
       this.formDisabled.emit(c === "DISABLED");
@@ -224,6 +263,28 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
         this.policyService.policyAppliesToUser$(PolicyType.OrganizationDataOwnership, userId),
       ),
     );
+
+    /* determine value of _showExcludeMyItems in a reactive way
+       feature flag is not expected to change at runtime
+       policy and organization can be changed by user actions */
+    combineLatest({
+      createDefaultLocationFlagEnabled: this.createDefaultLocationFlagEnabled$,
+      organizationDataOwnershipPolicyEnabled: this.organizationDataOwnershipPolicy$,
+      hasOrganizationContext: this.organizationExport$,
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(
+        ({
+          createDefaultLocationFlagEnabled,
+          organizationDataOwnershipPolicyEnabled,
+          hasOrganizationContext,
+        }) => {
+          this._showExcludeMyItems =
+            hasOrganizationContext &&
+            createDefaultLocationFlagEnabled &&
+            organizationDataOwnershipPolicyEnabled;
+        },
+      );
 
     this.exportForm.controls.vaultSelector.valueChanges
       .pipe(takeUntil(this.destroy$))
