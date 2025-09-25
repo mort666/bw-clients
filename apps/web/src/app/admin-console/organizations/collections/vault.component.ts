@@ -1221,13 +1221,13 @@ export class vNextVaultComponent implements OnInit, OnDestroy {
 
     if (field === "username" && cipher.type === CipherType.Login) {
       aType = "Username";
-      value = cipher.login.username;
+      value = cipher.login?.username;
       typeI18nKey = "username";
     } else if (field === "password") {
       aType = "Password";
-      value = cipher.login.password;
+      value = cipher.login?.password;
       typeI18nKey = "password";
-    } else if (field === "totp") {
+    } else if (field === "totp" && cipher.login?.totp) {
       aType = "TOTP";
       const totpResponse = await firstValueFrom(this.totpService.getCode$(cipher.login.totp));
       value = totpResponse.code;
@@ -1238,23 +1238,23 @@ export class vNextVaultComponent implements OnInit, OnDestroy {
       typeI18nKey = "cardNumber";
     } else if (field === "securityCode") {
       aType = "SecurityCode";
-      value = cipher.card.code;
+      value = cipher.card?.code;
       typeI18nKey = "securityCode";
     } else if (field === "username" && cipher.type === CipherType.Identity) {
       aType = "Username";
-      value = cipher.identity.username;
+      value = cipher.identity?.username;
       typeI18nKey = "username";
     } else if (field === "email") {
       aType = "Email";
-      value = cipher.identity.email;
+      value = cipher.identity?.email;
       typeI18nKey = "email";
     } else if (field === "phone") {
       aType = "Phone";
-      value = cipher.identity.phone;
+      value = cipher.identity?.phone;
       typeI18nKey = "phone";
     } else if (field === "address") {
       aType = "Address";
-      value = cipher.identity.fullAddressForCopy;
+      value = cipher.identity?.fullAddressForCopy;
       typeI18nKey = "address";
     } else if (field === "notes") {
       aType = "Notes";

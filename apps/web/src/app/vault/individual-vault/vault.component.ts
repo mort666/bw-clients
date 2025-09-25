@@ -1172,40 +1172,40 @@ export class VaultComponent<C extends CipherViewLike> implements OnInit, OnDestr
 
     if (field === "username" && cipherView.type === CipherType.Login) {
       aType = "Username";
-      value = cipherView.login.username;
+      value = cipherView.login?.username;
       typeI18nKey = "username";
     } else if (field === "password") {
       aType = "Password";
-      value = cipherView.login.password;
+      value = cipherView.login?.password;
       typeI18nKey = "password";
-    } else if (field === "totp") {
+    } else if (field === "totp" && cipherView.login?.totp) {
       aType = "TOTP";
       const totpResponse = await firstValueFrom(this.totpService.getCode$(cipherView.login.totp));
       value = totpResponse.code;
       typeI18nKey = "verificationCodeTotp";
     } else if (field === "cardNumber") {
       aType = "CardNumber";
-      value = cipherView.card.number;
+      value = cipherView.card?.number;
       typeI18nKey = "cardNumber";
     } else if (field === "securityCode") {
       aType = "SecurityCode";
-      value = cipherView.card.code;
+      value = cipherView.card?.code;
       typeI18nKey = "securityCode";
     } else if (field === "username" && cipherView.type === CipherType.Identity) {
       aType = "Username";
-      value = cipherView.identity.username;
+      value = cipherView.identity?.username;
       typeI18nKey = "username";
     } else if (field === "email") {
       aType = "Email";
-      value = cipherView.identity.email;
+      value = cipherView.identity?.email;
       typeI18nKey = "email";
     } else if (field === "phone") {
       aType = "Phone";
-      value = cipherView.identity.phone;
+      value = cipherView.identity?.phone;
       typeI18nKey = "phone";
     } else if (field === "address") {
       aType = "Address";
-      value = cipherView.identity.fullAddressForCopy;
+      value = cipherView.identity?.fullAddressForCopy;
       typeI18nKey = "address";
     } else if (field === "notes") {
       aType = "Note";
