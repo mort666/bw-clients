@@ -8,7 +8,6 @@ import { BillingSharedModule } from "../shared";
 import { BillingHistoryViewComponent } from "./billing-history-view.component";
 import { IndividualBillingRoutingModule } from "./individual-billing-routing.module";
 import { PremiumComponent } from "./premium/premium.component";
-import { UpgradeDialogComponent } from "./premium/upgrade-dialog.component";
 import { SubscriptionComponent } from "./subscription.component";
 import { UserSubscriptionComponent } from "./user-subscription.component";
 
@@ -25,7 +24,6 @@ import { UserSubscriptionComponent } from "./user-subscription.component";
     BillingHistoryViewComponent,
     UserSubscriptionComponent,
     PremiumComponent,
-    UpgradeDialogComponent,
   ],
 })
 export class IndividualBillingModule {}

@@ -12,7 +12,6 @@ import { AccountService } from "@bitwarden/common/auth/abstractions/account.serv
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions";
 import { TaxServiceAbstraction } from "@bitwarden/common/billing/abstractions/tax.service.abstraction";
-import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -21,9 +20,15 @@ import { SyncService } from "@bitwarden/common/platform/sync";
 import { DialogService, ToastService } from "@bitwarden/components";
 
 import { SubscriptionPricingService } from "../../services/subscription-pricing.service";
-import { PersonalSubscriptionPricingTier } from "../../types/subscription-pricing-tier";
-
-import { UpgradeDialogComponent, UpgradeDialogResult } from "./upgrade-dialog.component";
+import {
+  PersonalSubscriptionPricingTier,
+  PersonalSubscriptionPricingTierIds,
+} from "../../types/subscription-pricing-tier";
+import { BitwardenSubscriber, mapAccountToSubscriber } from "../../types/bitwarden-subscriber";
+import {
+  UpgradePaymentDialogComponent,
+  UpgradePaymentDialogResult,
+} from "../upgrade/upgrade-payment-dialog/upgrade-payment-dialog.component";
 
 @Component({
   templateUrl: "./premium.component.html",
@@ -56,6 +61,7 @@ export class PremiumComponent {
   protected cloudWebVaultURL: string;
   protected isSelfHost = false;
   protected providerId: string;
+  protected subscriber: BitwardenSubscriber;
 
   protected estimatedTax: number = 0;
   protected readonly familyPlanMaxUserCount = 6;
@@ -91,16 +97,16 @@ export class PremiumComponent {
       ),
     );
 
+    this.accountService.activeAccount$
+      .pipe(mapAccountToSubscriber, takeUntilDestroyed())
+      .subscribe((subscriber) => {
+        this.subscriber = subscriber;
+      });
+
     this.shouldShowNewDesign$ = combineLatest([
       this.hasPremiumFromAnyOrganization$,
       this.hasPremiumPersonally$,
-      this.configService.getFeatureFlag$(FeatureFlag.PremiumUpgradeNewDesign),
-    ]).pipe(
-      map(
-        ([hasOrgPremium, hasPersonalPremium, newDesignFeatureFlagEnabled]) =>
-          !hasOrgPremium && !hasPersonalPremium && newDesignFeatureFlagEnabled,
-      ),
-    );
+    ]).pipe(map(([hasOrgPremium, hasPersonalPremium]) => !hasOrgPremium && !hasPersonalPremium));
 
     this.personalPricingTiers$ =
       this.subscriptionPricingService.getPersonalSubscriptionPricingTiers$();
@@ -223,14 +229,25 @@ export class PremiumComponent {
 
   protected async openUpgradeDialog(type: "Premium" | "Families"): Promise<void> {
     try {
-      const dialogData = await this.getPricingForUpgrade(type);
-      const dialogRef = this.dialogService.open<UpgradeDialogResult>(UpgradeDialogComponent, {
-        data: dialogData,
+      const planId =
+        type === "Premium"
+          ? PersonalSubscriptionPricingTierIds.Premium
+          : PersonalSubscriptionPricingTierIds.Families;
+
+      if (!this.subscriber) {
+        throw new Error("No subscriber found");
+      }
+
+      const paymentDialogRef = UpgradePaymentDialogComponent.open(this.dialogService, {
+        data: {
+          plan: planId,
+          subscriber: this.subscriber,
+        },
       });
 
-      const result = await firstValueFrom(dialogRef.closed);
-      await this.handleUpgradeResult(result, type);
-    } catch {
+      const paymentResult = await firstValueFrom(paymentDialogRef.closed);
+      await this.handleUpgradeResult(paymentResult, planId);
+    } catch (error) {
       this.toastService.showToast({
         variant: "error",
         title: this.i18nService.t("errorOccurred"),
@@ -239,44 +256,31 @@ export class PremiumComponent {
     }
   }
 
-  private async getPricingForUpgrade(type: "Premium" | "Families") {
-    const pricingTiers = await firstValueFrom(this.personalPricingTiers$);
-    const tier =
-      type === "Premium"
-        ? pricingTiers.find((t) => t.id === "premium")
-        : pricingTiers.find((t) => t.id === "families");
-
-    const price =
-      tier?.passwordManager.type === "standalone"
-        ? tier.passwordManager.annualPrice
-        : tier?.passwordManager.type === "packaged"
-          ? tier.passwordManager.annualPrice
-          : 0;
-
-    return {
-      type,
-      price,
-      providerId: this.providerId,
-    };
-  }
-
   private async handleUpgradeResult(
-    result: UpgradeDialogResult | null,
-    type: "Premium" | "Families",
+    result: UpgradePaymentDialogResult | null,
+    plan: string,
   ): Promise<void> {
-    if (!result?.success) {
+    if (!result) {
       return;
     }
 
-    if (type === "Premium") {
-      await this.navigateToSubscriptionPage();
-    } else if (type === "Families" && result.orgId) {
-      await this.router.navigate(["/organizations/" + result.orgId]);
-      this.toastService.showToast({
-        variant: "success",
-        title: null,
-        message: this.i18nService.t("familiesUpgradeSuccess"),
-      });
+    switch (result) {
+      case "upgradedToPremium":
+        await this.finalizeUpgrade();
+        await this.postFinalizeUpgrade();
+        break;
+      case "upgradedToFamilies":
+        this.toastService.showToast({
+          variant: "success",
+          title: null,
+          message: this.i18nService.t("familiesUpgradeSuccess"),
+        });
+        // Navigate to the organizations page after successful families upgrade
+        // Note: We would need the organization ID from the upgrade service to navigate properly
+        break;
+      case "back":
+        // User went back, could re-open the account dialog
+        break;
     }
   }
 
