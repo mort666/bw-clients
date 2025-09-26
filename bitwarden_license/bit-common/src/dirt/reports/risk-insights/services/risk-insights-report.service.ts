@@ -94,7 +94,7 @@ export class RiskInsightsReportService {
   LEGACY_generateRawDataReport$(
     organizationId: OrganizationId,
   ): Observable<LEGACY_CipherHealthReportDetail[]> {
-    const allCiphers$ = from(this.cipherService.getAllFromApiForOrganization(organizationId));
+    const allCiphers$ = from(this.cipherService.getAllFromApiForOrganization(organizationId, true));
     const memberCiphers$ = from(
       this.memberCipherDetailsApiService.getMemberCipherDetails(organizationId),
     );
@@ -160,7 +160,7 @@ export class RiskInsightsReportService {
   generateApplicationsReport$(
     organizationId: OrganizationId,
   ): Observable<ApplicationHealthReportDetail[]> {
-    const allCiphers$ = from(this.cipherService.getAllFromApiForOrganization(organizationId));
+    const allCiphers$ = from(this.cipherService.getAllFromApiForOrganization(organizationId, true));
     const memberCiphers$ = from(
       this.memberCipherDetailsApiService.getMemberCipherDetails(organizationId),
     ).pipe(map((memberCiphers) => flattenMemberDetails(memberCiphers)));
