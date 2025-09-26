@@ -28,11 +28,6 @@ import {
 } from "../../components/member-dialog";
 import { DeleteManagedMemberWarningService } from "../delete-managed-member/delete-managed-member-warning.service";
 
-export interface DialogResult<T = any> {
-  result: T;
-  action?: "saved" | "deleted" | "revoked" | "restored" | "confirmed";
-}
-
 @Injectable()
 export class MemberDialogManagerService {
   constructor(
@@ -47,7 +42,7 @@ export class MemberDialogManagerService {
     organization: Organization,
     billingMetadata: OrganizationBillingMetadataResponse,
     allUserEmails: string[],
-  ): Promise<DialogResult<MemberDialogResult>> {
+  ): Promise<MemberDialogResult> {
     const dialog = openUserAddEditDialog(this.dialogService, {
       data: {
         kind: "Add",
@@ -59,10 +54,7 @@ export class MemberDialogManagerService {
     });
 
     const result = await lastValueFrom(dialog.closed);
-    return {
-      result: result ?? MemberDialogResult.Canceled,
-      action: result === MemberDialogResult.Saved ? "saved" : undefined,
-    };
+    return result ?? MemberDialogResult.Canceled;
   }
 
   async openEditDialog(
@@ -70,7 +62,7 @@ export class MemberDialogManagerService {
     organization: Organization,
     billingMetadata: OrganizationBillingMetadataResponse,
     initialTab: MemberDialogTab = MemberDialogTab.Role,
-  ): Promise<DialogResult<MemberDialogResult>> {
+  ): Promise<MemberDialogResult> {
     const dialog = openUserAddEditDialog(this.dialogService, {
       data: {
         kind: "Edit",
@@ -85,32 +77,13 @@ export class MemberDialogManagerService {
     });
 
     const result = await lastValueFrom(dialog.closed);
-    const dialogResult = result ?? MemberDialogResult.Canceled;
-    let action: DialogResult["action"];
-    switch (dialogResult) {
-      case MemberDialogResult.Saved:
-        action = "saved";
-        break;
-      case MemberDialogResult.Deleted:
-        action = "deleted";
-        break;
-      case MemberDialogResult.Revoked:
-        action = "revoked";
-        break;
-      case MemberDialogResult.Restored:
-        action = "restored";
-        break;
-      default:
-        action = undefined;
-    }
-
-    return { result: dialogResult, action };
+    return result ?? MemberDialogResult.Canceled;
   }
 
   async openAccountRecoveryDialog(
     user: OrganizationUserView,
     organization: Organization,
-  ): Promise<DialogResult<AccountRecoveryDialogResultType>> {
+  ): Promise<AccountRecoveryDialogResultType> {
     const dialogRef = AccountRecoveryDialogComponent.open(this.dialogService, {
       data: {
         name: this.userNamePipe.transform(user),
@@ -121,13 +94,13 @@ export class MemberDialogManagerService {
     });
 
     const result = await lastValueFrom(dialogRef.closed);
-    return { result: result ?? AccountRecoveryDialogResultType.Ok };
+    return result ?? AccountRecoveryDialogResultType.Ok;
   }
 
   async openBulkConfirmDialog(
     organization: Organization,
     users: OrganizationUserView[],
-  ): Promise<DialogResult<void>> {
+  ): Promise<void> {
     const dialogRef = BulkConfirmDialogComponent.open(this.dialogService, {
       data: {
         organization: organization,
@@ -136,13 +109,12 @@ export class MemberDialogManagerService {
     });
 
     await lastValueFrom(dialogRef.closed);
-    return { result: undefined, action: "confirmed" };
   }
 
   async openBulkRemoveDialog(
     organization: Organization,
     users: OrganizationUserView[],
-  ): Promise<DialogResult<void>> {
+  ): Promise<void> {
     const dialogRef = BulkRemoveDialogComponent.open(this.dialogService, {
       data: {
         organizationId: organization.id,
@@ -151,13 +123,12 @@ export class MemberDialogManagerService {
     });
 
     await lastValueFrom(dialogRef.closed);
-    return { result: undefined };
   }
 
   async openBulkDeleteDialog(
     organization: Organization,
     users: OrganizationUserView[],
-  ): Promise<DialogResult<void>> {
+  ): Promise<void> {
     const warningAcknowledged = await firstValueFrom(
       this.deleteManagedMemberWarningService.warningAcknowledged(organization.id),
     );
@@ -169,7 +140,7 @@ export class MemberDialogManagerService {
     ) {
       const acknowledged = await this.deleteManagedMemberWarningService.showWarning();
       if (!acknowledged) {
-        return { result: undefined };
+        return;
       }
     }
 
@@ -181,14 +152,13 @@ export class MemberDialogManagerService {
     });
 
     await lastValueFrom(dialogRef.closed);
-    return { result: undefined, action: "deleted" };
   }
 
   async openBulkRestoreRevokeDialog(
     organization: Organization,
     users: OrganizationUserView[],
     isRevoking: boolean,
-  ): Promise<DialogResult<void>> {
+  ): Promise<void> {
     const ref = BulkRestoreRevokeComponent.open(this.dialogService, {
       organizationId: organization.id,
       users: users,
@@ -196,13 +166,12 @@ export class MemberDialogManagerService {
     });
 
     await firstValueFrom(ref.closed);
-    return { result: undefined, action: isRevoking ? "revoked" : "restored" };
   }
 
   async openBulkEnableSecretsManagerDialog(
     organization: Organization,
     users: OrganizationUserView[],
-  ): Promise<DialogResult<void>> {
+  ): Promise<void> {
     const eligibleUsers = users.filter((ou) => !ou.accessSecretsManager);
 
     if (eligibleUsers.length === 0) {
@@ -211,7 +180,7 @@ export class MemberDialogManagerService {
         title: this.i18nService.t("errorOccurred"),
         message: this.i18nService.t("noSelectedUsersApplicable"),
       });
-      return { result: undefined };
+      return;
     }
 
     const dialogRef = BulkEnableSecretsManagerDialogComponent.open(this.dialogService, {
@@ -220,7 +189,6 @@ export class MemberDialogManagerService {
     });
 
     await lastValueFrom(dialogRef.closed);
-    return { result: undefined };
   }
 
   async openBulkStatusDialog(
@@ -228,7 +196,7 @@ export class MemberDialogManagerService {
     filteredUsers: OrganizationUserView[],
     request: Promise<any>,
     successMessage: string,
-  ): Promise<DialogResult<void>> {
+  ): Promise<void> {
     const dialogRef = BulkStatusComponent.open(this.dialogService, {
       data: {
         users: users,
@@ -239,7 +207,6 @@ export class MemberDialogManagerService {
     });
 
     await lastValueFrom(dialogRef.closed);
-    return { result: undefined };
   }
 
   openEventsDialog(user: OrganizationUserView, organization: Organization): void {

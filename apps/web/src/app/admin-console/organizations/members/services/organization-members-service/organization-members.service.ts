@@ -1,14 +1,5 @@
 import { Injectable } from "@angular/core";
-import {
-  Observable,
-  combineLatest,
-  switchMap,
-  map,
-  filter,
-  shareReplay,
-  BehaviorSubject,
-  from,
-} from "rxjs";
+import { Observable, combineLatest, switchMap, map, filter, shareReplay, from } from "rxjs";
 
 import { OrganizationUserApiService } from "@bitwarden/admin-console/common";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
@@ -27,7 +18,6 @@ import { OrganizationId } from "@bitwarden/common/types/guid";
 
 import { GroupApiService } from "../../../core";
 import { OrganizationUserView } from "../../../core/views/organization-user.view";
-import { BillingConstraintService } from "../billing-constraint/billing-constraint.service";
 
 export interface OrganizationMemberState {
   organization: Organization | null;
@@ -35,19 +25,15 @@ export interface OrganizationMemberState {
   policies: Policy[];
   resetPasswordPolicyEnabled: boolean;
   loading: boolean;
-  error: string | null;
 }
 
 @Injectable()
-export class OrganizationMembersFacadeService {
-  private refreshTrigger$ = new BehaviorSubject<void>(undefined);
-
+export class OrganizationMembersService {
   constructor(
     private organizationService: OrganizationService,
     private organizationUserApiService: OrganizationUserApiService,
     private policyService: PolicyService,
     private policyApiService: PolicyApiService,
-    private billingConstraintService: BillingConstraintService,
     private groupService: GroupApiService,
     private apiService: ApiService,
     private accountService: AccountService,
@@ -74,9 +60,7 @@ export class OrganizationMembersFacadeService {
       ),
     );
 
-    const users$ = combineLatest([this.refreshTrigger$, organization$]).pipe(
-      switchMap(([_, organization]) => this.loadUsers(organization)),
-    );
+    const users$ = organization$.pipe(switchMap((organization) => this.loadUsers(organization)));
 
     return combineLatest([organization$, users$, policies$]).pipe(
       map(([organization, users, policies]) => {
@@ -90,19 +74,13 @@ export class OrganizationMembersFacadeService {
           policies,
           resetPasswordPolicyEnabled: resetPasswordPolicy?.enabled ?? false,
           loading: false, // Data is loaded when we reach this point
-          error: null,
         };
       }),
       shareReplay({ refCount: true, bufferSize: 1 }),
     );
   }
 
-  refreshData(): void {
-    this.refreshTrigger$.next();
-    this.billingConstraintService.refreshBillingMetadata();
-  }
-
-  private async loadUsers(organization: Organization): Promise<OrganizationUserView[]> {
+  async loadUsers(organization: Organization): Promise<OrganizationUserView[]> {
     let groupsPromise: Promise<Map<string, string>> | undefined;
     let collectionsPromise: Promise<Map<string, string>> | undefined;
 

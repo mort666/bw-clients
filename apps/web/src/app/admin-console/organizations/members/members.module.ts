@@ -19,10 +19,9 @@ import { UserDialogModule } from "./components/member-dialog";
 import { MembersRoutingModule } from "./members-routing.module";
 import { MembersComponent } from "./members.component";
 import {
-  OrganizationMembersFacadeService,
+  OrganizationMembersService,
   MemberActionsService,
   BillingConstraintService,
-  MemberPermissionsService,
   MemberDialogManagerService,
 } from "./services";
 
@@ -48,10 +47,9 @@ import {
     BulkDeleteDialogComponent,
   ],
   providers: [
-    OrganizationMembersFacadeService,
+    OrganizationMembersService,
     MemberActionsService,
     BillingConstraintService,
-    MemberPermissionsService,
     MemberDialogManagerService,
   ],
 })
