@@ -24,6 +24,7 @@ import { KeyService } from "@bitwarden/key-management";
 
 import { OrganizationUserView } from "../organizations/core/views/organization-user.view";
 import { UserConfirmComponent } from "../organizations/manage/user-confirm.component";
+import { MemberActionResult } from "../organizations/members/services/member-actions/member-actions.service";
 
 import { PeopleTableDataSource, peopleFilter } from "./people-table-data-source";
 
@@ -76,6 +77,7 @@ export abstract class BaseMembersComponent<UserView extends UserViewTypes> {
    * The currently executing promise - used to avoid multiple user actions executing at once.
    */
   actionPromise?: Promise<void>;
+  actionPromise2?: Promise<MemberActionResult>;
 
   protected searchControl = new FormControl("", { nonNullable: true });
   protected statusToggle = new BehaviorSubject<StatusType | undefined>(undefined);

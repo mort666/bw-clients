@@ -2,7 +2,7 @@
 @if (organization) {
   <app-organization-free-trial-warning
     [organization]="organization"
-    (clicked)="navigateToPaymentMethod(organization)"
+    (clicked)="billingConstraint.navigateToPaymentMethod(organization)"
   >
   </app-organization-free-trial-warning>
   <app-header>

@@ -18,6 +18,13 @@ import { BulkStatusComponent } from "./components/bulk/bulk-status.component";
 import { UserDialogModule } from "./components/member-dialog";
 import { MembersRoutingModule } from "./members-routing.module";
 import { MembersComponent } from "./members.component";
+import {
+  OrganizationMembersFacadeService,
+  MemberActionsService,
+  BillingConstraintService,
+  MemberPermissionsService,
+  MemberDialogManagerService,
+} from "./services";
 
 @NgModule({
   imports: [
@@ -39,6 +46,13 @@ import { MembersComponent } from "./members.component";
     BulkStatusComponent,
     MembersComponent,
     BulkDeleteDialogComponent,
+  ],
+  providers: [
+    OrganizationMembersFacadeService,
+    MemberActionsService,
+    BillingConstraintService,
+    MemberPermissionsService,
+    MemberDialogManagerService,
   ],
 })
 export class MembersModule {}

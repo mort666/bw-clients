@@ -1,6 +1,6 @@
 import { Component, computed, Signal } from "@angular/core";
 import { takeUntilDestroyed, toSignal } from "@angular/core/rxjs-interop";
-import { ActivatedRoute, Router } from "@angular/router";
+import { ActivatedRoute } from "@angular/router";
 import {
   BehaviorSubject,
   combineLatest,
@@ -19,7 +19,6 @@ import {
 
 import {
   OrganizationUserApiService,
-  OrganizationUserConfirmRequest,
   OrganizationUserUserDetailsResponse,
   CollectionService,
   CollectionData,
@@ -28,7 +27,6 @@ import {
 } from "@bitwarden/admin-console/common";
 import { UserNamePipe } from "@bitwarden/angular/pipes/user-name.pipe";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
-import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
 import {
   getOrganizationById,
   OrganizationService,
@@ -43,28 +41,18 @@ import {
 } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
-import { OrganizationKeysRequest } from "@bitwarden/common/admin-console/models/request/organization-keys.request";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
-import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions/billing-api.service.abstraction";
-import { isNotSelfUpgradable, ProductTierType } from "@bitwarden/common/billing/enums";
+import { ProductTierType } from "@bitwarden/common/billing/enums";
 import { OrganizationBillingMetadataResponse } from "@bitwarden/common/billing/models/response/organization-billing-metadata.response";
-import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
-import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
-import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { ValidationService } from "@bitwarden/common/platform/abstractions/validation.service";
 import { OrganizationId, UserId } from "@bitwarden/common/types/guid";
-import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
-import { DialogService, SimpleDialogOptions, ToastService } from "@bitwarden/components";
+import { DialogService, ToastService } from "@bitwarden/components";
 import { KeyService } from "@bitwarden/key-management";
 import { OrganizationWarningsService } from "@bitwarden/web-vault/app/billing/organizations/warnings/services";
 
-import {
-  ChangePlanDialogResultType,
-  openChangePlanDialog,
-} from "../../../billing/organizations/change-plan-dialog.component";
 import { BaseMembersComponent } from "../../common/base-members.component";
 import { PeopleTableDataSource } from "../../common/people-table-data-source";
 import { GroupApiService } from "../core";
@@ -86,8 +74,9 @@ import {
   MemberDialogTab,
   openUserAddEditDialog,
 } from "./components/member-dialog";
-import { isFixedSeatPlan } from "./components/member-dialog/validators/org-seat-limit-reached.validator";
+import { BillingConstraintService } from "./services";
 import { DeleteManagedMemberWarningService } from "./services/delete-managed-member/delete-managed-member-warning.service";
+import { MemberActionsService } from "./services/member-actions/member-actions.service";
 import { OrganizationUserService } from "./services/organization-user/organization-user.service";
 
 class MembersTableDataSource extends PeopleTableDataSource<OrganizationUserView> {
@@ -128,7 +117,6 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     i18nService: I18nService,
     organizationManagementPreferencesService: OrganizationManagementPreferencesService,
     keyService: KeyService,
-    private encryptService: EncryptService,
     validationService: ValidationService,
     logService: LogService,
     userNamePipe: UserNamePipe,
@@ -137,19 +125,16 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     private policyService: PolicyService,
     private policyApiService: PolicyApiService,
     private route: ActivatedRoute,
-    private syncService: SyncService,
     private organizationService: OrganizationService,
     private accountService: AccountService,
-    private organizationApiService: OrganizationApiServiceAbstraction,
     private organizationUserApiService: OrganizationUserApiService,
-    private router: Router,
     private groupService: GroupApiService,
     private collectionService: CollectionService,
-    private billingApiService: BillingApiServiceAbstraction,
     protected deleteManagedMemberWarningService: DeleteManagedMemberWarningService,
-    private configService: ConfigService,
     private organizationUserService: OrganizationUserService,
     private organizationWarningsService: OrganizationWarningsService,
+    private memberActionsService: MemberActionsService,
+    protected billingConstraint: BillingConstraintService,
   ) {
     super(
       apiService,
@@ -193,34 +178,10 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
       .pipe(
         concatMap(async ([qParams, policies, organization]) => {
           // Backfill pub/priv key if necessary
-          if (organization.canManageUsersPassword && !organization.hasPublicAndPrivateKeys) {
-            const orgShareKey = await firstValueFrom(
-              this.userId$.pipe(
-                switchMap((userId) => this.keyService.orgKeys$(userId)),
-                map((orgKeys) => {
-                  if (orgKeys == null || orgKeys[organization.id] == null) {
-                    throw new Error("Organization keys not found for provided User.");
-                  }
-                  return orgKeys[organization.id];
-                }),
-              ),
-            );
-
-            const [orgPublicKey, encryptedOrgPrivateKey] =
-              await this.keyService.makeKeyPair(orgShareKey);
-            if (encryptedOrgPrivateKey.encryptedString == null) {
-              throw new Error("Encrypted private key is null.");
-            }
-            const request = new OrganizationKeysRequest(
-              orgPublicKey,
-              encryptedOrgPrivateKey.encryptedString,
-            );
-            const response = await this.organizationApiService.updateKeys(organization.id, request);
-            if (response != null) {
-              await this.syncService.fullSync(true); // Replace organizations with new data
-            } else {
-              throw new Error(this.i18nService.t("resetPasswordOrgKeysError"));
-            }
+          try {
+            await this.memberActionsService.ensureOrganizationKeys(organization);
+          } catch {
+            throw new Error(this.i18nService.t("resetPasswordOrgKeysError"));
           }
 
           const resetPasswordPolicy = policies
@@ -255,11 +216,8 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
       )
       .subscribe();
 
-    this.billingMetadata$ = combineLatest([this.refreshBillingMetadata$, organization$]).pipe(
-      switchMap(([_, organization]) =>
-        this.billingApiService.getOrganizationBillingMetadata(organization.id),
-      ),
-      takeUntilDestroyed(),
+    this.billingMetadata$ = organization$.pipe(
+      switchMap((organization) => this.billingConstraint.getBillingMetadata$(organization.id)),
       shareReplay({ bufferSize: 1, refCount: false }),
     );
 
@@ -353,20 +311,32 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     return await firstValueFrom(decryptedCollections$);
   }
 
-  removeUser(id: string, organization: Organization): Promise<void> {
-    return this.organizationUserApiService.removeOrganizationUser(organization.id, id);
+  async removeUser(id: string, organization: Organization): Promise<void> {
+    const result = await this.memberActionsService.removeUser(organization, id);
+    if (!result.success) {
+      throw new Error(result.error);
+    }
   }
 
-  revokeUser(id: string, organization: Organization): Promise<void> {
-    return this.organizationUserApiService.revokeOrganizationUser(organization.id, id);
+  async revokeUser(id: string, organization: Organization): Promise<void> {
+    const result = await this.memberActionsService.revokeUser(organization, id);
+    if (!result.success) {
+      throw new Error(result.error);
+    }
   }
 
-  restoreUser(id: string, organization: Organization): Promise<void> {
-    return this.organizationUserApiService.restoreOrganizationUser(organization.id, id);
+  async restoreUser(id: string, organization: Organization): Promise<void> {
+    const result = await this.memberActionsService.restoreUser(organization, id);
+    if (!result.success) {
+      throw new Error(result.error);
+    }
   }
 
-  reinviteUser(id: string, organization: Organization): Promise<void> {
-    return this.organizationUserApiService.postOrganizationUserReinvite(organization.id, id);
+  async reinviteUser(id: string, organization: Organization): Promise<void> {
+    const result = await this.memberActionsService.reinviteUser(organization, id);
+    if (!result.success) {
+      throw new Error(result.error);
+    }
   }
 
   async confirmUser(
@@ -374,30 +344,9 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     publicKey: Uint8Array,
     organization: Organization,
   ): Promise<void> {
-    if (
-      await firstValueFrom(this.configService.getFeatureFlag$(FeatureFlag.CreateDefaultLocation))
-    ) {
-      await firstValueFrom(this.organizationUserService.confirmUser(organization, user, publicKey));
-    } else {
-      const request = await firstValueFrom(
-        this.userId$.pipe(
-          switchMap((userId) => this.keyService.orgKeys$(userId)),
-          filter((orgKeys) => orgKeys != null),
-          map((orgKeys) => orgKeys[organization.id]),
-          switchMap((orgKey) => this.encryptService.encapsulateKeyUnsigned(orgKey, publicKey)),
-          map((encKey) => {
-            const req = new OrganizationUserConfirmRequest();
-            req.key = encKey.encryptedString;
-            return req;
-          }),
-        ),
-      );
-
-      await this.organizationUserApiService.postOrganizationUserConfirm(
-        organization.id,
-        user.id,
-        request,
-      );
+    const result = await this.memberActionsService.confirmUser(user, publicKey, organization);
+    if (!result.success) {
+      throw new Error(result.error);
     }
   }
 
@@ -438,30 +387,10 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
   }
 
   allowResetPassword(orgUser: OrganizationUserView, organization: Organization): boolean {
-    let callingUserHasPermission = false;
-
-    switch (organization.type) {
-      case OrganizationUserType.Owner:
-        callingUserHasPermission = true;
-        break;
-      case OrganizationUserType.Admin:
-        callingUserHasPermission = orgUser.type !== OrganizationUserType.Owner;
-        break;
-      case OrganizationUserType.Custom:
-        callingUserHasPermission =
-          orgUser.type !== OrganizationUserType.Owner &&
-          orgUser.type !== OrganizationUserType.Admin;
-        break;
-    }
-
-    return (
-      organization.canManageUsersPassword &&
-      callingUserHasPermission &&
-      organization.useResetPassword &&
-      organization.hasPublicAndPrivateKeys &&
-      orgUser.resetPasswordEnrolled &&
-      this.orgResetPasswordPolicyEnabled &&
-      orgUser.status === OrganizationUserStatusType.Confirmed
+    return this.memberActionsService.allowResetPassword(
+      orgUser,
+      organization,
+      this.orgResetPasswordPolicyEnabled,
     );
   }
 
@@ -473,83 +402,6 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
       organization.useResetPassword &&
       orgUser.resetPasswordEnrolled &&
       this.orgResetPasswordPolicyEnabled
-    );
-  }
-
-  private getManageBillingText(organization: Organization): string {
-    return organization.canEditSubscription ? "ManageBilling" : "NoManageBilling";
-  }
-
-  private getProductKey(organization: Organization): string {
-    let product = "";
-    switch (organization.productTierType) {
-      case ProductTierType.Free:
-        product = "freeOrg";
-        break;
-      case ProductTierType.TeamsStarter:
-        product = "teamsStarterPlan";
-        break;
-      case ProductTierType.Families:
-        product = "familiesPlan";
-        break;
-      default:
-        throw new Error(`Unsupported product type: ${organization.productTierType}`);
-    }
-    return `${product}InvLimitReached${this.getManageBillingText(organization)}`;
-  }
-
-  private getDialogContent(organization: Organization): string {
-    return this.i18nService.t(this.getProductKey(organization), organization.seats);
-  }
-
-  private getAcceptButtonText(organization: Organization): string {
-    if (!organization.canEditSubscription) {
-      return this.i18nService.t("ok");
-    }
-
-    const productType = organization.productTierType;
-
-    if (isNotSelfUpgradable(productType)) {
-      throw new Error(`Unsupported product type: ${productType}`);
-    }
-
-    return this.i18nService.t("upgrade");
-  }
-
-  private async handleDialogClose(
-    result: boolean | undefined,
-    organization: Organization,
-  ): Promise<void> {
-    if (!result || !organization.canEditSubscription) {
-      return;
-    }
-
-    const productType = organization.productTierType;
-
-    if (isNotSelfUpgradable(productType)) {
-      throw new Error(`Unsupported product type: ${organization.productTierType}`);
-    }
-
-    await this.router.navigate(["/organizations", organization.id, "billing", "subscription"], {
-      queryParams: { upgrade: true },
-    });
-  }
-
-  private async showSeatLimitReachedDialog(organization: Organization): Promise<void> {
-    const orgUpgradeSimpleDialogOpts: SimpleDialogOptions = {
-      title: this.i18nService.t("upgradeOrganization"),
-      content: this.getDialogContent(organization),
-      type: "primary",
-      acceptButtonText: this.getAcceptButtonText(organization),
-    };
-
-    if (!organization.canEditSubscription) {
-      orgUpgradeSimpleDialogOpts.cancelButtonText = null;
-    }
-
-    const simpleDialog = this.dialogService.openSimpleDialogRef(orgUpgradeSimpleDialogOpts);
-    await lastValueFrom(
-      simpleDialog.closed.pipe(map((closed) => this.handleDialogClose(closed, organization))),
     );
   }
 
@@ -572,51 +424,13 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     }
   }
 
-  private async handleSeatLimitForFixedTiers(organization: Organization) {
-    if (!organization.canEditSubscription) {
-      await this.showSeatLimitReachedDialog(organization);
-      return;
-    }
-
-    const reference = openChangePlanDialog(this.dialogService, {
-      data: {
-        organizationId: organization.id,
-        productTierType: organization.productTierType,
-      },
-    });
-
-    const result = await lastValueFrom(reference.closed);
-
-    if (result === ChangePlanDialogResultType.Submitted) {
-      await this.load(organization);
-    }
-  }
-
   async invite(organization: Organization) {
     const billingMetadata = await firstValueFrom(this.billingMetadata$);
-    if (
-      organization.hasReseller &&
-      organization.seats === billingMetadata?.organizationOccupiedSeats
-    ) {
-      this.toastService.showToast({
-        variant: "error",
-        title: this.i18nService.t("seatLimitReached"),
-        message: this.i18nService.t("contactYourProvider"),
-      });
-
-      return;
+    const seatLimitResult = this.billingConstraint.checkSeatLimit(organization, billingMetadata);
+    if (!(await this.billingConstraint.seatLimitReached(seatLimitResult, organization))) {
+      await this.handleInviteDialog(organization);
+      this.billingConstraint.refreshBillingMetadata();
     }
-
-    if (
-      billingMetadata?.organizationOccupiedSeats === organization.seats &&
-      isFixedSeatPlan(organization.productTierType)
-    ) {
-      await this.handleSeatLimitForFixedTiers(organization);
-
-      return;
-    }
-
-    await this.handleInviteDialog(organization);
   }
 
   async edit(
@@ -624,7 +438,9 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     organization: Organization,
     initialTab: MemberDialogTab = MemberDialogTab.Role,
   ) {
-    const billingMetadata = await firstValueFrom(this.billingMetadata$);
+    const billingMetadata = await firstValueFrom(
+      this.billingConstraint.getBillingMetadata$(organization.id),
+    );
     const dialog = openUserAddEditDialog(this.dialogService, {
       data: {
         kind: "Edit",
@@ -737,16 +553,21 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     }
 
     try {
-      const response = this.organizationUserApiService.postManyOrganizationUserReinvite(
-        organization.id,
+      const result = await this.memberActionsService.bulkReinvite(
+        organization,
         filteredUsers.map((user) => user.id),
       );
+
+      if (!result.successful) {
+        throw new Error();
+      }
+
       // Bulk Status component open
       const dialogRef = BulkStatusComponent.open(this.dialogService, {
         data: {
           users: users,
           filteredUsers: filteredUsers,
-          request: response,
+          request: Promise.resolve(result.successful),
           successfulMessage: this.i18nService.t("bulkReinviteMessage"),
         },
       });
@@ -916,12 +737,12 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
 
     await this.deleteManagedMemberWarningService.acknowledgeWarning(organization.id);
 
-    this.actionPromise = this.organizationUserApiService.deleteOrganizationUser(
-      organization.id,
-      user.id,
-    );
+    this.actionPromise2 = this.memberActionsService.deleteUser(organization, user.id);
     try {
-      await this.actionPromise;
+      const result = await this.actionPromise2;
+      if (!result.success) {
+        throw new Error(result.error);
+      }
       this.toastService.showToast({
         variant: "success",
         message: this.i18nService.t("organizationUserDeleted", this.userNamePipe.transform(user)),
@@ -972,15 +793,5 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     return this.dataSource
       .getCheckedUsers()
       .every((member) => member.managedByOrganization && validStatuses.includes(member.status));
-  }
-
-  async navigateToPaymentMethod(organization: Organization) {
-    const managePaymentDetailsOutsideCheckout = await this.configService.getFeatureFlag(
-      FeatureFlag.PM21881_ManagePaymentDetailsOutsideCheckout,
-    );
-    const route = managePaymentDetailsOutsideCheckout ? "payment-details" : "payment-method";
-    await this.router.navigate(["organizations", `${organization.id}`, "billing", route], {
-      state: { launchPaymentModalAutomatically: true },
-    });
   }
 }
