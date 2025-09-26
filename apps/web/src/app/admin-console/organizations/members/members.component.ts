@@ -43,7 +43,10 @@ import {
   OrganizationMembersService,
 } from "./services";
 import { DeleteManagedMemberWarningService } from "./services/delete-managed-member/delete-managed-member-warning.service";
-import { MemberActionsService } from "./services/member-actions/member-actions.service";
+import {
+  MemberActionsService,
+  MemberActionResult,
+} from "./services/member-actions/member-actions.service";
 
 class MembersTableDataSource extends PeopleTableDataSource<OrganizationUserView> {
   protected statusType = OrganizationUserStatusType;
@@ -175,43 +178,28 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     return await this.memberService.loadUsers(organization);
   }
 
-  async removeUser(id: string, organization: Organization): Promise<void> {
-    const result = await this.memberActionsService.removeUser(organization, id);
-    if (!result.success) {
-      throw new Error(result.error);
-    }
+  async removeUser(id: string, organization: Organization): Promise<MemberActionResult> {
+    return await this.memberActionsService.removeUser(organization, id);
   }
 
-  async revokeUser(id: string, organization: Organization): Promise<void> {
-    const result = await this.memberActionsService.revokeUser(organization, id);
-    if (!result.success) {
-      throw new Error(result.error);
-    }
+  async revokeUser(id: string, organization: Organization): Promise<MemberActionResult> {
+    return await this.memberActionsService.revokeUser(organization, id);
   }
 
-  async restoreUser(id: string, organization: Organization): Promise<void> {
-    const result = await this.memberActionsService.restoreUser(organization, id);
-    if (!result.success) {
-      throw new Error(result.error);
-    }
+  async restoreUser(id: string, organization: Organization): Promise<MemberActionResult> {
+    return await this.memberActionsService.restoreUser(organization, id);
   }
 
-  async reinviteUser(id: string, organization: Organization): Promise<void> {
-    const result = await this.memberActionsService.reinviteUser(organization, id);
-    if (!result.success) {
-      throw new Error(result.error);
-    }
+  async reinviteUser(id: string, organization: Organization): Promise<MemberActionResult> {
+    return await this.memberActionsService.reinviteUser(organization, id);
   }
 
   async confirmUser(
     user: OrganizationUserView,
     publicKey: Uint8Array,
     organization: Organization,
-  ): Promise<void> {
-    const result = await this.memberActionsService.confirmUser(user, publicKey, organization);
-    if (!result.success) {
-      throw new Error(result.error);
-    }
+  ): Promise<MemberActionResult> {
+    return await this.memberActionsService.confirmUser(user, publicKey, organization);
   }
 
   async revoke(user: OrganizationUserView, organization: Organization) {
@@ -223,12 +211,16 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
 
     this.actionPromise = this.revokeUser(user.id, organization);
     try {
-      await this.actionPromise;
-      this.toastService.showToast({
-        variant: "success",
-        message: this.i18nService.t("revokedUserId", this.userNamePipe.transform(user)),
-      });
-      await this.load(organization);
+      const result = await this.actionPromise;
+      if (result.success) {
+        this.toastService.showToast({
+          variant: "success",
+          message: this.i18nService.t("revokedUserId", this.userNamePipe.transform(user)),
+        });
+        await this.load(organization);
+      } else {
+        throw new Error(result.error);
+      }
     } catch (e) {
       this.validationService.showError(e);
     }
@@ -238,12 +230,16 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
   async restore(user: OrganizationUserView, organization: Organization) {
     this.actionPromise = this.restoreUser(user.id, organization);
     try {
-      await this.actionPromise;
-      this.toastService.showToast({
-        variant: "success",
-        message: this.i18nService.t("restoredUserId", this.userNamePipe.transform(user)),
-      });
-      await this.load(organization);
+      const result = await this.actionPromise;
+      if (result.success) {
+        this.toastService.showToast({
+          variant: "success",
+          message: this.i18nService.t("restoredUserId", this.userNamePipe.transform(user)),
+        });
+        await this.load(organization);
+      } else {
+        throw new Error(result.error);
+      }
     } catch (e) {
       this.validationService.showError(e);
     }
@@ -469,9 +465,9 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
       return false;
     }
 
-    this.actionPromise2 = this.memberActionsService.deleteUser(organization, user.id);
+    this.actionPromise = this.memberActionsService.deleteUser(organization, user.id);
     try {
-      const result = await this.actionPromise2;
+      const result = await this.actionPromise;
       if (!result.success) {
         throw new Error(result.error);
       }
