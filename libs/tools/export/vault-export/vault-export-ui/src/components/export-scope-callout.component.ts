@@ -27,7 +27,7 @@ export class ExportScopeCalloutComponent {
   /* Optional export format, determines which individual export description to display */
   readonly exportFormat = input<string>();
   /* The description key to use for organizational exports */
-  readonly exportScopeDescription = input<string>();
+  readonly orgExportDescription = input<string>();
 
   constructor(
     protected organizationService: OrganizationService,
@@ -38,7 +38,7 @@ export class ExportScopeCalloutComponent {
       await this.getScopeMessage(
         this.organizationId(),
         this.exportFormat(),
-        this.exportScopeDescription(),
+        this.orgExportDescription(),
       );
       this.show = true;
     });
@@ -47,7 +47,7 @@ export class ExportScopeCalloutComponent {
   private async getScopeMessage(
     organizationId: string,
     exportFormat: string,
-    exportScopeDescription: string,
+    orgExportDescription: string,
   ): Promise<void> {
     const userId = await firstValueFrom(getUserId(this.accountService.activeAccount$));
 
@@ -59,7 +59,7 @@ export class ExportScopeCalloutComponent {
 
       this.scopeConfig = {
         title: "exportingOrganizationVaultTitle",
-        description: exportScopeDescription,
+        description: orgExportDescription,
         scopeIdentifier: org?.name ?? "",
       };
     } else {

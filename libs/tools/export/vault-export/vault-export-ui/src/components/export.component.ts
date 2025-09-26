@@ -130,7 +130,7 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
     return this._showExcludeMyItems;
   }
 
-  get exportScopeDescription(): string {
+  get orgExportDescription(): string {
     if (!this._showExcludeMyItems) {
       return "exportingOrganizationVaultDesc";
     }
