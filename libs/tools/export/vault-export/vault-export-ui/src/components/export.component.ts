@@ -247,18 +247,40 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
   ) {}
 
   async ngOnInit() {
-    /*
-      Subscribe to values necessary for conditional logic in ngOnInit()
-    */
+    this.observeFeatureFlags();
+    this.observeFormState();
+    this.observePolicyStatus();
+    this.observeFormSelections();
+
+    // order is important below this line
+    this.observeMyItemsExclusionCriteria();
+    this.observeValidatorAdjustments();
+    this.setupPasswordGeneration();
+
+    if (this.organizationId) {
+      // organization vault export
+      this.initOrganizationOnly();
+      return;
+    }
+
+    // individual vault export
+    this.initIndividual();
+    this.setupPolicyBasedFormState();
+  }
+
+  private observeFeatureFlags(): void {
     this.createDefaultLocationFlagEnabled$ = from(
       this.configService.getFeatureFlag(FeatureFlag.CreateDefaultLocation),
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
 
-    // Setup subscription to emit when this form is enabled/disabled
+  private observeFormState(): void {
     this.exportForm.statusChanges.pipe(takeUntil(this.destroy$)).subscribe((c) => {
       this.formDisabled.emit(c === "DISABLED");
     });
+  }
 
+  private observePolicyStatus(): void {
     this.disablePersonalVaultExportPolicy$ = this.accountService.activeAccount$.pipe(
       getUserId,
       switchMap((userId) =>
@@ -266,6 +288,7 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
       ),
     );
 
+    // when true, html template will hide "My Vault" option in vault selector drop down
     this.organizationDataOwnershipPolicyAppliesToUser$ = this.accountService.activeAccount$.pipe(
       getUserId,
       switchMap((userId) =>
@@ -273,6 +296,11 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
       ),
     );
 
+    /* 
+      Determines how organization exports are described in the callout. 
+      Admins are exempted from organization data ownership policy, 
+      and so this needs to determine if the policy is enabled for the org, not if it applies to the user.
+    */
     this.organizationDataOwnershipPolicyEnabledForOrg$ = combineLatest([
       this.accountService.activeAccount$.pipe(getUserId),
       this._organizationId$,
@@ -293,11 +321,9 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
         );
       }),
     );
+  }
 
-    /*
-      Subscribe to drop down (vault selector) changes for form reactivity 
-    */
-
+  private observeFormSelections(): void {
     this.exportForm.controls.vaultSelector.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe((value) => {
@@ -309,10 +335,15 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
           this.formatOptions.push({ name: ".zip (with attachments)", value: "zip" });
         }
       });
+  }
 
-    /* Determine value of showExcludeMyItems based on feature flag, policy active for org, and valid OrganizationId */
-    /* TODO extract this to a private helper method */
-    /* TODO why does moving this block (re-ordering) break the component?  */
+  /**
+   * Determine value of showExcludeMyItems. Returns true when:
+   * CreateDefaultLocation feature flag is on
+   * AND organizationDataOwnershipPolicy is enabled for the selected organization
+   * AND a valid OrganizationId is present (not exporting from individual vault)
+   */
+  private observeMyItemsExclusionCriteria(): void {
     combineLatest({
       createDefaultLocationFlagEnabled: this.createDefaultLocationFlagEnabled$,
       organizationDataOwnershipPolicyEnabledForOrg:
@@ -334,16 +365,20 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
           this._showExcludeMyItems = organizationDataOwnershipPolicyEnabledForOrg;
         },
       );
-    /* TODO extract other logical blocks to be private helper methods */
+  }
 
+  // Setup validator adjustments based on format and encryption type changes
+  private observeValidatorAdjustments(): void {
     merge(
       this.exportForm.get("format").valueChanges,
       this.exportForm.get("fileEncryptionType").valueChanges,
     )
       .pipe(startWith(0), takeUntil(this.destroy$))
       .subscribe(() => this.adjustValidators());
+  }
 
-    // Wire up the password generation for the password-protected export
+  // Wire up the password generation for password-protected exports
+  private setupPasswordGeneration(): void {
     const account$ = this.accountService.activeAccount$.pipe(
       pin({
         name() {
@@ -354,6 +389,7 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
         },
       }),
     );
+
     this.generatorService
       .generate$({ on$: this.onGenerate$, account$ })
       .pipe(takeUntil(this.destroy$))
@@ -363,23 +399,29 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
           confirmFilePassword: generated.credential,
         });
       });
+  }
 
-    if (this.organizationId) {
-      this.organizations$ = this.accountService.activeAccount$.pipe(
-        getUserId,
-        switchMap((userId) =>
-          this.organizationService
-            .memberOrganizations$(userId)
-            .pipe(map((orgs) => orgs.filter((org) => org.id == this.organizationId))),
-        ),
-      );
-      this.exportForm.controls.vaultSelector.patchValue(this.organizationId);
-      this.exportForm.controls.vaultSelector.disable();
+  /* 
+  Initialize component for organization only export  
+  Hides "My Vault" option by returning immediately 
+  */
+  private initOrganizationOnly(): void {
+    this.organizations$ = this.accountService.activeAccount$.pipe(
+      getUserId,
+      switchMap((userId) =>
+        this.organizationService
+          .memberOrganizations$(userId)
+          .pipe(map((orgs) => orgs.filter((org) => org.id == this.organizationId))),
+      ),
+    );
+    this.exportForm.controls.vaultSelector.patchValue(this.organizationId);
+    this.exportForm.controls.vaultSelector.disable();
 
-      this.onlyManagedCollections = false;
-      return;
-    }
+    this.onlyManagedCollections = false;
+  }
 
+  // Initialize component to support individual and organizational exports
+  private initIndividual(): void {
     this.organizations$ = this.accountService.activeAccount$
       .pipe(
         getUserId,
@@ -395,15 +437,15 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
           const managedCollectionsOrgIds = new Set(
             collections.filter((c) => c.manage).map((c) => c.organizationId),
           );
-          // Filter organizations that exist in managedCollectionsOrgIds
           const filteredOrgs = memberOrganizations.filter((org) =>
             managedCollectionsOrgIds.has(org.id),
           );
-          // Sort the filtered organizations based on the name
           return filteredOrgs.sort(Utils.getSortFunction(this.i18nService, "name"));
         }),
       );
+  }
 
+  private setupPolicyBasedFormState(): void {
     combineLatest([
       this.disablePersonalVaultExportPolicy$,
       this.organizationDataOwnershipPolicyAppliesToUser$,
