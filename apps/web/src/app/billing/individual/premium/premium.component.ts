@@ -12,6 +12,7 @@ import { AccountService } from "@bitwarden/common/auth/abstractions/account.serv
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions";
 import { TaxServiceAbstraction } from "@bitwarden/common/billing/abstractions/tax.service.abstraction";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -90,17 +91,20 @@ export class PremiumComponent {
       ),
     );
 
-    // Show new design when user doesn't have premium from any source
     this.shouldShowNewDesign$ = combineLatest([
       this.hasPremiumFromAnyOrganization$,
       this.hasPremiumPersonally$,
-    ]).pipe(map(([hasOrgPremium, hasPersonalPremium]) => !hasOrgPremium && !hasPersonalPremium));
+      this.configService.getFeatureFlag$(FeatureFlag.PremiumUpgradeNewDesign),
+    ]).pipe(
+      map(
+        ([hasOrgPremium, hasPersonalPremium, newDesignFeatureFlagEnabled]) =>
+          !hasOrgPremium && !hasPersonalPremium && newDesignFeatureFlagEnabled,
+      ),
+    );
 
-    // Load personal subscription pricing tiers
     this.personalPricingTiers$ =
       this.subscriptionPricingService.getPersonalSubscriptionPricingTiers$();
 
-    // Initialize combined observables for pricing cards
     this.premiumCardData$ = this.personalPricingTiers$.pipe(
       map((tiers) => {
         const tier = tiers.find((t) => t.id === "premium");
