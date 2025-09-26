@@ -90,6 +90,7 @@ import { ExportScopeCalloutComponent } from "./export-scope-callout.component";
 })
 export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
   private _organizationId: OrganizationId | undefined;
+  private _showExcludeMyItems = false;
   private createDefaultLocationFlagEnabled$: Observable<boolean>;
   private organizationExport$ = new BehaviorSubject<boolean>(false);
 
@@ -126,22 +127,20 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
       });
   }
 
-  private _showExcludeMyItems = false;
-
   get showExcludeMyItems(): boolean {
     return this._showExcludeMyItems;
   }
 
   /**
-   * When true, the callout will render a translation value specific to org data ownership policy
+   * When true, the callout will render a translation value specifying that My items collections will not be exported
    * Default: false
    *
    * In order for this to be true, the CreateDefaultLocation feature flag must be enabled,
    * the Enforce Organization Data Ownership policy must be enabled,
-   * and an organization must be selected as input (if organizationId is undefined, it's an individual export).
+   * and an organization must be selected as input (if organizationId is undefined, it's treated as an individual export).
    */
   @Input() set showExcludeMyItems(organizationId: OrganizationId) {
-    // if organizationId is undefined or invalid, treat as an individual vault export, which is unaffected by policy/flag
+    // if organizationId is undefined or invalid, treat as an individual vault export
     const validOrgId = !Utils.isNullOrEmpty(organizationId) && isId<OrganizationId>(organizationId);
     if (!validOrgId) {
       this._showExcludeMyItems = false;
@@ -149,7 +148,6 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    // this._organizationId = organizationId;  // already assigned via the organizationId input setter
     this.organizationExport$.next(true);
   }
 
@@ -264,9 +262,19 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
       ),
     );
 
-    /* determine value of _showExcludeMyItems in a reactive way
-       feature flag is not expected to change at runtime
-       policy and organization can be changed by user actions */
+    this.exportForm.controls.vaultSelector.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((value) => {
+        this.organizationId = value !== "myVault" ? value : undefined;
+
+        this.formatOptions = this.formatOptions.filter((option) => option.value !== "zip");
+        this.exportForm.get("format").setValue("json");
+        if (value === "myVault") {
+          this.formatOptions.push({ name: ".zip (with attachments)", value: "zip" });
+        }
+      });
+
+    // Determine value of showExcludeMyItems based on input and flag/policy state
     combineLatest({
       createDefaultLocationFlagEnabled: this.createDefaultLocationFlagEnabled$,
       organizationDataOwnershipPolicyEnabled: this.organizationDataOwnershipPolicy$,
@@ -285,18 +293,6 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
             organizationDataOwnershipPolicyEnabled;
         },
       );
-
-    this.exportForm.controls.vaultSelector.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((value) => {
-        this.organizationId = value !== "myVault" ? value : undefined;
-
-        this.formatOptions = this.formatOptions.filter((option) => option.value !== "zip");
-        this.exportForm.get("format").setValue("json");
-        if (value === "myVault") {
-          this.formatOptions.push({ name: ".zip (with attachments)", value: "zip" });
-        }
-      });
 
     merge(
       this.exportForm.get("format").valueChanges,
