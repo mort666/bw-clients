@@ -1,16 +1,11 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
 import { CommonModule } from "@angular/common";
-import { Component, Optional, effect, input } from "@angular/core";
-import { Router } from "@angular/router";
+import { Component, effect, input } from "@angular/core";
 import { firstValueFrom, map } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
-import { ClientType } from "@bitwarden/common/enums";
-import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { getById } from "@bitwarden/common/platform/misc/rxjs-operators";
 import { CalloutModule } from "@bitwarden/components";
 
@@ -31,42 +26,30 @@ export class ExportScopeCalloutComponent {
   readonly organizationId = input<string>();
   /* Optional export format, determines which individual export description to display */
   readonly exportFormat = input<string>();
-  readonly showExcludeMyItems = input<boolean>(false);
+  /* The description key to use for organizational exports */
+  readonly exportScopeDescription = input<string>();
 
   constructor(
     protected organizationService: OrganizationService,
     protected accountService: AccountService,
-    private platformUtilsService: PlatformUtilsService,
-    @Optional() private router?: Router,
   ) {
     effect(async () => {
       this.show = false;
-      await this.getScopeMessage(this.organizationId(), this.exportFormat());
+      await this.getScopeMessage(
+        this.organizationId(),
+        this.exportFormat(),
+        this.exportScopeDescription(),
+      );
       this.show = true;
     });
   }
 
-  private get isAdminConsoleContext(): boolean {
-    const isWeb = this.platformUtilsService.getClientType?.() === ClientType.Web;
-    if (!isWeb || !this.router) {
-      return false;
-    }
-    try {
-      const url = this.router.url ?? "";
-      return url.includes("/organizations/");
-    } catch {
-      return false;
-    }
-  }
-
-  private async getScopeMessage(organizationId: string, exportFormat: string): Promise<void> {
+  private async getScopeMessage(
+    organizationId: string,
+    exportFormat: string,
+    exportScopeDescription: string,
+  ): Promise<void> {
     const userId = await firstValueFrom(getUserId(this.accountService.activeAccount$));
-
-    const orgExportDescription = this.showExcludeMyItems
-      ? this.isAdminConsoleContext
-        ? "exportingOrganizationVaultFromAdminConsoleWithDataOwnershipDesc"
-        : "exportingOrganizationVaultFromPasswordManagerWithDataOwnershipDesc"
-      : "exportingOrganizationVaultDesc";
 
     if (organizationId != null) {
       // exporting from organizational vault
@@ -76,7 +59,7 @@ export class ExportScopeCalloutComponent {
 
       this.scopeConfig = {
         title: "exportingOrganizationVaultTitle",
-        description: orgExportDescription,
+        description: exportScopeDescription,
         scopeIdentifier: org?.name ?? "",
       };
     } else {

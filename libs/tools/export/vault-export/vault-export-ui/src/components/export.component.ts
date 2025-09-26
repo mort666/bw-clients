@@ -1,5 +1,3 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
 import { CommonModule } from "@angular/common";
 import {
   AfterViewInit,
@@ -10,8 +8,10 @@ import {
   OnInit,
   Output,
   ViewChild,
+  Optional,
 } from "@angular/core";
 import { ReactiveFormsModule, UntypedFormBuilder, Validators } from "@angular/forms";
+import { Router } from "@angular/router";
 import {
   BehaviorSubject,
   combineLatest,
@@ -20,6 +20,7 @@ import {
   map,
   merge,
   Observable,
+  of,
   shareReplay,
   startWith,
   Subject,
@@ -39,12 +40,13 @@ import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
-import { EventType } from "@bitwarden/common/enums";
+import { ClientType, EventType } from "@bitwarden/common/enums";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { FileDownloadService } from "@bitwarden/common/platform/abstractions/file-download/file-download.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { getById } from "@bitwarden/common/platform/misc";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { pin } from "@bitwarden/common/tools/rx";
@@ -89,14 +91,9 @@ import { ExportScopeCalloutComponent } from "./export-scope-callout.component";
   ],
 })
 export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
-  private _organizationId: OrganizationId | undefined;
-  private _showExcludeMyItems = false;
+  private _organizationId$ = new BehaviorSubject<OrganizationId | undefined>(undefined);
   private createDefaultLocationFlagEnabled$: Observable<boolean>;
-  private organizationExport$ = new BehaviorSubject<boolean>(false);
-
-  get organizationId(): OrganizationId | undefined {
-    return this._organizationId;
-  }
+  private _showExcludeMyItems = false;
 
   /**
    * Enables the hosting control to pass in an organizationId
@@ -104,51 +101,55 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   @Input() set organizationId(value: OrganizationId | string | undefined) {
     if (Utils.isNullOrEmpty(value)) {
-      this._organizationId = undefined;
+      this._organizationId$.next(undefined);
       return;
     }
 
     if (!isId<OrganizationId>(value)) {
-      this._organizationId = undefined;
+      this._organizationId$.next(undefined);
       return;
     }
 
-    this._organizationId = value;
+    this._organizationId$.next(value);
 
     getUserId(this.accountService.activeAccount$)
       .pipe(
-        switchMap((userId) =>
-          this.organizationService.organizations$(userId).pipe(getById(this._organizationId)),
-        ),
+        switchMap((userId) => this.organizationService.organizations$(userId).pipe(getById(value))),
       )
       .pipe(takeUntil(this.destroy$))
       .subscribe((organization) => {
-        this._organizationId = organization?.id;
+        this._organizationId$.next(organization?.id);
       });
+  }
+
+  get organizationId(): OrganizationId | undefined {
+    return this._organizationId$.value;
   }
 
   get showExcludeMyItems(): boolean {
     return this._showExcludeMyItems;
   }
 
-  /**
-   * When true, the callout will render a translation value specifying that My items collections will not be exported
-   * Default: false
-   *
-   * In order for this to be true, the CreateDefaultLocation feature flag must be enabled,
-   * the Enforce Organization Data Ownership policy must be enabled,
-   * and an organization must be selected as input (if organizationId is undefined, it's treated as an individual export).
-   */
-  @Input() set showExcludeMyItems(organizationId: OrganizationId) {
-    // if organizationId is undefined or invalid, treat as an individual vault export
-    const validOrgId = !Utils.isNullOrEmpty(organizationId) && isId<OrganizationId>(organizationId);
-    if (!validOrgId) {
-      this._showExcludeMyItems = false;
-      this.organizationExport$.next(false);
-      return;
+  get exportScopeDescription(): string {
+    if (!this._showExcludeMyItems) {
+      return "exportingOrganizationVaultDesc";
     }
+    return this.isAdminConsoleContext
+      ? "exportingOrganizationVaultFromAdminConsoleWithDataOwnershipDesc"
+      : "exportingOrganizationVaultFromPasswordManagerWithDataOwnershipDesc";
+  }
 
-    this.organizationExport$.next(true);
+  private get isAdminConsoleContext(): boolean {
+    const isWeb = this.platformUtilsService.getClientType?.() === ClientType.Web;
+    if (!isWeb || !this.router) {
+      return false;
+    }
+    try {
+      const url = this.router.url ?? "";
+      return url.includes("/organizations/");
+    } catch {
+      return false;
+    }
   }
 
   /**
@@ -175,7 +176,7 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
   /**
    * Emits when the creation and download of the export-file have succeeded
    * - Emits an undefined when exporting from an individual vault
-   * - Emits the organizationId when exporting from an organizationl vault
+   * - Emits the organizationId when exporting from an organizational vault
    * */
   @Output()
   onSuccessfulExport = new EventEmitter<OrganizationId | undefined>();
@@ -194,7 +195,10 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   disablePersonalVaultExportPolicy$: Observable<boolean>;
-  organizationDataOwnershipPolicy$: Observable<boolean>;
+  // detects if policy is enabled and applies to the user, admins are exempted
+  organizationDataOwnershipPolicyAppliesToUser$: Observable<boolean>;
+  // detects if policy is enabled regardless of admin exemption
+  organizationDataOwnershipPolicyEnabledForOrg$: Observable<boolean>;
 
   exportForm = this.formBuilder.group({
     vaultSelector: [
@@ -236,9 +240,14 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
     private accountService: AccountService,
     private collectionService: CollectionService,
     private configService: ConfigService,
+    private platformUtilsService: PlatformUtilsService,
+    @Optional() private router?: Router,
   ) {}
 
   async ngOnInit() {
+    /*
+      Subscribe to values necessary for conditional logic in ngOnInit()
+    */
     this.createDefaultLocationFlagEnabled$ = from(
       this.configService.getFeatureFlag(FeatureFlag.CreateDefaultLocation),
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
@@ -255,12 +264,37 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
       ),
     );
 
-    this.organizationDataOwnershipPolicy$ = this.accountService.activeAccount$.pipe(
+    this.organizationDataOwnershipPolicyAppliesToUser$ = this.accountService.activeAccount$.pipe(
       getUserId,
       switchMap((userId) =>
         this.policyService.policyAppliesToUser$(PolicyType.OrganizationDataOwnership, userId),
       ),
     );
+
+    this.organizationDataOwnershipPolicyEnabledForOrg$ = combineLatest([
+      this.accountService.activeAccount$.pipe(getUserId),
+      this._organizationId$,
+    ]).pipe(
+      switchMap(([userId, organizationId]) => {
+        if (!organizationId || !userId) {
+          return of(false);
+        }
+        return this.policyService.policies$(userId).pipe(
+          map((policies) => {
+            const policy = policies?.find(
+              (p) =>
+                p.type === PolicyType.OrganizationDataOwnership &&
+                p.organizationId === organizationId,
+            );
+            return policy?.enabled ?? false;
+          }),
+        );
+      }),
+    );
+
+    /*
+      Subscribe to drop down (vault selector) changes for form reactivity 
+    */
 
     this.exportForm.controls.vaultSelector.valueChanges
       .pipe(takeUntil(this.destroy$))
@@ -274,25 +308,31 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       });
 
-    // Determine value of showExcludeMyItems based on input and flag/policy state
+    /* Determine value of showExcludeMyItems based on feature flag, policy active for org, and valid OrganizationId */
+    /* TODO extract this to a private helper method */
+    /* TODO why does moving this block (re-ordering) break the component?  */
     combineLatest({
       createDefaultLocationFlagEnabled: this.createDefaultLocationFlagEnabled$,
-      organizationDataOwnershipPolicyEnabled: this.organizationDataOwnershipPolicy$,
-      hasOrganizationContext: this.organizationExport$,
+      organizationDataOwnershipPolicyEnabledForOrg:
+        this.organizationDataOwnershipPolicyEnabledForOrg$,
+      organizationId: this._organizationId$,
     })
       .pipe(takeUntil(this.destroy$))
       .subscribe(
         ({
           createDefaultLocationFlagEnabled,
-          organizationDataOwnershipPolicyEnabled,
-          hasOrganizationContext,
+          organizationDataOwnershipPolicyEnabledForOrg,
+          organizationId,
         }) => {
-          this._showExcludeMyItems =
-            hasOrganizationContext &&
-            createDefaultLocationFlagEnabled &&
-            organizationDataOwnershipPolicyEnabled;
+          if (!createDefaultLocationFlagEnabled || !organizationId) {
+            this._showExcludeMyItems = false;
+            return;
+          }
+
+          this._showExcludeMyItems = organizationDataOwnershipPolicyEnabledForOrg;
         },
       );
+    /* TODO extract other logical blocks to be private helper methods */
 
     merge(
       this.exportForm.get("format").valueChanges,
@@ -364,7 +404,7 @@ export class ExportComponent implements OnInit, OnDestroy, AfterViewInit {
 
     combineLatest([
       this.disablePersonalVaultExportPolicy$,
-      this.organizationDataOwnershipPolicy$,
+      this.organizationDataOwnershipPolicyAppliesToUser$,
       this.organizations$,
     ])
       .pipe(
