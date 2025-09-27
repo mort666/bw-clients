@@ -11,11 +11,11 @@ import {
   RiskInsightsReportService,
 } from "@bitwarden/bit-common/dirt/reports/risk-insights";
 import {
-  ApplicationHealthReportDetail,
-  ApplicationHealthReportDetailWithCriticalFlag,
-  ApplicationHealthReportDetailWithCriticalFlagAndCipher,
-  ApplicationHealthReportSummary,
+  LEGACY_ApplicationHealthReportDetailWithCriticalFlag,
+  LEGACY_ApplicationHealthReportDetailWithCriticalFlagAndCipher,
 } from "@bitwarden/bit-common/dirt/reports/risk-insights/models/password-health";
+import { OrganizationReportSummary } from "@bitwarden/bit-common/dirt/reports/risk-insights/models/report-models";
+import { RiskInsightsEncryptionService } from "@bitwarden/bit-common/dirt/reports/risk-insights/services/risk-insights-encryption.service";
 import {
   getOrganizationById,
   OrganizationService,
@@ -59,18 +59,23 @@ import { ApplicationsLoadingComponent } from "./risk-insights-loading.component"
 })
 export class AllApplicationsComponent implements OnInit {
   protected dataSource =
-    new TableDataSource<ApplicationHealthReportDetailWithCriticalFlagAndCipher>();
+    new TableDataSource<LEGACY_ApplicationHealthReportDetailWithCriticalFlagAndCipher>();
   protected selectedUrls: Set<string> = new Set<string>();
   protected searchControl = new FormControl("", { nonNullable: true });
   protected loading = true;
   protected organization = new Organization();
   noItemsIcon = Security;
   protected markingAsCritical = false;
-  protected applicationSummary: ApplicationHealthReportSummary = {
+  protected applicationSummary: OrganizationReportSummary = {
     totalMemberCount: 0,
     totalAtRiskMemberCount: 0,
     totalApplicationCount: 0,
     totalAtRiskApplicationCount: 0,
+    totalCriticalMemberCount: 0,
+    totalCriticalAtRiskMemberCount: 0,
+    totalCriticalApplicationCount: 0,
+    totalCriticalAtRiskApplicationCount: 0,
+    newApplications: [],
   };
 
   destroyRef = inject(DestroyRef);
@@ -98,7 +103,7 @@ export class AllApplicationsComponent implements OnInit {
               const data = applications?.map((app) => ({
                 ...app,
                 isMarkedAsCritical: criticalUrls.includes(app.applicationName),
-              })) as ApplicationHealthReportDetailWithCriticalFlag[];
+              })) as LEGACY_ApplicationHealthReportDetailWithCriticalFlag[];
               return { data, organization };
             }
 
@@ -108,7 +113,7 @@ export class AllApplicationsComponent implements OnInit {
             if (data && organization) {
               const dataWithCiphers = await this.reportService.identifyCiphers(
                 data,
-                organization.id,
+                organization.id as OrganizationId,
               );
 
               return {
@@ -145,6 +150,7 @@ export class AllApplicationsComponent implements OnInit {
     protected reportService: RiskInsightsReportService,
     private accountService: AccountService,
     protected criticalAppsService: CriticalAppsService,
+    protected riskInsightsEncryptionService: RiskInsightsEncryptionService,
   ) {
     this.searchControl.valueChanges
       .pipe(debounceTime(200), takeUntilDestroyed())
@@ -184,10 +190,6 @@ export class AllApplicationsComponent implements OnInit {
     }
   };
 
-  trackByFunction(_: number, item: ApplicationHealthReportDetail) {
-    return item.applicationName;
-  }
-
   showAppAtRiskMembers = async (applicationName: string) => {
     const info = {
       members:
@@ -217,9 +219,9 @@ export class AllApplicationsComponent implements OnInit {
     }
   };
 
-  getSelectedUrls = () => Array.from(this.selectedUrls);
-
   isDrawerOpenForTableRow = (applicationName: string): boolean => {
-    return this.dataService.drawerInvokerId === applicationName;
+    // Note: This function will be replaced by PR #16523 with openApplication binding
+    // Using private access to BehaviorSubject value for backward compatibility
+    return (this.dataService as any).drawerDetailsSubject?.value?.invokerId === applicationName;
   };
 }
