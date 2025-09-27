@@ -152,7 +152,7 @@ Each login strategy has it's own implementation of the `logIn()` method. This me
           - This response means the user needs to verify their new device via [new device verification](https://bitwarden.com/help/new-device-verification/)
           - The response contains a boolean property that simply states whether or not the device has been verified
 
-   2. **Calls one of the `process*Response()` methods, each of which returns an [`AuthResult`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/domain/auth-result.ts) object**
+   2. **Calls one of the `process[IdentityType]Response()` methods, each of which returns an [`AuthResult`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/domain/auth-result.ts) object**
       - If `IdentityTokenResponse`, call `processTokenResponse()`
         - This method uses information from the `IdentityTokenResponse` object to set Authentication and Decryption information about the user into state.
           - `saveAccountInformation()` - initializes the account with information from the `IdentityTokenResponse` after successful login.
