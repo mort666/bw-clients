@@ -141,7 +141,7 @@ Each login strategy has it's own implementation of the `logIn()` method. This me
               - An access token, which is a JWT with claims about the user
               - A refresh token
             - Decryption information for the user
-              - Includes the user's master-key-encrypted user key, along with their KDF settings
+              - Includes the user's master-key-encrypted user key (if the user has a master password), along with their KDF settings
               - Includes an object that contains information about which decryption options the user has available to them
 
         - [`IdentityTwoFactorResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-two-factor.response.ts)
