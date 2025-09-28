@@ -6,7 +6,7 @@ import { EncryptService } from "@bitwarden/common/key-management/crypto/abstract
 import { PinServiceAbstraction } from "@bitwarden/common/key-management/pin/pin.service.abstraction";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
-import { OrganizationId } from "@bitwarden/common/types/guid";
+import { emptyGuid, OrganizationId } from "@bitwarden/common/types/guid";
 import { OrgKey, UserKey } from "@bitwarden/common/types/key";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { newGuid } from "@bitwarden/guid";
@@ -47,7 +47,7 @@ describe("BitwardenPasswordProtectedImporter", () => {
       name: "Test User",
     });
 
-    const mockOrgId = "00000000-0000-0000-0000-000000000000" as OrganizationId;
+    const mockOrgId = emptyGuid as OrganizationId;
     /* 
       The key values below are never read, empty objects are cast as types for compilation type checking only.
       Tests specific to key contents are in key-service.spec.ts
@@ -188,6 +188,18 @@ describe("BitwardenPasswordProtectedImporter", () => {
     it("fails if data === null", async () => {
       jDoc.data = null;
       expect((await importer.parse(JSON.stringify(jDoc))).success).toEqual(false);
+    });
+
+    it("returns invalidFilePassword errorMessage if decryptString throws", async () => {
+      encryptService.decryptString.mockImplementation(() => {
+        throw new Error("SDK error");
+      });
+      i18nService.t.mockReturnValue("invalidFilePassword");
+
+      const result = await importer.parse(JSON.stringify(jDoc));
+
+      expect(result.success).toBe(false);
+      expect(result.errorMessage).toBe("invalidFilePassword");
     });
   });
 });
