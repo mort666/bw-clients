@@ -242,6 +242,15 @@ export class InlineMenuFieldQualificationService
       return this.isPasswordFieldForLoginForm(field, pageDetails);
     }
 
+    // If the field is a WebAuthn field assume it is a login field.
+    if (this.fieldContainsAutocompleteValues(field, new Set([this.webAuthnAutocompleteValue]))) {
+      const hasWebAuthnField = pageDetails.fields.some((f) => this.isPasswordField(f));
+
+      if (hasWebAuthnField) {
+        return true;
+      }
+    }
+
     const isUsernameField = this.isUsernameField(field);
     if (!isUsernameField) {
       return false;

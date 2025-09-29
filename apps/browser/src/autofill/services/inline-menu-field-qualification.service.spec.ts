@@ -605,7 +605,7 @@ describe("InlineMenuFieldQualificationService", () => {
       });
 
       describe("a valid username field", () => {
-        ["username", "email"].forEach((autoCompleteType) => {
+        ["username", "email", "webauthn"].forEach((autoCompleteType) => {
           it(`has a ${autoCompleteType} 'autoCompleteType' value`, () => {
             const field = mock<AutofillField>({
               type: "text",
