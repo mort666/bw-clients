@@ -28,7 +28,7 @@ export enum FeatureFlag {
   PM21881_ManagePaymentDetailsOutsideCheckout = "pm-21881-manage-payment-details-outside-checkout",
   PM21821_ProviderPortalTakeover = "pm-21821-provider-portal-takeover",
   PM22415_TaxIDWarnings = "pm-22415-tax-id-warnings",
-  PremiumUpgradeNewDesign = "premium-upgrade-new-design",
+  PremiumUpgradeNewDesign = "pm-24033-updat-premium-subscription-page",
 
   /* Key Management */
   PrivateKeyRegeneration = "pm-12241-private-key-regeneration",
