@@ -1,8 +1,7 @@
 import { mock } from "jest-mock-extended";
 import { of } from "rxjs";
 
-import { UserId } from "@bitwarden/common/types/guid";
-import { newGuid } from "@bitwarden/guid";
+import { emptyGuid, UserId } from "@bitwarden/common/types/guid";
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
 import { KeyService } from "@bitwarden/key-management";
@@ -100,7 +99,7 @@ describe("Send", () => {
     const text = mock<SendText>();
     text.decrypt.mockResolvedValue("textView" as any);
     const userKey = new SymmetricCryptoKey(new Uint8Array(32)) as UserKey;
-    const userId = newGuid() as UserId;
+    const userId = emptyGuid as UserId;
 
     const send = new Send();
     send.id = "id";

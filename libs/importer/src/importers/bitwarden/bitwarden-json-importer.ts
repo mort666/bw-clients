@@ -1,6 +1,6 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { concatMap, firstValueFrom, map, filter, take } from "rxjs";
+import { concatMap, firstValueFrom, map } from "rxjs";
 
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
@@ -15,7 +15,7 @@ import {
 } from "@bitwarden/common/models/export";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
-import { OrganizationId, UserId } from "@bitwarden/common/types/guid";
+import { OrganizationId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
 import { KeyService } from "@bitwarden/key-management";
@@ -42,16 +42,6 @@ export class BitwardenJsonImporter extends BaseImporter implements Importer {
     protected accountService: AccountService,
   ) {
     super();
-  }
-
-  private async getActiveUserId(): Promise<UserId> {
-    return await firstValueFrom(
-      this.accountService.activeAccount$.pipe(
-        map((a) => (a?.id as UserId) ?? null),
-        filter((id): id is UserId => id != null),
-        take(1),
-      ),
-    );
   }
 
   async parse(data: string): Promise<ImportResult> {
