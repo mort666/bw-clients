@@ -1,14 +1,6 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import {
-  Observable,
-  concatMap,
-  distinctUntilChanged,
-  firstValueFrom,
-  map,
-  filter,
-  take,
-} from "rxjs";
+import { Observable, concatMap, distinctUntilChanged, firstValueFrom, map } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
@@ -48,17 +40,6 @@ export class SendService implements InternalSendServiceAbstraction {
       this.decryptSends(Object.values(record || {}).map((data) => new Send(data))),
     ),
   );
-
-  private async getActiveUserId(): Promise<UserId> {
-    const userId = await firstValueFrom(
-      this.accountService.activeAccount$.pipe(
-        map((a) => (a?.id as UserId) ?? null),
-        filter((id): id is UserId => id != null),
-        take(1),
-      ),
-    );
-    return userId;
-  }
 
   constructor(
     private accountService: AccountService,
@@ -111,8 +92,8 @@ export class SendService implements InternalSendServiceAbstraction {
       send.password = passwordKey.keyB64;
     }
     if (userKey == null) {
-      const userId = await this.getActiveUserId();
-      userKey = await firstValueFrom(this.keyService.userKey$(userId));
+      const account = await firstValueFrom(this.accountService.activeAccount$);
+      userKey = await firstValueFrom(this.keyService.userKey$(account.id));
     }
     // Key is not a SymmetricCryptoKey, but key material used to derive the cryptoKey
     send.key = await this.encryptService.encryptBytes(model.key, userKey);
@@ -365,8 +346,8 @@ export class SendService implements InternalSendServiceAbstraction {
     key: SymmetricCryptoKey,
   ): Promise<[EncString, EncArrayBuffer]> {
     if (key == null) {
-      const userId = await this.getActiveUserId();
-      key = await firstValueFrom(this.keyService.userKey$(userId));
+      const account = await firstValueFrom(this.accountService.activeAccount$);
+      key = await firstValueFrom(this.keyService.userKey$(account.id));
     }
     const encFileName = await this.encryptService.encryptString(fileName, key);
     const encFileData = await this.encryptService.encryptFileData(new Uint8Array(data), key);
@@ -374,8 +355,8 @@ export class SendService implements InternalSendServiceAbstraction {
   }
 
   private async decryptSends(sends: Send[]) {
-    const userId = await this.getActiveUserId();
-    const decryptSendPromises = sends.map((s) => s.decrypt(userId));
+    const account = await firstValueFrom(this.accountService.activeAccount$);
+    const decryptSendPromises = sends.map((s) => s.decrypt(account.id));
     const decryptedSends = await Promise.all(decryptSendPromises);
 
     decryptedSends.sort(Utils.getSortFunction(this.i18nService, "name"));
