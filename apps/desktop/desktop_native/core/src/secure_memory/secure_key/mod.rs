@@ -15,8 +15,37 @@ mod mlock;
 
 pub use crypto::EncryptedMemory;
 
+/// An ephemeral key that is protected using a platform mechanism. It is generated on construction freshly, and can be used
+/// to encrypt and decrypt segments of memory. Since the key is ephemeral, persistent data cannot be encrypted with this key.
+/// On Linux and Windows, in most cases the protection mechanisms prevent memory dumps/debuggers from reading the key.
 #[allow(unused)]
-trait SecureKeyContainer {
+pub(crate) struct SecureMemoryEncryptionKey(CrossPlatformSecureKeyContainer);
+
+impl SecureMemoryEncryptionKey {
+    pub fn new() -> Self {
+        SecureMemoryEncryptionKey(CrossPlatformSecureKeyContainer::from_key(
+            crypto::MemoryEncryptionKey::new(),
+        ))
+    }
+
+    /// Encrypts the provided plaintext using the contained key, returning an EncryptedMemory blob.
+    #[allow(unused)]
+    pub fn encrypt(&self, plaintext: &[u8]) -> crypto::EncryptedMemory {
+        self.0.as_key().encrypt(plaintext)
+    }
+
+    /// Decrypts the provided EncryptedMemory blob using the contained key, returning the plaintext.
+    /// If the decryption fails, that means the memory was tampered with, and the function panics.
+    #[allow(unused)]
+    pub fn decrypt(&self, encrypted: &crypto::EncryptedMemory) -> Vec<u8> {
+        self.0.as_key().decrypt(encrypted)
+    }
+}
+
+/// A platform specific implementation of a key container that protects a single encryption key
+/// from memory attacks.
+#[allow(unused)]
+trait SecureKeyContainer: Sync + Send {
     /// Returns the ikey as a byte slice. This slice does not have additional memory protections applied.
     fn as_key(&self) -> crypto::MemoryEncryptionKey;
     /// Creates a new SecureKeyContainer from the provided key.
@@ -77,40 +106,8 @@ impl SecureKeyContainer for CrossPlatformSecureKeyContainer {
     }
 
     fn is_supported() -> bool {
+        // Mlock is always supported as a fallback.
         true
-    }
-}
-
-/// An ephemeral key that is protected using a platform mechanism. It is generated on construction freshly, and can be used
-/// to encrypt and decrypt segments of memory. Since the key is ephemeral, persistent data cannot be encrypted with this key.
-/// On Linux and Windows, in most cases the protection mechanisms prevent memory dumps/debuggers from reading the key.
-#[allow(unused)]
-pub(crate) struct SecureMemoryEncryptionKey(CrossPlatformSecureKeyContainer);
-
-// There is no mutation allowed here, so this struct is sync.
-unsafe impl Sync for SecureMemoryEncryptionKey {}
-// The key is a non mutable container in memory. It can be safely sent between threads.
-// Some platform implementations (keyctl) offer per-thread protection, but we mandate
-// per-process protection instead.
-unsafe impl Send for SecureMemoryEncryptionKey {}
-
-impl SecureMemoryEncryptionKey {
-    pub fn new() -> Self {
-        let key = crypto::MemoryEncryptionKey::new();
-        let container = CrossPlatformSecureKeyContainer::from_key(key);
-        SecureMemoryEncryptionKey(container)
-    }
-
-    #[allow(unused)]
-    pub fn encrypt(&self, plaintext: &[u8]) -> crypto::EncryptedMemory {
-        let key = self.0.as_key();
-        key.encrypt(plaintext)
-    }
-
-    #[allow(unused)]
-    pub fn decrypt(&self, encrypted: &crypto::EncryptedMemory) -> Vec<u8> {
-        let key = self.0.as_key();
-        key.decrypt(encrypted)
     }
 }
 
