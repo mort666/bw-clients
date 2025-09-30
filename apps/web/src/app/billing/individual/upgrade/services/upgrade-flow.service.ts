@@ -7,6 +7,7 @@ import { UnionOfValues } from "@bitwarden/common/vault/types/union-of-values";
 import { DialogRef, DialogService } from "@bitwarden/components";
 
 import { BitwardenSubscriber, mapAccountToSubscriber } from "../../../types";
+import { PersonalSubscriptionPricingTierId } from "../../../types/subscription-pricing-tier";
 import {
   UpgradeAccountDialogComponent,
   UpgradeAccountDialogResult,
@@ -18,7 +19,6 @@ import {
   UpgradePaymentDialogResult,
   UpgradePaymentDialogStatus,
 } from "../upgrade-payment-dialog/upgrade-payment-dialog.component";
-
 export const UpgradeFlowResult = {
   Upgraded: "upgraded",
   Cancelled: "cancelled",
@@ -91,7 +91,7 @@ export class UpgradeFlowService {
   }
 
   private async openUpgradePaymentDialog(
-    plan: any,
+    plan: PersonalSubscriptionPricingTierId | null,
   ): Promise<UpgradePaymentDialogResult | undefined> {
     this.upgradePaymentDialogRef = UpgradePaymentDialogComponent.open(this.dialogService, {
       data: {
