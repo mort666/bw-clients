@@ -11,7 +11,7 @@ use windows::Win32::Security::Cryptography::{
 ///
 /// Note: Admin processes can still decrypt this memory:
 /// https://blog.slowerzs.net/posts/cryptdecryptmemory/
-struct DpapiSecureKeyContainer {
+pub(super) struct DpapiSecureKeyContainer {
     dpapi_encrypted_key: [u8; KEY_SIZE + CRYPTPROTECTMEMORY_BLOCK_SIZE as usize],
 }
 
