@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { By } from "@angular/platform-browser";
 import { RouterTestingModule } from "@angular/router/testing";
 import { mock } from "jest-mock-extended";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -15,7 +14,7 @@ import { MessageListener } from "@bitwarden/common/platform/messaging";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { FakeAccountService, mockAccountServiceWith } from "@bitwarden/common/spec";
 import { UserId } from "@bitwarden/common/types/guid";
-import { BannerComponent, BannerModule } from "@bitwarden/components";
+import { BannerModule } from "@bitwarden/components";
 
 import { VerifyEmailComponent } from "../../../auth/settings/verify-email.component";
 import { SharedModule } from "../../../shared";
@@ -27,12 +26,10 @@ describe("VaultBannersComponent", () => {
   let component: VaultBannersComponent;
   let fixture: ComponentFixture<VaultBannersComponent>;
   let messageSubject: Subject<{ command: string }>;
-  const premiumBanner$ = new BehaviorSubject<boolean>(false);
   const pendingAuthRequest$ = new BehaviorSubject<boolean>(false);
   const mockUserId = Utils.newGuid() as UserId;
 
   const bannerService = mock<VaultBannersService>({
-    shouldShowPremiumBanner$: jest.fn((userId: UserId) => premiumBanner$),
     shouldShowUpdateBrowserBanner: jest.fn(),
     shouldShowVerifyEmailBanner: jest.fn(),
     shouldShowLowKDFBanner: jest.fn(),
@@ -50,7 +47,6 @@ describe("VaultBannersComponent", () => {
     bannerService.shouldShowVerifyEmailBanner.mockResolvedValue(false);
     bannerService.shouldShowLowKDFBanner.mockResolvedValue(false);
     pendingAuthRequest$.next(false);
-    premiumBanner$.next(false);
 
     await TestBed.configureTestingModule({
       imports: [
@@ -103,26 +99,6 @@ describe("VaultBannersComponent", () => {
     component = fixture.componentInstance;
 
     fixture.detectChanges();
-  });
-
-  describe("premiumBannerVisible$", () => {
-    it("shows premium banner", async () => {
-      premiumBanner$.next(true);
-
-      fixture.detectChanges();
-
-      const banner = fixture.debugElement.query(By.directive(BannerComponent));
-      expect(banner.componentInstance.bannerType()).toBe("premium");
-    });
-
-    it("dismisses premium banner", async () => {
-      premiumBanner$.next(false);
-
-      fixture.detectChanges();
-
-      const banner = fixture.debugElement.query(By.directive(BannerComponent));
-      expect(banner).toBeNull();
-    });
   });
 
   describe("determineVisibleBanner", () => {

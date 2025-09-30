@@ -1,14 +1,13 @@
 import { Component, Input, OnInit } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { Router } from "@angular/router";
-import { filter, firstValueFrom, map, Observable, switchMap } from "rxjs";
+import { filter, firstValueFrom, map } from "rxjs";
 
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { MessageListener } from "@bitwarden/common/platform/messaging";
-import { UserId } from "@bitwarden/common/types/guid";
 import { BannerModule } from "@bitwarden/components";
 import { OrganizationFreeTrialWarningComponent } from "@bitwarden/web-vault/app/billing/organizations/warnings/components";
 
@@ -30,7 +29,6 @@ import { VaultBannersService, VisibleVaultBanner } from "./services/vault-banner
 })
 export class VaultBannersComponent implements OnInit {
   visibleBanners: VisibleVaultBanner[] = [];
-  premiumBannerVisible$: Observable<boolean>;
   VisibleVaultBanner = VisibleVaultBanner;
   @Input() organizations: Organization[] = [];
 
@@ -43,11 +41,6 @@ export class VaultBannersComponent implements OnInit {
     private messageListener: MessageListener,
     private configService: ConfigService,
   ) {
-    this.premiumBannerVisible$ = this.activeUserId$.pipe(
-      filter((userId): userId is UserId => userId != null),
-      switchMap((userId) => this.vaultBannerService.shouldShowPremiumBanner$(userId)),
-    );
-
     // Listen for auth request messages and show banner immediately
     this.messageListener.allMessages$
       .pipe(
