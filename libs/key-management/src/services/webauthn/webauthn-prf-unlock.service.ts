@@ -91,8 +91,8 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
           rpId: rpId,
           userVerification: "preferred", // Allow platform authenticators to work properly
           extensions: {
-            prf: { eval: { first: prfSalt } } as any,
-          },
+            prf: { eval: { first: prfSalt } },
+          } as any,
         },
       };
 
