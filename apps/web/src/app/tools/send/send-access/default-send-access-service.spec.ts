@@ -6,11 +6,11 @@ import { firstValueFrom, NEVER } from "rxjs";
 import { ErrorResponse } from "@bitwarden/common/models/response/error.response";
 import { StateProvider } from "@bitwarden/common/platform/state";
 import { mockAccountServiceWith, FakeStateProvider } from "@bitwarden/common/spec";
-import { SemanticLogger } from "@bitwarden/common/tools/log";
 import { SystemServiceProvider } from "@bitwarden/common/tools/providers";
 import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.service.abstraction";
 import { UserId } from "@bitwarden/common/types/guid";
 import { SYSTEM_SERVICE_PROVIDER } from "@bitwarden/generator-components";
+import { SemanticLogger } from "@bitwarden/logging";
 
 import { DefaultSendAccessService } from "./default-send-access-service";
 import { SEND_RESPONSE_KEY, SEND_CONTEXT_KEY } from "./send-access-memory";

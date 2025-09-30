@@ -4,11 +4,11 @@ import { map, of, from, catchError, timeout } from "rxjs";
 
 import { ErrorResponse } from "@bitwarden/common/models/response/error.response";
 import { StateProvider } from "@bitwarden/common/platform/state";
-import { SemanticLogger } from "@bitwarden/common/tools/log";
 import { SystemServiceProvider } from "@bitwarden/common/tools/providers";
 import { SendAccessRequest } from "@bitwarden/common/tools/send/models/request/send-access.request";
 import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.service.abstraction";
 import { SYSTEM_SERVICE_PROVIDER } from "@bitwarden/generator-components";
+import { SemanticLogger } from "@bitwarden/logging";
 
 import { SEND_RESPONSE_KEY, SEND_CONTEXT_KEY } from "./send-access-memory";
 import { SendAccessService } from "./send-access-service.abstraction";

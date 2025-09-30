@@ -5,8 +5,9 @@ import { ConsoleLogService } from "@bitwarden/common/platform/services/console-l
 import { Site, VendorId } from "@bitwarden/common/tools/extension";
 import { Bitwarden } from "@bitwarden/common/tools/extension/vendor/bitwarden";
 import { Vendor } from "@bitwarden/common/tools/extension/vendor/data";
-import { SemanticLogger, ifEnabledSemanticLoggerProvider } from "@bitwarden/common/tools/log";
+import { ifEnabledSemanticLoggerProvider } from "@bitwarden/common/tools/log";
 import { UserId } from "@bitwarden/common/types/guid";
+import { SemanticLogger } from "@bitwarden/logging";
 
 import { awaitAsync } from "../../../../../common/spec";
 import {

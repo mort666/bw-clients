@@ -63,10 +63,18 @@ describe("ImportService", () => {
     const environment = mock<PlatformUtilsService>();
     environment.getClientType.mockReturnValue(ClientType.Desktop);
 
-    systemServiceProvider = mock<SystemServiceProvider>({
-      configService,
-      environment,
-      log: jest.fn().mockReturnValue({ debug: jest.fn() }),
+    systemServiceProvider = mock<SystemServiceProvider>();
+    Object.defineProperty(systemServiceProvider, "configService", {
+      get: () => configService,
+      configurable: true,
+    });
+    Object.defineProperty(systemServiceProvider, "environment", {
+      get: () => environment,
+      configurable: true,
+    });
+    Object.defineProperty(systemServiceProvider, "log", {
+      get: () => jest.fn().mockReturnValue({ debug: jest.fn() }),
+      configurable: true,
     });
 
     importService = new ImportService(
@@ -285,10 +293,18 @@ describe("ImportService", () => {
       const environment = mock<PlatformUtilsService>();
       environment.getClientType.mockReturnValue(ClientType.Desktop);
 
-      systemServiceProvider = mock<SystemServiceProvider>({
-        configService,
-        environment,
-        log: jest.fn().mockReturnValue(mockLogger),
+      systemServiceProvider = mock<SystemServiceProvider>();
+      Object.defineProperty(systemServiceProvider, "configService", {
+        get: () => configService,
+        configurable: true,
+      });
+      Object.defineProperty(systemServiceProvider, "environment", {
+        get: () => environment,
+        configurable: true,
+      });
+      Object.defineProperty(systemServiceProvider, "log", {
+        get: () => jest.fn().mockReturnValue(mockLogger),
+        configurable: true,
       });
 
       // Recreate the service with the updated mocks for logging tests

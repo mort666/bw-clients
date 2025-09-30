@@ -2,9 +2,9 @@ import { TestBed } from "@angular/core/testing";
 import { ActivatedRouteSnapshot, RouterStateSnapshot, UrlTree } from "@angular/router";
 import { firstValueFrom, Observable, of } from "rxjs";
 
-import { SemanticLogger } from "@bitwarden/common/tools/log";
 import { SystemServiceProvider } from "@bitwarden/common/tools/providers";
 import { SYSTEM_SERVICE_PROVIDER } from "@bitwarden/generator-components";
+import { SemanticLogger } from "@bitwarden/logging";
 
 import { SendAccessService } from "./send-access-service.abstraction";
 import { trySendAccess } from "./try-send-access.guard";

@@ -1,4 +1,4 @@
-import { LogService } from "@bitwarden/logging";
+import { LogService, LogProvider } from "@bitwarden/logging";
 import { BitwardenClient } from "@bitwarden/sdk-internal";
 import { StateProvider } from "@bitwarden/state";
 
@@ -9,7 +9,7 @@ import { PlatformUtilsService } from "../platform/abstractions/platform-utils.se
 import { LegacyEncryptorProvider } from "./cryptography/legacy-encryptor-provider";
 import { ExtensionRegistry } from "./extension/extension-registry.abstraction";
 import { ExtensionService } from "./extension/extension.service";
-import { disabledSemanticLoggerProvider, enableLogForTypes, LogProvider } from "./log";
+import { disabledSemanticLoggerProvider, enableLogForTypes } from "./log";
 
 /** Provides access to commonly-used cross-cutting services. */
 export type SystemServiceProvider = {
