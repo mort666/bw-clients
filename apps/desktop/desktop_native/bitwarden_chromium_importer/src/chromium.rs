@@ -192,8 +192,12 @@ fn load_local_state(browser_dir: &Path) -> Result<LocalState> {
 fn get_profile_info(local_state: &LocalState) -> Vec<ProfileInfo> {
     let mut profile_infos = Vec::new();
     for (name, info) in local_state.profile.info_cache.iter() {
+        let mut profile_name = info.name.clone();
+        if profile_name.is_empty() {
+            profile_name = name.clone();
+        }
         profile_infos.push(ProfileInfo {
-            name: info.name.clone(),
+            name: profile_name,
             folder: name.clone(),
             account_name: info.gaia_name.clone(),
             account_email: info.user_name.clone(),
@@ -346,5 +350,102 @@ async fn decrypt_login(
             username: encrypted_login.username,
             error: e.to_string(),
         }),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_local_state(profiles: Vec<(&str, &str, Option<&str>, Option<&str>)>) -> LocalState {
+        let mut info_cache = std::collections::HashMap::new();
+        for (folder, name, gaia_name, user_name) in profiles {
+            info_cache.insert(
+                folder.to_string(),
+                OneProfile {
+                    name: name.to_string(),
+                    gaia_name: gaia_name.map(|s| s.to_string()),
+                    user_name: user_name.map(|s| s.to_string()),
+                },
+            );
+        }
+        LocalState {
+            profile: AllProfiles { info_cache },
+            os_crypt: None,
+        }
+    }
+
+    #[test]
+    fn test_get_profile_info_basic() {
+        let local_state = make_local_state(vec![
+            (
+                "Profile 1",
+                "User 1",
+                Some("Account 1"),
+                Some("email1@example.com"),
+            ),
+            (
+                "Profile 2",
+                "User 2",
+                Some("Account 2"),
+                Some("email2@example.com"),
+            ),
+        ]);
+        let infos = get_profile_info(&local_state);
+        assert_eq!(infos.len(), 2);
+        assert_eq!(infos[0].name, "User 1");
+        assert_eq!(infos[0].folder, "Profile 1");
+        assert_eq!(infos[0].account_name.as_deref(), Some("Account 1"));
+        assert_eq!(
+            infos[0].account_email.as_deref(),
+            Some("email1@example.com")
+        );
+        assert_eq!(infos[1].name, "User 2");
+        assert_eq!(infos[1].folder, "Profile 2");
+        assert_eq!(infos[1].account_name.as_deref(), Some("Account 2"));
+        assert_eq!(
+            infos[1].account_email.as_deref(),
+            Some("email2@example.com")
+        );
+    }
+
+    #[test]
+    fn test_get_profile_info_empty_name() {
+        let local_state = make_local_state(vec![(
+            "ProfileX",
+            "",
+            Some("AccountX"),
+            Some("emailx@example.com"),
+        )]);
+        let infos = get_profile_info(&local_state);
+        assert_eq!(infos.len(), 1);
+        assert_eq!(infos[0].name, "ProfileX");
+        assert_eq!(infos[0].folder, "ProfileX");
+    }
+
+    #[test]
+    fn test_get_profile_info_none_fields() {
+        let local_state = make_local_state(vec![("ProfileY", "NameY", None, None)]);
+        let infos = get_profile_info(&local_state);
+        assert_eq!(infos.len(), 1);
+        assert_eq!(infos[0].name, "NameY");
+        assert_eq!(infos[0].account_name, None);
+        assert_eq!(infos[0].account_email, None);
+    }
+
+    #[test]
+    fn test_get_profile_info_multiple_profiles() {
+        let local_state = make_local_state(vec![
+            ("P1", "N1", Some("A1"), Some("E1")),
+            ("P2", "", None, None),
+            ("P3", "N3", Some("A3"), None),
+        ]);
+        let infos = get_profile_info(&local_state);
+        assert_eq!(infos.len(), 3);
+        assert_eq!(infos[0].name, "N1");
+        assert_eq!(infos[1].name, "P2");
+        assert_eq!(infos[2].name, "N3");
+        assert_eq!(infos[2].account_name.as_deref(), Some("A3"));
+        assert_eq!(infos[2].account_email, None);
     }
 }
