@@ -11,6 +11,7 @@ const KEY_RING_IDENTIFIER: KeyRingIdentifier = KeyRingIdentifier::Process;
 static COUNTER: std::sync::Mutex<u64> = std::sync::Mutex::new(0);
 
 /// A secure key container that uses the Linux kernel keyctl API to store the key.
+/// `https://man7.org/linux/man-pages/man1/keyctl.1.html`
 pub(super) struct KeyctlSecureKeyContainer {
     /// The kernel has an identifier for the key. This is randomly generated on construction.
     id: String,

@@ -17,7 +17,7 @@ pub use crypto::EncryptedMemory;
 
 #[allow(unused)]
 trait SecureKeyContainer {
-    /// Returns the key as a byte slice. This slice does not have additional memory protections applied.
+    /// Returns the ikey as a byte slice. This slice does not have additional memory protections applied.
     fn as_key(&self) -> crypto::MemoryEncryptionKey;
     /// Creates a new SecureKeyContainer from the provided key.
     fn from_key(key: crypto::MemoryEncryptionKey) -> Self;
@@ -86,6 +86,13 @@ impl SecureKeyContainer for CrossPlatformSecureKeyContainer {
 /// On Linux and Windows, in most cases the protection mechanisms prevent memory dumps/debuggers from reading the key.
 #[allow(unused)]
 pub(crate) struct SecureMemoryEncryptionKey(CrossPlatformSecureKeyContainer);
+
+// There is no mutation allowed here, so this struct is sync.
+unsafe impl Sync for SecureMemoryEncryptionKey {}
+// The key is a non mutable container in memory. It can be safely sent between threads.
+// Some platform implementations (keyctl) offer per-thread protection, but we mandate
+// per-process protection instead.
+unsafe impl Send for SecureMemoryEncryptionKey {}
 
 impl SecureMemoryEncryptionKey {
     pub fn new() -> Self {
