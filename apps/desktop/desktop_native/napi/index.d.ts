@@ -75,7 +75,7 @@ export declare namespace autostart {
 
 export declare namespace autotype {
   export function getForegroundWindowTitle(): string
-  export function typeInput(input: Array<number>): void
+  export function typeInput(input: Array<number>, keyboardShortcut: Array<string>): void
 }
 
 export declare namespace biometrics {
