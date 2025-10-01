@@ -11550,5 +11550,8 @@
   },
   "continueWithoutUpgrading": {
     "message": "Continue without upgrading"
+  },
+  "upgradeErrorMessage": {
+    "message": "We encountered an error while processing your upgrade. Please try again."
   }
 }
