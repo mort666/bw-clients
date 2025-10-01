@@ -1,5 +1,5 @@
 <form [formGroup]="formGroup" [bitSubmit]="submit">
-  <bit-dialog dialogSize="large" [loading]="loading">
+  <bit-dialog dialogSize="large" [loading]="loading()">
     <span bitDialogTitle class="tw-font-semibold">{{ upgradeToMessage }}</span>
     <ng-container bitDialogContent>
       <section>
@@ -39,10 +39,16 @@
     </ng-container>
 
     <ng-container bitDialogFooter>
-      <button bitButton bitFormButton buttonType="primary" [disabled]="loading" type="submit">
+      <button bitButton bitFormButton buttonType="primary" [disabled]="loading()" type="submit">
         {{ "upgrade" | i18n }}
       </button>
-      <button bitButton type="button" buttonType="secondary" (click)="back()">
+      <button
+        bitButton
+        type="button"
+        buttonType="secondary"
+        (click)="goBack.emit()"
+        [disabled]="loading()"
+      >
         {{ "back" | i18n }}
       </button>
     </ng-container>

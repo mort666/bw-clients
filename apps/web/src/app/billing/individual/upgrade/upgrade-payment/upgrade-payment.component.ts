@@ -1,19 +1,21 @@
-import { DialogConfig } from "@angular/cdk/dialog";
-import { AfterViewInit, Component, DestroyRef, Inject, OnInit, ViewChild } from "@angular/core";
+import {
+  AfterViewInit,
+  Component,
+  DestroyRef,
+  input,
+  OnInit,
+  output,
+  signal,
+  ViewChild,
+} from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl, FormGroup, Validators } from "@angular/forms";
 import { debounceTime, Observable } from "rxjs";
 
+import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { UnionOfValues } from "@bitwarden/common/vault/types/union-of-values";
-import {
-  ButtonModule,
-  DIALOG_DATA,
-  DialogModule,
-  DialogRef,
-  DialogService,
-  ToastService,
-} from "@bitwarden/components";
+import { ButtonModule, DialogModule, ToastService } from "@bitwarden/components";
 import { LogService } from "@bitwarden/logging";
 import { CartSummaryComponent, LineItem } from "@bitwarden/pricing";
 import { SharedModule } from "@bitwarden/web-vault/app/shared";
@@ -33,29 +35,30 @@ import { PlanDetails, UpgradePaymentService } from "./services/upgrade-payment.s
 /**
  * Status types for upgrade payment dialog
  */
-export const UpgradePaymentDialogStatus = {
+export const UpgradePaymentStatus = {
   Back: "back",
+  Closed: "closed",
   UpgradedToPremium: "upgradedToPremium",
   UpgradedToFamilies: "upgradedToFamilies",
 } as const;
 
-export type UpgradePaymentDialogStatus = UnionOfValues<typeof UpgradePaymentDialogStatus>;
+export type UpgradePaymentStatus = UnionOfValues<typeof UpgradePaymentStatus>;
 
-export type UpgradePaymentDialogResult = {
-  status: UpgradePaymentDialogStatus;
+export type UpgradePaymentResult = {
+  status: UpgradePaymentStatus;
   organizationId: string | null;
 };
 
 /**
- * Parameters for upgrade payment dialog
+ * Parameters for upgrade payment
  */
-export type UpgradePaymentDialogParams = {
+export type UpgradePaymentParams = {
   plan: PersonalSubscriptionPricingTierId | null;
   subscriber: BitwardenSubscriber;
 };
 
 @Component({
-  selector: "app-upgrade-payment-dialog",
+  selector: "app-upgrade-payment",
   imports: [
     DialogModule,
     SharedModule,
@@ -65,9 +68,15 @@ export type UpgradePaymentDialogParams = {
     BillingServicesModule,
   ],
   providers: [UpgradePaymentService],
-  templateUrl: "./upgrade-payment-dialog.component.html",
+  templateUrl: "./upgrade-payment.component.html",
 })
-export class UpgradePaymentDialogComponent implements OnInit, AfterViewInit {
+export class UpgradePaymentComponent implements OnInit, AfterViewInit {
+  protected selectedPlanId = input.required<PersonalSubscriptionPricingTierId>();
+  protected account = input.required<Account>();
+  protected goBack = output<void>();
+  protected complete = output<UpgradePaymentResult>();
+  protected selectedPlan: PlanDetails | null = null;
+
   @ViewChild(EnterPaymentMethodComponent) paymentComponent!: EnterPaymentMethodComponent;
   @ViewChild(CartSummaryComponent) cartSummaryComponent!: CartSummaryComponent;
 
@@ -76,9 +85,8 @@ export class UpgradePaymentDialogComponent implements OnInit, AfterViewInit {
     paymentForm: EnterPaymentMethodComponent.getFormGroup(),
   });
 
-  protected loading = true;
+  protected loading = signal(true);
   private pricingTiers$!: Observable<PersonalSubscriptionPricingTier[]>;
-  protected selectedPlan!: PlanDetails;
 
   // Cart Summary data
   protected passwordManager!: LineItem;
@@ -88,14 +96,12 @@ export class UpgradePaymentDialogComponent implements OnInit, AfterViewInit {
   protected upgradeToMessage = "";
 
   constructor(
-    private dialogRef: DialogRef<UpgradePaymentDialogResult>,
     private i18nService: I18nService,
     private subscriptionPricingService: SubscriptionPricingService,
     private toastService: ToastService,
     private logService: LogService,
     private destroyRef: DestroyRef,
     private upgradePaymentService: UpgradePaymentService,
-    @Inject(DIALOG_DATA) private dialogParams: UpgradePaymentDialogParams,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -105,21 +111,18 @@ export class UpgradePaymentDialogComponent implements OnInit, AfterViewInit {
 
     this.pricingTiers$ = this.subscriptionPricingService.getPersonalSubscriptionPricingTiers$();
     this.pricingTiers$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((plans) => {
-      const planDetails = plans.find((plan) => plan.id === this.dialogParams.plan);
+      const planDetails = plans.find((plan) => plan.id === this.selectedPlanId());
 
-      if (planDetails && this.dialogParams.plan) {
+      if (planDetails) {
         this.selectedPlan = {
-          tier: this.dialogParams.plan,
+          tier: this.selectedPlanId(),
           details: planDetails,
         };
       }
     });
 
     if (!this.selectedPlan) {
-      this.close({
-        status: UpgradePaymentDialogStatus.Back,
-        organizationId: null,
-      });
+      this.complete.emit({ status: UpgradePaymentStatus.Closed, organizationId: null });
       return;
     }
 
@@ -139,7 +142,7 @@ export class UpgradePaymentDialogComponent implements OnInit, AfterViewInit {
     this.formGroup.valueChanges
       .pipe(debounceTime(1000), takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.refreshSalesTax());
-    this.loading = false;
+    this.loading.set(false);
   }
 
   ngAfterViewInit(): void {
@@ -147,28 +150,11 @@ export class UpgradePaymentDialogComponent implements OnInit, AfterViewInit {
   }
 
   protected get isPremiumPlan(): boolean {
-    return this.dialogParams.plan === PersonalSubscriptionPricingTierIds.Premium;
+    return this.selectedPlanId() === PersonalSubscriptionPricingTierIds.Premium;
   }
 
   protected get isFamiliesPlan(): boolean {
-    return this.dialogParams.plan === PersonalSubscriptionPricingTierIds.Families;
-  }
-
-  back = () => {
-    this.close({
-      status: UpgradePaymentDialogStatus.Back,
-      organizationId: null,
-    });
-  };
-
-  static open(
-    dialogService: DialogService,
-    dialogConfig: DialogConfig<UpgradePaymentDialogParams>,
-  ): DialogRef<UpgradePaymentDialogResult> {
-    return dialogService.open<UpgradePaymentDialogResult>(
-      UpgradePaymentDialogComponent,
-      dialogConfig,
-    );
+    return this.selectedPlanId() === PersonalSubscriptionPricingTierIds.Families;
   }
 
   protected submit = async (): Promise<void> => {
@@ -183,23 +169,23 @@ export class UpgradePaymentDialogComponent implements OnInit, AfterViewInit {
 
     try {
       const result = await this.processUpgrade();
-      if (result.status === UpgradePaymentDialogStatus.UpgradedToFamilies) {
+      if (result.status === UpgradePaymentStatus.UpgradedToFamilies) {
         this.toastService.showToast({
           variant: "success",
           message: this.i18nService.t("familiesUpdated"),
         });
-      } else if (result.status === UpgradePaymentDialogStatus.UpgradedToPremium) {
+      } else if (result.status === UpgradePaymentStatus.UpgradedToPremium) {
         this.toastService.showToast({
           variant: "success",
           message: this.i18nService.t("premiumUpdated"),
         });
       }
-      this.close(result);
+      this.complete.emit(result);
     } catch (error: unknown) {
       this.logService.error("Upgrade failed:", error);
       this.toastService.showToast({
         variant: "error",
-        message: this.i18nService.t("upgradeError"),
+        message: this.i18nService.t("upgradeErrorMessage"),
       });
     }
   };
@@ -208,7 +194,7 @@ export class UpgradePaymentDialogComponent implements OnInit, AfterViewInit {
     return this.formGroup.valid && this.paymentComponent?.validate();
   }
 
-  private async processUpgrade(): Promise<UpgradePaymentDialogResult> {
+  private async processUpgrade(): Promise<UpgradePaymentResult> {
     // Get common values
     const country = this.formGroup.value?.paymentForm?.billingAddress?.country;
     const postalCode = this.formGroup.value?.paymentForm?.billingAddress?.postalCode;
@@ -225,9 +211,6 @@ export class UpgradePaymentDialogComponent implements OnInit, AfterViewInit {
 
     // Get payment method
     const tokenizedPaymentMethod = await this.paymentComponent?.tokenize();
-    if (!tokenizedPaymentMethod) {
-      throw new Error("Payment information is incomplete");
-    }
 
     // Process the upgrade based on plan type
     if (this.isFamiliesPlan) {
@@ -237,25 +220,20 @@ export class UpgradePaymentDialogComponent implements OnInit, AfterViewInit {
       };
 
       const response = await this.upgradePaymentService.upgradeToFamilies(
-        this.dialogParams.subscriber,
+        this.account(),
         this.selectedPlan,
         tokenizedPaymentMethod,
         paymentFormValues,
       );
 
-      return { status: UpgradePaymentDialogStatus.UpgradedToFamilies, organizationId: response.id };
+      return { status: UpgradePaymentStatus.UpgradedToFamilies, organizationId: response.id };
     } else {
-      await this.upgradePaymentService.upgradeToPremium(
-        this.dialogParams.subscriber,
-        tokenizedPaymentMethod,
-        { country, postalCode },
-      );
-      return { status: UpgradePaymentDialogStatus.UpgradedToPremium, organizationId: null };
+      await this.upgradePaymentService.upgradeToPremium(tokenizedPaymentMethod, {
+        country,
+        postalCode,
+      });
+      return { status: UpgradePaymentStatus.UpgradedToPremium, organizationId: null };
     }
-  }
-
-  private close(result: UpgradePaymentDialogResult) {
-    this.dialogRef.close(result);
   }
 
   private async refreshSalesTax(): Promise<void> {
