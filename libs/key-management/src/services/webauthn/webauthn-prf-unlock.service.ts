@@ -42,7 +42,7 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
     }
   }
 
-  async getPrfUnlockCredentials(
+  private async getPrfUnlockCredentials(
     userId: string,
   ): Promise<{ credentialId: string; transports: string[] }[]> {
     try {
@@ -170,7 +170,7 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
     }
   }
 
-  async getUnlockWithPrfSalt(): Promise<ArrayBuffer> {
+  private async getUnlockWithPrfSalt(): Promise<ArrayBuffer> {
     try {
       // Use the same salt as login to ensure PRF keys match
       return await this.webAuthnLoginPrfKeyService.getLoginWithPrfSalt();
@@ -180,7 +180,7 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
     }
   }
 
-  async createUnlockKeyFromPrf(prf: ArrayBuffer): Promise<PrfKey> {
+  private async createUnlockKeyFromPrf(prf: ArrayBuffer): Promise<PrfKey> {
     try {
       return await this.webAuthnLoginPrfKeyService.createSymmetricKeyFromPrf(prf);
     } catch (error) {
