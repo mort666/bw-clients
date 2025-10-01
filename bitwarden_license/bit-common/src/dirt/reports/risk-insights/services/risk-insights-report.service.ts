@@ -250,7 +250,7 @@ export class RiskInsightsReportService {
     data: ApplicationHealthReportDetail[],
     organizationId: OrganizationId,
   ): Promise<LEGACY_ApplicationHealthReportDetailWithCriticalFlagAndCipher[]> {
-    const cipherViews = await this.cipherService.getAllFromApiForOrganization(organizationId);
+    const cipherViews = await this.cipherService.getAllFromApiForOrganization(organizationId, true);
 
     const dataWithCiphers = data.map(
       (app, index) =>
