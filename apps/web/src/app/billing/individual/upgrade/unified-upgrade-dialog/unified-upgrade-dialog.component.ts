@@ -12,7 +12,7 @@ import {
   DialogService,
 } from "@bitwarden/components";
 
-import { AccountBillingClient } from "../../../clients";
+import { AccountBillingClient, TaxClient } from "../../../clients";
 import { BillingServicesModule } from "../../../services";
 import { PersonalSubscriptionPricingTierId } from "../../../types/subscription-pricing-tier";
 import { UpgradeAccountComponent } from "../upgrade-account/upgrade-account.component";
@@ -65,7 +65,7 @@ export type UnifiedUpgradeDialogParams = {
     UpgradePaymentComponent,
     BillingServicesModule,
   ],
-  providers: [UpgradePaymentService, AccountBillingClient],
+  providers: [UpgradePaymentService, AccountBillingClient, TaxClient],
   templateUrl: "./unified-upgrade-dialog.component.html",
 })
 export class UnifiedUpgradeDialogComponent implements OnInit {
