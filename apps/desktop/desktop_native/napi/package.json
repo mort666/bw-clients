@@ -12,18 +12,15 @@
     "@napi-rs/cli": "3.2.0"
   },
   "napi": {
-    "name": "desktop_napi",
-    "triples": {
-      "defaults": true,
-      "additional": [
-        "x86_64-unknown-linux-musl",
-        "aarch64-unknown-linux-gnu",
-        "i686-pc-windows-msvc",
-        "armv7-unknown-linux-gnueabihf",
-        "aarch64-apple-darwin",
-        "aarch64-unknown-linux-musl",
-        "aarch64-pc-windows-msvc"
-      ]
-    }
+    "binaryName": "desktop_napi",
+    "targets": [
+      "x86_64-unknown-linux-musl",
+      "aarch64-unknown-linux-gnu",
+      "i686-pc-windows-msvc",
+      "armv7-unknown-linux-gnueabihf",
+      "aarch64-apple-darwin",
+      "aarch64-unknown-linux-musl",
+      "aarch64-pc-windows-msvc"
+    ]
   }
 }
