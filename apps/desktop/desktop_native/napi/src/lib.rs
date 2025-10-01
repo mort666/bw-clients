@@ -656,7 +656,7 @@ pub mod autofill {
                 u32,
                 PasskeyAssertionWithoutUserInterfaceRequest,
             )>,
-    ) -> napi::Result<Self> {
+        ) -> napi::Result<Self> {
             let (send, mut recv) = tokio::sync::mpsc::channel::<Message>(32);
             tokio::spawn(async move {
                 while let Some(Message {
