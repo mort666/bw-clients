@@ -7,7 +7,7 @@ members = [
     "macos_provider",
     "napi",
     "proxy",
-    "windows_plugin_authenticator"
+    "windows_plugin_authenticator",
 ]
 
 [workspace.package]
@@ -38,7 +38,7 @@ keytar = "=0.1.6"
 libc = "=0.2.172"
 log = "=0.4.25"
 napi = "=3.3.0"
-napi-build = "=2.2.0"
+napi-build = "=2.2.3"
 napi-derive = "=3.2.5"
 oo7 = "=0.4.3"
 oslog = "=0.2.0"
