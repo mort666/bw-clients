@@ -936,6 +936,11 @@ const safeProviders: SafeProvider[] = [
     deps: [],
   }),
   safeProvider({
+    provide: ActionsService,
+    useClass: UnsupportedActionsService,
+    deps: [],
+  }),
+  safeProvider({
     provide: SystemNotificationsService,
     useClass: UnsupportedSystemNotificationsService,
     deps: [],
