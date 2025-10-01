@@ -3,7 +3,6 @@ import { mock, mockReset } from "jest-mock-extended";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { OrganizationResponse } from "@bitwarden/common/admin-console/models/response/organization.response";
-import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { OrganizationBillingServiceAbstraction } from "@bitwarden/common/billing/abstractions";
 import { TaxServiceAbstraction } from "@bitwarden/common/billing/abstractions/tax.service.abstraction";
 import { PaymentMethodType, PlanType } from "@bitwarden/common/billing/enums";
@@ -12,16 +11,15 @@ import { SyncService } from "@bitwarden/common/platform/sync";
 import { UserId } from "@bitwarden/common/types/guid";
 import { LogService } from "@bitwarden/logging";
 
-import { SubscriberBillingClient } from "../../../../clients";
+import { AccountBillingClient } from "../../../../clients";
 import { TokenizedPaymentMethod } from "../../../../payment/types";
-import { BitwardenSubscriber } from "../../../../types";
 import { PersonalSubscriptionPricingTierIds } from "../../../../types/subscription-pricing-tier";
 
 import { UpgradePaymentService, PlanDetails } from "./upgrade-payment.service";
 
 describe("UpgradePaymentService", () => {
   const mockOrganizationBillingService = mock<OrganizationBillingServiceAbstraction>();
-  const mockSubscriberBillingClient = mock<SubscriberBillingClient>();
+  const mockAccountBillingClient = mock<AccountBillingClient>();
   const mockTaxService = mock<TaxServiceAbstraction>();
   const mockLogService = mock<LogService>();
   const mockApiService = mock<ApiService>();
@@ -32,12 +30,11 @@ describe("UpgradePaymentService", () => {
 
   let sut: UpgradePaymentService;
 
-  const mockSubscriber: BitwardenSubscriber = {
-    type: "account",
-    data: {
-      id: "user-id" as UserId,
-      email: "test@example.com",
-    } as Account,
+  const mockAccount = {
+    id: "user-id" as UserId,
+    email: "test@example.com",
+    emailVerified: true,
+    name: "Test User",
   };
 
   const mockTokenizedPaymentMethod: TokenizedPaymentMethod = {
@@ -91,7 +88,7 @@ describe("UpgradePaymentService", () => {
 
   beforeEach(() => {
     mockReset(mockOrganizationBillingService);
-    mockReset(mockSubscriberBillingClient);
+    mockReset(mockAccountBillingClient);
     mockReset(mockTaxService);
     mockReset(mockLogService);
 
@@ -103,7 +100,7 @@ describe("UpgradePaymentService", () => {
           provide: OrganizationBillingServiceAbstraction,
           useValue: mockOrganizationBillingService,
         },
-        { provide: SubscriberBillingClient, useValue: mockSubscriberBillingClient },
+        { provide: AccountBillingClient, useValue: mockAccountBillingClient },
         { provide: TaxServiceAbstraction, useValue: mockTaxService },
         { provide: LogService, useValue: mockLogService },
         { provide: ApiService, useValue: mockApiService },
@@ -187,16 +184,15 @@ describe("UpgradePaymentService", () => {
   });
 
   describe("upgradeToPremium", () => {
-    it("should call subscriberBillingClient to purchase premium subscription and refresh data", async () => {
+    it("should call accountBillingClient to purchase premium subscription and refresh data", async () => {
       // Arrange
-      mockSubscriberBillingClient.purchasePremiumSubscription.mockResolvedValue();
+      mockAccountBillingClient.purchasePremiumSubscription.mockResolvedValue();
 
       // Act
-      await sut.upgradeToPremium(mockSubscriber, mockTokenizedPaymentMethod, mockBillingAddress);
+      await sut.upgradeToPremium(mockTokenizedPaymentMethod, mockBillingAddress);
 
       // Assert
-      expect(mockSubscriberBillingClient.purchasePremiumSubscription).toHaveBeenCalledWith(
-        mockSubscriber,
+      expect(mockAccountBillingClient.purchasePremiumSubscription).toHaveBeenCalledWith(
         mockTokenizedPaymentMethod,
         mockBillingAddress,
       );
@@ -210,7 +206,7 @@ describe("UpgradePaymentService", () => {
 
       // Act & Assert
       await expect(
-        sut.upgradeToPremium(mockSubscriber, incompletePaymentMethod, mockBillingAddress),
+        sut.upgradeToPremium(incompletePaymentMethod, mockBillingAddress),
       ).rejects.toThrow("Payment method type or token is missing");
     });
 
@@ -220,7 +216,7 @@ describe("UpgradePaymentService", () => {
 
       // Act & Assert
       await expect(
-        sut.upgradeToPremium(mockSubscriber, mockTokenizedPaymentMethod, incompleteBillingAddress),
+        sut.upgradeToPremium(mockTokenizedPaymentMethod, incompleteBillingAddress),
       ).rejects.toThrow("Billing address information is incomplete");
     });
   });
@@ -236,7 +232,7 @@ describe("UpgradePaymentService", () => {
 
       // Act
       await sut.upgradeToFamilies(
-        mockSubscriber,
+        mockAccount,
         mockFamiliesPlanDetails,
         mockTokenizedPaymentMethod,
         {
@@ -295,7 +291,7 @@ describe("UpgradePaymentService", () => {
 
       // Act & Assert
       await expect(
-        sut.upgradeToFamilies(mockSubscriber, invalidPlanDetails, mockTokenizedPaymentMethod, {
+        sut.upgradeToFamilies(mockAccount, invalidPlanDetails, mockTokenizedPaymentMethod, {
           organizationName: "Test Organization",
           billingAddress: mockBillingAddress,
         }),
@@ -303,27 +299,11 @@ describe("UpgradePaymentService", () => {
       expect(mockOrganizationBillingService.purchaseSubscription).toHaveBeenCalledTimes(1);
     });
 
-    it("should throw error if subscriber is not an account", async () => {
-      const invalidSubscriber = { type: "organization" } as BitwardenSubscriber;
-
-      await expect(
-        sut.upgradeToFamilies(
-          invalidSubscriber,
-          mockFamiliesPlanDetails,
-          mockTokenizedPaymentMethod,
-          {
-            organizationName: "Test Organization",
-            billingAddress: mockBillingAddress,
-          },
-        ),
-      ).rejects.toThrow("Subscriber must be an account for families upgrade");
-    });
-
     it("should throw error if payment method is incomplete", async () => {
       const incompletePaymentMethod = { type: "card" } as TokenizedPaymentMethod;
 
       await expect(
-        sut.upgradeToFamilies(mockSubscriber, mockFamiliesPlanDetails, incompletePaymentMethod, {
+        sut.upgradeToFamilies(mockAccount, mockFamiliesPlanDetails, incompletePaymentMethod, {
           organizationName: "Test Organization",
           billingAddress: mockBillingAddress,
         }),

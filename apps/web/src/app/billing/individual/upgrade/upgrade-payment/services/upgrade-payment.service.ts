@@ -14,13 +14,12 @@ import { PreviewOrganizationInvoiceRequest } from "@bitwarden/common/billing/mod
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
 import { LogService } from "@bitwarden/logging";
 
-import { SubscriberBillingClient } from "../../../../clients";
+import { AccountBillingClient } from "../../../../clients";
 import {
   BillingAddress,
   TokenizablePaymentMethod,
   TokenizedPaymentMethod,
 } from "../../../../payment/types";
-import { BitwardenSubscriber } from "../../../../types";
 import {
   PersonalSubscriptionPricingTier,
   PersonalSubscriptionPricingTierId,
@@ -53,7 +52,7 @@ export type PaymentFormValues = {
 export class UpgradePaymentService {
   constructor(
     private organizationBillingService: OrganizationBillingServiceAbstraction,
-    private subscriberBillingClient: SubscriberBillingClient,
+    private accountBillingClient: AccountBillingClient,
     private taxService: TaxServiceAbstraction,
     private logService: LogService,
     private apiService: ApiService,
@@ -126,17 +125,12 @@ export class UpgradePaymentService {
    * Process premium upgrade
    */
   async upgradeToPremium(
-    subscriber: BitwardenSubscriber,
     paymentMethod: TokenizedPaymentMethod,
     billingAddress: Pick<BillingAddress, "country" | "postalCode">,
   ): Promise<void> {
     this.validatePaymentAndBillingInfo(paymentMethod, billingAddress);
 
-    await this.subscriberBillingClient.purchasePremiumSubscription(
-      subscriber,
-      paymentMethod,
-      billingAddress,
-    );
+    await this.accountBillingClient.purchasePremiumSubscription(paymentMethod, billingAddress);
 
     await this.refreshAndSync();
   }
@@ -145,15 +139,11 @@ export class UpgradePaymentService {
    * Process families upgrade
    */
   async upgradeToFamilies(
-    subscriber: BitwardenSubscriber,
+    account: Account,
     planDetails: PlanDetails,
     paymentMethod: TokenizedPaymentMethod,
     formValues: PaymentFormValues,
   ): Promise<OrganizationResponse> {
-    if (subscriber.type !== "account") {
-      throw new Error("Subscriber must be an account for families upgrade");
-    }
-    const user = subscriber.data as Account;
     const billingAddress = formValues.billingAddress;
 
     if (!formValues.organizationName) {
@@ -167,7 +157,7 @@ export class UpgradePaymentService {
     const subscriptionInformation: SubscriptionInformation = {
       organization: {
         name: formValues.organizationName,
-        billingEmail: user.email, // Use account email as billing email
+        billingEmail: account.email, // Use account email as billing email
       },
       plan: {
         type: PlanType.FamiliesAnnually,
@@ -187,7 +177,7 @@ export class UpgradePaymentService {
 
     const result = await this.organizationBillingService.purchaseSubscription(
       subscriptionInformation,
-      user.id,
+      account.id,
     );
     await this.refreshAndSync();
     return result;
