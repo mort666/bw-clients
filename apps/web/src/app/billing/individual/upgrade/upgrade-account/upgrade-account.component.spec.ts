@@ -1,10 +1,10 @@
+import { CdkTrapFocus } from "@angular/cdk/a11y";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { mock } from "jest-mock-extended";
 import { of } from "rxjs";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { DialogRef, DialogService } from "@bitwarden/components";
 import { PricingCardComponent } from "@bitwarden/pricing";
 
 import { BillingServicesModule } from "../../../services";
@@ -14,19 +14,13 @@ import {
   PersonalSubscriptionPricingTierIds,
 } from "../../../types/subscription-pricing-tier";
 
-import {
-  UpgradeAccountDialogComponent,
-  UpgradeAccountDialogResult,
-  UpgradeAccountDialogStatus,
-} from "./upgrade-account-dialog.component";
+import { UpgradeAccountComponent, UpgradeAccountStatus } from "./upgrade-account.component";
 
-describe("UpgradeAccountDialogComponent", () => {
-  let sut: UpgradeAccountDialogComponent;
-  let fixture: ComponentFixture<UpgradeAccountDialogComponent>;
-  const mockDialogRef = mock<DialogRef<UpgradeAccountDialogResult>>();
+describe("UpgradeAccountComponent", () => {
+  let sut: UpgradeAccountComponent;
+  let fixture: ComponentFixture<UpgradeAccountComponent>;
   const mockI18nService = mock<I18nService>();
   const mockSubscriptionPricingService = mock<SubscriptionPricingService>();
-  const mockDialogService = mock<DialogService>();
 
   // Mock pricing tiers data
   const mockPricingTiers: PersonalSubscriptionPricingTier[] = [
@@ -60,20 +54,19 @@ describe("UpgradeAccountDialogComponent", () => {
     );
 
     await TestBed.configureTestingModule({
-      imports: [NoopAnimationsModule, UpgradeAccountDialogComponent, PricingCardComponent],
+      imports: [NoopAnimationsModule, UpgradeAccountComponent, PricingCardComponent, CdkTrapFocus],
       providers: [
-        { provide: DialogRef, useValue: mockDialogRef },
         { provide: I18nService, useValue: mockI18nService },
         { provide: SubscriptionPricingService, useValue: mockSubscriptionPricingService },
       ],
     })
-      .overrideComponent(UpgradeAccountDialogComponent, {
+      .overrideComponent(UpgradeAccountComponent, {
         // Remove BillingServicesModule to avoid conflicts with mocking SubscriptionPricingService dependencies
         remove: { imports: [BillingServicesModule] },
       })
       .compileComponents();
 
-    fixture = TestBed.createComponent(UpgradeAccountDialogComponent);
+    fixture = TestBed.createComponent(UpgradeAccountComponent);
     sut = fixture.componentInstance;
     fixture.detectChanges();
   });
@@ -109,40 +102,37 @@ describe("UpgradeAccountDialogComponent", () => {
     expect(sut["familiesCardDetails"].features).toEqual(["Feature A", "Feature B", "Feature C"]);
   });
 
-  it("should call dialogRef.close with proceeded-to-payment status and premium pricing tier when premium plan is selected", () => {
-    sut["onProceedClick"](PersonalSubscriptionPricingTierIds.Premium);
+  it("should emit planSelected with premium pricing tier when premium plan is selected", () => {
+    // Arrange
+    const emitSpy = jest.spyOn(sut.planSelected, "emit");
 
-    expect(mockDialogRef.close).toHaveBeenCalledWith({
-      status: UpgradeAccountDialogStatus.ProceededToPayment,
-      plan: PersonalSubscriptionPricingTierIds.Premium,
-    });
+    // Act
+    sut.planSelected.emit(PersonalSubscriptionPricingTierIds.Premium);
+
+    // Assert
+    expect(emitSpy).toHaveBeenCalledWith(PersonalSubscriptionPricingTierIds.Premium);
   });
 
-  it("should call dialogRef.close with proceeded-to-payment status and families pricing tier when families plan is selected", () => {
-    sut["onProceedClick"](PersonalSubscriptionPricingTierIds.Families);
+  it("should emit planSelected with families pricing tier when families plan is selected", () => {
+    // Arrange
+    const emitSpy = jest.spyOn(sut.planSelected, "emit");
 
-    expect(mockDialogRef.close).toHaveBeenCalledWith({
-      status: UpgradeAccountDialogStatus.ProceededToPayment,
-      plan: PersonalSubscriptionPricingTierIds.Families,
-    });
+    // Act
+    sut.planSelected.emit(PersonalSubscriptionPricingTierIds.Families);
+
+    // Assert
+    expect(emitSpy).toHaveBeenCalledWith(PersonalSubscriptionPricingTierIds.Families);
   });
 
-  it("should call dialogRef.close with closed status when dialog is closed", () => {
-    sut["onCloseClick"]();
+  it("should emit closeClicked with closed status when close button is clicked", () => {
+    // Arrange
+    const emitSpy = jest.spyOn(sut.closeClicked, "emit");
 
-    expect(mockDialogRef.close).toHaveBeenCalledWith({
-      status: UpgradeAccountDialogStatus.Closed,
-      plan: null,
-    });
-  });
+    // Act
+    sut.closeClicked.emit(UpgradeAccountStatus.Closed);
 
-  it("should return a DialogRef when open static method is called", () => {
-    mockDialogService.open.mockReturnValue(mockDialogRef);
-
-    const result = UpgradeAccountDialogComponent.open(mockDialogService);
-
-    expect(mockDialogService.open).toHaveBeenCalledWith(UpgradeAccountDialogComponent);
-    expect(result).toBe(mockDialogRef);
+    // Assert
+    expect(emitSpy).toHaveBeenCalledWith(UpgradeAccountStatus.Closed);
   });
 
   describe("isFamiliesPlan", () => {

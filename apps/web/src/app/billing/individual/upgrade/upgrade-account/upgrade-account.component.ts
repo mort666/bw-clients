@@ -1,9 +1,11 @@
-import { Component, DestroyRef, OnInit } from "@angular/core";
+import { CdkTrapFocus } from "@angular/cdk/a11y";
+import { CommonModule } from "@angular/common";
+import { Component, DestroyRef, OnInit, output, signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { UnionOfValues } from "@bitwarden/common/vault/types/union-of-values";
-import { ButtonType, DialogModule, DialogRef, DialogService } from "@bitwarden/components";
+import { ButtonType, DialogModule } from "@bitwarden/components";
 import { PricingCardComponent } from "@bitwarden/pricing";
 
 import { SharedModule } from "../../../../shared";
@@ -17,15 +19,15 @@ import {
   SubscriptionCadenceIds,
 } from "../../../types/subscription-pricing-tier";
 
-export const UpgradeAccountDialogStatus = {
+export const UpgradeAccountStatus = {
   Closed: "closed",
   ProceededToPayment: "proceeded-to-payment",
 } as const;
 
-export type UpgradeAccountDialogStatus = UnionOfValues<typeof UpgradeAccountDialogStatus>;
+export type UpgradeAccountStatus = UnionOfValues<typeof UpgradeAccountStatus>;
 
-export type UpgradeAccountDialogResult = {
-  status: UpgradeAccountDialogStatus;
+export type UpgradeAccountResult = {
+  status: UpgradeAccountStatus;
   plan: PersonalSubscriptionPricingTierId | null;
 };
 
@@ -38,20 +40,29 @@ type CardDetails = {
 };
 
 @Component({
-  selector: "app-upgrade-account-dialog",
-  imports: [DialogModule, SharedModule, BillingServicesModule, PricingCardComponent],
-  templateUrl: "./upgrade-account-dialog.component.html",
+  selector: "app-upgrade-account",
+  imports: [
+    CommonModule,
+    DialogModule,
+    SharedModule,
+    BillingServicesModule,
+    PricingCardComponent,
+    CdkTrapFocus,
+  ],
+  templateUrl: "./upgrade-account.component.html",
 })
-export class UpgradeAccountDialogComponent implements OnInit {
+export class UpgradeAccountComponent implements OnInit {
+  planSelected = output<PersonalSubscriptionPricingTierId>();
+  closeClicked = output<UpgradeAccountStatus>();
+  protected loading = signal(true);
   protected premiumCardDetails!: CardDetails;
   protected familiesCardDetails!: CardDetails;
 
   protected familiesPlanType = PersonalSubscriptionPricingTierIds.Families;
   protected premiumPlanType = PersonalSubscriptionPricingTierIds.Premium;
-  protected loading = true;
+  protected closeStatus = UpgradeAccountStatus.Closed;
 
   constructor(
-    private dialogRef: DialogRef<UpgradeAccountDialogResult>,
     private i18nService: I18nService,
     private subscriptionPricingService: SubscriptionPricingService,
     private destroyRef: DestroyRef,
@@ -63,7 +74,7 @@ export class UpgradeAccountDialogComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((plans) => {
         this.setupCardDetails(plans);
-        this.loading = false;
+        this.loading.set(false);
       });
   }
 
@@ -108,29 +119,7 @@ export class UpgradeAccountDialogComponent implements OnInit {
     };
   }
 
-  protected onProceedClick(plan: PersonalSubscriptionPricingTierId): void {
-    this.close({
-      status: UpgradeAccountDialogStatus.ProceededToPayment,
-      plan,
-    });
-  }
-
   private isFamiliesPlan(plan: PersonalSubscriptionPricingTierId): boolean {
     return plan === PersonalSubscriptionPricingTierIds.Families;
-  }
-
-  protected onCloseClick(): void {
-    this.close({
-      status: UpgradeAccountDialogStatus.Closed,
-      plan: null,
-    });
-  }
-
-  private close(result: UpgradeAccountDialogResult): void {
-    this.dialogRef.close(result);
-  }
-
-  static open(dialogService: DialogService): DialogRef<UpgradeAccountDialogResult> {
-    return dialogService.open<UpgradeAccountDialogResult>(UpgradeAccountDialogComponent);
   }
 }
