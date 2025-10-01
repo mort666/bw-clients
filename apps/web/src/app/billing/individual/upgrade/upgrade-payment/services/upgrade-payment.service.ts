@@ -7,17 +7,19 @@ import {
   OrganizationBillingServiceAbstraction,
   SubscriptionInformation,
 } from "@bitwarden/common/billing/abstractions";
-import { TaxServiceAbstraction } from "@bitwarden/common/billing/abstractions/tax.service.abstraction";
-import { PaymentMethodType, PlanType } from "@bitwarden/common/billing/enums";
-import { PreviewIndividualInvoiceRequest } from "@bitwarden/common/billing/models/request/preview-individual-invoice.request";
-import { PreviewOrganizationInvoiceRequest } from "@bitwarden/common/billing/models/request/preview-organization-invoice.request";
+import { PlanType } from "@bitwarden/common/billing/enums";
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
 import { LogService } from "@bitwarden/logging";
 
-import { AccountBillingClient } from "../../../../clients";
+import {
+  AccountBillingClient,
+  OrganizationSubscriptionPurchase,
+  TaxAmounts,
+  TaxClient,
+} from "../../../../clients";
 import {
   BillingAddress,
-  TokenizablePaymentMethod,
+  tokenizablePaymentMethodToLegacyEnum,
   TokenizedPaymentMethod,
 } from "../../../../payment/types";
 import {
@@ -25,12 +27,6 @@ import {
   PersonalSubscriptionPricingTierId,
   PersonalSubscriptionPricingTierIds,
 } from "../../../../types/subscription-pricing-tier";
-
-type TaxInformation = {
-  postalCode: string;
-  country: string;
-  taxId: string | null;
-};
 
 export type PlanDetails = {
   tier: PersonalSubscriptionPricingTierId;
@@ -53,7 +49,7 @@ export class UpgradePaymentService {
   constructor(
     private organizationBillingService: OrganizationBillingServiceAbstraction,
     private accountBillingClient: AccountBillingClient,
-    private taxService: TaxServiceAbstraction,
+    private taxClient: TaxClient,
     private logService: LogService,
     private apiService: ApiService,
     private syncService: SyncService,
@@ -64,20 +60,13 @@ export class UpgradePaymentService {
    */
   async calculateEstimatedTax(
     planDetails: PlanDetails,
-    billingAddress: Pick<BillingAddress, "country" | "postalCode">,
+    billingAddress: BillingAddress,
   ): Promise<number> {
     try {
-      const taxInformation: TaxInformation = {
-        postalCode: billingAddress.postalCode,
-        country: billingAddress.country,
-        // This is null for now since we only process Families and Premium plans
-        taxId: null,
-      };
-
       const isOrganizationPlan = planDetails.tier === PersonalSubscriptionPricingTierIds.Families;
       const isPremiumPlan = planDetails.tier === PersonalSubscriptionPricingTierIds.Premium;
 
-      let taxServiceCall: Promise<{ taxAmount: number }> | null = null;
+      let taxClientCall: Promise<TaxAmounts> | null = null;
 
       if (isOrganizationPlan) {
         const seats = this.getPasswordManagerSeats(planDetails);
@@ -85,36 +74,28 @@ export class UpgradePaymentService {
           throw new Error("Seats must be greater than 0 for organization plan");
         }
         // Currently, only Families plan is supported for organization plans
-        const request: PreviewOrganizationInvoiceRequest = {
-          passwordManager: {
-            additionalStorage: 0,
-            plan: PlanType.FamiliesAnnually,
-            seats: seats,
-          },
-          taxInformation,
+        const request: OrganizationSubscriptionPurchase = {
+          tier: "families",
+          cadence: "annually",
+          passwordManager: { seats, additionalStorage: 0, sponsored: false },
         };
 
-        taxServiceCall = this.taxService.previewOrganizationInvoice(request);
+        taxClientCall = this.taxClient.previewTaxForOrganizationSubscriptionPurchase(
+          request,
+          billingAddress,
+        );
       }
 
       if (isPremiumPlan) {
-        const request: PreviewIndividualInvoiceRequest = {
-          passwordManager: { additionalStorage: 0 },
-          taxInformation: {
-            postalCode: billingAddress.postalCode,
-            country: billingAddress.country,
-          },
-        };
-
-        taxServiceCall = this.taxService.previewIndividualInvoice(request);
+        taxClientCall = this.taxClient.previewTaxForPremiumSubscriptionPurchase(0, billingAddress);
       }
 
-      if (taxServiceCall === null) {
-        throw new Error("Tax service call is not defined");
+      if (taxClientCall === null) {
+        throw new Error("Tax client call is not defined");
       }
 
-      const invoice = await taxServiceCall;
-      return invoice.taxAmount;
+      const preview = await taxClientCall;
+      return preview.tax;
     } catch (error: unknown) {
       this.logService.error("Tax calculation failed:", error);
       throw error;
@@ -166,7 +147,7 @@ export class UpgradePaymentService {
       payment: {
         paymentMethod: [
           paymentMethod.token,
-          this.tokenizablePaymentMethodToLegacyEnum(paymentMethod.type),
+          tokenizablePaymentMethodToLegacyEnum(paymentMethod.type),
         ],
         billing: {
           country: billingAddress.country,
@@ -181,21 +162,6 @@ export class UpgradePaymentService {
     );
     await this.refreshAndSync();
     return result;
-  }
-
-  /**
-   * Convert tokenizable payment method to legacy enum
-   * note: this will be removed once another PR is merged
-   */
-  tokenizablePaymentMethodToLegacyEnum(paymentMethod: TokenizablePaymentMethod): PaymentMethodType {
-    switch (paymentMethod) {
-      case "bankAccount":
-        return PaymentMethodType.BankAccount;
-      case "card":
-        return PaymentMethodType.Card;
-      case "payPal":
-        return PaymentMethodType.PayPal;
-    }
   }
 
   private getPasswordManagerSeats(planDetails: PlanDetails): number {

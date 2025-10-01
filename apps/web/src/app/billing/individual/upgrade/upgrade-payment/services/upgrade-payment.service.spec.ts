@@ -4,15 +4,13 @@ import { mock, mockReset } from "jest-mock-extended";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { OrganizationResponse } from "@bitwarden/common/admin-console/models/response/organization.response";
 import { OrganizationBillingServiceAbstraction } from "@bitwarden/common/billing/abstractions";
-import { TaxServiceAbstraction } from "@bitwarden/common/billing/abstractions/tax.service.abstraction";
 import { PaymentMethodType, PlanType } from "@bitwarden/common/billing/enums";
-import { PreviewInvoiceResponse } from "@bitwarden/common/billing/models/response/preview-invoice.response";
 import { SyncService } from "@bitwarden/common/platform/sync";
 import { UserId } from "@bitwarden/common/types/guid";
 import { LogService } from "@bitwarden/logging";
 
-import { AccountBillingClient } from "../../../../clients";
-import { TokenizedPaymentMethod } from "../../../../payment/types";
+import { AccountBillingClient, TaxAmounts, TaxClient } from "../../../../clients";
+import { BillingAddress, TokenizedPaymentMethod } from "../../../../payment/types";
 import { PersonalSubscriptionPricingTierIds } from "../../../../types/subscription-pricing-tier";
 
 import { UpgradePaymentService, PlanDetails } from "./upgrade-payment.service";
@@ -20,7 +18,7 @@ import { UpgradePaymentService, PlanDetails } from "./upgrade-payment.service";
 describe("UpgradePaymentService", () => {
   const mockOrganizationBillingService = mock<OrganizationBillingServiceAbstraction>();
   const mockAccountBillingClient = mock<AccountBillingClient>();
-  const mockTaxService = mock<TaxServiceAbstraction>();
+  const mockTaxClient = mock<TaxClient>();
   const mockLogService = mock<LogService>();
   const mockApiService = mock<ApiService>();
   const mockSyncService = mock<SyncService>();
@@ -42,9 +40,14 @@ describe("UpgradePaymentService", () => {
     type: "card",
   };
 
-  const mockBillingAddress = {
+  const mockBillingAddress: BillingAddress = {
+    line1: "123 Test St",
+    line2: null,
+    city: "Test City",
+    state: "TS",
     country: "US",
     postalCode: "12345",
+    taxId: null,
   };
 
   const mockPremiumPlanDetails: PlanDetails = {
@@ -89,7 +92,7 @@ describe("UpgradePaymentService", () => {
   beforeEach(() => {
     mockReset(mockOrganizationBillingService);
     mockReset(mockAccountBillingClient);
-    mockReset(mockTaxService);
+    mockReset(mockTaxClient);
     mockReset(mockLogService);
 
     TestBed.configureTestingModule({
@@ -101,7 +104,7 @@ describe("UpgradePaymentService", () => {
           useValue: mockOrganizationBillingService,
         },
         { provide: AccountBillingClient, useValue: mockAccountBillingClient },
-        { provide: TaxServiceAbstraction, useValue: mockTaxService },
+        { provide: TaxClient, useValue: mockTaxClient },
         { provide: LogService, useValue: mockLogService },
         { provide: ApiService, useValue: mockApiService },
         { provide: SyncService, useValue: mockSyncService },
@@ -114,55 +117,52 @@ describe("UpgradePaymentService", () => {
   describe("calculateEstimatedTax", () => {
     it("should calculate tax for premium plan", async () => {
       // Arrange
-      const mockResponse = mock<PreviewInvoiceResponse>();
-      mockResponse.taxAmount = 2.5;
+      const mockResponse = mock<TaxAmounts>();
+      mockResponse.tax = 2.5;
 
-      mockTaxService.previewIndividualInvoice.mockResolvedValue(mockResponse);
+      mockTaxClient.previewTaxForPremiumSubscriptionPurchase.mockResolvedValue(mockResponse);
 
       // Act
       const result = await sut.calculateEstimatedTax(mockPremiumPlanDetails, mockBillingAddress);
 
       // Assert
       expect(result).toEqual(2.5);
-      expect(mockTaxService.previewIndividualInvoice).toHaveBeenCalledWith({
-        passwordManager: { additionalStorage: 0 },
-        taxInformation: {
-          postalCode: "12345",
-          country: "US",
-        },
-      });
+      expect(mockTaxClient.previewTaxForPremiumSubscriptionPurchase).toHaveBeenCalledWith(
+        0,
+        mockBillingAddress,
+      );
     });
 
     it("should calculate tax for families plan", async () => {
       // Arrange
-      const mockResponse = mock<PreviewInvoiceResponse>();
-      mockResponse.taxAmount = 5.0;
+      const mockResponse = mock<TaxAmounts>();
+      mockResponse.tax = 5.0;
 
-      mockTaxService.previewOrganizationInvoice.mockResolvedValue(mockResponse);
+      mockTaxClient.previewTaxForOrganizationSubscriptionPurchase.mockResolvedValue(mockResponse);
 
       // Act
       const result = await sut.calculateEstimatedTax(mockFamiliesPlanDetails, mockBillingAddress);
 
       // Assert
       expect(result).toEqual(5.0);
-      expect(mockTaxService.previewOrganizationInvoice).toHaveBeenCalledWith({
-        passwordManager: {
-          additionalStorage: 0,
-          plan: PlanType.FamiliesAnnually,
-          seats: 6,
+      expect(mockTaxClient.previewTaxForOrganizationSubscriptionPurchase).toHaveBeenCalledWith(
+        {
+          cadence: "annually",
+          tier: "families",
+          passwordManager: {
+            additionalStorage: 0,
+            seats: 6,
+            sponsored: false,
+          },
         },
-        taxInformation: {
-          postalCode: "12345",
-          country: "US",
-          taxId: null,
-        },
-      });
+        mockBillingAddress,
+      );
     });
 
     it("should throw and log error if personal tax calculation fails", async () => {
       // Arrange
       const error = new Error("Tax service error");
-      mockTaxService.previewIndividualInvoice.mockRejectedValue(error);
+      mockTaxClient.previewTaxForPremiumSubscriptionPurchase.mockRejectedValue(error);
 
       // Act & Assert
       await expect(
@@ -174,7 +174,7 @@ describe("UpgradePaymentService", () => {
     it("should throw and log error if organization tax calculation fails", async () => {
       // Arrange
       const error = new Error("Tax service error");
-      mockTaxService.previewOrganizationInvoice.mockRejectedValue(error);
+      mockTaxClient.previewTaxForOrganizationSubscriptionPurchase.mockRejectedValue(error);
       // Act & Assert
       await expect(
         sut.calculateEstimatedTax(mockFamiliesPlanDetails, mockBillingAddress),
@@ -308,23 +308,6 @@ describe("UpgradePaymentService", () => {
           billingAddress: mockBillingAddress,
         }),
       ).rejects.toThrow("Payment method type or token is missing");
-    });
-
-    describe("tokenizablePaymentMethodToLegacyEnum", () => {
-      it("should convert 'card' to PaymentMethodType.Card", () => {
-        const result = sut.tokenizablePaymentMethodToLegacyEnum("card");
-        expect(result).toBe(PaymentMethodType.Card);
-      });
-
-      it("should convert 'bankAccount' to PaymentMethodType.BankAccount", () => {
-        const result = sut.tokenizablePaymentMethodToLegacyEnum("bankAccount");
-        expect(result).toBe(PaymentMethodType.BankAccount);
-      });
-
-      it("should convert 'payPal' to PaymentMethodType.PayPal", () => {
-        const result = sut.tokenizablePaymentMethodToLegacyEnum("payPal");
-        expect(result).toBe(PaymentMethodType.PayPal);
-      });
     });
   });
 });

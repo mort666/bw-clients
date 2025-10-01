@@ -249,8 +249,13 @@ export class UpgradePaymentComponent implements OnInit, AfterViewInit {
 
     this.upgradePaymentService
       .calculateEstimatedTax(this.selectedPlan, {
+        line1: null,
+        line2: null,
+        city: null,
+        state: null,
         country: billingAddress.country,
         postalCode: billingAddress.postalCode,
+        taxId: null,
       })
       .then((tax) => {
         this.estimatedTax = tax;
