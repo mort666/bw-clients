@@ -1,6 +1,5 @@
 import { NgClass } from "@angular/common";
 import {
-  ChangeDetectorRef,
   Component,
   computed,
   effect,
@@ -112,7 +111,6 @@ export class BitIconButtonComponent implements ButtonLikeAbstraction, FocusableE
 
   readonly size = model<IconButtonSize>("default");
 
-  private readonly cdr = inject(ChangeDetectorRef);
   private elementRef = inject(ElementRef);
   private tooltip = inject(TooltipDirective, { host: true, optional: true });
 
