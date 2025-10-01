@@ -14,8 +14,8 @@ import { SharedModule } from "@bitwarden/web-vault/app/shared";
 
 import { SessionTimeoutConfirmationNeverComponent } from "./session-timeout-confirmation-never.component";
 
-type SessionTimeoutAction = null | "lock" | "logOut";
-type SessionTimeoutType =
+export type SessionTimeoutAction = null | "lock" | "logOut";
+export type SessionTimeoutType =
   | null
   | "never"
   | "onAppRestart"
