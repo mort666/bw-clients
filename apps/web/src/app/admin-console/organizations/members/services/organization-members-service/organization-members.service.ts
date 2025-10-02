@@ -1,84 +1,19 @@
 import { Injectable } from "@angular/core";
-import { Observable, combineLatest, switchMap, map, filter, shareReplay, from } from "rxjs";
 
 import { OrganizationUserApiService } from "@bitwarden/admin-console/common";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
-import {
-  getOrganizationById,
-  OrganizationService,
-} from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
-import { PolicyApiServiceAbstraction as PolicyApiService } from "@bitwarden/common/admin-console/abstractions/policy/policy-api.service.abstraction";
-import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
-import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
-import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
-import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
-import { getUserId } from "@bitwarden/common/auth/services/account.service";
-import { OrganizationId } from "@bitwarden/common/types/guid";
 
 import { GroupApiService } from "../../../core";
 import { OrganizationUserView } from "../../../core/views/organization-user.view";
 
-export interface OrganizationMemberState {
-  organization: Organization | null;
-  users: OrganizationUserView[];
-  policies: Policy[];
-  resetPasswordPolicyEnabled: boolean;
-  loading: boolean;
-}
-
 @Injectable()
 export class OrganizationMembersService {
   constructor(
-    private organizationService: OrganizationService,
     private organizationUserApiService: OrganizationUserApiService,
-    private policyService: PolicyService,
-    private policyApiService: PolicyApiService,
     private groupService: GroupApiService,
     private apiService: ApiService,
-    private accountService: AccountService,
   ) {}
-
-  getMemberState(organizationId: OrganizationId): Observable<OrganizationMemberState> {
-    const userId$ = this.accountService.activeAccount$.pipe(getUserId);
-
-    const organization$ = userId$.pipe(
-      switchMap((userId) =>
-        this.organizationService.organizations$(userId).pipe(getOrganizationById(organizationId)),
-      ),
-      filter((organization): organization is Organization => organization != null),
-      shareReplay({ refCount: true, bufferSize: 1 }),
-    );
-
-    const policies$ = combineLatest([userId$, organization$]).pipe(
-      switchMap(([userId, organization]) =>
-        organization.isProviderUser
-          ? from(this.policyApiService.getPolicies(organization.id)).pipe(
-              map((response) => Policy.fromListResponse(response)),
-            )
-          : this.policyService.policies$(userId),
-      ),
-    );
-
-    const users$ = organization$.pipe(switchMap((organization) => this.loadUsers(organization)));
-
-    return combineLatest([organization$, users$, policies$]).pipe(
-      map(([organization, users, policies]) => {
-        const resetPasswordPolicy = policies
-          .filter((policy) => policy.type === PolicyType.ResetPassword)
-          .find((p) => p.organizationId === organization.id);
-
-        return {
-          organization,
-          users,
-          policies,
-          resetPasswordPolicyEnabled: resetPasswordPolicy?.enabled ?? false,
-          loading: false, // Data is loaded when we reach this point
-        };
-      }),
-      shareReplay({ refCount: true, bufferSize: 1 }),
-    );
-  }
 
   async loadUsers(organization: Organization): Promise<OrganizationUserView[]> {
     let groupsPromise: Promise<Map<string, string>> | undefined;

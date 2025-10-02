@@ -58,7 +58,10 @@ export class BillingConstraintService {
     organization: Organization,
     billingMetadata: OrganizationBillingMetadataResponse,
   ): SeatLimitResult {
-    const occupiedSeats = billingMetadata?.organizationOccupiedSeats ?? 0;
+    const occupiedSeats = billingMetadata?.organizationOccupiedSeats;
+    if (occupiedSeats == null) {
+      throw new Error("Cannot check seat limit: billingMetadata is null or undefined.");
+    }
     const totalSeats = organization.seats;
 
     if (occupiedSeats < totalSeats) {

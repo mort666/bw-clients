@@ -6,6 +6,7 @@ import {
   concatMap,
   filter,
   firstValueFrom,
+  from,
   map,
   merge,
   Observable,
@@ -17,18 +18,27 @@ import {
 import { OrganizationUserUserDetailsResponse } from "@bitwarden/admin-console/common";
 import { UserNamePipe } from "@bitwarden/angular/pipes/user-name.pipe";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
+import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { OrganizationManagementPreferencesService } from "@bitwarden/common/admin-console/abstractions/organization-management-preferences/organization-management-preferences.service";
+import { PolicyApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/policy/policy-api.service.abstraction";
+import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import {
   OrganizationUserStatusType,
   OrganizationUserType,
+  PolicyType,
 } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
+import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { OrganizationBillingMetadataResponse } from "@bitwarden/common/billing/models/response/organization-billing-metadata.response";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { ValidationService } from "@bitwarden/common/platform/abstractions/validation.service";
+import { getById } from "@bitwarden/common/platform/misc";
 import { DialogService, ToastService } from "@bitwarden/components";
 import { KeyService } from "@bitwarden/key-management";
+import { UserId } from "@bitwarden/user-core";
 import { OrganizationWarningsService } from "@bitwarden/web-vault/app/billing/organizations/warnings/services";
 
 import { BaseMembersComponent } from "../../common/base-members.component";
@@ -64,7 +74,10 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
 
   organization: Signal<Organization | undefined>;
   status: OrganizationUserStatusType | undefined;
-  orgResetPasswordPolicyEnabled = false;
+
+  private userId$: Observable<UserId> = this.accountService.activeAccount$.pipe(getUserId);
+
+  resetPasswordPolicyEnabled$: Observable<boolean>;
 
   protected canUseSecretsManager: Signal<boolean> = computed(
     () => this.organization()?.useSecretsManager ?? false,
@@ -95,6 +108,10 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     private memberDialogManager: MemberDialogManagerService,
     protected billingConstraint: BillingConstraintService,
     protected memberService: OrganizationMembersService,
+    private organizationService: OrganizationService,
+    private accountService: AccountService,
+    private policyService: PolicyService,
+    private policyApiService: PolicyApiServiceAbstraction,
   ) {
     super(
       apiService,
@@ -108,39 +125,48 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
       toastService,
     );
 
-    const memberState$ = this.route.params.pipe(
-      switchMap((params) => this.memberService.getMemberState(params.organizationId)),
-      shareReplay({ refCount: true, bufferSize: 1 }),
-    );
-
-    const organization$ = memberState$.pipe(
-      map((state) => state.organization),
-      filter((organization): organization is Organization => organization != null),
-      shareReplay({ refCount: true, bufferSize: 1 }),
+    const organization$ = this.route.params.pipe(
+      concatMap((params) =>
+        this.userId$.pipe(
+          switchMap((userId) =>
+            this.organizationService.organizations$(userId).pipe(getById(params.organizationId)),
+          ),
+        ),
+      ),
     );
 
     this.organization = toSignal(organization$);
 
-    combineLatest([this.route.queryParams, memberState$])
+    const policies$ = combineLatest([this.userId$, organization$]).pipe(
+      switchMap(([userId, organization]) =>
+        organization?.isProviderUser
+          ? from(this.policyApiService.getPolicies(organization.id)).pipe(
+              map((response) => Policy.fromListResponse(response)),
+            )
+          : this.policyService.policies$(userId),
+      ),
+    );
+
+    this.resetPasswordPolicyEnabled$ = combineLatest([organization$, policies$]).pipe(
+      map(
+        ([organization, policies]) =>
+          policies
+            .filter((policy) => policy.type === PolicyType.ResetPassword)
+            .find((p) => p.organizationId === organization?.id)?.enabled ?? false,
+      ),
+    );
+
+    combineLatest([this.route.queryParams, organization$])
       .pipe(
-        concatMap(async ([qParams, memberState]) => {
-          // Backfill pub/priv key if necessary
-          try {
-            await this.memberActionsService.ensureOrganizationKeys(memberState.organization!);
-          } catch {
-            throw new Error(this.i18nService.t("resetPasswordOrgKeysError"));
-          }
-
-          this.orgResetPasswordPolicyEnabled = memberState.resetPasswordPolicyEnabled;
-
-          await this.load(memberState.organization!);
+        concatMap(async ([qParams, organization]) => {
+          await this.load(organization!);
 
           this.searchControl.setValue(qParams.search);
 
           if (qParams.viewEvents != null) {
             const user = this.dataSource.data.filter((u) => u.id === qParams.viewEvents);
             if (user.length > 0 && user[0].status === OrganizationUserStatusType.Confirmed) {
-              this.openEventsDialog(user[0], memberState.organization!);
+              this.openEventsDialog(user[0], organization!);
             }
           }
         }),
@@ -150,6 +176,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
 
     organization$
       .pipe(
+        filter((organization) => organization != null),
         switchMap((organization) =>
           merge(
             this.organizationWarningsService.showInactiveSubscriptionDialog$(organization),
@@ -161,6 +188,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
       .subscribe();
 
     this.billingMetadata$ = organization$.pipe(
+      filter((organization) => organization != null),
       switchMap((organization) => this.billingConstraint.getBillingMetadata$(organization.id)),
       shareReplay({ bufferSize: 1, refCount: false }),
     );
@@ -246,22 +274,27 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     this.actionPromise = undefined;
   }
 
-  allowResetPassword(orgUser: OrganizationUserView, organization: Organization): boolean {
+  allowResetPassword(
+    orgUser: OrganizationUserView,
+    organization: Organization,
+    orgResetPasswordPolicyEnabled: boolean,
+  ): boolean {
     return this.memberActionsService.allowResetPassword(
       orgUser,
       organization,
-      this.orgResetPasswordPolicyEnabled,
+      orgResetPasswordPolicyEnabled,
     );
   }
 
   showEnrolledStatus(
     orgUser: OrganizationUserUserDetailsResponse,
     organization: Organization,
+    orgResetPasswordPolicyEnabled: boolean,
   ): boolean {
     return (
       organization.useResetPassword &&
       orgUser.resetPasswordEnrolled &&
-      this.orgResetPasswordPolicyEnabled
+      orgResetPasswordPolicyEnabled
     );
   }
 

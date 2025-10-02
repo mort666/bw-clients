@@ -6,20 +6,17 @@ import {
   OrganizationUserBulkResponse,
   OrganizationUserConfirmRequest,
 } from "@bitwarden/admin-console/common";
-import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
 import {
   OrganizationUserType,
   OrganizationUserStatusType,
 } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
-import { OrganizationKeysRequest } from "@bitwarden/common/admin-console/models/request/organization-keys.request";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { ListResponse } from "@bitwarden/common/models/response/list.response";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
-import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
 import { KeyService } from "@bitwarden/key-management";
 
 import { OrganizationUserView } from "../../../core/views/organization-user.view";
@@ -41,11 +38,9 @@ export class MemberActionsService {
 
   constructor(
     private organizationUserApiService: OrganizationUserApiService,
-    private organizationApiService: OrganizationApiServiceAbstraction,
     private organizationUserService: OrganizationUserService,
     private keyService: KeyService,
     private encryptService: EncryptService,
-    private syncService: SyncService,
     private configService: ConfigService,
     private accountService: AccountService,
   ) {}
@@ -158,35 +153,6 @@ export class MemberActionsService {
       return { success: true };
     } catch (error) {
       return { success: false, error: (error as Error).message ?? String(error) };
-    }
-  }
-
-  async ensureOrganizationKeys(organization: Organization): Promise<void> {
-    if (organization.canManageUsersPassword && !organization.hasPublicAndPrivateKeys) {
-      const orgShareKey = await firstValueFrom(
-        this.userId$.pipe(
-          switchMap((userId) => this.keyService.orgKeys$(userId)),
-          map((orgKeys) => {
-            if (orgKeys == null || orgKeys[organization.id] == null) {
-              throw new Error("Organization keys not found for provided User.");
-            }
-            return orgKeys[organization.id];
-          }),
-        ),
-      );
-
-      const [orgPublicKey, encryptedOrgPrivateKey] = await this.keyService.makeKeyPair(orgShareKey);
-      if (encryptedOrgPrivateKey.encryptedString == null) {
-        throw new Error("Encrypted private key is null.");
-      }
-      const request = new OrganizationKeysRequest(
-        orgPublicKey,
-        encryptedOrgPrivateKey.encryptedString,
-      );
-      const response = await this.organizationApiService.updateKeys(organization.id, request);
-      if (response != null) {
-        await this.syncService.fullSync(true);
-      }
     }
   }
 
