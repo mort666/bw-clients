@@ -77,14 +77,13 @@ export class Send extends Domain {
   }
 
   async decrypt(userId: UserId): Promise<SendView> {
-    const model = new SendView(this);
-
-    const keyService = Utils.getContainerService().getKeyService();
-    const encryptService = Utils.getContainerService().getEncryptService();
-
     if (!userId) {
       throw new Error("User ID must not be null or undefined");
     }
+
+    const model = new SendView(this);
+    const keyService = Utils.getContainerService().getKeyService();
+    const encryptService = Utils.getContainerService().getEncryptService();
     const sendKeyEncryptionKey = await firstValueFrom(keyService.userKey$(userId));
     // model.key is a seed used to derive a key, not a SymmetricCryptoKey
     model.key = await encryptService.decryptBytes(this.key, sendKeyEncryptionKey);

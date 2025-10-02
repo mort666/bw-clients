@@ -19,7 +19,7 @@ export class LegacyPasswordHistoryDecryptor {
   async decrypt(history: GeneratedPasswordHistory[]): Promise<GeneratedPasswordHistory[]> {
     const key = await firstValueFrom(this.keyService.userKey$(this.userId));
 
-    if (key == null) {
+    if (key == undefined) {
       throw new Error("No user key found for decryption");
     }
 

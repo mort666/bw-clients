@@ -345,9 +345,12 @@ export class SendService implements InternalSendServiceAbstraction {
     data: ArrayBuffer,
     key: SymmetricCryptoKey,
   ): Promise<[EncString, EncArrayBuffer]> {
+    const userId = await firstValueFrom(
+      this.stateProvider.encryptedState$.pipe(map(([userId]) => userId)),
+    );
+
     if (key == null) {
-      const account = await firstValueFrom(this.accountService.activeAccount$);
-      key = await firstValueFrom(this.keyService.userKey$(account.id));
+      key = await firstValueFrom(this.keyService.userKey$(userId));
     }
     const encFileName = await this.encryptService.encryptString(fileName, key);
     const encFileData = await this.encryptService.encryptFileData(new Uint8Array(data), key);
@@ -355,8 +358,10 @@ export class SendService implements InternalSendServiceAbstraction {
   }
 
   private async decryptSends(sends: Send[]) {
-    const account = await firstValueFrom(this.accountService.activeAccount$);
-    const decryptSendPromises = sends.map((s) => s.decrypt(account.id));
+    const userId = await firstValueFrom(
+      this.stateProvider.encryptedState$.pipe(map(([userId]) => userId)),
+    );
+    const decryptSendPromises = sends.map((s) => s.decrypt(userId));
     const decryptedSends = await Promise.all(decryptSendPromises);
 
     decryptedSends.sort(Utils.getSortFunction(this.i18nService, "name"));
