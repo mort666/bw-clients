@@ -212,9 +212,10 @@ export class AutofillOptionsComponent implements OnInit {
           return;
         }
 
-        // Safari is unable to format messages with placeholders surrounded by parentheses manually inserting them is required
-        this.autofillOptions[0].label =
-          this.i18nService.t("default") + " (" + defaultOption.label + ")";
+        this.autofillOptions[0].label = this.i18nService.t(
+          "defaultLabelWithValue",
+          defaultOption.label,
+        );
         // Trigger change detection to update the label in the template
         this.autofillOptions = [...this.autofillOptions];
       });
