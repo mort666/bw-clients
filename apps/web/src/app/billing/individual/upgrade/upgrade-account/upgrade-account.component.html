@@ -4,17 +4,17 @@
     cdkTrapFocus
     cdkTrapFocusAutoCapture
   >
-    <div class="tw-pt-4 tw-px-14 tw-pb-20">
-      <header class="tw-flex tw-items-center tw-justify-end">
-        <button
-          type="button"
-          bitIconButton="bwi-close"
-          buttonType="main"
-          size="default"
-          [label]="'close' | i18n"
-          (click)="closeClicked.emit(closeStatus)"
-        ></button>
-      </header>
+    <header class="tw-flex tw-items-center tw-justify-end tw-p-4">
+      <button
+        type="button"
+        bitIconButton="bwi-close"
+        buttonType="main"
+        size="default"
+        [label]="'close' | i18n"
+        (click)="closeClicked.emit(closeStatus)"
+      ></button>
+    </header>
+    <div class="tw-px-14 tw-pb-20">
       <div class="tw-flex tw-text-center tw-flex-col">
         <h1 bitTypography="h1" class="tw-font-semibold">
           {{ "individualUpgradeWelcomeMessage" | i18n }}
