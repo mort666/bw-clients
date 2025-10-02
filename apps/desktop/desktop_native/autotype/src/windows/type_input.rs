@@ -14,15 +14,15 @@ trait InputOperations {
     /// Attempts to type the provided input wherever the user's cursor is.
     ///
     /// https://learn.microsoft.com/en-in/windows/win32/api/winuser/nf-winuser-sendinput
-    fn send_input(inputs: &Vec<INPUT>) -> u32;
+    fn send_input(inputs: &[INPUT]) -> u32;
 }
 
 struct Win32InputOperations;
 
 impl InputOperations for Win32InputOperations {
-    fn send_input(inputs: &Vec<INPUT>) -> u32 {
+    fn send_input(inputs: &[INPUT]) -> u32 {
         const INPUT_STRUCT_SIZE: i32 = std::mem::size_of::<INPUT>() as i32;
-        let insert_count = unsafe { SendInput(&inputs, INPUT_STRUCT_SIZE) };
+        let insert_count = unsafe { SendInput(inputs, INPUT_STRUCT_SIZE) };
 
         debug!(insert_count, "SendInput() called.");
 
