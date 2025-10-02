@@ -80,7 +80,7 @@ export const Default: Story = {
       <div class="tw-p-4">
         <button
           bitIconButton="bwi-ellipsis-v"
-          label="This is a tooltip"
+          label="This is some other tooltip"
           ${formatArgsForCodeSnippet<TooltipDirective>(args)}
         >
           Button label here

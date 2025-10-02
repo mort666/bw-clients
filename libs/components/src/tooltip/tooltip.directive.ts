@@ -8,8 +8,8 @@ import {
   ElementRef,
   Injector,
   input,
-  effect,
   signal,
+  computed,
 } from "@angular/core";
 
 import { TooltipPositionIdentifier, tooltipPositions } from "./tooltip-positions";
@@ -40,6 +40,11 @@ export class TooltipDirective implements OnInit {
   readonly tooltipPosition = input<TooltipPositionIdentifier>("above-center");
 
   private _bitTooltip = signal("");
+
+  private resolvedTooltipText = computed(() => {
+    return this.bitTooltip() ?? this._bitTooltip();
+  });
+
   private isVisible = signal(false);
   private overlayRef: OverlayRef | undefined;
   private elementRef = inject(ElementRef);
@@ -60,7 +65,7 @@ export class TooltipDirective implements OnInit {
         {
           provide: TOOLTIP_DATA,
           useValue: {
-            content: this._bitTooltip,
+            content: this.resolvedTooltipText,
             isVisible: this.isVisible,
             tooltipPosition: this.tooltipPosition,
           },
@@ -69,12 +74,26 @@ export class TooltipDirective implements OnInit {
     }),
   );
 
+  private destroyTooltip = () => {
+    this.overlayRef?.dispose();
+    this.overlayRef = undefined;
+    this.isVisible.set(false);
+  };
+
   private showTooltip = () => {
+    if (!this.overlayRef) {
+      this.overlayRef = this.overlay.create({
+        ...this.defaultPopoverConfig,
+        positionStrategy: this.positionStrategy,
+      });
+
+      this.overlayRef.attach(this.tooltipPortal);
+    }
     this.isVisible.set(true);
   };
 
   private hideTooltip = () => {
-    this.isVisible.set(false);
+    this.destroyTooltip();
   };
 
   private computePositions(tooltipPosition: TooltipPositionIdentifier) {
@@ -96,20 +115,5 @@ export class TooltipDirective implements OnInit {
 
   ngOnInit() {
     this.positionStrategy.withPositions(this.computePositions(this.tooltipPosition()));
-
-    this.overlayRef = this.overlay.create({
-      ...this.defaultPopoverConfig,
-      positionStrategy: this.positionStrategy,
-    });
-
-    this.overlayRef.attach(this.tooltipPortal);
-
-    effect(
-      () => {
-        this.positionStrategy.withPositions(this.computePositions(this.tooltipPosition()));
-        this.overlayRef?.updatePosition();
-      },
-      { injector: this.injector },
-    );
   }
 }
