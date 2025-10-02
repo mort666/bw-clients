@@ -190,7 +190,7 @@ export class UpgradePaymentComponent implements OnInit, AfterViewInit {
     }
   };
 
-  private isFormValid(): boolean {
+  protected isFormValid(): boolean {
     return this.formGroup.valid && this.paymentComponent?.validate();
   }
 
@@ -199,6 +199,9 @@ export class UpgradePaymentComponent implements OnInit, AfterViewInit {
     const country = this.formGroup.value?.paymentForm?.billingAddress?.country;
     const postalCode = this.formGroup.value?.paymentForm?.billingAddress?.postalCode;
 
+    if (!this.selectedPlan) {
+      throw new Error("No plan selected");
+    }
     if (!country || !postalCode) {
       throw new Error("Billing address is incomplete");
     }
@@ -211,6 +214,10 @@ export class UpgradePaymentComponent implements OnInit, AfterViewInit {
 
     // Get payment method
     const tokenizedPaymentMethod = await this.paymentComponent?.tokenize();
+
+    if (!tokenizedPaymentMethod) {
+      throw new Error("Payment method is required");
+    }
 
     // Process the upgrade based on plan type
     if (this.isFamiliesPlan) {
