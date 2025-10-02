@@ -131,6 +131,8 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
           switchMap((userId) =>
             this.organizationService.organizations$(userId).pipe(getById(params.organizationId)),
           ),
+          filter((organization): organization is Organization => organization != null),
+          shareReplay({ refCount: true, bufferSize: 1 }),
         ),
       ),
     );
@@ -139,7 +141,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
 
     const policies$ = combineLatest([this.userId$, organization$]).pipe(
       switchMap(([userId, organization]) =>
-        organization?.isProviderUser
+        organization.isProviderUser
           ? from(this.policyApiService.getPolicies(organization.id)).pipe(
               map((response) => Policy.fromListResponse(response)),
             )
@@ -152,7 +154,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
         ([organization, policies]) =>
           policies
             .filter((policy) => policy.type === PolicyType.ResetPassword)
-            .find((p) => p.organizationId === organization?.id)?.enabled ?? false,
+            .find((p) => p.organizationId === organization.id)?.enabled ?? false,
       ),
     );
 
@@ -176,7 +178,6 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
 
     organization$
       .pipe(
-        filter((organization) => organization != null),
         switchMap((organization) =>
           merge(
             this.organizationWarningsService.showInactiveSubscriptionDialog$(organization),
@@ -188,7 +189,6 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
       .subscribe();
 
     this.billingMetadata$ = organization$.pipe(
-      filter((organization) => organization != null),
       switchMap((organization) => this.billingConstraint.getBillingMetadata$(organization.id)),
       shareReplay({ bufferSize: 1, refCount: false }),
     );
