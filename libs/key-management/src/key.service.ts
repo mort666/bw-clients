@@ -62,7 +62,6 @@ import { KdfConfigService } from "./abstractions/kdf-config.service";
 import {
   CipherDecryptionKeys,
   KeyService as KeyServiceAbstraction,
-  UserPrivateKeyDecryptionFailedError,
 } from "./abstractions/key.service";
 import { KdfConfig } from "./models/kdf-config";
 
@@ -103,30 +102,6 @@ export class DefaultKeyService implements KeyServiceAbstraction {
     await this.stateProvider.setUserState(USER_EVER_HAD_USER_KEY, true, userId);
 
     await this.storeAdditionalKeys(key, userId);
-  }
-
-  async setUserKeys(
-    userKey: UserKey,
-    encPrivateKey: EncryptedString,
-    userId: UserId,
-  ): Promise<void> {
-    if (userKey == null) {
-      throw new Error("No userKey provided. Lock the user to clear the key");
-    }
-    if (encPrivateKey == null) {
-      throw new Error("No encPrivateKey provided.");
-    }
-    if (userId == null) {
-      throw new Error("No userId provided.");
-    }
-
-    const decryptedPrivateKey = await this.decryptPrivateKey(encPrivateKey, userKey);
-    if (decryptedPrivateKey == null) {
-      throw new UserPrivateKeyDecryptionFailedError();
-    }
-
-    await this.setUserKey(userKey, userId);
-    await this.setPrivateKey(encPrivateKey, userId);
   }
 
   async refreshAdditionalKeys(userId: UserId): Promise<void> {
@@ -219,19 +194,6 @@ export class DefaultKeyService implements KeyServiceAbstraction {
     // Set userId to ensure we have one for the account status update
     await this.stateProvider.setUserState(USER_KEY, null, userId);
     await this.clearAllStoredUserKeys(userId);
-  }
-
-  async clearStoredUserKey(keySuffix: KeySuffixOptions, userId: UserId): Promise<void> {
-    if (userId == null) {
-      throw new Error("UserId is required");
-    }
-
-    if (keySuffix === KeySuffixOptions.Auto) {
-      await this.stateService.setUserKeyAutoUnlock(null, { userId: userId });
-    }
-    if (keySuffix === KeySuffixOptions.Pin) {
-      await this.pinService.clearPinKeyEncryptedUserKeyEphemeral(userId);
-    }
   }
 
   /**
@@ -577,7 +539,7 @@ export class DefaultKeyService implements KeyServiceAbstraction {
   }
 
   // ---HELPERS---
-  async validateUserKey(key: UserKey | MasterKey | null, userId: UserId): Promise<boolean> {
+  async validateUserKey(key: UserKey, userId: UserId): Promise<boolean> {
     if (key == null) {
       return false;
     }
@@ -797,21 +759,6 @@ export class DefaultKeyService implements KeyServiceAbstraction {
 
   userPrivateKey$(userId: UserId): Observable<UserPrivateKey | null> {
     return this.userPrivateKeyHelper$(userId).pipe(map((keys) => keys?.userPrivateKey ?? null));
-  }
-
-  userEncryptionKeyPair$(
-    userId: UserId,
-  ): Observable<{ privateKey: UserPrivateKey; publicKey: UserPublicKey } | null> {
-    return this.userPrivateKey$(userId).pipe(
-      switchMap(async (privateKey) => {
-        if (privateKey == null) {
-          return null;
-        }
-
-        const publicKey = (await this.derivePublicKey(privateKey))!;
-        return { privateKey, publicKey };
-      }),
-    );
   }
 
   userEncryptedPrivateKey$(userId: UserId): Observable<EncryptedString | null> {

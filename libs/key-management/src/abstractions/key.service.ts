@@ -22,12 +22,6 @@ import {
 
 import { KdfConfig } from "../models/kdf-config";
 
-export class UserPrivateKeyDecryptionFailedError extends Error {
-  constructor() {
-    super("Failed to decrypt the user's private key.");
-  }
-}
-
 /**
  * An object containing all the users key needed to decrypt a users personal and organization vaults.
  */
@@ -67,20 +61,6 @@ export abstract class KeyService {
    * @param userId The desired user
    */
   abstract setUserKey(key: UserKey, userId: UserId): Promise<void>;
-  /**
-   * Sets the provided user keys and stores any other necessary versions
-   * (such as auto, biometrics, or pin).
-   * Also sets the user's encrypted private key in storage and
-   * clears the decrypted private key from memory
-   * Note: does not clear the private key if null is provided
-   *
-   * @throws Error when userKey, encPrivateKey or userId is null
-   * @throws UserPrivateKeyDecryptionFailedError when the userKey cannot decrypt encPrivateKey
-   * @param userKey The user key to set
-   * @param encPrivateKey An encrypted private key
-   * @param userId The desired user
-   */
-  abstract setUserKeys(userKey: UserKey, encPrivateKey: string, userId: UserId): Promise<void>;
   /**
    * Gets the user key from memory and sets it again,
    * kicking off a refresh of any additional keys
@@ -139,13 +119,6 @@ export abstract class KeyService {
    * @returns A new user key
    */
   abstract makeUserKeyV1(): Promise<UserKey>;
-  /**
-   * Clears the user's stored version of the user key
-   * @param keySuffix The desired version of the key to clear
-   * @param userId The desired user
-   * @throws Error when userId is null or undefined.
-   */
-  abstract clearStoredUserKey(keySuffix: KeySuffixOptions, userId: string): Promise<void>;
   /**
    * Retrieves the user's master key if it is in state, or derives it from the provided password
    * @param password The user's master password that will be used to derive a master key if one isn't found
@@ -294,28 +267,6 @@ export abstract class KeyService {
    * will be removed when auth has been migrated to the SDK.
    */
   abstract userEncryptedPrivateKey$(userId: UserId): Observable<EncryptedString | null>;
-
-  /**
-   * Gets an observable stream of the given users decrypted private key and public key, guaranteed to be consistent.
-   * Will emit null if the user doesn't have a userkey to decrypt the encrypted private key, or null if the user doesn't have a private key
-   * at all.
-   *
-   * @param userId The user id of the user to get the data for.
-   */
-  abstract userEncryptionKeyPair$(
-    userId: UserId,
-  ): Observable<{ privateKey: UserPrivateKey; publicKey: UserPublicKey } | null>;
-
-  /**
-   * Gets an observable stream of the given users decrypted private key and public key, guaranteed to be consistent.
-   * Will emit null if the user doesn't have a userkey to decrypt the encrypted private key, or null if the user doesn't have a private key
-   * at all.
-   *
-   * @param userId The user id of the user to get the data for.
-   */
-  abstract userEncryptionKeyPair$(
-    userId: UserId,
-  ): Observable<{ privateKey: UserPrivateKey; publicKey: UserPublicKey } | null>;
 
   /**
    * Generates a fingerprint phrase for the public key provided.
