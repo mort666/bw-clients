@@ -5,7 +5,7 @@ import { firstValueFrom, Subject, takeUntil } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { UserVerificationFormInputComponent } from "@bitwarden/auth/angular";
-import { ApiService } from "@bitwarden/common/abstractions/api.service";
+import { TwoFactorApiService } from "@bitwarden/auth/common";
 import { AccountApiService } from "@bitwarden/common/auth/abstractions/account-api.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
@@ -64,7 +64,7 @@ export class SetAccountVerifyDevicesDialogComponent implements OnInit, OnDestroy
     private userVerificationService: UserVerificationService,
     private dialogRef: DialogRef,
     private toastService: ToastService,
-    private apiService: ApiService,
+    private twoFactorApiService: TwoFactorApiService,
   ) {
     this.accountService.accountVerifyNewDeviceLogin$
       .pipe(takeUntil(this.destroy$))
@@ -74,7 +74,7 @@ export class SetAccountVerifyDevicesDialogComponent implements OnInit, OnDestroy
   }
 
   async ngOnInit() {
-    const twoFactorProviders = await this.apiService.getTwoFactorProviders();
+    const twoFactorProviders = await this.twoFactorApiService.getTwoFactorProviders();
     this.has2faConfigured = twoFactorProviders.data.length > 0;
   }
 

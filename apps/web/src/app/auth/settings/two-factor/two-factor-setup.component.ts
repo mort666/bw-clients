@@ -13,7 +13,7 @@ import {
 } from "rxjs";
 
 import { PremiumBadgeComponent } from "@bitwarden/angular/billing/components/premium-badge";
-import { ApiService } from "@bitwarden/common/abstractions/api.service";
+import { TwoFactorApiService } from "@bitwarden/auth/common";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
@@ -68,7 +68,7 @@ export class TwoFactorSetupComponent implements OnInit, OnDestroy {
 
   constructor(
     protected dialogService: DialogService,
-    protected apiService: ApiService,
+    protected twoFactorApiService: TwoFactorApiService,
     protected messagingService: MessagingService,
     protected policyService: PolicyService,
     billingAccountProfileStateService: BillingAccountProfileStateService,
@@ -270,7 +270,7 @@ export class TwoFactorSetupComponent implements OnInit, OnDestroy {
   }
 
   protected getTwoFactorProviders() {
-    return this.apiService.getTwoFactorProviders();
+    return this.twoFactorApiService.getTwoFactorProviders();
   }
 
   protected filterProvider(type: TwoFactorProviderType): boolean {

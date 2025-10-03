@@ -12,9 +12,9 @@ import {
   PasswordLoginCredentials,
   SsoLoginCredentials,
   SsoUrlService,
+  TwoFactorApiService,
   UserApiLoginCredentials,
 } from "@bitwarden/auth/common";
-import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { PolicyApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/policy/policy-api.service.abstraction";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
@@ -61,7 +61,7 @@ export class LoginCommand {
   constructor(
     protected loginStrategyService: LoginStrategyServiceAbstraction,
     protected authService: AuthService,
-    protected apiService: ApiService,
+    protected twoFactorApiService: TwoFactorApiService,
     protected masterPasswordApiService: MasterPasswordApiService,
     protected cryptoFunctionService: CryptoFunctionService,
     protected environmentService: EnvironmentService,
@@ -278,7 +278,7 @@ export class LoginCommand {
           const emailReq = new TwoFactorEmailRequest();
           emailReq.email = await this.loginStrategyService.getEmail();
           emailReq.masterPasswordHash = await this.loginStrategyService.getMasterPasswordHash();
-          await this.apiService.postTwoFactorEmail(emailReq);
+          await this.twoFactorApiService.postTwoFactorEmail(emailReq);
         }
 
         if (twoFactorToken == null) {

@@ -6,7 +6,7 @@ import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angu
 import { firstValueFrom, map } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
-import { ApiService } from "@bitwarden/common/abstractions/api.service";
+import { TwoFactorApiService } from "@bitwarden/auth/common";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
@@ -92,7 +92,7 @@ export class TwoFactorSetupAuthenticatorComponent
   constructor(
     @Inject(DIALOG_DATA) protected data: AuthResponse<TwoFactorAuthenticatorResponse>,
     private dialogRef: DialogRef,
-    apiService: ApiService,
+    twoFactorApiService: TwoFactorApiService,
     i18nService: I18nService,
     userVerificationService: UserVerificationService,
     private formBuilder: FormBuilder,
@@ -104,7 +104,7 @@ export class TwoFactorSetupAuthenticatorComponent
     protected toastService: ToastService,
   ) {
     super(
-      apiService,
+      twoFactorApiService,
       i18nService,
       platformUtilsService,
       logService,
@@ -154,7 +154,7 @@ export class TwoFactorSetupAuthenticatorComponent
     request.key = this.key;
     request.userVerificationToken = this.userVerificationToken;
 
-    const response = await this.apiService.putTwoFactorAuthenticator(request);
+    const response = await this.twoFactorApiService.putTwoFactorAuthenticator(request);
     await this.processResponse(response);
     this.onUpdated.emit(true);
   }
@@ -174,7 +174,7 @@ export class TwoFactorSetupAuthenticatorComponent
     request.type = this.type;
     request.key = this.key;
     request.userVerificationToken = this.userVerificationToken;
-    await this.apiService.deleteTwoFactorAuthenticator(request);
+    await this.twoFactorApiService.deleteTwoFactorAuthenticator(request);
     this.enabled = false;
     this.toastService.showToast({
       variant: "success",

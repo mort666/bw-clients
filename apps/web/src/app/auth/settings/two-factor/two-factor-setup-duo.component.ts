@@ -2,7 +2,7 @@ import { CommonModule } from "@angular/common";
 import { Component, EventEmitter, Inject, OnInit, Output } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 
-import { ApiService } from "@bitwarden/common/abstractions/api.service";
+import { TwoFactorApiService } from "@bitwarden/auth/common";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
 import { UpdateTwoFactorDuoRequest } from "@bitwarden/common/auth/models/request/update-two-factor-duo.request";
@@ -63,7 +63,7 @@ export class TwoFactorSetupDuoComponent
 
   constructor(
     @Inject(DIALOG_DATA) protected data: TwoFactorDuoComponentConfig,
-    apiService: ApiService,
+    twoFactorApiService: TwoFactorApiService,
     i18nService: I18nService,
     platformUtilsService: PlatformUtilsService,
     logService: LogService,
@@ -74,7 +74,7 @@ export class TwoFactorSetupDuoComponent
     protected toastService: ToastService,
   ) {
     super(
-      apiService,
+      twoFactorApiService,
       i18nService,
       platformUtilsService,
       logService,
@@ -139,9 +139,12 @@ export class TwoFactorSetupDuoComponent
     let response: TwoFactorDuoResponse;
 
     if (this.organizationId != null) {
-      response = await this.apiService.putTwoFactorOrganizationDuo(this.organizationId, request);
+      response = await this.twoFactorApiService.putTwoFactorOrganizationDuo(
+        this.organizationId,
+        request,
+      );
     } else {
-      response = await this.apiService.putTwoFactorDuo(request);
+      response = await this.twoFactorApiService.putTwoFactorDuo(request);
     }
 
     this.processResponse(response);

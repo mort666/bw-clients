@@ -3,7 +3,7 @@ import { Component, EventEmitter, Inject, OnInit, Output } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { firstValueFrom, map } from "rxjs";
 
-import { ApiService } from "@bitwarden/common/abstractions/api.service";
+import { TwoFactorApiService } from "@bitwarden/auth/common";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
@@ -66,7 +66,7 @@ export class TwoFactorSetupEmailComponent
 
   constructor(
     @Inject(DIALOG_DATA) protected data: AuthResponse<TwoFactorEmailResponse>,
-    apiService: ApiService,
+    twoFactorApiService: TwoFactorApiService,
     i18nService: I18nService,
     platformUtilsService: PlatformUtilsService,
     logService: LogService,
@@ -78,7 +78,7 @@ export class TwoFactorSetupEmailComponent
     protected toastService: ToastService,
   ) {
     super(
-      apiService,
+      twoFactorApiService,
       i18nService,
       platformUtilsService,
       logService,
@@ -131,7 +131,7 @@ export class TwoFactorSetupEmailComponent
   sendEmail = async () => {
     const request = await this.buildRequestModel(TwoFactorEmailRequest);
     request.email = this.email;
-    this.emailPromise = this.apiService.postTwoFactorEmailSetup(request);
+    this.emailPromise = this.twoFactorApiService.postTwoFactorEmailSetup(request);
     await this.emailPromise;
     this.sentEmail = this.email;
   };
@@ -141,7 +141,7 @@ export class TwoFactorSetupEmailComponent
     request.email = this.email;
     request.token = this.token;
 
-    const response = await this.apiService.putTwoFactorEmail(request);
+    const response = await this.twoFactorApiService.putTwoFactorEmail(request);
     await this.processResponse(response);
     this.onUpdated.emit(true);
   }
