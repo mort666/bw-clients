@@ -22,10 +22,7 @@ pub struct ProfileInfo {
     pub name: String,
     pub folder: String,
 
-    #[allow(dead_code)]
     pub account_name: Option<String>,
-
-    #[allow(dead_code)]
     pub account_email: Option<String>,
 }
 
