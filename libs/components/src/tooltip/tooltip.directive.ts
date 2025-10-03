@@ -39,7 +39,10 @@ export class TooltipDirective implements OnInit {
    */
   readonly tooltipPosition = input<TooltipPositionIdentifier>("above-center");
 
+  readonly isDescribedbyText = input<boolean>(true);
+
   private _bitTooltip = signal("");
+  private _isDescribedbyText = signal(this.isDescribedbyText());
 
   private resolvedTooltipText = computed(() => {
     return this.bitTooltip() ?? this._bitTooltip();
@@ -47,7 +50,7 @@ export class TooltipDirective implements OnInit {
 
   private isVisible = signal(false);
   private overlayRef: OverlayRef | undefined;
-  private elementRef = inject(ElementRef);
+  private elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private overlay = inject(Overlay);
   private viewContainerRef = inject(ViewContainerRef);
   private injector = inject(Injector);
@@ -56,7 +59,7 @@ export class TooltipDirective implements OnInit {
     .flexibleConnectedTo(this.elementRef)
     .withFlexibleDimensions(false)
     .withPush(true);
-
+  private currentDescribedBy = this.elementRef.nativeElement.getAttribute("aria-describedby");
   private tooltipPortal = new ComponentPortal(
     TooltipComponent,
     this.viewContainerRef,
@@ -74,6 +77,10 @@ export class TooltipDirective implements OnInit {
     }),
   );
 
+  private setDescribedBy = (describedbyText: string | null) => {
+    this.elementRef.nativeElement.setAttribute("aria-describedby", describedbyText);
+  };
+
   private destroyTooltip = () => {
     this.overlayRef?.dispose();
     this.overlayRef = undefined;
@@ -87,13 +94,26 @@ export class TooltipDirective implements OnInit {
         positionStrategy: this.positionStrategy,
       });
 
-      this.overlayRef.attach(this.tooltipPortal);
+      const tooltipRef = this.overlayRef.attach(this.tooltipPortal);
+
+      if (this._isDescribedbyText()) {
+        tooltipRef.changeDetectorRef.detectChanges();
+
+        const hostEl = tooltipRef.location.nativeElement as HTMLElement;
+        const tooltipId = hostEl.querySelector("[role='tooltip']")?.id;
+
+        this.setDescribedBy(
+          this.currentDescribedBy ? `${this.currentDescribedBy} ${tooltipId}` : tooltipId || "",
+        );
+      }
     }
+
     this.isVisible.set(true);
   };
 
   private hideTooltip = () => {
     this.destroyTooltip();
+    this.setDescribedBy(this.currentDescribedBy || "");
   };
 
   private computePositions(tooltipPosition: TooltipPositionIdentifier) {
@@ -111,6 +131,10 @@ export class TooltipDirective implements OnInit {
 
   setContent(text: string) {
     this._bitTooltip.set(text);
+  }
+
+  setIsDescribedbyText(isDescribedbyText: boolean) {
+    this._isDescribedbyText.set(isDescribedbyText);
   }
 
   ngOnInit() {
