@@ -251,17 +251,16 @@ fn hex_to_bytes(hex: &str) -> Vec<u8> {
     decode(hex).unwrap_or_default()
 }
 
-fn does_table_exist(conn: &Connection, table_name: &str) -> Result<bool, rusqlite::Error> {
-    let mut stmt = conn.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?1")?;
-    let exists = stmt.exists(params![table_name])?;
-    Ok(exists)
+fn table_exist(conn: &Connection, table_name: &str) -> Result<bool, rusqlite::Error> {
+    conn.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?1")?
+        .exists(params![table_name])
 }
 
 fn query_logins(db_path: &str) -> Result<Vec<EncryptedLogin>, rusqlite::Error> {
     let conn = Connection::open(db_path)?;
 
-    let have_logins = does_table_exist(&conn, "logins")?;
-    let have_password_notes = does_table_exist(&conn, "password_notes")?;
+    let have_logins = table_exist(&conn, "logins")?;
+    let have_password_notes = table_exist(&conn, "password_notes")?;
     if !have_logins || !have_password_notes {
         return Ok(vec![]);
     }
