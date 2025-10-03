@@ -34,15 +34,15 @@ pub(crate) fn split_encrypted_string_and_validate<'a>(
     Ok((version, password))
 }
 
+/// Decrypt using AES-128 in CBC mode.
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 pub(crate) fn decrypt_aes_128_cbc(key: &[u8], iv: &[u8], ciphertext: &[u8]) -> Result<Vec<u8>> {
-    let decryptor = cbc::Decryptor::<aes::Aes128>::new_from_slices(key, iv)?;
-    let plaintext: Vec<u8> = decryptor
+    cbc::Decryptor::<aes::Aes128>::new_from_slices(key, iv)?
         .decrypt_padded_vec_mut::<Pkcs7>(ciphertext)
-        .map_err(|e| anyhow!("Failed to decrypt: {}", e))?;
-    Ok(plaintext)
+        .map_err(|e| anyhow!("Failed to decrypt: {}", e))
 }
 
+/// Derives a PBKDF2 key from the static "saltysalt" salt with the given password and iteration count.
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 pub(crate) fn derive_saltysalt(password: &[u8], iterations: u32) -> Result<Vec<u8>> {
     let mut key = vec![0u8; 16];
