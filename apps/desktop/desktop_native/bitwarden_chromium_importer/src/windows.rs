@@ -7,10 +7,10 @@ use winapi::shared::minwindef::{BOOL, BYTE, DWORD};
 use winapi::um::{dpapi::CryptUnprotectData, wincrypt::DATA_BLOB};
 use windows::Win32::Foundation::{LocalFree, HLOCAL};
 
-use crate::chromium::{BrowserConfig, CryptoService, LocalState};
-
-#[allow(dead_code)]
-mod util;
+use crate::{
+    chromium::{BrowserConfig, CryptoService, LocalState},
+    util,
+};
 
 //
 // Public API
