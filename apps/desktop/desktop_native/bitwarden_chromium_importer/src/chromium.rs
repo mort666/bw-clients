@@ -192,10 +192,11 @@ fn load_local_state(browser_dir: &Path) -> Result<LocalState> {
 fn get_profile_info(local_state: &LocalState) -> Vec<ProfileInfo> {
     let mut profile_infos = Vec::new();
     for (name, info) in local_state.profile.info_cache.iter() {
-        let mut profile_name = info.name.clone();
-        if profile_name.is_empty() {
-            profile_name = name.clone();
-        }
+        let profile_name = if info.name.is_empty() {
+            name.clone()
+        } else {
+            info.name.clone()
+        };
         profile_infos.push(ProfileInfo {
             name: profile_name,
             folder: name.clone(),
