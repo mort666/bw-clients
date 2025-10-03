@@ -1,1 +1,25 @@
-<ng-content></ng-content>
+<ng-template #projectedContent>
+  <ng-content></ng-content>
+</ng-template>
+
+<ng-container *ngIf="isSmallScreen()">
+  <button
+    type="button"
+    class="tw-flex tw-items-center tw-justify-between tw-rounded-lg tw-border tw-border-secondary-500 tw-text-main tw-px-3 tw-py-2"
+    [ngClass]="fullWidth() ? ['tw-w-full'] : []"
+    aria-label="Toggle Menu"
+    [bitMenuTriggerFor]="myMenu"
+  >
+    {{ selectedLabel() || "Select an option" }}
+    <i class="bwi bwi-down-solid tw-text-xs"></i>
+  </button>
+  <bit-menu #myMenu="menuComponent">
+    <ng-container *ngTemplateOutlet="projectedContent"></ng-container>
+  </bit-menu>
+</ng-container>
+
+<ng-container *ngIf="!isSmallScreen()">
+  <div class="tw-flex" [ngClass]="fullWidth() ? ['tw-w-full', '[&>*]:tw-flex-1'] : []">
+    <ng-container *ngTemplateOutlet="projectedContent"></ng-container>
+  </div>
+</ng-container>

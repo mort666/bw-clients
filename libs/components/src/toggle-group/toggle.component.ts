@@ -1,4 +1,4 @@
-import { NgClass } from "@angular/common";
+import { CommonModule, NgClass } from "@angular/common";
 import {
   AfterContentChecked,
   AfterViewInit,
@@ -17,7 +17,7 @@ let nextId = 0;
 @Component({
   selector: "bit-toggle",
   templateUrl: "./toggle.component.html",
-  imports: [NgClass],
+  imports: [NgClass, CommonModule],
 })
 export class ToggleComponent<TValue> implements AfterContentChecked, AfterViewInit {
   id = nextId++;
@@ -26,12 +26,12 @@ export class ToggleComponent<TValue> implements AfterContentChecked, AfterViewIn
   readonly labelContent = viewChild<ElementRef<HTMLSpanElement>>("labelContent");
   readonly bitBadgeContainer = viewChild<ElementRef<HTMLSpanElement>>("bitBadgeContainer");
 
-  constructor(private groupComponent: ToggleGroupComponent<TValue>) {}
+  constructor(protected groupComponent: ToggleGroupComponent<TValue>) {}
 
   @HostBinding("tabIndex") tabIndex = "-1";
   @HostBinding("class") classList = ["tw-group/toggle", "tw-flex", "tw-min-w-16"];
 
-  protected bitBadgeContainerHasChidlren = signal(false);
+  protected bitBadgeContainerHasChildren = signal(false);
   protected labelTitle = signal<string | null>(null);
 
   get name() {
@@ -93,11 +93,14 @@ export class ToggleComponent<TValue> implements AfterContentChecked, AfterViewIn
   }
 
   onInputInteraction() {
-    this.groupComponent.onInputInteraction(this.value());
+    this.groupComponent.onInputInteraction({
+      label: this.labelTitle(),
+      value: this.value(),
+    });
   }
 
   ngAfterContentChecked() {
-    this.bitBadgeContainerHasChidlren.set(
+    this.bitBadgeContainerHasChildren.set(
       (this.bitBadgeContainer()?.nativeElement.childElementCount ?? 0) > 0,
     );
   }
@@ -106,6 +109,9 @@ export class ToggleComponent<TValue> implements AfterContentChecked, AfterViewIn
     const labelText = this.labelContent()?.nativeElement.innerText;
     if (labelText) {
       this.labelTitle.set(labelText);
+      if (this.selected) {
+        this.groupComponent.selectedLabel.set(labelText);
+      }
     }
   }
 }
