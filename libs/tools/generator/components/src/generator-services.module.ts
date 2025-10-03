@@ -1,12 +1,10 @@
 import { NgModule } from "@angular/core";
-import { from, take } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { safeProvider } from "@bitwarden/angular/platform/utils/safe-provider";
-import { SafeInjectionToken } from "@bitwarden/angular/services/injection-tokens";
+import { LOG_PROVIDER, SafeInjectionToken } from "@bitwarden/angular/services/injection-tokens";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
-import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -23,7 +21,7 @@ import { RuntimeExtensionRegistry } from "@bitwarden/common/tools/extension/runt
 import { VendorExtensions, Vendors } from "@bitwarden/common/tools/extension/vendor";
 import { RestClient } from "@bitwarden/common/tools/integration/rpc";
 import { disabledSemanticLoggerProvider, enableLogForTypes } from "@bitwarden/common/tools/log";
-import { SystemServiceProvider } from "@bitwarden/common/tools/providers";
+import { DefaultEnvService, EnvService } from "@bitwarden/common/tools/providers";
 import { UserStateSubjectDependencyProvider } from "@bitwarden/common/tools/state/user-state-subject-dependency-provider";
 import {
   BuiltIn,
@@ -41,16 +39,26 @@ const GENERATOR_SERVICE_PROVIDER = new SafeInjectionToken<providers.CredentialGe
   "CredentialGeneratorProviders",
 );
 
-// FIXME: relocate the system service provider to a more general module once
-//        NX migration is complete.
-export const SYSTEM_SERVICE_PROVIDER = new SafeInjectionToken<SystemServiceProvider>(
-  "SystemServices",
-);
-
 /** Shared module containing generator component dependencies */
 @NgModule({
   imports: [JslibModule],
   providers: [
+    safeProvider({
+      provide: EnvService,
+      useClass: DefaultEnvService,
+      deps: [ConfigService, PlatformUtilsService],
+    }),
+    safeProvider({
+      provide: LOG_PROVIDER,
+      useFactory: (logger: LogService, env: EnvService) => {
+        if (env.isDev()) {
+          return enableLogForTypes(logger, []);
+        } else {
+          return disabledSemanticLoggerProvider;
+        }
+      },
+      deps: [LogService, EnvService],
+    }),
     safeProvider({
       provide: RANDOMIZER,
       useFactory: createRandomizer,
@@ -80,51 +88,29 @@ export const SYSTEM_SERVICE_PROVIDER = new SafeInjectionToken<SystemServiceProvi
       deps: [],
     }),
     safeProvider({
-      provide: SYSTEM_SERVICE_PROVIDER,
+      provide: ExtensionService,
       useFactory: (
+        registry: ExtensionRegistry,
         encryptor: LegacyEncryptorProvider,
         state: StateProvider,
-        policy: PolicyService,
-        registry: ExtensionRegistry,
-        logger: LogService,
-        environment: PlatformUtilsService,
-        configService: ConfigService,
+        log: LogProvider,
       ) => {
-        let log: LogProvider;
-        if (environment.isDev()) {
-          log = enableLogForTypes(logger, []);
-        } else {
-          log = disabledSemanticLoggerProvider;
-        }
-
-        const extension = new ExtensionService(registry, {
+        return new ExtensionService(registry, {
           encryptor,
           state,
           log,
           now: Date.now,
         });
-
-        return {
-          policy,
-          extension,
-          log,
-          configService,
-        };
       },
-      deps: [
-        LegacyEncryptorProvider,
-        StateProvider,
-        PolicyService,
-        ExtensionRegistry,
-        LogService,
-        PlatformUtilsService,
-        ConfigService,
-      ],
+      deps: [ExtensionRegistry, LegacyEncryptorProvider, StateProvider, LOG_PROVIDER],
     }),
     safeProvider({
       provide: GENERATOR_SERVICE_PROVIDER,
       useFactory: (
-        system: SystemServiceProvider,
+        policy: PolicyService,
+        extension: ExtensionService,
+        log: LogProvider,
+        configService: ConfigService,
         random: Randomizer,
         encryptor: LegacyEncryptorProvider,
         state: StateProvider,
@@ -134,23 +120,21 @@ export const SYSTEM_SERVICE_PROVIDER = new SafeInjectionToken<SystemServiceProvi
         const userStateDeps = {
           encryptor,
           state,
-          log: system.log,
+          log,
           now: Date.now,
         } satisfies UserStateSubjectDependencyProvider;
 
-        const featureFlagObs$ = from(
-          system.configService.getFeatureFlag(FeatureFlag.UseSdkPasswordGenerators),
-        );
-        let featureFlag: boolean = false;
-        featureFlagObs$.pipe(take(1)).subscribe((ff) => (featureFlag = ff));
+        // Feature flag for SDK password generators (currently not available)
+        // TODO: Add SDK service support when available
         const metadata = new providers.GeneratorMetadataProvider(
           userStateDeps,
-          system,
+          policy,
+          extension,
           Object.values(BuiltIn),
         );
 
-        const sdkService = featureFlag ? system.sdk : undefined;
-        const profile = new providers.GeneratorProfileProvider(userStateDeps, system.policy);
+        const sdkService: undefined = undefined; // SDK service is not available in this context
+        const profile = new providers.GeneratorProfileProvider(userStateDeps, policy);
 
         const generator: providers.GeneratorDependencyProvider = {
           randomizer: random,
@@ -163,7 +147,7 @@ export const SYSTEM_SERVICE_PROVIDER = new SafeInjectionToken<SystemServiceProvi
         const userState: UserStateSubjectDependencyProvider = {
           encryptor,
           state,
-          log: system.log,
+          log,
           now: Date.now,
         };
 
@@ -175,7 +159,10 @@ export const SYSTEM_SERVICE_PROVIDER = new SafeInjectionToken<SystemServiceProvi
         } satisfies providers.CredentialGeneratorProviders;
       },
       deps: [
-        SYSTEM_SERVICE_PROVIDER,
+        PolicyService,
+        ExtensionService,
+        LOG_PROVIDER,
+        ConfigService,
         RANDOMIZER,
         LegacyEncryptorProvider,
         StateProvider,
@@ -197,7 +184,7 @@ export const SYSTEM_SERVICE_PROVIDER = new SafeInjectionToken<SystemServiceProvi
     safeProvider({
       provide: CredentialGeneratorService,
       useClass: DefaultCredentialGeneratorService,
-      deps: [GENERATOR_SERVICE_PROVIDER, SYSTEM_SERVICE_PROVIDER],
+      deps: [GENERATOR_SERVICE_PROVIDER, ExtensionService, LOG_PROVIDER],
     }),
   ],
 })

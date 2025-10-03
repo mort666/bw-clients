@@ -10,11 +10,9 @@ import { ClientType } from "@bitwarden/client-type";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { PinServiceAbstraction } from "@bitwarden/common/key-management/pin/pin.service.abstraction";
-import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
-import { SystemServiceProvider } from "@bitwarden/common/tools/providers";
+import { EnvService } from "@bitwarden/common/tools/providers";
 import { CollectionId, OrganizationId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
@@ -22,6 +20,7 @@ import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
 import { RestrictedItemTypesService } from "@bitwarden/common/vault/services/restricted-item-types.service";
 import { KeyService } from "@bitwarden/key-management";
+import { LogProvider } from "@bitwarden/logging";
 
 import { BitwardenPasswordProtectedImporter } from "../importers/bitwarden/bitwarden-password-protected-importer";
 import { Importer } from "../importers/importer";
@@ -44,7 +43,8 @@ describe("ImportService", () => {
   let pinService: MockProxy<PinServiceAbstraction>;
   let accountService: MockProxy<AccountService>;
   let restrictedItemTypesService: MockProxy<RestrictedItemTypesService>;
-  let systemServiceProvider: MockProxy<SystemServiceProvider>;
+  let envService: MockProxy<EnvService>;
+  let logProvider: LogProvider;
 
   beforeEach(() => {
     cipherService = mock<CipherService>();
@@ -57,25 +57,18 @@ describe("ImportService", () => {
     pinService = mock<PinServiceAbstraction>();
     restrictedItemTypesService = mock<RestrictedItemTypesService>();
 
-    const configService = mock<ConfigService>();
-    configService.getFeatureFlag$.mockReturnValue(new BehaviorSubject(false));
+    envService = mock<EnvService>();
+    envService.getFeatureFlag$.mockReturnValue(new BehaviorSubject(false));
+    envService.getClientType.mockReturnValue(ClientType.Desktop);
 
-    const environment = mock<PlatformUtilsService>();
-    environment.getClientType.mockReturnValue(ClientType.Desktop);
-
-    systemServiceProvider = mock<SystemServiceProvider>();
-    Object.defineProperty(systemServiceProvider, "configService", {
-      get: () => configService,
-      configurable: true,
-    });
-    Object.defineProperty(systemServiceProvider, "environment", {
-      get: () => environment,
-      configurable: true,
-    });
-    Object.defineProperty(systemServiceProvider, "log", {
-      get: () => jest.fn().mockReturnValue({ debug: jest.fn() }),
-      configurable: true,
-    });
+    logProvider = jest.fn(() => ({
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      panic: jest.fn(),
+      child: jest.fn(),
+    })) as any;
 
     importService = new ImportService(
       cipherService,
@@ -88,7 +81,8 @@ describe("ImportService", () => {
       pinService,
       accountService,
       restrictedItemTypesService,
-      systemServiceProvider,
+      envService,
+      logProvider,
     );
   });
 
@@ -287,25 +281,11 @@ describe("ImportService", () => {
       typeSubject = new Subject<ImportType>();
       mockLogger = { debug: jest.fn() };
 
-      const configService = mock<ConfigService>();
-      configService.getFeatureFlag$.mockReturnValue(featureFlagSubject);
+      envService = mock<EnvService>();
+      envService.getFeatureFlag$.mockReturnValue(featureFlagSubject);
+      envService.getClientType.mockReturnValue(ClientType.Desktop);
 
-      const environment = mock<PlatformUtilsService>();
-      environment.getClientType.mockReturnValue(ClientType.Desktop);
-
-      systemServiceProvider = mock<SystemServiceProvider>();
-      Object.defineProperty(systemServiceProvider, "configService", {
-        get: () => configService,
-        configurable: true,
-      });
-      Object.defineProperty(systemServiceProvider, "environment", {
-        get: () => environment,
-        configurable: true,
-      });
-      Object.defineProperty(systemServiceProvider, "log", {
-        get: () => jest.fn().mockReturnValue(mockLogger),
-        configurable: true,
-      });
+      logProvider = jest.fn(() => mockLogger) as any;
 
       // Recreate the service with the updated mocks for logging tests
       importService = new ImportService(
@@ -319,7 +299,8 @@ describe("ImportService", () => {
         pinService,
         accountService,
         restrictedItemTypesService,
-        systemServiceProvider,
+        envService,
+        logProvider,
       );
     });
 

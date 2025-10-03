@@ -10,12 +10,20 @@ import { ConfigService } from "../platform/abstractions/config/config.service";
 import { PlatformUtilsService } from "../platform/abstractions/platform-utils.service";
 import { UserId } from "../types/guid";
 
+import { EnvService } from "./abstractions/env.service";
 import { LegacyEncryptorProvider } from "./cryptography/legacy-encryptor-provider";
 import { ExtensionRegistry } from "./extension/extension-registry.abstraction";
 import { ExtensionService } from "./extension/extension.service";
 import { disabledSemanticLoggerProvider, enableLogForTypes } from "./log";
 
-/** Provides access to commonly-used cross-cutting services. */
+export { EnvService } from "./abstractions/env.service";
+
+/**
+ * @deprecated Use individual service injection instead: PolicyService, ExtensionService,
+ * LogProvider, and EnvService (which consolidates ConfigService and PlatformUtilsService).
+ *
+ * Provides access to commonly-used cross-cutting services.
+ */
 export type SystemServiceProvider = {
   /** Policy configured by the administrative console */
   readonly policy: PolicyService;
@@ -36,7 +44,11 @@ export type SystemServiceProvider = {
   readonly sdk?: BitwardenClient;
 };
 
-/** Constructs a system service provider. */
+/**
+ * @deprecated Use individual service injection instead.
+ *
+ * Constructs a system service provider.
+ */
 export function createSystemServiceProvider(
   encryptor: LegacyEncryptorProvider,
   state: StateProvider,
@@ -70,13 +82,15 @@ export function createSystemServiceProvider(
 }
 
 /**
- * Facade exposing methods from ConfigService and PlatformUtilsService that appear related to environmental awareness
+ * Facade exposing methods from ConfigService and PlatformUtilsService that are related to environmental awareness
  */
-export class EnvService {
+export class DefaultEnvService extends EnvService {
   constructor(
     private configService: ConfigService,
     private platformUtilsService: PlatformUtilsService,
-  ) {}
+  ) {
+    super();
+  }
 
   /* ConfigService methods */
   get serverConfig$() {
