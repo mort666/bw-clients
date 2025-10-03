@@ -43,8 +43,8 @@ const THREE_MINUTES = 3 * 60 * 1000;
 export class DefaultCredentialGeneratorService implements CredentialGeneratorService {
   /** Instantiate the `DefaultCredentialGeneratorService`.
    *  @param provide application services required by the credential generator.
-   *  @param extension extension service for managing forwarder extensions.
-   *  @param log logger factory for creating semantic loggers.
+   *  @param extension service for managing forwarder extensions.
+   *  @param log factory for creating semantic loggers.
    */
   constructor(
     private readonly provide: CredentialGeneratorProviders,

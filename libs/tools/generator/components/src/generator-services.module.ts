@@ -1,10 +1,13 @@
 import { NgModule } from "@angular/core";
+import { from } from "rxjs";
+import { take } from "rxjs/operators";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { safeProvider } from "@bitwarden/angular/platform/utils/safe-provider";
 import { LOG_PROVIDER, SafeInjectionToken } from "@bitwarden/angular/services/injection-tokens";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -126,6 +129,12 @@ const GENERATOR_SERVICE_PROVIDER = new SafeInjectionToken<providers.CredentialGe
 
         // Feature flag for SDK password generators (currently not available)
         // TODO: Add SDK service support when available
+        const featureFlagObs$ = from(
+          configService.getFeatureFlag(FeatureFlag.UseSdkPasswordGenerators),
+        );
+        let featureFlag: boolean = false;
+        featureFlagObs$.pipe(take(1)).subscribe((ff) => (featureFlag = ff));
+
         const metadata = new providers.GeneratorMetadataProvider(
           userStateDeps,
           policy,
@@ -133,7 +142,7 @@ const GENERATOR_SERVICE_PROVIDER = new SafeInjectionToken<providers.CredentialGe
           Object.values(BuiltIn),
         );
 
-        const sdkService: undefined = undefined; // SDK service is not available in this context
+        const sdkService: undefined = featureFlag ? undefined : undefined;
         const profile = new providers.GeneratorProfileProvider(userStateDeps, policy);
 
         const generator: providers.GeneratorDependencyProvider = {

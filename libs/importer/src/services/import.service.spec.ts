@@ -20,7 +20,7 @@ import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
 import { RestrictedItemTypesService } from "@bitwarden/common/vault/services/restricted-item-types.service";
 import { KeyService } from "@bitwarden/key-management";
-import { LogProvider } from "@bitwarden/logging";
+import { LogProvider, SemanticLogger } from "@bitwarden/logging";
 
 import { BitwardenPasswordProtectedImporter } from "../importers/bitwarden/bitwarden-password-protected-importer";
 import { Importer } from "../importers/importer";
@@ -45,6 +45,7 @@ describe("ImportService", () => {
   let restrictedItemTypesService: MockProxy<RestrictedItemTypesService>;
   let envService: MockProxy<EnvService>;
   let logProvider: LogProvider;
+  let mockLogger: MockProxy<SemanticLogger>;
 
   beforeEach(() => {
     cipherService = mock<CipherService>();
@@ -61,14 +62,8 @@ describe("ImportService", () => {
     envService.getFeatureFlag$.mockReturnValue(new BehaviorSubject(false));
     envService.getClientType.mockReturnValue(ClientType.Desktop);
 
-    logProvider = jest.fn(() => ({
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      panic: jest.fn(),
-      child: jest.fn(),
-    })) as any;
+    mockLogger = mock<SemanticLogger>();
+    logProvider = () => mockLogger;
 
     importService = new ImportService(
       cipherService,

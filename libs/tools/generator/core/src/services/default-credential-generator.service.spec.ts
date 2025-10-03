@@ -55,7 +55,7 @@ describe("DefaultCredentialGeneratorService", () => {
     }) as any;
     logProvider = () => mockLogger;
 
-    mockExtension = { settings: jest.fn() } as any;
+    mockExtension = { settings: jest.fn() };
 
     // Use a hard-coded value for mockAccount
     account = {
