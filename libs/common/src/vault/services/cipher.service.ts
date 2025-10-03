@@ -912,39 +912,32 @@ export class CipherService implements CipherServiceAbstraction {
 
     await this.adjustCipherHistory(cipher, userId, originalCipher);
 
-    let encCipher: EncryptionContext;
     if (sdkCipherEncryptionEnabled) {
-      // The SDK does not expect the cipher to already have an organizationId. It will result in the wrong
-      // cipher encryption key being used during the move to organization operation.
-      if (cipher.organizationId != null) {
-        throw new Error("Cipher is already associated with an organization.");
-      }
-
-      encCipher = await this.cipherEncryptionService.moveToOrganization(
+      return await this.cipherEncryptionService.share(
         cipher,
         organizationId as OrganizationId,
         userId,
+        collectionIds as CollectionId[],
       );
-      encCipher.cipher.collectionIds = collectionIds;
-    } else {
-      // This old attachment logic is safe to remove after it is replaced in PM-22750; which will require fixing
-      // the attachment before sharing.
-      const attachmentPromises: Promise<any>[] = [];
-      if (cipher.attachments != null) {
-        cipher.attachments.forEach((attachment) => {
-          if (attachment.key == null) {
-            attachmentPromises.push(
-              this.shareAttachmentWithServer(attachment, cipher.id, organizationId),
-            );
-          }
-        });
-      }
-      await Promise.all(attachmentPromises);
-
-      cipher.organizationId = organizationId;
-      cipher.collectionIds = collectionIds;
-      encCipher = await this.encryptSharedCipher(cipher, userId);
     }
+
+    // This old attachment logic is safe to remove after it is replaced in PM-22750; which will require fixing
+    // the attachment before sharing.
+    const attachmentPromises: Promise<any>[] = [];
+    if (cipher.attachments != null) {
+      cipher.attachments.forEach((attachment) => {
+        if (attachment.key == null) {
+          attachmentPromises.push(
+            this.shareAttachmentWithServer(attachment, cipher.id, organizationId),
+          );
+        }
+      });
+    }
+    await Promise.all(attachmentPromises);
+
+    cipher.organizationId = organizationId;
+    cipher.collectionIds = collectionIds;
+    const encCipher = await this.encryptSharedCipher(cipher, userId);
 
     const request = new CipherShareRequest(encCipher);
     const response = await this.apiService.putShareCipher(cipher.id, request);
@@ -962,25 +955,17 @@ export class CipherService implements CipherServiceAbstraction {
     const sdkCipherEncryptionEnabled = await this.configService.getFeatureFlag(
       FeatureFlag.PM22136_SdkCipherEncryption,
     );
-    const promises: Promise<any>[] = [];
-    const encCiphers: Cipher[] = [];
-    for (const cipher of ciphers) {
-      if (sdkCipherEncryptionEnabled) {
-        // The SDK does not expect the cipher to already have an organizationId. It will result in the wrong
-        // cipher encryption key being used during the move to organization operation.
-        if (cipher.organizationId != null) {
-          throw new Error("Cipher is already associated with an organization.");
-        }
-
-        promises.push(
-          this.cipherEncryptionService
-            .moveToOrganization(cipher, organizationId as OrganizationId, userId)
-            .then((encCipher) => {
-              encCipher.cipher.collectionIds = collectionIds;
-              encCiphers.push(encCipher.cipher);
-            }),
-        );
-      } else {
+    if (sdkCipherEncryptionEnabled) {
+      return await this.cipherEncryptionService.shareMany(
+        ciphers,
+        organizationId as OrganizationId,
+        userId,
+        collectionIds as CollectionId[],
+      );
+    } else {
+      const promises: Promise<any>[] = [];
+      const encCiphers: Cipher[] = [];
+      for (const cipher of ciphers) {
         cipher.organizationId = organizationId;
         cipher.collectionIds = collectionIds;
         promises.push(
@@ -989,26 +974,26 @@ export class CipherService implements CipherServiceAbstraction {
           }),
         );
       }
-    }
-    await Promise.all(promises);
-    const request = new CipherBulkShareRequest(encCiphers, collectionIds, userId);
-    try {
-      const response = await this.apiService.putShareCiphers(request);
-      const responseMap = new Map(response.data.map((r) => [r.id, r]));
+      await Promise.all(promises);
+      const request = new CipherBulkShareRequest(encCiphers, collectionIds, userId);
+      try {
+        const response = await this.apiService.putShareCiphers(request);
+        const responseMap = new Map(response.data.map((r) => [r.id, r]));
 
-      encCiphers.forEach((cipher) => {
-        const matchingCipher = responseMap.get(cipher.id);
-        if (matchingCipher) {
-          cipher.revisionDate = new Date(matchingCipher.revisionDate);
+        encCiphers.forEach((cipher) => {
+          const matchingCipher = responseMap.get(cipher.id);
+          if (matchingCipher) {
+            cipher.revisionDate = new Date(matchingCipher.revisionDate);
+          }
+        });
+        await this.upsert(encCiphers.map((c) => c.toCipherData()));
+      } catch (e) {
+        for (const cipher of ciphers) {
+          cipher.organizationId = null;
+          cipher.collectionIds = null;
         }
-      });
-      await this.upsert(encCiphers.map((c) => c.toCipherData()));
-    } catch (e) {
-      for (const cipher of ciphers) {
-        cipher.organizationId = null;
-        cipher.collectionIds = null;
+        throw e;
       }
-      throw e;
     }
   }
 

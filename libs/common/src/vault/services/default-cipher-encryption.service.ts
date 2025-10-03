@@ -11,7 +11,7 @@ import {
 
 import { LogService } from "../../platform/abstractions/log.service";
 import { SdkService, asUuid, uuidAsString } from "../../platform/abstractions/sdk/sdk.service";
-import { UserId, OrganizationId } from "../../types/guid";
+import { UserId, OrganizationId, CollectionId } from "../../types/guid";
 import { CipherEncryptionService } from "../abstractions/cipher-encryption.service";
 import { CipherType } from "../enums";
 import { Cipher } from "../models/domain/cipher";
@@ -77,6 +77,76 @@ export class DefaultCipherEncryptionService implements CipherEncryptionService {
             cipher: Cipher.fromSdkCipher(encryptionContext.cipher)!,
             encryptedFor: uuidAsString(encryptionContext.encryptedFor) as UserId,
           };
+        }),
+        catchError((error: unknown) => {
+          this.logService.error(`Failed to move cipher to organization: ${error}`);
+          return EMPTY;
+        }),
+      ),
+    );
+  }
+
+  async shareMany(
+    models: CipherView[],
+    organizationId: OrganizationId,
+    userId: UserId,
+    collectionIds: CollectionId[],
+  ): Promise<Cipher[] | undefined> {
+    return firstValueFrom(
+      this.sdkService.userClient$(userId).pipe(
+        map(async (sdk) => {
+          if (!sdk) {
+            throw new Error("SDK not available");
+          }
+
+          using ref = sdk.take();
+          const sdkCipherViews = models.map((model) => this.toSdkCipherView(model, ref.value));
+
+          const ciphers = await ref.value
+            .vault()
+            .ciphers()
+            .share_ciphers_bulk(
+              sdkCipherViews,
+              asUuid(organizationId),
+              collectionIds.map((id) => asUuid(id)),
+            );
+
+          return ciphers.map((c) => Cipher.fromSdkCipher(c));
+        }),
+        catchError((error: unknown) => {
+          this.logService.error(`Failed to move cipher to organization: ${error}`);
+          return EMPTY;
+        }),
+      ),
+    );
+  }
+
+  async share(
+    model: CipherView,
+    organizationId: OrganizationId,
+    userId: UserId,
+    collectionIds: CollectionId[],
+  ): Promise<Cipher | undefined> {
+    return firstValueFrom(
+      this.sdkService.userClient$(userId).pipe(
+        map(async (sdk) => {
+          if (!sdk) {
+            throw new Error("SDK not available");
+          }
+
+          using ref = sdk.take();
+          const sdkCipherView = this.toSdkCipherView(model, ref.value);
+
+          const movedCipher = await ref.value
+            .vault()
+            .ciphers()
+            .share_cipher(
+              sdkCipherView,
+              asUuid(organizationId),
+              collectionIds.map((id) => asUuid(id)),
+            );
+
+          return Cipher.fromSdkCipher(movedCipher);
         }),
         catchError((error: unknown) => {
           this.logService.error(`Failed to move cipher to organization: ${error}`);

@@ -2,7 +2,7 @@ import { UserKey } from "@bitwarden/common/types/key";
 import { EncryptionContext } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherListView } from "@bitwarden/sdk-internal";
 
-import { UserId, OrganizationId } from "../../types/guid";
+import { UserId, OrganizationId, CollectionId } from "../../types/guid";
 import { Cipher } from "../models/domain/cipher";
 import { AttachmentView } from "../models/view/attachment.view";
 import { CipherView } from "../models/view/cipher.view";
@@ -32,6 +32,20 @@ export abstract class CipherEncryptionService {
     organizationId: OrganizationId,
     userId: UserId,
   ): Promise<EncryptionContext | undefined>;
+
+  abstract share(
+    model: CipherView,
+    organizationId: OrganizationId,
+    userId: UserId,
+    collectionIds: CollectionId[],
+  ): Promise<Cipher | undefined>;
+
+  abstract shareMany(
+    models: CipherView[],
+    organizationId: OrganizationId,
+    userId: UserId,
+    collectionIds: CollectionId[],
+  ): Promise<Cipher[] | undefined>;
 
   /**
    * Encrypts a cipher for a given userId with a new key for key rotation.
