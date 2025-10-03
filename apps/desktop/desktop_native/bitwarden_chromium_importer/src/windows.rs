@@ -16,7 +16,7 @@ use crate::{
 // Public API
 //
 
-pub const SUPPORTED_BROWSERS: [BrowserConfig; 6] = [
+pub(crate) const SUPPORTED_BROWSERS: [BrowserConfig; 6] = [
     BrowserConfig {
         name: "Chrome",
         data_dir: "AppData/Local/Google/Chrome/User Data",
@@ -43,7 +43,7 @@ pub const SUPPORTED_BROWSERS: [BrowserConfig; 6] = [
     },
 ];
 
-pub fn get_crypto_service(
+pub(crate) fn get_crypto_service(
     _browser_name: &str,
     local_state: &LocalState,
 ) -> Result<Box<dyn CryptoService>> {
