@@ -32,7 +32,7 @@ pub(crate) fn split_encrypted_string_and_validate<'a>(
 }
 
 /// Decrypt using AES-128 in CBC mode.
-#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[cfg(any(target_os = "linux", target_os = "macos", test))]
 pub(crate) fn decrypt_aes_128_cbc(key: &[u8], iv: &[u8], ciphertext: &[u8]) -> Result<Vec<u8>> {
     use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, KeyIvInit};
 
