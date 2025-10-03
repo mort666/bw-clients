@@ -9,7 +9,6 @@ import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { emptyGuid, OrganizationId } from "@bitwarden/common/types/guid";
 import { OrgKey, UserKey } from "@bitwarden/common/types/key";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
-import { newGuid } from "@bitwarden/guid";
 import { KdfType, KeyService } from "@bitwarden/key-management";
 import { UserId } from "@bitwarden/user-core";
 
