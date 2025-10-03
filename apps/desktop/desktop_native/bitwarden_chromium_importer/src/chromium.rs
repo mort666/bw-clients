@@ -49,16 +49,13 @@ pub enum LoginImportResult {
 
 // TODO: Make thus async
 pub fn get_installed_browsers() -> Result<Vec<String>> {
-    let mut browsers = Vec::with_capacity(SUPPORTED_BROWSER_MAP.len());
-
-    for (browser, config) in SUPPORTED_BROWSER_MAP.iter() {
-        let data_dir = get_browser_data_dir(config)?;
-        if data_dir.exists() {
-            browsers.push((*browser).to_string());
-        }
-    }
-
-    Ok(browsers)
+    Ok(SUPPORTED_BROWSER_MAP
+        .iter()
+        .filter_map(|(browser, config)| {
+            let data_dir = get_browser_data_dir(config).ok()?;
+            data_dir.exists().then(|| (*browser).to_string())
+        })
+        .collect())
 }
 
 // TODO: Make thus async
@@ -187,16 +184,17 @@ fn load_local_state(browser_dir: &Path) -> Result<LocalState> {
 }
 
 fn get_profile_info(local_state: &LocalState) -> Vec<ProfileInfo> {
-    let mut profile_infos = Vec::new();
-    for (name, info) in local_state.profile.info_cache.iter() {
-        profile_infos.push(ProfileInfo {
+    local_state
+        .profile
+        .info_cache
+        .iter()
+        .map(|(name, info)| ProfileInfo {
             name: info.name.clone(),
             folder: name.clone(),
             account_name: info.gaia_name.clone(),
             account_email: info.user_name.clone(),
-        });
-    }
-    profile_infos
+        })
+        .collect()
 }
 
 struct EncryptedLogin {
@@ -297,10 +295,7 @@ fn query_logins(db_path: &str) -> Result<Vec<EncryptedLogin>, rusqlite::Error> {
         })
     })?;
 
-    let mut logins = Vec::new();
-    for login in logins_iter {
-        logins.push(login?);
-    }
+    let logins = logins_iter.collect::<Result<Vec<_>, _>>()?;
 
     Ok(logins)
 }
