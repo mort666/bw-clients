@@ -1,7 +1,5 @@
 use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, KeyIvInit};
 use anyhow::{anyhow, Result};
-use pbkdf2::{hmac::Hmac, pbkdf2};
-use sha1::Sha1;
 
 fn split_encrypted_string(encrypted: &[u8]) -> Result<(&str, &[u8])> {
     if encrypted.len() < 3 {
@@ -45,6 +43,9 @@ pub(crate) fn decrypt_aes_128_cbc(key: &[u8], iv: &[u8], ciphertext: &[u8]) -> R
 /// Derives a PBKDF2 key from the static "saltysalt" salt with the given password and iteration count.
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 pub(crate) fn derive_saltysalt(password: &[u8], iterations: u32) -> Result<Vec<u8>> {
+    use pbkdf2::{hmac::Hmac, pbkdf2};
+    use sha1::Sha1;
+
     let mut key = vec![0u8; 16];
     pbkdf2::<Hmac<Sha1>>(password, b"saltysalt", iterations, &mut key)
         .map_err(|e| anyhow!("Failed to derive master key: {}", e))?;
