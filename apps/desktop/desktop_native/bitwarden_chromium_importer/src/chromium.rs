@@ -145,7 +145,7 @@ struct LocalState {
 
 #[derive(serde::Deserialize, Clone)]
 struct AllProfiles {
-    info_cache: std::collections::HashMap<String, OneProfile>,
+    info_cache: Vec<(String, OneProfile)>,
 }
 
 #[derive(serde::Deserialize, Clone)]
@@ -358,17 +358,20 @@ mod tests {
     use super::*;
 
     fn make_local_state(profiles: Vec<(&str, &str, Option<&str>, Option<&str>)>) -> LocalState {
-        let mut info_cache = std::collections::HashMap::new();
-        for (folder, name, gaia_name, user_name) in profiles {
-            info_cache.insert(
-                folder.to_string(),
-                OneProfile {
-                    name: name.to_string(),
-                    gaia_name: gaia_name.map(|s| s.to_string()),
-                    user_name: user_name.map(|s| s.to_string()),
-                },
-            );
-        }
+        let info_cache = profiles
+            .into_iter()
+            .map(|(folder, name, gaia_name, user_name)| {
+                (
+                    folder.to_string(),
+                    OneProfile {
+                        name: name.to_string(),
+                        gaia_name: gaia_name.map(|s| s.to_string()),
+                        user_name: user_name.map(|s| s.to_string()),
+                    },
+                )
+            })
+            .collect::<Vec<_>>();
+
         LocalState {
             profile: AllProfiles { info_cache },
             os_crypt: None,
