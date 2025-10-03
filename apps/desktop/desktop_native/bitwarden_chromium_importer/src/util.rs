@@ -3,7 +3,7 @@ use anyhow::{anyhow, Result};
 use pbkdf2::{hmac::Hmac, pbkdf2};
 use sha1::Sha1;
 
-pub(crate) fn split_encrypted_string(encrypted: &[u8]) -> Result<(&str, &[u8])> {
+fn split_encrypted_string(encrypted: &[u8]) -> Result<(&str, &[u8])> {
     if encrypted.len() < 3 {
         return Err(anyhow!(
             "Corrupted entry: invalid encrypted string length, expected at least 3 bytes, got {}",
@@ -15,6 +15,13 @@ pub(crate) fn split_encrypted_string(encrypted: &[u8]) -> Result<(&str, &[u8])> 
     Ok((std::str::from_utf8(version)?, password))
 }
 
+/// A Chromium password consists of three parts:
+/// - Version (3 bytes): "v10", "v11", etc.
+/// - Cipher text (chunks of 16 bytes)
+/// - Padding (1-15 bytes)
+///
+/// This function splits the encrypted byte slice into version and cipher text.
+/// Padding is included and handled by the underlying cryptographic library.
 pub(crate) fn split_encrypted_string_and_validate<'a>(
     encrypted: &'a [u8],
     supported_versions: &[&str],
