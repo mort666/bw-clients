@@ -210,11 +210,31 @@ export class DefaultEnvService extends EnvService {
     return this.platformUtilsService.isSelfHost();
   }
 
+  copyToClipboard(text: string, options?: any) {
+    return this.platformUtilsService.copyToClipboard(text, options);
+  }
+
+  readFromClipboard() {
+    return this.platformUtilsService.readFromClipboard();
+  }
+
   supportsSecureStorage() {
     return this.platformUtilsService.supportsSecureStorage();
   }
 
   getAutofillKeyboardShortcut() {
     return this.platformUtilsService.getAutofillKeyboardShortcut();
+  }
+
+  /**
+   * @deprecated use `@bitwarden/components/ToastService.showToast` instead
+   */
+  showToast(
+    type: "error" | "success" | "warning" | "info",
+    title: string,
+    text: string | string[],
+    options?: any,
+  ) {
+    return this.platformUtilsService.showToast(type, title, text, options);
   }
 }

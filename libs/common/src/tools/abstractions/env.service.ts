@@ -53,6 +53,17 @@ export abstract class EnvService {
   abstract supportsFileDownloads(): boolean;
   abstract isDev(): boolean;
   abstract isSelfHost(): boolean;
+  abstract copyToClipboard(text: string, options?: any): void | boolean;
+  abstract readFromClipboard(): Promise<string>;
   abstract supportsSecureStorage(): boolean;
   abstract getAutofillKeyboardShortcut(): Promise<string>;
+  /**
+   * @deprecated use `@bitwarden/components/ToastService.showToast` instead
+   */
+  abstract showToast(
+    type: "error" | "success" | "warning" | "info",
+    title: string,
+    text: string | string[],
+    options?: any,
+  ): void;
 }
