@@ -1,0 +1,13 @@
+<div [formGroup]="data">
+  <bit-form-control>
+    <input type="checkbox" bitCheckbox [formControl]="enabled" id="enabled" />
+    <bit-label>{{ "turnOn" | i18n }}</bit-label>
+  </bit-form-control>
+
+  <bit-form-field class="tw-flex-auto">
+    <bit-label>{{ "uriMatchDetectionOptionsLabel" | i18n }}</bit-label>
+    <bit-select formControlName="uriMatchDetection" id="uriMatchDetection">
+      <bit-option *ngFor="let o of uriMatchOptions" [value]="o.value" [label]="o.name"></bit-option>
+    </bit-select>
+  </bit-form-field>
+</div>
