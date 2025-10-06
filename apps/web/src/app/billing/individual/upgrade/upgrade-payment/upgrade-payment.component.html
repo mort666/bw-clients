@@ -14,7 +14,7 @@
             </p>
           </div>
         }
-        <div class="tw-pb-4 !tw-mx-0">
+        <div class="tw-pb-8 !tw-mx-0">
           <app-enter-payment-method
             [group]="formGroup.controls.paymentForm"
             [includeBillingAddress]="true"
@@ -30,7 +30,7 @@
             [estimatedTax]="estimatedTax"
           ></billing-cart-summary>
           @if (isFamiliesPlan) {
-            <p bitTypography="helper" class="tw-italic tw-text-muted">
+            <p bitTypography="helper" class="tw-italic tw-text-muted !tw-mb-0">
               {{ "paymentChargedWithTrial" | i18n }}
             </p>
           }
