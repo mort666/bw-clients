@@ -99,7 +99,7 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
       // Create credential request options
       const options: CredentialRequestOptions = {
         publicKey: {
-          challenge: crypto.getRandomValues(new Uint8Array(32)),
+          challenge: new Uint8Array(32),
           allowCredentials: credentials.map(({ credentialId, transports }) => {
             // The credential ID is already base64url encoded from login storage
             // We need to decode it to ArrayBuffer for WebAuthn
@@ -139,7 +139,7 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
       }
 
       // Create unlock key from PRF
-      const unlockKey = await this.createUnlockKeyFromPrf(prfResult);
+      const prfKey = await this.createUnlockKeyFromPrf(prfResult);
 
       // PRF unlock must follow the same key derivation process as PRF login:
       // PRF key → decrypt private key → use private key to decrypt user key → set user key
@@ -168,7 +168,7 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
       // Step 1: Decrypt PRF encrypted private key using the PRF key
       const privateKey = await this.encryptService.unwrapDecapsulationKey(
         new EncString(webAuthnPrfOption.encryptedPrivateKey),
-        unlockKey,
+        prfKey,
       );
 
       // Step 2: Use private key to decrypt user key
