@@ -26,6 +26,7 @@ import { TooltipComponent, TOOLTIP_DATA } from "./tooltip.component";
     "(mouseleave)": "hideTooltip()",
     "(focus)": "showTooltip()",
     "(blur)": "hideTooltip()",
+    "attr.aria-describedby": "this.isDescribedbyText() ? this.resolvedTooltipText() : null",
   },
 })
 export class TooltipDirective implements OnInit {
@@ -59,7 +60,8 @@ export class TooltipDirective implements OnInit {
     .flexibleConnectedTo(this.elementRef)
     .withFlexibleDimensions(false)
     .withPush(true);
-  private currentDescribedBy = this.elementRef.nativeElement.getAttribute("aria-describedby");
+  private currentDescribedBy =
+    this.elementRef.nativeElement.getAttribute("aria-describedby") || undefined;
   private tooltipPortal = new ComponentPortal(
     TooltipComponent,
     this.viewContainerRef,
@@ -77,7 +79,12 @@ export class TooltipDirective implements OnInit {
     }),
   );
 
-  private setDescribedBy = (describedbyText: string) => {
+  private setDescribedBy = (describedbyText: string | undefined) => {
+    if (!describedbyText) {
+      this.elementRef.nativeElement.removeAttribute("aria-describedby");
+      return;
+    }
+
     this.elementRef.nativeElement.setAttribute("aria-describedby", describedbyText);
   };
 
@@ -103,7 +110,7 @@ export class TooltipDirective implements OnInit {
         const tooltipId = hostEl.querySelector("[role='tooltip']")?.id;
 
         this.setDescribedBy(
-          this.currentDescribedBy ? `${this.currentDescribedBy} ${tooltipId}` : tooltipId || "",
+          this.currentDescribedBy ? `${this.currentDescribedBy} ${tooltipId}` : tooltipId,
         );
       }
     }
@@ -113,7 +120,7 @@ export class TooltipDirective implements OnInit {
 
   private hideTooltip = () => {
     this.destroyTooltip();
-    this.setDescribedBy(this.currentDescribedBy || "");
+    this.setDescribedBy(this.currentDescribedBy);
   };
 
   private computePositions(tooltipPosition: TooltipPositionIdentifier) {
