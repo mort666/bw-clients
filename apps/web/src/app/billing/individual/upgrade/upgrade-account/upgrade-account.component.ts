@@ -115,7 +115,7 @@ export class UpgradeAccountComponent implements OnInit {
         ),
         type: buttonType,
       },
-      features: tier.passwordManager.features.map((f: any) => f.value),
+      features: tier.passwordManager.features.map((f: { key: string; value: string }) => f.value),
     };
   }
 
