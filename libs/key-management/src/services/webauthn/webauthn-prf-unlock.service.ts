@@ -90,10 +90,7 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
       }
 
       // Get the appropriate rpId from the user's environment
-      const rawRpId = await this.getRpIdForUser(userId);
-      // Extract hostname using URL parsing to handle IPv6 and ports correctly
-      const url = new URL(`https://${rawRpId}`);
-      const rpId = url.hostname;
+      const rpId = await this.getRpIdForUser(userId);
       const prfSalt = await this.getUnlockWithPrfSalt();
 
       // Create credential request options
@@ -110,7 +107,7 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
               transports: (transports || []) as AuthenticatorTransport[],
             };
           }),
-          rpId: rpId,
+          rpId,
           userVerification: "preferred", // Allow platform authenticators to work properly
           extensions: {
             prf: { eval: { first: prfSalt } },
@@ -228,15 +225,25 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
    * Helper method to get the appropriate rpId for WebAuthn PRF operations
    * Returns the hostname from the user's environment configuration
    */
-  private async getRpIdForUser(userId: UserId): Promise<string> {
+  private async getRpIdForUser(userId: UserId): Promise<string | undefined> {
     try {
       const environment = await firstValueFrom(this.environmentService.getEnvironment$(userId));
       const hostname = environment.getHostname();
 
-      return hostname;
+      // The navigator.credentials.get call will fail if rpId is set but is null/empty. Undefined uses the current host.
+      if (!hostname) {
+        return undefined;
+      }
+
+      // Extract hostname using URL parsing to handle IPv6 and ports correctly
+      // This removes ports etc.
+      const url = new URL(`https://${hostname}`);
+      const rpId = url.hostname;
+
+      return rpId;
     } catch (error) {
       this.logService.error("Error getting rpId", error);
-      return "";
+      return undefined;
     }
   }
 }
