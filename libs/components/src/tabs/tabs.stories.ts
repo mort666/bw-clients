@@ -3,8 +3,11 @@ import { Component, importProvidersFrom } from "@angular/core";
 import { RouterModule } from "@angular/router";
 import { applicationConfig, Meta, moduleMetadata, StoryObj } from "@storybook/angular";
 
+import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+
 import { ButtonModule } from "../button";
 import { FormFieldModule } from "../form-field";
+import { I18nMockService } from "../utils";
 
 import { TabGroupComponent } from "./tab-group/tab-group.component";
 import { TabsModule } from "./tabs.module";
@@ -55,6 +58,12 @@ export default {
         ItemThreeDummyComponent,
         ItemWithChildCounterDummyComponent,
         DisabledDummyComponent,
+      ],
+      providers: [
+        {
+          provide: I18nService,
+          useValue: new I18nMockService({ loading: "Loading" }),
+        },
       ],
     }),
     applicationConfig({
@@ -153,7 +162,7 @@ export const PreserveContentTabs: Story = {
 export const KeyboardNavigation: Story = {
   render: (args) => ({
     props: args,
-    template: `
+    template: /*html*/ `
       <bit-tab-group label="Keyboard Navigation Tabs" class="tw-text-main">
         <bit-tab label="Form Tab">
           <p>
@@ -174,7 +183,7 @@ export const KeyboardNavigation: Story = {
           <p>This tab has no focusable content, but the panel should still be focusable</p>
         </bit-tab>
       </bit-tab-group>
-      <button bitButton buttonType="primary" class="tw-mt-5">External Button</button>
+      <button type="button" bitButton buttonType="primary" class="tw-mt-5">External Button</button>
     `,
   }),
 };

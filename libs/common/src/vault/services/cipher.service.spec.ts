@@ -1,5 +1,5 @@
 import { mock } from "jest-mock-extended";
-import { BehaviorSubject, map, of } from "rxjs";
+import { BehaviorSubject, filter, firstValueFrom, map, of } from "rxjs";
 
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
@@ -7,6 +7,8 @@ import { CipherResponse } from "@bitwarden/common/vault/models/response/cipher.r
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
 import { CipherDecryptionKeys, KeyService } from "@bitwarden/key-management";
+import { MessageSender } from "@bitwarden/messaging";
+import { CipherListView } from "@bitwarden/sdk-internal";
 
 import { FakeAccountService, mockAccountServiceWith } from "../../../spec/fake-account-service";
 import { FakeStateProvider } from "../../../spec/fake-state-provider";
@@ -19,7 +21,6 @@ import { EncString } from "../../key-management/crypto/models/enc-string";
 import { UriMatchStrategy } from "../../models/domain/domain-service";
 import { ConfigService } from "../../platform/abstractions/config/config.service";
 import { I18nService } from "../../platform/abstractions/i18n.service";
-import { StateService } from "../../platform/abstractions/state.service";
 import { Utils } from "../../platform/misc/utils";
 import { EncArrayBuffer } from "../../platform/models/domain/enc-array-buffer";
 import { SymmetricCryptoKey } from "../../platform/models/domain/symmetric-crypto-key";
@@ -67,6 +68,7 @@ const cipherData: CipherData = {
   deletedDate: null,
   permissions: new CipherPermissionsApi(),
   key: "EncKey",
+  archivedDate: null,
   reprompt: CipherRepromptType.None,
   login: {
     uris: [
@@ -93,7 +95,6 @@ let accountService: FakeAccountService;
 
 describe("Cipher Service", () => {
   const keyService = mock<KeyService>();
-  const stateService = mock<StateService>();
   const autofillSettingsService = mock<AutofillSettingsService>();
   const domainSettingsService = mock<DomainSettingsService>();
   const apiService = mock<ApiService>();
@@ -106,6 +107,7 @@ describe("Cipher Service", () => {
   const logService = mock<LogService>();
   const stateProvider = new FakeStateProvider(accountService);
   const cipherEncryptionService = mock<CipherEncryptionService>();
+  const messageSender = mock<MessageSender>();
 
   const userId = "TestUserId" as UserId;
   const orgId = "4ff8c0b2-1d3e-4f8c-9b2d-1d3e4f8c0b2" as OrganizationId;
@@ -117,6 +119,12 @@ describe("Cipher Service", () => {
     encryptService.encryptFileData.mockReturnValue(Promise.resolve(ENCRYPTED_BYTES));
     encryptService.encryptString.mockReturnValue(Promise.resolve(new EncString(ENCRYPTED_TEXT)));
 
+    // Mock i18nService collator
+    i18nService.collator = {
+      compare: jest.fn().mockImplementation((a: string, b: string) => a.localeCompare(b)),
+      resolvedOptions: jest.fn().mockReturnValue({}),
+    } as any;
+
     (window as any).bitwardenContainerService = new ContainerService(keyService, encryptService);
 
     cipherService = new CipherService(
@@ -125,7 +133,6 @@ describe("Cipher Service", () => {
       apiService,
       i18nService,
       searchService,
-      stateService,
       autofillSettingsService,
       encryptService,
       cipherFileUploadService,
@@ -134,6 +141,7 @@ describe("Cipher Service", () => {
       accountService,
       logService,
       cipherEncryptionService,
+      messageSender,
     );
 
     encryptionContext = { cipher: new Cipher(cipherData), encryptedFor: userId };
@@ -467,8 +475,6 @@ describe("Cipher Service", () => {
 
       searchService.indexedEntityId$.mockReturnValue(of(null));
 
-      stateService.getUserId.mockResolvedValue(mockUserId);
-
       const keys = { userKey: originalUserKey } as CipherDecryptionKeys;
       keyService.cipherDecryptionKeys$.mockReturnValue(of(keys));
 
@@ -550,6 +556,23 @@ describe("Cipher Service", () => {
         mockUserId,
         newUserKey,
       );
+    });
+
+    it("sends overlay update when cipherViews$ emits", async () => {
+      (cipherService.cipherViews$ as jest.Mock)?.mockRestore();
+
+      const decryptedView = new CipherView(encryptionContext.cipher);
+      jest.spyOn(cipherService, "getAllDecrypted").mockResolvedValue([decryptedView]);
+
+      const sendSpy = jest.spyOn(messageSender, "send");
+
+      await firstValueFrom(
+        cipherService
+          .cipherViews$(mockUserId)
+          .pipe(filter((cipherViews): cipherViews is CipherView[] => cipherViews != null)),
+      );
+      expect(sendSpy).toHaveBeenCalledWith("updateOverlayCiphers");
+      expect(sendSpy).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -716,6 +739,82 @@ describe("Cipher Service", () => {
         } as unknown as CipherView),
         userId,
       );
+    });
+  });
+
+  describe("decryptCiphers", () => {
+    let mockCiphers: Cipher[];
+    const cipher1_id = "11111111-1111-1111-1111-111111111111";
+    const cipher2_id = "22222222-2222-2222-2222-222222222222";
+
+    beforeEach(() => {
+      const originalUserKey = new SymmetricCryptoKey(new Uint8Array(32)) as UserKey;
+      const orgKey = new SymmetricCryptoKey(new Uint8Array(32)) as OrgKey;
+      const keys = {
+        userKey: originalUserKey,
+        orgKeys: { [orgId]: orgKey },
+      } as CipherDecryptionKeys;
+      keyService.cipherDecryptionKeys$.mockReturnValue(of(keys));
+
+      mockCiphers = [
+        new Cipher({ ...cipherData, id: cipher1_id }),
+        new Cipher({ ...cipherData, id: cipher2_id }),
+      ];
+
+      //// Mock the SDK response
+      cipherEncryptionService.decryptManyWithFailures.mockResolvedValue([
+        [{ id: mockCiphers[0].id, name: "Success 1" } as unknown as CipherListView],
+        [mockCiphers[1]], // Mock failed cipher
+      ]);
+    });
+
+    it("should use the SDK for decryption when SDK feature flag is enabled", async () => {
+      configService.getFeatureFlag
+        .calledWith(FeatureFlag.PM19941MigrateCipherDomainToSdk)
+        .mockResolvedValue(true);
+
+      // Set up expected results
+      const expectedSuccessCipherViews = [
+        { id: mockCiphers[0].id, name: "Success 1" } as unknown as CipherListView,
+      ];
+
+      const expectedFailedCipher = new CipherView(mockCiphers[1]);
+      expectedFailedCipher.name = "[error: cannot decrypt]";
+      expectedFailedCipher.decryptionFailure = true;
+      const expectedFailedCipherViews = [expectedFailedCipher];
+
+      // Execute
+      const [successes, failures] = await (cipherService as any).decryptCiphers(
+        mockCiphers,
+        userId,
+      );
+
+      // Verify the SDK was used for decryption
+      expect(cipherEncryptionService.decryptManyWithFailures).toHaveBeenCalledWith(
+        mockCiphers,
+        userId,
+      );
+
+      expect(successes).toEqual(expectedSuccessCipherViews);
+      expect(failures).toEqual(expectedFailedCipherViews);
+    });
+
+    it("should use legacy decryption when SDK feature flag is disabled", async () => {
+      configService.getFeatureFlag
+        .calledWith(FeatureFlag.PM19941MigrateCipherDomainToSdk)
+        .mockResolvedValue(false);
+
+      // Execute
+      const [successes, failures] = await (cipherService as any).decryptCiphers(
+        mockCiphers,
+        userId,
+      );
+
+      // Verify the SDK was not used for decryption
+      expect(cipherEncryptionService.decryptManyWithFailures).toHaveBeenCalledTimes(0);
+
+      expect(successes).toHaveLength(2);
+      expect(failures).toHaveLength(0);
     });
   });
 });
