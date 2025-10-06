@@ -10,6 +10,7 @@ import {
   input,
   signal,
   computed,
+  effect,
 } from "@angular/core";
 
 import { TooltipPositionIdentifier, tooltipPositions } from "./tooltip-positions";
@@ -142,6 +143,12 @@ export class TooltipDirective implements OnInit {
 
   setIsDescribedbyText(isDescribedbyText: boolean) {
     this._isDescribedbyText.set(isDescribedbyText);
+  }
+
+  constructor() {
+    effect(() => {
+      this.setIsDescribedbyText(this.isDescribedbyText());
+    });
   }
 
   ngOnInit() {

@@ -205,7 +205,11 @@ export class BitIconButtonComponent implements ButtonLikeAbstraction, FocusableE
         label: this.label(),
       });
 
-      this.tooltip?.setContent(originalTitle || this.label());
+      const tooltipContent: string = originalTitle || this.label();
+
+      if (tooltipContent) {
+        this.tooltip?.setContent(tooltipContent);
+      }
     });
   }
 }
