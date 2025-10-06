@@ -77,7 +77,7 @@ export class TooltipDirective implements OnInit {
     }),
   );
 
-  private setDescribedBy = (describedbyText: string | null) => {
+  private setDescribedBy = (describedbyText: string) => {
     this.elementRef.nativeElement.setAttribute("aria-describedby", describedbyText);
   };
 

@@ -201,7 +201,7 @@ export class BitIconButtonComponent implements ButtonLikeAbstraction, FocusableE
     effect(() => {
       setA11yTitleAndAriaLabel({
         element: this.elementRef.nativeElement,
-        title: null,
+        title: undefined,
         label: this.label(),
       });
 
