@@ -370,6 +370,12 @@ checksum = "4c7f02d4ea65f2c1853089ffd8d2787bdbc63de2f0d29dedbcf8ccdfa0ccd4cf"
 
 [[package]]
 name = "base64"
+version = "0.21.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
+
+[[package]]
+name = "base64"
 version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
@@ -445,7 +451,7 @@ dependencies = [
  "aes-gcm",
  "anyhow",
  "async-trait",
- "base64",
+ "base64 0.22.1",
  "cbc",
  "hex",
  "homedir",
@@ -889,7 +895,7 @@ dependencies = [
  "anyhow",
  "arboard",
  "ashpd",
- "base64",
+ "base64 0.22.1",
  "bitwarden-russh",
  "byteorder",
  "bytes",
@@ -916,6 +922,7 @@ dependencies = [
  "sha2",
  "ssh-encoding",
  "ssh-key",
+ "swift-rs",
  "sysinfo",
  "thiserror 2.0.12",
  "tokio",
@@ -937,7 +944,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "autotype",
- "base64",
+ "base64 0.22.1",
  "bitwarden_chromium_importer",
  "desktop_core",
  "hex",
@@ -2897,9 +2904,9 @@ dependencies = [
 
 [[package]]
 name = "security-framework"
-version = "3.4.0"
+version = "3.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60b369d18893388b345804dc0007963c99b7d665ae71d275812d828c6f089640"
+checksum = "cc198e42d9b7510827939c9a15f5062a0c913f3371d765977e586d2fe6c16f4a"
 dependencies = [
  "bitflags",
  "core-foundation",
@@ -3161,6 +3168,17 @@ name = "subtle"
 version = "2.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
+
+[[package]]
+name = "swift-rs"
+version = "1.0.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4057c98e2e852d51fdcfca832aac7b571f6b351ad159f9eda5db1655f8d0c4d7"
+dependencies = [
+ "base64 0.21.7",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "syn"
