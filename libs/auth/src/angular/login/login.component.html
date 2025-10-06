@@ -67,7 +67,13 @@
       </ng-container>
 
       <!-- Button to Login with SSO -->
-      <button type="button" bitButton block buttonType="secondary" (click)="handleSsoClick()">
+      <button
+        type="button"
+        bitButton
+        block
+        [buttonType]="ssoRequired ? 'primary' : 'secondary'"
+        (click)="handleSsoClick()"
+      >
         <i class="bwi bwi-provider tw-mr-1" aria-hidden="true"></i>
         {{ "useSingleSignOn" | i18n }}
       </button>
