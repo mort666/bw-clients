@@ -98,7 +98,7 @@ describe("TwoFactorApiService", () => {
 
         expect(apiService.send).toHaveBeenCalledWith(
           "POST",
-          "/two-factor/authenticator",
+          "/two-factor/get-authenticator",
           request,
           true,
           true,
