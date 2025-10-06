@@ -54,7 +54,7 @@ export class TwoFactorApiService implements TwoFactorApiServiceAbstraction {
   ): Promise<TwoFactorAuthenticatorResponse> {
     const response = await this.apiService.send(
       "POST",
-      "/two-factor/authenticator",
+      "/two-factor/get-authenticator",
       request,
       true,
       true,
