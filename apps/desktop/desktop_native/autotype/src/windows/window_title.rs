@@ -242,7 +242,7 @@ mod tests {
         let title = get_window_title::<MockHandleOperations, MockErrorOperations>(&mock_handle, 42)
             .unwrap();
 
-        assert_eq!(title.len(), 43); // TODO Hmm do we need that extra slot in the buffer
+        assert_eq!(title.len(), 43); // That extra slot in the buffer for null char
 
         assert_eq!(title, "*******************************************");
     }
