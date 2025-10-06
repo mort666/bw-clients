@@ -6,10 +6,12 @@ import {
   UserDecryptionOptionsServiceAbstraction,
 } from "@bitwarden/auth/common";
 import { WebAuthnLoginPrfKeyServiceAbstraction } from "@bitwarden/common/auth/abstractions/webauthn/webauthn-login-prf-key.service.abstraction";
+import { ClientType } from "@bitwarden/common/enums";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { EncString } from "@bitwarden/common/key-management/crypto/models/enc-string";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { Fido2Utils } from "@bitwarden/common/platform/services/fido2/fido2-utils";
 import { UserId } from "@bitwarden/common/types/guid";
 import { PrfKey, UserKey } from "@bitwarden/common/types/key";
@@ -26,16 +28,36 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
     private userDecryptionOptionsService: UserDecryptionOptionsServiceAbstraction,
     private encryptService: EncryptService,
     private environmentService: EnvironmentService,
+    private platformUtilsService: PlatformUtilsService,
     private window: Window,
     private logService?: LogService,
   ) {
     this.navigatorCredentials = this.window.navigator.credentials;
   }
 
-  async isPrfUnlockAvailable(userId: string): Promise<boolean> {
+  async isPrfUnlockAvailable(userId: UserId): Promise<boolean> {
     try {
+      // Check if browser supports WebAuthn
+      if (!this.navigatorCredentials || !this.navigatorCredentials.get) {
+        return false;
+      }
+
+      // If we're in the browser extension, check if we're in a Chromium browser
+      if (this.platformUtilsService.getClientType() === ClientType.Browser) {
+        // FIXME: Use the platforms util after our base branch is merged to main
+        const isChromium = !!(this.window as any).chrome;
+        if (!isChromium) {
+          return false;
+        }
+      }
+
+      // Check if user has any WebAuthn PRF credentials registered
       const credentials = await this.getPrfUnlockCredentials(userId);
-      return credentials.length > 0;
+      if (credentials.length === 0) {
+        return false;
+      }
+
+      return true;
     } catch (error) {
       this.logService?.error("Error checking PRF unlock availability:", error);
       return false;
@@ -43,7 +65,7 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
   }
 
   private async getPrfUnlockCredentials(
-    userId: string,
+    userId: UserId,
   ): Promise<{ credentialId: string; transports: string[] }[]> {
     try {
       const userDecryptionOptions = await this.getUserDecryptionOptions(userId);
@@ -60,7 +82,7 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
     }
   }
 
-  async unlockVaultWithPrf(userId: string): Promise<boolean> {
+  async unlockVaultWithPrf(userId: UserId): Promise<boolean> {
     try {
       const credentials = await this.getPrfUnlockCredentials(userId);
       if (credentials.length === 0) {
@@ -118,7 +140,6 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
 
       // Create unlock key from PRF
       const unlockKey = await this.createUnlockKeyFromPrf(prfResult);
-      const userIdTyped = userId as UserId;
 
       // PRF unlock must follow the same key derivation process as PRF login:
       // PRF key → decrypt private key → use private key to decrypt user key → set user key
@@ -161,7 +182,7 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
       }
 
       // Step 3: Set the actual user key
-      await this.keyService.setUserKey(actualUserKey as UserKey, userIdTyped);
+      await this.keyService.setUserKey(actualUserKey as UserKey, userId);
 
       return true;
     } catch (error) {
@@ -192,10 +213,10 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
   /**
    * Helper method to get user decryption options for a user
    */
-  private async getUserDecryptionOptions(userId: string): Promise<UserDecryptionOptions | null> {
+  private async getUserDecryptionOptions(userId: UserId): Promise<UserDecryptionOptions | null> {
     try {
       return (await firstValueFrom(
-        this.userDecryptionOptionsService.userDecryptionOptionsById$(userId as UserId),
+        this.userDecryptionOptionsService.userDecryptionOptionsById$(userId),
       )) as UserDecryptionOptions;
     } catch (error) {
       this.logService?.error("Error getting user decryption options:", error);
@@ -207,11 +228,9 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
    * Helper method to get the appropriate rpId for WebAuthn PRF operations
    * Returns the hostname from the user's environment configuration
    */
-  private async getRpIdForUser(userId: string): Promise<string> {
+  private async getRpIdForUser(userId: UserId): Promise<string> {
     try {
-      const environment = await firstValueFrom(
-        this.environmentService.getEnvironment$(userId as UserId),
-      );
+      const environment = await firstValueFrom(this.environmentService.getEnvironment$(userId));
       const hostname = environment.getHostname();
 
       return hostname;

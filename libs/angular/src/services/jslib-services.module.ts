@@ -1269,6 +1269,7 @@ const safeProviders: SafeProvider[] = [
       UserDecryptionOptionsServiceAbstraction,
       EncryptService,
       EnvironmentService,
+      PlatformUtilsServiceAbstraction,
       WINDOW,
       LogService,
     ],
