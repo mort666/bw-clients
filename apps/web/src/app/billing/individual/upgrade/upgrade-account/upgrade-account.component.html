@@ -1,10 +1,10 @@
 @if (!loading()) {
   <section
-    class="tw-bg-background tw-rounded-xl tw-shadow-lg tw-max-w-4xl tw-w-[870px]"
+    class="tw-bg-background tw-rounded-xl tw-shadow-lg tw-max-w-5xl tw-min-w-[332px] tw-w-[870px] tw-border-secondary-100 tw-border-solid tw-border"
     cdkTrapFocus
     cdkTrapFocusAutoCapture
   >
-    <header class="tw-flex tw-items-center tw-justify-end tw-p-4">
+    <header class="tw-flex tw-items-center tw-justify-end tw-pl-6 tw-pt-3 tw-pr-2">
       <button
         type="button"
         bitIconButton="bwi-close"
@@ -14,12 +14,12 @@
         (click)="closeClicked.emit(closeStatus)"
       ></button>
     </header>
-    <div class="tw-px-14 tw-pb-20">
-      <div class="tw-flex tw-text-center tw-flex-col">
-        <h1 bitTypography="h1" class="tw-font-semibold">
+    <div class="tw-px-14 tw-pb-8">
+      <div class="tw-flex tw-text-center tw-flex-col tw-pb-4">
+        <h1 class="tw-font-semibold tw-text-[32px]">
           {{ "individualUpgradeWelcomeMessage" | i18n }}
         </h1>
-        <p bitTypography="body1" class="tw-text-muted tw-mb-8">
+        <p bitTypography="body1" class="tw-text-muted">
           {{ "individualUpgradeDescriptionMessage" | i18n }}
         </p>
       </div>
