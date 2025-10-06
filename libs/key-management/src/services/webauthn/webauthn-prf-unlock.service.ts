@@ -30,7 +30,7 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
     private environmentService: EnvironmentService,
     private platformUtilsService: PlatformUtilsService,
     private window: Window,
-    private logService?: LogService,
+    private logService: LogService,
   ) {
     this.navigatorCredentials = this.window.navigator.credentials;
   }
@@ -59,7 +59,7 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
 
       return true;
     } catch (error) {
-      this.logService?.error("Error checking PRF unlock availability:", error);
+      this.logService.error("Error checking PRF unlock availability:", error);
       return false;
     }
   }
@@ -77,7 +77,7 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
         transports: option.transports,
       }));
     } catch (error) {
-      this.logService?.error("Error getting PRF unlock credentials:", error);
+      this.logService.error("Error getting PRF unlock credentials:", error);
       return [];
     }
   }
@@ -186,7 +186,7 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
 
       return true;
     } catch (error) {
-      this.logService?.error("PRF unlock failed:", error);
+      this.logService.error("PRF unlock failed:", error);
       return false;
     }
   }
@@ -196,7 +196,7 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
       // Use the same salt as login to ensure PRF keys match
       return await this.webAuthnLoginPrfKeyService.getLoginWithPrfSalt();
     } catch (error) {
-      this.logService?.error("Error getting unlock PRF salt:", error);
+      this.logService.error("Error getting unlock PRF salt:", error);
       throw error;
     }
   }
@@ -205,7 +205,7 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
     try {
       return await this.webAuthnLoginPrfKeyService.createSymmetricKeyFromPrf(prf);
     } catch (error) {
-      this.logService?.error("Failed to create unlock key from PRF:", error);
+      this.logService.error("Failed to create unlock key from PRF:", error);
       throw error;
     }
   }
@@ -219,7 +219,7 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
         this.userDecryptionOptionsService.userDecryptionOptionsById$(userId),
       )) as UserDecryptionOptions;
     } catch (error) {
-      this.logService?.error("Error getting user decryption options:", error);
+      this.logService.error("Error getting user decryption options:", error);
       return null;
     }
   }
@@ -235,7 +235,7 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
 
       return hostname;
     } catch (error) {
-      this.logService?.error("Error getting rpId", error);
+      this.logService.error("Error getting rpId", error);
       return "";
     }
   }
