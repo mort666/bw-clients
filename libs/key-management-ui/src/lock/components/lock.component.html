@@ -47,19 +47,7 @@
         </button>
       </ng-container>
 
-      <ng-container *ngIf="unlockOptions.prf.enabled">
-        <button
-          type="button"
-          bitButton
-          buttonType="secondary"
-          block
-          (click)="unlockViaPrf()"
-          [disabled]="unlockingViaPrf"
-          [loading]="unlockingViaPrf"
-        >
-          {{ "unlockWithPasskey" | i18n }}
-        </button>
-      </ng-container>
+      <bit-unlock-via-prf (unlockSuccess)="onPrfUnlockSuccess()"></bit-unlock-via-prf>
 
       <button type="button" bitButton block (click)="logOut()">
         {{ "logOut" | i18n }}
@@ -125,20 +113,10 @@
           </button>
         </ng-container>
 
-        <ng-container *ngIf="unlockOptions.prf.enabled">
-          <button
-            type="button"
-            bitButton
-            bitFormButton
-            buttonType="secondary"
-            block
-            (click)="unlockViaPrf()"
-            [disabled]="unlockingViaPrf"
-            [loading]="unlockingViaPrf"
-          >
-            {{ "unlockWithPasskey" | i18n }}
-          </button>
-        </ng-container>
+        <bit-unlock-via-prf
+          [formButton]="true"
+          (unlockSuccess)="onPrfUnlockSuccess()"
+        ></bit-unlock-via-prf>
 
         <button type="button" bitButton bitFormButton block (click)="logOut()">
           {{ "logOut" | i18n }}
@@ -211,20 +189,10 @@
           </button>
         </ng-container>
 
-        <ng-container *ngIf="unlockOptions.prf.enabled">
-          <button
-            type="button"
-            bitButton
-            bitFormButton
-            buttonType="secondary"
-            block
-            (click)="unlockViaPrf()"
-            [disabled]="unlockingViaPrf"
-            [loading]="unlockingViaPrf"
-          >
-            {{ "unlockWithPasskey" | i18n }}
-          </button>
-        </ng-container>
+        <bit-unlock-via-prf
+          [formButton]="true"
+          (unlockSuccess)="onPrfUnlockSuccess()"
+        ></bit-unlock-via-prf>
 
         <button type="button" bitButton bitFormButton block (click)="logOut()">
           {{ "logOut" | i18n }}
