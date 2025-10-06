@@ -16,6 +16,7 @@ import {
   AuthRequestService,
   LoginStrategyService,
   LoginStrategyServiceAbstraction,
+  TwoFactorApiService,
   UserDecryptionOptionsService,
   SsoUrlService,
   AuthRequestApiServiceAbstraction,
@@ -226,6 +227,7 @@ export class ServiceContainer {
   tokenService: TokenService;
   appIdService: AppIdService;
   apiService: NodeApiService;
+  twoFactorApiService: TwoFactorApiService;
   hibpApiService: HibpApiService;
   environmentService: EnvironmentService;
   cipherService: CipherService;
@@ -522,6 +524,8 @@ export class ServiceContainer {
     this.containerService = new ContainerService(this.keyService, this.encryptService);
 
     this.configApiService = new ConfigApiService(this.apiService);
+
+    this.twoFactorApiService = new TwoFactorApiService(this.apiService);
 
     this.authService = new AuthService(
       this.accountService,
