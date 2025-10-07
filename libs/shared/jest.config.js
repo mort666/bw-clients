@@ -2,7 +2,13 @@
 
 /** @type {import('jest').Config} */
 module.exports = {
+  // Match all .spec.ts files, but not .play.spec.ts files, those are playwright tests
   testMatch: ["**/+(*.)+(spec).+(ts)"],
+  testPathIgnorePatterns: [
+    "/node_modules/", // default value
+    ".*.type.spec.ts", // ignore type tests (which are checked at compile time and not run by jest)
+    ".*.play.spec.ts", // ignore playwright tests
+  ],
 
   // Workaround for a memory leak that crashes tests in CI:
   // https://github.com/facebook/jest/issues/9430#issuecomment-1149882002
@@ -20,9 +26,6 @@ module.exports = {
         // Makes tests run faster and reduces size/rate of leak, but loses typechecking on test code
         // See https://bitwarden.atlassian.net/browse/EC-497 for more info
         isolatedModules: true,
-        astTransformers: {
-          before: ["<rootDir>/../../libs/shared/es2020-transformer.ts"],
-        },
       },
     ],
   },
