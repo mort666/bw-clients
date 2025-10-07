@@ -2,7 +2,7 @@ import { Component, OnInit } from "@angular/core";
 import { FormBuilder, Validators } from "@angular/forms";
 import { firstValueFrom } from "rxjs";
 
-import { TwoFactorApiService } from "@bitwarden/auth/common";
+import { TwoFactorApiServiceAbstraction } from "@bitwarden/auth/common";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
@@ -38,7 +38,7 @@ export class ChangeEmailComponent implements OnInit {
   constructor(
     private accountService: AccountService,
     private apiService: ApiService,
-    private twoFactorApiService: TwoFactorApiService,
+    private twoFactorApiService: TwoFactorApiServiceAbstraction,
     private i18nService: I18nService,
     private keyService: KeyService,
     private messagingService: MessagingService,

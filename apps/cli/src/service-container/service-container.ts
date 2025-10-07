@@ -21,6 +21,7 @@ import {
   SsoUrlService,
   AuthRequestApiServiceAbstraction,
   DefaultAuthRequestApiService,
+  TwoFactorApiServiceAbstraction,
 } from "@bitwarden/auth/common";
 import { EventCollectionService as EventCollectionServiceAbstraction } from "@bitwarden/common/abstractions/event/event-collection.service";
 import { EventUploadService as EventUploadServiceAbstraction } from "@bitwarden/common/abstractions/event/event-upload.service";
@@ -227,7 +228,7 @@ export class ServiceContainer {
   tokenService: TokenService;
   appIdService: AppIdService;
   apiService: NodeApiService;
-  twoFactorApiService: TwoFactorApiService;
+  twoFactorApiService: TwoFactorApiServiceAbstraction;
   hibpApiService: HibpApiService;
   environmentService: EnvironmentService;
   cipherService: CipherService;

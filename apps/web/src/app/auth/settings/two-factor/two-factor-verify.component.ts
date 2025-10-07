@@ -2,7 +2,7 @@ import { Component, EventEmitter, Inject, Output } from "@angular/core";
 import { FormControl, FormGroup, ReactiveFormsModule } from "@angular/forms";
 
 import { UserVerificationFormInputComponent } from "@bitwarden/auth/angular";
-import { TwoFactorApiService } from "@bitwarden/auth/common";
+import { TwoFactorApiServiceAbstraction } from "@bitwarden/auth/common";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
 import { VerificationType } from "@bitwarden/common/auth/enums/verification-type";
@@ -55,7 +55,7 @@ export class TwoFactorVerifyComponent {
   constructor(
     @Inject(DIALOG_DATA) protected data: TwoFactorVerifyDialogData,
     private dialogRef: DialogRef,
-    private twoFactorApiService: TwoFactorApiService,
+    private twoFactorApiService: TwoFactorApiServiceAbstraction,
     private i18nService: I18nService,
     private userVerificationService: UserVerificationService,
   ) {

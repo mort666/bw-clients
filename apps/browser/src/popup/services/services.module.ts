@@ -36,7 +36,6 @@ import {
   LoginEmailService,
   SsoUrlService,
   LogoutService,
-  TwoFactorApiService,
 } from "@bitwarden/auth/common";
 import { ExtensionNewDeviceVerificationComponentService } from "@bitwarden/browser/auth/services/new-device-verification/extension-new-device-verification-component.service";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
@@ -667,11 +666,6 @@ const safeProviders: SafeProvider[] = [
     provide: LoginEmailService,
     useClass: LoginEmailService,
     deps: [AccountService, AuthService, StateProvider],
-  }),
-  safeProvider({
-    provide: TwoFactorApiService,
-    useClass: TwoFactorApiService,
-    deps: [ApiService],
   }),
   safeProvider({
     provide: ExtensionAnonLayoutWrapperDataService,

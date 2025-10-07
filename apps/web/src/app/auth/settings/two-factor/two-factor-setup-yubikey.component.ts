@@ -9,7 +9,7 @@ import {
 } from "@angular/forms";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
-import { TwoFactorApiService } from "@bitwarden/auth/common";
+import { TwoFactorApiServiceAbstraction } from "@bitwarden/auth/common";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
 import { UpdateTwoFactorYubikeyOtpRequest } from "@bitwarden/common/auth/models/request/update-two-factor-yubikey-otp.request";
@@ -93,7 +93,7 @@ export class TwoFactorSetupYubiKeyComponent
 
   constructor(
     @Inject(DIALOG_DATA) protected data: AuthResponse<TwoFactorYubiKeyResponse>,
-    twoFactorApiService: TwoFactorApiService,
+    twoFactorApiService: TwoFactorApiServiceAbstraction,
     i18nService: I18nService,
     platformUtilsService: PlatformUtilsService,
     logService: LogService,

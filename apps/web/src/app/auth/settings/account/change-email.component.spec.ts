@@ -3,7 +3,7 @@ import { FormBuilder, ReactiveFormsModule } from "@angular/forms";
 import mock, { MockProxy } from "jest-mock-extended/lib/Mock";
 import { firstValueFrom, of } from "rxjs";
 
-import { TwoFactorApiService } from "@bitwarden/auth/common";
+import { TwoFactorApiServiceAbstraction } from "@bitwarden/auth/common";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
@@ -23,14 +23,14 @@ describe("ChangeEmailComponent", () => {
   let fixture: ComponentFixture<ChangeEmailComponent>;
 
   let apiService: MockProxy<ApiService>;
-  let twoFactorApiService: MockProxy<TwoFactorApiService>;
+  let twoFactorApiService: MockProxy<TwoFactorApiServiceAbstraction>;
   let accountService: FakeAccountService;
   let keyService: MockProxy<KeyService>;
   let kdfConfigService: MockProxy<KdfConfigService>;
 
   beforeEach(async () => {
     apiService = mock<ApiService>();
-    twoFactorApiService = mock<TwoFactorApiService>();
+    twoFactorApiService = mock<TwoFactorApiServiceAbstraction>();
     keyService = mock<KeyService>();
     kdfConfigService = mock<KdfConfigService>();
     accountService = mockAccountServiceWith("UserId" as UserId);
@@ -40,7 +40,7 @@ describe("ChangeEmailComponent", () => {
       providers: [
         { provide: AccountService, useValue: accountService },
         { provide: ApiService, useValue: apiService },
-        { provide: TwoFactorApiService, useValue: twoFactorApiService },
+        { provide: TwoFactorApiServiceAbstraction, useValue: twoFactorApiService },
         { provide: I18nService, useValue: { t: (key: string) => key } },
         { provide: KeyService, useValue: keyService },
         { provide: MessagingService, useValue: mock<MessagingService>() },

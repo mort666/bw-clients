@@ -3,7 +3,7 @@ import { Component, EventEmitter, Inject, OnInit, Output } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import { firstValueFrom, map } from "rxjs";
 
-import { TwoFactorApiService } from "@bitwarden/auth/common";
+import { TwoFactorApiServiceAbstraction } from "@bitwarden/auth/common";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
@@ -66,7 +66,7 @@ export class TwoFactorSetupEmailComponent
 
   constructor(
     @Inject(DIALOG_DATA) protected data: AuthResponse<TwoFactorEmailResponse>,
-    twoFactorApiService: TwoFactorApiService,
+    twoFactorApiService: TwoFactorApiServiceAbstraction,
     i18nService: I18nService,
     platformUtilsService: PlatformUtilsService,
     logService: LogService,
