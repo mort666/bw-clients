@@ -404,7 +404,6 @@ describe("ExtensionLockComponentService", () => {
 
       // PRF
       webAuthnPrfUnlockService.isPrfUnlockAvailable.mockResolvedValue(false);
-      webAuthnPrfUnlockService.getPrfUnlockCredentials.mockResolvedValue([]);
 
       const unlockOptions = await firstValueFrom(service.getAvailableUnlockOptions$(userId));
 
