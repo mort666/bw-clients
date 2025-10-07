@@ -5,8 +5,6 @@ import { featureFlaggedRoute } from "@bitwarden/angular/platform/utils/feature-f
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { AccountPaymentDetailsComponent } from "@bitwarden/web-vault/app/billing/individual/payment-details/account-payment-details.component";
 
-import { PaymentMethodComponent } from "../shared";
-
 import { BillingHistoryViewComponent } from "./billing-history-view.component";
 import { PremiumVNextComponent } from "./premium/premium-vnext.component";
 import { PremiumComponent } from "./premium/premium.component";
@@ -34,11 +32,6 @@ const routes: Routes = [
           path: "premium",
         },
       }),
-      {
-        path: "payment-method",
-        component: PaymentMethodComponent,
-        data: { titleId: "paymentMethod" },
-      },
       {
         path: "payment-details",
         component: AccountPaymentDetailsComponent,
