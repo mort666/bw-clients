@@ -148,8 +148,8 @@ export default {
       },
     );
   },
-  configureAutotype: (enabled: boolean) => {
-    ipcRenderer.send("autofill.configureAutotype", { enabled });
+  configureAutotype: (enabled: boolean, keyboardShortcut: string[]) => {
+    ipcRenderer.send("autofill.configureAutotype", { enabled, keyboardShortcut });
   },
   listenAutotypeRequest: (
     fn: (
