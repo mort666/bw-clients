@@ -1,5 +1,5 @@
 {
   "extends": "../../tsconfig.base",
-  "include": ["src", "spec", "../common/src/auth/two-factor"],
+  "include": ["src", "spec"],
   "exclude": ["node_modules", "dist"]
 }
