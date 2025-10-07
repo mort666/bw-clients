@@ -171,7 +171,6 @@ import { ApiService } from "@bitwarden/common/services/api.service";
 import { AuditService } from "@bitwarden/common/services/audit.service";
 import { EventCollectionService } from "@bitwarden/common/services/event/event-collection.service";
 import { EventUploadService } from "@bitwarden/common/services/event/event-upload.service";
-import { enableLogForTypes } from "@bitwarden/common/tools/log";
 import {
   PasswordStrengthService,
   PasswordStrengthServiceAbstraction,
@@ -232,6 +231,7 @@ import {
   KdfConfigService,
   KeyService as KeyServiceAbstraction,
 } from "@bitwarden/key-management";
+import { enableLogForTypes } from "@bitwarden/logging";
 import { BackgroundSyncService } from "@bitwarden/platform/background-sync";
 import {
   ActiveUserStateProvider,

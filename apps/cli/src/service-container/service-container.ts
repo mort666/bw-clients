@@ -114,7 +114,6 @@ import { DefaultSyncService } from "@bitwarden/common/platform/sync/internal";
 import { AuditService } from "@bitwarden/common/services/audit.service";
 import { EventCollectionService } from "@bitwarden/common/services/event/event-collection.service";
 import { EventUploadService } from "@bitwarden/common/services/event/event-upload.service";
-import { enableLogForTypes } from "@bitwarden/common/tools/log";
 import {
   PasswordStrengthService,
   PasswordStrengthServiceAbstraction,
@@ -155,6 +154,7 @@ import {
   BiometricStateService,
   DefaultBiometricStateService,
 } from "@bitwarden/key-management";
+import { enableLogForTypes } from "@bitwarden/logging";
 import { NodeCryptoFunctionService } from "@bitwarden/node/services/node-crypto-function.service";
 import {
   ActiveUserStateProvider,

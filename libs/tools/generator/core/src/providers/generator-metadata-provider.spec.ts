@@ -16,11 +16,11 @@ import {
 } from "@bitwarden/common/tools/extension";
 import { ExtensionService } from "@bitwarden/common/tools/extension/extension.service";
 import { Bitwarden } from "@bitwarden/common/tools/extension/vendor/bitwarden";
-import { disabledSemanticLoggerProvider } from "@bitwarden/common/tools/log";
 import { UserStateSubject } from "@bitwarden/common/tools/state/user-state-subject";
 import { UserStateSubjectDependencyProvider } from "@bitwarden/common/tools/state/user-state-subject-dependency-provider";
 import { deepFreeze } from "@bitwarden/common/tools/util";
 import { UserId } from "@bitwarden/common/types/guid";
+import { disabledSemanticLoggerProvider } from "@bitwarden/logging";
 
 import { FakeAccountService, FakeStateProvider } from "../../../../../common/spec";
 import { Algorithm, AlgorithmsByType, CredentialAlgorithm, Type, Types } from "../metadata";

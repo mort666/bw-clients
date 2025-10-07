@@ -1,6 +1,11 @@
 import { SemVer } from "semver";
 
-import { LogService, LogProvider } from "@bitwarden/logging";
+import {
+  disabledSemanticLoggerProvider,
+  enableLogForTypes,
+  LogProvider,
+  LogService,
+} from "@bitwarden/logging";
 import { BitwardenClient } from "@bitwarden/sdk-internal";
 import { StateProvider } from "@bitwarden/state";
 
@@ -14,7 +19,6 @@ import { EnvService } from "./abstractions/env.service";
 import { LegacyEncryptorProvider } from "./cryptography/legacy-encryptor-provider";
 import { ExtensionRegistry } from "./extension/extension-registry.abstraction";
 import { ExtensionService } from "./extension/extension.service";
-import { disabledSemanticLoggerProvider, enableLogForTypes } from "./log";
 
 export { EnvService } from "./abstractions/env.service";
 

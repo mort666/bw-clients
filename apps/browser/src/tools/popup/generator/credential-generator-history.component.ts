@@ -7,10 +7,6 @@ import { ReplaySubject, Subject, firstValueFrom, map, switchMap, takeUntil } fro
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { Account, AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
-import {
-  disabledSemanticLoggerProvider,
-  ifEnabledSemanticLoggerProvider,
-} from "@bitwarden/common/tools/log";
 import { UserId } from "@bitwarden/common/types/guid";
 import { ButtonModule, DialogService } from "@bitwarden/components";
 import {
@@ -18,7 +14,11 @@ import {
   EmptyCredentialHistoryComponent,
 } from "@bitwarden/generator-components";
 import { GeneratorHistoryService } from "@bitwarden/generator-history";
-import { SemanticLogger } from "@bitwarden/logging";
+import {
+  disabledSemanticLoggerProvider,
+  ifEnabledSemanticLoggerProvider,
+  SemanticLogger,
+} from "@bitwarden/logging";
 
 import { PopOutComponent } from "../../../platform/popup/components/pop-out.component";
 import { PopupFooterComponent } from "../../../platform/popup/layout/popup-footer.component";

@@ -16,6 +16,26 @@ describe("logging module", () => {
     it("should export ConsoleLogService", () => {
       expect(lib.ConsoleLogService).toBeDefined();
     });
+
+    it("should export DISABLED_LOGGER", () => {
+      expect(lib.DISABLED_LOGGER).toBeDefined();
+    });
+
+    it("should export disabledSemanticLoggerProvider", () => {
+      expect(lib.disabledSemanticLoggerProvider).toBeDefined();
+    });
+
+    it("should export consoleSemanticLoggerProvider", () => {
+      expect(lib.consoleSemanticLoggerProvider).toBeDefined();
+    });
+
+    it("should export enableLogForTypes", () => {
+      expect(lib.enableLogForTypes).toBeDefined();
+    });
+
+    it("should export ifEnabledSemanticLoggerProvider", () => {
+      expect(lib.ifEnabledSemanticLoggerProvider).toBeDefined();
+    });
   });
 
   describe("SemanticLogger", () => {
