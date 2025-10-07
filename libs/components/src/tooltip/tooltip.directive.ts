@@ -27,7 +27,6 @@ import { TooltipComponent, TOOLTIP_DATA } from "./tooltip.component";
     "(mouseleave)": "hideTooltip()",
     "(focus)": "showTooltip()",
     "(blur)": "hideTooltip()",
-    "attr.aria-describedby": "this.isDescribedbyText() ? this.resolvedTooltipText() : null",
   },
 })
 export class TooltipDirective implements OnInit {
