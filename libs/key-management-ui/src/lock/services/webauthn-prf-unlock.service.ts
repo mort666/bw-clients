@@ -1,6 +1,6 @@
 import { firstValueFrom } from "rxjs";
 
-// eslint-disable-next-line no-restricted-imports
+ 
 import {
   UserDecryptionOptions,
   UserDecryptionOptionsServiceAbstraction,
@@ -15,9 +15,7 @@ import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/pl
 import { Fido2Utils } from "@bitwarden/common/platform/services/fido2/fido2-utils";
 import { UserId } from "@bitwarden/common/types/guid";
 import { PrfKey, UserKey } from "@bitwarden/common/types/key";
-import { KeyService } from "@bitwarden/key-management";
-
-import { WebAuthnPrfUnlockServiceAbstraction } from "../../abstractions/webauthn/webauthn-prf-unlock.service.abstraction";
+import { KeyService, WebAuthnPrfUnlockServiceAbstraction } from "@bitwarden/key-management";
 
 export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstraction {
   private navigatorCredentials: CredentialsContainer;

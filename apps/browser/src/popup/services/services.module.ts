@@ -141,10 +141,9 @@ import {
   DefaultKeyService,
   KdfConfigService,
   KeyService,
-  WebAuthnPrfUnlockService,
   WebAuthnPrfUnlockServiceAbstraction,
 } from "@bitwarden/key-management";
-import { LockComponentService } from "@bitwarden/key-management-ui";
+import { LockComponentService, WebAuthnPrfUnlockService } from "@bitwarden/key-management-ui";
 import { DerivedStateProvider, GlobalStateProvider, StateProvider } from "@bitwarden/state";
 import { InlineDerivedStateProvider } from "@bitwarden/state-internal";
 import {
