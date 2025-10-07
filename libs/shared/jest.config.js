@@ -3,11 +3,11 @@
 /** @type {import('jest').Config} */
 module.exports = {
   // Match all .spec.ts files, but not .play.spec.ts files, those are playwright tests
-  testMatch: ["**/+(*.)+(spec).+(ts)"],
+  testMatch: ["**/+(*.)+(spec).+(ts|js|mjs|cjs)"],
   testPathIgnorePatterns: [
     "/node_modules/", // default value
-    ".*.type.spec.ts", // ignore type tests (which are checked at compile time and not run by jest)
-    ".*.play.spec.ts", // ignore playwright tests
+    "\\.type\\.spec\\.ts", // ignore type tests (which are checked at compile time and not run by jest)
+    "\\.play\\.spec\\.ts", // ignore playwright tests
   ],
 
   // Workaround for a memory leak that crashes tests in CI:
