@@ -1,6 +1,5 @@
 import { firstValueFrom } from "rxjs";
 
- 
 import {
   UserDecryptionOptions,
   UserDecryptionOptionsServiceAbstraction,
@@ -41,12 +40,11 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
       }
 
       // If we're in the browser extension, check if we're in a Chromium browser
-      if (this.platformUtilsService.getClientType() === ClientType.Browser) {
-        // FIXME: Use the platforms util after our base branch is merged to main
-        const isChromium = !!(this.window as any).chrome;
-        if (!isChromium) {
-          return false;
-        }
+      if (
+        this.platformUtilsService.getClientType() === ClientType.Browser &&
+        !this.platformUtilsService.isChromium()
+      ) {
+        return false;
       }
 
       // Check if user has any WebAuthn PRF credentials registered
