@@ -5,7 +5,7 @@ import { ActivatedRoute } from "@angular/router";
 import { concatMap, takeUntil, map, lastValueFrom, firstValueFrom } from "rxjs";
 import { first, tap } from "rxjs/operators";
 
-import { TwoFactorApiServiceAbstraction } from "@bitwarden/auth/common";
+import { TwoFactorApiService } from "@bitwarden/auth/common";
 import {
   getOrganizationById,
   OrganizationService,
@@ -35,7 +35,7 @@ export class TwoFactorSetupComponent extends BaseTwoFactorSetupComponent impleme
   tabbedHeader = false;
   constructor(
     dialogService: DialogService,
-    twoFactorApiService: TwoFactorApiServiceAbstraction,
+    twoFactorApiService: TwoFactorApiService,
     messagingService: MessagingService,
     policyService: PolicyService,
     private route: ActivatedRoute,

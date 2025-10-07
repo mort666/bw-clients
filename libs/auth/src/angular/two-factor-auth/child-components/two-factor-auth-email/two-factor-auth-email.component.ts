@@ -3,10 +3,7 @@ import { Component, Input, OnInit, Output, EventEmitter } from "@angular/core";
 import { ReactiveFormsModule, FormsModule, FormControl } from "@angular/forms";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
-import {
-  LoginStrategyServiceAbstraction,
-  TwoFactorApiServiceAbstraction,
-} from "@bitwarden/auth/common";
+import { LoginStrategyServiceAbstraction, TwoFactorApiService } from "@bitwarden/auth/common";
 import { TwoFactorService } from "@bitwarden/common/auth/abstractions/two-factor.service";
 import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
 import { TwoFactorEmailRequest } from "@bitwarden/common/auth/models/request/two-factor-email.request";
@@ -64,7 +61,7 @@ export class TwoFactorAuthEmailComponent implements OnInit {
     protected loginStrategyService: LoginStrategyServiceAbstraction,
     protected platformUtilsService: PlatformUtilsService,
     protected logService: LogService,
-    protected twoFactorApiService: TwoFactorApiServiceAbstraction,
+    protected twoFactorApiService: TwoFactorApiService,
     protected appIdService: AppIdService,
     private toastService: ToastService,
     private cacheService: TwoFactorAuthEmailComponentCacheService,

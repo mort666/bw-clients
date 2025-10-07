@@ -1,6 +1,6 @@
 import { Directive, EventEmitter, Output } from "@angular/core";
 
-import { TwoFactorApiServiceAbstraction } from "@bitwarden/auth/common";
+import { TwoFactorApiService } from "@bitwarden/auth/common";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
 import { VerificationType } from "@bitwarden/common/auth/enums/verification-type";
@@ -30,7 +30,7 @@ export abstract class TwoFactorSetupMethodBaseComponent {
   protected componentName = "";
 
   constructor(
-    protected twoFactorApiService: TwoFactorApiServiceAbstraction,
+    protected twoFactorApiService: TwoFactorApiService,
     protected i18nService: I18nService,
     protected platformUtilsService: PlatformUtilsService,
     protected logService: LogService,

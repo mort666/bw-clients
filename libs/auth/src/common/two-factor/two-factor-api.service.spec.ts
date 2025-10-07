@@ -23,15 +23,15 @@ import {
 import { TwoFactorYubiKeyResponse } from "@bitwarden/common/auth/models/response/two-factor-yubi-key.response";
 import { ListResponse } from "@bitwarden/common/models/response/list.response";
 
-import { TwoFactorApiService } from "./two-factor-api.service";
+import { DefaultTwoFactorApiService } from "./default-two-factor-api.service";
 
 describe("TwoFactorApiService", () => {
   let apiService: MockProxy<ApiService>;
-  let twoFactorApiService: TwoFactorApiService;
+  let twoFactorApiService: DefaultTwoFactorApiService;
 
   beforeEach(() => {
     apiService = mock<ApiService>();
-    twoFactorApiService = new TwoFactorApiService(apiService);
+    twoFactorApiService = new DefaultTwoFactorApiService(apiService);
   });
 
   describe("Two-Factor Providers", () => {

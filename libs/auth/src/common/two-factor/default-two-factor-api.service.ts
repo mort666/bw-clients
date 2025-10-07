@@ -1,4 +1,4 @@
-import { ApiService as ApiServiceAbstraction } from "@bitwarden/common/abstractions/api.service";
+import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { DisableTwoFactorAuthenticatorRequest } from "@bitwarden/common/auth/models/request/disable-two-factor-authenticator.request";
 import { SecretVerificationRequest } from "@bitwarden/common/auth/models/request/secret-verification.request";
 import { TwoFactorEmailRequest } from "@bitwarden/common/auth/models/request/two-factor-email.request";
@@ -22,10 +22,10 @@ import { TwoFactorYubiKeyResponse } from "@bitwarden/common/auth/models/response
 import { ListResponse } from "@bitwarden/common/models/response/list.response";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 
-import { TwoFactorApiServiceAbstraction } from "../../abstractions";
+import { TwoFactorApiService } from "./two-factor-api.service";
 
-export class TwoFactorApiService implements TwoFactorApiServiceAbstraction {
-  constructor(private apiService: ApiServiceAbstraction) {}
+export class DefaultTwoFactorApiService implements TwoFactorApiService {
+  constructor(private apiService: ApiService) {}
 
   // Providers
 

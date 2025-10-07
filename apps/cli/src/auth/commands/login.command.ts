@@ -12,7 +12,7 @@ import {
   PasswordLoginCredentials,
   SsoLoginCredentials,
   SsoUrlService,
-  TwoFactorApiServiceAbstraction,
+  TwoFactorApiService,
   UserApiLoginCredentials,
 } from "@bitwarden/auth/common";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
@@ -61,7 +61,7 @@ export class LoginCommand {
   constructor(
     protected loginStrategyService: LoginStrategyServiceAbstraction,
     protected authService: AuthService,
-    protected twoFactorApiService: TwoFactorApiServiceAbstraction,
+    protected twoFactorApiService: TwoFactorApiService,
     protected masterPasswordApiService: MasterPasswordApiService,
     protected cryptoFunctionService: CryptoFunctionService,
     protected environmentService: EnvironmentService,

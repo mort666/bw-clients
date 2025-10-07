@@ -3,7 +3,7 @@ import { Component, Inject, NgZone } from "@angular/core";
 import { FormControl, FormGroup, ReactiveFormsModule } from "@angular/forms";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
-import { TwoFactorApiServiceAbstraction } from "@bitwarden/auth/common";
+import { TwoFactorApiService } from "@bitwarden/auth/common";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
 import { SecretVerificationRequest } from "@bitwarden/common/auth/models/request/secret-verification.request";
@@ -79,7 +79,7 @@ export class TwoFactorSetupWebAuthnComponent extends TwoFactorSetupMethodBaseCom
   constructor(
     @Inject(DIALOG_DATA) protected data: AuthResponse<TwoFactorWebAuthnResponse>,
     private dialogRef: DialogRef,
-    twoFactorApiService: TwoFactorApiServiceAbstraction,
+    twoFactorApiService: TwoFactorApiService,
     i18nService: I18nService,
     platformUtilsService: PlatformUtilsService,
     private ngZone: NgZone,

@@ -48,8 +48,8 @@ import {
   LoginSuccessHandlerService,
   LogoutReason,
   LogoutService,
+  DefaultTwoFactorApiService,
   TwoFactorApiService,
-  TwoFactorApiServiceAbstraction,
   UserDecryptionOptionsService,
   UserDecryptionOptionsServiceAbstraction,
 } from "@bitwarden/auth/common";
@@ -1500,8 +1500,8 @@ const safeProviders: SafeProvider[] = [
     deps: [],
   }),
   safeProvider({
-    provide: TwoFactorApiServiceAbstraction,
-    useClass: TwoFactorApiService,
+    provide: TwoFactorApiService,
+    useClass: DefaultTwoFactorApiService,
     deps: [ApiServiceAbstraction],
   }),
   safeProvider({

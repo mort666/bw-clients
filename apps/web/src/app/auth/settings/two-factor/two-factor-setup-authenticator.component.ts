@@ -6,7 +6,7 @@ import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from "@angu
 import { firstValueFrom, map } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
-import { TwoFactorApiServiceAbstraction } from "@bitwarden/auth/common";
+import { TwoFactorApiService } from "@bitwarden/auth/common";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
@@ -92,7 +92,7 @@ export class TwoFactorSetupAuthenticatorComponent
   constructor(
     @Inject(DIALOG_DATA) protected data: AuthResponse<TwoFactorAuthenticatorResponse>,
     private dialogRef: DialogRef,
-    twoFactorApiService: TwoFactorApiServiceAbstraction,
+    twoFactorApiService: TwoFactorApiService,
     i18nService: I18nService,
     userVerificationService: UserVerificationService,
     private formBuilder: FormBuilder,

@@ -29,7 +29,7 @@ import { ListResponse } from "@bitwarden/common/models/response/list.response";
  * SecretVerificationRequest. Premium-tier providers (Duo, YubiKey) require an active
  * premium subscription. Organization-level methods require appropriate administrative permissions.
  */
-export abstract class TwoFactorApiServiceAbstraction {
+export abstract class TwoFactorApiService {
   /**
    * Gets a list of all enabled two-factor providers for the current user.
    *
