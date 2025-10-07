@@ -107,10 +107,6 @@ export class LoginCredentialsViewComponent implements OnChanges {
     }
   }
 
-  async getPremium(organizationId?: string) {
-    await this.premiumUpgradeService.promptForPremium(organizationId);
-  }
-
   async pwToggleValue(passwordVisible: boolean) {
     this.passwordRevealed = passwordVisible;
 

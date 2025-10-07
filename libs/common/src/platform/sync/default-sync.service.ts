@@ -140,9 +140,11 @@ export class DefaultSyncService extends CoreSyncService {
 
     const now = new Date();
     let needsSync = false;
+    let needsSyncSucceeded = true;
     try {
       needsSync = await this.needsSyncing(forceSync);
     } catch (e) {
+      needsSyncSucceeded = false;
       if (allowThrowOnError) {
         this.syncCompleted(false, userId);
         throw e;
@@ -150,7 +152,9 @@ export class DefaultSyncService extends CoreSyncService {
     }
 
     if (!needsSync) {
-      await this.setLastSync(now, userId);
+      if (needsSyncSucceeded) {
+        await this.setLastSync(now, userId);
+      }
       return this.syncCompleted(false, userId);
     }
 

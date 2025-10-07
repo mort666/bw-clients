@@ -2,8 +2,17 @@
 // @ts-strict-ignore
 import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
-import { firstValueFrom, lastValueFrom, Observable } from "rxjs";
-import { first, map } from "rxjs/operators";
+import {
+  combineLatest,
+  firstValueFrom,
+  lastValueFrom,
+  Observable,
+  of,
+  switchMap,
+  first,
+  map,
+  withLatestFrom,
+} from "rxjs";
 
 import {
   getOrganizationById,
@@ -11,27 +20,34 @@ import {
 } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { PolicyApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/policy/policy-api.service.abstraction";
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
-import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { PolicyResponse } from "@bitwarden/common/admin-console/models/response/policy.response";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { DialogService } from "@bitwarden/components";
+import { safeProvider } from "@bitwarden/ui-common";
 
-import { PolicyListService } from "../../core/policy-list.service";
-import { BasePolicy } from "../policies";
+import { HeaderModule } from "../../../layouts/header/header.module";
+import { SharedModule } from "../../../shared";
 
-import { PolicyEditComponent, PolicyEditDialogResult } from "./policy-edit.component";
+import { BasePolicyEditDefinition } from "./base-policy-edit.component";
+import { PolicyEditDialogComponent } from "./policy-edit-dialog.component";
+import { PolicyListService } from "./policy-list.service";
+import { POLICY_EDIT_REGISTER } from "./policy-register-token";
 
 @Component({
-  selector: "app-org-policies",
   templateUrl: "policies.component.html",
-  standalone: false,
+  imports: [SharedModule, HeaderModule],
+  providers: [
+    safeProvider({
+      provide: PolicyListService,
+      deps: [POLICY_EDIT_REGISTER],
+    }),
+  ],
 })
 export class PoliciesComponent implements OnInit {
   loading = true;
   organizationId: string;
-  policies: BasePolicy[];
-  organization$: Observable<Organization>;
+  policies$: Observable<BasePolicyEditDefinition[]>;
 
   private orgPolicies: PolicyResponse[];
   protected policiesEnabledMap: Map<PolicyType, boolean> = new Map<PolicyType, boolean>();
@@ -54,28 +70,41 @@ export class PoliciesComponent implements OnInit {
         this.accountService.activeAccount$.pipe(map((a) => a?.id)),
       );
 
-      this.organization$ = this.organizationService
+      const organization$ = this.organizationService
         .organizations$(userId)
         .pipe(getOrganizationById(this.organizationId));
 
-      this.policies = this.policyListService.getPolicies();
+      this.policies$ = organization$.pipe(
+        withLatestFrom(of(this.policyListService.getPolicies())),
+        switchMap(([organization, policies]) => {
+          return combineLatest(
+            policies.map((policy) =>
+              policy
+                .display$(organization, this.configService)
+                .pipe(map((shouldDisplay) => ({ policy, shouldDisplay }))),
+            ),
+          );
+        }),
+        map((results) =>
+          results.filter((result) => result.shouldDisplay).map((result) => result.policy),
+        ),
+      );
 
       await this.load();
 
       // Handle policies component launch from Event message
-      this.route.queryParams
-        .pipe(first())
+      combineLatest([this.route.queryParams.pipe(first()), this.policies$])
         /* eslint-disable-next-line rxjs-angular/prefer-takeuntil, rxjs/no-async-subscribe, rxjs/no-nested-subscribe */
-        .subscribe(async (qParams) => {
+        .subscribe(async ([qParams, policies]) => {
           if (qParams.policyId != null) {
             const policyIdFromEvents: string = qParams.policyId;
             for (const orgPolicy of this.orgPolicies) {
               if (orgPolicy.id === policyIdFromEvents) {
-                for (let i = 0; i < this.policies.length; i++) {
-                  if (this.policies[i].type === orgPolicy.type) {
+                for (let i = 0; i < policies.length; i++) {
+                  if (policies[i].type === orgPolicy.type) {
                     // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
                     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-                    this.edit(this.policies[i]);
+                    this.edit(policies[i]);
                     break;
                   }
                 }
@@ -97,8 +126,8 @@ export class PoliciesComponent implements OnInit {
     this.loading = false;
   }
 
-  async edit(policy: BasePolicy) {
-    const dialogRef = PolicyEditComponent.open(this.dialogService, {
+  async edit(policy: BasePolicyEditDefinition) {
+    const dialogRef = PolicyEditDialogComponent.open(this.dialogService, {
       data: {
         policy: policy,
         organizationId: this.organizationId,
@@ -106,7 +135,7 @@ export class PoliciesComponent implements OnInit {
     });
 
     const result = await lastValueFrom(dialogRef.closed);
-    if (result === PolicyEditDialogResult.Saved) {
+    if (result == "saved") {
       await this.load();
     }
   }
