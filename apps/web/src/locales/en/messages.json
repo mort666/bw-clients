@@ -6328,7 +6328,7 @@
     "message": "Session timeout"
   },
   "sessionTimeoutPolicyDescription": {
-    "message": "Set a maximum session timeout for members."
+    "message": "Set a maximum session timeout for all members except owners."
   },
   "maximumAllowedTimeout": {
     "message": "Maximum allowed timeout"
@@ -6368,6 +6368,9 @@
   },
   "sessionTimeoutConfirmationOnSystemLockDescription": {
     "message": "The mobile and web app will use \"on app restart\" as their maximum allowed timeout, since the option is not supported."
+  },
+  "sessionTimeoutPolicyOwnersExempt": {
+    "message": "Organization owners are exempt from this policy’s enforcement."
   },
   "vaultTimeoutPolicyInEffect": {
     "message": "Your organization policies have set your maximum allowed vault timeout to $HOURS$ hour(s) and $MINUTES$ minute(s).",
