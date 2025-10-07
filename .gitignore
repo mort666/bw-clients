@@ -55,3 +55,10 @@ apps/**/config/local.json
 
 # Nx
 .nx
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
