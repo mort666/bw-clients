@@ -146,7 +146,7 @@ export class ImportService implements ImportServiceAbstraction {
         let loaders = availableLoaders(type, client);
 
         // Mac App Store is currently disabled due to sandboxing.
-        let isUnsupported = this.system.environment.isMacAppStore();
+        let isUnsupported = this.env.isMacAppStore();
 
         if (enabled && type === "bravecsv") {
           try {
