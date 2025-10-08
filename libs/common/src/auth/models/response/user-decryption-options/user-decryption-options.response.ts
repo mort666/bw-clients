@@ -55,7 +55,7 @@ export class UserDecryptionOptionsResponse extends BaseResponse {
     }
     if (response.WebAuthnPrfOption) {
       this.webAuthnPrfOption = new WebAuthnPrfDecryptionOptionResponse(
-        this.getResponseProperty("WebAuthnPrfOptions"),
+        this.getResponseProperty("WebAuthnPrfOption"),
       );
     }
   }
