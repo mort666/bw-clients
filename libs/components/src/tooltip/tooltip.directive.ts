@@ -16,8 +16,6 @@ import {
 import { TooltipPositionIdentifier, tooltipPositions } from "./tooltip-positions";
 import { TooltipComponent, TOOLTIP_DATA } from "./tooltip.component";
 
-let nextId = 0;
-
 /**
  * Directive to add a tooltip to any element. The tooltip content is provided via the `bitTooltip` input.
  * The position of the tooltip can be set via the `tooltipPosition` input. Default position is "above-center".
@@ -33,6 +31,7 @@ let nextId = 0;
   },
 })
 export class TooltipDirective implements OnInit {
+  private static nextId = 0;
   /**
    * The value of this input is forwarded to the tooltip.component to render
    */
@@ -55,7 +54,7 @@ export class TooltipDirective implements OnInit {
     .flexibleConnectedTo(this.elementRef)
     .withFlexibleDimensions(false)
     .withPush(true);
-  private tooltipId = `bit-tooltip-${nextId++}`;
+  private tooltipId = `bit-tooltip-${TooltipDirective.nextId++}`;
   private currentDescribedByIds =
     this.elementRef.nativeElement.getAttribute("aria-describedby") || null;
 
