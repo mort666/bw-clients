@@ -1,4 +1,4 @@
-<ng-template #projectedContent>
+<ng-template #content>
   <span class="tw-line-clamp-2 tw-break-words" #labelContent>
     <ng-content></ng-content>
   </span>
@@ -6,31 +6,3 @@
     <ng-content select="[bitBadge]"></ng-content>
   </span>
 </ng-template>
-
-<ng-container *ngIf="groupComponent.isSmallScreen()">
-  <button
-    type="button"
-    bitMenuItem
-    (click)="onInputInteraction()"
-    class="tw-flex tw-items-center tw-pl-3 tw-pr-6 tw-py-2 tw-w-full tw-text-left"
-  >
-    <i
-      class="bwi bwi-check tw-text-lg tw-w-8 tw-text-main"
-      [ngClass]="selected ? 'tw-opacity-100' : 'tw-opacity-0'"
-    ></i>
-    <ng-container *ngTemplateOutlet="projectedContent"></ng-container>
-  </button>
-</ng-container>
-<ng-container *ngIf="!groupComponent.isSmallScreen()">
-  <input
-    type="radio"
-    id="bit-toggle-{{ id }}"
-    [name]="name"
-    [ngClass]="inputClasses"
-    [checked]="selected"
-    (change)="onInputInteraction()"
-  />
-  <label for="bit-toggle-{{ id }}" [ngClass]="labelClasses" [title]="labelTitle()">
-    <ng-container *ngTemplateOutlet="projectedContent"></ng-container>
-  </label>
-</ng-container>

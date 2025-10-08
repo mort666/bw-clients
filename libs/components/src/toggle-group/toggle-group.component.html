@@ -1,7 +1,4 @@
-<ng-template #projectedContent>
-  <ng-content></ng-content>
-</ng-template>
-
+<!-- Mobile View: Dropdown Menu -->
 <ng-container *ngIf="isSmallScreen()">
   <button
     type="button"
@@ -10,16 +7,48 @@
     aria-label="Toggle Menu"
     [bitMenuTriggerFor]="myMenu"
   >
-    {{ selectedLabel() || "Select an option" }}
+    {{ selectedLabel() }}
     <i class="bwi bwi-down-solid tw-text-xs"></i>
   </button>
   <bit-menu #myMenu="menuComponent">
-    <ng-container *ngTemplateOutlet="projectedContent"></ng-container>
+    <ng-container *ngFor="let toggle of toggles">
+      <button
+        type="button"
+        (click)="onInputInteraction(toggle)"
+        class="tw-flex tw-items-center tw-pl-3 tw-pr-6 tw-py-2 tw-w-full tw-text-left"
+      >
+        <i
+          class="bwi bwi-check tw-text-lg tw-w-8 tw-text-main"
+          [ngClass]="toggle.selected ? 'tw-opacity-100' : 'tw-opacity-0'"
+        ></i>
+        <div class="tw-flex tw-items-center tw-gap-2">
+          <ng-container *ngTemplateOutlet="toggle.contentTemplate"></ng-container>
+        </div>
+      </button>
+    </ng-container>
   </bit-menu>
 </ng-container>
 
+<!-- Desktop View: Toggle Group -->
 <ng-container *ngIf="!isSmallScreen()">
   <div class="tw-flex" [ngClass]="fullWidth() ? ['tw-w-full', '[&>*]:tw-flex-1'] : []">
-    <ng-container *ngTemplateOutlet="projectedContent"></ng-container>
+    <div *ngFor="let toggle of toggles" class="tw-group/toggle tw-flex tw-min-w-16" tabIndex="-1">
+      <input
+        type="radio"
+        id="bit-toggle-{{ toggle.id }}"
+        [name]="name"
+        [ngClass]="toggle.inputClasses"
+        [checked]="toggle.selected"
+        (change)="onInputInteraction(toggle)"
+        [attr.data-selected]="toggle.selected ? true : null"
+      />
+      <label
+        for="bit-toggle-{{ toggle.id }}"
+        [ngClass]="toggle.labelClasses"
+        [title]="toggle.labelTitle()"
+      >
+        <ng-container *ngTemplateOutlet="toggle.contentTemplate"></ng-container>
+      </label>
+    </div>
   </div>
 </ng-container>

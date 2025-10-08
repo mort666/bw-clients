@@ -1,13 +1,13 @@
-import { CommonModule, NgClass } from "@angular/common";
+import { CommonModule } from "@angular/common";
 import {
   AfterContentChecked,
-  AfterViewInit,
   Component,
   ElementRef,
-  HostBinding,
   signal,
   input,
   viewChild,
+  TemplateRef,
+  ViewChild,
 } from "@angular/core";
 
 import { ToggleGroupComponent } from "./toggle-group.component";
@@ -17,10 +17,12 @@ let nextId = 0;
 @Component({
   selector: "bit-toggle",
   templateUrl: "./toggle.component.html",
-  imports: [NgClass, CommonModule],
+  imports: [CommonModule],
 })
-export class ToggleComponent<TValue> implements AfterContentChecked, AfterViewInit {
+export class ToggleComponent<TValue> implements AfterContentChecked {
   id = nextId++;
+
+  @ViewChild("content", { static: true }) contentTemplate!: TemplateRef<any>;
 
   readonly value = input.required<TValue>();
   readonly labelContent = viewChild<ElementRef<HTMLSpanElement>>("labelContent");
@@ -28,15 +30,8 @@ export class ToggleComponent<TValue> implements AfterContentChecked, AfterViewIn
 
   constructor(protected groupComponent: ToggleGroupComponent<TValue>) {}
 
-  @HostBinding("tabIndex") tabIndex = "-1";
-  @HostBinding("class") classList = ["tw-group/toggle", "tw-flex", "tw-min-w-16"];
-
   protected bitBadgeContainerHasChildren = signal(false);
-  protected labelTitle = signal<string | null>(null);
-
-  get name() {
-    return this.groupComponent.name;
-  }
+  labelTitle = signal<string | null>(null);
 
   get selected() {
     return this.groupComponent.selected() === this.value();
@@ -92,25 +87,15 @@ export class ToggleComponent<TValue> implements AfterContentChecked, AfterViewIn
     ];
   }
 
-  onInputInteraction() {
-    this.groupComponent.onInputInteraction({
-      label: this.labelTitle(),
-      value: this.value(),
-    });
-  }
-
   ngAfterContentChecked() {
     this.bitBadgeContainerHasChildren.set(
       (this.bitBadgeContainer()?.nativeElement.childElementCount ?? 0) > 0,
     );
-  }
 
-  ngAfterViewInit() {
-    const labelText = this.labelContent()?.nativeElement.innerText;
-    if (labelText) {
-      this.labelTitle.set(labelText);
-      if (this.selected) {
-        this.groupComponent.selectedLabel.set(labelText);
+    if (this.labelTitle() === null) {
+      const labelText = this.labelContent()?.nativeElement.innerText;
+      if (labelText) {
+        this.labelTitle.set(labelText);
       }
     }
   }
