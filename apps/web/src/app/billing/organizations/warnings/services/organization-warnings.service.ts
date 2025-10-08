@@ -17,6 +17,7 @@ import { take } from "rxjs/operators";
 import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { OrganizationId } from "@bitwarden/common/types/guid";
 import { DialogService } from "@bitwarden/components";
 import { OrganizationBillingClient } from "@bitwarden/web-vault/app/billing/clients";
@@ -55,6 +56,7 @@ export class OrganizationWarningsService {
     private i18nService: I18nService,
     private organizationApiService: OrganizationApiServiceAbstraction,
     private organizationBillingClient: OrganizationBillingClient,
+    private platformUtilsService: PlatformUtilsService,
     private router: Router,
   ) {}
 
@@ -254,7 +256,7 @@ export class OrganizationWarningsService {
     organization: Organization,
     bypassCache: boolean = false,
   ): Observable<OrganizationWarningsResponse> => {
-    if (organization.selfHost) {
+    if (this.platformUtilsService.isSelfHost()) {
       return from(Promise.resolve(new OrganizationWarningsResponse({})));
     }
 
