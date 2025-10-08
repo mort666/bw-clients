@@ -19,7 +19,7 @@ export class FSecureFskImporter extends BaseImporter implements Importer {
 
     for (const [, value] of Object.entries(results.data)) {
       const cipher = this.parseEntry(value);
-      if (cipher != null) {
+      if (cipher != undefined) {
         result.ciphers.push(cipher);
       }
     }
