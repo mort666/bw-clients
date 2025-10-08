@@ -19,7 +19,6 @@ type TooltipData = {
 
 export const TOOLTIP_DATA = new InjectionToken<TooltipData>("TOOLTIP_DATA");
 
-let nextId = 0;
 /**
  * tooltip component used internally by the tooltip.directive. Not meant to be used explicitly
  */
@@ -34,6 +33,4 @@ export class TooltipComponent {
   private elementRef = inject(ElementRef<HTMLDivElement>);
 
   readonly tooltipData = inject<TooltipData>(TOOLTIP_DATA);
-
-  protected id = `bit-tooltip-${nextId++}`;
 }
