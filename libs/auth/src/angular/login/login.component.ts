@@ -95,7 +95,6 @@ export class LoginComponent implements OnInit, OnDestroy {
   isKnownDevice = false;
   loginUiState: LoginUiState = LoginUiState.EMAIL_ENTRY;
   ssoRequired = false;
-  initializing = true;
 
   formGroup = this.formBuilder.group(
     {
@@ -154,8 +153,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     if (this.clientType === ClientType.Desktop) {
       await this.desktopOnInit();
     }
-
-    this.initializing = false;
   }
 
   ngOnDestroy(): void {
