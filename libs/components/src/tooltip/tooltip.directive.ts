@@ -90,7 +90,6 @@ export class TooltipDirective implements OnInit {
 
       this.overlayRef.attach(this.tooltipPortal);
     }
-
     this.isVisible.set(true);
   };
 
