@@ -69,6 +69,7 @@ export class TooltipDirective implements OnInit {
             content: this.bitTooltip,
             isVisible: this.isVisible,
             tooltipPosition: this.tooltipPosition,
+            id: signal(this.tooltipId),
           },
         },
       ],
