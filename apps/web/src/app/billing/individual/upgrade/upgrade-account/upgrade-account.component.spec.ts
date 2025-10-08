@@ -5,14 +5,14 @@ import { mock } from "jest-mock-extended";
 import { of } from "rxjs";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { PricingCardComponent } from "@bitwarden/pricing";
-
-import { BillingServicesModule } from "../../../services";
-import { SubscriptionPricingService } from "../../../services/subscription-pricing.service";
 import {
   PersonalSubscriptionPricingTier,
   PersonalSubscriptionPricingTierIds,
-} from "../../../types/subscription-pricing-tier";
+  PricingCardComponent,
+  SubscriptionPricingServiceAbstraction,
+} from "@bitwarden/pricing";
+
+import { BillingServicesModule } from "../../../services";
 
 import { UpgradeAccountComponent, UpgradeAccountStatus } from "./upgrade-account.component";
 
@@ -20,7 +20,7 @@ describe("UpgradeAccountComponent", () => {
   let sut: UpgradeAccountComponent;
   let fixture: ComponentFixture<UpgradeAccountComponent>;
   const mockI18nService = mock<I18nService>();
-  const mockSubscriptionPricingService = mock<SubscriptionPricingService>();
+  const mockSubscriptionPricingService = mock<SubscriptionPricingServiceAbstraction>();
 
   // Mock pricing tiers data
   const mockPricingTiers: PersonalSubscriptionPricingTier[] = [
@@ -57,7 +57,10 @@ describe("UpgradeAccountComponent", () => {
       imports: [NoopAnimationsModule, UpgradeAccountComponent, PricingCardComponent, CdkTrapFocus],
       providers: [
         { provide: I18nService, useValue: mockI18nService },
-        { provide: SubscriptionPricingService, useValue: mockSubscriptionPricingService },
+        {
+          provide: SubscriptionPricingServiceAbstraction,
+          useValue: mockSubscriptionPricingService,
+        },
       ],
     })
       .overrideComponent(UpgradeAccountComponent, {

@@ -330,6 +330,8 @@ import {
   UserAsymmetricKeysRegenerationApiService,
   UserAsymmetricKeysRegenerationService,
 } from "@bitwarden/key-management";
+import { SubscriptionPricingServiceAbstraction } from "@bitwarden/pricing/abstractions/subscription-pricing.service.abstraction";
+import { DefaultSubscriptionPricingService } from "@bitwarden/pricing/services/subscription-pricing.service";
 import {
   ActiveUserStateProvider,
   DerivedStateProvider,
@@ -1425,6 +1427,11 @@ const safeProviders: SafeProvider[] = [
     provide: BillingAccountProfileStateService,
     useClass: DefaultBillingAccountProfileStateService,
     deps: [StateProvider, PlatformUtilsServiceAbstraction, ApiServiceAbstraction],
+  }),
+  safeProvider({
+    provide: SubscriptionPricingServiceAbstraction,
+    useClass: DefaultSubscriptionPricingService,
+    deps: [ApiServiceAbstraction, I18nServiceAbstraction, LogService, ToastService],
   }),
   safeProvider({
     provide: OrganizationManagementPreferencesService,

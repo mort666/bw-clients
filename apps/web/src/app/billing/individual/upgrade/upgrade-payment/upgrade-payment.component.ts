@@ -17,18 +17,19 @@ import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.servic
 import { UnionOfValues } from "@bitwarden/common/vault/types/union-of-values";
 import { ButtonModule, DialogModule, ToastService } from "@bitwarden/components";
 import { LogService } from "@bitwarden/logging";
-import { CartSummaryComponent, LineItem } from "@bitwarden/pricing";
+import {
+  CartSummaryComponent,
+  LineItem,
+  PersonalSubscriptionPricingTier,
+  PersonalSubscriptionPricingTierId,
+  PersonalSubscriptionPricingTierIds,
+  SubscriptionPricingServiceAbstraction,
+} from "@bitwarden/pricing";
 import { SharedModule } from "@bitwarden/web-vault/app/shared";
 
 import { EnterPaymentMethodComponent } from "../../../payment/components";
 import { BillingServicesModule } from "../../../services";
-import { SubscriptionPricingService } from "../../../services/subscription-pricing.service";
 import { BitwardenSubscriber } from "../../../types";
-import {
-  PersonalSubscriptionPricingTier,
-  PersonalSubscriptionPricingTierId,
-  PersonalSubscriptionPricingTierIds,
-} from "../../../types/subscription-pricing-tier";
 
 import { PlanDetails, UpgradePaymentService } from "./services/upgrade-payment.service";
 
@@ -97,7 +98,7 @@ export class UpgradePaymentComponent implements OnInit, AfterViewInit {
 
   constructor(
     private i18nService: I18nService,
-    private subscriptionPricingService: SubscriptionPricingService,
+    private subscriptionPricingService: SubscriptionPricingServiceAbstraction,
     private toastService: ToastService,
     private logService: LogService,
     private destroyRef: DestroyRef,

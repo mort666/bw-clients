@@ -6,18 +6,18 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { UnionOfValues } from "@bitwarden/common/vault/types/union-of-values";
 import { ButtonType, DialogModule } from "@bitwarden/components";
-import { PricingCardComponent } from "@bitwarden/pricing";
-
-import { SharedModule } from "../../../../shared";
-import { BillingServicesModule } from "../../../services";
-import { SubscriptionPricingService } from "../../../services/subscription-pricing.service";
 import {
   PersonalSubscriptionPricingTier,
   PersonalSubscriptionPricingTierId,
   PersonalSubscriptionPricingTierIds,
+  PricingCardComponent,
   SubscriptionCadence,
   SubscriptionCadenceIds,
-} from "../../../types/subscription-pricing-tier";
+  SubscriptionPricingServiceAbstraction,
+} from "@bitwarden/pricing";
+
+import { SharedModule } from "../../../../shared";
+import { BillingServicesModule } from "../../../services";
 
 export const UpgradeAccountStatus = {
   Closed: "closed",
@@ -70,7 +70,7 @@ export class UpgradeAccountComponent implements OnInit {
 
   constructor(
     private i18nService: I18nService,
-    private subscriptionPricingService: SubscriptionPricingService,
+    private subscriptionPricingService: SubscriptionPricingServiceAbstraction,
     private destroyRef: DestroyRef,
   ) {}
 

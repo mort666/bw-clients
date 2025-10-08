@@ -14,10 +14,10 @@ import { PaymentMethodType, PlanType } from "@bitwarden/common/billing/enums";
 import { SyncService } from "@bitwarden/common/platform/sync";
 import { UserId } from "@bitwarden/common/types/guid";
 import { LogService } from "@bitwarden/logging";
+import { PersonalSubscriptionPricingTierIds } from "@bitwarden/pricing";
 
 import { AccountBillingClient, TaxAmounts, TaxClient } from "../../../../clients";
 import { BillingAddress, TokenizedPaymentMethod } from "../../../../payment/types";
-import { PersonalSubscriptionPricingTierIds } from "../../../../types/subscription-pricing-tier";
 
 import { UpgradePaymentService, PlanDetails } from "./upgrade-payment.service";
 

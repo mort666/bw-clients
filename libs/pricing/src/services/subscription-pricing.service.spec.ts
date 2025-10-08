@@ -14,10 +14,10 @@ import {
   SubscriptionCadenceIds,
 } from "../types/subscription-pricing-tier";
 
-import { SubscriptionPricingService } from "./subscription-pricing.service";
+import { DefaultSubscriptionPricingService } from "./subscription-pricing.service";
 
-describe("SubscriptionPricingService", () => {
-  let service: SubscriptionPricingService;
+describe("DefaultSubscriptionPricingService", () => {
+  let service: DefaultSubscriptionPricingService;
   let apiService: MockProxy<ApiService>;
   let i18nService: MockProxy<I18nService>;
   let logService: MockProxy<LogService>;
@@ -326,7 +326,11 @@ describe("SubscriptionPricingService", () => {
 
     TestBed.configureTestingModule({
       providers: [
-        SubscriptionPricingService,
+        {
+          provide: DefaultSubscriptionPricingService,
+          useClass: DefaultSubscriptionPricingService,
+          deps: [ApiService, I18nService, LogService, ToastService],
+        },
         { provide: ApiService, useValue: apiService },
         { provide: I18nService, useValue: i18nService },
         { provide: LogService, useValue: logService },
@@ -334,7 +338,7 @@ describe("SubscriptionPricingService", () => {
       ],
     });
 
-    service = TestBed.inject(SubscriptionPricingService);
+    service = TestBed.inject(DefaultSubscriptionPricingService);
   });
 
   describe("getPersonalSubscriptionPricingTiers$", () => {
@@ -421,7 +425,7 @@ describe("SubscriptionPricingService", () => {
         return key;
       });
 
-      const errorService = new SubscriptionPricingService(
+      const errorService = new DefaultSubscriptionPricingService(
         errorApiService,
         errorI18nService,
         errorLogService,
@@ -606,7 +610,7 @@ describe("SubscriptionPricingService", () => {
         return key;
       });
 
-      const errorService = new SubscriptionPricingService(
+      const errorService = new DefaultSubscriptionPricingService(
         errorApiService,
         errorI18nService,
         errorLogService,
@@ -846,7 +850,7 @@ describe("SubscriptionPricingService", () => {
         return key;
       });
 
-      const errorService = new SubscriptionPricingService(
+      const errorService = new DefaultSubscriptionPricingService(
         errorApiService,
         errorI18nService,
         errorLogService,

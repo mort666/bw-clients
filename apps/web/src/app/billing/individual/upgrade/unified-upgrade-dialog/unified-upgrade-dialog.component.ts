@@ -11,10 +11,10 @@ import {
   DialogRef,
   DialogService,
 } from "@bitwarden/components";
+import { PersonalSubscriptionPricingTierId } from "@bitwarden/pricing";
 
 import { AccountBillingClient, TaxClient } from "../../../clients";
 import { BillingServicesModule } from "../../../services";
-import { PersonalSubscriptionPricingTierId } from "../../../types/subscription-pricing-tier";
 import { UpgradeAccountComponent } from "../upgrade-account/upgrade-account.component";
 import { UpgradePaymentService } from "../upgrade-payment/services/upgrade-payment.service";
 import {

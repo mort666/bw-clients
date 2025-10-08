@@ -1,4 +1,3 @@
-import { Injectable } from "@angular/core";
 import { combineLatest, from, map, Observable, of, shareReplay } from "rxjs";
 import { catchError } from "rxjs/operators";
 
@@ -9,17 +8,17 @@ import { ListResponse } from "@bitwarden/common/models/response/list.response";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { ToastService } from "@bitwarden/components";
 import { LogService } from "@bitwarden/logging";
-import { BillingServicesModule } from "@bitwarden/web-vault/app/billing/services/billing-services.module";
+
+import { SubscriptionPricingServiceAbstraction } from "../abstractions/subscription-pricing.service.abstraction";
 import {
   BusinessSubscriptionPricingTier,
   BusinessSubscriptionPricingTierIds,
   PersonalSubscriptionPricingTier,
   PersonalSubscriptionPricingTierIds,
   SubscriptionCadenceIds,
-} from "@bitwarden/web-vault/app/billing/types/subscription-pricing-tier";
+} from "../types/subscription-pricing-tier";
 
-@Injectable({ providedIn: BillingServicesModule })
-export class SubscriptionPricingService {
+export class DefaultSubscriptionPricingService implements SubscriptionPricingServiceAbstraction {
   constructor(
     private apiService: ApiService,
     private i18nService: I18nService,
