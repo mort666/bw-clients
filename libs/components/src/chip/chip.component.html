@@ -1,0 +1,38 @@
+<!-- <div class="bit-chip"
+  class="tw-inline-flex tw-items-center tw-rounded-full tw-w-full tw-border-solid tw-border tw-gap-1.5 tw-group/chip-select [&:has(button[aria-expanded=])]:focus:tw-border-secondary-700"
+  [ngClass]="{
+    'tw-bg-text-muted hover:tw-bg-secondary-700 tw-text-contrast hover:!tw-border-secondary-700':
+      isSelected && !isDisabled,
+    'tw-bg-transparent hover:tw-border-secondary-700 !tw-text-muted hover:tw-bg-secondary-100':
+      !isSelected && !isDisabled,
+    'tw-bg-secondary-300 tw-text-muted tw-border-transparent': isDisabled,
+    'tw-border-text-muted': !isDisabled,
+    'tw-ring-2 tw-ring-primary-600 tw-ring-offset-1': focusVisibleWithin(),
+  }">
+    <ng-content select="chip-select-trigger"></ng-content>
+</div>
+
+  <ng-content select="chip-select-menu"></ng-content> -->
+
+<div
+  class="bit-chip"
+  bitTypography="body2"
+  [attr.data-is-interactive]="isInteractive()"
+  [attr.data-is-disabled]="isDisabled()"
+  [attr.data-is-dismissible]="isDismissible()"
+  [attr.data-is-selected]="isSelected()"
+>
+  Chip component
+
+  @if (isDismissible()) {
+    <button
+      type="button"
+      [attr.aria-label]="'removeItem' | i18n: label"
+      [disabled]="disabled"
+      class="bit-chip-dismiss-button"
+      (click)="clear()"
+    >
+      <i class="bwi bwi-close tw-text-xs" aria-hidden="true"></i>
+    </button>
+  }
+</div>
