@@ -1,0 +1,40 @@
+{
+  "name": "playwright-scenes",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/playwright-scenes/src",
+  "projectType": "library",
+  "tags": ["!dependsOn:common"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/playwright-scenes",
+        "main": "libs/playwright-scenes/src/index.ts",
+        "tsConfig": "libs/playwright-scenes/tsconfig.lib.json",
+        "assets": ["libs/playwright-scenes/*.md"],
+        "rootDir": "libs/playwright-scenes/src"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/playwright-scenes/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/playwright-scenes/jest.config.js"
+      }
+    },
+    "e2e": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx playwright test"
+      }
+    }
+  }
+}
