@@ -19,7 +19,7 @@ export interface IUserDecryptionOptionsServerResponse {
   MasterPasswordUnlock?: unknown;
   TrustedDeviceOption?: ITrustedDeviceUserDecryptionOptionServerResponse;
   KeyConnectorOption?: IKeyConnectorUserDecryptionOptionServerResponse;
-  WebAuthnPrfOptions?: IWebAuthnPrfDecryptionOptionServerResponse[];
+  WebAuthnPrfOption?: IWebAuthnPrfDecryptionOptionServerResponse;
 }
 
 export class UserDecryptionOptionsResponse extends BaseResponse {
@@ -27,7 +27,11 @@ export class UserDecryptionOptionsResponse extends BaseResponse {
   masterPasswordUnlock?: MasterPasswordUnlockResponse;
   trustedDeviceOption?: TrustedDeviceUserDecryptionOptionResponse;
   keyConnectorOption?: KeyConnectorUserDecryptionOptionResponse;
-  webAuthnPrfOptions?: WebAuthnPrfDecryptionOptionResponse[];
+  /**
+   * The IdTokenresponse only returns a single WebAuthn PRF option.
+   * To support immediate unlock after logging in with the same PRF passkey.
+   */
+  webAuthnPrfOption?: WebAuthnPrfDecryptionOptionResponse;
 
   constructor(response: IUserDecryptionOptionsServerResponse) {
     super(response);
@@ -49,10 +53,9 @@ export class UserDecryptionOptionsResponse extends BaseResponse {
         this.getResponseProperty("KeyConnectorOption"),
       );
     }
-    if (response.WebAuthnPrfOptions && Array.isArray(response.WebAuthnPrfOptions)) {
-      this.webAuthnPrfOptions = this.getResponseProperty("WebAuthnPrfOptions")?.map(
-        (option: IWebAuthnPrfDecryptionOptionServerResponse) =>
-          new WebAuthnPrfDecryptionOptionResponse(option),
+    if (response.WebAuthnPrfOption) {
+      this.webAuthnPrfOption = new WebAuthnPrfDecryptionOptionResponse(
+        this.getResponseProperty("WebAuthnPrfOptions"),
       );
     }
   }

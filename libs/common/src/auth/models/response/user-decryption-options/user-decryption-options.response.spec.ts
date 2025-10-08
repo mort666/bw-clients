@@ -28,7 +28,7 @@ describe("UserDecryptionOptionsResponse", () => {
     expect(response.masterPasswordUnlock!.masterKeyWrappedUserKey).toEqual(encryptedUserKey);
     expect(response.trustedDeviceOption).toBeUndefined();
     expect(response.keyConnectorOption).toBeUndefined();
-    expect(response.webAuthnPrfOptions).toBeUndefined();
+    expect(response.webAuthnPrfOption).toBeUndefined();
   });
 
   it("should create response when master password unlock is not present", () => {
@@ -40,6 +40,6 @@ describe("UserDecryptionOptionsResponse", () => {
     expect(response.masterPasswordUnlock).toBeUndefined();
     expect(response.trustedDeviceOption).toBeUndefined();
     expect(response.keyConnectorOption).toBeUndefined();
-    expect(response.webAuthnPrfOptions).toBeUndefined();
+    expect(response.webAuthnPrfOption).toBeUndefined();
   });
 });

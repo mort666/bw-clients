@@ -4,6 +4,10 @@ import { MasterPasswordUnlockResponse } from "../../master-password/models/respo
 
 export class UserDecryptionResponse extends BaseResponse {
   masterPasswordUnlock?: MasterPasswordUnlockResponse;
+
+  /**
+   * The sync service returns an array of WebAuthn PRF options.
+   */
   webAuthnPrfOptions?: WebAuthnPrfDecryptionOptionResponse[];
 
   constructor(response: unknown) {

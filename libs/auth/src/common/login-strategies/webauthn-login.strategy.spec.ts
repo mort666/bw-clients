@@ -168,25 +168,21 @@ describe("WebAuthnLoginStrategy", () => {
   const userDecryptionOptsServerResponseWithWebAuthnPrfOption: IUserDecryptionOptionsServerResponse =
     {
       HasMasterPassword: true,
-      WebAuthnPrfOptions: [
-        {
-          EncryptedPrivateKey: mockEncPrfPrivateKey,
-          EncryptedUserKey: mockEncUserKey,
-          CredentialId: "mockCredentialId",
-          Transports: ["usb", "nfc"],
-        },
-      ],
+      WebAuthnPrfOption: {
+        EncryptedPrivateKey: mockEncPrfPrivateKey,
+        EncryptedUserKey: mockEncUserKey,
+        CredentialId: "mockCredentialId",
+        Transports: ["usb", "nfc"],
+      },
     };
 
   const mockIdTokenResponseWithModifiedWebAuthnPrfOption = (key: string, value: any) => {
     const userDecryptionOpts: IUserDecryptionOptionsServerResponse = {
       ...userDecryptionOptsServerResponseWithWebAuthnPrfOption,
-      WebAuthnPrfOptions: [
-        {
-          ...userDecryptionOptsServerResponseWithWebAuthnPrfOption.WebAuthnPrfOptions[0],
-          [key]: value,
-        },
-      ],
+      WebAuthnPrfOption: {
+        ...userDecryptionOptsServerResponseWithWebAuthnPrfOption.WebAuthnPrfOption,
+        [key]: value,
+      },
     };
     return identityTokenResponseFactory(null, userDecryptionOpts);
   };
@@ -255,12 +251,12 @@ describe("WebAuthnLoginStrategy", () => {
 
     expect(encryptService.unwrapDecapsulationKey).toHaveBeenCalledTimes(1);
     expect(encryptService.unwrapDecapsulationKey).toHaveBeenCalledWith(
-      idTokenResponse.userDecryptionOptions.webAuthnPrfOptions[0].encryptedPrivateKey,
+      idTokenResponse.userDecryptionOptions.webAuthnPrfOption.encryptedPrivateKey,
       webAuthnCredentials.prfKey,
     );
     expect(encryptService.decapsulateKeyUnsigned).toHaveBeenCalledTimes(1);
     expect(encryptService.decapsulateKeyUnsigned).toHaveBeenCalledWith(
-      idTokenResponse.userDecryptionOptions.webAuthnPrfOptions[0].encryptedUserKey,
+      idTokenResponse.userDecryptionOptions.webAuthnPrfOption.encryptedUserKey,
       mockPrfPrivateKey,
     );
     expect(keyService.setUserKey).toHaveBeenCalledWith(mockUserKey, userId);

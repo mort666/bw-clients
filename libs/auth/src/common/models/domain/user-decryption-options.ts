@@ -192,10 +192,16 @@ export class UserDecryptionOptions {
         responseOptions.keyConnectorOption,
       );
 
-      if (responseOptions.webAuthnPrfOptions && Array.isArray(responseOptions.webAuthnPrfOptions)) {
-        decryptionOptions.webAuthnPrfOptions = responseOptions.webAuthnPrfOptions
-          .map((option) => WebAuthnPrfUserDecryptionOption.fromResponse(option))
-          .filter((option) => option !== undefined);
+      // The IdTokenResponse only returns a single WebAuthn PRF option to support immediate unlock after logging in
+      // with the same PRF passkey.
+      // Since our domain model supports multiple WebAuthn PRF options, we convert the single option into an array.
+      if (responseOptions.webAuthnPrfOption) {
+        const option = WebAuthnPrfUserDecryptionOption.fromResponse(
+          responseOptions.webAuthnPrfOption,
+        );
+        if (option) {
+          decryptionOptions.webAuthnPrfOptions = [option];
+        }
       }
     } else {
       // If the response does not have userDecryptionOptions, this means it's on a pre-TDE server version and so
