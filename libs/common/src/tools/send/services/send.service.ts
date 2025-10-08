@@ -91,9 +91,9 @@ export class SendService implements InternalSendServiceAbstraction {
       );
       send.password = passwordKey.keyB64;
     }
+    const userId = (await firstValueFrom(this.accountService.activeAccount$)).id;
     if (userKey == null) {
-      const account = await firstValueFrom(this.accountService.activeAccount$);
-      userKey = await firstValueFrom(this.keyService.userKey$(account.id));
+      userKey = await firstValueFrom(this.keyService.userKey$(userId));
     }
     // Key is not a SymmetricCryptoKey, but key material used to derive the cryptoKey
     send.key = await this.encryptService.encryptBytes(model.key, userKey);
@@ -114,11 +114,12 @@ export class SendService implements InternalSendServiceAbstraction {
             model.file.fileName,
             file,
             model.cryptoKey,
+            userId,
           );
           send.file.fileName = name;
           fileData = data;
         } else {
-          fileData = await this.parseFile(send, file, model.cryptoKey);
+          fileData = await this.parseFile(send, file, model.cryptoKey, userId);
         }
       }
     }
@@ -317,7 +318,12 @@ export class SendService implements InternalSendServiceAbstraction {
     return requests;
   }
 
-  private parseFile(send: Send, file: File, key: SymmetricCryptoKey): Promise<EncArrayBuffer> {
+  private parseFile(
+    send: Send,
+    file: File,
+    key: SymmetricCryptoKey,
+    userId: UserId,
+  ): Promise<EncArrayBuffer> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsArrayBuffer(file);
@@ -327,6 +333,7 @@ export class SendService implements InternalSendServiceAbstraction {
             file.name,
             evt.target.result as ArrayBuffer,
             key,
+            userId,
           );
           send.file.fileName = name;
           resolve(data);
@@ -344,11 +351,8 @@ export class SendService implements InternalSendServiceAbstraction {
     fileName: string,
     data: ArrayBuffer,
     key: SymmetricCryptoKey,
+    userId: UserId,
   ): Promise<[EncString, EncArrayBuffer]> {
-    const userId = await firstValueFrom(
-      this.stateProvider.encryptedState$.pipe(map(([userId]) => userId)),
-    );
-
     if (key == null) {
       key = await firstValueFrom(this.keyService.userKey$(userId));
     }
