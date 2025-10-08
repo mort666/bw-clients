@@ -36,8 +36,11 @@ export class SendService implements InternalSendServiceAbstraction {
     map(([, record]) => Object.values(record || {}).map((data) => new Send(data))),
   );
   sendViews$ = this.stateProvider.encryptedState$.pipe(
-    concatMap(([, record]) =>
-      this.decryptSends(Object.values(record || {}).map((data) => new Send(data))),
+    concatMap(([userId, record]) =>
+      this.decryptSends(
+        Object.values(record || {}).map((data) => new Send(data)),
+        userId,
+      ),
     ),
   );
 
@@ -361,10 +364,7 @@ export class SendService implements InternalSendServiceAbstraction {
     return [encFileName, encFileData];
   }
 
-  private async decryptSends(sends: Send[]) {
-    const userId = await firstValueFrom(
-      this.stateProvider.encryptedState$.pipe(map(([userId]) => userId)),
-    );
+  private async decryptSends(sends: Send[], userId: UserId) {
     const decryptSendPromises = sends.map((s) => s.decrypt(userId));
     const decryptedSends = await Promise.all(decryptSendPromises);
 
