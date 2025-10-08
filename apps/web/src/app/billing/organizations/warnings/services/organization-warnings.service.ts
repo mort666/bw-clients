@@ -254,6 +254,10 @@ export class OrganizationWarningsService {
     organization: Organization,
     bypassCache: boolean = false,
   ): Observable<OrganizationWarningsResponse> => {
+    if (organization.selfHost) {
+      return from(Promise.resolve(new OrganizationWarningsResponse({})));
+    }
+
     const organizationId = organization.id as OrganizationId;
     const existing = this.cache$.get(organizationId);
     if (existing && !bypassCache) {
