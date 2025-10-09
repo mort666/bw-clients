@@ -2,24 +2,21 @@ import { test, expect } from "@playwright/test";
 
 import { Play, SingleUserRecipe } from "@bitwarden/playwright-scenes";
 
-test("has title", async ({ page }) => {
-  await page.goto("");
-
-  // Expect a title "to contain" a substring.
-  await expect(page).toHaveTitle(/Bitwarden/);
-});
-
-test("get started link", async ({ page }) => {
-  await page.goto("https://playwright.dev/");
-
-  // Click the get started link.
-  await page.getByRole("link", { name: "Get started" }).click();
-
-  // Expects page to have a heading with the name of Installation.
-  await expect(page.getByRole("heading", { name: "Installation" })).toBeVisible();
-});
-
 test("login with password", async ({ page }) => {
-  using _ = await Play.scene(new SingleUserRecipe({ email: "test@example.com" }), { noDown: true });
-  await page.goto("");
+  using _ = await Play.scene(new SingleUserRecipe({ email: "test@example.com" }));
+
+  await page.goto("https://localhost:8080/#/login");
+  await page.getByRole("textbox", { name: "Email address (required)" }).click();
+  await page.getByRole("textbox", { name: "Email address (required)" }).fill("admin@large.test");
+  await page.getByRole("textbox", { name: "Email address (required)" }).press("Enter");
+  await page.getByRole("textbox", { name: "Master password (required)" }).click();
+  await page.getByRole("textbox", { name: "Master password (required)" }).fill("asdfasdfasdf");
+  await page.getByRole("button", { name: "Log in with master password" }).click();
+  await expect(page.getByRole("button", { name: "Add it later" })).toBeVisible();
+  await page.getByRole("button", { name: "Add it later" }).click();
+  await expect(page.locator("bit-simple-dialog")).toContainText(
+    "You can't autofill passwords without the browser extension",
+  );
+  await page.getByRole("link", { name: "Skip to web app" }).click();
+  await expect(page.locator("app-vault")).toContainText("There are no items to list. New item");
 });

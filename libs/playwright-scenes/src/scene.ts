@@ -24,6 +24,17 @@ class Scene implements UsingRequired {
     return this._recipe;
   }
 
+  /**
+   * Chainable method to set the scene to not be torn down when disposed.
+   * Note: if you do not tear down the scene, you are responsible for cleaning up any side effects.
+   *
+   * @returns The scene instance for chaining
+   */
+  noDown(): this {
+    this.options.noDown = true;
+    return this;
+  }
+
   get seedId(): string {
     if (!this.inited) {
       throw new Error("Scene must be initialized before accessing seedId");
