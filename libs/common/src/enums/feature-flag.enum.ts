@@ -23,9 +23,9 @@ export enum FeatureFlag {
   /* Billing */
   TrialPaymentOptional = "PM-8163-trial-payment",
   PM17772_AdminInitiatedSponsorships = "pm-17772-admin-initiated-sponsorships",
-  PM21881_ManagePaymentDetailsOutsideCheckout = "pm-21881-manage-payment-details-outside-checkout",
   PM21821_ProviderPortalTakeover = "pm-21821-provider-portal-takeover",
   PM22415_TaxIDWarnings = "pm-22415-tax-id-warnings",
+  PM24996_ImplementUpgradeFromFreeDialog = "pm-24996-implement-upgrade-from-free-dialog",
 
   /* Key Management */
   PrivateKeyRegeneration = "pm-12241-private-key-regeneration",
@@ -100,9 +100,9 @@ export const DefaultFeatureFlagValue = {
   /* Billing */
   [FeatureFlag.TrialPaymentOptional]: FALSE,
   [FeatureFlag.PM17772_AdminInitiatedSponsorships]: FALSE,
-  [FeatureFlag.PM21881_ManagePaymentDetailsOutsideCheckout]: FALSE,
   [FeatureFlag.PM21821_ProviderPortalTakeover]: FALSE,
   [FeatureFlag.PM22415_TaxIDWarnings]: FALSE,
+  [FeatureFlag.PM24996_ImplementUpgradeFromFreeDialog]: FALSE,
 
   /* Key Management */
   [FeatureFlag.PrivateKeyRegeneration]: FALSE,

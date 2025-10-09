@@ -71,6 +71,7 @@ export class BrowserSystemNotificationService implements SystemNotificationsServ
 
   async clear(clearInfo: SystemNotificationClearInfo): Promise<undefined> {
     await chrome.notifications.clear(clearInfo.id);
+    return undefined;
   }
 
   isSupported(): boolean {
