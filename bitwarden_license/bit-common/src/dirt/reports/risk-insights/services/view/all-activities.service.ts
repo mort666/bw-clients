@@ -37,7 +37,7 @@ export class AllActivitiesService {
 
   constructor(private dataService: RiskInsightsDataService) {
     // All application summary changes
-    this.dataService.reportResults$.subscribe((report) => {
+    this.dataService.enrichedReportData$.subscribe((report) => {
       if (report) {
         this.setAllAppsReportSummary(report.summaryData);
         this.setAllAppsReportDetails(report.reportData);

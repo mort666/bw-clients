@@ -67,7 +67,7 @@ export class AllApplicationsComponent implements OnInit {
   }
 
   async ngOnInit() {
-    this.dataService.reportResults$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.dataService.enrichedReportData$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (report) => {
         this.applicationSummary = report?.summaryData ?? createNewSummaryData();
         this.dataSource.data = report?.reportData ?? [];

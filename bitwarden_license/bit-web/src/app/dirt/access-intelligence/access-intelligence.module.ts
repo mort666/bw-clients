@@ -13,6 +13,7 @@ import {
   SecurityTasksApiService,
 } from "@bitwarden/bit-common/dirt/reports/risk-insights/services";
 import { RiskInsightsEncryptionService } from "@bitwarden/bit-common/dirt/reports/risk-insights/services/domain/risk-insights-encryption.service";
+import { RiskInsightsOrchestratorService } from "@bitwarden/bit-common/dirt/reports/risk-insights/services/domain/risk-insights-orchestrator.service";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
@@ -56,13 +57,17 @@ import { RiskInsightsComponent } from "./risk-insights.component";
       ],
     }),
     safeProvider({
-      provide: RiskInsightsDataService,
+      provide: RiskInsightsOrchestratorService,
       deps: [
         AccountServiceAbstraction,
         CriticalAppsService,
         OrganizationService,
         RiskInsightsReportService,
       ],
+    }),
+    safeProvider({
+      provide: RiskInsightsDataService,
+      deps: [CriticalAppsService, RiskInsightsReportService, RiskInsightsOrchestratorService],
     }),
     {
       provide: RiskInsightsEncryptionService,

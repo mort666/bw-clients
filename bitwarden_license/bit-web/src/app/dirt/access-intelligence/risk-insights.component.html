@@ -17,7 +17,7 @@
     } @else {
       <span class="tw-mx-4">{{ "noReportRan" | i18n }}</span>
     }
-    @let isRunningReport = dataService.isRunningReport$ | async;
+    @let isRunningReport = dataService.isGeneratingReport$ | async;
     <span class="tw-flex tw-justify-center">
       <button
         *ngIf="!isRunningReport"

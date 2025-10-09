@@ -1,9 +1,9 @@
 import { CommonModule } from "@angular/common";
-import { Component, DestroyRef, OnInit, inject } from "@angular/core";
+import { Component, DestroyRef, OnDestroy, OnInit, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ActivatedRoute, Router } from "@angular/router";
 import { EMPTY } from "rxjs";
-import { map, switchMap } from "rxjs/operators";
+import { map, tap } from "rxjs/operators";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { RiskInsightsDataService } from "@bitwarden/bit-common/dirt/reports/risk-insights";
@@ -43,7 +43,7 @@ import { RiskInsightsTabType } from "./models/risk-insights.models";
     AllActivityComponent,
   ],
 })
-export class RiskInsightsComponent implements OnInit {
+export class RiskInsightsComponent implements OnInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   private _isDrawerOpen: boolean = false;
 
@@ -83,11 +83,10 @@ export class RiskInsightsComponent implements OnInit {
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         map((params) => params.get("organizationId")),
-        switchMap(async (orgId) => {
+        tap((orgId) => {
           if (orgId) {
             // Initialize Data Service
-            await this.dataService.initializeForOrganization(orgId as OrganizationId);
-
+            this.dataService.initializeForOrganization(orgId as OrganizationId);
             this.organizationId = orgId as OrganizationId;
           } else {
             return EMPTY;
@@ -97,7 +96,7 @@ export class RiskInsightsComponent implements OnInit {
       .subscribe();
 
     // Subscribe to report result details
-    this.dataService.reportResults$
+    this.dataService.enrichedReportData$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((report) => {
         this.appsCount = report?.reportData.length ?? 0;
@@ -111,6 +110,12 @@ export class RiskInsightsComponent implements OnInit {
         this._isDrawerOpen = details.open;
       });
   }
+
+  ngOnDestroy(): void {
+    // The component tells the facade when to stop
+    this.dataService.destroy();
+  }
+
   runReport = () => {
     this.dataService.triggerReport();
   };

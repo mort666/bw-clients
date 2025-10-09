@@ -157,3 +157,9 @@ export interface RiskInsightsData {
   summaryData: OrganizationReportSummary;
   applicationData: OrganizationReportApplication[];
 }
+
+export interface ReportState {
+  loading: boolean;
+  error: string | null;
+  data: RiskInsightsData | null;
+}
