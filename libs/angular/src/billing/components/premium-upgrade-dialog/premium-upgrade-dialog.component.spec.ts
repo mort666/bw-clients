@@ -11,7 +11,8 @@ import {
 } from "@bitwarden/common/billing/types/subscription-pricing-tier";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { DialogRef } from "@bitwarden/components";
-import { PremiumUpgradeDialogComponent } from "@bitwarden/pricing";
+
+import { PremiumUpgradeDialogComponent } from "./premium-upgrade-dialog.component";
 
 describe("PremiumUpgradeDialogComponent", () => {
   let component: PremiumUpgradeDialogComponent;

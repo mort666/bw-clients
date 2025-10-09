@@ -9,8 +9,7 @@ import {
 } from "@bitwarden/common/billing/types/subscription-pricing-tier";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { ButtonModule, DialogModule, DialogRef, TypographyModule } from "@bitwarden/components";
-
-import { PricingCardComponent } from "../pricing-card/pricing-card.component";
+import { PricingCardComponent } from "@bitwarden/pricing";
 
 import { PremiumUpgradeDialogComponent } from "./premium-upgrade-dialog.component";
 

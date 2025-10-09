@@ -21,9 +21,8 @@ import {
   ToastService,
   TypographyModule,
 } from "@bitwarden/components";
+import { PricingCardComponent } from "@bitwarden/pricing";
 import { I18nPipe } from "@bitwarden/ui-common";
-
-import { PricingCardComponent } from "../pricing-card/pricing-card.component";
 
 type CardDetails = {
   title: string;
