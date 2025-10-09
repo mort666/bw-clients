@@ -6,7 +6,7 @@ import { Subject, switchMap, takeUntil, of, BehaviorSubject, combineLatest } fro
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import {
   AllActivitiesService,
-  LEGACY_ApplicationHealthReportDetailWithCriticalFlagAndCipher,
+  ApplicationHealthReportDetailEnriched,
   SecurityTasksApiService,
   TaskMetrics,
 } from "@bitwarden/bit-common/dirt/reports/risk-insights";
@@ -22,13 +22,7 @@ import {
 
 import { CreateTasksRequest } from "../../../../vault/services/abstractions/admin-task.abstraction";
 import { DefaultAdminTaskService } from "../../../../vault/services/default-admin-task.service";
-
-export const RenderMode = {
-  noCriticalApps: "noCriticalApps",
-  criticalAppsWithAtRiskAppsAndNoTasks: "criticalAppsWithAtRiskAppsAndNoTasks",
-  criticalAppsWithAtRiskAppsAndTasks: "criticalAppsWithAtRiskAppsAndTasks",
-} as const;
-export type RenderMode = (typeof RenderMode)[keyof typeof RenderMode];
+import { RenderMode } from "../../models/activity.models";
 
 @Component({
   selector: "dirt-password-change-metric",
@@ -40,14 +34,22 @@ export class PasswordChangeMetricComponent implements OnInit {
   protected taskMetrics$ = new BehaviorSubject<TaskMetrics>({ totalTasks: 0, completedTasks: 0 });
   private completedTasks: number = 0;
   private totalTasks: number = 0;
-  private allApplicationsDetails: LEGACY_ApplicationHealthReportDetailWithCriticalFlagAndCipher[] =
-    [];
+  private allApplicationsDetails: ApplicationHealthReportDetailEnriched[] = [];
 
   atRiskAppsCount: number = 0;
   atRiskPasswordsCount: number = 0;
   private organizationId!: OrganizationId;
   private destroyRef = new Subject<void>();
   renderMode: RenderMode = "noCriticalApps";
+
+  constructor(
+    private activatedRoute: ActivatedRoute,
+    private securityTasksApiService: SecurityTasksApiService,
+    private allActivitiesService: AllActivitiesService,
+    private adminTaskService: DefaultAdminTaskService,
+    protected toastService: ToastService,
+    protected i18nService: I18nService,
+  ) {}
 
   async ngOnInit(): Promise<void> {
     this.activatedRoute.paramMap
@@ -105,15 +107,6 @@ export class PasswordChangeMetricComponent implements OnInit {
         );
       });
   }
-
-  constructor(
-    private activatedRoute: ActivatedRoute,
-    private securityTasksApiService: SecurityTasksApiService,
-    private allActivitiesService: AllActivitiesService,
-    private adminTaskService: DefaultAdminTaskService,
-    protected toastService: ToastService,
-    protected i18nService: I18nService,
-  ) {}
 
   get completedPercent(): number {
     if (this.totalTasks === 0) {
