@@ -88,10 +88,7 @@ export class SessionTimeoutPolicyComponent
   ngOnInit() {
     super.ngOnInit();
 
-    this.data.markAllAsTouched();
-    this.data.updateValueAndValidity();
-
-    const typeControl = this.data.get("type")!;
+    const typeControl = this.data.controls.type;
     typeControl.valueChanges
       .pipe(
         concatMap(async (type) => {
@@ -132,7 +129,11 @@ export class SessionTimeoutPolicyComponent
 
   protected override buildRequestData() {
     this.data.markAllAsTouched();
+    this.data.updateValueAndValidity();
     if (this.data.invalid) {
+      if (this.data.controls.type.hasError("required")) {
+        throw new Error(this.i18nService.t("inputRequired"));
+      }
       throw new Error(this.i18nService.t("sessionTimeoutPolicyInvalidTime"));
     }
 
@@ -187,8 +188,8 @@ export class SessionTimeoutPolicyComponent
   }
 
   private updateFormControls(type: SessionTimeoutType) {
-    const hoursControl = this.data.get("hours")!;
-    const minutesControl = this.data.get("minutes")!;
+    const hoursControl = this.data.controls.hours;
+    const minutesControl = this.data.controls.minutes;
     if (type === "custom") {
       hoursControl.enable();
       minutesControl.enable();

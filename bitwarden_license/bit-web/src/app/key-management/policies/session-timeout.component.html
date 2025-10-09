@@ -12,11 +12,9 @@
     <bit-form-field class="tw-col-span-12 !tw-mb-0">
       <bit-label>{{ "maximumAllowedTimeout" | i18n }}</bit-label>
       <bit-select formControlName="type">
-        <bit-option
-          *ngFor="let option of typeOptions"
-          [value]="option.value"
-          [label]="option.name"
-        ></bit-option>
+        @for (option of typeOptions; track option.value) {
+          <bit-option [value]="option.value" [label]="option.name"></bit-option>
+        }
       </bit-select>
     </bit-form-field>
     @if (data.value.type === "custom") {
@@ -32,11 +30,9 @@
     <bit-form-field class="tw-col-span-12">
       <bit-label>{{ "sessionTimeoutAction" | i18n }}</bit-label>
       <bit-select formControlName="action">
-        <bit-option
-          *ngFor="let option of actionOptions"
-          [value]="option.value"
-          [label]="option.name"
-        ></bit-option>
+        @for (option of actionOptions; track option.value) {
+          <bit-option [value]="option.value" [label]="option.name"></bit-option>
+        }
       </bit-select>
     </bit-form-field>
   </div>
