@@ -3,7 +3,7 @@ import { mock } from "jest-mock-extended";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 
-import { MemberCipherDetailsResponse } from "../../response/member-cipher-details.response";
+import { MemberCipherDetailsResponse } from "..";
 import { ApplicationHealthReportDetailEnriched } from "../report-data-service.types";
 import {
   ApplicationHealthReportDetail,

@@ -1,12 +1,12 @@
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 
+import { MemberCipherDetailsResponse } from "../models";
 import {
   MemberDetails,
   OrganizationReportSummary,
   RiskInsightsData,
 } from "../models/report-models";
-import { MemberCipherDetailsResponse } from "../response/member-cipher-details.response";
 
 export function flattenMemberDetails(
   memberCiphers: MemberCipherDetailsResponse[],
