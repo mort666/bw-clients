@@ -228,11 +228,12 @@ describe("RiskInsightsApiService", () => {
 
   it("updateRiskInsightsApplicationData$ should call apiService.send with correct parameters and return an Observable", async () => {
     const reportId = "report123" as OrganizationReportId;
-    const mockApplication = mockApplicationData[0];
+    // TODO Update to be encrypted test
+    const mockApplication = makeEncString("application-data");
 
     mockApiService.send.mockResolvedValueOnce(undefined);
     const result = await firstValueFrom(
-      service.updateRiskInsightsApplicationData$(mockApplication, orgId, reportId),
+      service.updateRiskInsightsApplicationData$(mockApplication.encryptedString, orgId, reportId),
     );
     expect(mockApiService.send).toHaveBeenCalledWith(
       "PATCH",

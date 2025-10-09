@@ -1,8 +1,14 @@
 import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { OrganizationReportId } from "@bitwarden/common/types/guid";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 
-import { MemberCipherDetailsResponse } from "../models";
 import {
+  AtRiskApplicationDetail,
+  AtRiskMemberDetail,
+  MemberCipherDetailsResponse,
+} from "../models";
+import {
+  ApplicationHealthReportDetail,
   MemberDetails,
   OrganizationReportSummary,
   RiskInsightsData,
@@ -61,6 +67,7 @@ export function getUniqueMembers(orgMembers: MemberDetails[]): MemberDetails[] {
  */
 export function createNewReportData(): RiskInsightsData {
   return {
+    id: "" as OrganizationReportId,
     creationDate: new Date(),
     reportData: [],
     summaryData: createNewSummaryData(),
@@ -85,4 +92,61 @@ export function createNewSummaryData(): OrganizationReportSummary {
     totalCriticalAtRiskApplicationCount: 0,
     newApplications: [],
   };
+}
+export function getAtRiskApplicationList(
+  cipherHealthReportDetails: ApplicationHealthReportDetail[],
+): AtRiskApplicationDetail[] {
+  const applicationPasswordRiskMap = new Map<string, number>();
+
+  cipherHealthReportDetails
+    .filter((app) => app.atRiskPasswordCount > 0)
+    .forEach((app) => {
+      const atRiskPasswordCount = applicationPasswordRiskMap.get(app.applicationName) ?? 0;
+      applicationPasswordRiskMap.set(
+        app.applicationName,
+        atRiskPasswordCount + app.atRiskPasswordCount,
+      );
+    });
+
+  return Array.from(applicationPasswordRiskMap.entries()).map(
+    ([applicationName, atRiskPasswordCount]) => ({
+      applicationName,
+      atRiskPasswordCount,
+    }),
+  );
+}
+/**
+ * Generates a list of members with at-risk passwords along with the number of at-risk passwords.
+ */
+export function getAtRiskMemberList(
+  cipherHealthReportDetails: ApplicationHealthReportDetail[],
+): AtRiskMemberDetail[] {
+  const memberRiskMap = new Map<string, number>();
+
+  cipherHealthReportDetails.forEach((app) => {
+    app.atRiskMemberDetails.forEach((member) => {
+      const currentCount = memberRiskMap.get(member.email) ?? 0;
+      memberRiskMap.set(member.email, currentCount + 1);
+    });
+  });
+
+  return Array.from(memberRiskMap.entries()).map(([email, atRiskPasswordCount]) => ({
+    email,
+    atRiskPasswordCount,
+  }));
+}
+
+/**
+ * Builds a map of passwords to the number of times they are used across ciphers
+ *
+ * @param ciphers List of ciphers to check for password reuse
+ * @returns A map where the key is the password and the value is the number of times it is used
+ */
+export function buildPasswordUseMap(ciphers: CipherView[]): Map<string, number> {
+  const passwordUseMap = new Map<string, number>();
+  ciphers.forEach((cipher) => {
+    const password = cipher.login.password!;
+    passwordUseMap.set(password, (passwordUseMap.get(password) || 0) + 1);
+  });
+  return passwordUseMap;
 }

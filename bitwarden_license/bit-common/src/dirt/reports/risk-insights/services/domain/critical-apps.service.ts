@@ -139,10 +139,11 @@ export class CriticalAppsService {
       return;
     }
 
-    await this.criticalAppsApiService.dropCriticalApp({
-      organizationId: app.organizationId,
-      passwordHealthReportApplicationIds: [app.id],
-    });
+    // TODO Uncomment when done testing that the migration is working
+    // await this.criticalAppsApiService.dropCriticalApp({
+    //   organizationId: app.organizationId,
+    //   passwordHealthReportApplicationIds: [app.id],
+    // });
 
     this.criticalAppsListSubject$.next(
       this.criticalAppsListSubject$.value.filter((f) => f.uri !== selectedUrl),

@@ -6,8 +6,10 @@ import { EMPTY } from "rxjs";
 import { map, tap } from "rxjs/operators";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
-import { RiskInsightsDataService } from "@bitwarden/bit-common/dirt/reports/risk-insights";
-import { DrawerType } from "@bitwarden/bit-common/dirt/reports/risk-insights/models/report-models";
+import {
+  DrawerType,
+  RiskInsightsDataService,
+} from "@bitwarden/bit-common/dirt/reports/risk-insights";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { OrganizationId } from "@bitwarden/common/types/guid";

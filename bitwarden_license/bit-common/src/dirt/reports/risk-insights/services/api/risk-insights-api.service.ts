@@ -4,7 +4,7 @@ import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { ErrorResponse } from "@bitwarden/common/models/response/error.response";
 import { OrganizationId, OrganizationReportId } from "@bitwarden/common/types/guid";
 
-import { EncryptedDataWithKey, OrganizationReportApplication } from "../../models";
+import { EncryptedDataWithKey } from "../../models";
 import {
   GetRiskInsightsApplicationDataResponse,
   GetRiskInsightsReportResponse,
@@ -102,7 +102,7 @@ export class RiskInsightsApiService {
   }
 
   updateRiskInsightsApplicationData$(
-    applicationData: OrganizationReportApplication,
+    applicationData: string,
     orgId: OrganizationId,
     reportId: OrganizationReportId,
   ): Observable<void> {

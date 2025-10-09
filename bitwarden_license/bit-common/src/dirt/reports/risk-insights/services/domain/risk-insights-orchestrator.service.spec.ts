@@ -3,7 +3,9 @@ import { of, throwError } from "rxjs";
 
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Account, AccountService } from "@bitwarden/common/auth/abstractions/account.service";
-import { OrganizationId, UserId } from "@bitwarden/common/types/guid";
+import { OrganizationId, OrganizationReportId, UserId } from "@bitwarden/common/types/guid";
+import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
+import { LogService } from "@bitwarden/logging";
 
 import { createNewSummaryData } from "../../helpers";
 import { ReportState } from "../../models";
@@ -12,8 +14,12 @@ import {
   mockEnrichedReportData,
   mockSummaryData,
 } from "../../models/mocks/mock-data";
+import { MemberCipherDetailsApiService } from "../api/member-cipher-details-api.service";
+import { RiskInsightsApiService } from "../api/risk-insights-api.service";
 
 import { CriticalAppsService } from "./critical-apps.service";
+import { PasswordHealthService } from "./password-health.service";
+import { RiskInsightsEncryptionService } from "./risk-insights-encryption.service";
 import { RiskInsightsOrchestratorService } from "./risk-insights-orchestrator.service";
 import { RiskInsightsReportService } from "./risk-insights-report.service";
 
@@ -24,6 +30,7 @@ describe("RiskInsightsOrchestratorService", () => {
   const mockOrgId = "org-789" as OrganizationId;
   const mockOrgName = "Test Org";
   const mockUserId = "user-101" as UserId;
+  const mockReportId = "report-1" as OrganizationReportId;
 
   // Mock services
   const mockAccountService = mock<AccountService>({
@@ -33,14 +40,26 @@ describe("RiskInsightsOrchestratorService", () => {
     criticalAppsList$: of([]),
   });
   const mockOrganizationService = mock<OrganizationService>();
+  const mockCipherService = mock<CipherService>();
+  const mockMemberCipherDetailsApiService = mock<MemberCipherDetailsApiService>();
+  const mockPasswordHealthService = mock<PasswordHealthService>();
+  const mockReportApiService = mock<RiskInsightsApiService>();
   const mockReportService = mock<RiskInsightsReportService>();
+  const mockRiskInsightsEncryptionService = mock<RiskInsightsEncryptionService>();
+  const mockLogService = mock<LogService>();
 
   beforeEach(() => {
     service = new RiskInsightsOrchestratorService(
       mockAccountService,
+      mockCipherService,
       mockCriticalAppsService,
+      mockMemberCipherDetailsApiService,
       mockOrganizationService,
+      mockPasswordHealthService,
+      mockReportApiService,
       mockReportService,
+      mockRiskInsightsEncryptionService,
+      mockLogService,
     );
   });
 
@@ -53,6 +72,7 @@ describe("RiskInsightsOrchestratorService", () => {
         loading: false,
         error: null,
         data: {
+          id: mockReportId,
           reportData: [],
           summaryData: createNewSummaryData(),
           applicationData: [],
@@ -106,14 +126,14 @@ describe("RiskInsightsOrchestratorService", () => {
   });
 
   describe("generateReport", () => {
-    it("should call reportService.generateApplicationsReport$ and saveRiskInsightsReport$ and emit ReportState", (done) => {
+    it("should call reportService.generateApplicationsReport and saveRiskInsightsReport$ and emit ReportState", (done) => {
       const privateOrganizationDetailsSubject = service["_organizationDetailsSubject"];
       const privateUserIdSubject = service["_userIdSubject"];
 
       // Arrange
-      mockReportService.generateApplicationsReport$.mockReturnValueOnce(of(mockEnrichedReportData));
-      mockReportService.generateApplicationsSummary.mockReturnValueOnce(mockSummaryData);
-      mockReportService.generateOrganizationApplications.mockReturnValueOnce(mockApplicationData);
+      mockReportService.generateApplicationsReport.mockReturnValueOnce(mockEnrichedReportData);
+      mockReportService.getApplicationsSummary.mockReturnValueOnce(mockSummaryData);
+      mockReportService.getOrganizationApplications.mockReturnValueOnce(mockApplicationData);
       mockReportService.saveRiskInsightsReport$.mockReturnValueOnce(of(null));
       privateOrganizationDetailsSubject.next({
         organizationId: mockOrgId,
@@ -127,7 +147,7 @@ describe("RiskInsightsOrchestratorService", () => {
       // Assert
       service.rawReportData$.subscribe((state) => {
         if (!state.loading) {
-          expect(mockReportService.generateApplicationsReport$).toHaveBeenCalledWith(mockOrgId);
+          expect(mockReportService.generateApplicationsReport).toHaveBeenCalledWith(mockOrgId);
           expect(mockReportService.saveRiskInsightsReport$).toHaveBeenCalledWith(
             mockEnrichedReportData,
             mockSummaryData,
@@ -142,35 +162,13 @@ describe("RiskInsightsOrchestratorService", () => {
       });
     });
 
-    it("should emit error ReportState when generateApplicationsReport$ throws", (done) => {
-      const privateOrganizationDetailsSubject = service["_organizationDetailsSubject"];
-      const privateUserIdSubject = service["_userIdSubject"];
-
-      mockReportService.generateApplicationsReport$.mockReturnValueOnce(
-        throwError(() => new Error("Generate error")),
-      );
-      privateOrganizationDetailsSubject.next({
-        organizationId: mockOrgId,
-        organizationName: mockOrgName,
-      });
-      privateUserIdSubject.next(mockUserId);
-      service.generateReport();
-      service.rawReportData$.subscribe((state) => {
-        if (!state.loading) {
-          expect(state.error).toBe("Failed to generate or save report");
-          expect(state.data).toBeNull();
-          done();
-        }
-      });
-    });
-
     it("should emit error ReportState when saveRiskInsightsReport$ throws", (done) => {
       const privateOrganizationDetailsSubject = service["_organizationDetailsSubject"];
       const privateUserIdSubject = service["_userIdSubject"];
 
-      mockReportService.generateApplicationsReport$.mockReturnValueOnce(of(mockEnrichedReportData));
-      mockReportService.generateApplicationsSummary.mockReturnValueOnce(mockSummaryData);
-      mockReportService.generateOrganizationApplications.mockReturnValueOnce(mockApplicationData);
+      mockReportService.generateApplicationsReport.mockReturnValueOnce(mockEnrichedReportData);
+      mockReportService.getApplicationsSummary.mockReturnValueOnce(mockSummaryData);
+      mockReportService.getOrganizationApplications.mockReturnValueOnce(mockApplicationData);
       mockReportService.saveRiskInsightsReport$.mockReturnValueOnce(
         throwError(() => new Error("Save error")),
       );

@@ -3,8 +3,8 @@ import { catchError, distinctUntilChanged, exhaustMap, map } from "rxjs/operator
 
 import { OrganizationId } from "@bitwarden/common/types/guid";
 
-import { RiskInsightsEnrichedData } from "../../models/report-data-service.types";
-import { DrawerType, DrawerDetails, ReportState } from "../../models/report-models";
+import { getAtRiskApplicationList, getAtRiskMemberList } from "../../helpers";
+import { ReportState, DrawerDetails, DrawerType, RiskInsightsEnrichedData } from "../../models";
 import { CriticalAppsService } from "../domain/critical-apps.service";
 import { RiskInsightsOrchestratorService } from "../domain/risk-insights-orchestrator.service";
 import { RiskInsightsReportService } from "../domain/risk-insights-report.service";
@@ -113,9 +113,7 @@ export class RiskInsightsDataService {
         return;
       }
 
-      const atRiskMemberDetails = this.reportService.generateAtRiskMemberList(
-        reportResults.reportData,
-      );
+      const atRiskMemberDetails = getAtRiskMemberList(reportResults.reportData);
 
       this.drawerDetailsSubject.next({
         open: true,
@@ -170,9 +168,7 @@ export class RiskInsightsDataService {
       if (!reportResults) {
         return;
       }
-      const atRiskAppDetails = this.reportService.generateAtRiskApplicationList(
-        reportResults.reportData,
-      );
+      const atRiskAppDetails = getAtRiskApplicationList(reportResults.reportData);
 
       this.drawerDetailsSubject.next({
         open: true,
@@ -187,6 +183,7 @@ export class RiskInsightsDataService {
 
   // ------------------------------ Critical application methods --------------
   saveCriticalApplications(selectedUrls: string[]) {
+    this.orchestrator.setCriticalApplications$(selectedUrls);
     return this.organizationDetails$.pipe(
       exhaustMap((organizationDetails) => {
         if (!organizationDetails?.organizationId) {

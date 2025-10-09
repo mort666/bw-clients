@@ -81,10 +81,12 @@ export const mockApplicationData: OrganizationReportApplication[] = [
   {
     applicationName: "application1.com",
     isCritical: true,
+    reviewedDate: new Date(),
   },
   {
     applicationName: "application2.com",
     isCritical: false,
+    reviewedDate: null,
   },
 ];
 

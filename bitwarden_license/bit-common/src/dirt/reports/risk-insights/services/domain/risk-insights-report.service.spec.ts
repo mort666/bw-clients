@@ -79,9 +79,6 @@ describe("RiskInsightsReportService", () => {
     });
 
     service = new RiskInsightsReportService(
-      cipherService,
-      memberCipherDetailsService,
-      mockPasswordHealthService,
       mockRiskInsightsApiService,
       mockRiskInsightsEncryptionService,
     );
@@ -93,23 +90,21 @@ describe("RiskInsightsReportService", () => {
     };
   });
 
-  it("should group and aggregate application health reports correctly", (done) => {
+  it("should group and aggregate application health reports correctly", () => {
     // Mock the service methods
     cipherService.getAllFromApiForOrganization.mockResolvedValue(mockCipherViews);
     memberCipherDetailsService.getMemberCipherDetails.mockResolvedValue(mockMemberDetails);
 
-    service.generateApplicationsReport$("orgId" as any).subscribe((result) => {
-      expect(Array.isArray(result)).toBe(true);
+    const result = service.generateApplicationsReport("orgId" as any);
+    expect(Array.isArray(result)).toBe(true);
 
-      // Should group by application name (trimmedUris)
-      const appCom = result.find((r) => r.applicationName === "app.com");
-      const otherCom = result.find((r) => r.applicationName === "other.com");
-      expect(appCom).toBeTruthy();
-      expect(appCom?.passwordCount).toBe(2);
-      expect(otherCom).toBeTruthy();
-      expect(otherCom?.passwordCount).toBe(1);
-      done();
-    });
+    // Should group by application name (trimmedUris)
+    const appCom = result.find((r) => r.applicationName === "app.com");
+    const otherCom = result.find((r) => r.applicationName === "other.com");
+    expect(appCom).toBeTruthy();
+    expect(appCom?.passwordCount).toBe(2);
+    expect(otherCom).toBeTruthy();
+    expect(otherCom?.passwordCount).toBe(1);
   });
 
   describe("saveRiskInsightsReport$", () => {
