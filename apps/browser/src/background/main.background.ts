@@ -1237,8 +1237,8 @@ export default class MainBackground {
       this.authService,
       this.systemService,
       this.processReloadService,
-      this.biometricsService,
       this.logService,
+      this.keyService,
     );
 
     this.vaultTimeoutService = new VaultTimeoutService(
