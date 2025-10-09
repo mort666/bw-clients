@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+export const webServerBaseUrl = process.env.WEB_SERVER_BASE_URL ?? "https://localhost:8080";
+
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
@@ -27,7 +29,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
-    baseURL: "https://localhost:8080",
+    baseURL: webServerBaseUrl,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
@@ -74,7 +76,7 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: {
     command: "cd apps/web && npm run build:bit:watch",
-    url: "https://localhost:8080",
+    url: webServerBaseUrl,
     reuseExistingServer: true, //!process.env.CI,
     ignoreHTTPSErrors: true,
   },

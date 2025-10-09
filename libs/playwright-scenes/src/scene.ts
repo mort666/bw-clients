@@ -1,17 +1,41 @@
-import { expect } from "@playwright/test";
+import { webServerBaseUrl } from "@playwright-config";
 
 import { UsingRequired } from "@bitwarden/common/platform/misc/using-required";
 
-import { OrganizationWithUsersRecipe } from "./recipes/organization-with-users.recipe";
 import { Recipe } from "./recipes/recipe";
 
-export class Scene implements UsingRequired {
+// First seed points at the seeder API proxy, second is the seed path of the SeedController
+const seedApiUrl = new URL("/seed/seed/", webServerBaseUrl).toString();
+
+class Scene implements UsingRequired {
   private inited = false;
-  private recipe?: Recipe<unknown>;
+  private _recipe?: Recipe<unknown>;
   private mangledMap = new Map<string, string>();
 
-  [Symbol.dispose] = () => {
+  constructor(private options: SceneOptions) {}
+
+  private get recipe(): Recipe<unknown> {
     if (!this.inited) {
+      throw new Error("Scene must be initialized before accessing recipe");
+    }
+    if (!this._recipe) {
+      throw new Error("Scene was not properly initialized");
+    }
+    return this._recipe;
+  }
+
+  get seedId(): string {
+    if (!this.inited) {
+      throw new Error("Scene must be initialized before accessing seedId");
+    }
+    if (!this.recipe) {
+      throw new Error("Scene was not properly initialized");
+    }
+    return this.recipe.currentSeedId;
+  }
+
+  [Symbol.dispose] = () => {
+    if (!this.inited || this.options.noDown) {
       return;
     }
 
@@ -35,32 +59,67 @@ export class Scene implements UsingRequired {
     if (this.inited) {
       throw new Error("Scene has already been initialized");
     }
-    this.recipe = recipe;
+    this._recipe = recipe;
     this.inited = true;
 
-    const response = await recipe.up();
+    const mangleMap = await recipe.up();
 
-    this.mangledMap = new Map(Object.entries(response.mangleMap));
+    this.mangledMap = new Map(Object.entries(mangleMap));
   }
 }
 
+export type SceneOptions = {
+  //
+  /**
+   * If true, the scene will not be torn down when disposed.
+   * Note: if you do not tear down the scene, you are responsible for cleaning up any side effects.
+   *
+   * @default false
+   */
+  noDown?: boolean;
+};
+
+const SCENE_OPTIONS_DEFAULTS: Readonly<SceneOptions> = Object.freeze({
+  noDown: false,
+});
+
 export class Play {
-  static async scene<T extends Recipe<TUp>, TUp>(recipe: T): Promise<Scene> {
-    const scene = new Scene();
+  /**
+   * Runs server-side recipes to create a test scene. Automatically destroys the scene when disposed.
+   *
+   * Scenes also expose a `mangle` method that can be used to mangle magic string in the same way the server reports them
+   * back to avoid collisions. For example, if a recipe creates a user with the email `test@example.com`, you can call
+   * `scene.mangle("test@example.com")` to get the actual email address of the user created in the scene.
+   *
+   * Example usage:
+   * ```ts
+   * import { Play, SingleUserRecipe } from "@bitwarden/playwright-scenes";
+   *
+   * test("my test", async ({ page }) => {
+   *  using scene = await Play.scene(new SingleUserRecipe({ email: "
+   *  expect(scene.mangle("my-id")).not.toBe("my-id");
+   * });
+   *
+   * @param recipe The recipe to run to create the scene
+   * @param options Options for the scene
+   * @returns
+   */
+  static async scene<T extends Recipe<TUp>, TUp>(
+    recipe: T,
+    options: SceneOptions = {},
+  ): Promise<Scene> {
+    const scene = new Scene({ SCENE_OPTIONS_DEFAULTS, ...options });
     await scene.init(recipe);
     return scene;
   }
-}
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- example usage of the framework
-async function test() {
-  // example usage
-  const recipe = new OrganizationWithUsersRecipe({
-    name: "My Org",
-    numUsers: 3,
-    domain: "example.com",
-  });
-  using scene = await Play.scene(recipe);
+  static async DeleteAllScenes(): Promise<void> {
+    const response = await fetch(seedApiUrl, {
+      method: "DELETE",
+    });
 
-  expect(scene.mangle("my-id")).toBe("my-id");
+    if (!response.ok) {
+      throw new Error(`Failed to delete recipes: ${response.statusText}`);
+    }
+  }
 }
