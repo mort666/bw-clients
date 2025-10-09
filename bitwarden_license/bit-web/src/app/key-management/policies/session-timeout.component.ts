@@ -164,9 +164,7 @@ export class SessionTimeoutPolicyComponent
 
     let confirmed = true;
     if (newType === "never") {
-      const dialogRef = this.dialogService.open<boolean>(SessionTimeoutConfirmationNeverComponent, {
-        disableClose: true,
-      });
+      const dialogRef = SessionTimeoutConfirmationNeverComponent.open(this.dialogService);
 
       confirmed = !!(await firstValueFrom(dialogRef.closed));
     } else if (newType === "onSystemLock") {

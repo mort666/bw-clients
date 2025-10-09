@@ -8,6 +8,7 @@ import {
   CalloutModule,
   DialogModule,
   DialogRef,
+  DialogService,
   TypographyModule,
 } from "@bitwarden/components";
 import { I18nPipe } from "@bitwarden/ui-common";
@@ -27,4 +28,10 @@ import { I18nPipe } from "@bitwarden/ui-common";
 })
 export class SessionTimeoutConfirmationNeverComponent {
   constructor(public dialogRef: DialogRef) {}
+
+  static open(dialogService: DialogService) {
+    return dialogService.open<boolean>(SessionTimeoutConfirmationNeverComponent, {
+      disableClose: true,
+    });
+  }
 }

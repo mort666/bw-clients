@@ -29,7 +29,7 @@
 
   <div bitDialogFooter class="tw-flex tw-flex-col tw-flex-grow tw-gap-2">
     <button bitButton buttonType="primary" type="button" (click)="dialogRef.close(true)">
-      <span>{{ "yes" | i18n }}</span>
+      {{ "yes" | i18n }}
     </button>
     <button bitButton buttonType="secondary" type="button" (click)="dialogRef.close(false)">
       {{ "no" | i18n }}
