@@ -4,14 +4,14 @@ import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { ErrorResponse } from "@bitwarden/common/models/response/error.response";
 import { OrganizationId, OrganizationReportId } from "@bitwarden/common/types/guid";
 
-import { EncryptedDataWithKey, OrganizationReportApplication } from "../models";
+import { EncryptedDataWithKey, OrganizationReportApplication } from "../../models";
 import {
   GetRiskInsightsApplicationDataResponse,
   GetRiskInsightsReportResponse,
   GetRiskInsightsSummaryResponse,
   SaveRiskInsightsReportRequest,
   SaveRiskInsightsReportResponse,
-} from "../models/api-models.types";
+} from "../../models/api-models.types";
 
 export class RiskInsightsApiService {
   constructor(private apiService: ApiService) {}

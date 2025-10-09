@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 
-import { MemberCipherDetailsResponse } from "../response/member-cipher-details.response";
+import { MemberCipherDetailsResponse } from "../../response/member-cipher-details.response";
 
 @Injectable()
 export class MemberCipherDetailsApiService {

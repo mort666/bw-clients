@@ -26,17 +26,17 @@ import {
   getMemberDetailsFlat,
   getTrimmedCipherUris,
   getUniqueMembers,
-} from "../helpers/risk-insights-data-mappers";
+} from "../../helpers/risk-insights-data-mappers";
 import {
   isSaveRiskInsightsReportResponse,
   SaveRiskInsightsReportResponse,
-} from "../models/api-models.types";
+} from "../../models/api-models.types";
 import {
   LEGACY_CipherHealthReportDetail,
   LEGACY_CipherHealthReportUriDetail,
   LEGACY_MemberDetailsFlat,
   LEGACY_ApplicationHealthReportDetailWithCriticalFlagAndCipher,
-} from "../models/password-health";
+} from "../../models/password-health";
 import {
   ApplicationHealthReportDetail,
   OrganizationReportSummary,
@@ -47,11 +47,11 @@ import {
   PasswordHealthData,
   OrganizationReportApplication,
   RiskInsightsData,
-} from "../models/report-models";
+} from "../../models/report-models";
+import { MemberCipherDetailsApiService } from "../api/member-cipher-details-api.service";
+import { RiskInsightsApiService } from "../api/risk-insights-api.service";
 
-import { MemberCipherDetailsApiService } from "./member-cipher-details-api.service";
 import { PasswordHealthService } from "./password-health.service";
-import { RiskInsightsApiService } from "./risk-insights-api.service";
 import { RiskInsightsEncryptionService } from "./risk-insights-encryption.service";
 
 export class RiskInsightsReportService {

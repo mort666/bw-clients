@@ -7,17 +7,16 @@ import { ErrorResponse } from "@bitwarden/common/models/response/error.response"
 import { makeEncString } from "@bitwarden/common/spec";
 import { OrganizationId, OrganizationReportId } from "@bitwarden/common/types/guid";
 
-import { EncryptedDataWithKey } from "../models";
+import { EncryptedDataWithKey } from "../../models";
 import {
   GetRiskInsightsApplicationDataResponse,
   GetRiskInsightsReportResponse,
   GetRiskInsightsSummaryResponse,
   SaveRiskInsightsReportRequest,
   SaveRiskInsightsReportResponse,
-} from "../models/api-models.types";
-import { mockApplicationData, mockReportData, mockSummaryData } from "../models/mock-data";
-
-import { RiskInsightsApiService } from "./risk-insights-api.service";
+} from "../../models/api-models.types";
+import { mockApplicationData, mockReportData, mockSummaryData } from "../../models/mocks/mock-data";
+import { RiskInsightsApiService } from "../api/risk-insights-api.service";
 
 describe("RiskInsightsApiService", () => {
   let service: RiskInsightsApiService;

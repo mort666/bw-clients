@@ -20,12 +20,15 @@ import { AccountService } from "@bitwarden/common/auth/abstractions/account.serv
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { OrganizationId, UserId } from "@bitwarden/common/types/guid";
 
-import { ApplicationHealthReportDetailEnriched } from "../models";
-import { RiskInsightsEnrichedData } from "../models/report-data-service.types";
-import { DrawerType, DrawerDetails, ApplicationHealthReportDetail } from "../models/report-models";
-
-import { CriticalAppsService } from "./critical-apps.service";
-import { RiskInsightsReportService } from "./risk-insights-report.service";
+import { ApplicationHealthReportDetailEnriched } from "../../models";
+import { RiskInsightsEnrichedData } from "../../models/report-data-service.types";
+import {
+  DrawerType,
+  DrawerDetails,
+  ApplicationHealthReportDetail,
+} from "../../models/report-models";
+import { CriticalAppsService } from "../domain/critical-apps.service";
+import { RiskInsightsReportService } from "../domain/risk-insights-report.service";
 
 export class RiskInsightsDataService {
   // -------------------------- Context state --------------------------
@@ -39,17 +42,6 @@ export class RiskInsightsDataService {
     organizationName: string;
   } | null>(null);
   organizationDetails$ = this.organizationDetailsSubject.asObservable();
-
-  // -------------------------- Data ------------------------------------
-  // TODO: Remove. Will use report results
-  private LEGACY_applicationsSubject = new BehaviorSubject<ApplicationHealthReportDetail[] | null>(
-    null,
-  );
-  LEGACY_applications$ = this.LEGACY_applicationsSubject.asObservable();
-
-  // TODO: Remove. Will use date from report results
-  private LEGACY_dataLastUpdatedSubject = new BehaviorSubject<Date | null>(null);
-  dataLastUpdated$ = this.LEGACY_dataLastUpdatedSubject.asObservable();
 
   // --------------------------- UI State ------------------------------------
   private isLoadingSubject = new BehaviorSubject<boolean>(false);
@@ -152,36 +144,6 @@ export class RiskInsightsDataService {
         this.errorSubject.next("Failed to save report");
       },
     });
-  }
-
-  /**
-   * Fetches the applications report and updates the applicationsSubject.
-   * @param organizationId The ID of the organization.
-   */
-  LEGACY_fetchApplicationsReport(organizationId: OrganizationId, isRefresh?: boolean): void {
-    if (isRefresh) {
-      this.isRefreshingSubject.next(true);
-    } else {
-      this.isLoadingSubject.next(true);
-    }
-    this.reportService
-      .LEGACY_generateApplicationsReport$(organizationId)
-      .pipe(
-        finalize(() => {
-          this.isLoadingSubject.next(false);
-          this.isRefreshingSubject.next(false);
-          this.LEGACY_dataLastUpdatedSubject.next(new Date());
-        }),
-      )
-      .subscribe({
-        next: (reports: ApplicationHealthReportDetail[]) => {
-          this.LEGACY_applicationsSubject.next(reports);
-          this.errorSubject.next(null);
-        },
-        error: () => {
-          this.LEGACY_applicationsSubject.next([]);
-        },
-      });
   }
 
   // ------------------------------- Enrichment methods -------------------------------

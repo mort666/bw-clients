@@ -12,7 +12,7 @@ import {
   RiskInsightsReportService,
   SecurityTasksApiService,
 } from "@bitwarden/bit-common/dirt/reports/risk-insights/services";
-import { RiskInsightsEncryptionService } from "@bitwarden/bit-common/dirt/reports/risk-insights/services/risk-insights-encryption.service";
+import { RiskInsightsEncryptionService } from "@bitwarden/bit-common/dirt/reports/risk-insights/services/domain/risk-insights-encryption.service";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";

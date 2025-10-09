@@ -7,7 +7,7 @@ import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/sym
 import { OrganizationId, UserId } from "@bitwarden/common/types/guid";
 import { KeyService } from "@bitwarden/key-management";
 
-import { DecryptedReportData, EncryptedReportData, EncryptedDataWithKey } from "../models";
+import { DecryptedReportData, EncryptedReportData, EncryptedDataWithKey } from "../../models";
 
 export class RiskInsightsEncryptionService {
   constructor(

@@ -20,9 +20,8 @@ import { KeyService } from "@bitwarden/key-management";
 import {
   PasswordHealthReportApplicationsRequest,
   PasswordHealthReportApplicationsResponse,
-} from "../models/api-models.types";
-
-import { CriticalAppsApiService } from "./critical-apps-api.service";
+} from "../../models/api-models.types";
+import { CriticalAppsApiService } from "../api/critical-apps-api.service";
 
 /* Retrieves and decrypts critical apps for a given organization
  *  Encrypts and saves data for a given organization

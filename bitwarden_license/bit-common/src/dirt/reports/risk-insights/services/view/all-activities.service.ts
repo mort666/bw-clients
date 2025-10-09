@@ -1,7 +1,7 @@
 import { BehaviorSubject } from "rxjs";
 
-import { ApplicationHealthReportDetailEnriched } from "../models";
-import { OrganizationReportSummary } from "../models/report-models";
+import { ApplicationHealthReportDetailEnriched } from "../../models";
+import { OrganizationReportSummary } from "../../models/report-models";
 
 import { RiskInsightsDataService } from "./risk-insights-data.service";
 

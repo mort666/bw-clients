@@ -6,24 +6,24 @@ import { makeEncString } from "@bitwarden/common/spec";
 import { OrganizationId, UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 
-import { DecryptedReportData, EncryptedDataWithKey } from "../models";
+import { DecryptedReportData, EncryptedDataWithKey } from "../../models";
 import {
   GetRiskInsightsReportResponse,
   SaveRiskInsightsReportResponse,
-} from "../models/api-models.types";
+} from "../../models/api-models.types";
+import { mockCiphers } from "../../models/mocks/ciphers.mock";
 import {
   mockApplicationData,
   mockCipherViews,
   mockMemberDetails,
   mockReportData,
   mockSummaryData,
-} from "../models/mock-data";
+} from "../../models/mocks/mock-data";
+import { MemberCipherDetailsApiService } from "../api/member-cipher-details-api.service";
+import { mockMemberCipherDetails } from "../api/member-cipher-details-api.service.spec";
+import { RiskInsightsApiService } from "../api/risk-insights-api.service";
 
-import { mockCiphers } from "./ciphers.mock";
-import { MemberCipherDetailsApiService } from "./member-cipher-details-api.service";
-import { mockMemberCipherDetails } from "./member-cipher-details-api.service.spec";
 import { PasswordHealthService } from "./password-health.service";
-import { RiskInsightsApiService } from "./risk-insights-api.service";
 import { RiskInsightsEncryptionService } from "./risk-insights-encryption.service";
 import { RiskInsightsReportService } from "./risk-insights-report.service";
 

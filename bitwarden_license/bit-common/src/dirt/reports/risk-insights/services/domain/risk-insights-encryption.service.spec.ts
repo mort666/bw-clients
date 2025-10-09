@@ -10,8 +10,8 @@ import { OrganizationId, UserId } from "@bitwarden/common/types/guid";
 import { OrgKey } from "@bitwarden/common/types/key";
 import { KeyService } from "@bitwarden/key-management";
 
-import { EncryptedReportData, DecryptedReportData } from "../models";
-import { mockApplicationData, mockReportData, mockSummaryData } from "../models/mock-data";
+import { EncryptedReportData, DecryptedReportData } from "../../models";
+import { mockApplicationData, mockReportData, mockSummaryData } from "../../models/mocks/mock-data";
 
 import { RiskInsightsEncryptionService } from "./risk-insights-encryption.service";
 

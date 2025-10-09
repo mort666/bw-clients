@@ -14,10 +14,10 @@ import { KeyService } from "@bitwarden/key-management";
 import {
   PasswordHealthReportApplicationsRequest,
   PasswordHealthReportApplicationsResponse,
-} from "../models/api-models.types";
-import { PasswordHealthReportApplicationId } from "../models/report-models";
+} from "../../models/api-models.types";
+import { PasswordHealthReportApplicationId } from "../../models/report-models";
+import { CriticalAppsApiService } from "../api/critical-apps-api.service";
 
-import { CriticalAppsApiService } from "./critical-apps-api.service";
 import { CriticalAppsService } from "./critical-apps.service";
 
 const SomeCsprngArray = new Uint8Array(64) as CsprngArray;

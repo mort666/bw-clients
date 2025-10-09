@@ -3,14 +3,13 @@ import { mock } from "jest-mock-extended";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 
-import { MemberCipherDetailsResponse } from "../response/member-cipher-details.response";
-
-import { ApplicationHealthReportDetailEnriched } from "./report-data-service.types";
+import { MemberCipherDetailsResponse } from "../../response/member-cipher-details.response";
+import { ApplicationHealthReportDetailEnriched } from "../report-data-service.types";
 import {
   ApplicationHealthReportDetail,
   OrganizationReportApplication,
   OrganizationReportSummary,
-} from "./report-models";
+} from "../report-models";
 
 const mockApplication1: ApplicationHealthReportDetail = {
   applicationName: "application1.com",
