@@ -12,7 +12,7 @@ import { UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { SearchService } from "@bitwarden/common/vault/abstractions/search.service";
-import { BiometricsService } from "@bitwarden/key-management";
+import { BiometricsService, KeyService } from "@bitwarden/key-management";
 import { LogService } from "@bitwarden/logging";
 import { StateService, StateEventRunnerService } from "@bitwarden/state";
 
@@ -41,6 +41,7 @@ describe("DefaultLockService", () => {
   const systemService = mock<SystemService>();
   const processReloadService = mock<ProcessReloadServiceAbstraction>();
   const logService = mock<LogService>();
+  const keyService = mock<KeyService>();
 
   const sut = new DefaultLockService(
     accountService,
@@ -58,8 +59,8 @@ describe("DefaultLockService", () => {
     authService,
     systemService,
     processReloadService,
-    biometricsService,
     logService,
+    keyService,
   );
 
   describe("lockAll", () => {
