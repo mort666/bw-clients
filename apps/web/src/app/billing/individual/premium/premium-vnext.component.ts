@@ -1,6 +1,6 @@
 import { Component } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { combineLatest, map, Observable, shareReplay, switchMap } from "rxjs";
+import { combineLatest, firstValueFrom, map, Observable, shareReplay, switchMap } from "rxjs";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
@@ -13,6 +13,12 @@ import { DialogService, ToastService } from "@bitwarden/components";
 import { SubscriptionPricingService } from "../../services/subscription-pricing.service";
 import { BitwardenSubscriber, mapAccountToSubscriber } from "../../types";
 import { PersonalSubscriptionPricingTier } from "../../types/subscription-pricing-tier";
+import {
+  UnifiedUpgradeDialogComponent,
+  UnifiedUpgradeDialogParams,
+  UnifiedUpgradeDialogResult,
+  UnifiedUpgradeDialogStep,
+} from "../upgrade/unified-upgrade-dialog/unified-upgrade-dialog.component";
 
 @Component({
   templateUrl: "./premium-vnext.component.html",
@@ -119,4 +125,31 @@ export class PremiumVNextComponent {
       message: this.i18nService.t("premiumUpdated"),
     });
   };
+
+  protected async openUpgradeDialog(planType: "Premium" | "Families"): Promise<void> {
+    const account = await firstValueFrom(this.accountService.activeAccount$);
+    if (!account) {
+      return;
+    }
+
+    const selectedPlan = planType === "Premium" ? "premium" : "families";
+
+    const dialogParams: UnifiedUpgradeDialogParams = {
+      account,
+      initialStep: UnifiedUpgradeDialogStep.Payment,
+      selectedPlan: selectedPlan as any,
+    };
+
+    const dialogRef = UnifiedUpgradeDialogComponent.open(this.dialogService, {
+      data: dialogParams,
+    });
+
+    dialogRef.closed.pipe(takeUntilDestroyed()).subscribe((result: UnifiedUpgradeDialogResult) => {
+      if (result?.status === "upgradedToPremium" || result?.status === "upgradedToFamilies") {
+        void this.finalizeUpgrade().then(() => {
+          void this.postFinalizeUpgrade();
+        });
+      }
+    });
+  }
 }

@@ -1,6 +1,6 @@
-<div class="tw-max-w-4xl tw-mx-auto">
+<div class="tw-max-w-3xl tw-mx-auto">
   <bit-section *ngIf="shouldShowNewDesign$ | async">
-    <div class="tw-max-w-4xl tw-ml-auto tw-mr-16 tw-text-center">
+    <div class="tw-text-center">
       <div
         class="tw-inline-block tw-bg-background-alt tw-border-[0.5px] tw-border-secondary-700 tw-rounded-full tw-px-2 tw-py-1 tw-mt-8 tw-mb-6"
       >
@@ -9,11 +9,11 @@
         </span>
       </div>
 
-      <h2 *ngIf="!isSelfHost" class="tw-mt-6 tw-text-4xl">
+      <h2 *ngIf="!isSelfHost" class="tw-mt-2 tw-text-4xl">
         {{ "upgradeCompleteSecurity" | i18n }}
       </h2>
-      <p class="tw-text-muted tw-mb-6">
-        {{ "unlockPremiumFeatures" | i18n }}
+      <p class="tw-text-muted tw-mb-6 tw-mt-4">
+        {{ "individualUpgradeDescriptionMessage" | i18n }}
       </p>
     </div>
 
@@ -52,7 +52,9 @@
 
     <!-- Business Plans Link -->
     <div class="tw-text-center tw-mt-6">
-      <p class="tw-text-muted tw-mb-2">{{ "individualUpgradeTaxInformationMessage" | i18n }}</p>
+      <p class="tw-text-muted tw-mb-2 tw-italic">
+        {{ "individualUpgradeTaxInformationMessage" | i18n }}
+      </p>
       <a
         bitLink
         linkType="primary"
