@@ -13,11 +13,12 @@ import {
 } from "@bitwarden/common/key-management/vault-timeout";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { SystemService } from "@bitwarden/common/platform/abstractions/system.service";
+import { KeySuffixOptions } from "@bitwarden/common/platform/enums";
 import { UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { SearchService } from "@bitwarden/common/vault/abstractions/search.service";
-import { BiometricsService } from "@bitwarden/key-management";
+import { BiometricsService, KeyService } from "@bitwarden/key-management";
 import { LogService } from "@bitwarden/logging";
 import { StateService, StateEventRunnerService } from "@bitwarden/state";
 
@@ -52,8 +53,8 @@ export class DefaultLockService implements LockService {
     private readonly authService: AuthService,
     private readonly systemService: SystemService,
     private readonly processReloadService: ProcessReloadServiceAbstraction,
-    private readonly biometricsService: BiometricsService,
     private readonly logService: LogService,
+    private readonly keyService: KeyService,
   ) {}
 
   async lockAll() {
@@ -127,6 +128,8 @@ export class DefaultLockService implements LockService {
     await this.masterPasswordService.clearMasterKey(userId);
     await this.stateService.setUserKeyAutoUnlock(null, { userId });
     await this.cipherService.clearCache(userId);
+    // Clear CLI unlock state
+    await this.keyService.clearStoredUserKey(KeySuffixOptions.Auto, userId);
 
     // System clipboard clearing
     await this.systemService.clearPendingClipboard();
@@ -144,7 +147,7 @@ export class DefaultLockService implements LockService {
     this.messagingService.send("locked", { userId });
 
     // Wipe the current process to clear active secrets in memory.
-    await this.biometricsService.setShouldAutopromptNow(false);
+    await this.biometricService.setShouldAutopromptNow(false);
     await this.processReloadService.startProcessReload();
   }
 }
