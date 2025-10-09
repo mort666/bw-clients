@@ -139,6 +139,6 @@ export class VaultTimeoutService implements VaultTimeoutServiceAbstraction {
     );
     timeoutAction === VaultTimeoutAction.LogOut
       ? await this.logOut(userId)
-      : await this.lock(userId);
+      : await this.lockService.lock(userId);
   }
 }
