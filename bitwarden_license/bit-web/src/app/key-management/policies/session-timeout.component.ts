@@ -1,6 +1,13 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import { FormBuilder, FormControl, Validators } from "@angular/forms";
-import { concatMap, firstValueFrom, pairwise, startWith, Subject, takeUntil } from "rxjs";
+import {
+  BehaviorSubject,
+  concatMap,
+  firstValueFrom,
+  Subject,
+  takeUntil,
+  withLatestFrom,
+} from "rxjs";
 
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { VaultTimeoutAction } from "@bitwarden/common/key-management/vault-timeout";
@@ -42,6 +49,7 @@ export class SessionTimeoutPolicyComponent
   implements OnInit, OnDestroy
 {
   private destroy$ = new Subject<void>();
+  private lastConfirmedType$ = new BehaviorSubject<SessionTimeoutType>(null);
 
   actionOptions: { name: string; value: SessionTimeoutAction }[];
   typeOptions: { name: string; value: SessionTimeoutType }[];
@@ -63,7 +71,6 @@ export class SessionTimeoutPolicyComponent
     ),
     action: new FormControl<SessionTimeoutAction>(null),
   });
-  skipTypeConfirmation = false;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -89,16 +96,19 @@ export class SessionTimeoutPolicyComponent
     super.ngOnInit();
 
     const typeControl = this.data.controls.type;
+    this.lastConfirmedType$.next(typeControl.value ?? null);
+
     typeControl.valueChanges
       .pipe(
-        concatMap(async (type) => {
-          this.updateFormControls(type);
-          return type;
-        }),
-        startWith(typeControl.value ?? null),
-        pairwise(),
-        concatMap(async ([previousType, newType]) => {
-          await this.confirmTypeChange(previousType, newType);
+        withLatestFrom(this.lastConfirmedType$),
+        concatMap(async ([newType, lastConfirmedType]) => {
+          const confirmed = await this.confirmTypeChange(newType);
+          if (confirmed) {
+            this.updateFormControls(newType);
+            this.lastConfirmedType$.next(newType);
+          } else {
+            typeControl.setValue(lastConfirmedType, { emitEvent: false });
+          }
         }),
         takeUntil(this.destroy$),
       )
@@ -156,19 +166,12 @@ export class SessionTimeoutPolicyComponent
     };
   }
 
-  private async confirmTypeChange(previousType: SessionTimeoutType, newType: SessionTimeoutType) {
-    if (this.skipTypeConfirmation) {
-      this.skipTypeConfirmation = false;
-      return;
-    }
-
-    let confirmed = true;
+  private async confirmTypeChange(newType: SessionTimeoutType): Promise<boolean> {
     if (newType === "never") {
       const dialogRef = SessionTimeoutConfirmationNeverComponent.open(this.dialogService);
-
-      confirmed = !!(await firstValueFrom(dialogRef.closed));
+      return !!(await firstValueFrom(dialogRef.closed));
     } else if (newType === "onSystemLock") {
-      confirmed = await this.dialogService.openSimpleDialog({
+      return await this.dialogService.openSimpleDialog({
         type: "info",
         title: { key: "sessionTimeoutConfirmationOnSystemLockTitle" },
         content: { key: "sessionTimeoutConfirmationOnSystemLockDescription" },
@@ -177,12 +180,7 @@ export class SessionTimeoutPolicyComponent
       });
     }
 
-    if (!confirmed) {
-      this.skipTypeConfirmation = true;
-      this.data.patchValue({
-        type: previousType,
-      });
-    }
+    return true;
   }
 
   private updateFormControls(type: SessionTimeoutType) {
