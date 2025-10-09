@@ -24,8 +24,8 @@ const routes: Routes = [
         data: { titleId: "premiumMembership" },
       },
       ...featureFlaggedRoute({
-        defaultComponent: PremiumVNextComponent,
-        flaggedComponent: PremiumComponent,
+        defaultComponent: PremiumComponent,
+        flaggedComponent: PremiumVNextComponent,
         featureFlag: FeatureFlag.PM24033PremiumUpgradeNewDesign,
         routeOptions: {
           data: { titleId: "goPremium" },
