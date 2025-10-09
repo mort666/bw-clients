@@ -6,7 +6,7 @@
 >
 > - [Authentication Methods](#authentication-methods)
 > - [The Credentials Object](#the-credentials-object)
-> - [The Login Strategy](#the-login-strategy)
+> - [The `LoginStrategyService` and our Login Strategies](#the-loginstrategyservice-and-our-login-strategies)
 > - [The `logIn()` and `startLogin()` Methods](#the-login-and-startlogin-methods)
 > - [Handling the `AuthResult`](#handling-the-authresult)
 > - [Diagram of Authentication Flows](#diagram-of-authentication-flows)
@@ -17,23 +17,45 @@
 
 Bitwarden provides 5 methods for logging in to Bitwarden, as defined in our [`AuthenticationType`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/enums/authentication-type.ts) enum. They are:
 
-1. [Login with Master Password](https://bitwarden.com/help/bitwarden-security-white-paper/#authentication-and-decryption) &mdash; authenticate with an email address and master password
-2. [Login with Device](https://bitwarden.com/help/log-in-with-device/) (aka Login with Auth Request) &mdash; authenticate with a one-time access code
-3. [Login with SSO](https://bitwarden.com/help/about-sso/) &mdash; authenticate with an SSO Identity Provider (IdP) through SAML or OpenID Connect (OIDC)
+1. [Login with Master Password](https://bitwarden.com/help/bitwarden-security-white-paper/#authentication-and-decryption) &mdash; authenticate with a master password
+2. [Login with Auth Request](https://bitwarden.com/help/log-in-with-device/) (aka Login with Device) &mdash; authenticate with a one-time access code
+3. [Login with Single Sign-On](https://bitwarden.com/help/about-sso/) &mdash; authenticate with an SSO Identity Provider (IdP) through SAML or OpenID Connect (OIDC)
 4. [Login with Passkey](https://bitwarden.com/help/login-with-passkeys/) (aka Login with WebAuthn) &mdash; authenticate with a passkey
 5. [Login with User API Key](https://bitwarden.com/help/personal-api-key/) &mdash; authenticate with an API key and secret
 
 <br>
 
-- Methods 1-4
-  - Can be initiated from the `LoginComponent` on our Angular clients (at route `/login`)
-  - Can be initiated from our CLI client
-- Method 5
-  - Can be initiated _only_ from our CLI client
+**Login Initiation - Angular Clients**
+
+From the user's perspective, methods 1-4 can be initiated from the `/login` screen (`LoginComponent`).
+
+But "initiated" in this context simply means "the user can enter their email" to begin the login process. _After_ a user has entered their email on the `/login` screen they must then click one of the following buttons to navigate to the relevant component, which is where they can truly kick off the particular login process:
+
+- "Continue" button &rarr; user stays on the `LoginComponent` and enters a Master Password
+- "Log in with device" button &rarr; navigates user to `LoginViaAuthRequestComponent`
+- "Use single sign-on" button &rarr; navigates user to `SsoComponent`
+- "Log in with passkey" button &rarr; navigates user to `LoginViaWebAuthnComponent`
+  - Note: Login with Passkey is currently not available on the Desktop client.
+
+> [!NOTE]  
+> It is worth noting that the Login with Master Password method is also used by the
+> `RegistrationFinishComponent` and `CompleteTrialInitiationComponent` (the user automatically
+> gets logged in with their Master Password after registration), and the `RecoverTwoFactorComponent`
+> (the user logs in with their Master Password along with their 2FA recovery code).
+
+**Login Initiation - CLI Client**
+
+The CLI client can handle the following login methods via the `LoginCommand`.
+
+- Login with Master Password
+- Login with Single Sign-On
+- Login with User API Key (which can _only_ be initiated from the CLI client)
 
 <br>
 
-While each login method relies on its own unique logic, this `README` discusses the logic that is _generally_ common to all login methods.
+## Login Methods Share Common Logic
+
+While each login method has its own unique logic, this `README` discusses the logic that is _generally_ common to all login methods. That said, the code is the ultimate source of truth. This document is meant to provide a high-level overview and as such will involve some abstraction.
 
 <br>
 
@@ -41,7 +63,7 @@ While each login method relies on its own unique logic, this `README` discusses 
 
 When the user clicks the "submit" action for their specific login method, we first build a **credentials object**. This object gathers the core credentials needed to initiate the specific login method.
 
-For example, when the user clicks "Log in with master password", we build a `PasswordLoginCredentials` object, which is defined as follows:
+For example, when the user clicks "Log in with master password" on the `LoginComponent`, we build a `PasswordLoginCredentials` object, which is defined as follows:
 
 ```typescript
 export class PasswordLoginCredentials {
@@ -58,7 +80,7 @@ export class PasswordLoginCredentials {
 
 Notice that the `type` is automatically set to `AuthenticationType.Password`, and that the `PasswordLoginCredentials` object simply requires an `email` and `masterPassword` to initiate the login process.
 
-Each authentication method builds it's respective credentials object, all of which are defined in [`login-credentials.ts`](https://github.com/bitwarden/clients/blob/main/libs/auth/src/common/models/domain/login-credentials.ts).
+Each login method builds it's respective credentials object, all of which are defined in [`login-credentials.ts`](https://github.com/bitwarden/clients/blob/main/libs/auth/src/common/models/domain/login-credentials.ts).
 
 - `PasswordLoginCredentials`
 - `AuthRequestLoginCredentials`
@@ -68,12 +90,12 @@ Each authentication method builds it's respective credentials object, all of whi
 
 <br>
 
-## The Login Strategy
+## The `LoginStrategyService` and our Login Strategies
 
-The credentials object gets passed to our [`LoginStrategyService`](https://github.com/bitwarden/clients/blob/main/libs/auth/src/common/services/login-strategies/login-strategy.service.ts), which acts as an orchestrator that determines which specific **login strategy** should be used for the login process.
+The credentials object gets passed to our [`LoginStrategyService`](https://github.com/bitwarden/clients/blob/main/libs/auth/src/common/services/login-strategies/login-strategy.service.ts), which acts as an orchestrator that determines which specific **login strategy** should be initialized and used for the login process.
 
 > [!IMPORTANT]
-> Our authentication methods are handled by different [login strategies](https://github.com/bitwarden/clients/tree/main/libs/auth/src/common/login-strategies) in our code, making use of the [Strategy Pattern](https://refactoring.guru/design-patterns/strategy). Those strategies are:
+> Our authentication methods are handled by different [login strategies](https://github.com/bitwarden/clients/tree/main/libs/auth/src/common/login-strategies) in our code, making use of the [Strategy Design Pattern](https://refactoring.guru/design-patterns/strategy). Those strategies are:
 >
 > - `PasswordLoginStrategy`
 > - `AuthRequestLoginStrategy`
@@ -83,15 +105,17 @@ The credentials object gets passed to our [`LoginStrategyService`](https://githu
 >
 > Each of those strategies extend the base [`LoginStrategy`](https://github.com/bitwarden/clients/blob/main/libs/auth/src/common/login-strategies/login.strategy.ts), which houses common login logic.
 
-The `LoginStrategyService` uses the `type` property on the credentials object to determine which of the specific login strategies should be used for the login process.
+The `LoginStrategyService` uses the `type` property on the credentials object to determine which of the specific login strategies should be initialized and used for the login process.
 
-For example, the `PasswordLoginCredentials` object has `type = 0` (which is `AuthenticationType.Password`). This tells the `LoginStrategyService` to use the `PasswordLoginStrategy` for the login process.
+For example, the `PasswordLoginCredentials` object has `type = 0` (which is `AuthenticationType.Password`). This tells the `LoginStrategyService` to initialize and use the `PasswordLoginStrategy` for the login process.
+
+Once the `LoginStrategyService` initializes the correct Login Strategy, it then calls the `logIn(...)` method defined on that particular Login Strategy.
 
 <br>
 
 ## The `logIn()` and `startLogin()` Methods
 
-Each login strategy has it's own implementation of the `logIn()` method. This method takes the credentials object as its sole argument and triggers a process that does the following at minimum:
+Each login strategy has it's own implementation of the `logIn()` method. This method takes the credentials object as its sole argument (passed in from the `LoginStrategyService`) and triggers a process that perfoms the following common logic at minimum:
 
 1. **Build a `LoginStrategyData` Object**
 
