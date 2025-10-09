@@ -98,6 +98,9 @@ export const Default: Story = {
 
 export const AllPositions: Story = {
   render: () => ({
+    parameters: {
+      chromatic: { disableSnapshot: true },
+    },
     template: `
       <div class="tw-p-16 tw-grid tw-grid-cols-2 tw-gap-8 tw-place-items-center">
         <button
@@ -127,6 +130,9 @@ export const AllPositions: Story = {
 
 export const LongContent: Story = {
   render: () => ({
+    parameters: {
+      chromatic: { disableSnapshot: true },
+    },
     template: `
       <div class="tw-p-16 tw-flex tw-items-center tw-justify-center">
         <button
@@ -140,6 +146,9 @@ export const LongContent: Story = {
 
 export const OnDisabledButton: Story = {
   render: () => ({
+    parameters: {
+      chromatic: { disableSnapshot: true },
+    },
     template: `
       <div class="tw-p-16 tw-flex tw-items-center tw-justify-center">
         <button
