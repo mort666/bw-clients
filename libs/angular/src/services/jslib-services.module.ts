@@ -36,9 +36,11 @@ import {
   AuthRequestService,
   AuthRequestServiceAbstraction,
   DefaultAuthRequestApiService,
+  DefaultLockService,
   DefaultLoginSuccessHandlerService,
   DefaultLogoutService,
   InternalUserDecryptionOptionsServiceAbstraction,
+  LockService,
   LoginEmailService,
   LoginEmailServiceAbstraction,
   LoginStrategyService,
@@ -153,6 +155,7 @@ import { OrganizationSponsorshipApiService } from "@bitwarden/common/billing/ser
 import { OrganizationBillingService } from "@bitwarden/common/billing/services/organization-billing.service";
 import { TaxService } from "@bitwarden/common/billing/services/tax.service";
 import { HibpApiService } from "@bitwarden/common/dirt/services/hibp-api.service";
+import { ProcessReloadServiceAbstraction } from "@bitwarden/common/key-management/abstractions/process-reload.service";
 import {
   DefaultKeyGenerationService,
   KeyGenerationService,
@@ -203,6 +206,7 @@ import { SdkClientFactory } from "@bitwarden/common/platform/abstractions/sdk/sd
 import { SdkService } from "@bitwarden/common/platform/abstractions/sdk/sdk.service";
 import { StateService as StateServiceAbstraction } from "@bitwarden/common/platform/abstractions/state.service";
 import { AbstractStorageService } from "@bitwarden/common/platform/abstractions/storage.service";
+import { SystemService } from "@bitwarden/common/platform/abstractions/system.service";
 import { ValidationService as ValidationServiceAbstraction } from "@bitwarden/common/platform/abstractions/validation.service";
 import { ActionsService } from "@bitwarden/common/platform/actions";
 import { UnsupportedActionsService } from "@bitwarden/common/platform/actions/unsupported-actions.service";
@@ -852,22 +856,12 @@ const safeProviders: SafeProvider[] = [
     useClass: DefaultVaultTimeoutService,
     deps: [
       AccountServiceAbstraction,
-      InternalMasterPasswordServiceAbstraction,
-      CipherServiceAbstraction,
-      FolderServiceAbstraction,
-      CollectionService,
       PlatformUtilsServiceAbstraction,
-      MessagingServiceAbstraction,
-      SearchServiceAbstraction,
-      StateServiceAbstraction,
-      TokenServiceAbstraction,
       AuthServiceAbstraction,
       VaultTimeoutSettingsService,
-      StateEventRunnerService,
       TaskSchedulerService,
       LogService,
-      BiometricsService,
-      LOCKED_CALLBACK,
+      LockService,
       LOGOUT_CALLBACK,
     ],
   }),
@@ -1641,6 +1635,29 @@ const safeProviders: SafeProvider[] = [
       KeyService,
       MasterPasswordApiServiceAbstraction,
       InternalMasterPasswordServiceAbstraction,
+    ],
+  }),
+  safeProvider({
+    provide: LockService,
+    useClass: DefaultLockService,
+    deps: [
+      AccountService,
+      BiometricsService,
+      TokenServiceAbstraction,
+      VaultTimeoutSettingsService,
+      LogoutService,
+      MessagingServiceAbstraction,
+      SearchServiceAbstraction,
+      FolderServiceAbstraction,
+      InternalMasterPasswordServiceAbstraction,
+      StateServiceAbstraction,
+      StateEventRunnerService,
+      CipherServiceAbstraction,
+      AuthServiceAbstraction,
+      SystemService,
+      ProcessReloadServiceAbstraction,
+      BiometricsService,
+      LogService,
     ],
   }),
   safeProvider({
