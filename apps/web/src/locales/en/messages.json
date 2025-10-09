@@ -6419,6 +6419,9 @@
   "maximumAllowedTimeout": {
     "message": "Maximum allowed timeout"
   },
+  "maximumAllowedTimeoutRequired": {
+    "message": "Maximum allowed timeout is required."
+  },
   "sessionTimeoutPolicyInvalidTime": {
     "message": "Time is invalid. Change at least one value."
   },

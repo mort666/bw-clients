@@ -142,7 +142,7 @@ export class SessionTimeoutPolicyComponent
     this.data.updateValueAndValidity();
     if (this.data.invalid) {
       if (this.data.controls.type.hasError("required")) {
-        throw new Error(this.i18nService.t("inputRequired"));
+        throw new Error(this.i18nService.t("maximumAllowedTimeoutRequired"));
       }
       throw new Error(this.i18nService.t("sessionTimeoutPolicyInvalidTime"));
     }

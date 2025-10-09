@@ -360,10 +360,12 @@ describe("SessionTimeoutPolicyComponent", () => {
       fixture.detectChanges();
     });
 
-    it("should throw input required error when type is invalid", () => {
+    it("should throw max allowed timeout required error when type is invalid", () => {
       component.data.patchValue({ type: null });
 
-      expect(() => component["buildRequestData"]()).toThrow("inputRequired-used-i18n");
+      expect(() => component["buildRequestData"]()).toThrow(
+        "maximumAllowedTimeoutRequired-used-i18n",
+      );
     });
 
     it.each([
