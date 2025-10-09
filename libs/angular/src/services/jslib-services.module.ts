@@ -388,7 +388,6 @@ import {
   HTTP_OPERATIONS,
   INTRAPROCESS_MESSAGING_SUBJECT,
   LOCALES_DIRECTORY,
-  LOCKED_CALLBACK,
   LOG_MAC_FAILURES,
   LOGOUT_CALLBACK,
   OBSERVABLE_DISK_STORAGE,
@@ -443,10 +442,6 @@ const safeProviders: SafeProvider[] = [
         );
       },
     deps: [MessagingServiceAbstraction],
-  }),
-  safeProvider({
-    provide: LOCKED_CALLBACK,
-    useValue: null,
   }),
   safeProvider({
     provide: LOG_MAC_FAILURES,
