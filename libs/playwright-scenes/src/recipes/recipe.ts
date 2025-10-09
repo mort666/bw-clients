@@ -29,15 +29,8 @@ export abstract class Recipe<TUp> {
   }
 
   async down(): Promise<void> {
-    const response = await fetch(`${webServer.url}/api/delete`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        template: this.template,
-        seedId: this.seedId,
-      }),
+    const response = await fetch(`${webServer.url}/api/seed/${this.seedId}`, {
+      method: "DELETE",
     });
 
     if (!response.ok) {
