@@ -3,6 +3,7 @@ import { CommonModule } from "@angular/common";
 import { Component, Inject, OnInit, signal } from "@angular/core";
 
 import { Account } from "@bitwarden/common/auth/abstractions/account.service";
+import { PersonalSubscriptionPricingTierId } from "@bitwarden/common/billing/types/subscription-pricing-tier";
 import { UnionOfValues } from "@bitwarden/common/vault/types/union-of-values";
 import {
   ButtonModule,
@@ -11,7 +12,6 @@ import {
   DialogRef,
   DialogService,
 } from "@bitwarden/components";
-import { PersonalSubscriptionPricingTierId } from "@bitwarden/pricing";
 
 import { AccountBillingClient, TaxClient } from "../../../clients";
 import { BillingServicesModule } from "../../../services";

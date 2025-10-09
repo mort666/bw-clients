@@ -10,21 +10,20 @@ import {
 } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl, FormGroup, Validators } from "@angular/forms";
-import { debounceTime, Observable } from "rxjs";
+import { catchError, debounceTime, Observable, of } from "rxjs";
 
 import { Account } from "@bitwarden/common/auth/abstractions/account.service";
+import { SubscriptionPricingServiceAbstraction } from "@bitwarden/common/billing/abstractions/subscription-pricing.service.abstraction";
+import {
+  PersonalSubscriptionPricingTier,
+  PersonalSubscriptionPricingTierId,
+  PersonalSubscriptionPricingTierIds,
+} from "@bitwarden/common/billing/types/subscription-pricing-tier";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { UnionOfValues } from "@bitwarden/common/vault/types/union-of-values";
 import { ButtonModule, DialogModule, ToastService } from "@bitwarden/components";
 import { LogService } from "@bitwarden/logging";
-import {
-  CartSummaryComponent,
-  LineItem,
-  PersonalSubscriptionPricingTier,
-  PersonalSubscriptionPricingTierId,
-  PersonalSubscriptionPricingTierIds,
-  SubscriptionPricingServiceAbstraction,
-} from "@bitwarden/pricing";
+import { CartSummaryComponent, LineItem } from "@bitwarden/pricing";
 import { SharedModule } from "@bitwarden/web-vault/app/shared";
 
 import { EnterPaymentMethodComponent } from "../../../payment/components";
@@ -115,15 +114,28 @@ export class UpgradePaymentComponent implements OnInit, AfterViewInit {
     }
 
     this.pricingTiers$ = this.subscriptionPricingService.getPersonalSubscriptionPricingTiers$();
-    this.pricingTiers$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((plans) => {
-      const planDetails = plans.find((plan) => plan.id === this.selectedPlanId());
+    this.pricingTiers$
+      .pipe(
+        catchError((error: unknown) => {
+          this.toastService.showToast({
+            variant: "error",
+            title: "",
+            message: this.i18nService.t("unexpectedError"),
+          });
+          this.loading.set(false);
+          return of([]);
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((plans) => {
+        const planDetails = plans.find((plan) => plan.id === this.selectedPlanId());
 
-      if (planDetails) {
-        this.selectedPlan = {
-          tier: this.selectedPlanId(),
-          details: planDetails,
-        };
-        this.passwordManager = {
+        if (planDetails) {
+          this.selectedPlan = {
+            tier: this.selectedPlanId(),
+            details: planDetails,
+          };
+          this.passwordManager = {
           name: this.isFamiliesPlan ? "familiesMembership" : "premiumMembership",
           cost: this.selectedPlan.details.passwordManager.annualPrice,
           quantity: 1,

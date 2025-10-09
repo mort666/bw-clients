@@ -1,8 +1,14 @@
 import { CdkTrapFocus } from "@angular/cdk/a11y";
 import { CommonModule } from "@angular/common";
 import { Component } from "@angular/core";
-import { map, Observable, startWith } from "rxjs";
+import { catchError, map, Observable, of, startWith } from "rxjs";
 
+import { SubscriptionPricingServiceAbstraction } from "@bitwarden/common/billing/abstractions/subscription-pricing.service.abstraction";
+import {
+  PersonalSubscriptionPricingTier,
+  PersonalSubscriptionPricingTierIds,
+  SubscriptionCadenceIds,
+} from "@bitwarden/common/billing/types/subscription-pricing-tier";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import {
   ButtonModule,
@@ -12,16 +18,11 @@ import {
   DialogRef,
   DialogService,
   IconButtonModule,
+  ToastService,
   TypographyModule,
 } from "@bitwarden/components";
 import { I18nPipe } from "@bitwarden/ui-common";
 
-import { SubscriptionPricingServiceAbstraction } from "../../abstractions/subscription-pricing.service.abstraction";
-import {
-  PersonalSubscriptionPricingTier,
-  PersonalSubscriptionPricingTierIds,
-  SubscriptionCadenceIds,
-} from "../../types/subscription-pricing-tier";
 import { PricingCardComponent } from "../pricing-card/pricing-card.component";
 
 type CardDetails = {
@@ -47,11 +48,19 @@ type CardDetails = {
   templateUrl: "./premium-upgrade-dialog.component.html",
 })
 export class PremiumUpgradeDialogComponent {
-  protected cardDetails$: Observable<CardDetails> = this.subscriptionPricingService
+  protected cardDetails$: Observable<CardDetails | null> = this.subscriptionPricingService
     .getPersonalSubscriptionPricingTiers$()
     .pipe(
       map((tiers) => tiers.find((tier) => tier.id === PersonalSubscriptionPricingTierIds.Premium)),
       map((tier) => this.mapPremiumTierToCardDetails(tier!)),
+      catchError((error: unknown) => {
+        this.toastService.showToast({
+          variant: "error",
+          title: "",
+          message: this.i18nService.t("unexpectedError"),
+        });
+        return of(null);
+      }),
     );
 
   protected loading$: Observable<boolean> = this.cardDetails$.pipe(
@@ -63,6 +72,7 @@ export class PremiumUpgradeDialogComponent {
     private dialogRef: DialogRef,
     private subscriptionPricingService: SubscriptionPricingServiceAbstraction,
     private i18nService: I18nService,
+    private toastService: ToastService,
   ) {}
 
   protected onUpgradeClick(): void {

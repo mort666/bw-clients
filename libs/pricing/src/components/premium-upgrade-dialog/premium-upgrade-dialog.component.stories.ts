@@ -1,15 +1,15 @@
 import { Meta, moduleMetadata, StoryObj } from "@storybook/angular";
 import { of } from "rxjs";
 
-import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { ButtonModule, DialogModule, DialogRef, TypographyModule } from "@bitwarden/components";
-
-import { SubscriptionPricingServiceAbstraction } from "../../abstractions/subscription-pricing.service.abstraction";
+import { SubscriptionPricingServiceAbstraction } from "@bitwarden/common/billing/abstractions/subscription-pricing.service.abstraction";
 import {
   PersonalSubscriptionPricingTier,
   PersonalSubscriptionPricingTierIds,
   SubscriptionCadenceIds,
-} from "../../types/subscription-pricing-tier";
+} from "@bitwarden/common/billing/types/subscription-pricing-tier";
+import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { ButtonModule, DialogModule, DialogRef, TypographyModule } from "@bitwarden/components";
+
 import { PricingCardComponent } from "../pricing-card/pricing-card.component";
 
 import { PremiumUpgradeDialogComponent } from "./premium-upgrade-dialog.component";

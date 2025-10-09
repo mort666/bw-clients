@@ -3,15 +3,15 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { firstValueFrom, of } from "rxjs";
 
-import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { DialogRef } from "@bitwarden/components";
+import { SubscriptionPricingServiceAbstraction } from "@bitwarden/common/billing/abstractions/subscription-pricing.service.abstraction";
 import {
   PersonalSubscriptionPricingTier,
   PersonalSubscriptionPricingTierIds,
   SubscriptionCadenceIds,
-  SubscriptionPricingServiceAbstraction,
-  PremiumUpgradeDialogComponent,
-} from "@bitwarden/pricing";
+} from "@bitwarden/common/billing/types/subscription-pricing-tier";
+import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { DialogRef } from "@bitwarden/components";
+import { PremiumUpgradeDialogComponent } from "@bitwarden/pricing";
 
 describe("PremiumUpgradeDialogComponent", () => {
   let component: PremiumUpgradeDialogComponent;

@@ -4,13 +4,13 @@ import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { mock } from "jest-mock-extended";
 import { of } from "rxjs";
 
-import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { SubscriptionPricingServiceAbstraction } from "@bitwarden/common/billing/abstractions/subscription-pricing.service.abstraction";
 import {
   PersonalSubscriptionPricingTier,
   PersonalSubscriptionPricingTierIds,
-  PricingCardComponent,
-  SubscriptionPricingServiceAbstraction,
-} from "@bitwarden/pricing";
+} from "@bitwarden/common/billing/types/subscription-pricing-tier";
+import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { PricingCardComponent } from "@bitwarden/pricing";
 
 import { BillingServicesModule } from "../../../services";
 
