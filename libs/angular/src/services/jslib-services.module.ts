@@ -20,11 +20,13 @@ import {
 import {
   DefaultLoginComponentService,
   DefaultLoginDecryptionOptionsService,
+  DefaultNewDeviceVerificationComponentService,
   DefaultRegistrationFinishService,
   DefaultTwoFactorAuthComponentService,
   DefaultTwoFactorAuthWebAuthnComponentService,
   LoginComponentService,
   LoginDecryptionOptionsService,
+  NewDeviceVerificationComponentService,
   RegistrationFinishService as RegistrationFinishServiceAbstraction,
   TwoFactorAuthComponentService,
   TwoFactorAuthWebAuthnComponentService,
@@ -104,6 +106,7 @@ import { UserVerificationService as UserVerificationServiceAbstraction } from "@
 import { WebAuthnLoginApiServiceAbstraction } from "@bitwarden/common/auth/abstractions/webauthn/webauthn-login-api.service.abstraction";
 import { WebAuthnLoginPrfKeyServiceAbstraction } from "@bitwarden/common/auth/abstractions/webauthn/webauthn-login-prf-key.service.abstraction";
 import { WebAuthnLoginServiceAbstraction } from "@bitwarden/common/auth/abstractions/webauthn/webauthn-login.service.abstraction";
+import { SendTokenService, DefaultSendTokenService } from "@bitwarden/common/auth/send-access";
 import { AccountApiServiceImplementation } from "@bitwarden/common/auth/services/account-api.service";
 import { AccountServiceImplementation } from "@bitwarden/common/auth/services/account.service";
 import { AnonymousHubService } from "@bitwarden/common/auth/services/anonymous-hub.service";
@@ -146,14 +149,12 @@ import { AccountBillingApiServiceAbstraction } from "@bitwarden/common/billing/a
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { OrganizationBillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions/organizations/organization-billing-api.service.abstraction";
 import { OrganizationSponsorshipApiServiceAbstraction } from "@bitwarden/common/billing/abstractions/organizations/organization-sponsorship-api.service.abstraction";
-import { TaxServiceAbstraction } from "@bitwarden/common/billing/abstractions/tax.service.abstraction";
 import { AccountBillingApiService } from "@bitwarden/common/billing/services/account/account-billing-api.service";
 import { DefaultBillingAccountProfileStateService } from "@bitwarden/common/billing/services/account/billing-account-profile-state.service";
 import { BillingApiService } from "@bitwarden/common/billing/services/billing-api.service";
 import { OrganizationBillingApiService } from "@bitwarden/common/billing/services/organization/organization-billing-api.service";
 import { OrganizationSponsorshipApiService } from "@bitwarden/common/billing/services/organization/organization-sponsorship-api.service";
 import { OrganizationBillingService } from "@bitwarden/common/billing/services/organization-billing.service";
-import { TaxService } from "@bitwarden/common/billing/services/tax.service";
 import { HibpApiService } from "@bitwarden/common/dirt/services/hibp-api.service";
 import { ProcessReloadServiceAbstraction } from "@bitwarden/common/key-management/abstractions/process-reload.service";
 import {
@@ -1393,11 +1394,6 @@ const safeProviders: SafeProvider[] = [
     deps: [ApiServiceAbstraction],
   }),
   safeProvider({
-    provide: TaxServiceAbstraction,
-    useClass: TaxService,
-    deps: [ApiServiceAbstraction],
-  }),
-  safeProvider({
     provide: BillingAccountProfileStateService,
     useClass: DefaultBillingAccountProfileStateService,
     deps: [StateProvider, PlatformUtilsServiceAbstraction, ApiServiceAbstraction],
@@ -1521,6 +1517,7 @@ const safeProviders: SafeProvider[] = [
       AccountServiceAbstraction,
       KdfConfigService,
       KeyService,
+      ApiServiceAbstraction,
       StateProvider,
       ConfigService,
     ],
@@ -1586,6 +1583,11 @@ const safeProviders: SafeProvider[] = [
       ServerNotificationsService,
       MessageListener,
     ],
+  }),
+  safeProvider({
+    provide: SendTokenService,
+    useClass: DefaultSendTokenService,
+    deps: [GlobalStateProvider, SdkService, SendPasswordService],
   }),
   safeProvider({
     provide: EndUserNotificationService,
@@ -1669,6 +1671,11 @@ const safeProviders: SafeProvider[] = [
       BillingAccountProfileStateService,
       ConfigService,
     ],
+  }),
+  safeProvider({
+    provide: NewDeviceVerificationComponentService,
+    useClass: DefaultNewDeviceVerificationComponentService,
+    deps: [],
   }),
 ];
 
