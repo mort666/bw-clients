@@ -16,10 +16,11 @@ import { getById } from "@bitwarden/common/platform/misc";
 import { ToastService } from "@bitwarden/components";
 import { SharedModule } from "@bitwarden/web-vault/app/shared";
 
+import { RiskInsightsTabType } from "../models/risk-insights.models";
+import { ApplicationsLoadingComponent } from "../shared/risk-insights-loading.component";
+
 import { ActivityCardComponent } from "./activity-card.component";
 import { PasswordChangeMetricComponent } from "./activity-cards/password-change-metric.component";
-import { ApplicationsLoadingComponent } from "./risk-insights-loading.component";
-import { RiskInsightsTabType } from "./risk-insights.component";
 
 @Component({
   selector: "dirt-all-activity",

@@ -20,8 +20,8 @@ import {
   TypographyModule,
 } from "@bitwarden/components";
 
-import { CreateTasksRequest } from "../../../vault/services/abstractions/admin-task.abstraction";
-import { DefaultAdminTaskService } from "../../../vault/services/default-admin-task.service";
+import { CreateTasksRequest } from "../../../../vault/services/abstractions/admin-task.abstraction";
+import { DefaultAdminTaskService } from "../../../../vault/services/default-admin-task.service";
 
 export const RenderMode = {
   noCriticalApps: "noCriticalApps",

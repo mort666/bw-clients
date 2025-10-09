@@ -21,18 +21,10 @@ import {
 } from "@bitwarden/components";
 import { HeaderModule } from "@bitwarden/web-vault/app/layouts/header/header.module";
 
-import { AllActivityComponent } from "./all-activity.component";
-import { AllApplicationsComponent } from "./all-applications.component";
-import { CriticalApplicationsComponent } from "./critical-applications.component";
-
-// FIXME: update to use a const object instead of a typescript enum
-// eslint-disable-next-line @bitwarden/platform/no-enums
-export enum RiskInsightsTabType {
-  AllActivity = 0,
-  AllApps = 1,
-  CriticalApps = 2,
-  NotifiedMembers = 3,
-}
+import { AllActivityComponent } from "./activity/all-activity.component";
+import { AllApplicationsComponent } from "./all-applications/all-applications.component";
+import { CriticalApplicationsComponent } from "./critical-applications/critical-applications.component";
+import { RiskInsightsTabType } from "./models/risk-insights.models";
 
 @Component({
   templateUrl: "./risk-insights.component.html",
