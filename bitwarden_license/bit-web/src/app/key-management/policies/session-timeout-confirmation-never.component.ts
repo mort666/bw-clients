@@ -1,29 +1,10 @@
 import { Component } from "@angular/core";
 
-import { JslibModule } from "@bitwarden/angular/jslib.module";
-import {
-  A11yTitleDirective,
-  AnchorLinkDirective,
-  ButtonComponent,
-  CalloutModule,
-  DialogModule,
-  DialogRef,
-  DialogService,
-  TypographyModule,
-} from "@bitwarden/components";
-import { I18nPipe } from "@bitwarden/ui-common";
+import { DialogRef, DialogService } from "@bitwarden/components";
+import { SharedModule } from "@bitwarden/web-vault/app/shared";
 
 @Component({
-  imports: [
-    DialogModule,
-    I18nPipe,
-    CalloutModule,
-    ButtonComponent,
-    A11yTitleDirective,
-    AnchorLinkDirective,
-    JslibModule,
-    TypographyModule,
-  ],
+  imports: [SharedModule],
   templateUrl: "./session-timeout-confirmation-never.component.html",
 })
 export class SessionTimeoutConfirmationNeverComponent {

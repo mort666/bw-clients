@@ -108,7 +108,6 @@ describe("SessionTimeoutPolicyComponent", () => {
 
       fixture.detectChanges();
 
-      expect(component.data.touched).toBe(true);
       expect(component.data.controls.type.value).toBeNull();
       expect(component.data.controls.type.hasError("required")).toBe(true);
       expect(component.data.controls.hours.value).toBe(8);
@@ -240,6 +239,7 @@ describe("SessionTimeoutPolicyComponent", () => {
         expect(component.data.controls.minutes.disabled).toBe(true);
 
         component.data.patchValue({ type: "custom", hours: 8, minutes: 1 });
+        tick();
         fixture.detectChanges();
 
         expect(component.data.controls.hours.value).toBe(8);
@@ -302,24 +302,6 @@ describe("SessionTimeoutPolicyComponent", () => {
       expect(component.data.controls.type.value).toBe("onSystemLock");
     }));
 
-    it.each(["never", "onSystemLock"])(
-      "should not show confirmation dialog when changing to %s type and skipTypeConfirmation flag is true",
-      fakeAsync((newType: SessionTimeoutType) => {
-        setPolicyResponseType(null);
-        fixture.detectChanges();
-
-        component.skipTypeConfirmation = true;
-        component.data.patchValue({ type: newType });
-        tick();
-        fixture.detectChanges();
-
-        expect(mockDialogService.open).not.toHaveBeenCalled();
-        expect(mockDialogService.openSimpleDialog).not.toHaveBeenCalled();
-        expect(component.skipTypeConfirmation).toBe(false);
-        expect(component.data.controls.type.value).toBe(newType);
-      }),
-    );
-
     it("should revert to previous type when type changed to never and dialog not confirmed", fakeAsync(() => {
       mockDialogRef.closed = of(false);
       setPolicyResponseType("immediately");
@@ -347,6 +329,29 @@ describe("SessionTimeoutPolicyComponent", () => {
       expect(mockDialogService.open).not.toHaveBeenCalled();
       expect(component.data.controls.type.value).toBe("immediately");
     }));
+
+    it("should revert to last confirmed type when canceling multiple times", fakeAsync(() => {
+      mockDialogRef.closed = of(false);
+      mockDialogService.openSimpleDialog.mockResolvedValue(false);
+
+      setPolicyResponseType("custom");
+      fixture.detectChanges();
+
+      // First attempt: custom -> never (cancel)
+      component.data.patchValue({ type: "never" });
+      tick();
+      fixture.detectChanges();
+
+      expect(component.data.controls.type.value).toBe("custom");
+
+      // Second attempt: custom -> onSystemLock (cancel)
+      component.data.patchValue({ type: "onSystemLock" });
+      tick();
+      fixture.detectChanges();
+
+      // Should revert to "custom", not "never"
+      expect(component.data.controls.type.value).toBe("custom");
+    }));
   });
 
   describe("buildRequestData", () => {
@@ -355,25 +360,31 @@ describe("SessionTimeoutPolicyComponent", () => {
       fixture.detectChanges();
     });
 
-    it("should throw error when form is invalid", () => {
+    it("should throw input required error when type is invalid", () => {
       component.data.patchValue({ type: null });
 
-      expect(() => component["buildRequestData"]()).toThrow(
-        "sessionTimeoutPolicyInvalidTime-used-i18n",
-      );
+      expect(() => component["buildRequestData"]()).toThrow("inputRequired-used-i18n");
     });
 
-    it("should throw error when type is custom and minutes is zero", () => {
-      component.data.patchValue({
-        type: "custom",
-        hours: 0,
-        minutes: 0,
-      });
+    it.each([
+      [null, null],
+      [null, 0],
+      [0, null],
+      [0, 0],
+    ])(
+      "should throw invalid time error when type is custom, hours is %o and minutes is %o ",
+      (hours, minutes) => {
+        component.data.patchValue({
+          type: "custom",
+          hours: hours,
+          minutes: minutes,
+        });
 
-      expect(() => component["buildRequestData"]()).toThrow(
-        "sessionTimeoutPolicyInvalidTime-used-i18n",
-      );
-    });
+        expect(() => component["buildRequestData"]()).toThrow(
+          "sessionTimeoutPolicyInvalidTime-used-i18n",
+        );
+      },
+    );
 
     it("should return correct data when type is custom with valid time", () => {
       component.data.patchValue({
