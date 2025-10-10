@@ -67,6 +67,7 @@ class Scene implements UsingRequired {
 
     // Fire off an unawaited promise to delete the side effects of the scene
     void this.recipe.down();
+    seedIdsToTearDown.delete(this.seedId);
   };
 
   mangle(id: string): string {
