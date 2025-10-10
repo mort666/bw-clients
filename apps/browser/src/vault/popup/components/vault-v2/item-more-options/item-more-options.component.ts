@@ -11,12 +11,14 @@ import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { CipherId } from "@bitwarden/common/types/guid";
 import { CipherArchiveService } from "@bitwarden/common/vault/abstractions/cipher-archive.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherRepromptType, CipherType } from "@bitwarden/common/vault/enums";
-import { LoginUriView } from "@bitwarden/common/vault/models/view/login-uri.view";
 import { CipherAuthorizationService } from "@bitwarden/common/vault/services/cipher-authorization.service";
 import { RestrictedItemTypesService } from "@bitwarden/common/vault/services/restricted-item-types.service";
 import {
@@ -143,6 +145,7 @@ export class ItemMoreOptionsComponent {
     private collectionService: CollectionService,
     private restrictedItemTypesService: RestrictedItemTypesService,
     private cipherArchiveService: CipherArchiveService,
+    private configService: ConfigService,
   ) {}
 
   get canEdit() {
@@ -182,27 +185,30 @@ export class ItemMoreOptionsComponent {
   async doAutofillAndSave() {
     const cipher = await this.cipherService.getFullCipherView(this.cipher);
 
-    const currentTab = await firstValueFrom(this.vaultPopupAutofillService.currentAutofillTab$);
-    const loginUri = new LoginUriView();
-    loginUri.uri = currentTab.url;
-    const currentUri = loginUri.hostname;
+    const isFeatureFlagEnabled = await firstValueFrom(
+      this.configService.getFeatureFlag$(FeatureFlag.AutofillConfirmation),
+    );
 
-    const ref = AutofillConfirmationDialogComponent.open(this.dialogService, {
-      data: {
-        currentUri,
-        savedUris: cipher.login?.uris?.map((u) => u.uri) ?? [],
-      },
-    });
+    if (!isFeatureFlagEnabled) {
+      const currentTab = await firstValueFrom(this.vaultPopupAutofillService.currentAutofillTab$);
+      const currentUri = Utils.getHostname(currentTab.url);
 
-    const result = await firstValueFrom(ref.closed);
+      const ref = AutofillConfirmationDialogComponent.open(this.dialogService, {
+        data: {
+          currentUri,
+        },
+      });
 
-    if (!result || result === AutofillConfirmationDialogResult.Canceled) {
-      return;
-    }
+      const result = await firstValueFrom(ref.closed);
 
-    if (result === AutofillConfirmationDialogResult.AutofilledOnly) {
-      await this.vaultPopupAutofillService.doAutofill(cipher);
-      return;
+      if (!result || result === AutofillConfirmationDialogResult.Canceled) {
+        return;
+      }
+
+      if (result === AutofillConfirmationDialogResult.AutofilledOnly) {
+        await this.vaultPopupAutofillService.doAutofill(cipher);
+        return;
+      }
     }
 
     await this.vaultPopupAutofillService.doAutofillAndSave(cipher, false);
@@ -294,8 +300,6 @@ export class ItemMoreOptionsComponent {
       queryParams: { cipherId: this.cipher.id, type: CipherViewLikeUtils.getType(this.cipher) },
     });
   }
-
-  private async showConfirmAutofillDialog() {}
 
   protected async delete() {
     const confirmed = await this.dialogService.openSimpleDialog({

@@ -30,7 +30,6 @@ export type AutofillConfirmationDialogResultType = UnionOfValues<
 >;
 
 @Component({
-  selector: "autofill-confirmation-dialog",
   templateUrl: "./autofill-confirmation-dialog.component.html",
   imports: [CalloutComponent, CommonModule, ButtonModule, I18nPipe, DialogModule, TypographyModule],
 })
@@ -44,7 +43,6 @@ export class AutofillConfirmationDialogComponent {
     private dialogRef: DialogRef,
   ) {
     this.currentUri = params.currentUri;
-    this.savedUris = params.savedUris ?? [];
   }
 
   protected close = () => {
