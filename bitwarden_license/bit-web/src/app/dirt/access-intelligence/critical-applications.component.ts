@@ -4,7 +4,7 @@ import { Component, DestroyRef, inject, OnInit } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
-import { debounceTime, EMPTY, map, switchMap } from "rxjs";
+import { debounceTime, EMPTY, from, map, switchMap } from "rxjs";
 
 import { Security } from "@bitwarden/assets/svg";
 import {
@@ -17,6 +17,7 @@ import { createNewSummaryData } from "@bitwarden/bit-common/dirt/reports/risk-in
 import { OrganizationReportSummary } from "@bitwarden/bit-common/dirt/reports/risk-insights/models/report-models";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { OrganizationId } from "@bitwarden/common/types/guid";
+import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { NoItemsModule, SearchModule, TableDataSource, ToastService } from "@bitwarden/components";
 import { CardComponent } from "@bitwarden/dirt-card";
 import { HeaderModule } from "@bitwarden/web-vault/app/layouts/header/header.module";
@@ -26,6 +27,7 @@ import { PipesModule } from "@bitwarden/web-vault/app/vault/individual-vault/pip
 import { DefaultAdminTaskService } from "../../vault/services/default-admin-task.service";
 
 import { AppTableRowScrollableComponent } from "./app-table-row-scrollable.component";
+import { EmptyStateCardComponent } from "./empty-state-card.component";
 import { RiskInsightsTabType } from "./risk-insights.component";
 import { AccessIntelligenceSecurityTasksService } from "./shared/security-tasks.service";
 
@@ -40,6 +42,7 @@ import { AccessIntelligenceSecurityTasksService } from "./shared/security-tasks.
     PipesModule,
     SharedModule,
     AppTableRowScrollableComponent,
+    EmptyStateCardComponent,
   ],
   providers: [AccessIntelligenceSecurityTasksService, DefaultAdminTaskService],
 })
@@ -48,7 +51,12 @@ export class CriticalApplicationsComponent implements OnInit {
   protected loading = false;
   protected enableRequestPasswordChange = false;
   protected organizationId: OrganizationId;
+  protected hasReportBeenRun = false;
+  protected reportHasLoaded = false;
+  protected hasVaultItems = false;
   noItemsIcon = Security;
+
+  private static readonly IMPORT_ICON = "bwi bwi-download";
 
   protected dataSource = new TableDataSource<ApplicationHealthReportDetailEnriched>();
   protected applicationSummary = {} as OrganizationReportSummary;
@@ -65,6 +73,7 @@ export class CriticalApplicationsComponent implements OnInit {
     protected reportService: RiskInsightsReportService,
     protected i18nService: I18nService,
     private accessIntelligenceSecurityTasksService: AccessIntelligenceSecurityTasksService,
+    private cipherService: CipherService,
   ) {
     this.searchControl.valueChanges
       .pipe(debounceTime(200), takeUntilDestroyed())
@@ -72,6 +81,22 @@ export class CriticalApplicationsComponent implements OnInit {
   }
 
   async ngOnInit() {
+    this.dataService.reportResults$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (report) => {
+        this.reportHasLoaded = true;
+        this.hasReportBeenRun = !!report?.creationDate;
+
+        if (!this.hasReportBeenRun) {
+          this.checkForVaultItems();
+        }
+      },
+      error: () => {
+        this.reportHasLoaded = true;
+        this.hasReportBeenRun = false;
+        this.checkForVaultItems();
+      },
+    });
+
     this.dataService.criticalReportResults$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (criticalReport) => {
         this.dataSource.data = criticalReport?.reportData ?? [];
@@ -97,6 +122,109 @@ export class CriticalApplicationsComponent implements OnInit {
         }),
       )
       .subscribe();
+  }
+
+  runReport = () => {
+    this.dataService.triggerReport();
+  };
+
+  goToImportPage = () => {
+    const organizationId = this.activatedRoute.snapshot.paramMap.get("organizationId");
+    void this.router.navigate(["/organizations", organizationId, "settings", "tools", "import"]);
+  };
+
+  get shouldShowImportDataState(): boolean {
+    return !this.hasVaultItems;
+  }
+
+  get shouldShowCriticalApplicationsState(): boolean {
+    return this.hasVaultItems && this.reportHasLoaded && this.hasReportBeenRun;
+  }
+
+  get shouldShowRunReportState(): boolean {
+    return this.hasVaultItems && this.reportHasLoaded && !this.hasReportBeenRun;
+  }
+
+  get emptyStateTitle(): string {
+    if (this.shouldShowImportDataState) {
+      return this.i18nService.t("noApplicationsInOrgTitle", this.organizationName);
+    }
+    if (this.shouldShowCriticalApplicationsState) {
+      return this.i18nService.t("noCriticalApplicationsTitle");
+    }
+    return this.i18nService.t("noReportRunTitle");
+  }
+
+  get emptyStateDescription(): string {
+    if (this.shouldShowImportDataState) {
+      return this.i18nService.t("noApplicationsInOrgDescription");
+    }
+    if (this.shouldShowCriticalApplicationsState) {
+      return this.i18nService.t("noCriticalApplicationsDescription");
+    }
+    return this.i18nService.t("noReportRunDescription");
+  }
+
+  get emptyStateBenefits(): string[] {
+    if (this.shouldShowCriticalApplicationsState) {
+      return [];
+    }
+    return [
+      `${this.i18nService.t("benefit1Title")}|${this.i18nService.t("benefit1Description")}`,
+      `${this.i18nService.t("benefit2Title")}|${this.i18nService.t("benefit2Description")}`,
+      `${this.i18nService.t("benefit3Title")}|${this.i18nService.t("benefit3Description")}`,
+    ];
+  }
+
+  get emptyStateButtonText(): string {
+    if (this.shouldShowImportDataState) {
+      return this.i18nService.t("importData");
+    }
+    if (this.shouldShowCriticalApplicationsState) {
+      return this.i18nService.t("markCriticalApplications");
+    }
+    return this.i18nService.t("riskInsightsRunReport");
+  }
+
+  get emptyStateButtonIcon(): string {
+    if (this.shouldShowImportDataState) {
+      return CriticalApplicationsComponent.IMPORT_ICON;
+    }
+    return "";
+  }
+
+  get emptyStateButtonAction(): () => void {
+    if (this.shouldShowImportDataState) {
+      return this.goToImportPage;
+    }
+    if (this.shouldShowCriticalApplicationsState) {
+      return this.goToAllAppsTab;
+    }
+    return this.runReport;
+  }
+
+  get emptyStateVideoSrc(): string | null {
+    return "/videos/risk-insights-mark-as-critical.mp4";
+  }
+
+  private get organizationName(): string {
+    return "";
+  }
+
+  private checkForVaultItems() {
+    const organizationId = this.activatedRoute.snapshot.paramMap.get("organizationId");
+    if (organizationId) {
+      from(this.cipherService.getAllFromApiForOrganization(organizationId as any))
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (ciphers) => {
+            this.hasVaultItems = ciphers.length > 0;
+          },
+          error: () => {
+            this.hasVaultItems = false;
+          },
+        });
+    }
   }
 
   goToAllAppsTab = async () => {
