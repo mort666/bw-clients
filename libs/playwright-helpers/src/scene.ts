@@ -8,7 +8,17 @@ import { Recipe } from "./recipes/recipe";
 // First seed points at the seeder API proxy, second is the seed path of the SeedController
 const seedApiUrl = new URL("/seed/seed/", webServerBaseUrl).toString();
 
-class Scene implements UsingRequired {
+/**
+ * A Scene contains logic to set up and tear down data for a test on the server.
+ * It is created by running a Recipe, which contains the arguments the server requires to create the data.
+ *
+ * Scenes are `Disposable`, meaning they must be used with the `using` keyword and will be automatically torn down when disposed.
+ * Options exist to modify this behavior.
+ *
+ * - {@link SceneOptions.noDown}: Useful for setting up data then using codegen to create tests that use the data. Remember to tear down the data manually.
+ * - {@link SceneOptions.downAfterAll}: Useful for expensive setups that you want to share across all tests in a worker or for writing acts.
+ */
+export class Scene implements UsingRequired {
   private inited = false;
   private _recipe?: Recipe<unknown>;
   private mangledMap = new Map<string, string>();
@@ -125,7 +135,7 @@ export class Play {
    *
    * Example usage:
    * ```ts
-   * import { Play, SingleUserRecipe } from "@bitwarden/playwright-scenes";
+   * import { Play, SingleUserRecipe } from "@bitwarden/playwright-helpers";
    *
    * test("my test", async ({ page }) => {
    *  using scene = await Play.scene(new SingleUserRecipe({ email: "
@@ -140,9 +150,10 @@ export class Play {
     recipe: T,
     options: SceneOptions = {},
   ): Promise<Scene> {
-    const scene = new Scene({ SCENE_OPTIONS_DEFAULTS, ...options });
+    const opts = { ...SCENE_OPTIONS_DEFAULTS, ...options };
+    const scene = new Scene(opts);
     await scene.init(recipe);
-    if (!scene.options.noDown) {
+    if (!opts.noDown) {
       seedIdsToTearDown.add(scene.seedId);
     }
     return scene;

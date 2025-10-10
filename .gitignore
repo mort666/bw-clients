@@ -63,3 +63,5 @@ apps/**/config/local.json
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+# Stores local state data for playwright while it runs
+/playwright-data/

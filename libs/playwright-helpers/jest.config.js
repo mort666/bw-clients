@@ -1,4 +1,4 @@
-const sharedConfig = require("../../libs/shared/jest.config.angular");
+const sharedConfig = require("../shared/jest.config.angular");
 
 module.exports = {
   ...sharedConfig,
