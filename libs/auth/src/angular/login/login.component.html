@@ -1,4 +1,4 @@
-<!-- 
+<!--
   # Table of Contents
 
     This file contains a single consolidated template for all visual clients.
@@ -16,6 +16,7 @@
     <bit-form-field>
       <bit-label>{{ "emailAddress" | i18n }}</bit-label>
       <input
+        id="login_input_email"
         type="email"
         formControlName="email"
         bitInput
@@ -39,6 +40,7 @@
     <div class="tw-grid tw-gap-3">
       <!-- Continue button -->
       <button
+        id="login_button_continue"
         type="button"
         bitButton
         block
@@ -78,7 +80,13 @@
     <!-- Master Password input -->
     <bit-form-field class="!tw-mb-1">
       <bit-label>{{ "masterPass" | i18n }}</bit-label>
-      <input type="password" formControlName="masterPassword" bitInput #masterPasswordInputRef />
+      <input
+        id="login_input_password"
+        type="password"
+        formControlName="masterPassword"
+        bitInput
+        #masterPasswordInputRef
+      />
       <button type="button" bitIconButton bitSuffix bitPasswordInputToggle></button>
     </bit-form-field>
 
@@ -89,7 +97,14 @@
 
     <div class="tw-grid tw-gap-3">
       <!-- Submit button to Login with Master Password -->
-      <button type="submit" bitButton bitFormButton block buttonType="primary">
+      <button
+        id="login_button_submit"
+        type="submit"
+        bitButton
+        bitFormButton
+        block
+        buttonType="primary"
+      >
         {{ "loginWithMasterPassword" | i18n }}
       </button>
 
