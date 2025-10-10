@@ -49,7 +49,7 @@
       "@bitwarden/nx-plugin": ["libs/nx-plugin/src/index.ts"],
       "@bitwarden/platform": ["./libs/platform/src"],
       "@bitwarden/platform/*": ["./libs/platform/src/*"],
-      "@bitwarden/playwright-scenes": ["libs/playwright-scenes/src/index.ts"],
+      "@bitwarden/playwright-helpers": ["libs/playwright-helpers/src/index.ts"],
       "@bitwarden/pricing": ["libs/pricing/src/index.ts"],
       "@bitwarden/send-ui": ["./libs/tools/send/send-ui/src"],
       "@bitwarden/serialization": ["libs/serialization/src/index.ts"],

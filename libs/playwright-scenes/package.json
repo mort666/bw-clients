@@ -1,5 +1,5 @@
 {
-  "name": "@bitwarden/playwright-scenes",
+  "name": "@bitwarden/playwright-helpers",
   "version": "0.0.1",
   "description": "Framework for writing end-to-end playwright tests",
   "private": true,

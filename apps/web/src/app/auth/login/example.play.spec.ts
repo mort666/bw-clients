@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-import { Play, SingleUserRecipe } from "@bitwarden/playwright-scenes";
+import { Play, SingleUserRecipe } from "@bitwarden/playwright-helpers";
 
 test("login with password", async ({ page }) => {
   using scene = await Play.scene(new SingleUserRecipe({ email: "test@example.com" }));
