@@ -10,6 +10,7 @@ import { RiskInsightsDataService } from "@bitwarden/bit-common/dirt/reports/risk
 import { DrawerType } from "@bitwarden/bit-common/dirt/reports/risk-insights/models/report-models";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
+import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { OrganizationId } from "@bitwarden/common/types/guid";
 import {
   AsyncActionsModule,
@@ -24,6 +25,7 @@ import { HeaderModule } from "@bitwarden/web-vault/app/layouts/header/header.mod
 import { AllActivityComponent } from "./all-activity.component";
 import { AllApplicationsComponent } from "./all-applications.component";
 import { CriticalApplicationsComponent } from "./critical-applications.component";
+import { EmptyStateCardComponent } from "./empty-state-card.component";
 
 // FIXME: update to use a const object instead of a typescript enum
 // eslint-disable-next-line @bitwarden/platform/no-enums
@@ -42,6 +44,7 @@ export enum RiskInsightsTabType {
     ButtonModule,
     CommonModule,
     CriticalApplicationsComponent,
+    EmptyStateCardComponent,
     JslibModule,
     HeaderModule,
     TabsModule,
@@ -67,11 +70,19 @@ export class RiskInsightsComponent implements OnInit {
   dataLastUpdated: Date | null = null;
   refetching: boolean = false;
 
+  // Empty state properties
+  protected hasReportBeenRun = false;
+  protected reportHasLoaded = false;
+  protected hasVaultItems = false;
+
+  private static readonly IMPORT_ICON = "bwi bwi-download";
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private configService: ConfigService,
     protected dataService: RiskInsightsDataService,
+    private i18nService: I18nService,
   ) {
     this.route.queryParams.pipe(takeUntilDestroyed()).subscribe(({ tabIndex }) => {
       this.tabIndex = !isNaN(Number(tabIndex)) ? Number(tabIndex) : RiskInsightsTabType.AllApps;
@@ -108,8 +119,14 @@ export class RiskInsightsComponent implements OnInit {
     this.dataService.reportResults$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((report) => {
+        this.reportHasLoaded = true;
+        this.hasReportBeenRun = !!report?.creationDate;
         this.appsCount = report?.reportData.length ?? 0;
         this.dataLastUpdated = report?.creationDate ?? null;
+
+        if (!this.hasReportBeenRun) {
+          this.checkForVaultItems();
+        }
       });
 
     // Subscribe to drawer state changes
@@ -174,5 +191,88 @@ export class RiskInsightsComponent implements OnInit {
         this.dataService.closeDrawer();
       }
     }
+  }
+
+  // Empty state methods
+  goToImportPage = () => {
+    void this.router.navigate([
+      "/organizations",
+      this.organizationId,
+      "settings",
+      "tools",
+      "import",
+    ]);
+  };
+
+  get shouldShowImportDataState(): boolean {
+    return !this.hasVaultItems;
+  }
+
+  get shouldShowRunReportState(): boolean {
+    return this.hasVaultItems && this.reportHasLoaded && !this.hasReportBeenRun;
+  }
+
+  get emptyStateTitle(): string {
+    if (this.shouldShowImportDataState) {
+      return this.i18nService.t("noApplicationsInOrgTitle", this.organizationName);
+    }
+    return this.i18nService.t("noReportRunTitle");
+  }
+
+  get emptyStateDescription(): string {
+    if (this.shouldShowImportDataState) {
+      return this.i18nService.t("noApplicationsInOrgDescription");
+    }
+    return this.i18nService.t("noReportRunDescription");
+  }
+
+  get emptyStateBenefits(): string[] {
+    return [
+      `${this.i18nService.t("benefit1Title")}|${this.i18nService.t("benefit1Description")}`,
+      `${this.i18nService.t("benefit2Title")}|${this.i18nService.t("benefit2Description")}`,
+      `${this.i18nService.t("benefit3Title")}|${this.i18nService.t("benefit3Description")}`,
+    ];
+  }
+
+  get emptyStateButtonText(): string {
+    if (this.shouldShowImportDataState) {
+      return this.i18nService.t("importData");
+    }
+    return this.i18nService.t("riskInsightsRunReport");
+  }
+
+  get emptyStateButtonIcon(): string {
+    if (this.shouldShowImportDataState) {
+      return RiskInsightsComponent.IMPORT_ICON;
+    }
+    return "";
+  }
+
+  get emptyStateButtonAction(): () => void {
+    if (this.shouldShowImportDataState) {
+      return this.goToImportPage;
+    }
+    return this.runReport;
+  }
+
+  get emptyStateVideoSrc(): string | null {
+    return "/videos/risk-insights-mark-as-critical.mp4";
+  }
+
+  private get organizationName(): string {
+    return "";
+  }
+
+  private checkForVaultItems() {
+    // Use the applicationData from the report results to check if there are any vault items
+    this.dataService.reportResults$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (report) => {
+        // If we have applicationData in the report, that means there are vault items
+        this.hasVaultItems = (report?.applicationData?.length ?? 0) > 0;
+      },
+      error: () => {
+        this.hasVaultItems = false;
+      },
+    });
   }
 }

@@ -64,7 +64,17 @@
           </bit-tab>
         </bit-tab-group>
       } @else {
-        <dirt-all-applications></dirt-all-applications>
+        <div class="tw-flex tw-justify-center tw-items-center tw-min-h-[70vh] tw-w-full">
+          <empty-state-card
+            [videoSrc]="emptyStateVideoSrc"
+            [title]="emptyStateTitle"
+            [description]="emptyStateDescription"
+            [benefits]="emptyStateBenefits"
+            [buttonText]="emptyStateButtonText"
+            [buttonIcon]="emptyStateButtonIcon"
+            [buttonAction]="emptyStateButtonAction"
+          ></empty-state-card>
+        </div>
       }
     </div>
   </div>
