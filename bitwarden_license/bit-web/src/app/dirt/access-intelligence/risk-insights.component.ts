@@ -75,6 +75,17 @@ export class RiskInsightsComponent implements OnInit {
   protected reportHasLoaded = false;
   protected hasVaultItems = false;
 
+  // Empty state computed properties
+  protected shouldShowImportDataState = false;
+  protected shouldShowRunReportState = false;
+  protected emptyStateTitle = "";
+  protected emptyStateDescription = "";
+  protected emptyStateBenefits: string[] = [];
+  protected emptyStateButtonText = "";
+  protected emptyStateButtonIcon = "";
+  protected emptyStateButtonAction: (() => void) | null = null;
+  protected emptyStateVideoSrc: string | null = "/videos/risk-insights-mark-as-critical.mp4";
+
   private static readonly IMPORT_ICON = "bwi bwi-download";
 
   constructor(
@@ -126,6 +137,9 @@ export class RiskInsightsComponent implements OnInit {
 
         if (!this.hasReportBeenRun) {
           this.checkForVaultItems();
+        } else {
+          // If report has been run, update empty state properties
+          this.updateEmptyStateProperties();
         }
       });
 
@@ -194,6 +208,10 @@ export class RiskInsightsComponent implements OnInit {
   }
 
   // Empty state methods
+
+  // TODO: import data button (we have this) OR button for adding new login items
+  // we want to add this new button as a second option on the empty state card
+
   goToImportPage = () => {
     void this.router.navigate([
       "/organizations",
@@ -204,62 +222,64 @@ export class RiskInsightsComponent implements OnInit {
     ]);
   };
 
-  get shouldShowImportDataState(): boolean {
-    return !this.hasVaultItems;
-  }
+  /**
+   * Updates all empty state properties based on current state.
+   * Called whenever the underlying data (hasVaultItems, hasReportBeenRun, reportHasLoaded) changes.
+   */
+  private updateEmptyStateProperties(): void {
+    // Calculate boolean flags
+    this.shouldShowImportDataState = !this.hasVaultItems;
+    this.shouldShowRunReportState =
+      this.hasVaultItems && this.reportHasLoaded && !this.hasReportBeenRun;
 
-  get shouldShowRunReportState(): boolean {
-    return this.hasVaultItems && this.reportHasLoaded && !this.hasReportBeenRun;
-  }
-
-  get emptyStateTitle(): string {
+    // Update title
     if (this.shouldShowImportDataState) {
-      return this.i18nService.t("noApplicationsInOrgTitle", this.organizationName);
+      this.emptyStateTitle = this.i18nService.t(
+        "noApplicationsInOrgTitle",
+        this.getOrganizationName(),
+      );
+    } else {
+      this.emptyStateTitle = this.i18nService.t("noReportRunTitle");
     }
-    return this.i18nService.t("noReportRunTitle");
-  }
 
-  get emptyStateDescription(): string {
+    // Update description
     if (this.shouldShowImportDataState) {
-      return this.i18nService.t("noApplicationsInOrgDescription");
+      this.emptyStateDescription = this.i18nService.t("noApplicationsInOrgDescription");
+    } else {
+      this.emptyStateDescription = this.i18nService.t("noReportRunDescription");
     }
-    return this.i18nService.t("noReportRunDescription");
-  }
 
-  get emptyStateBenefits(): string[] {
-    return [
+    // Update benefits
+    this.emptyStateBenefits = [
       `${this.i18nService.t("benefit1Title")}|${this.i18nService.t("benefit1Description")}`,
       `${this.i18nService.t("benefit2Title")}|${this.i18nService.t("benefit2Description")}`,
       `${this.i18nService.t("benefit3Title")}|${this.i18nService.t("benefit3Description")}`,
     ];
-  }
 
-  get emptyStateButtonText(): string {
+    // Update button text
     if (this.shouldShowImportDataState) {
-      return this.i18nService.t("importData");
+      this.emptyStateButtonText = this.i18nService.t("importData");
+    } else {
+      this.emptyStateButtonText = this.i18nService.t("riskInsightsRunReport");
     }
-    return this.i18nService.t("riskInsightsRunReport");
-  }
 
-  get emptyStateButtonIcon(): string {
+    // Update button icon
     if (this.shouldShowImportDataState) {
-      return RiskInsightsComponent.IMPORT_ICON;
+      this.emptyStateButtonIcon = RiskInsightsComponent.IMPORT_ICON;
+    } else {
+      this.emptyStateButtonIcon = "";
     }
-    return "";
-  }
 
-  get emptyStateButtonAction(): () => void {
+    // Update button action
     if (this.shouldShowImportDataState) {
-      return this.goToImportPage;
+      this.emptyStateButtonAction = this.goToImportPage;
+    } else {
+      this.emptyStateButtonAction = this.runReport;
     }
-    return this.runReport;
   }
 
-  get emptyStateVideoSrc(): string | null {
-    return "/videos/risk-insights-mark-as-critical.mp4";
-  }
-
-  private get organizationName(): string {
+  //TODO: complete this
+  private getOrganizationName(): string {
     return "";
   }
 
@@ -269,9 +289,13 @@ export class RiskInsightsComponent implements OnInit {
       next: (report) => {
         // If we have applicationData in the report, that means there are vault items
         this.hasVaultItems = (report?.applicationData?.length ?? 0) > 0;
+        // Update empty state properties after checking vault items
+        this.updateEmptyStateProperties();
       },
       error: () => {
         this.hasVaultItems = false;
+        // Update empty state properties even on error
+        this.updateEmptyStateProperties();
       },
     });
   }
