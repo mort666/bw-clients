@@ -1,6 +1,6 @@
-import { Component } from "@angular/core";
+import { Component, DestroyRef, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { combineLatest, firstValueFrom, map, Observable, shareReplay, switchMap } from "rxjs";
+import { combineLatest, firstValueFrom, map, Observable, of, shareReplay, switchMap } from "rxjs";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
@@ -40,8 +40,9 @@ export class PremiumVNextComponent {
     features: string[];
   }>;
 
-  protected subscriber: BitwardenSubscriber;
+  protected subscriber!: BitwardenSubscriber;
   protected isSelfHost = false;
+  private destroyRef = inject(DestroyRef);
 
   constructor(
     private accountService: AccountService,
@@ -58,18 +59,22 @@ export class PremiumVNextComponent {
 
     this.hasPremiumFromAnyOrganization$ = this.accountService.activeAccount$.pipe(
       switchMap((account) =>
-        this.billingAccountProfileStateService.hasPremiumFromAnyOrganization$(account.id),
+        account
+          ? this.billingAccountProfileStateService.hasPremiumFromAnyOrganization$(account.id)
+          : of(false),
       ),
     );
 
     this.hasPremiumPersonally$ = this.accountService.activeAccount$.pipe(
       switchMap((account) =>
-        this.billingAccountProfileStateService.hasPremiumPersonally$(account.id),
+        account
+          ? this.billingAccountProfileStateService.hasPremiumPersonally$(account.id)
+          : of(false),
       ),
     );
 
     this.accountService.activeAccount$
-      .pipe(mapAccountToSubscriber, takeUntilDestroyed())
+      .pipe(mapAccountToSubscriber, takeUntilDestroyed(this.destroyRef))
       .subscribe((subscriber) => {
         this.subscriber = subscriber;
       });
@@ -121,7 +126,7 @@ export class PremiumVNextComponent {
   postFinalizeUpgrade = async () => {
     this.toastService.showToast({
       variant: "success",
-      title: null,
+      title: undefined,
       message: this.i18nService.t("premiumUpdated"),
     });
   };
@@ -146,12 +151,14 @@ export class PremiumVNextComponent {
       data: dialogParams,
     });
 
-    dialogRef.closed.pipe(takeUntilDestroyed()).subscribe((result: UnifiedUpgradeDialogResult) => {
-      if (result?.status === "upgradedToPremium" || result?.status === "upgradedToFamilies") {
-        void this.finalizeUpgrade().then(() => {
-          void this.postFinalizeUpgrade();
-        });
-      }
-    });
+    dialogRef.closed
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result: UnifiedUpgradeDialogResult | undefined) => {
+        if (result?.status === "upgradedToPremium" || result?.status === "upgradedToFamilies") {
+          void this.finalizeUpgrade().then(() => {
+            void this.postFinalizeUpgrade();
+          });
+        }
+      });
   }
 }

@@ -154,6 +154,8 @@ export class UnifiedUpgradeDialogComponent implements OnInit {
         } else {
           redirectUrl = this.params.redirectUrl;
         }
+      } else {
+        redirectUrl = this.params.redirectUrl;
       }
 
       void this.router.navigate([redirectUrl]);
