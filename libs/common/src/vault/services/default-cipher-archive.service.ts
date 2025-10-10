@@ -61,25 +61,18 @@ export class DefaultCipherArchiveService implements CipherArchiveService {
     );
   }
 
-  /**
-   * User can access the archive vault if:
-   * Feature Flag is enabled
-   * There is at least one archived item
-   * ///////////// NOTE /////////////
-   * This is separated from userCanArchive because a user that loses premium status, but has archived items,
-   * should still be able to access their archive vault. The items will be read-only, and can be restored.
-   */
-  showArchiveVault$(userId: UserId): Observable<boolean> {
-    return combineLatest([
-      this.configService.getFeatureFlag$(FeatureFlag.PM19148_InnovationArchive),
-      this.archivedCiphers$(userId),
-    ]).pipe(
-      map(
-        ([archiveFlagEnabled, hasArchivedItems]) =>
-          archiveFlagEnabled && hasArchivedItems.length > 0,
-      ),
-      shareReplay({ refCount: true, bufferSize: 1 }),
-    );
+  /** Returns true when the archive vault should be shown. */
+  showArchiveVault$(): Observable<boolean> {
+    return this.configService
+      .getFeatureFlag$(FeatureFlag.PM19148_InnovationArchive)
+      .pipe(shareReplay({ refCount: true, bufferSize: 1 }));
+  }
+
+  /** Returns true when the user has premium from any means. */
+  userHasPremium$(userId: UserId): Observable<boolean> {
+    return this.billingAccountProfileStateService
+      .hasPremiumFromAnySource$(userId)
+      .pipe(shareReplay({ refCount: true, bufferSize: 1 }));
   }
 
   async archiveWithServer(ids: CipherId | CipherId[], userId: UserId): Promise<void> {

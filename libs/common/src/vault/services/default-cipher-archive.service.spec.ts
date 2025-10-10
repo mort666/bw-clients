@@ -109,6 +109,48 @@ describe("DefaultCipherArchiveService", () => {
     });
   });
 
+  describe("showArchiveVault$", () => {
+    it("returns true when feature flag is enabled", async () => {
+      mockConfigService.getFeatureFlag$.mockReturnValue(of(true));
+
+      const result = await firstValueFrom(service.showArchiveVault$());
+
+      expect(result).toBe(true);
+      expect(mockConfigService.getFeatureFlag$).toHaveBeenCalledWith(
+        FeatureFlag.PM19148_InnovationArchive,
+      );
+    });
+
+    it("returns false when feature flag is disabled", async () => {
+      mockConfigService.getFeatureFlag$.mockReturnValue(of(false));
+
+      const result = await firstValueFrom(service.showArchiveVault$());
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe("userHasPremium$", () => {
+    it("returns true when user has premium", async () => {
+      mockBillingAccountProfileStateService.hasPremiumFromAnySource$.mockReturnValue(of(true));
+
+      const result = await firstValueFrom(service.userHasPremium$(userId));
+
+      expect(result).toBe(true);
+      expect(mockBillingAccountProfileStateService.hasPremiumFromAnySource$).toHaveBeenCalledWith(
+        userId,
+      );
+    });
+
+    it("returns false when user does not have premium", async () => {
+      mockBillingAccountProfileStateService.hasPremiumFromAnySource$.mockReturnValue(of(false));
+
+      const result = await firstValueFrom(service.userHasPremium$(userId));
+
+      expect(result).toBe(false);
+    });
+  });
+
   describe("archiveWithServer", () => {
     const mockResponse = {
       data: [
