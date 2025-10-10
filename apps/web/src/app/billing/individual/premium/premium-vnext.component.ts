@@ -138,6 +138,8 @@ export class PremiumVNextComponent {
       account,
       initialStep: UnifiedUpgradeDialogStep.Payment,
       selectedPlan: selectedPlan as any,
+      redirectUrl:
+        planType === "Premium" ? "/settings/subscription/user-subscription" : "families-redirect",
     };
 
     const dialogRef = UnifiedUpgradeDialogComponent.open(this.dialogService, {
