@@ -31,7 +31,17 @@ class Scene implements UsingRequired {
    * @returns The scene instance for chaining
    */
   noDown(): this {
+    seedIdsToTearDown.delete(this.seedId);
     this.options.noDown = true;
+    return this;
+  }
+
+  /** Chainable method to set the scene to not be torn down when disposed, but still torn down after all tests complete.
+   *
+   * @returns The scene instance for chaining
+   */
+  downAfterAll(): this {
+    this.options.downAfterAll = true;
     return this;
   }
 
@@ -46,7 +56,7 @@ class Scene implements UsingRequired {
   }
 
   [Symbol.dispose] = () => {
-    if (!this.inited || this.options.noDown) {
+    if (!this.inited || this.options.noDown || this.options.downAfterAll) {
       return;
     }
 
@@ -80,7 +90,6 @@ class Scene implements UsingRequired {
 }
 
 export type SceneOptions = {
-  //
   /**
    * If true, the scene will not be torn down when disposed.
    * Note: if you do not tear down the scene, you are responsible for cleaning up any side effects.
@@ -88,10 +97,20 @@ export type SceneOptions = {
    * @default false
    */
   noDown?: boolean;
+  /**
+   * If true, this scene will be torn down after all tests complete, rather than when the scene is disposed.
+   *
+   * Note: after all, in this case, means after all tests _for the specific worker_ are complete. Parallelization
+   * over multiple cores means that these will not be shared between workers, and each worker will tear down its own scenes.
+   *
+   * @default false
+   */
+  downAfterAll?: boolean;
 };
 
 const SCENE_OPTIONS_DEFAULTS: Readonly<SceneOptions> = Object.freeze({
   noDown: false,
+  downAfterAll: false,
 });
 
 export class Play {
@@ -121,6 +140,9 @@ export class Play {
   ): Promise<Scene> {
     const scene = new Scene({ SCENE_OPTIONS_DEFAULTS, ...options });
     await scene.init(recipe);
+    if (!scene.options.noDown) {
+      seedIdsToTearDown.add(scene.seedId);
+    }
     return scene;
   }
 
@@ -134,3 +156,20 @@ export class Play {
     }
   }
 }
+
+const seedIdsToTearDown = new Set<string>();
+
+// After all tests complete
+test.afterAll(async () => {
+  const response = await fetch(new URL("batch", seedApiUrl).toString(), {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(Array.from(seedIdsToTearDown)),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete recipes: ${response.statusText}`);
+  }
+});
