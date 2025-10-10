@@ -36,6 +36,9 @@ export default defineConfig({
     launchOptions: {
       slowMo: parseInt(process.env.PLAYWRIGHT_SLOW_MO || 0),
     },
+
+    locale: "en-US", // Sets a default locale for all tests
+    timezoneId: "Europe/Stockholm", // Slightly different from server time
   },
 
   /* Configure projects for major browsers */
