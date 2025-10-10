@@ -8,6 +8,7 @@ import {
   map,
   merge,
   Observable,
+  of,
   Subject,
   switchMap,
   tap,
@@ -256,10 +257,6 @@ export class OrganizationWarningsService {
     organization: Organization,
     bypassCache: boolean = false,
   ): Observable<OrganizationWarningsResponse> => {
-    if (this.platformUtilsService.isSelfHost()) {
-      return from(Promise.resolve(new OrganizationWarningsResponse({})));
-    }
-
     const organizationId = organization.id as OrganizationId;
     const existing = this.cache$.get(organizationId);
     if (existing && !bypassCache) {
@@ -274,12 +271,17 @@ export class OrganizationWarningsService {
     organization: Organization,
     extract: (response: OrganizationWarningsResponse) => T | null | undefined,
     bypassCache: boolean = false,
-  ): Observable<T | null> =>
-    this.readThroughWarnings$(organization, bypassCache).pipe(
+  ): Observable<T | null> => {
+    if (this.platformUtilsService.isSelfHost()) {
+      return of(null);
+    }
+
+    return this.readThroughWarnings$(organization, bypassCache).pipe(
       map((response) => {
         const value = extract(response);
         return value ? value : null;
       }),
       take(1),
     );
+  };
 }
