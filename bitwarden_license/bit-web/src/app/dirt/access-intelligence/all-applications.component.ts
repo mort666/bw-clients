@@ -59,7 +59,6 @@ export class AllApplicationsComponent implements OnInit {
   protected hasVaultItems = false;
 
   private static readonly IMPORT_ICON = "bwi bwi-download";
-  private static readonly PLAY_ICON = "bwi bwi-play";
 
   destroyRef = inject(DestroyRef);
 
@@ -96,22 +95,6 @@ export class AllApplicationsComponent implements OnInit {
         this.checkForVaultItems();
       },
     });
-  }
-
-  private checkForVaultItems() {
-    const organizationId = this.activatedRoute.snapshot.paramMap.get("organizationId");
-    if (organizationId) {
-      from(this.cipherService.getAllFromApiForOrganization(organizationId as any))
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: (ciphers) => {
-            this.hasVaultItems = ciphers.length > 0;
-          },
-          error: () => {
-            this.hasVaultItems = false;
-          },
-        });
-    }
   }
 
   goToImportPage = () => {
@@ -178,10 +161,6 @@ export class AllApplicationsComponent implements OnInit {
     return "/videos/risk-insights-mark-as-critical.mp4";
   }
 
-  private get organizationName(): string {
-    return "";
-  }
-
   isMarkedAsCriticalItem(applicationName: string) {
     return this.selectedUrls.has(applicationName);
   }
@@ -224,4 +203,24 @@ export class AllApplicationsComponent implements OnInit {
       this.selectedUrls.delete(applicationName);
     }
   };
+
+  private checkForVaultItems() {
+    const organizationId = this.activatedRoute.snapshot.paramMap.get("organizationId");
+    if (organizationId) {
+      from(this.cipherService.getAllFromApiForOrganization(organizationId as any))
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (ciphers) => {
+            this.hasVaultItems = ciphers.length > 0;
+          },
+          error: () => {
+            this.hasVaultItems = false;
+          },
+        });
+    }
+  }
+
+  private get organizationName(): string {
+    return "";
+  }
 }

@@ -207,26 +207,6 @@ export class CriticalApplicationsComponent implements OnInit {
     return "/videos/risk-insights-mark-as-critical.mp4";
   }
 
-  private get organizationName(): string {
-    return "";
-  }
-
-  private checkForVaultItems() {
-    const organizationId = this.activatedRoute.snapshot.paramMap.get("organizationId");
-    if (organizationId) {
-      from(this.cipherService.getAllFromApiForOrganization(organizationId as any))
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: (ciphers) => {
-            this.hasVaultItems = ciphers.length > 0;
-          },
-          error: () => {
-            this.hasVaultItems = false;
-          },
-        });
-    }
-  }
-
   goToAllAppsTab = async () => {
     await this.router.navigate(
       [`organizations/${this.organizationId}/access-intelligence/risk-insights`],
@@ -268,4 +248,24 @@ export class CriticalApplicationsComponent implements OnInit {
   showAppAtRiskMembers = async (applicationName: string) => {
     await this.dataService.setDrawerForAppAtRiskMembers(applicationName);
   };
+
+  private get organizationName(): string {
+    return "";
+  }
+
+  private checkForVaultItems() {
+    const organizationId = this.activatedRoute.snapshot.paramMap.get("organizationId");
+    if (organizationId) {
+      from(this.cipherService.getAllFromApiForOrganization(organizationId as any))
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (ciphers) => {
+            this.hasVaultItems = ciphers.length > 0;
+          },
+          error: () => {
+            this.hasVaultItems = false;
+          },
+        });
+    }
+  }
 }
