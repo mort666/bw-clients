@@ -336,6 +336,7 @@ export default tseslint.config(
             "mfaType.*",
             "filter.*", // Temporary until filters are migrated
             "tw-app-region*", // Custom utility for native passkey modals
+            "tw-@container",
           ],
         },
       ],
