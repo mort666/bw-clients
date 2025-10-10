@@ -1,3 +1,4 @@
+import { test } from "@playwright/test";
 import { webServerBaseUrl } from "@playwright-config";
 
 import { UsingRequired } from "@bitwarden/common/platform/misc/using-required";
