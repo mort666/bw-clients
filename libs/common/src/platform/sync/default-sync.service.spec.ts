@@ -13,7 +13,7 @@ import {
 } from "@bitwarden/auth/common";
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
-import { KeyService } from "@bitwarden/key-management";
+import { KeyService, PBKDF2KdfConfig } from "@bitwarden/key-management";
 
 import { Matrix } from "../../../spec/matrix";
 import { ApiService } from "../../abstractions/api.service";
@@ -29,6 +29,11 @@ import { DomainSettingsService } from "../../autofill/services/domain-settings.s
 import { BillingAccountProfileStateService } from "../../billing/abstractions";
 import { KeyConnectorService } from "../../key-management/key-connector/abstractions/key-connector.service";
 import { InternalMasterPasswordServiceAbstraction } from "../../key-management/master-password/abstractions/master-password.service.abstraction";
+import {
+  MasterKeyWrappedUserKey,
+  MasterPasswordSalt,
+  MasterPasswordUnlockData,
+} from "../../key-management/master-password/types/master-password.types";
 import { SendApiService } from "../../tools/send/services/send-api.service.abstraction";
 import { InternalSendService } from "../../tools/send/services/send.service.abstraction";
 import { UserId } from "../../types/guid";
@@ -36,7 +41,6 @@ import { CipherService } from "../../vault/abstractions/cipher.service";
 import { FolderApiServiceAbstraction } from "../../vault/abstractions/folder/folder-api.service.abstraction";
 import { InternalFolderService } from "../../vault/abstractions/folder/folder.service.abstraction";
 import { LogService } from "../abstractions/log.service";
-import { StateService } from "../abstractions/state.service";
 import { MessageSender } from "../messaging";
 import { StateProvider } from "../state";
 
@@ -57,7 +61,6 @@ describe("DefaultSyncService", () => {
   let sendService: MockProxy<InternalSendService>;
   let logService: MockProxy<LogService>;
   let keyConnectorService: MockProxy<KeyConnectorService>;
-  let stateService: MockProxy<StateService>;
   let providerService: MockProxy<ProviderService>;
   let folderApiService: MockProxy<FolderApiServiceAbstraction>;
   let organizationService: MockProxy<InternalOrganizationServiceAbstraction>;
@@ -86,7 +89,7 @@ describe("DefaultSyncService", () => {
     sendService = mock();
     logService = mock();
     keyConnectorService = mock();
-    stateService = mock();
+    keyConnectorService.convertAccountRequired$ = of(false);
     providerService = mock();
     folderApiService = mock();
     organizationService = mock();
@@ -113,7 +116,6 @@ describe("DefaultSyncService", () => {
       sendService,
       logService,
       keyConnectorService,
-      stateService,
       providerService,
       folderApiService,
       organizationService,
@@ -238,6 +240,150 @@ describe("DefaultSyncService", () => {
 
         expect(sut["inFlightApiCalls"].refreshToken).toBeNull();
         expect(sut["inFlightApiCalls"].sync).toBeNull();
+      });
+    });
+
+    describe("syncUserDecryption", () => {
+      const salt = "test@example.com";
+      const kdf = new PBKDF2KdfConfig(600_000);
+      const encryptedUserKey = "testUserKey";
+
+      it("should set master password unlock when present in user decryption", async () => {
+        const syncResponse = new SyncResponse({
+          Profile: {
+            Id: user1,
+          },
+          UserDecryption: {
+            MasterPasswordUnlock: {
+              Salt: salt,
+              Kdf: {
+                KdfType: kdf.kdfType,
+                Iterations: kdf.iterations,
+              },
+              MasterKeyEncryptedUserKey: encryptedUserKey,
+            },
+          },
+        });
+        apiService.getSync.mockResolvedValue(syncResponse);
+
+        await sut.fullSync(true, true);
+
+        expect(masterPasswordAbstraction.setMasterPasswordUnlockData).toHaveBeenCalledWith(
+          new MasterPasswordUnlockData(
+            salt as MasterPasswordSalt,
+            kdf,
+            encryptedUserKey as MasterKeyWrappedUserKey,
+          ),
+          user1,
+        );
+      });
+
+      it("should not set master password unlock when not present in user decryption", async () => {
+        const syncResponse = new SyncResponse({
+          Profile: {
+            Id: user1,
+          },
+          UserDecryption: {},
+        });
+        apiService.getSync.mockResolvedValue(syncResponse);
+
+        await sut.fullSync(true, true);
+
+        expect(masterPasswordAbstraction.setMasterPasswordUnlockData).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("mutate 'last update time'", () => {
+      let mockUserState: { update: jest.Mock };
+
+      const setupMockUserState = () => {
+        const mockUserState = { update: jest.fn() };
+        jest.spyOn(stateProvider, "getUser").mockReturnValue(mockUserState as any);
+        return mockUserState;
+      };
+
+      const setupSyncScenario = (revisionDate: Date, lastSyncDate: Date) => {
+        jest.spyOn(apiService, "getAccountRevisionDate").mockResolvedValue(revisionDate.getTime());
+        jest.spyOn(sut as any, "getLastSync").mockResolvedValue(lastSyncDate);
+      };
+
+      const expectUpdateCallCount = (
+        mockUserState: { update: jest.Mock },
+        expectedCount: number,
+      ) => {
+        if (expectedCount === 0) {
+          expect(mockUserState.update).not.toHaveBeenCalled();
+        } else {
+          expect(mockUserState.update).toHaveBeenCalledTimes(expectedCount);
+        }
+      };
+
+      const defaultSyncOptions = { allowThrowOnError: true, skipTokenRefresh: true };
+      const errorTolerantSyncOptions = { allowThrowOnError: false, skipTokenRefresh: true };
+
+      beforeEach(() => {
+        mockUserState = setupMockUserState();
+      });
+
+      it("uses the current time when a sync is forced", async () => {
+        // Mock the value of this observable because it's used in `syncProfile`. Without it, the test breaks.
+        keyConnectorService.convertAccountRequired$ = of(false);
+
+        jest.useFakeTimers({ now: Date.now() });
+
+        await sut.fullSync(true, defaultSyncOptions);
+
+        expectUpdateCallCount(mockUserState, 1);
+        // Get the first and only call to update(...)
+        const updateCall = mockUserState.update.mock.calls[0];
+        // Get the first argument to update(...) -- this will be the date callback that returns the date of the last successful sync
+        const dateCallback = updateCall[0];
+        const actualDate = dateCallback() as Date;
+
+        expect(actualDate.getTime()).toEqual(jest.now());
+        jest.useRealTimers();
+      });
+
+      it("updates last sync time when no sync is necessary", async () => {
+        const revisionDate = new Date(1);
+        setupSyncScenario(revisionDate, revisionDate);
+
+        const syncResult = await sut.fullSync(false, defaultSyncOptions);
+
+        // Sync should complete but return false since no sync was needed
+        expect(syncResult).toBe(false);
+        expectUpdateCallCount(mockUserState, 1);
+      });
+
+      it("updates last sync time when sync is successful", async () => {
+        setupSyncScenario(new Date(2), new Date(1));
+
+        const syncResult = await sut.fullSync(false, defaultSyncOptions);
+
+        expect(syncResult).toBe(true);
+        expectUpdateCallCount(mockUserState, 1);
+      });
+
+      describe("error scenarios", () => {
+        it("does not update last sync time when sync fails", async () => {
+          apiService.getSync.mockRejectedValue(new Error("not connected"));
+
+          const syncResult = await sut.fullSync(true, errorTolerantSyncOptions);
+
+          expect(syncResult).toBe(false);
+          expectUpdateCallCount(mockUserState, 0);
+        });
+
+        it("does not update last sync time when account revision check fails", async () => {
+          jest
+            .spyOn(apiService, "getAccountRevisionDate")
+            .mockRejectedValue(new Error("not connected"));
+
+          const syncResult = await sut.fullSync(false, errorTolerantSyncOptions);
+
+          expect(syncResult).toBe(false);
+          expectUpdateCallCount(mockUserState, 0);
+        });
       });
     });
   });

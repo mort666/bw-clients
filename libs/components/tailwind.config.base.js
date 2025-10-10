@@ -10,6 +10,7 @@ module.exports = {
   prefix: "tw-",
   content: [
     "./src/**/*.{html,ts}",
+    "../../libs/assets/src/**/*.{html,ts}",
     "../../libs/components/src/**/*.{html,ts}",
     "../../libs/key-management-ui/src/**/*.{html,ts}",
     "../../libs/auth/src/**/*.{html,ts}",
@@ -62,11 +63,6 @@ module.exports = {
       notification: {
         100: rgba("--color-notification-100"),
         600: rgba("--color-notification-600"),
-      },
-      // art styles deprecated, use 'illustration' instead
-      art: {
-        primary: rgba("--color-art-primary"),
-        accent: rgba("--color-art-accent"),
       },
       text: {
         main: rgba("--color-text-main"),
@@ -136,6 +132,11 @@ module.exports = {
         600: rgba("--color-notification-600"),
       },
     },
+    fontFamily: {
+      sans: "var(--font-sans)",
+      serif: "var(--font-serif)",
+      mono: "var(--font-mono)",
+    },
     ringOffsetColor: ({ theme }) => ({
       DEFAULT: theme("colors.background"),
       ...theme("colors"),
@@ -155,6 +156,9 @@ module.exports = {
       fontSize: {
         xs: [".8125rem", "1rem"],
         "3xl": ["1.75rem", "2rem"],
+      },
+      container: {
+        "@5xl": "1100px",
       },
     },
   },
@@ -195,5 +199,6 @@ module.exports = {
     plugin(function ({ addVariant }) {
       addVariant("bit-compact", ".bit-compact &");
     }),
+    require("@tailwindcss/container-queries"),
   ],
 };
