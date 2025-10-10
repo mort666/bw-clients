@@ -233,7 +233,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
         await this.updateCredential(this.updatedCipher);
         return { cipherId: this.updatedCipher.id, userVerified: userVerification };
       } else {
-        // Create the credential
+        // Create the cipher
         const createdCipher = await this.createCipher({
           credentialName,
           userName,
@@ -273,7 +273,7 @@ export class DesktopFido2UserInterfaceSession implements Fido2UserInterfaceSessi
   }
 
   /**
-   * Can be called by the UI to create a new credential with user input etc.
+   * Can be called by the UI to create a new cipher with user input etc.
    * @param param0
    */
   async createCipher({ credentialName, userName, rpId }: NewCredentialParams): Promise<Cipher> {

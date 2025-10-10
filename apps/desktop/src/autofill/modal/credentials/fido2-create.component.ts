@@ -177,6 +177,7 @@ export class Fido2CreateComponent implements OnInit, OnDestroy {
           const allCiphers = await this.cipherService.getAllDecrypted(activeUserId);
           return allCiphers.filter(
             (cipher) =>
+              cipher != null &&
               cipher.type == CipherType.Login &&
               cipher.login?.matchesUri(rpid, equivalentDomains) &&
               Fido2Utils.cipherHasNoOtherPasskeys(cipher, userHandle) &&

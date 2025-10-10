@@ -89,7 +89,7 @@ export class DesktopAutofillService implements OnDestroy {
       )
       .subscribe();
 
-    // Listen for sign out to clear credentials?
+    // Listen for sign out to clear credentials
     this.authService.activeAccountStatus$
       .pipe(
         filter((status) => status === AuthenticationStatus.LoggedOut),
@@ -102,7 +102,7 @@ export class DesktopAutofillService implements OnDestroy {
   }
 
   async adHocSync(): Promise<any> {
-    this.logService.info("Performing AdHoc sync");
+    this.logService.debug("Performing AdHoc sync");
     const account = await firstValueFrom(this.accountService.activeAccount$);
     const userId = account?.id;
 
@@ -442,12 +442,10 @@ export class DesktopAutofillService implements OnDestroy {
 }
 
 function normalizePosition(position: { x: number; y: number }): { x: number; y: number } {
-  // if macOS, the position we're sending is too far left and too far down.
-  // It's the left bottom corner of the parent window.
-  // so we need to add half of the estimated width of the nativeOS dialog to the x position
-  // and remove half of the estimated height of the nativeOS dialog to the y position.
+  // If macOS, the position we're sending is too far left.
+  // Add 100 pixels to the x-coordinate to offset the native OS dialog positioning.
   return {
-    x: Math.round(position.x + 100), // add half of estimated width of the nativeOS dialog
-    y: Math.round(position.y), // remove half of estimated height of the nativeOS dialog
+    x: Math.round(position.x + 100), // Offset for native dialog positioning
+    y: Math.round(position.y),
   };
 }
