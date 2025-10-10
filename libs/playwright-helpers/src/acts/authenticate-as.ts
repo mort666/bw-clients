@@ -1,9 +1,9 @@
 import * as fs from "fs";
 
-import { Page } from "@playwright/test";
+import { Page, expect } from "@playwright/test";
 import { webServerBaseUrl } from "@playwright-config";
 
-import { Play, Scene } from "@bitwarden/playwright-helpers";
+import { Play, Scene, SingleUserRecipe } from "@bitwarden/playwright-helpers";
 
 const hostname = new URL(webServerBaseUrl).hostname;
 const dataDir = process.env.PLAYWRIGHT_DATA_DIR ?? "playwright-data";
@@ -26,7 +26,7 @@ type AuthenticatedContext = {
 /**
  * A map of already authenticated emails to their scenes.
  */
-const AuthenticatedEmails = new Map<email, AuthedUserData>();
+const AuthenticatedEmails = new Map<string, AuthedUserData>();
 
 function dataFilePath(email: string): string {
   return `${dataDir}/auth-${email}.json`;
@@ -59,11 +59,15 @@ export async function authenticateAs(
     };
   }
 
-  return newAuthenticateAs(email, password);
+  return newAuthenticateAs(page, email, password);
 }
 
-function newAuthenticateAs(email: string, password: string): Promise<AuthenticatedContext> {
-  using scene = await Play.scene(new SingleUserRecipe({ email, password }), {
+async function newAuthenticateAs(
+  page: Page,
+  email: string,
+  password: string,
+): Promise<AuthenticatedContext> {
+  using scene = await Play.scene(new SingleUserRecipe({ email }), {
     downAfterAll: true,
   });
   await page.goto("/#/login");
@@ -94,18 +98,8 @@ function newAuthenticateAs(email: string, password: string): Promise<Authenticat
 
 async function saveSession(page: Page, email: string): Promise<void> {
   // Get session storage and store as env variable
-  const sessionStorage = await page.evaluate(() => JSON.stringify(sessionStorage));
-  fs.writeFileSync("playwright/.auth/session.json", sessionStorage, "utf-8");
-
-  // Set session storage in a new context
-  const sessionStorage = JSON.parse(fs.readFileSync("playwright/.auth/session.json", "utf-8"));
-  await context.addInitScript((storage) => {
-    if (window.location.hostname === "example.com") {
-      for (const [key, value] of Object.entries(storage)) {
-        window.sessionStorage.setItem(key, value);
-      }
-    }
-  }, sessionStorage);
+  const json = await page.evaluate(() => JSON.stringify(sessionStorage));
+  fs.writeFileSync("playwright/.auth/session.json", json, "utf-8");
 }
 
 async function loadSession(page: Page, email: string): Promise<void> {
@@ -114,10 +108,10 @@ async function loadSession(page: Page, email: string): Promise<void> {
   }
   // Set session storage in a new context
   const sessionStorage = JSON.parse(fs.readFileSync(sessionFilePath(email), "utf-8"));
-  await context.addInitScript((storage) => {
+  await page.addInitScript((storage) => {
     if (window.location.hostname === hostname) {
       for (const [key, value] of Object.entries(storage)) {
-        window.sessionStorage.setItem(key, value);
+        window.sessionStorage.setItem(key, value as any);
       }
     }
   }, sessionStorage);
