@@ -57,8 +57,8 @@ export class DefaultCipherArchiveService implements CipherArchiveService {
     );
   }
 
-  /** Returns true when the archive vault should be shown. */
-  showArchiveVault$(): Observable<boolean> {
+  /** Returns true when the archive features should be shown. */
+  showArchiveFeatures$(): Observable<boolean> {
     return this.configService
       .getFeatureFlag$(FeatureFlag.PM19148_InnovationArchive)
       .pipe(shareReplay({ refCount: true, bufferSize: 1 }));

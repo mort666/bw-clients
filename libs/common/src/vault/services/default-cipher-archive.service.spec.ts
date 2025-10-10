@@ -109,11 +109,11 @@ describe("DefaultCipherArchiveService", () => {
     });
   });
 
-  describe("showArchiveVault$", () => {
+  describe("showArchiveFeatures$", () => {
     it("returns true when feature flag is enabled", async () => {
       mockConfigService.getFeatureFlag$.mockReturnValue(of(true));
 
-      const result = await firstValueFrom(service.showArchiveVault$());
+      const result = await firstValueFrom(service.showArchiveFeatures$());
 
       expect(result).toBe(true);
       expect(mockConfigService.getFeatureFlag$).toHaveBeenCalledWith(
@@ -124,7 +124,7 @@ describe("DefaultCipherArchiveService", () => {
     it("returns false when feature flag is disabled", async () => {
       mockConfigService.getFeatureFlag$.mockReturnValue(of(false));
 
-      const result = await firstValueFrom(service.showArchiveVault$());
+      const result = await firstValueFrom(service.showArchiveFeatures$());
 
       expect(result).toBe(false);
     });
