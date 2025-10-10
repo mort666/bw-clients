@@ -16,6 +16,7 @@ import { CipherId } from "@bitwarden/common/types/guid";
 import { CipherArchiveService } from "@bitwarden/common/vault/abstractions/cipher-archive.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherRepromptType, CipherType } from "@bitwarden/common/vault/enums";
+import { LoginUriView } from "@bitwarden/common/vault/models/view/login-uri.view";
 import { CipherAuthorizationService } from "@bitwarden/common/vault/services/cipher-authorization.service";
 import { RestrictedItemTypesService } from "@bitwarden/common/vault/services/restricted-item-types.service";
 import {
@@ -33,6 +34,10 @@ import { PasswordRepromptService } from "@bitwarden/vault";
 
 import { VaultPopupAutofillService } from "../../../services/vault-popup-autofill.service";
 import { AddEditQueryParams } from "../add-edit/add-edit-v2.component";
+import {
+  AutofillConfirmationDialogComponent,
+  AutofillConfirmationDialogResult,
+} from "../autofill-confirmation-dialog/autofill-confirmation-dialog.component";
 
 @Component({
   selector: "app-item-more-options",
@@ -176,6 +181,30 @@ export class ItemMoreOptionsComponent {
 
   async doAutofillAndSave() {
     const cipher = await this.cipherService.getFullCipherView(this.cipher);
+
+    const currentTab = await firstValueFrom(this.vaultPopupAutofillService.currentAutofillTab$);
+    const loginUri = new LoginUriView();
+    loginUri.uri = currentTab.url;
+    const currentUri = loginUri.hostname;
+
+    const ref = AutofillConfirmationDialogComponent.open(this.dialogService, {
+      data: {
+        currentUri,
+        savedUris: cipher.login?.uris?.map((u) => u.uri) ?? [],
+      },
+    });
+
+    const result = await firstValueFrom(ref.closed);
+
+    if (!result || result === AutofillConfirmationDialogResult.Canceled) {
+      return;
+    }
+
+    if (result === AutofillConfirmationDialogResult.AutofilledOnly) {
+      await this.vaultPopupAutofillService.doAutofill(cipher);
+      return;
+    }
+
     await this.vaultPopupAutofillService.doAutofillAndSave(cipher, false);
   }
 
@@ -265,6 +294,8 @@ export class ItemMoreOptionsComponent {
       queryParams: { cipherId: this.cipher.id, type: CipherViewLikeUtils.getType(this.cipher) },
     });
   }
+
+  private async showConfirmAutofillDialog() {}
 
   protected async delete() {
     const confirmed = await this.dialogService.openSimpleDialog({
