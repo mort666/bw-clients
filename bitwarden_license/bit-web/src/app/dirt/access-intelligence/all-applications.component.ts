@@ -107,11 +107,13 @@ export class AllApplicationsComponent implements OnInit {
   };
 
   get shouldShowImportDataState(): boolean {
-    return !this.hasVaultItems || (this.reportHasLoaded && this.hasReportBeenRun);
+    return true;
+    // return !this.hasVaultItems || (this.reportHasLoaded && this.hasReportBeenRun);
   }
 
   get shouldShowRunReportState(): boolean {
-    return this.hasVaultItems && this.reportHasLoaded && !this.hasReportBeenRun;
+    return false;
+    // return this.hasVaultItems && this.reportHasLoaded && !this.hasReportBeenRun;
   }
 
   get emptyStateTitle(): string {
