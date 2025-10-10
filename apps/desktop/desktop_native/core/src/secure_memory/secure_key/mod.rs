@@ -1,8 +1,11 @@
 //! This module provides hardened storage for single cryptographic keys. These are meant for encrypting large amounts of memory.
 //! Some platforms restrict how many keys can be protected by their APIs, which necessitates this layer of indirection. This significantly
-//! reduces the complexity of each platform specific implementation, since all that's needed is implementing protecting a single fixed sized key.
+//! reduces the complexity of each platform specific implementation, since all that's needed is implementing protecting a single fixed sized key
+//! instead of protecting many arbitrarily sized secrets. This significantly lowers the effort to maintain each implementation.
 //!
 //! The implementations include DPAPI on Windows, `keyctl` on Linux, and `memfd_secret` on Linux, and a fallback implementation using mlock.
+
+use tracing::info;
 
 mod crypto;
 #[cfg(target_os = "windows")]
@@ -18,6 +21,10 @@ pub use crypto::EncryptedMemory;
 /// An ephemeral key that is protected using a platform mechanism. It is generated on construction freshly, and can be used
 /// to encrypt and decrypt segments of memory. Since the key is ephemeral, persistent data cannot be encrypted with this key.
 /// On Linux and Windows, in most cases the protection mechanisms prevent memory dumps/debuggers from reading the key.
+/// 
+/// Note: This can be circumvented if code can be injected into the process and is only effective in combination with the
+/// memory isolation provided in `process_isolation`.
+/// - https://github.com/zer1t0/keydump
 #[allow(unused)]
 pub(crate) struct SecureMemoryEncryptionKey(CrossPlatformSecureKeyContainer);
 
@@ -82,6 +89,7 @@ impl SecureKeyContainer for CrossPlatformSecureKeyContainer {
         #[cfg(target_os = "windows")]
         {
             if dpapi::DpapiSecureKeyContainer::is_supported() {
+                info!("Using DPAPI for secure key storage");
                 return CrossPlatformSecureKeyContainer::Dpapi(
                     dpapi::DpapiSecureKeyContainer::from_key(key),
                 );
@@ -89,19 +97,25 @@ impl SecureKeyContainer for CrossPlatformSecureKeyContainer {
         }
         #[cfg(target_os = "linux")]
         {
-            // There is no strong reasoning behind preferring memfd_secret over keyctl. Note that keyctl may
-            // sometimes not be available in e.g. snap. Memfd_secret is sometimes not available on old kernels.
+            // Memfd_secret is slightly better in some cases of the kernel being compromised.
+            // Note that keyctl may sometimes not be available in e.g. snap. Memfd_secret is
+            // not available on kernels older than 6.5 while keyctl is supported since 2.6.
             if memfd_secret::MemfdSecretSecureKeyContainer::is_supported() {
+                info!("Using memfd_secret for secure key storage");
                 return CrossPlatformSecureKeyContainer::MemfdSecret(
                     memfd_secret::MemfdSecretSecureKeyContainer::from_key(key),
                 );
             }
             if keyctl::KeyctlSecureKeyContainer::is_supported() {
+                info!("Using keyctl for secure key storage");
                 return CrossPlatformSecureKeyContainer::Keyctl(
                     keyctl::KeyctlSecureKeyContainer::from_key(key),
                 );
             }
         }
+
+        // Falling back to mlock means that the key is accessible via memory dumping.
+        info!("Falling back to mlock for secure key storage");
         CrossPlatformSecureKeyContainer::Mlock(mlock::MlockSecureKeyContainer::from_key(key))
     }
 
