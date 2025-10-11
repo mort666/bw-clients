@@ -42,7 +42,12 @@ export class Scene implements UsingRequired {
    * @returns The scene instance for chaining
    */
   noDown(): this {
+    if (process.env.CI) {
+      throw new Error("Cannot set noDown to true in CI environments");
+    }
+
     seedIdsToTearDown.delete(this.seedId);
+    seedIdsToWarnAbout.add(this.seedId);
     this.options.noDown = true;
     return this;
   }
@@ -151,10 +156,15 @@ export class Play {
     options: SceneOptions = {},
   ): Promise<Scene> {
     const opts = { ...SCENE_OPTIONS_DEFAULTS, ...options };
+    if (opts.noDown && process.env.CI) {
+      throw new Error("Cannot set noDown to true in CI environments");
+    }
     const scene = new Scene(opts);
     await scene.init(recipe);
     if (!opts.noDown) {
       seedIdsToTearDown.add(scene.seedId);
+    } else {
+      seedIdsToWarnAbout.add(scene.seedId);
     }
     return scene;
   }
@@ -171,9 +181,17 @@ export class Play {
 }
 
 const seedIdsToTearDown = new Set<string>();
+const seedIdsToWarnAbout = new Set<string>();
 
 // After all tests complete
 test.afterAll(async () => {
+  if (seedIdsToWarnAbout.size > 0) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      "Some scenes were not torn down. To tear them down manually run:\n",
+      `curl -X DELETE -H 'Content-Type: application/json' -d '${JSON.stringify(Array.from(seedIdsToWarnAbout))}' ${new URL("batch", seedApiUrl).toString()}\n`,
+    );
+  }
   const response = await fetch(new URL("batch", seedApiUrl).toString(), {
     method: "DELETE",
     headers: {

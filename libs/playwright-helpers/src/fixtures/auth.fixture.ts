@@ -1,8 +1,11 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import { Page, test } from "@playwright/test";
+import { Browser, Page, test } from "@playwright/test";
 import { webServerBaseUrl } from "@playwright-config";
+import * as playwright from "playwright";
+// Playwright doesn't expose this type, so we duplicate it here
+type BrowserName = "chromium" | "firefox" | "webkit";
 
 import { Play, Scene, SingleUserRecipe } from "@bitwarden/playwright-helpers";
 
@@ -42,8 +45,44 @@ type AuthenticatedContext = {
 const AuthenticatedEmails = new Map<string, AuthedUserData>();
 
 export class AuthFixture {
-  constructor(private readonly page: Page) {}
+  private _browser!: Browser;
+  private _page!: Page;
 
+  constructor(private readonly browserName: BrowserName) {}
+
+  async init(): Promise<void> {
+    if (!this._browser) {
+      this._browser = await playwright[this.browserName].launch();
+    }
+  }
+
+  async close(): Promise<void> {
+    if (this._browser) {
+      await this._browser.close();
+      this._browser = undefined!;
+    }
+  }
+
+  async page(): Promise<Page> {
+    if (!this._page) {
+      if (!this._browser) {
+        await this.init();
+      }
+      const context = await this._browser.newContext();
+      this._page = await context.newPage();
+    }
+    return this._page;
+  }
+
+  /**
+   * Creates a testing {@link Scene} with a user and a {@link Page} authenticated as that user.
+   * If the user has already been authenticated in this worker, it will reuse the existing session,
+   * but the pages are independent.
+   *
+   * @param email email of the user
+   * @param password password of the user
+   * @returns The authenticated page and scene used to scaffold the user
+   */
   async authenticate(email: string, password: string): Promise<AuthenticatedContext> {
     if (AuthenticatedEmails.has(email)) {
       return await this.resumeSession(email, password);
@@ -54,6 +93,7 @@ export class AuthFixture {
   }
 
   async resumeSession(email: string, password: string): Promise<AuthenticatedContext> {
+    const page = await this.page();
     if (AuthenticatedEmails.get(email)!.password !== password) {
       throw new Error(
         `Email ${email} is already authenticated with a different password (${
@@ -63,50 +103,51 @@ export class AuthFixture {
     }
     const scene = AuthenticatedEmails.get(email)!.scene;
     const mangledEmail = scene.mangle(email);
-    await this.page.context().storageState({ path: dataFilePath(mangledEmail) });
+    await page.context().storageState({ path: dataFilePath(mangledEmail) });
 
     if (!fs.existsSync(sessionFilePath(mangledEmail))) {
       throw new Error("No session file found");
     }
 
     // Load stored state and session into a new page
-    await loadLocal(this.page, mangledEmail);
-    await loadSession(this.page, mangledEmail);
+    await loadLocal(page, mangledEmail);
+    await loadSession(page, mangledEmail);
 
-    await this.page.goto("/#/");
+    await page.goto("/#/");
 
     return {
-      page: this.page,
+      page,
       scene,
     };
   }
 
   async newSession(email: string, password: string): Promise<AuthenticatedContext> {
+    const page = await this.page();
     using scene = await Play.scene(new SingleUserRecipe({ email }), {
       downAfterAll: true,
     });
     const mangledEmail = scene.mangle(email);
-    await this.page.goto("/#/login");
+    await page.goto("/#/login");
 
-    await this.page
+    await page
       .getByRole("textbox", { name: "Email address (required)" })
       .fill(scene.mangle("test@example.com"));
-    await this.page.getByRole("textbox", { name: "Email address (required)" }).press("Enter");
-    await this.page
+    await page.getByRole("textbox", { name: "Email address (required)" }).press("Enter");
+    await page
       .getByRole("textbox", { name: "Master password (required)" })
       .fill(scene.mangle("asdfasdfasdf"));
-    await this.page.getByRole("button", { name: "Log in with master password" }).click();
-    await this.page.getByRole("button", { name: "Add it later" }).click();
-    await this.page.getByRole("link", { name: "Skip to web app" }).click();
+    await page.getByRole("button", { name: "Log in with master password" }).click();
+    await page.getByRole("button", { name: "Add it later" }).click();
+    await page.getByRole("link", { name: "Skip to web app" }).click();
 
     // Store the scene for future use
     AuthenticatedEmails.set(email, { email, password, scene });
 
     // Save storage state to avoid logging in again
-    await saveLocal(this.page, mangledEmail);
-    await saveSession(this.page, mangledEmail);
+    await saveLocal(page, mangledEmail);
+    await saveSession(page, mangledEmail);
 
-    return { page: this.page, scene };
+    return { page, scene };
   }
 }
 

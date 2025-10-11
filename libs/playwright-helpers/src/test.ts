@@ -7,8 +7,12 @@ interface TestParams {
 }
 
 export const test = base.extend<TestParams>({
-  auth: async ({ page }, use) => {
-    const authedPage = new AuthFixture(page);
+  auth: async ({ browserName }, use) => {
+    const authedPage = new AuthFixture(browserName);
+    await authedPage.init();
+
     await use(authedPage);
+
+    await authedPage.close();
   },
 });
