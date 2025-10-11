@@ -16,8 +16,6 @@ export const webServerBaseUrl = process.env.WEB_SERVER_BASE_URL ?? "https://loca
 export default defineConfig({
   testDir: "./",
   testMatch: ["**/*.play.spec.ts"],
-  /* Run tests in files in parallel */
-  fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
@@ -34,7 +32,7 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
     launchOptions: {
-      slowMo: parseInt(process.env.PLAYWRIGHT_SLOW_MO || 0),
+      slowMo: parseInt(process.env.PLAYWRIGHT_SLOW_MO || "0"),
     },
 
     locale: "en-US", // Sets a default locale for all tests

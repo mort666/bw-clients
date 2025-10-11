@@ -1,6 +1,6 @@
-import { test, expect } from "@playwright/test";
+import { expect } from "@playwright/test";
 
-import { Play, SingleUserRecipe } from "@bitwarden/playwright-helpers";
+import { Play, SingleUserRecipe, test } from "@bitwarden/playwright-helpers";
 
 test("login with password", async ({ page }) => {
   using scene = await Play.scene(new SingleUserRecipe({ email: "test@example.com" }));
@@ -23,4 +23,28 @@ test("login with password", async ({ page }) => {
   );
   await page.getByRole("link", { name: "Skip to web app" }).click();
   await expect(page.locator("app-vault")).toContainText("There are no items to list. New item");
+});
+
+test("login and save session", async ({ auth }) => {
+  const { page, scene } = await auth.authenticate("test@example.com", "asdfasdfasdf");
+
+  await page.goto("/#");
+
+  await page.getByRole("button", { name: scene.mangle("test@example.com") }).click();
+  await expect(page.getByRole("menu")).toContainText(
+    `Logged in as ${scene.mangle("test@example.com")}`,
+  );
+});
+
+test("As long as the previous test ran in this worker, this time it will reuse authentication", async ({
+  auth,
+}) => {
+  const { page, scene } = await auth.authenticate("test@example.com", "asdfasdfasdf");
+
+  await page.goto("/#");
+
+  await page.getByRole("button", { name: scene.mangle("test@example.com") }).click();
+  await expect(page.getByRole("menu")).toContainText(
+    `Logged in as ${scene.mangle("test@example.com")}`,
+  );
 });
