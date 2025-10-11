@@ -13,14 +13,14 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-function dataFilePath(email: string): string {
-  return path.join(dataDir, `auth-${email}.json`);
+function dataFilePath(mangledEmail: string): string {
+  return path.join(dataDir, `auth-${mangledEmail}.json`);
 }
-function sessionFilePath(email: string): string {
-  return path.join(dataDir, `session-${email}.json`);
+function sessionFilePath(mangledEmail: string): string {
+  return path.join(dataDir, `session-${mangledEmail}.json`);
 }
-function localFilePath(email: string): string {
-  return path.join(dataDir, `local-${email}.json`);
+function localFilePath(mangledEmail: string): string {
+  return path.join(dataDir, `local-${mangledEmail}.json`);
 }
 
 type AuthedUserData = {
@@ -54,8 +54,6 @@ export class AuthFixture {
   }
 
   async resumeSession(email: string, password: string): Promise<AuthenticatedContext> {
-    await this.page.context().storageState({ path: dataFilePath(email) });
-
     if (AuthenticatedEmails.get(email)!.password !== password) {
       throw new Error(
         `Email ${email} is already authenticated with a different password (${
@@ -63,19 +61,23 @@ export class AuthFixture {
         })`,
       );
     }
-    if (!fs.existsSync(sessionFilePath(email))) {
+    const scene = AuthenticatedEmails.get(email)!.scene;
+    const mangledEmail = scene.mangle(email);
+    await this.page.context().storageState({ path: dataFilePath(mangledEmail) });
+
+    if (!fs.existsSync(sessionFilePath(mangledEmail))) {
       throw new Error("No session file found");
     }
 
     // Load stored state and session into a new page
-    await loadLocal(this.page, email);
-    await loadSession(this.page, email);
+    await loadLocal(this.page, mangledEmail);
+    await loadSession(this.page, mangledEmail);
 
     await this.page.goto("/#/");
 
     return {
       page: this.page,
-      scene: AuthenticatedEmails.get(email)!.scene,
+      scene,
     };
   }
 
@@ -83,6 +85,7 @@ export class AuthFixture {
     using scene = await Play.scene(new SingleUserRecipe({ email }), {
       downAfterAll: true,
     });
+    const mangledEmail = scene.mangle(email);
     await this.page.goto("/#/login");
 
     await this.page
@@ -100,25 +103,25 @@ export class AuthFixture {
     AuthenticatedEmails.set(email, { email, password, scene });
 
     // Save storage state to avoid logging in again
-    await saveLocal(this.page, email);
-    await saveSession(this.page, email);
+    await saveLocal(this.page, mangledEmail);
+    await saveSession(this.page, mangledEmail);
 
     return { page: this.page, scene };
   }
 }
 
-async function saveSession(page: Page, email: string): Promise<void> {
+async function saveSession(page: Page, mangledEmail: string): Promise<void> {
   // Get session storage and store as env variable
   const json = await page.evaluate(() => JSON.stringify(sessionStorage));
-  fs.writeFileSync(sessionFilePath(email), json, "utf-8");
+  fs.writeFileSync(sessionFilePath(mangledEmail), json, "utf-8");
 }
 
-async function loadSession(page: Page, email: string): Promise<void> {
-  if (!fs.existsSync(sessionFilePath(email))) {
+async function loadSession(page: Page, mangledEmail: string): Promise<void> {
+  if (!fs.existsSync(sessionFilePath(mangledEmail))) {
     throw new Error("No session file found");
   }
   // Set session storage in a new context
-  const sessionStorage = JSON.parse(fs.readFileSync(sessionFilePath(email), "utf-8"));
+  const sessionStorage = JSON.parse(fs.readFileSync(sessionFilePath(mangledEmail), "utf-8"));
   await page.addInitScript(
     ({ storage, hostname }) => {
       if (window.location.hostname === hostname) {
@@ -131,18 +134,18 @@ async function loadSession(page: Page, email: string): Promise<void> {
   );
 }
 
-async function saveLocal(page: Page, email: string): Promise<void> {
+async function saveLocal(page: Page, mangledEmail: string): Promise<void> {
   // Get session storage and store as env variable
   const json = await page.evaluate(() => JSON.stringify(localStorage));
-  fs.writeFileSync(localFilePath(email), json, "utf-8");
+  fs.writeFileSync(localFilePath(mangledEmail), json, "utf-8");
 }
 
-async function loadLocal(page: Page, email: string): Promise<void> {
-  if (!fs.existsSync(localFilePath(email))) {
+async function loadLocal(page: Page, mangledEmail: string): Promise<void> {
+  if (!fs.existsSync(localFilePath(mangledEmail))) {
     throw new Error("No local file found");
   }
   // Set session storage in a new context
-  const localStorage = JSON.parse(fs.readFileSync(localFilePath(email), "utf-8"));
+  const localStorage = JSON.parse(fs.readFileSync(localFilePath(mangledEmail), "utf-8"));
   await page.addInitScript(
     ({ storage, hostname }) => {
       if (window.location.hostname === hostname) {
@@ -157,16 +160,17 @@ async function loadLocal(page: Page, email: string): Promise<void> {
 
 test.afterAll(async () => {
   // clean up all the saved data files
-  for (const email of AuthenticatedEmails.keys()) {
-    const dataPath = dataFilePath(email);
+  for (const { email, scene } of AuthenticatedEmails.values()) {
+    const mangledEmail = scene.mangle(email);
+    const dataPath = dataFilePath(mangledEmail);
     if (fs.existsSync(dataPath)) {
       fs.unlinkSync(dataPath);
     }
-    const sessionPath = sessionFilePath(email);
+    const sessionPath = sessionFilePath(mangledEmail);
     if (fs.existsSync(sessionPath)) {
       fs.unlinkSync(sessionPath);
     }
-    const localPath = localFilePath(email);
+    const localPath = localFilePath(mangledEmail);
     if (fs.existsSync(localPath)) {
       fs.unlinkSync(localPath);
     }
