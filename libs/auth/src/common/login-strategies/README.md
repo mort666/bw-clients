@@ -1,11 +1,17 @@
 # Overview of Authentication at Bitwarden
 
+> [!IMPORTANT]
+> While each login method has its own unique logic, this document discusses the
+> logic that is _generally_ common to all login methods. It provides a high-level
+> overview of authentication and as such will involve some abstraction. That said,
+> the code is the ultimate source of truth.
+
 <br>
 
 > **Table of Contents**
 >
 > - [Authentication Methods](#authentication-methods)
-> - [The Credentials Object](#the-credentials-object)
+> - [The Login Credentials Object](#the-login-credentials-object)
 > - [The `LoginStrategyService` and our Login Strategies](#the-loginstrategyservice-and-our-login-strategies)
 > - [The `logIn()` and `startLogin()` Methods](#the-login-and-startlogin-methods)
 > - [Handling the `AuthResult`](#handling-the-authresult)
@@ -17,35 +23,38 @@
 
 Bitwarden provides 5 methods for logging in to Bitwarden, as defined in our [`AuthenticationType`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/enums/authentication-type.ts) enum. They are:
 
-1. [Login with Master Password](https://bitwarden.com/help/bitwarden-security-white-paper/#authentication-and-decryption) &mdash; authenticate with a master password
+1. [Login with Master Password](https://bitwarden.com/help/bitwarden-security-white-paper/#authentication-and-decryption)
 2. [Login with Auth Request](https://bitwarden.com/help/log-in-with-device/) (aka Login with Device) &mdash; authenticate with a one-time access code
 3. [Login with Single Sign-On](https://bitwarden.com/help/about-sso/) &mdash; authenticate with an SSO Identity Provider (IdP) through SAML or OpenID Connect (OIDC)
-4. [Login with Passkey](https://bitwarden.com/help/login-with-passkeys/) (aka Login with WebAuthn) &mdash; authenticate with a passkey
+4. [Login with Passkey](https://bitwarden.com/help/login-with-passkeys/) (WebAuthn)
 5. [Login with User API Key](https://bitwarden.com/help/personal-api-key/) &mdash; authenticate with an API key and secret
 
 <br>
 
-**Login Initiation - Angular Clients**
+**Login Initiation**
 
-From the user's perspective, methods 1-4 can be initiated from the `/login` screen (`LoginComponent`).
+_Angular Clients_
 
-But "initiated" in this context simply means "the user can enter their email" to begin the login process. _After_ a user has entered their email on the `/login` screen they must then click one of the following buttons to navigate to the relevant component, which is where they can truly kick off the particular login process:
+A user begins the login process by entering their email on the `/login` screen (`LoginComponent`). From there, the user must click one of the following buttons to initiate a login method by navigating to the associated login component:
 
-- "Continue" button &rarr; user stays on the `LoginComponent` and enters a Master Password
-- "Log in with device" button &rarr; navigates user to `LoginViaAuthRequestComponent`
-- "Use single sign-on" button &rarr; navigates user to `SsoComponent`
-- "Log in with passkey" button &rarr; navigates user to `LoginViaWebAuthnComponent`
+- `"Continue"` &rarr; user stays on the `LoginComponent` and enters a Master Password
+- `"Log in with device"` &rarr; navigates user to `LoginViaAuthRequestComponent`
+- `"Use single sign-on"` &rarr; navigates user to `SsoComponent`
+- `"Log in with passkey"` &rarr; navigates user to `LoginViaWebAuthnComponent`
   - Note: Login with Passkey is currently not available on the Desktop client.
 
-> [!NOTE]  
-> It is worth noting that the Login with Master Password method is also used by the
-> `RegistrationFinishComponent` and `CompleteTrialInitiationComponent` (the user automatically
-> gets logged in with their Master Password after registration), and the `RecoverTwoFactorComponent`
-> (the user logs in with their Master Password along with their 2FA recovery code).
+> [!NOTE]
+>
+> - Our Angular clients do not support the Login with User API Key method.
 
-**Login Initiation - CLI Client**
+> - The Login with Master Password method is also used by the
+>   `RegistrationFinishComponent` and `CompleteTrialInitiationComponent` (the user automatically
+>   gets logged in with their Master Password after registration), and the `RecoverTwoFactorComponent`
+>   (the user logs in with their Master Password along with their 2FA recovery code).
 
-The CLI client can handle the following login methods via the `LoginCommand`.
+_CLI Client_
+
+The CLI client supports the following login methods via the `LoginCommand`.
 
 - Login with Master Password
 - Login with Single Sign-On
@@ -53,15 +62,9 @@ The CLI client can handle the following login methods via the `LoginCommand`.
 
 <br>
 
-## Login Methods Share Common Logic
+## The Login Credentials Object
 
-While each login method has its own unique logic, this `README` discusses the logic that is _generally_ common to all login methods. That said, the code is the ultimate source of truth. This document is meant to provide a high-level overview and as such will involve some abstraction.
-
-<br>
-
-## The Credentials Object
-
-When the user clicks the "submit" action for their specific login method, we first build a **credentials object**. This object gathers the core credentials needed to initiate the specific login method.
+When the user clicks the "submit" action on the associated login component, we first build a **login credentials object**. This object gathers the core credentials needed to initiate the specific login method.
 
 For example, when the user clicks "Log in with master password" on the `LoginComponent`, we build a `PasswordLoginCredentials` object, which is defined as follows:
 
@@ -78,9 +81,9 @@ export class PasswordLoginCredentials {
 }
 ```
 
-Notice that the `type` is automatically set to `AuthenticationType.Password`, and that the `PasswordLoginCredentials` object simply requires an `email` and `masterPassword` to initiate the login process.
+Notice that the `type` is automatically set to `AuthenticationType.Password`, and the `PasswordLoginCredentials` object simply requires an `email` and `masterPassword` to initiate the login method.
 
-Each login method builds it's respective credentials object, all of which are defined in [`login-credentials.ts`](https://github.com/bitwarden/clients/blob/main/libs/auth/src/common/models/domain/login-credentials.ts).
+Each login method builds it's own type of credentials object, each of which is defined in [`login-credentials.ts`](https://github.com/bitwarden/clients/blob/main/libs/auth/src/common/models/domain/login-credentials.ts).
 
 - `PasswordLoginCredentials`
 - `AuthRequestLoginCredentials`
@@ -92,10 +95,10 @@ Each login method builds it's respective credentials object, all of which are de
 
 ## The `LoginStrategyService` and our Login Strategies
 
-The credentials object gets passed to our [`LoginStrategyService`](https://github.com/bitwarden/clients/blob/main/libs/auth/src/common/services/login-strategies/login-strategy.service.ts), which acts as an orchestrator that determines which specific **login strategy** should be initialized and used for the login process.
+The credentials object gets passed to our [`LoginStrategyService`](https://github.com/bitwarden/clients/blob/main/libs/auth/src/common/services/login-strategies/login-strategy.service.ts), which acts as an orchestrator that determines which of our specific **login strategies** should be initialized and used for the login process.
 
 > [!IMPORTANT]
-> Our authentication methods are handled by different [login strategies](https://github.com/bitwarden/clients/tree/main/libs/auth/src/common/login-strategies) in our code, making use of the [Strategy Design Pattern](https://refactoring.guru/design-patterns/strategy). Those strategies are:
+> Our authentication methods are handled by different [login strategies](https://github.com/bitwarden/clients/tree/main/libs/auth/src/common/login-strategies), making use of the [Strategy Design Pattern](https://refactoring.guru/design-patterns/strategy). Those strategies are:
 >
 > - `PasswordLoginStrategy`
 > - `AuthRequestLoginStrategy`
@@ -105,28 +108,40 @@ The credentials object gets passed to our [`LoginStrategyService`](https://githu
 >
 > Each of those strategies extend the base [`LoginStrategy`](https://github.com/bitwarden/clients/blob/main/libs/auth/src/common/login-strategies/login.strategy.ts), which houses common login logic.
 
-The `LoginStrategyService` uses the `type` property on the credentials object to determine which of the specific login strategies should be initialized and used for the login process.
+The `LoginStrategyService` uses the `type` property on the credentials object to determine which specific login strategy should be initialized and used for the login process.
 
-For example, the `PasswordLoginCredentials` object has `type = 0` (which is `AuthenticationType.Password`). This tells the `LoginStrategyService` to initialize and use the `PasswordLoginStrategy` for the login process.
+For example, the `PasswordLoginCredentials` object has `type` of `AuthenticationType.Password`. This tells the `LoginStrategyService` to initialize and use the `PasswordLoginStrategy` for the login process.
 
-Once the `LoginStrategyService` initializes the correct Login Strategy, it then calls the `logIn(...)` method defined on that particular Login Strategy.
+Once the `LoginStrategyService` initializes the appropriate strategy, it then calls the `logIn()` method defined on that strategy, passing in the credentials object as an argument. For example: `PasswordLoginStrategy.logIn(PasswordLoginCredentials)`.
 
 <br>
 
 ## The `logIn()` and `startLogin()` Methods
 
-Each login strategy has it's own implementation of the `logIn()` method. This method takes the credentials object as its sole argument (passed in from the `LoginStrategyService`) and triggers a process that perfoms the following common logic at minimum:
+Each login strategy has it's own unique implementation of the `logIn()` method, yet they all perform similar logic.
 
-1. **Build a `LoginStrategyData` Object**
+The main purpose of the `logIn()` method is to take the credentials object (passed in from the `LoginStrategyService`) and perform the following general logic:
 
-   Each login strategy uses the credentials object to help build a type of `LoginStrategyData` object, which contains the data needed throughout the lifetime of the particular login strategy. Each login strategy has it's own class that implements the `LoginStrategyData` interface:
+1. Build a `LoginStrategyData` object
+2. Cache the `LoginStrategyData` object
+3. Call the `startLogin()` method on the base `LoginStrategy`
+
+Here are those steps in more detail:
+
+1. **Build a `LoginStrategyData` object**
+
+   Each strategy uses the credentials object to help build a type of `LoginStrategyData` object, which contains the data needed throughout the lifetime of the particular strategy.
+
+   Each strategy has it's own class that implements the `LoginStrategyData` interface:
    - `PasswordLoginStrategyData`
    - `AuthRequestLoginStrategyData`
    - `SsoLoginStrategyData`
    - `WebAuthnLoginStrategyData`
    - `UserApiLoginStrategyData`
 
-   So in our ongoing example that uses the "Login with Master Password" method, we would call `PasswordLoginStrategy.logIn(passwordLoginCredentials)`, which in turn would build a `PasswordLoginStrategyData` object that contains the data needed throughout the lifetime of the `PasswordLoginStrategy`. That object is defined like so:
+   So in our ongoing example that uses the "Login with Master Password" method, the call to `PasswordLoginStrategy.logIn(PasswordLoginCredentials)` would build a `PasswordLoginStrategyData` object that contains the data needed throughout the lifetime of the `PasswordLoginStrategy`.
+
+   That `PasswordLoginStrategyData` object is defined like so:
 
    ```typescript
    export class PasswordLoginStrategyData implements LoginStrategyData {
@@ -139,17 +154,29 @@ Each login strategy has it's own implementation of the `logIn()` method. This me
    }
    ```
 
-   Each of the `LoginStrategyData` types have varying properties, but one property common to all is the `tokenRequest` property. The `tokenRequest` property holds some type of [`TokenRequest`](https://github.com/bitwarden/clients/tree/main/libs/common/src/auth/models/request/identity-token) object based on the login strategy:
-   - `PasswordTokenRequest` &mdash; used by both Password and Auth Request login strategies
+   Each of the `LoginStrategyData` types have varying properties, but one property common to all is the `tokenRequest` property.
+
+   The `tokenRequest` property holds some type of [`TokenRequest`](https://github.com/bitwarden/clients/tree/main/libs/common/src/auth/models/request/identity-token) object based on the strategy:
+   - `PasswordTokenRequest` &mdash; used by both the `PasswordLoginStrategy` and `AuthRequestLoginStrategy`
    - `SsoTokenRequest`
    - `WebAuthnTokenRequest`
    - `UserApiTokenRequest`
 
-   This `TokenRequest` object is built during the `logIn()` call and is added to the `LoginStrategyData` object, as seen in the example above.
+   This `TokenRequest` object is built during the `logIn()` call and is added as a property to the `LoginStrategyData` object.
 
-2. **Call the base `startLogin()` Method**
+   <br />
 
-   After building the `LoginStrategyData` object with its `tokenRequest` property, we call the `startLogin()` method, which exists on the base `LoginStrategy` and is therefore common to all login strategies. The `startLogin()` method does the following:
+2. **Cache the `LoginStrategyData` object**
+
+   Because a login method could "fail" due to a need for Two Factor Authentication or New Device Verification, we need a way of preserving the `LoginStrategyData` so that we can re-use it later when the user provides their 2FA or NDV token. This way, the user does not need to completely re-submit all of their credentials.
+
+   The way we cache this `LoginStrategyData` is simply by saving it to a property called `cache` on the strategy. There will be more details on how this cache is used later on.
+
+   <br />
+
+3. **Call the `startLogin()` method on the base `LoginStrategy`**
+
+   Next, we call the `startLogin()` method, which exists on the base `LoginStrategy` and is therefore common to all login strategies. The `startLogin()` method does the following:
    1. **Makes a `POST` request to the `/connect/token` endpoint on our Identity Server**
       - `REQUEST`
 
@@ -198,7 +225,43 @@ Each login strategy has it's own implementation of the `logIn()` method. This me
 
 ## Handling the `AuthResult`
 
-The `AuthResult` object returned from the `process*Response()` method contains information that will be used to determine how to navigate the user after authentication.
+The `AuthResult` object returned from the `process*Response()` method contains information that will be used to determine how to direct the user after an authentication attempt.
+
+### Re-submit Scenarios
+
+There are two cases where a user is required to provide additional information before they can be authenticated: Two Factor Authenticatin (2FA) and New Device Verification (NDV). In these scenarios, we actually need the user to "re-submit" their original request, along with their added 2FA or NDV token. Here is how these scenarios work:
+
+**User must complete Two Factor Authentication**
+
+1. Remember that when the server response is `IdentityTwoFactorResponse`, we set 2FA data into state and also add the necessary data for the 2FA process to the `AuthResult`.
+2. When `AuthResult.requiresTwoFactor`, the specific login strategy exports its `LoginStrategyData` to the `LoginStrategyService`, where it gets stored in memory. This means the `LoginStrategyService` has a cache of the original request the user sent.
+3. We route the user to `/2fa` (`TwoFactorAuthComponent`).
+4. The user enters their 2FA token.
+5. On submission, the `LoginStrategyService` calls `logInTwoFactor()` on the particular login strategy. This method then:
+
+- Takes the cached `LoginStrategyData` (the user's original request), and appends the 2FA token onto the `TokenRequest`
+- Calls `startLogin()` again, this time using the updated `LoginStrategyData` that includes the 2FA token.
+
+**User must complete New Device Verification**
+
+1. Remember that when the server response is `IdentityDeviceVerificationResponse`, we set `requiresDeviceVerification` to `true` on the `AuthResult`.
+2. When `AuthResult.requiresDeviceVerification` is `true`, the specific login strategy exports its `LoginStrategyData` to the `LoginStrategyService`, where it gets stored in memory. This means the `LoginStrategyService` has a cache of the original request the user sent.
+3. We route the user to `/device-verification`.
+4. The user enters their NDV token.
+5. On submission, the `LoginStrategyService` calls `logInNewDeviceVerification()` on the particular login strategy. This method then:
+
+- Takes the cached `LoginStrategyData` (the user's original request), and appends the NDV token onto the `TokenRequest`.
+- Calls `startLogIn()` again, this time using the updated `LoginStrategyData` that includes the NDV token.
+
+### Successful Authentication Scenarios
+
+**User must change their password**
+
+**User sent to `/login-initiated`**
+
+**User sent to `/vault`**
+
+If `AuthResult.requiresDeviceVerification`
 
 For example, if the `AuthResult` contains:
 
