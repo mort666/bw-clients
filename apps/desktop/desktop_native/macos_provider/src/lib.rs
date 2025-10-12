@@ -50,6 +50,8 @@ trait Callback: Send + Sync {
 }
 
 #[derive(uniffi::Enum, Debug)]
+/// Store the connection status between the macOS credential provider extension
+/// and the desktop application's IPC server.
 pub enum ConnectionStatus {
     Connected,
     Disconnected,
@@ -70,6 +72,8 @@ pub struct MacOSProviderClient {
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+/// Store native desktop status information to use for IPC communication
+/// between the application and the macOS credential provider.
 pub struct NativeStatus {
     key: String,
     value: String,

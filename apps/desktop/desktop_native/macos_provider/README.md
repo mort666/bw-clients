@@ -18,7 +18,6 @@ Electron receives the messages and passes it to Angular (through the electron-re
 
 Our existing fido2 services in the renderer respond to events, displaying UI as necessary, and returns the signature back through the same mechanism, allowing people to authenticate with passkeys through the native system + UI. See [Mac OS Native Passkey Workflows](https://bitwarden.atlassian.net/wiki/spaces/EN/pages/1828356098/Mac+OS+Native+Passkey+Workflows) for demo videos.
 
-
 ## Typescript + UI implementations
 
 We utilize the same FIDO2 implementation and interface that is already present for our browser authentication. It was designed by @coroiu with multiple ‘ui environments' in mind.
@@ -29,7 +28,6 @@ We’ve also implemented a couple FIDO2 UI components to handle registration/sig
 
 ## Modal mode
 
-When modal mode is activated, the desktop app turns into a smaller modal that is always on top and cannot be resized. This is done to improve the UX of performing a passkey operation (or SSH operation). Once the operation is completed, the app returns to normal mode and its previous position.
+When (modal mode)[https://www.electronjs.org/docs/latest/api/browser-window#modal-windows] is activated, the desktop app turns into a smaller modal that is always on top and cannot be resized. This is done to improve the UX of performing a passkey operation (or SSH operation). Once the operation is completed, the app returns to normal mode and its previous position.
 
 Some modal modes may hide the 'traffic buttons' (window controls) due to design requirements.
-
