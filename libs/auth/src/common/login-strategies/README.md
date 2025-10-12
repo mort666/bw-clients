@@ -122,13 +122,13 @@ Each login strategy has it's own unique implementation of the `logIn()` method, 
 
 The main purpose of the `logIn()` method is to take the credentials object (passed in from the `LoginStrategyService`) and perform the following general logic:
 
-1. Build a `LoginStrategyData` object
+1. Build a `LoginStrategyData` object with a `TokenRequest` property
 2. Cache the `LoginStrategyData` object
 3. Call the `startLogin()` method on the base `LoginStrategy`
 
 Here are those steps in more detail:
 
-1. **Build a `LoginStrategyData` object**
+1. **Build a `LoginStrategyData` object with a `TokenRequest` property**
 
    Each strategy uses the credentials object to help build a type of `LoginStrategyData` object, which contains the data needed throughout the lifetime of the particular strategy.
 
@@ -162,7 +162,7 @@ Here are those steps in more detail:
    - `WebAuthnTokenRequest`
    - `UserApiTokenRequest`
 
-   This `TokenRequest` object is built during the `logIn()` call and is added as a property to the `LoginStrategyData` object.
+   This `TokenRequest` object is also built within the `logIn()` method and is added as a property to the `LoginStrategyData` object.
 
    <br />
 
@@ -203,7 +203,7 @@ Here are those steps in more detail:
           - This response means the user needs to verify their new device via [new device verification](https://bitwarden.com/help/new-device-verification/)
           - The response contains a boolean property that simply states whether or not the device has been verified
 
-   2. **Calls one of the `process[IdentityType]Response()` methods, each of which returns an [`AuthResult`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/domain/auth-result.ts) object**
+   2. **Calls one of the `process[IdentityType]Response()` methods, each of which builds and returns an [`AuthResult`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/domain/auth-result.ts) object**
       - If `IdentityTokenResponse`, call `processTokenResponse()`
         - This method uses information from the `IdentityTokenResponse` object to set Authentication and Decryption information about the user into state.
           - `saveAccountInformation()` - initializes the account with information from the `IdentityTokenResponse` after successful login.
@@ -225,11 +225,11 @@ Here are those steps in more detail:
 
 ## Handling the `AuthResult`
 
-The `AuthResult` object returned from the `process*Response()` method contains information that will be used to determine how to direct the user after an authentication attempt.
+The `AuthResult` object returned from the `process[IdentityType]Response()` method contains information that will be used to determine how to direct the user after an authentication attempt.
 
 ### Re-submit Scenarios
 
-There are two cases where a user is required to provide additional information before they can be authenticated: Two Factor Authenticatin (2FA) and New Device Verification (NDV). In these scenarios, we actually need the user to "re-submit" their original request, along with their added 2FA or NDV token. Here is how these scenarios work:
+There are two cases where a user is required to provide additional information before they can be authenticated: Two Factor Authentication (2FA) and New Device Verification (NDV). In these scenarios, we actually need the user to "re-submit" their original request, along with their added 2FA or NDV token. Here is how these scenarios work:
 
 **User must complete Two Factor Authentication**
 
@@ -260,14 +260,6 @@ There are two cases where a user is required to provide additional information b
 **User sent to `/login-initiated`**
 
 **User sent to `/vault`**
-
-If `AuthResult.requiresDeviceVerification`
-
-For example, if the `AuthResult` contains:
-
-- `requiresTwoFactor` &mdash; then navigate user to `/2fa`
-- `requiresDeviceVerification` &mdash; then navigate user to `/device-verification`
-- If there are no additional requirements according to the `AuthResult`, then navigate user to `/vault`
 
 <br>
 
