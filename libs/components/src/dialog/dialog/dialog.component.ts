@@ -87,29 +87,36 @@ export class DialogComponent {
   readonly disablePadding = input(false, { transform: booleanAttribute });
 
   /**
+   * Disable animations for the dialog.
+   */
+  readonly disableAnimations = input(false, { transform: booleanAttribute });
+
+  /**
    * Mark the dialog as loading which replaces the content with a spinner.
    */
   readonly loading = input(false);
 
   private animationCompleted = signal(false);
 
-  classes() {
+  protected classes = computed(() => {
     // `tw-max-h-[90vh]` is needed to prevent dialogs from overlapping the desktop header
-    return [
-      "tw-flex",
-      "tw-flex-col",
-      "tw-w-screen",
-      // Prevent the animation from starting again when the viewport changes since it changes between breakpoints
-      this.animationCompleted() ? [] : this.animationClasses(),
-    ]
-      .concat(
-        this.width,
-        this.dialogRef?.isDrawer
-          ? ["tw-min-h-screen", "md:tw-w-[23rem]"]
-          : ["md:tw-p-4", "tw-w-screen", "tw-max-h-[90vh]"],
-      )
-      .flat();
-  }
+    const baseClasses = ["tw-flex", "tw-flex-col", "tw-w-screen"];
+    const sizeClasses = this.dialogRef?.isDrawer
+      ? ["tw-min-h-screen", "md:tw-w-[23rem]"]
+      : ["md:tw-p-4", "tw-w-screen", "tw-max-h-[90vh]"];
+
+    const animationClasses =
+      this.disableAnimations() ||
+      this.animationCompleted() ||
+      !this.dialogRef || // Disable if component is rendered staticly
+      this.dialogRef.isDrawer
+        ? []
+        : this.dialogSize() === "small"
+          ? ["tw-animate-slide-down"]
+          : ["tw-animate-slide-up", "md:tw-animate-slide-down"];
+
+    return [...baseClasses, this.width, ...sizeClasses, ...animationClasses];
+  });
 
   handleEsc(event: Event) {
     if (!this.dialogRef?.disableClose) {
@@ -131,18 +138,6 @@ export class DialogComponent {
       }
     }
   }
-
-  protected animationClasses = computed(() => {
-    if (!this.dialogRef || this.dialogRef?.isDrawer) {
-      return [];
-    }
-    switch (this.dialogSize()) {
-      case "small":
-        return ["tw-animate-slide-down"];
-      default:
-        return ["tw-animate-slide-up", "md:tw-animate-slide-down"];
-    }
-  });
 
   onAnimationEnd() {
     this.animationCompleted.set(true);

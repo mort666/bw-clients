@@ -17,6 +17,7 @@ import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authenticatio
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 
 import { DrawerService } from "../drawer/drawer.service";
+import { isBreakpoint } from "../utils/responsive-utils";
 
 import { SimpleConfigurableDialogComponent } from "./simple-dialog/simple-configurable-dialog/simple-configurable-dialog.component";
 import { SimpleDialogOptions } from "./simple-dialog/types";
@@ -77,13 +78,15 @@ class ResponsivePositionStrategy extends GlobalPositionStrategy {
 
   constructor() {
     super();
-    this.onResizeListener = this.updatePosition.bind(this);
-    this.updatePosition(); // Initial position update
-    window.addEventListener("resize", this.onResizeListener);
+    if (typeof window !== "undefined") {
+      this.onResizeListener = this.updatePosition.bind(this);
+      this.updatePosition(); // Initial position update
+      window.addEventListener("resize", this.onResizeListener);
+    }
   }
 
   override dispose() {
-    if (this.onResizeListener) {
+    if (this.onResizeListener && typeof window !== "undefined") {
       window.removeEventListener("resize", this.onResizeListener);
       this.onResizeListener = null;
     }
@@ -91,7 +94,7 @@ class ResponsivePositionStrategy extends GlobalPositionStrategy {
   }
 
   updatePosition() {
-    const isSmallScreen = window?.matchMedia?.("(max-width: 768px)")?.matches ?? false;
+    const isSmallScreen = isBreakpoint("md");
     const currentBreakpoint = isSmallScreen ? "small" : "large";
     if (this.prevBreakpoint === currentBreakpoint) {
       return; // No change in breakpoint, no need to update position
@@ -106,6 +109,16 @@ class ResponsivePositionStrategy extends GlobalPositionStrategy {
   }
 }
 
+/**
+ * Position strategy that centers dialogs regardless of screen size.
+ * Use this for simple dialogs and custom dialogs that should not use
+ * the responsive bottom-sheet behavior on mobile.
+ *
+ * @example
+ * dialogService.open(MyComponent, {
+ *   positionStrategy: new CenterPositionStrategy()
+ * });
+ */
 export class CenterPositionStrategy extends GlobalPositionStrategy {
   constructor() {
     super();
@@ -180,7 +193,6 @@ export class DialogService {
 
   private backDropClasses = ["tw-fixed", "tw-bg-black", "tw-bg-opacity-30", "tw-inset-0"];
   private defaultScrollStrategy = new CustomBlockScrollStrategy();
-  private defaultPositionStrategy = new ResponsivePositionStrategy();
   private activeDrawer: DrawerDialogRef<any, any> | null = null;
 
   constructor() {
@@ -223,7 +235,7 @@ export class DialogService {
     const _config = {
       backdropClass: this.backDropClasses,
       scrollStrategy: this.defaultScrollStrategy,
-      positionStrategy: this.defaultPositionStrategy,
+      positionStrategy: config?.positionStrategy ?? new ResponsivePositionStrategy(),
       injector,
       ...config,
     };
