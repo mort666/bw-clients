@@ -28,6 +28,6 @@ We’ve also implemented a couple FIDO2 UI components to handle registration/sig
 
 ## Modal mode
 
-When (modal mode)[https://www.electronjs.org/docs/latest/api/browser-window#modal-windows] is activated, the desktop app turns into a smaller modal that is always on top and cannot be resized. This is done to improve the UX of performing a passkey operation (or SSH operation). Once the operation is completed, the app returns to normal mode and its previous position.
+When modal mode is activated, the desktop app turns into a smaller modal that is always on top and cannot be resized. This is done to improve the UX of performing a passkey operation (or SSH operation). Once the operation is completed, the app returns to normal mode and its previous position.
 
 Some modal modes may hide the 'traffic buttons' (window controls) due to design requirements.
