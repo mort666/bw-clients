@@ -1,6 +1,17 @@
-import { Component, DestroyRef, inject } from "@angular/core";
+import { Component, DestroyRef, inject, OnInit } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { combineLatest, firstValueFrom, map, Observable, of, shareReplay, switchMap } from "rxjs";
+import { ActivatedRoute } from "@angular/router";
+import {
+  combineLatest,
+  concatMap,
+  firstValueFrom,
+  from,
+  map,
+  Observable,
+  of,
+  shareReplay,
+  switchMap,
+} from "rxjs";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
@@ -24,7 +35,7 @@ import {
   templateUrl: "./premium-vnext.component.html",
   standalone: false,
 })
-export class PremiumVNextComponent {
+export class PremiumVNextComponent implements OnInit {
   protected hasPremiumFromAnyOrganization$: Observable<boolean>;
   protected hasPremiumPersonally$: Observable<boolean>;
   protected shouldShowNewDesign$: Observable<boolean>;
@@ -39,7 +50,6 @@ export class PremiumVNextComponent {
     price: number;
     features: string[];
   }>;
-
   protected subscriber!: BitwardenSubscriber;
   protected isSelfHost = false;
   private destroyRef = inject(DestroyRef);
@@ -54,6 +64,7 @@ export class PremiumVNextComponent {
     private toastService: ToastService,
     private billingAccountProfileStateService: BillingAccountProfileStateService,
     private subscriptionPricingService: SubscriptionPricingService,
+    private activatedRoute: ActivatedRoute,
   ) {
     this.isSelfHost = this.platformUtilsService.isSelfHost();
 
@@ -118,6 +129,10 @@ export class PremiumVNextComponent {
     );
   }
 
+  async ngOnInit(): Promise<void> {
+    await this.triggerUpgradeDialogFromQueryParam();
+  }
+
   finalizeUpgrade = async () => {
     await this.apiService.refreshIdentityToken();
     await this.syncService.fullSync(true);
@@ -160,5 +175,20 @@ export class PremiumVNextComponent {
           });
         }
       });
+  }
+
+  private async triggerUpgradeDialogFromQueryParam(): Promise<void> {
+    combineLatest([this.hasPremiumFromAnyOrganization$, this.activatedRoute.queryParams])
+      .pipe(
+        map(([hasPremium, queryParams]) => {
+          const cta = queryParams["callToAction"];
+          return !hasPremium && cta === "upgradeToPremium";
+        }),
+        concatMap((shouldShowUpgradeDialog) => {
+          return shouldShowUpgradeDialog ? from(this.openUpgradeDialog("Premium")) : of(undefined);
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
   }
 }
