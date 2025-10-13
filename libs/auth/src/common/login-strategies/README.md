@@ -159,7 +159,7 @@ Here are those steps in more detail:
    The `tokenRequest` property holds some type of [`TokenRequest`](https://github.com/bitwarden/clients/tree/main/libs/common/src/auth/models/request/identity-token) object based on the strategy:
    - `PasswordTokenRequest` &mdash; used by both the `PasswordLoginStrategy` and `AuthRequestLoginStrategy`
    - `SsoTokenRequest`
-   - `WebAuthnTokenRequest`
+   - `WebAuthnLoginTokenRequest`
    - `UserApiTokenRequest`
 
    This `TokenRequest` object is also built within the `logIn()` method and is added as a property to the `LoginStrategyData` object.
