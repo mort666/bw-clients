@@ -754,8 +754,8 @@ pub mod autofill {
                                         .call(value, ThreadsafeFunctionCallMode::NonBlocking);
                                     continue;
                                 }
-                                Err(e) => {
-                                    println!("[ERROR] Error deserializing native status: {e}");
+                                Err(error) => {
+                                    error!(%error, "Unable to deserialze native status.");
                                 }
                             }
 
