@@ -1,10 +1,8 @@
 <div class="tw-max-w-3xl tw-mx-auto">
   <bit-section *ngIf="shouldShowNewDesign$ | async">
     <div class="tw-text-center">
-      <div
-        class="tw-inline-block tw-bg-background-alt tw-border-[0.5px] tw-border-secondary-700 tw-rounded-full tw-px-2 tw-py-1 tw-mt-8 tw-mb-6"
-      >
-        <span bitTypography="helper" class="tw-text-secondary-700">
+      <div class="tw-mt-8 tw-mb-6">
+        <span bitBadge variant="secondary" [truncate]="false">
           {{ "bitwardenFreeplanMessage" | i18n }}
         </span>
       </div>
