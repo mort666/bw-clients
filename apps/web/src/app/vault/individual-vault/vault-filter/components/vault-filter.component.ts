@@ -11,7 +11,6 @@ import {
   takeUntil,
 } from "rxjs";
 
-import { PremiumBadgeComponent } from "@bitwarden/angular/billing/components/premium-badge";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { getFirstPolicy } from "@bitwarden/common/admin-console/services/policy/default-policy.service";
@@ -20,7 +19,6 @@ import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions/billing-api.service.abstraction";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { UserId } from "@bitwarden/common/types/guid";
 import { CipherArchiveService } from "@bitwarden/common/vault/abstractions/cipher-archive.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
@@ -244,14 +242,13 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
   };
 
   async buildAllFilters(): Promise<VaultFilterList> {
-    const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
     const builderFilter = {} as VaultFilterList;
     builderFilter.organizationFilter = await this.addOrganizationFilter();
     builderFilter.typeFilter = await this.addTypeFilter();
     builderFilter.folderFilter = await this.addFolderFilter();
     builderFilter.collectionFilter = await this.addCollectionFilter();
     if (await firstValueFrom(this.cipherArchiveService.showArchiveFeatures$())) {
-      builderFilter.archiveFilter = await this.addArchiveFilter(userId);
+      builderFilter.archiveFilter = await this.addArchiveFilter();
     }
     builderFilter.trashFilter = await this.addTrashFilter();
     return builderFilter;
@@ -411,8 +408,7 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
     return trashFilterSection;
   }
 
-  protected async addArchiveFilter(userId: UserId): Promise<VaultFilterSection> {
-    const userHasPremium = await firstValueFrom(this.cipherArchiveService.userHasPremium$(userId));
+  protected async addArchiveFilter(): Promise<VaultFilterSection> {
     const archiveFilterSection: VaultFilterSection = {
       data$: this.vaultFilterService.buildTypeTree(
         {
@@ -434,14 +430,8 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
         showHeader: false,
         isSelectable: true,
       },
-      ...(userHasPremium
-        ? {}
-        : {
-            options: {
-              component: PremiumBadgeComponent,
-            },
-          }),
       action: this.applyTypeFilter as (filterNode: TreeNode<VaultFilterType>) => Promise<void>,
+      premiumFeature: true,
     };
     return archiveFilterSection;
   }

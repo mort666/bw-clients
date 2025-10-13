@@ -1,9 +1,18 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { Component, InjectionToken, Injector, Input, OnDestroy, OnInit } from "@angular/core";
+import {
+  Component,
+  InjectionToken,
+  Injector,
+  Input,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from "@angular/core";
 import { firstValueFrom, Observable, Subject, takeUntil } from "rxjs";
 import { map } from "rxjs/operators";
 
+import { PremiumBadgeComponent } from "@bitwarden/angular/billing/components/premium-badge";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
@@ -21,6 +30,7 @@ import { VaultFilter } from "../models/vault-filter.model";
 export class VaultFilterSectionComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private activeUserId$ = getUserId(this.accountService.activeAccount$);
+  @ViewChild(PremiumBadgeComponent) private premiumBadgeComponent: PremiumBadgeComponent;
 
   @Input() activeFilter: VaultFilter;
   @Input() section: VaultFilterSection;
@@ -90,6 +100,11 @@ export class VaultFilterSectionComponent implements OnInit, OnDestroy {
   }
 
   async onFilterSelect(filterNode: TreeNode<VaultFilterType>) {
+    if (this.premiumFeature && this.premiumBadgeComponent) {
+      await this.premiumBadgeComponent.promptForPremium();
+      return;
+    }
+
     await this.section?.action(filterNode);
   }
 
@@ -115,6 +130,10 @@ export class VaultFilterSectionComponent implements OnInit, OnDestroy {
 
   get optionsInfo() {
     return this.section?.options;
+  }
+
+  get premiumFeature() {
+    return this.section?.premiumFeature;
   }
 
   get divider() {
