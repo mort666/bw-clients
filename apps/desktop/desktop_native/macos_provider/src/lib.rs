@@ -246,8 +246,8 @@ impl MacOSProviderClient {
         message: impl Serialize + DeserializeOwned,
         callback: Option<Box<dyn Callback>>,
     ) {
-        let sequence_number = if let Some(cb) = callback {
-            self.add_callback(cb)
+        let sequence_number = if let Some(callback) = callback {
+            self.add_callback(callback)
         } else {
             NO_CALLBACK_INDICATOR
         };
@@ -261,13 +261,13 @@ impl MacOSProviderClient {
         if let Err(e) = self.to_server_send.blocking_send(message) {
             // Make sure we remove the callback from the queue if we can't send the message
             if sequence_number != NO_CALLBACK_INDICATOR {
-                if let Some((cb, _)) = self
+                if let Some((callback, _)) = self
                     .response_callbacks_queue
                     .lock()
                     .unwrap()
                     .remove(&sequence_number)
                 {
-                    cb.error(BitwardenError::Internal(format!(
+                    callback.error(BitwardenError::Internal(format!(
                         "Error sending message: {e}"
                     )));
                 }
