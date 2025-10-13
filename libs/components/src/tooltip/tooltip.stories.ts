@@ -160,3 +160,19 @@ export const OnDisabledButton: Story = {
     `,
   }),
 };
+
+export const OnNonIconButton: Story = {
+  render: () => ({
+    parameters: {
+      chromatic: { disableSnapshot: true },
+    },
+    template: `
+      <div class="tw-p-16 tw-flex tw-items-center tw-justify-center">
+        <button
+          bitButton
+          bitTooltip="Some additional tooltip text to describe the button"
+        >Button label</button>
+      </div>
+    `,
+  }),
+};
