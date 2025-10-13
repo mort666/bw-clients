@@ -5728,7 +5728,7 @@
     "message": "URI match detection"
   },
   "uriMatchDetectionPolicyDesc": {
-    "message": "Set a default URI match detection strategy for all members"
+    "message": "Set a default URI match detection strategy for all members."
   },
   "uriMatchDetectionOptionsLabel": {
     "message": "URI match detection"

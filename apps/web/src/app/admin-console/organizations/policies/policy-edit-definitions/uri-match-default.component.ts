@@ -18,7 +18,7 @@ import { BasePolicyEditDefinition, BasePolicyEditComponent } from "../base-polic
 
 export class UriMatchDefaultPolicy extends BasePolicyEditDefinition {
   name = "uriMatchDetectionPolicy";
-  description = "uriMatchDetectionDesc";
+  description = "uriMatchDetectionPolicyDesc";
   type = PolicyType.UriMatchDefaults;
   component = UriMatchDefaultPolicyComponent;
 
