@@ -10,4 +10,5 @@ export abstract class CipherArchiveService {
   abstract userHasPremium$(userId: UserId): Observable<boolean>;
   abstract archiveWithServer(ids: CipherId | CipherId[], userId: UserId): Promise<void>;
   abstract unarchiveWithServer(ids: CipherId | CipherId[], userId: UserId): Promise<void>;
+  abstract showSubscriptionEndedMessaging$(userId: UserId): Observable<boolean>;
 }

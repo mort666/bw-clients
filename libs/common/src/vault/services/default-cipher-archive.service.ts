@@ -71,6 +71,14 @@ export class DefaultCipherArchiveService implements CipherArchiveService {
       .pipe(shareReplay({ refCount: true, bufferSize: 1 }));
   }
 
+  /** Returns true when the user has previously archived ciphers but lost their premium membership. */
+  showSubscriptionEndedMessaging$(userId: UserId): Observable<boolean> {
+    return combineLatest([this.archivedCiphers$(userId), this.userHasPremium$(userId)]).pipe(
+      map(([archivedCiphers, hasPremium]) => archivedCiphers.length > 0 && !hasPremium),
+      shareReplay({ refCount: true, bufferSize: 1 }),
+    );
+  }
+
   async archiveWithServer(ids: CipherId | CipherId[], userId: UserId): Promise<void> {
     const request = new CipherBulkArchiveRequest(Array.isArray(ids) ? ids : [ids]);
     const r = await this.apiService.send("PUT", "/ciphers/archive", request, true, true);

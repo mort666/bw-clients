@@ -151,6 +151,51 @@ describe("DefaultCipherArchiveService", () => {
     });
   });
 
+  describe("showSubscriptionEndedMessaging$", () => {
+    it("returns true when user has archived ciphers but no premium", async () => {
+      const mockCiphers: CipherListView[] = [
+        {
+          id: "1",
+          archivedDate: "2024-01-15T10:30:00.000Z",
+          type: "identity",
+        } as unknown as CipherListView,
+      ];
+
+      mockCipherService.cipherListViews$.mockReturnValue(of(mockCiphers));
+      mockBillingAccountProfileStateService.hasPremiumFromAnySource$.mockReturnValue(of(false));
+
+      const result = await firstValueFrom(service.showSubscriptionEndedMessaging$(userId));
+
+      expect(result).toBe(true);
+    });
+
+    it("returns false when user has archived ciphers and has premium", async () => {
+      const mockCiphers: CipherListView[] = [
+        {
+          id: "1",
+          archivedDate: "2024-01-15T10:30:00.000Z",
+          type: "identity",
+        } as unknown as CipherListView,
+      ];
+
+      mockCipherService.cipherListViews$.mockReturnValue(of(mockCiphers));
+      mockBillingAccountProfileStateService.hasPremiumFromAnySource$.mockReturnValue(of(true));
+
+      const result = await firstValueFrom(service.showSubscriptionEndedMessaging$(userId));
+
+      expect(result).toBe(false);
+    });
+
+    it("returns false when user has no archived ciphers and no premium", async () => {
+      mockCipherService.cipherListViews$.mockReturnValue(of([]));
+      mockBillingAccountProfileStateService.hasPremiumFromAnySource$.mockReturnValue(of(false));
+
+      const result = await firstValueFrom(service.showSubscriptionEndedMessaging$(userId));
+
+      expect(result).toBe(false);
+    });
+  });
+
   describe("archiveWithServer", () => {
     const mockResponse = {
       data: [

@@ -47,8 +47,12 @@ export type VaultFilterSection = {
     component: any;
   };
   divider?: boolean;
-  /**  When true, the premium badge will show on the filter for non-premium users. */
-  premiumFeature?: true;
+  premiumOptions?: {
+    /**  When true, the premium badge will show on the filter for non-premium users. */
+    showPremiumBadge?: true;
+    /** Action to be called instead of applying the filter. */
+    blockFilterAction?: () => Promise<void>;
+  };
 };
 
 export type VaultFilterList = {
