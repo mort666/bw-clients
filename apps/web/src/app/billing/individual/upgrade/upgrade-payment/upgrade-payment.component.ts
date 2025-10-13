@@ -1,5 +1,5 @@
 import {
-  AfterViewInit,
+  AfterViewChecked,
   Component,
   DestroyRef,
   input,
@@ -70,7 +70,7 @@ export type UpgradePaymentParams = {
   providers: [UpgradePaymentService],
   templateUrl: "./upgrade-payment.component.html",
 })
-export class UpgradePaymentComponent implements OnInit, AfterViewInit {
+export class UpgradePaymentComponent implements OnInit, AfterViewChecked {
   protected selectedPlanId = input.required<PersonalSubscriptionPricingTierId>();
   protected account = input.required<Account>();
   protected goBack = output<void>();
@@ -86,6 +86,7 @@ export class UpgradePaymentComponent implements OnInit, AfterViewInit {
   });
 
   protected loading = signal(true);
+  private cartSummaryConfigured = false;
   private pricingTiers$!: Observable<PersonalSubscriptionPricingTier[]>;
 
   // Cart Summary data
@@ -145,8 +146,12 @@ export class UpgradePaymentComponent implements OnInit, AfterViewInit {
     this.loading.set(false);
   }
 
-  ngAfterViewInit(): void {
-    this.cartSummaryComponent.isExpanded.set(false);
+  ngAfterViewChecked(): void {
+    // Configure cart summary only once when it becomes available
+    if (this.cartSummaryComponent && !this.cartSummaryConfigured) {
+      this.cartSummaryComponent.isExpanded.set(false);
+      this.cartSummaryConfigured = true;
+    }
   }
 
   protected get isPremiumPlan(): boolean {
