@@ -68,28 +68,28 @@ export type DialogConfig<D = unknown, R = unknown> = Pick<
  * A responsive position strategy that adjusts the dialog position based on the screen size.
  */
 class ResponsivePositionStrategy extends GlobalPositionStrategy {
-  onResizeListener: (() => void) | null = null;
+  private abortController: AbortController | null = null;
 
   /**
    * The previous breakpoint to avoid unnecessary updates.
    * `null` means no previous breakpoint has been set.
    */
-  prevBreakpoint: "small" | "large" | null = null;
+  private prevBreakpoint: "small" | "large" | null = null;
 
   constructor() {
     super();
     if (typeof window !== "undefined") {
-      this.onResizeListener = this.updatePosition.bind(this);
+      this.abortController = new AbortController();
       this.updatePosition(); // Initial position update
-      window.addEventListener("resize", this.onResizeListener);
+      window.addEventListener("resize", this.updatePosition.bind(this), {
+        signal: this.abortController.signal,
+      });
     }
   }
 
   override dispose() {
-    if (this.onResizeListener && typeof window !== "undefined") {
-      window.removeEventListener("resize", this.onResizeListener);
-      this.onResizeListener = null;
-    }
+    this.abortController?.abort();
+    this.abortController = null;
     super.dispose();
   }
 
