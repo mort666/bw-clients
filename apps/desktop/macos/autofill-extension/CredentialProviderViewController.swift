@@ -467,8 +467,8 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
                 clientDataHash: requestParameters.clientDataHash,
                 userVerification: userVerification,
                 allowedCredentials: requestParameters.allowedCredentials,
-                windowXy: windowPosition
-                //extensionInput: requestParameters.extensionInput,
+                windowXy: windowPosition,
+                extensionInput: requestParameters.extensionInput
             )
             
             let client = await getClient()

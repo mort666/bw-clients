@@ -24,7 +24,7 @@ void runSync(void* context, NSDictionary *params) {
         NSString *uri = credential[@"uri"];
         NSString *username = credential[@"username"];
         
-        // Skip credentials with null username
+        // Skip credentials with null username since MacOS crashes if we send credentials with empty usernames
         if ([username isKindOfClass:[NSNull class]] || username.length == 0) {
             NSLog(@"Skipping credential, username is empty: %@", credential);
           continue;
@@ -42,8 +42,8 @@ void runSync(void* context, NSDictionary *params) {
           NSString *cipherId = credential[@"cipherId"];
           NSString *rpId = credential[@"rpId"];
           NSString *userName = credential[@"userName"];
-          
-          // Skip credentials with null userName
+
+          // Skip credentials with null username since MacOS crashes if we send credentials with empty usernames
           if ([userName isKindOfClass:[NSNull class]] || userName.length == 0) {
             NSLog(@"Skipping credential, username is empty: %@", credential);
             continue;
