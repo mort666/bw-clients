@@ -30,4 +30,6 @@ We’ve also implemented a couple FIDO2 UI components to handle registration/sig
 
 When modal mode is activated, the desktop app turns into a smaller modal that is always on top and cannot be resized. This is done to improve the UX of performing a passkey operation (or SSH operation). Once the operation is completed, the app returns to normal mode and its previous position.
 
+We are not using electron modal windows, for a couple reason. It would require us to send data in yet another layer of IPC, but also because we'd need to bootstrap entire renderer/app instead of reusing the existing window.
+
 Some modal modes may hide the 'traffic buttons' (window controls) due to design requirements.
