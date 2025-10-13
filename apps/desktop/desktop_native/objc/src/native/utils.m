@@ -27,6 +27,7 @@ NSData *decodeBase64URL(NSString *base64URLString) {
   base64String = [base64String stringByReplacingOccurrencesOfString:@"_" withString:@"/"];
   
   // Add padding if needed
+  // Base 64 strings should be a multiple of 4 in length
   NSUInteger paddingLength = 4 - (base64String.length % 4);
   if (paddingLength < 4) {
     NSMutableString *paddedString = [NSMutableString stringWithString:base64String];
