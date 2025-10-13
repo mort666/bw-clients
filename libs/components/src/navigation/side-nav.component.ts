@@ -4,7 +4,7 @@ import { CommonModule } from "@angular/common";
 import { Component, ElementRef, inject, input, OnDestroy, signal, viewChild } from "@angular/core";
 import { toObservable } from "@angular/core/rxjs-interop";
 import { Subject } from "rxjs";
-import { debounceTime, map, takeUntil } from "rxjs/operators";
+import { debounceTime, first, map, takeUntil } from "rxjs/operators";
 
 import { BIT_SIDE_NAV_DISK, GlobalStateProvider, KeyDefinition } from "@bitwarden/state";
 import { I18nPipe } from "@bitwarden/ui-common";
@@ -47,29 +47,24 @@ export class SideNavComponent implements OnDestroy {
 
   private readonly widthState = inject(GlobalStateProvider).get(BIT_SIDE_NAV_WIDTH_KEY_DEF);
   readonly widthState$ = this.widthState.state$.pipe(map((width) => width ?? DEFAULT_OPEN_WIDTH));
-  private debouncedWidthStateSubject = new Subject<number>();
 
   private readonly destroy$ = new Subject<void>();
 
   constructor(protected sideNavService: SideNavService) {
-    this.width$.pipe(takeUntil(this.destroy$)).subscribe((width) => {
+    this.width$.pipe(debounceTime(200), takeUntil(this.destroy$)).subscribe((width) => {
       // Store the last open width when the side nav is open
       if (this.sideNavService.open) {
         this.lastOpenWidth = width;
       }
+
+      // Update the stored width state
+      void this.widthState.update(() => width);
     });
 
     // Initialize the width from state
-    void this.widthState$.forEach((width) => {
+    this.widthState$.pipe(first(), takeUntil(this.destroy$)).subscribe((width: number) => {
       this.width.set(width);
     });
-
-    // Debounce storing the width to avoid excessive writes to storage
-    this.debouncedWidthStateSubject
-      .pipe(debounceTime(200), takeUntil(this.destroy$))
-      .subscribe((width) => {
-        void this.widthState.update(() => width);
-      });
   }
 
   ngOnDestroy(): void {
@@ -95,7 +90,6 @@ export class SideNavComponent implements OnDestroy {
       MAX_OPEN_WIDTH,
     );
     this.width.set(width);
-    void this.debouncedWidthStateSubject.next(width);
 
     const element = event.source.element.nativeElement;
     element.style.transform = "none";
