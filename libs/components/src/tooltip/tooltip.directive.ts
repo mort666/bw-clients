@@ -42,7 +42,10 @@ export class TooltipDirective implements OnInit {
    */
   readonly tooltipPosition = input<TooltipPositionIdentifier>("above-center");
 
-  readonly isDescribedbyText = model<boolean>(false);
+  /**
+   * Input so the consumer can choose to add the tooltip id to the aria-describedby attribute of the host element.
+   */
+  readonly addTooltipToDescribedby = model<boolean>(false);
 
   private isVisible = signal(false);
   private overlayRef: OverlayRef | undefined;
@@ -99,7 +102,7 @@ export class TooltipDirective implements OnInit {
   };
 
   private resolvedDescribedByIds = computed(() => {
-    if (this.isDescribedbyText()) {
+    if (this.addTooltipToDescribedby()) {
       if (this.currentDescribedByIds) {
         return `${this.currentDescribedByIds || ""} ${this.tooltipId}`;
       } else {
