@@ -74,6 +74,7 @@ export class RiskInsightsComponent implements OnInit {
   protected hasReportBeenRun = false;
   protected reportHasLoaded = false;
   protected hasVaultItems = false;
+  private organizationName = "";
 
   // Empty state computed properties
   protected shouldShowImportDataState = false;
@@ -148,6 +149,15 @@ export class RiskInsightsComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((details) => {
         this._isDrawerOpen = details.open;
+      });
+
+    // Subscribe to organization details to get organization name
+    this.dataService.organizationDetails$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((orgDetails) => {
+        this.organizationName = orgDetails?.organizationName ?? "";
+        // Update empty state properties when organization name changes
+        this.updateEmptyStateProperties();
       });
   }
   runReport = () => {
@@ -278,9 +288,8 @@ export class RiskInsightsComponent implements OnInit {
     }
   }
 
-  //TODO: complete this
   private getOrganizationName(): string {
-    return "";
+    return this.organizationName;
   }
 
   private checkForVaultItems() {
