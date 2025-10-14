@@ -224,7 +224,6 @@ enum SerializedMessage {
 }
 
 impl MacOSProviderClient {
-    // FIXME: Remove unwraps! They panic and terminate the whole application.
     #[allow(clippy::unwrap_used)]
     fn add_callback(&self, callback: Box<dyn Callback>) -> u32 {
         let sequence_number = self
@@ -233,13 +232,12 @@ impl MacOSProviderClient {
 
         self.response_callbacks_queue
             .lock()
-            .unwrap()
+            .expect("response callbacks queue mutex should not be poisoned")
             .insert(sequence_number, (callback, Instant::now()));
 
         sequence_number
     }
 
-    // FIXME: Remove unwraps! They panic and terminate the whole application.
     #[allow(clippy::unwrap_used)]
     fn send_message(
         &self,
@@ -264,7 +262,7 @@ impl MacOSProviderClient {
                 if let Some((callback, _)) = self
                     .response_callbacks_queue
                     .lock()
-                    .unwrap()
+                    .expect("response callbacks queue mutex should not be poisoned")
                     .remove(&sequence_number)
                 {
                     callback.error(BitwardenError::Internal(format!(
