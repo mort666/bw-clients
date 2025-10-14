@@ -35,7 +35,7 @@ export class TooltipDirective implements OnInit {
   /**
    * The value of this input is forwarded to the tooltip.component to render
    */
-  readonly bitTooltip = model<string>();
+  readonly tooltipContent = model("", { alias: "bitTooltip" });
   /**
    * The value of this input is forwarded to the tooltip.component to set its position explicitly.
    * @default "above-center"
@@ -69,7 +69,7 @@ export class TooltipDirective implements OnInit {
         {
           provide: TOOLTIP_DATA,
           useValue: {
-            content: this.bitTooltip,
+            content: this.tooltipContent,
             isVisible: this.isVisible,
             tooltipPosition: this.tooltipPosition,
             id: signal(this.tooltipId),
@@ -124,10 +124,6 @@ export class TooltipDirective implements OnInit {
       hasBackdrop: false,
       scrollStrategy: this.overlay.scrollStrategies.reposition(),
     };
-  }
-
-  setContent(text: string) {
-    this.bitTooltip.set(text);
   }
 
   ngOnInit() {
