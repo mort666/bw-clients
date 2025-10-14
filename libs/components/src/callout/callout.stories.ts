@@ -37,6 +37,27 @@ export default {
 
 type Story = StoryObj<CalloutComponent>;
 
+export const Blargh: Story = {
+  render: (args) => ({
+    props: args,
+    template: `
+    <div  class="tw-w-[300px]">
+      <bit-callout ${formatArgsForCodeSnippet<CalloutComponent>(args)}>
+        <div class="tw-truncate">The content of the callout which is soooooo long</div>
+      </bit-callout>
+      </div>
+      <div  class="tw-w-[300px]">
+      <bit-callout ${formatArgsForCodeSnippet<CalloutComponent>(args)}>
+        <span>The content of the callout which is soooooo long</span>
+      </bit-callout>
+      </div>
+    `,
+  }),
+  args: {
+    title: "Callout title",
+  },
+};
+
 export const Info: Story = {
   render: (args) => ({
     props: args,

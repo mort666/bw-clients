@@ -59,7 +59,7 @@
   }
 
   dt {
-    @apply tw-font-bold;
+    @apply tw-font-medium;
   }
 
   hr {

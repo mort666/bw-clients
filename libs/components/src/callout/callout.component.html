@@ -13,13 +13,13 @@
       aria-hidden="true"
     ></i>
   }
-  <div class="tw-flex tw-flex-col tw-gap-0.5">
+  <div class="tw-flex tw-flex-col tw-gap-0.5 tw-truncate">
     @if (title) {
-      <header id="{{ titleId }}" class="tw-text-base tw-font-semibold">
+      <header id="{{ titleId }}" class="tw-text-base tw-font-medium">
         {{ title }}
       </header>
     }
-    <div bitTypography="body2">
+    <div bitTypography="body2" class="tw-truncate">
       <ng-content></ng-content>
     </div>
   </div>
