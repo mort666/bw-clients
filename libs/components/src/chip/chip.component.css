@@ -1,9 +1,13 @@
 .bit-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
   border-radius: 9999px;
   border: 1px solid rgb(var(--color-text-muted));
   max-width: 13rem; /* 208px */
   transition-property: background-color, border-color;
   transition-duration: 100ms;
+  color: rgb(var(--color-text-muted));
 
   &[data-is-full-width="true"] {
     width: 100%;
@@ -52,12 +56,19 @@
 }
 
 .bit-chip-content {
+  padding: 0.25rem 0.75rem;
+}
+
+.bit-chip-dismiss-button-container {
+  padding-right: 0.25rem;
+}
+
+.bit-chip-label-and-leading-icon-container {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  padding: 0.25rem 0.5rem;
   width: fit-content;
-  color: rgb(var(--color-text-muted));
+  color: inherit;
   font-size: 0.875rem;
   line-height: 1.25rem;
 }
