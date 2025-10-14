@@ -123,7 +123,7 @@ export const WithTextButton: Story = {
   },
 };
 
-export const TruncateWithTitle: Story = {
+export const Truncate: Story = {
   render: (args) => ({
     props: args,
     template: `
@@ -135,12 +135,13 @@ export const TruncateWithTitle: Story = {
     `,
   }),
   args: {
-    title: "Title",
+    title:
+      "This is a really long title that should truncate. Like really, really, really, ridiculously long title",
     truncate: true,
   },
 };
 
-export const TruncateWithoutTitle: Story = {
+export const TruncateOnlyContent: Story = {
   render: (args) => ({
     props: args,
     template: `
@@ -156,7 +157,7 @@ export const TruncateWithoutTitle: Story = {
   },
 };
 
-export const TruncateWithoutContent: Story = {
+export const TruncateOnlyTitle: Story = {
   render: (args) => ({
     props: args,
     template: `
@@ -168,7 +169,7 @@ export const TruncateWithoutContent: Story = {
   }),
   args: {
     title:
-      "This is a really long title that should truncate. Like really, really, really, ridiculously long title.",
+      "This is a really long title that should truncate. Like really, really, really, ridiculously long title",
     truncate: true,
   },
 };
