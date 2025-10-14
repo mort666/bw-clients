@@ -2586,6 +2586,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "process_isolation"
+version = "0.0.0"
+dependencies = [
+ "ctor",
+ "desktop_core",
+ "libc",
+]
+
+[[package]]
 name = "quick-xml"
 version = "0.37.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
