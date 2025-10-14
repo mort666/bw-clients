@@ -2,7 +2,7 @@ import { CommonModule } from "@angular/common";
 import { Component, DestroyRef, OnInit, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ActivatedRoute, Router } from "@angular/router";
-import { EMPTY } from "rxjs";
+import { EMPTY, from } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
@@ -12,6 +12,7 @@ import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { OrganizationId } from "@bitwarden/common/types/guid";
+import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import {
   AsyncActionsModule,
   ButtonModule,
@@ -95,6 +96,7 @@ export class RiskInsightsComponent implements OnInit {
     private configService: ConfigService,
     protected dataService: RiskInsightsDataService,
     private i18nService: I18nService,
+    private cipherService: CipherService,
   ) {
     this.route.queryParams.pipe(takeUntilDestroyed()).subscribe(({ tabIndex }) => {
       this.tabIndex = !isNaN(Number(tabIndex)) ? Number(tabIndex) : RiskInsightsTabType.AllApps;
@@ -293,19 +295,35 @@ export class RiskInsightsComponent implements OnInit {
   }
 
   private checkForVaultItems() {
-    // Use the applicationData from the report results to check if there are any vault items
-    this.dataService.reportResults$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (report) => {
-        // If we have applicationData in the report, that means there are vault items
-        this.hasVaultItems = (report?.applicationData?.length ?? 0) > 0;
-        // Update empty state properties after checking vault items
-        this.updateEmptyStateProperties();
-      },
-      error: () => {
-        this.hasVaultItems = false;
-        // Update empty state properties even on error
-        this.updateEmptyStateProperties();
-      },
-    });
+    // Check if organization has any vault items (ciphers) to determine which empty state to show
+    // NOTE: If we don't want to use CipherService directly here, we need to add a method to
+    // RiskInsightsDataService like hasVaultItems$() that internally checks ciphers and exposes
+    // this information. The challenge is that reportResults$.applicationData is only populated
+    // AFTER a report is generated, so we can't rely on it to check current vault state before
+    // the first report is run.
+
+    // Get organizationId from dataService since this.organizationId may not be set yet
+    this.dataService.organizationDetails$
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        switchMap((orgDetails) => {
+          if (orgDetails?.organizationId) {
+            return from(this.cipherService.getAllFromApiForOrganization(orgDetails.organizationId));
+          }
+          return EMPTY;
+        }),
+      )
+      .subscribe({
+        next: (ciphers) => {
+          this.hasVaultItems = ciphers.length > 0;
+          // Update empty state properties after checking vault items
+          this.updateEmptyStateProperties();
+        },
+        error: () => {
+          this.hasVaultItems = false;
+          // Update empty state properties even on error
+          this.updateEmptyStateProperties();
+        },
+      });
   }
 }
