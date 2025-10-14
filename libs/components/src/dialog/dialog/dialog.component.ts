@@ -89,7 +89,7 @@ export class DialogComponent {
   /**
    * Disable animations for the dialog.
    */
-  readonly disableAnimations = input(false, { transform: booleanAttribute });
+  readonly disableAnimations = input(false);
 
   /**
    * Mark the dialog as loading which replaces the content with a spinner.
@@ -106,10 +106,7 @@ export class DialogComponent {
       : ["md:tw-p-4", "tw-w-screen", "tw-max-h-[90vh]"];
 
     const animationClasses =
-      this.disableAnimations() ||
-      this.animationCompleted() ||
-      !this.dialogRef || // Disable if component is rendered staticly
-      this.dialogRef.isDrawer
+      this.disableAnimations() || this.animationCompleted() || this.dialogRef?.isDrawer
         ? []
         : this.dialogSize() === "small"
           ? ["tw-animate-slide-down"]
