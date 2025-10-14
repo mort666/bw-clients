@@ -1,4 +1,3 @@
-///! Note: This file is deprecated and will be replaced by the EncryptedMemoryStore in the future.
 use std::collections::HashMap;
 
 use windows::Win32::Security::Cryptography::{
