@@ -68,6 +68,8 @@ void runSync(void* context, NSDictionary *params) {
       }
     } @catch (NSException *exception) {
       // Silently skip any credential that causes an exception
+      // to make sure we don't fail the entire sync
+      // There is likely some invalid data in the credential, and not something the user should/could be asked to correct.
       NSLog(@"ERROR: Exception processing credential: %@ - %@", exception.name, exception.reason);
       continue;
     }
