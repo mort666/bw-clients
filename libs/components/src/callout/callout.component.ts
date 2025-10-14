@@ -37,6 +37,7 @@ export class CalloutComponent {
   readonly type = input<CalloutTypes>("info");
   readonly icon = input<string>();
   readonly title = input<string>();
+  readonly truncate = input(false);
   readonly useAlertRole = input(false);
   readonly iconComputed = computed(() => this.icon() ?? defaultIcon[this.type()]);
   readonly titleComputed = computed(() => {
@@ -52,6 +53,16 @@ export class CalloutComponent {
   protected readonly titleId = `bit-callout-title-${nextId++}`;
 
   constructor(private i18nService: I18nService) {}
+
+  protected readonly iconClass = computed(() => {
+    if (!this.title() && this.truncate()) {
+      return "";
+    }
+    if (this.iconComputed() && this.titleComputed()) {
+      return "tw-top-[3px] tw-self-start";
+    }
+    return "tw-top-[1px]";
+  });
 
   protected readonly calloutClass = computed(() => {
     switch (this.type()) {

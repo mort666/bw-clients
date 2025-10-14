@@ -122,3 +122,53 @@ export const WithTextButton: Story = {
     icon: "",
   },
 };
+
+export const TruncateWithTitle: Story = {
+  render: (args) => ({
+    props: args,
+    template: `
+      <div style="width: 300px;">
+        <bit-callout ${formatArgsForCodeSnippet<CalloutComponent>(args)}>
+          This is a really long callout that should truncate when it reaches the end of the container. This is a really long title that should truncate. Like really, really, really, ridiculously long title.
+        </bit-callout>
+      </div>
+    `,
+  }),
+  args: {
+    title: "Title",
+    truncate: true,
+  },
+};
+
+export const TruncateWithoutTitle: Story = {
+  render: (args) => ({
+    props: args,
+    template: `
+      <div style="width: 300px;">
+        <bit-callout ${formatArgsForCodeSnippet<CalloutComponent>(args)}>
+          This is a really long callout that should truncate when it reaches the end of the container. This is a really long title that should truncate. Like really, really, really, ridiculously long title.
+        </bit-callout>
+      </div>
+    `,
+  }),
+  args: {
+    truncate: true,
+  },
+};
+
+export const TruncateWithoutContent: Story = {
+  render: (args) => ({
+    props: args,
+    template: `
+      <div style="width: 300px;">
+        <bit-callout ${formatArgsForCodeSnippet<CalloutComponent>(args)}>
+        </bit-callout>
+      </div>
+    `,
+  }),
+  args: {
+    title:
+      "This is a really long title that should truncate. Like really, really, really, ridiculously long title.",
+    truncate: true,
+  },
+};
