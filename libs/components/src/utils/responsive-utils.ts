@@ -13,11 +13,11 @@ export const BREAKPOINTS = {
 };
 
 /**
- * Checks if the current viewport matches the specified breakpoint.
+ * Checks if the current viewport is within the specified breakpoint.
  * @param size The breakpoint to check.
- * @returns True if the viewport matches the breakpoint, false otherwise.
+ * @returns True if the viewport is within the breakpoint, false otherwise.
  */
-export const isBreakpoint = (size: keyof typeof BREAKPOINTS): boolean => {
+export const isWithinBreakpoint = (size: keyof typeof BREAKPOINTS): boolean => {
   if (typeof window === "undefined" || !window.matchMedia) {
     return false;
   }

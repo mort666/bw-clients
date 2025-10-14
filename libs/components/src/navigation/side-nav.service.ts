@@ -2,13 +2,13 @@ import { Injectable } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { BehaviorSubject, Observable, combineLatest, fromEvent, map, startWith } from "rxjs";
 
-import { BREAKPOINTS, isBreakpoint } from "../utils/responsive-utils";
+import { BREAKPOINTS, isWithinBreakpoint } from "../utils/responsive-utils";
 
 @Injectable({
   providedIn: "root",
 })
 export class SideNavService {
-  private _open$ = new BehaviorSubject<boolean>(!isBreakpoint("md"));
+  private _open$ = new BehaviorSubject<boolean>(!isWithinBreakpoint("md"));
   open$ = this._open$.asObservable();
 
   private isSmallScreen$ = media(`(max-width: ${BREAKPOINTS.md}px)`);
