@@ -36,7 +36,7 @@ export class IntegrationsComponent {
       },
       {
         name: "Ansible",
-        linkURL: "https://bitwarden.com/help/ansible-integration/",
+        linkURL: "https://galaxy.ansible.com/ui/repo/published/bitwarden/secrets",
         image: "../../../../../../../images/secrets-manager/integrations/ansible.svg",
         type: IntegrationType.Integration,
       },
