@@ -245,13 +245,19 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
   };
 
   async buildAllFilters(): Promise<VaultFilterList> {
-    const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
+    const [userId, showArchive] = await firstValueFrom(
+      combineLatest([
+        this.accountService.activeAccount$.pipe(getUserId),
+        this.cipherArchiveService.showArchiveFeatures$(),
+      ]),
+    );
+
     const builderFilter = {} as VaultFilterList;
     builderFilter.organizationFilter = await this.addOrganizationFilter();
     builderFilter.typeFilter = await this.addTypeFilter();
     builderFilter.folderFilter = await this.addFolderFilter();
     builderFilter.collectionFilter = await this.addCollectionFilter();
-    if (await firstValueFrom(this.cipherArchiveService.showArchiveFeatures$())) {
+    if (showArchive) {
       builderFilter.archiveFilter = await this.addArchiveFilter(userId);
     }
     builderFilter.trashFilter = await this.addTrashFilter();
@@ -413,15 +419,16 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
   }
 
   protected async addArchiveFilter(userId: UserId): Promise<VaultFilterSection> {
-    const hasArchivedCiphers = await firstValueFrom(
-      this.cipherArchiveService
-        .archivedCiphers$(userId)
-        .pipe(map((archivedCiphers) => archivedCiphers.length > 0)),
+    const [hasArchivedCiphers, userHasPremium] = await firstValueFrom(
+      combineLatest([
+        this.cipherArchiveService
+          .archivedCiphers$(userId)
+          .pipe(map((archivedCiphers) => archivedCiphers.length > 0)),
+        this.cipherArchiveService.userHasPremium$(userId),
+      ]),
     );
 
-    const userHasPremium = await firstValueFrom(this.cipherArchiveService.userHasPremium$(userId));
-
-    const premiumPromptOnFilter = !userHasPremium && !hasArchivedCiphers;
+    const promptForPremiumOnFilter = !userHasPremium && !hasArchivedCiphers;
 
     const archiveFilterSection: VaultFilterSection = {
       data$: this.vaultFilterService.buildTypeTree(
@@ -447,7 +454,7 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
       action: this.applyTypeFilter as (filterNode: TreeNode<VaultFilterType>) => Promise<void>,
       premiumOptions: {
         showPremiumBadge: true,
-        blockFilterAction: premiumPromptOnFilter
+        blockFilterAction: promptForPremiumOnFilter
           ? async () => await this.premiumUpgradePromptService.promptForPremium()
           : undefined,
       },
