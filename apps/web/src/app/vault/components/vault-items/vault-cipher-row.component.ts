@@ -87,7 +87,7 @@ export class VaultCipherRowComponent<C extends CipherViewLike> implements OnInit
   }
 
   protected get showArchiveButton() {
-    if (!this.archiveEnabled || !this.userCanArchive) {
+    if (!this.archiveEnabled) {
       return false;
     }
 
