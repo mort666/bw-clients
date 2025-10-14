@@ -38,6 +38,9 @@ void runSync(void* context, NSDictionary *params) {
         [mappedCredentials addObject:passwordIdentity];
       } 
       else if (@available(macos 14, *)) {
+        // Fido2CredentialView uses `userName` (camelCase) while Login uses `username`.
+        // This is intentional. Fido2 fields are flattened from the FIDO2 spec's nested structure
+        // (user.name -> userName, rp.id -> rpId) to maintain a clear distinction between these fields.
         if ([type isEqualToString:@"fido2"]) {
           NSString *cipherId = credential[@"cipherId"];
           NSString *rpId = credential[@"rpId"];

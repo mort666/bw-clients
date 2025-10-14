@@ -1,7 +1,7 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit, OnDestroy } from "@angular/core";
 import { RouterModule, Router } from "@angular/router";
-import { combineLatest, map, Observable, switchMap } from "rxjs";
+import { combineLatest, map, Observable, Subject, switchMap } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { BitwardenShield, NoResults } from "@bitwarden/assets/svg";
@@ -54,6 +54,7 @@ import {
 export class Fido2CreateComponent implements OnInit, OnDestroy {
   session?: DesktopFido2UserInterfaceSession = null;
   ciphers$: Observable<CipherView[]>;
+  private destroy$ = new Subject<void>();
   readonly Icons = { BitwardenShield, NoResults };
 
   private get DIALOG_MESSAGES() {
@@ -96,17 +97,18 @@ export class Fido2CreateComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     this.session = this.fido2UserInterfaceService.getCurrentSession();
-    const rpid = await this.session?.getRpId();
 
-    if (!this.session) {
+    if (this.session) {
+      const rpid = await this.session.getRpId();
+      this.initializeCiphersObservable(rpid);
+    } else {
       await this.showErrorDialog(this.DIALOG_MESSAGES.unableToSavePasskey);
-      return;
     }
-
-    this.initializeCiphersObservable(rpid);
   }
 
   async ngOnDestroy(): Promise<void> {
+    this.destroy$.next();
+    this.destroy$.complete();
     await this.closeModal();
   }
 
