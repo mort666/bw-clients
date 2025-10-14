@@ -49,13 +49,13 @@ export type UnifiedUpgradeDialogResult = {
  * @property {Account} account - The user account information.
  * @property {UnifiedUpgradeDialogStep | null} [initialStep] - The initial step to show in the dialog, if any.
  * @property {PersonalSubscriptionPricingTierId | null} [selectedPlan] - Pre-selected subscription plan, if any.
- * @property {string | null} [redirectUrl] - URL to redirect to after successful upgrade. For Families upgrades, use "families-redirect" to automatically redirect to `/organizations/{organizationId}/vault`.
+ * @property {boolean} [redirectOnCompletion] - Whether to redirect after successful upgrade. Premium upgrades redirect to subscription settings, Families upgrades redirect to organization vault.
  */
 export type UnifiedUpgradeDialogParams = {
   account: Account;
   initialStep?: UnifiedUpgradeDialogStep | null;
   selectedPlan?: PersonalSubscriptionPricingTierId | null;
-  redirectUrl?: string | null;
+  redirectOnCompletion?: boolean;
 };
 
 @Component({
@@ -140,24 +140,14 @@ export class UnifiedUpgradeDialogComponent implements OnInit {
     this.close({ status, organizationId: result.organizationId });
 
     if (
-      this.params.redirectUrl &&
+      this.params.redirectOnCompletion &&
       (status === UnifiedUpgradeDialogStatus.UpgradedToPremium ||
         status === UnifiedUpgradeDialogStatus.UpgradedToFamilies)
     ) {
-      let redirectUrl: string;
-
-      if (status === UnifiedUpgradeDialogStatus.UpgradedToPremium) {
-        redirectUrl = this.params.redirectUrl;
-      } else if (status === UnifiedUpgradeDialogStatus.UpgradedToFamilies) {
-        if (this.params.redirectUrl === "families-redirect") {
-          redirectUrl = `/organizations/${result.organizationId}/vault`;
-        } else {
-          redirectUrl = this.params.redirectUrl;
-        }
-      } else {
-        redirectUrl = this.params.redirectUrl;
-      }
-
+      const redirectUrl =
+        status === UnifiedUpgradeDialogStatus.UpgradedToFamilies
+          ? `/organizations/${result.organizationId}/vault`
+          : "/settings/subscription/user-subscription";
       void this.router.navigate([redirectUrl]);
     }
   }

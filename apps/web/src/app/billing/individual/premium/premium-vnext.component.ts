@@ -1,3 +1,4 @@
+import { CommonModule } from "@angular/common";
 import { Component, DestroyRef, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { combineLatest, firstValueFrom, map, Observable, of, shareReplay, switchMap } from "rxjs";
@@ -8,21 +9,43 @@ import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abs
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { SyncService } from "@bitwarden/common/platform/sync";
-import { DialogService, ToastService } from "@bitwarden/components";
+import {
+  DialogService,
+  ToastService,
+  SectionComponent,
+  BadgeModule,
+  TypographyModule,
+  LinkModule,
+} from "@bitwarden/components";
+import { PricingCardComponent } from "@bitwarden/pricing";
+import { I18nPipe } from "@bitwarden/ui-common";
 
 import { SubscriptionPricingService } from "../../services/subscription-pricing.service";
 import { BitwardenSubscriber, mapAccountToSubscriber } from "../../types";
-import { PersonalSubscriptionPricingTier } from "../../types/subscription-pricing-tier";
+import {
+  PersonalSubscriptionPricingTier,
+  PersonalSubscriptionPricingTierIds,
+} from "../../types/subscription-pricing-tier";
 import {
   UnifiedUpgradeDialogComponent,
   UnifiedUpgradeDialogParams,
   UnifiedUpgradeDialogResult,
+  UnifiedUpgradeDialogStatus,
   UnifiedUpgradeDialogStep,
 } from "../upgrade/unified-upgrade-dialog/unified-upgrade-dialog.component";
 
 @Component({
   templateUrl: "./premium-vnext.component.html",
-  standalone: false,
+  standalone: true,
+  imports: [
+    CommonModule,
+    SectionComponent,
+    BadgeModule,
+    TypographyModule,
+    LinkModule,
+    I18nPipe,
+    PricingCardComponent,
+  ],
 })
 export class PremiumVNextComponent {
   protected hasPremiumFromAnyOrganization$: Observable<boolean>;
@@ -89,7 +112,7 @@ export class PremiumVNextComponent {
 
     this.premiumCardData$ = this.personalPricingTiers$.pipe(
       map((tiers) => {
-        const tier = tiers.find((t) => t.id === "premium");
+        const tier = tiers.find((t) => t.id === PersonalSubscriptionPricingTierIds.Premium);
         return {
           tier,
           price:
@@ -104,7 +127,7 @@ export class PremiumVNextComponent {
 
     this.familiesCardData$ = this.personalPricingTiers$.pipe(
       map((tiers) => {
-        const tier = tiers.find((t) => t.id === "families");
+        const tier = tiers.find((t) => t.id === PersonalSubscriptionPricingTierIds.Families);
         return {
           tier,
           price:
@@ -123,28 +146,22 @@ export class PremiumVNextComponent {
     await this.syncService.fullSync(true);
   };
 
-  postFinalizeUpgrade = async () => {
-    this.toastService.showToast({
-      variant: "success",
-      title: undefined,
-      message: this.i18nService.t("premiumUpdated"),
-    });
-  };
-
   protected async openUpgradeDialog(planType: "Premium" | "Families"): Promise<void> {
     const account = await firstValueFrom(this.accountService.activeAccount$);
     if (!account) {
       return;
     }
 
-    const selectedPlan = planType === "Premium" ? "premium" : "families";
+    const selectedPlan =
+      planType === "Premium"
+        ? PersonalSubscriptionPricingTierIds.Premium
+        : PersonalSubscriptionPricingTierIds.Families;
 
     const dialogParams: UnifiedUpgradeDialogParams = {
       account,
       initialStep: UnifiedUpgradeDialogStep.Payment,
-      selectedPlan: selectedPlan as any,
-      redirectUrl:
-        planType === "Premium" ? "/settings/subscription/user-subscription" : "families-redirect",
+      selectedPlan: selectedPlan,
+      redirectOnCompletion: true,
     };
 
     const dialogRef = UnifiedUpgradeDialogComponent.open(this.dialogService, {
@@ -154,10 +171,11 @@ export class PremiumVNextComponent {
     dialogRef.closed
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((result: UnifiedUpgradeDialogResult | undefined) => {
-        if (result?.status === "upgradedToPremium" || result?.status === "upgradedToFamilies") {
-          void this.finalizeUpgrade().then(() => {
-            void this.postFinalizeUpgrade();
-          });
+        if (
+          result?.status === UnifiedUpgradeDialogStatus.UpgradedToPremium ||
+          result?.status === UnifiedUpgradeDialogStatus.UpgradedToFamilies
+        ) {
+          void this.finalizeUpgrade();
         }
       });
   }
