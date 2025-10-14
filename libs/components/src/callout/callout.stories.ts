@@ -129,7 +129,7 @@ export const TruncateWithTitle: Story = {
     template: `
       <div style="width: 300px;">
         <bit-callout ${formatArgsForCodeSnippet<CalloutComponent>(args)}>
-          This is a really long callout that should truncate when it reaches the end of the container. This is a really long title that should truncate. Like really, really, really, ridiculously long title.
+          This is a really long callout that should truncate when it reaches the end of the container. This is a really long title that should truncate. Like really, really, really, ridiculously long content.
         </bit-callout>
       </div>
     `,
@@ -146,7 +146,7 @@ export const TruncateWithoutTitle: Story = {
     template: `
       <div style="width: 300px;">
         <bit-callout ${formatArgsForCodeSnippet<CalloutComponent>(args)}>
-          This is a really long callout that should truncate when it reaches the end of the container. This is a really long title that should truncate. Like really, really, really, ridiculously long title.
+          This is a really long callout that should truncate when it reaches the end of the container. This is a really long title that should truncate. Like really, really, really, ridiculously long content.
         </bit-callout>
       </div>
     `,
