@@ -943,6 +943,7 @@ describe("deviceTrustService", () => {
       userDecryptionOptionsService,
       logService,
       configService,
+      accountService,
     );
   }
 });

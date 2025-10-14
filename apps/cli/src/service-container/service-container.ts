@@ -488,7 +488,9 @@ export class ServiceContainer {
       ")";
 
     this.biometricStateService = new DefaultBiometricStateService(this.stateProvider);
-    this.userDecryptionOptionsService = new UserDecryptionOptionsService(this.stateProvider);
+    this.userDecryptionOptionsService = new UserDecryptionOptionsService(
+      this.singleUserStateProvider,
+    );
     this.ssoUrlService = new SsoUrlService();
 
     this.organizationService = new DefaultOrganizationService(this.stateProvider);
@@ -669,6 +671,7 @@ export class ServiceContainer {
       this.userDecryptionOptionsService,
       this.logService,
       this.configService,
+      this.accountService,
     );
 
     this.loginStrategyService = new LoginStrategyService(

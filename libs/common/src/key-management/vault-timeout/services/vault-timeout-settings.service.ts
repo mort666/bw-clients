@@ -296,12 +296,15 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
   private async userHasMasterPassword(userId: string): Promise<boolean> {
     if (userId) {
       const decryptionOptions = await firstValueFrom(
-        this.userDecryptionOptionsService.userDecryptionOptionsById$(userId),
+        this.userDecryptionOptionsService.userDecryptionOptionsById$(userId as UserId),
       );
 
       return !!decryptionOptions?.hasMasterPassword;
     } else {
-      return await firstValueFrom(this.userDecryptionOptionsService.hasMasterPassword$);
+      const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
+      return await firstValueFrom(
+        this.userDecryptionOptionsService.hasMasterPasswordById$(activeAccount.id),
+      );
     }
   }
 }
