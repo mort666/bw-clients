@@ -96,8 +96,9 @@ export class VaultItemsComponent<C extends CipherViewLike> {
   protected canDeleteSelected$: Observable<boolean>;
   protected canRestoreSelected$: Observable<boolean>;
   protected disableMenu$: Observable<boolean>;
-  protected archiveFeatureEnabled: boolean = false;
   private restrictedTypes: RestrictedCipherType[] = [];
+
+  protected archiveFeatureEnabled$ = this.cipherArchiveService.showArchiveFeatures$();
 
   constructor(
     protected cipherAuthorizationService: CipherAuthorizationService,
@@ -170,13 +171,6 @@ export class VaultItemsComponent<C extends CipherViewLike> {
         );
       }),
     );
-
-    this.cipherArchiveService
-      .showArchiveFeatures$()
-      .pipe(takeUntilDestroyed())
-      .subscribe((enabled) => {
-        this.archiveFeatureEnabled = enabled;
-      });
   }
 
   clearSelection() {
