@@ -104,8 +104,11 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
     }
     
     // Check the connection status by calling into Rust
+    // If the connection is has changed and is now disconnected, cancel the request
     private func checkConnectionStatus() {
-        // Only check if we have a client
+        // Only check connection status if the client has been initialized.
+        // Initialization is done asynchronously, so we might be called before it's ready
+        // In that case we just skip this check and wait for the next timer tick and re-check
         guard let client = self.client else {
             return
         }
