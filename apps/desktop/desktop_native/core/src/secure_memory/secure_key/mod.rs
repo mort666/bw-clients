@@ -21,7 +21,7 @@ pub use crypto::EncryptedMemory;
 /// An ephemeral key that is protected using a platform mechanism. It is generated on construction freshly, and can be used
 /// to encrypt and decrypt segments of memory. Since the key is ephemeral, persistent data cannot be encrypted with this key.
 /// On Linux and Windows, in most cases the protection mechanisms prevent memory dumps/debuggers from reading the key.
-/// 
+///
 /// Note: This can be circumvented if code can be injected into the process and is only effective in combination with the
 /// memory isolation provided in `process_isolation`.
 /// - https://github.com/zer1t0/keydump
