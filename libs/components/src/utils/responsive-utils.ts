@@ -1,5 +1,8 @@
 /**
- * Breakpoint definitions in pixels.
+ * Breakpoint definitions in pixels based on our design system and tailwindcss defaults.
+ *
+ * @see {@link /libs/components/src/stories/responsive-design.mdx} for details on design system.
+ * @see {@link https://tailwindcss.com/docs/responsive-design} for tailwindcss breakpoints.
  */
 export const BREAKPOINTS = {
   sm: 640,
