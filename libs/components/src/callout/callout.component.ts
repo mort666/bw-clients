@@ -54,16 +54,6 @@ export class CalloutComponent {
 
   constructor(private i18nService: I18nService) {}
 
-  protected readonly iconClass = computed(() => {
-    if (!this.title() && this.truncate()) {
-      return "";
-    }
-    if (this.iconComputed() && this.titleComputed()) {
-      return "tw-top-[3px] tw-self-start";
-    }
-    return "tw-top-[1px]";
-  });
-
   protected readonly calloutClass = computed(() => {
     switch (this.type()) {
       case "danger":
