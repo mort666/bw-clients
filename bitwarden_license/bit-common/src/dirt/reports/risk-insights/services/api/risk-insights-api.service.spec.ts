@@ -233,7 +233,9 @@ describe("RiskInsightsApiService", () => {
 
     mockApiService.send.mockResolvedValueOnce(undefined);
     const result = await firstValueFrom(
-      service.updateRiskInsightsApplicationData$(mockApplication.encryptedString, orgId, reportId),
+      service.updateRiskInsightsApplicationData$(reportId, orgId, {
+        data: { applicationData: mockApplication.encryptedString! },
+      }),
     );
     expect(mockApiService.send).toHaveBeenCalledWith(
       "PATCH",

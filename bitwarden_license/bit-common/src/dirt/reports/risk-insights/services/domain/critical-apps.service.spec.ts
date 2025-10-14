@@ -181,7 +181,7 @@ describe("CriticalAppsService", () => {
     privateCriticalAppsSubject.next(initialList);
 
     // act
-    await service.dropCriticalApp(SomeOrganization, selectedUrl);
+    await service.dropCriticalAppByUrl(SomeOrganization, selectedUrl);
 
     // expectations
     expect(criticalAppsApiService.dropCriticalApp).toHaveBeenCalledWith({
@@ -213,7 +213,7 @@ describe("CriticalAppsService", () => {
     privateCriticalAppsSubject.next(initialList);
 
     // act
-    await service.dropCriticalApp(SomeOrganization, selectedUrl);
+    await service.dropCriticalAppByUrl(SomeOrganization, selectedUrl);
 
     // expectations
     expect(criticalAppsApiService.dropCriticalApp).not.toHaveBeenCalled();

@@ -8,7 +8,7 @@ import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.servi
 import { LogService } from "@bitwarden/logging";
 
 import { createNewSummaryData } from "../../helpers";
-import { ReportState } from "../../models";
+import { RiskInsightsData, SaveRiskInsightsReportResponse } from "../../models";
 import {
   mockApplicationData,
   mockEnrichedReportData,
@@ -68,18 +68,14 @@ describe("RiskInsightsOrchestratorService", () => {
       const privateOrganizationDetailsSubject = service["_organizationDetailsSubject"];
       const privateUserIdSubject = service["_userIdSubject"];
       // Arrange
-      const reportState: ReportState = {
-        loading: false,
-        error: null,
-        data: {
-          id: mockReportId,
-          reportData: [],
-          summaryData: createNewSummaryData(),
-          applicationData: [],
-          creationDate: new Date(),
-        },
+      const reportState: RiskInsightsData = {
+        id: mockReportId,
+        reportData: [],
+        summaryData: createNewSummaryData(),
+        applicationData: [],
+        creationDate: new Date(),
       };
-      mockReportService.getRiskInsightsReport$.mockReturnValueOnce(of(reportState.data));
+      mockReportService.getRiskInsightsReport$.mockReturnValueOnce(of(reportState));
       // Set up organization and user context
       privateOrganizationDetailsSubject.next({
         organizationId: mockOrgId,
@@ -97,7 +93,7 @@ describe("RiskInsightsOrchestratorService", () => {
             mockOrgId,
             mockUserId,
           );
-          expect(state.data).toEqual(reportState.data);
+          expect(state.data).toEqual(reportState);
           done();
         }
       });
@@ -134,7 +130,9 @@ describe("RiskInsightsOrchestratorService", () => {
       mockReportService.generateApplicationsReport.mockReturnValueOnce(mockEnrichedReportData);
       mockReportService.getApplicationsSummary.mockReturnValueOnce(mockSummaryData);
       mockReportService.getOrganizationApplications.mockReturnValueOnce(mockApplicationData);
-      mockReportService.saveRiskInsightsReport$.mockReturnValueOnce(of(null));
+      mockReportService.saveRiskInsightsReport$.mockReturnValueOnce(
+        of({ id: mockReportId } as SaveRiskInsightsReportResponse),
+      );
       privateOrganizationDetailsSubject.next({
         organizationId: mockOrgId,
         organizationName: mockOrgName,
@@ -146,7 +144,7 @@ describe("RiskInsightsOrchestratorService", () => {
 
       // Assert
       service.rawReportData$.subscribe((state) => {
-        if (!state.loading) {
+        if (!state.loading && state.data) {
           expect(mockReportService.generateApplicationsReport).toHaveBeenCalledWith(mockOrgId);
           expect(mockReportService.saveRiskInsightsReport$).toHaveBeenCalledWith(
             mockEnrichedReportData,
@@ -189,22 +187,20 @@ describe("RiskInsightsOrchestratorService", () => {
   });
 
   describe("destroy", () => {
-    it("should complete destroy$ subject and unsubscribe reportStateSubscription", (done) => {
-      const privateDestroy = service["_destroy$"];
-      const privateReportStateSubscription = service["_reportStateSubscription"];
+    it("should complete destroy$ subject and unsubscribe reportStateSubscription", () => {
+      const privateDestroy = (service as any)._destroy$;
+      const privateReportStateSubscription = (service as any)._reportStateSubscription;
+
+      // Spy on the methods you expect to be called.
+      const destroyCompleteSpy = jest.spyOn(privateDestroy, "complete");
       const unsubscribeSpy = jest.spyOn(privateReportStateSubscription, "unsubscribe");
 
+      // Execute the destroy method.
       service.destroy();
 
+      // Assert that the methods were called as expected.
+      expect(destroyCompleteSpy).toHaveBeenCalled();
       expect(unsubscribeSpy).toHaveBeenCalled();
-      privateDestroy.subscribe({
-        error: (err: unknown) => {
-          done.fail("Should not error: " + err);
-        },
-        complete: () => {
-          done();
-        },
-      });
     });
   });
 });

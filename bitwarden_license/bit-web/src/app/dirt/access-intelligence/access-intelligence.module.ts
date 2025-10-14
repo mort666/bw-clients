@@ -70,11 +70,10 @@ import { RiskInsightsComponent } from "./risk-insights.component";
       provide: RiskInsightsDataService,
       deps: [CriticalAppsService, RiskInsightsReportService, RiskInsightsOrchestratorService],
     }),
-    {
+    safeProvider({
       provide: RiskInsightsEncryptionService,
-      useClass: RiskInsightsEncryptionService,
-      deps: [KeyService, EncryptService, KeyGenerationService],
-    },
+      deps: [KeyService, EncryptService, KeyGenerationService, LogService],
+    }),
     safeProvider({
       provide: CriticalAppsService,
       useClass: CriticalAppsService,

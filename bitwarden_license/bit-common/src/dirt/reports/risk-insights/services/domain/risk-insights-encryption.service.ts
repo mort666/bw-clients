@@ -6,14 +6,24 @@ import { EncString } from "@bitwarden/common/key-management/crypto/models/enc-st
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
 import { OrganizationId, UserId } from "@bitwarden/common/types/guid";
 import { KeyService } from "@bitwarden/key-management";
+import { LogService } from "@bitwarden/logging";
 
-import { DecryptedReportData, EncryptedReportData, EncryptedDataWithKey } from "../../models";
+import { createNewSummaryData } from "../../helpers";
+import {
+  DecryptedReportData,
+  EncryptedReportData,
+  EncryptedDataWithKey,
+  ApplicationHealthReportDetail,
+  OrganizationReportSummary,
+  OrganizationReportApplication,
+} from "../../models";
 
 export class RiskInsightsEncryptionService {
   constructor(
     private keyService: KeyService,
     private encryptService: EncryptService,
     private keyGeneratorService: KeyGenerationService,
+    private logService: LogService,
   ) {}
 
   async encryptRiskInsightsReport(
@@ -24,6 +34,7 @@ export class RiskInsightsEncryptionService {
     data: DecryptedReportData,
     wrappedKey?: EncString,
   ): Promise<EncryptedDataWithKey> {
+    this.logService.info("[RiskInsightsEncryptionService] Encrypting risk insights report");
     const { userId, organizationId } = context;
     const orgKey = await firstValueFrom(
       this.keyService
@@ -36,16 +47,24 @@ export class RiskInsightsEncryptionService {
     );
 
     if (!orgKey) {
+      this.logService.warning(
+        "[RiskInsightsEncryptionService] Attempted to encrypt report data without org id",
+      );
       throw new Error("Organization key not found");
     }
 
     let contentEncryptionKey: SymmetricCryptoKey;
-    if (!wrappedKey) {
-      // Generate a new key
-      contentEncryptionKey = await this.keyGeneratorService.createKey(512);
-    } else {
-      // Unwrap the existing key
-      contentEncryptionKey = await this.encryptService.unwrapSymmetricKey(wrappedKey, orgKey);
+    try {
+      if (!wrappedKey) {
+        // Generate a new key
+        contentEncryptionKey = await this.keyGeneratorService.createKey(512);
+      } else {
+        // Unwrap the existing key
+        contentEncryptionKey = await this.encryptService.unwrapSymmetricKey(wrappedKey, orgKey);
+      }
+    } catch (error: unknown) {
+      this.logService.error("[RiskInsightsEncryptionService] Failed to get encryption key", error);
+      throw new Error("Failed to get encryption key");
     }
 
     const { reportData, summaryData, applicationData } = data;
@@ -75,6 +94,9 @@ export class RiskInsightsEncryptionService {
       !encryptedApplicationData.encryptedString ||
       !wrappedEncryptionKey.encryptedString
     ) {
+      this.logService.error(
+        "[RiskInsightsEncryptionService] Encryption failed, encrypted strings are null",
+      );
       throw new Error("Encryption failed, encrypted strings are null");
     }
 
@@ -97,6 +119,8 @@ export class RiskInsightsEncryptionService {
     encryptedData: EncryptedReportData,
     wrappedKey: EncString,
   ): Promise<DecryptedReportData> {
+    this.logService.info("[RiskInsightsEncryptionService] Decrypting risk insights report");
+
     const { userId, organizationId } = context;
     const orgKey = await firstValueFrom(
       this.keyService
@@ -109,47 +133,106 @@ export class RiskInsightsEncryptionService {
     );
 
     if (!orgKey) {
+      this.logService.warning(
+        "[RiskInsightsEncryptionService] Attempted to decrypt report data without org id",
+      );
       throw new Error("Organization key not found");
     }
 
     const unwrappedEncryptionKey = await this.encryptService.unwrapSymmetricKey(wrappedKey, orgKey);
     if (!unwrappedEncryptionKey) {
+      this.logService.error("[RiskInsightsEncryptionService] Encryption key not found");
       throw Error("Encryption key not found");
     }
 
     const { encryptedReportData, encryptedSummaryData, encryptedApplicationData } = encryptedData;
-    if (!encryptedReportData || !encryptedSummaryData || !encryptedApplicationData) {
-      throw new Error("Missing data");
-    }
 
     // Decrypt the data
-    const decryptedReportData = await this.encryptService.decryptString(
+    const decryptedReportData = await this._handleDecryptReport(
       encryptedReportData,
       unwrappedEncryptionKey,
     );
-    const decryptedSummaryData = await this.encryptService.decryptString(
+    const decryptedSummaryData = await this._handleDecryptSummary(
       encryptedSummaryData,
       unwrappedEncryptionKey,
     );
-    const decryptedApplicationData = await this.encryptService.decryptString(
+    const decryptedApplicationData = await this._handleDecryptApplication(
       encryptedApplicationData,
       unwrappedEncryptionKey,
     );
 
-    if (!decryptedReportData || !decryptedSummaryData || !decryptedApplicationData) {
-      throw new Error("Decryption failed, decrypted strings are null");
-    }
-
-    const decryptedReportDataJson = JSON.parse(decryptedReportData);
-    const decryptedSummaryDataJson = JSON.parse(decryptedSummaryData);
-    const decryptedApplicationDataJson = JSON.parse(decryptedApplicationData);
-
     const decryptedFullReport = {
-      reportData: decryptedReportDataJson,
-      summaryData: decryptedSummaryDataJson,
-      applicationData: decryptedApplicationDataJson,
+      reportData: decryptedReportData,
+      summaryData: decryptedSummaryData,
+      applicationData: decryptedApplicationData,
     };
 
     return decryptedFullReport;
+  }
+
+  private async _handleDecryptReport(
+    encryptedData: EncString | null,
+    key: SymmetricCryptoKey,
+  ): Promise<ApplicationHealthReportDetail[]> {
+    if (encryptedData == null) {
+      return [];
+    }
+
+    try {
+      const decryptedData = await this.encryptService.decryptString(encryptedData, key);
+      const parsedData = JSON.parse(decryptedData);
+
+      // TODO Add type guard to check that parsed data is actual type
+      return parsedData as ApplicationHealthReportDetail[];
+    } catch (error: unknown) {
+      this.logService.error("[RiskInsightsEncryptionService] Failed to decrypt report", error);
+      return [];
+    }
+  }
+
+  private async _handleDecryptSummary(
+    encryptedData: EncString | null,
+    key: SymmetricCryptoKey,
+  ): Promise<OrganizationReportSummary> {
+    if (encryptedData == null) {
+      return createNewSummaryData();
+    }
+
+    try {
+      const decryptedData = await this.encryptService.decryptString(encryptedData, key);
+      const parsedData = JSON.parse(decryptedData);
+
+      // TODO Add type guard to check that parsed data is actual type
+      return parsedData as OrganizationReportSummary;
+    } catch (error: unknown) {
+      this.logService.error(
+        "[RiskInsightsEncryptionService] Failed to decrypt report summary",
+        error,
+      );
+      return createNewSummaryData();
+    }
+  }
+
+  private async _handleDecryptApplication(
+    encryptedData: EncString | null,
+    key: SymmetricCryptoKey,
+  ): Promise<OrganizationReportApplication[]> {
+    if (encryptedData == null) {
+      return [];
+    }
+
+    try {
+      const decryptedData = await this.encryptService.decryptString(encryptedData, key);
+      const parsedData = JSON.parse(decryptedData);
+
+      // TODO Add type guard to check that parsed data is actual type
+      return parsedData as OrganizationReportApplication[];
+    } catch (error: unknown) {
+      this.logService.error(
+        "[RiskInsightsEncryptionService] Failed to decrypt report applications",
+        error,
+      );
+      return [];
+    }
   }
 }

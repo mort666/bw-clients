@@ -59,7 +59,6 @@ export class RiskInsightsComponent implements OnInit, OnDestroy {
   private organizationId: OrganizationId = "" as OrganizationId;
 
   dataLastUpdated: Date | null = null;
-  refetching: boolean = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -114,19 +113,14 @@ export class RiskInsightsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // The component tells the facade when to stop
     this.dataService.destroy();
   }
-
-  runReport = () => {
-    this.dataService.triggerReport();
-  };
 
   /**
    * Refreshes the data by re-fetching the applications report.
    * This will automatically notify child components subscribed to the RiskInsightsDataService observables.
    */
-  refreshData(): void {
+  generateReport(): void {
     if (this.organizationId) {
       this.dataService.triggerReport();
     }

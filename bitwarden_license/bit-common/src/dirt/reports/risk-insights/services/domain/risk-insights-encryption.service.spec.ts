@@ -9,6 +9,7 @@ import { makeSymmetricCryptoKey } from "@bitwarden/common/spec";
 import { OrganizationId, UserId } from "@bitwarden/common/types/guid";
 import { OrgKey } from "@bitwarden/common/types/key";
 import { KeyService } from "@bitwarden/key-management";
+import { LogService } from "@bitwarden/logging";
 
 import { EncryptedReportData, DecryptedReportData } from "../../models";
 import { mockApplicationData, mockReportData, mockSummaryData } from "../../models/mocks/mock-data";
@@ -20,6 +21,7 @@ describe("RiskInsightsEncryptionService", () => {
   const mockKeyService = mock<KeyService>();
   const mockEncryptService = mock<EncryptService>();
   const mockKeyGenerationService = mock<KeyGenerationService>();
+  const mockLogService = mock<LogService>();
 
   const ENCRYPTED_TEXT = "This data has been encrypted";
   const ENCRYPTED_KEY = "Re-encrypted Cipher Key";
@@ -43,6 +45,7 @@ describe("RiskInsightsEncryptionService", () => {
       mockKeyService,
       mockEncryptService,
       mockKeyGenerationService,
+      mockLogService,
     );
 
     jest.clearAllMocks();

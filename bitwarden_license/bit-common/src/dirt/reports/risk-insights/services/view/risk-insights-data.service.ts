@@ -183,7 +183,10 @@ export class RiskInsightsDataService {
 
   // ------------------------------ Critical application methods --------------
   saveCriticalApplications(selectedUrls: string[]) {
-    this.orchestrator.setCriticalApplications$(selectedUrls);
+    // Saving critical applications to the report
+    this.orchestrator.saveCriticalApplications$(selectedUrls);
+
+    // Legacy support: also save to the CriticalAppsService for backward compatibility
     return this.organizationDetails$.pipe(
       exhaustMap((organizationDetails) => {
         if (!organizationDetails?.organizationId) {
@@ -207,7 +210,7 @@ export class RiskInsightsDataService {
         if (!organizationDetails?.organizationId) {
           return EMPTY;
         }
-        return this.criticalAppsService.dropCriticalApp(
+        return this.criticalAppsService.dropCriticalAppByUrl(
           organizationDetails?.organizationId,
           hostname,
         );

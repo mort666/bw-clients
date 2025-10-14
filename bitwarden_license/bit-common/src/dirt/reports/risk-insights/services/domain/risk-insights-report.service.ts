@@ -171,15 +171,12 @@ export class RiskInsightsReportService {
             creationDate: response.creationDate,
           })),
           catchError((error: unknown) => {
-            // TODO Handle errors appropriately
-            // console.error("An error occurred when decrypting report", error);
-            return EMPTY;
+            return throwError(() => error);
           }),
         );
       }),
       catchError((error: unknown) => {
-        // console.error("An error occurred when fetching the last report", error);
-        return EMPTY;
+        return throwError(() => error);
       }),
     );
   }
