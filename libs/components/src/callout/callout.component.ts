@@ -37,6 +37,7 @@ export class CalloutComponent {
   readonly type = input<CalloutTypes>("info");
   readonly icon = input<string>();
   readonly title = input<string>();
+  readonly truncate = input(false);
   readonly useAlertRole = input(false);
   readonly iconComputed = computed(() => this.icon() ?? defaultIcon[this.type()]);
   readonly titleComputed = computed(() => {
