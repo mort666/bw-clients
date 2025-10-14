@@ -170,6 +170,7 @@ export const OnNonIconButton: Story = {
       <div class="tw-p-16 tw-flex tw-items-center tw-justify-center">
         <button
           bitButton
+          addTooltipToDescribedby="true"
           bitTooltip="Some additional tooltip text to describe the button"
         >Button label</button>
       </div>
