@@ -12,7 +12,6 @@ import {
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { DeviceType } from "@bitwarden/common/enums";
-import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { PinServiceAbstraction } from "@bitwarden/common/key-management/pin/pin.service.abstraction";
 import { ImportCiphersRequest } from "@bitwarden/common/models/request/import-ciphers.request";
@@ -139,18 +138,16 @@ export class ImportService implements ImportServiceAbstraction {
   }
 
   metadata$(type$: Observable<ImportType>): Observable<ImporterMetadata> {
-    const browserEnabled$ = this.system.configService.getFeatureFlag$(
-      FeatureFlag.UseChromiumImporter,
-    );
     const client = this.system.environment.getClientType();
-    const capabilities$ = combineLatest([type$, browserEnabled$]).pipe(
-      map(([type, enabled]) => {
+    const capabilities$ = combineLatest([type$]).pipe(
+      map(([type]) => {
         let loaders = availableLoaders(type, client);
 
         // Mac App Store is currently disabled due to sandboxing.
         let isUnsupported = this.system.environment.isMacAppStore();
 
-        if (enabled && type === "bravecsv") {
+        // disable the chromium loader for Brave on Windows only
+        if (type === "bravecsv") {
           try {
             const device = this.system.environment.getDevice();
             const isWindowsDesktop = device === DeviceType.WindowsDesktop;
@@ -161,8 +158,8 @@ export class ImportService implements ImportServiceAbstraction {
             isUnsupported = true;
           }
         }
-        // If the feature flag is disabled, or if the browser is unsupported, remove the chromium loader
-        if (!enabled || isUnsupported) {
+        // If the browser is unsupported, remove the chromium loader
+        if (isUnsupported) {
           loaders = loaders?.filter((loader) => loader !== Loader.chromium);
         }
 

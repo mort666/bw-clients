@@ -56,37 +56,6 @@ export const Category = Object.freeze({
  */
 export type Category = (typeof Category)[keyof typeof Category];
 
-// const namesByCategory = new Map<Category, keyof typeof Category>(
-//   Object.entries(Category).map(([key, value]) => [value, key as keyof typeof Category]),
-// );
-
-// /**
-//  * Checks if a value is a valid 1Password Category.
-//  * @param value - The value to check.
-//  * @returns True if the value is a valid 1Password Category, false otherwise.
-//  */
-// export function isCategory(value: unknown): value is Category {
-//   return namesByCategory.has(value as Category);
-// }
-
-// /**
-//  * Converts a value to a 1Password Category if it is valid.
-//  * @param value - The value to convert.
-//  * @returns The value as a Category if valid, otherwise undefined.
-//  */
-// export function asCategory(value: unknown): Category | undefined {
-//   return isCategory(value) ? (value as Category) : undefined;
-// }
-
-// /**
-//  * Gets the name of a 1Password Category value.
-//  * @param value - The Category value to get the name for.
-//  * @returns The name of the Category value, or undefined if not found.
-//  */
-// export function nameOfCategory(value: Category): keyof typeof Category | undefined {
-//   return namesByCategory.get(value);
-// }
-
 export interface Item {
   uuid: string;
   favIndex: number;
