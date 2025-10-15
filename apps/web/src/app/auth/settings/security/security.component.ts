@@ -1,9 +1,12 @@
 import { Component, OnInit } from "@angular/core";
+import { firstValueFrom } from "rxjs";
 
-import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
+import { UserDecryptionOptionsServiceAbstraction } from "@bitwarden/auth/common";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 
 import { HeaderModule } from "../../../layouts/header/header.module";
 import { SharedModule } from "../../../shared";
+
 
 @Component({
   templateUrl: "security.component.html",
@@ -13,9 +16,15 @@ export class SecurityComponent implements OnInit {
   showChangePassword = true;
   changePasswordRoute = "password";
 
-  constructor(private userVerificationService: UserVerificationService) {}
+  constructor(
+    private userDecryptionOptionsService: UserDecryptionOptionsServiceAbstraction,
+    private accountService: AccountService,
+  ) {}
 
   async ngOnInit() {
-    this.showChangePassword = await this.userVerificationService.hasMasterPassword();
+    const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
+    this.showChangePassword = await firstValueFrom(
+      this.userDecryptionOptionsService.hasMasterPasswordById$(activeAccount.id),
+    );
   }
 }

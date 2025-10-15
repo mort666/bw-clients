@@ -1,11 +1,9 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
 import { Component, OnInit } from "@angular/core";
 import { firstValueFrom, map } from "rxjs";
 
+import { UserDecryptionOptionsServiceAbstraction } from "@bitwarden/auth/common";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
-import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { DialogService } from "@bitwarden/components";
 
 import { ChangeKdfModule } from "../../../key-management/change-kdf/change-kdf.module";
@@ -21,14 +19,17 @@ export class SecurityKeysComponent implements OnInit {
   showChangeKdf = true;
 
   constructor(
-    private userVerificationService: UserVerificationService,
+    private userDecryptionOptionsService: UserDecryptionOptionsServiceAbstraction,
     private accountService: AccountService,
     private apiService: ApiService,
     private dialogService: DialogService,
   ) {}
 
   async ngOnInit() {
-    this.showChangeKdf = await this.userVerificationService.hasMasterPassword();
+    const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
+    this.showChangeKdf = await firstValueFrom(
+      this.userDecryptionOptionsService.hasMasterPasswordById$(activeAccount.id),
+    );
   }
 
   async viewUserApiKey() {
