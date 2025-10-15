@@ -16,7 +16,7 @@ import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folde
 import { SearchService } from "@bitwarden/common/vault/abstractions/search.service";
 import { BiometricsService, KeyService } from "@bitwarden/key-management";
 import { LogService } from "@bitwarden/logging";
-import { StateService, StateEventRunnerService } from "@bitwarden/state";
+import { StateEventRunnerService } from "@bitwarden/state";
 
 import { LogoutService } from "../../abstractions";
 
@@ -30,6 +30,8 @@ export abstract class LockService {
    * @param userId The user id to lock
    */
   abstract lock(userId: UserId): Promise<void>;
+
+  abstract runPlatformOnLockActions(): Promise<void>;
 }
 
 export class DefaultLockService implements LockService {
@@ -42,7 +44,6 @@ export class DefaultLockService implements LockService {
     private readonly searchService: SearchService,
     private readonly folderService: FolderService,
     private readonly masterPasswordService: InternalMasterPasswordServiceAbstraction,
-    private readonly stateService: StateService,
     private readonly stateEventRunnerService: StateEventRunnerService,
     private readonly cipherService: CipherService,
     private readonly authService: AuthService,
@@ -106,6 +107,7 @@ export class DefaultLockService implements LockService {
     await this.wipeDecryptedState(userId);
     await this.waitForLockedStatus(userId);
     await this.systemService.clearPendingClipboard();
+    await this.runPlatformOnLockActions();
 
     this.logService.info(`[LockService] Locked user ${userId}`);
 
@@ -148,5 +150,10 @@ export class DefaultLockService implements LockService {
         }),
       ),
     );
+  }
+
+  async runPlatformOnLockActions(): Promise<void> {
+    // No platform specific actions to run for this platform.
+    return;
   }
 }

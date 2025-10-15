@@ -20,7 +20,6 @@ import {
   AuthRequestService,
   AuthRequestServiceAbstraction,
   DefaultAuthRequestApiService,
-  DefaultLockService,
   DefaultLogoutService,
   InternalUserDecryptionOptionsServiceAbstraction,
   LockService,
@@ -266,6 +265,7 @@ import {
 } from "@bitwarden/vault-export-core";
 
 import { AuthStatusBadgeUpdaterService } from "../auth/services/auth-status-badge-updater.service";
+import { ExtensionLockService } from "../auth/services/extension-lock.service";
 import { OverlayNotificationsBackground as OverlayNotificationsBackgroundInterface } from "../autofill/background/abstractions/overlay-notifications.background";
 import { OverlayBackground as OverlayBackgroundInterface } from "../autofill/background/abstractions/overlay.background";
 import { AutoSubmitLoginBackground } from "../autofill/background/auto-submit-login.background";
@@ -1221,7 +1221,7 @@ export default class MainBackground {
 
     const logoutService = new DefaultLogoutService(this.messagingService);
 
-    this.lockService = new DefaultLockService(
+    this.lockService = new ExtensionLockService(
       this.accountService,
       this.biometricsService,
       this.vaultTimeoutSettingsService,
@@ -1230,7 +1230,6 @@ export default class MainBackground {
       this.searchService,
       this.folderService,
       this.masterPasswordService,
-      this.stateService,
       this.stateEventRunnerService,
       this.cipherService,
       this.authService,
@@ -1238,6 +1237,7 @@ export default class MainBackground {
       this.processReloadService,
       this.logService,
       this.keyService,
+      this,
     );
 
     this.vaultTimeoutService = new VaultTimeoutService(

@@ -15,7 +15,7 @@ import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folde
 import { SearchService } from "@bitwarden/common/vault/abstractions/search.service";
 import { BiometricsService, KeyService } from "@bitwarden/key-management";
 import { LogService } from "@bitwarden/logging";
-import { StateService, StateEventRunnerService } from "@bitwarden/state";
+import { StateEventRunnerService } from "@bitwarden/state";
 
 import { LogoutService } from "../../abstractions";
 
@@ -34,7 +34,6 @@ describe("DefaultLockService", () => {
   const searchService = mock<SearchService>();
   const folderService = mock<FolderService>();
   const masterPasswordService = mock<InternalMasterPasswordServiceAbstraction>();
-  const stateService = mock<StateService>();
   const stateEventRunnerService = mock<StateEventRunnerService>();
   const cipherService = mock<CipherService>();
   const authService = mock<AuthService>();
@@ -51,7 +50,6 @@ describe("DefaultLockService", () => {
     searchService,
     folderService,
     masterPasswordService,
-    stateService,
     stateEventRunnerService,
     cipherService,
     authService,
@@ -71,7 +69,6 @@ describe("DefaultLockService", () => {
       searchService,
       folderService,
       masterPasswordService,
-      stateService,
       stateEventRunnerService,
       cipherService,
       authService,
