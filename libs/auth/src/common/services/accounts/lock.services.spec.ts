@@ -1,6 +1,8 @@
 import { mock } from "jest-mock-extended";
+import { of } from "rxjs";
 
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
+import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
 import { ProcessReloadServiceAbstraction } from "@bitwarden/common/key-management/abstractions/process-reload.service";
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
 import { VaultTimeoutSettingsService } from "@bitwarden/common/key-management/vault-timeout";
@@ -40,7 +42,6 @@ describe("DefaultLockService", () => {
   const processReloadService = mock<ProcessReloadServiceAbstraction>();
   const logService = mock<LogService>();
   const keyService = mock<KeyService>();
-
   const sut = new DefaultLockService(
     accountService,
     biometricsService,
@@ -61,6 +62,25 @@ describe("DefaultLockService", () => {
   );
 
   describe("lockAll", () => {
+    const sut = new DefaultLockService(
+      accountService,
+      biometricsService,
+      vaultTimeoutSettingsService,
+      logoutService,
+      messagingService,
+      searchService,
+      folderService,
+      masterPasswordService,
+      stateService,
+      stateEventRunnerService,
+      cipherService,
+      authService,
+      systemService,
+      processReloadService,
+      logService,
+      keyService,
+    );
+
     it("locks the active account last", async () => {
       await accountService.addAccount(mockUser2, {
         name: "name2",
@@ -84,6 +104,36 @@ describe("DefaultLockService", () => {
 
       // Active user should be called last
       expect(lockSpy).toHaveBeenNthCalledWith(3, mockUser1);
+    });
+  });
+
+  describe("lock", () => {
+    const userId = mockUser1;
+
+    it("returns early if user is already logged out", async () => {
+      authService.authStatusFor$.mockReturnValue(of(AuthenticationStatus.LoggedOut));
+      await sut.lock(userId);
+      // Should return early, not call logoutService.logout
+      expect(logoutService.logout).not.toHaveBeenCalled();
+      expect(stateEventRunnerService.handleEvent).not.toHaveBeenCalled();
+    });
+
+    it("logs out if user cannot lock", async () => {
+      authService.authStatusFor$.mockReturnValue(of(AuthenticationStatus.Unlocked));
+      vaultTimeoutSettingsService.canLock.mockResolvedValue(false);
+      await sut.lock(userId);
+      expect(logoutService.logout).toHaveBeenCalledWith(userId, "vaultTimeout");
+      expect(stateEventRunnerService.handleEvent).not.toHaveBeenCalled();
+    });
+
+    it("locks user", async () => {
+      authService.authStatusFor$.mockReturnValue(of(AuthenticationStatus.Unlocked));
+      authService.authStatusFor$.mockReturnValue(of(AuthenticationStatus.Locked));
+      logoutService.logout.mockClear();
+      vaultTimeoutSettingsService.canLock.mockResolvedValue(true);
+      await sut.lock(userId);
+      expect(logoutService.logout).not.toHaveBeenCalled();
+      expect(stateEventRunnerService.handleEvent).toHaveBeenCalledWith("lock", userId);
     });
   });
 });
