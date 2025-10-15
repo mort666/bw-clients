@@ -64,6 +64,11 @@ export class ActivityCardComponent {
    */
   @Output() buttonClick = new EventEmitter<void>();
 
+  /**
+   * Event emitted when navigation link is clicked
+   */
+  @Output() navigationClick = new EventEmitter<void>();
+
   constructor(private router: Router) {}
 
   navigateToLink = async (navigationLink: string) => {
@@ -72,5 +77,9 @@ export class ActivityCardComponent {
 
   onButtonClick = () => {
     this.buttonClick.emit();
+  };
+
+  onNavigationClick = () => {
+    this.navigationClick.emit();
   };
 }
