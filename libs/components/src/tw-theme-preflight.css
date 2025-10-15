@@ -10,7 +10,7 @@
 
 @layer base {
   body {
-    @apply !tw-text-base tw-text-main;
+    @apply tw-text-base tw-text-main;
   }
 
   h1 {
