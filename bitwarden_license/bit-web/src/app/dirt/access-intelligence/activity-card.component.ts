@@ -29,19 +29,14 @@ export class ActivityCardComponent {
   @Input() metricDescription: string = "";
 
   /**
-   * The link to navigate to for more information
+   * The text to display for the action link
    */
-  @Input() navigationLink: string = "";
+  @Input() actionText: string = "";
 
   /**
-   * The text to display for the navigation link
+   * Show action link
    */
-  @Input() navigationText: string = "";
-
-  /**
-   * Show Navigation link
-   */
-  @Input() showNavigationLink: boolean = false;
+  @Input() showActionLink: boolean = false;
 
   /**
    * Icon class to display next to metrics (e.g., "bwi-exclamation-triangle").
@@ -65,21 +60,17 @@ export class ActivityCardComponent {
   @Output() buttonClick = new EventEmitter<void>();
 
   /**
-   * Event emitted when navigation link is clicked
+   * Event emitted when action link is clicked
    */
-  @Output() navigationClick = new EventEmitter<void>();
+  @Output() actionClick = new EventEmitter<void>();
 
   constructor(private router: Router) {}
-
-  navigateToLink = async (navigationLink: string) => {
-    await this.router.navigateByUrl(navigationLink);
-  };
 
   onButtonClick = () => {
     this.buttonClick.emit();
   };
 
-  onNavigationClick = () => {
-    this.navigationClick.emit();
+  onActionClick = () => {
+    this.actionClick.emit();
   };
 }
