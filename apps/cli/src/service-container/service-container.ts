@@ -782,7 +782,6 @@ export class ServiceContainer {
       this.searchService,
       this.folderService,
       this.masterPasswordService,
-      this.stateService,
       this.stateEventRunnerService,
       this.cipherService,
       this.authService,
