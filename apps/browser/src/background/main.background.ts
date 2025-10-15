@@ -1224,7 +1224,6 @@ export default class MainBackground {
     this.lockService = new DefaultLockService(
       this.accountService,
       this.biometricsService,
-      this.tokenService,
       this.vaultTimeoutSettingsService,
       logoutService,
       this.messagingService,

@@ -1640,7 +1640,6 @@ const safeProviders: SafeProvider[] = [
     deps: [
       AccountService,
       BiometricsService,
-      TokenServiceAbstraction,
       VaultTimeoutSettingsService,
       LogoutService,
       MessagingServiceAbstraction,

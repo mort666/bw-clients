@@ -1,7 +1,6 @@
 import { mock } from "jest-mock-extended";
 
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
-import { TokenService } from "@bitwarden/common/auth/services/token.service";
 import { ProcessReloadServiceAbstraction } from "@bitwarden/common/key-management/abstractions/process-reload.service";
 import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
 import { VaultTimeoutSettingsService } from "@bitwarden/common/key-management/vault-timeout";
@@ -27,7 +26,6 @@ describe("DefaultLockService", () => {
 
   const accountService = mockAccountServiceWith(mockUser1);
   const biometricsService = mock<BiometricsService>();
-  const tokenService = mock<TokenService>();
   const vaultTimeoutSettingsService = mock<VaultTimeoutSettingsService>();
   const logoutService = mock<LogoutService>();
   const messagingService = mock<MessagingService>();
@@ -46,7 +44,6 @@ describe("DefaultLockService", () => {
   const sut = new DefaultLockService(
     accountService,
     biometricsService,
-    tokenService,
     vaultTimeoutSettingsService,
     logoutService,
     messagingService,
