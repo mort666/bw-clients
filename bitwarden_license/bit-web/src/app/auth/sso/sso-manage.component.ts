@@ -51,11 +51,11 @@ interface SelectOptions {
 const defaultSigningAlgorithm = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256";
 
 @Component({
-  selector: "app-org-manage-sso",
-  templateUrl: "sso.component.html",
+  selector: "auth-sso-manage",
+  templateUrl: "sso-manage.component.html",
   standalone: false,
 })
-export class SsoComponent implements OnInit, OnDestroy {
+export class SsoManageComponent implements OnInit, OnDestroy {
   readonly ssoType = SsoType;
   readonly memberDecryptionType = MemberDecryptionType;
 
