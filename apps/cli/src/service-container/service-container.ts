@@ -776,7 +776,6 @@ export class ServiceContainer {
     const lockService = new DefaultLockService(
       this.accountService,
       biometricService,
-      this.tokenService,
       this.vaultTimeoutSettingsService,
       logoutService,
       this.messagingService,
