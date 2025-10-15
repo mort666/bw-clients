@@ -89,7 +89,7 @@ export class DialogComponent {
   /**
    * Disable animations for the dialog.
    */
-  readonly disableAnimations = input(false);
+  readonly disableAnimations = input(false, { transform: booleanAttribute });
 
   /**
    * Mark the dialog as loading which replaces the content with a spinner.
