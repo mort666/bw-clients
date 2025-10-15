@@ -78,4 +78,8 @@
   svg {
     display: inline;
   }
+
+  th {
+    font-weight: 500;
+  }
 }
