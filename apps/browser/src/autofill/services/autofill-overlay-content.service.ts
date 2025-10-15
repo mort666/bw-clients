@@ -968,6 +968,38 @@ export class AutofillOverlayContentService implements AutofillOverlayContentServ
       await this.getMostRecentlyFocusedFieldRects(formFieldElement);
     const autofillFieldData = this.formFieldElements.get(formFieldElement);
 
+    // Re-qualify password fields on focus to handle split login forms
+    if (
+      autofillFieldData?.type === "password" &&
+      (autofillFieldData.inlineMenuFillType === InlineMenuFillTypes.AccountCreationUsername ||
+        autofillFieldData.inlineMenuFillType === InlineMenuFillTypes.PasswordGeneration)
+    ) {
+      // Check for hidden username fields with specific autocomplete values
+      const usernameAutocompleteValues = ["username", "account", "email"];
+      const usernameFieldSelector = usernameAutocompleteValues
+        .map((value) => `input[autocomplete="${value}" i]`)
+        .join(", ");
+
+      const hasHiddenUsernameField = Array.from(
+        document.querySelectorAll(usernameFieldSelector),
+      ).some((input: HTMLInputElement) => {
+        const sameForm =
+          input.form === formFieldElement.form || (!input.form && !formFieldElement.form);
+        const isHidden =
+          input.type === "hidden" ||
+          input.offsetParent === null ||
+          window.getComputedStyle(input).display === "none";
+        return sameForm && isHidden;
+      });
+
+      if (hasHiddenUsernameField) {
+        // Re-qualify as login field
+        autofillFieldData.inlineMenuFillType = CipherType.Login;
+        autofillFieldData.accountCreationFieldType = undefined;
+        this.formFieldElements.set(formFieldElement, autofillFieldData);
+      }
+    }
+
     this.focusedFieldData = {
       focusedFieldStyles: { paddingRight, paddingLeft },
       focusedFieldRects: { width, height, top, left },
