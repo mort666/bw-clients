@@ -158,7 +158,7 @@ export const ScrollingContent: Story = {
   render: (args) => ({
     props: args,
     template: /*html*/ `
-      <bit-dialog [background]="background" [dialogSize]="dialogSize" [loading]="loading" [disablePadding]="disablePadding">
+      <bit-dialog title="Scrolling Example" [background]="background" [dialogSize]="dialogSize" [loading]="loading" [disablePadding]="disablePadding">
         <span bitDialogContent>
           Dialog body text goes here.<br />
           <ng-container *ngFor="let _ of [].constructor(100)">
@@ -166,10 +166,10 @@ export const ScrollingContent: Story = {
           </ng-container>
           end of sequence!
         </span>
-        <!-- <ng-container bitDialogFooter>
+        <ng-container bitDialogFooter>
           <button type="button" bitButton buttonType="primary" [disabled]="loading">Save</button>
           <button type="button" bitButton buttonType="secondary" [disabled]="loading">Cancel</button>
-        </ng-container> -->
+        </ng-container>
       </bit-dialog>
     `,
   }),
