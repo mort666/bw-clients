@@ -26,11 +26,6 @@ const margins: Record<TypographyType, string[]> = {
   helper: [],
 };
 
-/**
- * @deprecated
- *
- * Use typography classes instead
- */
 @Directive({
   selector: "[bitTypography]",
 })

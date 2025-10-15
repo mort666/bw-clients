@@ -7,7 +7,6 @@
 @import "./toast/toastr.css";
 @import "./tooltip/tooltip.component.css";
 @import "./search/search.component.css";
-@import "./typography/typography.css";
 
 @tailwind base;
 @tailwind components;
