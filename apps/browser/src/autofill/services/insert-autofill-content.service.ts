@@ -49,8 +49,9 @@ class InsertAutofillContentService implements InsertAutofillContentServiceInterf
       return;
     }
 
-    const fillActionPromises = fillScript.script.map(this.runFillScriptAction);
-    await Promise.all(fillActionPromises);
+    for (let index = 0; index < fillScript.script.length; index++) {
+      await this.runFillScriptAction(fillScript.script[index], index);
+    }
   }
 
   /**
