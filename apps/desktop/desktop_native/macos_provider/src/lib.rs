@@ -71,8 +71,8 @@ impl MacOSProviderClient {
     #[uniffi::constructor]
     pub fn connect() -> Self {
         let filter = EnvFilter::builder()
-            // Everything logs at `TRACE`
-            .with_default_directive(LevelFilter::TRACE.into())
+            // Everything logs at `INFO`
+            .with_default_directive(LevelFilter::INFO.into())
             .from_env_lossy();
 
         tracing_subscriber::registry()
