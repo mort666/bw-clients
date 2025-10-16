@@ -264,8 +264,12 @@ export class UserVerificationService implements UserVerificationServiceAbstracti
     const resolvedUserId = userId ?? (await firstValueFrom(this.accountService.activeAccount$))?.id;
 
     if (!resolvedUserId) {
-      return false; // or throw appropriate error
+      return false;
     }
+
+    // Ideally, this method would accept a UserId over string. To avoid scope creep in PM-26413, we are
+    // doing the cast here. Future work should be done to make this type-safe, and should be considered
+    // as part of PM-27009.
 
     return await firstValueFrom(
       this.userDecryptionOptionsService.hasMasterPasswordById$(resolvedUserId as UserId),
