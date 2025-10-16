@@ -10,11 +10,11 @@ import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.servic
 import { OrganizationId } from "@bitwarden/common/types/guid";
 import { DialogService, ToastService } from "@bitwarden/components";
 
+import { isFixedSeatPlan } from "../../../admin-console/organizations/members/components/member-dialog/validators/org-seat-limit-reached.validator";
 import {
   ChangePlanDialogResultType,
   openChangePlanDialog,
-} from "../../../../../billing/organizations/change-plan-dialog.component";
-import { isFixedSeatPlan } from "../../components/member-dialog/validators/org-seat-limit-reached.validator";
+} from "../../organizations/change-plan-dialog.component";
 
 export interface SeatLimitResult {
   canAddUsers: boolean;

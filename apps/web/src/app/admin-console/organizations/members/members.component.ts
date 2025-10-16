@@ -39,6 +39,7 @@ import { getById } from "@bitwarden/common/platform/misc";
 import { DialogService, ToastService } from "@bitwarden/components";
 import { KeyService } from "@bitwarden/key-management";
 import { UserId } from "@bitwarden/user-core";
+import { BillingConstraintService } from "@bitwarden/web-vault/app/billing/members/billing-constraint/billing-constraint.service";
 import { OrganizationWarningsService } from "@bitwarden/web-vault/app/billing/organizations/warnings/services";
 
 import { BaseMembersComponent } from "../../common/base-members.component";
@@ -47,11 +48,7 @@ import { OrganizationUserView } from "../core/views/organization-user.view";
 
 import { AccountRecoveryDialogResultType } from "./components/account-recovery/account-recovery-dialog.component";
 import { MemberDialogResult, MemberDialogTab } from "./components/member-dialog";
-import {
-  BillingConstraintService,
-  MemberDialogManagerService,
-  OrganizationMembersService,
-} from "./services";
+import { MemberDialogManagerService, OrganizationMembersService } from "./services";
 import { DeleteManagedMemberWarningService } from "./services/delete-managed-member/delete-managed-member-warning.service";
 import {
   MemberActionsService,

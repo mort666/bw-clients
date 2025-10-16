@@ -13,11 +13,11 @@ import { DialogService, ToastService } from "@bitwarden/components";
 import {
   ChangePlanDialogResultType,
   openChangePlanDialog,
-} from "../../../../../billing/organizations/change-plan-dialog.component";
+} from "../../organizations/change-plan-dialog.component";
 
 import { BillingConstraintService, SeatLimitResult } from "./billing-constraint.service";
 
-jest.mock("../../../../../billing/organizations/change-plan-dialog.component");
+jest.mock("../../organizations/change-plan-dialog.component");
 
 describe("BillingConstraintService", () => {
   let service: BillingConstraintService;
