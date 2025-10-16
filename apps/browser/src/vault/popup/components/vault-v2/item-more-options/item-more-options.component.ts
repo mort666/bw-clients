@@ -191,11 +191,12 @@ export class ItemMoreOptionsComponent {
 
     if (!isFeatureFlagEnabled) {
       const currentTab = await firstValueFrom(this.vaultPopupAutofillService.currentAutofillTab$);
-      const currentUri = Utils.getHostname(currentTab.url);
+      const currentUrl = Utils.getHost(currentTab?.url);
 
       const ref = AutofillConfirmationDialogComponent.open(this.dialogService, {
         data: {
-          currentUri,
+          currentUrl,
+          savedUrls: cipher.login?.uris?.map((u) => u.uri),
         },
       });
 
