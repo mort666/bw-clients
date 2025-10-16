@@ -57,8 +57,13 @@ impl NamedPipeServerStream {
                             }
                         };
 
-                        let peer_info = PeerInfo::new(pid as u32, crate::transport::peer_info::PeerType::NamedPipe);
-                        tx.send((listener, peer_info)).await.unwrap();
+                        let peer_info = PeerInfo::new(pid, crate::transport::peer_info::PeerType::NamedPipe);
+                        let result = tx.send((listener, peer_info)).await;
+                        if result.is_err() {
+                            info!("Receiver dropped, stopping named pipe server");
+                            cancellation_token.cancel();
+                            break;
+                        }
 
                         listener = match ServerOptions::new().create(pipe_name.clone()) {
                             Ok(pipe) => pipe,
