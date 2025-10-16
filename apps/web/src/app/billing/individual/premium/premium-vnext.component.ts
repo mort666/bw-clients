@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, DestroyRef, inject, OnInit } from "@angular/core";
+import { Component, DestroyRef, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ActivatedRoute, Router } from "@angular/router";
 import { combineLatest, firstValueFrom, map, Observable, of, shareReplay, switchMap } from "rxjs";
@@ -54,7 +54,7 @@ const RouteParamValues = {
     PricingCardComponent,
   ],
 })
-export class PremiumVNextComponent implements OnInit {
+export class PremiumVNextComponent {
   protected hasPremiumFromAnySource$: Observable<boolean>;
   protected shouldShowNewDesign$: Observable<boolean>;
   protected shouldShowUpgradeDialogOnInit$: Observable<boolean>;
@@ -109,7 +109,6 @@ export class PremiumVNextComponent implements OnInit {
         const cta = queryParams[RouteParams.callToAction];
         return !hasPremium && cta === RouteParamValues.upgradeToPremium;
       }),
-      takeUntilDestroyed(this.destroyRef),
     );
 
     this.personalPricingTiers$ =
@@ -144,19 +143,20 @@ export class PremiumVNextComponent implements OnInit {
       }),
       shareReplay({ bufferSize: 1, refCount: true }),
     );
-  }
 
-  async ngOnInit(): Promise<void> {
-    // In any case that the user has premium, we want to redirect them to the subscription settings page.
-    const hasPremium = await firstValueFrom(this.hasPremiumFromAnySource$);
-    if (hasPremium) {
-      await this.router.navigate(["/settings/subscription/user-subscription"]);
-    }
-
-    const shouldTriggerUpgradeDialog = await firstValueFrom(this.shouldShowUpgradeDialogOnInit$);
-    if (shouldTriggerUpgradeDialog) {
-      await this.openUpgradeDialog("Premium");
-    }
+    combineLatest([this.hasPremiumFromAnySource$, this.shouldShowUpgradeDialogOnInit$])
+      .pipe(
+        switchMap(async ([hasPremiumFromAnySource, shouldShowUpgradeDialogOnInit]) => {
+          // In any case that the user has premium, we want to redirect them to the subscription settings page.
+          if (hasPremiumFromAnySource) {
+            await this.router.navigate(["/settings/subscription/user-subscription"]);
+          } else if (shouldShowUpgradeDialogOnInit) {
+            await this.openUpgradeDialog("Premium");
+          }
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
   }
 
   finalizeUpgrade = async () => {
