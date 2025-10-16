@@ -2,8 +2,16 @@ import { Component } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
-import { firstValueFrom, from, lastValueFrom, map } from "rxjs";
-import { debounceTime, first, switchMap } from "rxjs/operators";
+import {
+  firstValueFrom,
+  from,
+  lastValueFrom,
+  map,
+  combineLatest,
+  switchMap,
+  Observable,
+} from "rxjs";
+import { debounceTime, first } from "rxjs/operators";
 
 import { ProviderService } from "@bitwarden/common/admin-console/abstractions/provider.service";
 import {
@@ -13,8 +21,12 @@ import {
 } from "@bitwarden/common/admin-console/enums";
 import { Provider } from "@bitwarden/common/admin-console/models/domain/provider";
 import { ProviderOrganizationOrganizationDetailsResponse } from "@bitwarden/common/admin-console/models/response/provider/provider-organization.response";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions";
 import { PlanResponse } from "@bitwarden/common/billing/models/response/plan.response";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { ValidationService } from "@bitwarden/common/platform/abstractions/validation.service";
 import {
@@ -61,19 +73,49 @@ import { ReplacePipe } from "./replace.pipe";
   ],
 })
 export class ManageClientsComponent {
-  providerId: string = "";
-  provider: Provider | undefined;
   loading = true;
-  isProviderAdmin = false;
   dataSource: TableDataSource<ProviderOrganizationOrganizationDetailsResponse> =
     new TableDataSource();
 
   protected searchControl = new FormControl("", { nonNullable: true });
   protected plans: PlanResponse[] = [];
+  protected ProviderUserType = ProviderUserType;
 
   pageTitle = this.i18nService.t("clients");
   clientColumnHeader = this.i18nService.t("client");
   newClientButtonLabel = this.i18nService.t("newClient");
+
+  protected providerId$: Observable<string> =
+    this.activatedRoute.parent?.params.pipe(map((params) => params.providerId as string)) ??
+    new Observable();
+
+  protected provider$ = combineLatest([
+    this.providerId$,
+    this.accountService.activeAccount$.pipe(getUserId),
+  ]).pipe(switchMap(([providerId, userId]) => this.providerService.get$(providerId, userId)));
+
+  protected isAdminOrServiceUser$ = this.provider$.pipe(
+    map(
+      (provider) =>
+        provider?.type === ProviderUserType.ProviderAdmin ||
+        provider?.type === ProviderUserType.ServiceUser,
+    ),
+  );
+
+  protected providerPortalTakeover$ = this.configService.getFeatureFlag$(
+    FeatureFlag.PM21821_ProviderPortalTakeover,
+  );
+
+  protected suspensionActive$ = combineLatest([
+    this.isAdminOrServiceUser$,
+    this.providerPortalTakeover$,
+    this.provider$.pipe(map((provider) => provider?.enabled ?? false)),
+  ]).pipe(
+    map(
+      ([isAdminOrServiceUser, portalTakeoverEnabled, providerEnabled]) =>
+        isAdminOrServiceUser && portalTakeoverEnabled && !providerEnabled,
+    ),
+  );
 
   constructor(
     private billingApiService: BillingApiServiceAbstraction,
@@ -86,29 +128,24 @@ export class ManageClientsComponent {
     private validationService: ValidationService,
     private webProviderService: WebProviderService,
     private billingNotificationService: BillingNotificationService,
+    private configService: ConfigService,
+    private accountService: AccountService,
   ) {
     this.activatedRoute.queryParams.pipe(first(), takeUntilDestroyed()).subscribe((queryParams) => {
       this.searchControl.setValue(queryParams.search);
     });
 
-    this.activatedRoute.parent?.params
-      ?.pipe(
-        switchMap((params) => {
-          this.providerId = params.providerId;
-          return this.providerService.get$(this.providerId).pipe(
-            map((provider: Provider) => provider?.providerStatus === ProviderStatusType.Billable),
-            map((isBillable) => {
-              if (!isBillable) {
-                return from(
-                  this.router.navigate(["../clients"], {
-                    relativeTo: this.activatedRoute,
-                  }),
-                );
-              } else {
-                return from(this.load());
-              }
-            }),
-          );
+    this.provider$
+      .pipe(
+        map((provider: Provider | undefined) => {
+          if (provider?.providerStatus !== ProviderStatusType.Billable) {
+            return from(
+              this.router.navigate(["../clients"], {
+                relativeTo: this.activatedRoute,
+              }),
+            );
+          }
+          return from(this.load());
         }),
         takeUntilDestroyed(),
       )
@@ -124,15 +161,16 @@ export class ManageClientsComponent {
 
   async load() {
     try {
-      this.provider = await firstValueFrom(this.providerService.get$(this.providerId));
-      if (this.provider?.providerType === ProviderType.BusinessUnit) {
+      const providerId = await firstValueFrom(this.providerId$);
+      const userId = await firstValueFrom(getUserId(this.accountService.activeAccount$));
+      const provider = await firstValueFrom(this.providerService.get$(providerId, userId));
+      if (provider?.providerType === ProviderType.BusinessUnit) {
         this.pageTitle = this.i18nService.t("businessUnits");
         this.clientColumnHeader = this.i18nService.t("businessUnit");
         this.newClientButtonLabel = this.i18nService.t("newBusinessUnit");
       }
-      this.isProviderAdmin = this.provider?.type === ProviderUserType.ProviderAdmin;
       this.dataSource.data = (
-        await this.billingApiService.getProviderClientOrganizations(this.providerId)
+        await this.billingApiService.getProviderClientOrganizations(providerId)
       ).data;
       this.plans = (await this.billingApiService.getPlans()).data;
       this.loading = false;
@@ -142,10 +180,11 @@ export class ManageClientsComponent {
   }
 
   addExistingOrganization = async () => {
-    if (this.provider) {
+    const provider = await firstValueFrom(this.provider$);
+    if (provider) {
       const reference = AddExistingOrganizationDialogComponent.open(this.dialogService, {
         data: {
-          provider: this.provider,
+          provider: provider,
         },
       });
 
@@ -158,9 +197,10 @@ export class ManageClientsComponent {
   };
 
   createClient = async () => {
+    const providerId = await firstValueFrom(this.providerId$);
     const reference = openCreateClientDialog(this.dialogService, {
       data: {
-        providerId: this.providerId,
+        providerId: providerId,
         plans: this.plans,
       },
     });
@@ -173,9 +213,10 @@ export class ManageClientsComponent {
   };
 
   manageClientName = async (organization: ProviderOrganizationOrganizationDetailsResponse) => {
+    const providerId = await firstValueFrom(this.providerId$);
     const dialogRef = openManageClientNameDialog(this.dialogService, {
       data: {
-        providerId: this.providerId,
+        providerId: providerId,
         organization: {
           id: organization.id,
           name: organization.organizationName,
@@ -194,10 +235,11 @@ export class ManageClientsComponent {
   manageClientSubscription = async (
     organization: ProviderOrganizationOrganizationDetailsResponse,
   ) => {
+    const provider = await firstValueFrom(this.provider$);
     const dialogRef = openManageClientSubscriptionDialog(this.dialogService, {
       data: {
         organization,
-        provider: this.provider!,
+        provider: provider!,
       },
     });
 
@@ -220,7 +262,8 @@ export class ManageClientsComponent {
     }
 
     try {
-      await this.webProviderService.detachOrganization(this.providerId, organization.id);
+      const providerId = await firstValueFrom(this.providerId$);
+      await this.webProviderService.detachOrganization(providerId, organization.id);
       this.toastService.showToast({
         variant: "success",
         title: "",

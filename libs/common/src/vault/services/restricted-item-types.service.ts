@@ -5,20 +5,17 @@ import { OrganizationService } from "@bitwarden/common/admin-console/abstraction
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
-import { getUserId } from "@bitwarden/common/auth/services/account.service";
-import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
-import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
+import { getOptionalUserId } from "@bitwarden/common/auth/services/account.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
-import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 
-import { Cipher } from "../models/domain/cipher";
+import { uuidAsString } from "../../platform/abstractions/sdk/sdk.service";
+import { CipherLike } from "../types/cipher-like";
+import { CipherViewLikeUtils } from "../utils/cipher-view-like-utils";
 
 export type RestrictedCipherType = {
   cipherType: CipherType;
   allowViewOrgIds: string[];
 };
-
-type CipherLike = Cipher | CipherView;
 
 export class RestrictedItemTypesService {
   /**
@@ -26,21 +23,17 @@ export class RestrictedItemTypesService {
    * - cipherType: each type restricted by at least one org-level policy
    * - allowViewOrgIds: org IDs that allow viewing that type
    */
-  readonly restricted$: Observable<RestrictedCipherType[]> = this.configService
-    .getFeatureFlag$(FeatureFlag.RemoveCardItemTypePolicy)
-    .pipe(
-      switchMap((flagOn) => {
-        if (!flagOn) {
-          return of([]);
+  readonly restricted$: Observable<RestrictedCipherType[]> =
+    this.accountService.activeAccount$.pipe(
+      getOptionalUserId,
+      switchMap((userId) => {
+        if (userId == null) {
+          return of([]); // No user logged in, no restrictions
         }
-        return this.accountService.activeAccount$.pipe(
-          getUserId,
-          switchMap((userId) =>
-            combineLatest([
-              this.organizationService.organizations$(userId),
-              this.policyService.policiesByType$(PolicyType.RestrictedItemTypes, userId),
-            ]),
-          ),
+        return combineLatest([
+          this.organizationService.organizations$(userId),
+          this.policyService.policiesByType$(PolicyType.RestrictedItemTypes, userId),
+        ]).pipe(
           map(([orgs, enabledPolicies]) => {
             // Helper to extract restricted types, defaulting to [Card]
             const restrictedTypes = (p: (typeof enabledPolicies)[number]) =>
@@ -75,7 +68,6 @@ export class RestrictedItemTypesService {
     );
 
   constructor(
-    private configService: ConfigService,
     private accountService: AccountService,
     private organizationService: OrganizationService,
     private policyService: PolicyService,
@@ -94,7 +86,9 @@ export class RestrictedItemTypesService {
    * - Otherwise → restricted
    */
   isCipherRestricted(cipher: CipherLike, restrictedTypes: RestrictedCipherType[]): boolean {
-    const restriction = restrictedTypes.find((r) => r.cipherType === cipher.type);
+    const restriction = restrictedTypes.find(
+      (r) => r.cipherType === CipherViewLikeUtils.getType(cipher),
+    );
 
     // If cipher type is not restricted by any organization, allow it
     if (!restriction) {
@@ -104,7 +98,7 @@ export class RestrictedItemTypesService {
     // If cipher belongs to an organization
     if (cipher.organizationId) {
       // Check if this organization allows viewing this cipher type
-      return !restriction.allowViewOrgIds.includes(cipher.organizationId);
+      return !restriction.allowViewOrgIds.includes(uuidAsString(cipher.organizationId));
     }
 
     // Cipher is restricted by at least one organization, restrict it

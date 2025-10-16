@@ -1,5 +1,5 @@
 import { mockEnc, mockFromJson } from "../../../../spec";
-import { EncryptedString, EncString } from "../../../platform/models/domain/enc-string";
+import { EncryptedString, EncString } from "../../../key-management/crypto/models/enc-string";
 import { IdentityData } from "../../models/data/identity.data";
 import { Identity } from "../../models/domain/identity";
 
@@ -112,7 +112,6 @@ describe("Identity", () => {
     expect(view).toEqual({
       _firstName: "mockFirstName",
       _lastName: "mockLastName",
-      _subTitle: null,
       address1: "mockAddress1",
       address2: "mockAddress2",
       address3: "mockAddress3",

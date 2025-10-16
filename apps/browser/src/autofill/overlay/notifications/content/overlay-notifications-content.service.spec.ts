@@ -1,9 +1,11 @@
 import { mock, MockProxy } from "jest-mock-extended";
 
 import AutofillInit from "../../../content/autofill-init";
+import { NotificationType } from "../../../enums/notification-type.enum";
 import { DomQueryService } from "../../../services/abstractions/dom-query.service";
 import DomElementVisibilityService from "../../../services/dom-element-visibility.service";
 import { flushPromises, sendMockExtensionMessage } from "../../../spec/testing-utils";
+import * as utils from "../../../utils";
 import { NotificationTypeData } from "../abstractions/overlay-notifications-content.service";
 
 import { OverlayNotificationsContentService } from "./overlay-notifications-content.service";
@@ -17,6 +19,7 @@ describe("OverlayNotificationsContentService", () => {
 
   beforeEach(() => {
     jest.useFakeTimers();
+    jest.spyOn(utils, "sendExtensionMessage").mockImplementation(jest.fn());
     domQueryService = mock<DomQueryService>();
     domElementVisibilityService = new DomElementVisibilityService();
     overlayNotificationsContentService = new OverlayNotificationsContentService();
@@ -44,40 +47,6 @@ describe("OverlayNotificationsContentService", () => {
       expect(bodyAppendChildSpy).not.toHaveBeenCalled();
     });
 
-    it("applies correct styles when notificationRefreshFlag is true", async () => {
-      overlayNotificationsContentService["notificationRefreshFlag"] = true;
-
-      sendMockExtensionMessage({
-        command: "openNotificationBar",
-        data: {
-          type: "change",
-          typeData: mock<NotificationTypeData>(),
-        },
-      });
-      await flushPromises();
-
-      const barElement = overlayNotificationsContentService["notificationBarElement"]!;
-      expect(barElement.style.height).toBe("400px");
-      expect(barElement.style.right).toBe("0px");
-    });
-
-    it("applies correct styles when notificationRefreshFlag is false", async () => {
-      overlayNotificationsContentService["notificationRefreshFlag"] = false;
-
-      sendMockExtensionMessage({
-        command: "openNotificationBar",
-        data: {
-          type: "change",
-          typeData: mock<NotificationTypeData>(),
-        },
-      });
-      await flushPromises();
-
-      const barElement = overlayNotificationsContentService["notificationBarElement"]!;
-      expect(barElement.style.height).toBe("82px");
-      expect(barElement.style.right).toBe("10px");
-    });
-
     it("closes the notification bar if the notification bar type has changed", async () => {
       overlayNotificationsContentService["currentNotificationBarType"] = "add";
       const closeNotificationBarSpy = jest.spyOn(
@@ -88,7 +57,7 @@ describe("OverlayNotificationsContentService", () => {
       sendMockExtensionMessage({
         command: "openNotificationBar",
         data: {
-          type: "change",
+          type: NotificationType.ChangePassword,
           typeData: mock<NotificationTypeData>(),
         },
       });
@@ -101,7 +70,7 @@ describe("OverlayNotificationsContentService", () => {
       sendMockExtensionMessage({
         command: "openNotificationBar",
         data: {
-          type: "change",
+          type: NotificationType.ChangePassword,
           typeData: mock<NotificationTypeData>(),
         },
       });
@@ -114,7 +83,7 @@ describe("OverlayNotificationsContentService", () => {
       sendMockExtensionMessage({
         command: "openNotificationBar",
         data: {
-          type: "change",
+          type: NotificationType.ChangePassword,
           typeData: mock<NotificationTypeData>({
             launchTimestamp: Date.now(),
           }),
@@ -131,7 +100,7 @@ describe("OverlayNotificationsContentService", () => {
       sendMockExtensionMessage({
         command: "openNotificationBar",
         data: {
-          type: "change",
+          type: NotificationType.ChangePassword,
           typeData: mock<NotificationTypeData>(),
         },
       });
@@ -150,7 +119,7 @@ describe("OverlayNotificationsContentService", () => {
       sendMockExtensionMessage({
         command: "openNotificationBar",
         data: {
-          type: "change",
+          type: NotificationType.ChangePassword,
           typeData: mock<NotificationTypeData>(),
         },
       });
@@ -207,11 +176,21 @@ describe("OverlayNotificationsContentService", () => {
       ).toBe("0");
 
       jest.advanceTimersByTime(150);
+    });
 
-      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(
-        { command: "bgRemoveTabFromNotificationQueue" },
-        expect.any(Function),
-      );
+    it("triggers a fadeout of the notification bar and removes from the notification queue", () => {
+      sendMockExtensionMessage({
+        command: "closeNotificationBar",
+        data: { fadeOutNotification: true, type: NotificationType.ChangePassword },
+      });
+
+      expect(
+        overlayNotificationsContentService["notificationBarIframeElement"]?.style.opacity,
+      ).toBe("0");
+
+      jest.advanceTimersByTime(150);
+
+      expect(utils.sendExtensionMessage).toHaveBeenCalledWith("bgRemoveTabFromNotificationQueue");
     });
 
     it("closes the notification bar without a fadeout", () => {
@@ -231,7 +210,7 @@ describe("OverlayNotificationsContentService", () => {
       sendMockExtensionMessage({
         command: "openNotificationBar",
         data: {
-          type: "change",
+          type: NotificationType.ChangePassword,
           typeData: mock<NotificationTypeData>(),
         },
       });
@@ -255,7 +234,7 @@ describe("OverlayNotificationsContentService", () => {
       sendMockExtensionMessage({
         command: "openNotificationBar",
         data: {
-          type: "change",
+          type: NotificationType.ChangePassword,
           typeData: mock<NotificationTypeData>(),
         },
       });
@@ -285,7 +264,7 @@ describe("OverlayNotificationsContentService", () => {
       sendMockExtensionMessage({
         command: "openNotificationBar",
         data: {
-          type: "change",
+          type: NotificationType.ChangePassword,
           typeData: mock<NotificationTypeData>(),
         },
       });

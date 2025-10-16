@@ -1,15 +1,25 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
 import { CdkTrapFocus } from "@angular/cdk/a11y";
-import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import { CdkScrollable } from "@angular/cdk/scrolling";
 import { CommonModule } from "@angular/common";
-import { Component, HostBinding, Input, inject, viewChild } from "@angular/core";
+import {
+  Component,
+  HostBinding,
+  inject,
+  viewChild,
+  input,
+  booleanAttribute,
+  ElementRef,
+  DestroyRef,
+} from "@angular/core";
+import { toObservable } from "@angular/core/rxjs-interop";
+import { combineLatest, switchMap } from "rxjs";
 
 import { I18nPipe } from "@bitwarden/ui-common";
 
 import { BitIconButtonComponent } from "../../icon-button/icon-button.component";
+import { SpinnerComponent } from "../../spinner";
 import { TypographyDirective } from "../../typography/typography.directive";
+import { hasScrollableContent$ } from "../../utils/";
 import { hasScrolledFrom } from "../../utils/has-scrolled-from";
 import { fadeIn } from "../animations";
 import { DialogRef } from "../dialog.service";
@@ -32,47 +42,53 @@ import { DialogTitleContainerDirective } from "../directives/dialog-title-contai
     I18nPipe,
     CdkTrapFocus,
     CdkScrollable,
+    SpinnerComponent,
   ],
 })
 export class DialogComponent {
-  protected dialogRef = inject(DialogRef, { optional: true });
+  private readonly destroyRef = inject(DestroyRef);
   private scrollableBody = viewChild.required(CdkScrollable);
+  private scrollBottom = viewChild.required<ElementRef<HTMLDivElement>>("scrollBottom");
+
+  protected dialogRef = inject(DialogRef, { optional: true });
   protected bodyHasScrolledFrom = hasScrolledFrom(this.scrollableBody);
 
+  private scrollableBody$ = toObservable(this.scrollableBody);
+  private scrollBottom$ = toObservable(this.scrollBottom);
+
+  protected isScrollable$ = combineLatest([this.scrollableBody$, this.scrollBottom$]).pipe(
+    switchMap(([body, bottom]) =>
+      hasScrollableContent$(body.getElementRef().nativeElement, bottom.nativeElement),
+    ),
+  );
+
   /** Background color */
-  @Input()
-  background: "default" | "alt" = "default";
+  readonly background = input<"default" | "alt">("default");
 
   /**
    * Dialog size, more complex dialogs should use large, otherwise default is fine.
    */
-  @Input() dialogSize: "small" | "default" | "large" = "default";
+  readonly dialogSize = input<"small" | "default" | "large">("default");
 
   /**
    * Title to show in the dialog's header
    */
-  @Input() title: string;
+  readonly title = input<string>();
 
   /**
    * Subtitle to show in the dialog's header
    */
-  @Input() subtitle: string;
+  readonly subtitle = input<string>();
 
-  private _disablePadding = false;
   /**
    * Disable the built-in padding on the dialog, for use with tabbed dialogs.
    */
-  @Input() set disablePadding(value: boolean | "") {
-    this._disablePadding = coerceBooleanProperty(value);
-  }
-  get disablePadding() {
-    return this._disablePadding;
-  }
+  readonly disablePadding = input(false, { transform: booleanAttribute });
 
   /**
    * Mark the dialog as loading which replaces the content with a spinner.
    */
-  @Input() loading = false;
+  readonly loading = input(false);
 
   @HostBinding("class") get classes() {
     // `tw-max-h-[90vh]` is needed to prevent dialogs from overlapping the desktop header
@@ -94,7 +110,7 @@ export class DialogComponent {
   }
 
   get width() {
-    switch (this.dialogSize) {
+    switch (this.dialogSize()) {
       case "small": {
         return "md:tw-max-w-sm";
       }

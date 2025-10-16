@@ -84,6 +84,7 @@ export class Menubar {
         updateRequest?.accounts,
         isLocked,
         isLockable,
+        updateRequest?.restrictedCipherTypes,
       ),
       new EditMenu(i18nService, messagingService, isLocked),
       new ViewMenu(i18nService, messagingService, isLocked, isProdOrSelfHost),

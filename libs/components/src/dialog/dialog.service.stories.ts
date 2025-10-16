@@ -93,7 +93,10 @@ class StoryDialogContentComponent {
 
 @Component({
   template: `
-    <bit-dialog title="Dialog Title" dialogSize="large">
+    <bit-dialog
+      title="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore"
+      dialogSize="large"
+    >
       <span bitDialogContent>
         Dialog body text goes here.
         <br />
@@ -152,6 +155,7 @@ export default {
               toggleSideNavigation: "Toggle side navigation",
               yes: "Yes",
               no: "No",
+              loading: "Loading",
             });
           },
         },

@@ -2,14 +2,13 @@ import { ActivatedRoute, RouterModule } from "@angular/router";
 import { Meta, StoryObj, moduleMetadata } from "@storybook/angular";
 import { BehaviorSubject, of } from "rxjs";
 
+import { Icon, LockIcon } from "@bitwarden/assets/svg";
 import { ClientType } from "@bitwarden/common/enums";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 
 import { ButtonModule } from "../button";
-import { Icon } from "../icon";
-import { LockIcon } from "../icon/icons";
 import { I18nMockService } from "../utils/i18n-mock.service";
 
 import { AnonLayoutComponent } from "./anon-layout.component";
@@ -19,17 +18,7 @@ class MockPlatformUtilsService implements Partial<PlatformUtilsService> {
   getClientType = () => ClientType.Web;
 }
 
-type StoryArgs = Pick<
-  AnonLayoutComponent,
-  | "title"
-  | "subtitle"
-  | "showReadonlyHostname"
-  | "hideCardWrapper"
-  | "hideIcon"
-  | "hideLogo"
-  | "hideFooter"
-  | "maxWidth"
-> & {
+type StoryArgs = AnonLayoutComponent & {
   contentLength: "normal" | "long" | "thin";
   showSecondary: boolean;
   useDefaultIcon: boolean;
@@ -72,15 +61,14 @@ export default {
       ],
     }),
   ],
-
-  render: (args: StoryArgs) => {
+  render: (args) => {
     const { useDefaultIcon, icon, ...rest } = args;
     return {
       props: {
         ...rest,
         icon: useDefaultIcon ? null : icon,
       },
-      template: `
+      template: /*html*/ `
         <auth-anon-layout
           [title]="title"
           [subtitle]="subtitle"
@@ -91,6 +79,7 @@ export default {
           [hideIcon]="hideIcon"
           [hideLogo]="hideLogo"
           [hideFooter]="hideFooter"
+          [hideBackgroundIllustration]="hideBackgroundIllustration"
         >
           <ng-container [ngSwitch]="contentLength">
             <div *ngSwitchCase="'thin'" class="tw-text-center">  <div class="tw-font-bold">Thin Content</div></div>
@@ -109,7 +98,7 @@ export default {
             <div class="tw-font-bold tw-mb-2">
               Secondary Projected Content (optional)
             </div>
-            <button bitButton>Perform Action</button>
+            <button type="button" bitButton>Perform Action</button>
           </div>
         </auth-anon-layout>
       `,
@@ -137,6 +126,7 @@ export default {
     hideIcon: { control: "boolean" },
     hideLogo: { control: "boolean" },
     hideFooter: { control: "boolean" },
+    hideBackgroundIllustration: { control: "boolean" },
 
     contentLength: {
       control: "radio",
@@ -157,10 +147,11 @@ export default {
     hideIcon: false,
     hideLogo: false,
     hideFooter: false,
+    hideBackgroundIllustration: false,
     contentLength: "normal",
     showSecondary: false,
   },
-} as Meta<StoryArgs>;
+} satisfies Meta<StoryArgs>;
 
 type Story = StoryObj<StoryArgs>;
 
@@ -233,6 +224,10 @@ export const NoFooter: Story = {
   args: { hideFooter: true },
 };
 
+export const NoBackgroundIllustration: Story = {
+  args: { hideBackgroundIllustration: true },
+};
+
 export const ReadonlyHostname: Story = {
   args: { showReadonlyHostname: true },
 };
@@ -246,5 +241,6 @@ export const MinimalState: Story = {
     hideIcon: true,
     hideLogo: true,
     hideFooter: true,
+    hideBackgroundIllustration: true,
   },
 };

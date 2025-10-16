@@ -6,7 +6,10 @@ import { CollectionView } from "@bitwarden/admin-console/common";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
-import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
+import {
+  CipherViewLike,
+  CipherViewLikeUtils,
+} from "@bitwarden/common/vault/utils/cipher-view-like-utils";
 
 import {
   convertToPermission,
@@ -20,11 +23,11 @@ import { RowHeightClass } from "./vault-items.component";
   templateUrl: "vault-cipher-row.component.html",
   standalone: false,
 })
-export class VaultCipherRowComponent implements OnInit {
+export class VaultCipherRowComponent<C extends CipherViewLike> implements OnInit {
   protected RowHeightClass = RowHeightClass;
 
   @Input() disabled: boolean;
-  @Input() cipher: CipherView;
+  @Input() cipher: C;
   @Input() showOwner: boolean;
   @Input() showCollections: boolean;
   @Input() showGroups: boolean;
@@ -45,8 +48,16 @@ export class VaultCipherRowComponent implements OnInit {
    * uses new permission restore logic from PM-15493
    */
   @Input() canRestoreCipher: boolean;
+  /**
+   * user has archive permissions
+   */
+  @Input() userCanArchive: boolean;
+  /**
+   * Enforge Org Data Ownership Policy Status
+   */
+  @Input() enforceOrgDataOwnershipPolicy: boolean;
 
-  @Output() onEvent = new EventEmitter<VaultItemEvent>();
+  @Output() onEvent = new EventEmitter<VaultItemEvent<C>>();
 
   @Input() checked: boolean;
   @Output() checkedToggled = new EventEmitter<void>();
@@ -73,42 +84,116 @@ export class VaultCipherRowComponent implements OnInit {
     }
   }
 
+  protected get showArchiveButton() {
+    return (
+      this.userCanArchive &&
+      !CipherViewLikeUtils.isArchived(this.cipher) &&
+      !CipherViewLikeUtils.isDeleted(this.cipher) &&
+      !this.cipher.organizationId
+    );
+  }
+
+  // If item is archived always show unarchive button, even if user is not premium
+  protected get showUnArchiveButton() {
+    return CipherViewLikeUtils.isArchived(this.cipher);
+  }
+
   protected get clickAction() {
-    if (this.cipher.decryptionFailure) {
+    if (this.decryptionFailure) {
       return "showFailedToDecrypt";
     }
+
     return "view";
   }
 
   protected get showTotpCopyButton() {
-    return (
-      (this.cipher.login?.hasTotp ?? false) &&
-      (this.cipher.organizationUseTotp || this.showPremiumFeatures)
-    );
+    const login = CipherViewLikeUtils.getLogin(this.cipher);
+
+    const hasTotp = login?.totp ?? false;
+
+    return hasTotp && (this.cipher.organizationUseTotp || this.showPremiumFeatures);
   }
 
   protected get showFixOldAttachments() {
     return this.cipher.hasOldAttachments && this.cipher.organizationId == null;
   }
 
+  protected get hasAttachments() {
+    return CipherViewLikeUtils.hasAttachments(this.cipher);
+  }
+
+  // Do not show attachments button if:
+  // item is archived AND user is not premium user
   protected get showAttachments() {
-    return this.canEditCipher || this.cipher.attachments?.length > 0;
+    if (CipherViewLikeUtils.isArchived(this.cipher) && !this.userCanArchive) {
+      return false;
+    }
+    return this.canEditCipher || this.hasAttachments;
   }
 
+  protected get canLaunch() {
+    return CipherViewLikeUtils.canLaunch(this.cipher);
+  }
+
+  protected get launchUri() {
+    return CipherViewLikeUtils.getLaunchUri(this.cipher);
+  }
+
+  protected get subtitle() {
+    return CipherViewLikeUtils.subtitle(this.cipher);
+  }
+
+  protected get isDeleted() {
+    return CipherViewLikeUtils.isDeleted(this.cipher);
+  }
+
+  protected get decryptionFailure() {
+    return CipherViewLikeUtils.decryptionFailure(this.cipher);
+  }
+
+  // Do Not show Assign to Collections option if item is archived
   protected get showAssignToCollections() {
-    return this.organizations?.length && this.canAssignCollections && !this.cipher.isDeleted;
+    if (CipherViewLikeUtils.isArchived(this.cipher)) {
+      return false;
+    }
+    return (
+      this.organizations?.length &&
+      this.canAssignCollections &&
+      !CipherViewLikeUtils.isDeleted(this.cipher)
+    );
   }
 
+  // Do NOT show clone option if:
+  // item is archived AND user is not premium user
+  // item is archived AND enforce org data ownership policy is on
   protected get showClone() {
-    return this.cloneable && !this.cipher.isDeleted;
+    if (
+      CipherViewLikeUtils.isArchived(this.cipher) &&
+      (!this.userCanArchive || this.enforceOrgDataOwnershipPolicy)
+    ) {
+      return false;
+    }
+    return this.cloneable && !CipherViewLikeUtils.isDeleted(this.cipher);
   }
 
   protected get showEventLogs() {
     return this.useEvents && this.cipher.organizationId;
   }
 
-  protected get isNotDeletedLoginCipher() {
-    return this.cipher.type === this.CipherType.Login && !this.cipher.isDeleted;
+  protected get isActiveLoginCipher() {
+    return (
+      CipherViewLikeUtils.getType(this.cipher) === this.CipherType.Login &&
+      !CipherViewLikeUtils.isDeleted(this.cipher) &&
+      !CipherViewLikeUtils.isArchived(this.cipher)
+    );
+  }
+
+  protected get hasPasswordToCopy() {
+    return CipherViewLikeUtils.hasCopyableValue(this.cipher, "password");
+  }
+
+  protected get hasUsernameToCopy() {
+    return CipherViewLikeUtils.hasCopyableValue(this.cipher, "username");
   }
 
   protected get permissionText() {
@@ -145,28 +230,38 @@ export class VaultCipherRowComponent implements OnInit {
     return this.i18nService.t("noAccess");
   }
 
+  protected get showCopyUsername(): boolean {
+    const usernameCopy = CipherViewLikeUtils.hasCopyableValue(this.cipher, "username");
+    return this.isActiveLoginCipher && usernameCopy;
+  }
+
   protected get showCopyPassword(): boolean {
-    return this.isNotDeletedLoginCipher && this.cipher.viewPassword;
+    const passwordCopy = CipherViewLikeUtils.hasCopyableValue(this.cipher, "password");
+    return this.isActiveLoginCipher && this.cipher.viewPassword && passwordCopy;
   }
 
   protected get showCopyTotp(): boolean {
-    return this.isNotDeletedLoginCipher && this.showTotpCopyButton;
+    return this.isActiveLoginCipher && this.showTotpCopyButton;
   }
 
   protected get showLaunchUri(): boolean {
-    return this.isNotDeletedLoginCipher && this.cipher.login.canLaunch;
+    return this.isActiveLoginCipher && this.canLaunch;
   }
 
-  protected get disableMenu() {
+  protected get isDeletedCanRestore(): boolean {
+    return CipherViewLikeUtils.isDeleted(this.cipher) && this.canRestoreCipher;
+  }
+
+  protected get hideMenu() {
     return !(
-      this.isNotDeletedLoginCipher ||
+      this.isDeletedCanRestore ||
+      this.showCopyUsername ||
       this.showCopyPassword ||
       this.showCopyTotp ||
       this.showLaunchUri ||
       this.showAttachments ||
       this.showClone ||
-      this.canEditCipher ||
-      (this.cipher.isDeleted && this.canRestoreCipher)
+      this.canEditCipher
     );
   }
 
@@ -180,6 +275,14 @@ export class VaultCipherRowComponent implements OnInit {
 
   protected events() {
     this.onEvent.emit({ type: "viewEvents", item: this.cipher });
+  }
+
+  protected archive() {
+    this.onEvent.emit({ type: "archive", items: [this.cipher] });
+  }
+
+  protected unarchive() {
+    this.onEvent.emit({ type: "unarchive", items: [this.cipher] });
   }
 
   protected restore() {

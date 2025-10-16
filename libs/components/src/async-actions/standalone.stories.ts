@@ -3,26 +3,27 @@ import { action } from "@storybook/addon-actions";
 import { Meta, StoryObj, moduleMetadata } from "@storybook/angular";
 import { delay, of } from "rxjs";
 
+import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { ValidationService } from "@bitwarden/common/platform/abstractions/validation.service";
 
 import { ButtonModule } from "../button";
 import { IconButtonModule } from "../icon-button";
+import { I18nMockService } from "../utils";
 
 import { AsyncActionsModule } from "./async-actions.module";
 import { BitActionDirective } from "./bit-action.directive";
 
 const template = /*html*/ `
-  <button bitButton buttonType="primary" [bitAction]="action" class="tw-me-2">
+  <button type="button" bitButton buttonType="primary" [bitAction]="action" class="tw-me-2">
     Perform action {{ statusEmoji }}
   </button>
-  <button bitIconButton="bwi-trash" buttonType="danger" [bitAction]="action"></button>`;
+  <button type="button" label="Delete" bitIconButton="bwi-trash" buttonType="danger" [bitAction]="action"></button>`;
 
 @Component({
   template,
   selector: "app-promise-example",
   imports: [AsyncActionsModule, ButtonModule, IconButtonModule],
-  standalone: true,
 })
 class PromiseExampleComponent {
   statusEmoji = "🟡";
@@ -103,6 +104,14 @@ export default {
           useValue: {
             error: action("LogService.error"),
           } as Partial<LogService>,
+        },
+        {
+          provide: I18nService,
+          useFactory: () => {
+            return new I18nMockService({
+              loading: "Loading",
+            });
+          },
         },
       ],
     }),

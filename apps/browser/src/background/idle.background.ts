@@ -1,5 +1,3 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
 import { firstValueFrom } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
@@ -9,18 +7,18 @@ import {
   VaultTimeoutSettingsService,
   VaultTimeoutStringType,
 } from "@bitwarden/common/key-management/vault-timeout";
-import { NotificationsService } from "@bitwarden/common/platform/notifications";
+import { ServerNotificationsService } from "@bitwarden/common/platform/server-notifications";
 
 const IdleInterval = 60 * 5; // 5 minutes
 
 export default class IdleBackground {
   private idle: typeof chrome.idle | typeof browser.idle | null;
-  private idleTimer: number | NodeJS.Timeout = null;
+  private idleTimer: null | number | NodeJS.Timeout = null;
   private idleState = "active";
 
   constructor(
     private vaultTimeoutService: VaultTimeoutService,
-    private notificationsService: NotificationsService,
+    private serverNotificationsService: ServerNotificationsService,
     private accountService: AccountService,
     private vaultTimeoutSettingsService: VaultTimeoutSettingsService,
   ) {
@@ -34,9 +32,9 @@ export default class IdleBackground {
 
     const idleHandler = (newState: string) => {
       if (newState === "active") {
-        this.notificationsService.reconnectFromActivity();
+        this.serverNotificationsService.reconnectFromActivity();
       } else {
-        this.notificationsService.disconnectFromInactivity();
+        this.serverNotificationsService.disconnectFromInactivity();
       }
     };
     if (this.idle.onStateChanged && this.idle.setDetectionInterval) {
@@ -48,7 +46,7 @@ export default class IdleBackground {
 
     if (this.idle.onStateChanged) {
       this.idle.onStateChanged.addListener(
-        async (newState: chrome.idle.IdleState | browser.idle.IdleState) => {
+        async (newState: `${chrome.idle.IdleState}` | browser.idle.IdleState) => {
           if (newState === "locked") {
             // Need to check if any of the current users have their timeout set to `onLocked`
             const allUsers = await firstValueFrom(this.accountService.accounts$);
@@ -80,9 +78,8 @@ export default class IdleBackground {
       globalThis.clearTimeout(this.idleTimer);
       this.idleTimer = null;
     }
-    // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    this.idle.queryState(IdleInterval, (state: string) => {
+
+    void this.idle?.queryState(IdleInterval, (state: string) => {
       if (state !== this.idleState) {
         this.idleState = state;
         handler(state);

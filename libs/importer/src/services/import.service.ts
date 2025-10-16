@@ -1,6 +1,6 @@
 // FIXME: Update this file to be type safe and remove this and next line
 // @ts-strict-ignore
-import { firstValueFrom, map } from "rxjs";
+import { combineLatest, firstValueFrom, map, Observable } from "rxjs";
 
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
@@ -9,16 +9,20 @@ import {
   CollectionWithIdRequest,
   CollectionView,
 } from "@bitwarden/admin-console/common";
-import { PinServiceAbstraction } from "@bitwarden/auth/common";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { getUserId } from "@bitwarden/common/auth/services/account.service";
+import { DeviceType } from "@bitwarden/common/enums";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
+import { PinServiceAbstraction } from "@bitwarden/common/key-management/pin/pin.service.abstraction";
 import { ImportCiphersRequest } from "@bitwarden/common/models/request/import-ciphers.request";
 import { ImportOrganizationCiphersRequest } from "@bitwarden/common/models/request/import-organization-ciphers.request";
 import { KvpRequest } from "@bitwarden/common/models/request/kvp.request";
 import { ErrorResponse } from "@bitwarden/common/models/response/error.response";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { SdkService } from "@bitwarden/common/platform/abstractions/sdk/sdk.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { SemanticLogger } from "@bitwarden/common/tools/log";
+import { SystemServiceProvider } from "@bitwarden/common/tools/providers";
+import { OrganizationId, UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { CipherType, toCipherTypeName } from "@bitwarden/common/vault/enums";
@@ -26,6 +30,7 @@ import { CipherRequest } from "@bitwarden/common/vault/models/request/cipher.req
 import { FolderWithIdRequest } from "@bitwarden/common/vault/models/request/folder-with-id.request";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
+import { RestrictedItemTypesService } from "@bitwarden/common/vault/services/restricted-item-types.service";
 import { KeyService } from "@bitwarden/key-management";
 
 import {
@@ -93,6 +98,7 @@ import {
   PasswordDepot17XmlImporter,
 } from "../importers";
 import { Importer } from "../importers/importer";
+import { ImporterMetadata, Importers, Loader } from "../metadata";
 import {
   featuredImportOptions,
   ImportOption,
@@ -102,11 +108,14 @@ import {
 import { ImportResult } from "../models/import-result";
 import { ImportApiServiceAbstraction } from "../services/import-api.service.abstraction";
 import { ImportServiceAbstraction } from "../services/import.service.abstraction";
+import { availableLoaders as availableLoaders } from "../util";
 
 export class ImportService implements ImportServiceAbstraction {
   featuredImportOptions = featuredImportOptions as readonly ImportOption[];
 
   regularImportOptions = regularImportOptions as readonly ImportOption[];
+
+  private logger: SemanticLogger;
 
   constructor(
     private cipherService: CipherService,
@@ -118,17 +127,60 @@ export class ImportService implements ImportServiceAbstraction {
     private encryptService: EncryptService,
     private pinService: PinServiceAbstraction,
     private accountService: AccountService,
-    private sdkService: SdkService,
-  ) {}
+    private restrictedItemTypesService: RestrictedItemTypesService,
+    private system: SystemServiceProvider,
+  ) {
+    this.logger = system.log({ type: "ImportService" });
+  }
 
   getImportOptions(): ImportOption[] {
     return this.featuredImportOptions.concat(this.regularImportOptions);
   }
 
+  metadata$(type$: Observable<ImportType>): Observable<ImporterMetadata> {
+    const client = this.system.environment.getClientType();
+    const capabilities$ = combineLatest([type$]).pipe(
+      map(([type]) => {
+        let loaders = availableLoaders(type, client);
+
+        // Mac App Store is currently disabled due to sandboxing.
+        let isUnsupported = this.system.environment.isMacAppStore();
+
+        // disable the chromium loader for Brave on Windows only
+        if (type === "bravecsv") {
+          try {
+            const device = this.system.environment.getDevice();
+            const isWindowsDesktop = device === DeviceType.WindowsDesktop;
+            if (isWindowsDesktop) {
+              isUnsupported = true;
+            }
+          } catch {
+            isUnsupported = true;
+          }
+        }
+        // If the browser is unsupported, remove the chromium loader
+        if (isUnsupported) {
+          loaders = loaders?.filter((loader) => loader !== Loader.chromium);
+        }
+
+        const capabilities: ImporterMetadata = { type, loaders };
+        if (type in Importers) {
+          capabilities.instructions = Importers[type].instructions;
+        }
+
+        this.logger.debug({ importType: type, capabilities }, "capabilities updated");
+
+        return capabilities;
+      }),
+    );
+
+    return capabilities$;
+  }
+
   async import(
     importer: Importer,
     fileContents: string,
-    organizationId: string = null,
+    organizationId: OrganizationId = null,
     selectedImportTarget: FolderView | CollectionView = null,
     canAccessImportExport: boolean,
   ): Promise<ImportResult> {
@@ -166,6 +218,17 @@ export class ImportService implements ImportServiceAbstraction {
       }
     }
 
+    const restrictedItemTypes = await firstValueFrom(
+      this.restrictedItemTypesService.restricted$.pipe(
+        map((restrictedItemTypes) => restrictedItemTypes.map((r) => r.cipherType)),
+      ),
+    );
+
+    // Filter out restricted item types from the import result
+    importResult.ciphers = importResult.ciphers.filter(
+      (cipher) => !restrictedItemTypes.includes(cipher.type),
+    );
+
     if (organizationId && !selectedImportTarget && !canAccessImportExport) {
       const hasUnassignedCollections =
         importResult.collectionRelationships.length < importResult.ciphers.length;
@@ -176,10 +239,11 @@ export class ImportService implements ImportServiceAbstraction {
 
     try {
       await this.setImportTarget(importResult, organizationId, selectedImportTarget);
+      const userId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
       if (organizationId != null) {
-        await this.handleOrganizationalImport(importResult, organizationId);
+        await this.handleOrganizationalImport(importResult, organizationId, userId);
       } else {
-        await this.handleIndividualImport(importResult);
+        await this.handleIndividualImport(importResult, userId);
       }
     } catch (error) {
       const errorResponse = new ErrorResponse(error, 400);
@@ -191,7 +255,7 @@ export class ImportService implements ImportServiceAbstraction {
   getImporter(
     format: ImportType | "bitwardenpasswordprotected",
     promptForPassword_callback: () => Promise<string>,
-    organizationId: string = null,
+    organizationId: OrganizationId = null,
   ): Importer {
     if (promptForPassword_callback == null) {
       return null;
@@ -246,6 +310,7 @@ export class ImportService implements ImportServiceAbstraction {
       case "chromecsv":
       case "operacsv":
       case "vivaldicsv":
+      case "bravecsv":
         return new ChromeCsvImporter();
       case "firefoxcsv":
         return new FirefoxCsvImporter();
@@ -356,16 +421,14 @@ export class ImportService implements ImportServiceAbstraction {
     }
   }
 
-  private async handleIndividualImport(importResult: ImportResult) {
+  private async handleIndividualImport(importResult: ImportResult, userId: UserId) {
     const request = new ImportCiphersRequest();
-    const activeUserId = await firstValueFrom(
-      this.accountService.activeAccount$.pipe(map((a) => a?.id)),
-    );
     for (let i = 0; i < importResult.ciphers.length; i++) {
-      const c = await this.cipherService.encrypt(importResult.ciphers[i], activeUserId);
+      const c = await this.cipherService.encrypt(importResult.ciphers[i], userId);
       request.ciphers.push(new CipherRequest(c));
     }
-    const userKey = await this.keyService.getUserKey(activeUserId);
+    const userKey = await firstValueFrom(this.keyService.userKey$(userId));
+
     if (importResult.folders != null) {
       for (let i = 0; i < importResult.folders.length; i++) {
         const f = await this.folderService.encrypt(importResult.folders[i], userKey);
@@ -380,20 +443,21 @@ export class ImportService implements ImportServiceAbstraction {
     return await this.importApiService.postImportCiphers(request);
   }
 
-  private async handleOrganizationalImport(importResult: ImportResult, organizationId: string) {
+  private async handleOrganizationalImport(
+    importResult: ImportResult,
+    organizationId: OrganizationId,
+    userId: UserId,
+  ) {
     const request = new ImportOrganizationCiphersRequest();
-    const activeUserId = await firstValueFrom(
-      this.accountService.activeAccount$.pipe(map((a) => a?.id)),
-    );
     for (let i = 0; i < importResult.ciphers.length; i++) {
       importResult.ciphers[i].organizationId = organizationId;
-      const c = await this.cipherService.encrypt(importResult.ciphers[i], activeUserId);
+      const c = await this.cipherService.encrypt(importResult.ciphers[i], userId);
       request.ciphers.push(new CipherRequest(c));
     }
     if (importResult.collections != null) {
       for (let i = 0; i < importResult.collections.length; i++) {
         importResult.collections[i].organizationId = organizationId;
-        const c = await this.collectionService.encrypt(importResult.collections[i]);
+        const c = await this.collectionService.encrypt(importResult.collections[i], userId);
         request.collections.push(new CollectionWithIdRequest(c));
       }
     }
@@ -484,7 +548,7 @@ export class ImportService implements ImportServiceAbstraction {
       const collections: CollectionView[] = [...importResult.collections];
       importResult.collections = [importTarget as CollectionView];
       collections.map((x) => {
-        const f = new CollectionView();
+        const f = new CollectionView(x);
         f.name = `${importTarget.name}/${x.name}`;
         importResult.collections.push(f);
       });

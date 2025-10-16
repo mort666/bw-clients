@@ -1,5 +1,5 @@
 import { mockEnc, mockFromJson } from "../../../../spec";
-import { EncryptedString, EncString } from "../../../platform/models/domain/enc-string";
+import { EncryptedString, EncString } from "../../../key-management/crypto/models/enc-string";
 import { CardData } from "../../../vault/models/data/card.data";
 import { Card } from "../../models/domain/card";
 
@@ -63,7 +63,6 @@ describe("Card", () => {
     expect(view).toEqual({
       _brand: "brand",
       _number: "number",
-      _subTitle: null,
       cardholderName: "cardHolder",
       code: "code",
       expMonth: "expMonth",

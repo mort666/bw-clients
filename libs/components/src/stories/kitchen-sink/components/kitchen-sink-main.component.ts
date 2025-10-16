@@ -89,9 +89,7 @@ class KitchenSinkDialog {
   selector: "bit-tab-main",
   imports: [KitchenSinkSharedModule, KitchenSinkTable, KitchenSinkToggleList, KitchenSinkForm],
   template: `
-    <bit-banner bannerType="info" class="-tw-m-6 tw-flex tw-flex-col tw-pb-6">
-      Kitchen Sink test zone
-    </bit-banner>
+    <bit-banner bannerType="info"> Kitchen Sink test zone </bit-banner>
 
     <p class="tw-mt-4">
       <bit-breadcrumbs>
@@ -105,7 +103,21 @@ class KitchenSinkDialog {
 
     <div class="tw-my-6">
       <h1 bitTypography="h1">Bitwarden Kitchen Sink<bit-avatar text="Bit Warden"></bit-avatar></h1>
-      <a bitLink linkType="primary" href="#">Learn more</a>
+      <a bitLink linkType="primary" href="#">This is a link</a>
+      <p bitTypography="body1" class="tw-inline">
+        &nbsp;and this is a link button popover trigger:&nbsp;
+      </p>
+      <button
+        bitLink
+        linkType="primary"
+        [bitPopoverTriggerFor]="myPopover"
+        #triggerRef="popoverTrigger"
+        type="button"
+        slot="end"
+        aria-label="Popover trigger link"
+      >
+        <i class="bwi bwi-question-circle"></i>
+      </button>
     </div>
 
     <bit-callout type="info" title="About the Kitchen Sink">
@@ -138,6 +150,7 @@ class KitchenSinkDialog {
 
       <bit-tab label="Empty tab" data-testid="empty-tab">
         <bit-section>
+          <h2 bitTypography="h2" class="tw-mb-6">Tab Number 2</h2>
           <bit-no-items class="tw-text-main">
             <ng-container slot="title">This tab is empty</ng-container>
             <ng-container slot="description">
@@ -149,6 +162,14 @@ class KitchenSinkDialog {
         </bit-section>
       </bit-tab>
     </bit-tab-group>
+
+    <bit-popover [title]="'Educational Popover'" #myPopover>
+      <div>You can learn more things at:</div>
+      <ul class="tw-mt-2 tw-mb-0 tw-ps-4">
+        <li>Help center</li>
+        <li>Support</li>
+      </ul>
+    </bit-popover>
   `,
 })
 export class KitchenSinkMainComponent {
