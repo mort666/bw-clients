@@ -4,13 +4,13 @@ use futures::Stream;
 use tokio_util::sync::CancellationToken;
 
 use crate::{
-    agent::ui_requester::{self, UiRequester},
+    agent::ui_requester::{UiRequester},
     memory::UnlockedSshItem,
     protocol::{
         self,
         key_store::Agent,
         protocol::serve_listener,
-        types::{KeyPair, PublicKeyWithName},
+        types::PublicKeyWithName,
     },
     transport::peer_info::PeerInfo,
 };
@@ -96,7 +96,7 @@ impl Agent for &BitwardenDesktopAgent {
                 .request_sign(connection_info, cipher_id, "unknown".to_string())
                 .await);
         } else {
-            return Ok(false);
+            Ok(false)
         }
     }
 }

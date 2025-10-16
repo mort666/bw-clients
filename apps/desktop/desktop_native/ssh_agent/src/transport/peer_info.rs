@@ -31,12 +31,12 @@ impl PeerInfo {
             true,
         );
         if let Some(process) = system.process(Pid::from_u32(peer_pid)) {
-            return Ok(Self {
+            Ok(Self {
                 uid: **process.user_id().ok_or(())?,
                 pid: peer_pid,
                 process_name: process.name().to_str().ok_or(())?.to_string(),
                 peer_type,
-            });
+            })
         } else {
             Err(())
         }

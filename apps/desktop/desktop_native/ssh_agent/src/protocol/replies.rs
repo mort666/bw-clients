@@ -2,7 +2,7 @@ use num_enum::{IntoPrimitive, TryFromPrimitive};
 use ssh_encoding::Encode;
 
 use crate::protocol::types::{
-    KeyPair, PrivateKey, PublicKey, PublicKeyWithName, RsaSigningScheme, Signature,
+    PrivateKey, PublicKeyWithName, RsaSigningScheme, Signature,
 };
 
 /// `https://www.ietf.org/archive/id/draft-miller-ssh-agent-11.html#name-protocol-messages`
@@ -51,9 +51,9 @@ impl ReplyFrame {
     }
 }
 
-impl Into<Vec<u8>> for &ReplyFrame {
-    fn into(self) -> Vec<u8> {
-        self.raw_frame.clone()
+impl From<&ReplyFrame> for Vec<u8> {
+    fn from(val: &ReplyFrame) -> Self {
+        val.raw_frame.clone()
     }
 }
 

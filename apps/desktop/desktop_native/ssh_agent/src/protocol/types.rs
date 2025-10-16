@@ -85,7 +85,7 @@ impl Signature {
                 ed25519_dalek::VerifyingKey::from_bytes(&verifying_key.0)
                     .map_err(|e| anyhow::anyhow!("Failed to parse Ed25519 key: {e}"))?
                     .verify_strict(data, signature)?;
-                return Ok(true);
+                Ok(true)
             }
             Algorithm::Rsa { hash: Some(alg) } => {
                 let verifying_key: Result<rsa::RsaPublicKey, _> = public_key_parsed
@@ -110,7 +110,7 @@ impl Signature {
                     _ => return Ok(false),
                 }
                 .map_err(|e| anyhow::anyhow!("RSA signature verification failed: {e}"))?;
-                return Ok(true);
+                Ok(true)
             }
             Algorithm::Ecdsa { curve } => {
                 let sec1_bytes = public_key_parsed
@@ -129,7 +129,7 @@ impl Signature {
                             .map_err(|e| {
                                 anyhow::anyhow!("ECDSA P-256 signature verification failed: {e}")
                             })?;
-                        return Ok(true);
+                        Ok(true)
                     }
                     EcdsaCurve::NistP384 => {
                         use p384::ecdsa::signature::Verifier;
@@ -141,7 +141,7 @@ impl Signature {
                             .map_err(|e| {
                                 anyhow::anyhow!("ECDSA P-384 signature verification failed: {e}")
                             })?;
-                        return Ok(true);
+                        Ok(true)
                     }
                     EcdsaCurve::NistP521 => {
                         use p521::ecdsa::signature::Verifier;
@@ -153,12 +153,12 @@ impl Signature {
                             .map_err(|e| {
                                 anyhow::anyhow!("ECDSA P-521 signature verification failed: {e}")
                             })?;
-                        return Ok(true);
+                        Ok(true)
                     }
-                    _ => return Ok(false),
+                    _ => Ok(false),
                 }
             }
-            _ => return Ok(false),
+            _ => Ok(false),
         }
     }
 }
@@ -179,7 +179,7 @@ impl TryFrom<&[u8]> for Signature {
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         let mut buffer = bytes;
         let alg = Algorithm::new(
-            &String::from_utf8_lossy(read_bytes(&mut buffer).unwrap().as_slice()).to_string(),
+            String::from_utf8_lossy(read_bytes(&mut buffer).unwrap().as_slice()).as_ref(),
         )?;
         let sig = read_bytes(&mut buffer).unwrap();
         Ok(Signature(ssh_key::Signature::new(alg, sig)?))

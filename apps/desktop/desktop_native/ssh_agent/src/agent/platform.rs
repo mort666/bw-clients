@@ -1,7 +1,7 @@
 use tracing::info;
 use homedir::my_home;
 
-use crate::{agent::{self, BitwardenDesktopAgent}, transport::unix_listener_stream::UnixListenerStream};
+use crate::{agent::{BitwardenDesktopAgent}, transport::unix_listener_stream::UnixListenerStream};
 
 pub struct PlatformListener {
 }

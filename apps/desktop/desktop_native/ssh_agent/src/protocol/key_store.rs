@@ -2,7 +2,7 @@ use crate::{
     memory::UnlockedSshItem,
     protocol::{
         connection::ConnectionInfo,
-        types::{KeyPair, PublicKey, PublicKeyWithName},
+        types::{PublicKey, PublicKeyWithName},
     },
 };
 

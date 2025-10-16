@@ -1068,10 +1068,9 @@ pub mod sshagent_v2 {
         agent::{ui_requester::UiRequestMessage, BitwardenDesktopAgent},
         memory::UnlockedSshItem,
         protocol::types::KeyPair,
-        transport::unix_listener_stream::UnixListenerStream,
     };
     use tokio::{self, sync::Mutex};
-    use tracing::{error, info};
+    use tracing::error;
 
     #[napi]
     pub struct SshAgentState {

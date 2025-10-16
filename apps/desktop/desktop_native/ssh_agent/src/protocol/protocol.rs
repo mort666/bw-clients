@@ -100,8 +100,8 @@ async fn handle_connection(
 
                 if let Some(ssh_item) = ssh_item {
                     SshSignReply::new(
-                        &ssh_item.key_pair.private_key(),
-                        &sign_request.payload_to_sign(),
+                        ssh_item.key_pair.private_key(),
+                        sign_request.payload_to_sign(),
                         sign_request.signing_scheme(),
                     )
                     .encode()
