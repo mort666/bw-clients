@@ -337,7 +337,7 @@ mod tests {
         let req =
             ParsedSignRequest::try_from(TEST_VECTOR_REQUEST_SIGN_SSHSIG_GIT).expect("Should parse");
         assert!(
-            matches!(req, ParsedSignRequest::SshSigRequest { namespace } if namespace == "git".to_string())
+            matches!(req, ParsedSignRequest::SshSigRequest { namespace } if namespace == *"git".to_string())
         );
     }
 }

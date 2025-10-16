@@ -98,11 +98,11 @@ async fn handle_connection(
                     .flatten();
 
                 if let Some(ssh_item) = ssh_item {
-                    SshSignReply::new(
+                    SshSignReply::try_create(
                         ssh_item.key_pair.private_key(),
                         sign_request.payload_to_sign(),
                         sign_request.signing_scheme(),
-                    )
+                    )?
                     .encode()
                 } else {
                     Ok(AgentFailure::new().into())

@@ -6,7 +6,7 @@ use std::{fs, io};
 use tokio::net::{UnixListener, UnixStream};
 use tracing::{error, info};
 
-use crate::agent::agent::BitwardenDesktopAgent;
+use crate::agent::desktop_agent::BitwardenDesktopAgent;
 use crate::transport::peer_info::{PeerInfo, PeerType};
 
 pub struct UnixListenerStream {

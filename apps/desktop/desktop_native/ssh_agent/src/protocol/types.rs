@@ -117,7 +117,7 @@ impl Signature {
                 let sec1_bytes = public_key_parsed
                     .key_data()
                     .ecdsa()
-                    .unwrap()
+                    .ok_or(anyhow::anyhow!("Ecdsa key failed to parse"))?
                     .as_sec1_bytes();
                 match curve {
                     EcdsaCurve::NistP256 => {
@@ -178,10 +178,9 @@ impl TryFrom<&[u8]> for Signature {
     type Error = anyhow::Error;
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         let mut buffer = bytes;
-        let alg = Algorithm::new(
-            String::from_utf8_lossy(read_bytes(&mut buffer).unwrap().as_slice()).as_ref(),
-        )?;
-        let sig = read_bytes(&mut buffer).unwrap();
+        let alg =
+            Algorithm::new(String::from_utf8_lossy(read_bytes(&mut buffer)?.as_slice()).as_ref())?;
+        let sig = read_bytes(&mut buffer)?;
         Ok(Signature(ssh_key::Signature::new(alg, sig)?))
     }
 }
@@ -284,15 +283,24 @@ impl TryFrom<ssh_key::private::PrivateKey> for PrivateKey {
 
     fn try_from(key: ssh_key::private::PrivateKey) -> Result<Self, Self::Error> {
         match key.algorithm() {
-            ssh_key::Algorithm::Ed25519 => {
-                Ok(Self::Ed25519(key.key_data().ed25519().unwrap().to_owned()))
-            }
-            ssh_key::Algorithm::Rsa { hash: _ } => {
-                Ok(Self::Rsa(key.key_data().rsa().unwrap().to_owned()))
-            }
-            ssh_key::Algorithm::Ecdsa { curve: _ } => {
-                Ok(Self::Ecdsa(key.key_data().ecdsa().unwrap().to_owned()))
-            }
+            ssh_key::Algorithm::Ed25519 => Ok(Self::Ed25519(
+                key.key_data()
+                    .ed25519()
+                    .ok_or(anyhow::anyhow!("Failed to parse ed25519 key"))?
+                    .to_owned(),
+            )),
+            ssh_key::Algorithm::Rsa { hash: _ } => Ok(Self::Rsa(
+                key.key_data()
+                    .rsa()
+                    .ok_or(anyhow::anyhow!("Failed to parse RSA key"))?
+                    .to_owned(),
+            )),
+            ssh_key::Algorithm::Ecdsa { curve: _ } => Ok(Self::Ecdsa(
+                key.key_data()
+                    .ecdsa()
+                    .ok_or(anyhow::anyhow!("Failed to parse ECDSA key"))?
+                    .to_owned(),
+            )),
             _ => Err(anyhow::anyhow!("Unsupported key type")),
         }
     }
@@ -365,18 +373,5 @@ fn parse_key_safe(pem: &str) -> Result<ssh_key::private::PrivateKey, anyhow::Err
             ))),
         },
         Err(e) => Err(anyhow::Error::msg(format!("Failed to parse key: {e}"))),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::protocol::key_store::PRIVATE_ED25519_KEY;
-
-    use super::*;
-
-    #[test]
-    fn test_keypair_creation() {
-        let private_key = PrivateKey::try_from(PRIVATE_ED25519_KEY.to_string())
-            .expect("Test key is always valid");
     }
 }

@@ -6,7 +6,7 @@ use tokio_util::sync::CancellationToken;
 use crate::{
     agent::ui_requester::UiRequester,
     memory::UnlockedSshItem,
-    protocol::{self, key_store::Agent, protocol::serve_listener, types::PublicKeyWithName},
+    protocol::{self, agent_listener::serve_listener, key_store::Agent, types::PublicKeyWithName},
     transport::peer_info::PeerInfo,
 };
 
@@ -31,9 +31,10 @@ impl BitwardenDesktopAgent {
         S: tokio::io::AsyncRead + tokio::io::AsyncWrite + Send + Sync + Unpin + 'static,
         L: Stream<Item = tokio::io::Result<(S, PeerInfo)>> + Unpin,
     {
-        serve_listener(listener, self.cancellation_token.clone(), self)
-            .await
-            .unwrap();
+        let err = serve_listener(listener, self.cancellation_token.clone(), self).await;
+        if let Err(e) = err {
+            tracing::error!("Error in agent listener: {e}");
+        }
     }
 
     pub fn stop(&self) {

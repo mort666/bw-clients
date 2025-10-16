@@ -12,7 +12,7 @@ pub struct UiRequester {
     get_ui_response_rx: Arc<Mutex<tokio::sync::broadcast::Receiver<(u32, bool)>>>,
 }
 
-const REQUEST_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
+static REQUEST_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 #[derive(Clone, Debug)]
 pub enum UiRequestMessage {

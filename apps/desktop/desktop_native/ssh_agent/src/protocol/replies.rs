@@ -90,15 +90,15 @@ impl IdentitiesReply {
 pub(crate) struct SshSignReply(Signature);
 
 impl SshSignReply {
-    pub fn new(
+    pub fn try_create(
         private_key: &PrivateKey,
         data: &[u8],
         requested_signing_scheme: Option<RsaSigningScheme>,
-    ) -> Self {
-        Self(
+    ) -> Result<Self, anyhow::Error> {
+        Ok(Self(
             // Note, this should take into account the extension / signing scheme.
-            private_key.sign(data, requested_signing_scheme).unwrap(),
-        )
+            private_key.sign(data, requested_signing_scheme)?,
+        ))
     }
 
     /// `https://www.ietf.org/archive/id/draft-miller-ssh-agent-11.html#name-private-key-operations`
@@ -109,7 +109,7 @@ impl SshSignReply {
     pub fn encode(&self) -> Result<ReplyFrame, ssh_encoding::Error> {
         Ok(ReplyFrame::new(ReplyType::SSH_AGENT_SIGN_RESPONSE, {
             let mut reply_payload = Vec::new();
-            self.0.encode().unwrap().encode(&mut reply_payload)?;
+            self.0.encode()?.encode(&mut reply_payload)?;
             reply_payload
         }))
     }
