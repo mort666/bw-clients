@@ -173,7 +173,10 @@ describe("UpgradeAccountComponent", () => {
         ],
         providers: [
           { provide: I18nService, useValue: mockI18nService },
-          { provide: SubscriptionPricingService, useValue: mockSubscriptionPricingService },
+          {
+            provide: SubscriptionPricingServiceAbstraction,
+            useValue: mockSubscriptionPricingService,
+          },
         ],
       })
         .overrideComponent(UpgradeAccountComponent, {

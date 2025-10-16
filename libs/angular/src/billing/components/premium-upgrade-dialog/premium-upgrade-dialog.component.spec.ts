@@ -9,8 +9,10 @@ import {
   PersonalSubscriptionPricingTierIds,
   SubscriptionCadenceIds,
 } from "@bitwarden/common/billing/types/subscription-pricing-tier";
+import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { DialogRef } from "@bitwarden/components";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { DialogRef, ToastService } from "@bitwarden/components";
 
 import { PremiumUpgradeDialogComponent } from "./premium-upgrade-dialog.component";
 
@@ -20,6 +22,9 @@ describe("PremiumUpgradeDialogComponent", () => {
   let mockDialogRef: jest.Mocked<DialogRef>;
   let mockSubscriptionPricingService: jest.Mocked<SubscriptionPricingServiceAbstraction>;
   let mockI18nService: jest.Mocked<I18nService>;
+  let mockToastService: jest.Mocked<ToastService>;
+  let mockEnvironmentService: jest.Mocked<EnvironmentService>;
+  let mockPlatformUtilsService: jest.Mocked<PlatformUtilsService>;
 
   const mockPremiumTier: PersonalSubscriptionPricingTier = {
     id: PersonalSubscriptionPricingTierIds.Premium,
@@ -65,6 +70,18 @@ describe("PremiumUpgradeDialogComponent", () => {
       t: jest.fn((key: string) => key),
     } as any;
 
+    mockToastService = {
+      showToast: jest.fn(),
+    } as any;
+
+    mockEnvironmentService = {
+      cloudWebVaultUrl$: of("https://vault.bitwarden.com"),
+    } as any;
+
+    mockPlatformUtilsService = {
+      launchUri: jest.fn(),
+    } as any;
+
     mockSubscriptionPricingService.getPersonalSubscriptionPricingTiers$.mockReturnValue(
       of([mockPremiumTier, mockFamiliesTier]),
     );
@@ -78,6 +95,9 @@ describe("PremiumUpgradeDialogComponent", () => {
           useValue: mockSubscriptionPricingService,
         },
         { provide: I18nService, useValue: mockI18nService },
+        { provide: ToastService, useValue: mockToastService },
+        { provide: EnvironmentService, useValue: mockEnvironmentService },
+        { provide: PlatformUtilsService, useValue: mockPlatformUtilsService },
       ],
     }).compileComponents();
 
@@ -143,6 +163,9 @@ describe("PremiumUpgradeDialogComponent", () => {
   it("should close dialog when upgrade button clicked", async () => {
     await component["upgrade"]();
 
+    expect(mockPlatformUtilsService.launchUri).toHaveBeenCalledWith(
+      "https://vault.bitwarden.com/#/settings/subscription/premium?callToAction=upgradeToPremium",
+    );
     expect(mockDialogRef.close).toHaveBeenCalled();
   });
 
