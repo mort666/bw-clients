@@ -370,6 +370,8 @@ fn parse_key_safe(pem: &str) -> Result<ssh_key::private::PrivateKey, anyhow::Err
 
 #[cfg(test)]
 mod tests {
+    use crate::protocol::key_store::PRIVATE_ED25519_KEY;
+
     use super::*;
 
     #[test]
