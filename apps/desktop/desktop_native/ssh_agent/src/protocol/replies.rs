@@ -115,6 +115,19 @@ impl SshSignReply {
     }
 }
 
+pub(crate) struct AgentExtensionFailure;
+impl AgentExtensionFailure {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl From<AgentExtensionFailure> for ReplyFrame {
+    fn from(_value: AgentExtensionFailure) -> Self {
+        ReplyFrame::new(ReplyType::SSH_AGENT_EXTENSION_FAILURE, Vec::new())
+    }
+}
+
 pub(crate) struct AgentFailure;
 impl AgentFailure {
     pub fn new() -> Self {
@@ -124,6 +137,6 @@ impl AgentFailure {
 
 impl From<AgentFailure> for ReplyFrame {
     fn from(_value: AgentFailure) -> Self {
-        ReplyFrame::new(ReplyType::SSH_AGENT_EXTENSION_FAILURE, Vec::new())
+        ReplyFrame::new(ReplyType::SSH_AGENT_FAILURE, Vec::new())
     }
 }

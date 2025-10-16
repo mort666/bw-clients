@@ -11,7 +11,7 @@ use crate::{
         async_stream_wrapper::AsyncStreamWrapper,
         connection::ConnectionInfo,
         key_store::Agent,
-        replies::{AgentFailure, IdentitiesReply, SshSignReply},
+        replies::{AgentExtensionFailure, AgentFailure, IdentitiesReply, SshSignReply},
         requests::Request,
     },
     transport::peer_info::PeerInfo,
@@ -63,7 +63,9 @@ async fn handle_connection(
 
         let Ok(request) = Request::try_from(request.as_slice()) else {
             span.in_scope(|| error!("Failed to parse request"));
-            stream.write_reply(&AgentFailure::new().into()).await?;
+            stream
+                .write_reply(&AgentExtensionFailure::new().into())
+                .await?;
             continue;
         };
 
@@ -73,7 +75,9 @@ async fn handle_connection(
 
                 let Ok(true) = agent.request_can_list(connection).await else {
                     span.in_scope(|| error!("List keys request denied by UI"));
-                    return stream.write_reply(&AgentFailure::new().into()).await;
+                    return stream
+                        .write_reply(&AgentExtensionFailure::new().into())
+                        .await;
                 };
 
                 IdentitiesReply::new(agent.list_keys().await?)
@@ -105,7 +109,7 @@ async fn handle_connection(
                     )?
                     .encode()
                 } else {
-                    Ok(AgentFailure::new().into())
+                    Ok(AgentExtensionFailure::new().into())
                 }
                 .map_err(|e| anyhow::anyhow!("Failed to create sign reply: {e}"))
             }
