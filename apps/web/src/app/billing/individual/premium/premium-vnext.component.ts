@@ -56,7 +56,6 @@ const RouteParamValues = {
 })
 export class PremiumVNextComponent {
   protected hasPremiumFromAnySource$: Observable<boolean>;
-  protected shouldShowNewDesign$: Observable<boolean>;
   protected shouldShowUpgradeDialogOnInit$: Observable<boolean>;
   protected personalPricingTiers$: Observable<PersonalSubscriptionPricingTier[]>;
   protected premiumCardData$: Observable<{
