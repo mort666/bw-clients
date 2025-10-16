@@ -10,7 +10,7 @@ import {
 } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl, FormGroup, Validators } from "@angular/forms";
-import { debounceTime, Observable } from "rxjs";
+import { catchError, debounceTime, from, Observable, of, switchMap } from "rxjs";
 
 import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -20,7 +20,10 @@ import { LogService } from "@bitwarden/logging";
 import { CartSummaryComponent, LineItem } from "@bitwarden/pricing";
 import { SharedModule } from "@bitwarden/web-vault/app/shared";
 
-import { EnterPaymentMethodComponent } from "../../../payment/components";
+import {
+  EnterBillingAddressComponent,
+  EnterPaymentMethodComponent,
+} from "../../../payment/components";
 import { BillingServicesModule } from "../../../services";
 import { SubscriptionPricingService } from "../../../services/subscription-pricing.service";
 import { BitwardenSubscriber } from "../../../types";
@@ -65,6 +68,7 @@ export type UpgradePaymentParams = {
     CartSummaryComponent,
     ButtonModule,
     EnterPaymentMethodComponent,
+    EnterBillingAddressComponent,
     BillingServicesModule,
   ],
   providers: [UpgradePaymentService],
@@ -83,6 +87,7 @@ export class UpgradePaymentComponent implements OnInit, AfterViewChecked {
   protected formGroup = new FormGroup({
     organizationName: new FormControl<string>("", [Validators.required]),
     paymentForm: EnterPaymentMethodComponent.getFormGroup(),
+    billingAddress: EnterBillingAddressComponent.getFormGroup(),
   });
 
   protected loading = signal(true);
@@ -141,9 +146,16 @@ export class UpgradePaymentComponent implements OnInit, AfterViewChecked {
       }
     });
 
-    this.formGroup.valueChanges
-      .pipe(debounceTime(1000), takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.refreshSalesTax());
+    this.formGroup.controls.billingAddress.valueChanges
+      .pipe(
+        debounceTime(1000),
+        // Only proceed when form has required values
+        switchMap(() => this.refreshSalesTax$()),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((tax) => {
+        this.estimatedTax = tax;
+      });
     this.loading.set(false);
   }
 
@@ -202,8 +214,8 @@ export class UpgradePaymentComponent implements OnInit, AfterViewChecked {
 
   private async processUpgrade(): Promise<UpgradePaymentResult> {
     // Get common values
-    const country = this.formGroup.value?.paymentForm?.billingAddress?.country;
-    const postalCode = this.formGroup.value?.paymentForm?.billingAddress?.postalCode;
+    const country = this.formGroup.value?.billingAddress?.country;
+    const postalCode = this.formGroup.value?.billingAddress?.postalCode;
 
     if (!this.selectedPlan) {
       throw new Error("No plan selected");
@@ -249,19 +261,20 @@ export class UpgradePaymentComponent implements OnInit, AfterViewChecked {
     }
   }
 
-  private async refreshSalesTax(): Promise<void> {
+  // Create an observable for tax calculation
+  private refreshSalesTax$(): Observable<number> {
     const billingAddress = {
-      country: this.formGroup.value.paymentForm?.billingAddress?.country,
-      postalCode: this.formGroup.value.paymentForm?.billingAddress?.postalCode,
+      country: this.formGroup.value?.billingAddress?.country,
+      postalCode: this.formGroup.value?.billingAddress?.postalCode,
     };
 
     if (!this.selectedPlan || !billingAddress.country || !billingAddress.postalCode) {
-      this.estimatedTax = 0;
-      return;
+      return of(0);
     }
 
-    this.upgradePaymentService
-      .calculateEstimatedTax(this.selectedPlan, {
+    // Convert Promise to Observable
+    return from(
+      this.upgradePaymentService.calculateEstimatedTax(this.selectedPlan, {
         line1: null,
         line2: null,
         city: null,
@@ -269,17 +282,16 @@ export class UpgradePaymentComponent implements OnInit, AfterViewChecked {
         country: billingAddress.country,
         postalCode: billingAddress.postalCode,
         taxId: null,
-      })
-      .then((tax) => {
-        this.estimatedTax = tax;
-      })
-      .catch((error: unknown) => {
+      }),
+    ).pipe(
+      catchError((error: unknown) => {
         this.logService.error("Tax calculation failed:", error);
         this.toastService.showToast({
           variant: "error",
           message: this.i18nService.t("taxCalculationError"),
         });
-        this.estimatedTax = 0;
-      });
+        return of(0); // Return default value on error
+      }),
+    );
   }
 }
