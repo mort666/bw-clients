@@ -1,12 +1,34 @@
-import { ChangeDetectionStrategy, Component } from "@angular/core";
+import { ChangeDetectionStrategy, Component, computed, input } from "@angular/core";
+
+import { BaseCardDirective } from "./base-card.directive";
+
+export const CardSize = {
+  Small: "small",
+  Default: "default",
+  Large: "large",
+} as const;
+
+export type CardSize = (typeof CardSize)[keyof typeof CardSize];
+
+const cardStyles: Record<CardSize, string> = {
+  [CardSize.Small]: "tw-p-3",
+  [CardSize.Default]: "tw-p-6",
+  [CardSize.Large]: "tw-p-8 !tw-rounded-2xl",
+};
 
 @Component({
   selector: "bit-card",
   template: `<ng-content></ng-content>`,
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    class:
-      "tw-box-border tw-block tw-bg-background tw-text-main tw-border-solid tw-border-b tw-border-0 tw-border-b-secondary-300 [&:not(bit-layout_*)]:tw-rounded-lg [&:not(bit-layout_*)]:tw-border-b-shadow tw-py-4 bit-compact:tw-py-3 tw-px-3 bit-compact:tw-px-2",
+    "[class]": "cardPaddingStyle()",
   },
+  hostDirectives: [BaseCardDirective],
 })
-export class CardComponent {}
+export class CardComponent {
+  readonly size = input<CardSize>(CardSize.Default);
+
+  private cardPaddingStyle = computed(
+    () => cardStyles[this.size()] || cardStyles[CardSize.Default],
+  );
+}

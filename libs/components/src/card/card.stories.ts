@@ -85,6 +85,28 @@ export const WithinSections: Story = {
   }),
 };
 
+export const Small: Story = {
+  render: (args) => ({
+    props: args,
+    template: /*html*/ `
+      <bit-card size="small">
+        <p bitTypography="body1" class="!tw-mb-0">Small card content has less padding</p>
+      </bit-card>
+    `,
+  }),
+};
+
+export const Large: Story = {
+  render: (args) => ({
+    props: args,
+    template: /*html*/ `
+      <bit-card size="large">
+        <p bitTypography="body1" class="!tw-mb-0">Large card content has more padding</p>
+      </bit-card>
+    `,
+  }),
+};
+
 export const WithoutBorderRadius: Story = {
   render: (args) => ({
     props: args,
