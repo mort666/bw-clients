@@ -67,6 +67,7 @@ impl Signature {
         Ok(buffer)
     }
 
+    #[allow(unused)]
     pub(crate) fn verify(
         &self,
         public_key: &PublicKey,
@@ -155,7 +156,6 @@ impl Signature {
                             })?;
                         Ok(true)
                     }
-                    _ => Ok(false),
                 }
             }
             _ => Ok(false),
@@ -187,7 +187,7 @@ impl TryFrom<&[u8]> for Signature {
 }
 
 #[derive(Clone)]
-pub(super) struct SessionId(Vec<u8>);
+pub struct SessionId(Vec<u8>);
 
 impl From<Vec<u8>> for SessionId {
     fn from(v: Vec<u8>) -> Self {

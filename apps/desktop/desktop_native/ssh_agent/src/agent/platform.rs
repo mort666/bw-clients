@@ -1,4 +1,13 @@
-use crate::{agent::BitwardenDesktopAgent, transport::named_pipe_listener_stream::NamedPipeServerStream};
+use crate::agent::BitwardenDesktopAgent;
+
+#[cfg(target_os = "windows")]
+use crate::transport::named_pipe_listener_stream::NamedPipeServerStream;
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+use crate::transport::unix_listener_stream::UnixListenerStream;
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+use homedir::my_home;
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+use tracing::info;
 
 pub struct PlatformListener {}
 
