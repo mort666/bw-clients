@@ -81,7 +81,7 @@ export const DefaultFeatureFlagValue = {
   /* Autofill */
   [FeatureFlag.MacOsNativeCredentialSync]: FALSE,
   [FeatureFlag.WindowsDesktopAutotype]: FALSE,
-  [FeatureFlag.SshAgentV2]: FALSE,
+  [FeatureFlag.SshAgentV2]: true,
 
   /* Tools */
   [FeatureFlag.DesktopSendUIRefresh]: FALSE,
