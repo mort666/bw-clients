@@ -1070,7 +1070,7 @@ pub mod sshagent_v2 {
         protocol::types::KeyPair,
     };
     use tokio::{self, sync::Mutex};
-    use tracing::error;
+    use tracing::{error, info};
 
     #[napi]
     pub struct SshAgentState {
@@ -1201,6 +1201,7 @@ pub mod sshagent_v2 {
 
     #[napi]
     pub fn stop(agent_state: &mut SshAgentState) -> napi::Result<()> {
+        info!("Stopping SSH Agent");
         agent_state.agent.stop();
         Ok(())
     }

@@ -37,6 +37,49 @@ export class MainSshAgentService {
     ipcMain.handle("sshagent.isloaded", async (event: any) => {
       return this.agentStateV1 != null && this.agentStateV2 != null;
     });
+
+    ipcMain.handle(
+      "sshagent.setkeys",
+      async (event: any, keys: { name: string; privateKey: string; cipherId: string }[]) => {
+        if (this.agentStateV1 != null && (await sshagent.isRunning(this.agentStateV1))) {
+          sshagent.setKeys(this.agentStateV1, keys);
+        }
+        if (this.agentStateV2 != null && (await sshagent_v2.isRunning(this.agentStateV2))) {
+          sshagent_v2.setKeys(this.agentStateV2, keys);
+        }
+      },
+    );
+    ipcMain.handle(
+      "sshagent.signrequestresponse",
+      async (event: any, { requestId, accepted }: { requestId: number; accepted: boolean }) => {
+        this.requestResponses.push({ requestId, accepted, timestamp: new Date() });
+      },
+    );
+
+    ipcMain.handle("sshagent.lock", async (event: any) => {
+      if (this.agentStateV1 != null && (await sshagent.isRunning(this.agentStateV1))) {
+        sshagent.lock(this.agentStateV1);
+      }
+      if (this.agentStateV2 != null && (await sshagent_v2.isRunning(this.agentStateV2))) {
+        sshagent_v2.lock(this.agentStateV2);
+      }
+    });
+
+    ipcMain.handle("sshagent.clearkeys", async (event: any) => {
+      if (this.agentStateV1 != null) {
+        sshagent.clearKeys(this.agentStateV1);
+      }
+      if (this.agentStateV2 != null) {
+        sshagent_v2.clearKeys(this.agentStateV2);
+      }
+    });
+
+    ipcMain.handle("sshagent.stop", async (event: any) => {
+      if (this.agentStateV2 != null) {
+        sshagent_v2.stop(this.agentStateV2);
+        this.agentStateV2 = null;
+      }
+    });
   }
 
   init_v1() {
@@ -94,33 +137,6 @@ export class MainSshAgentService {
       .catch((e) => {
         this.logService.error("SSH agent encountered an error: ", e);
       });
-
-    ipcMain.handle(
-      "sshagent.setkeys",
-      async (event: any, keys: { name: string; privateKey: string; cipherId: string }[]) => {
-        if (this.agentStateV1 != null && (await sshagent.isRunning(this.agentStateV1))) {
-          sshagent.setKeys(this.agentStateV1, keys);
-        }
-      },
-    );
-    ipcMain.handle(
-      "sshagent.signrequestresponse",
-      async (event: any, { requestId, accepted }: { requestId: number; accepted: boolean }) => {
-        this.requestResponses.push({ requestId, accepted, timestamp: new Date() });
-      },
-    );
-
-    ipcMain.handle("sshagent.lock", async (event: any) => {
-      if (this.agentStateV1 != null && (await sshagent.isRunning(this.agentStateV1))) {
-        sshagent.lock(this.agentStateV1);
-      }
-    });
-
-    ipcMain.handle("sshagent.clearkeys", async (event: any) => {
-      if (this.agentStateV1 != null) {
-        sshagent.clearKeys(this.agentStateV1);
-      }
-    });
   }
 
   init_v2() {
@@ -178,32 +194,5 @@ export class MainSshAgentService {
       .catch((e) => {
         this.logService.error("SSH agent encountered an error: ", e);
       });
-
-    ipcMain.handle(
-      "sshagent.setkeys",
-      async (event: any, keys: { name: string; privateKey: string; cipherId: string }[]) => {
-        if (this.agentStateV2 != null && (await sshagent_v2.isRunning(this.agentStateV2))) {
-          sshagent_v2.setKeys(this.agentStateV2, keys);
-        }
-      },
-    );
-    ipcMain.handle(
-      "sshagent.signrequestresponse",
-      async (event: any, { requestId, accepted }: { requestId: number; accepted: boolean }) => {
-        this.requestResponses.push({ requestId, accepted, timestamp: new Date() });
-      },
-    );
-
-    ipcMain.handle("sshagent.lock", async (event: any) => {
-      if (this.agentStateV2 != null && (await sshagent_v2.isRunning(this.agentStateV2))) {
-        sshagent_v2.lock(this.agentStateV2);
-      }
-    });
-
-    ipcMain.handle("sshagent.clearkeys", async (event: any) => {
-      if (this.agentStateV2 != null) {
-        sshagent_v2.clearKeys(this.agentStateV2);
-      }
-    });
   }
 }

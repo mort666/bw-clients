@@ -63,6 +63,9 @@ const sshAgent = {
   clearKeys: async () => {
     return await ipcRenderer.invoke("sshagent.clearkeys");
   },
+  stop: async () => {
+    return await ipcRenderer.invoke("sshagent.stop");
+  },
   isLoaded(): Promise<boolean> {
     return ipcRenderer.invoke("sshagent.isloaded");
   },

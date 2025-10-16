@@ -75,6 +75,10 @@ export class SshAgentService implements OnDestroy {
             );
             await ipc.platform.sshAgent.init(isV2FeatureFlagEnabled ? 2 : 1);
           }
+
+          if (!enabled) {
+            await ipc.platform.sshAgent.stop();
+          }
         }),
         takeUntil(this.destroy$),
       )
