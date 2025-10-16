@@ -47,9 +47,7 @@ export class VaultSettingsV2Component implements OnInit, OnDestroy {
     this.userId$.pipe(switchMap((userId) => this.cipherArchiveService.userCanArchive$(userId))),
   );
 
-  protected showArchiveItem = toSignal(
-    this.userId$.pipe(switchMap((userId) => this.cipherArchiveService.showArchiveVault$(userId))),
-  );
+  protected showArchiveItem = toSignal(this.cipherArchiveService.hasArchiveFlagEnabled$());
 
   protected userHasArchivedItems = toSignal(
     this.userId$.pipe(
