@@ -39,7 +39,6 @@ import { DefaultPolicyService } from "@bitwarden/common/admin-console/services/p
 import { PolicyApiService } from "@bitwarden/common/admin-console/services/policy/policy-api.service";
 import { ProviderService } from "@bitwarden/common/admin-console/services/provider.service";
 import { AccountService as AccountServiceAbstraction } from "@bitwarden/common/auth/abstractions/account.service";
-import { AuthRequestAnsweringServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth-request-answering/auth-request-answering.service.abstraction";
 import { AuthService as AuthServiceAbstraction } from "@bitwarden/common/auth/abstractions/auth.service";
 import { AvatarService as AvatarServiceAbstraction } from "@bitwarden/common/auth/abstractions/avatar.service";
 import { DevicesServiceAbstraction } from "@bitwarden/common/auth/abstractions/devices/devices.service.abstraction";
@@ -51,7 +50,6 @@ import { UserVerificationService as UserVerificationServiceAbstraction } from "@
 import { AuthServerNotificationTags } from "@bitwarden/common/auth/enums/auth-server-notification-tags";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
 import { AccountServiceImplementation } from "@bitwarden/common/auth/services/account.service";
-import { AuthRequestAnsweringService } from "@bitwarden/common/auth/services/auth-request-answering/auth-request-answering.service";
 import { PendingAuthRequestsStateService } from "@bitwarden/common/auth/services/auth-request-answering/pending-auth-requests.state";
 import { AuthService } from "@bitwarden/common/auth/services/auth.service";
 import { AvatarService } from "@bitwarden/common/auth/services/avatar.service";
@@ -265,6 +263,7 @@ import {
   VaultExportServiceAbstraction,
 } from "@bitwarden/vault-export-core";
 
+import { ExtensionAuthRequestAnsweringService } from "../auth/services/auth-request-answering/extension-auth-request-answering.service";
 import { AuthStatusBadgeUpdaterService } from "../auth/services/auth-status-badge-updater.service";
 import { OverlayNotificationsBackground as OverlayNotificationsBackgroundInterface } from "../autofill/background/abstractions/overlay-notifications.background";
 import { OverlayBackground as OverlayBackgroundInterface } from "../autofill/background/abstractions/overlay.background";
@@ -375,7 +374,7 @@ export default class MainBackground {
   serverNotificationsService: ServerNotificationsService;
   systemNotificationService: SystemNotificationsService;
   actionsService: ActionsService;
-  authRequestAnsweringService: AuthRequestAnsweringServiceAbstraction;
+  authRequestAnsweringService: ExtensionAuthRequestAnsweringService;
   stateService: StateServiceAbstraction;
   userNotificationSettingsService: UserNotificationSettingsServiceAbstraction;
   autofillSettingsService: AutofillSettingsServiceAbstraction;
@@ -1173,14 +1172,14 @@ export default class MainBackground {
 
     this.pendingAuthRequestStateService = new PendingAuthRequestsStateService(this.stateProvider);
 
-    this.authRequestAnsweringService = new AuthRequestAnsweringService(
+    this.authRequestAnsweringService = new ExtensionAuthRequestAnsweringService(
       this.accountService,
-      this.actionsService,
       this.authService,
-      this.i18nService,
       this.masterPasswordService,
       this.messagingService,
       this.pendingAuthRequestStateService,
+      this.actionsService,
+      this.i18nService,
       this.platformUtilsService,
       this.systemNotificationService,
     );
