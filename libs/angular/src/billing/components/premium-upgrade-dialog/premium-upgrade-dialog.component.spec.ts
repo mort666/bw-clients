@@ -140,14 +140,14 @@ describe("PremiumUpgradeDialogComponent", () => {
     expect(loadingValues[loadingValues.length - 1]).toBe(false);
   });
 
-  it("should close dialog when upgrade button clicked", () => {
-    component["onUpgradeClick"]();
+  it("should close dialog when upgrade button clicked", async () => {
+    await component["upgrade"]();
 
     expect(mockDialogRef.close).toHaveBeenCalled();
   });
 
   it("should close dialog when close button clicked", () => {
-    component["onCloseClick"]();
+    component["close"]();
 
     expect(mockDialogRef.close).toHaveBeenCalled();
   });

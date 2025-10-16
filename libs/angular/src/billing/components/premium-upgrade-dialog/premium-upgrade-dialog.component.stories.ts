@@ -7,8 +7,17 @@ import {
   PersonalSubscriptionPricingTierIds,
   SubscriptionCadenceIds,
 } from "@bitwarden/common/billing/types/subscription-pricing-tier";
+import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { ButtonModule, DialogModule, DialogRef, TypographyModule } from "@bitwarden/components";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import {
+  ButtonModule,
+  DialogModule,
+  DialogRef,
+  ToastOptions,
+  ToastService,
+  TypographyModule,
+} from "@bitwarden/components";
 import { PricingCardComponent } from "@bitwarden/pricing";
 
 import { PremiumUpgradeDialogComponent } from "./premium-upgrade-dialog.component";
@@ -53,6 +62,24 @@ export default {
           },
         },
         {
+          provide: ToastService,
+          useValue: {
+            showToast: (options: ToastOptions) => {},
+          },
+        },
+        {
+          provide: EnvironmentService,
+          useValue: {
+            cloudWebVaultUrl$: of("https://vault.bitwarden.com"),
+          },
+        },
+        {
+          provide: PlatformUtilsService,
+          useValue: {
+            launchUri: (uri: string) => {},
+          },
+        },
+        {
           provide: I18nService,
           useValue: {
             t: (key: string) => {
@@ -61,6 +88,8 @@ export default {
                   return "Upgrade Now";
                 case "month":
                   return "month";
+                case "upgradeToPremium":
+                  return "Upgrade To Premium";
                 default:
                   return key;
               }

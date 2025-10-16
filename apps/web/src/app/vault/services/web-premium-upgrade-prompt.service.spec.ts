@@ -2,6 +2,8 @@ import { TestBed } from "@angular/core/testing";
 import { Router } from "@angular/router";
 import { lastValueFrom, of } from "rxjs";
 
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { OrganizationId } from "@bitwarden/common/types/guid";
 import { DialogRef, DialogService } from "@bitwarden/components";
 
@@ -14,11 +16,21 @@ describe("WebVaultPremiumUpgradePromptService", () => {
   let dialogServiceMock: jest.Mocked<DialogService>;
   let routerMock: jest.Mocked<Router>;
   let dialogRefMock: jest.Mocked<DialogRef<VaultItemDialogResult>>;
+  let configServiceMock: jest.Mocked<ConfigService>;
+  let accountServiceMock: jest.Mocked<AccountService>;
 
   beforeEach(() => {
     dialogServiceMock = {
       openSimpleDialog: jest.fn(),
     } as unknown as jest.Mocked<DialogService>;
+
+    configServiceMock = {
+      getFeatureFlag: jest.fn().mockReturnValue(false),
+    } as unknown as jest.Mocked<ConfigService>;
+
+    accountServiceMock = {
+      activeAccount$: of({ id: "user-123" }),
+    } as unknown as jest.Mocked<AccountService>;
 
     routerMock = {
       navigate: jest.fn(),
@@ -34,6 +46,8 @@ describe("WebVaultPremiumUpgradePromptService", () => {
         { provide: DialogService, useValue: dialogServiceMock },
         { provide: Router, useValue: routerMock },
         { provide: DialogRef, useValue: dialogRefMock },
+        { provide: ConfigService, useValue: configServiceMock },
+        { provide: AccountService, useValue: accountServiceMock },
       ],
     });
 

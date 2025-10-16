@@ -1,19 +1,21 @@
 import { CdkTrapFocus } from "@angular/cdk/a11y";
 import { CommonModule } from "@angular/common";
 import { Component } from "@angular/core";
-import { catchError, map, Observable, of, startWith } from "rxjs";
+import { catchError, firstValueFrom, map, Observable, of, startWith } from "rxjs";
 
 import { SubscriptionPricingServiceAbstraction } from "@bitwarden/common/billing/abstractions/subscription-pricing.service.abstraction";
 import {
   PersonalSubscriptionPricingTier,
   PersonalSubscriptionPricingTierIds,
+  SubscriptionCadence,
   SubscriptionCadenceIds,
 } from "@bitwarden/common/billing/types/subscription-pricing-tier";
+import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import {
   ButtonModule,
   ButtonType,
-  DialogConfig,
   DialogModule,
   DialogRef,
   DialogService,
@@ -27,8 +29,8 @@ import { I18nPipe } from "@bitwarden/ui-common";
 type CardDetails = {
   title: string;
   tagline: string;
-  price: { amount: number; cadence: string };
-  button: { text: string; type: ButtonType };
+  price: { amount: number; cadence: SubscriptionCadence };
+  button: { text: string; type: ButtonType; icon?: { type: string; position: "before" | "after" } };
   features: string[];
 };
 
@@ -52,7 +54,7 @@ export class PremiumUpgradeDialogComponent {
     .pipe(
       map((tiers) => tiers.find((tier) => tier.id === PersonalSubscriptionPricingTierIds.Premium)),
       map((tier) => this.mapPremiumTierToCardDetails(tier!)),
-      catchError((error: unknown) => {
+      catchError(() => {
         this.toastService.showToast({
           variant: "error",
           title: "",
@@ -72,14 +74,19 @@ export class PremiumUpgradeDialogComponent {
     private subscriptionPricingService: SubscriptionPricingServiceAbstraction,
     private i18nService: I18nService,
     private toastService: ToastService,
+    private environmentService: EnvironmentService,
+    private platformUtilsService: PlatformUtilsService,
   ) {}
 
-  protected onUpgradeClick(): void {
-    // todo: redirect to web vault upgrade path
+  protected async upgrade(): Promise<void> {
+    const vaultUrl = await firstValueFrom(this.environmentService.cloudWebVaultUrl$);
+    this.platformUtilsService.launchUri(
+      vaultUrl + "/#/settings/subscription/premium?callToAction=upgradeToPremium",
+    );
     this.dialogRef.close();
   }
 
-  protected onCloseClick(): void {
+  protected close(): void {
     this.dialogRef.close();
   }
 
@@ -94,8 +101,9 @@ export class PremiumUpgradeDialogComponent {
       button: {
         text: this.i18nService.t("upgradeNow"),
         type: "primary",
+        icon: { type: "bwi-external-link", position: "after" },
       },
-      features: tier.passwordManager.features.map((f: { key: string; value: string }) => f.value),
+      features: tier.passwordManager.features.map((f) => f.value),
     };
   }
 
@@ -103,10 +111,9 @@ export class PremiumUpgradeDialogComponent {
    * Opens the premium upgrade dialog.
    *
    * @param dialogService - The dialog service used to open the component
-   * @param dialogConfig - Optional configuration for the dialog
    * @returns A dialog reference object
    */
-  static open(dialogService: DialogService, dialogConfig?: DialogConfig<void>): DialogRef<void> {
-    return dialogService.open(PremiumUpgradeDialogComponent, dialogConfig);
+  static open(dialogService: DialogService): DialogRef<PremiumUpgradeDialogComponent> {
+    return dialogService.open(PremiumUpgradeDialogComponent);
   }
 }

@@ -1,10 +1,14 @@
 import { Injectable, Optional } from "@angular/core";
 import { Router } from "@angular/router";
-import { Subject } from "rxjs";
+import { firstValueFrom, Subject } from "rxjs";
 
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { OrganizationId } from "@bitwarden/common/types/guid";
 import { PremiumUpgradePromptService } from "@bitwarden/common/vault/abstractions/premium-upgrade-prompt.service";
 import { DialogRef, DialogService } from "@bitwarden/components";
+import { UnifiedUpgradeDialogComponent } from "@bitwarden/web-vault/app/billing/individual/upgrade/unified-upgrade-dialog/unified-upgrade-dialog.component";
 
 import { VaultItemDialogResult } from "../components/vault-item-dialog/vault-item-dialog.component";
 
@@ -15,6 +19,8 @@ export class WebVaultPremiumUpgradePromptService implements PremiumUpgradePrompt
 
   constructor(
     private dialogService: DialogService,
+    private configService: ConfigService,
+    private accountService: AccountService,
     private router: Router,
     @Optional() private dialog?: DialogRef<VaultItemDialogResult>,
   ) {}
@@ -23,6 +29,26 @@ export class WebVaultPremiumUpgradePromptService implements PremiumUpgradePrompt
    * Prompts the user for a premium upgrade.
    */
   async promptForPremium(organizationId?: OrganizationId) {
+    const showNewDialog = await this.configService.getFeatureFlag(
+      FeatureFlag.PM23713_PremiumBadgeOpensNewPremiumUpgradeDialog,
+    );
+
+    // Per conversation in PM-23713, retain the existing upgrade org flow for now, will be addressed later
+    if (showNewDialog && !organizationId) {
+      const account = await firstValueFrom(this.accountService.activeAccount$);
+      if (!account) {
+        return;
+      }
+      UnifiedUpgradeDialogComponent.open(this.dialogService, {
+        data: {
+          account,
+          planSelectionStepTitleOverride: "upgradeYourPlan",
+          hideContinueWithoutUpgradingButton: true,
+        },
+      });
+      return;
+    }
+
     let confirmed = false;
     let route: string[] | null = null;
 
