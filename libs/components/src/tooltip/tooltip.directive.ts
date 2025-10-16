@@ -45,7 +45,7 @@ export class TooltipDirective implements OnInit {
   /**
    * Input so the consumer can choose to add the tooltip id to the aria-describedby attribute of the host element.
    */
-  readonly addTooltipToDescribedby = model<boolean>(false);
+  readonly addTooltipToDescribedby = input<boolean>(false);
 
   private isVisible = signal(false);
   private overlayRef: OverlayRef | undefined;
