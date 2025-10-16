@@ -27,15 +27,22 @@ export class SecurityKeysComponent implements OnInit {
 
   async ngOnInit() {
     const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
-    this.showChangeKdf = await firstValueFrom(
-      this.userDecryptionOptionsService.hasMasterPasswordById$(activeAccount.id),
-    );
+    this.showChangeKdf = activeAccount
+      ? await firstValueFrom(
+          this.userDecryptionOptionsService.hasMasterPasswordById$(activeAccount.id),
+        )
+      : false;
   }
 
   async viewUserApiKey() {
     const entityId = await firstValueFrom(
       this.accountService.activeAccount$.pipe(map((a) => a?.id)),
     );
+
+    if (!entityId) {
+      throw new Error("Active account not found");
+    }
+
     await ApiKeyComponent.open(this.dialogService, {
       data: {
         keyType: "user",
@@ -54,6 +61,11 @@ export class SecurityKeysComponent implements OnInit {
     const entityId = await firstValueFrom(
       this.accountService.activeAccount$.pipe(map((a) => a?.id)),
     );
+
+    if (!entityId) {
+      throw new Error("Active account not found");
+    }
+
     await ApiKeyComponent.open(this.dialogService, {
       data: {
         keyType: "user",

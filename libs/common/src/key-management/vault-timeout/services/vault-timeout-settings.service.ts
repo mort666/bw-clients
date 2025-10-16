@@ -293,18 +293,21 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
     await this.keyService.clearPinKeys(userId);
   }
 
-  private async userHasMasterPassword(userId: string): Promise<boolean> {
-    if (userId) {
-      const decryptionOptions = await firstValueFrom(
-        this.userDecryptionOptionsService.userDecryptionOptionsById$(userId as UserId),
-      );
+  private async userHasMasterPassword(userId?: string): Promise<boolean> {
+    let resolvedUserId: UserId | undefined;
 
-      return !!decryptionOptions?.hasMasterPassword;
+    if (userId) {
+      resolvedUserId = userId as UserId;
     } else {
       const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
-      return await firstValueFrom(
-        this.userDecryptionOptionsService.hasMasterPasswordById$(activeAccount.id),
-      );
+      if (!activeAccount) {
+        return false; // No account, can't have master password
+      }
+      resolvedUserId = activeAccount.id;
     }
+
+    return await firstValueFrom(
+      this.userDecryptionOptionsService.hasMasterPasswordById$(resolvedUserId),
+    );
   }
 }

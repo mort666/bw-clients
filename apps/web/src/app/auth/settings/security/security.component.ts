@@ -7,7 +7,6 @@ import { AccountService } from "@bitwarden/common/auth/abstractions/account.serv
 import { HeaderModule } from "../../../layouts/header/header.module";
 import { SharedModule } from "../../../shared";
 
-
 @Component({
   templateUrl: "security.component.html",
   imports: [SharedModule, HeaderModule],
@@ -23,8 +22,10 @@ export class SecurityComponent implements OnInit {
 
   async ngOnInit() {
     const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
-    this.showChangePassword = await firstValueFrom(
-      this.userDecryptionOptionsService.hasMasterPasswordById$(activeAccount.id),
-    );
+    this.showChangePassword = activeAccount
+      ? await firstValueFrom(
+          this.userDecryptionOptionsService.hasMasterPasswordById$(activeAccount.id),
+        )
+      : false;
   }
 }

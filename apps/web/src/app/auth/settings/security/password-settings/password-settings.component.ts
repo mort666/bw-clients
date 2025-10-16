@@ -28,9 +28,11 @@ export class PasswordSettingsComponent implements OnInit {
 
   async ngOnInit() {
     const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
-    const userHasMasterPassword = await firstValueFrom(
-      this.userDecryptionOptionsService.hasMasterPasswordById$(activeAccount.id),
-    );
+    const userHasMasterPassword = activeAccount
+      ? await firstValueFrom(
+          this.userDecryptionOptionsService.hasMasterPasswordById$(activeAccount.id),
+        )
+      : false;
 
     if (!userHasMasterPassword) {
       await this.router.navigate(["/settings/security/two-factor"]);

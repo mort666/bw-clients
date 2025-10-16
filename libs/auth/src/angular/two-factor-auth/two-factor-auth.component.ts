@@ -446,11 +446,11 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
     // User is fully logged in so handle any post login logic before executing navigation
     await this.loginSuccessHandlerService.run(authResult.userId);
 
-    const userId = (await firstValueFrom(this.accountService.activeAccount$))?.id;
     // Save off the OrgSsoIdentifier for use in the TDE flows
     // - TDE login decryption options component
     // - Browser SSO on extension open
     if (this.orgSsoIdentifier !== undefined) {
+      const userId = (await firstValueFrom(this.accountService.activeAccount$))?.id;
       await this.ssoLoginService.setActiveUserOrganizationSsoIdentifier(
         this.orgSsoIdentifier,
         userId,
@@ -467,7 +467,7 @@ export class TwoFactorAuthComponent implements OnInit, OnDestroy {
     }
 
     const userDecryptionOpts = await firstValueFrom(
-      this.userDecryptionOptionsService.userDecryptionOptionsById$(userId),
+      this.userDecryptionOptionsService.userDecryptionOptionsById$(authResult.userId),
     );
 
     const tdeEnabled = await this.isTrustedDeviceEncEnabled(userDecryptionOpts.trustedDeviceOption);

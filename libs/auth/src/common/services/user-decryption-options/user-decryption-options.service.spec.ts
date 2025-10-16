@@ -43,16 +43,6 @@ describe("UserDecryptionOptionsService", () => {
 
       expect(result).toEqual(userDecryptionOptions);
     });
-
-    it("should return null when no options are set", async () => {
-      const userId = newGuid() as UserId;
-
-      fakeStateProvider.getFake(userId, USER_DECRYPTION_OPTIONS).nextState(null);
-
-      const result = await firstValueFrom(sut.userDecryptionOptionsById$(userId));
-
-      expect(result).toBeNull();
-    });
   });
 
   describe("hasMasterPasswordById$", () => {
@@ -76,16 +66,6 @@ describe("UserDecryptionOptionsService", () => {
       fakeStateProvider
         .getFake(userId, USER_DECRYPTION_OPTIONS)
         .nextState(optionsWithoutMasterPassword);
-
-      const result = await firstValueFrom(sut.hasMasterPasswordById$(userId));
-
-      expect(result).toBe(false);
-    });
-
-    it("should return false when user decryption options are null", async () => {
-      const userId = newGuid() as UserId;
-
-      fakeStateProvider.getFake(userId, USER_DECRYPTION_OPTIONS).nextState(null);
 
       const result = await firstValueFrom(sut.hasMasterPasswordById$(userId));
 

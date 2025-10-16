@@ -1,4 +1,4 @@
-import { Observable, map } from "rxjs";
+import { Observable, filter, map } from "rxjs";
 
 import {
   SingleUserStateProvider,
@@ -25,12 +25,14 @@ export class UserDecryptionOptionsService
   constructor(private singleUserStateProvider: SingleUserStateProvider) {}
 
   userDecryptionOptionsById$(userId: UserId): Observable<UserDecryptionOptions> {
-    return this.singleUserStateProvider.get(userId, USER_DECRYPTION_OPTIONS).state$;
+    return this.singleUserStateProvider
+      .get(userId, USER_DECRYPTION_OPTIONS)
+      .state$.pipe(filter((options): options is UserDecryptionOptions => options != null));
   }
 
   hasMasterPasswordById$(userId: UserId): Observable<boolean> {
     return this.userDecryptionOptionsById$(userId).pipe(
-      map((options) => options?.hasMasterPassword ?? false),
+      map((options) => options.hasMasterPassword),
     );
   }
 
