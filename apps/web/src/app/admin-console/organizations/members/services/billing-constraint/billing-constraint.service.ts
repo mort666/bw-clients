@@ -1,16 +1,9 @@
 import { Injectable } from "@angular/core";
 import { Router } from "@angular/router";
-import {
-  lastValueFrom,
-  Observable,
-  BehaviorSubject,
-  combineLatest,
-  switchMap,
-  shareReplay,
-} from "rxjs";
+import { lastValueFrom, Observable, shareReplay } from "rxjs";
 
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
-import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions/billing-api.service.abstraction";
+import { OrganizationMetadataServiceAbstraction } from "@bitwarden/common/billing/abstractions/organization-metadata.service.abstraction";
 import { isNotSelfUpgradable, ProductTierType } from "@bitwarden/common/billing/enums";
 import { OrganizationBillingMetadataResponse } from "@bitwarden/common/billing/models/response/organization-billing-metadata.response";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -31,27 +24,24 @@ export interface SeatLimitResult {
 
 @Injectable()
 export class BillingConstraintService {
-  private refreshTrigger$ = new BehaviorSubject<void>(undefined);
-
   constructor(
     private i18nService: I18nService,
     private dialogService: DialogService,
     private toastService: ToastService,
+    private organizationMetadataService: OrganizationMetadataServiceAbstraction,
     private router: Router,
-    private billingApiService: BillingApiServiceAbstraction,
   ) {}
 
   getBillingMetadata$(
     organizationId: OrganizationId,
   ): Observable<OrganizationBillingMetadataResponse> {
-    return combineLatest([this.refreshTrigger$]).pipe(
-      switchMap(([_]) => this.billingApiService.getOrganizationBillingMetadata(organizationId)),
-      shareReplay({ bufferSize: 1, refCount: false }),
-    );
+    return this.organizationMetadataService
+      .getOrganizationMetadata$(organizationId)
+      .pipe(shareReplay({ bufferSize: 1, refCount: false }));
   }
 
   refreshBillingMetadata(): void {
-    this.refreshTrigger$.next();
+    this.organizationMetadataService.refreshMetadataCache();
   }
 
   checkSeatLimit(

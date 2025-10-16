@@ -1,9 +1,9 @@
 import { TestBed } from "@angular/core/testing";
 import { Router } from "@angular/router";
-import { BehaviorSubject, of } from "rxjs";
+import { of } from "rxjs";
 
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
-import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions/billing-api.service.abstraction";
+import { OrganizationMetadataServiceAbstraction } from "@bitwarden/common/billing/abstractions/organization-metadata.service.abstraction";
 import { ProductTierType } from "@bitwarden/common/billing/enums";
 import { OrganizationBillingMetadataResponse } from "@bitwarden/common/billing/models/response/organization-billing-metadata.response";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -25,7 +25,7 @@ describe("BillingConstraintService", () => {
   let dialogService: jest.Mocked<DialogService>;
   let toastService: jest.Mocked<ToastService>;
   let router: jest.Mocked<Router>;
-  let billingApiService: jest.Mocked<BillingApiServiceAbstraction>;
+  let organizationMetadataService: jest.Mocked<OrganizationMetadataServiceAbstraction>;
 
   const mockOrganizationId = "org-123" as OrganizationId;
 
@@ -84,8 +84,9 @@ describe("BillingConstraintService", () => {
       navigate: jest.fn().mockResolvedValue(true),
     } as any;
 
-    billingApiService = {
-      getOrganizationBillingMetadata: jest.fn(),
+    organizationMetadataService = {
+      getOrganizationMetadata$: jest.fn(),
+      refreshMetadataCache: jest.fn(),
     } as any;
 
     (openChangePlanDialog as jest.Mock).mockReturnValue(mockDialogRef);
@@ -97,7 +98,7 @@ describe("BillingConstraintService", () => {
         { provide: DialogService, useValue: dialogService },
         { provide: ToastService, useValue: toastService },
         { provide: Router, useValue: router },
-        { provide: BillingApiServiceAbstraction, useValue: billingApiService },
+        { provide: OrganizationMetadataServiceAbstraction, useValue: organizationMetadataService },
       ],
     });
 
@@ -107,46 +108,47 @@ describe("BillingConstraintService", () => {
   describe("getBillingMetadata$", () => {
     it("should return billing metadata observable", (done) => {
       const mockMetadata = createMockBillingMetadata();
-      billingApiService.getOrganizationBillingMetadata.mockResolvedValue(mockMetadata);
+      organizationMetadataService.getOrganizationMetadata$.mockReturnValue(of(mockMetadata));
 
       service.getBillingMetadata$(mockOrganizationId).subscribe((result) => {
         expect(result).toBe(mockMetadata);
-        expect(billingApiService.getOrganizationBillingMetadata).toHaveBeenCalledWith(
+        expect(organizationMetadataService.getOrganizationMetadata$).toHaveBeenCalledWith(
           mockOrganizationId,
         );
         done();
       });
     });
 
-    it("should refresh when refreshTrigger$ emits", (done) => {
+    it("should cache results using shareReplay", (done) => {
       const mockMetadata = createMockBillingMetadata();
-      billingApiService.getOrganizationBillingMetadata.mockResolvedValue(mockMetadata);
-
       let callCount = 0;
-
-      service.getBillingMetadata$(mockOrganizationId).subscribe(() => {
+      organizationMetadataService.getOrganizationMetadata$.mockImplementation(() => {
         callCount++;
+        return of(mockMetadata);
+      });
 
-        if (callCount === 1) {
-          expect(billingApiService.getOrganizationBillingMetadata).toHaveBeenCalledTimes(1);
-          // Trigger refresh for second emission
-          service.refreshBillingMetadata();
-        } else if (callCount === 2) {
-          expect(billingApiService.getOrganizationBillingMetadata).toHaveBeenCalledTimes(2);
-          done();
-        }
+      const metadata$ = service.getBillingMetadata$(mockOrganizationId);
+
+      // First subscription
+      metadata$.subscribe((result) => {
+        expect(result).toBe(mockMetadata);
+      });
+
+      // Second subscription should use cached value
+      metadata$.subscribe((result) => {
+        expect(result).toBe(mockMetadata);
+        // The organizationMetadataService should only be called once due to shareReplay
+        expect(callCount).toBe(1);
+        done();
       });
     });
   });
 
   describe("refreshBillingMetadata", () => {
-    it("should trigger refresh by emitting next value", () => {
-      const refreshTrigger = (service as any).refreshTrigger$ as BehaviorSubject<void>;
-      const nextSpy = jest.spyOn(refreshTrigger, "next");
-
+    it("should call refreshMetadataCache on organizationMetadataService", () => {
       service.refreshBillingMetadata();
 
-      expect(nextSpy).toHaveBeenCalled();
+      expect(organizationMetadataService.refreshMetadataCache).toHaveBeenCalled();
     });
   });
 
