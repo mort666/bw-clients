@@ -5,6 +5,7 @@ use byteorder::ReadBytesExt;
 use bytes::{Buf, Bytes};
 use log::info;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
+use std::fmt::Debug;
 
 use crate::protocol::types::{PublicKey, RsaSigningScheme, SessionId, Signature};
 
@@ -78,7 +79,10 @@ impl TryFrom<&[u8]> for Request {
             RequestType::SSH_AGENTC_EXTENSION => {
                 // Only support session bind for now
                 let _extension_request: SessionBindRequest = contents.as_slice().try_into()?;
-                info!("Received extension request: {:?}", _extension_request);
+                info!(
+                    "Received extension request, handling not yet implemented: {:?}",
+                    _extension_request
+                );
                 Err(anyhow::anyhow!("Unsupported extension request"))
             }
             _ => Err(anyhow::anyhow!("Unsupported request type: {:?}", r#type)),
@@ -89,13 +93,22 @@ impl TryFrom<&[u8]> for Request {
 /// A sign request requests the agent to sign a blob of data with a specific key. The key is
 /// referenced by its public key blob. The payload usually has a specific structure for auth
 /// requests or SSHSIG requests. There are also flags supported that control signing behavior.
-#[derive(Debug)]
 pub(crate) struct SshSignRequest {
     public_key: PublicKey,
     payload_to_sign: Vec<u8>,
     #[allow(unused)]
     parsed_sign_request: ParsedSignRequest,
     flags: u32,
+}
+
+impl Debug for SshSignRequest {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SshSignRequest")
+            .field("public_key", &self.public_key)
+            .field("parsed_sign_request", &self.parsed_sign_request)
+            .field("flags", &self.flags)
+            .finish()
+    }
 }
 
 impl SshSignRequest {
