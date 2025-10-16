@@ -120,10 +120,7 @@ export class ItemMoreOptionsComponent {
     }),
   );
 
-  protected showArchive$: Observable<boolean> = this.accountService.activeAccount$.pipe(
-    getUserId,
-    switchMap((userId) => this.cipherArchiveService.showArchiveVault$(userId)),
-  );
+  protected showArchive$: Observable<boolean> = this.cipherArchiveService.hasArchiveFlagEnabled$();
 
   protected canArchive$: Observable<boolean> = this.accountService.activeAccount$.pipe(
     getUserId,
