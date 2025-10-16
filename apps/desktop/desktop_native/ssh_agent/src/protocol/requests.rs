@@ -93,6 +93,7 @@ impl TryFrom<&[u8]> for Request {
 pub(crate) struct SshSignRequest {
     public_key: PublicKey,
     payload_to_sign: Vec<u8>,
+    #[allow(unused)]
     parsed_sign_request: ParsedSignRequest,
     flags: u32,
 }
@@ -120,6 +121,7 @@ impl SshSignRequest {
         &self.payload_to_sign
     }
 
+    #[allow(unused)]
     pub fn parsed_payload(&self) -> &ParsedSignRequest {
         &self.parsed_sign_request
     }
@@ -155,7 +157,10 @@ impl TryFrom<&[u8]> for SshSignRequest {
 
 #[derive(Debug)]
 pub(crate) enum ParsedSignRequest {
-    SshSigRequest { namespace: String },
+    #[allow(unused)]
+    SshSigRequest {
+        namespace: String,
+    },
     SignRequest {},
 }
 
@@ -236,9 +241,13 @@ impl From<String> for Extension {
 /// bool            is_forwarding
 #[derive(Debug)]
 struct SessionBindRequest {
+    #[allow(unused)]
     host_key: PublicKey,
+    #[allow(unused)]
     session_id: SessionId,
+    #[allow(unused)]
     signature: Signature,
+    #[allow(unused)]
     is_forwarding: bool,
 }
 

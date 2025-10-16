@@ -61,7 +61,6 @@ async fn handle_connection(
             }
         };
 
-        span.in_scope(|| info!("Request {:x?}", request));
         let Ok(request) = Request::try_from(request.as_slice()) else {
             span.in_scope(|| error!("Failed to parse request"));
             stream.write_reply(&AgentFailure::new().into()).await?;
@@ -112,9 +111,7 @@ async fn handle_connection(
             }
         }?;
 
-        let encoded: Vec<u8> = (&response).into();
         span.in_scope(|| info!("Sending response"));
-        span.in_scope(|| info!("Response {:x?}", encoded));
         stream.write_reply(&response).await?;
     }
     Ok(())

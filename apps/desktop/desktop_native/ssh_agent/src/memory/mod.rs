@@ -23,11 +23,11 @@ impl UnlockedSshItem {
     }
 }
 
-struct LockedKeyStore {
+pub(crate) struct LockedKeyStore {
     keys: Vec<LockedSshItem>,
 }
 
-struct UnlockedKeyStore {
+pub(crate) struct UnlockedKeyStore {
     keys: Vec<UnlockedSshItem>,
 }
 
@@ -113,6 +113,7 @@ impl KeyStore {
         None
     }
 
+    #[allow(unused)]
     pub fn is_locked(&self) -> bool {
         matches!(self, KeyStore::Locked(_))
     }
