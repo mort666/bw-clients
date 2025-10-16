@@ -6,6 +6,7 @@ import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { EventCollectionService } from "@bitwarden/common/abstractions/event/event-collection.service";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
@@ -73,6 +74,7 @@ describe("VaultItemDialogComponent", () => {
         { provide: LogService, useValue: {} },
         { provide: CipherService, useValue: {} },
         { provide: AccountService, useValue: { activeAccount$: { pipe: () => ({}) } } },
+        { provide: ConfigService, useValue: { getFeatureFlag: () => Promise.resolve(false) } },
         { provide: Router, useValue: {} },
         { provide: ActivatedRoute, useValue: {} },
         {

@@ -27,6 +27,7 @@ export class PremiumBadgeComponent {
 
   async promptForPremium(event: Event) {
     event.stopPropagation();
+    event.preventDefault();
     await this.premiumUpgradePromptService.promptForPremium(this.organizationId());
   }
 }
