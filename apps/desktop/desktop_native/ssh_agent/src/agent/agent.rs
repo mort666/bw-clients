@@ -4,14 +4,9 @@ use futures::Stream;
 use tokio_util::sync::CancellationToken;
 
 use crate::{
-    agent::ui_requester::{UiRequester},
+    agent::ui_requester::UiRequester,
     memory::UnlockedSshItem,
-    protocol::{
-        self,
-        key_store::Agent,
-        protocol::serve_listener,
-        types::PublicKeyWithName,
-    },
+    protocol::{self, key_store::Agent, protocol::serve_listener, types::PublicKeyWithName},
     transport::peer_info::PeerInfo,
 };
 

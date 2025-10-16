@@ -1,9 +1,7 @@
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use ssh_encoding::Encode;
 
-use crate::protocol::types::{
-    PrivateKey, PublicKeyWithName, RsaSigningScheme, Signature,
-};
+use crate::protocol::types::{PrivateKey, PublicKeyWithName, RsaSigningScheme, Signature};
 
 /// `https://www.ietf.org/archive/id/draft-miller-ssh-agent-11.html#name-protocol-messages`
 /// The different types of replies that the SSH agent can send to a client.

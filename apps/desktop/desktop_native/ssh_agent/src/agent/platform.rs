@@ -1,10 +1,9 @@
-use tracing::info;
 use homedir::my_home;
+use tracing::info;
 
-use crate::{agent::{BitwardenDesktopAgent}, transport::unix_listener_stream::UnixListenerStream};
+use crate::{agent::BitwardenDesktopAgent, transport::unix_listener_stream::UnixListenerStream};
 
-pub struct PlatformListener {
-}
+pub struct PlatformListener {}
 
 impl PlatformListener {
     pub fn spawn_listeners(agent: BitwardenDesktopAgent) {
