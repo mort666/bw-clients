@@ -51,6 +51,17 @@ impl BitwardenDesktopAgent {
             .expect("Failed to lock key store")
             .set_unlocked(keys);
     }
+
+    pub fn lock(&self) {
+        self.key_store
+            .lock()
+            .expect("Failed to lock key store")
+            .lock();
+    }
+
+    pub fn is_running(&self) -> bool {
+        !self.cancellation_token.is_cancelled()
+    }
 }
 
 impl Agent for &BitwardenDesktopAgent {

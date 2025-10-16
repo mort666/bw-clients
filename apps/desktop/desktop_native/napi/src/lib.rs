@@ -1135,7 +1135,7 @@ pub mod sshagent_v2 {
                             namespace: None,
                         },
                         UiRequestMessage::AuthRequest {
-                            request_id,
+                            request_id: _,
                             connection_info,
                             cipher_id,
                         } => SshUIRequest {
@@ -1146,7 +1146,7 @@ pub mod sshagent_v2 {
                             namespace: None,
                         },
                         UiRequestMessage::SignRequest {
-                            request_id,
+                            request_id: _,
                             connection_info,
                             cipher_id,
                             namespace,
@@ -1207,9 +1207,7 @@ pub mod sshagent_v2 {
 
     #[napi]
     pub fn is_running(agent_state: &mut SshAgentState) -> bool {
-        // let bitwarden_agent_state = agent_state.state.clone();
-        // bitwarden_agent_state.is_running()
-        true
+        agent_state.agent.is_running()
     }
 
     #[napi]
@@ -1236,19 +1234,12 @@ pub mod sshagent_v2 {
 
     #[napi]
     pub fn lock(agent_state: &mut SshAgentState) -> napi::Result<()> {
-        // let bitwarden_agent_state = &mut agent_state.state;
-        // bitwarden_agent_state
-        //     .lock()
-        //     .map_err(|e| napi::Error::from_reason(e.to_string()))
+        agent_state.agent.lock();
         Ok(())
     }
 
     #[napi]
     pub fn clear_keys(agent_state: &mut SshAgentState) -> napi::Result<()> {
-        // let bitwarden_agent_state = &mut agent_state.state;
-        // bitwarden_agent_state
-        //     .clear_keys()
-        //     .map_err(|e| napi::Error::from_reason(e.to_string()))
-        Ok(())
+        set_keys(agent_state, vec![])
     }
 }

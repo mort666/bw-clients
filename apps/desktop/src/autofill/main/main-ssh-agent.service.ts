@@ -27,16 +27,16 @@ export class MainSshAgentService {
     private messagingService: MessagingService,
   ) {
     ipcMain.handle("sshagent.init", async (event: any, message: any) => {
-      this.init();
+      if (message.version === 2) {
+        this.init_v2();
+      } else {
+        this.init_v1();
+      }
     });
 
     ipcMain.handle("sshagent.isloaded", async (event: any) => {
       return this.agentStateV1 != null && this.agentStateV2 != null;
     });
-  }
-
-  init() {
-    this.init_v2();
   }
 
   init_v1() {
@@ -121,7 +121,6 @@ export class MainSshAgentService {
         sshagent.clearKeys(this.agentStateV1);
       }
     });
-
   }
 
   init_v2() {

@@ -19,6 +19,7 @@ impl PlatformListener {
         }
     }
 
+    #[cfg(target_os = "linux")]
     fn spawn_linux_listeners(agent: BitwardenDesktopAgent) {
         let ssh_agent_directory = match my_home() {
             Ok(Some(home)) => home,
@@ -46,6 +47,7 @@ impl PlatformListener {
         tokio::spawn(UnixListenerStream::listen(path, agent));
     }
 
+    #[cfg(target_os = "macos")]
     fn spawn_macos_listeners(agent: BitwardenDesktopAgent) {
         let ssh_agent_directory = match my_home() {
             Ok(Some(home)) => home,
