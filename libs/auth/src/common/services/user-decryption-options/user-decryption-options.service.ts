@@ -32,7 +32,7 @@ export class UserDecryptionOptionsService
 
   hasMasterPasswordById$(userId: UserId): Observable<boolean> {
     return this.userDecryptionOptionsById$(userId).pipe(
-      map((options) => options.hasMasterPassword),
+      map((options) => options.hasMasterPassword ?? false),
     );
   }
 

@@ -261,18 +261,14 @@ export class UserVerificationService implements UserVerificationServiceAbstracti
   }
 
   async hasMasterPassword(userId?: string): Promise<boolean> {
-    if (userId) {
-      const decryptionOptions = await firstValueFrom(
-        this.userDecryptionOptionsService.userDecryptionOptionsById$(userId as UserId),
-      );
+    const resolvedUserId = userId ?? (await firstValueFrom(this.accountService.activeAccount$))?.id;
 
-      if (decryptionOptions?.hasMasterPassword != undefined) {
-        return decryptionOptions.hasMasterPassword;
-      }
+    if (!resolvedUserId) {
+      return false; // or throw appropriate error
     }
-    const activeAccountUserId = (await firstValueFrom(this.accountService.activeAccount$)).id;
+
     return await firstValueFrom(
-      this.userDecryptionOptionsService.hasMasterPasswordById$(activeAccountUserId),
+      this.userDecryptionOptionsService.hasMasterPasswordById$(resolvedUserId as UserId),
     );
   }
 
