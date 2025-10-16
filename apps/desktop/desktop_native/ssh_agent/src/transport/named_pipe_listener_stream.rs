@@ -24,10 +24,11 @@ impl NamedPipeServerStream {
     pub async fn listen(
         pipe_name: String,
         agent: BitwardenDesktopAgent,
-    ) -> Result<NamedPipeServerStream, anyhow::Error> {
+    ) -> Result<(), anyhow::Error> {
         info!("Starting SSH Named Pipe listener");
         let (tx, rx) = tokio::sync::mpsc::channel(16);
 
+        let cloned_agent = agent.clone();
         tokio::spawn(async move {
             info!("Creating named pipe server on {}", pipe_name.clone());
             let mut listener = match ServerOptions::new().create(pipe_name.clone()) {
@@ -37,7 +38,7 @@ impl NamedPipeServerStream {
                     return;
                 }
             };
-            let cancellation_token = agent.cancellation_token();
+            let cancellation_token = cloned_agent.cancellation_token();
             loop {
                 info!("Waiting for connection");
                 select! {
@@ -72,7 +73,8 @@ impl NamedPipeServerStream {
             }
         });
 
-        Ok(NamedPipeServerStream { rx })
+        agent.serve(NamedPipeServerStream { rx }).await;
+        Ok(())
     }
 }
 
