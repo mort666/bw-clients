@@ -790,6 +790,12 @@
   "onLocked": {
     "message": "On system lock"
   },
+  "onIdle": {
+    "message": "On system idle"
+  },
+  "onSleep": {
+    "message": "On system sleep"
+  },
   "onRestart": {
     "message": "On browser restart"
   },

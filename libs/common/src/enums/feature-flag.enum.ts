@@ -35,6 +35,7 @@ export enum FeatureFlag {
   EnrollAeadOnKeyRotation = "enroll-aead-on-key-rotation",
   ForceUpdateKDFSettings = "pm-18021-force-update-kdf-settings",
   UnlockWithMasterPasswordUnlockData = "pm-23246-unlock-with-master-password-unlock-data",
+  ConsolidatedSessionTimeoutComponent = "pm-26056-consolidated-session-timeout-component",
 
   /* Tools */
   DesktopSendUIRefresh = "desktop-send-ui-refresh",
@@ -114,6 +115,7 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.EnrollAeadOnKeyRotation]: FALSE,
   [FeatureFlag.ForceUpdateKDFSettings]: FALSE,
   [FeatureFlag.UnlockWithMasterPasswordUnlockData]: FALSE,
+  [FeatureFlag.ConsolidatedSessionTimeoutComponent]: FALSE,
 
   /* Platform */
   [FeatureFlag.IpcChannelFramework]: FALSE,

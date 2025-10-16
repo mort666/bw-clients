@@ -11860,5 +11860,26 @@
   },
   "viewbusinessplans": {
     "message": "View business plans"
+  },
+  "vaultTimeoutHeader": {
+    "message": "Vault timeout"
+  },
+  "vaultTimeoutAction1": {
+    "message": "Timeout action"
+  },
+  "unlockMethodNeededToChangeTimeoutActionDesc": {
+    "message": "Set up an unlock method to change your vault timeout action."
+  },
+  "vaultTimeoutPolicyAffectingOptions": {
+    "message": "Enterprise policy requirements have been applied to your timeout options"
+  },
+  "vaultTimeoutTooLarge": {
+    "message": "Your vault timeout exceeds the restrictions set by your organization."
+  },
+  "neverLockWarning": {
+    "message": "Are you sure you want to use the \"Never\" option? Setting your lock options to \"Never\" stores your vault's encryption key on your device. If you use this option you should ensure that you keep your device properly protected."
+  },
+  "sessionTimeoutHeader": {
+    "message": "Session timeout"
   }
 }
