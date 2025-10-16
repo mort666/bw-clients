@@ -3,7 +3,7 @@ use homedir::my_home;
 
 use crate::{agent::{self, BitwardenDesktopAgent}, transport::unix_listener_stream::UnixListenerStream};
 
-struct PlatformListener {
+pub struct PlatformListener {
 }
 
 impl PlatformListener {

@@ -1062,7 +1062,7 @@ pub mod sshagent_v2 {
         bindgen_prelude::Promise,
         threadsafe_function::{ErrorStrategy::CalleeHandled, ThreadsafeFunction},
     };
-    use ssh_agent::agent::ui_requester;
+    use ssh_agent::agent::{ui_requester, PlatformListener};
     use ssh_agent::{
         self,
         agent::{ui_requester::UiRequestMessage, BitwardenDesktopAgent},
@@ -1195,13 +1195,9 @@ pub mod sshagent_v2 {
 
         let agent = BitwardenDesktopAgent::new(ui_requester);
         let agent_copy = agent.clone();
-        tokio::spawn(async move {
-            UnixListenerStream::listen("/home/quexten/.ssh-sock".to_string(), agent_copy)
-                .await
-                .unwrap();
-        });
+        PlatformListener::spawn_listeners(agent_copy);
 
-        Ok(SshAgentState { agent: agent })
+        Ok(SshAgentState { agent })
     }
 
     #[napi]
