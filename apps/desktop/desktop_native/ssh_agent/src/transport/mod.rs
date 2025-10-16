@@ -1,4 +1,5 @@
 #[cfg(windows)]
-mod named_pipe_listener_stream;
-pub mod peer_info;
+pub mod named_pipe_listener_stream;
+#[cfg(not(windows))]
 pub mod unix_listener_stream;
+pub mod peer_info;

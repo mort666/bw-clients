@@ -1,7 +1,4 @@
-use homedir::my_home;
-use tracing::info;
-
-use crate::{agent::BitwardenDesktopAgent, transport::unix_listener_stream::UnixListenerStream};
+use crate::{agent::BitwardenDesktopAgent, transport::named_pipe_listener_stream::NamedPipeServerStream};
 
 pub struct PlatformListener {}
 
@@ -15,6 +12,11 @@ impl PlatformListener {
         #[cfg(target_os = "macos")]
         {
             Self::spawn_macos_listeners(agent);
+        }
+
+        #[cfg(target_os = "windows")]
+        {
+            Self::spawn_windows_listeners(agent);
         }
     }
 
@@ -63,5 +65,13 @@ impl PlatformListener {
             .to_owned();
 
         tokio::spawn(UnixListenerStream::listen(path, agent));
+    }
+
+    #[cfg(target_os = "windows")]
+    pub fn spawn_windows_listeners(agent: BitwardenDesktopAgent) {
+        tokio::spawn(async move {
+            const PIPE_NAME: &str = r"\\.\pipe\openssh-ssh-agent";
+            tokio::spawn(NamedPipeServerStream::listen(PIPE_NAME.to_string(), agent));
+        });
     }
 }

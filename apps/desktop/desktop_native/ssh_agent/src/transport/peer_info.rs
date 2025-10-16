@@ -6,7 +6,6 @@ use sysinfo::{Pid, System};
 /// This can be later extended to include more information (icon, app name) for the corresponding application.
 #[derive(Clone)]
 pub struct PeerInfo {
-    uid: u32,
     pid: u32,
     process_name: String,
     peer_type: PeerType,
@@ -32,7 +31,6 @@ impl PeerInfo {
         );
         if let Some(process) = system.process(Pid::from_u32(peer_pid)) {
             Ok(Self {
-                uid: **process.user_id().ok_or(())?,
                 pid: peer_pid,
                 process_name: process.name().to_str().ok_or(())?.to_string(),
                 peer_type,
@@ -44,15 +42,10 @@ impl PeerInfo {
 
     pub fn unknown() -> Self {
         Self {
-            uid: 0,
             pid: 0,
             process_name: "Unknown application".to_string(),
             peer_type: PeerType::UnixSocket,
         }
-    }
-
-    pub fn uid(&self) -> u32 {
-        self.uid
     }
 
     pub fn pid(&self) -> u32 {
@@ -67,7 +60,6 @@ impl PeerInfo {
 impl Debug for PeerInfo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("PeerInfo")
-            .field("uid", &self.uid)
             .field("pid", &self.pid)
             .field("process_name", &self.process_name)
             .field("peer_type", &self.peer_type)

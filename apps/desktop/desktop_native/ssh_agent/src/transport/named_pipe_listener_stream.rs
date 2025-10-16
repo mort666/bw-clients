@@ -3,23 +3,17 @@ use std::os::windows::prelude::AsRawHandle as _;
 use std::{
     io,
     pin::Pin,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc,
-    },
     task::{Context, Poll},
 };
 use tokio::{
     net::windows::named_pipe::{NamedPipeServer, ServerOptions},
     select,
 };
-use tokio_util::sync::CancellationToken;
 use tracing::{error, info};
 use windows::Win32::{Foundation::HANDLE, System::Pipes::GetNamedPipeClientProcessId};
 
-use crate::ssh_agent::peerinfo::{self, models::PeerInfo};
-
-const PIPE_NAME: &str = r"\\.\pipe\openssh-ssh-agent";
+use crate::agent::BitwardenDesktopAgent;
+use crate::transport::peer_info::PeerInfo;
 
 #[pin_project::pin_project]
 pub struct NamedPipeServerStream {
@@ -27,30 +21,32 @@ pub struct NamedPipeServerStream {
 }
 
 impl NamedPipeServerStream {
-    // FIXME: Remove unwraps! They panic and terminate the whole application.
-    #[allow(clippy::unwrap_used)]
-    pub fn new(cancellation_token: CancellationToken, is_running: Arc<AtomicBool>) -> Self {
+    pub async fn listen(
+        pipe_name: String,
+        agent: BitwardenDesktopAgent,
+    ) -> Result<NamedPipeServerStream, anyhow::Error> {
+        info!("Starting SSH Named Pipe listener");
         let (tx, rx) = tokio::sync::mpsc::channel(16);
+
         tokio::spawn(async move {
-            info!("Creating named pipe server on {}", PIPE_NAME);
-            let mut listener = match ServerOptions::new().create(PIPE_NAME) {
+            info!("Creating named pipe server on {}", pipe_name.clone());
+            let mut listener = match ServerOptions::new().create(pipe_name.clone()) {
                 Ok(pipe) => pipe,
                 Err(e) => {
                     error!(error = %e, "Encountered an error creating the first pipe. The system's openssh service must likely be disabled");
-                    cancellation_token.cancel();
-                    is_running.store(false, Ordering::Relaxed);
                     return;
                 }
             };
+            let cancellation_token = agent.cancellation_token();
             loop {
                 info!("Waiting for connection");
                 select! {
                     _ = cancellation_token.cancelled() => {
-                        info!("[SSH Agent Native Module] Cancellation token triggered, stopping named pipe server");
+                        info!("Cancellation token triggered, stopping named pipe server");
                         break;
                     }
                     _ = listener.connect() => {
-                        info!("[SSH Agent Native Module] Incoming connection");
+                        info!("Incoming connection");
                         let handle = HANDLE(listener.as_raw_handle());
                         let mut pid = 0;
                         unsafe {
@@ -60,23 +56,14 @@ impl NamedPipeServerStream {
                             }
                         };
 
-                        let peer_info = peerinfo::gather::get_peer_info(pid);
-                        let peer_info = match peer_info {
-                            Err(e) => {
-                                error!(error = %e, pid = %pid, "Failed getting process info");
-                                continue
-                            },
-                            Ok(info) => info,
-                        };
-
+                        let peer_info = PeerInfo::new(pid as u32, crate::transport::peer_info::PeerType::NamedPipe);
                         tx.send((listener, peer_info)).await.unwrap();
 
-                        listener = match ServerOptions::new().create(PIPE_NAME) {
+                        listener = match ServerOptions::new().create(pipe_name.clone()) {
                             Ok(pipe) => pipe,
                             Err(e) => {
                                 error!(error = %e, "Encountered an error creating a new pipe");
                                 cancellation_token.cancel();
-                                is_running.store(false, Ordering::Relaxed);
                                 return;
                             }
                         };
@@ -84,7 +71,8 @@ impl NamedPipeServerStream {
                 }
             }
         });
-        Self { rx }
+
+        Ok(NamedPipeServerStream { rx })
     }
 }
 

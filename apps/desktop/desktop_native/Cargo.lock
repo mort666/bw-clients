@@ -3643,6 +3643,7 @@ dependencies = [
  "p256",
  "p384",
  "p521",
+ "pin-project",
  "rsa 0.10.0-rc.8",
  "sha2 0.10.9",
  "signature 3.0.0-rc.4",

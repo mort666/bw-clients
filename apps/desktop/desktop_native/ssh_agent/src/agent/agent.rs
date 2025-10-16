@@ -57,6 +57,10 @@ impl BitwardenDesktopAgent {
     pub fn is_running(&self) -> bool {
         !self.cancellation_token.is_cancelled()
     }
+
+    pub fn cancellation_token(&self) -> CancellationToken {
+        self.cancellation_token.clone()
+    }
 }
 
 impl Agent for &BitwardenDesktopAgent {
