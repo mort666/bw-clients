@@ -269,10 +269,10 @@ impl PrivateKey {
             PrivateKey::Ecdsa(key) => ssh_key::private::PrivateKey::from(key.to_owned()),
         };
 
-        let pubkey_bytes = BASE64_STANDARD.encode(private_key
+        let pubkey_bytes = private_key
             .public_key()
             .to_bytes()
-            .expect("Converting to public key bytes should always be possible"));
+            .expect("Converting to public key bytes should always be possible");
         let alg_str = private_key.algorithm();
 
         PublicKey::try_from(format!("{} {}", alg_str.as_str(), BASE64_STANDARD.encode(&pubkey_bytes)))
