@@ -43,6 +43,18 @@ impl UiRequester {
 
     /// Ask the UI to show a request for the user to approve or deny. The UI may choose to not show a prompt but only
     /// require that the client is unlocked or apply other automatic rules.
+    pub async fn request_auth(&self, connection_info: &ConnectionInfo, cipher_id: String) -> bool {
+        let request_id = REQUEST_ID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        self.request(UiRequestMessage::AuthRequest {
+            request_id,
+            connection_info: connection_info.clone(),
+            cipher_id,
+        })
+        .await
+    }
+
+    /// Ask the UI to show a request for the user to approve or deny. The UI may choose to not show a prompt but only
+    /// require that the client is unlocked or apply other automatic rules.
     pub async fn request_sign(
         &self,
         connection_info: &ConnectionInfo,

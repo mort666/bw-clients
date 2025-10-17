@@ -124,6 +124,5 @@ github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okW
 "#;
         let entries = KnownHostsReader::parse(content).unwrap();
         assert!(entries.len() <= 1);
-        println!("{:?}", entries);
     }
 }

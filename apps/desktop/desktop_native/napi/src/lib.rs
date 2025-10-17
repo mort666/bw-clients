@@ -1130,7 +1130,7 @@ pub mod sshagent_v2 {
                         } => SshUIRequest {
                             cipher_id: None,
                             is_list: true,
-                            process_name: "".to_string(),
+                            process_name: connection_info.peer_info().process_name().to_string(),
                             is_forwarding: connection_info.is_forwarding(),
                             namespace: None,
                         },
@@ -1141,7 +1141,7 @@ pub mod sshagent_v2 {
                         } => SshUIRequest {
                             cipher_id: Some(cipher_id),
                             is_list: false,
-                            process_name: "".to_string(),
+                            process_name: connection_info.peer_info().process_name().to_string(),
                             is_forwarding: connection_info.is_forwarding(),
                             namespace: None,
                         },
@@ -1153,7 +1153,7 @@ pub mod sshagent_v2 {
                         } => SshUIRequest {
                             cipher_id: Some(cipher_id),
                             is_list: false,
-                            process_name: "".to_string(),
+                            process_name: connection_info.peer_info().process_name().to_string(),
                             is_forwarding: connection_info.is_forwarding(),
                             namespace: Some(namespace),
                         },
