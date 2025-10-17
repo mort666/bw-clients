@@ -160,8 +160,10 @@ fn make_keys(dir: &str) -> Vec<UnlockedSshItem> {
         .args(["-f", &format!("{}/ssh_rsa", dir), "-N", "", "-t", "rsa"])
         .status()
         .expect("failed to execute process");
-    let pubkey1 = fs::read_to_string(format!("{}/id_ed25519.pub", dir)).expect("failed to read public key");
-    let pubkey2 = fs::read_to_string(format!("{}/ssh_rsa.pub", dir)).expect("failed to read public key");
+    let pubkey1 =
+        fs::read_to_string(format!("{}/id_ed25519.pub", dir)).expect("failed to read public key");
+    let pubkey2 =
+        fs::read_to_string(format!("{}/ssh_rsa.pub", dir)).expect("failed to read public key");
     fs::write(
         format!("{}/authorized_keys", dir),
         format!("{}{}", pubkey1, pubkey2),
