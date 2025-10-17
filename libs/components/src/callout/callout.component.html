@@ -18,14 +18,19 @@
     @if (title) {
       <header
         id="{{ titleId }}"
-        [appA11yTitle]="title"
         class="tw-text-base tw-font-semibold"
         [ngClass]="_truncate ? 'tw-truncate' : ''"
+        [appA11yTitle]="_truncate ? title : ''"
       >
         {{ title }}
       </header>
     }
-    <div bitTypography="body2" [ngClass]="_truncate ? 'tw-truncate' : ''">
+    <div
+      #content
+      bitTypography="body2"
+      [ngClass]="_truncate ? 'tw-truncate' : ''"
+      [appA11yTitle]="_truncate ? contentText : ''"
+    >
       <ng-content></ng-content>
     </div>
   </div>
