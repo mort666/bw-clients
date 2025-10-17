@@ -49,7 +49,7 @@ AuthorizedKeysFile  {}/authorized_keys
     let dir_clone = dir.clone();
     std::thread::spawn(move || {
         Command::new("/usr/bin/sshd")
-            .args(&["-f", &format!("{}/sshd_config", &dir_clone), "-D", "-e"])
+            .args(["-f", &format!("{}/sshd_config", &dir_clone), "-D", "-e"])
             .status()
             .expect("failed to execute process");
     });
@@ -74,7 +74,7 @@ AuthorizedKeysFile  {}/authorized_keys
     let jh1 = std::thread::spawn(move || {
         Command::new("ssh-add")
             .env("SSH_AUTH_SOCK", format!("{}/ssh-agent.sock", dir_clone))
-            .args(&["-L"])
+            .args(["-L"])
             .status()
             .expect("failed to execute process");
     });
@@ -86,7 +86,7 @@ AuthorizedKeysFile  {}/authorized_keys
     let jh1 = std::thread::spawn(move || {
         Command::new("ssh")
             .env("SSH_AUTH_SOCK", format!("{}/ssh-agent.sock", dir_clone))
-            .args(&[
+            .args([
                 "-o",
                 "StrictHostKeyChecking=no",
                 "-o",
@@ -95,7 +95,7 @@ AuthorizedKeysFile  {}/authorized_keys
                 "2222",
                 "localhost",
                 "echo",
-                "Hello, world!",
+                "Success",
             ])
             .status()
             .expect("failed to execute process");
@@ -112,7 +112,7 @@ AuthorizedKeysFile  {}/authorized_keys
 #[cfg(target_os = "linux")]
 fn make_keys(dir: &str) -> Vec<UnlockedSshItem> {
     Command::new("ssh-keygen")
-        .args(&[
+        .args([
             "-f",
             &format!("{}/ssh_host_rsa_key", dir),
             "-N",
@@ -123,7 +123,7 @@ fn make_keys(dir: &str) -> Vec<UnlockedSshItem> {
         .status()
         .expect("failed to execute process");
     Command::new("ssh-keygen")
-        .args(&[
+        .args([
             "-f",
             &format!("{}/ssh_host_ecdsa_key", dir),
             "-N",
@@ -134,7 +134,7 @@ fn make_keys(dir: &str) -> Vec<UnlockedSshItem> {
         .status()
         .expect("failed to execute process");
     Command::new("ssh-keygen")
-        .args(&[
+        .args([
             "-f",
             &format!("{}/ssh_host_ed25519_key", dir),
             "-N",
@@ -146,7 +146,7 @@ fn make_keys(dir: &str) -> Vec<UnlockedSshItem> {
         .expect("failed to execute process");
     // // Make user key
     Command::new("ssh-keygen")
-        .args(&[
+        .args([
             "-f",
             &format!("{}/id_ed25519", dir),
             "-N",
@@ -157,24 +157,24 @@ fn make_keys(dir: &str) -> Vec<UnlockedSshItem> {
         .status()
         .expect("failed to execute process");
     Command::new("ssh-keygen")
-        .args(&["-f", &format!("{}/ssh_rsa", dir), "-N", "", "-t", "rsa"])
+        .args(["-f", &format!("{}/ssh_rsa", dir), "-N", "", "-t", "rsa"])
         .status()
         .expect("failed to execute process");
-    let pubkey1 = fs::read_to_string(format!("{}/id_ed25519.pub", dir)).unwrap();
-    let pubkey2 = fs::read_to_string(format!("{}/ssh_rsa.pub", dir)).unwrap();
+    let pubkey1 = fs::read_to_string(format!("{}/id_ed25519.pub", dir)).expect("failed to read public key");
+    let pubkey2 = fs::read_to_string(format!("{}/ssh_rsa.pub", dir)).expect("failed to read public key");
     fs::write(
         format!("{}/authorized_keys", dir),
         format!("{}{}", pubkey1, pubkey2),
     )
-    .unwrap();
-    let privkey1 = fs::read_to_string(format!("{}/id_ed25519", dir)).unwrap();
+    .expect("failed to write authorized_keys");
+    let privkey1 = fs::read_to_string(format!("{}/id_ed25519", dir)).expect("key is valid");
     let key1 = KeyPair::new(
-        PrivateKey::try_from(privkey1).unwrap(),
+        PrivateKey::try_from(privkey1).expect("key is valid"),
         "ed25519-key".to_string(),
     );
-    let privkey2 = fs::read_to_string(format!("{}/ssh_rsa", dir)).unwrap();
+    let privkey2 = fs::read_to_string(format!("{}/ssh_rsa", dir)).expect("key is valid");
     let key2 = KeyPair::new(
-        PrivateKey::try_from(privkey2).unwrap(),
+        PrivateKey::try_from(privkey2).expect("key is valid"),
         "rsa-key".to_string(),
     );
     let unlocked_items = vec![
@@ -194,7 +194,7 @@ fn mock_channels() -> UiRequester {
 
     // Spawn a task to automatically send back "true" responses
     let response_tx_clone = response_tx.clone();
-    let _ = task::spawn(async move {
+    let _handle = task::spawn(async move {
         while let Some(req) = show_ui_request_rx.recv().await {
             info!("Mock UI requester received request: {:?}", req);
             let _ = response_tx_clone.send((req.id(), true));
