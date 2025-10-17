@@ -363,8 +363,12 @@ impl PublicKey {
     pub fn try_from_blob(blob: Vec<u8>) -> Result<Self, anyhow::Error> {
         // Parse the blob to extract the algorithm
         let mut bytes = &blob[..];
-        let alg = String::from_utf8_lossy(read_bytes(&mut bytes)
-            .map_err(|e| anyhow::anyhow!("Failed to read algorithm from blob: {e}"))?.as_slice()).to_string();
+        let alg = String::from_utf8_lossy(
+            read_bytes(&mut bytes)
+                .map_err(|e| anyhow::anyhow!("Failed to read algorithm from blob: {e}"))?
+                .as_slice(),
+        )
+        .to_string();
         Ok(PublicKey { alg, blob })
     }
 }
