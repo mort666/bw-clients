@@ -15,8 +15,7 @@ import {
 import { I18nPipe } from "@bitwarden/ui-common";
 
 export interface AutofillConfirmationDialogParams {
-  savedUris?: string[];
-  currentUri: string;
+  currentUri: string | null;
 }
 
 export const AutofillConfirmationDialogResult = Object.freeze({
@@ -36,7 +35,6 @@ export type AutofillConfirmationDialogResultType = UnionOfValues<
 export class AutofillConfirmationDialogComponent {
   AutofillConfirmationDialogResult = AutofillConfirmationDialogResult;
   currentUri: string | null = null;
-  savedUris: string[] = [];
 
   constructor(
     @Inject(DIALOG_DATA) protected params: AutofillConfirmationDialogParams,
