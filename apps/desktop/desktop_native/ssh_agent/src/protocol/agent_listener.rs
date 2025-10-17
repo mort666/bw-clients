@@ -54,7 +54,6 @@ async fn handle_connection(
 ) -> Result<(), anyhow::Error> {
     loop {
         let span = tracing::info_span!("Connection", connection_id = connection.id());
-        span.in_scope(|| info!("Waiting for request"));
 
         let request = match stream.read_message().await {
             Ok(request) => request,
@@ -122,13 +121,11 @@ async fn handle_connection(
                 info!(
                     "Bound connection {} to host {:?}",
                     connection.id(),
-                    connection.host_name()
+                    connection.host_name().unwrap_or(&"".to_string())
                 );
                 Ok(ReplyFrame::from(AgentSuccess::new()))
             }
         }?;
-
-        span.in_scope(|| info!("Sending response"));
         stream.write_reply(&response).await?;
     }
     Ok(())
