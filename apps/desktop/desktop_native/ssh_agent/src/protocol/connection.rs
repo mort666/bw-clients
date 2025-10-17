@@ -1,7 +1,7 @@
 use std::sync::atomic::{AtomicU32, Ordering};
 
 use crate::{
-    hostinfo,
+    knownhosts,
     protocol::types::{PublicKey, SessionId},
     transport::peer_info::PeerInfo,
 };
@@ -60,7 +60,7 @@ impl ConnectionInfo {
     pub fn set_host_key(&mut self, host_key: PublicKey) {
         self.host_key = Some(host_key.clone());
         // Some systems (flatpak, macos sandbox) may prevent access to the known hosts file.
-        if let Ok(hosts) = hostinfo::KnownHostsReader::read_default() {
+        if let Ok(hosts) = knownhosts::KnownHostsReader::read_default() {
             self.host_name = hosts
                 .find_host(&host_key)
                 .map(|entry| entry.hostname.clone());

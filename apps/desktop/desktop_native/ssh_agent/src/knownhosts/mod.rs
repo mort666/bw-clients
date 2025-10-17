@@ -16,9 +16,9 @@ pub struct KnownHostEntry {
 
 impl KnownHostEntry {
     /// Creates a new known host entry
-    pub fn new(hostnames: String, public_key: PublicKey) -> Self {
+    pub fn new(hostname: String, public_key: PublicKey) -> Self {
         Self {
-            hostname: hostnames,
+            hostname,
             public_key,
         }
     }
