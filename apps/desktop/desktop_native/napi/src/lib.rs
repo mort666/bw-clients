@@ -312,11 +312,9 @@ pub mod sshagent {
     }
 
     #[napi]
-    pub fn clear_keys(agent_state: &mut SshAgentState) -> napi::Result<()> {
+    pub fn clear_keys(agent_state: &mut SshAgentState) {
         let bitwarden_agent_state = &mut agent_state.state;
-        bitwarden_agent_state
-            .clear_keys()
-            .map_err(|e| napi::Error::from_reason(e.to_string()))
+        bitwarden_agent_state.clear_keys();
     }
 }
 

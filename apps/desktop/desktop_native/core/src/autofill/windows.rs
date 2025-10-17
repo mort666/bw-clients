@@ -1,6 +1,9 @@
 use anyhow::Result;
 
-#[allow(clippy::unused_async)]
+/// # Errors
+///
+/// TODO
+#[allow(clippy::unused_async, missing_errors_doc)]
 pub async fn run_command(_value: String) -> Result<String> {
     todo!("Windows does not support autofill");
 }
