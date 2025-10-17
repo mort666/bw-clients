@@ -33,7 +33,6 @@ export class DefaultProcessReloadService implements ProcessReloadServiceAbstract
   ) {}
 
   async startProcessReload(authService: AuthService): Promise<void> {
-    return;
     const accounts = await firstValueFrom(this.accountService.accounts$);
     if (accounts != null) {
       const keys = Object.keys(accounts);
