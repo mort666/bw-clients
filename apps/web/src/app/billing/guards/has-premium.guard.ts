@@ -6,7 +6,7 @@ import {
   RouterStateSnapshot,
   UrlTree,
 } from "@angular/router";
-import { Observable, of } from "rxjs";
+import { from, Observable, of } from "rxjs";
 import { switchMap, tap } from "rxjs/operators";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
@@ -33,10 +33,14 @@ export function hasPremiumGuard(): CanActivateFn {
           ? billingAccountProfileStateService.hasPremiumFromAnySource$(account.id)
           : of(false),
       ),
-      tap((userHasPremium: boolean) => {
+      switchMap((userHasPremium: boolean) => {
+        // Can't call async method inside tap so instead, wait for service then switch back to the boolean
         if (!userHasPremium) {
-          return premiumUpgradePromptService.promptForPremium();
+          return from(premiumUpgradePromptService.promptForPremium()).pipe(
+            switchMap(() => of(userHasPremium)),
+          );
         }
+        return of(userHasPremium);
       }),
       // Prevent trapping the user on the login page, since that's an awful UX flow
       tap((userHasPremium: boolean) => {
