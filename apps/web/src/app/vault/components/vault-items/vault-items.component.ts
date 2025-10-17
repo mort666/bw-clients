@@ -17,6 +17,7 @@ import {
   CipherViewLikeUtils,
 } from "@bitwarden/common/vault/utils/cipher-view-like-utils";
 import { SortDirection, TableDataSource } from "@bitwarden/components";
+import { OrganizationId } from "@bitwarden/sdk-internal";
 
 import { GroupView } from "../../../admin-console/organizations/core";
 
@@ -63,6 +64,8 @@ export class VaultItemsComponent<C extends CipherViewLike> {
   @Input() addAccessStatus: number;
   @Input() addAccessToggle: boolean;
   @Input() activeCollection: CollectionView | undefined;
+  @Input() userCanArchive: boolean;
+  @Input() enforceOrgDataOwnershipPolicy: boolean;
 
   private restrictedPolicies = toSignal(this.restrictedItemTypesService.restricted$);
 
@@ -190,6 +193,30 @@ export class VaultItemsComponent<C extends CipherViewLike> {
     );
   }
 
+  get bulkArchiveAllowed() {
+    if (this.selection.selected.length === 0 || !this.userCanArchive) {
+      return false;
+    }
+
+    return (
+      this.userCanArchive &&
+      !this.selection.selected.find(
+        (item) => item.cipher && (item.cipher.organizationId || item.cipher.archivedDate),
+      )
+    );
+  }
+
+  // Bulk Unarchive button should appear for Archive vault even if user does not have archive permissions
+  get bulkUnarchiveAllowed() {
+    if (this.selection.selected.length === 0) {
+      return false;
+    }
+
+    return !this.selection.selected.find(
+      (item) => !item.cipher?.archivedDate || item.cipher?.organizationId,
+    );
+  }
+
   //@TODO: remove this function when removing the limitItemDeletion$ feature flag.
   get showDelete(): boolean {
     if (this.selection.selected.length === 0) {
@@ -220,7 +247,17 @@ export class VaultItemsComponent<C extends CipherViewLike> {
   }
 
   get bulkAssignToCollectionsAllowed() {
-    return this.showBulkAddToCollections && this.ciphers.length > 0;
+    return (
+      this.showBulkAddToCollections &&
+      this.ciphers.length > 0 &&
+      !this.anySelectedCiphersAreArchived
+    );
+  }
+
+  get anySelectedCiphersAreArchived() {
+    return this.selection.selected.some(
+      (item) => item.cipher && CipherViewLikeUtils.isArchived(item.cipher),
+    );
   }
 
   protected canEditCollection(collection: CollectionView): boolean {
@@ -269,6 +306,24 @@ export class VaultItemsComponent<C extends CipherViewLike> {
     });
   }
 
+  protected bulkArchive() {
+    this.event({
+      type: "archive",
+      items: this.selection.selected
+        .filter((item) => item.cipher !== undefined)
+        .map((item) => item.cipher),
+    });
+  }
+
+  protected bulkUnarchive() {
+    this.event({
+      type: "unarchive",
+      items: this.selection.selected
+        .filter((item) => item.cipher !== undefined)
+        .map((item) => item.cipher),
+    });
+  }
+
   protected bulkRestore() {
     this.event({
       type: "restore",
@@ -310,7 +365,7 @@ export class VaultItemsComponent<C extends CipherViewLike> {
     const orgCollections = this.allCollections.filter((c) => c.organizationId === org.id);
 
     for (const collection of orgCollections) {
-      if (vaultItem.cipher.collectionIds.includes(collection.id) && collection.manage) {
+      if (vaultItem.cipher.collectionIds.includes(collection.id as any) && collection.manage) {
         return true;
       }
     }
@@ -364,7 +419,7 @@ export class VaultItemsComponent<C extends CipherViewLike> {
     }
 
     return this.allCollections
-      .filter((c) => cipher.collectionIds.includes(c.id))
+      .filter((c) => cipher.collectionIds.includes(c.id as any))
       .some((collection) => collection.manage);
   }
 
@@ -579,7 +634,7 @@ export class VaultItemsComponent<C extends CipherViewLike> {
       .every(({ cipher }) => cipher?.edit && cipher?.viewPassword);
   }
 
-  private getUniqueOrganizationIds(): Set<string> {
+  private getUniqueOrganizationIds(): Set<string | [] | OrganizationId> {
     return new Set(this.selection.selected.flatMap((i) => i.cipher?.organizationId ?? []));
   }
 

@@ -4,6 +4,7 @@ import { CommonModule } from "@angular/common";
 import {
   AfterViewInit,
   Component,
+  DestroyRef,
   EventEmitter,
   Inject,
   Input,
@@ -13,35 +14,40 @@ import {
   Output,
   ViewChild,
 } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
 import * as JSZip from "jszip";
-import { Observable, Subject, lastValueFrom, combineLatest, firstValueFrom } from "rxjs";
+import {
+  Observable,
+  Subject,
+  lastValueFrom,
+  combineLatest,
+  firstValueFrom,
+  BehaviorSubject,
+} from "rxjs";
 import { combineLatestWith, filter, map, switchMap, takeUntil } from "rxjs/operators";
 
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
-import { CollectionService, CollectionView } from "@bitwarden/admin-console/common";
-import { JslibModule } from "@bitwarden/angular/jslib.module";
-import { safeProvider, SafeProvider } from "@bitwarden/angular/platform/utils/safe-provider";
-import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import {
-  getOrganizationById,
-  OrganizationService,
-} from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
+  CollectionService,
+  CollectionTypes,
+  CollectionView,
+} from "@bitwarden/admin-console/common";
+import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { ClientType } from "@bitwarden/common/enums";
-import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
-import { PinServiceAbstraction } from "@bitwarden/common/key-management/pin/pin.service.abstraction";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { SdkService } from "@bitwarden/common/platform/abstractions/sdk/sdk.service";
+import { getById } from "@bitwarden/common/platform/misc";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
-import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
+import { isId, OrganizationId } from "@bitwarden/common/types/guid";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
 import { FolderView } from "@bitwarden/common/vault/models/view/folder.view";
@@ -62,48 +68,23 @@ import {
   ToastService,
   LinkModule,
 } from "@bitwarden/components";
-import { KeyService } from "@bitwarden/key-management";
 
+import { ImporterMetadata, DataLoader, Loader, Instructions } from "../metadata";
 import { ImportOption, ImportResult, ImportType } from "../models";
 import {
-  ImportApiService,
-  ImportApiServiceAbstraction,
   ImportCollectionServiceAbstraction,
-  ImportService,
+  ImportMetadataServiceAbstraction,
   ImportServiceAbstraction,
 } from "../services";
 
+import { ImportChromeComponent } from "./chrome";
 import {
   FilePasswordPromptComponent,
   ImportErrorDialogComponent,
   ImportSuccessDialogComponent,
 } from "./dialog";
+import { ImporterProviders } from "./importer-providers";
 import { ImportLastPassComponent } from "./lastpass";
-
-const safeProviders: SafeProvider[] = [
-  safeProvider({
-    provide: ImportApiServiceAbstraction,
-    useClass: ImportApiService,
-    deps: [ApiService],
-  }),
-  safeProvider({
-    provide: ImportServiceAbstraction,
-    useClass: ImportService,
-    deps: [
-      CipherService,
-      FolderService,
-      ImportApiServiceAbstraction,
-      I18nService,
-      CollectionService,
-      KeyService,
-      EncryptService,
-      PinServiceAbstraction,
-      AccountService,
-      SdkService,
-      RestrictedItemTypesService,
-    ],
-  }),
-];
 
 @Component({
   selector: "tools-import",
@@ -118,6 +99,7 @@ const safeProviders: SafeProvider[] = [
     SelectModule,
     CalloutModule,
     ReactiveFormsModule,
+    ImportChromeComponent,
     ImportLastPassComponent,
     RadioButtonModule,
     CardComponent,
@@ -125,9 +107,11 @@ const safeProviders: SafeProvider[] = [
     SectionComponent,
     LinkModule,
   ],
-  providers: safeProviders,
+  providers: ImporterProviders,
 })
 export class ImportComponent implements OnInit, OnDestroy, AfterViewInit {
+  DefaultCollectionType = CollectionTypes.DefaultUserCollection;
+
   featuredImportOptions: ImportOption[];
   importOptions: ImportOption[];
   format: ImportType = null;
@@ -137,21 +121,34 @@ export class ImportComponent implements OnInit, OnDestroy, AfterViewInit {
   collections$: Observable<CollectionView[]>;
   organizations$: Observable<Organization[]>;
 
-  private _organizationId: string;
+  private _organizationId: OrganizationId | undefined;
 
-  get organizationId(): string {
+  get organizationId(): OrganizationId | undefined {
     return this._organizationId;
   }
 
-  @Input() set organizationId(value: string) {
+  /**
+   * Enables the hosting control to pass in an organizationId
+   * If a organizationId is provided, the organization selection is disabled.
+   */
+  @Input() set organizationId(value: OrganizationId | string | undefined) {
+    if (Utils.isNullOrEmpty(value)) {
+      this._organizationId = undefined;
+      this.organization = undefined;
+      return;
+    }
+
+    if (!isId<OrganizationId>(value)) {
+      this._organizationId = undefined;
+      this.organization = undefined;
+      return;
+    }
+
     this._organizationId = value;
+
     getUserId(this.accountService.activeAccount$)
       .pipe(
-        switchMap((userId) =>
-          this.organizationService
-            .organizations$(userId)
-            .pipe(getOrganizationById(this._organizationId)),
-        ),
+        switchMap((userId) => this.organizationService.organizations$(userId).pipe(getById(value))),
       )
       .pipe(takeUntil(this.destroy$))
       .subscribe((organization) => {
@@ -160,7 +157,13 @@ export class ImportComponent implements OnInit, OnDestroy, AfterViewInit {
       });
   }
 
-  protected organization: Organization;
+  @Input()
+  onLoadProfilesFromBrowser: (browser: string) => Promise<any[]>;
+
+  @Input()
+  onImportFromBrowser: (browser: string, profile: string) => Promise<any[]>;
+
+  protected organization: Organization | undefined = undefined;
   protected destroy$ = new Subject<void>();
 
   protected readonly isCardTypeRestricted$: Observable<boolean> =
@@ -184,6 +187,8 @@ export class ImportComponent implements OnInit, OnDestroy, AfterViewInit {
     fileContents: [],
     file: [],
     lastPassType: ["direct" as "csv" | "direct"],
+    // FIXME: once the flag is disabled this should initialize to `Strategy.browser`
+    chromiumLoader: [Loader.file as DataLoader],
   });
 
   @ViewChild(BitSubmitDirective)
@@ -208,6 +213,26 @@ export class ImportComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  private importer$ = new BehaviorSubject<ImporterMetadata | undefined>(undefined);
+
+  /** emits `true` when the chromium instruction block should be visible. */
+  protected readonly showChromiumInstructions$ = this.importer$.pipe(
+    map((importer) => importer?.instructions === Instructions.chromium),
+  );
+
+  /** emits `true` when direct browser import is available. */
+  // FIXME: use the capabilities list to populate `chromiumLoader` and replace the explicit
+  //        strategy check with a check for multiple loaders
+  protected readonly browserImporterAvailable$ = this.importer$.pipe(
+    map((importer) => (importer?.loaders ?? []).includes(Loader.chromium)),
+  );
+
+  /** emits `true` when the chromium loader is selected. */
+  protected readonly showChromiumOptions$ =
+    this.formGroup.controls.chromiumLoader.valueChanges.pipe(
+      map((chromiumLoader) => chromiumLoader === Loader.chromium),
+    );
+
   constructor(
     protected i18nService: I18nService,
     protected importService: ImportServiceAbstraction,
@@ -226,6 +251,8 @@ export class ImportComponent implements OnInit, OnDestroy, AfterViewInit {
     protected toastService: ToastService,
     protected accountService: AccountService,
     private restrictedItemTypesService: RestrictedItemTypesService,
+    private destroyRef: DestroyRef,
+    protected importMetadataService: ImportMetadataServiceAbstraction,
   ) {}
 
   protected get importBlockedByPolicy(): boolean {
@@ -244,7 +271,26 @@ export class ImportComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   async ngOnInit() {
+    await this.importMetadataService.init();
+
     this.setImportOptions();
+
+    this.importMetadataService
+      .metadata$(this.formGroup.controls.format.valueChanges)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (importer) => {
+          this.importer$.next(importer);
+
+          // when an importer is defined, the loader needs to be set to a value from
+          // its list.
+          const loader = importer.loaders?.includes(Loader.chromium)
+            ? Loader.chromium
+            : importer.loaders?.[0];
+          this.formGroup.controls.chromiumLoader.setValue(loader ?? Loader.file);
+        },
+        error: (err: unknown) => this.logService.error("an error occurred", err),
+      });
 
     if (this.organizationId) {
       await this.handleOrganizationImportInit();
@@ -417,7 +463,7 @@ export class ImportComponent implements OnInit, OnDestroy, AfterViewInit {
         importContents,
         this.organizationId,
         this.formGroup.controls.targetSelector.value,
-        (await this.canAccessImport(this.organizationId)) && this.isFromAC,
+        this.organization?.canAccessImport && this.isFromAC,
       );
 
       //No errors, display success message
@@ -435,20 +481,6 @@ export class ImportComponent implements OnInit, OnDestroy, AfterViewInit {
       });
       this.logService.error(e);
     }
-  }
-
-  private async canAccessImport(organizationId?: string): Promise<boolean> {
-    if (!organizationId) {
-      return false;
-    }
-    const userId = await firstValueFrom(getUserId(this.accountService.activeAccount$));
-    return (
-      await firstValueFrom(
-        this.organizationService
-          .organizations$(userId)
-          .pipe(getOrganizationById(this.organizationId)),
-      )
-    )?.canAccessImport;
   }
 
   getFormatInstructionTitle() {
@@ -578,7 +610,7 @@ export class ImportComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private async setImportContents(): Promise<string> {
     const fileEl = document.getElementById("import_input_file") as HTMLInputElement;
-    const files = fileEl.files;
+    const files = fileEl?.files;
     let fileContents = this.formGroup.controls.fileContents.value;
 
     if (files != null && files.length > 0) {
