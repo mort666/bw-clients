@@ -17,7 +17,7 @@ import { I18nPipe } from "@bitwarden/ui-common";
 
 export interface AutofillConfirmationDialogParams {
   savedUrls?: string[];
-  currentUrl: string;
+  currentUrl: string | null;
 }
 
 export const AutofillConfirmationDialogResult = Object.freeze({
