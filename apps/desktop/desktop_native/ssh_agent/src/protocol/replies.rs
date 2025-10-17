@@ -140,3 +140,16 @@ impl From<AgentFailure> for ReplyFrame {
         ReplyFrame::new(ReplyType::SSH_AGENT_FAILURE, Vec::new())
     }
 }
+
+pub(crate) struct AgentSuccess;
+impl AgentSuccess {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl From<AgentSuccess> for ReplyFrame {
+    fn from(_value: AgentSuccess) -> Self {
+        ReplyFrame::new(ReplyType::SSH_AGENT_SUCCESS, Vec::new())
+    }
+}

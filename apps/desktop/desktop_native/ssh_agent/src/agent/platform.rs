@@ -12,6 +12,7 @@ use tracing::info;
 pub struct PlatformListener {}
 
 impl PlatformListener {
+    /// Spawns all listeners for the current platform. A platform may have a single listener, or multiple.
     pub fn spawn_listeners(agent: BitwardenDesktopAgent) {
         #[cfg(target_os = "linux")]
         {
@@ -79,6 +80,8 @@ impl PlatformListener {
     #[cfg(target_os = "windows")]
     pub fn spawn_windows_listeners(agent: BitwardenDesktopAgent) {
         tokio::spawn(async move {
+            // Windows by default uses the named pipe \\.\pipe\openssh-ssh-agent. It also supports external SSH auth sock variables, which are
+            // not supported here. Windows also supports putty (not implemented here) and unix sockets for WSL (not implemented here).
             const PIPE_NAME: &str = r"\\.\pipe\openssh-ssh-agent";
             tokio::spawn(NamedPipeServerStream::listen(PIPE_NAME.to_string(), agent));
         });

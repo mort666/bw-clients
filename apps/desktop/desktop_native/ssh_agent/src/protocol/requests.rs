@@ -50,6 +50,8 @@ pub(crate) enum Request {
     IdentitiesRequest,
     /// Sign an authentication request or SSHSIG request
     SignRequest(SshSignRequest),
+    /// Session bind request
+    SessionBindRequest(SessionBindRequest),
 }
 
 impl TryFrom<&[u8]> for Request {
@@ -78,12 +80,12 @@ impl TryFrom<&[u8]> for Request {
             }
             RequestType::SSH_AGENTC_EXTENSION => {
                 // Only support session bind for now
-                let _extension_request: SessionBindRequest = contents.as_slice().try_into()?;
-                info!(
-                    "Received extension request, handling not yet implemented: {:?}",
-                    _extension_request
-                );
-                Err(anyhow::anyhow!("Unsupported extension request"))
+                let extension_request: SessionBindRequest = contents.as_slice().try_into()?;
+                if !extension_request.verify_signature() {
+                    info!("Invalid session bind signature");
+                    return Err(anyhow::anyhow!("Invalid session bind signature"));
+                }
+                Ok(Request::SessionBindRequest(extension_request))
             }
             _ => Err(anyhow::anyhow!("Unsupported request type: {:?}", r#type)),
         }
@@ -253,7 +255,7 @@ impl From<String> for Extension {
 /// string          signature
 /// bool            is_forwarding
 #[derive(Debug)]
-struct SessionBindRequest {
+pub(crate) struct SessionBindRequest {
     #[allow(unused)]
     host_key: PublicKey,
     #[allow(unused)]
@@ -262,6 +264,30 @@ struct SessionBindRequest {
     signature: Signature,
     #[allow(unused)]
     is_forwarding: bool,
+}
+
+impl SessionBindRequest {
+    pub fn verify_signature(&self) -> bool {
+        match self.signature.verify(
+            &self.host_key,
+            Vec::from(self.session_id.clone()).as_slice(),
+        ) {
+            Ok(valid) => {
+                if !valid {
+                    info!("Invalid session bind signature");
+                }
+                valid
+            }
+            Err(e) => {
+                info!("Failed to verify session bind signature: {e}");
+                false
+            }
+        }
+    }
+
+    pub fn host_key(&self) -> &PublicKey {
+        &self.host_key
+    }
 }
 
 impl TryFrom<&[u8]> for SessionBindRequest {

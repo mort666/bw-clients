@@ -1,6 +1,7 @@
 use std::sync::atomic::{AtomicU32, Ordering};
 
 use crate::{
+    hostinfo,
     protocol::types::{PublicKey, SessionId},
     transport::peer_info::PeerInfo,
 };
@@ -15,6 +16,7 @@ pub struct ConnectionInfo {
 
     is_forwarding: bool,
     host_key: Option<PublicKey>,
+    host_name: Option<String>,
     session_identifier: Option<SessionId>,
 }
 
@@ -26,6 +28,7 @@ impl ConnectionInfo {
             peer_info,
             is_forwarding: false,
             host_key: None,
+            host_name: None,
             session_identifier: None,
         }
     }
@@ -50,8 +53,18 @@ impl ConnectionInfo {
         self.host_key.as_ref()
     }
 
+    pub fn host_name(&self) -> Option<&String> {
+        self.host_name.as_ref()
+    }
+
     pub fn set_host_key(&mut self, host_key: PublicKey) {
-        self.host_key = Some(host_key);
+        self.host_key = Some(host_key.clone());
+        // Some systems (flatpak, macos sandbox) may prevent access to the known hosts file.
+        if let Ok(hosts) = hostinfo::KnownHostsReader::read_default() {
+            self.host_name = hosts
+                .find_host(&host_key)
+                .map(|entry| entry.hostname.clone());
+        }
     }
 
     pub fn session_identifier(&self) -> Option<&SessionId> {

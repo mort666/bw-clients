@@ -73,8 +73,8 @@ impl Signature {
         public_key: &PublicKey,
         data: &[u8],
     ) -> Result<bool, anyhow::Error> {
-        let public_key_parsed =
-            ssh_key::PublicKey::from_bytes(public_key.blob()).map_err(|e| anyhow::anyhow!(e))?;
+        let public_key_parsed = ssh_key::PublicKey::from_openssh(&public_key.to_string())
+            .map_err(|e| anyhow::anyhow!("Failed to parse public key: {e}"))?;
 
         match self.0.algorithm() {
             Algorithm::Ed25519 => {
@@ -187,6 +187,12 @@ impl TryFrom<&[u8]> for Signature {
 
 #[derive(Clone)]
 pub struct SessionId(Vec<u8>);
+
+impl From<SessionId> for Vec<u8> {
+    fn from(sid: SessionId) -> Self {
+        sid.0
+    }
+}
 
 impl From<Vec<u8>> for SessionId {
     fn from(v: Vec<u8>) -> Self {
@@ -328,6 +334,14 @@ impl PublicKey {
         let blob = read_bytes(&mut bytes)?;
         Ok(PublicKey { alg, blob })
     }
+
+    fn to_string(&self) -> String {
+        let mut buf = Vec::new();
+        self.alg().as_bytes().encode(&mut buf).unwrap();
+        self.blob().encode(&mut buf).unwrap();
+        let buf_b64 = BASE64_STANDARD.encode(&buf);
+        format!("{} {}", self.alg(), buf_b64)
+    }
 }
 
 impl TryFrom<PublicKey> for ssh_key::PublicKey {
@@ -344,9 +358,26 @@ impl TryFrom<Vec<u8>> for PublicKey {
     }
 }
 
+impl TryFrom<String> for PublicKey {
+    type Error = anyhow::Error;
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        // split by space
+        let parts: Vec<&str> = s.split_whitespace().collect();
+        if parts.len() < 2 {
+            return Err(anyhow::anyhow!("Invalid public key format"));
+        }
+
+        let blob_b64 = parts[1];
+        let blob = BASE64_STANDARD
+            .decode(blob_b64)
+            .map_err(|e| anyhow::anyhow!("Failed to decode base64: {e}"))?;
+        Self::try_read_from(blob.as_slice())
+    }
+}
+
 impl Debug for PublicKey {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "SshPublicKey(\"{} {}\")", self.alg(), self.blob_b64())
+        write!(f, "SshPublicKey(\"{}\")", self.to_string())
     }
 }
 
@@ -357,10 +388,6 @@ impl PublicKey {
 
     fn blob(&self) -> &[u8] {
         &self.blob
-    }
-
-    fn blob_b64(&self) -> String {
-        BASE64_STANDARD.encode(self.blob())
     }
 }
 
@@ -373,5 +400,17 @@ fn parse_key_safe(pem: &str) -> Result<ssh_key::private::PrivateKey, anyhow::Err
             ))),
         },
         Err(e) => Err(anyhow::Error::msg(format!("Failed to parse key: {e}"))),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_public_key_try_from_string() {
+        let pubkey_str = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC3F6YkV6vV8Y5Q9Y5Z5b5Z5b5Z5b5Z5b5Z5b5Z5b5Z5 user@host";
+        let public_key = PublicKey::try_from(pubkey_str.to_string()).unwrap();
+        assert_eq!(public_key.alg(), "ssh-ed25519");
     }
 }

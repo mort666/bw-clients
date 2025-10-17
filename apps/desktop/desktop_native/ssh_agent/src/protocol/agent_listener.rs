@@ -11,7 +11,10 @@ use crate::{
         async_stream_wrapper::AsyncStreamWrapper,
         connection::ConnectionInfo,
         key_store::Agent,
-        replies::{AgentExtensionFailure, AgentFailure, IdentitiesReply, SshSignReply},
+        replies::{
+            AgentExtensionFailure, AgentFailure, AgentSuccess, IdentitiesReply, ReplyFrame,
+            SshSignReply,
+        },
         requests::Request,
     },
     transport::peer_info::PeerInfo,
@@ -33,9 +36,9 @@ where
             }
             Some(Ok((stream, peer_info))) = listener.next() => {
                 let mut stream = AsyncStreamWrapper::new(stream);
-                let connection_info = ConnectionInfo::new(peer_info);
+                let mut connection_info = ConnectionInfo::new(peer_info);
                 info!("Accepted connection {} from {:?}", connection_info.id(), connection_info.peer_info());
-                if let Err(e) = handle_connection(&agent, &mut stream, &connection_info).await {
+                if let Err(e) = handle_connection(&agent, &mut stream, &mut connection_info).await {
                     error!("Error handling request: {e}");
                 }
             }
@@ -47,7 +50,7 @@ where
 async fn handle_connection(
     agent: &impl Agent,
     stream: &mut AsyncStreamWrapper<impl AsyncRead + AsyncWrite + Send + Sync + Unpin>,
-    connection: &ConnectionInfo,
+    connection: &mut ConnectionInfo,
 ) -> Result<(), anyhow::Error> {
     loop {
         let span = tracing::info_span!("Connection", connection_id = connection.id());
@@ -112,6 +115,16 @@ async fn handle_connection(
                     Ok(AgentExtensionFailure::new().into())
                 }
                 .map_err(|e| anyhow::anyhow!("Failed to create sign reply: {e}"))
+            }
+            Request::SessionBindRequest(request) => {
+                span.in_scope(|| info!("Received SessionBind {:?}", request));
+                connection.set_host_key(request.host_key().clone());
+                info!(
+                    "Bound connection {} to host {:?}",
+                    connection.id(),
+                    connection.host_name()
+                );
+                Ok(ReplyFrame::from(AgentSuccess::new()))
             }
         }?;
 

@@ -44,7 +44,7 @@ ssh-key = { version = "=0.7.0-rc.3", features = [
     "getrandom",
 ] }
 sysinfo = { workspace = true, features = ["windows"] }
-tokio = { workspace = true, features = ["io-util", "sync", "macros", "net"] }
+tokio = { workspace = true, features = ["io-util", "sync", "macros", "net", "full"] }
 tokio-util = { workspace = true, features = ["codec"] }
 tracing = { workspace = true }
 tracing-subscriber.workspace = true
