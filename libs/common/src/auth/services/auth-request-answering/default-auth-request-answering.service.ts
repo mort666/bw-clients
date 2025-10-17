@@ -27,14 +27,7 @@ export class DefaultAuthRequestAnsweringService implements AuthRequestAnsweringS
   ) {}
 
   async receivedPendingAuthRequest(userId: UserId): Promise<void> {
-    // Always persist the pending marker for this user to global state.
-    await this.pendingAuthRequestsState.add(userId);
-
-    const userIsAvailableToViewDialog = await this.userMeetsConditionsToShowApprovalDialog(userId);
-    if (userIsAvailableToViewDialog) {
-      // Send message to open dialog immediately for this request
-      this.messagingService.send("openLoginApproval");
-    }
+    throw new Error("receivedPendingAuthRequest() not implemented for this client");
   }
 
   async userMeetsConditionsToShowApprovalDialog(userId: UserId): Promise<boolean> {
