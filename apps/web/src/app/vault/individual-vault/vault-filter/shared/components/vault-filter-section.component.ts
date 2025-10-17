@@ -123,7 +123,7 @@ export class VaultFilterSectionComponent implements OnInit, OnDestroy {
   }
 
   get premiumFeature() {
-    return this.section?.premiumOptions?.showPremiumBadge;
+    return this.section?.premiumOptions?.showBadgeForNonPremium;
   }
 
   get divider() {

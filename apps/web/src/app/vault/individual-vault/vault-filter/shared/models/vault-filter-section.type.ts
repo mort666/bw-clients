@@ -49,8 +49,12 @@ export type VaultFilterSection = {
   divider?: boolean;
   premiumOptions?: {
     /**  When true, the premium badge will show on the filter for non-premium users. */
-    showPremiumBadge?: true;
-    /** Action to be called instead of applying the filter. */
+    showBadgeForNonPremium?: true;
+    /**
+     * Action to be called instead of applying the filter.
+     * Useful when the user does not have access to a filter (e.g., premium feature)
+     * and custom behavior is needed when invoking the filter.
+     */
     blockFilterAction?: () => Promise<void>;
   };
 };

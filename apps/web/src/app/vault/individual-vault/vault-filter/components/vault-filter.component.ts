@@ -453,7 +453,7 @@ export class VaultFilterComponent implements OnInit, OnDestroy {
       },
       action: this.applyTypeFilter as (filterNode: TreeNode<VaultFilterType>) => Promise<void>,
       premiumOptions: {
-        showPremiumBadge: true,
+        showBadgeForNonPremium: true,
         blockFilterAction: promptForPremiumOnFilter
           ? async () => await this.premiumUpgradePromptService.promptForPremium()
           : undefined,
