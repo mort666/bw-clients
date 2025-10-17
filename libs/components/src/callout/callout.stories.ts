@@ -123,6 +123,23 @@ export const WithTextButton: Story = {
   },
 };
 
+export const WithWrappingContent: Story = {
+  render: (args) => ({
+    props: args,
+    template: `
+      <bit-callout ${formatArgsForCodeSnippet<CalloutComponent>(args)}>
+        This is a really long callout that should wrap when it reaches the end of the container. This is a really long callout that should wrap when it reaches the end of the container.
+        This is a really long callout that should wrap when it reaches the end of the container. This is a really long callout that should wrap when it reaches the end of the container.
+        This is a really long callout that should wrap when it reaches the end of the container. This is a really long callout that should wrap when it reaches the end of the container.
+      </bit-callout>
+    `,
+  }),
+  args: {
+    type: "default",
+    icon: "bwi-globe",
+  },
+};
+
 export const Truncate: Story = {
   render: (args) => ({
     props: args,

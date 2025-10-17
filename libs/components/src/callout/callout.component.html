@@ -5,6 +5,7 @@
 >
   @let title = titleComputed();
   @let icon = iconComputed();
+  @let _truncate = truncate();
 
   @if (icon) {
     <i
@@ -13,17 +14,17 @@
       aria-hidden="true"
     ></i>
   }
-  <div class="tw-flex tw-flex-col tw-gap-0.5" [ngClass]="truncate ? 'tw-truncate' : ''">
+  <div class="tw-flex tw-flex-col tw-gap-0.5" [ngClass]="_truncate ? 'tw-truncate' : ''">
     @if (title) {
       <header
         id="{{ titleId }}"
         class="tw-text-base tw-font-semibold"
-        [ngClass]="truncate ? 'tw-truncate' : ''"
+        [ngClass]="_truncate ? 'tw-truncate' : ''"
       >
         {{ title }}
       </header>
     }
-    <div bitTypography="body2" [ngClass]="truncate ? 'tw-truncate' : ''">
+    <div bitTypography="body2" [ngClass]="_truncate ? 'tw-truncate' : ''">
       <ng-content></ng-content>
     </div>
   </div>
