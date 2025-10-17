@@ -57,7 +57,7 @@ export class PremiumUpgradeDialogComponent {
       catchError(() => {
         this.toastService.showToast({
           variant: "error",
-          title: "",
+          title: this.i18nService.t("error"),
           message: this.i18nService.t("unexpectedError"),
         });
         return of(null);

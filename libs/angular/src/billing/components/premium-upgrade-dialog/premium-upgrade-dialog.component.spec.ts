@@ -150,10 +150,11 @@ describe("PremiumUpgradeDialogComponent", () => {
     const newComponent = newFixture.componentInstance;
 
     const loadingValues: boolean[] = [];
-    newComponent["loading$"].subscribe((loading) => loadingValues.push(loading));
+    const sub = newComponent["loading$"].subscribe((loading) => loadingValues.push(loading));
 
     // Wait for the observable to emit
     await firstValueFrom(newComponent["cardDetails$"]);
+    sub.unsubscribe();
 
     expect(loadingValues.length).toBeGreaterThanOrEqual(2);
     expect(loadingValues[0]).toBe(true);

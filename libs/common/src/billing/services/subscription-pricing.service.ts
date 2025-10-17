@@ -24,6 +24,10 @@ export class DefaultSubscriptionPricingService implements SubscriptionPricingSer
     private logService: LogService,
   ) {}
 
+  /**
+   * Gets personal subscription pricing tiers (Premium and Families).
+   * @returns An observable of an array of personal subscription pricing tiers.
+   */
   getPersonalSubscriptionPricingTiers$ = (): Observable<PersonalSubscriptionPricingTier[]> =>
     combineLatest([this.premium$, this.families$]).pipe(
       catchError((error: unknown) => {
@@ -32,6 +36,10 @@ export class DefaultSubscriptionPricingService implements SubscriptionPricingSer
       }),
     );
 
+  /**
+   * Gets business subscription pricing tiers (Teams, Enterprise, and Custom).
+   * @returns An observable of an array of business subscription pricing tiers.
+   */
   getBusinessSubscriptionPricingTiers$ = (): Observable<BusinessSubscriptionPricingTier[]> =>
     combineLatest([this.teams$, this.enterprise$, this.custom$]).pipe(
       catchError((error: unknown) => {
@@ -40,6 +48,10 @@ export class DefaultSubscriptionPricingService implements SubscriptionPricingSer
       }),
     );
 
+  /**
+   * Gets developer subscription pricing tiers (Free, Teams, and Enterprise).
+   * @returns An observable of an array of business subscription pricing tiers for developers.
+   */
   getDeveloperSubscriptionPricingTiers$ = (): Observable<BusinessSubscriptionPricingTier[]> =>
     combineLatest([this.free$, this.teams$, this.enterprise$]).pipe(
       catchError((error: unknown) => {
