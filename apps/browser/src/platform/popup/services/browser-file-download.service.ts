@@ -17,8 +17,7 @@ export class BrowserFileDownloadService implements FileDownloadService {
     if (BrowserApi.isSafariApi) {
       // Handle Safari download asynchronously to allow Blob conversion
       // This function can't be async because the interface is not async
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      this.downloadSafari(request, builder);
+      void this.downloadSafari(request, builder);
     } else {
       const a = window.document.createElement("a");
       a.href = URL.createObjectURL(builder.blob);
@@ -33,7 +32,7 @@ export class BrowserFileDownloadService implements FileDownloadService {
     request: FileDownloadRequest,
     builder: FileDownloadBuilder,
   ): Promise<void> {
-    let data: BlobPart = null;
+    let data: string = null;
     if (builder.blobOptions.type === "text/plain" && typeof request.blobData === "string") {
       data = request.blobData;
     } else if (request.blobData instanceof Blob) {
