@@ -190,7 +190,7 @@ class InsertAutofillContentService implements InsertAutofillContentServiceInterf
     const elementCanBeReadonly =
       elementIsInputElement(element) || elementIsTextAreaElement(element);
     const elementCanBeFilled = elementCanBeReadonly || elementIsSelectElement(element);
-    const elementValue = (element as HTMLInputElement).value || element.innerText || "";
+    const elementValue = (element as HTMLInputElement)?.value || element?.innerText || "";
 
     const elementAlreadyHasTheValue = !!(elementValue?.length && elementValue === value);
 
