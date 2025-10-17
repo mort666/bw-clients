@@ -43,7 +43,6 @@ import {
   NativeAutofillPasswordCredential,
   NativeAutofillSyncCommand,
 } from "../../platform/main/autofill/sync.command";
-import { isMac } from "../../utils";
 
 import type { NativeWindowObject } from "./desktop-fido2-user-interface.service";
 
@@ -443,9 +442,8 @@ export class DesktopAutofillService implements OnDestroy {
 }
 
 function normalizePosition(position: { x: number; y: number }): { x: number; y: number } {
-  // If macOS, the position we're sending is too far left.
   // Add 100 pixels to the x-coordinate to offset the native OS dialog positioning.
-  const xPostionOffset = isMac() ? 100 : 0; // Offset for native dialog positioning
+  const xPostionOffset = 100;
 
   return {
     x: Math.round(position.x + xPostionOffset),
