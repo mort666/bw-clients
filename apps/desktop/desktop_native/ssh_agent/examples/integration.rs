@@ -1,3 +1,5 @@
+#![cfg(target_os = "linux")]
+
 use std::{fs, process::Command, sync::Arc};
 
 use ssh_agent::{agent::{ui_requester::{UiRequestMessage, UiRequester}, BitwardenDesktopAgent}, memory::UnlockedSshItem, protocol::types::{KeyPair, PrivateKey}, transport::unix_listener_stream::UnixListenerStream};
