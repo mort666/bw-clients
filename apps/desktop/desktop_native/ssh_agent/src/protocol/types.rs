@@ -269,12 +269,14 @@ impl PrivateKey {
             PrivateKey::Ecdsa(key) => ssh_key::private::PrivateKey::from(key.to_owned()),
         };
 
-        private_key
+        let pubkey_bytes = BASE64_STANDARD.encode(private_key
             .public_key()
             .to_bytes()
-            .map(PublicKey::try_from)
-            .expect("Key is always valid")
-            .expect("Key is always valid")
+            .expect("Converting to public key bytes should always be possible"));
+        let alg_str = private_key.algorithm();
+
+        PublicKey::try_from(format!("{} {}", alg_str.as_str(), BASE64_STANDARD.encode(&pubkey_bytes)))
+            .expect("Parsing public key should always be possible")
     }
 
     pub(crate) fn sign(
@@ -345,16 +347,20 @@ impl PublicKey {
         &self,
         writer: &mut impl ssh_encoding::Writer,
     ) -> Result<(), ssh_encoding::Error> {
-        let mut buf = Vec::new();
-        self.alg().as_bytes().encode(&mut buf)?;
-        self.blob().encode(&mut buf)?;
-        buf.encode(writer)?;
+        self.blob().encode(writer)?;
         Ok(())
     }
     fn try_read_from(mut bytes: &[u8]) -> Result<Self, anyhow::Error> {
         let alg = String::from_utf8_lossy(read_bytes(&mut bytes)?.as_slice()).to_string();
         let blob = read_bytes(&mut bytes)?;
         Ok(PublicKey { alg, blob })
+    }
+
+    pub fn from_blob(blob: Vec<u8>) -> Self {
+        // Parse the blob to extract the algorithm
+        let mut bytes = &blob[..];
+        let alg = String::from_utf8_lossy(read_bytes(&mut bytes).unwrap().as_slice()).to_string();
+        PublicKey { alg, blob }
     }
 }
 

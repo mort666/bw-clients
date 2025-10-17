@@ -82,7 +82,6 @@ impl TryFrom<&[u8]> for Request {
                 // Only support session bind for now
                 let extension_request: SessionBindRequest = contents.as_slice().try_into()?;
                 if !extension_request.verify_signature() {
-                    info!("Invalid session bind signature");
                     return Err(anyhow::anyhow!("Invalid session bind signature"));
                 }
                 Ok(Request::SessionBind(extension_request))
@@ -162,7 +161,7 @@ impl TryFrom<&[u8]> for SshSignRequest {
             .map_err(|e| anyhow::anyhow!("Failed to read flags from sign request: {e}"))?;
 
         Ok(SshSignRequest {
-            public_key: public_key_blob.try_into()?,
+            public_key: PublicKey::from_blob(public_key_blob),
             payload_to_sign: data.clone(),
             parsed_sign_request: data.as_slice().try_into()?,
             flags,
