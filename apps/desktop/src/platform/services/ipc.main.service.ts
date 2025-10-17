@@ -1,6 +1,13 @@
+import { ipcMain } from "electron";
+
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
-import { IpcMessage, IpcService, isIpcMessage } from "@bitwarden/common/platform/ipc";
+import {
+  ForwardedIpcMessage,
+  IpcMessage,
+  IpcService,
+  isIpcMessage,
+} from "@bitwarden/common/platform/ipc";
 import {
   IncomingMessage,
   IpcClient,
@@ -10,6 +17,7 @@ import {
 } from "@bitwarden/sdk-internal";
 
 import { NativeMessagingMain } from "../../main/native-messaging.main";
+import { WindowMain } from "../../main/window.main";
 import { isDev } from "../../utils";
 
 export class IpcMainService extends IpcService {
@@ -19,6 +27,7 @@ export class IpcMainService extends IpcService {
     private logService: LogService,
     private app: Electron.App,
     private nativeMessaging: NativeMessagingMain,
+    private windowMain: WindowMain,
   ) {
     super();
   }
@@ -49,25 +58,38 @@ export class IpcMainService extends IpcService {
           }
 
           if (message.destination === "DesktopRenderer") {
-            // TODO: Implement sending to renderer process
+            this.windowMain.win?.webContents.send("ipc.onMessage", {
+              type: "bitwarden-ipc-message",
+              message: {
+                destination: message.destination,
+                payload: [...message.payload],
+                topic: message.topic,
+              },
+            } satisfies IpcMessage);
+            return;
           }
         },
       });
 
-      // window.addEventListener("message", async (event: MessageEvent) => {
       this.nativeMessaging.messages$.subscribe((nativeMessage) => {
         const ipcMessage = JSON.parse(nativeMessage.message);
         if (!isIpcMessage(ipcMessage)) {
           return;
         }
 
-        // TODO: Add support for forwarding to DesktopRenderer
+        // Forward to renderer process
+        if (ipcMessage.message.destination === "DesktopRenderer") {
+          this.windowMain.win?.webContents.send("ipc.onMessage", {
+            type: "forwarded-bitwarden-ipc-message",
+            message: ipcMessage.message,
+            originalSource: "BrowserBackground",
+          } satisfies ForwardedIpcMessage);
+          return;
+        }
 
         if (ipcMessage.message.destination !== "DesktopMain") {
           return;
         }
-
-        this.logService.info("[IPC] Received native message", ipcMessage);
 
         this.communicationBackend?.receive(
           new IncomingMessage(
@@ -78,6 +100,34 @@ export class IpcMainService extends IpcService {
             ipcMessage.message.topic,
           ),
         );
+      });
+
+      // Handle messages from renderer process
+      ipcMain.on("ipc.send", async (_event, message: IpcMessage) => {
+        if (message.message.destination === "DesktopMain") {
+          this.communicationBackend?.receive(
+            new IncomingMessage(
+              new Uint8Array(message.message.payload),
+              message.message.destination,
+              "DesktopRenderer",
+              message.message.topic,
+            ),
+          );
+          return;
+        }
+
+        // Forward to native messaging
+        if (message.message.destination === "BrowserBackground") {
+          this.nativeMessaging.send({
+            type: "forwarded-bitwarden-ipc-message",
+            message: {
+              destination: message.message.destination,
+              payload: [...message.message.payload],
+              topic: message.message.topic,
+            },
+            originalSource: "DesktopRenderer",
+          } satisfies ForwardedIpcMessage);
+        }
       });
 
       await super.initWithClient(new IpcClient(this.communicationBackend));

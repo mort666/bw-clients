@@ -314,7 +314,12 @@ export class Main {
       this.windowMain,
     );
 
-    this.ipcService = new IpcMainService(this.logService, app, this.nativeMessagingMain);
+    this.ipcService = new IpcMainService(
+      this.logService,
+      app,
+      this.nativeMessagingMain,
+      this.windowMain,
+    );
 
     app
       .whenReady()

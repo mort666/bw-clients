@@ -1,10 +1,14 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { inject, Injectable } from "@angular/core";
+import { inject } from "@angular/core";
 
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
-import { IpcMessage, IpcService, isIpcMessage } from "@bitwarden/common/platform/ipc";
+import {
+  ForwardedIpcMessage,
+  IpcMessage,
+  IpcService,
+  isForwardedIpcMessage,
+} from "@bitwarden/common/platform/ipc";
 import {
   IncomingMessage,
   IpcClient,
@@ -31,50 +35,33 @@ export class IpcRendererService extends IpcService {
             );
           }
 
-          throw new Error("Not implemented");
-          // if (message.destination === "BrowserBackground" || message.destination === "ElectronMain") {
-          // window.postMessage(
-          //   {
-          //     type: "bitwarden-ipc-message",
-          //     message: {
-          //       destination: message.destination,
-          //       payload: [...message.payload],
-          //       topic: message.topic,
-          //     },
-          //   } satisfies IpcMessage,
-          //   window.location.origin,
-          // );
-          // return;
-          // }
+          if (
+            message.destination === "BrowserBackground" ||
+            message.destination === "DesktopMain"
+          ) {
+            ipc.platform.ipcService.send({
+              type: "bitwarden-ipc-message",
+              message: {
+                destination: message.destination,
+                payload: [...message.payload],
+                topic: message.topic,
+              },
+            } satisfies IpcMessage);
+            return;
+          }
         },
       });
 
-      // window.addEventListener("message", async (event: MessageEvent) => {
-      //   if (event.origin !== window.origin) {
-      //     return;
-      //   }
-
-      //   const message = event.data;
-      //   if (!isIpcMessage(message)) {
-      //     return;
-      //   }
-
-      //   if (
-      //     typeof message.message.destination !== "object" ||
-      //     message.message.destination.Web == undefined
-      //   ) {
-      //     return;
-      //   }
-
-      //   this.communicationBackend?.receive(
-      //     new IncomingMessage(
-      //       new Uint8Array(message.message.payload),
-      //       message.message.destination,
-      //       "BrowserBackground",
-      //       message.message.topic,
-      //     ),
-      //   );
-      // });
+      ipc.platform.ipcService.onMessage((message: ForwardedIpcMessage | IpcMessage) => {
+        this.communicationBackend?.receive(
+          new IncomingMessage(
+            new Uint8Array(message.message.payload),
+            message.message.destination,
+            isForwardedIpcMessage(message) ? message.originalSource : "DesktopMain",
+            message.message.topic,
+          ),
+        );
+      });
 
       await super.initWithClient(new IpcClient(this.communicationBackend));
 

@@ -1,7 +1,12 @@
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
-import { IpcMessage, isIpcMessage, IpcService } from "@bitwarden/common/platform/ipc";
+import {
+  IpcMessage,
+  isIpcMessage,
+  IpcService,
+  isForwardedIpcMessage,
+} from "@bitwarden/common/platform/ipc";
 import {
   IpcCommunicationBackend,
   IncomingMessage,
@@ -96,7 +101,7 @@ export class IpcBackgroundService extends IpcService {
       });
 
       this.nativeMessagingPort?.onMessage.addListener((ipcMessage) => {
-        if (!isIpcMessage(ipcMessage)) {
+        if (!isIpcMessage(ipcMessage) && !isForwardedIpcMessage(ipcMessage)) {
           return;
         }
 
@@ -104,7 +109,7 @@ export class IpcBackgroundService extends IpcService {
           new IncomingMessage(
             new Uint8Array(ipcMessage.message.payload),
             ipcMessage.message.destination,
-            "DesktopMain",
+            isForwardedIpcMessage(ipcMessage) ? ipcMessage.originalSource : "DesktopMain",
             ipcMessage.message.topic,
           ),
         );
