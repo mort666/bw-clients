@@ -1,7 +1,7 @@
-#![cfg(target_os = "linux")]
-
+#[cfg(target_os = "linux")]
 use std::{fs, process::Command, sync::Arc};
 
+#[cfg(target_os = "linux")]
 use ssh_agent::{
     agent::{
         ui_requester::{UiRequestMessage, UiRequester},
@@ -11,25 +11,22 @@ use ssh_agent::{
     protocol::types::{KeyPair, PrivateKey},
     transport::unix_listener_stream::UnixListenerStream,
 };
+#[cfg(target_os = "linux")]
 use tokio::{
     sync::{broadcast, mpsc, Mutex},
     task,
 };
+#[cfg(target_os = "linux")]
 use tracing::info;
 
-#[tokio::main]
-async fn main() {
+#[cfg(target_os = "linux")]
+#[tokio::test]
+#[test_log::test]
+async fn ssh_agent_auth() {
     let dir = homedir::my_home().unwrap().unwrap();
     let dir = dir.join(".cache");
     let dir = dir.join("ssh_agent_integration_test");
     let dir = dir.to_string_lossy().into_owned();
-
-    // set up tracing to stdout
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO)
-        .with_thread_ids(true)
-        .with_thread_names(true)
-        .init();
 
     fs::remove_dir_all(&dir).unwrap_or(());
     // Prepare test run directory
@@ -56,6 +53,7 @@ AuthorizedKeysFile  {}/authorized_keys
             .status()
             .expect("failed to execute process");
     });
+    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
     let ui_requester = mock_channels();
     let desktop_agent = BitwardenDesktopAgent::new(ui_requester);
@@ -63,23 +61,31 @@ AuthorizedKeysFile  {}/authorized_keys
 
     let dir_clone = dir.clone();
     task::spawn(async move {
-        println!("Starting SSH Agent V2 socket...");
         info!(target: "ssh-agent", "Listening on {}", format!("{}/ssh-agent.sock", dir_clone));
         UnixListenerStream::listen(format!("{}/ssh-agent.sock", dir_clone), desktop_agent)
             .await
             .unwrap();
     });
 
-    // run ssh-add -L
-    Command::new("ssh-add")
-        .env("SSH_AUTH_SOCK", format!("{}/ssh-agent.sock", dir))
-        .args(&["-L"])
-        .status()
-        .expect("failed to execute process");
+    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
 
-    // run ssh
-    Command::new("ssh")
-        .env("SSH_AUTH_SOCK", format!("{}/ssh-agent.sock", dir))
+    // Test listing keys
+    let dir_clone = dir.clone();
+    let jh1 = std::thread::spawn(move || {
+        Command::new("ssh-add")
+            .env("SSH_AUTH_SOCK", format!("{}/ssh-agent.sock", dir_clone))
+            .args(&["-L"])
+            .status()
+            .expect("failed to execute process");
+    });
+    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+    jh1.join().unwrap();
+
+    // Test ssh connection
+    let dir_clone = dir.clone();
+    let jh1 = std::thread::spawn(move || {
+        Command::new("ssh")
+        .env("SSH_AUTH_SOCK", format!("{}/ssh-agent.sock", dir_clone))
         .args(&[
             "-o",
             "StrictHostKeyChecking=no",
@@ -93,12 +99,17 @@ AuthorizedKeysFile  {}/authorized_keys
         ])
         .status()
         .expect("failed to execute process");
+    });
+    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+    jh1.join().unwrap();
+    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
     // Cleanup
     fs::remove_dir_all(dir).unwrap();
     std::process::exit(0);
 }
 
+#[cfg(target_os = "linux")]
 fn make_keys(dir: &str) -> Vec<UnlockedSshItem> {
     Command::new("ssh-keygen")
         .args(&[
@@ -173,6 +184,7 @@ fn make_keys(dir: &str) -> Vec<UnlockedSshItem> {
     unlocked_items
 }
 
+#[cfg(target_os = "linux")]
 fn mock_channels() -> UiRequester {
     let (show_ui_request_tx, mut show_ui_request_rx) = mpsc::channel::<UiRequestMessage>(10);
 
