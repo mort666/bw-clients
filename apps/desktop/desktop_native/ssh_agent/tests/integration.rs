@@ -85,20 +85,20 @@ AuthorizedKeysFile  {}/authorized_keys
     let dir_clone = dir.clone();
     let jh1 = std::thread::spawn(move || {
         Command::new("ssh")
-        .env("SSH_AUTH_SOCK", format!("{}/ssh-agent.sock", dir_clone))
-        .args(&[
-            "-o",
-            "StrictHostKeyChecking=no",
-            "-o",
-            "UserKnownHostsFile=/dev/null",
-            "-p",
-            "2222",
-            "localhost",
-            "echo",
-            "Hello, world!",
-        ])
-        .status()
-        .expect("failed to execute process");
+            .env("SSH_AUTH_SOCK", format!("{}/ssh-agent.sock", dir_clone))
+            .args(&[
+                "-o",
+                "StrictHostKeyChecking=no",
+                "-o",
+                "UserKnownHostsFile=/dev/null",
+                "-p",
+                "2222",
+                "localhost",
+                "echo",
+                "Hello, world!",
+            ])
+            .status()
+            .expect("failed to execute process");
     });
     tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
     jh1.join().unwrap();
