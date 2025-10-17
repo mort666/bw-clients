@@ -1435,7 +1435,7 @@ export default class MainBackground {
     );
 
     this.ipcContentScriptManagerService = new IpcContentScriptManagerService(this.configService);
-    this.ipcService = new IpcBackgroundService(this.platformUtilsService, this.logService);
+    this.ipcService = new IpcBackgroundService(this.logService, this.platformUtilsService);
 
     this.endUserNotificationService = new DefaultEndUserNotificationService(
       this.stateProvider,

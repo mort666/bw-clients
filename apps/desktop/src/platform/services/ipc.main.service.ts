@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
-import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { SdkLoadService } from "@bitwarden/common/platform/abstractions/sdk/sdk-load.service";
 import { IpcMessage, IpcService, isIpcMessage } from "@bitwarden/common/platform/ipc";
 import {
@@ -11,6 +9,7 @@ import {
   OutgoingMessage,
 } from "@bitwarden/sdk-internal";
 
+import { NativeMessagingMain } from "../../main/native-messaging.main";
 import { isDev } from "../../utils";
 
 export class IpcMainService extends IpcService {
@@ -19,6 +18,7 @@ export class IpcMainService extends IpcService {
   constructor(
     private logService: LogService,
     private app: Electron.App,
+    private nativeMessaging: NativeMessagingMain,
   ) {
     super();
   }
@@ -29,57 +29,56 @@ export class IpcMainService extends IpcService {
       await SdkLoadService.Ready;
 
       this.communicationBackend = new IpcCommunicationBackend({
-        async send(message: OutgoingMessage): Promise<void> {
+        send: async (message: OutgoingMessage): Promise<void> => {
           if (message.destination === "DesktopMain") {
             throw new Error(
               `Destination not supported: ${message.destination} (cannot send messages to self)`,
             );
           }
 
-          throw new Error("Not implemented");
-          // if (message.destination === "BrowserBackground" || message.destination === "ElectronMain") {
-          // window.postMessage(
-          //   {
-          //     type: "bitwarden-ipc-message",
-          //     message: {
-          //       destination: message.destination,
-          //       payload: [...message.payload],
-          //       topic: message.topic,
-          //     },
-          //   } satisfies IpcMessage,
-          //   window.location.origin,
-          // );
-          // return;
-          // }
+          if (message.destination === "BrowserBackground") {
+            this.nativeMessaging.send({
+              type: "bitwarden-ipc-message",
+              message: {
+                destination: message.destination,
+                payload: [...message.payload],
+                topic: message.topic,
+              },
+            } satisfies IpcMessage);
+            return;
+          }
+
+          if (message.destination === "DesktopRenderer") {
+            // TODO: Implement sending to renderer process
+          }
         },
       });
 
       // window.addEventListener("message", async (event: MessageEvent) => {
-      //   if (event.origin !== window.origin) {
-      //     return;
-      //   }
+      this.nativeMessaging.messages$.subscribe((nativeMessage) => {
+        const ipcMessage = JSON.parse(nativeMessage.message);
+        if (!isIpcMessage(ipcMessage)) {
+          return;
+        }
 
-      //   const message = event.data;
-      //   if (!isIpcMessage(message)) {
-      //     return;
-      //   }
+        // TODO: Add support for forwarding to DesktopRenderer
 
-      //   if (
-      //     typeof message.message.destination !== "object" ||
-      //     message.message.destination.Web == undefined
-      //   ) {
-      //     return;
-      //   }
+        if (ipcMessage.message.destination !== "DesktopMain") {
+          return;
+        }
 
-      //   this.communicationBackend?.receive(
-      //     new IncomingMessage(
-      //       new Uint8Array(message.message.payload),
-      //       message.message.destination,
-      //       "BrowserBackground",
-      //       message.message.topic,
-      //     ),
-      //   );
-      // });
+        this.logService.info("[IPC] Received native message", ipcMessage);
+
+        this.communicationBackend?.receive(
+          new IncomingMessage(
+            new Uint8Array(ipcMessage.message.payload),
+            ipcMessage.message.destination,
+            // TODO: Add ID to BrowserBackground
+            "BrowserBackground",
+            ipcMessage.message.topic,
+          ),
+        );
+      });
 
       await super.initWithClient(new IpcClient(this.communicationBackend));
 
