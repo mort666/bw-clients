@@ -343,7 +343,7 @@ impl Display for PublicKey {
         // Failure to encode is ignored
         let _ = self.alg().as_bytes().encode(&mut buf);
         let _ = self.blob().encode(&mut buf);
-        write!(f, "{}", BASE64_STANDARD.encode(&buf))
+        write!(f, "{} {}", self.alg(), BASE64_STANDARD.encode(&buf))
     }
 }
 
@@ -408,6 +408,8 @@ fn parse_key_safe(pem: &str) -> Result<ssh_key::private::PrivateKey, anyhow::Err
 
 #[cfg(test)]
 mod tests {
+    use ssh_encoding::base64::Base64;
+
     use super::*;
 
     #[test]
@@ -415,5 +417,15 @@ mod tests {
         let pubkey_str = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC3F6YkV6vV8Y5Q9Y5Z5b5Z5b5Z5b5Z5b5Z5b5Z5b5Z5 user@host";
         let public_key = PublicKey::try_from(pubkey_str.to_string()).unwrap();
         assert_eq!(public_key.alg(), "ssh-ed25519");
+    }
+
+    #[test]
+    fn test_verify_sig_ed25519() {
+        let public_key = PublicKey::try_from("ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl".to_string()).unwrap();
+        let data = BASE64_STANDARD.decode("31OCVyEvqX0D4XBdgzOKe9MA8n/JZUEv2wWiMM0G+7I=").unwrap();
+        let signature = BASE64_STANDARD.decode("n1PA02OSA/qsDk3XmGP7OSjizN7kTjtJ9gIvmJRBaJa0Nz2X62q0xsNKKnRXuPwsqiXKQU25jS3ytO6y2S0hAA==").unwrap();
+        assert!(Signature::try_from(
+            signature.as_slice()
+        ).unwrap().verify(&public_key, &data).unwrap());
     }
 }
