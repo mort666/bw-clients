@@ -85,18 +85,6 @@ impl KnownHostsReader {
 
         Ok(entries)
     }
-
-    /// Finds host entries by hostname pattern
-    pub fn find_host(entries: &[KnownHostEntry], hostname: &str) -> Option<KnownHostEntry> {
-        entries
-            .iter()
-            .find(|entry| {
-                entry.hostname.split(',').any(|h| {
-                    h == hostname || h == "*" || h.starts_with("*.") && hostname.ends_with(&h[1..])
-                })
-            })
-            .cloned()
-    }
 }
 
 #[cfg(test)]

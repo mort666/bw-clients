@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use std::fmt::Display;
 use std::fmt::Formatter;
 
 use base64::prelude::BASE64_STANDARD;
@@ -334,13 +335,15 @@ impl PublicKey {
         let blob = read_bytes(&mut bytes)?;
         Ok(PublicKey { alg, blob })
     }
+}
 
-    fn to_string(&self) -> String {
+impl Display for PublicKey {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut buf = Vec::new();
-        self.alg().as_bytes().encode(&mut buf).unwrap();
-        self.blob().encode(&mut buf).unwrap();
-        let buf_b64 = BASE64_STANDARD.encode(&buf);
-        format!("{} {}", self.alg(), buf_b64)
+        // Failure to encode is ignored
+        let _ = self.alg().as_bytes().encode(&mut buf);
+        let _ = self.blob().encode(&mut buf);
+        write!(f, "{}", BASE64_STANDARD.encode(&buf))
     }
 }
 
@@ -377,7 +380,7 @@ impl TryFrom<String> for PublicKey {
 
 impl Debug for PublicKey {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "SshPublicKey(\"{}\")", self.to_string())
+        write!(f, "SshPublicKey(\"{}\")", self)
     }
 }
 

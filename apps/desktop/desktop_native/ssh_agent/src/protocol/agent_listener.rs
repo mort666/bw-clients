@@ -72,7 +72,7 @@ async fn handle_connection(
         };
 
         let response = match request {
-            Request::IdentitiesRequest => {
+            Request::Identities => {
                 span.in_scope(|| info!("Received IdentitiesRequest"));
 
                 let Ok(true) = agent.request_can_list(connection).await else {
@@ -86,7 +86,7 @@ async fn handle_connection(
                     .encode()
                     .map_err(|e| anyhow::anyhow!("Failed to encode identities reply: {e}"))
             }
-            Request::SignRequest(sign_request) => {
+            Request::Sign(sign_request) => {
                 span.in_scope(|| info!("Received SignRequest {:?}", sign_request));
 
                 let Ok(true) = agent
@@ -115,7 +115,7 @@ async fn handle_connection(
                 }
                 .map_err(|e| anyhow::anyhow!("Failed to create sign reply: {e}"))
             }
-            Request::SessionBindRequest(request) => {
+            Request::SessionBind(request) => {
                 span.in_scope(|| info!("Received SessionBind {:?}", request));
                 connection.set_host_key(request.host_key().clone());
                 info!(

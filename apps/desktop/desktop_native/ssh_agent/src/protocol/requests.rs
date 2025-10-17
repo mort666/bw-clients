@@ -47,11 +47,11 @@ pub(crate) enum SshSignFlags {
 #[derive(Debug)]
 pub(crate) enum Request {
     /// Request the list of keys the agent is holding
-    IdentitiesRequest,
+    Identities,
     /// Sign an authentication request or SSHSIG request
-    SignRequest(SshSignRequest),
+    Sign(SshSignRequest),
     /// Session bind request
-    SessionBindRequest(SessionBindRequest),
+    SessionBind(SessionBindRequest),
 }
 
 impl TryFrom<&[u8]> for Request {
@@ -74,9 +74,9 @@ impl TryFrom<&[u8]> for Request {
         let contents = message[1..].to_vec();
 
         match r#type {
-            RequestType::SSH_AGENTC_REQUEST_IDENTITIES => Ok(Request::IdentitiesRequest),
+            RequestType::SSH_AGENTC_REQUEST_IDENTITIES => Ok(Request::Identities),
             RequestType::SSH_AGENTC_SIGN_REQUEST => {
-                Ok(Request::SignRequest(contents.as_slice().try_into()?))
+                Ok(Request::Sign(contents.as_slice().try_into()?))
             }
             RequestType::SSH_AGENTC_EXTENSION => {
                 // Only support session bind for now
@@ -85,7 +85,7 @@ impl TryFrom<&[u8]> for Request {
                     info!("Invalid session bind signature");
                     return Err(anyhow::anyhow!("Invalid session bind signature"));
                 }
-                Ok(Request::SessionBindRequest(extension_request))
+                Ok(Request::SessionBind(extension_request))
             }
             _ => Err(anyhow::anyhow!("Unsupported request type: {:?}", r#type)),
         }
@@ -355,13 +355,13 @@ mod tests {
     #[test]
     fn test_parse_identities_request() {
         let req = Request::try_from(TEST_VECTOR_REQUEST_LIST).expect("Should parse");
-        assert!(matches!(req, Request::IdentitiesRequest));
+        assert!(matches!(req, Request::Identities));
     }
 
     #[test]
     fn test_parse_sign_request() {
         let req = Request::try_from(TEST_VECTOR_REQUEST_SIGN).expect("Should parse");
-        assert!(matches!(req, Request::SignRequest { .. }));
+        assert!(matches!(req, Request::Sign { .. }));
     }
 
     #[test]
