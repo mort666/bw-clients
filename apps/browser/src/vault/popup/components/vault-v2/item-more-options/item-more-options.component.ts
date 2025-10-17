@@ -1,5 +1,3 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
 import { CommonModule } from "@angular/common";
 import { booleanAttribute, Component, Input } from "@angular/core";
 import { Router, RouterModule } from "@angular/router";
@@ -14,8 +12,7 @@ import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { Utils } from "@bitwarden/common/platform/misc/utils";
-import { CipherId } from "@bitwarden/common/types/guid";
+import { CipherId, UserId } from "@bitwarden/common/types/guid";
 import { CipherArchiveService } from "@bitwarden/common/vault/abstractions/cipher-archive.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherRepromptType, CipherType } from "@bitwarden/common/vault/enums";
@@ -47,7 +44,7 @@ import {
   imports: [ItemModule, IconButtonModule, MenuModule, CommonModule, JslibModule, RouterModule],
 })
 export class ItemMoreOptionsComponent {
-  private _cipher$ = new BehaviorSubject<CipherViewLike>(undefined);
+  private _cipher$ = new BehaviorSubject<CipherViewLike>({} as CipherViewLike);
 
   @Input({
     required: true,
@@ -65,14 +62,14 @@ export class ItemMoreOptionsComponent {
    * assigned as the primary action for the item, such as autofill.
    */
   @Input({ transform: booleanAttribute })
-  showViewOption: boolean;
+  showViewOption = false;
 
   /**
    * Flag to hide the autofill menu options. Used for items that are
    * already in the autofill list suggestion.
    */
   @Input({ transform: booleanAttribute })
-  hideAutofillOptions: boolean;
+  hideAutofillOptions = false;
 
   protected autofillAllowed$ = this.vaultPopupAutofillService.autofillAllowed$;
 
@@ -189,13 +186,12 @@ export class ItemMoreOptionsComponent {
       this.configService.getFeatureFlag$(FeatureFlag.AutofillConfirmation),
     );
 
-    if (!isFeatureFlagEnabled) {
+    if (isFeatureFlagEnabled) {
       const currentTab = await firstValueFrom(this.vaultPopupAutofillService.currentAutofillTab$);
-      const currentUri = Utils.getHostname(currentTab.url);
 
       const ref = AutofillConfirmationDialogComponent.open(this.dialogService, {
         data: {
-          currentUri,
+          currentUri: currentTab?.url ?? null,
         },
       });
 
@@ -231,15 +227,14 @@ export class ItemMoreOptionsComponent {
     const cipher = await this.cipherService.getFullCipherView(this.cipher);
 
     cipher.favorite = !cipher.favorite;
-    const activeUserId = await firstValueFrom(
+    const activeUserId = (await firstValueFrom(
       this.accountService.activeAccount$.pipe(map((a) => a?.id)),
-    );
+    )) as UserId;
 
     const encryptedCipher = await this.cipherService.encrypt(cipher, activeUserId);
     await this.cipherService.updateWithServer(encryptedCipher);
     this.toastService.showToast({
       variant: "success",
-      title: null,
       message: this.i18nService.t(
         this.cipher.favorite ? "itemAddedToFavorites" : "itemRemovedFromFavorites",
       ),
@@ -337,7 +332,7 @@ export class ItemMoreOptionsComponent {
     await this.cipherArchiveService.archiveWithServer(this.cipher.id as CipherId, activeUserId);
     this.toastService.showToast({
       variant: "success",
-      message: this.i18nService.t("itemWasSentToArchive"),
+      message: this.i18nService.t("itemSentToArchive"),
     });
   }
 }
