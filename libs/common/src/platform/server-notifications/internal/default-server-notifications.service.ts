@@ -293,9 +293,9 @@ export class DefaultServerNotificationsService implements ServerNotificationsSer
          * pending auth request to process at a time, so this second call will not cause any
          * duplicate processing conflicts on Extension.
          */
-        // this.messagingService.send("openLoginApproval", {
-        //   notificationId: notification.payload.id,
-        // });
+        this.messagingService.send("openLoginApproval", {
+          notificationId: notification.payload.id,
+        });
         break;
       case NotificationType.SyncOrganizationStatusChanged:
         await this.syncService.fullSync(true);
