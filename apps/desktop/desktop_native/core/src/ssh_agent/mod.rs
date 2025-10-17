@@ -208,7 +208,10 @@ impl BitwardenDesktopAgent<BitwardenSshKey> {
     ///
     /// This function panics if the underlying `RwLock` is poisoned or
     /// if the cipher's public key is not serializable to bytes.
-    pub fn set_keys(&mut self, new_keys: &[(String, String, String)]) -> Result<(), anyhow::Error> {
+    pub fn set_keys(
+        &mut self,
+        new_keys: &[(&String, &String, &String)],
+    ) -> Result<(), anyhow::Error> {
         if !self.is_running() {
             return Err(anyhow::anyhow!(
                 "[BitwardenDesktopAgent] Tried to set keys while agent is not running"
@@ -232,8 +235,8 @@ impl BitwardenDesktopAgent<BitwardenSshKey> {
                         public_key_bytes,
                         BitwardenSshKey {
                             private_key: Some(private_key),
-                            name: name.clone(),
-                            cipher_uuid: cipher_id.clone(),
+                            name: (*name).to_string(),
+                            cipher_uuid: (*cipher_id).to_string(),
                         },
                     );
                 }
