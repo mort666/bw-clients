@@ -131,7 +131,7 @@ impl Signature {
                             .verify(
                                 data,
                                 &p256::ecdsa::Signature::from_scalars(
-                                    p256::FieldBytes::clone_from_slice(&r),
+                                    p256::FieldBytes::clone_from_slice(r),
                                     p256::FieldBytes::clone_from_slice(&s),
                                 )?,
                             )
@@ -150,7 +150,7 @@ impl Signature {
                             .verify(
                                 data,
                                 &p384::ecdsa::Signature::from_scalars(
-                                    p384::FieldBytes::clone_from_slice(&r),
+                                    p384::FieldBytes::clone_from_slice(r),
                                     p384::FieldBytes::clone_from_slice(&s),
                                 )?,
                             )
@@ -169,7 +169,7 @@ impl Signature {
                             .verify(
                                 data,
                                 &p521::ecdsa::Signature::from_scalars(
-                                    p521::FieldBytes::clone_from_slice(&r),
+                                    p521::FieldBytes::clone_from_slice(r),
                                     p521::FieldBytes::clone_from_slice(&s),
                                 )?,
                             )
@@ -360,7 +360,7 @@ impl PublicKey {
 
 impl Display for PublicKey {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {}", self.alg(), BASE64_STANDARD.encode(&self.blob()))
+        write!(f, "{} {}", self.alg(), BASE64_STANDARD.encode(self.blob()))
     }
 }
 
