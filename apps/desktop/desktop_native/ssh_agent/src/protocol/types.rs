@@ -408,8 +408,6 @@ fn parse_key_safe(pem: &str) -> Result<ssh_key::private::PrivateKey, anyhow::Err
 
 #[cfg(test)]
 mod tests {
-    use ssh_encoding::base64::Base64;
-
     use super::*;
 
     #[test]
