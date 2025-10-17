@@ -123,10 +123,17 @@ impl Signature {
                 match curve {
                     EcdsaCurve::NistP256 => {
                         use p256::ecdsa::signature::Verifier;
+                        let mut buf = self.0.as_bytes();
+                        let r = read_bytes(&mut buf)?;
+                        let s = read_bytes(&mut buf)?;
+                        let r = if r.len() == 33 { &r[1..] } else { &r };
                         p256::ecdsa::VerifyingKey::from_sec1_bytes(sec1_bytes)?
                             .verify(
                                 data,
-                                &p256::ecdsa::Signature::from_slice(self.0.as_bytes())?,
+                                &p256::ecdsa::Signature::from_scalars(
+                                    p256::FieldBytes::clone_from_slice(&r),
+                                    p256::FieldBytes::clone_from_slice(&s),
+                                )?,
                             )
                             .map_err(|e| {
                                 anyhow::anyhow!("ECDSA P-256 signature verification failed: {e}")
@@ -135,10 +142,17 @@ impl Signature {
                     }
                     EcdsaCurve::NistP384 => {
                         use p384::ecdsa::signature::Verifier;
+                        let mut buf = self.0.as_bytes();
+                        let r = read_bytes(&mut buf)?;
+                        let s = read_bytes(&mut buf)?;
+                        let r = if r.len() == 49 { &r[1..] } else { &r };
                         p384::ecdsa::VerifyingKey::from_sec1_bytes(sec1_bytes)?
                             .verify(
                                 data,
-                                &p384::ecdsa::Signature::from_slice(self.0.as_bytes())?,
+                                &p384::ecdsa::Signature::from_scalars(
+                                    p384::FieldBytes::clone_from_slice(&r),
+                                    p384::FieldBytes::clone_from_slice(&s),
+                                )?,
                             )
                             .map_err(|e| {
                                 anyhow::anyhow!("ECDSA P-384 signature verification failed: {e}")
@@ -147,10 +161,17 @@ impl Signature {
                     }
                     EcdsaCurve::NistP521 => {
                         use p521::ecdsa::signature::Verifier;
+                        let mut buf = self.0.as_bytes();
+                        let r = read_bytes(&mut buf)?;
+                        let s = read_bytes(&mut buf)?;
+                        let r = if r.len() == 67 { &r[1..] } else { &r };
                         p521::ecdsa::VerifyingKey::from_sec1_bytes(sec1_bytes)?
                             .verify(
                                 data,
-                                &p521::ecdsa::Signature::from_slice(self.0.as_bytes())?,
+                                &p521::ecdsa::Signature::from_scalars(
+                                    p521::FieldBytes::clone_from_slice(&r),
+                                    p521::FieldBytes::clone_from_slice(&s),
+                                )?,
                             )
                             .map_err(|e| {
                                 anyhow::anyhow!("ECDSA P-521 signature verification failed: {e}")
@@ -339,18 +360,7 @@ impl PublicKey {
 
 impl Display for PublicKey {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut buf = Vec::new();
-        // Failure to encode is ignored
-        let _ = self.alg().as_bytes().encode(&mut buf);
-        let _ = self.blob().encode(&mut buf);
-        write!(f, "{} {}", self.alg(), BASE64_STANDARD.encode(&buf))
-    }
-}
-
-impl TryFrom<PublicKey> for ssh_key::PublicKey {
-    type Error = anyhow::Error;
-    fn try_from(key: PublicKey) -> Result<Self, Self::Error> {
-        ssh_key::PublicKey::from_bytes(&key.blob).map_err(|e| anyhow::anyhow!(e))
+        write!(f, "{} {}", self.alg(), BASE64_STANDARD.encode(&self.blob()))
     }
 }
 
@@ -364,17 +374,21 @@ impl TryFrom<Vec<u8>> for PublicKey {
 impl TryFrom<String> for PublicKey {
     type Error = anyhow::Error;
     fn try_from(s: String) -> Result<Self, Self::Error> {
+        println!("Parsing public key from string: {}", s);
         // split by space
         let parts: Vec<&str> = s.split_whitespace().collect();
         if parts.len() < 2 {
             return Err(anyhow::anyhow!("Invalid public key format"));
         }
+        println!("Public key parts: alg='{}', blob='{}'", parts[0], parts[1]);
+
+        let alg = parts[0].to_string();
 
         let blob_b64 = parts[1];
         let blob = BASE64_STANDARD
             .decode(blob_b64)
             .map_err(|e| anyhow::anyhow!("Failed to decode base64: {e}"))?;
-        Self::try_read_from(blob.as_slice())
+        Ok(PublicKey { alg, blob })
     }
 }
 
@@ -417,18 +431,60 @@ mod tests {
         assert_eq!(public_key.alg(), "ssh-ed25519");
     }
 
+    // Test vectors are collected from authentications to GitHub's ssh service
     #[test]
     fn test_verify_sig_ed25519() {
-        let public_key = PublicKey::try_from(
-            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"
-                .to_string(),
-        )
-        .unwrap();
-        let data = BASE64_STANDARD
-            .decode("31OCVyEvqX0D4XBdgzOKe9MA8n/JZUEv2wWiMM0G+7I=")
-            .unwrap();
-        let signature = BASE64_STANDARD.decode("n1PA02OSA/qsDk3XmGP7OSjizN7kTjtJ9gIvmJRBaJa0Nz2X62q0xsNKKnRXuPwsqiXKQU25jS3ytO6y2S0hAA==").unwrap();
+        const PUBLIC_KEY: &str =
+            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
+        const DATA: &str = "31OCVyEvqX0D4XBdgzOKe9MA8n/JZUEv2wWiMM0G+7I=";
+        const SIGNATURE: &str = "n1PA02OSA/qsDk3XmGP7OSjizN7kTjtJ9gIvmJRBaJa0Nz2X62q0xsNKKnRXuPwsqiXKQU25jS3ytO6y2S0hAA==";
+
+        let public_key = PublicKey::try_from(PUBLIC_KEY.to_string()).unwrap();
+        let data = BASE64_STANDARD.decode(DATA).unwrap();
+        let signature = BASE64_STANDARD.decode(SIGNATURE).unwrap();
         let sig = Signature(ssh_key::Signature::new(Algorithm::Ed25519, signature).unwrap());
+        assert!(sig.verify(&public_key, &data).unwrap());
+    }
+
+    #[test]
+    fn test_verify_sig_ecdsa() {
+        let sig = "AAAAIQDz7QDHe33YhnAKbyUlwkDbe5o8qs172ycTUP4WC2GdKgAAACADT8fMBEmPuNd/cfe+Tobv70HDUmkjPqNqO0Yjsb37PQ==";
+        let pubkey = "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=";
+        let data = "NEJYKAPuiPrBuEQrn/9NPiAuJ0YH6ZVq/4d01j1VrPw=";
+
+        let public_key = PublicKey::try_from(pubkey.to_string()).unwrap();
+        let data = BASE64_STANDARD.decode(data).unwrap();
+        let signature = BASE64_STANDARD.decode(sig).unwrap();
+        let sig = Signature(
+            ssh_key::Signature::new(
+                Algorithm::Ecdsa {
+                    curve: EcdsaCurve::NistP256,
+                },
+                signature,
+            )
+            .unwrap(),
+        );
+        assert!(sig.verify(&public_key, &data).unwrap());
+    }
+
+    #[test]
+    fn test_verify_sig_rsa() {
+        let sig = "GWRiAWPY/L6t531C8ehA4nn/3yTVtKNjs909kY2mbvhNAeXklPJuwKBBsbrXoABBmDa8b+iwUQfZhBXdC0AB3ulN1amb35yN+4HzWoc7gY+DR22hjcqLmDbu2pq7QlTGcO0WUt2xQagZokx8tojjRydqeO8ZU7zo4uuEt+ndYubwYWFUPEgaMdMOtW4JcwqJh7VQSZUlRGfj09V1aj9I52V+BD15sth6N/yGzd91D9d2H10XcYyPtQFlwXpp7mDr7vvjEWQqqQ694Ls2q6nSwjbmychI0svS//GGQM1X6gePNyoaNqm6fD+uvZGJ2Ytl7dI7Qg37AvaUS79+VlA/n+Tq/FMQYpETpC0ZsW8nBCn/rIkzZRcwhTYoAguRIXzoVQ/owklFAU591f/PZ5PBWIrJGjnEoxgOq/88lHPfE+grREklSfucyYtLN3rCc9q0rYnbCvfBe6yuSsRW07WiOP+t24mwag3qOWvkJ/lSLNQGu92iRib0w2hX0vdT/WG7";
+        let pubkey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=";
+        let data = "79oy/lj+/eUTDc07ImyQPmPvazMN1CJJfDTkAZzaqow=";
+
+        let public_key = PublicKey::try_from(pubkey.to_string()).unwrap();
+        let data = BASE64_STANDARD.decode(data).unwrap();
+        let signature = BASE64_STANDARD.decode(sig).unwrap();
+        let sig = Signature(
+            ssh_key::Signature::new(
+                Algorithm::Rsa {
+                    hash: Some(HashAlg::Sha512),
+                },
+                signature,
+            )
+            .unwrap(),
+        );
         assert!(sig.verify(&public_key, &data).unwrap());
     }
 }
