@@ -4,10 +4,16 @@ use ssh_agent::{agent::{ui_requester::{UiRequestMessage, UiRequester}, Bitwarden
 use tokio::{sync::{broadcast, mpsc, Mutex}, task};
 use tracing::info;
 
-const TEST_RUN_DIR: &str = "/home/quexten/test_run/";
 
 #[tokio::main]
 async fn main() {
+    let dir = homedir::my_home()
+        .unwrap()
+        .unwrap();
+    let dir = dir.join(".cache");
+    let dir = dir.join("ssh_agent_integration_test");
+    let dir = dir.to_string_lossy().into_owned();
+
     // set up tracing to stdout
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
@@ -15,24 +21,25 @@ async fn main() {
         .with_thread_names(true)
         .init();
 
-    fs::remove_dir_all(TEST_RUN_DIR).unwrap_or(());
+    fs::remove_dir_all(&dir).unwrap_or(());
     // Prepare test run directory 
-    fs::create_dir_all(TEST_RUN_DIR).unwrap();
+    fs::create_dir_all(&dir).unwrap();
 
     let config = format!("Port 2222
 HostKey {}/ssh_host_rsa_key
 HostKey {}/ssh_host_ecdsa_key
 HostKey {}/ssh_host_ed25519_key
 AuthorizedKeysFile  {}/authorized_keys
-", TEST_RUN_DIR, TEST_RUN_DIR, TEST_RUN_DIR, TEST_RUN_DIR);
-    fs::write(format!("{}/sshd_config", TEST_RUN_DIR), config).unwrap();
+", dir, dir, dir, dir);
+    fs::write(format!("{}/sshd_config", dir), config).unwrap();
 
-    let keys = make_keys();
+    let keys = make_keys(&dir);
 
     // Start ssh server
+    let dir_clone = dir.clone();
     std::thread::spawn(move || {
         Command::new("/usr/bin/sshd")
-            .args(&["-f", &format!("{}/sshd_config", TEST_RUN_DIR), "-D", "-e"])
+            .args(&["-f", &format!("{}/sshd_config", &dir_clone), "-D", "-e"])
             .status()
             .expect("failed to execute process");
     });
@@ -41,24 +48,25 @@ AuthorizedKeysFile  {}/authorized_keys
     let desktop_agent = BitwardenDesktopAgent::new(ui_requester);
     desktop_agent.set_keys(keys);
 
+    let dir_clone = dir.clone();
     task::spawn(async move {
         println!("Starting SSH Agent V2 socket...");
-        info!(target: "ssh-agent", "Listening on {}", format!("{}/ssh-agent.sock", TEST_RUN_DIR));
-        UnixListenerStream::listen(format!("{}/ssh-agent.sock", TEST_RUN_DIR), desktop_agent)
+        info!(target: "ssh-agent", "Listening on {}", format!("{}/ssh-agent.sock", dir_clone));
+        UnixListenerStream::listen(format!("{}/ssh-agent.sock", dir_clone), desktop_agent)
             .await
             .unwrap();
     });
 
     // run ssh-add -L
     Command::new("ssh-add")
-        .env("SSH_AUTH_SOCK", format!("{}/ssh-agent.sock", TEST_RUN_DIR))
+        .env("SSH_AUTH_SOCK", format!("{}/ssh-agent.sock", dir))
         .args(&["-L"])
         .status()
         .expect("failed to execute process");
 
     // run ssh
     Command::new("ssh")
-        .env("SSH_AUTH_SOCK", format!("{}/ssh-agent.sock", TEST_RUN_DIR))
+        .env("SSH_AUTH_SOCK", format!("{}/ssh-agent.sock", dir))
         .args(&[
             "-o",
             "StrictHostKeyChecking=no",
@@ -74,15 +82,15 @@ AuthorizedKeysFile  {}/authorized_keys
         .expect("failed to execute process");
 
     // Cleanup
-    fs::remove_dir_all(TEST_RUN_DIR).unwrap();
+    fs::remove_dir_all(dir).unwrap();
     std::process::exit(0);
 }
 
-fn make_keys() -> Vec<UnlockedSshItem> {
+fn make_keys(dir: &str) -> Vec<UnlockedSshItem> {
     Command::new("ssh-keygen")
         .args(&[
             "-f",
-            &format!("{}/ssh_host_rsa_key", TEST_RUN_DIR),
+            &format!("{}/ssh_host_rsa_key", dir),
             "-N",
             "",
             "-t",
@@ -93,7 +101,7 @@ fn make_keys() -> Vec<UnlockedSshItem> {
     Command::new("ssh-keygen")
         .args(&[
             "-f",
-            &format!("{}/ssh_host_ecdsa_key", TEST_RUN_DIR),
+            &format!("{}/ssh_host_ecdsa_key", dir),
             "-N",
             "",
             "-t",
@@ -104,7 +112,7 @@ fn make_keys() -> Vec<UnlockedSshItem> {
     Command::new("ssh-keygen")
         .args(&[
             "-f",
-            &format!("{}/ssh_host_ed25519_key", TEST_RUN_DIR),
+            &format!("{}/ssh_host_ed25519_key", dir),
             "-N",
             "",
             "-t",
@@ -116,7 +124,7 @@ fn make_keys() -> Vec<UnlockedSshItem> {
     Command::new("ssh-keygen")
         .args(&[
             "-f",
-            &format!("{}/id_ed25519", TEST_RUN_DIR),
+            &format!("{}/id_ed25519", dir),
             "-N",
             "",
             "-t",
@@ -127,7 +135,7 @@ fn make_keys() -> Vec<UnlockedSshItem> {
     Command::new("ssh-keygen")
         .args(&[
             "-f",
-            &format!("{}/ssh_rsa", TEST_RUN_DIR),
+            &format!("{}/ssh_rsa", dir),
             "-N",
             "",
             "-t",
@@ -135,16 +143,16 @@ fn make_keys() -> Vec<UnlockedSshItem> {
         ])
         .status()
         .expect("failed to execute process");
-    let pubkey1 = fs::read_to_string(format!("{}/id_ed25519.pub", TEST_RUN_DIR)).unwrap();
-    let pubkey2 = fs::read_to_string(format!("{}/ssh_rsa.pub", TEST_RUN_DIR)).unwrap();
+    let pubkey1 = fs::read_to_string(format!("{}/id_ed25519.pub", dir)).unwrap();
+    let pubkey2 = fs::read_to_string(format!("{}/ssh_rsa.pub", dir)).unwrap();
     fs::write(
-        format!("{}/authorized_keys", TEST_RUN_DIR),
+        format!("{}/authorized_keys", dir),
         format!("{}{}", pubkey1, pubkey2),
     )
     .unwrap();
-    let privkey1 = fs::read_to_string(format!("{}/id_ed25519", TEST_RUN_DIR)).unwrap();
+    let privkey1 = fs::read_to_string(format!("{}/id_ed25519", dir)).unwrap();
     let key1 = KeyPair::new(PrivateKey::try_from(privkey1).unwrap(), "ed25519-key".to_string());
-    let privkey2 = fs::read_to_string(format!("{}/ssh_rsa", TEST_RUN_DIR)).unwrap();
+    let privkey2 = fs::read_to_string(format!("{}/ssh_rsa", dir)).unwrap();
     let key2 = KeyPair::new(PrivateKey::try_from(privkey2).unwrap(), "rsa-key".to_string());
     let unlocked_items = vec![
         UnlockedSshItem::new(key1, "cipher1".to_string()),
