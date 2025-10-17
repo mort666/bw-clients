@@ -12,6 +12,7 @@ import { LogService } from "@bitwarden/common/platform/abstractions/log.service"
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { PremiumUpgradePromptService } from "@bitwarden/common/vault/abstractions/premium-upgrade-prompt.service";
+import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { CipherAuthorizationService } from "@bitwarden/common/vault/services/cipher-authorization.service";
 import { DialogRef, DIALOG_DATA, DialogService, ToastService } from "@bitwarden/components";
@@ -86,6 +87,7 @@ describe("VaultItemDialogComponent", () => {
         { provide: ApiService, useValue: {} },
         { provide: EventCollectionService, useValue: {} },
         { provide: RoutedVaultFilterService, useValue: {} },
+        { provide: SyncService, useValue: {} },
       ],
     }).compileComponents();
 
