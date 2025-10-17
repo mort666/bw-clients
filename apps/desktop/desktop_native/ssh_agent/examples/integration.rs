@@ -2,16 +2,24 @@
 
 use std::{fs, process::Command, sync::Arc};
 
-use ssh_agent::{agent::{ui_requester::{UiRequestMessage, UiRequester}, BitwardenDesktopAgent}, memory::UnlockedSshItem, protocol::types::{KeyPair, PrivateKey}, transport::unix_listener_stream::UnixListenerStream};
-use tokio::{sync::{broadcast, mpsc, Mutex}, task};
+use ssh_agent::{
+    agent::{
+        ui_requester::{UiRequestMessage, UiRequester},
+        BitwardenDesktopAgent,
+    },
+    memory::UnlockedSshItem,
+    protocol::types::{KeyPair, PrivateKey},
+    transport::unix_listener_stream::UnixListenerStream,
+};
+use tokio::{
+    sync::{broadcast, mpsc, Mutex},
+    task,
+};
 use tracing::info;
-
 
 #[tokio::main]
 async fn main() {
-    let dir = homedir::my_home()
-        .unwrap()
-        .unwrap();
+    let dir = homedir::my_home().unwrap().unwrap();
     let dir = dir.join(".cache");
     let dir = dir.join("ssh_agent_integration_test");
     let dir = dir.to_string_lossy().into_owned();
@@ -24,15 +32,18 @@ async fn main() {
         .init();
 
     fs::remove_dir_all(&dir).unwrap_or(());
-    // Prepare test run directory 
+    // Prepare test run directory
     fs::create_dir_all(&dir).unwrap();
 
-    let config = format!("Port 2222
+    let config = format!(
+        "Port 2222
 HostKey {}/ssh_host_rsa_key
 HostKey {}/ssh_host_ecdsa_key
 HostKey {}/ssh_host_ed25519_key
 AuthorizedKeysFile  {}/authorized_keys
-", dir, dir, dir, dir);
+",
+        dir, dir, dir, dir
+    );
     fs::write(format!("{}/sshd_config", dir), config).unwrap();
 
     let keys = make_keys(&dir);
@@ -135,14 +146,7 @@ fn make_keys(dir: &str) -> Vec<UnlockedSshItem> {
         .status()
         .expect("failed to execute process");
     Command::new("ssh-keygen")
-        .args(&[
-            "-f",
-            &format!("{}/ssh_rsa", dir),
-            "-N",
-            "",
-            "-t",
-            "rsa",
-        ])
+        .args(&["-f", &format!("{}/ssh_rsa", dir), "-N", "", "-t", "rsa"])
         .status()
         .expect("failed to execute process");
     let pubkey1 = fs::read_to_string(format!("{}/id_ed25519.pub", dir)).unwrap();
@@ -153,9 +157,15 @@ fn make_keys(dir: &str) -> Vec<UnlockedSshItem> {
     )
     .unwrap();
     let privkey1 = fs::read_to_string(format!("{}/id_ed25519", dir)).unwrap();
-    let key1 = KeyPair::new(PrivateKey::try_from(privkey1).unwrap(), "ed25519-key".to_string());
+    let key1 = KeyPair::new(
+        PrivateKey::try_from(privkey1).unwrap(),
+        "ed25519-key".to_string(),
+    );
     let privkey2 = fs::read_to_string(format!("{}/ssh_rsa", dir)).unwrap();
-    let key2 = KeyPair::new(PrivateKey::try_from(privkey2).unwrap(), "rsa-key".to_string());
+    let key2 = KeyPair::new(
+        PrivateKey::try_from(privkey2).unwrap(),
+        "rsa-key".to_string(),
+    );
     let unlocked_items = vec![
         UnlockedSshItem::new(key1, "cipher1".to_string()),
         UnlockedSshItem::new(key2, "cipher2".to_string()),

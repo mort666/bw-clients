@@ -275,8 +275,12 @@ impl PrivateKey {
             .expect("Converting to public key bytes should always be possible");
         let alg_str = private_key.algorithm();
 
-        PublicKey::try_from(format!("{} {}", alg_str.as_str(), BASE64_STANDARD.encode(&pubkey_bytes)))
-            .expect("Parsing public key should always be possible")
+        PublicKey::try_from(format!(
+            "{} {}",
+            alg_str.as_str(),
+            BASE64_STANDARD.encode(&pubkey_bytes)
+        ))
+        .expect("Parsing public key should always be possible")
     }
 
     pub(crate) fn sign(
