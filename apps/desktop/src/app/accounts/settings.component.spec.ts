@@ -406,7 +406,7 @@ describe("SettingsComponent", () => {
         await component.updatePinHandler(true);
 
         expect(component.form.controls.pin.value).toBe(false);
-        expect(vaultTimeoutSettingsService.clear).not.toHaveBeenCalled();
+        expect(pinServiceAbstraction.unsetPin).not.toHaveBeenCalled();
         expect(messagingService.send).toHaveBeenCalledWith("redrawMenu");
       });
 
@@ -422,7 +422,7 @@ describe("SettingsComponent", () => {
           await component.updatePinHandler(true);
 
           expect(component.form.controls.pin.value).toBe(dialogResult);
-          expect(vaultTimeoutSettingsService.clear).not.toHaveBeenCalled();
+          expect(pinServiceAbstraction.unsetPin).not.toHaveBeenCalled();
           expect(messagingService.send).toHaveBeenCalledWith("redrawMenu");
         },
       );
@@ -434,7 +434,7 @@ describe("SettingsComponent", () => {
         await component.updatePinHandler(false);
 
         expect(component.form.controls.pin.value).toBe(false);
-        expect(vaultTimeoutSettingsService.clear).not.toHaveBeenCalled();
+        expect(pinServiceAbstraction.unsetPin).toHaveBeenCalled();
         expect(messagingService.send).toHaveBeenCalledWith("redrawMenu");
       });
 
@@ -460,7 +460,7 @@ describe("SettingsComponent", () => {
 
             expect(component.form.controls.requireMasterPasswordOnAppRestart.value).toBe(false);
             expect(component.form.controls.pin.value).toBe(false);
-            expect(vaultTimeoutSettingsService.clear).toHaveBeenCalled();
+            expect(pinServiceAbstraction.unsetPin).toHaveBeenCalled();
             expect(messagingService.send).toHaveBeenCalledWith("redrawMenu");
 
             if (enrolled) {
@@ -569,7 +569,7 @@ describe("SettingsComponent", () => {
             await component.updatePinHandler(false);
 
             expect(component.form.controls.pin.value).toBe(false);
-            expect(vaultTimeoutSettingsService.clear).toHaveBeenCalled();
+            expect(pinServiceAbstraction.unsetPin).toHaveBeenCalled();
             expect(messagingService.send).toHaveBeenCalledWith("redrawMenu");
             expect(desktopBiometricsService.enrollPersistent).not.toHaveBeenCalled();
           },
