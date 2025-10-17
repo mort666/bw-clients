@@ -428,9 +428,7 @@ mod tests {
             .decode("31OCVyEvqX0D4XBdgzOKe9MA8n/JZUEv2wWiMM0G+7I=")
             .unwrap();
         let signature = BASE64_STANDARD.decode("n1PA02OSA/qsDk3XmGP7OSjizN7kTjtJ9gIvmJRBaJa0Nz2X62q0xsNKKnRXuPwsqiXKQU25jS3ytO6y2S0hAA==").unwrap();
-        assert!(Signature::try_from(signature.as_slice())
-            .unwrap()
-            .verify(&public_key, &data)
-            .unwrap());
+        let sig = Signature(ssh_key::Signature::new(Algorithm::Ed25519, signature).unwrap());
+        assert!(sig.verify(&public_key, &data).unwrap());
     }
 }
