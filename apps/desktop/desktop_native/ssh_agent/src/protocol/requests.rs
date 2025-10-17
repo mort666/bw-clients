@@ -161,7 +161,7 @@ impl TryFrom<&[u8]> for SshSignRequest {
             .map_err(|e| anyhow::anyhow!("Failed to read flags from sign request: {e}"))?;
 
         Ok(SshSignRequest {
-            public_key: PublicKey::from_blob(public_key_blob),
+            public_key: PublicKey::try_from_blob(public_key_blob)?,
             payload_to_sign: data.clone(),
             parsed_sign_request: data.as_slice().try_into()?,
             flags,
