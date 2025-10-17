@@ -421,11 +421,18 @@ mod tests {
 
     #[test]
     fn test_verify_sig_ed25519() {
-        let public_key = PublicKey::try_from("ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl".to_string()).unwrap();
-        let data = BASE64_STANDARD.decode("31OCVyEvqX0D4XBdgzOKe9MA8n/JZUEv2wWiMM0G+7I=").unwrap();
+        let public_key = PublicKey::try_from(
+            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"
+                .to_string(),
+        )
+        .unwrap();
+        let data = BASE64_STANDARD
+            .decode("31OCVyEvqX0D4XBdgzOKe9MA8n/JZUEv2wWiMM0G+7I=")
+            .unwrap();
         let signature = BASE64_STANDARD.decode("n1PA02OSA/qsDk3XmGP7OSjizN7kTjtJ9gIvmJRBaJa0Nz2X62q0xsNKKnRXuPwsqiXKQU25jS3ytO6y2S0hAA==").unwrap();
-        assert!(Signature::try_from(
-            signature.as_slice()
-        ).unwrap().verify(&public_key, &data).unwrap());
+        assert!(Signature::try_from(signature.as_slice())
+            .unwrap()
+            .verify(&public_key, &data)
+            .unwrap());
     }
 }
