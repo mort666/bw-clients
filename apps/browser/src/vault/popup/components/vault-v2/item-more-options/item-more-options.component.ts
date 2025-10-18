@@ -12,7 +12,6 @@ import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { CipherId, UserId } from "@bitwarden/common/types/guid";
 import { CipherArchiveService } from "@bitwarden/common/vault/abstractions/cipher-archive.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
@@ -189,11 +188,10 @@ export class ItemMoreOptionsComponent {
 
     if (isFeatureFlagEnabled) {
       const currentTab = await firstValueFrom(this.vaultPopupAutofillService.currentAutofillTab$);
-      const currentUri = currentTab?.url ? Utils.getHostname(currentTab.url) : null;
 
       const ref = AutofillConfirmationDialogComponent.open(this.dialogService, {
         data: {
-          currentUri,
+          currentUrl: currentTab?.url ?? null,
         },
       });
 

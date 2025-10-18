@@ -15,11 +15,11 @@ import {
 import { I18nPipe } from "@bitwarden/ui-common";
 
 export interface AutofillConfirmationDialogParams {
-  currentUri: string | null;
+  currentUrl: string | null;
 }
 
 export const AutofillConfirmationDialogResult = Object.freeze({
-  AutofillAndUriAdded: "added",
+  AutofillAndUrlAdded: "added",
   AutofilledOnly: "autofilled",
   Canceled: "canceled",
 } as const);
@@ -34,21 +34,21 @@ export type AutofillConfirmationDialogResultType = UnionOfValues<
 })
 export class AutofillConfirmationDialogComponent {
   AutofillConfirmationDialogResult = AutofillConfirmationDialogResult;
-  currentUri: string | null = null;
+  currentUrl: string | null = null;
 
   constructor(
     @Inject(DIALOG_DATA) protected params: AutofillConfirmationDialogParams,
     private dialogRef: DialogRef,
   ) {
-    this.currentUri = params.currentUri;
+    this.currentUrl = params.currentUrl;
   }
 
   protected close = () => {
     this.dialogRef.close(AutofillConfirmationDialogResult.Canceled);
   };
 
-  protected autofillAndAddUri = () => {
-    this.dialogRef.close(AutofillConfirmationDialogResult.AutofillAndUriAdded);
+  protected autofillAndAddUrl = () => {
+    this.dialogRef.close(AutofillConfirmationDialogResult.AutofillAndUrlAdded);
   };
 
   protected autofillOnly = () => {
