@@ -53,7 +53,7 @@ impl SecureMemoryEncryptionKey {
 /// from memory attacks.
 #[allow(unused)]
 trait SecureKeyContainer: Sync + Send {
-    /// Returns the ikey as a byte slice. This slice does not have additional memory protections applied.
+    /// Returns the key as a byte slice. This slice does not have additional memory protections applied.
     fn as_key(&self) -> crypto::MemoryEncryptionKey;
     /// Creates a new SecureKeyContainer from the provided key.
     fn from_key(key: crypto::MemoryEncryptionKey) -> Self;
