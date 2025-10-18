@@ -1,7 +1,8 @@
-import { Component, computed, input } from "@angular/core";
+import { AfterViewInit, Component, computed, ElementRef, input, ViewChild } from "@angular/core";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 
+import { A11yTitleDirective } from "../a11y";
 import { SharedModule } from "../shared";
 import { TypographyModule } from "../typography";
 
@@ -31,14 +32,17 @@ let nextId = 0;
 @Component({
   selector: "bit-callout",
   templateUrl: "callout.component.html",
-  imports: [SharedModule, TypographyModule],
+  imports: [A11yTitleDirective, SharedModule, TypographyModule],
 })
-export class CalloutComponent {
+export class CalloutComponent implements AfterViewInit {
   readonly type = input<CalloutTypes>("info");
   readonly icon = input<string>();
   readonly title = input<string>();
+  readonly truncate = input(false);
   readonly useAlertRole = input(false);
-  readonly iconComputed = computed(() => this.icon() ?? defaultIcon[this.type()]);
+  readonly iconComputed = computed(() =>
+    this.icon() === undefined ? defaultIcon[this.type()] : this.icon(),
+  );
   readonly titleComputed = computed(() => {
     const title = this.title();
     const type = this.type();
@@ -51,7 +55,15 @@ export class CalloutComponent {
 
   protected readonly titleId = `bit-callout-title-${nextId++}`;
 
+  @ViewChild("content", { static: false })
+  private contentRef!: ElementRef<HTMLElement>;
+  contentText = "";
+
   constructor(private i18nService: I18nService) {}
+
+  ngAfterViewInit() {
+    this.contentText = this.contentRef?.nativeElement?.textContent?.trim() ?? "";
+  }
 
   protected readonly calloutClass = computed(() => {
     switch (this.type()) {
