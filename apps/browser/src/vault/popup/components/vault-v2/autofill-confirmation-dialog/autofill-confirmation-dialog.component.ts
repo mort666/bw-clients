@@ -21,7 +21,7 @@ export interface AutofillConfirmationDialogParams {
 }
 
 export const AutofillConfirmationDialogResult = Object.freeze({
-  AutofillAndUriAdded: "added",
+  AutofillAndUrlAdded: "added",
   AutofilledOnly: "autofilled",
   Canceled: "canceled",
 } as const);
@@ -77,8 +77,8 @@ export class AutofillConfirmationDialogComponent {
     this.dialogRef.close(AutofillConfirmationDialogResult.Canceled);
   };
 
-  protected autofillAndAddUri = () => {
-    this.dialogRef.close(AutofillConfirmationDialogResult.AutofillAndUriAdded);
+  protected autofillAndAddUrl = () => {
+    this.dialogRef.close(AutofillConfirmationDialogResult.AutofillAndUrlAdded);
   };
 
   protected autofillOnly = () => {
