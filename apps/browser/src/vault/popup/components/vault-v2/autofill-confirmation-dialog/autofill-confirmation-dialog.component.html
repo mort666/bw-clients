@@ -7,9 +7,9 @@
     <p class="tw-text-muted tw-text-xs tw-uppercase tw-mt-4 tw-font-semibold">
       {{ "currentWebsite" | i18n }}
     </p>
-    <bit-callout title="" type="warning" icon="bwi-globe" class="tw-mb-2 tw-truncate">{{
-      currentUrl
-    }}</bit-callout>
+    <bit-callout title="" type="warning" icon="bwi-globe" class="tw-mb-2" [truncate]="true">
+      <div class="monospaced">{{ currentUrl }}</div>
+    </bit-callout>
     <div class="tw-flex tw-my-6">
       <a
         bitLink
