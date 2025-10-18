@@ -192,6 +192,7 @@ export class ItemMoreOptionsComponent {
       const ref = AutofillConfirmationDialogComponent.open(this.dialogService, {
         data: {
           currentUrl: currentTab?.url ?? null,
+          savedUrls: cipher.login?.uris?.filter((u) => u.uri).map((u) => u.uri) as string[],
         },
       });
 
@@ -332,7 +333,7 @@ export class ItemMoreOptionsComponent {
     await this.cipherArchiveService.archiveWithServer(this.cipher.id as CipherId, activeUserId);
     this.toastService.showToast({
       variant: "success",
-      message: this.i18nService.t("itemWasSentToArchive"),
+      message: this.i18nService.t("itemSentToArchive"),
     });
   }
 }

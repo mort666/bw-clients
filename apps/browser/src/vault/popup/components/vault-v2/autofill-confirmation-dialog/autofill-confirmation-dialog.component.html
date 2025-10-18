@@ -4,6 +4,38 @@
     <p bitTypography="body2">
       {{ "confirmAutofillDesc" | i18n }}
     </p>
+    @if (savedUrls.length === 1) {
+      <p class="tw-text-muted tw-text-xs tw-uppercase tw-mt-4 tw-font-semibold">
+        {{ "savedWebsite" | i18n }}
+      </p>
+      <bit-callout title="" type="success" icon="bwi-globe" truncate>{{
+        savedUrls[0]
+      }}</bit-callout>
+    }
+    @if (savedUrls.length > 1) {
+      <div class="tw-flex tw-justify-between tw-items-center tw-mt-4 tw-mb-1 tw-pt-2">
+        <span class="tw-text-muted tw-text-xs tw-uppercase tw-font-semibold">
+          {{ "savedWebsites" | i18n: count : savedUrls.length }}
+        </span>
+        <button
+          type="button"
+          bitLink
+          class="tw-text-sm tw-font-bold tw-cursor-pointer"
+          (click)="viewAllSavedUrls()"
+        >
+          {{ "viewAll" | i18n }}
+        </button>
+      </div>
+      <div class="tw-pt-2" [ngClass]="savedUrlsListClass">
+        <div class="-tw-mt-2" *ngFor="let url of savedUrls">
+          <bit-callout title="" type="success" icon="bwi-globe" truncate>
+            <div class="monospaced">
+              {{ url }}
+            </div>
+          </bit-callout>
+        </div>
+      </div>
+    }
     <p class="tw-text-muted tw-text-xs tw-uppercase tw-mt-4 tw-font-semibold">
       {{ "currentWebsite" | i18n }}
     </p>
@@ -33,10 +65,10 @@
       </button>
       <button
         type="button"
-        class="tw-border-none tw-mt-2"
-        bitButton
-        buttonType="unstyled"
+        bitLink
+        linkType="secondary"
         (click)="close()"
+        class="tw-mt-2 tw-font-bold tw-text-sm tw-justify-center tw-text-center"
       >
         {{ "doNotAutofill" | i18n }}
       </button>
