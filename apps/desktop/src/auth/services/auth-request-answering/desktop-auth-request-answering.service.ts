@@ -62,9 +62,9 @@ export class DesktopAuthRequestAnsweringService
 
     // To show an approval dialog immediately on Desktop, the window must be open.
     const isWindowVisible = await ipc.platform.isWindowVisible();
-    const meetsExtensionConditions = meetsBasicConditions && isWindowVisible;
+    const meetsDesktopConditions = meetsBasicConditions && isWindowVisible;
 
-    return meetsExtensionConditions;
+    return meetsDesktopConditions;
   }
 
   async handleAuthRequestNotificationClicked(event: SystemNotificationEvent) {
