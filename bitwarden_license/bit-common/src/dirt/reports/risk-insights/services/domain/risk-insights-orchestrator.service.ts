@@ -210,7 +210,7 @@ export class RiskInsightsOrchestratorService {
               summaryData: reportState?.data?.summaryData ?? createNewSummaryData(),
               applicationData: updatedState?.data?.applicationData ?? [],
             },
-            reportState.data.contentEncryptionKey,
+            reportState?.data?.contentEncryptionKey,
           ),
         ).pipe(
           map((encryptedData) => ({
@@ -296,7 +296,7 @@ export class RiskInsightsOrchestratorService {
               summaryData: reportState?.data?.summaryData ?? createNewSummaryData(),
               applicationData: updatedState?.data?.applicationData ?? [],
             },
-            reportState.data.contentEncryptionKey,
+            reportState?.data?.contentEncryptionKey,
           ),
         ).pipe(
           map((encryptedData) => ({
