@@ -15,6 +15,8 @@ pub(crate) trait SecureMemoryStore {
     /// Retrieves a copy of the value associated with the given key from secure memory.
     /// This copy does not have additional memory protections applied, and should be zeroed when no
     /// longer needed.
+    ///
+    /// Note: If memory was tampered with, this will re-key the store and return None.
     fn get(&mut self, key: &str) -> Option<Vec<u8>>;
     /// Checks if a value is stored under the given key.
     fn has(&self, key: &str) -> bool;
