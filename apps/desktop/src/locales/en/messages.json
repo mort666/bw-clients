@@ -2549,6 +2549,9 @@
       }
     }
   },
+  "vaultCustomTimeoutMinimum": {
+    "message": "Minimum custom timeout is 1 minute."
+  },
   "inviteAccepted": {
     "message": "Invitation accepted"
   },
@@ -4164,7 +4167,7 @@
   "itemWasSentToArchive": {
     "message": "Item was sent to archive"
   },
-  "itemUnarchived": {
+  "itemWasUnarchived": {
     "message": "Item was unarchived"
   },
   "archiveItem": {
