@@ -27,11 +27,9 @@ export class PasswordSettingsComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
-    const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
-    const userHasMasterPassword = activeAccount
-      ? await firstValueFrom(
-          this.userDecryptionOptionsService.hasMasterPasswordById$(activeAccount.id),
-        )
+    const userId = (await firstValueFrom(this.accountService.activeAccount$))?.id;
+    const userHasMasterPassword = userId
+      ? await firstValueFrom(this.userDecryptionOptionsService.hasMasterPasswordById$(userId))
       : false;
 
     if (!userHasMasterPassword) {

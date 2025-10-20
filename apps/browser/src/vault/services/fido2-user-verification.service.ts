@@ -81,6 +81,11 @@ export class Fido2UserVerificationService {
 
   private async handleMasterPasswordReprompt(): Promise<boolean> {
     const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
+
+    if (!activeAccount?.id) {
+      return false;
+    }
+
     const hasMasterPassword = await firstValueFrom(
       this.userDecryptionOptionsService.hasMasterPasswordById$(activeAccount.id),
     );

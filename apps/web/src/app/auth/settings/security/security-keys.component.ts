@@ -26,11 +26,9 @@ export class SecurityKeysComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
-    const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
-    this.showChangeKdf = activeAccount
-      ? await firstValueFrom(
-          this.userDecryptionOptionsService.hasMasterPasswordById$(activeAccount.id),
-        )
+    const userId = (await firstValueFrom(this.accountService.activeAccount$))?.id;
+    this.showChangeKdf = userId
+      ? await firstValueFrom(this.userDecryptionOptionsService.hasMasterPasswordById$(userId))
       : false;
   }
 
