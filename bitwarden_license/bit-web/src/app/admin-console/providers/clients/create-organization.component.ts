@@ -5,12 +5,16 @@ import { ActivatedRoute } from "@angular/router";
 
 import { OrganizationPlansComponent } from "@bitwarden/web-vault/app/billing";
 
+// FIXME(https://bitwarden.atlassian.net/browse/CL-764): Migrate to OnPush
+// eslint-disable-next-line @angular-eslint/prefer-on-push-component-change-detection
 @Component({
   selector: "app-create-organization",
   templateUrl: "create-organization.component.html",
   standalone: false,
 })
 export class CreateOrganizationComponent implements OnInit {
+  // FIXME(https://bitwarden.atlassian.net/browse/CL-903): Migrate to Signals
+  // eslint-disable-next-line @angular-eslint/prefer-signals
   @ViewChild(OrganizationPlansComponent, { static: true })
   orgPlansComponent: OrganizationPlansComponent;
 
