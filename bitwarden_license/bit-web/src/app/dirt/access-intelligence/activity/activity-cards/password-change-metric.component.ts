@@ -11,8 +11,7 @@ import {
   TaskMetrics,
 } from "@bitwarden/bit-common/dirt/reports/risk-insights";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { CipherId, OrganizationId } from "@bitwarden/common/types/guid";
-import { SecurityTaskType } from "@bitwarden/common/vault/tasks";
+import { OrganizationId } from "@bitwarden/common/types/guid";
 import {
   ButtonModule,
   ProgressModule,
@@ -20,15 +19,15 @@ import {
   TypographyModule,
 } from "@bitwarden/components";
 
-import { CreateTasksRequest } from "../../../../vault/services/abstractions/admin-task.abstraction";
 import { DefaultAdminTaskService } from "../../../../vault/services/default-admin-task.service";
 import { RenderMode } from "../../models/activity.models";
+import { AccessIntelligenceSecurityTasksService } from "../../shared/security-tasks.service";
 
 @Component({
   selector: "dirt-password-change-metric",
   imports: [CommonModule, TypographyModule, JslibModule, ProgressModule, ButtonModule],
   templateUrl: "./password-change-metric.component.html",
-  providers: [DefaultAdminTaskService],
+  providers: [AccessIntelligenceSecurityTasksService, DefaultAdminTaskService],
 })
 export class PasswordChangeMetricComponent implements OnInit {
   protected taskMetrics$ = new BehaviorSubject<TaskMetrics>({ totalTasks: 0, completedTasks: 0 });
@@ -46,16 +45,16 @@ export class PasswordChangeMetricComponent implements OnInit {
     private activatedRoute: ActivatedRoute,
     private securityTasksApiService: SecurityTasksApiService,
     private allActivitiesService: AllActivitiesService,
-    private adminTaskService: DefaultAdminTaskService,
     protected toastService: ToastService,
     protected i18nService: I18nService,
+    protected accessIntelligenceSecurityTasksService: AccessIntelligenceSecurityTasksService,
   ) {}
 
   async ngOnInit(): Promise<void> {
-    this.activatedRoute.paramMap
+    combineLatest([this.activatedRoute.paramMap, this.allActivitiesService.taskCreatedCount$])
       .pipe(
-        switchMap((paramMap) => {
-          const orgId = paramMap.get("organizationId");
+        switchMap(([params, _]) => {
+          const orgId = params.get("organizationId");
           if (orgId) {
             this.organizationId = orgId as OrganizationId;
             return this.securityTasksApiService.getTaskMetrics(this.organizationId);
@@ -154,44 +153,9 @@ export class PasswordChangeMetricComponent implements OnInit {
   }
 
   async assignTasks() {
-    const taskCount = await this.requestPasswordChange();
-    this.taskMetrics$.next({
-      totalTasks: this.totalTasks + taskCount,
-      completedTasks: this.completedTasks,
-    });
-  }
-
-  // TODO: this method is shared between here and critical-applications.component.ts
-  async requestPasswordChange() {
-    const apps = this.allApplicationsDetails;
-    const cipherIds = apps
-      .filter((_) => _.atRiskPasswordCount > 0)
-      .flatMap((app) => app.atRiskCipherIds);
-
-    const distinctCipherIds = Array.from(new Set(cipherIds));
-
-    const tasks: CreateTasksRequest[] = distinctCipherIds.map((cipherId) => ({
-      cipherId: cipherId as CipherId,
-      type: SecurityTaskType.UpdateAtRiskCredential,
-    }));
-
-    try {
-      await this.adminTaskService.bulkCreateTasks(this.organizationId as OrganizationId, tasks);
-      this.toastService.showToast({
-        message: this.i18nService.t("notifiedMembers"),
-        variant: "success",
-        title: this.i18nService.t("success"),
-      });
-
-      return tasks.length;
-    } catch {
-      this.toastService.showToast({
-        message: this.i18nService.t("unexpectedError"),
-        variant: "error",
-        title: this.i18nService.t("error"),
-      });
-    }
-
-    return 0;
+    await this.accessIntelligenceSecurityTasksService.assignTasks(
+      this.organizationId,
+      this.allApplicationsDetails,
+    );
   }
 }
