@@ -16,8 +16,8 @@
       />
     </div>
   </div>
-  <div class="tw-p-5">
-    <h3 class="tw-text-main tw-text-lg tw-font-semibold">
+  <bit-card-content>
+    <h3 class="tw-text-main tw-m-0 tw-text-lg tw-font-semibold">
       {{ name }}
       @if (showConnectedBadge()) {
         <span class="tw-ml-3">
@@ -30,8 +30,9 @@
         </span>
       }
     </h3>
-    <p class="tw-mb-0 tw-font-semibold">{{ description }}</p>
-
+    @if (description) {
+      <p class="tw-mb-0 tw-mt-2 tw-font-semibold">{{ description }}</p>
+    }
     @if (canSetupConnection) {
       <button type="button" class="tw-mt-3" bitButton (click)="setupConnection()">
         @if (isUpdateAvailable) {
@@ -57,5 +58,5 @@
         {{ "new" | i18n }}
       </span>
     }
-  </div>
+  </bit-card-content>
 </bit-base-card>
