@@ -22,6 +22,8 @@ import { NewApplicationsDialogComponent } from "./new-applications-dialog.compon
 import { ApplicationsLoadingComponent } from "./risk-insights-loading.component";
 import { RiskInsightsTabType } from "./risk-insights.component";
 
+// FIXME(https://bitwarden.atlassian.net/browse/CL-764): Migrate to OnPush
+// eslint-disable-next-line @angular-eslint/prefer-on-push-component-change-detection
 @Component({
   selector: "dirt-all-activity",
   imports: [
