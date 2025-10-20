@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const child_process = require("child_process");
+const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const process = require("process");
@@ -25,10 +26,36 @@ const target = targetArg ? targetArg.split("=")[1] : null;
 
 let crossPlatform = process.argv.length > 2 && process.argv[2] === "cross-platform";
 
-function buildNapiModule(target, release = true) {
+function computeProxyBinExt(target) {
+    // Determine extension from target or current platform
+    if (target) {
+        const entry = rustTargetsMap[target];
+        if (entry && entry.platform === 'win32') return '.exe';
+        return '';
+    }
+    return process.platform === 'win32' ? '.exe' : '';
+}
+
+function computeProxyBinPath(target, release = true) {
+    const targetFolder = release ? "release" : "debug";
+    const ext = computeProxyBinExt(target);
+    if (target) {
+        return path.join(__dirname, "target", target, targetFolder, `desktop_proxy${ext}`);
+    }
+    return path.join(__dirname, "target", targetFolder, `desktop_proxy${ext}`);
+}
+
+function sha256File(filePath) {
+    const hash = crypto.createHash('sha256');
+    const data = fs.readFileSync(filePath);
+    hash.update(data);
+    return hash.digest('hex');
+}
+
+function buildNapiModule(target, release = true, envExtra = {}) {
     const targetArg = target ? `--target ${target}` : "";
     const releaseArg = release ? "--release" : "";
-    child_process.execSync(`npm run build -- ${releaseArg} ${targetArg}`, { stdio: 'inherit', cwd: path.join(__dirname, "napi") });
+    child_process.execSync(`npm run build -- ${releaseArg} ${targetArg}`, { stdio: 'inherit', cwd: path.join(__dirname, "napi"), env: { ...process.env, ...envExtra } });
 }
 
 function buildProxyBin(target, release = true) {
@@ -39,10 +66,13 @@ function buildProxyBin(target, release = true) {
     if (target) {
         // Copy the resulting binary to the dist folder
         const targetFolder = release ? "release" : "debug";
-        const ext = process.platform === "win32" ? ".exe" : "";
+        const ext = computeProxyBinExt(target);
         const nodeArch = rustTargetsMap[target].nodeArch;
         fs.copyFileSync(path.join(__dirname, "target", target, targetFolder, `desktop_proxy${ext}`), path.join(__dirname, "dist", `desktop_proxy.${process.platform}-${nodeArch}${ext}`));
     }
+
+    // Return the path to the built binary so callers can hash it
+    return computeProxyBinPath(target, release);
 }
 
 function buildProcessIsolation() {
@@ -65,8 +95,10 @@ function installTarget(target) {
 
 if (!crossPlatform && !target) {
     console.log(`Building native modules in ${mode} mode for the native architecture`);
-    buildNapiModule(false, mode === "release");
-    buildProxyBin(false, mode === "release");
+    // Build proxy first so we can hash and pass it to the N-API build
+    const binPath = buildProxyBin(false, mode === "release");
+    const proxyHash = sha256File(binPath);
+    buildNapiModule(false, mode === "release", { PROXY_BIN_PATH: binPath, PROXY_HASH: proxyHash });
     buildProcessIsolation();
     return;
 }
@@ -74,8 +106,10 @@ if (!crossPlatform && !target) {
 if (target) {
     console.log(`Building for target: ${target} in ${mode} mode`);
     installTarget(target);
-    buildNapiModule(target, mode === "release");
-    buildProxyBin(target, mode === "release");
+    // Build proxy first so we can hash and pass it to the N-API build
+    const binPath = buildProxyBin(target, mode === "release");
+    const proxyHash = sha256File(binPath);
+    buildNapiModule(target, mode === "release", { PROXY_BIN_PATH: binPath, PROXY_HASH: proxyHash, PROXY_TARGET: target });
     buildProcessIsolation();
     return;
 }
@@ -92,7 +126,8 @@ if (process.platform === "linux") {
 
 platformTargets.forEach(([target, _]) => {
     installTarget(target);
-    buildNapiModule(target);
-    buildProxyBin(target);
+    const binPath = buildProxyBin(target);
+    const proxyHash = sha256File(binPath);
+    buildNapiModule(target, true, { PROXY_BIN_PATH: binPath, PROXY_HASH: proxyHash, PROXY_TARGET: target });
     buildProcessIsolation();
 });

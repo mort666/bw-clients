@@ -162,6 +162,17 @@ async fn listen_incoming_unix(
                                         Err(_) => crate::ssh_agent::peerinfo::models::PeerInfo::unknown(),
                                     };
                                     info!(client_id, pid, uid = peer.uid(), gid = peer.gid(), peer_info = ?peer_info, "IPC client connected (peer credentials)");
+                                    match (peer_info.exe_hash(), option_env!("PROXY_HASH")) {
+                                        (Some(exe_hash), Some(proxy_hash)) if exe_hash == proxy_hash => {
+                                            info!(client_id, "Client is identified as a trusted proxy application.");
+                                        },
+                                        (Some(_), Some(_)) => {
+                                            info!(client_id, "Client is identified as an untrusted proxy application.");
+                                        },
+                                        _ => {
+                                            info!(client_id, "Unable to identify client.");
+                                        }
+                                    }
                                 } else {
                                     info!(client_id, uid = peer.uid(), gid = peer.gid(), "IPC client connected (peer credentials, no pid)");
                                 }
