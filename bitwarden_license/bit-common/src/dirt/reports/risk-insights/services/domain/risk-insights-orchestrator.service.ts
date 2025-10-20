@@ -32,7 +32,7 @@ import {
 } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
-import { OrganizationId, OrganizationReportId, UserId } from "@bitwarden/common/types/guid";
+import { OrganizationId, UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { LogService } from "@bitwarden/logging";
@@ -210,6 +210,7 @@ export class RiskInsightsOrchestratorService {
               summaryData: reportState?.data?.summaryData ?? createNewSummaryData(),
               applicationData: updatedState?.data?.applicationData ?? [],
             },
+            reportState.data.contentEncryptionKey,
           ),
         ).pipe(
           map((encryptedData) => ({
@@ -295,6 +296,7 @@ export class RiskInsightsOrchestratorService {
               summaryData: reportState?.data?.summaryData ?? createNewSummaryData(),
               applicationData: updatedState?.data?.applicationData ?? [],
             },
+            reportState.data.contentEncryptionKey,
           ),
         ).pipe(
           map((encryptedData) => ({
@@ -337,19 +339,13 @@ export class RiskInsightsOrchestratorService {
   private _fetchReport$(organizationId: OrganizationId, userId: UserId): Observable<ReportState> {
     return this.reportService.getRiskInsightsReport$(organizationId, userId).pipe(
       tap(() => this.logService.debug("[RiskInsightsOrchestratorService] Fetching report")),
-      map(
-        ({ id, reportData, summaryData, applicationData, creationDate }): ReportState => ({
+      map((result): ReportState => {
+        return {
           loading: false,
           error: null,
-          data: {
-            id,
-            reportData,
-            summaryData,
-            applicationData,
-            creationDate,
-          },
-        }),
-      ),
+          data: result ?? null,
+        };
+      }),
       tap((fetchedReport) =>
         this.logService.debug("[RiskInsightsOrchestratorService] _fetchReport$", fetchedReport),
       ),
@@ -384,35 +380,39 @@ export class RiskInsightsOrchestratorService {
           previousReport?.data?.applicationData ?? [],
         ),
       })),
-      switchMap(({ report, summary, applications }) =>
+      switchMap(({ report, summary, applications }) => {
         // Save the report after enrichment
-        this.reportService
+        return this.reportService
           .saveRiskInsightsReport$(report, summary, applications, {
             organizationId,
             userId,
           })
           .pipe(
-            map(() => ({
+            map((result) => ({
               report,
               summary,
               applications,
+              id: result.response.id,
+              contentEncryptionKey: result.contentEncryptionKey,
             })),
-          ),
-      ),
+          );
+      }),
       // Update the running state
-      map(
-        ({ report, summary, applications }): ReportState => ({
+      map((mappedResult): ReportState => {
+        const { id, report, summary, applications, contentEncryptionKey } = mappedResult;
+        return {
           loading: false,
           error: null,
           data: {
-            id: "" as OrganizationReportId,
+            id,
             reportData: report,
             summaryData: summary,
             applicationData: applications,
             creationDate: new Date(),
+            contentEncryptionKey,
           },
-        }),
-      ),
+        };
+      }),
       catchError(() => {
         return of({ loading: false, error: "Failed to generate or save report", data: null });
       }),

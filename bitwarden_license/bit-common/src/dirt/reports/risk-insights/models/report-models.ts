@@ -1,5 +1,6 @@
 import { Opaque } from "type-fest";
 
+import { EncString } from "@bitwarden/common/key-management/crypto/models/enc-string";
 import { OrganizationReportId } from "@bitwarden/common/types/guid";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { BadgeVariant } from "@bitwarden/components";
@@ -101,6 +102,7 @@ export type ReportResult = CipherView & {
 export interface RiskInsightsData {
   id: OrganizationReportId;
   creationDate: Date;
+  contentEncryptionKey: EncString;
   reportData: ApplicationHealthReportDetail[];
   summaryData: OrganizationReportSummary;
   applicationData: OrganizationReportApplication[];

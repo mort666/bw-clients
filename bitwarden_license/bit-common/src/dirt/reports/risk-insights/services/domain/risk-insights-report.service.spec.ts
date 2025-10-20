@@ -143,8 +143,6 @@ describe("RiskInsightsReportService", () => {
           },
         });
     });
-
-    it("should encrypt and save report, then update subjects", async () => {});
   });
 
   describe("getRiskInsightsReport$", () => {
@@ -236,6 +234,7 @@ describe("RiskInsightsReportService", () => {
         ...mockDecryptedData,
         id: mockResponse.id,
         creationDate: mockResponse.creationDate,
+        contentEncryptionKey: mockEncryptedKey,
       });
     });
   });

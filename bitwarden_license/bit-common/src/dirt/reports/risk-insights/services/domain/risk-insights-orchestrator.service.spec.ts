@@ -3,6 +3,8 @@ import { of, throwError } from "rxjs";
 
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Account, AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { EncString } from "@bitwarden/common/key-management/crypto/models/enc-string";
+import { makeEncString } from "@bitwarden/common/spec";
 import { OrganizationId, OrganizationReportId, UserId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { LogService } from "@bitwarden/logging";
@@ -32,6 +34,7 @@ describe("RiskInsightsOrchestratorService", () => {
   const mockOrgName = "Test Org";
   const mockUserId = "user-101" as UserId;
   const mockReportId = "report-1" as OrganizationReportId;
+  const mockKey: EncString = makeEncString("wrappedKey");
 
   const reportState: RiskInsightsData = {
     id: mockReportId,
@@ -39,6 +42,7 @@ describe("RiskInsightsOrchestratorService", () => {
     summaryData: createNewSummaryData(),
     applicationData: [],
     creationDate: new Date(),
+    contentEncryptionKey: mockKey,
   };
   const mockCiphers = [{ id: "cipher-1" }] as any;
 
@@ -65,9 +69,12 @@ describe("RiskInsightsOrchestratorService", () => {
       getApplicationsSummary: jest.fn().mockReturnValue(mockSummaryData),
       getOrganizationApplications: jest.fn().mockReturnValue(mockApplicationData),
       getRiskInsightsReport$: jest.fn().mockReturnValue(of(reportState)),
-      saveRiskInsightsReport$: jest
-        .fn()
-        .mockReturnValue(of({ id: mockReportId } as SaveRiskInsightsReportResponse)),
+      saveRiskInsightsReport$: jest.fn().mockReturnValue(
+        of({
+          response: { id: mockReportId } as SaveRiskInsightsReportResponse,
+          contentEncryptionKey: mockKey,
+        }),
+      ),
     });
     // Arrange mocks for new flow
     mockMemberCipherDetailsApiService.getMemberCipherDetails.mockResolvedValue(

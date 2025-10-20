@@ -1,9 +1,10 @@
-import { catchError, EMPTY, from, map, Observable, of, switchMap, throwError } from "rxjs";
+import { catchError, EMPTY, from, map, Observable, switchMap, throwError } from "rxjs";
 
+import { EncString } from "@bitwarden/common/key-management/crypto/models/enc-string";
 import { OrganizationId, OrganizationReportId, UserId } from "@bitwarden/common/types/guid";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 
-import { createNewReportData, getUniqueMembers } from "../../helpers/risk-insights-data-mappers";
+import { getUniqueMembers } from "../../helpers/risk-insights-data-mappers";
 import {
   isSaveRiskInsightsReportResponse,
   SaveRiskInsightsReportResponse,
@@ -134,7 +135,7 @@ export class RiskInsightsReportService {
       switchMap((response) => {
         if (!response) {
           // Return an empty report and summary if response is falsy
-          return of<RiskInsightsData>(createNewReportData());
+          return EMPTY;
         }
         if (!response.contentEncryptionKey || response.contentEncryptionKey.data == "") {
           return throwError(() => new Error("Report key not found"));
@@ -163,13 +164,17 @@ export class RiskInsightsReportService {
             response.contentEncryptionKey,
           ),
         ).pipe(
-          map((decryptedData) => ({
-            id: response.id as OrganizationReportId,
-            reportData: decryptedData.reportData,
-            summaryData: decryptedData.summaryData,
-            applicationData: decryptedData.applicationData,
-            creationDate: response.creationDate,
-          })),
+          map((decryptedData) => {
+            const newReport: RiskInsightsData = {
+              id: response.id as OrganizationReportId,
+              reportData: decryptedData.reportData,
+              summaryData: decryptedData.summaryData,
+              applicationData: decryptedData.applicationData,
+              creationDate: response.creationDate,
+              contentEncryptionKey: response.contentEncryptionKey,
+            };
+            return newReport;
+          }),
           catchError((error: unknown) => {
             return throwError(() => error);
           }),
@@ -196,7 +201,7 @@ export class RiskInsightsReportService {
       organizationId: OrganizationId;
       userId: UserId;
     },
-  ): Observable<SaveRiskInsightsReportResponse> {
+  ): Observable<{ response: SaveRiskInsightsReportResponse; contentEncryptionKey: EncString }> {
     return from(
       this.riskInsightsEncryptionService.encryptRiskInsightsReport(
         {
@@ -217,30 +222,38 @@ export class RiskInsightsReportService {
           encryptedApplicationData,
           contentEncryptionKey,
         }) => ({
-          data: {
-            organizationId: encryptionParameters.organizationId,
-            creationDate: new Date().toISOString(),
-            reportData: encryptedReportData.toSdk(),
-            summaryData: encryptedSummaryData.toSdk(),
-            applicationData: encryptedApplicationData.toSdk(),
-            contentEncryptionKey: contentEncryptionKey.toSdk(),
+          requestPayload: {
+            data: {
+              organizationId: encryptionParameters.organizationId,
+              creationDate: new Date().toISOString(),
+              reportData: encryptedReportData.toSdk(),
+              summaryData: encryptedSummaryData.toSdk(),
+              applicationData: encryptedApplicationData.toSdk(),
+              contentEncryptionKey: contentEncryptionKey.toSdk(),
+            },
           },
+          // Keep the original EncString alongside the SDK payload so downstream can return the EncString type.
+          contentEncryptionKey,
         }),
       ),
-      switchMap((encryptedReport) =>
-        this.riskInsightsApiService.saveRiskInsightsReport$(
-          encryptedReport,
-          encryptionParameters.organizationId,
-        ),
+      switchMap(({ requestPayload, contentEncryptionKey }) =>
+        this.riskInsightsApiService
+          .saveRiskInsightsReport$(requestPayload, encryptionParameters.organizationId)
+          .pipe(
+            map((response) => ({
+              response,
+              contentEncryptionKey,
+            })),
+          ),
       ),
       catchError((error: unknown) => {
         return EMPTY;
       }),
-      map((response) => {
-        if (!isSaveRiskInsightsReportResponse(response)) {
+      map((result) => {
+        if (!isSaveRiskInsightsReportResponse(result.response)) {
           throw new Error("Invalid response from API");
         }
-        return response;
+        return result;
       }),
     );
   }

@@ -1,5 +1,4 @@
 import { Utils } from "@bitwarden/common/platform/misc/utils";
-import { OrganizationReportId } from "@bitwarden/common/types/guid";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 
 import {
@@ -11,7 +10,6 @@ import {
   ApplicationHealthReportDetail,
   MemberDetails,
   OrganizationReportSummary,
-  RiskInsightsData,
 } from "../models/report-models";
 
 export function flattenMemberDetails(
@@ -58,21 +56,6 @@ export function getUniqueMembers(orgMembers: MemberDetails[]): MemberDetails[] {
     existingEmails.add(member.email);
     return true;
   });
-}
-
-/**
- * Create a new Risk Insights Report
- *
- * @returns An empty report
- */
-export function createNewReportData(): RiskInsightsData {
-  return {
-    id: "" as OrganizationReportId,
-    creationDate: new Date(),
-    reportData: [],
-    summaryData: createNewSummaryData(),
-    applicationData: [],
-  };
 }
 
 /**
