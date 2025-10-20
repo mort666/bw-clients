@@ -31,7 +31,7 @@ export class PricingCardComponent {
   }>();
   features = input<string[]>();
   activeBadge = input<{ text: string; variant?: BadgeVariant }>();
-  disableVerticalPadding = input<boolean>(false);
+  disableCardPaddingTop = input<boolean>(false);
   disableCardBorder = input<boolean>(false);
 
   @Output() buttonClick = new EventEmitter<void>();

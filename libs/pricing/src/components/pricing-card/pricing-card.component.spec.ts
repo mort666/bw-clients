@@ -14,7 +14,7 @@ import { PricingCardComponent } from "./pricing-card.component";
       [button]="button"
       [features]="features"
       [activeBadge]="activeBadge"
-      [disableVerticalPadding]="disableVerticalPadding"
+      [disableCardPaddingTop]="disableCardPaddingTop"
       [disableCardBorder]="disableCardBorder"
       (buttonClick)="onButtonClick()"
     >
@@ -49,7 +49,7 @@ class TestHostComponent {
   features = ["Feature 1", "Feature 2", "Feature 3"];
   titleLevel: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" = "h3";
   activeBadge: { text: string; variant?: string } | undefined = undefined;
-  disableVerticalPadding = false;
+  disableCardPaddingTop = false;
   disableCardBorder = false;
 
   onButtonClick() {
@@ -196,23 +196,25 @@ describe("PricingCardComponent", () => {
     expect(cardContainer.classList).not.toContain("tw-block"); // Should not have conflicting display property
   });
 
-  it("should apply full padding by default when disableVerticalPadding is false", () => {
-    hostComponent.disableVerticalPadding = false;
+  it("should apply full padding by default when disableCardPaddingTop is false", () => {
+    hostComponent.disableCardPaddingTop = false;
     hostFixture.detectChanges();
     const compiled = hostFixture.nativeElement;
     const cardContainer = compiled.querySelector("div");
 
     expect(cardContainer.classList).toContain("tw-p-8");
     expect(cardContainer.classList).not.toContain("tw-px-8");
+    expect(cardContainer.classList).not.toContain("tw-pb-2");
   });
 
-  it("should apply horizontal-only padding when disableVerticalPadding is true", () => {
-    hostComponent.disableVerticalPadding = true;
+  it("should apply horizontal-only padding when disableCardPaddingTop is true", () => {
+    hostComponent.disableCardPaddingTop = true;
     hostFixture.detectChanges();
     const compiled = hostFixture.nativeElement;
     const cardContainer = compiled.querySelector("div");
 
     expect(cardContainer.classList).toContain("tw-px-8");
+    expect(cardContainer.classList).toContain("tw-pb-2");
     expect(cardContainer.classList).not.toContain("tw-p-8");
   });
 
