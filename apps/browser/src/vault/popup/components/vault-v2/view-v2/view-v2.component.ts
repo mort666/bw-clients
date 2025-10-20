@@ -25,13 +25,13 @@ import { EventType } from "@bitwarden/common/enums";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { UserId } from "@bitwarden/common/types/guid";
+import { CipherArchiveService } from "@bitwarden/common/vault/abstractions/cipher-archive.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { PremiumUpgradePromptService } from "@bitwarden/common/vault/abstractions/premium-upgrade-prompt.service";
 import { ViewPasswordHistoryService } from "@bitwarden/common/vault/abstractions/view-password-history.service";
 import { CipherRepromptType, CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { CipherAuthorizationService } from "@bitwarden/common/vault/services/cipher-authorization.service";
-import { DefaultCipherArchiveService } from "@bitwarden/common/vault/services/default-cipher-archive.service";
 import { filterOutNullish } from "@bitwarden/common/vault/utils/observable-utilities";
 import {
   AsyncActionsModule,
@@ -135,7 +135,7 @@ export class ViewV2Component {
     protected cipherAuthorizationService: CipherAuthorizationService,
     private copyCipherFieldService: CopyCipherFieldService,
     private popupScrollPositionService: VaultPopupScrollPositionService,
-    private archiveService: DefaultCipherArchiveService,
+    private archiveService: CipherArchiveService,
   ) {
     this.subscribeToParams();
   }
