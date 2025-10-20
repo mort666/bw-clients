@@ -1370,6 +1370,7 @@ export default class MainBackground {
       this.serverNotificationsService,
       this.accountService,
       this.vaultTimeoutSettingsService,
+      this.lockService,
     );
 
     this.usernameGenerationService = legacyUsernameGenerationServiceFactory(
