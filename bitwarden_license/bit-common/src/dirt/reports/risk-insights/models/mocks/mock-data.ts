@@ -7,8 +7,10 @@ import { MemberCipherDetailsResponse } from "..";
 import { ApplicationHealthReportDetailEnriched } from "../report-data-service.types";
 import {
   ApplicationHealthReportDetail,
+  CipherHealthReport,
   OrganizationReportApplication,
   OrganizationReportSummary,
+  PasswordHealthData,
 } from "../report-models";
 
 const mockApplication1: ApplicationHealthReportDetail = {
@@ -139,3 +141,41 @@ export const mockMemberDetails = [
     email: "user3@other.com",
   }),
 ];
+
+export const mockCipherHealthReports: CipherHealthReport[] = [
+  {
+    applications: ["app.com"],
+    cipherMembers: [],
+    healthData: createPasswordHealthData(0),
+    cipher: mockCipherViews[0],
+  },
+  {
+    applications: ["app.com"],
+    cipherMembers: [],
+    healthData: createPasswordHealthData(1),
+    cipher: mockCipherViews[1],
+  },
+  {
+    applications: ["other.com"],
+    cipherMembers: [],
+    healthData: createPasswordHealthData(2),
+    cipher: mockCipherViews[2],
+  },
+];
+
+function createPasswordHealthData(reusedPasswordCount: number | null): PasswordHealthData {
+  return {
+    reusedPasswordCount: reusedPasswordCount ?? 0,
+    weakPasswordDetail: {
+      score: 0,
+      detailValue: {
+        label: "",
+        badgeVariant: "info",
+      },
+    },
+    exposedPasswordDetail: {
+      cipherId: "",
+      exposedXTimes: 0,
+    },
+  };
+}

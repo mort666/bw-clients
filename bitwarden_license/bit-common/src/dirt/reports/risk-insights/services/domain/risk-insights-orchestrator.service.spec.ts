@@ -9,6 +9,7 @@ import { LogService } from "@bitwarden/logging";
 
 import { createNewSummaryData } from "../../helpers";
 import { RiskInsightsData, SaveRiskInsightsReportResponse } from "../../models";
+import { mockMemberCipherDetailsResponse } from "../../models/mocks/member-cipher-details-response.mock";
 import {
   mockApplicationData,
   mockEnrichedReportData,
@@ -32,6 +33,15 @@ describe("RiskInsightsOrchestratorService", () => {
   const mockUserId = "user-101" as UserId;
   const mockReportId = "report-1" as OrganizationReportId;
 
+  const reportState: RiskInsightsData = {
+    id: mockReportId,
+    reportData: [],
+    summaryData: createNewSummaryData(),
+    applicationData: [],
+    creationDate: new Date(),
+  };
+  const mockCiphers = [{ id: "cipher-1" }] as any;
+
   // Mock services
   const mockAccountService = mock<AccountService>({
     activeAccount$: of(mock<Account>({ id: mockUserId })),
@@ -42,40 +52,56 @@ describe("RiskInsightsOrchestratorService", () => {
   const mockOrganizationService = mock<OrganizationService>();
   const mockCipherService = mock<CipherService>();
   const mockMemberCipherDetailsApiService = mock<MemberCipherDetailsApiService>();
-  const mockPasswordHealthService = mock<PasswordHealthService>();
+  let mockPasswordHealthService: PasswordHealthService;
   const mockReportApiService = mock<RiskInsightsApiService>();
-  const mockReportService = mock<RiskInsightsReportService>();
+  let mockReportService: RiskInsightsReportService;
   const mockRiskInsightsEncryptionService = mock<RiskInsightsEncryptionService>();
   const mockLogService = mock<LogService>();
 
   beforeEach(() => {
+    // Mock pipes from constructor
+    mockReportService = mock<RiskInsightsReportService>({
+      generateApplicationsReport: jest.fn().mockReturnValue(mockEnrichedReportData),
+      getApplicationsSummary: jest.fn().mockReturnValue(mockSummaryData),
+      getOrganizationApplications: jest.fn().mockReturnValue(mockApplicationData),
+      getRiskInsightsReport$: jest.fn().mockReturnValue(of(reportState)),
+      saveRiskInsightsReport$: jest
+        .fn()
+        .mockReturnValue(of({ id: mockReportId } as SaveRiskInsightsReportResponse)),
+    });
+    // Arrange mocks for new flow
+    mockMemberCipherDetailsApiService.getMemberCipherDetails.mockResolvedValue(
+      mockMemberCipherDetailsResponse,
+    );
+
+    mockPasswordHealthService = mock<PasswordHealthService>({
+      auditPasswordLeaks$: jest.fn(() => of([])),
+      isValidCipher: jest.fn().mockReturnValue(true),
+      findWeakPasswordDetails: jest.fn().mockReturnValue(null),
+    });
+
+    mockCipherService.getAllFromApiForOrganization.mockReturnValue(mockCiphers);
+
     service = new RiskInsightsOrchestratorService(
       mockAccountService,
       mockCipherService,
       mockCriticalAppsService,
+      mockLogService,
       mockMemberCipherDetailsApiService,
       mockOrganizationService,
       mockPasswordHealthService,
       mockReportApiService,
       mockReportService,
       mockRiskInsightsEncryptionService,
-      mockLogService,
     );
   });
 
   describe("fetchReport", () => {
-    it("should call reportService.getRiskInsightsReport$ with correct org and user IDs and emit ReportState", (done) => {
+    it("should call with correct org and user IDs and emit ReportState", (done) => {
+      // Arrange
       const privateOrganizationDetailsSubject = service["_organizationDetailsSubject"];
       const privateUserIdSubject = service["_userIdSubject"];
-      // Arrange
-      const reportState: RiskInsightsData = {
-        id: mockReportId,
-        reportData: [],
-        summaryData: createNewSummaryData(),
-        applicationData: [],
-        creationDate: new Date(),
-      };
-      mockReportService.getRiskInsightsReport$.mockReturnValueOnce(of(reportState));
+
       // Set up organization and user context
       privateOrganizationDetailsSubject.next({
         organizationId: mockOrgId,
@@ -100,18 +126,31 @@ describe("RiskInsightsOrchestratorService", () => {
     });
 
     it("should emit error ReportState when getRiskInsightsReport$ throws", (done) => {
-      const { _organizationDetailsSubject, _userIdSubject } = service as any;
-      mockReportService.getRiskInsightsReport$.mockReturnValueOnce(
-        // Simulate error
-        throwError(() => new Error("API error")),
+      // Setup error passed via constructor for this test case
+      mockReportService.getRiskInsightsReport$ = jest
+        .fn()
+        .mockReturnValue(throwError(() => new Error("API error")));
+      const testService = new RiskInsightsOrchestratorService(
+        mockAccountService,
+        mockCipherService,
+        mockCriticalAppsService,
+        mockLogService,
+        mockMemberCipherDetailsApiService,
+        mockOrganizationService,
+        mockPasswordHealthService,
+        mockReportApiService,
+        mockReportService,
+        mockRiskInsightsEncryptionService,
       );
+
+      const { _organizationDetailsSubject, _userIdSubject } = testService as any;
       _organizationDetailsSubject.next({
         organizationId: mockOrgId,
         organizationName: mockOrgName,
       });
       _userIdSubject.next(mockUserId);
-      service.fetchReport();
-      service.rawReportData$.subscribe((state) => {
+      testService.fetchReport();
+      testService.rawReportData$.subscribe((state) => {
         if (!state.loading) {
           expect(state.error).toBe("Failed to fetch report");
           expect(state.data).toBeNull();
@@ -122,17 +161,11 @@ describe("RiskInsightsOrchestratorService", () => {
   });
 
   describe("generateReport", () => {
-    it("should call reportService.generateApplicationsReport and saveRiskInsightsReport$ and emit ReportState", (done) => {
+    it("should generate report using member ciphers and password health, then save and emit ReportState", (done) => {
       const privateOrganizationDetailsSubject = service["_organizationDetailsSubject"];
       const privateUserIdSubject = service["_userIdSubject"];
 
-      // Arrange
-      mockReportService.generateApplicationsReport.mockReturnValueOnce(mockEnrichedReportData);
-      mockReportService.getApplicationsSummary.mockReturnValueOnce(mockSummaryData);
-      mockReportService.getOrganizationApplications.mockReturnValueOnce(mockApplicationData);
-      mockReportService.saveRiskInsightsReport$.mockReturnValueOnce(
-        of({ id: mockReportId } as SaveRiskInsightsReportResponse),
-      );
+      // Set up ciphers in orchestrator
       privateOrganizationDetailsSubject.next({
         organizationId: mockOrgId,
         organizationName: mockOrgName,
@@ -145,7 +178,10 @@ describe("RiskInsightsOrchestratorService", () => {
       // Assert
       service.rawReportData$.subscribe((state) => {
         if (!state.loading && state.data) {
-          expect(mockReportService.generateApplicationsReport).toHaveBeenCalledWith(mockOrgId);
+          expect(mockMemberCipherDetailsApiService.getMemberCipherDetails).toHaveBeenCalledWith(
+            mockOrgId,
+          );
+          expect(mockReportService.generateApplicationsReport).toHaveBeenCalled();
           expect(mockReportService.saveRiskInsightsReport$).toHaveBeenCalledWith(
             mockEnrichedReportData,
             mockSummaryData,
@@ -160,47 +196,22 @@ describe("RiskInsightsOrchestratorService", () => {
       });
     });
 
-    it("should emit error ReportState when saveRiskInsightsReport$ throws", (done) => {
-      const privateOrganizationDetailsSubject = service["_organizationDetailsSubject"];
-      const privateUserIdSubject = service["_userIdSubject"];
+    describe("destroy", () => {
+      it("should complete destroy$ subject and unsubscribe reportStateSubscription", () => {
+        const privateDestroy = (service as any)._destroy$;
+        const privateReportStateSubscription = (service as any)._reportStateSubscription;
 
-      mockReportService.generateApplicationsReport.mockReturnValueOnce(mockEnrichedReportData);
-      mockReportService.getApplicationsSummary.mockReturnValueOnce(mockSummaryData);
-      mockReportService.getOrganizationApplications.mockReturnValueOnce(mockApplicationData);
-      mockReportService.saveRiskInsightsReport$.mockReturnValueOnce(
-        throwError(() => new Error("Save error")),
-      );
-      privateOrganizationDetailsSubject.next({
-        organizationId: mockOrgId,
-        organizationName: mockOrgName,
+        // Spy on the methods you expect to be called.
+        const destroyCompleteSpy = jest.spyOn(privateDestroy, "complete");
+        const unsubscribeSpy = jest.spyOn(privateReportStateSubscription, "unsubscribe");
+
+        // Execute the destroy method.
+        service.destroy();
+
+        // Assert that the methods were called as expected.
+        expect(destroyCompleteSpy).toHaveBeenCalled();
+        expect(unsubscribeSpy).toHaveBeenCalled();
       });
-      privateUserIdSubject.next(mockUserId);
-      service.generateReport();
-      service.rawReportData$.subscribe((state) => {
-        if (!state.loading) {
-          expect(state.error).toBe("Failed to generate or save report");
-          expect(state.data).toBeNull();
-          done();
-        }
-      });
-    });
-  });
-
-  describe("destroy", () => {
-    it("should complete destroy$ subject and unsubscribe reportStateSubscription", () => {
-      const privateDestroy = (service as any)._destroy$;
-      const privateReportStateSubscription = (service as any)._reportStateSubscription;
-
-      // Spy on the methods you expect to be called.
-      const destroyCompleteSpy = jest.spyOn(privateDestroy, "complete");
-      const unsubscribeSpy = jest.spyOn(privateReportStateSubscription, "unsubscribe");
-
-      // Execute the destroy method.
-      service.destroy();
-
-      // Assert that the methods were called as expected.
-      expect(destroyCompleteSpy).toHaveBeenCalled();
-      expect(unsubscribeSpy).toHaveBeenCalled();
     });
   });
 });

@@ -12,15 +12,16 @@ import {
   SaveRiskInsightsReportResponse,
 } from "../../models/api-models.types";
 import { mockCiphers } from "../../models/mocks/ciphers.mock";
+import { mockMemberCipherDetailsResponse } from "../../models/mocks/member-cipher-details-response.mock";
 import {
   mockApplicationData,
+  mockCipherHealthReports,
   mockCipherViews,
   mockMemberDetails,
   mockReportData,
   mockSummaryData,
 } from "../../models/mocks/mock-data";
 import { MemberCipherDetailsApiService } from "../api/member-cipher-details-api.service";
-import { mockMemberCipherDetails } from "../api/member-cipher-details-api.service.spec";
 import { RiskInsightsApiService } from "../api/risk-insights-api.service";
 
 import { PasswordHealthService } from "./password-health.service";
@@ -54,7 +55,9 @@ describe("RiskInsightsReportService", () => {
   beforeEach(() => {
     cipherService.getAllFromApiForOrganization.mockResolvedValue(mockCiphers);
 
-    memberCipherDetailsService.getMemberCipherDetails.mockResolvedValue(mockMemberCipherDetails);
+    memberCipherDetailsService.getMemberCipherDetails.mockResolvedValue(
+      mockMemberCipherDetailsResponse,
+    );
 
     // Mock PasswordHealthService methods
     mockPasswordHealthService.isValidCipher.mockImplementation((cipher: any) => {
@@ -95,7 +98,7 @@ describe("RiskInsightsReportService", () => {
     cipherService.getAllFromApiForOrganization.mockResolvedValue(mockCipherViews);
     memberCipherDetailsService.getMemberCipherDetails.mockResolvedValue(mockMemberDetails);
 
-    const result = service.generateApplicationsReport("orgId" as any);
+    const result = service.generateApplicationsReport(mockCipherHealthReports);
     expect(Array.isArray(result)).toBe(true);
 
     // Should group by application name (trimmedUris)
@@ -229,7 +232,11 @@ describe("RiskInsightsReportService", () => {
         expect.anything(),
         expect.anything(),
       );
-      expect(result).toEqual({ ...mockDecryptedData, creationDate: mockResponse.creationDate });
+      expect(result).toEqual({
+        ...mockDecryptedData,
+        id: mockResponse.id,
+        creationDate: mockResponse.creationDate,
+      });
     });
   });
 });

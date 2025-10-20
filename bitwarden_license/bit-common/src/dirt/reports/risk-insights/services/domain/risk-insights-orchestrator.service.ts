@@ -109,13 +109,13 @@ export class RiskInsightsOrchestratorService {
     private accountService: AccountService,
     private cipherService: CipherService,
     private criticalAppsService: CriticalAppsService,
+    private logService: LogService,
     private memberCipherDetailsApiService: MemberCipherDetailsApiService,
     private organizationService: OrganizationService,
     private passwordHealthService: PasswordHealthService,
     private reportApiService: RiskInsightsApiService,
     private reportService: RiskInsightsReportService,
     private riskInsightsEncryptionService: RiskInsightsEncryptionService,
-    private logService: LogService,
   ) {
     this.logService.debug("[RiskInsightsOrchestratorService] Setting up");
     this._setupCriticalApplicationContext();
@@ -283,8 +283,10 @@ export class RiskInsightsOrchestratorService {
       this.memberCipherDetailsApiService.getMemberCipherDetails(organizationId),
     ).pipe(map((memberCiphers) => flattenMemberDetails(memberCiphers)));
 
-    return forkJoin([this._ciphers$, memberCiphers$]).pipe(
-      tap(() => this.logService.debug("[RiskInsightsOrchestratorService] Generating new report")),
+    return forkJoin([this._ciphers$.pipe(take(1)), memberCiphers$]).pipe(
+      tap(() => {
+        this.logService.debug("[RiskInsightsOrchestratorService] Generating new report");
+      }),
       switchMap(([ciphers, memberCiphers]) => this._getCipherHealth(ciphers ?? [], memberCiphers)),
       map((cipherHealthReports) =>
         this.reportService.generateApplicationsReport(cipherHealthReports),

@@ -240,10 +240,10 @@ describe("RiskInsightsApiService", () => {
     expect(mockApiService.send).toHaveBeenCalledWith(
       "PATCH",
       `/reports/organizations/${orgId.toString()}/data/application/${reportId.toString()}`,
-      mockApplication,
+      { applicationData: mockApplication.encryptedString!, id: reportId, organizationId: orgId },
       true,
       true,
     );
-    expect(result).toBeUndefined();
+    expect(result).toBeTruthy();
   });
 });
