@@ -10,6 +10,8 @@ import { SecurityTaskType, TaskService } from "@bitwarden/common/vault/tasks";
 import { AnchorLinkDirective, CalloutModule } from "@bitwarden/components";
 import { I18nPipe } from "@bitwarden/ui-common";
 
+// FIXME(https://bitwarden.atlassian.net/browse/CL-764): Migrate to OnPush
+// eslint-disable-next-line @angular-eslint/prefer-on-push-component-change-detection
 @Component({
   selector: "vault-at-risk-password-callout",
   imports: [CommonModule, AnchorLinkDirective, RouterModule, CalloutModule, I18nPipe],
