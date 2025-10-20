@@ -526,16 +526,11 @@ export class SettingsComponent implements OnInit, OnDestroy {
     }
 
     // Avoid saving 0 since it's useless as a timeout value.
-    if (this.form.value.vaultTimeout === 0) {
+    if (newValue === 0) {
       return;
     }
 
     if (!this.form.controls.vaultTimeout.valid) {
-      this.platformUtilsService.showToast(
-        "error",
-        null,
-        this.i18nService.t("vaultTimeoutTooLarge"),
-      );
       return;
     }
 
@@ -622,7 +617,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
         // Allow biometric unlock on app restart so the user doesn't get into a bad state.
         await this.enrollPersistentBiometricIfNeeded(userId);
       }
-      await this.vaultTimeoutSettingsService.clear(userId);
+      await this.pinService.unsetPin(userId);
     }
   }
 
