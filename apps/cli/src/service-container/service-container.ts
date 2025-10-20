@@ -775,7 +775,7 @@ export class ServiceContainer {
     const logoutService = new DefaultLogoutService(this.messagingService);
     const processReloadService = new CliProcessReloadService();
     const systemService = new CliSystemService();
-    lockService = new DefaultLockService(
+    this.lockService = new DefaultLockService(
       this.accountService,
       biometricService,
       this.vaultTimeoutSettingsService,
