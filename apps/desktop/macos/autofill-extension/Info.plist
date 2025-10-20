@@ -9,9 +9,9 @@
 			<key>ASCredentialProviderExtensionCapabilities</key>
 			<dict>
 				<key>ProvidesPasskeys</key>
-				<true />
+				<true/>
 				<key>ShowsConfigurationUI</key>
-				<true />
+				<true/>
 			</dict>
 		</dict>
 		<key>NSExtensionPointIdentifier</key>
