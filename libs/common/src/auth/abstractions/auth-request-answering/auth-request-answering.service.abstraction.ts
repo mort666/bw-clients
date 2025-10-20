@@ -1,3 +1,5 @@
+import { Observable } from "rxjs";
+
 import { SystemNotificationEvent } from "@bitwarden/common/platform/system-notifications/system-notifications.service";
 import { UserId } from "@bitwarden/user-core";
 
@@ -17,10 +19,7 @@ export abstract class AuthRequestAnsweringService {
 
   /**
    * Confirms whether or not the user meets the conditions required to show an approval
-   * dialog immediately. Those conditions are:
-   * - User must be Unlocked
-   * - User must be the active user
-   * - User must not be required to set/change their password
+   * dialog immediately.
    *
    * @param userId the UserId that the auth request is for.
    * @returns boolean stating whether or not the user meets conditions necessary to show
@@ -41,4 +40,13 @@ export abstract class AuthRequestAnsweringService {
    * approval dialog.
    */
   abstract processPendingAuthRequests(): Promise<void>;
+
+  /**
+   * Sets up listeners for scenarios where the user unlocks and we want to process
+   * any pending auth requests in state.
+   * - Implemented in Extension and Desktop
+   *
+   * @param destroy$ The destroy$ observable from the caller
+   */
+  abstract setupUnlockListenersForProcessingAuthRequests(destroy$: Observable<void>): void;
 }

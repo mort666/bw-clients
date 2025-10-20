@@ -15,4 +15,6 @@ export class NoopAuthRequestAnsweringService implements AuthRequestAnsweringServ
   async handleAuthRequestNotificationClicked(event: SystemNotificationEvent) {}
 
   async processPendingAuthRequests(): Promise<void> {}
+
+  setupUnlockListenersForProcessingAuthRequests(): void {}
 }

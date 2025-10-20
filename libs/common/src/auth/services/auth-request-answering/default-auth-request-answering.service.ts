@@ -1,4 +1,16 @@
-import { firstValueFrom } from "rxjs";
+import {
+  distinctUntilChanged,
+  filter,
+  firstValueFrom,
+  map,
+  Observable,
+  pairwise,
+  startWith,
+  switchMap,
+  take,
+  takeUntil,
+  tap,
+} from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
@@ -39,6 +51,7 @@ export class DefaultAuthRequestAnsweringService implements AuthRequestAnsweringS
       this.masterPasswordService.forceSetPasswordReason$(userId),
     );
 
+    // Use must be unlocked, active, and must not be required to set/change their master password
     const meetsConditions =
       authStatus === AuthenticationStatus.Unlocked &&
       activeUserId === userId &&
@@ -47,7 +60,7 @@ export class DefaultAuthRequestAnsweringService implements AuthRequestAnsweringS
     return meetsConditions;
   }
 
-  async handleAuthRequestNotificationClicked(event: SystemNotificationEvent) {
+  async handleAuthRequestNotificationClicked(event: SystemNotificationEvent): Promise<void> {
     throw new Error("handleAuthRequestNotificationClicked() not implemented for this client");
   }
 
@@ -72,5 +85,39 @@ export class DefaultAuthRequestAnsweringService implements AuthRequestAnsweringS
         this.messagingService.send("openLoginApproval");
       }
     }
+  }
+
+  setupUnlockListenersForProcessingAuthRequests(destroy$: Observable<void>): void {
+    // Trigger processing auth requests when the active user is in an unlocked state.
+    this.accountService.activeAccount$
+      .pipe(
+        map((a) => a?.id), // Extract active userId
+        distinctUntilChanged(), // Only when userId actually changes
+        filter((userId) => userId != null), // Require a valid userId
+        switchMap((userId) => this.authService.authStatusFor$(userId).pipe(take(1))), // Get current auth status once for new user
+        filter((status) => status === AuthenticationStatus.Unlocked), // Only when the new user is Unlocked
+        tap(() => {
+          // Trigger processing when switching users while app is visible.
+          void this.processPendingAuthRequests();
+        }),
+        takeUntil(destroy$),
+      )
+      .subscribe();
+
+    // When the app is already visible and the active account transitions to Unlocked, process any
+    // pending auth requests for the active user. The above subscription does not handle this case.
+    this.authService.activeAccountStatus$
+      .pipe(
+        startWith(null as unknown as AuthenticationStatus), // Seed previous value to handle initial emission
+        pairwise(), // Compare previous and current statuses
+        filter(
+          ([prev, curr]) =>
+            prev !== AuthenticationStatus.Unlocked && curr === AuthenticationStatus.Unlocked, // Fire on transitions into Unlocked (incl. initial)
+        ),
+        takeUntil(destroy$),
+      )
+      .subscribe(() => {
+        void this.processPendingAuthRequests();
+      });
   }
 }

@@ -40,6 +40,7 @@ import { EventUploadService } from "@bitwarden/common/abstractions/event/event-u
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { InternalPolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { AuthRequestAnsweringService } from "@bitwarden/common/auth/abstractions/auth-request-answering/auth-request-answering.service.abstraction";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
@@ -186,6 +187,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private desktopAutotypeDefaultSettingPolicy: DesktopAutotypeDefaultSettingPolicy,
     private pendingAuthRequestsState: PendingAuthRequestsStateService,
     private authRequestService: AuthRequestServiceAbstraction,
+    private authRequestAnsweringService: AuthRequestAnsweringService,
   ) {
     this.deviceTrustToastService.setupListeners$.pipe(takeUntilDestroyed()).subscribe();
 
@@ -197,6 +199,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.accountService.activeAccount$.pipe(takeUntil(this.destroy$)).subscribe((account) => {
       this.activeUserId = account?.id;
     });
+
+    this.authRequestAnsweringService.setupUnlockListenersForProcessingAuthRequests(this.destroy$);
 
     this.ngZone.runOutsideAngular(() => {
       setTimeout(async () => {
@@ -530,15 +534,6 @@ export class AppComponent implements OnInit, OnDestroy {
             } finally {
               this.processingPendingAuth = false;
             }
-
-            // if (message.notificationId != null) {
-            //   this.dialogService.closeAll();
-            //   const dialogRef = LoginApprovalDialogComponent.open(this.dialogService, {
-            //     notificationId: message.notificationId,
-            //   });
-            //   await firstValueFrom(dialogRef.closed);
-            // }
-
             break;
           case "redrawMenu":
             await this.updateAppMenu();
