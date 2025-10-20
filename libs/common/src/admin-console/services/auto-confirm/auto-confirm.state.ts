@@ -15,7 +15,7 @@ export const AUTO_CONFIRM_STATE = UserKeyDefinition.record<AutoConfirmState>(
   AUTO_CONFIRM,
   "autoConfirm",
   {
-    deserializer: (autoConfirnState) => autoConfirnState,
+    deserializer: (autoConfirmState) => autoConfirmState,
     clearOn: ["logout"],
   },
 );
