@@ -45,6 +45,9 @@ export class CalloutComponent implements AfterViewInit {
   );
   readonly titleComputed = computed(() => {
     const title = this.title();
+    if (title === null) {
+      return undefined;
+    }
     const type = this.type();
     if (title == null && defaultI18n[type] != null) {
       return this.i18nService.t(defaultI18n[type]);
