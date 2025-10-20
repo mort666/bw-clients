@@ -60,6 +60,8 @@ export type UpgradePaymentParams = {
   subscriber: BitwardenSubscriber;
 };
 
+// FIXME(https://bitwarden.atlassian.net/browse/CL-764): Migrate to OnPush
+// eslint-disable-next-line @angular-eslint/prefer-on-push-component-change-detection
 @Component({
   selector: "app-upgrade-payment",
   imports: [
@@ -75,13 +77,17 @@ export type UpgradePaymentParams = {
   templateUrl: "./upgrade-payment.component.html",
 })
 export class UpgradePaymentComponent implements OnInit, AfterViewInit {
-  protected selectedPlanId = input.required<PersonalSubscriptionPricingTierId>();
-  protected account = input.required<Account>();
+  protected readonly selectedPlanId = input.required<PersonalSubscriptionPricingTierId>();
+  protected readonly account = input.required<Account>();
   protected goBack = output<void>();
   protected complete = output<UpgradePaymentResult>();
   protected selectedPlan: PlanDetails | null = null;
 
+  // FIXME(https://bitwarden.atlassian.net/browse/CL-903): Migrate to Signals
+  // eslint-disable-next-line @angular-eslint/prefer-signals
   @ViewChild(EnterPaymentMethodComponent) paymentComponent!: EnterPaymentMethodComponent;
+  // FIXME(https://bitwarden.atlassian.net/browse/CL-903): Migrate to Signals
+  // eslint-disable-next-line @angular-eslint/prefer-signals
   @ViewChild(CartSummaryComponent) cartSummaryComponent!: CartSummaryComponent;
 
   protected formGroup = new FormGroup({
@@ -90,7 +96,7 @@ export class UpgradePaymentComponent implements OnInit, AfterViewInit {
     billingAddress: EnterBillingAddressComponent.getFormGroup(),
   });
 
-  protected loading = signal(true);
+  protected readonly loading = signal(true);
   private pricingTiers$!: Observable<PersonalSubscriptionPricingTier[]>;
 
   // Cart Summary data
