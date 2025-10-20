@@ -3,12 +3,8 @@ import { firstValueFrom } from "rxjs";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthRequestAnsweringService } from "@bitwarden/common/auth/abstractions/auth-request-answering/auth-request-answering.service.abstraction";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
-import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { DefaultAuthRequestAnsweringService } from "@bitwarden/common/auth/services/auth-request-answering/default-auth-request-answering.service";
-import {
-  PendingAuthRequestsStateService,
-  PendingAuthUserMarker,
-} from "@bitwarden/common/auth/services/auth-request-answering/pending-auth-requests.state";
+import { PendingAuthRequestsStateService } from "@bitwarden/common/auth/services/auth-request-answering/pending-auth-requests.state";
 import { MasterPasswordServiceAbstraction } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
@@ -68,29 +64,8 @@ export class DesktopAuthRequestAnsweringService
   }
 
   async handleAuthRequestNotificationClicked(event: SystemNotificationEvent) {
+    // Not implemented for Desktop because click handling is already setup in electron-main-messaging.service.ts.
+    // See click handler in ipcMain.handle("loginRequest"...
     throw new Error("handleAuthRequestNotificationClicked() not implemented for this client");
-  }
-
-  async processPendingAuthRequests(): Promise<void> {
-    // Prune any stale pending requests (older than 15 minutes)
-    // This comes from GlobalSettings.cs
-    //    public TimeSpan UserRequestExpiration { get; set; } = TimeSpan.FromMinutes(15);
-    const fifteenMinutesMs = 15 * 60 * 1000;
-
-    await this.pendingAuthRequestsState.pruneOlderThan(fifteenMinutesMs);
-
-    const pendingAuthRequestsInState: PendingAuthUserMarker[] =
-      (await firstValueFrom(this.pendingAuthRequestsState.getAll$())) ?? [];
-
-    if (pendingAuthRequestsInState.length > 0) {
-      const activeUserId = await firstValueFrom(this.accountService.activeAccount$.pipe(getUserId));
-      const pendingAuthRequestsForActiveUser = pendingAuthRequestsInState.some(
-        (e) => e.userId === activeUserId,
-      );
-
-      if (pendingAuthRequestsForActiveUser) {
-        this.messagingService.send("openLoginApproval");
-      }
-    }
   }
 }
