@@ -21,7 +21,6 @@ import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { AutofillTargetingRulesByDomain } from "@bitwarden/common/autofill/types";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { Utils } from "@bitwarden/common/platform/misc/utils";
 import {
   ButtonModule,
   CardComponent,
@@ -185,46 +184,44 @@ export class AutofillTargetingRulesComponent implements AfterViewInit, OnDestroy
       const formGroup = control as FormGroup;
       const domain = formGroup.get("domain")?.value;
 
-      if (domain && domain !== "") {
-        const validatedHost = Utils.getHostname(domain);
+      const normalizedURI = this.domainSettingsService.normalizeAutofillTargetingURI(domain);
 
-        if (!validatedHost) {
-          this.toastService.showToast({
-            message: this.i18nService.t("blockedDomainsInvalidDomain", domain),
-            title: "",
-            variant: "error",
-          });
-          return;
-        }
+      if (!normalizedURI) {
+        this.toastService.showToast({
+          message: this.i18nService.t("blockedDomainsInvalidDomain", domain),
+          title: "",
+          variant: "error",
+        });
+        return;
+      }
 
-        const enteredUsername = formGroup.get("username")?.value;
-        const enteredPassword = formGroup.get("password")?.value;
-        const enteredTotp = formGroup.get("totp")?.value;
+      const enteredUsername = formGroup.get("username")?.value;
+      const enteredPassword = formGroup.get("password")?.value;
+      const enteredTotp = formGroup.get("totp")?.value;
 
-        if (!enteredUsername && !enteredPassword && !enteredTotp) {
-          this.toastService.showToast({
-            message: "No targeting rules were specified for the URL",
-            title: "",
-            variant: "error",
-          });
+      if (!enteredUsername && !enteredPassword && !enteredTotp) {
+        this.toastService.showToast({
+          message: "No targeting rules were specified for the URL",
+          title: "",
+          variant: "error",
+        });
 
-          return;
-        }
+        return;
+      }
 
-        newUriTargetingRulesSaveState[validatedHost] = {};
+      newUriTargetingRulesSaveState[normalizedURI] = {};
 
-        // Only add the property to the object if it has a value
-        if (enteredUsername) {
-          newUriTargetingRulesSaveState[validatedHost].username = enteredUsername;
-        }
+      // Only add the property to the object if it has a value
+      if (enteredUsername) {
+        newUriTargetingRulesSaveState[normalizedURI].username = enteredUsername;
+      }
 
-        if (enteredPassword) {
-          newUriTargetingRulesSaveState[validatedHost].password = enteredPassword;
-        }
+      if (enteredPassword) {
+        newUriTargetingRulesSaveState[normalizedURI].password = enteredPassword;
+      }
 
-        if (enteredTotp) {
-          newUriTargetingRulesSaveState[validatedHost].totp = enteredTotp;
-        }
+      if (enteredTotp) {
+        newUriTargetingRulesSaveState[normalizedURI].totp = enteredTotp;
       }
     });
 

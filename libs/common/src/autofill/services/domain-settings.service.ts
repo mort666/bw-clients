@@ -123,6 +123,9 @@ export abstract class DomainSettingsService {
    * Helper function for the common resolution of a given URL against equivalent domains
    */
   getUrlEquivalentDomains: (url: string) => Observable<Set<string>>;
+
+  /** URI normalization for Autofill Targeting rules URLs to ensure state is doing safe, consistent internal comparisons */
+  normalizeAutofillTargetingURI: (url: chrome.tabs.Tab["url"]) => chrome.tabs.Tab["url"] | null;
 }
 
 export class DefaultDomainSettingsService implements DomainSettingsService {
@@ -205,7 +208,19 @@ export class DefaultDomainSettingsService implements DomainSettingsService {
   }
 
   async setAutofillTargetingRules(newValue: AutofillTargetingRulesByDomain): Promise<void> {
-    await this.autofillTargetingRulesState.update(() => newValue);
+    await this.autofillTargetingRulesState.update(() => {
+      const validatedNewValue = Object.keys(newValue || {}).reduce((updatingValue, valueKey) => {
+        const normalizedURI = this.normalizeAutofillTargetingURI(valueKey);
+
+        if (normalizedURI) {
+          return { ...updatingValue, [normalizedURI]: newValue[valueKey] };
+        }
+
+        return updatingValue;
+      }, {});
+
+      return validatedNewValue;
+    });
   }
 
   async setShowFavicons(newValue: boolean): Promise<void> {
@@ -245,17 +260,33 @@ export class DefaultDomainSettingsService implements DomainSettingsService {
     return domains$;
   }
 
-  getUrlAutofillTargetingRules$(url: string): Observable<AutofillTargetingRules> {
+  getUrlAutofillTargetingRules$(url: chrome.tabs.Tab["url"]): Observable<AutofillTargetingRules> {
+    const normalizedURI = this.normalizeAutofillTargetingURI(url);
+
     return this.autofillTargetingRules$.pipe(
       map((autofillTargetingRules) => {
-        const domain = Utils.getHostname(url);
-
-        if (domain == null) {
+        if (!normalizedURI) {
           return {};
         }
 
-        return autofillTargetingRules?.[domain] || {};
+        return autofillTargetingRules?.[normalizedURI] || {};
       }),
     );
+  }
+
+  normalizeAutofillTargetingURI(url: chrome.tabs.Tab["url"]) {
+    if (!Utils.isNullOrWhitespace(url)) {
+      const uriParts = Utils.getUrl(url);
+      const validatedHostname = Utils.getHostname(url);
+
+      // Prevent directory traversal from malicious paths
+      const pathParts = uriParts.pathname.split("?");
+      const normalizedURI =
+        uriParts.protocol + "//" + validatedHostname + Utils.normalizePath(pathParts[0]);
+
+      return normalizedURI;
+    }
+
+    return null;
   }
 }
