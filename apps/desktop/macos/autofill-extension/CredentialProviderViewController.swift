@@ -8,16 +8,20 @@
 import AuthenticationServices
 import os
 
-
 class CredentialProviderViewController: ASCredentialProviderViewController {
     let logger: Logger
     
     @IBOutlet weak var statusLabel: NSTextField!
     @IBOutlet weak var logoImageView: NSImageView!
     
+    // The IPC client to communicate with the Bitwarden desktop app
     private var client: MacOsProviderClient?
     
-    // We made the the getclient method async
+    // Timer for checking connection status
+    private var connectionMonitorTimer: Timer?
+    private var lastConnectionStatus: ConnectionStatus = .disconnected
+
+    // We changed the getClient method to be async, here's why:
     // This is so that we can check if the app is running, and launch it, without blocking the main thread
     // Blocking the main thread caused MacOS layouting to 'fail' or at least be very delayed, which caused our getWindowPositioning code to sent 0,0.
     // We also properly retry the IPC connection which sometimes would take some time to be up and running, depending on CPU load, phase of jupiters moon, etc.
@@ -83,11 +87,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
         
         self.client = newClient
         return newClient!
-    }
-    
-    // Timer for checking connection status
-    private var connectionMonitorTimer: Timer?
-    private var lastConnectionStatus: ConnectionStatus = .disconnected
+    }    
     
     // Setup the connection monitoring timer
     private func setupConnectionMonitoring() {
@@ -321,8 +321,7 @@ class CredentialProviderViewController: ASCredentialProviderViewController {
         logger.log("[autofill-extension] provideCredentialWithoutUserInteraction2 called wrong")
         self.extensionContext.cancelRequest(withError: BitwardenError.Internal("Invalid authentication request"))
     }
-     
-
+    
     private func createTimer() -> DispatchWorkItem {
         // Create a timer for 600 second timeout
         let timeoutTimer = DispatchWorkItem { [weak self] in
