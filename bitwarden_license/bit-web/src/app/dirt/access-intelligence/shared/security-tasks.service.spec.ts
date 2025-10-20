@@ -3,7 +3,7 @@ import { mock } from "jest-mock-extended";
 
 import {
   AllActivitiesService,
-  LEGACY_ApplicationHealthReportDetailWithCriticalFlagAndCipher,
+  ApplicationHealthReportDetailEnriched,
 } from "@bitwarden/bit-common/dirt/reports/risk-insights";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { OrganizationId } from "@bitwarden/common/types/guid";
@@ -42,7 +42,7 @@ describe("AccessIntelligenceSecurityTasksService", () => {
         {
           atRiskPasswordCount: 1,
           atRiskCipherIds: ["cid1"],
-        } as LEGACY_ApplicationHealthReportDetailWithCriticalFlagAndCipher,
+        } as ApplicationHealthReportDetailEnriched,
       ];
       const spy = jest.spyOn(service, "requestPasswordChange").mockResolvedValue(2);
       await service.assignTasks(organizationId, apps);
@@ -58,11 +58,11 @@ describe("AccessIntelligenceSecurityTasksService", () => {
         {
           atRiskPasswordCount: 2,
           atRiskCipherIds: ["cid1", "cid2"],
-        } as LEGACY_ApplicationHealthReportDetailWithCriticalFlagAndCipher,
+        } as ApplicationHealthReportDetailEnriched,
         {
           atRiskPasswordCount: 1,
           atRiskCipherIds: ["cid2"],
-        } as LEGACY_ApplicationHealthReportDetailWithCriticalFlagAndCipher,
+        } as ApplicationHealthReportDetailEnriched,
       ];
       defaultAdminTaskServiceSpy.bulkCreateTasks.mockResolvedValue(undefined);
       i18nServiceSpy.t.mockImplementation((key) => key);
@@ -87,7 +87,7 @@ describe("AccessIntelligenceSecurityTasksService", () => {
         {
           atRiskPasswordCount: 1,
           atRiskCipherIds: ["cid3"],
-        } as LEGACY_ApplicationHealthReportDetailWithCriticalFlagAndCipher,
+        } as ApplicationHealthReportDetailEnriched,
       ];
       defaultAdminTaskServiceSpy.bulkCreateTasks.mockRejectedValue(new Error("fail"));
       i18nServiceSpy.t.mockImplementation((key) => key);
@@ -108,7 +108,7 @@ describe("AccessIntelligenceSecurityTasksService", () => {
         {
           atRiskPasswordCount: 0,
           atRiskCipherIds: ["cid4"],
-        } as LEGACY_ApplicationHealthReportDetailWithCriticalFlagAndCipher,
+        } as ApplicationHealthReportDetailEnriched,
       ];
       const result = await service.requestPasswordChange(organizationId, apps);
 

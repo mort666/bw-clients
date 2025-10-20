@@ -184,24 +184,24 @@ export class RiskInsightsDataService {
   // ------------------------------ Critical application methods --------------
   saveCriticalApplications(selectedUrls: string[]) {
     // Saving critical applications to the report
-    this.orchestrator.saveCriticalApplications$(selectedUrls);
+    return this.orchestrator.saveCriticalApplications$(selectedUrls);
 
-    // Legacy support: also save to the CriticalAppsService for backward compatibility
-    return this.organizationDetails$.pipe(
-      exhaustMap((organizationDetails) => {
-        if (!organizationDetails?.organizationId) {
-          return EMPTY;
-        }
-        return this.criticalAppsService.setCriticalApps(
-          organizationDetails?.organizationId,
-          selectedUrls,
-        );
-      }),
-      catchError((error: unknown) => {
-        this.errorSubject.next("Failed to save critical applications");
-        return throwError(() => error);
-      }),
-    );
+    // Legacy saving CriticalAppsService for backward compatibility
+    // return this.organizationDetails$.pipe(
+    //   exhaustMap((organizationDetails) => {
+    //     if (!organizationDetails?.organizationId) {
+    //       return EMPTY;
+    //     }
+    //     return this.criticalAppsService.setCriticalApps(
+    //       organizationDetails?.organizationId,
+    //       selectedUrls,
+    //     );
+    //   }),
+    //   catchError((error: unknown) => {
+    //     this.errorSubject.next("Failed to save critical applications");
+    //     return throwError(() => error);
+    //   }),
+    // );
   }
 
   removeCriticalApplication(hostname: string) {

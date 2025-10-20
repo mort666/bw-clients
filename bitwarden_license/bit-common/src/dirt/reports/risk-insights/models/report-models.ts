@@ -64,6 +64,10 @@ export type OrganizationReportSummary = {
 export type OrganizationReportApplication = {
   applicationName: string;
   isCritical: boolean;
+  /**
+   * Captures when a report has been reviewed by a user and
+   * can be filtered on to check for new applications
+   * */
   reviewedDate: Date | null;
 };
 

@@ -148,7 +148,6 @@ export class CriticalAppsService {
       return;
     }
 
-    // TODO Uncomment when done testing that the migration is working
     await this.criticalAppsApiService.dropCriticalApp({
       organizationId: app.organizationId,
       passwordHealthReportApplicationIds: [app.id],

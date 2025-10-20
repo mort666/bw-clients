@@ -10,14 +10,8 @@ import {
   SecurityTasksApiService,
   TaskMetrics,
 } from "@bitwarden/bit-common/dirt/reports/risk-insights";
-import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { OrganizationId } from "@bitwarden/common/types/guid";
-import {
-  ButtonModule,
-  ProgressModule,
-  ToastService,
-  TypographyModule,
-} from "@bitwarden/components";
+import { ButtonModule, ProgressModule, TypographyModule } from "@bitwarden/components";
 
 import { DefaultAdminTaskService } from "../../../../vault/services/default-admin-task.service";
 import { RenderMode } from "../../models/activity.models";
@@ -45,8 +39,6 @@ export class PasswordChangeMetricComponent implements OnInit {
     private activatedRoute: ActivatedRoute,
     private securityTasksApiService: SecurityTasksApiService,
     private allActivitiesService: AllActivitiesService,
-    protected toastService: ToastService,
-    protected i18nService: I18nService,
     protected accessIntelligenceSecurityTasksService: AccessIntelligenceSecurityTasksService,
   ) {}
 
