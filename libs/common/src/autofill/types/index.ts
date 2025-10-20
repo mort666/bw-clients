@@ -22,9 +22,11 @@ export type AutofillFieldQualifierType =
   (typeof AutofillFieldQualifier)[keyof typeof AutofillFieldQualifier];
 
 export type AutofillTargetingRules = {
-  [type in AutofillFieldQualifierType]?: string;
+  [type in AutofillTargetingRuleTypes]?: string;
 };
 
+export type AutofillTargetingRuleTypes = keyof typeof AutofillFieldQualifier | "totp";
+
 export type AutofillTargetingRulesByDomain = {
-  [key: string]: AutofillTargetingRules
+  [key: string]: AutofillTargetingRules;
 };

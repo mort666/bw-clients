@@ -1,4 +1,4 @@
-import { AutofillFieldQualifierType } from "@bitwarden/common/autofill/types";
+import { AutofillTargetingRuleTypes } from "@bitwarden/common/autofill/types";
 
 import AutofillField from "../../models/autofill-field";
 import AutofillForm from "../../models/autofill-form";
@@ -16,7 +16,7 @@ type UpdateAutofillDataAttributeParams = {
   dataTargetKey?: string;
 };
 
-type TargetedFields = { [type in AutofillFieldQualifierType | "totp"]?: Element };
+type TargetedFields = { [type in AutofillTargetingRuleTypes]?: Element };
 
 interface CollectAutofillContentService {
   autofillFormElements: AutofillFormElements;

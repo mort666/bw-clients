@@ -29,6 +29,7 @@ import { UserNotificationSettingsServiceAbstraction } from "@bitwarden/common/au
 import {
   AutofillFieldQualifierType,
   AutofillTargetingRules,
+  AutofillTargetingRuleTypes,
   InlineMenuVisibilitySetting,
 } from "@bitwarden/common/autofill/types";
 import { normalizeExpiryYearFormat } from "@bitwarden/common/autofill/utils";
@@ -521,7 +522,7 @@ export default class AutofillService implements AutofillServiceInterface {
         const shouldAutoCopyTotp = await this.getShouldAutoCopyTotp();
 
         totp = shouldAutoCopyTotp
-          ? (await firstValueFrom(this.totpService.getCode$(options.cipher.login.totp))).code
+          ? (await this.getTotpCode(options.cipher.login.totp))?.code || null
           : null;
       }),
     );
@@ -816,7 +817,10 @@ export default class AutofillService implements AutofillServiceInterface {
       case CipherType.Login:
         if (pageHasTargetingRules) {
           for (const fieldType of pageTargetedFields) {
-            const fieldTypeValue = this.findCipherPropertyValueFieldType(options.cipher, fieldType);
+            const fieldTypeValue = await this.findCipherPropertyValueFieldType(
+              options.cipher,
+              fieldType,
+            );
 
             if (fieldTypeValue) {
               AutofillService.fillByTargetingRule(fillScript, fieldType, fieldTypeValue);
@@ -1033,10 +1037,10 @@ export default class AutofillService implements AutofillServiceInterface {
 
           filledFields[t.opid] = t;
 
-          const totpResponse = await firstValueFrom(this.totpService.getCode$(login.totp));
-          let totpValue = totpResponse.code;
+          const totpResponse = await this.getTotpCode(login.totp);
+          let totpValue = totpResponse?.code;
 
-          if (totpValue.length == totps.length) {
+          if (totpValue?.length == totps.length) {
             totpValue = totpValue.charAt(i);
           }
           AutofillService.fillByOpid(fillScript, t, totpValue);
@@ -2459,10 +2463,30 @@ export default class AutofillService implements AutofillServiceInterface {
     return totpField;
   }
 
-  private findCipherPropertyValueFieldType(
+  /**
+   * Returns the derived totpService response given a key
+   * @private
+   * @param {CipherView["login"]["totp"]} totpKey
+   */
+  private async getTotpCode(totpKey: CipherView["login"]["totp"]) {
+    if (!totpKey) {
+      return null;
+    }
+
+    return (await firstValueFrom(this.totpService.getCode$(totpKey))) || null;
+  }
+
+  /**
+   * Map cipher values to field targeting rules
+   * @private
+   * @param {CipherView} cipher
+   * @param {AutofillTargetingRuleTypes} fieldType
+   */
+  private async findCipherPropertyValueFieldType(
     cipher: CipherView,
-    fieldType: AutofillFieldQualifierType | "totp",
+    fieldType: AutofillTargetingRuleTypes,
   ) {
+    let totp = null;
     let cipherPropertyValue = null;
 
     switch (fieldType) {
@@ -2473,7 +2497,11 @@ export default class AutofillService implements AutofillServiceInterface {
         cipherPropertyValue = cipher.login?.password || null;
         break;
       case "totp":
-        cipherPropertyValue = cipher.login?.totp || null;
+        totp = await this.getTotpCode(cipher.login?.totp);
+
+        if (totp?.code) {
+          cipherPropertyValue = totp.code;
+        }
         break;
       default:
         break;
