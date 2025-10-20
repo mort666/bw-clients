@@ -31,6 +31,7 @@ import { ViewPasswordHistoryService } from "@bitwarden/common/vault/abstractions
 import { CipherRepromptType, CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { CipherAuthorizationService } from "@bitwarden/common/vault/services/cipher-authorization.service";
+import { DefaultCipherArchiveService } from "@bitwarden/common/vault/services/default-cipher-archive.service";
 import { filterOutNullish } from "@bitwarden/common/vault/utils/observable-utilities";
 import {
   AsyncActionsModule,
@@ -114,6 +115,9 @@ export class ViewV2Component {
   senderTabId?: number;
 
   protected showFooter$: Observable<boolean>;
+  protected userCanArchive$ = this.accountService.activeAccount$
+    .pipe(getUserId)
+    .pipe(switchMap((userId) => this.archiveService.userCanArchive$(userId)));
 
   constructor(
     private passwordRepromptService: PasswordRepromptService,
@@ -131,6 +135,7 @@ export class ViewV2Component {
     protected cipherAuthorizationService: CipherAuthorizationService,
     private copyCipherFieldService: CopyCipherFieldService,
     private popupScrollPositionService: VaultPopupScrollPositionService,
+    private archiveService: DefaultCipherArchiveService,
   ) {
     this.subscribeToParams();
   }
