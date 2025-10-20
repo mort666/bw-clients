@@ -588,6 +588,9 @@
   "view": {
     "message": "View"
   },
+  "viewAll": {
+    "message": "View all"
+  },
   "viewLogin": {
     "message": "View login"
   },

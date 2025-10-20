@@ -28,7 +28,7 @@
       </div>
       <div class="tw-pt-2" [ngClass]="savedUrlsListClass">
         <div class="-tw-mt-2" *ngFor="let url of savedUrls">
-          <bit-callout title="" type="success" icon="bwi-globe" truncate>
+          <bit-callout title="" type="success" icon="bwi-globe" [truncate]="true">
             <div class="monospaced">
               {{ url }}
             </div>
