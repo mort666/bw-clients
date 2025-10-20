@@ -995,6 +995,7 @@ dependencies = [
  "futures",
  "log",
  "simplelog",
+ "sysinfo",
  "tokio",
  "tokio-util",
 ]

@@ -3,6 +3,7 @@ use std::path::Path;
 use desktop_core::ipc::{MESSAGE_CHANNEL_BUFFER, NATIVE_MESSAGING_BUFFER_SIZE};
 use futures::{FutureExt, SinkExt, StreamExt};
 use log::*;
+use sysinfo::{Pid, System};
 use tokio_util::codec::LengthDelimitedCodec;
 
 #[cfg(target_os = "windows")]
@@ -73,6 +74,10 @@ async fn main() {
     init_logging(&log_path, level, LevelFilter::Info);
 
     info!("Starting Bitwarden IPC Proxy.");
+
+    // Detect and log the invoking process (browser or otherwise)
+    let (invoker, invoker_exe) = detect_invoker();
+    info!("Invoker: {:?}, exe: {:?}", invoker, invoker_exe);
 
     // Different browsers send different arguments when the app starts:
     //
@@ -172,4 +177,84 @@ async fn main() {
 
         }
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Browser {
+    Chrome,
+    Edge,
+    Firefox,
+    Brave,
+    Chromium,
+    Vivaldi,
+    Safari,
+    Unknown,
+}
+
+fn detect_invoker() -> (Browser, Option<std::path::PathBuf>) {
+    let s = System::new_all();
+    // Start from current process's parent and walk a few steps up to account for helpers
+    let mut current = s
+        .process(Pid::from_u32(std::process::id()))
+        .and_then(|p| p.parent());
+
+    for _ in 0..5 {
+        let Some(pid) = current else { break };
+        let Some(proc_) = s.process(pid) else { break };
+
+        let name_lc = proc_.name().to_string_lossy().to_lowercase();
+        let exe = proc_.exe().map(|p| p.to_path_buf());
+
+        let kind = classify_browser(&name_lc, exe.as_deref());
+        if kind != Browser::Unknown {
+            return (kind, exe);
+        }
+
+        current = proc_.parent();
+    }
+
+    (Browser::Unknown, None)
+}
+
+fn classify_browser(name_lc: &str, exe: Option<&std::path::Path>) -> Browser {
+    // Common names per platform (helpers included for macOS)
+    // Chromium-based
+    if name_lc.contains("chrome helper") || name_lc.contains("google chrome") || name_lc == "chrome"
+    {
+        return Browser::Chrome;
+    }
+    if name_lc.contains("msedge") || name_lc.contains("edge") || name_lc.contains("microsoft edge")
+    {
+        return Browser::Edge;
+    }
+    if name_lc.contains("brave") {
+        return Browser::Brave;
+    }
+    if name_lc.contains("chromium") {
+        return Browser::Chromium;
+    }
+    if name_lc.contains("vivaldi") {
+        return Browser::Vivaldi;
+    }
+    // Gecko
+    if name_lc.contains("firefox") {
+        return Browser::Firefox;
+    }
+    // Safari (macOS)
+    if name_lc.contains("safari") {
+        return Browser::Safari;
+    }
+
+    // Fallback: try exe path heuristics
+    if let Some(p) = exe {
+        if let Some(file) = p
+            .file_name()
+            .and_then(|n| n.to_str())
+            .map(|s| s.to_lowercase())
+        {
+            return classify_browser(&file, Some(p));
+        }
+    }
+
+    Browser::Unknown
 }
