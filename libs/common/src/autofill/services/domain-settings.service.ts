@@ -154,7 +154,9 @@ export class DefaultDomainSettingsService implements DomainSettingsService {
     private accountService: AccountService,
   ) {
     this.autofillTargetingRulesState = this.stateProvider.getActive(AUTOFILL_TARGETING_RULES);
-    this.autofillTargetingRules$ = this.autofillTargetingRulesState.state$.pipe(map((x) => (x && Object.keys(x).length) ? x : {}));
+    this.autofillTargetingRules$ = this.autofillTargetingRulesState.state$.pipe(
+      map((x) => (x && Object.keys(x).length ? x : {})),
+    );
 
     this.showFaviconsState = this.stateProvider.getGlobal(SHOW_FAVICONS);
     this.showFavicons$ = this.showFaviconsState.state$.pipe(map((x) => x ?? true));

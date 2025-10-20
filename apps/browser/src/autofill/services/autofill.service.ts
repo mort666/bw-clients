@@ -431,7 +431,6 @@ export default class AutofillService implements AutofillServiceInterface {
    */
   async doAutoFill(options: AutoFillOptions): Promise<string | null> {
     const tab = options.tab;
-    const pageTargetingRules = await this.getPageTagetingRules(tab.url);
 
     if (!tab || !options.cipher || !options.pageDetails || !options.pageDetails.length) {
       throw new Error("Nothing to autofill.");
@@ -439,6 +438,7 @@ export default class AutofillService implements AutofillServiceInterface {
 
     let totp: string | null = null;
 
+    const pageTargetingRules = await this.getPageTagetingRules(tab.url);
     const activeAccount = await firstValueFrom(this.accountService.activeAccount$);
     const canAccessPremium = await firstValueFrom(
       this.billingAccountProfileStateService.hasPremiumFromAnySource$(activeAccount.id),
@@ -765,7 +765,7 @@ export default class AutofillService implements AutofillServiceInterface {
     const filledFields: { [id: string]: AutofillField } = {};
     const fields = options.cipher.fields;
     const pageTargetedFields = Object.keys(
-      options.pageTargetingRules,
+      options.pageTargetingRules || {},
     ) as AutofillFieldQualifierType[];
     const pageHasTargetingRules = !!pageTargetedFields.length;
 
