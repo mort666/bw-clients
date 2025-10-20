@@ -40,14 +40,14 @@ impl MemoryEncryptionKey {
     /// okay because neither the keys nor ciphertexts should ever fail to decrypt, and doing so
     /// indicates that the process memory was tampered with.
     #[allow(unused)]
-    pub(super) fn decrypt(&self, encrypted: &EncryptedMemory) -> Vec<u8> {
+    pub(super) fn decrypt(&self, encrypted: &EncryptedMemory) -> Result<Vec<u8>, DecryptionError> {
         let cipher = chacha20poly1305::XChaCha20Poly1305::new(Key::from_slice(self.as_ref()));
         cipher
             .decrypt(
                 chacha20poly1305::XNonce::from_slice(&encrypted.nonce),
                 encrypted.ciphertext.as_ref(),
             )
-            .expect("decryption should not fail")
+            .map_err(|_| DecryptionError::CouldNotDecrypt)
     }
 }
 
@@ -76,6 +76,11 @@ impl AsRef<[u8]> for MemoryEncryptionKey {
     }
 }
 
+#[derive(Debug)]
+pub(crate) enum DecryptionError {
+    CouldNotDecrypt,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -85,7 +90,7 @@ mod tests {
         let key = MemoryEncryptionKey::new();
         let data = b"Hello, world!";
         let encrypted = key.encrypt(data);
-        let decrypted = key.decrypt(&encrypted);
+        let decrypted = key.decrypt(&encrypted).unwrap();
         assert_eq!(data.as_ref(), decrypted.as_slice());
     }
 }

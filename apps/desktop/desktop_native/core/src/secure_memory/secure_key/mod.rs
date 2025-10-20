@@ -18,6 +18,8 @@ mod mlock;
 
 pub use crypto::EncryptedMemory;
 
+use crate::secure_memory::secure_key::crypto::DecryptionError;
+
 /// An ephemeral key that is protected using a platform mechanism. It is generated on construction freshly, and can be used
 /// to encrypt and decrypt segments of memory. Since the key is ephemeral, persistent data cannot be encrypted with this key.
 /// On Linux and Windows, in most cases the protection mechanisms prevent memory dumps/debuggers from reading the key.
@@ -44,7 +46,7 @@ impl SecureMemoryEncryptionKey {
     /// Decrypts the provided EncryptedMemory blob using the contained key, returning the plaintext.
     /// If the decryption fails, that means the memory was tampered with, and the function panics.
     #[allow(unused)]
-    pub fn decrypt(&self, encrypted: &crypto::EncryptedMemory) -> Vec<u8> {
+    pub fn decrypt(&self, encrypted: &crypto::EncryptedMemory) -> Result<Vec<u8>, DecryptionError> {
         self.0.as_key().decrypt(encrypted)
     }
 }
