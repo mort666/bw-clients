@@ -20,7 +20,7 @@ import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.servic
 import { ThemeType } from "@bitwarden/common/platform/enums";
 import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-state.service";
 import { OrganizationId } from "@bitwarden/common/types/guid";
-import { DialogRef, DialogService, ToastService } from "@bitwarden/components";
+import { BaseCardComponent, DialogRef, DialogService, ToastService } from "@bitwarden/components";
 import { SharedModule } from "@bitwarden/web-vault/app/shared";
 
 import {
@@ -35,7 +35,7 @@ import {
 @Component({
   selector: "app-integration-card",
   templateUrl: "./integration-card.component.html",
-  imports: [SharedModule],
+  imports: [SharedModule, BaseCardComponent],
 })
 export class IntegrationCardComponent implements AfterViewInit, OnDestroy {
   private destroyed$: Subject<void> = new Subject();
