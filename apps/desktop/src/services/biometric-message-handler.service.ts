@@ -122,6 +122,11 @@ export class BiometricMessageHandlerService {
   async handleMessage(msg: LegacyMessageWrapper) {
     const { appId, message: rawMessage } = msg as LegacyMessageWrapper;
 
+    if (!("appId" in msg)) {
+      this.logService.debug("[Native Messaging IPC] Unknown message format. Ignoring.");
+      return;
+    }
+
     // Request to setup secure encryption
     if ("command" in rawMessage && rawMessage.command === "setupEncryption") {
       if (rawMessage.publicKey == null || rawMessage.userId == null) {
@@ -166,6 +171,7 @@ export class BiometricMessageHandlerService {
     if (sessionSecret == null) {
       this.logService.info(
         "[Native Messaging IPC] Session secret for secure channel is missing. Invalidating encryption...",
+        msg,
       );
       ipc.platform.nativeMessaging.sendMessage({
         command: "invalidateEncryption",
