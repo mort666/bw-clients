@@ -36,23 +36,14 @@
       {{ "restore" | i18n }}
     </button>
 
-    <ng-container slot="end">
-      <button
-        type="button"
-        *ngIf="userCanArchive$ | async"
-        (click)="unarchive()"
-        appA11yTitle="{{ 'unarchive' | i18n }}"
-      >
-        <i class="bwi bwi-unarchive bwi-lg bwi-fw" aria-hidden="true"></i>
-      </button>
-      <button
-        *ngIf="canDeleteCipher$ | async"
-        [bitAction]="delete"
-        type="button"
-        buttonType="danger"
-        bitIconButton="bwi-trash"
-        [label]="(cipher.isDeleted ? 'deleteForever' : 'delete') | i18n"
-      ></button>
-    </ng-container>
+    <button
+      slot="end"
+      *ngIf="canDeleteCipher$ | async"
+      [bitAction]="delete"
+      type="button"
+      buttonType="danger"
+      bitIconButton="bwi-trash"
+      [label]="(cipher.isDeleted ? 'deleteForever' : 'delete') | i18n"
+    ></button>
   </popup-footer>
 </popup-page>
