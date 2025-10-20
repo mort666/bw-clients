@@ -10,7 +10,7 @@ use windows::Win32::{
 use super::{ErrorOperations, Win32ErrorOperations, WIN32_SUCCESS};
 
 #[cfg_attr(test, mockall::automock)]
-trait HandleOperations {
+trait WindowHandleOperations {
     // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowtextlengthw
     fn get_window_text_length_w(&self) -> Result<i32>;
 
@@ -41,7 +41,7 @@ impl WindowHandle {
     }
 }
 
-impl HandleOperations for WindowHandle {
+impl WindowHandleOperations for WindowHandle {
     fn get_window_text_length_w(&self) -> Result<i32> {
         self.validate()?;
         let length = unsafe { GetWindowTextLengthW(self.handle) };
@@ -90,7 +90,7 @@ fn get_foreground_window_handle() -> Result<WindowHandle> {
 /// - If the length zero and GetLastError() != 0, return the GetLastError() message.
 fn get_window_title_length<H, E>(window_handle: &H) -> Result<usize>
 where
-    H: HandleOperations,
+    H: WindowHandleOperations,
     E: ErrorOperations,
 {
     // GetWindowTextLengthW does not itself clear the last error so we must do it ourselves.
@@ -131,7 +131,7 @@ where
 ///   buffer), is length zero and GetLastError() != 0 , return the GetLastError() message.
 fn get_window_title<H, E>(window_handle: &H, expected_title_length: usize) -> Result<String>
 where
-    H: HandleOperations,
+    H: WindowHandleOperations,
     E: ErrorOperations,
 {
     if expected_title_length == 0 {
@@ -183,7 +183,7 @@ mod tests {
     #[test]
     #[serial]
     fn get_window_title_length_can_be_zero() {
-        let mut mock_handle = MockHandleOperations::new();
+        let mut mock_handle = MockWindowHandleOperations::new();
 
         let ctxse = MockErrorOperations::set_last_error_context();
         ctxse
@@ -200,9 +200,10 @@ mod tests {
         let ctxge = MockErrorOperations::get_last_error_context();
         ctxge.expect().returning(|| WIN32_ERROR(0));
 
-        let len =
-            get_window_title_length::<MockHandleOperations, MockErrorOperations>(&mock_handle)
-                .unwrap();
+        let len = get_window_title_length::<MockWindowHandleOperations, MockErrorOperations>(
+            &mock_handle,
+        )
+        .unwrap();
 
         assert_eq!(len, 0);
     }
@@ -211,7 +212,7 @@ mod tests {
     #[serial]
     #[should_panic(expected = "Error getting window text length:")]
     fn get_window_title_length_fails() {
-        let mut mock_handle = MockHandleOperations::new();
+        let mut mock_handle = MockWindowHandleOperations::new();
 
         let ctxse = MockErrorOperations::set_last_error_context();
         ctxse.expect().with(predicate::eq(0)).returning(|_| {});
@@ -224,12 +225,13 @@ mod tests {
         let ctxge = MockErrorOperations::get_last_error_context();
         ctxge.expect().returning(|| WIN32_ERROR(1));
 
-        get_window_title_length::<MockHandleOperations, MockErrorOperations>(&mock_handle).unwrap();
+        get_window_title_length::<MockWindowHandleOperations, MockErrorOperations>(&mock_handle)
+            .unwrap();
     }
 
     #[test]
     fn get_window_title_succeeds() {
-        let mut mock_handle = MockHandleOperations::new();
+        let mut mock_handle = MockWindowHandleOperations::new();
 
         mock_handle
             .expect_get_window_text_w()
@@ -239,8 +241,9 @@ mod tests {
                 Ok(42)
             });
 
-        let title = get_window_title::<MockHandleOperations, MockErrorOperations>(&mock_handle, 42)
-            .unwrap();
+        let title =
+            get_window_title::<MockWindowHandleOperations, MockErrorOperations>(&mock_handle, 42)
+                .unwrap();
 
         assert_eq!(title.len(), 43); // That extra slot in the buffer for null char
 
@@ -249,10 +252,11 @@ mod tests {
 
     #[test]
     fn get_window_title_returns_empty_string() {
-        let mock_handle = MockHandleOperations::new();
+        let mock_handle = MockWindowHandleOperations::new();
 
         let title =
-            get_window_title::<MockHandleOperations, MockErrorOperations>(&mock_handle, 0).unwrap();
+            get_window_title::<MockWindowHandleOperations, MockErrorOperations>(&mock_handle, 0)
+                .unwrap();
 
         assert_eq!(title, "");
     }
@@ -261,7 +265,7 @@ mod tests {
     #[serial]
     #[should_panic(expected = "Error retrieving window title:")]
     fn get_window_title_fails_with_last_error() {
-        let mut mock_handle = MockHandleOperations::new();
+        let mut mock_handle = MockWindowHandleOperations::new();
 
         mock_handle
             .expect_get_window_text_w()
@@ -271,13 +275,14 @@ mod tests {
         let ctxge = MockErrorOperations::get_last_error_context();
         ctxge.expect().returning(|| WIN32_ERROR(1));
 
-        get_window_title::<MockHandleOperations, MockErrorOperations>(&mock_handle, 42).unwrap();
+        get_window_title::<MockWindowHandleOperations, MockErrorOperations>(&mock_handle, 42)
+            .unwrap();
     }
 
     #[test]
     #[serial]
     fn get_window_title_doesnt_fail_but_reads_zero() {
-        let mut mock_handle = MockHandleOperations::new();
+        let mut mock_handle = MockWindowHandleOperations::new();
 
         mock_handle
             .expect_get_window_text_w()
@@ -287,6 +292,7 @@ mod tests {
         let ctxge = MockErrorOperations::get_last_error_context();
         ctxge.expect().returning(|| WIN32_ERROR(0));
 
-        get_window_title::<MockHandleOperations, MockErrorOperations>(&mock_handle, 42).unwrap();
+        get_window_title::<MockWindowHandleOperations, MockErrorOperations>(&mock_handle, 42)
+            .unwrap();
     }
 }
