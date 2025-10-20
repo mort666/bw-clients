@@ -356,6 +356,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
       organization,
       this.dataSource.getCheckedUsers(),
     );
+    this.billingConstraint.refreshBillingMetadata();
     await this.load(organization);
   }
 

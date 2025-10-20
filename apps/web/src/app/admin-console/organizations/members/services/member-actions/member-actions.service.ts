@@ -18,6 +18,7 @@ import { EncryptService } from "@bitwarden/common/key-management/crypto/abstract
 import { ListResponse } from "@bitwarden/common/models/response/list.response";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { KeyService } from "@bitwarden/key-management";
+import { BillingConstraintService } from "@bitwarden/web-vault/app/billing/members/billing-constraint/billing-constraint.service";
 
 import { OrganizationUserView } from "../../../core/views/organization-user.view";
 import { OrganizationUserService } from "../organization-user/organization-user.service";
@@ -43,6 +44,7 @@ export class MemberActionsService {
     private encryptService: EncryptService,
     private configService: ConfigService,
     private accountService: AccountService,
+    private billingConstraint: BillingConstraintService,
   ) {}
 
   async inviteUser(
@@ -71,6 +73,7 @@ export class MemberActionsService {
   async removeUser(organization: Organization, userId: string): Promise<MemberActionResult> {
     try {
       await this.organizationUserApiService.removeOrganizationUser(organization.id, userId);
+      this.billingConstraint.refreshBillingMetadata();
       return { success: true };
     } catch (error) {
       return { success: false, error: (error as Error).message ?? String(error) };
@@ -98,6 +101,7 @@ export class MemberActionsService {
   async deleteUser(organization: Organization, userId: string): Promise<MemberActionResult> {
     try {
       await this.organizationUserApiService.deleteOrganizationUser(organization.id, userId);
+      this.billingConstraint.refreshBillingMetadata();
       return { success: true };
     } catch (error) {
       return { success: false, error: (error as Error).message ?? String(error) };

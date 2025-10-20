@@ -20,6 +20,7 @@ import { OrgKey } from "@bitwarden/common/types/key";
 import { newGuid } from "@bitwarden/guid";
 import { KeyService } from "@bitwarden/key-management";
 
+import { BillingConstraintService } from "../../../../../billing/members/billing-constraint/billing-constraint.service";
 import { OrganizationUserView } from "../../../core/views/organization-user.view";
 import { OrganizationUserService } from "../organization-user/organization-user.service";
 
@@ -33,6 +34,7 @@ describe("MemberActionsService", () => {
   let encryptService: MockProxy<EncryptService>;
   let configService: MockProxy<ConfigService>;
   let accountService: FakeAccountService;
+  let billingConstraintService: MockProxy<BillingConstraintService>;
 
   const userId = newGuid() as UserId;
   const organizationId = newGuid() as OrganizationId;
@@ -48,6 +50,7 @@ describe("MemberActionsService", () => {
     encryptService = mock<EncryptService>();
     configService = mock<ConfigService>();
     accountService = mockAccountServiceWith(userId);
+    billingConstraintService = mock<BillingConstraintService>();
 
     mockOrganization = {
       id: organizationId,
@@ -72,6 +75,7 @@ describe("MemberActionsService", () => {
       encryptService,
       configService,
       accountService,
+      billingConstraintService,
     );
   });
 
