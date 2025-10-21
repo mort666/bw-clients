@@ -5770,7 +5770,7 @@
     "message": "URI match detection"
   },
   "uriMatchDetectionPolicyDesc": {
-    "message": "Set a default URI match detection strategy for all members."
+    "message": "Set when logins are suggested for autofill based on the selected match detection option."
   },
   "uriMatchDetectionOptionsLabel": {
     "message": "URI match detection"
