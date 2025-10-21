@@ -128,7 +128,7 @@ describe("AccessIntelligenceSecurityTasksService", () => {
           isMarkedAsCritical: false,
           atRiskPasswordCount: 2,
           atRiskCipherIds: ["cid5", "cid6"],
-        } as LEGACY_ApplicationHealthReportDetailWithCriticalFlagAndCipher,
+        } as ApplicationHealthReportDetailEnriched,
       ];
       const result = await service.requestPasswordChange(organizationId, apps);
 
