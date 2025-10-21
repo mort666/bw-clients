@@ -21,18 +21,22 @@ import {
   imports: [BadgeModule, ButtonModule, IconModule, TypographyModule, CurrencyPipe, NgClass],
 })
 export class PricingCardComponent {
-  tagline = input.required<string>();
-  price = input<{ amount: number; cadence: "monthly" | "annually"; showPerUser?: boolean }>();
-  button = input<{
+  readonly tagline = input.required<string>();
+  readonly price = input<{
+    amount: number;
+    cadence: "monthly" | "annually";
+    showPerUser?: boolean;
+  }>();
+  readonly button = input<{
     type: ButtonType;
     text: string;
     disabled?: boolean;
     icon?: { type: string; position: "before" | "after" };
   }>();
-  features = input<string[]>();
-  activeBadge = input<{ text: string; variant?: BadgeVariant }>();
-  disableCardPaddingTop = input<boolean>(false);
-  disableCardBorder = input<boolean>(false);
+  readonly features = input<string[]>();
+  readonly activeBadge = input<{ text: string; variant?: BadgeVariant }>();
+  readonly disableCardPaddingTop = input<boolean>(false);
+  readonly disableCardBorder = input<boolean>(false);
 
   @Output() buttonClick = new EventEmitter<void>();
 
