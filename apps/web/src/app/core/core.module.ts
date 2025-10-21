@@ -417,6 +417,7 @@ const safeProviders: SafeProvider[] = [
       ApiService,
       SyncService,
       BillingAccountProfileStateService,
+      PlatformUtilsService,
       Router,
     ],
   }),

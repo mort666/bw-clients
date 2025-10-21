@@ -9,7 +9,10 @@ import {
   PersonalSubscriptionPricingTierIds,
   SubscriptionCadenceIds,
 } from "@bitwarden/common/billing/types/subscription-pricing-tier";
-import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
+import {
+  EnvironmentService,
+  Region,
+} from "@bitwarden/common/platform/abstractions/environment.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { DialogRef, ToastService } from "@bitwarden/components";
@@ -75,7 +78,10 @@ describe("PremiumUpgradeDialogComponent", () => {
     } as any;
 
     mockEnvironmentService = {
-      cloudWebVaultUrl$: of("https://vault.bitwarden.com"),
+      environment$: of({
+        getWebVaultUrl: () => "https://vault.bitwarden.com",
+        getRegion: () => Region.US,
+      }),
     } as any;
 
     mockPlatformUtilsService = {
@@ -161,13 +167,48 @@ describe("PremiumUpgradeDialogComponent", () => {
     expect(loadingValues[loadingValues.length - 1]).toBe(false);
   });
 
-  it("should close dialog when upgrade button clicked", async () => {
-    await component["upgrade"]();
+  describe("upgrade()", () => {
+    it("should launch URI with query parameter for cloud-hosted environments", async () => {
+      mockEnvironmentService.environment$ = of({
+        getWebVaultUrl: () => "https://vault.bitwarden.com",
+        getRegion: () => Region.US,
+      });
 
-    expect(mockPlatformUtilsService.launchUri).toHaveBeenCalledWith(
-      "https://vault.bitwarden.com/#/settings/subscription/premium?callToAction=upgradeToPremium",
-    );
-    expect(mockDialogRef.close).toHaveBeenCalled();
+      await component["upgrade"]();
+
+      expect(mockPlatformUtilsService.launchUri).toHaveBeenCalledWith(
+        "https://vault.bitwarden.com/#/settings/subscription/premium?callToAction=upgradeToPremium",
+      );
+      expect(mockDialogRef.close).toHaveBeenCalled();
+    });
+
+    it("should launch URI without query parameter for self-hosted environments", async () => {
+      mockEnvironmentService.environment$ = of({
+        getWebVaultUrl: () => "https://self-hosted.example.com",
+        getRegion: () => Region.SelfHosted,
+      });
+
+      await component["upgrade"]();
+
+      expect(mockPlatformUtilsService.launchUri).toHaveBeenCalledWith(
+        "https://self-hosted.example.com/#/settings/subscription/premium",
+      );
+      expect(mockDialogRef.close).toHaveBeenCalled();
+    });
+
+    it("should launch URI with query parameter for EU cloud region", async () => {
+      mockEnvironmentService.environment$ = of({
+        getWebVaultUrl: () => "https://vault.bitwarden.eu",
+        getRegion: () => Region.EU,
+      });
+
+      await component["upgrade"]();
+
+      expect(mockPlatformUtilsService.launchUri).toHaveBeenCalledWith(
+        "https://vault.bitwarden.eu/#/settings/subscription/premium?callToAction=upgradeToPremium",
+      );
+      expect(mockDialogRef.close).toHaveBeenCalled();
+    });
   });
 
   it("should close dialog when close button clicked", () => {

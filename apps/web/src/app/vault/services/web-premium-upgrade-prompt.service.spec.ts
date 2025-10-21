@@ -7,6 +7,7 @@ import { AccountService } from "@bitwarden/common/auth/abstractions/account.serv
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { SyncService } from "@bitwarden/common/platform/sync";
 import { OrganizationId } from "@bitwarden/common/types/guid";
 import { DialogRef, DialogService } from "@bitwarden/components";
@@ -29,6 +30,7 @@ describe("WebVaultPremiumUpgradePromptService", () => {
   let apiServiceMock: jest.Mocked<ApiService>;
   let syncServiceMock: jest.Mocked<SyncService>;
   let billingAccountProfileServiceMock: jest.Mocked<BillingAccountProfileStateService>;
+  let platformUtilsServiceMock: jest.Mocked<PlatformUtilsService>;
 
   beforeEach(() => {
     dialogServiceMock = {
@@ -63,6 +65,10 @@ describe("WebVaultPremiumUpgradePromptService", () => {
       hasPremiumFromAnySource$: jest.fn().mockReturnValue(of(false)),
     } as unknown as jest.Mocked<BillingAccountProfileStateService>;
 
+    platformUtilsServiceMock = {
+      isSelfHost: jest.fn().mockReturnValue(false),
+    } as unknown as jest.Mocked<PlatformUtilsService>;
+
     TestBed.configureTestingModule({
       providers: [
         WebVaultPremiumUpgradePromptService,
@@ -74,6 +80,7 @@ describe("WebVaultPremiumUpgradePromptService", () => {
         { provide: ApiService, useValue: apiServiceMock },
         { provide: SyncService, useValue: syncServiceMock },
         { provide: BillingAccountProfileStateService, useValue: billingAccountProfileServiceMock },
+        { provide: PlatformUtilsService, useValue: platformUtilsServiceMock },
       ],
     });
 
@@ -169,81 +176,100 @@ describe("WebVaultPremiumUpgradePromptService", () => {
       });
     });
 
-    it("should refresh identity token and sync when user upgrades to premium", async () => {
-      const unifiedDialogRefMock = {
-        closed: of({ status: UnifiedUpgradeDialogStatus.UpgradedToPremium }),
-        close: jest.fn(),
-      } as any;
-      jest.spyOn(UnifiedUpgradeDialogComponent, "open").mockReturnValue(unifiedDialogRefMock);
-
-      await service.promptForPremium();
-
-      expect(UnifiedUpgradeDialogComponent.open).toHaveBeenCalledWith(dialogServiceMock, {
-        data: {
-          account: { id: "user-123" },
-          planSelectionStepTitleOverride: "upgradeYourPlan",
-          hideContinueWithoutUpgradingButton: true,
-        },
+    describe("when self-hosted", () => {
+      beforeEach(() => {
+        platformUtilsServiceMock.isSelfHost.mockReturnValue(true);
       });
-      expect(apiServiceMock.refreshIdentityToken).toHaveBeenCalled();
-      expect(syncServiceMock.fullSync).toHaveBeenCalledWith(true);
+
+      it("should navigate to subscription page instead of opening dialog", async () => {
+        await service.promptForPremium();
+
+        expect(routerMock.navigate).toHaveBeenCalledWith(["settings/subscription/premium"]);
+        expect(dialogServiceMock.openSimpleDialog).not.toHaveBeenCalled();
+      });
     });
 
-    it("should refresh identity token and sync when user upgrades to families", async () => {
-      const unifiedDialogRefMock = {
-        closed: of({ status: UnifiedUpgradeDialogStatus.UpgradedToFamilies }),
-        close: jest.fn(),
-      } as any;
-      jest.spyOn(UnifiedUpgradeDialogComponent, "open").mockReturnValue(unifiedDialogRefMock);
-
-      await service.promptForPremium();
-
-      expect(UnifiedUpgradeDialogComponent.open).toHaveBeenCalledWith(dialogServiceMock, {
-        data: {
-          account: { id: "user-123" },
-          planSelectionStepTitleOverride: "upgradeYourPlan",
-          hideContinueWithoutUpgradingButton: true,
-        },
+    describe("when not self-hosted", () => {
+      beforeEach(() => {
+        platformUtilsServiceMock.isSelfHost.mockReturnValue(false);
       });
-      expect(apiServiceMock.refreshIdentityToken).toHaveBeenCalled();
-      expect(syncServiceMock.fullSync).toHaveBeenCalledWith(true);
-    });
 
-    it("should not refresh or sync when user closes dialog without upgrading", async () => {
-      const unifiedDialogRefMock = {
-        closed: of({ status: UnifiedUpgradeDialogStatus.Closed }),
-        close: jest.fn(),
-      } as any;
-      jest.spyOn(UnifiedUpgradeDialogComponent, "open").mockReturnValue(unifiedDialogRefMock);
+      it("should refresh identity token and sync when user upgrades to premium", async () => {
+        const unifiedDialogRefMock = {
+          closed: of({ status: UnifiedUpgradeDialogStatus.UpgradedToPremium }),
+          close: jest.fn(),
+        } as any;
+        jest.spyOn(UnifiedUpgradeDialogComponent, "open").mockReturnValue(unifiedDialogRefMock);
 
-      await service.promptForPremium();
+        await service.promptForPremium();
 
-      expect(UnifiedUpgradeDialogComponent.open).toHaveBeenCalledWith(dialogServiceMock, {
-        data: {
-          account: { id: "user-123" },
-          planSelectionStepTitleOverride: "upgradeYourPlan",
-          hideContinueWithoutUpgradingButton: true,
-        },
+        expect(UnifiedUpgradeDialogComponent.open).toHaveBeenCalledWith(dialogServiceMock, {
+          data: {
+            account: { id: "user-123" },
+            planSelectionStepTitleOverride: "upgradeYourPlan",
+            hideContinueWithoutUpgradingButton: true,
+          },
+        });
+        expect(apiServiceMock.refreshIdentityToken).toHaveBeenCalled();
+        expect(syncServiceMock.fullSync).toHaveBeenCalledWith(true);
       });
-      expect(apiServiceMock.refreshIdentityToken).not.toHaveBeenCalled();
-      expect(syncServiceMock.fullSync).not.toHaveBeenCalled();
-    });
 
-    it("should not open new dialog if organizationId is provided", async () => {
-      const organizationId = "test-org-id" as OrganizationId;
-      dialogServiceMock.openSimpleDialog.mockReturnValue(lastValueFrom(of(true)));
+      it("should refresh identity token and sync when user upgrades to families", async () => {
+        const unifiedDialogRefMock = {
+          closed: of({ status: UnifiedUpgradeDialogStatus.UpgradedToFamilies }),
+          close: jest.fn(),
+        } as any;
+        jest.spyOn(UnifiedUpgradeDialogComponent, "open").mockReturnValue(unifiedDialogRefMock);
 
-      const openSpy = jest.spyOn(UnifiedUpgradeDialogComponent, "open");
-      openSpy.mockClear();
+        await service.promptForPremium();
 
-      await service.promptForPremium(organizationId);
+        expect(UnifiedUpgradeDialogComponent.open).toHaveBeenCalledWith(dialogServiceMock, {
+          data: {
+            account: { id: "user-123" },
+            planSelectionStepTitleOverride: "upgradeYourPlan",
+            hideContinueWithoutUpgradingButton: true,
+          },
+        });
+        expect(apiServiceMock.refreshIdentityToken).toHaveBeenCalled();
+        expect(syncServiceMock.fullSync).toHaveBeenCalledWith(true);
+      });
 
-      expect(openSpy).not.toHaveBeenCalled();
-      expect(dialogServiceMock.openSimpleDialog).toHaveBeenCalledWith({
-        title: { key: "upgradeOrganization" },
-        content: { key: "upgradeOrganizationDesc" },
-        acceptButtonText: { key: "upgradeOrganization" },
-        type: "info",
+      it("should not refresh or sync when user closes dialog without upgrading", async () => {
+        const unifiedDialogRefMock = {
+          closed: of({ status: UnifiedUpgradeDialogStatus.Closed }),
+          close: jest.fn(),
+        } as any;
+        jest.spyOn(UnifiedUpgradeDialogComponent, "open").mockReturnValue(unifiedDialogRefMock);
+
+        await service.promptForPremium();
+
+        expect(UnifiedUpgradeDialogComponent.open).toHaveBeenCalledWith(dialogServiceMock, {
+          data: {
+            account: { id: "user-123" },
+            planSelectionStepTitleOverride: "upgradeYourPlan",
+            hideContinueWithoutUpgradingButton: true,
+          },
+        });
+        expect(apiServiceMock.refreshIdentityToken).not.toHaveBeenCalled();
+        expect(syncServiceMock.fullSync).not.toHaveBeenCalled();
+      });
+
+      it("should not open new dialog if organizationId is provided", async () => {
+        const organizationId = "test-org-id" as OrganizationId;
+        dialogServiceMock.openSimpleDialog.mockReturnValue(lastValueFrom(of(true)));
+
+        const openSpy = jest.spyOn(UnifiedUpgradeDialogComponent, "open");
+        openSpy.mockClear();
+
+        await service.promptForPremium(organizationId);
+
+        expect(openSpy).not.toHaveBeenCalled();
+        expect(dialogServiceMock.openSimpleDialog).toHaveBeenCalledWith({
+          title: { key: "upgradeOrganization" },
+          content: { key: "upgradeOrganizationDesc" },
+          acceptButtonText: { key: "upgradeOrganization" },
+          type: "info",
+        });
       });
     });
   });

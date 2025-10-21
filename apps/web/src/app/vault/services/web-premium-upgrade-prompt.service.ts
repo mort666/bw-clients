@@ -7,6 +7,7 @@ import { Account, AccountService } from "@bitwarden/common/auth/abstractions/acc
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { SyncService } from "@bitwarden/common/platform/sync";
 import { OrganizationId } from "@bitwarden/common/types/guid";
 import { PremiumUpgradePromptService } from "@bitwarden/common/vault/abstractions/premium-upgrade-prompt.service";
@@ -30,9 +31,11 @@ export class WebVaultPremiumUpgradePromptService implements PremiumUpgradePrompt
     private apiService: ApiService,
     private syncService: SyncService,
     private billingAccountProfileStateService: BillingAccountProfileStateService,
+    private platformUtilsService: PlatformUtilsService,
     private router: Router,
     @Optional() private dialog?: DialogRef<VaultItemDialogResult>,
   ) {}
+  private readonly subscriptionPageRoute = "settings/subscription/premium";
 
   /**
    * Prompts the user for a premium upgrade.
@@ -56,7 +59,7 @@ export class WebVaultPremiumUpgradePromptService implements PremiumUpgradePrompt
 
     // Per conversation in PM-23713, retain the existing upgrade org flow for now, will be addressed later
     if (showNewDialog && !organizationId) {
-      await this.promptWithNewPremiumUpgradeDialog(account);
+      await this.promptForPremiumVNext(account);
       return;
     }
 
@@ -81,7 +84,7 @@ export class WebVaultPremiumUpgradePromptService implements PremiumUpgradePrompt
         type: "success",
       });
       if (confirmed) {
-        route = ["settings/subscription/premium"];
+        route = [this.subscriptionPageRoute];
       }
     }
 
@@ -95,7 +98,17 @@ export class WebVaultPremiumUpgradePromptService implements PremiumUpgradePrompt
     }
   }
 
-  private async promptWithNewPremiumUpgradeDialog(account: Account) {
+  private async promptForPremiumVNext(account: Account) {
+    await (this.platformUtilsService.isSelfHost()
+      ? this.redirectToSubscriptionPage()
+      : this.openUpgradeDialog(account));
+  }
+
+  private async redirectToSubscriptionPage() {
+    await this.router.navigate([this.subscriptionPageRoute]);
+  }
+
+  private async openUpgradeDialog(account: Account) {
     const dialogRef = UnifiedUpgradeDialogComponent.open(this.dialogService, {
       data: {
         account,

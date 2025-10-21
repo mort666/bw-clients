@@ -10,7 +10,10 @@ import {
   SubscriptionCadence,
   SubscriptionCadenceIds,
 } from "@bitwarden/common/billing/types/subscription-pricing-tier";
-import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
+import {
+  EnvironmentService,
+  Region,
+} from "@bitwarden/common/platform/abstractions/environment.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import {
@@ -79,10 +82,12 @@ export class PremiumUpgradeDialogComponent {
   ) {}
 
   protected async upgrade(): Promise<void> {
-    const vaultUrl = await firstValueFrom(this.environmentService.cloudWebVaultUrl$);
-    this.platformUtilsService.launchUri(
-      vaultUrl + "/#/settings/subscription/premium?callToAction=upgradeToPremium",
-    );
+    const environment = await firstValueFrom(this.environmentService.environment$);
+    let vaultUrl = environment.getWebVaultUrl() + "/#/settings/subscription/premium";
+    if (environment.getRegion() !== Region.SelfHosted) {
+      vaultUrl += "?callToAction=upgradeToPremium";
+    }
+    this.platformUtilsService.launchUri(vaultUrl);
     this.dialogRef.close();
   }
 
