@@ -118,8 +118,8 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.PrivateKeyRegeneration]: FALSE,
   [FeatureFlag.EnrollAeadOnKeyRotation]: FALSE,
   [FeatureFlag.ForceUpdateKDFSettings]: FALSE,
-  [FeatureFlag.WindowsBiometricsV2]: FALSE,
   [FeatureFlag.PM25174_DisableType0Decryption]: FALSE,
+  [FeatureFlag.WindowsBiometricsV2]: FALSE,
   [FeatureFlag.UnlockWithMasterPasswordUnlockData]: FALSE,
   [FeatureFlag.NoLogoutOnKdfChange]: FALSE,
 
