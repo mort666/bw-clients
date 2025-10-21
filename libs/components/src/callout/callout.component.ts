@@ -1,5 +1,4 @@
 import {
-  AfterViewInit,
   Component,
   computed,
   ElementRef,
@@ -43,7 +42,7 @@ let nextId = 0;
   templateUrl: "callout.component.html",
   imports: [A11yTitleDirective, SharedModule, TypographyModule],
 })
-export class CalloutComponent implements AfterViewInit {
+export class CalloutComponent {
   readonly type = input<CalloutTypes>("info");
   readonly icon = input<string>();
   readonly title = input<string>();
@@ -71,9 +70,7 @@ export class CalloutComponent implements AfterViewInit {
   private contentRef!: ElementRef<HTMLElement>;
   readonly contentText = signal("");
 
-  constructor(private i18nService: I18nService) {}
-
-  ngAfterViewInit() {
+  constructor(private i18nService: I18nService) {
     // use afterNextRender to ensure the DOM content is available
     afterNextRender(() => {
       this.contentText.set(this.contentRef?.nativeElement?.textContent?.trim() ?? "");
