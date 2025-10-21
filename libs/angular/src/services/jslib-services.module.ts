@@ -175,11 +175,15 @@ import { KeyConnectorService as KeyConnectorServiceAbstraction } from "@bitwarde
 import { KeyConnectorService } from "@bitwarden/common/key-management/key-connector/services/key-connector.service";
 import { KeyApiService } from "@bitwarden/common/key-management/keys/services/abstractions/key-api-service.abstraction";
 import { DefaultKeyApiService } from "@bitwarden/common/key-management/keys/services/default-key-api-service.service";
+import { MasterPasswordUnlockService } from "@bitwarden/common/key-management/master-password/abstractions/master-password-unlock.service";
 import {
   InternalMasterPasswordServiceAbstraction,
   MasterPasswordServiceAbstraction,
 } from "@bitwarden/common/key-management/master-password/abstractions/master-password.service.abstraction";
+import { DefaultMasterPasswordUnlockService } from "@bitwarden/common/key-management/master-password/services/default-master-password-unlock.service";
 import { MasterPasswordService } from "@bitwarden/common/key-management/master-password/services/master-password.service";
+import { PinStateServiceAbstraction } from "@bitwarden/common/key-management/pin/pin-state.service.abstraction";
+import { PinStateService } from "@bitwarden/common/key-management/pin/pin-state.service.implementation";
 import { PinServiceAbstraction } from "@bitwarden/common/key-management/pin/pin.service.abstraction";
 import { PinService } from "@bitwarden/common/key-management/pin/pin.service.implementation";
 import { SecurityStateService } from "@bitwarden/common/key-management/security-state/abstractions/security-state.service";
@@ -542,7 +546,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: DomainSettingsService,
     useClass: DefaultDomainSettingsService,
-    deps: [StateProvider],
+    deps: [StateProvider, PolicyServiceAbstraction, AccountService],
   }),
   safeProvider({
     provide: CipherServiceAbstraction,
@@ -696,7 +700,6 @@ const safeProviders: SafeProvider[] = [
     provide: KeyService,
     useClass: DefaultKeyService,
     deps: [
-      PinServiceAbstraction,
       InternalMasterPasswordServiceAbstraction,
       KeyGenerationService,
       CryptoFunctionServiceAbstraction,
@@ -792,6 +795,7 @@ const safeProviders: SafeProvider[] = [
     provide: InternalSendService,
     useClass: SendService,
     deps: [
+      AccountServiceAbstraction,
       KeyService,
       I18nServiceAbstraction,
       KeyGenerationService,
@@ -855,7 +859,7 @@ const safeProviders: SafeProvider[] = [
     useClass: DefaultVaultTimeoutSettingsService,
     deps: [
       AccountServiceAbstraction,
-      PinServiceAbstraction,
+      PinStateServiceAbstraction,
       UserDecryptionOptionsServiceAbstraction,
       KeyService,
       TokenServiceAbstraction,
@@ -1065,9 +1069,7 @@ const safeProviders: SafeProvider[] = [
     useClass: MasterPasswordService,
     deps: [
       StateProvider,
-      StateServiceAbstraction,
       KeyGenerationService,
-      EncryptService,
       LogService,
       CryptoFunctionServiceAbstraction,
       AccountServiceAbstraction,
@@ -1076,6 +1078,11 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: MasterPasswordServiceAbstraction,
     useExisting: InternalMasterPasswordServiceAbstraction,
+  }),
+  safeProvider({
+    provide: MasterPasswordUnlockService,
+    useClass: DefaultMasterPasswordUnlockService,
+    deps: [InternalMasterPasswordServiceAbstraction, KeyService],
   }),
   safeProvider({
     provide: KeyConnectorServiceAbstraction,
@@ -1270,7 +1277,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: ChangeKdfService,
     useClass: DefaultChangeKdfService,
-    deps: [MasterPasswordServiceAbstraction, KeyService, KdfConfigService, ChangeKdfApiService],
+    deps: [ChangeKdfApiService, SdkService],
   }),
   safeProvider({
     provide: AuthRequestServiceAbstraction,
@@ -1283,19 +1290,26 @@ const safeProviders: SafeProvider[] = [
       ApiServiceAbstraction,
       StateProvider,
       AuthRequestApiServiceAbstraction,
+      AccountServiceAbstraction,
     ],
+  }),
+  safeProvider({
+    provide: PinStateServiceAbstraction,
+    useClass: PinStateService,
+    deps: [StateProvider],
   }),
   safeProvider({
     provide: PinServiceAbstraction,
     useClass: PinService,
     deps: [
       AccountServiceAbstraction,
-      CryptoFunctionServiceAbstraction,
       EncryptService,
       KdfConfigService,
       KeyGenerationService,
       LogService,
-      StateProvider,
+      KeyService,
+      SdkService,
+      PinStateServiceAbstraction,
     ],
   }),
   safeProvider({
