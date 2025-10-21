@@ -3,6 +3,7 @@ import { firstValueFrom } from "rxjs";
 import {
   UserDecryptionOptions,
   UserDecryptionOptionsServiceAbstraction,
+  WebAuthnPrfUserDecryptionOption,
 } from "@bitwarden/auth/common";
 import { WebAuthnLoginPrfKeyServiceAbstraction } from "@bitwarden/common/auth/abstractions/webauthn/webauthn-login-prf-key.service.abstraction";
 import { ClientType } from "@bitwarden/common/enums";
@@ -86,16 +87,53 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
    * @throws Error if unlock fails for any reason
    */
   async unlockVaultWithPrf(userId: UserId): Promise<void> {
+    // Get offline PRF credentials from user decryption options
     const credentials = await this.getPrfUnlockCredentials(userId);
     if (credentials.length === 0) {
       throw new Error("No PRF credentials available for unlock");
     }
 
-    // Get the appropriate rpId from the user's environment
+    const response = await this.performWebAuthnGetWithPrf(credentials, userId);
+    const prfKey = await this.createPrfKeyFromResponse(response);
+    const prfOption = await this.getPrfOptionForCredential(response.id, userId);
+
+    // PRF unlock follows the same key derivation process as PRF login:
+    // PRF key → decrypt private key → use private key to decrypt user key → set user key
+
+    // Step 1: Decrypt PRF encrypted private key using the PRF key
+    const privateKey = await this.encryptService.unwrapDecapsulationKey(
+      new EncString(prfOption.encryptedPrivateKey),
+      prfKey,
+    );
+
+    // Step 2: Use private key to decrypt user key
+    const actualUserKey = await this.encryptService.decapsulateKeyUnsigned(
+      new EncString(prfOption.encryptedUserKey),
+      privateKey,
+    );
+
+    if (!actualUserKey) {
+      throw new Error("Failed to decrypt user key from private key");
+    }
+
+    // Step 3: Set the actual user key
+    await this.keyService.setUserKey(actualUserKey as UserKey, userId);
+  }
+
+  /**
+   * Performs WebAuthn get operation with PRF extension.
+   *
+   * @param credentials Available PRF credentials for the user
+   * @returns PublicKeyCredential response from the authenticator
+   * @throws Error if WebAuthn operation fails or returns invalid response
+   */
+  private async performWebAuthnGetWithPrf(
+    credentials: { credentialId: string; transports: string[] }[],
+    userId: UserId,
+  ): Promise<PublicKeyCredential> {
     const rpId = await this.getRpIdForUser(userId);
     const prfSalt = await this.getUnlockWithPrfSalt();
 
-    // Create credential request options
     const options: CredentialRequestOptions = {
       publicKey: {
         challenge: new Uint8Array(32),
@@ -127,6 +165,17 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
       throw new Error("Failed to get PRF credential for unlock");
     }
 
+    return response;
+  }
+
+  /**
+   * Extracts PRF result from WebAuthn response and creates a PrfKey.
+   *
+   * @param response PublicKeyCredential response from authenticator
+   * @returns PrfKey derived from the PRF extension output
+   * @throws Error if no PRF result is present in the response
+   */
+  private async createPrfKeyFromResponse(response: PublicKeyCredential): Promise<PrfKey> {
     // Extract PRF result
     // TODO: Remove `any` when typescript typings add support for PRF
     const extensionResults = response.getClientExtensionResults() as any;
@@ -135,14 +184,26 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
       throw new Error("No PRF result received from authenticator");
     }
 
-    // Create unlock key from PRF
-    const prfKey = await this.createUnlockKeyFromPrf(prfResult);
+    try {
+      return await this.webAuthnLoginPrfKeyService.createSymmetricKeyFromPrf(prfResult);
+    } catch (error) {
+      this.logService.error("Failed to create unlock key from PRF:", error);
+      throw error;
+    }
+  }
 
-    // PRF unlock must follow the same key derivation process as PRF login:
-    // PRF key → decrypt private key → use private key to decrypt user key → set user key
-
-    // First, we need to get the WebAuthn PRF option data from UserDecryptionOptions
-    // This contains the encrypted private key and encrypted user key
+  /**
+   * Gets the WebAuthn PRF option that matches the credential used in the response.
+   *
+   * @param credentialId Credential ID to match
+   * @param userId User ID to get decryption options for
+   * @returns Matching WebAuthnPrfUserDecryptionOption with encrypted keys
+   * @throws Error if no PRF options exist or no matching option is found
+   */
+  private async getPrfOptionForCredential(
+    credentialId: string,
+    userId: UserId,
+  ): Promise<WebAuthnPrfUserDecryptionOption> {
     const userDecryptionOptions = await this.getUserDecryptionOptions(userId);
 
     if (
@@ -152,34 +213,15 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
       throw new Error("No WebAuthn PRF option found for user - cannot perform PRF unlock");
     }
 
-    // Get the credential ID from the response to find the matching option
-    const responseCredentialId = Fido2Utils.bufferToString(response.rawId);
-    const webAuthnPrfOption = userDecryptionOptions.webAuthnPrfOptions.find(
-      (option) => option.credentialId === responseCredentialId,
+    const prfOption = userDecryptionOptions.webAuthnPrfOptions.find(
+      (option) => option.credentialId === credentialId,
     );
 
-    if (!webAuthnPrfOption) {
+    if (!prfOption) {
       throw new Error("No matching WebAuthn PRF option found for this credential");
     }
 
-    // Step 1: Decrypt PRF encrypted private key using the PRF key
-    const privateKey = await this.encryptService.unwrapDecapsulationKey(
-      new EncString(webAuthnPrfOption.encryptedPrivateKey),
-      prfKey,
-    );
-
-    // Step 2: Use private key to decrypt user key
-    const actualUserKey = await this.encryptService.decapsulateKeyUnsigned(
-      new EncString(webAuthnPrfOption.encryptedUserKey),
-      privateKey,
-    );
-
-    if (!actualUserKey) {
-      throw new Error("Failed to decrypt user key from private key");
-    }
-
-    // Step 3: Set the actual user key
-    await this.keyService.setUserKey(actualUserKey as UserKey, userId);
+    return prfOption;
   }
 
   private async getUnlockWithPrfSalt(): Promise<ArrayBuffer> {
@@ -188,15 +230,6 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
       return await this.webAuthnLoginPrfKeyService.getLoginWithPrfSalt();
     } catch (error) {
       this.logService.error("Error getting unlock PRF salt:", error);
-      throw error;
-    }
-  }
-
-  private async createUnlockKeyFromPrf(prf: ArrayBuffer): Promise<PrfKey> {
-    try {
-      return await this.webAuthnLoginPrfKeyService.createSymmetricKeyFromPrf(prf);
-    } catch (error) {
-      this.logService.error("Failed to create unlock key from PRF:", error);
       throw error;
     }
   }
