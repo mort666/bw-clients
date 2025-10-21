@@ -117,8 +117,6 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
       },
     };
 
-    // Get credential with PRF - wrap in timeout to avoid hanging
-    // Use shorter timeout for testing in browser extension context
     const response = await this.navigatorCredentials.get(options);
 
     if (!response) {
