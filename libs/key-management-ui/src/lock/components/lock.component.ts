@@ -66,8 +66,8 @@ import {
   UnlockOptionValue,
 } from "../services/lock-component.service";
 
-import { UnlockViaPrfComponent } from "./unlock-via-prf.component";
 import { MasterPasswordLockComponent } from "./master-password-lock/master-password-lock.component";
+import { UnlockViaPrfComponent } from "./unlock-via-prf.component";
 
 const BroadcasterSubscriptionId = "LockComponent";
 
@@ -443,7 +443,7 @@ export class LockComponent implements OnInit, OnDestroy {
 
   async onPrfUnlockSuccess(): Promise<void> {
     // If successful, the service has already set the user key
-    await this.doContinue(false);
+    await this.doContinue({});
   }
 
   //TODO PM-25385 This code isn't used and should be removed when removing the UnlockWithMasterPasswordUnlockData feature flag.
