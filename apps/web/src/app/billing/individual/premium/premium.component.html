@@ -106,6 +106,8 @@
         <app-enter-payment-method
           [group]="formGroup.controls.paymentMethod"
           [showBankAccount]="false"
+          [showAccountCredit]="true"
+          [hasEnoughAccountCredit]="hasEnoughAccountCredit$ | async"
         >
         </app-enter-payment-method>
         <app-enter-billing-address
