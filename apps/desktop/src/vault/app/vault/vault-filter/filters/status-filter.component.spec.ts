@@ -52,11 +52,13 @@ describe("StatusFilterComponent", () => {
 
   describe("handleArchiveFilter", () => {
     const applyFilter = jest.fn();
+    let promptForPremiumSpy: jest.SpyInstance;
+
     beforeEach(() => {
       applyFilter.mockClear();
       component["applyFilter"] = applyFilter;
 
-      jest.spyOn(component["premiumBadgeComponent"]!, "promptForPremium");
+      promptForPremiumSpy = jest.spyOn(component["premiumBadgeComponent"]!, "promptForPremium");
     });
 
     it("should apply archive filter when userCanArchive returns true", async () => {
@@ -66,7 +68,7 @@ describe("StatusFilterComponent", () => {
       await component["handleArchiveFilter"]();
 
       expect(applyFilter).toHaveBeenCalledWith("archive");
-      expect(component["premiumBadgeComponent"]?.promptForPremium).not.toHaveBeenCalled();
+      expect(promptForPremiumSpy).not.toHaveBeenCalled();
     });
 
     it("should apply archive filter when userCanArchive returns false but hasArchivedCiphers is true", async () => {
@@ -79,7 +81,7 @@ describe("StatusFilterComponent", () => {
       await component["handleArchiveFilter"]();
 
       expect(applyFilter).toHaveBeenCalledWith("archive");
-      expect(component["premiumBadgeComponent"]?.promptForPremium).not.toHaveBeenCalled();
+      expect(promptForPremiumSpy).not.toHaveBeenCalled();
     });
 
     it("should prompt for premium when userCanArchive returns false and hasArchivedCiphers is false", async () => {
@@ -89,7 +91,7 @@ describe("StatusFilterComponent", () => {
       await component["handleArchiveFilter"]();
 
       expect(applyFilter).not.toHaveBeenCalled();
-      expect(component["premiumBadgeComponent"]?.promptForPremium).toHaveBeenCalled();
+      expect(promptForPremiumSpy).toHaveBeenCalled();
     });
   });
 });
