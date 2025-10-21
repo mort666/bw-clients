@@ -29,7 +29,7 @@
       #content
       bitTypography="body2"
       [ngClass]="_truncate ? 'tw-truncate' : ''"
-      [appA11yTitle]="_truncate ? contentText : ''"
+      [appA11yTitle]="_truncate ? contentText() : ''"
     >
       <ng-content></ng-content>
     </div>
