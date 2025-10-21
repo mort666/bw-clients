@@ -40,8 +40,10 @@ export class StatusFilterComponent extends BaseStatusFilterComponent {
 
     if (canArchive || hasArchivedCiphers) {
       this.applyFilter("archive");
-    } else {
-      await this.premiumBadgeComponent?.promptForPremium();
+    } else if (this.premiumBadgeComponent) {
+      // The `premiumBadgeComponent` should always be defined here, adding the
+      // if to satisfy TypeScript.
+      await this.premiumBadgeComponent.promptForPremium();
     }
   }
 }
