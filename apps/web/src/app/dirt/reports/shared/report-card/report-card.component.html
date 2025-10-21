@@ -11,10 +11,10 @@
         <bit-icon [icon]="icon" aria-hidden="true"></bit-icon>
       </div>
     </div>
-    <div class="tw-p-5" [ngClass]="{ 'tw-grayscale': disabled }">
+    <bit-card-content [ngClass]="{ 'tw-grayscale': disabled }">
       <h3 class="tw-mb-4 tw-text-xl tw-font-bold">{{ title }}</h3>
       <p class="tw-mb-0">{{ description }}</p>
-    </div>
+    </bit-card-content>
     <span
       bitBadge
       [variant]="requiresPremium ? 'success' : 'primary'"
