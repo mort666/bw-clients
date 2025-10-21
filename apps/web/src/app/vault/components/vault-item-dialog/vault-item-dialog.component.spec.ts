@@ -10,6 +10,7 @@ import { ConfigService } from "@bitwarden/common/platform/abstractions/config/co
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { PremiumUpgradePromptService } from "@bitwarden/common/vault/abstractions/premium-upgrade-prompt.service";
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
@@ -88,6 +89,7 @@ describe("VaultItemDialogComponent", () => {
         { provide: EventCollectionService, useValue: {} },
         { provide: RoutedVaultFilterService, useValue: {} },
         { provide: SyncService, useValue: {} },
+        { provide: PlatformUtilsService, useValue: {} },
       ],
     }).compileComponents();
 
