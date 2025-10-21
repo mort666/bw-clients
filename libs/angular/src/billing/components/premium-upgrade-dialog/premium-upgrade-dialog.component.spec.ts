@@ -172,7 +172,7 @@ describe("PremiumUpgradeDialogComponent", () => {
       mockEnvironmentService.environment$ = of({
         getWebVaultUrl: () => "https://vault.bitwarden.com",
         getRegion: () => Region.US,
-      });
+      } as any);
 
       await component["upgrade"]();
 
@@ -186,7 +186,7 @@ describe("PremiumUpgradeDialogComponent", () => {
       mockEnvironmentService.environment$ = of({
         getWebVaultUrl: () => "https://self-hosted.example.com",
         getRegion: () => Region.SelfHosted,
-      });
+      } as any);
 
       await component["upgrade"]();
 
@@ -200,7 +200,7 @@ describe("PremiumUpgradeDialogComponent", () => {
       mockEnvironmentService.environment$ = of({
         getWebVaultUrl: () => "https://vault.bitwarden.eu",
         getRegion: () => Region.EU,
-      });
+      } as any);
 
       await component["upgrade"]();
 
