@@ -15,35 +15,37 @@ import { WebAuthnPrfUnlockServiceAbstraction } from "@bitwarden/key-management";
   standalone: true,
   imports: [CommonModule, JslibModule, ButtonModule, AsyncActionsModule],
   template: `
-    <ng-container *ngIf="isAvailable">
-      <button
-        *ngIf="formButton"
-        type="button"
-        bitButton
-        bitFormButton
-        buttonType="secondary"
-        block
-        (click)="unlockViaPrf()"
-        [disabled]="unlocking"
-        [loading]="unlocking"
-      >
-        <i class="bwi bwi-passkey tw-mr-1" aria-hidden="true"></i>
-        {{ "unlockWithPasskey" | i18n }}
-      </button>
-      <button
-        *ngIf="!formButton"
-        type="button"
-        bitButton
-        buttonType="secondary"
-        block
-        (click)="unlockViaPrf()"
-        [disabled]="unlocking"
-        [loading]="unlocking"
-      >
-        <i class="bwi bwi-passkey tw-mr-1" aria-hidden="true"></i>
-        {{ "unlockWithPasskey" | i18n }}
-      </button>
-    </ng-container>
+ @if (isAvailable) {
+      @if (formButton) {
+        <button
+          type="button"
+          bitButton
+          bitFormButton
+          buttonType="secondary"
+          block
+          (click)="unlockViaPrf()"
+          [disabled]="unlocking"
+          [loading]="unlocking"
+          >
+          <i class="bwi bwi-passkey tw-mr-1" aria-hidden="true"></i>
+          {{ "unlockWithPasskey" | i18n }}
+        </button>
+      }
+      @if (!formButton) {
+        <button
+          type="button"
+          bitButton
+          buttonType="secondary"
+          block
+          (click)="unlockViaPrf()"
+          [disabled]="unlocking"
+          [loading]="unlocking"
+          >
+          <i class="bwi bwi-passkey tw-mr-1" aria-hidden="true"></i>
+          {{ "unlockWithPasskey" | i18n }}
+        </button>
+      }
+    }
   `,
 })
 export class UnlockViaPrfComponent implements OnInit {
