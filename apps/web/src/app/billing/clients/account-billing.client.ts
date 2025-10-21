@@ -2,7 +2,11 @@ import { Injectable } from "@angular/core";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 
-import { BillingAddress, TokenizedPaymentMethod } from "../payment/types";
+import {
+  BillingAddress,
+  NonTokenizedPaymentMethod,
+  TokenizedPaymentMethod,
+} from "../payment/types";
 
 @Injectable()
 export class AccountBillingClient {
@@ -14,7 +18,7 @@ export class AccountBillingClient {
   }
 
   purchasePremiumSubscription = async (
-    paymentMethod: TokenizedPaymentMethod,
+    paymentMethod: TokenizedPaymentMethod | NonTokenizedPaymentMethod,
     billingAddress: Pick<BillingAddress, "country" | "postalCode">,
   ): Promise<void> => {
     const path = `${this.endpoint}/subscription`;
