@@ -266,7 +266,7 @@ const routes: Routes = [
         children: [{ path: "", component: LoginViaAuthRequestComponent }],
       },
       {
-        path: AuthRoutes.Hint,
+        path: AuthRoutes.PasswordHint,
         canActivate: [unauthGuardFn()],
         data: {
           pageTitle: {

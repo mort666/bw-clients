@@ -7,7 +7,7 @@ export const AuthRoutes = Object.freeze({
   Login: "login",
   LoginWithDevice: "login-with-device",
   AdminApprovalRequested: "admin-approval-requested",
-  Hint: "hint",
+  PasswordHint: "hint",
   LoginInitiated: "login-initiated",
   SetInitialPassword: "set-initial-password",
   ChangePassword: "change-password",

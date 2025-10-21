@@ -2,6 +2,7 @@ import { NgModule } from "@angular/core";
 import { RouterModule, Routes } from "@angular/router";
 
 import { AuthenticationTimeoutComponent } from "@bitwarden/angular/auth/components/authentication-timeout.component";
+import { AuthRoutes } from "@bitwarden/angular/auth/constants";
 import { EnvironmentSelectorComponent } from "@bitwarden/angular/auth/environment-selector/environment-selector.component";
 import {
   authGuard,
@@ -65,7 +66,7 @@ const routes: Routes = [
     canActivate: [redirectGuard({ loggedIn: "/vault", loggedOut: "/login", locked: "/lock" })],
   },
   {
-    path: "authentication-timeout",
+    path: AuthRoutes.AuthenticationTimeout,
     component: AnonLayoutWrapperComponent,
     children: [
       {
@@ -81,7 +82,7 @@ const routes: Routes = [
     } satisfies RouteDataProperties & AnonLayoutWrapperData,
   },
   {
-    path: "device-verification",
+    path: AuthRoutes.NewDeviceVerification,
     component: AnonLayoutWrapperComponent,
     canActivate: [unauthGuardFn(), activeAuthGuard()],
     children: [{ path: "", component: NewDeviceVerificationComponent }],
@@ -123,7 +124,7 @@ const routes: Routes = [
     component: AnonLayoutWrapperComponent,
     children: [
       {
-        path: "signup",
+        path: AuthRoutes.SignUp,
         canActivate: [unauthGuardFn()],
         data: {
           pageIcon: RegistrationUserAddIcon,
@@ -141,13 +142,13 @@ const routes: Routes = [
             component: RegistrationStartSecondaryComponent,
             outlet: "secondary",
             data: {
-              loginRoute: "/login",
+              loginRoute: `/${AuthRoutes.Login}`,
             } satisfies RegistrationStartSecondaryComponentData,
           },
         ],
       },
       {
-        path: "finish-signup",
+        path: AuthRoutes.FinishSignUp,
         canActivate: [unauthGuardFn()],
         data: {
           pageIcon: LockIcon,
@@ -160,7 +161,7 @@ const routes: Routes = [
         ],
       },
       {
-        path: "login",
+        path: AuthRoutes.Login,
         canActivate: [maxAccountsGuardFn()],
         data: {
           pageTitle: {
@@ -179,7 +180,7 @@ const routes: Routes = [
         ],
       },
       {
-        path: "login-initiated",
+        path: AuthRoutes.LoginInitiated,
         canActivate: [tdeDecryptionRequiredGuard()],
         data: {
           pageIcon: DevicesIcon,
@@ -187,7 +188,7 @@ const routes: Routes = [
         children: [{ path: "", component: LoginDecryptionOptionsComponent }],
       },
       {
-        path: "sso",
+        path: AuthRoutes.Sso,
         data: {
           pageIcon: VaultIcon,
           pageTitle: {
@@ -207,7 +208,7 @@ const routes: Routes = [
         ],
       },
       {
-        path: "login-with-device",
+        path: AuthRoutes.LoginWithDevice,
         data: {
           pageIcon: DevicesIcon,
           pageTitle: {
@@ -227,7 +228,7 @@ const routes: Routes = [
         ],
       },
       {
-        path: "admin-approval-requested",
+        path: AuthRoutes.AdminApprovalRequested,
         data: {
           pageIcon: DevicesIcon,
           pageTitle: {
@@ -240,7 +241,7 @@ const routes: Routes = [
         children: [{ path: "", component: LoginViaAuthRequestComponent }],
       },
       {
-        path: "hint",
+        path: AuthRoutes.PasswordHint,
         canActivate: [unauthGuardFn()],
         data: {
           pageTitle: {
@@ -278,7 +279,7 @@ const routes: Routes = [
         ],
       },
       {
-        path: "2fa",
+        path: AuthRoutes.TwoFactor,
         canActivate: [unauthGuardFn(), TwoFactorAuthGuard],
         children: [
           {
@@ -295,7 +296,7 @@ const routes: Routes = [
         } satisfies RouteDataProperties & AnonLayoutWrapperData,
       },
       {
-        path: "set-initial-password",
+        path: AuthRoutes.SetInitialPassword,
         canActivate: [authGuard],
         component: SetInitialPasswordComponent,
         data: {
@@ -304,7 +305,7 @@ const routes: Routes = [
         } satisfies AnonLayoutWrapperData,
       },
       {
-        path: "change-password",
+        path: AuthRoutes.ChangePassword,
         component: ChangePasswordComponent,
         canActivate: [authGuard],
         data: {

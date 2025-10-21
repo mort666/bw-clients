@@ -1,4 +1,4 @@
-// Route segments auth owns under shared infrastructure
+// Web route segments auth owns under shared infrastructure
 export const AuthWebRouteSegments = Object.freeze({
   // settings routes
   Account: "account",
