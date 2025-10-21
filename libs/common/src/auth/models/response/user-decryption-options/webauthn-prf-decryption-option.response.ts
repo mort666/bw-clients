@@ -16,7 +16,7 @@ export class WebAuthnPrfDecryptionOptionResponse extends BaseResponse {
   credentialId: string;
   transports: string[];
 
-  constructor(response: IWebAuthnPrfDecryptionOptionServerResponse | any) {
+  constructor(response: IWebAuthnPrfDecryptionOptionServerResponse) {
     super(response);
 
     const encPrivateKey = this.getResponseProperty("EncryptedPrivateKey");

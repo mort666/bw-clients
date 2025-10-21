@@ -56,9 +56,9 @@ import {
 import {
   LockComponentService,
   UnlockOption,
-  WebAuthnPrfUnlockService,
   UnlockOptions,
 } from "../services/lock-component.service";
+import { WebAuthnPrfUnlockService } from "../services/webauthn-prf-unlock.service";
 
 import { LockComponent } from "./lock.component";
 
