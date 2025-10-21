@@ -88,6 +88,10 @@ impl SecureKeyContainer for CrossPlatformSecureKeyContainer {
     }
 
     fn from_key(key: crypto::MemoryEncryptionKey) -> Self {
+        if let Some(container) = get_env_forced_container() {
+            return container;
+        }
+
         #[cfg(target_os = "windows")]
         {
             if dpapi::DpapiSecureKeyContainer::is_supported() {
@@ -102,6 +106,11 @@ impl SecureKeyContainer for CrossPlatformSecureKeyContainer {
             // Memfd_secret is slightly better in some cases of the kernel being compromised.
             // Note that keyctl may sometimes not be available in e.g. snap. Memfd_secret is
             // not available on kernels older than 6.5 while keyctl is supported since 2.6.
+            //
+            // Note: This may prevent the system from hibernating but not sleeping. Hibernate
+            // would write the memory to disk, exposing the keys. If this is an issue,
+            // the environment variable `SECURE_KEY_CONTAINER_BACKEND` can be used
+            // to force the use of keyctl or mlock.
             if memfd_secret::MemfdSecretSecureKeyContainer::is_supported() {
                 info!("Using memfd_secret for secure key storage");
                 return CrossPlatformSecureKeyContainer::MemfdSecret(
@@ -124,6 +133,48 @@ impl SecureKeyContainer for CrossPlatformSecureKeyContainer {
     fn is_supported() -> bool {
         // Mlock is always supported as a fallback.
         true
+    }
+}
+
+fn get_env_forced_container() -> Option<CrossPlatformSecureKeyContainer> {
+    let env_var = std::env::var("SECURE_KEY_CONTAINER_BACKEND");
+    match env_var.as_deref() {
+        #[cfg(target_os = "windows")]
+        Ok("dpapi") => {
+            info!("Forcing DPAPI secure key container via environment variable");
+            Some(CrossPlatformSecureKeyContainer::Dpapi(
+                dpapi::DpapiSecureKeyContainer::from_key(crypto::MemoryEncryptionKey::new()),
+            ))
+        }
+        #[cfg(target_os = "linux")]
+        Ok("memfd_secret") => {
+            info!("Forcing memfd_secret secure key container via environment variable");
+            Some(CrossPlatformSecureKeyContainer::MemfdSecret(
+                memfd_secret::MemfdSecretSecureKeyContainer::from_key(
+                    crypto::MemoryEncryptionKey::new(),
+                ),
+            ))
+        }
+        #[cfg(target_os = "linux")]
+        Ok("keyctl") => {
+            info!("Forcing keyctl secure key container via environment variable");
+            Some(CrossPlatformSecureKeyContainer::Keyctl(
+                keyctl::KeyctlSecureKeyContainer::from_key(crypto::MemoryEncryptionKey::new()),
+            ))
+        }
+        Ok("mlock") => {
+            info!("Forcing mlock secure key container via environment variable");
+            Some(CrossPlatformSecureKeyContainer::Mlock(
+                mlock::MlockSecureKeyContainer::from_key(crypto::MemoryEncryptionKey::new()),
+            ))
+        }
+        _ => {
+            info!(
+                "{} is not a valid secure key container backend, using automatic selection",
+                env_var.unwrap_or_default()
+            );
+            None
+        }
     }
 }
 
