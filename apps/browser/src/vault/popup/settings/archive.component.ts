@@ -1,7 +1,15 @@
 import { CommonModule } from "@angular/common";
 import { Component, inject } from "@angular/core";
 import { Router } from "@angular/router";
-import { combineLatest, firstValueFrom, map, Observable, startWith, switchMap } from "rxjs";
+import {
+  combineLatest,
+  firstValueFrom,
+  map,
+  Observable,
+  shareReplay,
+  startWith,
+  switchMap,
+} from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
@@ -75,7 +83,10 @@ export class ArchiveComponent {
   protected previouslyHadPremium$ = combineLatest([
     this.userId$.pipe(switchMap((userId) => this.cipherArchiveService.userCanArchive$(userId))),
     this.archivedCiphers$,
-  ]).pipe(map(([canArchive, ciphers]) => !canArchive && ciphers.length > 0));
+  ]).pipe(
+    map(([canArchive, ciphers]) => !canArchive && ciphers.length > 0),
+    shareReplay({ refCount: true, bufferSize: 1 }),
+  );
 
   protected loading$ = this.archivedCiphers$.pipe(
     map(() => false),

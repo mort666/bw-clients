@@ -163,7 +163,7 @@ export class AddEditV2Component implements OnInit {
   headerText: string;
   config: CipherFormConfig;
   canDeleteCipher$: Observable<boolean>;
-  protected submitBtnI18nKey = "save";
+  protected previouslyCouldArchive = false;
 
   get loading() {
     return this.config == null;
@@ -340,7 +340,7 @@ export class AddEditV2Component implements OnInit {
           );
 
           if (!canArchive && config.originalCipher?.archivedDate) {
-            this.submitBtnI18nKey = "unarchiveAndSave";
+            this.previouslyCouldArchive = true;
           }
 
           return config;

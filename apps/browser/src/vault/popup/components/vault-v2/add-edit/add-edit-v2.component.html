@@ -6,12 +6,7 @@
     showBackButton
   >
     <ng-container slot="end">
-      <button
-        *ngIf="config?.originalCipher?.archivedDate"
-        bitBadge
-        type="button"
-        variant="secondary"
-      >
+      <button *ngIf="previouslyCouldArchive" bitBadge type="button" variant="secondary">
         {{ "archived" | i18n }}
       </button>
       <app-pop-out />
@@ -34,7 +29,7 @@
 
   <popup-footer slot="footer">
     <button bitButton type="submit" form="cipherForm" buttonType="primary" #submitBtn>
-      {{ submitBtnI18nKey | i18n }}
+      {{ (previouslyCouldArchive ? "unarchiveAndSave" : "save") | i18n }}
     </button>
 
     <button (click)="handleBackButton()" bitButton type="button" buttonType="secondary">
