@@ -158,6 +158,7 @@ describe("ViewV2Component", () => {
           provide: CipherArchiveService,
           useValue: {
             userCanArchive$: jest.fn().mockReturnValue(of(false)),
+            hasArchiveFlagEnabled$: jest.fn().mockReturnValue(of(true)),
           },
         },
         {

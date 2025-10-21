@@ -377,7 +377,12 @@ describe("AddEditV2Component", () => {
     });
   });
 
-  describe("submitBtnI18nKey", () => {
+  describe("submit button text", () => {
+    beforeEach(() => {
+      // prevent form from rendering
+      jest.spyOn(component as any, "loading", "get").mockReturnValue(true);
+    });
+
     it("sets it to 'save' by default", fakeAsync(() => {
       buildConfigResponse.originalCipher = {} as Cipher;
 
@@ -385,7 +390,8 @@ describe("AddEditV2Component", () => {
 
       tick();
 
-      expect(component["submitBtnI18nKey"]).toBe("save");
+      const submitBtn = fixture.debugElement.query(By.css("button[type=submit]"));
+      expect(submitBtn.nativeElement.textContent.trim()).toBe("save");
     }));
 
     it("sets it to 'save' when the user is able to archive the item", fakeAsync(() => {
@@ -398,17 +404,22 @@ describe("AddEditV2Component", () => {
 
       tick();
 
-      expect(component["submitBtnI18nKey"]).toBe("save");
+      const submitBtn = fixture.debugElement.query(By.css("button[type=submit]"));
+      expect(submitBtn.nativeElement.textContent.trim()).toBe("save");
     }));
 
-    it("sets it to 'unarchiveAndSave' when the user can not archive and the item is archived", fakeAsync(() => {
+    it("sets it to 'unarchiveAndSave' when the user cannot archive and the item is archived", fakeAsync(() => {
+      const archiveService = TestBed.inject(CipherArchiveService);
+      (archiveService.userCanArchive$ as jest.Mock).mockReturnValue(of(false));
       buildConfigResponse.originalCipher = { archivedDate: new Date() } as Cipher;
 
       queryParams$.next({});
 
       tick();
+      fixture.detectChanges();
 
-      expect(component["submitBtnI18nKey"]).toBe("unarchiveAndSave");
+      const submitBtn = fixture.debugElement.query(By.css("button[type=submit]"));
+      expect(submitBtn.nativeElement.textContent.trim()).toBe("unarchiveAndSave");
     }));
   });
 
