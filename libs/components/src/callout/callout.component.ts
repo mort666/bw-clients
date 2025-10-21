@@ -1,4 +1,13 @@
-import { AfterViewInit, Component, computed, ElementRef, input, ViewChild } from "@angular/core";
+import {
+  AfterViewInit,
+  Component,
+  computed,
+  ElementRef,
+  input,
+  signal,
+  ViewChild,
+  afterNextRender,
+} from "@angular/core";
 
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 
@@ -60,12 +69,15 @@ export class CalloutComponent implements AfterViewInit {
 
   @ViewChild("content", { static: false })
   private contentRef!: ElementRef<HTMLElement>;
-  contentText = "";
+  readonly contentText = signal("");
 
   constructor(private i18nService: I18nService) {}
 
   ngAfterViewInit() {
-    this.contentText = this.contentRef?.nativeElement?.textContent?.trim() ?? "";
+    // use afterNextRender to ensure the DOM content is available
+    afterNextRender(() => {
+      this.contentText.set(this.contentRef?.nativeElement?.textContent?.trim() ?? "");
+    });
   }
 
   protected readonly calloutClass = computed(() => {
