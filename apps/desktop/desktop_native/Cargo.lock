@@ -2652,6 +2652,7 @@ dependencies = [
  "ctor 0.5.0",
  "desktop_core",
  "libc",
+ "tracing",
 ]
 
 [[package]]
