@@ -22,6 +22,3 @@ export { DefaultKdfConfigService } from "./kdf-config.service";
 export { KdfType } from "./enums/kdf-type.enum";
 
 export * from "./user-asymmetric-key-regeneration";
-
-// WebAuthn PRF Unlock
-export { WebAuthnPrfUnlockServiceAbstraction } from "./abstractions/webauthn/webauthn-prf-unlock.service.abstraction";

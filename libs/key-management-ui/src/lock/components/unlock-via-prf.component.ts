@@ -8,7 +8,8 @@ import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.servic
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { UserId } from "@bitwarden/common/types/guid";
 import { AsyncActionsModule, ButtonModule, DialogService } from "@bitwarden/components";
-import { WebAuthnPrfUnlockServiceAbstraction } from "@bitwarden/key-management";
+
+import { WebAuthnPrfUnlockService } from "../services/webauthn-prf-unlock.service";
 
 @Component({
   selector: "bit-unlock-via-prf",
@@ -58,7 +59,7 @@ export class UnlockViaPrfComponent implements OnInit {
 
   constructor(
     private accountService: AccountService,
-    private webAuthnPrfUnlockService: WebAuthnPrfUnlockServiceAbstraction,
+    private webAuthnPrfUnlockService: WebAuthnPrfUnlockService,
     private dialogService: DialogService,
     private i18nService: I18nService,
     private logService: LogService,

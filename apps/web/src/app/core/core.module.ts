@@ -106,9 +106,12 @@ import {
   KdfConfigService,
   KeyService as KeyServiceAbstraction,
   BiometricsService,
-  WebAuthnPrfUnlockServiceAbstraction,
 } from "@bitwarden/key-management";
-import { LockComponentService, WebAuthnPrfUnlockService } from "@bitwarden/key-management-ui";
+import {
+  LockComponentService,
+  WebAuthnPrfUnlockService,
+  DefaultWebAuthnPrfUnlockService,
+} from "@bitwarden/key-management-ui";
 import { SerializedMemoryStorageService } from "@bitwarden/storage-core";
 import { DefaultSshImportPromptService, SshImportPromptService } from "@bitwarden/vault";
 import { WebOrganizationInviteService } from "@bitwarden/web-vault/app/auth/core/services/organization-invite/web-organization-invite.service";
@@ -413,8 +416,8 @@ const safeProviders: SafeProvider[] = [
     deps: [DialogService, Router],
   }),
   safeProvider({
-    provide: WebAuthnPrfUnlockServiceAbstraction,
-    useClass: WebAuthnPrfUnlockService,
+    provide: WebAuthnPrfUnlockService,
+    useClass: DefaultWebAuthnPrfUnlockService,
     deps: [
       WebAuthnLoginPrfKeyServiceAbstraction,
       KeyServiceAbstraction,

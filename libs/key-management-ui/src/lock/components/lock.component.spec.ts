@@ -51,12 +51,12 @@ import {
   KeyService,
   PBKDF2KdfConfig,
   UserAsymmetricKeysRegenerationService,
-  WebAuthnPrfUnlockServiceAbstraction,
 } from "@bitwarden/key-management";
 
 import {
   LockComponentService,
   UnlockOption,
+  WebAuthnPrfUnlockService,
   UnlockOptions,
 } from "../services/lock-component.service";
 
@@ -92,7 +92,7 @@ describe("LockComponent", () => {
   const mockLockComponentService = mock<LockComponentService>();
   const mockAnonLayoutWrapperDataService = mock<AnonLayoutWrapperDataService>();
   const mockBroadcasterService = mock<BroadcasterService>();
-  const mockWebAuthnPrfUnlockService = mock<WebAuthnPrfUnlockServiceAbstraction>();
+  const mockWebAuthnPrfUnlockService = mock<WebAuthnPrfUnlockService>();
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -150,7 +150,7 @@ describe("LockComponent", () => {
         { provide: LockComponentService, useValue: mockLockComponentService },
         { provide: AnonLayoutWrapperDataService, useValue: mockAnonLayoutWrapperDataService },
         { provide: BroadcasterService, useValue: mockBroadcasterService },
-        { provide: WebAuthnPrfUnlockServiceAbstraction, useValue: mockWebAuthnPrfUnlockService },
+        { provide: WebAuthnPrfUnlockService, useValue: mockWebAuthnPrfUnlockService },
       ],
     })
       .overrideProvider(DialogService, { useValue: mockDialogService })

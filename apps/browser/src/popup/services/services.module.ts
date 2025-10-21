@@ -145,9 +145,12 @@ import {
   DefaultKeyService,
   KdfConfigService,
   KeyService,
-  WebAuthnPrfUnlockServiceAbstraction,
 } from "@bitwarden/key-management";
-import { LockComponentService, WebAuthnPrfUnlockService } from "@bitwarden/key-management-ui";
+import {
+  LockComponentService,
+  WebAuthnPrfUnlockService,
+  DefaultWebAuthnPrfUnlockService,
+} from "@bitwarden/key-management-ui";
 import { DerivedStateProvider, GlobalStateProvider, StateProvider } from "@bitwarden/state";
 import { InlineDerivedStateProvider } from "@bitwarden/state-internal";
 import {
@@ -576,7 +579,7 @@ const safeProviders: SafeProvider[] = [
       PinServiceAbstraction,
       BiometricStateService,
       BrowserRouterService,
-      WebAuthnPrfUnlockServiceAbstraction,
+      WebAuthnPrfUnlockService,
     ],
   }),
   // TODO: PM-18182 - Refactor component services into lazy loaded modules
@@ -622,8 +625,8 @@ const safeProviders: SafeProvider[] = [
     deps: [PasswordRepromptService, UserVerificationService, DialogService],
   }),
   safeProvider({
-    provide: WebAuthnPrfUnlockServiceAbstraction,
-    useClass: WebAuthnPrfUnlockService,
+    provide: WebAuthnPrfUnlockService,
+    useClass: DefaultWebAuthnPrfUnlockService,
     deps: [
       WebAuthnLoginPrfKeyServiceAbstraction,
       KeyService,

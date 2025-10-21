@@ -4,7 +4,8 @@ import { firstValueFrom, of } from "rxjs";
 
 import { UserDecryptionOptionsServiceAbstraction } from "@bitwarden/auth/common";
 import { UserId } from "@bitwarden/common/types/guid";
-import { BiometricsStatus, WebAuthnPrfUnlockServiceAbstraction } from "@bitwarden/key-management";
+import { BiometricsStatus } from "@bitwarden/key-management";
+import { WebAuthnPrfUnlockService } from "@bitwarden/key-management-ui";
 
 import { WebLockComponentService } from "./web-lock-component.service";
 
@@ -12,11 +13,11 @@ describe("WebLockComponentService", () => {
   let service: WebLockComponentService;
 
   let userDecryptionOptionsService: MockProxy<UserDecryptionOptionsServiceAbstraction>;
-  let webAuthnPrfUnlockService: MockProxy<WebAuthnPrfUnlockServiceAbstraction>;
+  let webAuthnPrfUnlockService: MockProxy<WebAuthnPrfUnlockService>;
 
   beforeEach(() => {
     userDecryptionOptionsService = mock<UserDecryptionOptionsServiceAbstraction>();
-    webAuthnPrfUnlockService = mock<WebAuthnPrfUnlockServiceAbstraction>();
+    webAuthnPrfUnlockService = mock<WebAuthnPrfUnlockService>();
 
     TestBed.configureTestingModule({
       providers: [
@@ -26,7 +27,7 @@ describe("WebLockComponentService", () => {
           useValue: userDecryptionOptionsService,
         },
         {
-          provide: WebAuthnPrfUnlockServiceAbstraction,
+          provide: WebAuthnPrfUnlockService,
           useValue: webAuthnPrfUnlockService,
         },
       ],

@@ -7,12 +7,15 @@ import { UserDecryptionOptionsServiceAbstraction } from "@bitwarden/auth/common"
 import { PinServiceAbstraction } from "@bitwarden/common/key-management/pin/pin.service.abstraction";
 import { UserId } from "@bitwarden/common/types/guid";
 import {
-  WebAuthnPrfUnlockServiceAbstraction,
   BiometricsService,
   BiometricsStatus,
   BiometricStateService,
 } from "@bitwarden/key-management";
-import { LockComponentService, UnlockOptions } from "@bitwarden/key-management-ui";
+import {
+  LockComponentService,
+  UnlockOptions,
+  WebAuthnPrfUnlockService,
+} from "@bitwarden/key-management-ui";
 
 import { BiometricErrors, BiometricErrorTypes } from "../../../models/biometricErrors";
 import { BrowserApi } from "../../../platform/browser/browser-api";
@@ -29,7 +32,7 @@ export class ExtensionLockComponentService implements LockComponentService {
     private readonly pinService: PinServiceAbstraction,
     private readonly biometricStateService: BiometricStateService,
     private readonly routerService: BrowserRouterService,
-    private readonly webAuthnPrfUnlockService: WebAuthnPrfUnlockServiceAbstraction,
+    private readonly webAuthnPrfUnlockService: WebAuthnPrfUnlockService,
   ) {}
 
   getPreviousUrl(): string | null {

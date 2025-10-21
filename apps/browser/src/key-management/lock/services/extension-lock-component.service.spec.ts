@@ -13,9 +13,8 @@ import {
   BiometricsService,
   BiometricsStatus,
   BiometricStateService,
-  WebAuthnPrfUnlockServiceAbstraction,
 } from "@bitwarden/key-management";
-import { UnlockOptions } from "@bitwarden/key-management-ui";
+import { UnlockOptions, WebAuthnPrfUnlockService } from "@bitwarden/key-management-ui";
 
 import { BrowserApi } from "../../../platform/browser/browser-api";
 import BrowserPopupUtils from "../../../platform/browser/browser-popup-utils";
@@ -35,7 +34,7 @@ describe("ExtensionLockComponentService", () => {
   let vaultTimeoutSettingsService: MockProxy<VaultTimeoutSettingsService>;
   let routerService: MockProxy<BrowserRouterService>;
   let biometricStateService: MockProxy<BiometricStateService>;
-  let webAuthnPrfUnlockService: MockProxy<WebAuthnPrfUnlockServiceAbstraction>;
+  let webAuthnPrfUnlockService: MockProxy<WebAuthnPrfUnlockService>;
 
   beforeEach(() => {
     userDecryptionOptionsService = mock<UserDecryptionOptionsServiceAbstraction>();
@@ -45,7 +44,7 @@ describe("ExtensionLockComponentService", () => {
     vaultTimeoutSettingsService = mock<VaultTimeoutSettingsService>();
     routerService = mock<BrowserRouterService>();
     biometricStateService = mock<BiometricStateService>();
-    webAuthnPrfUnlockService = mock<WebAuthnPrfUnlockServiceAbstraction>();
+    webAuthnPrfUnlockService = mock<WebAuthnPrfUnlockService>();
 
     TestBed.configureTestingModule({
       providers: [
@@ -79,7 +78,7 @@ describe("ExtensionLockComponentService", () => {
           useValue: biometricStateService,
         },
         {
-          provide: WebAuthnPrfUnlockServiceAbstraction,
+          provide: WebAuthnPrfUnlockService,
           useValue: webAuthnPrfUnlockService,
         },
       ],

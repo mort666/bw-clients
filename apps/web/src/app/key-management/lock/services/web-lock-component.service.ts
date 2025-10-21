@@ -3,12 +3,16 @@ import { combineLatest, defer, map, Observable } from "rxjs";
 
 import { UserDecryptionOptionsServiceAbstraction } from "@bitwarden/auth/common";
 import { UserId } from "@bitwarden/common/types/guid";
-import { WebAuthnPrfUnlockServiceAbstraction, BiometricsStatus } from "@bitwarden/key-management";
-import { LockComponentService, UnlockOptions } from "@bitwarden/key-management-ui";
+import { BiometricsStatus } from "@bitwarden/key-management";
+import {
+  LockComponentService,
+  UnlockOptions,
+  WebAuthnPrfUnlockService,
+} from "@bitwarden/key-management-ui";
 
 export class WebLockComponentService implements LockComponentService {
   private readonly userDecryptionOptionsService = inject(UserDecryptionOptionsServiceAbstraction);
-  private readonly webAuthnPrfUnlockService = inject(WebAuthnPrfUnlockServiceAbstraction);
+  private readonly webAuthnPrfUnlockService = inject(WebAuthnPrfUnlockService);
 
   constructor() {}
 
