@@ -13,25 +13,24 @@ describe("Fido2Credential", () => {
   });
 
   describe("constructor", () => {
-    it("returns all fields null when given empty data parameter", () => {
+    it("returns all fields undefined when given empty data parameter", () => {
       const data = new Fido2CredentialData();
       const credential = new Fido2Credential(data);
 
-      expect(credential).toEqual({
-        credentialId: null,
-        keyType: null,
-        keyAlgorithm: null,
-        keyCurve: null,
-        keyValue: null,
-        rpId: null,
-        userHandle: null,
-        userName: null,
-        rpName: null,
-        userDisplayName: null,
-        counter: null,
-        discoverable: null,
-        creationDate: null,
-      });
+      expect(credential.credentialId).toBeDefined();
+      expect(credential.keyType).toBeDefined();
+      expect(credential.keyAlgorithm).toBeDefined();
+      expect(credential.keyCurve).toBeDefined();
+      expect(credential.keyValue).toBeDefined();
+      expect(credential.rpId).toBeDefined();
+      expect(credential.counter).toBeDefined();
+      expect(credential.discoverable).toBeDefined();
+      expect(credential.userHandle).toBeUndefined();
+      expect(credential.userName).toBeUndefined();
+      expect(credential.rpName).toBeUndefined();
+      expect(credential.userDisplayName).toBeUndefined();
+      expect(credential.creationDate).toBeInstanceOf(Date);
+      expect(credential.creationDate.getTime()).toBeNaN();
     });
 
     it("returns all fields as EncStrings except creationDate when given full Fido2CredentialData", () => {
@@ -72,9 +71,7 @@ describe("Fido2Credential", () => {
     it("should not populate fields when data parameter is not given", () => {
       const credential = new Fido2Credential();
 
-      expect(credential).toEqual({
-        credentialId: null,
-      });
+      expect(credential).toEqual({});
     });
   });
 
@@ -163,8 +160,8 @@ describe("Fido2Credential", () => {
       expect(result).toEqual(credential);
     });
 
-    it("returns null if input is null", () => {
-      expect(Fido2Credential.fromJSON(null)).toBeNull();
+    it("returns undefined if input is null", () => {
+      expect(Fido2Credential.fromJSON(null)).toBeUndefined();
     });
   });
 

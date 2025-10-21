@@ -1,5 +1,3 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
 import { Jsonify } from "type-fest";
 
 import { SecureNote as SdkSecureNote } from "@bitwarden/sdk-internal";
@@ -11,7 +9,7 @@ import { SecureNoteData } from "../data/secure-note.data";
 import { SecureNoteView } from "../view/secure-note.view";
 
 export class SecureNote extends Domain {
-  type: SecureNoteType;
+  type: SecureNoteType = SecureNoteType.Generic;
 
   constructor(obj?: SecureNoteData) {
     super();
@@ -23,7 +21,7 @@ export class SecureNote extends Domain {
   }
 
   async decrypt(
-    orgId: string,
+    orgId: string | undefined,
     context = "No Cipher Context",
     encKey?: SymmetricCryptoKey,
   ): Promise<SecureNoteView> {
@@ -36,12 +34,14 @@ export class SecureNote extends Domain {
     return n;
   }
 
-  static fromJSON(obj: Jsonify<SecureNote>): SecureNote {
+  static fromJSON(obj: Jsonify<SecureNote> | undefined): SecureNote | undefined {
     if (obj == null) {
-      return null;
+      return undefined;
     }
 
-    return Object.assign(new SecureNote(), obj);
+    const secureNote = new SecureNote();
+    secureNote.type = obj.type;
+    return secureNote;
   }
 
   /**
@@ -59,7 +59,7 @@ export class SecureNote extends Domain {
    * Maps an SDK SecureNote object to a SecureNote
    * @param obj - The SDK SecureNote object
    */
-  static fromSdkSecureNote(obj: SdkSecureNote): SecureNote | undefined {
+  static fromSdkSecureNote(obj: SdkSecureNote | undefined): SecureNote | undefined {
     if (obj == null) {
       return undefined;
     }

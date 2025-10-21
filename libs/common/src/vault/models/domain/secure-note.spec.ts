@@ -46,8 +46,8 @@ describe("SecureNote", () => {
   });
 
   describe("fromJSON", () => {
-    it("returns null if object is null", () => {
-      expect(SecureNote.fromJSON(null)).toBeNull();
+    it("returns undefined if object is null", () => {
+      expect(SecureNote.fromJSON(null)).toBeUndefined();
     });
   });
 

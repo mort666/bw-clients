@@ -1,5 +1,3 @@
-// FIXME: Update this file to be type safe and remove this and next line
-// @ts-strict-ignore
 import { Jsonify } from "type-fest";
 
 import { LoginUri as SdkLoginUri } from "@bitwarden/sdk-internal";
@@ -13,9 +11,9 @@ import { LoginUriData } from "../data/login-uri.data";
 import { LoginUriView } from "../view/login-uri.view";
 
 export class LoginUri extends Domain {
-  uri: EncString;
-  uriChecksum: EncString | undefined;
-  match: UriMatchStrategySetting;
+  uri?: EncString;
+  uriChecksum?: EncString;
+  match?: UriMatchStrategySetting;
 
   constructor(obj?: LoginUriData) {
     super();
@@ -23,20 +21,13 @@ export class LoginUri extends Domain {
       return;
     }
 
-    this.match = obj.match;
-    this.buildDomainModel(
-      this,
-      obj,
-      {
-        uri: null,
-        uriChecksum: null,
-      },
-      [],
-    );
+    this.uri = obj.uri != null ? new EncString(obj.uri) : undefined;
+    this.uriChecksum = obj.uriChecksum != null ? new EncString(obj.uriChecksum) : undefined;
+    this.match = obj.match ?? undefined;
   }
 
   decrypt(
-    orgId: string,
+    orgId: string | undefined,
     context: string = "No Cipher Context",
     encKey?: SymmetricCryptoKey,
   ): Promise<LoginUriView> {
@@ -44,13 +35,17 @@ export class LoginUri extends Domain {
       this,
       new LoginUriView(this),
       ["uri"],
-      orgId,
+      orgId ?? null,
       encKey,
       context,
     );
   }
 
-  async validateChecksum(clearTextUri: string, orgId: string, encKey: SymmetricCryptoKey) {
+  async validateChecksum(
+    clearTextUri: string,
+    orgId: string | undefined,
+    encKey?: SymmetricCryptoKey,
+  ) {
     if (this.uriChecksum == null) {
       return false;
     }
@@ -58,7 +53,7 @@ export class LoginUri extends Domain {
     const keyService = Utils.getContainerService().getEncryptService();
     const localChecksum = await keyService.hash(clearTextUri, "sha256");
 
-    const remoteChecksum = await this.uriChecksum.decrypt(orgId, encKey);
+    const remoteChecksum = await this.uriChecksum.decrypt(orgId ?? null, encKey);
     return remoteChecksum === localChecksum;
   }
 
@@ -77,17 +72,18 @@ export class LoginUri extends Domain {
     return u;
   }
 
-  static fromJSON(obj: Jsonify<LoginUri>): LoginUri {
+  static fromJSON(obj: Jsonify<LoginUri> | undefined): LoginUri | undefined {
     if (obj == null) {
-      return null;
+      return undefined;
     }
 
-    const uri = EncString.fromJSON(obj.uri);
-    const uriChecksum = EncString.fromJSON(obj.uriChecksum);
-    return Object.assign(new LoginUri(), obj, {
-      uri,
-      uriChecksum,
-    });
+    const loginUri = new LoginUri();
+    loginUri.uri = obj.uri != null ? EncString.fromJSON(obj.uri) : undefined;
+    loginUri.match = obj.match ?? undefined;
+    loginUri.uriChecksum =
+      obj.uriChecksum != null ? EncString.fromJSON(obj.uriChecksum) : undefined;
+
+    return loginUri;
   }
 
   /**
@@ -103,16 +99,17 @@ export class LoginUri extends Domain {
     };
   }
 
-  static fromSdkLoginUri(obj: SdkLoginUri): LoginUri | undefined {
+  static fromSdkLoginUri(obj: SdkLoginUri | undefined): LoginUri | undefined {
     if (obj == null) {
       return undefined;
     }
 
-    const view = new LoginUri();
-    view.uri = EncString.fromJSON(obj.uri);
-    view.uriChecksum = obj.uriChecksum ? EncString.fromJSON(obj.uriChecksum) : undefined;
-    view.match = obj.match;
+    const loginUri = new LoginUri();
+    loginUri.uri = obj.uri != null ? EncString.fromJSON(obj.uri) : undefined;
+    loginUri.uriChecksum =
+      obj.uriChecksum != null ? EncString.fromJSON(obj.uriChecksum) : undefined;
+    loginUri.match = obj.match;
 
-    return view;
+    return loginUri;
   }
 }

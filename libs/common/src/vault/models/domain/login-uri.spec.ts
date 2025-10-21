@@ -27,9 +27,9 @@ describe("LoginUri", () => {
     const loginUri = new LoginUri(data);
 
     expect(loginUri).toEqual({
-      match: null,
-      uri: null,
-      uriChecksum: null,
+      match: undefined,
+      uri: undefined,
+      uriChecksum: undefined,
     });
   });
 
@@ -112,8 +112,8 @@ describe("LoginUri", () => {
       expect(actual).toBeInstanceOf(LoginUri);
     });
 
-    it("returns null if object is null", () => {
-      expect(LoginUri.fromJSON(null)).toBeNull();
+    it("returns undefined if object is null", () => {
+      expect(LoginUri.fromJSON(null)).toBeUndefined();
     });
   });
 
