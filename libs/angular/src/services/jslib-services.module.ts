@@ -891,7 +891,7 @@ const safeProviders: SafeProvider[] = [
       LogService,
       BiometricsService,
       LOCKED_CALLBACK,
-      LOGOUT_CALLBACK,
+      LogoutService,
     ],
   }),
   safeProvider({
@@ -1277,7 +1277,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: ChangeKdfService,
     useClass: DefaultChangeKdfService,
-    deps: [MasterPasswordServiceAbstraction, KeyService, KdfConfigService, ChangeKdfApiService],
+    deps: [ChangeKdfApiService, SdkService],
   }),
   safeProvider({
     provide: AuthRequestServiceAbstraction,
