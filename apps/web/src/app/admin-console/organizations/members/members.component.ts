@@ -25,6 +25,7 @@ import {
   CollectionData,
   Collection,
   CollectionDetailsResponse,
+  OrganizationUserService,
 } from "@bitwarden/admin-console/common";
 import { UserNamePipe } from "@bitwarden/angular/pipes/user-name.pipe";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
@@ -89,7 +90,6 @@ import {
 } from "./components/member-dialog";
 import { isFixedSeatPlan } from "./components/member-dialog/validators/org-seat-limit-reached.validator";
 import { DeleteManagedMemberWarningService } from "./services/delete-managed-member/delete-managed-member-warning.service";
-import { OrganizationUserService } from "./services/organization-user/organization-user.service";
 
 class MembersTableDataSource extends PeopleTableDataSource<OrganizationUserView> {
   protected statusType = OrganizationUserStatusType;
@@ -379,7 +379,9 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     if (
       await firstValueFrom(this.configService.getFeatureFlag$(FeatureFlag.CreateDefaultLocation))
     ) {
-      await firstValueFrom(this.organizationUserService.confirmUser(organization, user, publicKey));
+      await firstValueFrom(
+        this.organizationUserService.confirmUser(organization, user.id, publicKey),
+      );
     } else {
       const request = await firstValueFrom(
         this.userId$.pipe(
