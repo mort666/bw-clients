@@ -44,13 +44,8 @@ export class WebLockComponentService implements LockComponentService {
     return combineLatest([
       this.userDecryptionOptionsService.userDecryptionOptionsById$(userId),
       defer(async () => {
-        try {
-          const available = await this.webAuthnPrfUnlockService.isPrfUnlockAvailable(userId);
-
-          return { available };
-        } catch {
-          return { available: false };
-        }
+        const available = await this.webAuthnPrfUnlockService.isPrfUnlockAvailable(userId);
+        return { available };
       }),
     ]).pipe(
       map(([userDecryptionOptions, prfUnlockInfo]) => {

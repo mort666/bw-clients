@@ -87,12 +87,8 @@ export class ExtensionLockComponentService implements LockComponentService {
       this.userDecryptionOptionsService.userDecryptionOptionsById$(userId),
       defer(() => this.pinService.isPinDecryptionAvailable(userId)),
       defer(async () => {
-        try {
-          const available = await this.webAuthnPrfUnlockService.isPrfUnlockAvailable(userId);
-          return { available };
-        } catch {
-          return { available: false };
-        }
+        const available = await this.webAuthnPrfUnlockService.isPrfUnlockAvailable(userId);
+        return { available };
       }),
     ]).pipe(
       map(([biometricsStatus, userDecryptionOptions, pinDecryptionAvailable, prfUnlockInfo]) => {
