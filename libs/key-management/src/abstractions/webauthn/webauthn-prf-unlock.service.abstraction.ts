@@ -15,7 +15,8 @@ export abstract class WebAuthnPrfUnlockServiceAbstraction {
   /**
    * Attempt to unlock the vault using WebAuthn PRF
    * @param userId The user ID to unlock vault for
-   * @returns Promise<boolean> true if unlock was successful
+   * @returns Promise<true> if unlock was successful
+   * @throws Error if unlock fails for any reason
    */
-  abstract unlockVaultWithPrf(userId: UserId): Promise<boolean>;
+  abstract unlockVaultWithPrf(userId: UserId): Promise<void>;
 }

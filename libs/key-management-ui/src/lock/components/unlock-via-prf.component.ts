@@ -15,7 +15,7 @@ import { WebAuthnPrfUnlockServiceAbstraction } from "@bitwarden/key-management";
   standalone: true,
   imports: [CommonModule, JslibModule, ButtonModule, AsyncActionsModule],
   template: `
- @if (isAvailable) {
+    @if (isAvailable) {
       @if (formButton) {
         <button
           type="button"
@@ -26,7 +26,7 @@ import { WebAuthnPrfUnlockServiceAbstraction } from "@bitwarden/key-management";
           (click)="unlockViaPrf()"
           [disabled]="unlocking"
           [loading]="unlocking"
-          >
+        >
           <i class="bwi bwi-passkey tw-mr-1" aria-hidden="true"></i>
           {{ "unlockWithPasskey" | i18n }}
         </button>
@@ -40,7 +40,7 @@ import { WebAuthnPrfUnlockServiceAbstraction } from "@bitwarden/key-management";
           (click)="unlockViaPrf()"
           [disabled]="unlocking"
           [loading]="unlocking"
-          >
+        >
           <i class="bwi bwi-passkey tw-mr-1" aria-hidden="true"></i>
           {{ "unlockWithPasskey" | i18n }}
         </button>
@@ -80,20 +80,8 @@ export class UnlockViaPrfComponent implements OnInit {
     this.unlocking = true;
 
     try {
-      const success = await this.webAuthnPrfUnlockService.unlockVaultWithPrf(this.userId);
-
-      if (success) {
-        // If successful, the service has already set the user key
-        this.unlockSuccess.emit();
-      } else {
-        // Show error message
-        await this.dialogService.openSimpleDialog({
-          title: { key: "error" },
-          content: { key: "prfUnlockFailed" },
-          acceptButtonText: { key: "tryAgain" },
-          type: "danger",
-        });
-      }
+      await this.webAuthnPrfUnlockService.unlockVaultWithPrf(this.userId);
+      this.unlockSuccess.emit();
     } catch (error) {
       this.logService.error("[UnlockViaPrfComponent] Failed to unlock via PRF:", error);
 

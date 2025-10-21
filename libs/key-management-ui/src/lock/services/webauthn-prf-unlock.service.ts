@@ -78,110 +78,110 @@ export class WebAuthnPrfUnlockService implements WebAuthnPrfUnlockServiceAbstrac
     }
   }
 
-  async unlockVaultWithPrf(userId: UserId): Promise<boolean> {
-    try {
-      const credentials = await this.getPrfUnlockCredentials(userId);
-      if (credentials.length === 0) {
-        throw new Error("No PRF credentials available for unlock");
-      }
-
-      // Get the appropriate rpId from the user's environment
-      const rpId = await this.getRpIdForUser(userId);
-      const prfSalt = await this.getUnlockWithPrfSalt();
-
-      // Create credential request options
-      const options: CredentialRequestOptions = {
-        publicKey: {
-          challenge: new Uint8Array(32),
-          allowCredentials: credentials.map(({ credentialId, transports }) => {
-            // The credential ID is already base64url encoded from login storage
-            // We need to decode it to ArrayBuffer for WebAuthn
-            const decodedId = Fido2Utils.stringToBuffer(credentialId);
-            return {
-              type: "public-key",
-              id: decodedId,
-              transports: (transports || []) as AuthenticatorTransport[],
-            };
-          }),
-          rpId,
-          userVerification: "preferred", // Allow platform authenticators to work properly
-          extensions: {
-            prf: { eval: { first: prfSalt } },
-          } as any,
-        },
-      };
-
-      // Get credential with PRF - wrap in timeout to avoid hanging
-      // Use shorter timeout for testing in browser extension context
-      const response = await this.navigatorCredentials.get(options);
-
-      if (!response) {
-        throw new Error("WebAuthn get() returned null/undefined");
-      }
-
-      if (!(response instanceof PublicKeyCredential)) {
-        throw new Error("Failed to get PRF credential for unlock");
-      }
-
-      // Extract PRF result
-      // TODO: Remove `any` when typescript typings add support for PRF
-      const extensionResults = response.getClientExtensionResults() as any;
-      const prfResult = extensionResults.prf?.results?.first;
-      if (!prfResult) {
-        throw new Error("No PRF result received from authenticator");
-      }
-
-      // Create unlock key from PRF
-      const prfKey = await this.createUnlockKeyFromPrf(prfResult);
-
-      // PRF unlock must follow the same key derivation process as PRF login:
-      // PRF key → decrypt private key → use private key to decrypt user key → set user key
-
-      // First, we need to get the WebAuthn PRF option data from UserDecryptionOptions
-      // This contains the encrypted private key and encrypted user key
-      const userDecryptionOptions = await this.getUserDecryptionOptions(userId);
-
-      if (
-        !userDecryptionOptions?.webAuthnPrfOptions ||
-        userDecryptionOptions.webAuthnPrfOptions.length === 0
-      ) {
-        throw new Error("No WebAuthn PRF option found for user - cannot perform PRF unlock");
-      }
-
-      // Get the credential ID from the response to find the matching option
-      const responseCredentialId = Fido2Utils.bufferToString(response.rawId);
-      const webAuthnPrfOption = userDecryptionOptions.webAuthnPrfOptions.find(
-        (option) => option.credentialId === responseCredentialId,
-      );
-
-      if (!webAuthnPrfOption) {
-        throw new Error("No matching WebAuthn PRF option found for this credential");
-      }
-
-      // Step 1: Decrypt PRF encrypted private key using the PRF key
-      const privateKey = await this.encryptService.unwrapDecapsulationKey(
-        new EncString(webAuthnPrfOption.encryptedPrivateKey),
-        prfKey,
-      );
-
-      // Step 2: Use private key to decrypt user key
-      const actualUserKey = await this.encryptService.decapsulateKeyUnsigned(
-        new EncString(webAuthnPrfOption.encryptedUserKey),
-        privateKey,
-      );
-
-      if (!actualUserKey) {
-        throw new Error("Failed to decrypt user key from private key");
-      }
-
-      // Step 3: Set the actual user key
-      await this.keyService.setUserKey(actualUserKey as UserKey, userId);
-
-      return true;
-    } catch (error) {
-      this.logService.error("PRF unlock failed:", error);
-      return false;
+  /**
+   * Unlocks the vault using WebAuthn PRF.
+   *
+   * @param userId The user ID to unlock vault for
+   * @returns Promise<void> that resolves when unlock is successful
+   * @throws Error if unlock fails for any reason
+   */
+  async unlockVaultWithPrf(userId: UserId): Promise<void> {
+    const credentials = await this.getPrfUnlockCredentials(userId);
+    if (credentials.length === 0) {
+      throw new Error("No PRF credentials available for unlock");
     }
+
+    // Get the appropriate rpId from the user's environment
+    const rpId = await this.getRpIdForUser(userId);
+    const prfSalt = await this.getUnlockWithPrfSalt();
+
+    // Create credential request options
+    const options: CredentialRequestOptions = {
+      publicKey: {
+        challenge: new Uint8Array(32),
+        allowCredentials: credentials.map(({ credentialId, transports }) => {
+          // The credential ID is already base64url encoded from login storage
+          // We need to decode it to ArrayBuffer for WebAuthn
+          const decodedId = Fido2Utils.stringToBuffer(credentialId);
+          return {
+            type: "public-key",
+            id: decodedId,
+            transports: (transports || []) as AuthenticatorTransport[],
+          };
+        }),
+        rpId,
+        userVerification: "preferred", // Allow platform authenticators to work properly
+        extensions: {
+          prf: { eval: { first: prfSalt } },
+        } as any,
+      },
+    };
+
+    // Get credential with PRF - wrap in timeout to avoid hanging
+    // Use shorter timeout for testing in browser extension context
+    const response = await this.navigatorCredentials.get(options);
+
+    if (!response) {
+      throw new Error("WebAuthn get() returned null/undefined");
+    }
+
+    if (!(response instanceof PublicKeyCredential)) {
+      throw new Error("Failed to get PRF credential for unlock");
+    }
+
+    // Extract PRF result
+    // TODO: Remove `any` when typescript typings add support for PRF
+    const extensionResults = response.getClientExtensionResults() as any;
+    const prfResult = extensionResults.prf?.results?.first;
+    if (!prfResult) {
+      throw new Error("No PRF result received from authenticator");
+    }
+
+    // Create unlock key from PRF
+    const prfKey = await this.createUnlockKeyFromPrf(prfResult);
+
+    // PRF unlock must follow the same key derivation process as PRF login:
+    // PRF key → decrypt private key → use private key to decrypt user key → set user key
+
+    // First, we need to get the WebAuthn PRF option data from UserDecryptionOptions
+    // This contains the encrypted private key and encrypted user key
+    const userDecryptionOptions = await this.getUserDecryptionOptions(userId);
+
+    if (
+      !userDecryptionOptions?.webAuthnPrfOptions ||
+      userDecryptionOptions.webAuthnPrfOptions.length === 0
+    ) {
+      throw new Error("No WebAuthn PRF option found for user - cannot perform PRF unlock");
+    }
+
+    // Get the credential ID from the response to find the matching option
+    const responseCredentialId = Fido2Utils.bufferToString(response.rawId);
+    const webAuthnPrfOption = userDecryptionOptions.webAuthnPrfOptions.find(
+      (option) => option.credentialId === responseCredentialId,
+    );
+
+    if (!webAuthnPrfOption) {
+      throw new Error("No matching WebAuthn PRF option found for this credential");
+    }
+
+    // Step 1: Decrypt PRF encrypted private key using the PRF key
+    const privateKey = await this.encryptService.unwrapDecapsulationKey(
+      new EncString(webAuthnPrfOption.encryptedPrivateKey),
+      prfKey,
+    );
+
+    // Step 2: Use private key to decrypt user key
+    const actualUserKey = await this.encryptService.decapsulateKeyUnsigned(
+      new EncString(webAuthnPrfOption.encryptedUserKey),
+      privateKey,
+    );
+
+    if (!actualUserKey) {
+      throw new Error("Failed to decrypt user key from private key");
+    }
+
+    // Step 3: Set the actual user key
+    await this.keyService.setUserKey(actualUserKey as UserKey, userId);
   }
 
   private async getUnlockWithPrfSalt(): Promise<ArrayBuffer> {
