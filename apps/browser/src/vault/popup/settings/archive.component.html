@@ -8,7 +8,7 @@
   @let archivedItems = archivedCiphers$ | async;
   @let userCanArchive = userCanArchive$ | async;
 
-  @if (userCanArchive && archivedItems?.length) {
+  @if (!userCanArchive && archivedItems?.length) {
     <bit-card class="tw-mb-4">
       <div class="tw-flex tw-gap-2 tw-items-baseline">
         <i class="bwi bwi-info-circle" aria-hidden="true"></i>

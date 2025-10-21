@@ -81,9 +81,9 @@ export class ArchiveComponent {
     switchMap((userId) => this.cipherArchiveService.archivedCiphers$(userId)),
   );
 
-  protected userCanArchive$ = this.userId$
-    .pipe(switchMap((userId) => this.cipherArchiveService.userCanArchive$(userId)))
-    .pipe(map((canArchive) => canArchive));
+  protected userCanArchive$ = this.userId$.pipe(
+    switchMap((userId) => this.cipherArchiveService.userCanArchive$(userId)),
+  );
 
   protected loading$ = this.archivedCiphers$.pipe(
     map(() => false),
