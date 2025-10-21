@@ -40,6 +40,7 @@ describe("AccessIntelligenceSecurityTasksService", () => {
       const organizationId = "org-1" as OrganizationId;
       const apps = [
         {
+          isMarkedAsCritical: true,
           atRiskPasswordCount: 1,
           atRiskCipherIds: ["cid1"],
         } as ApplicationHealthReportDetailEnriched,
@@ -56,10 +57,12 @@ describe("AccessIntelligenceSecurityTasksService", () => {
       const organizationId = "org-2" as OrganizationId;
       const apps = [
         {
+          isMarkedAsCritical: true,
           atRiskPasswordCount: 2,
           atRiskCipherIds: ["cid1", "cid2"],
         } as ApplicationHealthReportDetailEnriched,
         {
+          isMarkedAsCritical: true,
           atRiskPasswordCount: 1,
           atRiskCipherIds: ["cid2"],
         } as ApplicationHealthReportDetailEnriched,
@@ -85,6 +88,7 @@ describe("AccessIntelligenceSecurityTasksService", () => {
       const organizationId = "org-3" as OrganizationId;
       const apps = [
         {
+          isMarkedAsCritical: true,
           atRiskPasswordCount: 1,
           atRiskCipherIds: ["cid3"],
         } as ApplicationHealthReportDetailEnriched,
@@ -106,9 +110,25 @@ describe("AccessIntelligenceSecurityTasksService", () => {
       const organizationId = "org-4" as OrganizationId;
       const apps = [
         {
+          isMarkedAsCritical: true,
           atRiskPasswordCount: 0,
           atRiskCipherIds: ["cid4"],
         } as ApplicationHealthReportDetailEnriched,
+      ];
+      const result = await service.requestPasswordChange(organizationId, apps);
+
+      expect(defaultAdminTaskServiceSpy.bulkCreateTasks).toHaveBeenCalledWith(organizationId, []);
+      expect(result).toBe(0);
+    });
+
+    it("should not create any tasks for non-critical apps", async () => {
+      const organizationId = "org-5" as OrganizationId;
+      const apps = [
+        {
+          isMarkedAsCritical: false,
+          atRiskPasswordCount: 2,
+          atRiskCipherIds: ["cid5", "cid6"],
+        } as LEGACY_ApplicationHealthReportDetailWithCriticalFlagAndCipher,
       ];
       const result = await service.requestPasswordChange(organizationId, apps);
 
