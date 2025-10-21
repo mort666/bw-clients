@@ -10,7 +10,16 @@ import {
 } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl, FormGroup, Validators } from "@angular/forms";
-import { catchError, debounceTime, from, Observable, of, switchMap } from "rxjs";
+import {
+  debounceTime,
+  Observable,
+  switchMap,
+  startWith,
+  from,
+  catchError,
+  of,
+  combineLatest,
+} from "rxjs";
 
 import { Account } from "@bitwarden/common/auth/abstractions/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -23,7 +32,13 @@ import { SharedModule } from "@bitwarden/web-vault/app/shared";
 import {
   EnterBillingAddressComponent,
   EnterPaymentMethodComponent,
+  getBillingAddressFromForm,
 } from "../../../payment/components";
+import {
+  NonTokenizablePaymentMethods,
+  NonTokenizedPaymentMethod,
+  TokenizedPaymentMethod,
+} from "../../../payment/types";
 import { BillingServicesModule } from "../../../services";
 import { SubscriptionPricingService } from "../../../services/subscription-pricing.service";
 import { BitwardenSubscriber } from "../../../types";
@@ -33,7 +48,11 @@ import {
   PersonalSubscriptionPricingTierIds,
 } from "../../../types/subscription-pricing-tier";
 
-import { PlanDetails, UpgradePaymentService } from "./services/upgrade-payment.service";
+import {
+  PaymentFormValues,
+  PlanDetails,
+  UpgradePaymentService,
+} from "./services/upgrade-payment.service";
 
 /**
  * Status types for upgrade payment dialog
@@ -75,11 +94,12 @@ export type UpgradePaymentParams = {
   templateUrl: "./upgrade-payment.component.html",
 })
 export class UpgradePaymentComponent implements OnInit, AfterViewInit {
-  protected selectedPlanId = input.required<PersonalSubscriptionPricingTierId>();
-  protected account = input.required<Account>();
+  protected readonly selectedPlanId = input.required<PersonalSubscriptionPricingTierId>();
+  protected readonly account = input.required<Account>();
   protected goBack = output<void>();
   protected complete = output<UpgradePaymentResult>();
   protected selectedPlan: PlanDetails | null = null;
+  protected hasEnoughAccountCredit$: Observable<boolean>;
 
   @ViewChild(EnterPaymentMethodComponent) paymentComponent!: EnterPaymentMethodComponent;
   @ViewChild(CartSummaryComponent) cartSummaryComponent!: CartSummaryComponent;
@@ -90,7 +110,7 @@ export class UpgradePaymentComponent implements OnInit, AfterViewInit {
     billingAddress: EnterBillingAddressComponent.getFormGroup(),
   });
 
-  protected loading = signal(true);
+  protected readonly loading = signal(true);
   private pricingTiers$!: Observable<PersonalSubscriptionPricingTier[]>;
 
   // Cart Summary data
@@ -155,6 +175,21 @@ export class UpgradePaymentComponent implements OnInit, AfterViewInit {
       .subscribe((tax) => {
         this.estimatedTax = tax;
       });
+
+    // Check if user has enough account credit for the purchase
+    this.hasEnoughAccountCredit$ = combineLatest([
+      this.upgradePaymentService.accountCredit$,
+      this.formGroup.valueChanges.pipe(startWith(this.formGroup.value)),
+    ]).pipe(
+      switchMap(([credit, formValue]) => {
+        const selectedPaymentType = formValue.paymentForm?.type;
+        if (selectedPaymentType !== NonTokenizablePaymentMethods.accountCredit) {
+          return of(true); // Not using account credit, so this check doesn't apply
+        }
+        return of(credit >= this.cartSummaryComponent.total());
+      }),
+    );
+
     this.loading.set(false);
   }
 
@@ -210,76 +245,66 @@ export class UpgradePaymentComponent implements OnInit, AfterViewInit {
   }
 
   private async processUpgrade(): Promise<UpgradePaymentResult> {
-    // Get common values
-    const country = this.formGroup.value?.billingAddress?.country;
-    const postalCode = this.formGroup.value?.billingAddress?.postalCode;
-
     if (!this.selectedPlan) {
       throw new Error("No plan selected");
     }
-    if (!country || !postalCode) {
+
+    // Get common values
+    const billingAddress = getBillingAddressFromForm(this.formGroup.controls.billingAddress);
+    const organizationName = this.formGroup.value?.organizationName;
+
+    if (!billingAddress.country || !billingAddress.postalCode) {
       throw new Error("Billing address is incomplete");
     }
 
-    // Validate organization name for Families plan
-    const organizationName = this.formGroup.value?.organizationName;
     if (this.isFamiliesPlan && !organizationName) {
       throw new Error("Organization name is required");
     }
 
-    // Get payment method
-    const tokenizedPaymentMethod = await this.paymentComponent?.tokenize();
+    const isAccountCreditSelected =
+      this.formGroup.value?.paymentForm?.type === NonTokenizablePaymentMethods.accountCredit;
 
-    if (!tokenizedPaymentMethod) {
+    // Tokenize payment method if not using account credit
+    const paymentMethod: TokenizedPaymentMethod | NonTokenizedPaymentMethod =
+      isAccountCreditSelected
+        ? { type: NonTokenizablePaymentMethods.accountCredit, token: "" }
+        : await this.paymentComponent?.tokenize();
+
+    if (!paymentMethod) {
       throw new Error("Payment method is required");
     }
 
     // Process the upgrade based on plan type
     if (this.isFamiliesPlan) {
-      const paymentFormValues = {
+      const paymentFormValues: PaymentFormValues = {
         organizationName,
-        billingAddress: { country, postalCode },
+        billingAddress: billingAddress,
       };
 
       const response = await this.upgradePaymentService.upgradeToFamilies(
         this.account(),
         this.selectedPlan,
-        tokenizedPaymentMethod,
+        paymentMethod,
         paymentFormValues,
       );
 
       return { status: UpgradePaymentStatus.UpgradedToFamilies, organizationId: response.id };
     } else {
-      await this.upgradePaymentService.upgradeToPremium(tokenizedPaymentMethod, {
-        country,
-        postalCode,
-      });
+      await this.upgradePaymentService.upgradeToPremium(paymentMethod, billingAddress);
       return { status: UpgradePaymentStatus.UpgradedToPremium, organizationId: null };
     }
   }
 
   // Create an observable for tax calculation
   private refreshSalesTax$(): Observable<number> {
-    const billingAddress = {
-      country: this.formGroup.value?.billingAddress?.country,
-      postalCode: this.formGroup.value?.billingAddress?.postalCode,
-    };
-
-    if (!this.selectedPlan || !billingAddress.country || !billingAddress.postalCode) {
+    if (this.formGroup.invalid) {
       return of(0);
     }
 
-    // Convert Promise to Observable
+    const billingAddress = getBillingAddressFromForm(this.formGroup.controls.billingAddress);
+
     return from(
-      this.upgradePaymentService.calculateEstimatedTax(this.selectedPlan, {
-        line1: null,
-        line2: null,
-        city: null,
-        state: null,
-        country: billingAddress.country,
-        postalCode: billingAddress.postalCode,
-        taxId: null,
-      }),
+      this.upgradePaymentService.calculateEstimatedTax(this.selectedPlan, billingAddress),
     ).pipe(
       catchError((error: unknown) => {
         this.logService.error("Tax calculation failed:", error);
