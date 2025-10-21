@@ -1,17 +1,11 @@
 import { CommonModule } from "@angular/common";
 import { Component, inject } from "@angular/core";
 import { Router } from "@angular/router";
-import {
-  combineLatest,
-  firstValueFrom,
-  map,
-  Observable,
-  shareReplay,
-  startWith,
-  switchMap,
-} from "rxjs";
+import { firstValueFrom, map, Observable, startWith, switchMap } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { PolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
+import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -74,19 +68,22 @@ export class ArchiveComponent {
   private i18nService = inject(I18nService);
   private cipherArchiveService = inject(CipherArchiveService);
   private passwordRepromptService = inject(PasswordRepromptService);
+  private policyService = inject(PolicyService);
   private userId$: Observable<UserId> = this.accountService.activeAccount$.pipe(getUserId);
+
+  protected enforceOrgDataOwnershipPolicy$ = this.userId$.pipe(
+    switchMap((userId) =>
+      this.policyService.policyAppliesToUser$(PolicyType.OrganizationDataOwnership, userId),
+    ),
+  );
 
   protected archivedCiphers$ = this.userId$.pipe(
     switchMap((userId) => this.cipherArchiveService.archivedCiphers$(userId)),
   );
 
-  protected previouslyHadPremium$ = combineLatest([
-    this.userId$.pipe(switchMap((userId) => this.cipherArchiveService.userCanArchive$(userId))),
-    this.archivedCiphers$,
-  ]).pipe(
-    map(([canArchive, ciphers]) => !canArchive && ciphers.length > 0),
-    shareReplay({ refCount: true, bufferSize: 1 }),
-  );
+  protected userCanArchive$ = this.userId$
+    .pipe(switchMap((userId) => this.cipherArchiveService.userCanArchive$(userId)))
+    .pipe(map((canArchive) => canArchive));
 
   protected loading$ = this.archivedCiphers$.pipe(
     map(() => false),
