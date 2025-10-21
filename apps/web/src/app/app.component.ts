@@ -114,7 +114,9 @@ export class AppComponent implements OnDestroy, OnInit {
             await this.logOut(message.redirect);
             break;
           case "lockVault": {
-            const activeUserId = (await firstValueFrom(this.accountService.activeAccount$))?.id;
+            const activeUserId = await firstValueFrom(
+              getUserId(this.accountService.activeAccount$),
+            );
             await this.lockService.lock(activeUserId);
             break;
           }

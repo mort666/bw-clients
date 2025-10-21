@@ -6,6 +6,7 @@ import { LockService } from "@bitwarden/auth/common";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
+import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { ExtensionCommand, ExtensionCommandType } from "@bitwarden/common/autofill/constants";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 
@@ -77,7 +78,7 @@ export default class CommandsBackground {
         await this.openPopup();
         break;
       case "lock_vault": {
-        const activeUserId = (await firstValueFrom(this.accountService.activeAccount$)).id;
+        const activeUserId = await firstValueFrom(getUserId(this.accountService.activeAccount$));
         await this.lockService.lock(activeUserId);
         break;
       }
