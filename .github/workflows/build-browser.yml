@@ -214,12 +214,14 @@ jobs:
             archive_name_prefix: ""
             npm_command_prefix: "dist:"
             readable: "open source license"
+            type: "oss"
           - build_prefix: "bit-"
             artifact_prefix: "bit-"
             source_archive_name_prefix: "bit-"
             archive_name_prefix: "bit-"
             npm_command_prefix: "dist:bit:"
             readable: "commercial license"
+            type: "commercial"
         browser:
           - name: "chrome"
             npm_command_suffix: "chrome"
@@ -271,6 +273,11 @@ jobs:
 
       - name: NPM setup
         run: npm ci
+        working-directory: browser-source/
+
+      - name: Remove commercial packages
+        if: ${{ matrix.license_type.type == 'oss' }}
+        run: rm -rf node_modules/@bitwarden/commercial-sdk-internal
         working-directory: browser-source/
 
       - name: Download SDK artifacts
@@ -344,11 +351,13 @@ jobs:
             archive_name_prefix: ""
             npm_command_prefix: "dist:"
             readable: "open source license"
+            type: "oss"
           - build_prefix: "bit-"
             artifact_prefix: "bit-"
             archive_name_prefix: "bit-"
             npm_command_prefix: "dist:bit:"
             readable: "commercial license"
+            type: "commercial"
     env:
       _BUILD_NUMBER: ${{ needs.setup.outputs.adj_build_number }}
       _NODE_VERSION: ${{ needs.setup.outputs.node_version }}
@@ -452,6 +461,11 @@ jobs:
 
       - name: NPM setup
         run: npm ci
+        working-directory: ./
+
+      - name: Remove commercial packages
+        if: ${{ matrix.license_type.type == 'oss' }}
+        run: rm -rf node_modules/@bitwarden/commercial-sdk-internal
         working-directory: ./
 
       - name: Download SDK Artifacts
