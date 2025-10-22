@@ -35,6 +35,7 @@ import {
   getBillingAddressFromForm,
 } from "../../../payment/components";
 import {
+  BillingAddress,
   NonTokenizablePaymentMethods,
   NonTokenizedPaymentMethod,
   TokenizedPaymentMethod,
@@ -99,7 +100,7 @@ export class UpgradePaymentComponent implements OnInit, AfterViewInit {
   protected goBack = output<void>();
   protected complete = output<UpgradePaymentResult>();
   protected selectedPlan: PlanDetails | null = null;
-  protected hasEnoughAccountCredit$: Observable<boolean>;
+  protected hasEnoughAccountCredit$!: Observable<boolean>;
 
   @ViewChild(EnterPaymentMethodComponent) paymentComponent!: EnterPaymentMethodComponent;
   @ViewChild(CartSummaryComponent) cartSummaryComponent!: CartSummaryComponent;
@@ -186,7 +187,8 @@ export class UpgradePaymentComponent implements OnInit, AfterViewInit {
         if (selectedPaymentType !== NonTokenizablePaymentMethods.accountCredit) {
           return of(true); // Not using account credit, so this check doesn't apply
         }
-        return of(credit >= this.cartSummaryComponent.total());
+
+        return credit ? of(credit >= this.cartSummaryComponent.total()) : of(false);
       }),
     );
 
@@ -249,7 +251,6 @@ export class UpgradePaymentComponent implements OnInit, AfterViewInit {
       throw new Error("No plan selected");
     }
 
-    // Get common values
     const billingAddress = getBillingAddressFromForm(this.formGroup.controls.billingAddress);
     const organizationName = this.formGroup.value?.organizationName;
 
@@ -261,43 +262,76 @@ export class UpgradePaymentComponent implements OnInit, AfterViewInit {
       throw new Error("Organization name is required");
     }
 
-    const isAccountCreditSelected =
-      this.formGroup.value?.paymentForm?.type === NonTokenizablePaymentMethods.accountCredit;
-
-    // Tokenize payment method if not using account credit
-    const paymentMethod: TokenizedPaymentMethod | NonTokenizedPaymentMethod =
-      isAccountCreditSelected
-        ? { type: NonTokenizablePaymentMethods.accountCredit, token: "" }
-        : await this.paymentComponent?.tokenize();
+    const paymentMethod = await this.getPaymentMethod();
 
     if (!paymentMethod) {
       throw new Error("Payment method is required");
     }
 
-    // Process the upgrade based on plan type
-    if (this.isFamiliesPlan) {
-      const paymentFormValues: PaymentFormValues = {
-        organizationName,
-        billingAddress: billingAddress,
-      };
+    const isTokenizedPayment = "token" in paymentMethod;
 
-      const response = await this.upgradePaymentService.upgradeToFamilies(
-        this.account(),
-        this.selectedPlan,
-        paymentMethod,
-        paymentFormValues,
-      );
-
-      return { status: UpgradePaymentStatus.UpgradedToFamilies, organizationId: response.id };
-    } else {
-      await this.upgradePaymentService.upgradeToPremium(paymentMethod, billingAddress);
-      return { status: UpgradePaymentStatus.UpgradedToPremium, organizationId: null };
+    if (!isTokenizedPayment && this.isFamiliesPlan) {
+      throw new Error("Tokenized payment is required for families plan");
     }
+
+    return this.isFamiliesPlan
+      ? this.processFamiliesUpgrade(
+          organizationName!,
+          billingAddress,
+          paymentMethod as TokenizedPaymentMethod,
+        )
+      : this.processPremiumUpgrade(paymentMethod, billingAddress);
+  }
+
+  private async processFamiliesUpgrade(
+    organizationName: string,
+    billingAddress: BillingAddress,
+    paymentMethod: TokenizedPaymentMethod,
+  ): Promise<UpgradePaymentResult> {
+    const paymentFormValues: PaymentFormValues = {
+      organizationName,
+      billingAddress,
+    };
+
+    const response = await this.upgradePaymentService.upgradeToFamilies(
+      this.account(),
+      this.selectedPlan!,
+      paymentMethod,
+      paymentFormValues,
+    );
+
+    return { status: UpgradePaymentStatus.UpgradedToFamilies, organizationId: response.id };
+  }
+
+  private async processPremiumUpgrade(
+    paymentMethod: NonTokenizedPaymentMethod | TokenizedPaymentMethod,
+    billingAddress: BillingAddress,
+  ): Promise<UpgradePaymentResult> {
+    await this.upgradePaymentService.upgradeToPremium(paymentMethod, billingAddress);
+    return { status: UpgradePaymentStatus.UpgradedToPremium, organizationId: null };
+  }
+
+  /**
+   * Get payment method based on selected type
+   * If using account credit, returns a non-tokenized payment method
+   * Otherwise, tokenizes the payment method from the payment component
+   */
+  private async getPaymentMethod(): Promise<
+    NonTokenizedPaymentMethod | TokenizedPaymentMethod | null
+  > {
+    const isAccountCreditSelected =
+      this.formGroup.value?.paymentForm?.type === NonTokenizablePaymentMethods.accountCredit;
+
+    if (isAccountCreditSelected) {
+      return { type: NonTokenizablePaymentMethods.accountCredit };
+    }
+
+    return await this.paymentComponent?.tokenize();
   }
 
   // Create an observable for tax calculation
   private refreshSalesTax$(): Observable<number> {
-    if (this.formGroup.invalid) {
+    if (this.formGroup.invalid || !this.selectedPlan) {
       return of(0);
     }
 
