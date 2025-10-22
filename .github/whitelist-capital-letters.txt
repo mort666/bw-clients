@@ -19,7 +19,6 @@
 ./apps/cli/stores/chocolatey/tools/VERIFICATION.txt
 ./apps/browser/store/windows/AppxManifest.xml
 ./apps/browser/src/background/nativeMessaging.background.ts
-./apps/browser/src/dirt/phishing-detection/services/phishing-domains-ACTIVE.txt
 ./apps/browser/src/models/browserComponentState.ts
 ./apps/browser/src/models/browserGroupingsComponentState.ts
 ./apps/browser/src/models/biometricErrors.ts

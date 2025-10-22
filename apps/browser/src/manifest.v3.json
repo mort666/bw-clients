@@ -163,7 +163,7 @@
         "overlay/menu-list.html",
         "overlay/menu.html",
         "popup/fonts/*",
-        "dirt/phishing-detection/services/phishing-domains-ACTIVE.txt"
+        "dirt/phishing-detection/services/data/*"
       ],
       "matches": ["<all_urls>"]
     }

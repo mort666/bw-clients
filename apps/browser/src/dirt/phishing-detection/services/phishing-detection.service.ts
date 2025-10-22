@@ -23,6 +23,7 @@ import { TaskSchedulerService } from "@bitwarden/common/platform/scheduling/task
 
 import { BrowserApi } from "../../../platform/browser/browser-api";
 
+import LocalPhishingMeta from "./data/local-phishing-meta.json";
 import {
   CachedPhishingData,
   CaughtPhishingDomain,
@@ -37,12 +38,6 @@ export class PhishingDetectionService {
     "https://raw.githubusercontent.com/Phishing-Database/Phishing.Database/master/phishing-domains-ACTIVE.txt";
   private static readonly RemotePhishingDatabaseChecksumUrl =
     "https://raw.githubusercontent.com/Phishing-Database/checksums/refs/heads/master/phishing-domains-ACTIVE.txt.md5";
-  private static readonly LocalPhishingDatabaseUrl?: string = chrome?.runtime?.getURL(
-    "dirt/phishing-detection/services/phishing-domains-ACTIVE.txt",
-  );
-  /** This is tied to `./phishing-domainas-ACTIVE.txt` and should be updated in kind  */
-  private static readonly LocalPhishingDatabaseChecksum =
-    "ff5eb4352bd817baca18d2db6178b6e5 *phishing-domains-ACTIVE.txt";
 
   private static readonly _UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
   private static readonly _RETRY_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -632,13 +627,15 @@ export class PhishingDetectionService {
 
     try {
       this._logService.info("[PhishingDetectionService] Fetching local DB as fallback");
-      if (!this.LocalPhishingDatabaseUrl) {
-        throw new Error("No local database URL provided");
-      }
-      const fallbackDomains = await this._auditService.getKnownPhishingDomains(
-        this.LocalPhishingDatabaseUrl,
-      );
-      this._setKnownPhishingDomains(fallbackDomains, this.LocalPhishingDatabaseChecksum);
+      const fallbackDomains: string[] = await Promise.all(
+        LocalPhishingMeta.files.map((path) =>
+          this._auditService.getKnownPhishingDomains(
+            chrome.runtime.getURL("dirt/phishing-detection/services/data/" + path),
+          ),
+        ),
+      ).then((chunkedDomains) => chunkedDomains.flat());
+
+      this._setKnownPhishingDomains(fallbackDomains, LocalPhishingMeta.checksum);
       await this._saveDomains();
     } catch (error) {
       this._logService.error("[PhishingDetectionService] Failed to fetch local DB.", error);

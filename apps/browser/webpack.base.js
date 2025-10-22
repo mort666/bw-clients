@@ -186,11 +186,8 @@ module.exports.buildConfig = function buildConfig(params) {
         { from: path.resolve(__dirname, "src/popup/images"), to: "popup/images" },
         { from: path.resolve(__dirname, "src/autofill/content/autofill.css"), to: "content" },
         {
-          from: path.resolve(
-            __dirname,
-            "src/dirt/phishing-detection/services/phishing-domains-ACTIVE.txt",
-          ),
-          to: "dirt/phishing-detection/services/phishing-domains-ACTIVE.txt",
+          from: path.resolve(__dirname, "src/dirt/phishing-detection/services/data"),
+          to: "dirt/phishing-detection/services/data",
         },
       ],
     }),
