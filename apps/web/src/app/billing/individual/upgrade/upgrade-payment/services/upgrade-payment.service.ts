@@ -85,7 +85,7 @@ export class UpgradePaymentService {
     );
 
   // Fetch account credit
-  accountCredit$: Observable<number> = this.accountService.activeAccount$.pipe(
+  accountCredit$: Observable<number | null> = this.accountService.activeAccount$.pipe(
     mapAccountToSubscriber,
     switchMap((account) => this.subscriberBillingClient.getCredit(account)),
   );
@@ -157,7 +157,7 @@ export class UpgradePaymentService {
   async upgradeToFamilies(
     account: Account,
     planDetails: PlanDetails,
-    paymentMethod: TokenizedPaymentMethod | NonTokenizedPaymentMethod,
+    paymentMethod: TokenizedPaymentMethod,
     formValues: PaymentFormValues,
   ): Promise<OrganizationResponse> {
     const billingAddress = formValues.billingAddress;

@@ -45,5 +45,4 @@ export type TokenizedPaymentMethod = {
 
 export type NonTokenizedPaymentMethod = {
   type: NonTokenizablePaymentMethod;
-  token: string;
 };

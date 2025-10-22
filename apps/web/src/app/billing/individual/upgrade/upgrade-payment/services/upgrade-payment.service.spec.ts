@@ -490,7 +490,6 @@ describe("UpgradePaymentService", () => {
       // Arrange
       const accountCreditPaymentMethod: NonTokenizedPaymentMethod = {
         type: NonTokenizablePaymentMethods.accountCredit,
-        token: null,
       };
       mockAccountBillingClient.purchasePremiumSubscription.mockResolvedValue();
 
@@ -575,54 +574,6 @@ describe("UpgradePaymentService", () => {
           },
           payment: {
             paymentMethod: ["test-token", PaymentMethodType.Card],
-            billing: {
-              country: "US",
-              postalCode: "12345",
-            },
-          },
-        }),
-        "user-id",
-      );
-      expect(mockApiService.refreshIdentityToken).toHaveBeenCalled();
-      expect(mockSyncService.fullSync).toHaveBeenCalledWith(true);
-    });
-
-    it("should handle upgrade with account credit payment method and refresh data", async () => {
-      // Arrange
-      const accountCreditPaymentMethod: NonTokenizedPaymentMethod = {
-        type: NonTokenizablePaymentMethods.accountCredit,
-        token: null,
-      };
-      mockOrganizationBillingService.purchaseSubscription.mockResolvedValue({
-        id: "org-id",
-        name: "Test Organization",
-        billingEmail: "test@example.com",
-      } as OrganizationResponse);
-
-      // Act
-      await sut.upgradeToFamilies(
-        mockAccount,
-        mockFamiliesPlanDetails,
-        accountCreditPaymentMethod,
-        {
-          organizationName: "Test Organization",
-          billingAddress: mockBillingAddress,
-        },
-      );
-
-      // Assert
-      expect(mockOrganizationBillingService.purchaseSubscription).toHaveBeenCalledWith(
-        expect.objectContaining({
-          organization: {
-            name: "Test Organization",
-            billingEmail: "test@example.com",
-          },
-          plan: {
-            type: PlanType.FamiliesAnnually,
-            passwordManagerSeats: 6,
-          },
-          payment: {
-            paymentMethod: [null, PaymentMethodType.Credit],
             billing: {
               country: "US",
               postalCode: "12345",
