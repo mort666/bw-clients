@@ -192,10 +192,6 @@ export class RiskInsightsOrchestratorService {
           },
         } as ReportState;
 
-        this.logService.debug(
-          "[RiskInsightsOrchestratorService] Updated applications data",
-          updatedState,
-        );
         return { reportState, organizationDetails, updatedState, userId };
       }),
       switchMap(({ reportState, organizationDetails, updatedState, userId }) => {
@@ -278,10 +274,6 @@ export class RiskInsightsOrchestratorService {
           },
         } as ReportState;
 
-        this.logService.debug(
-          "[RiskInsightsOrchestratorService] Updated applications data",
-          updatedState,
-        );
         return { reportState, organizationDetails, updatedState, userId };
       }),
       switchMap(({ reportState, organizationDetails, updatedState, userId }) => {
@@ -346,9 +338,6 @@ export class RiskInsightsOrchestratorService {
           data: result ?? null,
         };
       }),
-      tap((fetchedReport) =>
-        this.logService.debug("[RiskInsightsOrchestratorService] _fetchReport$", fetchedReport),
-      ),
       catchError(() => of({ loading: false, error: "Failed to fetch report", data: null })),
       startWith({ loading: true, error: null, data: null }),
     );
@@ -568,10 +557,6 @@ export class RiskInsightsOrchestratorService {
     const criticalReportResultsPipeline$ = this.enrichedReportData$.pipe(
       filter((state) => !!state),
       map((enrichedReports) => {
-        this.logService.debug(
-          "[RiskInsightsOrchestratorService] Generating critical applications report from",
-          enrichedReports,
-        );
         const criticalApplications = enrichedReports!.reportData.filter(
           (app) => app.isMarkedAsCritical,
         );
@@ -656,24 +641,11 @@ export class RiskInsightsOrchestratorService {
 
   private _setupMigrationAndCleanup() {
     const criticalApps$ = this.criticalAppsService.criticalAppsList$.pipe(
-      tap((criticalApps) => {
-        this.logService.debug(
-          "[RiskInsightsOrchestratorService] criticalAppsService.criticalAppsList",
-          criticalApps,
-        );
-      }),
       filter((criticalApps) => criticalApps.length > 0),
       take(1),
     );
 
     const rawReportData$ = this.rawReportData$.pipe(
-      tap((reportState) => {
-        this.logService.debug(
-          `[RiskInsightsOrchestratorService] Report state on _setupMigrationAndCleanup`,
-          !!reportState.data,
-          reportState,
-        );
-      }),
       filter((reportState) => !!reportState.data),
       take(1),
     );
@@ -756,7 +728,6 @@ export class RiskInsightsOrchestratorService {
     this._reportStateSubscription = mergedReportState$
       .pipe(takeUntil(this._destroy$))
       .subscribe((state) => {
-        this.logService.debug("[RiskInsightsOrchestratorService] Updating report state", state);
         this._rawReportDataSubject.next(state);
       });
   }
