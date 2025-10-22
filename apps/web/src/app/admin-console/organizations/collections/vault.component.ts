@@ -790,6 +790,9 @@ export class VaultComponent implements OnInit, OnDestroy {
         case "viewEvents":
           await this.viewEvents(event.item);
           break;
+        case "editCipher":
+          await this.editCipher(event.item);
+          break;
       }
     } finally {
       this.processingEvent$.next(false);
@@ -852,7 +855,7 @@ export class VaultComponent implements OnInit, OnDestroy {
    * @param cipherView - When set, the cipher to be edited
    * @param cloneCipher - `true` when the cipher should be cloned.
    */
-  async editCipher(cipher: CipherView | undefined, cloneCipher: boolean) {
+  async editCipher(cipher: CipherView | undefined, cloneCipher?: boolean) {
     if (
       cipher &&
       cipher.reprompt !== 0 &&
