@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, OnInit, ChangeDetectionStrategy } from "@angular/core";
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
 import { Subject, switchMap, takeUntil, of, BehaviorSubject, combineLatest } from "rxjs";
 
@@ -42,6 +42,7 @@ export class PasswordChangeMetricComponent implements OnInit {
     private securityTasksApiService: SecurityTasksApiService,
     private allActivitiesService: AllActivitiesService,
     protected accessIntelligenceSecurityTasksService: AccessIntelligenceSecurityTasksService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -59,6 +60,7 @@ export class PasswordChangeMetricComponent implements OnInit {
       )
       .subscribe((metrics) => {
         this.taskMetrics$.next(metrics);
+        this.cdr.markForCheck();
       });
 
     combineLatest([
@@ -81,6 +83,8 @@ export class PasswordChangeMetricComponent implements OnInit {
         this.allActivitiesService.setPasswordChangeProgressMetricHasProgressBar(
           this.renderMode === RenderMode.criticalAppsWithAtRiskAppsAndTasks,
         );
+
+        this.cdr.markForCheck();
       });
   }
 
