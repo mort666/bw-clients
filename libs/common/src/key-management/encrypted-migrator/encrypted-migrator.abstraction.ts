@@ -24,4 +24,9 @@ export abstract class EncryptedMigrator {
    * @param userId The ID of the user to check migrations for.
    */
   abstract needsMigrations(userId: UserId): Promise<MigrationRequirement>;
+
+  /**
+   * Indicates whether migrations are currently running.
+   */
+  abstract isRunningMigrations(): Promise<boolean>;
 }

@@ -1,6 +1,7 @@
 import { mock } from "jest-mock-extended";
 
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
+import { SyncService } from "@bitwarden/common/platform/sync";
 import { UserId } from "@bitwarden/common/types/guid";
 // eslint-disable-next-line no-restricted-imports
 import { KdfConfigService } from "@bitwarden/key-management";
@@ -21,6 +22,7 @@ describe("EncryptedMigrator", () => {
   const mockLogService = mock<LogService>();
   const configService = mock<ConfigService>();
   const masterPasswordService = mock<MasterPasswordServiceAbstraction>();
+  const syncService = mock<SyncService>();
 
   let sut: DefaultEncryptedMigrator;
   const mockMigration = mock<MinimumKdfMigration>();
@@ -42,6 +44,7 @@ describe("EncryptedMigrator", () => {
       mockLogService,
       configService,
       masterPasswordService,
+      syncService,
     );
   });
 

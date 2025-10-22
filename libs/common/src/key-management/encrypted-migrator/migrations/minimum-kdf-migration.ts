@@ -42,6 +42,10 @@ export class MinimumKdfMigration implements EncryptedMigration {
       new PBKDF2KdfConfig(MINIMUM_PBKDF2_ITERATIONS_FOR_UPGRADE),
       userId,
     );
+    await this.kdfConfigService.setKdfConfig(
+      userId,
+      new PBKDF2KdfConfig(MINIMUM_PBKDF2_ITERATIONS_FOR_UPGRADE),
+    );
   }
 
   async needsMigration(userId: UserId): Promise<MigrationRequirement> {

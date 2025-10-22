@@ -520,6 +520,7 @@ const safeProviders: SafeProvider[] = [
       LogService,
       ConfigService,
       MasterPasswordServiceAbstraction,
+      SyncService,
     ],
   }),
   safeProvider({
@@ -868,7 +869,6 @@ const safeProviders: SafeProvider[] = [
       AuthServiceAbstraction,
       StateProvider,
       SecurityStateService,
-      KdfConfigService,
     ],
   }),
   safeProvider({

@@ -1,5 +1,6 @@
 import { assertNonNullish } from "@bitwarden/common/auth/utils";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
+import { SyncService } from "@bitwarden/common/platform/sync";
 import { UserId } from "@bitwarden/common/types/guid";
 // eslint-disable-next-line no-restricted-imports
 import { KdfConfigService } from "@bitwarden/key-management";
@@ -22,6 +23,7 @@ export class DefaultEncryptedMigrator implements EncryptedMigrator {
     private readonly logService: LogService,
     readonly configService: ConfigService,
     readonly masterPasswordService: MasterPasswordServiceAbstraction,
+    readonly syncService: SyncService,
   ) {
     // Register migrations here
     this.migrations.push({
@@ -67,6 +69,7 @@ export class DefaultEncryptedMigrator implements EncryptedMigrator {
       }
       this.logService.mark("[Encrypted Migrator] Finish");
       this.logService.info(`[Encrypted Migrator] Completed migrations for user: ${userId}`);
+      await this.syncService.fullSync(true);
     } catch (error) {
       this.logService.error(
         `[Encrypted Migrator] Error running migrations for user: ${userId}`,
@@ -92,5 +95,9 @@ export class DefaultEncryptedMigrator implements EncryptedMigrator {
     } else {
       return "noMigrationNeeded";
     }
+  }
+
+  async isRunningMigrations(): Promise<boolean> {
+    return this.isRunningMigration;
   }
 }

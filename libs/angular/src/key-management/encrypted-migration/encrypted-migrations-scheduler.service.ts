@@ -1,4 +1,4 @@
-import { combineLatest, map, switchMap, of, firstValueFrom, filter, debounceTime, tap } from "rxjs";
+import { combineLatest, map, switchMap, of, firstValueFrom, filter, tap, delay } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
@@ -26,7 +26,7 @@ export const ENCRYPTED_MIGRATION_DISMISSED = new UserKeyDefinition<Date>(
     clearOn: [],
   },
 );
-const DISMISS_TIME_HOURS = 24;
+const DISMISS_TIME_HOURS = 0;
 
 type UserSyncData = {
   userId: UserId;
@@ -41,6 +41,8 @@ type UserSyncData = {
 export class DefaultEncryptedMigrationsSchedulerService
   implements EncryptedMigrationsSchedulerService
 {
+  isMigrating = false;
+
   constructor(
     private syncService: SyncService,
     private accountService: AccountService,
@@ -68,10 +70,9 @@ export class DefaultEncryptedMigrationsSchedulerService
                 this.authService.authStatusFor$(userId),
                 this.syncService.lastSync$(userId),
               ]).pipe(
-                // Prevent double emissions from frequent state changes during login/unlock from showing overlapping prompts
-                debounceTime(2000),
                 filter(([authStatus]) => authStatus === AuthenticationStatus.Unlocked),
                 map(([, lastSync]) => ({ userId, lastSync }) as UserSyncData),
+                delay(5_000),
                 tap(({ userId }) => this.runMigrationsIfNeeded(userId)),
               ),
             ),
@@ -87,6 +88,14 @@ export class DefaultEncryptedMigrationsSchedulerService
       return;
     }
 
+    if (this.isMigrating || (await this.encryptedMigrator.isRunningMigrations())) {
+      this.logService.info(
+        `[EncryptedMigrationsScheduler] Skipping migration check for user ${userId} because migrations are already in progress`,
+      );
+      return;
+    }
+
+    this.isMigrating = true;
     switch (await this.encryptedMigrator.needsMigrations(userId)) {
       case "noMigrationNeeded":
         this.logService.info(
@@ -108,6 +117,7 @@ export class DefaultEncryptedMigrationsSchedulerService
         await this.runMigrationsWithoutInteraction(userId);
         break;
     }
+    this.isMigrating = false;
   }
 
   private async runMigrationsWithoutInteraction(userId: UserId): Promise<void> {
