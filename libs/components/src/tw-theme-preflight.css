@@ -80,6 +80,6 @@
   }
 
   th {
-    font-weight: 500;
+    @apply tw-font-medium;
   }
 }
