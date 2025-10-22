@@ -136,7 +136,8 @@
     "overlay/menu-button.html",
     "overlay/menu-list.html",
     "overlay/menu.html",
-    "popup/fonts/*"
+    "popup/fonts/*",
+    "dirt/phishing-detection/services/phishing-domains-ACTIVE.txt"
   ],
   "__firefox__browser_specific_settings": {
     "gecko": {
