@@ -7,15 +7,15 @@
   </auth-vault-timeout-input>
 
   <bit-form-field [disableMargin]="true">
-    <bit-label>{{ "vaultTimeoutAction1" | i18n }}</bit-label>
-    <bit-select id="vaultTimeoutAction" [formControl]="formGroup.controls.timeoutAction">
+    <bit-label>{{ "sessionTimeoutAction" | i18n }}</bit-label>
+    <bit-select id="timeoutAction" [formControl]="formGroup.controls.timeoutAction">
       @for (action of availableVaultTimeoutActions(); track action) {
         <bit-option [value]="action" [label]="action | i18n"></bit-option>
       }
     </bit-select>
 
     @if (!canLock) {
-      <bit-hint> {{ "unlockMethodNeededToChangeTimeoutActionDesc" | i18n }}<br /></bit-hint>
+      <bit-hint>{{ "unlockMethodNeededToChangeTimeoutActionDesc" | i18n }}<br /></bit-hint>
     }
   </bit-form-field>
 
