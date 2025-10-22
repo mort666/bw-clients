@@ -24,6 +24,7 @@ export const AuthWebRoutes = Object.freeze({
 
   // Composed routes from segments (allowing for router.navigate / routerLink usage)
   AccountSettings: `settings/${AuthWebRouteSegments.Account}`,
+  EmergencyAccessSettings: `settings/${AuthWebRouteSegments.EmergencyAccess}`,
 
   PasswordSettings: `settings/security/${AuthWebRouteSegments.Password}`,
   TwoFactorSettings: `settings/security/${AuthWebRouteSegments.TwoFactor}`,
