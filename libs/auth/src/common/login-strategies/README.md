@@ -1,18 +1,11 @@
 # Overview of Authentication at Bitwarden
 
-> [!IMPORTANT]
-> While each login method has its own unique logic, this document discusses the
-> logic that is _generally_ common to all login methods. It provides a high-level
-> overview of authentication and as such will involve some abstraction and generalization.
-
-<br>
-
 > **Table of Contents**
 >
 > - [Authentication Methods](#authentication-methods)
 > - [The Login Credentials Object](#the-login-credentials-object)
 > - [The `LoginStrategyService` and our Login Strategies](#the-loginstrategyservice-and-our-login-strategies)
-> - [The `logIn()` and `startLogin()` Methods](#the-login-and-startlogin-methods)
+> - [The `logIn()` and `startLogIn()` Methods](#the-login-and-startlogin-methods)
 > - [Handling the `AuthResult`](#handling-the-authresult)
 > - [Diagram of Authentication Flows](#diagram-of-authentication-flows)
 
@@ -45,7 +38,7 @@ A user begins the login process by entering their email on the `/login` screen (
 > [!NOTE]
 >
 > - Our Angular clients do not support the Login with User API Key method.
-
+>   &nbsp;
 > - The Login with Master Password method is also used by the
 >   `RegistrationFinishComponent` and `CompleteTrialInitiationComponent` (the user automatically
 >   gets logged in with their Master Password after registration), as well as the `RecoverTwoFactorComponent`
@@ -58,6 +51,13 @@ The CLI client supports the following login methods via the `LoginCommand`.
 - Login with Master Password
 - Login with Single Sign-On
 - Login with User API Key (which can _only_ be initiated from the CLI client)
+
+<br>
+
+> [!IMPORTANT]
+> While each authentication method has its own unique logic, this document discusses the
+> logic that is _generally_ common to all authentication methods. It provides a high-level
+> overview of authentication and as such will involve some abstraction and generalization.
 
 <br>
 
@@ -113,14 +113,14 @@ More specifically, within its `logIn()` method, the `LoginStrategyService` uses 
 
 For example, the `PasswordLoginCredentials` object has `type` of `AuthenticationType.Password`. This tells the `LoginStrategyService` to initialize and use the `PasswordLoginStrategy` for the login process.
 
-Once the `LoginStrategyService` initializes the appropriate strategy, it then calls the `logIn()` method defined on _that_ particular strategy, passing on the credentials object as an argument. For example: `PasswordLoginStrategy.logIn(credentials)`.
+Once the `LoginStrategyService` initializes the appropriate strategy, it then calls the `logIn()` method defined on _that_ particular strategy, passing on the credentials object as an argument. For example: `PasswordLoginStrategy.logIn(credentials)`
 
 <br>
 
 To summarize everything so far:
 
 ```bash
-Initiating Component Submit Action   # ex: LoginComponent.submit()
+Initiating Component (Submit Action)   # ex: LoginComponent.submit()
     |
     Build credentials object         # ex: PasswordLoginCredentials
     |
@@ -135,14 +135,13 @@ Initiating Component Submit Action   # ex: LoginComponent.submit()
 
 <br>
 
-## The `logIn()` and `startLogin()` Methods
+## The `logIn()` and `startLogIn()` Methods
 
 Each login strategy has its own unique implementation of the `logIn()` method, but each `logIn()` method performs the following general logic with the help of the credentials object:
 
 1. Build a `LoginStrategyData` object with a `TokenRequest` property
 2. Cache the `LoginStrategyData` object
-3. Call the `startLogin()` method on the base `LoginStrategy`
-4. Return an `AuthResult` object
+3. Call the `startLogIn()` method on the base `LoginStrategy`
 
 Here are those steps in more detail:
 
@@ -199,15 +198,15 @@ Here are those steps in more detail:
 
 2. **Cache the `LoginStrategyData` object**
 
-   Because a login attempt could "fail" due to a need for Two Factor Authentication (2FA) or New Device Verification (NDV), we need to preserve the `LoginStrategyData` so that we can re-use it later when the user provides their 2FA or NDV token. This way, the user does not need to completely re-submit all of their credentials.
+   Because a login attempt could "fail" due to a need for Two Factor Authentication (2FA) or New Device Verification (NDV), we need to preserve the `LoginStrategyData` so that we can re-use it later when the user provides their 2FA or NDV token. This way, the user does not need to completely re-enter all of their credentials.
 
    The way we cache this `LoginStrategyData` is simply by saving it to a property called `cache` on the strategy. There will be more details on how this cache is used later on.
 
    <br />
 
-3. **Call the `startLogin()` method on the base `LoginStrategy`**
+3. **Call the `startLogIn()` method on the base `LoginStrategy`**
 
-   Next, we call the `startLogin()` method, which exists on the base `LoginStrategy` and is therefore common to all login strategies. The `startLogin()` method does the following:
+   Next, we call the `startLogIn()` method, which exists on the base `LoginStrategy` and is therefore common to all login strategies. The `startLogIn()` method does the following:
    1. **Makes a `POST` request to the `/connect/token` endpoint on our Identity Server**
       - `REQUEST`
 
@@ -221,20 +220,25 @@ Here are those steps in more detail:
         - [`IdentityTokenResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-token.response.ts)
           - Meaning: the user has been authenticated
           - Response Contains:
-            - Authentication information for the user
-              - An access token, which is a JWT with claims about the user
+            - Authentication information, such as:
+              - An access token (which is a JWT with claims about the user)
               - A refresh token
-            - Decryption information for the user
-              - Includes the user's master-key-encrypted user key (if the user has a master password), along with their KDF settings
-              - Includes an object that contains information about which decryption options the user has available to them
+            - Decryption information, such as:
+              - The user's master-key-encrypted user key (if the user has a master password), along with their KDF settings
+              - The user's user-key-encrypted private key
+              - A `userDecryptionOptions` object that contains information about which decryption options the user has available to them
+              - A flag that dictate if the user is required to set or change their master password
+              - Any master password policies the user is required to adhere to
 
         - [`IdentityTwoFactorResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-two-factor.response.ts)
           - Meaning: the user needs to complete Two Factor Authentication
-          - Response Contains: information about the user's 2FA requirements, such as which 2FA providers they have available to them, etc.
+          - Response Contains:
+            - A list of which 2FA providers the user has configured
+            - Any master password policies the user is required to adhere to
 
         - [`IdentityDeviceVerificationResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-device-verification.response.ts)
           - Meaning: the user needs to verify their new device via [new device verification](https://bitwarden.com/help/new-device-verification/)
-          - Response Contains: a boolean property that simply states whether or not the device has been verified
+          - Response Contains: a simple boolean property that states whether or not the device has been verified
 
    2. **Calls one of the `process[IdentityType]Response()` methods**
 
@@ -242,58 +246,54 @@ Here are those steps in more detail:
 
       The specific method that gets called depends on the type of the `IdentityResponse`:
       - If `IdentityTokenResponse` &rarr; call `processTokenResponse()`
-        - This method uses information from the `IdentityTokenResponse` object to set Authentication and Decryption information about the user into state
-          - `saveAccountInformation()` - initializes the account with information from the `IdentityTokenResponse` after successful login
-            - Adds the account to the `AccountService` and sets up the account profile in `StateService`
-            - Sets the access token and refresh token to state
-            - Sets the `userDecryptionOptions` to state
-
-          - Sets cryptographic properties to state via `setMasterKey()`, `setUserKey()`, and `setPrivateKey()`
-
-          - Sets a `forceSetPasswordReason` to state, if necessary
+        - Instantiates a new `AuthResult` object
+        - Calls `saveAccountInformation()` to initialize the account with information from the `IdentityTokenResponse`
+          - Decodes the access token (a JWT) to get information about the user (userId, email, etc.)
+          - Sets several things to state:
+            - The account (via `AccountService`)
+            - The user's environment
+            - `userDecryptionOptions`
+            - `masterPasswordUnlockData` (_if_ `userDecryptionOptions` allows for master password unlock):
+              - Salt
+              - KDF config
+              - Master-key-encrypted user key
+            - Access token and refresh token
+            - KDF config
+            - Premium status
+        - If the `IdentityTokenResponse` contains a `twoFactorToken` (because the user previously selected "remember me" for their 2FA method), set that token to state
+        - Sets cryptographic properties to state: master key, user key, private key
+        - Sets a `forceSetPasswordReason` to state (if necessary)
+        - Returns the `AuthResult`
 
       - If `IdentityTwoFactorResponse` &rarr; call `processTwoFactorResponse()`
-        - This method sets 2FA data to state for later processing at the `/2fa` route, and also adds the necessary data for the 2FA process to the `AuthResult`
+        - Instantiates a new `AuthResult` object
+        - Sets `AuthResult.twoFactorProviders` to the list of 2FA providers from the `IdentityTwoFactorResponse`
+        - Sets that same list of of 2FA providers to global state (memory)
+        - Returns the `AuthResult`
 
       - If `IdentityDeviceVerificationResponse` &rarr; call `processDeviceVerificationResponse()`
-        - This method simply sets `requiresDeviceVerification` to `true` on the `AuthResult`
-
-     <br />
-
-4. **Return the `AuthResult` object**
-
-   The `AuthResult` object that gets returned from the `process[IdentityType]Response()` method ultimately gets returned up through the chain of callers until it makes its way back to the original component that initiated the login method (e.g. the `LoginComponent` for Login with Master Password).
-
-   ```bash
-   Initiating Component Submit Action < - - - -
-       |                                        \
-       LoginStrategyService.logIn()            - \
-           |                                      \    # AuthResult bubbles back up
-           strategy.logIn()                      - \   # through chain of callers
-               |                                    \  # to the initiating component
-               startLogin()                        - \
-                   |                                  \
-                   process[IdentityType]Response()   - \
-                       |                                \
-                       returns AuthResult - - - - - - - -
-   ```
+        - Instantiates a new `AuthResult` object
+        - Sets `AuthResult.requiresDeviceVerification` to `true`
+        - Returns the `AuthResult`
 
 <br>
 
 ## Handling the `AuthResult`
 
-The `AuthResult` object returned from the `process[IdentityType]Response()` method ultimately makes its way up to the initiating component. The `AuthResult` contains information that will be used by the initiating component to determine how to direct the user after an authentication attempt.
+The `AuthResult` object that gets returned from the `process[IdentityType]Response()` method ultimately gets returned up through the chain of callers until it makes its way back to the initiating component (ex: the `LoginComponent` for Login with Master Password).
 
-We can add to the above diagram to give a high-level overview of how the `AuthResult` is handled, but note again that there are abstractions in this diagram &mdash; it doesn't depict every edge case, and is just meant to give a general picture.
+The initiating component will then use the information on that `AuthResult` to determine how to direct the user after an authentication attempt.
+
+Below is a high-level overview of how the `AuthResult` is handled, but note again that there are abstractions in this diagram &mdash; it doesn't depict every edge case, and is just meant to give a general picture.
 
 ```bash
-Initiating Component Submit Action < - - - -
+Initiating Component (Submit Action) < - - -
     |                                        \
     LoginStrategyService.logIn()            - \
         |                                      \    # AuthResult bubbles back up
         strategy.logIn()                      - \   # through chain of callers
             |                                    \  # to the initiating component
-            startLogin()                        - \
+            startLogIn()                        - \
                 |                                  \
                 process[IdentityType]Response()   - \
                     |                                \
@@ -324,7 +324,7 @@ There are two broad types of scenarios that the user will fall into:
 
 ### Re-submit Scenarios
 
-There are two cases where a user is required to provide additional information before they can be authenticated: Two Factor Authentication (2FA) and New Device Verification (NDV). In these scenarios, we actually need the user to "re-submit" their original request, along with their added 2FA or NDV token. But remember earlier that we cached the `LoginStrategyData`. This makes it so the user does not need to re-provide their original credentials. Instead, the user simply provides their 2FA or NDV token, we add it to their original (cached) `LoginStrategyData`, and then we re-submit the request.
+There are two cases where a user is required to provide additional information before they can be authenticated: Two Factor Authentication (2FA) and New Device Verification (NDV). In these scenarios, we actually need the user to "re-submit" their original request, along with their added 2FA or NDV token. But remember earlier that we cached the `LoginStrategyData`. This makes it so the user does not need to re-enter their original credentials. Instead, the user simply provides their 2FA or NDV token, we add it to their original (cached) `LoginStrategyData`, and then we re-submit the request.
 
 Here is how these scenarios work:
 
@@ -335,9 +335,8 @@ Here is how these scenarios work:
 3. We route the user to `/2fa` (`TwoFactorAuthComponent`).
 4. The user enters their 2FA token.
 5. On submission, the `LoginStrategyService` calls `logInTwoFactor()` on the particular login strategy. This method then:
-
-- Takes the cached `LoginStrategyData` (the user's original request), and appends the 2FA token onto the `TokenRequest`
-- Calls `startLogin()` again, this time using the updated `LoginStrategyData` that includes the 2FA token.
+   - Takes the cached `LoginStrategyData` (the user's original request), and appends the 2FA token onto the `TokenRequest`
+   - Calls `startLogIn()` again, this time using the updated `LoginStrategyData` that includes the 2FA token.
 
 **User must complete New Device Verification**
 
@@ -346,17 +345,22 @@ Here is how these scenarios work:
 3. We route the user to `/device-verification`.
 4. The user enters their NDV token.
 5. On submission, the `LoginStrategyService` calls `logInNewDeviceVerification()` on the particular login strategy. This method then:
-
-- Takes the cached `LoginStrategyData` (the user's original request), and appends the NDV token onto the `TokenRequest`.
-- Calls `startLogIn()` again, this time using the updated `LoginStrategyData` that includes the NDV token.
+   - Takes the cached `LoginStrategyData` (the user's original request), and appends the NDV token onto the `TokenRequest`.
+   - Calls `startLogIn()` again, this time using the updated `LoginStrategyData` that includes the NDV token.
 
 ### Successful Authentication Scenarios
 
 **User must change their password**
 
-**User sent to `/login-initiated`**
+A user can be successfully authenticated but still required to set/change their master password. In this case, the user gets routed to the relevant set/change password component (`SetInitialPassword` or `ChangePassword`).
 
-**User sent to `/vault`**
+**User does not need to complete 2FA, NDV, or set/change their master password**
+
+In this case, the user proceeds to their `/vault`.
+
+**Trusted Device Encryption scenario**
+
+If the user is on an untrusted device, they get routed to `/login-initiated`. If the user is on a trusted device, they get routed to `/vault`.
 
 <br>
 
