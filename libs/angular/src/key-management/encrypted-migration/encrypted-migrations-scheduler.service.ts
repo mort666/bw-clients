@@ -26,7 +26,7 @@ export const ENCRYPTED_MIGRATION_DISMISSED = new UserKeyDefinition<Date>(
     clearOn: [],
   },
 );
-const DISMISS_TIME_HOURS = 0;
+const DISMISS_TIME_HOURS = 24;
 
 type UserSyncData = {
   userId: UserId;
