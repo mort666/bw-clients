@@ -955,18 +955,14 @@ export class ServiceContainer {
 
     this.masterPasswordApiService = new MasterPasswordApiService(this.apiService, this.logService);
     const changeKdfApiService = new DefaultChangeKdfApiService(this.apiService);
-    const changeKdfService = new DefaultChangeKdfService(
-      this.masterPasswordService,
-      this.keyService,
-      this.kdfConfigService,
-      changeKdfApiService,
-    );
+    const changeKdfService = new DefaultChangeKdfService(changeKdfApiService, this.sdkService);
     this.encryptedMigrator = new DefaultEncryptedMigrator(
       this.kdfConfigService,
       changeKdfService,
       this.logService,
       this.configService,
       this.masterPasswordService,
+      this.syncService,
     );
   }
 
