@@ -41,6 +41,7 @@ import {
   TypographyModule,
 } from "@bitwarden/components";
 import {
+  AtRiskPasswordCalloutService,
   ChangeLoginPasswordService,
   DefaultChangeLoginPasswordService,
   PasswordRepromptService,
@@ -77,6 +78,7 @@ import { AtRiskPasswordPageService } from "./at-risk-password-page.service";
   providers: [
     AtRiskPasswordPageService,
     { provide: ChangeLoginPasswordService, useClass: DefaultChangeLoginPasswordService },
+    AtRiskPasswordCalloutService,
   ],
   selector: "vault-at-risk-passwords",
   templateUrl: "./at-risk-passwords.component.html",
@@ -97,6 +99,7 @@ export class AtRiskPasswordsComponent implements OnInit {
   private dialogService = inject(DialogService);
   private endUserNotificationService = inject(EndUserNotificationService);
   private destroyRef = inject(DestroyRef);
+  private atRiskPasswordCalloutService = inject(AtRiskPasswordCalloutService);
 
   /**
    * The cipher that is currently being launched. Used to show a loading spinner on the badge button.
@@ -203,6 +206,11 @@ export class AtRiskPasswordsComponent implements OnInit {
     }
 
     this.markTaskNotificationsAsRead();
+
+    this.atRiskPasswordCalloutService.updateAtRiskPasswordState(userId, {
+      hasInteractedWithTasks: true,
+      tasksBannerDismissed: false,
+    });
   }
 
   private markTaskNotificationsAsRead() {

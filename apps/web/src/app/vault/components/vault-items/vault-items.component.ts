@@ -111,9 +111,7 @@ export class VaultItemsComponent<C extends CipherViewLike> {
   // eslint-disable-next-line @angular-eslint/prefer-signals
   @Input() enforceOrgDataOwnershipPolicy: boolean;
 
-  // FIXME(https://bitwarden.atlassian.net/browse/CL-903): Migrate to Signals
-  // eslint-disable-next-line @angular-eslint/prefer-signals
-  private restrictedPolicies = toSignal(this.restrictedItemTypesService.restricted$);
+  private readonly restrictedPolicies = toSignal(this.restrictedItemTypesService.restricted$);
 
   private _ciphers?: C[] = [];
   // FIXME(https://bitwarden.atlassian.net/browse/CL-903): Migrate to Signals
