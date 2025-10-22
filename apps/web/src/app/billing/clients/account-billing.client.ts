@@ -22,7 +22,13 @@ export class AccountBillingClient {
     billingAddress: Pick<BillingAddress, "country" | "postalCode">,
   ): Promise<void> => {
     const path = `${this.endpoint}/subscription`;
-    const request = { tokenizedPaymentMethod: paymentMethod, billingAddress: billingAddress };
+
+    // Determine the request payload based on the payment method type
+    const isTokenizedPayment = "token" in paymentMethod;
+
+    const request = isTokenizedPayment
+      ? { tokenizedPaymentMethod: paymentMethod, billingAddress: billingAddress }
+      : { nonTokenizedPaymentMethod: paymentMethod, billingAddress: billingAddress };
     await this.apiService.send("POST", path, request, true, true);
   };
 }
