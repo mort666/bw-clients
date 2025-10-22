@@ -58,7 +58,6 @@ describe("Field", () => {
     field.name = mockEnc("encName");
     field.value = mockEnc("encValue");
 
-    // @ts-expect-error Testing null input
     const view = await field.decrypt(null);
 
     expect(view).toEqual({
@@ -90,7 +89,6 @@ describe("Field", () => {
     });
 
     it("returns undefined if object is null", () => {
-      // @ts-expect-error Testing null input
       expect(Field.fromJSON(null)).toBeUndefined();
     });
   });

@@ -86,7 +86,6 @@ describe("Attachment", () => {
         new SymmetricCryptoKey(makeStaticByteArray(64)),
       );
 
-      // @ts-expect-error Testing null input
       const view = await attachment.decrypt(null);
 
       expect(view).toEqual({
@@ -111,7 +110,6 @@ describe("Attachment", () => {
       it("uses the provided key without depending on KeyService", async () => {
         const providedKey = mock<SymmetricCryptoKey>();
 
-        // @ts-expect-error Testing null input
         await attachment.decrypt(null, "", providedKey);
 
         expect(keyService.getUserKey).not.toHaveBeenCalled();
@@ -122,7 +120,6 @@ describe("Attachment", () => {
         const orgKey = mock<OrgKey>();
         keyService.getOrgKey.calledWith("orgId").mockResolvedValue(orgKey);
 
-        // @ts-expect-error Testing null input
         await attachment.decrypt("orgId", "", null);
 
         expect(keyService.getOrgKey).toHaveBeenCalledWith("orgId");
@@ -133,7 +130,6 @@ describe("Attachment", () => {
         const userKey = mock<UserKey>();
         keyService.getUserKey.mockResolvedValue(userKey);
 
-        // @ts-expect-error Testing null input
         await attachment.decrypt(null, "", null);
 
         expect(keyService.getUserKey).toHaveBeenCalled();
@@ -159,7 +155,6 @@ describe("Attachment", () => {
     });
 
     it("returns undefined if object is null", () => {
-      // @ts-expect-error Testing null input
       expect(Attachment.fromJSON(null)).toBeUndefined();
     });
   });

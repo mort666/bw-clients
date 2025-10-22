@@ -53,7 +53,6 @@ describe("LoginUri", () => {
     loginUri.match = UriMatchStrategy.Exact;
     loginUri.uri = mockEnc("uri");
 
-    // @ts-expect-error Testing null input
     const view = await loginUri.decrypt(null);
 
     expect(view).toEqual({
@@ -115,7 +114,6 @@ describe("LoginUri", () => {
     });
 
     it("returns undefined if object is null", () => {
-      // @ts-expect-error Testing null input
       expect(LoginUri.fromJSON(null)).toBeUndefined();
     });
   });

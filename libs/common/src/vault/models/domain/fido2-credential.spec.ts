@@ -103,7 +103,6 @@ describe("Fido2Credential", () => {
       credential.discoverable = mockEnc("true");
       credential.creationDate = mockDate;
 
-      // @ts-expect-error Testing null input
       const credentialView = await credential.decrypt(null);
 
       expect(credentialView).toEqual({
@@ -173,7 +172,6 @@ describe("Fido2Credential", () => {
     });
 
     it("returns undefined if input is null", () => {
-      // @ts-expect-error Testing null input
       expect(Fido2Credential.fromJSON(null)).toBeUndefined();
     });
   });
