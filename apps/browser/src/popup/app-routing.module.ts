@@ -23,6 +23,7 @@ import {
   UserLockIcon,
   VaultIcon,
   LockIcon,
+  DomainIcon,
   TwoFactorAuthSecurityKeyIcon,
 } from "@bitwarden/assets/svg";
 import {
@@ -58,6 +59,7 @@ import { ProtectedByComponent } from "../dirt/phishing-detection/pages/protected
 import { RemovePasswordComponent } from "../key-management/key-connector/remove-password.component";
 import BrowserPopupUtils from "../platform/browser/browser-popup-utils";
 import { popupRouterCacheGuard } from "../platform/popup/view-cache/popup-router-cache.service";
+import { RouteCacheOptions } from "../platform/services/popup-view-cache-background.service";
 import { CredentialGeneratorHistoryComponent } from "../tools/popup/generator/credential-generator-history.component";
 import { CredentialGeneratorComponent } from "../tools/popup/generator/credential-generator.component";
 import { SendAddEditComponent as SendAddEditV2Component } from "../tools/popup/send-v2/add-edit/send-add-edit.component";
@@ -97,7 +99,7 @@ import { TabsV2Component } from "./tabs-v2.component";
 /**
  * Data properties acceptable for use in extension route objects
  */
-export interface RouteDataProperties {
+export interface RouteDataProperties extends RouteCacheOptions {
   elevation: RouteElevation;
 
   /**
@@ -203,7 +205,7 @@ const routes: Routes = [
     path: "add-cipher",
     component: AddEditV2Component,
     canActivate: [authGuard, debounceNavigationGuard()],
-    data: { elevation: 1 } satisfies RouteDataProperties,
+    data: { elevation: 1, resetRouterCacheOnTabChange: true } satisfies RouteDataProperties,
     runGuardsAndResolvers: "always",
   },
   {
@@ -213,6 +215,7 @@ const routes: Routes = [
     data: {
       // Above "trash"
       elevation: 3,
+      resetRouterCacheOnTabChange: true,
     } satisfies RouteDataProperties,
     runGuardsAndResolvers: "always",
   },
@@ -565,6 +568,8 @@ const routes: Routes = [
             key: "verifyYourIdentity",
           },
           showBackButton: true,
+          // `TwoFactorAuthComponent` manually sets its icon based on the 2fa type
+          pageIcon: null,
         } satisfies RouteDataProperties & ExtensionAnonLayoutWrapperData,
       },
       {
@@ -572,6 +577,7 @@ const routes: Routes = [
         data: {
           elevation: 1,
           hideFooter: true,
+          pageIcon: LockIcon,
         } satisfies RouteDataProperties & ExtensionAnonLayoutWrapperData,
         children: [
           {
@@ -617,9 +623,9 @@ const routes: Routes = [
         path: "",
         component: IntroCarouselComponent,
         data: {
-          hideIcon: true,
+          pageIcon: null,
           hideFooter: true,
-        },
+        } satisfies ExtensionAnonLayoutWrapperData,
       },
     ],
   },
@@ -637,6 +643,7 @@ const routes: Routes = [
             key: "confirmKeyConnectorDomain",
           },
           showBackButton: true,
+          pageIcon: DomainIcon,
         } satisfies ExtensionAnonLayoutWrapperData,
       },
     ],
@@ -722,7 +729,7 @@ const routes: Routes = [
           },
         ],
         data: {
-          hideIcon: true,
+          pageIcon: null,
           hideBackgroundIllustration: true,
           showReadonlyHostname: true,
         } satisfies AnonLayoutWrapperData,
