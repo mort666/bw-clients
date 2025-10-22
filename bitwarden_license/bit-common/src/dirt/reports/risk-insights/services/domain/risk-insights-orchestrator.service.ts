@@ -719,7 +719,7 @@ export class RiskInsightsOrchestratorService {
       scan((prevState: ReportState, currState: ReportState) => ({
         ...prevState,
         ...currState,
-        data: currState.data, // currState.data !== null ? currState.data : prevState.data,
+        data: currState.data,
       })),
       startWith({ loading: false, error: null, data: null }),
       shareReplay({ bufferSize: 1, refCount: true }),
