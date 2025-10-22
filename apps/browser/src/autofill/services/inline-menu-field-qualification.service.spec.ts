@@ -405,6 +405,56 @@ describe("InlineMenuFieldQualificationService", () => {
           });
         });
       });
+
+      describe("a password field with new-password autocomplete", () => {
+        it("is treated as a login field when no other password fields exist", () => {
+          const field = mock<AutofillField>({
+            type: "password",
+            autoCompleteType: "new-password",
+            htmlID: "user-password",
+            htmlName: "user-password",
+            placeholder: "password",
+            form: "validFormId",
+          });
+          const usernameField = mock<AutofillField>({
+            type: "text",
+            autoCompleteType: "username",
+            htmlID: "user-username",
+            htmlName: "user-username",
+            placeholder: "username",
+            form: "validFormId",
+          });
+          pageDetails.fields = [field, usernameField];
+
+          expect(inlineMenuFieldQualificationService.isFieldForLoginForm(field, pageDetails)).toBe(
+            true,
+          );
+        });
+
+        it("is not treated as a login field when other password fields with account creation keywords exist", () => {
+          const field = mock<AutofillField>({
+            type: "password",
+            autoCompleteType: "new-password",
+            htmlID: "user-password",
+            htmlName: "user-password",
+            placeholder: "password",
+            form: "validFormId",
+          });
+          const confirmPasswordField = mock<AutofillField>({
+            type: "password",
+            htmlID: "confirm-password",
+            htmlName: "confirm-password",
+            placeholder: "confirm password",
+            form: "validFormId",
+            viewable: true,
+          });
+          pageDetails.fields = [field, confirmPasswordField];
+
+          expect(inlineMenuFieldQualificationService.isFieldForLoginForm(field, pageDetails)).toBe(
+            false,
+          );
+        });
+      });
     });
 
     describe("qualifying a username field for a login form", () => {
@@ -605,7 +655,7 @@ describe("InlineMenuFieldQualificationService", () => {
       });
 
       describe("a valid username field", () => {
-        ["username", "email"].forEach((autoCompleteType) => {
+        ["username", "email", "webauthn"].forEach((autoCompleteType) => {
           it(`has a ${autoCompleteType} 'autoCompleteType' value`, () => {
             const field = mock<AutofillField>({
               type: "text",
@@ -752,6 +802,44 @@ describe("InlineMenuFieldQualificationService", () => {
               inlineMenuFieldQualificationService.isFieldForLoginForm(field, pageDetails),
             ).toBe(true);
           });
+        });
+      });
+
+      describe("a webauthn field", () => {
+        it("is treated as a login field when a password field exists on the page", () => {
+          const field = mock<AutofillField>({
+            type: "text",
+            autoCompleteType: "webauthn",
+            htmlID: "webauthn-field",
+            htmlName: "webauthn",
+            placeholder: "passkey",
+          });
+          const passwordField = mock<AutofillField>({
+            type: "password",
+            htmlID: "user-password",
+            htmlName: "user-password",
+            placeholder: "password",
+          });
+          pageDetails.fields = [field, passwordField];
+
+          expect(inlineMenuFieldQualificationService.isFieldForLoginForm(field, pageDetails)).toBe(
+            true,
+          );
+        });
+
+        it("is not treated as a login field when no password field exists on the page", () => {
+          const field = mock<AutofillField>({
+            type: "text",
+            autoCompleteType: "webauthn",
+            htmlID: "webauthn-field",
+            htmlName: "webauthn",
+            placeholder: "passkey",
+          });
+          pageDetails.fields = [field];
+
+          expect(inlineMenuFieldQualificationService.isFieldForLoginForm(field, pageDetails)).toBe(
+            false,
+          );
         });
       });
     });

@@ -52,6 +52,7 @@ import { ScriptInjectorService } from "../../platform/services/abstractions/scri
 // eslint-disable-next-line no-restricted-imports
 import { openVaultItemPasswordRepromptPopout } from "../../vault/popup/utils/vault-popout-window";
 import { AutofillMessageCommand, AutofillMessageSender } from "../enums/autofill-message.enums";
+import { InlineMenuFillTypes } from "../enums/autofill-overlay.enum";
 import { AutofillPort } from "../enums/autofill-port.enum";
 import AutofillField from "../models/autofill-field";
 import AutofillPageDetails from "../models/autofill-page-details";
@@ -451,6 +452,9 @@ export default class AutofillService implements AutofillServiceInterface {
           cipher: options.cipher,
           tabUrl: tab.url,
           defaultUriMatch: defaultUriMatch,
+          focusedFieldForm: options.focusedFieldForm,
+          focusedFieldOpid: options.focusedFieldOpid,
+          inlineMenuFillType: options.inlineMenuFillType,
         });
 
         if (!fillScript || !fillScript.script || !fillScript.script.length) {
@@ -971,16 +975,93 @@ export default class AutofillService implements AutofillServiceInterface {
       formElementsSet.add(u.form);
     });
 
-    passwords.forEach((p) => {
-      // eslint-disable-next-line
-      if (filledFields.hasOwnProperty(p.opid)) {
-        return;
-      }
+    // Check if we're filling from an inline menu click on a specific password field
+    // Different behavior based on the type of fill:
+    // - Password Generation: Fill new password and confirmation fields
+    // - Current Password Update: Only fill the current password field
+    // - Regular autofill: Fill all password fields
+    if (options.focusedFieldOpid && passwords.length > 0) {
+      const isPasswordGeneration =
+        options.inlineMenuFillType === InlineMenuFillTypes.PasswordGeneration;
+      const isCurrentPasswordUpdate =
+        options.inlineMenuFillType === InlineMenuFillTypes.CurrentPasswordUpdate;
 
-      filledFields[p.opid] = p;
-      AutofillService.fillByOpid(fillScript, p, login.password);
-      formElementsSet.add(p.form);
-    });
+      if (isPasswordGeneration) {
+        // For password generation, fill new password fields and confirmation fields
+        // but skip fields that look like "current password" fields
+        passwords.forEach((p) => {
+          // eslint-disable-next-line
+          if (filledFields.hasOwnProperty(p.opid)) {
+            return;
+          }
+
+          // Skip fields that look like "current password" fields
+          const fieldIdentifiers = [
+            p.htmlID,
+            p.htmlName,
+            p.placeholder,
+            p["label-tag"],
+            p["label-aria"],
+            p["label-left"],
+            p["label-right"],
+            p["label-top"],
+          ];
+          const isCurrentPasswordField = fieldIdentifiers.some((identifier) => {
+            if (!identifier) {
+              return false;
+            }
+            const lowerIdentifier = identifier.toLowerCase();
+            return (
+              (lowerIdentifier.includes("current") ||
+                lowerIdentifier.includes("old") ||
+                lowerIdentifier.includes("existing")) &&
+              lowerIdentifier.includes("passw")
+            );
+          });
+
+          if (!isCurrentPasswordField) {
+            filledFields[p.opid] = p;
+            AutofillService.fillByOpid(fillScript, p, login.password);
+            formElementsSet.add(p.form);
+          }
+        });
+      } else if (isCurrentPasswordUpdate) {
+        // For current password update, only fill the specific field that was clicked
+        const focusedPasswordField = passwords.find((p) => p.opid === options.focusedFieldOpid);
+        if (
+          focusedPasswordField &&
+          !Object.prototype.hasOwnProperty.call(filledFields, focusedPasswordField.opid)
+        ) {
+          filledFields[focusedPasswordField.opid] = focusedPasswordField;
+          AutofillService.fillByOpid(fillScript, focusedPasswordField, login.password);
+          formElementsSet.add(focusedPasswordField.form);
+        }
+      } else {
+        // For regular password fields in login forms, only fill the clicked field
+        // This prevents overwriting other password fields in complex forms
+        const focusedPasswordField = passwords.find((p) => p.opid === options.focusedFieldOpid);
+        if (
+          focusedPasswordField &&
+          !Object.prototype.hasOwnProperty.call(filledFields, focusedPasswordField.opid)
+        ) {
+          filledFields[focusedPasswordField.opid] = focusedPasswordField;
+          AutofillService.fillByOpid(fillScript, focusedPasswordField, login.password);
+          formElementsSet.add(focusedPasswordField.form);
+        }
+      }
+    } else {
+      // Normal behavior: fill all password fields when not clicking from inline menu
+      // (e.g., keyboard shortcut, context menu, etc.)
+      passwords.forEach((p) => {
+        if (Object.prototype.hasOwnProperty.call(filledFields, p.opid)) {
+          return;
+        }
+
+        filledFields[p.opid] = p;
+        AutofillService.fillByOpid(fillScript, p, login.password);
+        formElementsSet.add(p.form);
+      });
+    }
 
     if (options.autoSubmitLogin && formElementsSet.size) {
       fillScript.autosubmit = Array.from(formElementsSet);

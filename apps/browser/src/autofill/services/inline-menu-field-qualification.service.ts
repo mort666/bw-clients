@@ -242,6 +242,47 @@ export class InlineMenuFieldQualificationService
       return this.isPasswordFieldForLoginForm(field, pageDetails);
     }
 
+    // Check if this is a webauthn field - these are typically used for login
+    if (this.fieldContainsAutocompleteValues(field, new Set([this.webAuthnAutocompleteValue]))) {
+      // Verify there's a password field on the page to confirm it's a login form
+      const hasPasswordField = pageDetails.fields.some((f) => this.isPasswordField(f));
+      if (hasPasswordField) {
+        return true;
+      }
+    }
+
+    // Check if this is a password field with new-password autocomplete that should be treated as a login field
+    // This can happen when sites use new-password incorrectly for login forms
+    if (
+      this.isPasswordField(field) &&
+      this.fieldContainsAutocompleteValues(field, this.newPasswordAutoCompleteValue)
+    ) {
+      // Only consider it a login field if there's also a username field present
+      const hasUsernameField = pageDetails.fields.some((f) => this.isUsernameField(f));
+
+      if (hasUsernameField) {
+        // If there's no other password field that looks like an account creation field, treat this as a login field
+        const otherPasswordFields = pageDetails.fields.filter(
+          (f) => f !== field && this.isPasswordField(f) && f.viewable,
+        );
+
+        // If there are no other password fields, this is likely a login form
+        if (otherPasswordFields.length === 0) {
+          return true;
+        }
+
+        // If there are other password fields but none have account creation keywords,
+        // this might still be a login form
+        const hasAccountCreationFields = otherPasswordFields.some((f) =>
+          this.keywordsFoundInFieldData(f, this.accountCreationFieldKeywords),
+        );
+
+        if (!hasAccountCreationFields) {
+          return true;
+        }
+      }
+    }
+
     const isUsernameField = this.isUsernameField(field);
     if (!isUsernameField) {
       return false;
