@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, computed, inject, input, OnDestroy, OnInit, signal } from "@angular/core";
+import { Component, inject, input, OnDestroy, OnInit, signal } from "@angular/core";
 import {
   FormControl,
   FormGroup,
@@ -92,7 +92,7 @@ export class SessionTimeoutSettingsComponent implements OnInit, OnDestroy {
   readonly refreshTimeoutActionSettings$ = input(new BehaviorSubject<void>(undefined));
 
   protected readonly availableVaultTimeoutActions = signal<VaultTimeoutAction[]>([]);
-  protected readonly vaultTimeoutOptions = computed(() => this.getTimeoutOptions());
+  protected readonly vaultTimeoutOptions = signal<VaultTimeoutOption[]>([]);
   protected hasVaultTimeoutPolicy$: Observable<boolean> = of(false);
 
   private destroy$ = new Subject<void>();
@@ -110,6 +110,8 @@ export class SessionTimeoutSettingsComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
+    this.vaultTimeoutOptions.set(this.getTimeoutOptions());
+
     this.logService.debug(
       "[SessionTimeoutSettings] Available timeout options",
       this.vaultTimeoutOptions(),
