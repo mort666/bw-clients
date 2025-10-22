@@ -69,7 +69,13 @@
 
     <bit-section>
       <bit-section-header>
-        <h2 bitTypography="h6">{{ "vaultTimeoutHeader" | i18n }}</h2>
+        <h2 bitTypography="h6">
+          @if (consolidatedSessionTimeoutComponent$ | async) {
+            {{ "sessionTimeoutHeader" | i18n }}
+          } @else {
+            {{ "vaultTimeoutHeader" | i18n }}
+          }
+        </h2>
       </bit-section-header>
 
       <bit-card>
