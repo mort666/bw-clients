@@ -6,9 +6,14 @@
     showBackButton
   >
     <ng-container slot="end">
-      <button *ngIf="previouslyCouldArchive" bitBadge type="button" variant="secondary">
+      <span
+        *ngIf="!previouslyCouldArchive"
+        bitBadge
+        variant="secondary"
+        [appA11yTitle]="'archived' | i18n"
+      >
         {{ "archived" | i18n }}
-      </button>
+      </span>
       <app-pop-out />
     </ng-container>
   </popup-header>

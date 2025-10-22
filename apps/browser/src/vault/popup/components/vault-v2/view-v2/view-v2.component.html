@@ -1,14 +1,14 @@
 <popup-page>
   <popup-header slot="header" [pageTitle]="headerText" showBackButton>
     <ng-container slot="end">
-      <button
-        *ngIf="!(userCanArchive$ | async) && cipher?.isArchived"
+      <span
+        *ngIf="(userCanArchive$ | async) && cipher?.isArchived"
         bitBadge
-        type="button"
         variant="secondary"
+        [appA11yTitle]="'archived' | i18n"
       >
         {{ "archived" | i18n }}
-      </button>
+      </span>
       <app-pop-out />
     </ng-container>
   </popup-header>
