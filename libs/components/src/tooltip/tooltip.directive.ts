@@ -47,7 +47,7 @@ export class TooltipDirective implements OnInit {
    */
   readonly addTooltipToDescribedby = input<boolean>(false);
 
-  private isVisible = signal(false);
+  private readonly isVisible = signal(false);
   private overlayRef: OverlayRef | undefined;
   private elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private overlay = inject(Overlay);
@@ -101,7 +101,7 @@ export class TooltipDirective implements OnInit {
     this.destroyTooltip();
   };
 
-  private resolvedDescribedByIds = computed(() => {
+  private readonly resolvedDescribedByIds = computed(() => {
     if (this.addTooltipToDescribedby()) {
       if (this.currentDescribedByIds) {
         return `${this.currentDescribedByIds || ""} ${this.tooltipId}`;
