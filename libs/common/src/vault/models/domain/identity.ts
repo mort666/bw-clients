@@ -5,6 +5,7 @@ import { Identity as SdkIdentity } from "@bitwarden/sdk-internal";
 import { EncString } from "../../../key-management/crypto/models/enc-string";
 import Domain from "../../../platform/models/domain/domain-base";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
+import { conditionalEncString, encStringFrom } from "../../utils/domain-utils";
 import { IdentityData } from "../data/identity.data";
 import { IdentityView } from "../view/identity.view";
 
@@ -34,25 +35,24 @@ export class Identity extends Domain {
       return;
     }
 
-    this.title = obj.title != null ? new EncString(obj.title) : undefined;
-    this.firstName = obj.firstName != null ? new EncString(obj.firstName) : undefined;
-    this.middleName = obj.middleName != null ? new EncString(obj.middleName) : undefined;
-    this.lastName = obj.lastName != null ? new EncString(obj.lastName) : undefined;
-    this.address1 = obj.address1 != null ? new EncString(obj.address1) : undefined;
-    this.address2 = obj.address2 != null ? new EncString(obj.address2) : undefined;
-    this.address3 = obj.address3 != null ? new EncString(obj.address3) : undefined;
-    this.city = obj.city != null ? new EncString(obj.city) : undefined;
-    this.state = obj.state != null ? new EncString(obj.state) : undefined;
-    this.postalCode = obj.postalCode != null ? new EncString(obj.postalCode) : undefined;
-    this.country = obj.country != null ? new EncString(obj.country) : undefined;
-    this.company = obj.company != null ? new EncString(obj.company) : undefined;
-    this.email = obj.email != null ? new EncString(obj.email) : undefined;
-    this.phone = obj.phone != null ? new EncString(obj.phone) : undefined;
-    this.ssn = obj.ssn != null ? new EncString(obj.ssn) : undefined;
-    this.username = obj.username != null ? new EncString(obj.username) : undefined;
-    this.passportNumber =
-      obj.passportNumber != null ? new EncString(obj.passportNumber) : undefined;
-    this.licenseNumber = obj.licenseNumber != null ? new EncString(obj.licenseNumber) : undefined;
+    this.title = conditionalEncString(obj.title);
+    this.firstName = conditionalEncString(obj.firstName);
+    this.middleName = conditionalEncString(obj.middleName);
+    this.lastName = conditionalEncString(obj.lastName);
+    this.address1 = conditionalEncString(obj.address1);
+    this.address2 = conditionalEncString(obj.address2);
+    this.address3 = conditionalEncString(obj.address3);
+    this.city = conditionalEncString(obj.city);
+    this.state = conditionalEncString(obj.state);
+    this.postalCode = conditionalEncString(obj.postalCode);
+    this.country = conditionalEncString(obj.country);
+    this.company = conditionalEncString(obj.company);
+    this.email = conditionalEncString(obj.email);
+    this.phone = conditionalEncString(obj.phone);
+    this.ssn = conditionalEncString(obj.ssn);
+    this.username = conditionalEncString(obj.username);
+    this.passportNumber = conditionalEncString(obj.passportNumber);
+    this.licenseNumber = conditionalEncString(obj.licenseNumber);
   }
 
   decrypt(
@@ -120,26 +120,24 @@ export class Identity extends Domain {
     }
 
     const identity = new Identity();
-    identity.title = obj.title != null ? EncString.fromJSON(obj.title) : undefined;
-    identity.firstName = obj.firstName != null ? EncString.fromJSON(obj.firstName) : undefined;
-    identity.middleName = obj.middleName != null ? EncString.fromJSON(obj.middleName) : undefined;
-    identity.lastName = obj.lastName != null ? EncString.fromJSON(obj.lastName) : undefined;
-    identity.address1 = obj.address1 != null ? EncString.fromJSON(obj.address1) : undefined;
-    identity.address2 = obj.address2 != null ? EncString.fromJSON(obj.address2) : undefined;
-    identity.address3 = obj.address3 != null ? EncString.fromJSON(obj.address3) : undefined;
-    identity.city = obj.city != null ? EncString.fromJSON(obj.city) : undefined;
-    identity.state = obj.state != null ? EncString.fromJSON(obj.state) : undefined;
-    identity.postalCode = obj.postalCode != null ? EncString.fromJSON(obj.postalCode) : undefined;
-    identity.country = obj.country != null ? EncString.fromJSON(obj.country) : undefined;
-    identity.company = obj.company != null ? EncString.fromJSON(obj.company) : undefined;
-    identity.email = obj.email != null ? EncString.fromJSON(obj.email) : undefined;
-    identity.phone = obj.phone != null ? EncString.fromJSON(obj.phone) : undefined;
-    identity.ssn = obj.ssn != null ? EncString.fromJSON(obj.ssn) : undefined;
-    identity.username = obj.username != null ? EncString.fromJSON(obj.username) : undefined;
-    identity.passportNumber =
-      obj.passportNumber != null ? EncString.fromJSON(obj.passportNumber) : undefined;
-    identity.licenseNumber =
-      obj.licenseNumber != null ? EncString.fromJSON(obj.licenseNumber) : undefined;
+    identity.title = encStringFrom(obj.title);
+    identity.firstName = encStringFrom(obj.firstName);
+    identity.middleName = encStringFrom(obj.middleName);
+    identity.lastName = encStringFrom(obj.lastName);
+    identity.address1 = encStringFrom(obj.address1);
+    identity.address2 = encStringFrom(obj.address2);
+    identity.address3 = encStringFrom(obj.address3);
+    identity.city = encStringFrom(obj.city);
+    identity.state = encStringFrom(obj.state);
+    identity.postalCode = encStringFrom(obj.postalCode);
+    identity.country = encStringFrom(obj.country);
+    identity.company = encStringFrom(obj.company);
+    identity.email = encStringFrom(obj.email);
+    identity.phone = encStringFrom(obj.phone);
+    identity.ssn = encStringFrom(obj.ssn);
+    identity.username = encStringFrom(obj.username);
+    identity.passportNumber = encStringFrom(obj.passportNumber);
+    identity.licenseNumber = encStringFrom(obj.licenseNumber);
 
     return identity;
   }
@@ -176,32 +174,30 @@ export class Identity extends Domain {
    * Maps an SDK Identity object to an Identity
    * @param obj - The SDK Identity object
    */
-  static fromSdkIdentity(obj: SdkIdentity | undefined): Identity | undefined {
+  static fromSdkIdentity(obj?: SdkIdentity): Identity | undefined {
     if (obj == null) {
       return undefined;
     }
 
     const identity = new Identity();
-    identity.title = obj.title != null ? EncString.fromJSON(obj.title) : undefined;
-    identity.firstName = obj.firstName != null ? EncString.fromJSON(obj.firstName) : undefined;
-    identity.middleName = obj.middleName != null ? EncString.fromJSON(obj.middleName) : undefined;
-    identity.lastName = obj.lastName != null ? EncString.fromJSON(obj.lastName) : undefined;
-    identity.address1 = obj.address1 != null ? EncString.fromJSON(obj.address1) : undefined;
-    identity.address2 = obj.address2 != null ? EncString.fromJSON(obj.address2) : undefined;
-    identity.address3 = obj.address3 != null ? EncString.fromJSON(obj.address3) : undefined;
-    identity.city = obj.city != null ? EncString.fromJSON(obj.city) : undefined;
-    identity.state = obj.state != null ? EncString.fromJSON(obj.state) : undefined;
-    identity.postalCode = obj.postalCode != null ? EncString.fromJSON(obj.postalCode) : undefined;
-    identity.country = obj.country != null ? EncString.fromJSON(obj.country) : undefined;
-    identity.company = obj.company != null ? EncString.fromJSON(obj.company) : undefined;
-    identity.email = obj.email != null ? EncString.fromJSON(obj.email) : undefined;
-    identity.phone = obj.phone != null ? EncString.fromJSON(obj.phone) : undefined;
-    identity.ssn = obj.ssn != null ? EncString.fromJSON(obj.ssn) : undefined;
-    identity.username = obj.username != null ? EncString.fromJSON(obj.username) : undefined;
-    identity.passportNumber =
-      obj.passportNumber != null ? EncString.fromJSON(obj.passportNumber) : undefined;
-    identity.licenseNumber =
-      obj.licenseNumber != null ? EncString.fromJSON(obj.licenseNumber) : undefined;
+    identity.title = encStringFrom(obj.title);
+    identity.firstName = encStringFrom(obj.firstName);
+    identity.middleName = encStringFrom(obj.middleName);
+    identity.lastName = encStringFrom(obj.lastName);
+    identity.address1 = encStringFrom(obj.address1);
+    identity.address2 = encStringFrom(obj.address2);
+    identity.address3 = encStringFrom(obj.address3);
+    identity.city = encStringFrom(obj.city);
+    identity.state = encStringFrom(obj.state);
+    identity.postalCode = encStringFrom(obj.postalCode);
+    identity.country = encStringFrom(obj.country);
+    identity.company = encStringFrom(obj.company);
+    identity.email = encStringFrom(obj.email);
+    identity.phone = encStringFrom(obj.phone);
+    identity.ssn = encStringFrom(obj.ssn);
+    identity.username = encStringFrom(obj.username);
+    identity.passportNumber = encStringFrom(obj.passportNumber);
+    identity.licenseNumber = encStringFrom(obj.licenseNumber);
 
     return identity;
   }

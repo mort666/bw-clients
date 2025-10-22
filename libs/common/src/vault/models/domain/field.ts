@@ -6,6 +6,7 @@ import { EncString } from "../../../key-management/crypto/models/enc-string";
 import Domain from "../../../platform/models/domain/domain-base";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
 import { FieldType, LinkedIdType } from "../../enums";
+import { conditionalEncString, encStringFrom } from "../../utils/domain-utils";
 import { FieldData } from "../data/field.data";
 import { FieldView } from "../view/field.view";
 
@@ -23,8 +24,8 @@ export class Field extends Domain {
 
     this.type = obj.type;
     this.linkedId = obj.linkedId ?? undefined;
-    this.name = obj.name != null ? new EncString(obj.name) : undefined;
-    this.value = obj.value != null ? new EncString(obj.value) : undefined;
+    this.name = conditionalEncString(obj.name);
+    this.value = conditionalEncString(obj.value);
   }
 
   decrypt(orgId: string | undefined, encKey?: SymmetricCryptoKey): Promise<FieldView> {
@@ -61,8 +62,8 @@ export class Field extends Domain {
     const field = new Field();
     field.type = obj.type ?? FieldType.Text;
     field.linkedId = obj.linkedId ?? undefined;
-    field.name = obj.name != null ? EncString.fromJSON(obj.name) : undefined;
-    field.value = obj.value != null ? EncString.fromJSON(obj.value) : undefined;
+    field.name = encStringFrom(obj.name);
+    field.value = encStringFrom(obj.value);
 
     return field;
   }
@@ -86,14 +87,14 @@ export class Field extends Domain {
    * Maps SDK Field to Field
    * @param obj The SDK Field object to map
    */
-  static fromSdkField(obj: SdkField | undefined): Field | undefined {
+  static fromSdkField(obj?: SdkField): Field | undefined {
     if (obj == null) {
       return undefined;
     }
 
     const field = new Field();
-    field.name = obj.name != null ? EncString.fromJSON(obj.name) : undefined;
-    field.value = obj.value != null ? EncString.fromJSON(obj.value) : undefined;
+    field.name = encStringFrom(obj.name);
+    field.value = encStringFrom(obj.value);
     field.type = obj.type;
     field.linkedId = obj.linkedId;
 

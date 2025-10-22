@@ -38,6 +38,7 @@ describe("SecureNote", () => {
     const secureNote = new SecureNote();
     secureNote.type = SecureNoteType.Generic;
 
+    // @ts-expect-error Testing null input
     const view = await secureNote.decrypt(null);
 
     expect(view).toEqual({
@@ -47,6 +48,7 @@ describe("SecureNote", () => {
 
   describe("fromJSON", () => {
     it("returns undefined if object is null", () => {
+      // @ts-expect-error Testing null input
       expect(SecureNote.fromJSON(null)).toBeUndefined();
     });
   });

@@ -41,6 +41,7 @@ describe("Password", () => {
     password.password = mockEnc("password");
     password.lastUsedDate = new Date("2022-01-31T12:00:00.000Z");
 
+    // @ts-expect-error Testing null input
     const view = await password.decrypt(null);
 
     expect(view).toEqual({
@@ -67,6 +68,7 @@ describe("Password", () => {
     });
 
     it("returns undefined if object is null", () => {
+      // @ts-expect-error Testing null input
       expect(Password.fromJSON(null)).toBeUndefined();
     });
   });

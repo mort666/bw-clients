@@ -11,6 +11,7 @@ import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-cr
 import { InitializerKey } from "../../../platform/services/cryptography/initializer-key";
 import { CipherRepromptType } from "../../enums/cipher-reprompt-type";
 import { CipherType } from "../../enums/cipher-type";
+import { conditionalEncString, encStringFrom } from "../../utils/domain-utils";
 import { CipherPermissionsApi } from "../api/cipher-permissions.api";
 import { CipherData } from "../data/cipher.data";
 import { LocalData, fromSdkLocalData, toSdkLocalData } from "../data/local.data";
@@ -70,7 +71,7 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
     this.organizationId = obj.organizationId;
     this.folderId = obj.folderId;
     this.name = new EncString(obj.name);
-    this.notes = obj.notes != null ? new EncString(obj.notes) : undefined;
+    this.notes = conditionalEncString(obj.notes);
     this.type = obj.type;
     this.favorite = obj.favorite;
     this.organizationUseTotp = obj.organizationUseTotp;
@@ -84,7 +85,7 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
     this.deletedDate = obj.deletedDate != null ? new Date(obj.deletedDate) : undefined;
     this.archivedDate = obj.archivedDate != null ? new Date(obj.archivedDate) : undefined;
     this.reprompt = obj.reprompt;
-    this.key = obj.key != null ? new EncString(obj.key) : undefined;
+    this.key = conditionalEncString(obj.key);
 
     switch (this.type) {
       case CipherType.Login:
@@ -161,11 +162,7 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
         break;
       case CipherType.SecureNote:
         if (this.secureNote != null) {
-          model.secureNote = await this.secureNote.decrypt(
-            this.organizationId,
-            `Cipher Id: ${this.id}`,
-            encKey,
-          );
+          model.secureNote = await this.secureNote.decrypt();
         }
         break;
       case CipherType.Card:
@@ -339,8 +336,8 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
     domain.deletedDate = obj.deletedDate != null ? new Date(obj.deletedDate) : undefined;
     domain.archivedDate = obj.archivedDate != null ? new Date(obj.archivedDate) : undefined;
     domain.name = EncString.fromJSON(obj.name);
-    domain.notes = obj.notes != null ? EncString.fromJSON(obj.notes) : undefined;
-    domain.key = obj.key != null ? EncString.fromJSON(obj.key) : undefined;
+    domain.notes = encStringFrom(obj.notes);
+    domain.key = encStringFrom(obj.key);
     domain.attachments = obj.attachments
       ?.map((a: any) => Attachment.fromJSON(a))
       .filter((a): a is Attachment => a != null);
@@ -463,7 +460,7 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
    * Maps an SDK Cipher object to a Cipher
    * @param sdkCipher - The SDK Cipher object
    */
-  static fromSdkCipher(sdkCipher: SdkCipher | null): Cipher | undefined {
+  static fromSdkCipher(sdkCipher?: SdkCipher): Cipher | undefined {
     if (sdkCipher == null) {
       return undefined;
     }
@@ -476,9 +473,9 @@ export class Cipher extends Domain implements Decryptable<CipherView> {
       : undefined;
     cipher.folderId = sdkCipher.folderId ? uuidAsString(sdkCipher.folderId) : undefined;
     cipher.collectionIds = sdkCipher.collectionIds ? sdkCipher.collectionIds.map(uuidAsString) : [];
-    cipher.key = sdkCipher.key != null ? EncString.fromJSON(sdkCipher.key) : undefined;
+    cipher.key = encStringFrom(sdkCipher.key);
     cipher.name = EncString.fromJSON(sdkCipher.name);
-    cipher.notes = sdkCipher.notes != null ? EncString.fromJSON(sdkCipher.notes) : undefined;
+    cipher.notes = encStringFrom(sdkCipher.notes);
     cipher.type = sdkCipher.type;
     cipher.favorite = sdkCipher.favorite;
     cipher.organizationUseTotp = sdkCipher.organizationUseTotp;

@@ -58,6 +58,7 @@ describe("Card", () => {
     card.expYear = mockEnc("expYear");
     card.code = mockEnc("code");
 
+    // @ts-expect-error Testing null input
     const view = await card.decrypt(null);
 
     expect(view).toEqual({
@@ -95,6 +96,7 @@ describe("Card", () => {
     });
 
     it("returns undefined if object is null", () => {
+      // @ts-expect-error Testing null input
       expect(Card.fromJSON(null)).toBeUndefined();
     });
   });

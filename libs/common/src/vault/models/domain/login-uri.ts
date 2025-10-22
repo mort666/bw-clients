@@ -7,6 +7,7 @@ import { UriMatchStrategySetting } from "../../../models/domain/domain-service";
 import { Utils } from "../../../platform/misc/utils";
 import Domain from "../../../platform/models/domain/domain-base";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
+import { conditionalEncString, encStringFrom } from "../../utils/domain-utils";
 import { LoginUriData } from "../data/login-uri.data";
 import { LoginUriView } from "../view/login-uri.view";
 
@@ -21,8 +22,8 @@ export class LoginUri extends Domain {
       return;
     }
 
-    this.uri = obj.uri != null ? new EncString(obj.uri) : undefined;
-    this.uriChecksum = obj.uriChecksum != null ? new EncString(obj.uriChecksum) : undefined;
+    this.uri = conditionalEncString(obj.uri);
+    this.uriChecksum = conditionalEncString(obj.uriChecksum);
     this.match = obj.match ?? undefined;
   }
 
@@ -41,11 +42,7 @@ export class LoginUri extends Domain {
     );
   }
 
-  async validateChecksum(
-    clearTextUri: string,
-    orgId: string | undefined,
-    encKey?: SymmetricCryptoKey,
-  ) {
+  async validateChecksum(clearTextUri: string, orgId?: string, encKey?: SymmetricCryptoKey) {
     if (this.uriChecksum == null) {
       return false;
     }
@@ -78,10 +75,9 @@ export class LoginUri extends Domain {
     }
 
     const loginUri = new LoginUri();
-    loginUri.uri = obj.uri != null ? EncString.fromJSON(obj.uri) : undefined;
+    loginUri.uri = encStringFrom(obj.uri);
     loginUri.match = obj.match ?? undefined;
-    loginUri.uriChecksum =
-      obj.uriChecksum != null ? EncString.fromJSON(obj.uriChecksum) : undefined;
+    loginUri.uriChecksum = encStringFrom(obj.uriChecksum);
 
     return loginUri;
   }
@@ -99,15 +95,14 @@ export class LoginUri extends Domain {
     };
   }
 
-  static fromSdkLoginUri(obj: SdkLoginUri | undefined): LoginUri | undefined {
+  static fromSdkLoginUri(obj?: SdkLoginUri): LoginUri | undefined {
     if (obj == null) {
       return undefined;
     }
 
     const loginUri = new LoginUri();
-    loginUri.uri = obj.uri != null ? EncString.fromJSON(obj.uri) : undefined;
-    loginUri.uriChecksum =
-      obj.uriChecksum != null ? EncString.fromJSON(obj.uriChecksum) : undefined;
+    loginUri.uri = encStringFrom(obj.uri);
+    loginUri.uriChecksum = encStringFrom(obj.uriChecksum);
     loginUri.match = obj.match;
 
     return loginUri;

@@ -5,6 +5,7 @@ import { Fido2Credential as SdkFido2Credential } from "@bitwarden/sdk-internal";
 import { EncString } from "../../../key-management/crypto/models/enc-string";
 import Domain from "../../../platform/models/domain/domain-base";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
+import { conditionalEncString, encStringFrom } from "../../utils/domain-utils";
 import { Fido2CredentialData } from "../data/fido2-credential.data";
 import { Fido2CredentialView } from "../view/fido2-credential.view";
 
@@ -26,6 +27,7 @@ export class Fido2Credential extends Domain {
   constructor(obj?: Fido2CredentialData) {
     super();
     if (obj == null) {
+      this.creationDate = new Date();
       return;
     }
 
@@ -37,11 +39,10 @@ export class Fido2Credential extends Domain {
     this.rpId = new EncString(obj.rpId);
     this.counter = new EncString(obj.counter);
     this.discoverable = new EncString(obj.discoverable);
-    this.userHandle = obj.userHandle != null ? new EncString(obj.userHandle) : undefined;
-    this.userName = obj.userName != null ? new EncString(obj.userName) : undefined;
-    this.rpName = obj.rpName != null ? new EncString(obj.rpName) : undefined;
-    this.userDisplayName =
-      obj.userDisplayName != null ? new EncString(obj.userDisplayName) : undefined;
+    this.userHandle = conditionalEncString(obj.userHandle);
+    this.userName = conditionalEncString(obj.userName);
+    this.rpName = conditionalEncString(obj.rpName);
+    this.userDisplayName = conditionalEncString(obj.userDisplayName);
     this.creationDate = new Date(obj.creationDate);
   }
 
@@ -123,12 +124,11 @@ export class Fido2Credential extends Domain {
     credential.keyCurve = EncString.fromJSON(obj.keyCurve);
     credential.keyValue = EncString.fromJSON(obj.keyValue);
     credential.rpId = EncString.fromJSON(obj.rpId);
-    credential.userHandle = obj.userHandle != null ? EncString.fromJSON(obj.userHandle) : undefined;
-    credential.userName = obj.userName != null ? EncString.fromJSON(obj.userName) : undefined;
+    credential.userHandle = encStringFrom(obj.userHandle);
+    credential.userName = encStringFrom(obj.userName);
     credential.counter = EncString.fromJSON(obj.counter);
-    credential.rpName = obj.rpName != null ? EncString.fromJSON(obj.rpName) : undefined;
-    credential.userDisplayName =
-      obj.userDisplayName != null ? EncString.fromJSON(obj.userDisplayName) : undefined;
+    credential.rpName = encStringFrom(obj.rpName);
+    credential.userDisplayName = encStringFrom(obj.userDisplayName);
     credential.discoverable = EncString.fromJSON(obj.discoverable);
     credential.creationDate = new Date(obj.creationDate);
 
@@ -162,7 +162,7 @@ export class Fido2Credential extends Domain {
    * Maps an SDK Fido2Credential object to a Fido2Credential
    * @param obj - The SDK Fido2Credential object
    */
-  static fromSdkFido2Credential(obj: SdkFido2Credential | undefined): Fido2Credential | undefined {
+  static fromSdkFido2Credential(obj?: SdkFido2Credential): Fido2Credential | undefined {
     if (obj == null) {
       return undefined;
     }
@@ -175,11 +175,10 @@ export class Fido2Credential extends Domain {
     credential.keyCurve = EncString.fromJSON(obj.keyCurve);
     credential.keyValue = EncString.fromJSON(obj.keyValue);
     credential.rpId = EncString.fromJSON(obj.rpId);
-    credential.userHandle = obj.userHandle != null ? EncString.fromJSON(obj.userHandle) : undefined;
-    credential.userName = obj.userName != null ? EncString.fromJSON(obj.userName) : undefined;
-    credential.rpName = obj.rpName != null ? EncString.fromJSON(obj.rpName) : undefined;
-    credential.userDisplayName =
-      obj.userDisplayName != null ? EncString.fromJSON(obj.userDisplayName) : undefined;
+    credential.userHandle = encStringFrom(obj.userHandle);
+    credential.userName = encStringFrom(obj.userName);
+    credential.rpName = encStringFrom(obj.rpName);
+    credential.userDisplayName = encStringFrom(obj.userDisplayName);
     credential.discoverable = EncString.fromJSON(obj.discoverable);
     credential.creationDate = new Date(obj.creationDate);
 

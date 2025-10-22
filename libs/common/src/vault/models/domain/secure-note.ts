@@ -3,7 +3,6 @@ import { Jsonify } from "type-fest";
 import { SecureNote as SdkSecureNote } from "@bitwarden/sdk-internal";
 
 import Domain from "../../../platform/models/domain/domain-base";
-import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
 import { SecureNoteType } from "../../enums";
 import { SecureNoteData } from "../data/secure-note.data";
 import { SecureNoteView } from "../view/secure-note.view";
@@ -20,11 +19,7 @@ export class SecureNote extends Domain {
     this.type = obj.type;
   }
 
-  async decrypt(
-    orgId: string | undefined,
-    context = "No Cipher Context",
-    encKey?: SymmetricCryptoKey,
-  ): Promise<SecureNoteView> {
+  async decrypt(): Promise<SecureNoteView> {
     return new SecureNoteView(this);
   }
 
@@ -59,7 +54,7 @@ export class SecureNote extends Domain {
    * Maps an SDK SecureNote object to a SecureNote
    * @param obj - The SDK SecureNote object
    */
-  static fromSdkSecureNote(obj: SdkSecureNote | undefined): SecureNote | undefined {
+  static fromSdkSecureNote(obj?: SdkSecureNote): SecureNote | undefined {
     if (obj == null) {
       return undefined;
     }

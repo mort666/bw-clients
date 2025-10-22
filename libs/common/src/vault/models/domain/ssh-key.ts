@@ -79,7 +79,7 @@ export class SshKey extends Domain {
    * Maps an SDK SshKey object to a SshKey
    * @param obj - The SDK SshKey object
    */
-  static fromSdkSshKey(obj: SdkSshKey | undefined): SshKey | undefined {
+  static fromSdkSshKey(obj?: SdkSshKey): SshKey | undefined {
     if (obj == null) {
       return undefined;
     }

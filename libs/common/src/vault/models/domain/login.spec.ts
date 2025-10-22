@@ -99,6 +99,7 @@ describe("Login DTO", () => {
       loginUri.validateChecksum.mockResolvedValue(true);
       login.uris = [loginUri];
 
+      // @ts-expect-error Testing null input
       const loginView = await login.decrypt(null, true);
       expect(loginView).toEqual(expectedView);
     });
@@ -111,6 +112,7 @@ describe("Login DTO", () => {
         .mockResolvedValueOnce(true);
       login.uris = [loginUri, loginUri, loginUri];
 
+      // @ts-expect-error Testing null input
       const loginView = await login.decrypt(null, false);
       expect(loginView).toEqual(expectedView);
     });
@@ -194,6 +196,7 @@ describe("Login DTO", () => {
     });
 
     it("returns undefined if object is null", () => {
+      // @ts-expect-error Testing null input
       expect(Login.fromJSON(null)).toBeUndefined();
     });
   });

@@ -70,7 +70,7 @@ export class Password extends Domain {
    * Maps an SDK PasswordHistory object to a Password
    * @param obj - The SDK PasswordHistory object
    */
-  static fromSdkPasswordHistory(obj: PasswordHistory): Password | undefined {
+  static fromSdkPasswordHistory(obj?: PasswordHistory): Password | undefined {
     if (!obj) {
       return undefined;
     }

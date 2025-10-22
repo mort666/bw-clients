@@ -7,6 +7,7 @@ import { EncString } from "../../../key-management/crypto/models/enc-string";
 import { Utils } from "../../../platform/misc/utils";
 import Domain from "../../../platform/models/domain/domain-base";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
+import { conditionalEncString, encStringFrom } from "../../utils/domain-utils";
 import { AttachmentData } from "../data/attachment.data";
 import { AttachmentView } from "../view/attachment.view";
 
@@ -28,8 +29,8 @@ export class Attachment extends Domain {
     this.url = obj.url;
     this.size = obj.size;
     this.sizeName = obj.sizeName;
-    this.fileName = obj.fileName != null ? new EncString(obj.fileName) : undefined;
-    this.key = obj.key != null ? new EncString(obj.key) : undefined;
+    this.fileName = conditionalEncString(obj.fileName);
+    this.key = conditionalEncString(obj.key);
   }
 
   async decrypt(
@@ -119,8 +120,8 @@ export class Attachment extends Domain {
     attachment.url = obj.url;
     attachment.size = obj.size;
     attachment.sizeName = obj.sizeName;
-    attachment.key = obj.key != null ? EncString.fromJSON(obj.key) : undefined;
-    attachment.fileName = obj.fileName != null ? EncString.fromJSON(obj.fileName) : undefined;
+    attachment.key = encStringFrom(obj.key);
+    attachment.fileName = encStringFrom(obj.fileName);
 
     return attachment;
   }
@@ -145,7 +146,7 @@ export class Attachment extends Domain {
    * Maps an SDK Attachment object to an Attachment
    * @param obj - The SDK attachment object
    */
-  static fromSdkAttachment(obj: SdkAttachment | undefined): Attachment | undefined {
+  static fromSdkAttachment(obj?: SdkAttachment): Attachment | undefined {
     if (!obj) {
       return undefined;
     }
@@ -155,8 +156,8 @@ export class Attachment extends Domain {
     attachment.url = obj.url;
     attachment.size = obj.size;
     attachment.sizeName = obj.sizeName;
-    attachment.fileName = obj.fileName != null ? EncString.fromJSON(obj.fileName) : undefined;
-    attachment.key = obj.key != null ? EncString.fromJSON(obj.key) : undefined;
+    attachment.fileName = encStringFrom(obj.fileName);
+    attachment.key = encStringFrom(obj.key);
 
     return attachment;
   }

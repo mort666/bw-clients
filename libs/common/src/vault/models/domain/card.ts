@@ -5,6 +5,7 @@ import { Card as SdkCard } from "@bitwarden/sdk-internal";
 import { EncString } from "../../../key-management/crypto/models/enc-string";
 import Domain from "../../../platform/models/domain/domain-base";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
+import { conditionalEncString, encStringFrom } from "../../utils/domain-utils";
 import { CardData } from "../data/card.data";
 import { CardView } from "../view/card.view";
 
@@ -22,13 +23,12 @@ export class Card extends Domain {
       return;
     }
 
-    this.cardholderName =
-      obj.cardholderName != null ? new EncString(obj.cardholderName) : undefined;
-    this.brand = obj.brand != null ? new EncString(obj.brand) : undefined;
-    this.number = obj.number != null ? new EncString(obj.number) : undefined;
-    this.expMonth = obj.expMonth != null ? new EncString(obj.expMonth) : undefined;
-    this.expYear = obj.expYear != null ? new EncString(obj.expYear) : undefined;
-    this.code = obj.code != null ? new EncString(obj.code) : undefined;
+    this.cardholderName = conditionalEncString(obj.cardholderName);
+    this.brand = conditionalEncString(obj.brand);
+    this.number = conditionalEncString(obj.number);
+    this.expMonth = conditionalEncString(obj.expMonth);
+    this.expYear = conditionalEncString(obj.expYear);
+    this.code = conditionalEncString(obj.code);
   }
 
   async decrypt(
@@ -65,13 +65,12 @@ export class Card extends Domain {
     }
 
     const card = new Card();
-    card.cardholderName =
-      obj.cardholderName != null ? EncString.fromJSON(obj.cardholderName) : undefined;
-    card.brand = obj.brand != null ? EncString.fromJSON(obj.brand) : undefined;
-    card.number = obj.number != null ? EncString.fromJSON(obj.number) : undefined;
-    card.expMonth = obj.expMonth != null ? EncString.fromJSON(obj.expMonth) : undefined;
-    card.expYear = obj.expYear != null ? EncString.fromJSON(obj.expYear) : undefined;
-    card.code = obj.code != null ? EncString.fromJSON(obj.code) : undefined;
+    card.cardholderName = encStringFrom(obj.cardholderName);
+    card.brand = encStringFrom(obj.brand);
+    card.number = encStringFrom(obj.number);
+    card.expMonth = encStringFrom(obj.expMonth);
+    card.expYear = encStringFrom(obj.expYear);
+    card.code = encStringFrom(obj.code);
 
     return card;
   }
@@ -96,19 +95,18 @@ export class Card extends Domain {
    * Maps an SDK Card object to a Card
    * @param obj - The SDK Card object
    */
-  static fromSdkCard(obj: SdkCard | undefined): Card | undefined {
+  static fromSdkCard(obj?: SdkCard): Card | undefined {
     if (!obj) {
       return undefined;
     }
 
     const card = new Card();
-    card.cardholderName =
-      obj.cardholderName != null ? EncString.fromJSON(obj.cardholderName) : undefined;
-    card.brand = obj.brand != null ? EncString.fromJSON(obj.brand) : undefined;
-    card.number = obj.number != null ? EncString.fromJSON(obj.number) : undefined;
-    card.expMonth = obj.expMonth != null ? EncString.fromJSON(obj.expMonth) : undefined;
-    card.expYear = obj.expYear != null ? EncString.fromJSON(obj.expYear) : undefined;
-    card.code = obj.code != null ? EncString.fromJSON(obj.code) : undefined;
+    card.cardholderName = encStringFrom(obj.cardholderName);
+    card.brand = encStringFrom(obj.brand);
+    card.number = encStringFrom(obj.number);
+    card.expMonth = encStringFrom(obj.expMonth);
+    card.expYear = encStringFrom(obj.expYear);
+    card.code = encStringFrom(obj.code);
 
     return card;
   }

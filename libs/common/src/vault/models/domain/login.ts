@@ -5,6 +5,7 @@ import { Login as SdkLogin } from "@bitwarden/sdk-internal";
 import { EncString } from "../../../key-management/crypto/models/enc-string";
 import Domain from "../../../platform/models/domain/domain-base";
 import { SymmetricCryptoKey } from "../../../platform/models/domain/symmetric-crypto-key";
+import { conditionalEncString, encStringFrom } from "../../utils/domain-utils";
 import { LoginData } from "../data/login.data";
 import { LoginView } from "../view/login.view";
 
@@ -29,9 +30,9 @@ export class Login extends Domain {
     this.passwordRevisionDate =
       obj.passwordRevisionDate != null ? new Date(obj.passwordRevisionDate) : undefined;
     this.autofillOnPageLoad = obj.autofillOnPageLoad;
-    this.username = obj.username != null ? new EncString(obj.username) : undefined;
-    this.password = obj.password != null ? new EncString(obj.password) : undefined;
-    this.totp = obj.totp != null ? new EncString(obj.totp) : undefined;
+    this.username = conditionalEncString(obj.username);
+    this.password = conditionalEncString(obj.password);
+    this.totp = conditionalEncString(obj.totp);
 
     if (obj.uris) {
       this.uris = obj.uris.map((u) => new LoginUri(u));
@@ -75,7 +76,7 @@ export class Login extends Domain {
         // URIs are shared remotely after decryption
         // we need to validate that the string hasn't been changed by a compromised server
         // This validation is tied to the existence of cypher.key for backwards compatibility
-        // So we bypass the validation if there's no cipher.key or procceed with the validation and
+        // So we bypass the validation if there's no cipher.key or proceed with the validation and
         // Skip the value if it's been tampered with.
         const isValidUri =
           bypassValidation || (await this.uris[i].validateChecksum(uriString, orgId, encKey));
@@ -132,9 +133,9 @@ export class Login extends Domain {
     login.passwordRevisionDate =
       obj.passwordRevisionDate != null ? new Date(obj.passwordRevisionDate) : undefined;
     login.autofillOnPageLoad = obj.autofillOnPageLoad;
-    login.username = obj.username != null ? EncString.fromJSON(obj.username) : undefined;
-    login.password = obj.password != null ? EncString.fromJSON(obj.password) : undefined;
-    login.totp = obj.totp != null ? EncString.fromJSON(obj.totp) : undefined;
+    login.username = encStringFrom(obj.username);
+    login.password = encStringFrom(obj.password);
+    login.totp = encStringFrom(obj.totp);
     login.uris = obj.uris
       ?.map((uri: any) => LoginUri.fromJSON(uri))
       .filter((u): u is LoginUri => u != null);
@@ -167,7 +168,7 @@ export class Login extends Domain {
    * Maps an SDK Login object to a Login
    * @param obj - The SDK Login object
    */
-  static fromSdkLogin(obj: SdkLogin | undefined): Login | undefined {
+  static fromSdkLogin(obj?: SdkLogin): Login | undefined {
     if (!obj) {
       return undefined;
     }
@@ -176,9 +177,9 @@ export class Login extends Domain {
     login.passwordRevisionDate =
       obj.passwordRevisionDate != null ? new Date(obj.passwordRevisionDate) : undefined;
     login.autofillOnPageLoad = obj.autofillOnPageLoad;
-    login.username = obj.username != null ? EncString.fromJSON(obj.username) : undefined;
-    login.password = obj.password != null ? EncString.fromJSON(obj.password) : undefined;
-    login.totp = obj.totp != null ? EncString.fromJSON(obj.totp) : undefined;
+    login.username = encStringFrom(obj.username);
+    login.password = encStringFrom(obj.password);
+    login.totp = encStringFrom(obj.totp);
     login.uris =
       obj.uris
         ?.filter((u) => u.uri != null)

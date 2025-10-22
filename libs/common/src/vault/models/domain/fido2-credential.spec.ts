@@ -30,7 +30,6 @@ describe("Fido2Credential", () => {
       expect(credential.rpName).toBeUndefined();
       expect(credential.userDisplayName).toBeUndefined();
       expect(credential.creationDate).toBeInstanceOf(Date);
-      expect(credential.creationDate.getTime()).toBeNaN();
     });
 
     it("returns all fields as EncStrings except creationDate when given full Fido2CredentialData", () => {
@@ -71,7 +70,19 @@ describe("Fido2Credential", () => {
     it("should not populate fields when data parameter is not given", () => {
       const credential = new Fido2Credential();
 
-      expect(credential).toEqual({});
+      expect(credential.credentialId).toBeUndefined();
+      expect(credential.keyType).toBeUndefined();
+      expect(credential.keyAlgorithm).toBeUndefined();
+      expect(credential.keyCurve).toBeUndefined();
+      expect(credential.keyValue).toBeUndefined();
+      expect(credential.rpId).toBeUndefined();
+      expect(credential.userHandle).toBeUndefined();
+      expect(credential.userName).toBeUndefined();
+      expect(credential.counter).toBeUndefined();
+      expect(credential.rpName).toBeUndefined();
+      expect(credential.userDisplayName).toBeUndefined();
+      expect(credential.discoverable).toBeUndefined();
+      expect(credential.creationDate).toBeInstanceOf(Date);
     });
   });
 
@@ -92,6 +103,7 @@ describe("Fido2Credential", () => {
       credential.discoverable = mockEnc("true");
       credential.creationDate = mockDate;
 
+      // @ts-expect-error Testing null input
       const credentialView = await credential.decrypt(null);
 
       expect(credentialView).toEqual({
@@ -161,6 +173,7 @@ describe("Fido2Credential", () => {
     });
 
     it("returns undefined if input is null", () => {
+      // @ts-expect-error Testing null input
       expect(Fido2Credential.fromJSON(null)).toBeUndefined();
     });
   });

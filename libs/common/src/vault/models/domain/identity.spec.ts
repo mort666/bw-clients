@@ -106,7 +106,7 @@ describe("Identity", () => {
     identity.username = mockEnc("mockUsername");
     identity.passportNumber = mockEnc("mockPassportNumber");
     identity.licenseNumber = mockEnc("mockLicenseNumber");
-
+    // @ts-expect-error Testing null input
     const view = await identity.decrypt(null);
 
     expect(view).toEqual({
@@ -180,6 +180,7 @@ describe("Identity", () => {
     });
 
     it("returns undefined if object is null", () => {
+      // @ts-expect-error Testing null input
       expect(Identity.fromJSON(null)).toBeUndefined();
     });
   });

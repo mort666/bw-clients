@@ -55,13 +55,14 @@ describe("Sshkey", () => {
       publicKey: "publicKey",
       keyFingerprint: "keyFingerprint",
     };
-
+    // @ts-expect-error Testing null input
     const loginView = await sshKey.decrypt(null);
     expect(loginView).toEqual(expectedView);
   });
 
   describe("fromJSON", () => {
     it("returns undefined if object is null", () => {
+      // @ts-expect-error Testing null input
       expect(SshKey.fromJSON(null)).toBeUndefined();
     });
   });

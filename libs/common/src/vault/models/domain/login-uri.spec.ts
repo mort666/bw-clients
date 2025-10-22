@@ -53,6 +53,7 @@ describe("LoginUri", () => {
     loginUri.match = UriMatchStrategy.Exact;
     loginUri.uri = mockEnc("uri");
 
+    // @ts-expect-error Testing null input
     const view = await loginUri.decrypt(null);
 
     expect(view).toEqual({
@@ -68,6 +69,7 @@ describe("LoginUri", () => {
       encryptService = mock();
       global.bitwardenContainerService = {
         getEncryptService: () => encryptService,
+        // @ts-expect-error null implementation
         getKeyService: () => null,
       };
     });
@@ -77,7 +79,7 @@ describe("LoginUri", () => {
       loginUri.uriChecksum = mockEnc("checksum");
       encryptService.hash.mockResolvedValue("checksum");
 
-      const actual = await loginUri.validateChecksum("uri", null, null);
+      const actual = await loginUri.validateChecksum("uri", undefined, undefined);
 
       expect(actual).toBe(true);
       expect(encryptService.hash).toHaveBeenCalledWith("uri", "sha256");
@@ -88,7 +90,7 @@ describe("LoginUri", () => {
       loginUri.uriChecksum = mockEnc("checksum");
       encryptService.hash.mockResolvedValue("incorrect checksum");
 
-      const actual = await loginUri.validateChecksum("uri", null, null);
+      const actual = await loginUri.validateChecksum("uri", undefined, undefined);
 
       expect(actual).toBe(false);
     });
@@ -113,6 +115,7 @@ describe("LoginUri", () => {
     });
 
     it("returns undefined if object is null", () => {
+      // @ts-expect-error Testing null input
       expect(LoginUri.fromJSON(null)).toBeUndefined();
     });
   });
