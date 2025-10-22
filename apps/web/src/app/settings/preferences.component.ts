@@ -21,7 +21,6 @@ import { getFirstPolicy } from "@bitwarden/common/admin-console/services/policy/
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
-import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import {
   VaultTimeout,
   VaultTimeoutAction,
@@ -29,7 +28,6 @@ import {
   VaultTimeoutSettingsService,
   VaultTimeoutStringType,
 } from "@bitwarden/common/key-management/vault-timeout";
-import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { Theme, ThemeTypes } from "@bitwarden/common/platform/enums";
@@ -41,6 +39,11 @@ import { PermitCipherDetailsPopoverComponent } from "@bitwarden/vault";
 import { HeaderModule } from "../layouts/header/header.module";
 import { SharedModule } from "../shared";
 
+/**
+ * @deprecated Use {@link AppearanceComponent} and {@link SessionTimeoutComponent} instead.
+ */
+// FIXME(https://bitwarden.atlassian.net/browse/CL-764): Migrate to OnPush
+// eslint-disable-next-line @angular-eslint/prefer-on-push-component-change-detection
 @Component({
   selector: "app-preferences",
   templateUrl: "preferences.component.html",
@@ -56,7 +59,6 @@ export class PreferencesComponent implements OnInit, OnDestroy {
   protected readonly VaultTimeoutAction = VaultTimeoutAction;
 
   protected availableVaultTimeoutActions$: Observable<VaultTimeoutAction[]>;
-  consolidatedSessionTimeoutComponent$: Observable<boolean>;
 
   vaultTimeoutPolicyCallout: Observable<{
     timeout: { hours: number; minutes: number };
@@ -79,7 +81,6 @@ export class PreferencesComponent implements OnInit, OnDestroy {
 
   constructor(
     private formBuilder: FormBuilder,
-    private configService: ConfigService,
     private policyService: PolicyService,
     private i18nService: I18nService,
     private vaultTimeoutSettingsService: VaultTimeoutSettingsService,
@@ -121,10 +122,6 @@ export class PreferencesComponent implements OnInit, OnDestroy {
       { name: i18nService.t("themeDark"), value: ThemeTypes.Dark },
       { name: i18nService.t("themeSystem"), value: ThemeTypes.System },
     ];
-
-    this.consolidatedSessionTimeoutComponent$ = this.configService.getFeatureFlag$(
-      FeatureFlag.ConsolidatedSessionTimeoutComponent,
-    );
   }
 
   async ngOnInit() {
@@ -197,35 +194,28 @@ export class PreferencesComponent implements OnInit, OnDestroy {
   }
 
   submit = async () => {
-    const consolidatedSessionTimeoutComponent = await firstValueFrom(
-      this.consolidatedSessionTimeoutComponent$,
-    );
-
-    if (!consolidatedSessionTimeoutComponent) {
-      if (!this.form.controls.vaultTimeout.valid) {
-        this.platformUtilsService.showToast(
-          "error",
-          null,
-          this.i18nService.t("vaultTimeoutRangeError"),
-        );
-        return;
-      }
-
-      // must get raw value b/c the vault timeout action is disabled when a policy is applied
-      // which removes the timeout action property and value from the normal form.value.
-      const values = this.form.getRawValue();
-
-      const activeAcct = await firstValueFrom(this.accountService.activeAccount$);
-
-      await this.vaultTimeoutSettingsService.setVaultTimeoutOptions(
-        activeAcct.id,
-        values.vaultTimeout,
-        values.vaultTimeoutAction,
+    if (!this.form.controls.vaultTimeout.valid) {
+      this.platformUtilsService.showToast(
+        "error",
+        null,
+        this.i18nService.t("vaultTimeoutRangeError"),
       );
+      return;
     }
 
-    // Save other preferences (theme, locale, favicons)
+    // must get raw value b/c the vault timeout action is disabled when a policy is applied
+    // which removes the timeout action property and value from the normal form.value.
     const values = this.form.getRawValue();
+
+    const activeAcct = await firstValueFrom(this.accountService.activeAccount$);
+
+    await this.vaultTimeoutSettingsService.setVaultTimeoutOptions(
+      activeAcct.id,
+      values.vaultTimeout,
+      values.vaultTimeoutAction,
+    );
+
+    // Save other preferences (theme, locale, favicons)
     await this.domainSettingsService.setShowFavicons(values.enableFavicons);
     await this.themeStateService.setSelectedTheme(values.theme);
     await this.i18nService.setLocale(values.locale);

@@ -11899,5 +11899,11 @@
   },
   "sessionTimeoutHeader": {
     "message": "Session timeout"
+  },
+  "appearance": {
+    "message": "Appearance"
+  },
+  "appearanceUpdated": {
+    "message": "Appearance updated"
   }
 }

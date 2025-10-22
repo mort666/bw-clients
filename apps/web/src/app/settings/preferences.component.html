@@ -3,55 +3,53 @@
 <bit-container>
   <p bitTypography="body1">{{ "preferencesDesc" | i18n }}</p>
   <form [formGroup]="form" [bitSubmit]="submit" class="tw-w-full tw-max-w-md">
-    @if (!(consolidatedSessionTimeoutComponent$ | async)) {
-      <bit-callout type="info" *ngIf="vaultTimeoutPolicyCallout | async as policy">
-        <span *ngIf="policy.timeout && policy.action">
-          {{
-            "vaultTimeoutPolicyWithActionInEffect"
-              | i18n: policy.timeout.hours : policy.timeout.minutes : (policy.action | i18n)
-          }}
-        </span>
-        <span *ngIf="policy.timeout && !policy.action">
-          {{ "vaultTimeoutPolicyInEffect" | i18n: policy.timeout.hours : policy.timeout.minutes }}
-        </span>
-        <span *ngIf="!policy.timeout && policy.action">
-          {{ "vaultTimeoutActionPolicyInEffect" | i18n: (policy.action | i18n) }}
-        </span>
-      </bit-callout>
-      <auth-vault-timeout-input
-        [vaultTimeoutOptions]="vaultTimeoutOptions"
-        [formControl]="form.controls.vaultTimeout"
-        ngDefaultControl
+    <bit-callout type="info" *ngIf="vaultTimeoutPolicyCallout | async as policy">
+      <span *ngIf="policy.timeout && policy.action">
+        {{
+          "vaultTimeoutPolicyWithActionInEffect"
+            | i18n: policy.timeout.hours : policy.timeout.minutes : (policy.action | i18n)
+        }}
+      </span>
+      <span *ngIf="policy.timeout && !policy.action">
+        {{ "vaultTimeoutPolicyInEffect" | i18n: policy.timeout.hours : policy.timeout.minutes }}
+      </span>
+      <span *ngIf="!policy.timeout && policy.action">
+        {{ "vaultTimeoutActionPolicyInEffect" | i18n: (policy.action | i18n) }}
+      </span>
+    </bit-callout>
+    <auth-vault-timeout-input
+      [vaultTimeoutOptions]="vaultTimeoutOptions"
+      [formControl]="form.controls.vaultTimeout"
+      ngDefaultControl
+    >
+    </auth-vault-timeout-input>
+    <ng-container *ngIf="availableVaultTimeoutActions$ | async as availableVaultTimeoutActions">
+      <bit-radio-group
+        formControlName="vaultTimeoutAction"
+        *ngIf="availableVaultTimeoutActions.length > 1"
       >
-      </auth-vault-timeout-input>
-      <ng-container *ngIf="availableVaultTimeoutActions$ | async as availableVaultTimeoutActions">
-        <bit-radio-group
-          formControlName="vaultTimeoutAction"
-          *ngIf="availableVaultTimeoutActions.length > 1"
+        <bit-label>{{ "vaultTimeoutAction" | i18n }}</bit-label>
+        <bit-radio-button
+          *ngIf="availableVaultTimeoutActions.includes(VaultTimeoutAction.Lock)"
+          id="vaultTimeoutActionLock"
+          [value]="VaultTimeoutAction.Lock"
         >
-          <bit-label>{{ "vaultTimeoutAction" | i18n }}</bit-label>
-          <bit-radio-button
-            *ngIf="availableVaultTimeoutActions.includes(VaultTimeoutAction.Lock)"
-            id="vaultTimeoutActionLock"
-            [value]="VaultTimeoutAction.Lock"
-          >
-            <bit-label>{{ "lock" | i18n }}</bit-label>
-            <bit-hint>{{ "vaultTimeoutActionLockDesc" | i18n }}</bit-hint>
-          </bit-radio-button>
-          <bit-radio-button
-            *ngIf="availableVaultTimeoutActions.includes(VaultTimeoutAction.LogOut)"
-            id="vaultTimeoutActionLogOut"
-            [value]="VaultTimeoutAction.LogOut"
-          >
-            <bit-label>{{ "logOut" | i18n }}</bit-label>
-            <bit-hint>{{ "vaultTimeoutActionLogOutDesc" | i18n }}</bit-hint>
-          </bit-radio-button>
-        </bit-radio-group>
-      </ng-container>
-    }
+          <bit-label>{{ "lock" | i18n }}</bit-label>
+          <bit-hint>{{ "vaultTimeoutActionLockDesc" | i18n }}</bit-hint>
+        </bit-radio-button>
+        <bit-radio-button
+          *ngIf="availableVaultTimeoutActions.includes(VaultTimeoutAction.LogOut)"
+          id="vaultTimeoutActionLogOut"
+          [value]="VaultTimeoutAction.LogOut"
+        >
+          <bit-label>{{ "logOut" | i18n }}</bit-label>
+          <bit-hint>{{ "vaultTimeoutActionLogOutDesc" | i18n }}</bit-hint>
+        </bit-radio-button>
+      </bit-radio-group>
+    </ng-container>
     <bit-form-field>
-      <bit-label
-        >{{ "language" | i18n }}
+      <bit-label>
+        {{ "language" | i18n }}
         <a
           bitLink
           class="tw-float-right"
