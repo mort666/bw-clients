@@ -1104,7 +1104,7 @@ const safeProviders: SafeProvider[] = [
   safeProvider({
     provide: MasterPasswordUnlockService,
     useClass: DefaultMasterPasswordUnlockService,
-    deps: [InternalMasterPasswordServiceAbstraction, KeyService],
+    deps: [InternalMasterPasswordServiceAbstraction, KeyService, KdfConfigService],
   }),
   safeProvider({
     provide: KeyConnectorServiceAbstraction,

@@ -1,7 +1,7 @@
 import { firstValueFrom } from "rxjs";
 
 // eslint-disable-next-line no-restricted-imports
-import { KeyService } from "@bitwarden/key-management";
+import { KdfConfigService, KeyService } from "@bitwarden/key-management";
 import { UserId } from "@bitwarden/user-core";
 
 import { HashPurpose } from "../../../platform/enums";
@@ -14,6 +14,7 @@ export class DefaultMasterPasswordUnlockService implements MasterPasswordUnlockS
   constructor(
     private readonly masterPasswordService: InternalMasterPasswordServiceAbstraction,
     private readonly keyService: KeyService,
+    private readonly kdfService: KdfConfigService,
   ) {}
 
   async unlockWithMasterPassword(masterPassword: string, userId: UserId): Promise<UserKey> {
@@ -71,5 +72,6 @@ export class DefaultMasterPasswordUnlockService implements MasterPasswordUnlockS
 
     await this.masterPasswordService.setMasterKeyHash(localKeyHash, userId);
     await this.masterPasswordService.setMasterKey(masterKey, userId);
+    await this.kdfService.setKdfConfig(userId, masterPasswordUnlockData.kdf);
   }
 }
