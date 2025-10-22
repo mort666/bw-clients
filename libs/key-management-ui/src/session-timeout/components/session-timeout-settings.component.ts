@@ -153,7 +153,7 @@ export class SessionTimeoutSettingsComponent implements OnInit, OnDestroy {
         startWith(undefined),
         switchMap(() =>
           combineLatest([
-            this.vaultTimeoutSettingsService.availableVaultTimeoutActions$(),
+            this.vaultTimeoutSettingsService.availableVaultTimeoutActions$(this.userId),
             this.vaultTimeoutSettingsService.getVaultTimeoutActionByUserId$(this.userId),
             maximumVaultTimeoutPolicy$,
           ]),
