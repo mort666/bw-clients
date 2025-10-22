@@ -94,7 +94,10 @@ describe("AddEditV2Component", () => {
         { provide: AccountService, useValue: mockAccountServiceWith("UserId" as UserId) },
         {
           provide: CipherArchiveService,
-          useValue: { userCanArchive$: jest.fn().mockReturnValue(of(false)) },
+          useValue: {
+            userCanArchive$: jest.fn().mockReturnValue(of(false)),
+            hasArchiveFlagEnabled$: jest.fn().mockReturnValue(of(true)),
+          },
         },
         {
           provide: TaskService,
