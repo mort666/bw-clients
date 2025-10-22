@@ -175,6 +175,7 @@ export class Fido2Credential extends Domain {
     credential.keyCurve = EncString.fromJSON(obj.keyCurve);
     credential.keyValue = EncString.fromJSON(obj.keyValue);
     credential.rpId = EncString.fromJSON(obj.rpId);
+    credential.counter = EncString.fromJSON(obj.counter);
     credential.userHandle = encStringFrom(obj.userHandle);
     credential.userName = encStringFrom(obj.userName);
     credential.rpName = encStringFrom(obj.rpName);
