@@ -44,9 +44,11 @@ A user begins the login process by entering their email on the `/login` screen (
 >   gets logged in with their Master Password after registration), as well as the `RecoverTwoFactorComponent`
 >   (the user logs in with their Master Password along with their 2FA recovery code).
 
+<br>
+
 _CLI Client - `LoginCommand`_
 
-The CLI client supports the following login methods via the `LoginCommand`.
+The CLI client supports the following login methods via the `LoginCommand`:
 
 - Login with Master Password
 - Login with Single Sign-On
@@ -122,7 +124,7 @@ To summarize everything so far:
 ```bash
 Initiating Component (Submit Action)   # ex: LoginComponent.submit()
     |
-    Build credentials object         # ex: PasswordLoginCredentials
+    Build credentials object           # ex: PasswordLoginCredentials
     |
     Call LoginStrategyService.logIn(credentials)
         |
@@ -227,7 +229,7 @@ Here are those steps in more detail:
               - The user's master-key-encrypted user key (if the user has a master password), along with their KDF settings
               - The user's user-key-encrypted private key
               - A `userDecryptionOptions` object that contains information about which decryption options the user has available to them
-              - A flag that dictate if the user is required to set or change their master password
+              - A flag that indicates if the user is required to set or change their master password
               - Any master password policies the user is required to adhere to
 
         - [`IdentityTwoFactorResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-two-factor.response.ts)
@@ -330,8 +332,8 @@ Here is how these scenarios work:
 
 **User must complete Two Factor Authentication**
 
-1. Remember that when the server response is `IdentityTwoFactorResponse`, we set 2FA data into state and also add the necessary data for the 2FA process to the `AuthResult`.
-2. When `AuthResult.requiresTwoFactor`, the specific login strategy exports its `LoginStrategyData` to the `LoginStrategyService`, where it gets stored in memory. This means the `LoginStrategyService` has a cache of the original request the user sent.
+1. Remember that when the server response is `IdentityTwoFactorResponse`, we set 2FA provider data into state, and also set `requiresTwoFactor` to `true` on the `AuthResult`.
+2. When `AuthResult.requiresTwoFactor` is `true`, the specific login strategy exports its `LoginStrategyData` to the `LoginStrategyService`, where it gets stored in memory. This means the `LoginStrategyService` has a cache of the original request the user sent.
 3. We route the user to `/2fa` (`TwoFactorAuthComponent`).
 4. The user enters their 2FA token.
 5. On submission, the `LoginStrategyService` calls `logInTwoFactor()` on the particular login strategy. This method then:
