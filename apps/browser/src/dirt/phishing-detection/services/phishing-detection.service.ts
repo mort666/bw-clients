@@ -37,7 +37,7 @@ export class PhishingDetectionService {
     "https://raw.githubusercontent.com/Phishing-Database/Phishing.Database/master/phishing-domains-ACTIVE.txt";
   private static readonly RemotePhishingDatabaseChecksumUrl =
     "https://raw.githubusercontent.com/Phishing-Database/checksums/refs/heads/master/phishing-domains-ACTIVE.txt.md5";
-  private static readonly LocalPhishingDatabaseUrl = chrome.runtime.getURL(
+  private static readonly LocalPhishingDatabaseUrl?: string = chrome?.runtime?.getURL(
     "dirt/phishing-detection/services/phishing-domains-ACTIVE.txt",
   );
   /** This is tied to `./phishing-domainas-ACTIVE.txt` and should be updated in kind  */
@@ -632,6 +632,9 @@ export class PhishingDetectionService {
 
     try {
       this._logService.info("[PhishingDetectionService] Fetching local DB as fallback");
+      if (!this.LocalPhishingDatabaseUrl) {
+        throw new Error("No local database URL provided");
+      }
       const fallbackDomains = await this._auditService.getKnownPhishingDomains(
         this.LocalPhishingDatabaseUrl,
       );
