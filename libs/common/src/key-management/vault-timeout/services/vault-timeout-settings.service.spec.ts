@@ -129,6 +129,23 @@ describe("VaultTimeoutSettingsService", () => {
 
       expect(result).not.toContain(VaultTimeoutAction.Lock);
     });
+
+    it("should return only LogOut when userId is not provided and there is no active account", async () => {
+      // Set up accountService to return null for activeAccount
+      accountService.activeAccount$ = of(null);
+      pinStateService.isPinSet.mockResolvedValue(false);
+      biometricStateService.biometricUnlockEnabled$ = of(false);
+
+      // Call availableVaultTimeoutActions$ which internally calls userHasMasterPassword without a userId
+      const result = await firstValueFrom(
+        vaultTimeoutSettingsService.availableVaultTimeoutActions$(),
+      );
+
+      // Since there's no active account, userHasMasterPassword returns false,
+      // meaning no master password is available, so Lock should not be available
+      expect(result).toEqual([VaultTimeoutAction.LogOut]);
+      expect(result).not.toContain(VaultTimeoutAction.Lock);
+    });
   });
 
   describe("canLock", () => {
