@@ -31,6 +31,7 @@ import { Organization } from "@bitwarden/common/admin-console/models/domain/orga
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
+import { OrganizationMetadataServiceAbstraction } from "@bitwarden/common/billing/abstractions/organization-metadata.service.abstraction";
 import { OrganizationBillingMetadataResponse } from "@bitwarden/common/billing/models/response/organization-billing-metadata.response";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
@@ -109,6 +110,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     private accountService: AccountService,
     private policyService: PolicyService,
     private policyApiService: PolicyApiServiceAbstraction,
+    private organizationMetadataService: OrganizationMetadataServiceAbstraction,
   ) {
     super(
       apiService,
@@ -186,7 +188,9 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
       .subscribe();
 
     this.billingMetadata$ = organization$.pipe(
-      switchMap((organization) => this.billingConstraint.getBillingMetadata$(organization.id)),
+      switchMap((organization) =>
+        this.organizationMetadataService.getOrganizationMetadata$(organization.id),
+      ),
       shareReplay({ bufferSize: 1, refCount: false }),
     );
 
@@ -315,7 +319,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     const seatLimitResult = this.billingConstraint.checkSeatLimit(organization, billingMetadata);
     if (!(await this.billingConstraint.seatLimitReached(seatLimitResult, organization))) {
       await this.handleInviteDialog(organization);
-      this.billingConstraint.refreshBillingMetadata();
+      this.organizationMetadataService.refreshMetadataCache();
     }
   }
 
@@ -324,9 +328,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
     organization: Organization,
     initialTab: MemberDialogTab = MemberDialogTab.Role,
   ) {
-    const billingMetadata = await firstValueFrom(
-      this.billingConstraint.getBillingMetadata$(organization.id),
-    );
+    const billingMetadata = await firstValueFrom(this.billingMetadata$);
 
     const result = await this.memberDialogManager.openEditDialog(
       user,
@@ -356,7 +358,7 @@ export class MembersComponent extends BaseMembersComponent<OrganizationUserView>
       organization,
       this.dataSource.getCheckedUsers(),
     );
-    this.billingConstraint.refreshBillingMetadata();
+    this.organizationMetadataService.refreshMetadataCache();
     await this.load(organization);
   }
 

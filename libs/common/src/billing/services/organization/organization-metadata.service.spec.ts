@@ -232,7 +232,6 @@ describe("DefaultOrganizationMetadataService", () => {
 
       service.refreshMetadataCache();
 
-      // wait to ensure no additional invocations
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(invocationCount).toBe(2);

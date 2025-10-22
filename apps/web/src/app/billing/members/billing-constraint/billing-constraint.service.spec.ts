@@ -105,53 +105,6 @@ describe("BillingConstraintService", () => {
     service = TestBed.inject(BillingConstraintService);
   });
 
-  describe("getBillingMetadata$", () => {
-    it("should return billing metadata observable", (done) => {
-      const mockMetadata = createMockBillingMetadata();
-      organizationMetadataService.getOrganizationMetadata$.mockReturnValue(of(mockMetadata));
-
-      service.getBillingMetadata$(mockOrganizationId).subscribe((result) => {
-        expect(result).toBe(mockMetadata);
-        expect(organizationMetadataService.getOrganizationMetadata$).toHaveBeenCalledWith(
-          mockOrganizationId,
-        );
-        done();
-      });
-    });
-
-    it("should cache results using shareReplay", (done) => {
-      const mockMetadata = createMockBillingMetadata();
-      let callCount = 0;
-      organizationMetadataService.getOrganizationMetadata$.mockImplementation(() => {
-        callCount++;
-        return of(mockMetadata);
-      });
-
-      const metadata$ = service.getBillingMetadata$(mockOrganizationId);
-
-      // First subscription
-      metadata$.subscribe((result) => {
-        expect(result).toBe(mockMetadata);
-      });
-
-      // Second subscription should use cached value
-      metadata$.subscribe((result) => {
-        expect(result).toBe(mockMetadata);
-        // The organizationMetadataService should only be called once due to shareReplay
-        expect(callCount).toBe(1);
-        done();
-      });
-    });
-  });
-
-  describe("refreshBillingMetadata", () => {
-    it("should call refreshMetadataCache on organizationMetadataService", () => {
-      service.refreshBillingMetadata();
-
-      expect(organizationMetadataService.refreshMetadataCache).toHaveBeenCalled();
-    });
-  });
-
   describe("checkSeatLimit", () => {
     it("should allow users when occupied seats are less than total seats", () => {
       const organization = createMockOrganization({ seats: 10 });
@@ -261,14 +214,14 @@ describe("BillingConstraintService", () => {
       expect(seatLimitReached).toBe(true);
     });
 
-    it("should show upgrade dialog when shouldShowUpgradeDialog is true", async () => {
+    it("should return true when upgrade dialog is cancelled", async () => {
       const result: SeatLimitResult = {
         canAddUsers: false,
         reason: "fixed-seat-limit",
         shouldShowUpgradeDialog: true,
       };
       const organization = createMockOrganization();
-      const mockDialogRef = { closed: of(ChangePlanDialogResultType.Submitted) };
+      const mockDialogRef = { closed: of(ChangePlanDialogResultType.Closed) };
       (openChangePlanDialog as jest.Mock).mockReturnValue(mockDialogRef);
 
       const seatLimitReached = await service.seatLimitReached(result, organization);
@@ -294,7 +247,7 @@ describe("BillingConstraintService", () => {
 
       const seatLimitReached = await service.seatLimitReached(result, organization);
 
-      expect(seatLimitReached).toBe(true);
+      expect(seatLimitReached).toBe(false);
     });
 
     it("should show seat limit dialog when shouldShowUpgradeDialog is false", async () => {

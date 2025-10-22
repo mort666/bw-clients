@@ -1,13 +1,11 @@
 import { Injectable } from "@angular/core";
 import { Router } from "@angular/router";
-import { lastValueFrom, Observable, shareReplay } from "rxjs";
+import { lastValueFrom } from "rxjs";
 
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
-import { OrganizationMetadataServiceAbstraction } from "@bitwarden/common/billing/abstractions/organization-metadata.service.abstraction";
 import { isNotSelfUpgradable, ProductTierType } from "@bitwarden/common/billing/enums";
 import { OrganizationBillingMetadataResponse } from "@bitwarden/common/billing/models/response/organization-billing-metadata.response";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { OrganizationId } from "@bitwarden/common/types/guid";
 import { DialogService, ToastService } from "@bitwarden/components";
 
 import { isFixedSeatPlan } from "../../../admin-console/organizations/members/components/member-dialog/validators/org-seat-limit-reached.validator";
@@ -28,21 +26,8 @@ export class BillingConstraintService {
     private i18nService: I18nService,
     private dialogService: DialogService,
     private toastService: ToastService,
-    private organizationMetadataService: OrganizationMetadataServiceAbstraction,
     private router: Router,
   ) {}
-
-  getBillingMetadata$(
-    organizationId: OrganizationId,
-  ): Observable<OrganizationBillingMetadataResponse> {
-    return this.organizationMetadataService
-      .getOrganizationMetadata$(organizationId)
-      .pipe(shareReplay({ bufferSize: 1, refCount: false }));
-  }
-
-  refreshBillingMetadata(): void {
-    this.organizationMetadataService.refreshMetadataCache();
-  }
 
   checkSeatLimit(
     organization: Organization,
@@ -92,7 +77,9 @@ export class BillingConstraintService {
 
       case "fixed-seat-limit":
         if (result.shouldShowUpgradeDialog) {
-          return await this.handleFixedSeatLimitUpgrade(organization);
+          const dialogResult = await this.showChangePlanDialog(organization);
+          // If the plan was successfully changed, the seat limit is no longer blocking
+          return dialogResult !== ChangePlanDialogResultType.Submitted;
         } else {
           await this.showSeatLimitReachedDialog(organization);
           return true;
@@ -103,7 +90,9 @@ export class BillingConstraintService {
     }
   }
 
-  private async handleFixedSeatLimitUpgrade(organization: Organization): Promise<boolean> {
+  private async showChangePlanDialog(
+    organization: Organization,
+  ): Promise<ChangePlanDialogResultType> {
     const reference = openChangePlanDialog(this.dialogService, {
       data: {
         organizationId: organization.id,
@@ -112,12 +101,16 @@ export class BillingConstraintService {
     });
 
     const result = await lastValueFrom(reference.closed);
-    return result === ChangePlanDialogResultType.Submitted;
+    if (result == null) {
+      throw new Error("ChangePlanDialog result is null or undefined.");
+    }
+
+    return result;
   }
 
   private async showSeatLimitReachedDialog(organization: Organization): Promise<void> {
-    const dialogContent = this.getDialogContent(organization);
-    const acceptButtonText = this.getAcceptButtonText(organization);
+    const dialogContent = this.getSeatLimitReachedDialogContent(organization);
+    const acceptButtonText = this.getSeatLimitReachedDialogAcceptButtonText(organization);
 
     const orgUpgradeSimpleDialogOpts = {
       title: this.i18nService.t("upgradeOrganization"),
@@ -147,12 +140,12 @@ export class BillingConstraintService {
     });
   }
 
-  private getDialogContent(organization: Organization): string {
+  private getSeatLimitReachedDialogContent(organization: Organization): string {
     const productKey = this.getProductKey(organization);
     return this.i18nService.t(productKey, organization.seats);
   }
 
-  private getAcceptButtonText(organization: Organization): string {
+  private getSeatLimitReachedDialogAcceptButtonText(organization: Organization): string {
     if (!organization.canEditSubscription) {
       return this.i18nService.t("ok");
     }

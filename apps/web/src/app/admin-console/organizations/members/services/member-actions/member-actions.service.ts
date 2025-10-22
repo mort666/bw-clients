@@ -13,12 +13,12 @@ import {
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { getUserId } from "@bitwarden/common/auth/services/account.service";
+import { OrganizationMetadataServiceAbstraction } from "@bitwarden/common/billing/abstractions/organization-metadata.service.abstraction";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { EncryptService } from "@bitwarden/common/key-management/crypto/abstractions/encrypt.service";
 import { ListResponse } from "@bitwarden/common/models/response/list.response";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { KeyService } from "@bitwarden/key-management";
-import { BillingConstraintService } from "@bitwarden/web-vault/app/billing/members/billing-constraint/billing-constraint.service";
 
 import { OrganizationUserView } from "../../../core/views/organization-user.view";
 import { OrganizationUserService } from "../organization-user/organization-user.service";
@@ -44,7 +44,7 @@ export class MemberActionsService {
     private encryptService: EncryptService,
     private configService: ConfigService,
     private accountService: AccountService,
-    private billingConstraint: BillingConstraintService,
+    private organizationMetadataService: OrganizationMetadataServiceAbstraction,
   ) {}
 
   async inviteUser(
@@ -73,7 +73,7 @@ export class MemberActionsService {
   async removeUser(organization: Organization, userId: string): Promise<MemberActionResult> {
     try {
       await this.organizationUserApiService.removeOrganizationUser(organization.id, userId);
-      this.billingConstraint.refreshBillingMetadata();
+      this.organizationMetadataService.refreshMetadataCache();
       return { success: true };
     } catch (error) {
       return { success: false, error: (error as Error).message ?? String(error) };
@@ -83,6 +83,7 @@ export class MemberActionsService {
   async revokeUser(organization: Organization, userId: string): Promise<MemberActionResult> {
     try {
       await this.organizationUserApiService.revokeOrganizationUser(organization.id, userId);
+      this.organizationMetadataService.refreshMetadataCache();
       return { success: true };
     } catch (error) {
       return { success: false, error: (error as Error).message ?? String(error) };
@@ -92,6 +93,7 @@ export class MemberActionsService {
   async restoreUser(organization: Organization, userId: string): Promise<MemberActionResult> {
     try {
       await this.organizationUserApiService.restoreOrganizationUser(organization.id, userId);
+      this.organizationMetadataService.refreshMetadataCache();
       return { success: true };
     } catch (error) {
       return { success: false, error: (error as Error).message ?? String(error) };
@@ -101,7 +103,7 @@ export class MemberActionsService {
   async deleteUser(organization: Organization, userId: string): Promise<MemberActionResult> {
     try {
       await this.organizationUserApiService.deleteOrganizationUser(organization.id, userId);
-      this.billingConstraint.refreshBillingMetadata();
+      this.organizationMetadataService.refreshMetadataCache();
       return { success: true };
     } catch (error) {
       return { success: false, error: (error as Error).message ?? String(error) };
