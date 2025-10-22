@@ -3,7 +3,6 @@ import { EncString as SdkEncString } from "@bitwarden/sdk-internal";
 
 /**
  * Converts a string value to an EncString, handling null/undefined gracefully.
- * Used in domain model constructors when converting from data objects.
  *
  * @param value - The string value to convert, or undefined
  * @returns An EncString instance if value is defined, otherwise undefined
