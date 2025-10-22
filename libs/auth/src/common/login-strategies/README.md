@@ -3,8 +3,7 @@
 > [!IMPORTANT]
 > While each login method has its own unique logic, this document discusses the
 > logic that is _generally_ common to all login methods. It provides a high-level
-> overview of authentication and as such will involve some abstraction. That said,
-> the code is the ultimate source of truth.
+> overview of authentication and as such will involve some abstraction and generalization.
 
 <br>
 
@@ -33,9 +32,9 @@ Bitwarden provides 5 methods for logging in to Bitwarden, as defined in our [`Au
 
 **Login Initiation**
 
-_Angular Clients_
+_Angular Clients - Initiating Components_
 
-A user begins the login process by entering their email on the `/login` screen (`LoginComponent`). From there, the user must click one of the following buttons to initiate a login method by navigating to the associated login component:
+A user begins the login process by entering their email on the `/login` screen (`LoginComponent`). From there, the user must click one of the following buttons to initiate a login method by navigating to that method's associated "initiating component":
 
 - `"Continue"` &rarr; user stays on the `LoginComponent` and enters a Master Password
 - `"Log in with device"` &rarr; navigates user to `LoginViaAuthRequestComponent`
@@ -49,10 +48,10 @@ A user begins the login process by entering their email on the `/login` screen (
 
 > - The Login with Master Password method is also used by the
 >   `RegistrationFinishComponent` and `CompleteTrialInitiationComponent` (the user automatically
->   gets logged in with their Master Password after registration), and the `RecoverTwoFactorComponent`
+>   gets logged in with their Master Password after registration), as well as the `RecoverTwoFactorComponent`
 >   (the user logs in with their Master Password along with their 2FA recovery code).
 
-_CLI Client_
+_CLI Client - `LoginCommand`_
 
 The CLI client supports the following login methods via the `LoginCommand`.
 
@@ -64,9 +63,9 @@ The CLI client supports the following login methods via the `LoginCommand`.
 
 ## The Login Credentials Object
 
-When the user clicks the "submit" action on the associated login component, we first build a **login credentials object**. This object gathers the core credentials needed to initiate the specific login method.
+When the user presses the "submit" action on an initiating component (or via `LoginCommand` for CLI), we build a **login credentials object**, which contains the core credentials needed to initiate the specific login method.
 
-For example, when the user clicks "Log in with master password" on the `LoginComponent`, we build a `PasswordLoginCredentials` object, which is defined as follows:
+For example, when the user clicks "Log in with master password" on the `LoginComponent`, we build a `PasswordLoginCredentials` object, which is defined as:
 
 ```typescript
 export class PasswordLoginCredentials {
@@ -83,7 +82,7 @@ export class PasswordLoginCredentials {
 
 Notice that the `type` is automatically set to `AuthenticationType.Password`, and the `PasswordLoginCredentials` object simply requires an `email` and `masterPassword` to initiate the login method.
 
-Each login method builds it's own type of credentials object, each of which is defined in [`login-credentials.ts`](https://github.com/bitwarden/clients/blob/main/libs/auth/src/common/models/domain/login-credentials.ts).
+Each authentication method builds its own type of credentials object. These are defined in [`login-credentials.ts`](https://github.com/bitwarden/clients/blob/main/libs/auth/src/common/models/domain/login-credentials.ts).
 
 - `PasswordLoginCredentials`
 - `AuthRequestLoginCredentials`
@@ -91,11 +90,13 @@ Each login method builds it's own type of credentials object, each of which is d
 - `WebAuthnLoginCredentials`
 - `UserApiLoginCredentials`
 
+After building the credentials object, we then call the `logIn()` method on the `LoginStrategyService`, passing in the credentials object as an argument: `LoginStrategyService.logIn(credentials)`
+
 <br>
 
 ## The `LoginStrategyService` and our Login Strategies
 
-The credentials object gets passed to our [`LoginStrategyService`](https://github.com/bitwarden/clients/blob/main/libs/auth/src/common/services/login-strategies/login-strategy.service.ts), which acts as an orchestrator that determines which of our specific **login strategies** should be initialized and used for the login process.
+The [`LoginStrategyService`](https://github.com/bitwarden/clients/blob/main/libs/auth/src/common/services/login-strategies/login-strategy.service.ts) acts as an orchestrator that determines which of our specific **login strategies** should be initialized and used for the login process.
 
 > [!IMPORTANT]
 > Our authentication methods are handled by different [login strategies](https://github.com/bitwarden/clients/tree/main/libs/auth/src/common/login-strategies), making use of the [Strategy Design Pattern](https://refactoring.guru/design-patterns/strategy). Those strategies are:
@@ -108,31 +109,61 @@ The credentials object gets passed to our [`LoginStrategyService`](https://githu
 >
 > Each of those strategies extend the base [`LoginStrategy`](https://github.com/bitwarden/clients/blob/main/libs/auth/src/common/login-strategies/login.strategy.ts), which houses common login logic.
 
-The `LoginStrategyService` uses the `type` property on the credentials object to determine which specific login strategy should be initialized and used for the login process.
+More specifically, within its `logIn()` method, the `LoginStrategyService` uses the `type` property on the credentials object to determine which specific login strategy to initialize.
 
 For example, the `PasswordLoginCredentials` object has `type` of `AuthenticationType.Password`. This tells the `LoginStrategyService` to initialize and use the `PasswordLoginStrategy` for the login process.
 
-Once the `LoginStrategyService` initializes the appropriate strategy, it then calls the `logIn()` method defined on that strategy, passing in the credentials object as an argument. For example: `PasswordLoginStrategy.logIn(PasswordLoginCredentials)`.
+Once the `LoginStrategyService` initializes the appropriate strategy, it then calls the `logIn()` method defined on _that_ particular strategy, passing on the credentials object as an argument. For example: `PasswordLoginStrategy.logIn(credentials)`.
+
+<br>
+
+To summarize everything so far:
+
+```bash
+Initiating Component Submit Action   # ex: LoginComponent.submit()
+    |
+    Build credentials object         # ex: PasswordLoginCredentials
+    |
+    Call LoginStrategyService.logIn(credentials)
+        |
+        Initialize specific strategy      # ex: PasswordLoginStrategy
+        |
+        Call strategy.logIn(credentials)  # ex: PasswordLoginStrategy.logIn(credentials)
+
+    ...
+```
 
 <br>
 
 ## The `logIn()` and `startLogin()` Methods
 
-Each login strategy has it's own unique implementation of the `logIn()` method, yet they all perform similar logic.
-
-The main purpose of the `logIn()` method is to take the credentials object (passed in from the `LoginStrategyService`) and perform the following general logic:
+Each login strategy has its own unique implementation of the `logIn()` method, but each `logIn()` method performs the following general logic with the help of the credentials object:
 
 1. Build a `LoginStrategyData` object with a `TokenRequest` property
 2. Cache the `LoginStrategyData` object
 3. Call the `startLogin()` method on the base `LoginStrategy`
+4. Return an `AuthResult` object
 
 Here are those steps in more detail:
 
 1. **Build a `LoginStrategyData` object with a `TokenRequest` property**
 
-   Each strategy uses the credentials object to help build a type of `LoginStrategyData` object, which contains the data needed throughout the lifetime of the particular strategy.
+   Each strategy uses the credentials object to help build a type of `LoginStrategyData` object, which contains the data needed throughout the lifetime of the particular strategy, and must, at minimum, contain a `tokenRequest` property (more on this below).
 
-   Each strategy has it's own class that implements the `LoginStrategyData` interface:
+   ```typescript
+   export abstract class LoginStrategyData {
+     tokenRequest:
+       | PasswordTokenRequest
+       | SsoTokenRequest
+       | WebAuthnLoginTokenRequest
+       | UserApiTokenRequest
+       | undefined;
+
+     abstract userEnteredEmail?: string;
+   }
+   ```
+
+   Each strategy has its own class that implements the `LoginStrategyData` interface:
    - `PasswordLoginStrategyData`
    - `AuthRequestLoginStrategyData`
    - `SsoLoginStrategyData`
@@ -141,34 +172,34 @@ Here are those steps in more detail:
 
    So in our ongoing example that uses the "Login with Master Password" method, the call to `PasswordLoginStrategy.logIn(PasswordLoginCredentials)` would build a `PasswordLoginStrategyData` object that contains the data needed throughout the lifetime of the `PasswordLoginStrategy`.
 
-   That `PasswordLoginStrategyData` object is defined like so:
+   That `PasswordLoginStrategyData` object is defined as:
 
    ```typescript
    export class PasswordLoginStrategyData implements LoginStrategyData {
      tokenRequest: PasswordTokenRequest;
 
-     forcePasswordResetReason: ForceSetPasswordReason = ForceSetPasswordReason.None;
+     userEnteredEmail: string;
      localMasterKeyHash: string;
      masterKey: MasterKey;
-     userEnteredEmail: string;
+     forcePasswordResetReason: ForceSetPasswordReason = ForceSetPasswordReason.None;
    }
    ```
 
    Each of the `LoginStrategyData` types have varying properties, but one property common to all is the `tokenRequest` property.
 
    The `tokenRequest` property holds some type of [`TokenRequest`](https://github.com/bitwarden/clients/tree/main/libs/common/src/auth/models/request/identity-token) object based on the strategy:
-   - `PasswordTokenRequest` &mdash; used by both the `PasswordLoginStrategy` and `AuthRequestLoginStrategy`
+   - `PasswordTokenRequest` &mdash; used by both `PasswordLoginStrategy` and `AuthRequestLoginStrategy`
    - `SsoTokenRequest`
    - `WebAuthnLoginTokenRequest`
    - `UserApiTokenRequest`
 
-   This `TokenRequest` object is also built within the `logIn()` method and is added as a property to the `LoginStrategyData` object.
+   This `TokenRequest` object is _also_ built within the `logIn()` method and gets added to the `LoginStrategyData` object as the `tokenRequest` property.
 
    <br />
 
 2. **Cache the `LoginStrategyData` object**
 
-   Because a login method could "fail" due to a need for Two Factor Authentication or New Device Verification, we need a way of preserving the `LoginStrategyData` so that we can re-use it later when the user provides their 2FA or NDV token. This way, the user does not need to completely re-submit all of their credentials.
+   Because a login attempt could "fail" due to a need for Two Factor Authentication (2FA) or New Device Verification (NDV), we need to preserve the `LoginStrategyData` so that we can re-use it later when the user provides their 2FA or NDV token. This way, the user does not need to completely re-submit all of their credentials.
 
    The way we cache this `LoginStrategyData` is simply by saving it to a property called `cache` on the strategy. There will be more details on how this cache is used later on.
 
@@ -180,14 +211,16 @@ Here are those steps in more detail:
    1. **Makes a `POST` request to the `/connect/token` endpoint on our Identity Server**
       - `REQUEST`
 
-        The exact payload for this request is determined by the `TokenRequest` object. More specifically, the base `TokenRequest` object contains a `toIdentityToken()` method which can be overridden by the sub-classes (`PasswordTokenRequest`, etc.). This `toIdentityToken()` method takes the information in the `TokenRequest` object and turns it into the payload that gets sent to our `/connect/token` endpoint.
+        The exact payload for this request is determined by the `TokenRequest` object. More specifically, the base `TokenRequest` class contains a `toIdentityToken()` method which gets overridden/extended by the sub-classes (`PasswordTokenRequest.toIdentityToken()`, etc.). This `toIdentityToken()` method produces the exact payload that gets sent to our `/connect/token` endpoint.
+
+        The payload includes OAuth2 parameters, such as `scope`, `client_id`, and `grant_type`, as well as any other credentials that the server needs to complete validation for the specific authentication method.
 
       - `RESPONSE`
 
         The Identity Server validates the request and then generates some type of `IdentityResponse`, which can be one of three types:
         - [`IdentityTokenResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-token.response.ts)
-          - This response means the user has been authenticated
-          - The response contains:
+          - Meaning: the user has been authenticated
+          - Response Contains:
             - Authentication information for the user
               - An access token, which is a JWT with claims about the user
               - A refresh token
@@ -196,17 +229,21 @@ Here are those steps in more detail:
               - Includes an object that contains information about which decryption options the user has available to them
 
         - [`IdentityTwoFactorResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-two-factor.response.ts)
-          - This response means the user needs to complete two-factor authentication
-          - The response contains information about the user's 2FA requirements, such as which 2FA providers they have available to them, etc.
+          - Meaning: the user needs to complete Two Factor Authentication
+          - Response Contains: information about the user's 2FA requirements, such as which 2FA providers they have available to them, etc.
 
         - [`IdentityDeviceVerificationResponse`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/response/identity-device-verification.response.ts)
-          - This response means the user needs to verify their new device via [new device verification](https://bitwarden.com/help/new-device-verification/)
-          - The response contains a boolean property that simply states whether or not the device has been verified
+          - Meaning: the user needs to verify their new device via [new device verification](https://bitwarden.com/help/new-device-verification/)
+          - Response Contains: a boolean property that simply states whether or not the device has been verified
 
-   2. **Calls one of the `process[IdentityType]Response()` methods, each of which builds and returns an [`AuthResult`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/domain/auth-result.ts) object**
-      - If `IdentityTokenResponse`, call `processTokenResponse()`
-        - This method uses information from the `IdentityTokenResponse` object to set Authentication and Decryption information about the user into state.
-          - `saveAccountInformation()` - initializes the account with information from the `IdentityTokenResponse` after successful login.
+   2. **Calls one of the `process[IdentityType]Response()` methods**
+
+      Each of these methods builds and returns an [`AuthResult`](https://github.com/bitwarden/clients/blob/main/libs/common/src/auth/models/domain/auth-result.ts) object, which gets used later to determine how to direct the user after an authentication attempt.
+
+      The specific method that gets called depends on the type of the `IdentityResponse`:
+      - If `IdentityTokenResponse` &rarr; call `processTokenResponse()`
+        - This method uses information from the `IdentityTokenResponse` object to set Authentication and Decryption information about the user into state
+          - `saveAccountInformation()` - initializes the account with information from the `IdentityTokenResponse` after successful login
             - Adds the account to the `AccountService` and sets up the account profile in `StateService`
             - Sets the access token and refresh token to state
             - Sets the `userDecryptionOptions` to state
@@ -215,21 +252,81 @@ Here are those steps in more detail:
 
           - Sets a `forceSetPasswordReason` to state, if necessary
 
-      - If `IdentityTwoFactorResponse`, call `processTwoFactorResponse()`
+      - If `IdentityTwoFactorResponse` &rarr; call `processTwoFactorResponse()`
         - This method sets 2FA data to state for later processing at the `/2fa` route, and also adds the necessary data for the 2FA process to the `AuthResult`
 
-      - If `IdentityDeviceVerificationResponse`, call `processDeviceVerificationResponse()`
+      - If `IdentityDeviceVerificationResponse` &rarr; call `processDeviceVerificationResponse()`
         - This method simply sets `requiresDeviceVerification` to `true` on the `AuthResult`
+
+     <br />
+
+4. **Return the `AuthResult` object**
+
+   The `AuthResult` object that gets returned from the `process[IdentityType]Response()` method ultimately gets returned up through the chain of callers until it makes its way back to the original component that initiated the login method (e.g. the `LoginComponent` for Login with Master Password).
+
+   ```bash
+   Initiating Component Submit Action < - - - -
+       |                                        \
+       LoginStrategyService.logIn()            - \
+           |                                      \    # AuthResult bubbles back up
+           strategy.logIn()                      - \   # through chain of callers
+               |                                    \  # to the initiating component
+               startLogin()                        - \
+                   |                                  \
+                   process[IdentityType]Response()   - \
+                       |                                \
+                       returns AuthResult - - - - - - - -
+   ```
 
 <br>
 
 ## Handling the `AuthResult`
 
-The `AuthResult` object returned from the `process[IdentityType]Response()` method contains information that will be used to determine how to direct the user after an authentication attempt.
+The `AuthResult` object returned from the `process[IdentityType]Response()` method ultimately makes its way up to the initiating component. The `AuthResult` contains information that will be used by the initiating component to determine how to direct the user after an authentication attempt.
+
+We can add to the above diagram to give a high-level overview of how the `AuthResult` is handled, but note again that there are abstractions in this diagram &mdash; it doesn't depict every edge case, and is just meant to give a general picture.
+
+```bash
+Initiating Component Submit Action < - - - -
+    |                                        \
+    LoginStrategyService.logIn()            - \
+        |                                      \    # AuthResult bubbles back up
+        strategy.logIn()                      - \   # through chain of callers
+            |                                    \  # to the initiating component
+            startLogin()                        - \
+                |                                  \
+                process[IdentityType]Response()   - \
+                    |                                \
+                    returns AuthResult - - - - - - - -
+
+    |
+     - - - - - - - - - -                            # Initiating component then
+                        |                           # uses the AuthResult in
+    handleAuthResult(authResult)                    # handleAuthResult()
+        |
+        IF AuthResult.requiresTwoFactor
+        |  # route user to /2fa to complete 2FA
+        |
+        IF AuthResult.requiresDeviceVerification
+        |  # route user to /device-verification to complete NDV
+        |
+        # Otherwise, route user to /vault
+```
+
+<br />
+
+Now for a more detailed breakdown of how the `AuthResult` is handled...
+
+There are two broad types of scenarios that the user will fall into:
+
+1. Re-submit scenarios
+2. Successful Authentication scenarios
 
 ### Re-submit Scenarios
 
-There are two cases where a user is required to provide additional information before they can be authenticated: Two Factor Authentication (2FA) and New Device Verification (NDV). In these scenarios, we actually need the user to "re-submit" their original request, along with their added 2FA or NDV token. Here is how these scenarios work:
+There are two cases where a user is required to provide additional information before they can be authenticated: Two Factor Authentication (2FA) and New Device Verification (NDV). In these scenarios, we actually need the user to "re-submit" their original request, along with their added 2FA or NDV token. But remember earlier that we cached the `LoginStrategyData`. This makes it so the user does not need to re-provide their original credentials. Instead, the user simply provides their 2FA or NDV token, we add it to their original (cached) `LoginStrategyData`, and then we re-submit the request.
+
+Here is how these scenarios work:
 
 **User must complete Two Factor Authentication**
 
