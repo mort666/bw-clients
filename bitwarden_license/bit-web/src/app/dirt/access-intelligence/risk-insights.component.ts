@@ -2,8 +2,8 @@ import { CommonModule } from "@angular/common";
 import { Component, DestroyRef, OnDestroy, OnInit, inject } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { ActivatedRoute, Router } from "@angular/router";
-import { EMPTY, from } from "rxjs";
-import { map, switchMap, tap } from "rxjs/operators";
+import { combineLatest, EMPTY } from "rxjs";
+import { map, tap } from "rxjs/operators";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import {
@@ -14,7 +14,6 @@ import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { OrganizationId } from "@bitwarden/common/types/guid";
-import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import {
   AsyncActionsModule,
   ButtonModule,
@@ -90,7 +89,6 @@ export class RiskInsightsComponent implements OnInit, OnDestroy {
     private configService: ConfigService,
     protected dataService: RiskInsightsDataService,
     private i18nService: I18nService,
-    private cipherService: CipherService,
   ) {
     this.route.queryParams.pipe(takeUntilDestroyed()).subscribe(({ tabIndex }) => {
       this.tabIndex = !isNaN(Number(tabIndex)) ? Number(tabIndex) : RiskInsightsTabType.AllApps;
@@ -122,21 +120,29 @@ export class RiskInsightsComponent implements OnInit, OnDestroy {
       )
       .subscribe();
 
-    // Subscribe to report result details
-    this.dataService.enrichedReportData$
+    // Combine report data, vault items check, and organization details
+    // This declarative pattern ensures proper cleanup and prevents memory leaks
+    combineLatest([
+      this.dataService.enrichedReportData$,
+      this.dataService.hasVaultItems$,
+      this.dataService.organizationDetails$,
+    ])
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((report) => {
+      .subscribe(([report, hasVaultItems, orgDetails]) => {
+        // Update report state
         this.reportHasLoaded = true;
         this.hasReportBeenRun = !!report?.creationDate;
         this.appsCount = report?.reportData.length ?? 0;
         this.dataLastUpdated = report?.creationDate ?? null;
 
-        if (!this.hasReportBeenRun) {
-          this.checkForVaultItems();
-        } else {
-          // If report has been run, update empty state properties
-          this.updateEmptyStateProperties();
-        }
+        // Update vault items state
+        this.hasVaultItems = hasVaultItems;
+
+        // Update organization name
+        this.organizationName = orgDetails?.organizationName ?? "";
+
+        // Update all empty state properties based on current state
+        this.updateEmptyStateProperties();
       });
 
     // Subscribe to drawer state changes
@@ -144,15 +150,6 @@ export class RiskInsightsComponent implements OnInit, OnDestroy {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((details) => {
         this._isDrawerOpen = details.open;
-      });
-
-    // Subscribe to organization details to get organization name
-    this.dataService.organizationDetails$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((orgDetails) => {
-        this.organizationName = orgDetails?.organizationName ?? "";
-        // Update empty state properties when organization name changes
-        this.updateEmptyStateProperties();
       });
   }
 
@@ -290,38 +287,5 @@ export class RiskInsightsComponent implements OnInit, OnDestroy {
 
   private getOrganizationName(): string {
     return this.organizationName;
-  }
-
-  private checkForVaultItems() {
-    // Check if organization has any vault items (ciphers) to determine which empty state to show
-    // NOTE: If we don't want to use CipherService directly here, we need to add a method to
-    // RiskInsightsDataService like hasVaultItems$() that internally checks ciphers and exposes
-    // this information. The challenge is that reportResults$.applicationData is only populated
-    // AFTER a report is generated, so we can't rely on it to check current vault state before
-    // the first report is run.
-
-    // Get organizationId from dataService since this.organizationId may not be set yet
-    this.dataService.organizationDetails$
-      .pipe(
-        takeUntilDestroyed(this.destroyRef),
-        switchMap((orgDetails) => {
-          if (orgDetails?.organizationId) {
-            return from(this.cipherService.getAllFromApiForOrganization(orgDetails.organizationId));
-          }
-          return EMPTY;
-        }),
-      )
-      .subscribe({
-        next: (ciphers) => {
-          this.hasVaultItems = ciphers.length > 0;
-          // Update empty state properties after checking vault items
-          this.updateEmptyStateProperties();
-        },
-        error: () => {
-          this.hasVaultItems = false;
-          // Update empty state properties even on error
-          this.updateEmptyStateProperties();
-        },
-      });
   }
 }
