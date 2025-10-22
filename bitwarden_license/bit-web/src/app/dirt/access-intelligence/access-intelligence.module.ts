@@ -73,7 +73,7 @@ import { AccessIntelligenceSecurityTasksService } from "./shared/security-tasks.
     }),
     safeProvider({
       provide: RiskInsightsDataService,
-      deps: [CriticalAppsService, RiskInsightsReportService, RiskInsightsOrchestratorService],
+      deps: [RiskInsightsOrchestratorService],
     }),
     safeProvider({
       provide: RiskInsightsEncryptionService,

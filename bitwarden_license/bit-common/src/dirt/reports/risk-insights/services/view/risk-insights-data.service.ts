@@ -1,13 +1,11 @@
-import { BehaviorSubject, EMPTY, firstValueFrom, Observable, of, Subject, throwError } from "rxjs";
-import { catchError, distinctUntilChanged, exhaustMap, map } from "rxjs/operators";
+import { BehaviorSubject, firstValueFrom, Observable, of, Subject } from "rxjs";
+import { distinctUntilChanged, map } from "rxjs/operators";
 
 import { OrganizationId } from "@bitwarden/common/types/guid";
 
 import { getAtRiskApplicationList, getAtRiskMemberList } from "../../helpers";
 import { ReportState, DrawerDetails, DrawerType, RiskInsightsEnrichedData } from "../../models";
-import { CriticalAppsService } from "../domain/critical-apps.service";
 import { RiskInsightsOrchestratorService } from "../domain/risk-insights-orchestrator.service";
-import { RiskInsightsReportService } from "../domain/risk-insights-report.service";
 
 export class RiskInsightsDataService {
   private _destroy$ = new Subject<void>();
@@ -44,11 +42,7 @@ export class RiskInsightsDataService {
   drawerDetails$ = this.drawerDetailsSubject.asObservable();
 
   // --------------------------- Critical Application data ---------------------
-  constructor(
-    private criticalAppsService: CriticalAppsService,
-    private reportService: RiskInsightsReportService,
-    private orchestrator: RiskInsightsOrchestratorService,
-  ) {
+  constructor(private orchestrator: RiskInsightsOrchestratorService) {
     this.reportState$ = this.orchestrator.rawReportData$;
     this.isGeneratingReport$ = this.orchestrator.generatingReport$;
     this.organizationDetails$ = this.orchestrator.organizationDetails$;
@@ -183,42 +177,10 @@ export class RiskInsightsDataService {
 
   // ------------------------------ Critical application methods --------------
   saveCriticalApplications(selectedUrls: string[]) {
-    // Saving critical applications to the report
     return this.orchestrator.saveCriticalApplications$(selectedUrls);
-
-    // Legacy saving CriticalAppsService for backward compatibility
-    // return this.organizationDetails$.pipe(
-    //   exhaustMap((organizationDetails) => {
-    //     if (!organizationDetails?.organizationId) {
-    //       return EMPTY;
-    //     }
-    //     return this.criticalAppsService.setCriticalApps(
-    //       organizationDetails?.organizationId,
-    //       selectedUrls,
-    //     );
-    //   }),
-    //   catchError((error: unknown) => {
-    //     this.errorSubject.next("Failed to save critical applications");
-    //     return throwError(() => error);
-    //   }),
-    // );
   }
 
   removeCriticalApplication(hostname: string) {
-    return this.organizationDetails$.pipe(
-      exhaustMap((organizationDetails) => {
-        if (!organizationDetails?.organizationId) {
-          return EMPTY;
-        }
-        return this.criticalAppsService.dropCriticalAppByUrl(
-          organizationDetails?.organizationId,
-          hostname,
-        );
-      }),
-      catchError((error: unknown) => {
-        this.errorSubject.next("Failed to remove critical application");
-        return throwError(() => error);
-      }),
-    );
+    return this.orchestrator.removeCriticalApplication$(hostname);
   }
 }
