@@ -732,6 +732,9 @@ export class RiskInsightsOrchestratorService {
       exhaustMap(([_, [orgDetails, userId]]) =>
         this._generateNewApplicationsReport$(orgDetails!.organizationId, userId!),
       ),
+      tap(() => {
+        this._generateReportTriggerSubject.next(false);
+      }),
     );
 
     // Combine all triggers and update the single report state
