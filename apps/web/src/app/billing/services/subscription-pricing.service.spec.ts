@@ -900,6 +900,134 @@ describe("SubscriptionPricingService", () => {
     });
   });
 
+  describe("Edge case handling", () => {
+    it("should handle getPremiumPlan() error when getPlans() succeeds", (done) => {
+      const errorBillingApiService = mock<BillingApiServiceAbstraction>();
+      const errorConfigService = mock<ConfigService>();
+
+      const testError = new Error("Premium plan API error");
+      errorBillingApiService.getPlans.mockResolvedValue(mockPlansResponse);
+      errorBillingApiService.getPremiumPlan.mockRejectedValue(testError);
+      errorConfigService.getFeatureFlag$.mockReturnValue(of(true)); // Enable feature flag to use premium plan API
+
+      const errorService = new SubscriptionPricingService(
+        errorBillingApiService,
+        errorConfigService,
+        i18nService,
+        logService,
+        toastService,
+      );
+
+      errorService.getPersonalSubscriptionPricingTiers$().subscribe({
+        next: (tiers) => {
+          // Should return empty array due to error in premium plan fetch
+          expect(tiers).toEqual([]);
+          expect(logService.error).toHaveBeenCalledWith(
+            "Failed to fetch premium plan from API",
+            testError,
+          );
+          expect(toastService.showToast).toHaveBeenCalledWith({
+            variant: "error",
+            title: "",
+            message: "An unexpected error has occurred.",
+          });
+          done();
+        },
+        error: () => {
+          fail("Observable should not error, it should return empty array");
+        },
+      });
+    });
+
+    it("should handle malformed premium plan API response", (done) => {
+      const errorBillingApiService = mock<BillingApiServiceAbstraction>();
+      const errorConfigService = mock<ConfigService>();
+
+      // Malformed response missing the Seat property
+      const malformedResponse = {
+        Storage: {
+          StripePriceId: "price_storage",
+          Price: 4,
+        },
+      };
+
+      errorBillingApiService.getPlans.mockResolvedValue(mockPlansResponse);
+      errorBillingApiService.getPremiumPlan.mockResolvedValue(malformedResponse as any);
+      errorConfigService.getFeatureFlag$.mockReturnValue(of(true)); // Enable feature flag
+
+      const errorService = new SubscriptionPricingService(
+        errorBillingApiService,
+        errorConfigService,
+        i18nService,
+        logService,
+        toastService,
+      );
+
+      errorService.getPersonalSubscriptionPricingTiers$().subscribe({
+        next: (tiers) => {
+          // Should return empty array due to validation error
+          expect(tiers).toEqual([]);
+          expect(logService.error).toHaveBeenCalled();
+          expect(toastService.showToast).toHaveBeenCalledWith({
+            variant: "error",
+            title: "",
+            message: "An unexpected error has occurred.",
+          });
+          done();
+        },
+        error: () => {
+          fail("Observable should not error, it should return empty array");
+        },
+      });
+    });
+
+    it("should handle malformed premium plan with invalid price types", (done) => {
+      const errorBillingApiService = mock<BillingApiServiceAbstraction>();
+      const errorConfigService = mock<ConfigService>();
+
+      // Malformed response with price as string instead of number
+      const malformedResponse = {
+        Seat: {
+          StripePriceId: "price_seat",
+          Price: "10", // Should be a number
+        },
+        Storage: {
+          StripePriceId: "price_storage",
+          Price: 4,
+        },
+      };
+
+      errorBillingApiService.getPlans.mockResolvedValue(mockPlansResponse);
+      errorBillingApiService.getPremiumPlan.mockResolvedValue(malformedResponse as any);
+      errorConfigService.getFeatureFlag$.mockReturnValue(of(true)); // Enable feature flag
+
+      const errorService = new SubscriptionPricingService(
+        errorBillingApiService,
+        errorConfigService,
+        i18nService,
+        logService,
+        toastService,
+      );
+
+      errorService.getPersonalSubscriptionPricingTiers$().subscribe({
+        next: (tiers) => {
+          // Should return empty array due to validation error
+          expect(tiers).toEqual([]);
+          expect(logService.error).toHaveBeenCalled();
+          expect(toastService.showToast).toHaveBeenCalledWith({
+            variant: "error",
+            title: "",
+            message: "An unexpected error has occurred.",
+          });
+          done();
+        },
+        error: () => {
+          fail("Observable should not error, it should return empty array");
+        },
+      });
+    });
+  });
+
   describe("Observable behavior and caching", () => {
     it("should share API response between multiple subscriptions", () => {
       const getPlansResponse = jest.spyOn(billingApiService, "getPlans");

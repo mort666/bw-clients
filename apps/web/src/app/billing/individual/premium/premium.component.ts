@@ -14,6 +14,8 @@ import {
   of,
   startWith,
   switchMap,
+  catchError,
+  shareReplay,
 } from "rxjs";
 import { debounceTime } from "rxjs/operators";
 
@@ -62,16 +64,28 @@ export class PremiumComponent {
       const premiumPlan = tiers.find(
         (tier) => tier.id === PersonalSubscriptionPricingTierIds.Premium,
       );
+
+      if (!premiumPlan) {
+        throw new Error("Could not find Premium plan");
+      }
+
       return {
         seat: premiumPlan.passwordManager.annualPrice,
         storage: premiumPlan.passwordManager.annualPricePerAdditionalStorageGB,
       };
     }),
+    shareReplay({ bufferSize: 1, refCount: true }),
   );
 
   premiumPrice$ = this.premiumPrices$.pipe(map((prices) => prices.seat));
 
   storagePrice$ = this.premiumPrices$.pipe(map((prices) => prices.storage));
+
+  protected isLoadingPrices$ = this.premiumPrices$.pipe(
+    map(() => false),
+    startWith(true),
+    catchError(() => of(false)),
+  );
 
   storageCost$ = combineLatest([
     this.storagePrice$,

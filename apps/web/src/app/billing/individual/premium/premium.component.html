@@ -1,4 +1,4 @@
-@if (!(premiumPrices$ | async)) {
+@if (isLoadingPrices$ | async) {
   <ng-container>
     <i
       class="bwi bwi-spinner bwi-spin tw-text-muted"

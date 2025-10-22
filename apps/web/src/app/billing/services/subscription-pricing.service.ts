@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { combineLatest, from, map, Observable, of, shareReplay, switchMap } from "rxjs";
+import { combineLatest, from, map, Observable, of, shareReplay, switchMap, take } from "rxjs";
 import { catchError } from "rxjs/operators";
 
 import { BillingApiServiceAbstraction } from "@bitwarden/common/billing/abstractions";
@@ -23,6 +23,15 @@ import {
 
 @Injectable({ providedIn: BillingServicesModule })
 export class SubscriptionPricingService {
+  /**
+   * Fallback premium pricing used when the feature flag is disabled.
+   * These values represent the legacy pricing model and will not reflect
+   * server-side price changes. They are retained for backward compatibility
+   * during the feature flag rollout period.
+   */
+  private static readonly FALLBACK_PREMIUM_SEAT_PRICE = 10;
+  private static readonly FALLBACK_PREMIUM_STORAGE_PRICE = 4;
+
   constructor(
     private billingApiService: BillingApiServiceAbstraction,
     private configService: ConfigService,
@@ -64,11 +73,18 @@ export class SubscriptionPricingService {
 
   private premiumPlanResponse$: Observable<PremiumPlanResponse> = from(
     this.billingApiService.getPremiumPlan(),
-  ).pipe(shareReplay({ bufferSize: 1, refCount: false }));
+  ).pipe(
+    catchError((error: unknown) => {
+      this.logService.error("Failed to fetch premium plan from API", error);
+      throw error; // Re-throw to propagate to higher-level error handler
+    }),
+    shareReplay({ bufferSize: 1, refCount: false }),
+  );
 
   private premium$: Observable<PersonalSubscriptionPricingTier> = this.configService
     .getFeatureFlag$(FeatureFlag.PM26793_FetchPremiumPriceFromPricingService)
     .pipe(
+      take(1), // Lock behavior at first subscription to prevent switching data sources mid-stream
       switchMap((fetchPremiumFromPricingService) =>
         fetchPremiumFromPricingService
           ? this.premiumPlanResponse$.pipe(
@@ -78,8 +94,8 @@ export class SubscriptionPricingService {
               })),
             )
           : of({
-              seat: 10,
-              storage: 4,
+              seat: SubscriptionPricingService.FALLBACK_PREMIUM_SEAT_PRICE,
+              storage: SubscriptionPricingService.FALLBACK_PREMIUM_STORAGE_PRICE,
             }),
       ),
       map((premiumPrices) => ({
