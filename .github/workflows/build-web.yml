@@ -125,7 +125,7 @@ jobs:
             image_name: web-ee
             npm_command: build:bit:ee
             git_metadata: true
-          - artifact_name: cloud-
+          - artifact_name: cloud-euprd
             license_type: "commercial"
             image_name: web-euprd
             npm_command: build:bit:euprd
