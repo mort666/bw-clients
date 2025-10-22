@@ -22,7 +22,7 @@ import { ThemeStateService } from "@bitwarden/common/platform/theming/theme-stat
 import { OrganizationId } from "@bitwarden/common/types/guid";
 import {
   BaseCardComponent,
-  CardContentComponent, 
+  CardContentComponent,
   DialogRef,
   DialogService,
   ToastService,
