@@ -146,7 +146,7 @@ const routes: Routes = [
     component: ExtensionAnonLayoutWrapperComponent,
     children: [
       {
-        path: "authentication-timeout",
+        path: AuthRoutes.AuthenticationTimeout,
         canActivate: [unauthGuardFn(unauthRouteOverrides)],
         children: [
           {

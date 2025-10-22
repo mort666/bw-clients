@@ -191,7 +191,7 @@ const routes: Routes = [
         ],
       },
       {
-        path: "finish-signup",
+        path: AuthRoutes.FinishSignUp,
         canActivate: [unauthGuardFn()],
         data: {
           pageIcon: LockIcon,
@@ -454,7 +454,7 @@ const routes: Routes = [
         } satisfies RouteDataProperties & AnonLayoutWrapperData,
       },
       {
-        path: "device-verification",
+        path: AuthRoutes.NewDeviceVerification,
         canActivate: [unauthGuardFn(), activeAuthGuard()],
         children: [
           {
