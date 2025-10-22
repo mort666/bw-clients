@@ -67,7 +67,7 @@ describe("Fido2Credential", () => {
       });
     });
 
-    it("should not populate fields when data parameter is not given", () => {
+    it("should not populate fields when data parameter is not given except creationDate", () => {
       const credential = new Fido2Credential();
 
       expect(credential.credentialId).toBeUndefined();
