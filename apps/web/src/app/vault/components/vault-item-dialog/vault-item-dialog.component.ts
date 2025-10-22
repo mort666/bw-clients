@@ -274,6 +274,7 @@ export class VaultItemDialogComponent implements OnInit, OnDestroy {
     if (this.cipher == null || (this.params.mode == "form" && this.formConfig.mode === "clone")) {
       return false;
     }
+    return true;
   }
 
   protected get showCipherView() {
