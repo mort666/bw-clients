@@ -50,13 +50,14 @@ import {
   IconButtonModule,
   ItemModule,
   LinkModule,
-  SectionComponent,
   SelectModule,
   ToastService,
   TypographyModule,
 } from "@bitwarden/components";
 import { LogService } from "@bitwarden/logging";
 
+// FIXME(https://bitwarden.atlassian.net/browse/CL-764): Migrate to OnPush
+// eslint-disable-next-line @angular-eslint/prefer-on-push-component-change-detection
 @Component({
   selector: "bit-session-timeout-settings",
   templateUrl: "session-timeout-settings.component.html",
@@ -71,7 +72,6 @@ import { LogService } from "@bitwarden/logging";
     JslibModule,
     LinkModule,
     RouterModule,
-    SectionComponent,
     SelectModule,
     TypographyModule,
     VaultTimeoutInputComponent,
@@ -100,9 +100,7 @@ export class SessionTimeoutSettingsComponent implements OnInit, OnDestroy {
 
   formGroup = new FormGroup({
     timeout: new FormControl<VaultTimeout | null>(null, [Validators.required]),
-    timeoutAction: new FormControl<VaultTimeoutAction>(VaultTimeoutAction.Lock, [
-      Validators.required,
-    ]),
+    timeoutAction: new FormControl<VaultTimeoutAction>(VaultTimeoutAction.Lock),
   });
 
   get canLock() {
