@@ -473,7 +473,6 @@ describe("LockComponent", () => {
         component.clientType = clientType;
         mockLockComponentService.getPreviousUrl.mockReturnValue(null);
 
-        // Mock doContinue to include the navigation and required service calls
         jest.spyOn(component as any, "doContinue").mockImplementation(async () => {
           await mockBiometricStateService.resetUserPromptCancelled();
           mockMessagingService.send("unlocked");
@@ -493,7 +492,6 @@ describe("LockComponent", () => {
       component.shouldClosePopout = true;
       mockPlatformUtilsService.getDevice.mockReturnValue(DeviceType.FirefoxExtension);
 
-      // Mock doContinue to include the popout close and required service calls
       jest.spyOn(component as any, "doContinue").mockImplementation(async () => {
         await mockBiometricStateService.resetUserPromptCancelled();
         mockMessagingService.send("unlocked");
@@ -638,7 +636,6 @@ describe("LockComponent", () => {
     ])(
       "should unlock and force set password change = %o when master password on login = %o and evaluated password against policy = %o and policy set during user verification by master password",
       async (forceSetPassword, masterPasswordPolicyOptions, evaluatedMasterPassword) => {
-        // Mock doContinue to handle password policy evaluation and required service calls
         jest.spyOn(component as any, "doContinue").mockImplementation(async () => {
           await mockBiometricStateService.resetUserPromptCancelled();
           mockMessagingService.send("unlocked");
@@ -779,7 +776,6 @@ describe("LockComponent", () => {
         component.clientType = clientType;
         mockLockComponentService.getPreviousUrl.mockReturnValue(null);
 
-        // Mock doContinue to include the navigation and required service calls
         jest.spyOn(component as any, "doContinue").mockImplementation(async () => {
           await mockBiometricStateService.resetUserPromptCancelled();
           mockMessagingService.send("unlocked");
@@ -799,7 +795,6 @@ describe("LockComponent", () => {
       component.shouldClosePopout = true;
       mockPlatformUtilsService.getDevice.mockReturnValue(DeviceType.FirefoxExtension);
 
-      // Mock doContinue to include the popout close and required service calls
       jest.spyOn(component as any, "doContinue").mockImplementation(async () => {
         await mockBiometricStateService.resetUserPromptCancelled();
         mockMessagingService.send("unlocked");
