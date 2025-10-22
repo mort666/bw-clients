@@ -38,7 +38,7 @@ describe("SecureNote", () => {
     const secureNote = new SecureNote();
     secureNote.type = SecureNoteType.Generic;
 
-    const view = await secureNote.decrypt(null);
+    const view = await secureNote.decrypt();
 
     expect(view).toEqual({
       type: 0,

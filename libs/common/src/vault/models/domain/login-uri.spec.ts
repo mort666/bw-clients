@@ -68,7 +68,6 @@ describe("LoginUri", () => {
       encryptService = mock();
       global.bitwardenContainerService = {
         getEncryptService: () => encryptService,
-        // @ts-expect-error null implementation
         getKeyService: () => null,
       };
     });
