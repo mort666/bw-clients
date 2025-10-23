@@ -89,7 +89,7 @@ body * {
   padding: 0.7rem;
   margin: 0;
   cursor: pointer;
-  border-radius: 0.4rem;
+  border-radius: 0.0px !important;
 
   @include themify($themes) {
     color: themed("primaryColor");
@@ -164,7 +164,7 @@ body * {
   border: none;
   -webkit-box-shadow: none;
   box-shadow: none;
-  border-radius: 1rem;
+  border-radius: 0px !important;
 }
 
 .inline-menu-list-actions::-webkit-scrollbar-track-piece {
@@ -175,7 +175,7 @@ body * {
 }
 
 .inline-menu-list-actions::-webkit-scrollbar-thumb {
-  border-radius: 1rem;
+  border-radius: 0px !important;
 
   @include themify($themes) {
     background-color: themed("borderColor");
@@ -243,7 +243,7 @@ body * {
     align-items: center;
     justify-content: flex-start;
     padding: 0.7rem 0.3rem 0.7rem 0.7rem;
-    border-radius: 0.4rem;
+    border-radius: 0px !important;
 
     &:has(:focus-visible):not(.remove-outline) {
       outline-width: 0.2rem;
@@ -281,7 +281,7 @@ body * {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 0.4rem;
+    border-radius: 0px !important;
 
     &:focus:focus-visible {
       outline-width: 0.2rem;
@@ -488,7 +488,7 @@ body * {
   align-items: center;
   justify-content: flex-start;
   padding: 0.8rem 0.4rem 1.1rem 0.65rem;
-  border-radius: 0.4rem;
+  border-radius: 0px !important;
   transition: background-color 0.2s ease-in-out;
 
   &:hover {
@@ -550,7 +550,7 @@ body * {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 0.4rem;
+    border-radius: 0px !important;
 
     &:focus:focus-visible {
       outline-width: 0.2rem;

@@ -9,7 +9,7 @@ $ng-select-highlight: rgb(var(--color-primary-700)) !default;
 $ng-select-primary-text: rgb(var(--color-text-main)) !default;
 $ng-select-disabled-text: rgb(var(--color-secondary-100)) !default;
 $ng-select-border: rgb(var(--color-secondary-100)) !default;
-$ng-select-border-radius: 0.5rem !default;
+$ng-select-border-radius: 0px !important;
 $ng-select-bg: rgb(var(--color-background)) !default;
 $ng-select-selected: transparent !default;
 $ng-select-selected-text: $ng-select-primary-text !default;
@@ -165,7 +165,7 @@ $ng-dropdown-shadow: rgb(var(--color-secondary-100)) !default;
           font-size: $ng-select-value-font-size;
           color: $ng-select-value-text;
           background-color: $ng-select-selected;
-          border-radius: 2px;
+          border-radius: 0px !important;
           margin: 4px 5px 4px 0px;
           @include rtl {
             margin-right: 0;

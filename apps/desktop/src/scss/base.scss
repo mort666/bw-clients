@@ -116,7 +116,7 @@ div:not(.modal)::-webkit-scrollbar-track,
 div:not(.modal)::-webkit-scrollbar-thumb,
 .cdk-virtual-scroll-viewport::-webkit-scrollbar-thumb,
 .vault-filters::-webkit-scrollbar-thumb {
-  border-radius: 10px;
+  border-radius: 0px !important;
   margin-right: 1px;
 
   @include themify($themes) {

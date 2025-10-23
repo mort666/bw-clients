@@ -14,7 +14,7 @@
   box-shadow:
     0 4px 6px -1px var(--tooltip-shadow),
     0 2px 4px -2px var(--tooltip-shadow);
-  border-radius: 0.75rem;
+  border-radius: 0px !important;
   transition:
     transform 100ms ease-in-out,
     opacity 100ms ease-in-out;
@@ -29,7 +29,7 @@
     height: 1rem;
     z-index: 1;
     rotate: 45deg;
-    border-radius: 3px;
+    border-radius: 0px !important;
   }
 
   &::before {
@@ -125,7 +125,7 @@
   background-color: rgb(var(--color-text-main));
   color: rgb(var(--color-text-contrast));
   padding: 0.5rem 0.75rem;
-  border-radius: 0.75rem;
+  border-radius: 0px !important;
   font-size: 0.875rem;
   line-height: 1.25rem;
   z-index: 2;

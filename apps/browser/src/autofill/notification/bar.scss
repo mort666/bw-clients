@@ -33,7 +33,7 @@ select {
   min-height: 42px;
   border: 1px solid transparent;
   border-bottom: 2px solid transparent;
-  border-radius: 4px;
+  border-radius: 0px !important;
   box-sizing: border-box;
 
   @include themify($themes) {

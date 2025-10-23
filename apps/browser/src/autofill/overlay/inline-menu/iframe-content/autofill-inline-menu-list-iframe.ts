@@ -12,7 +12,7 @@ export class AutofillInlineMenuListIframe extends AutofillInlineMenuIframeElemen
         minWidth: "260px",
         maxHeight: "180px",
         boxShadow: "rgba(0, 0, 0, 0.1) 2px 4px 6px 0px",
-        borderRadius: "4px",
+        borderRadius: "0px !important",
         borderWidth: "1px",
         borderStyle: "solid",
         borderColor: "rgb(206, 212, 220)",

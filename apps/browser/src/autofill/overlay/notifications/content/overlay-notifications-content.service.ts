@@ -31,7 +31,7 @@ export class OverlayNotificationsContentService
     position: "fixed",
     zIndex: "2147483647",
     visibility: "visible",
-    borderRadius: "4px",
+    borderRadius: "0px !important",
     border: "none",
     backgroundColor: "transparent",
     overflow: "hidden",
@@ -46,7 +46,7 @@ export class OverlayNotificationsContentService
     display: "block",
     position: "relative",
     transition: "transform 0.15s ease-out, opacity 0.15s ease",
-    borderRadius: "4px",
+    borderRadius: "0px !important",
     colorScheme: "auto",
   };
 

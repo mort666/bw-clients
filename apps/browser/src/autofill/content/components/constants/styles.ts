@@ -136,8 +136,8 @@ export const spacing = {
 
 export const border = {
   radius: {
-    large: `8px`,
-    full: `9999px`,
+    large: `0px !important`,
+    full: `0px !important`,
   },
 };
 
@@ -202,7 +202,7 @@ export function scrollbarStyles(theme: Theme, color?: { thumb?: string; track?: 
       ::-webkit-scrollbar-thumb {
         border-width: 4px;
         border-style: solid;
-        border-radius: 0.5rem;
+        border-radius: 0px !important;
         border-color: transparent;
         background-clip: content-box;
         background-color: ${thumbColor};
