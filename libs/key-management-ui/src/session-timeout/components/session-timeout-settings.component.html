@@ -8,7 +8,11 @@
 
   <bit-form-field [disableMargin]="true">
     <bit-label>{{ "sessionTimeoutAction" | i18n }}</bit-label>
-    <bit-select id="timeoutAction" [formControl]="formGroup.controls.timeoutAction">
+    <bit-select
+      id="timeoutAction"
+      [formControl]="formGroup.controls.timeoutAction"
+      [required]="false"
+    >
       @for (action of availableVaultTimeoutActions(); track action) {
         <bit-option [value]="action" [label]="action | i18n"></bit-option>
       }

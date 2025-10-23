@@ -100,7 +100,9 @@ export class SessionTimeoutSettingsComponent implements OnInit, OnDestroy {
 
   formGroup = new FormGroup({
     timeout: new FormControl<VaultTimeout | null>(null, [Validators.required]),
-    timeoutAction: new FormControl<VaultTimeoutAction>(VaultTimeoutAction.Lock),
+    timeoutAction: new FormControl<VaultTimeoutAction>(VaultTimeoutAction.Lock, [
+      Validators.required,
+    ]),
   });
 
   get canLock() {
