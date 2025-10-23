@@ -138,6 +138,13 @@ module.exports = {
       serif: "var(--font-serif)",
       mono: "var(--font-mono)",
     },
+    borderRadius: {
+      sm: `0px !important`,
+      DEFAULT: `0px !important`,
+      md: `0px !important`,
+      lg: `0px !important`,
+      xl: `0px !important`,
+    },
     ringOffsetColor: ({ theme }) => ({
       DEFAULT: theme("colors.background"),
       ...theme("colors"),
