@@ -1,6 +1,3 @@
-// FIXME (PM-22628): angular imports are forbidden in background
-// eslint-disable-next-line no-restricted-imports
-import { Injectable } from "@angular/core";
 import { combineLatest, defer, firstValueFrom, map, Observable } from "rxjs";
 
 import { UserDecryptionOptionsServiceAbstraction } from "@bitwarden/auth/common";
@@ -24,7 +21,6 @@ import BrowserPopupUtils from "../../../platform/browser/browser-popup-utils";
 // eslint-disable-next-line no-restricted-imports
 import { BrowserRouterService } from "../../../platform/popup/services/browser-router.service";
 
-@Injectable()
 export class ExtensionLockComponentService implements LockComponentService {
   constructor(
     private readonly userDecryptionOptionsService: UserDecryptionOptionsServiceAbstraction,
