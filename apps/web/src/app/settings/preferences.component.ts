@@ -41,6 +41,8 @@ import { SharedModule } from "../shared";
 
 /**
  * @deprecated Use {@link AppearanceComponent} and {@link SessionTimeoutComponent} instead.
+ *
+ * TODO Cleanup once feature flag enabled: https://bitwarden.atlassian.net/browse/PM-27276
  */
 // FIXME(https://bitwarden.atlassian.net/browse/CL-764): Migrate to OnPush
 // eslint-disable-next-line @angular-eslint/prefer-on-push-component-change-detection
