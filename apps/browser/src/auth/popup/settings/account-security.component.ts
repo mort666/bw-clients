@@ -447,6 +447,13 @@ export class AccountSecurityComponent implements OnInit, OnDestroy {
     await this.vaultNudgesService.dismissNudge(NudgeType.AccountSecurity, activeAccount.id);
   }
 
+  protected handleTimeoutSave(newValue: VaultTimeout) {
+    // For browser extension: reseed storage when timeout is set to "Never"
+    if (newValue === VaultTimeoutStringType.Never) {
+      this.messagingService.send("bgReseedStorage");
+    }
+  }
+
   async saveVaultTimeoutAction(value: VaultTimeoutAction) {
     if (value === VaultTimeoutAction.LogOut) {
       const confirmed = await this.dialogService.openSimpleDialog({

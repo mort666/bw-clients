@@ -83,6 +83,7 @@
           <bit-session-timeout-settings
             [refreshTimeoutActionSettings$]="refreshTimeoutSettings$"
             [excludeTimeoutTypes]="excludeTimeoutTypes()"
+            (onTimeoutSave)="handleTimeoutSave($event)"
           />
         } @else {
           <auth-vault-timeout-input

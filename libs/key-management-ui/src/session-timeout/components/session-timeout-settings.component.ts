@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, inject, input, OnInit, signal } from "@angular/core";
+import { Component, inject, input, OnInit, output, signal } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import {
   FormControl,
@@ -39,7 +39,6 @@ import {
   VaultTimeoutStringType,
 } from "@bitwarden/common/key-management/vault-timeout";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { UserId } from "@bitwarden/common/types/guid";
 import {
@@ -83,12 +82,13 @@ export class SessionTimeoutSettingsComponent implements OnInit {
   private readonly toastService = inject(ToastService);
   private readonly policyService = inject(PolicyService);
   private readonly accountService = inject(AccountService);
-  private readonly messagingService = inject(MessagingService);
   private readonly dialogService = inject(DialogService);
   private readonly logService = inject(LogService);
 
   readonly excludeTimeoutTypes = input.required<VaultTimeout[]>();
   readonly refreshTimeoutActionSettings$ = input(new BehaviorSubject<void>(undefined));
+
+  readonly onTimeoutSave = output<VaultTimeout>();
 
   protected readonly availableVaultTimeoutActions = signal<VaultTimeoutAction[]>([]);
   protected readonly vaultTimeoutOptions = signal<VaultTimeoutOption[]>([]);
@@ -225,10 +225,8 @@ export class SessionTimeoutSettingsComponent implements OnInit {
       newValue,
       vaultTimeoutAction,
     );
-    // For browser extension
-    if (newValue === VaultTimeoutStringType.Never) {
-      this.messagingService.send("bgReseedStorage");
-    }
+
+    this.onTimeoutSave.emit(newValue);
   }
 
   async saveTimeoutAction(value: VaultTimeoutAction) {
