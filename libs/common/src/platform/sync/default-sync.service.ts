@@ -10,19 +10,18 @@ import {
   CollectionService,
 } from "@bitwarden/admin-console/common";
 // This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
+// eslint-disable-next-line no-restricted-imports, import/order
+import {
+  InternalUserDecryptionOptionsServiceAbstraction,
+  UserDecryptionOptions,
+  WebAuthnPrfUserDecryptionOption,
+} from "@bitwarden/auth/common";
+
 import { SecurityStateService } from "@bitwarden/common/key-management/security-state/abstractions/security-state.service";
+// This import has been flagged as unallowed for this class. It may be involved in a circular dependency loop.
 // eslint-disable-next-line no-restricted-imports
 import { KeyService } from "@bitwarden/key-management";
 
-// FIXME: remove `src` and fix import
-// eslint-disable-next-line no-restricted-imports
-import { InternalUserDecryptionOptionsServiceAbstraction } from "../../../../auth/src/common/abstractions";
-// FIXME: remove `src` and fix import
-// eslint-disable-next-line no-restricted-imports
-import {
-  UserDecryptionOptions,
-  WebAuthnPrfUserDecryptionOption,
-} from "../../../../auth/src/common/models";
 // FIXME: remove `src` and fix import
 // eslint-disable-next-line no-restricted-imports
 import { LogoutReason } from "../../../../auth/src/common/types";
