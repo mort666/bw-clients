@@ -1,5 +1,6 @@
 import { CommonModule } from "@angular/common";
-import { Component, inject, input, OnDestroy, OnInit, signal } from "@angular/core";
+import { Component, inject, input, OnInit, signal } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import {
   FormControl,
   FormGroup,
@@ -19,9 +20,7 @@ import {
   of,
   pairwise,
   startWith,
-  Subject,
   switchMap,
-  takeUntil,
 } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
@@ -77,7 +76,7 @@ import { LogService } from "@bitwarden/logging";
     VaultTimeoutInputComponent,
   ],
 })
-export class SessionTimeoutSettingsComponent implements OnInit, OnDestroy {
+export class SessionTimeoutSettingsComponent implements OnInit {
   private readonly vaultTimeoutSettingsService = inject(VaultTimeoutSettingsService);
   private readonly platformUtilsService = inject(PlatformUtilsService);
   private readonly i18nService = inject(I18nService);
@@ -95,7 +94,6 @@ export class SessionTimeoutSettingsComponent implements OnInit, OnDestroy {
   protected readonly vaultTimeoutOptions = signal<VaultTimeoutOption[]>([]);
   protected hasVaultTimeoutPolicy$: Observable<boolean> = of(false);
 
-  private destroy$ = new Subject<void>();
   private userId!: UserId;
 
   formGroup = new FormGroup({
@@ -160,7 +158,7 @@ export class SessionTimeoutSettingsComponent implements OnInit, OnDestroy {
             maximumVaultTimeoutPolicy$,
           ]),
         ),
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(),
       )
       .subscribe(([availableActions, action, policy]) => {
         this.availableVaultTimeoutActions.set(availableActions);
@@ -177,11 +175,12 @@ export class SessionTimeoutSettingsComponent implements OnInit, OnDestroy {
     this.formGroup.controls.timeout.valueChanges
       .pipe(
         startWith(timeout), // emit to init pairwise
+        filter((value) => value != null),
         pairwise(),
         concatMap(async ([previousValue, newValue]) => {
-          await this.saveTimeout(previousValue, newValue!);
+          await this.saveTimeout(previousValue, newValue);
         }),
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(),
       )
       .subscribe();
 
@@ -191,17 +190,12 @@ export class SessionTimeoutSettingsComponent implements OnInit, OnDestroy {
         map(async (value) => {
           await this.saveTimeoutAction(value);
         }),
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(),
       )
       .subscribe();
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  async saveTimeout(previousValue: VaultTimeout | null, newValue: VaultTimeout) {
+  async saveTimeout(previousValue: VaultTimeout, newValue: VaultTimeout) {
     this.formGroup.controls.timeout.markAllAsTouched();
     if (this.formGroup.controls.timeout.invalid) {
       return;
