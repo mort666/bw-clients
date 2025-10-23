@@ -705,8 +705,8 @@ export class OrganizationPlansComponent implements OnInit, OnDestroy {
         ? 1
         : this.formGroup.value.additionalSeats;
 
-    // When accepting sponsorship but user adds paid storage, avoid marking the purchase as
-    // sponsored in the tax preview so the storage is correctly taxed by the service.
+    // should still be taxed. We mark the plan as NOT sponsored when there is additional storage
+    // so the server calculates tax, but we'll adjust the calculation to only tax the storage.
     const hasPaidStorage = (this.formGroup.value.additionalStorage || 0) > 0;
     const sponsoredForTaxPreview = this.acceptingSponsorship && !hasPaidStorage;
 
@@ -729,7 +729,16 @@ export class OrganizationPlansComponent implements OnInit, OnDestroy {
       billingAddress,
     );
 
-    this.estimatedTax = taxAmounts.tax;
+    if (this.acceptingSponsorship && hasPaidStorage) {
+      const storageSubtotal = this.additionalStorageTotal(this.selectedPlan);
+      const basePlanPrice = this.selectedPlan.PasswordManager.basePrice;
+
+      const taxRate = taxAmounts.tax / basePlanPrice;
+      this.estimatedTax = storageSubtotal * taxRate;
+    } else {
+      this.estimatedTax = taxAmounts.tax;
+    }
+
     const subtotal =
       this.passwordManagerSubtotal +
       (this.planOffersSecretsManager && this.secretsManagerForm.value.enabled
