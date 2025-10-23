@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, Input, OnInit } from "@angular/core";
+import { Component, Input, isDevMode, OnInit } from "@angular/core";
 
 import { Icon } from "@bitwarden/assets/svg";
 import { ButtonModule, IconModule } from "@bitwarden/components";
@@ -20,7 +20,7 @@ export class EmptyStateCardComponent implements OnInit {
   @Input() buttonIcon?: string;
 
   ngOnInit(): void {
-    if (!this.title) {
+    if (!this.title && isDevMode()) {
       // eslint-disable-next-line no-console
       console.warn("EmptyStateCardComponent: title is required for proper display");
     }

@@ -235,9 +235,16 @@ export class RiskInsightsComponent implements OnInit, OnDestroy {
    */
   private updateEmptyStateProperties(): void {
     // Calculate boolean flags
+    // Note: We only show empty states when there are NO apps (appsCount === 0)
+    // The template uses @if(shouldShowTabs) to determine whether to show tabs or empty state
     this.shouldShowImportDataState = !this.hasVaultItems;
+    // Show "run report" state when:
+    // 1. Has vault items AND report never run, OR
+    // 2. Has vault items AND report was run but returned zero results (re-run scenario)
     this.shouldShowRunReportState =
-      this.hasVaultItems && this.reportHasLoaded && !this.hasReportBeenRun;
+      this.hasVaultItems &&
+      this.reportHasLoaded &&
+      (!this.hasReportBeenRun || (this.hasReportBeenRun && this.appsCount === 0));
 
     // Update title
     if (this.shouldShowImportDataState) {

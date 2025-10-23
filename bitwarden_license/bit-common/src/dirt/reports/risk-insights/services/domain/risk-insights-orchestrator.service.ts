@@ -767,8 +767,10 @@ export class RiskInsightsOrchestratorService {
   // Setup the user ID observable to track the current user
   private _setupUserId() {
     // Watch userId changes
-    this.accountService.activeAccount$.pipe(getUserId).subscribe((userId) => {
-      this._userIdSubject.next(userId);
-    });
+    this.accountService.activeAccount$
+      .pipe(getUserId, takeUntil(this._destroy$))
+      .subscribe((userId) => {
+        this._userIdSubject.next(userId);
+      });
   }
 }
