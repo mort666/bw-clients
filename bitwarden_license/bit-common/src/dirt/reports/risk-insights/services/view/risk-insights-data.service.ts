@@ -184,7 +184,7 @@ export class RiskInsightsDataService {
       this.closeDrawer();
     } else {
       const reportResults = await firstValueFrom(this.enrichedReportData$);
-      if (!reportResults) {
+      if (!reportResults?.reportData) {
         return;
       }
 
@@ -212,7 +212,7 @@ export class RiskInsightsDataService {
       this.closeDrawer();
     } else {
       const reportResults = await firstValueFrom(this.enrichedReportData$);
-      if (!reportResults) {
+      if (!reportResults?.reportData) {
         return;
       }
 
