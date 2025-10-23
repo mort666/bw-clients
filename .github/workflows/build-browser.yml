@@ -558,8 +558,6 @@ jobs:
       - locales-test
       - build-source
       - build
-      - build-safari
-      - crowdin-push
     steps:
       - name: Check if any job failed
         if: |
