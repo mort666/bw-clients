@@ -37,7 +37,7 @@ const editButtonStyles = ({ disabled, theme }: { disabled?: boolean; theme: Them
   user-select: none;
   display: flex;
   border: 1px solid transparent;
-  border-radius: ${spacing["1"]};
+  border-radius: 0px !important;
   background-color: transparent;
   padding: ${spacing["1"]};
   max-height: fit-content;

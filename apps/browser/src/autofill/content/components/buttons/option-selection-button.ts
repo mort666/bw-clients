@@ -71,7 +71,7 @@ const selectionButtonStyles = ({
   align-items: center;
   justify-content: space-between;
   columns: ${iconSize} max-content ${iconSize};
-  border-radius: ${border.radius.full};
+  border-radius: 0px !important;
   padding: ${spacing["1"]} ${spacing["2"]};
   max-height: fit-content;
   overflow: hidden;

@@ -28,7 +28,7 @@ export function CloseButton({ handleCloseNotification, i18n, theme }: CloseButto
 
 const closeButtonStyles = (theme: Theme) => css`
   border: 1px solid transparent;
-  border-radius: ${spacing["1"]};
+  border-radius: 0px !important;
   background-color: transparent;
   cursor: pointer;
   width: 36px;

@@ -349,7 +349,7 @@ function handleSaveCipherConfirmation(message: NotificationBarWindowMessage) {
   const { error, data } = message;
   const { cipherId, task, itemName } = data || {};
   const i18n = getI18n();
-  const resolvedTheme = getResolvedTheme(theme ?? ThemeTypes.Light);
+  const resolvedTheme = getResolvedTheme(theme ?? ThemeTypes.Dark);
   const resolvedType = resolveNotificationType(notificationBarIframeInitData);
   const headerMessage = getConfirmationHeaderMessage(i18n, resolvedType, error);
   const notificationTestId = getNotificationTestId(resolvedType, true);
@@ -421,7 +421,7 @@ function getTheme(globalThis: any, theme: NotificationBarIframeInitData["theme"]
       : ThemeTypes.Light;
   }
 
-  return theme;
+  return ThemeTypes.Dark;
 }
 
 function getResolvedTheme(theme: Theme) {
@@ -429,7 +429,7 @@ function getResolvedTheme(theme: Theme) {
 
   // There are other possible passed theme values, but for now, resolve to dark or light
   const resolvedTheme: Theme = themeType === ThemeTypes.Dark ? ThemeTypes.Dark : ThemeTypes.Light;
-  return resolvedTheme;
+  return ThemeTypes.Dark;
 }
 
 function postMessageToParent(message: NotificationBarWindowMessage) {

@@ -25,7 +25,7 @@ const actionRowStyles = (theme: Theme) => css`
   user-select: none;
   border-width: 0 0 0.5px 0;
   border-style: solid;
-  border-radius: ${spacing["2"]};
+  border-radius: 0px !important;
   border-color: ${themes[theme].secondary["300"]};
   background-color: ${themes[theme].background.DEFAULT};
   cursor: pointer;

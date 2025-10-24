@@ -61,14 +61,14 @@ const atRiskNotificationContainerStyles = (theme: Theme) => css`
   position: absolute;
   right: 20px;
   border: 1px solid ${themes[theme].secondary["300"]};
-  border-radius: ${spacing["4"]};
+  border-radius: 0px !important;
   box-shadow: -2px 4px 6px 0px #0000001a;
   background-color: ${themes[theme].background.alt};
   width: 400px;
   overflow: hidden;
 
   [class*="${notificationHeaderClassPrefix}-"] {
-    border-radius: ${spacing["4"]} ${spacing["4"]} 0 0;
+    border-radius: 0px !important;
     border-bottom: 0.5px solid ${themes[theme].secondary["300"]};
   }
 `;
